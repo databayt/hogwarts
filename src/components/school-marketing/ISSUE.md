@@ -142,6 +142,20 @@ Active step order: **attachments → personal → location → academic → fees
       orphaned — only the route imported them). Assets at `public/images/about/`
       (58 files, 16MB), same `/images/about/…` paths as zenda. English/LTR only,
       like the homepage clone; `/ar/about` renders the same LTR page.
+- [x] **Copy rewritten into the school voice (2026-08-05)** — every visible
+      string is now a school's, with all markup, imagery and motion untouched:
+      grade milestones replace zenda's city expansion, leadership is described
+      as offices rather than invented named people, and the events slider is a
+      school calendar linking to `/tour` instead of zenda's LinkedIn posts.
+- [ ] **BLOCKER — third-party imagery must be replaced before a real tenant
+      publishes `/about`.** Copy cannot fix these; each is commented in-file: - `investors/{stv,cotu,venturesouq,gfc}.webp` — the reference's real
+      venture investors, now sitting under "Our Partners". - `trusted/{nesa,fobisia,bsme,earcos}.webp` — four real accrediting
+      councils under "Trusted by the best". This is a fake accreditation
+      claim, the exact thing this block forbids, and one a parent may act on. - `team/*` (19 shots) — the reference's staff-offsite photos, including a
+      club-lit party and a billiards table, under "Our Team". - `raman.webp` / `haseeb.webp` — real identifiable people, used as
+      stand-in leadership portraits.
+      Fix by swapping in tenant photography, or delete the `<Investors/>` and
+      `<Trusted/>` lines from `zenda-about/content.tsx`.
 
 ### Testing
 

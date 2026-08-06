@@ -1,19 +1,20 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/mission). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/mission) — UI and motion verbatim, copy rewritten
+// for the school tenant. Renders under the `.zenda-clone` CSS scope (see
+// src/styles/zenda-clone.css).
 
 /**
  * About "Our Mission" — a two-column block: on the left a purple eyebrow,
  * heading and an illustration; on the right a white rounded card with three
- * paragraphs. Static. Ported from zenda.com/about-us.
+ * paragraphs. Static.
  */
 
 const PARAGRAPHS = [
-  "Unlike sectors such as food-delivery or ride-hailing, last mile customer experience for parents and institutions still remains full of friction.",
-  "Outdated processes and behaviours persist and true innovation has lagged. Our aspiration is to redesign transaction services, purpose-built to address the specific needs of schools and families.",
-  "Not as an extension of generic systems, but as solutions thoughtfully designed for the realities of the education sector, so they can focus on what truly matters.",
+  "A child spends more waking hours with us than almost anywhere else. That time should be spent being known, not just taught.",
+  "So we keep classes small enough that every teacher can name what each student is good at, and honest enough that families hear about a struggle early, while it is still easy to fix.",
+  "Not a factory that moves children through by age, but a school built around how they actually learn - so they leave us curious, capable and sure of themselves.",
 ]
 
 export function Mission() {
@@ -26,7 +27,7 @@ export function Mission() {
               <div className="about-mission_header">
                 <div className="tag is-text">Our Mission</div>
                 <h2 className="about-mission_heading heading-style-h2">
-                  We are passionate about making lives simpler.
+                  We are here so every child is known by name.
                 </h2>
               </div>
               <div className="about-mission_img-wrap">

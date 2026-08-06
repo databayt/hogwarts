@@ -45,7 +45,7 @@ export async function generateMetadata({
 }
 
 export default async function About({ params }: AboutProps) {
-  const { subdomain } = await params
+  const { lang, subdomain } = await params
   const result = await getSchoolBySubdomain(subdomain)
 
   if (!result.success || !result.data) {
@@ -83,7 +83,7 @@ export default async function About({ params }: AboutProps) {
       <div className="zenda-clone" dir="ltr">
         <div className="body-v2 bg-beige-home">
           <div className="about-page">
-            <AboutContent />
+            <AboutContent lang={lang} />
           </div>
         </div>
       </div>

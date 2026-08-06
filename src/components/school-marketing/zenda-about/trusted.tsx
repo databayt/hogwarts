@@ -1,13 +1,24 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/trusted). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/trusted) — UI and motion verbatim. Renders under the
+// `.zenda-clone` CSS scope (see src/styles/zenda-clone.css).
 
 /**
  * About "Trusted by the best" — a centred heading over a row of school-council
- * logos at per-brand widths, darken-blended into the beige. Static. Ported from
- * zenda.com/about-us.
+ * logos at per-brand widths, darken-blended into the beige. Static.
+ *
+ * ⚠️ BLOCKING BEFORE ANY REAL TENANT PUBLISHES THIS PAGE. These are the real
+ * marks of four real accrediting bodies — NESA, FOBISIA, BSME and EARCOS — and
+ * a school showing them under "Trusted by the best" is claiming a membership or
+ * accreditation it does not have. That is a fabricated credential, banned by
+ * the block's own rule ("never invent a person or an institution … no fake
+ * accreditation logos" — see the block CLAUDE.md), and it is the kind of claim
+ * a parent would act on. The heading is deliberately left as the reference
+ * wrote it rather than reworded, because no wording makes these logos true:
+ * either swap them for bodies the school is genuinely accredited by, or delete
+ * this section and its <Trusted/> line from content.tsx. Kept for now only so
+ * the page's section rhythm can be reviewed.
  */
 const LOGOS = [
   {

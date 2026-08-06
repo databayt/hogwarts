@@ -306,10 +306,14 @@ export function ZendaNav({
                       every width, so the media query comes off. */}
                   <style>{`
                     .nav_hamburger_wrap {
-                      --thickness: 0.22rem;
-                      --gap: 0.28rem;
+                      /* Narrower bars with a wider gap than the reference's --
+                         a school crest + name already sits at the other end of
+                         the bar, so a lighter mark reads less heavy beside it.
+                         --width is a share of the 2rem button box. */
+                      --thickness: 0.18rem;
+                      --gap: 0.42rem;
                       --rotate: 45;
-                      --width: 100%;
+                      --width: 68%;
                     }
                     .is-active .nav_hamburger_line:first-child {
                       transform: translateY(calc(var(--thickness) * 0.5 + var(--gap) * 0.5)) rotate(calc(var(--rotate) * 3 * -1deg));

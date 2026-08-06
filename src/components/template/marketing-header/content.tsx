@@ -7,7 +7,6 @@ import { DOCS_LINKS } from "@/components/docs/docs-config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { marketingConfig } from "./config"
-import { GitHubLink } from "./github-link"
 import { LangSwitcher } from "./lang-switcher"
 import { MainNav } from "./main-nav"
 import { MarketingMobileNav } from "./marketing-mobile-nav"
@@ -51,7 +50,7 @@ export default function MarketingHeader({
 
   return (
     <header
-      className="border-grid bg-background sticky top-0 z-50 w-full border-b"
+      className="border-grid bleed-bg bg-background sticky top-0 z-50 w-full border-b"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="container flex h-14 items-center gap-2 md:gap-4">
@@ -64,8 +63,6 @@ export default function MarketingHeader({
         />
         <div className="ms-auto flex items-center gap-2 md:flex-1 md:justify-end">
           <nav className="flex items-center gap-0.5 **:data-[slot=separator]:!h-4">
-            <GitHubLink />
-            <Separator orientation="vertical" className="mx-1" />
             <LangSwitcher />
             <ModeSwitcher />
             <Separator orientation="vertical" className="mx-1" />

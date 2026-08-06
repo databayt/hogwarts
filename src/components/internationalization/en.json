@@ -142,7 +142,7 @@
     "ctaOpenDocs": "Read the docs",
     "pricingNudgeTitle": "Comparing plans?",
     "pricingNudgeBody": "I can help you pick the right plan in seconds.",
-    "saasPromptTemplate": "You are the Databayt assistant on the marketing site. You help school owners, administrators, and educators decide whether Databayt — an open-source, multi-tenant school-management platform — fits their school. Always reply in English. Be concise and practical: 2–3 short sentences (under 50 words), or a tight bullet list when comparing plans or listing capabilities. Use ONLY the live data below; never invent prices, features, or numbers.\n\n## What Databayt is\n- Open-source school management + automation; run it self-hosted or fully cloud-hosted by us.\n- One platform for admissions, students, attendance, timetables, grades, fees, messaging, and parent communication.\n- Bilingual out of the box — Arabic (RTL) and English (LTR).\n- Multi-tenant: every school gets its own branded subdomain (yourschool.databayt.org).\n\n## Live pricing — quote exactly, never round\n{pricing}\n\n## Capabilities (10 categories, 85+ features)\n{features}\n\n## Getting started\n- Free on the Hobby plan, no credit card. Sign-up + setup wizard takes ~10–15 minutes (school details, branding, capacity, subdomain).\n- Paid plans add capacity and advanced modules; schools can upgrade anytime.\n\n## How to answer\n1. Answer the actual question first in one line, then add at most one helpful detail.\n2. For pricing, name the plan, its price, and 1–2 things it unlocks — straight from the list above.\n3. For \"can it do X\", say yes or no based on the capabilities above and name the relevant feature.\n4. For \"how do I start\", say it's free on Hobby and they can sign up now; the UI shows action buttons under your reply.\n5. Mention open-source / self-hosting when it's relevant to the question.\n6. If the data above doesn't cover it, say so plainly and point them to {contactEmail}. Never guess.\n7. No markdown links or HTML — the UI renders buttons separately.",
+    "saasPromptTemplate": "You are the Databayt assistant on the marketing site. You help school owners, administrators, and educators decide whether Databayt — an open-source, multi-tenant school-management platform — fits their school. Always reply in English. Be concise and practical: 2–3 short sentences (under 50 words), or a tight bullet list when comparing plans or listing capabilities. Use ONLY the live data below; never invent prices, features, or numbers.\n\n## What Databayt is\n- Open-source school management + automation; run it self-hosted or fully cloud-hosted by us.\n- One platform for admissions, students, attendance, timetables, grades, fees, messaging, and parent communication.\n- Bilingual out of the box — Arabic (RTL) and English (LTR).\n- Multi-tenant: every school gets its own branded subdomain (yourschool.databayt.org).\n\n## Live pricing — quote exactly, never round\n{pricing}\n\n## Capabilities (10 categories, 85+ features)\n{features}\n\n## Getting started\n- Free plan for up to 100 students, no credit card. Sign-up + setup wizard takes ~10–15 minutes (school details, branding, capacity, subdomain).\n- Paid plans add capacity and advanced modules; schools can upgrade anytime.\n\n## How to answer\n1. Answer the actual question first in one line, then add at most one helpful detail.\n2. For pricing, name the plan, its price, and 1–2 things it unlocks — straight from the list above.\n3. For \"can it do X\", say yes or no based on the capabilities above and name the relevant feature.\n4. For \"how do I start\", say the Free plan covers up to 100 students and they can sign up now; the UI shows action buttons under your reply.\n5. Mention open-source / self-hosting when it's relevant to the question.\n6. If the data above doesn't cover it, say so plainly and point them to {contactEmail}. Never guess.\n7. No markdown links or HTML — the UI renders buttons separately.",
     "schoolPromptIntroTemplate": "You are the friendly virtual assistant for {schoolName}, helping prospective parents and students on the school's website. Always reply in English. Be warm, accurate, and concise: 2–3 short sentences (under 60 words), or a short bullet list for fees, dates, or programs. Use ONLY the school's real data below — never invent facts, names, dates, or amounts.",
     "schoolPromptRules": "## How to answer\n1. Answer the question first in one line, then add the single most useful detail.\n2. Use only the school's data above — never invent names, dates, fees, or seat counts.\n3. Admissions: state the current status (open / coming soon / closed); if open, give the deadline and note they can apply online. The UI shows the Apply button.\n4. Fees: give the amount and currency, mention installments if available, and point to any scholarships listed above.\n5. Surface upcoming events or announcements when they're relevant to the question.\n6. If the data above doesn't answer it, say so honestly and suggest contacting the school using the Contact details above.\n7. Programs or grades questions: reference the Academic Structure above.\n8. No markdown links or HTML — the UI renders action buttons separately.",
     "schoolHeaderAcademic": "Academic Structure",
@@ -607,51 +607,61 @@
       "notFound": "Feature not found."
     },
     "pricing": {
-      "badge": "ROI Guaranteed",
-      "title": "Simple. Transparent.",
-      "subtitle": "All components and building blocks are open source — we charge for crafting fully functional masterpieces and ensuring their ongoing reliability.",
-      "headerSection": {
-        "label": "Pricing",
-        "title": "Transform your digital presence",
-        "subtitle": "Choose the perfect plan for your business needs"
-      },
+      "badge": "Simple, per-student pricing",
+      "title": "Pay for the students you teach.",
+      "subtitle": "One price per student, no per-module fees. Start free, upgrade only when you outgrow it.",
       "plans": {
-        "hobby": {
-          "title": "Hobby",
-          "description": "Get started for free",
+        "free": {
+          "title": "Free",
+          "description": "Great for small schools getting started",
           "benefits": [
-            "Up to 200 students",
-            "Basic responsive design",
-            "Contact form integration"
+            "Up to 100 students",
+            "Up to 10 teachers",
+            "Core features — admissions, attendance, exams, fees, timetable",
+            "1 GB storage",
+            "Community support"
           ]
         },
         "pro": {
           "title": "Pro",
-          "description": "For growing businesses",
+          "description": "For growing schools ready to scale",
           "benefits": [
-            "Up to 1,000 students",
-            "Advanced animations",
-            "SEO optimization",
-            "Custom branding"
+            "Unlimited students, billed per student",
+            "Unlimited teachers",
+            "10 GB storage",
+            "Priority support",
+            "Custom branding",
+            "Advanced analytics & parent push notifications"
           ]
         },
-        "ultra": {
-          "title": "Ultra",
-          "description": "For large organizations",
-          "benefits": ["Unlimited students", "Custom integrations"]
+        "enterprise": {
+          "title": "Enterprise",
+          "description": "For networks and government contracts, 1,000+ students",
+          "benefits": [
+            "Unlimited storage & API",
+            "Dedicated account manager",
+            "99.9% uptime SLA",
+            "White-label branding",
+            "SSO (SAML/OAuth)",
+            "Custom integrations"
+          ]
         }
       },
       "constants": {
         "free": "Free",
+        "custom": "Custom",
         "includes": "Includes",
-        "everythingInHobby": "Everything in Hobby, plus",
+        "everythingInFree": "Everything in Free, plus",
         "everythingInPro": "Everything in Pro, plus",
-        "startTrial": "Start Trial",
+        "startTrial": "Get started free",
         "getPro": "Get Pro",
-        "getUltra": "Get Ultra",
         "monthly": "Monthly",
         "yearly": "Yearly (save 20%)",
         "perMonth": "/mo",
+        "perStudentPerMonth": "/ student / month",
+        "minimumNote": "${amount}/mo minimum",
+        "billedAnnuallyNote": "billed annually at ${amount}/student/year",
+        "contactToUpgrade": "Contact us to upgrade",
         "moreInfo": "More info",
         "loading": "Loading...",
         "unavailable": "Unavailable",
@@ -659,79 +669,86 @@
         "getPlan": "Get plan"
       },
       "planNames": {
-        "hobby": "Hobby",
+        "free": "Free",
         "pro": "Pro",
-        "ultra": "Ultra",
         "enterprise": "Enterprise"
       },
       "enterprise": {
-        "badge": "Enterprise",
-        "title": "Need Something Bigger?",
-        "description": "For enterprises and large organizations, we offer custom solutions with dedicated teams, SLAs, and specialized support tailored to your unique requirements.",
-        "talkToSales": "Talk to Sales"
+        "badge": "For networks",
+        "title": "Running more than one school?",
+        "description": "Multi-campus networks and government contracts get a dedicated account manager, a 99.9% uptime SLA, white-label branding, and SSO — priced per student for 1,000+ students.",
+        "talkToSales": "Talk to Sales",
+        "contactHref": "mailto:contact@databayt.org?subject=Enterprise%20plan"
       },
       "comparePlans": {
-        "title": "Compare Plans",
-        "subtitle": "Find the perfect plan tailored for your business needs!",
+        "title": "Compare plans",
+        "subtitle": "Every plan runs the full platform — pricing scales with your school.",
         "features": {
-          "analyticsReporting": "Analytics & reporting",
-          "customBranding": "Custom branding",
+          "students": "Students included",
+          "teachers": "Teachers",
+          "coreModules": "Admissions, attendance, exams, fees, timetable, messaging",
+          "storage": "Storage",
           "support": "Support",
-          "advancedReporting": "Advanced reporting",
-          "dedicatedManager": "Dedicated manager",
+          "customBranding": "Custom branding",
           "apiAccess": "API access",
-          "monthlyWebinars": "Monthly webinars",
-          "customIntegrations": "Custom integrations",
-          "rolesPermissions": "Roles & permissions",
-          "onboardingAssistance": "Onboarding assistance"
+          "analyticsReporting": "Analytics & reporting",
+          "parentNotifications": "Parent push notifications",
+          "sso": "SSO (SAML/OAuth)",
+          "sla": "Uptime SLA",
+          "dataExport": "Data export, anytime"
         },
         "values": {
-          "custom": "Custom",
+          "upTo100": "Up to 100",
+          "unlimitedPerStudent": "Unlimited, billed per student",
+          "students1000Plus": "1,000+ (custom)",
           "unlimited": "Unlimited",
+          "upTo10": "Up to 10",
+          "oneGb": "1 GB",
+          "tenGb": "10 GB",
+          "community": "Community",
           "priority": "Priority",
-          "support24_7": "24/7",
-          "support24_7Support": "24/7 Support",
-          "limited": "Limited",
-          "standard": "Standard",
-          "enhanced": "Enhanced",
-          "full": "Full",
-          "available": "Available",
+          "dedicatedAm": "Dedicated account manager",
           "basic": "Basic",
           "advanced": "Advanced",
-          "selfService": "Self-service",
-          "assisted": "Assisted",
-          "fullService": "Full Service"
+          "advancedPlus": "Advanced + custom",
+          "rateLimited": "1,000 req/hr",
+          "sla999": "99.9%",
+          "whiteLabel": "Yes, white-label"
         },
         "tooltips": {
-          "analyticsReporting": "All plans include basic reports; advanced in Pro and Ultra.",
-          "customBranding": "Brand colors and logo available from Pro.",
-          "advancedReporting": "Advanced reporting is available in Ultra and Enterprise plans.",
-          "dedicatedManager": "Enterprise plan includes a dedicated account manager.",
-          "monthlyWebinars": "Pro and higher plans include access to monthly webinars.",
-          "customIntegrations": "Custom integrations are available in Ultra and Enterprise plans.",
-          "rolesPermissions": "User roles and permissions management improves with higher plans.",
-          "onboardingAssistance": "Higher plans include more comprehensive onboarding assistance."
+          "students": "Free is capped at 100 students. Pro and Enterprise bill per student with no hard cap.",
+          "apiAccess": "Free has no API access. Pro is rate-limited; Enterprise is unlimited.",
+          "sso": "Single sign-on via SAML or OAuth — Enterprise only.",
+          "sla": "Enterprise includes a contractual 99.9% uptime guarantee."
         }
       },
       "faqs": {
         "title": "Frequently Asked Questions",
-        "subtitle": "Your guide to pricing and plans with Databayt.",
+        "subtitle": "Your guide to per-student pricing and plans with Databayt.",
         "questions": [
           {
-            "question": "What's included in the One Project plan?",
-            "answer": "The One Project plan includes complete custom development for a single automation solution, including consultation, development, testing, and deployment."
+            "question": "What counts as a \"student\"?",
+            "answer": "Any student profile with an active enrollment in your school. Graduated, withdrawn, or archived students don't count toward your plan's student count."
           },
           {
-            "question": "How does the hourly billing work for Strategic Partner?",
-            "answer": "With Strategic Partner, you get access to our development team at $10/hour. Perfect for ongoing projects, maintenance, or when you need flexible development resources."
+            "question": "How does per-student billing work?",
+            "answer": "Pro is $1.50 per enrolled student per month (minimum $30/mo), billed monthly based on your active student count. Enterprise is $1.00 per student per month, custom-priced for networks of 1,000+ students."
           },
           {
-            "question": "Can I switch between plans?",
-            "answer": "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle."
+            "question": "Is the free plan really free?",
+            "answer": "Yes. Free is $0 forever for up to 100 students — no trial period, no credit card, no feature lock. Upgrade to Pro only when you outgrow it."
           },
           {
-            "question": "Do you offer enterprise solutions?",
-            "answer": "Absolutely! For enterprise needs, we offer custom solutions with dedicated teams, SLAs, and specialized support. Contact us for a tailored quote."
+            "question": "What payment methods do you accept?",
+            "answer": "Your Databayt subscription is billed in USD via Stripe. This is separate from how your school collects tuition from parents — that runs through Stripe, bankak, tap, cash, and bank transfer, whichever your school and parents use."
+          },
+          {
+            "question": "Can I cancel or export my data?",
+            "answer": "Cancel anytime from your billing settings — no exit fees. Every record exports to CSV or JSON whenever you want, so your data is never locked in."
+          },
+          {
+            "question": "How much do I save billing annually?",
+            "answer": "20% off. Pro drops to $1.20/student/month and Enterprise to $0.80/student/month when billed yearly."
           }
         ]
       },
@@ -739,6 +756,19 @@
         "title": "Secure Payment",
         "description": "Your security is our priority. We use industry-leading encryption and security protocols to ensure your payment information is always protected.",
         "poweredBy": "Powered by"
+      },
+      "calculator": {
+        "title": "Estimate your monthly cost",
+        "subtitle": "Drag the slider to your student count — see what you'd pay on Pro or Enterprise.",
+        "studentCountLabel": "Students",
+        "resultFree": "Free — $0/mo",
+        "resultPro": "Pro: ${amount}/mo",
+        "resultProYearly": "Pro: ${amount}/mo billed annually",
+        "resultEnterprise": "Enterprise — custom pricing",
+        "resultEnterpriseEstimate": "Estimated ~${amount}/mo — contact sales for a custom quote",
+        "minimumNote": "Pro has a ${amount}/mo minimum",
+        "example": "Example: 300 students on Pro is $450/mo.",
+        "talkToSales": "Talk to Sales"
       }
     },
     "logoCloud": {

@@ -1,8 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/events). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/events) — UI and motion verbatim, copy rewritten for
+// the school tenant. Renders under the `.zenda-clone` CSS scope (see
+// src/styles/zenda-clone.css).
 
 "use client"
 
@@ -12,11 +13,20 @@ import { Swiper, SwiperSlide } from "swiper/react"
 import "swiper/css"
 
 /**
- * About "Media & Events" — a Swiper carousel of event cards, a faithful port of
- * zenda.com/about-us' events slider. Each card pairs a portrait photo with the
- * event name, date · location, a recap paragraph, and a "Linkedin Post" link.
- * `slidesPerView: 1.2` peeks the next card; drag / keyboard / mousewheel advance
- * it (the reference has no visible arrows). Below 768px the card stacks.
+ * About "Our School Year" — a Swiper carousel of event cards. Each card pairs a
+ * photo with the event name, date · place, a recap paragraph, and a "Book a
+ * visit" link into the tour flow. `slidesPerView: 1.2` peeks the next card;
+ * drag / keyboard / mousewheel advance it (no visible arrows). Below 768px the
+ * card stacks.
+ *
+ * PLACEHOLDER CONTENT, on both sides. The twelve events are an illustrative
+ * school calendar — real tenants must replace them with things that actually
+ * happened, the same way the demo homepage's class-size and placement figures
+ * are placeholders. The photographs are still the reference site's own
+ * conference shots, which is why the events chosen are hall- and stage-shaped;
+ * swap them for the school's own photography. The link glyph is a LinkedIn mark
+ * left over from the reference and now points at `/tour` — replace it with a
+ * calendar or arrow icon.
  */
 
 type EventItem = {
@@ -25,95 +35,82 @@ type EventItem = {
   heading: string
   details: string
   para: string
-  href: string
 }
 
 const EVENTS: EventItem[] = [
   {
     img: "e1.webp",
-    heading: "An Evening of Celebration",
-    details: "20 Jun '25  I  Dubai",
-    para: "An evening dedicated to celebrating the people who make it all possible — our peers and partners in schools who are the backbone of our shared success. As we reflected on a year of milestones, from being named among UAE's Top Fintech companies to expanding to 450+ schools, we were reminded that every achievement is powered by trust and genuine collaboration. Here’s to many more! 🚀",
-    href: "https://www.linkedin.com/posts/zendaapp_schoolfinance-digitalpayments-educationfinance-activity-7345713136269676544-RkXa",
+    heading: "Prize Giving Evening",
+    details: "20 Jun '25  I  Main Hall",
+    para: "An evening for the people who make a school year work — the students who kept at it, and the parents who kept them at it. We handed out awards for academic progress, for service to the school, and for the quiet persistence that never shows up on a report card. Every graduating student left with a photograph and a handshake, and the hall stayed full long after the last certificate.",
   },
   {
     img: "e2.webp",
-    heading: "Higher Education Conference",
-    details: "29 May '25 | Dubai",
-    para: "Financial innovation in higher education is no longer just an idea — it’s quickly becoming the norm. The event brought together leaders and experts for an energising morning of ideas, perspectives, and progress. From insightful panel discussions to meaningful new connections, the gathering highlighted the urgent need for efficient, unified solutions to manage transactions across tuition fee and beyond.",
-    href: "https://www.linkedin.com/posts/zendaapp_highereducation-universityfinance-smartpayments-ugcPost-7334255343205531649-QtTr",
+    heading: "Science and Innovation Fair",
+    details: "29 May '25 | Main Hall",
+    para: "Ninety projects, from a Grade 4 water filter to a Grade 11 solar tracker, judged by teachers and two visiting engineers. Students defended their work at their own tables all morning and answered better questions than most of us expected. Three projects went forward to the regional fair.",
   },
   {
     img: "e3.webp",
-    heading: "BSME / Annual School Leaders' Conference",
-    details: "28-30 Jan '25 | Abu Dhabi",
-    para: "Inspiring sessions and invaluable networking unfolded in Abu Dhabi, bringing together education leaders and British schools from across the region. The BSME Annual Conference showcased a shared commitment to shaping the future of learning through innovation and collaboration. The experience highlighted the power of community in driving positive change in education.",
-    href: "https://www.linkedin.com/feed/update/urn:li:activity:7293273691721732096",
+    heading: "Parent Partnership Evening",
+    details: "28-30 Jan '25 | Campus",
+    para: "Three evenings of one-to-one meetings between families and every teacher who takes their child. No queues and no ten-minute bell — each family booked the slots it needed. Alongside the meetings, our heads of department ran short sessions on how reading, arithmetic and revision are actually taught here, so what happens at home can pull in the same direction.",
   },
   {
     img: "e4.webp",
-    heading: "NESA Fall Leadership conference",
-    details: "17-20 Oct '24 | Dubai",
-    para: "At the NESA Fall Leadership Conference, we connected with forward-thinking school leaders and changemakers dedicated to shaping the future of education in the region. We engaged in meaningful dialogues around building stronger partnerships with schools to support their evolving needs. It was inspiring to witness the energy and ideas shared across the community, to empower schools with seamless, technology-driven solutions.",
-    href: "https://www.linkedin.com/feed/update/urn:li:activity:7252283019242209280",
+    heading: "Careers and Universities Day",
+    details: "17-20 Oct '24 | Main Hall",
+    para: "Former students came back to talk about what they actually do all day — medicine, engineering, teaching, running a business — and stayed to answer the questions our seniors were too polite to ask in front of the room. Admissions officers from four universities took walk-ins all afternoon.",
   },
   {
     img: "e5.webp",
     fit: "left",
-    heading: "BSME Business Leader's Conference",
-    details: "9 Nov '24 | Dubai",
-    para: "Industry experts and education leaders explored fresh strategies for advancing school operations and leadership in Dubai. Through an engaging workshop, we shared insights on financial innovation and empowering schools to achieve operational excellence. It was an inspiring day of thought leadership and collaboration focused on shaping the future of education across the region.",
-    href: "https://www.linkedin.com/feed/update/urn:li:activity:7260873919170023424",
+    heading: "Inter-House Sports Day",
+    details: "9 Nov '24 | School Field",
+    para: "The whole school on the field for a day, from the kindergarten shuttle run to the staff relay that the staff would rather not discuss. Every student competed in something, which is the point — the trophy goes to the house with the widest participation, not the fastest runner.",
   },
   {
     img: "e6.jpeg",
-    heading: "EdInvest Saudi Arabia",
-    details: "3-4 Dec '24 | Riyadh",
-    para: "Haseeb joined industry experts at the EdInvest platform to talk about 'improving profitability through digital transformations in financial services & classrooms'. As the Kingdom moves towards Vision 2030, the event provided a dynamic platform for leading investors, educators, and policymakers to discuss innovative partnerships and opportunities to meet the growing demand for world-class private education.",
-    href: "https://www.linkedin.com/feed/update/urn:li:activity:7272194224563920898",
+    heading: "Debate and Public Speaking Final",
+    details: "3-4 Dec '24 | Main Hall",
+    para: "Our senior debaters argued both sides of a motion they only saw an hour beforehand, in front of a hall of students who were, remarkably, silent. Public speaking is on the timetable here from Grade 6 precisely so this evening is possible — being able to hold a room is a skill we teach, not a talent we wait for.",
   },
   {
     img: "e7.webp",
     fit: "right",
-    heading: "EdInvest MENA",
-    details: "13-14 Nov'24 | Dubai",
-    para: "EdEx MENA brought together education leaders, investors, and innovators from across the region to explore new ideas, partnerships, and solutions driving the future of learning. From school operators to EdTech pioneers, the event offered a powerful platform to discuss opportunities for growth and collaboration in an evolving education landscape.",
-    href: "https://www.linkedin.com/feed/update/urn:li:activity:7262395621955751938",
+    heading: "Open Day for New Families",
+    details: "13-14 Nov '24 | Campus",
+    para: "Families walked the school while it was running — lessons in progress, no staged classrooms — and asked our students, not our brochures, what it is like here. Our leadership team and heads of year took questions until everyone had run out, and applications for the next intake opened that evening.",
   },
   {
     img: "e8.jpg",
-    heading: "Future 100 by Ministry Of UAE",
-    details: "9 Dec '23 | Dubai",
-    para: "zenda is thrilled to be recognized as a Future 100 company by the Ministry Of Economy, UAE and the Government Development and the Future Office! A true testament to zenda's mission orientation, team spirit, and the unstoppable drive to sculpt the future of school payments! A special thanks to HE Abdulla Bin Touq, and HE Ohood Khalfan Al Roumi for extending this honour.",
-    href: "https://www.linkedin.com/posts/zendaapp_future100-activity-7143960167443849216-adFT",
+    heading: "Reading Week and Book Fair",
+    details: "9 Dec '23 | Library",
+    para: "A week where every class stopped for twenty minutes a day to read whatever they liked, teachers included. A visiting author spent an afternoon with our middle school, the library ran a book swap, and our youngest students came dressed as their favourite characters — which remains the most photographed morning of the year.",
   },
   {
     img: "e9.webp",
-    heading: "EdInvest Saudi Arabia '23",
-    details: "5-6 Dec '23 | Riyadh",
-    para: "At Education Investment Saudi, conversations on transforming financial services for K-12 education were dynamic and enlightening. Our co-Founder Haseeb joined industry experts at the event to talk about 'improving profitability through digital transformations in financial services & classrooms'. Grateful for the opportunity to engage and collaborate with some of the best minds in Saudi's education & technology sector.",
-    href: "https://www.linkedin.com/feed/update/urn:li:activity:7141765813463678976",
+    heading: "Arts and Music Showcase",
+    details: "5-6 Dec '23 | Main Hall",
+    para: "A term of art, drama and music put in front of an audience: the choir, two class plays, a first-time student band, and a gallery of work from every year group along the corridor. Nothing here is auditioned — every child who wanted a place on the programme had one.",
   },
   {
     img: "e10.webp",
-    heading: "Fintech Kuwait",
-    details: "20-21 Nov '23 | Kuwait",
-    para: "A delightful few days discovering the future of digital payments in Kuwait at the Fintech Festival! Our Founder, Raman thiagarajan lead a powerhouse panel featuring experts from LuLu Financial Holdings, McKinsey & Company, and Ahli United Bank & Kem, as he unraveled the blueprint of nurturing fintech ecosystems for key industries.",
-    href: "https://www.linkedin.com/feed/update/urn:li:activity:7132326686611681281",
+    heading: "Community Service Week",
+    details: "20-21 Nov '23 | Around the City",
+    para: "Our senior years spent the week outside the school — a neighbourhood clean-up, reading sessions at a nearby primary, and a food drive our own students ran end to end. Service is a graduation requirement here, and the point of the week is that the requirement is the easy part.",
   },
   {
     img: "e11.webp",
-    heading: "EdInvest MENA '23",
-    details: "4-5 Oct '23 | Dubai",
-    para: "A pleasure meeting with our peers, partners & potential associates on this mindfully curated platform. Our Founder & Co-founder, Raman Thiagarajan & Haseeb Ahmed respectively, lent their voice at the conference & shared some key insights on revolutionising financial services in education through technology, creating an unmistakable stir in this melting pot of ideas",
-    href: "https://www.linkedin.com/posts/zendaapp_edexmena-zenda-fintech-ugcPost-7117795182879674368-PJ63",
+    heading: "Graduation Ceremony",
+    details: "4-5 Oct '23 | Main Hall",
+    para: "The class we have taught since primary walked across the stage, some of them for the last time in a uniform they have worn for a decade. Every graduate was named by the teacher who knew them best, with a sentence about who they actually are — which took considerably longer than the schedule allowed, and was worth it.",
   },
   {
     img: "e12.webp",
-    heading: "Dubai Fintech Summit '23 by DIFC",
-    details: "8-9 May '23 | Dubai",
-    para: "Packed with a cluster of industry experts coming from beyond the length & breadth of the fintech eco-system, a pleasure to meet with like minded folks that are changing the narrative with their tech. As zenda leads the walk in providing specialised solutions, our founder & Co-founder, Raman Thiagarajan & Haseeb Ahmed, shared their expertise on leveraging technology to transform financial services in education.",
-    href: "https://www.linkedin.com/feed/update/urn:li:activity:7067506544203993088",
+    heading: "Welcome Morning for New Students",
+    details: "8-9 May '23 | Campus",
+    para: "New students met their class, their teacher and their assigned buddy a week before term started, so the first day was a return rather than an arrival. Parents had coffee with the year head in the hall while the children were shown where everything is — most importantly, the canteen.",
   },
 ]
 
@@ -160,17 +157,17 @@ function LinkedInOutlineIcon() {
   )
 }
 
-export function Events() {
+export function Events({ lang = "en" }: { lang?: string }) {
   return (
     <section className="section_events">
       <div className="padding-global-v2 padding-section-large">
         <div className="container-large">
           <div className="events_wrap">
             <div className="events_header">
-              <div className="tag is-text">Our presence</div>
+              <div className="tag is-text">Our school year</div>
               <div className="padding-bottom padding-xxsmall" />
               <h2 className="events_heading heading-style-h2">
-                Media &amp; Events
+                Life &amp; Events
               </h2>
             </div>
 
@@ -228,9 +225,8 @@ export function Events() {
                               {e.para}
                             </p>
                             <a
-                              href={e.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              href={`/${lang}/tour`}
+                              aria-label={`Book a visit — ${e.heading}`}
                               className="events_slide_social_wrap w-inline-block"
                             >
                               <div className="events_slide_social_icon">
@@ -239,7 +235,7 @@ export function Events() {
                                 </div>
                               </div>
                               <div className="text-size-medium">
-                                Linkedin Post
+                                Book a visit
                               </div>
                             </a>
                           </div>

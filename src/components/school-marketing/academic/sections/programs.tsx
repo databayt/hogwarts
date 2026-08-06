@@ -5,14 +5,13 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { SectionContainer } from "../../admission/shared/section-container"
-import { FeatureCard } from "../../shared/feature-card"
 
 interface AcademicProgramsProps {
   lang: Locale
   dictionary?: Dictionary
 }
 
-export function AcademicPrograms({ dictionary }: AcademicProgramsProps) {
+export function AcademicPrograms({ lang, dictionary }: AcademicProgramsProps) {
   const programsData = dictionary?.marketing?.site?.academic?.programs
 
   const programs = [
@@ -61,24 +60,38 @@ export function AcademicPrograms({ dictionary }: AcademicProgramsProps) {
   ]
 
   return (
-    <SectionContainer id="programs" className="mt-16 md:mt-24">
-      <h2 className="font-heading mb-8 text-3xl font-bold md:text-4xl">
-        {programsData?.title || "Academic Programs"}
-      </h2>
-      <p className="text-muted-foreground mb-16 max-w-3xl text-lg">
-        {programsData?.subtitle ||
-          "Comprehensive educational pathways designed to unlock every student's potential and prepare them for future success."}
-      </p>
+    <SectionContainer id="programs">
+      <div className="mb-16 text-center">
+        <p className="eyebrow band-muted mb-3">
+          {lang === "ar" ? "مسارات التعليم" : "Educational Pathways"}
+        </p>
+        <h2 className="font-heading mb-4 text-3xl font-bold text-neutral-900 md:text-4xl">
+          {programsData?.title || "Academic Programs"}
+        </h2>
+        <p className="band-muted mx-auto max-w-2xl text-lg">
+          {programsData?.subtitle ||
+            "Comprehensive educational pathways designed to unlock every student's potential and prepare them for future success."}
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
         {programs.map((program) => (
-          <FeatureCard
+          <div
             key={program.number}
-            number={program.number}
-            title={program.title}
-            description={program.description}
-            variant="muted"
-          />
+            className="flex min-h-48 flex-col justify-between rounded-3xl bg-white p-6 md:p-8"
+          >
+            <div>
+              <span className="mb-3 block text-sm font-medium text-neutral-400">
+                {program.number}
+              </span>
+              <h3 className="font-heading mb-2 text-lg font-semibold text-neutral-900 md:text-xl">
+                {program.title}
+              </h3>
+            </div>
+            <p className="text-sm leading-relaxed text-neutral-600">
+              {program.description}
+            </p>
+          </div>
         ))}
       </div>
     </SectionContainer>

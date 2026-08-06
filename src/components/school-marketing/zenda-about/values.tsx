@@ -1,8 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/values). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/values) — UI and motion verbatim, copy rewritten for
+// the school tenant. Renders under the `.zenda-clone` CSS scope (see
+// src/styles/zenda-clone.css).
 
 import { ValuesCards } from "./values-cards"
 
@@ -21,25 +22,25 @@ const VALUES: Value[] = [
     n: "01",
     name: "Rooted in Trust",
     img: "trust",
-    text: "At zenda, we see every school and family as a long-term partner. That’s why we listen closely, build with care, and show up—consistently. Trust in education isn’t a one-time win; it’s earned every day. And that’s exactly what we aim to do.",
+    text: "We see every family as a long-term partner. That’s why we listen closely, teach with care, and tell you the truth early—about a strong term and a hard one alike. Trust in a school isn’t won at open day; it’s earned every morning at the gate.",
   },
   {
     n: "02",
     name: "Stronger together",
     img: "together",
-    text: "We believe real care means lifting each other up while pushing for growth. We celebrate wins, learn from mistakes, and blend fun with meaningful work. Because when we’re in it together, challenges become easier and successes more rewarding",
+    text: "Real care means lifting each other up while still pushing for growth. Our students celebrate a classmate’s win, learn out loud from mistakes, and work in groups more often than alone. Because when children are in it together, hard things get easier and good things get bigger.",
   },
   {
     n: "03",
-    name: "Build for Impact",
+    name: "Teach for Mastery",
     img: "impact",
-    text: "We don’t adapt generic solutions—we design from scratch, grounded in the realities of schools and families. Excellence means creating what hasn’t existed before, with care, conviction, and impactful innovation that truly makes a difference.",
+    text: "We don’t rush a class past a topic because the calendar says so. Lessons are built from where our students actually are, and we stay with a concept until it’s genuinely theirs. Excellence here means understanding that lasts long after the exam.",
   },
   {
     n: "04",
-    name: "Take Charge, Move Fast",
+    name: "Own Your Learning",
     img: "charge",
-    text: "We take responsibility—fully, leading by example with urgency and decisiveness - owning outcomes assertively. For us, ownership means caring deeply, acting boldly, and delivering with pride. It’s about setting a high standard through swift, confident action—and inspiring others around us to rise with us.",
+    text: "We ask students to take responsibility—for their work, their word, and the room they share. Ownership means asking the question you’re afraid to ask, finishing what you started, and taking pride in it. It’s a high standard, set gently, and it travels with them long after they leave us.",
   },
 ]
 
@@ -53,9 +54,9 @@ export function Values() {
               <div className="tag is-text">Our Values</div>
               <div className="padding-bottom padding-xxsmall" />
               <h2 className="about-values_heading heading-style-h2">
-                At the heart of our organisation is a culture that{" "}
+                At the heart of our school is a culture that{" "}
                 <span className="about-values_heading-span">values</span>{" "}
-                creativity, collaboration &amp; growth
+                curiosity, kindness &amp; growth
               </h2>
             </div>
 

@@ -1,16 +1,26 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/team). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/team) — UI and motion verbatim, copy rewritten for
+// the school tenant. Renders under the `.zenda-clone` CSS scope (see
+// src/styles/zenda-clone.css).
 
 /**
  * About "Our Team" — a centred header over an infinite horizontal marquee of
- * team photos, with a few soft beige blocks floating behind. Ported from
- * zenda.com/about-us. The marquee is two identical tracks side by side, both
- * translating -100% on a continuous loop (a pure CSS animation — the reference
- * drives the same thing with GSAP). A couple of odd-aspect shots use the
- * reference's `about_team_marquee_img` crop instead of object-fit: cover.
+ * photos, with a few soft beige blocks floating behind. The marquee is two
+ * identical tracks side by side, both translating -100% on a continuous loop (a
+ * pure CSS animation — the reference drives the same thing with GSAP). A couple
+ * of odd-aspect shots use the reference's `about_team_marquee_img` crop instead
+ * of object-fit: cover.
+ *
+ * ⚠️ PLACEHOLDER IMAGERY, AND SOME OF IT IS WRONG FOR A SCHOOL. These are still
+ * the reference company's own staff-offsite photos: among them are a party lit
+ * in club purple and a billiards table. Nobody is named, so no individual is
+ * presented as this school's staff — but "Our Team" over a night-out collage is
+ * off-key on any school site, and plainly unacceptable for the conservative
+ * markets this product sells into. Swap all nineteen for the tenant's own
+ * campus photography before publishing. Keep the group/kind mix when you do:
+ * the row rhythm (base, base, rotate, large) is what makes it read as a collage.
  */
 
 type Kind = "base" | "large" | "rotate"
@@ -98,8 +108,8 @@ export function Team() {
               <h2 className="about-team_heading heading-style-h2">Our Team</h2>
               <div className="padding-bottom padding-small" />
               <p className="heading-style-h4 font-dm-sans">
-                A dream team is about pushing yourself to be the best possible
-                teammate, caring intensely about your team
+                A great school is a room full of adults who care intensely about
+                every child in front of them
               </p>
             </div>
           </div>

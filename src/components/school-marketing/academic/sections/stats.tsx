@@ -47,13 +47,16 @@ export function AcademicStats({ lang, dictionary }: AcademicStatsProps) {
   ]
 
   return (
-    <SectionContainer id="stats">
-      <div className="mb-16 text-center">
-        <h2 className="font-heading mb-4 text-3xl font-bold md:text-4xl">
+    <SectionContainer id="stats" className="py-10 md:py-14 lg:py-16">
+      <div className="mb-12 text-center">
+        <p className="eyebrow band-muted mb-3">
+          {lang === "ar" ? "أرقامنا" : "By the numbers"}
+        </p>
+        <h2 className="font-heading mb-4 text-3xl font-bold text-neutral-900 md:text-4xl">
           {dictionary?.marketing?.site?.academic?.stats?.title ||
             "Academic Excellence"}
         </h2>
-        <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+        <p className="band-muted mx-auto max-w-2xl text-lg">
           {dictionary?.marketing?.site?.academic?.stats?.subtitle ||
             "Numbers that reflect our commitment to academic excellence and the transformative impact of our educational programs."}
         </p>
@@ -62,11 +65,10 @@ export function AcademicStats({ lang, dictionary }: AcademicStatsProps) {
       <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
         {stats.map((stat, index) => (
           <div key={index} className="text-center">
-            <div className="bg-muted mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
-              <stat.icon className="h-6 w-6" />
+            <div className="font-heading text-4xl font-bold text-neutral-900 md:text-5xl">
+              {stat.number}
             </div>
-            <div className="text-3xl font-bold md:text-4xl">{stat.number}</div>
-            <div className="text-muted-foreground text-sm font-medium">
+            <div className="band-muted mt-2 text-sm font-medium">
               {stat.label}
             </div>
           </div>

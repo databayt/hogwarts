@@ -1,44 +1,60 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/makers). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/makers) — UI and motion verbatim, copy rewritten for
+// the school tenant. Renders under the `.zenda-clone` CSS scope (see
+// src/styles/zenda-clone.css).
 
 /**
- * About "THE MAKERS" — founder bios. A grey eyebrow + heading, then a two-up
- * grid of white cards. Each card has a square portrait area (a cut-out photo
- * bottom-aligned over a light-purple arch) above the bio: name + LinkedIn,
- * a grey all-caps role, and a short paragraph. Static — ported from
- * zenda.com/about-us. No scroll animation on the reference.
+ * About "OUR PEOPLE" — a grey eyebrow + heading, then a two-up grid of white
+ * cards. Each card has a square portrait area (a cut-out photo bottom-aligned
+ * over a light-purple arch) above the copy: a title + link, a grey all-caps
+ * label, and a short paragraph. Static — no scroll animation.
+ *
+ * Deliberately OFFICES, NOT NAMED PEOPLE. This page renders for every tenant,
+ * so a named principal with a bio would be an invented person on somebody's
+ * real school site — the same rule that de-Pottered the homepage (see the block
+ * CLAUDE.md). Cards describe the leadership office and the faculty as groups,
+ * which is true for any school that publishes this page.
+ *
+ * PLACEHOLDER PORTRAITS: `raman.webp` / `haseeb.webp` are still the reference
+ * site's own founder photographs — real, identifiable people who have nothing
+ * to do with this school. They stand in only so the layout can be reviewed.
+ * REPLACE THEM with the tenant's own leadership photography (or drop this
+ * section) before any real school publishes it. Same for the link glyph: it is
+ * a LinkedIn mark, now pointing at internal pages.
  */
 
-type Maker = {
-  name: string
+type Person = {
+  title: string
   role: string
   img: string
-  linkedin: string
+  href: string
+  linkLabel: string
   bio: string[] // paragraphs, separated by a blank line
 }
 
-const MAKERS: Maker[] = [
+const PEOPLE: Person[] = [
   {
-    name: "Raman Thiagarajan",
-    role: "CEO & Founder",
+    title: "Office of the Principal",
+    role: "School Leadership",
     img: "raman",
-    linkedin: "https://linkedin.com/in/ramanthiagarajan",
+    href: "/inquiry",
+    linkLabel: "Contact the principal's office",
     bio: [
-      "With over 20 years of experience in strategic advisory and financial services, Raman Thiagarajan assumes the role of an Investor, Board Member and Mentor for startups across geographies. Previously, he was a Senior Partner at McKinsey & Company, where he led the Financial Services Practice.",
-      "He is deeply passionate about social transformation delivered through commercially focused approaches",
+      "Our principal still teaches one class a week — the person who sets the standard should be in the room where it is met. Every family gets an open door, not an appointment three weeks out, and most weeks somebody takes it.",
+      "Leadership here is measured by how each child is doing, not by how the school looks from outside.",
     ],
   },
   {
-    name: "Haseeb Ahmed",
-    role: "Co-founder",
+    title: "Our Teaching Faculty",
+    role: "Academics",
     img: "haseeb",
-    linkedin: "https://linkedin.com/in/hbahmed",
+    href: "/academic",
+    linkLabel: "See what we teach",
     bio: [
-      "Ex McKinsey & Company, Haseeb Ahmed is currently building zenda with Raman, to make fee payments & transaction cycles simpler for parents and schools alike.",
-      "Haseeb is deeply passionate about start-ups, solving problems, and using tech and analytics to create value at scale.",
+      "Our teachers are subject specialists, and they stay with a year group long enough to know what each child finds easy, what they avoid, and what finally makes it click.",
+      "They plan together, sit in on one another's lessons, and keep studying themselves — the same thing we ask of our students.",
     ],
   },
 ]
@@ -63,30 +79,30 @@ function LinkedInIcon() {
   )
 }
 
-export function Makers() {
+export function Makers({ lang = "en" }: { lang?: string }) {
   return (
     <section className="section_about-makers">
       <div className="padding-global-v2 padding-section-large">
         <div className="container-medium">
           <div className="about-makers_wrap">
             <div className="about-makers_header">
-              <div className="tag is-text is-grey">THE MAKERS</div>
+              <div className="tag is-text is-grey">OUR PEOPLE</div>
               <h2 className="about-makers_heading heading-style-h2">
-                Meet the people who started our journey
+                Meet the people your child sees every day
               </h2>
             </div>
 
             <div className="padding-bottom padding-xlarge" />
 
             <div className="about-makers_grid">
-              {MAKERS.map((m) => (
-                <div key={m.name} className="about-makers_block">
+              {PEOPLE.map((m) => (
+                <div key={m.title} className="about-makers_block">
                   <div className="about-makers_img-parent">
                     <div className="about-makers_img-wrap">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={`/images/about/${m.img}.webp`}
-                        alt={m.name}
+                        alt=""
                         loading="lazy"
                         className="img-auto"
                       />
@@ -99,14 +115,12 @@ export function Makers() {
                       <div className="padding-bottom padding-small">
                         <div className="about_makers_head">
                           <div className="about_makers_heading text-weight-medium font-dm-sans">
-                            {m.name}
+                            {m.title}
                           </div>
                           <div className="about-makers_social-wrap">
                             <a
-                              aria-label={`Go to the LinkedIn profile of ${m.name}`}
-                              href={m.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              aria-label={m.linkLabel}
+                              href={`/${lang}${m.href}`}
                               className="about-makers_social-link w-inline-block"
                             >
                               <div className="svg-embed w-embed">

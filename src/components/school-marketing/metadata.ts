@@ -3,6 +3,8 @@
 
 import type { Metadata } from "next"
 
+import { resolveSchoolDisplayName } from "@/components/template/site-header/display-name"
+
 import { formatFullDomain } from "./utils"
 
 export interface SchoolMetadataProps {
@@ -20,11 +22,10 @@ export async function generateSchoolMetadata({
 }: SchoolMetadataProps): Promise<Metadata> {
   const fullDomain = formatFullDomain(subdomain, rootDomain)
 
-  // school.name is always Arabic, school.nameEn is English — pick by locale
-  let displayName = school.name
-  if (locale === "en" && school.nameEn) {
-    displayName = school.nameEn
-  }
+  // Same resolver the nav uses: `name` is the school's own language, `nameEn`
+  // the English name when supplied, otherwise on-demand translation. Without
+  // this the tab title stayed Arabic on /en for any school with no `nameEn`.
+  const displayName = await resolveSchoolDisplayName(school, locale ?? "ar")
 
   return {
     title: displayName,

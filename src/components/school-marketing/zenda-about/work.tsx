@@ -1,8 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/work). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/work) — UI and motion verbatim, copy rewritten for
+// the school tenant. Renders under the `.zenda-clone` CSS scope (see
+// src/styles/zenda-clone.css).
 
 import { Fragment } from "react"
 
@@ -15,8 +16,8 @@ import { AboutWorkScroll } from "./work-scroll"
  * line break, exactly like the reference's `<br><br>`.
  */
 const PARAGRAPHS = [
-  "Zenda is crafted with purpose, for institutions and parents alike - grounded in a deep understanding of their daily needs.",
-  "In a world of fragmented, one-size-fits-all solutions, zenda offers a unique & unified experience offering families flexibility and ease, while helping schools streamline operations through automation and smarter collections.",
+  "Our school is built with purpose, for students and parents alike - grounded in a deep understanding of how children learn and grow.",
+  "In a world of one-size-fits-all education, we offer a close-knit learning community - small classes, attentive teachers and an open door for every family, from the first bell of kindergarten to graduation day.",
 ]
 
 // Split into word/char spans the way SplitType does, so the scroll timeline can

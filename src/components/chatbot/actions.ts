@@ -202,7 +202,11 @@ async function resolveSystemPrompt(
     }
   }
 
-  return buildSaasMarketingPrompt(locale, chatbot)
+  return buildSaasMarketingPrompt(
+    locale,
+    chatbot,
+    dictionary.marketing?.pricing
+  )
 }
 
 export async function sendMessage(

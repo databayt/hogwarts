@@ -12,7 +12,10 @@ interface AcademicCurriculumProps {
   dictionary?: Dictionary
 }
 
-export function AcademicCurriculum({ dictionary }: AcademicCurriculumProps) {
+export function AcademicCurriculum({
+  lang,
+  dictionary,
+}: AcademicCurriculumProps) {
   const curriculum = dictionary?.marketing?.site?.academic?.curriculum
 
   const levels = [
@@ -63,39 +66,37 @@ export function AcademicCurriculum({ dictionary }: AcademicCurriculumProps) {
 
   return (
     <SectionContainer id="curriculum">
-      <div className="mb-16">
-        <h2 className="font-heading mb-4 text-3xl font-bold md:text-4xl">
+      <div className="mb-16 text-center">
+        <p className="eyebrow band-muted mb-3">
+          {lang === "ar" ? "المناهج الدراسية" : "Curriculum Structure"}
+        </p>
+        <h2 className="font-heading mb-4 text-3xl font-bold text-neutral-900 md:text-4xl">
           {curriculum?.title || "Curriculum Overview"}
         </h2>
-        <p className="text-muted-foreground max-w-3xl text-lg">
+        <p className="band-muted mx-auto max-w-2xl text-lg">
           {curriculum?.subtitle ||
             "Our progressive curriculum is designed to build knowledge systematically while fostering critical thinking and creativity at every stage."}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
         {levels.map((level, index) => (
-          <div
-            key={index}
-            className="border-border bg-card hover:border-primary/50 group relative rounded-lg border p-6 transition-all hover:-translate-y-1 hover:shadow-lg"
-          >
-            <span className="text-muted-foreground/20 group-hover:text-primary/20 absolute end-4 top-4 text-4xl font-light transition-colors">
+          <div key={index} className="relative rounded-3xl bg-white p-6 md:p-8">
+            <span className="absolute end-6 top-6 text-4xl font-light text-neutral-200">
               {index + 1}
             </span>
-            <level.icon className="text-primary mb-4 h-8 w-8" />
-            <h3 className="font-heading mb-2 text-lg font-semibold">
+            <level.icon className="mb-4 h-8 w-8 text-neutral-900" />
+            <h3 className="font-heading mb-2 text-lg font-semibold text-neutral-900">
               {level.title}
             </h3>
-            <p className="text-muted-foreground mb-4 text-sm">
-              {level.description}
-            </p>
+            <p className="mb-4 text-sm text-neutral-600">{level.description}</p>
             <ul className="space-y-2">
               {level.features.map((feature, featureIndex) => (
                 <li
                   key={featureIndex}
-                  className="text-muted-foreground flex items-start gap-3 text-sm"
+                  className="flex items-start gap-3 text-sm text-neutral-600"
                 >
-                  <span className="bg-primary mt-2 h-1.5 w-1.5 shrink-0 rounded-full" />
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-900" />
                   {feature}
                 </li>
               ))}

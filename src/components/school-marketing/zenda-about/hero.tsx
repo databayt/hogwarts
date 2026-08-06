@@ -1,8 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/hero). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/hero) — UI and motion verbatim, copy rewritten for
+// the school tenant. Renders under the `.zenda-clone` CSS scope (see
+// src/styles/zenda-clone.css). The flip cards stay PARENT/SCHOOL: the card
+// faces ARE letter artwork, so the two pill words are art-locked.
 
 import { AboutHeroCards } from "./hero-cards"
 
@@ -69,8 +71,8 @@ export function Hero() {
               <div className="padding-bottom padding-xsmall" />
               <h1 className="about-hero_heading">
                 <span className="about-hero_inline">
-                  We are expert innovators who make life simpler for those who
-                  care - The nurturers -
+                  We are educators devoted to those who raise tomorrow - The
+                  nurturers -
                 </span>
                 <button
                   type="button"

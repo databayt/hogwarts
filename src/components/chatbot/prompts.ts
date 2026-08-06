@@ -5,7 +5,10 @@ import {
   CATEGORIES,
   FEATURES,
 } from "@/components/saas-marketing/features/constants"
-import { pricingData } from "@/components/saas-marketing/pricing/config"
+import {
+  getPricingData,
+  isEnterprisePlan,
+} from "@/components/saas-marketing/pricing/config"
 
 import type { ChatbotDictionary } from "./type"
 
@@ -107,20 +110,28 @@ export function deriveSchoolContext(
 }
 
 /**
- * Format the live `pricingData` (Hobby / Pro / Ultra) into a short bulleted
- * block injected into the SaaS system prompt. Single source of truth — when
- * marketing edits `pricing/config.ts`, the chatbot's prices update too.
+ * Format the live plan data (Free / Pro / Enterprise, per-student pricing)
+ * into a short bulleted block injected into the SaaS system prompt. Single
+ * source of truth — when marketing edits `pricing/config.ts`, the chatbot's
+ * prices update too. Passing the dictionary localizes titles and benefits;
+ * without it the English constants render.
  */
-function formatPricing(locale: string): string {
+function formatPricing(
+  locale: string,
+  pricingDict?: Parameters<typeof getPricingData>[0]
+): string {
   const isAr = locale === "ar"
-  return pricingData
+  return getPricingData(pricingDict)
     .map((plan) => {
-      const price =
-        plan.prices.monthly === 0
+      const price = isEnterprisePlan(plan.id)
+        ? isAr
+          ? `مخصص (~$${plan.prices.monthly.toFixed(2)}/طالب/شهر لـ1,000+ طالب)`
+          : `Custom (~$${plan.prices.monthly.toFixed(2)}/student/mo for 1,000+ students)`
+        : plan.prices.monthly === 0
           ? isAr
-            ? "مجاني"
-            : "Free"
-          : `$${plan.prices.monthly}${isAr ? "/شهر" : "/mo"}`
+            ? "مجاني حتى 100 طالب"
+            : "Free up to 100 students"
+          : `$${plan.prices.monthly.toFixed(2)}${isAr ? "/طالب/شهر" : "/student/mo"}`
       const benefits = plan.benefits.slice(0, 3).join(", ")
       return `- ${plan.title} (${price}): ${benefits}`
     })
@@ -144,10 +155,11 @@ function formatFeatures(): string {
 
 export function buildSaasMarketingPrompt(
   locale: string = "en",
-  dict: Pick<ChatbotDictionary, "saasPromptTemplate">
+  dict: Pick<ChatbotDictionary, "saasPromptTemplate">,
+  pricingDict?: Parameters<typeof getPricingData>[0]
 ): string {
   return dict.saasPromptTemplate
-    .replace("{pricing}", formatPricing(locale))
+    .replace("{pricing}", formatPricing(locale, pricingDict))
     .replace("{features}", formatFeatures())
     .replace("{contactEmail}", "contact@databayt.org")
 }

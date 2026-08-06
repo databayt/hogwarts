@@ -52,12 +52,23 @@ export default async function Academic({ params }: AcademicProps) {
 
   const school = result.data
 
+  /*
+   * The zenda chrome (nav above, footer below) paints its cream edge to edge
+   * and this page must flow seamlessly between them. The content sits inside
+   * `.marketing-container` (max-width + gutters), so a background on the
+   * content itself can never reach the viewport edge -- paint `.main-wrapper`
+   * instead, route-scoped the same way the homepage scopes its opacity gate.
+   * Value must equal zenda's `.bg-beige-home` cream (see .band-cream).
+   */
+  const creamGate = <style>{`.main-wrapper{background-color:#f5f4ee}`}</style>
+
   return (
     <div
       className="school-content marketing-container"
       data-school-id={school.id}
       data-subdomain={subdomain}
     >
+      {creamGate}
       <AcademicContent school={school} dictionary={dictionary} lang={lang} />
     </div>
   )

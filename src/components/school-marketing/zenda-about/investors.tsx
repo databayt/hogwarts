@@ -1,15 +1,25 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/investors). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/investors) — UI and motion verbatim, heading
+// rewritten for the school tenant. Renders under the `.zenda-clone` CSS scope
+// (see src/styles/zenda-clone.css).
 
 /**
- * About "Our Investors" — a centred heading over a row of investor logos at
- * per-brand widths, multiply-blended into the beige page. Static. Ported from
- * zenda.com/about-us.
+ * About "Our Partners" — a centred heading over a row of logos at per-brand
+ * widths, multiply-blended into the beige page. Static.
+ *
+ * ⚠️ BLOCKING BEFORE ANY REAL TENANT PUBLISHES THIS PAGE. The four logos are
+ * still the reference site's actual venture investors (STV, COTU, VentureSouq,
+ * GFC) — real firms that have no relationship with any school on this platform.
+ * A logo row under a heading reads as an endorsement, so this is a fabricated
+ * credential of exactly the kind the block forbids ("never invent a person or
+ * an institution … no fake accreditation logos" — see the block CLAUDE.md).
+ * Swap in partners the school genuinely has, or delete this section and its
+ * <Investors/> line from content.tsx. It is kept for now only so the page's
+ * section rhythm can be reviewed.
  */
-const INVESTORS = ["stv", "cotu", "venturesouq", "gfc"] as const
+const PARTNERS = ["stv", "cotu", "venturesouq", "gfc"] as const
 
 export function Investors() {
   return (
@@ -18,13 +28,13 @@ export function Investors() {
         <div className="container-medium">
           <div className="about-investors_wrap">
             <h2 className="about-investors_heading heading-style-h2">
-              Our Investors
+              Our Partners
             </h2>
 
             <div className="padding-bottom padding-large" />
 
             <div className="about-investors_grid">
-              {INVESTORS.map((key) => (
+              {PARTNERS.map((key) => (
                 <div key={key} className={`about-investors_block is-${key}`}>
                   <div className="about-investors_logo">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

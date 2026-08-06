@@ -21,8 +21,6 @@ import { LanguageSwitcher } from "@/components/internationalization/language-swi
 import { MessageMailIcon } from "@/components/school-dashboard/messaging/mail-icon"
 import { NotificationBellIconCompact } from "@/components/school-dashboard/notifications/bell-icon"
 import type { School } from "@/components/school-marketing/types"
-import { siteConfig } from "@/components/template/marketing-header/config"
-import { Icons } from "@/components/template/marketing-header/icons"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 
 export interface NavItem {
@@ -291,20 +289,6 @@ function MarketingActionsSection({
     <div className="flex flex-col gap-4 border-t pt-4">
       <div className="flex items-center gap-3">
         <SpotlightSearch surface="saas-marketing" />
-
-        {/* GitHub link */}
-        <Button
-          asChild
-          variant="ghost"
-          size="icon"
-          className="size-10"
-          onClick={onClose}
-        >
-          <Link href={siteConfig.links.github} target="_blank" rel="noreferrer">
-            <Icons.gitHub className="size-5" />
-            <span className="sr-only">GitHub</span>
-          </Link>
-        </Button>
 
         {/* Language, Theme, User */}
         <LanguageSwitcher variant="toggle" iconClassName="size-5" />

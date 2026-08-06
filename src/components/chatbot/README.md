@@ -83,7 +83,7 @@ Optimized for both modes (goal: "optimize chatbot for SaaS + multi-tenant").
   specifics). Both languages.
 - **Rewrote both system prompts** for practical value: an explicit "answer the
   question first, then one useful detail" protocol, plan/price mapping, yes/no
-  capability answers, free-Hobby onboarding framing, and honest "I don't know →
+  capability answers, free-plan onboarding framing, and honest "I don't know →
   contact" fallbacks. Placeholders unchanged.
 - **Tuned generation** (kept the model per request): low temperature + output
   cap + history trim.

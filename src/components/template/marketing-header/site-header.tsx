@@ -8,7 +8,6 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { MobileNav } from "@/components/template/mobile-nav"
 
 import { marketingConfig } from "./config"
-import { GitHubLink } from "./github-link"
 import { LangSwitcher } from "./lang-switcher"
 import { MainNav } from "./main-nav"
 import { ModeSwitcher } from "./mode-switcher"
@@ -49,7 +48,7 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
 
   return (
     <header
-      className="bg-background sticky top-0 z-50 w-full"
+      className="bleed-bg bg-background sticky top-0 z-50 w-full"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="flex h-14 items-center gap-2 **:data-[slot=separator]:!h-4 md:gap-4">
@@ -67,8 +66,6 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
         {/* Right: Actions - all hidden on mobile, shown in menu */}
         <nav className="hidden flex-1 items-center justify-end gap-0.5 lg:flex">
           <SearchMenu />
-          <Separator orientation="vertical" className="ms-2" />
-          <GitHubLink />
           <Separator orientation="vertical" className="mx-1" />
           <LangSwitcher />
           <ModeSwitcher />

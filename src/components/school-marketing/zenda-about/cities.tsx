@@ -1,43 +1,50 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// Ported verbatim from zenda (about/cities). Renders under the `.zenda-clone`
-// CSS scope (see src/styles/zenda-clone.css).
+// Ported from zenda (about/cities) — UI and motion verbatim, copy rewritten for
+// the school tenant. Renders under the `.zenda-clone` CSS scope (see
+// src/styles/zenda-clone.css). The CSS class names still say "cities"; the rows
+// now carry the school's year-by-year growth in grades instead.
 
 import { Fragment } from "react"
 
 import { AboutCitiesScroll } from "./cities-scroll"
 
 /**
- * About "Our Growth Journey" — a centred header (location-pin icon, heading,
- * subtitle) over a stack of pill-shaped timeline rows. Each row pairs a city
- * count + city names on the left with a big year pill on the right; the rows
- * reveal on scroll (see <AboutCitiesScroll/>). Ported from zenda.com/about-us.
+ * About "Our Growth Journey" — a centred header (map-pin icon, heading,
+ * subtitle) over a stack of pill-shaped timeline rows. Each row pairs a grade
+ * count + the grades it opened on the left with a big year pill on the right;
+ * the rows reveal on scroll (see <AboutCitiesScroll/>).
+ *
+ * PLACEHOLDER FIGURES. These milestones are illustrative, like the demo
+ * homepage's class-size and placement numbers — every tenant must replace them
+ * with its own history before publishing. Keep the row count at five: the
+ * reveal timeline staggers per row and the layout is tuned for this length.
  */
 
-type City = {
-  count: [string, string] // e.g. ["3", "cities"] / ["To be", "Live"]
-  details: string[] // city-name lines (joined by <br>)
+type Milestone = {
+  count: [string, string] // e.g. ["3", "grades"] / ["To be", "Live"]
+  details: string[] // grade lines (joined by <br>)
   year: string
   isLast?: boolean
 }
 
-const CITIES: City[] = [
+const MILESTONES: Milestone[] = [
   {
-    count: ["3", "cities"],
-    details: ["Dubai, Kochi,", "Bengaluru"],
+    count: ["3", "grades"],
+    details: ["Kindergarten,", "Primary 1 and 2"],
     year: "2021",
   },
-  { count: ["+2", "cities"], details: ["Abu Dhabi, Sharjah"], year: "2022" },
-  { count: ["+2", "cities"], details: ["Doha, Bahrain"], year: "2023" },
+  { count: ["+2", "grades"], details: ["Primary 3 and 4"], year: "2022" },
+  { count: ["+2", "grades"], details: ["Primary 5 and 6"], year: "2023" },
   {
-    count: ["+3", "cities"],
-    details: ["Singapore,", "Kuwait, Riyadh"],
+    count: ["+3", "grades"],
+    details: ["Middle school opens,", "Grades 7, 8 and 9"],
     year: "2024",
   },
   {
     count: ["To be", "Live"],
-    details: ["Ho chi Minh, Bangkok", "London, Barcelona, Geneva"],
+    details: ["Secondary 1, 2 and 3,", "science and arts streams"],
     year: "2025",
     isLast: true,
   },
@@ -87,14 +94,16 @@ export function Cities() {
                 <h2 className="about-cities_heading heading-style-h2">
                   Our Growth Journey
                 </h2>
-                <p className="text-size-xlarge">From Funding to Footprints</p>
+                <p className="text-size-xlarge">
+                  From our first classroom to a full campus
+                </p>
               </div>
             </div>
 
             <div className="padding-bottom padding-large" />
 
             <div about-cities-wrap="" className="about-cities_list">
-              {CITIES.map(({ count, details, year, isLast }) => (
+              {MILESTONES.map(({ count, details, year, isLast }) => (
                 <div
                   key={year}
                   about-cities-item=""
