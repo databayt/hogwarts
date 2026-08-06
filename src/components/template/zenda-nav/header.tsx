@@ -180,39 +180,75 @@ export function ZendaNav({
   // scrolling up — the same GSAP hide/show (y:-100% / y:0%, 0.4s power2.out) that
   // zenda.com uses. Skipped while the mobile menu is open so the menu can't shift.
   //
-  // The reference also listens for a `zenda:hero-mounted` event and responds with
-  // `window.scrollTo(0, navHeight)` — its for-schools page loads deliberately
-  // nudged down so that hero sits flush at the top edge. That is dropped here:
-  // we never ported for-schools, so nothing dispatches the event, and the
-  // homepage must open at the very top with the logo centred. Keeping a dead
-  // listener whose whole job is to scroll the page down is a landmine, not
-  // fidelity.
+  // Plus the "tuck", which /academic asks for and no other page does: the page
+  // loads already scrolled down by one nav height, so that hero opens flush
+  // against the top edge with the nav parked just above the fold. It stays
+  // parked until the first upward scroll brings it back, then the normal
+  // hide/show above resumes. The hero's splash covers the jump.
+  //
+  // Opt-in, and it has to stay that way — a listener whose whole job is to
+  // scroll the page down is a landmine on any page that did not ask. Two
+  // triggers, because neither alone covers both entries: `[data-zenda-tuck]` in
+  // the DOM at mount handles a fresh load (the marker is server-rendered, so it
+  // is already there), and the `zenda:hero-mounted` event handles a client-side
+  // navigation, where this nav does not remount. The homepage marks neither and
+  // still opens at the very top with its logo centred.
   useEffect(() => {
     const nav = navRef.current
     if (!nav) return
     let lastScrollTop = 0
     let ticking = false
+    let tucked = false
     gsap.set(nav, { y: 0 })
+
+    const tuck = () => {
+      const h = nav.offsetHeight || 80
+      tucked = true
+      gsap.set(nav, { y: "-101%" }) // fully off — avoids a sub-pixel sliver
+      window.scrollTo(0, h)
+      lastScrollTop = h
+    }
+
     const onScroll = () => {
       if (ticking) return
       ticking = true
       requestAnimationFrame(() => {
         const scrollTop = window.scrollY || document.documentElement.scrollTop
-        const hide =
-          !isActiveRef.current && scrollTop > lastScrollTop && scrollTop > 100
-        gsap.to(nav, {
-          y: hide ? "-100%" : "0%",
-          duration: 0.4,
-          ease: "power2.out",
-          overwrite: true,
-        })
+        if (tucked) {
+          // Parked above the fold: hold until the user scrolls up, then reveal
+          // once and hand back to the normal behaviour.
+          if (scrollTop < lastScrollTop) {
+            tucked = false
+            gsap.to(nav, {
+              y: "0%",
+              duration: 0.4,
+              ease: "power2.out",
+              overwrite: true,
+            })
+          } else {
+            gsap.set(nav, { y: "-101%" })
+          }
+        } else {
+          const hide =
+            !isActiveRef.current && scrollTop > lastScrollTop && scrollTop > 100
+          gsap.to(nav, {
+            y: hide ? "-100%" : "0%",
+            duration: 0.4,
+            ease: "power2.out",
+            overwrite: true,
+          })
+        }
         lastScrollTop = scrollTop <= 0 ? 0 : scrollTop
         ticking = false
       })
     }
+
+    if (document.querySelector("[data-zenda-tuck]")) tuck()
     window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("zenda:hero-mounted", tuck)
     return () => {
       window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("zenda:hero-mounted", tuck)
       gsap.killTweensOf(nav)
     }
   }, [])
@@ -226,21 +262,9 @@ export function ZendaNav({
           href={`/${locale}`}
           className={`nav_logo-link w-nav-brand ${isActiveLink("/") ? "w--current" : ""}`}
         >
-          {/* Stays a plain <img>: the Webflow `img-auto` / `nav_logo-link`
-              rules size it, and next/image's wrapper would break them. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={logoUrl || "/feather.png"}
-            alt=""
-            width={477}
-            height={105}
-            loading="eager"
-            decoding="async"
-            fetchPriority="high"
-            className="img-auto"
-          />
-          {/* Zenda's logo is a wordmark that reads as the brand on its own; a
-              school's is a crest, so the name is set beside it. */}
+          {/* No mark, by request: like zenda's, the lockup is a wordmark -- the
+              school's name set on its own. `logoUrl` is still accepted so the
+              callers don't have to change if a crest comes back. */}
           <span className="nav_logo-text">{displayName}</span>
         </Link>
 

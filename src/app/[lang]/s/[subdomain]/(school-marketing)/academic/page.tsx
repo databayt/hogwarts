@@ -53,14 +53,31 @@ export default async function Academic({ params }: AcademicProps) {
   const school = result.data
 
   /*
-   * The zenda chrome (nav above, footer below) paints its cream edge to edge
-   * and this page must flow seamlessly between them. The content sits inside
-   * `.marketing-container` (max-width + gutters), so a background on the
-   * content itself can never reach the viewport edge -- paint `.main-wrapper`
-   * instead, route-scoped the same way the homepage scopes its opacity gate.
-   * Value must equal zenda's `.bg-beige-home` cream (see .band-cream).
+   * Two route-scoped rules, the same pair /admissions carries -- this page has
+   * to read as one surface with the zenda nav above it and the zenda footer
+   * below.
+   *
+   * 1. Cream. The chrome paints zenda's cream edge to edge. The content sits
+   *    inside `.marketing-container` (max-width + gutters), so a background on
+   *    the content itself can never reach the viewport edge -- paint
+   *    `.main-wrapper` instead, scoped the same way the homepage scopes its
+   *    opacity gate. Value must equal zenda's `.bg-beige-home` (.band-cream).
+   *
+   * 2. Rail. `.marketing-container` adds its own inner padding on top of the
+   *    shared max-width, which lands content inside the nav logo rather than on
+   *    the same vertical. The nav's rail is `.nav_component{padding-inline:5%}`
+   *    plus `.nav_wrap{max-width:80rem;margin-inline:auto}`, so reproduce
+   *    exactly that here and every section lines up with the logo at every
+   *    width, both directions. Scoped to this route: `.marketing-container` is
+   *    shared with every other marketing page and their gutters are unchanged.
    */
-  const creamGate = <style>{`.main-wrapper{background-color:#f5f4ee}`}</style>
+  const zendaSurface = (
+    <style>
+      {`.main-wrapper{background-color:#f5f4ee}` +
+        `.school-content.marketing-container{max-width:none;margin-inline:0;padding-inline:5%}` +
+        `.school-content.marketing-container>main{width:100%;max-width:80rem;margin-inline:auto}`}
+    </style>
+  )
 
   return (
     <div
@@ -68,7 +85,7 @@ export default async function Academic({ params }: AcademicProps) {
       data-school-id={school.id}
       data-subdomain={subdomain}
     >
-      {creamGate}
+      {zendaSurface}
       <AcademicContent school={school} dictionary={dictionary} lang={lang} />
     </div>
   )

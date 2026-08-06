@@ -11,7 +11,7 @@ interface AcademicProgramsProps {
   dictionary?: Dictionary
 }
 
-export function AcademicPrograms({ lang, dictionary }: AcademicProgramsProps) {
+export function AcademicPrograms({ dictionary }: AcademicProgramsProps) {
   const programsData = dictionary?.marketing?.site?.academic?.programs
 
   const programs = [
@@ -59,21 +59,11 @@ export function AcademicPrograms({ lang, dictionary }: AcademicProgramsProps) {
     },
   ]
 
+  /* The section header used to live here. It now opens the intro card above
+   * (./intro), which is also the building's landing slot -- two sections in a
+   * row introducing the same thing read as a stutter. */
   return (
     <SectionContainer id="programs">
-      <div className="mb-16 text-center">
-        <p className="eyebrow band-muted mb-3">
-          {lang === "ar" ? "مسارات التعليم" : "Educational Pathways"}
-        </p>
-        <h2 className="font-heading mb-4 text-3xl font-bold text-neutral-900 md:text-4xl">
-          {programsData?.title || "Academic Programs"}
-        </h2>
-        <p className="band-muted mx-auto max-w-2xl text-lg">
-          {programsData?.subtitle ||
-            "Comprehensive educational pathways designed to unlock every student's potential and prepare them for future success."}
-        </p>
-      </div>
-
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
         {programs.map((program) => (
           <div

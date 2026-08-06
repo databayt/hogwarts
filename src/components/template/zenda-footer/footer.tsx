@@ -62,26 +62,30 @@ const SOCIAL_LINKS = [
   },
 ]
 
-export function Footer() {
+interface FooterProps {
+  /** School name already resolved for display — the footer's wordmark. */
+  displayName: string
+  /** Locale prefix for the home link, e.g. "en". */
+  locale: string
+}
+
+export function Footer({ displayName, locale }: FooterProps) {
   return (
     <footer className="footer_component z-0">
       <div className="padding-global-v2 padding-section-medium">
         <div className="container-large">
           <div className="footer_wrap">
-            {/* Logo (grid: col 1, row 1) */}
+            {/* Wordmark (grid: col 1, row 1). The reference sets zenda's logo
+                image here; the school's name stands in, set exactly as the nav
+                sets it -- same size, weight and purple (.footer_logo-text in
+                zenda-shell.css mirrors .nav_logo-text). */}
             <div className="footer_company-wrap">
               <Link
-                href="/"
+                href={`/${locale}`}
                 aria-label="Go to the Home page"
                 className="footer_logo-link w-inline-block"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/62370d1192ac431c6a9f054e_IMG_1087.PNG"
-                  loading="lazy"
-                  alt="zenda"
-                  className="img-auto"
-                />
+                <span className="footer_logo-text">{displayName}</span>
               </Link>
             </div>
 
@@ -142,17 +146,22 @@ export function Footer() {
               id="w-node-_8d0dd67f-957c-7d26-2cbe-9c9b01d47fc5-19a94e0b"
               className="footer_content"
             >
+              {/* The school's own two paragraphs, written to the reference's
+                  exact word counts (21 and 37) so the grid's bottom row keeps
+                  its two- and three-line shape. Deliberately claims nothing
+                  tenant-specific -- no grade range, no founding year, no
+                  accreditation -- because this footer renders for every
+                  school. */}
               <p className="footer_para text-size-small margin-bottom">
-                zenda is a specialist financial technology partner to schools,
-                colleges &amp; nurseries, building products &amp; services
-                exclusively for the education sector.
+                {displayName} is a school for curious children and the families
+                who back them, building a place where learning feels worth
+                doing.
               </p>
               <p className="footer_para text-size-small">
-                It is a friendly app for families that helps simplify the
-                discovery and payment of tuition and education related services,
-                with flexibility. On the other side, it helps institutions with
-                enabling end-to-end digitization and improving cash-flow
-                predictability.
+                It is a welcoming place for children that helps make sense of
+                lessons, friendships and the stretch of a school year, with
+                patience. On the other side, it keeps families close to what
+                their child does daily.
               </p>
             </div>
           </div>

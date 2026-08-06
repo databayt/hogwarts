@@ -124,7 +124,7 @@ export default async function SiteLayout({
             </main>
             <div className="zenda-footer-slot zenda-clone" dir="ltr">
               <div className="body-v2 bg-beige-home">
-                <ZendaFooter />
+                <ZendaFooter displayName={displayName} locale={lang} />
               </div>
             </div>
           </div>

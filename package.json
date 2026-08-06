@@ -88,7 +88,7 @@
     "@mdx-js/react": "^3.1.0",
     "@neondatabase/api-client": "^2.2.0",
     "@neondatabase/serverless": "^1.0.1",
-    "@next/mdx": "^16.2.1",
+    "@next/mdx": "16.3.0",
     "@prisma/client": "^6.19.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -187,7 +187,7 @@
     "nanoid": "^5.1.5",
     "ndarray-pixels": "^5.0.1",
     "negotiator": "^1.0.0",
-    "next": "16.2.1",
+    "next": "16.3.0",
     "next-auth": "5.0.0-beta.30",
     "next-themes": "^0.4.6",
     "nuqs": "^2.4.3",
@@ -202,7 +202,7 @@
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "radix-ui": "latest",
-    "react": "19.2.0",
+    "react": "19.2.8",
     "react-chartjs-2": "^5.3.0",
     "react-circle-flags": "^0.0.27",
     "react-colorful": "^5.6.1",
@@ -213,7 +213,7 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dnd-touch-backend": "^16.0.1",
-    "react-dom": "19.2.0",
+    "react-dom": "19.2.8",
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.61.1",
     "react-i18next": "^16.5.0",
@@ -265,8 +265,8 @@
     "@types/node": "^20.19.9",
     "@types/papaparse": "^5.5.2",
     "@types/pg": "^8.15.6",
-    "@types/react": "^19.2.6",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
     "@types/react-dropzone": "^5.1.0",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.3.4",
@@ -276,7 +276,7 @@
     "csv-parse": "^6.1.0",
     "dotenv": "^17.2.3",
     "eslint": "^9",
-    "eslint-config-next": "16.2.1",
+    "eslint-config-next": "16.3.0",
     "eslint-config-prettier": "^10.1.8",
     "fast-check": "^4.5.3",
     "jsdom": "^27.2.0",
@@ -293,5 +293,11 @@
     "vitest": "^4.0.18",
     "vitest-axe": "^0.1.0",
     "zustand": "^5.0.7"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.18",
+      "@types/react-dom": "19.2.4"
+    }
   }
 }

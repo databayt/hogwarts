@@ -15,6 +15,19 @@ interface AcademicStatsProps {
 export function AcademicStats({ lang, dictionary }: AcademicStatsProps) {
   const isRTL = lang === "ar"
 
+  /*
+   * PLACEHOLDER FIGURES -- every one of these is invented, and this page
+   * renders for every tenant. "95% college acceptance" and "98% graduation"
+   * are claims a real school either can back or cannot, and publishing them
+   * unbacked is the same failure mode this block already banned for faculty
+   * portraits and accreditation logos.
+   *
+   * They are deliberately left un-animated for that reason: a count-up would
+   * draw the eye straight to the numbers we are least sure of. The admissions
+   * stat trio solved this by carrying only promises the school controls
+   * (free / 5 min / 2 days) -- do the same here before a real tenant
+   * publishes, or drop the section.
+   */
   const stats = [
     {
       number: isRTL ? "٩٥٪" : "95%",
@@ -52,7 +65,7 @@ export function AcademicStats({ lang, dictionary }: AcademicStatsProps) {
         <p className="eyebrow band-muted mb-3">
           {lang === "ar" ? "أرقامنا" : "By the numbers"}
         </p>
-        <h2 className="font-heading mb-4 text-3xl font-bold text-neutral-900 md:text-4xl">
+        <h2 className="zenda-heading is-section mb-4">
           {dictionary?.marketing?.site?.academic?.stats?.title ||
             "Academic Excellence"}
         </h2>
@@ -65,7 +78,7 @@ export function AcademicStats({ lang, dictionary }: AcademicStatsProps) {
       <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
         {stats.map((stat, index) => (
           <div key={index} className="text-center">
-            <div className="font-heading text-4xl font-bold text-neutral-900 md:text-5xl">
+            <div className="zenda-heading text-4xl md:text-5xl">
               {stat.number}
             </div>
             <div className="band-muted mt-2 text-sm font-medium">

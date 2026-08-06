@@ -9,24 +9,26 @@ import Link from "next/link"
 
 import { RewardsScroll } from "./rewards-scroll"
 
+// The reference also floats three real brand logos (Amazon, talabat, noon) as
+// reward coupons and three gift-card images (Ulta, ribbon, Givingli). They are
+// gone, and must not come back: on a school's homepage they read as reward
+// partnerships that do not exist -- the same rule that keeps invented faculty
+// and fake accreditation logos off this block. Their GSAP tweens
+// ([rewards-item-*] / [rewards-img-*]) were removed from rewards-scroll.tsx
+// alongside them. What is left -- the globe, the progress curve, the rising
+// blocks, two coins and a gift -- carries the section on its own.
 const CDN = "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/"
 const IMG = {
   leafs: CDN + "68677bf9dc4b788c9ef0fb91_leafs.webp",
   surface: CDN + "67e4cce8bab0dccbae7f3fc8_rewards-surface.webp",
   gift: CDN + "67e4cee17493c02f54e056e9_gift%201.webp",
-  ulta: CDN + "67e4dfe65cc20aed35145d06_image%202829.webp",
-  ribbon: CDN + "67e4dfe6187e70a30462641b_image%202824.webp",
-  givingli: CDN + "67e4dfe69d21a1fd3580a854_image%202825.webp",
   coin: CDN + "67e4dfdecfe71e2e85fb7a29_coin1.webp",
-  amazon: CDN + "6867e4c506712128ad9cb811_amazon.webp",
-  talabat: CDN + "6867e4c58317e590e1b61347_talabat.webp",
-  noon: CDN + "6867e4c6af4405a766bcdbd4_noon.webp",
 } as const
 
 // Render the literal attribute the GSAP timeline selects on (e.g. rewards-block-1).
 const target = (name: string): Record<string, string> => ({ [name]: "" })
 
-export function Rewards() {
+export function Rewards({ lang = "en" }: { lang?: string }) {
   return (
     <section rewards-section="" className="section_rewards">
       <div className="padding-global-v2 padding-section-large">
@@ -34,29 +36,44 @@ export function Rewards() {
           <div rewards-wrap="" className="rewards_wrap">
             <div className="rewards_header">
               <div rewards-element="" className="tag is-text">
-                REWARDS
+                DISCOUNTS
               </div>
               <div className="padding-bottom padding-xxsmall"></div>
               <h2
                 rewards-element=""
                 className="rewards_heading heading-style-h2"
               >
-                Unlock new experiences when you pay on zenda
+                Pay less for siblings, early birds and scholars
               </h2>
               <div className="padding-bottom padding-small"></div>
               <div
                 rewards-element=""
                 className="max-width is-33rem align-center"
               >
+                {/* The school's copy at the reference's word counts (8 and 19).
+                    The three named cases are the real ones a school configures
+                    in onboarding (`onboarding/discount/config.ts`:
+                    early_bird, sibling, scholarship -- alongside plain
+                    percentage and fixed amounts). Worded as "the school
+                    offers", never "automatic": a discount lands on a student's
+                    fee when it is assigned (StudentFee.discounts /
+                    totalDiscount), it is not computed on its own. */}
                 <p className="text-size-medium">
-                  Make every school payment count — turn fees into a little
-                  extra joy by earning gift cards and exclusive rewards.
+                  Register early, enroll a second child or win a scholarship —
+                  every discount the school offers comes off your fees.
                 </p>
               </div>
               <div className="padding-bottom padding-large"></div>
               <div rewards-element="" className="button-group is-align-center">
                 <div className="button_component">
-                  <Link href="/parents" className="button-v2 w-inline-block">
+                  {/* The reference points at its own /parents page, which does
+                      not exist here (it 404'd). Discounts are set against
+                      registration and tuition, so /admissions is where the
+                      question actually gets answered. */}
+                  <Link
+                    href={`/${lang}/admissions`}
+                    className="button-v2 w-inline-block"
+                  >
                     <span className="button-v2_bg">
                       <span
                         style={{ "--index": 0 } as React.CSSProperties}
@@ -78,7 +95,10 @@ export function Rewards() {
             <div className="rewards_surface_component">
               <div className="rewards_surface_wrap">
                 <div className="rewards_points-wrap">
-                  <div className="rewards_points-number">Rewards</div>
+                  {/* Class names stay `rewards_*` throughout -- they are the
+                      generated zenda-clone.css selectors and the GSAP targets.
+                      Only the words change. */}
+                  <div className="rewards_points-number">Discounts</div>
                   <div className="rewards_points-title hide">POINTS</div>
                   <div className="rewards_points-img-wrap">
                     <img
@@ -174,42 +194,6 @@ export function Rewards() {
                 ))}
               </div>
 
-              <div className="rewards_bg-img-wrap">
-                <div
-                  {...target("rewards-img-1")}
-                  className="rewards_bg-img is-ulta"
-                >
-                  <img
-                    src={IMG.ulta}
-                    loading="lazy"
-                    alt=""
-                    className="img-auto"
-                  />
-                </div>
-                <div
-                  {...target("rewards-img-2")}
-                  className="rewards_bg-img is-ribbon"
-                >
-                  <img
-                    src={IMG.ribbon}
-                    loading="lazy"
-                    alt=""
-                    className="img-auto"
-                  />
-                </div>
-                <div
-                  {...target("rewards-img-3")}
-                  className="rewards_bg-img is-givingli"
-                >
-                  <img
-                    src={IMG.givingli}
-                    loading="lazy"
-                    alt=""
-                    className="img-auto"
-                  />
-                </div>
-              </div>
-
               <div className="rewards_bg-coins-wrap">
                 <div {...target("rewards-coin-1")} className="rewards_bg-coin">
                   <img
@@ -229,48 +213,6 @@ export function Rewards() {
                     alt=""
                     className="img-auto"
                   />
-                </div>
-              </div>
-
-              <div className="rewards_coupons-wrap">
-                <div
-                  {...target("rewards-item-1")}
-                  className="rewards_coupon is-1"
-                >
-                  <div className="rewards_img_wrap">
-                    <img
-                      src={IMG.amazon}
-                      loading="lazy"
-                      alt=""
-                      className="img-auto"
-                    />
-                  </div>
-                </div>
-                <div
-                  {...target("rewards-item-2")}
-                  className="rewards_coupon is-2"
-                >
-                  <div className="rewards_img_wrap">
-                    <img
-                      src={IMG.talabat}
-                      loading="lazy"
-                      alt=""
-                      className="img-auto"
-                    />
-                  </div>
-                </div>
-                <div
-                  {...target("rewards-item-3")}
-                  className="rewards_coupon is-3"
-                >
-                  <div className="rewards_img_wrap">
-                    <img
-                      src={IMG.noon}
-                      loading="lazy"
-                      alt=""
-                      className="img-auto"
-                    />
-                  </div>
                 </div>
               </div>
             </div>

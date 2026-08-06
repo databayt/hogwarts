@@ -10041,10 +10041,13 @@
           "weeks": "2 weeks",
           "weeksLabel": "at most to receive a decision"
         },
-        "process": {
+        "journey": {
           "eyebrow": "How it works",
-          "title": "Admission Process",
-          "subtitle": "Four simple steps to join our educational community",
+          "title": "Four steps is all you need",
+          "step": "Step",
+          "whatYouNeed": "What you need",
+          "nothingToBring": "Nothing to bring",
+          "nothingToBringItem": "Just book a time that suits you",
           "submitApplication": "Submit Application",
           "submitApplicationDesc": "Complete our online application form with all required documents",
           "campusTour": "Campus Tour",
@@ -10052,11 +10055,7 @@
           "meetGreet": "Meet & Greet",
           "meetGreetDesc": "Connect with our admissions team and faculty members",
           "joinFamily": "Join Family",
-          "joinFamilyDesc": "Complete enrollment and begin your educational journey with us"
-        },
-        "requirements": {
-          "eyebrow": "What you need",
-          "title": "Admission Requirements",
+          "joinFamilyDesc": "Complete enrollment and begin your educational journey with us",
           "academicRecords": "Academic Records",
           "officialTranscripts": "Official transcripts",
           "testScores": "Test scores (if applicable)",

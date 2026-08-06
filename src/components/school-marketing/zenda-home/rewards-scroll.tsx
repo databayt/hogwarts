@@ -62,22 +62,10 @@ export function RewardsScroll() {
       intro.from("[rewards-block-6]", { y: "20rem", duration: 0.8 }, "<")
       intro.from("[rewards-block-7]", { y: "28rem", duration: 0.8 }, "<")
 
-      intro.from(
-        "[rewards-img-1]",
-        { y: "28rem", scale: 0.2, duration: 0.8 },
-        0
-      )
-      intro.from(
-        "[rewards-img-2]",
-        { y: "24rem", z: "80rem", scale: 0.2, duration: 0.8 },
-        "<"
-      )
-      intro.from(
-        "[rewards-img-3]",
-        { y: "26rem", scale: 0.2, duration: 0.8 },
-        "<"
-      )
-
+      // The reference also flies in three gift-card images ([rewards-img-*])
+      // and three brand coupons ([rewards-item-*]) here. Both sets of artwork
+      // were removed from rewards.tsx -- real brands as reward partners on a
+      // school's homepage -- so their tweens go with them. Don't re-add.
       intro.from(
         "[rewards-coin-1]",
         { y: "48rem", rotate: "-340deg", duration: 1.2 },
@@ -86,18 +74,6 @@ export function RewardsScroll() {
       intro.from(
         "[rewards-coin-2]",
         { y: "52rem", rotate: "380deg", duration: 1.2 },
-        "<"
-      )
-
-      intro.from("[rewards-item-1]", { y: "48rem", z: "80rem", duration: 1 }, 0)
-      intro.from(
-        "[rewards-item-2]",
-        { y: "54rem", z: "80rem", duration: 1.6 },
-        "<"
-      )
-      intro.from(
-        "[rewards-item-3]",
-        { y: "50rem", z: "80rem", duration: 1.5 },
         "<"
       )
 

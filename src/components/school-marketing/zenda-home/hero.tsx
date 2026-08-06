@@ -4,7 +4,7 @@
 // Ported from zenda (home/hero). Renders under the `.zenda-clone` CSS scope
 // (see src/styles/zenda-clone.css).
 //
-// One deviation from the source: zenda's "EXPLORE" pill is relabelled "Apply"
+// One deviation from the source: zenda's "EXPLORE" pill is relabelled "APPLICATION"
 // and points at the application wizard -- the one action a parent landing on a
 // school's homepage is actually here to take. It stays the default dark
 // `button-v2`, so the diagonal hover sweep, the label roll and the elastic
@@ -53,8 +53,11 @@ export function Hero({ lang = "en" }: { lang?: string }) {
                         className="button-v2_bg-inner is-second"
                       ></span>
                     </span>
-                    <span data-text="Apply" className="button-v2_inner">
-                      <span className="button-v2_text">Apply</span>
+                    {/* `data-text` is the label's rolled duplicate -- it must
+                        match the visible text exactly or the hover roll shows
+                        two different words. */}
+                    <span data-text="APPLICATION" className="button-v2_inner">
+                      <span className="button-v2_text">APPLICATION</span>
                     </span>
                   </Link>
                 </div>

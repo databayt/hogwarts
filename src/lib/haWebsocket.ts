@@ -12,7 +12,7 @@ import {
 function getImportMetaEnv(key: string): string | undefined {
   try {
     // Cast to bypass TypeScript's ImportMeta type (no env property in Next.js)
-    const meta = import.meta as { env?: Record<string, string> }
+    const meta = import.meta as unknown as { env?: Record<string, string> }
     return meta.env?.[key]
   } catch {
     return undefined

@@ -5,12 +5,29 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { SectionContainer } from "../shared/section-container"
+import { DatesReveal } from "./dates-reveal"
 
 interface AdmissionDatesProps {
   lang: Locale
   dictionary?: Dictionary
 }
 
+/*
+ * Key Dates, on zenda's `about-cities` "Our Growth Journey" pattern: contiguous
+ * capsule rows, each pairing the milestone on the start side with a big date
+ * pill pinned to the end. It replaced a thin vertical rule of 16px date badges
+ * -- the same four dates, but the one thing a parent actually scans this page
+ * for was the smallest thing on it.
+ *
+ * The content is unchanged: the same `school.admission.sections.dates` keys,
+ * the same four milestones. Only the rendering moved.
+ *
+ * Not the `.zenda-clone` port at `zenda-about/cities.tsx` -- that scope is
+ * English/LTR-only and this page is bilingual, so the geometry lives in
+ * `.zenda-tl-*` (school-marketing.css) on logical properties instead. That port
+ * also hardcodes five rows because its GSAP stagger is tuned to that length;
+ * ours is a CSS `--i` per row, so any number works.
+ */
 export function AdmissionDates({ lang, dictionary }: AdmissionDatesProps) {
   const dict =
     (
@@ -57,31 +74,31 @@ export function AdmissionDates({ lang, dictionary }: AdmissionDatesProps) {
         </h2>
       </div>
 
-      <div className="relative mx-auto max-w-2xl">
-        {/* Timeline line - visible on md+ */}
-        <div className="absolute start-8 top-0 bottom-0 hidden w-px bg-neutral-900/10 md:block" />
-
-        <div className="space-y-8 md:space-y-12">
-          {dates.map((item, index) => (
-            <div key={index} className="flex items-start gap-6 md:gap-8">
-              {/* Date badge */}
-              <div className="band-charcoal z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full">
-                <span className="px-1 text-center text-xs leading-tight font-semibold">
-                  {item.date}
-                </span>
-              </div>
-
-              {/* Content */}
-              <div className="pt-3">
-                <h3 className="font-heading mb-1 text-lg font-semibold text-neutral-900">
-                  {item.title}
-                </h3>
-                <p className="text-neutral-600">{item.description}</p>
-              </div>
+      {/* zenda's `container-medium`. Rows are gapless by design -- adjacent
+       * capsules share an edge, which is what makes the stack read as one
+       * ladder rather than four loose pills. */}
+      <div
+        id="admission-dates-list"
+        className="zenda-tl-list relative mx-auto max-w-4xl"
+      >
+        {dates.map((item, index) => (
+          <div
+            key={index}
+            className="zenda-tl-item"
+            style={{ "--i": index } as React.CSSProperties}
+          >
+            <div className="zenda-tl-content">
+              <h3 className="zenda-tl-lead">{item.title}</h3>
+              <p className="zenda-tl-detail">{item.description}</p>
             </div>
-          ))}
-        </div>
+            <div className="zenda-tl-pill">
+              <span className="zenda-tl-date">{item.date}</span>
+            </div>
+          </div>
+        ))}
       </div>
+
+      <DatesReveal targetId="admission-dates-list" />
     </SectionContainer>
   )
 }

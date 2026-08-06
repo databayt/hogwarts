@@ -207,6 +207,1132 @@
     color: #ffffff;
   }
 
+  /* ===== ZENDA-CHROME TYPE =====
+   * A page that sits between the zenda nav and the zenda footer has to speak
+   * their type, or the header and the first heading read as two designs stacked.
+   * These mirror `.heading-style-h1` / `.button-v2` in zenda-clone.css exactly
+   * -- change one side and this stops matching.
+   *
+   * Deliberately NOT the `.zenda-clone` classes themselves: that scope is
+   * English/LTR-only (see the block CLAUDE.md), and these pages stay bilingual.
+   * DM Sans is listed first and generic families after, so Latin picks up the
+   * zenda face and Arabic falls through per-glyph to a face that has the
+   * script. `--font-dm-sans` is published by the school-marketing layout.
+   * Do NOT reach for `var(--font-heading)` as the second family: it resolves
+   * EMPTY inside `.page-wrapper`, which makes the whole font-family list
+   * invalid and silently drops the declaration -- the heading then inherits
+   * Geist and nothing about it looks broken enough to notice.
+   *
+   * Sizes are absolute px against a 16px root at zenda's own two breakpoints
+   * (479/991), not Tailwind's. Zenda drives the same rem ramp off a fluid root
+   * font size (ZendaRootScale), which this page has no reason to adopt -- so
+   * the two agree exactly at >=1440px and this page runs a touch larger in the
+   * 992..1439 band. */
+  .zenda-heading {
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 2.5rem; /* 40px */
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+    color: #000000;
+  }
+
+  @media (min-width: 480px) {
+    .zenda-heading {
+      font-size: 3.25rem; /* 52px */
+    }
+  }
+
+  @media (min-width: 992px) {
+    .zenda-heading {
+      font-size: 4.4rem; /* 70.4px -- zenda .heading-style-h1 */
+    }
+  }
+
+  /* Section headings, mirroring zenda's `.heading-style-h2` (3.5rem, stepping
+   * at its own 991/768 breakpoints) as .zenda-heading mirrors its h1.
+   *
+   * These modifiers exist instead of pairing .zenda-heading with `text-3xl` /
+   * `text-white` utilities. Both this rule and those utilities land in
+   * @layer utilities at equal specificity (0,1,0 vs 0,2,0 here), so with a bare
+   * .zenda-heading the winner would come down to emitted order -- and a section
+   * h2 would silently render at the hero's 4.4rem. */
+  .zenda-heading.is-section {
+    font-size: 2rem; /* 32px */
+  }
+
+  @media (min-width: 769px) {
+    .zenda-heading.is-section {
+      font-size: 3rem; /* 48px */
+    }
+  }
+
+  @media (min-width: 992px) {
+    .zenda-heading.is-section {
+      font-size: 3.5rem; /* 56px -- zenda .heading-style-h2 */
+    }
+  }
+
+  /* For a heading sitting on the charcoal CTA panel. */
+  .zenda-heading.is-inverse {
+    color: #ffffff;
+  }
+
+  .zenda-body {
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    color: #212121; /* zenda --_primitives---text--grey-2 */
+  }
+
+  /* zenda `.home-hero_para` -- the standfirst under a hero heading. It is
+   * display-scale, not body copy: on the homepage it carries one short line
+   * ("The app parents love."), which is what the size is for. Same two
+   * breakpoints as .zenda-heading. */
+  .zenda-lede {
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.5rem; /* 24px */
+    font-weight: 400;
+    line-height: 1.3;
+    color: #212121;
+  }
+
+  @media (min-width: 480px) {
+    .zenda-lede {
+      font-size: 2rem; /* 32px */
+    }
+  }
+
+  @media (min-width: 992px) {
+    .zenda-lede {
+      font-size: 2.5rem; /* 40px -- zenda .home-hero_para */
+    }
+  }
+
+  /* Arabic gets none of this. DM Sans carries no Arabic, so /ar fell through
+   * the generic families to the platform serif -- worse than what it had.
+   * `--font-heading` (fontThmanyahText) is the product's Arabic face and IS
+   * defined under [dir="rtl"]. Letter-spacing must also go to 0: -0.04em is
+   * right for zenda's Latin display and breaks Arabic letter joins, the same
+   * reason the display ramp above zeroes it. */
+  :root[dir="rtl"] .zenda-heading,
+  :root[dir="rtl"] .zenda-body,
+  :root[dir="rtl"] .zenda-lede,
+  :root[dir="rtl"] .zenda-tl-date,
+  :root[dir="rtl"] .zenda-btn {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  :root[dir="rtl"] .zenda-heading,
+  :root[dir="rtl"] .zenda-tl-date {
+    letter-spacing: 0;
+  }
+
+  /* ===== ZENDA TIMELINE =====
+   * zenda's `about-cities` "Our Growth Journey": capsule rows, each carrying a
+   * two-cell content grid on the start side and a big white pill pinned to the
+   * end side. Transcribed from `.about-cities_*` in zenda-clone.css (that scope
+   * is English/LTR-only) with the physical properties swapped for logical ones,
+   * so the whole thing mirrors under `dir="rtl"` for free.
+   *
+   * Rows are DELIBERATELY GAPLESS -- measured on our own ported `/about`, they
+   * are 170px tall and 170px apart, so adjacent capsules share an edge. That
+   * contiguous ladder is the design; don't "fix" it with a gap.
+   *
+   * Mobile-first here, whereas zenda's sheet is desktop-first with max-width
+   * queries at 991/767/479 -- same values read in the other direction. */
+  /* Both knobs live on the row, not on the pill, because the content cell has
+   * to read the pill width to know where to stop. */
+  .zenda-tl-item {
+    --tl-pad: 1.5rem;
+    --tl-pill-w: 8rem;
+    --tl-measure: 26rem;
+    position: relative;
+    border: 1px solid #000000;
+    border-radius: 100vw;
+    padding: var(--tl-pad);
+  }
+
+  /* zenda caps this at a flat 44rem, which works there because its detail cell
+   * holds two-word fragments ("Dubai, Kochi,") that never reach the pill. Ours
+   * holds a sentence, and at 44rem it ran clean underneath. So the cap is the
+   * smaller of zenda's measure and whatever is actually clear of the pill:
+   * the pill is inset to the row edge, ignoring the row padding, so the free
+   * width inside the padded box is `100% + pad - pill`, less 1rem of air. This
+   * holds at any viewport and for either language's copy length. */
+  .zenda-tl-content {
+    display: grid;
+    width: 100%;
+    max-width: min(
+      var(--tl-measure),
+      calc(100% + var(--tl-pad) - var(--tl-pill-w) - 1rem)
+    );
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #000000;
+  }
+
+  /* Phones get the two cells stacked, not zenda's side-by-side split. At 390px
+   * the split leaves ~200px for the pair, so a one-sentence description wrapped
+   * to five lines and the capsule grew taller than it is wide. zenda never hits
+   * this because its detail cell is a two-word fragment. The divider rule goes
+   * with the split -- there are no columns left to divide. */
+  .zenda-tl-lead {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+  }
+
+  .zenda-tl-detail {
+    display: flex;
+    align-items: center;
+    margin-block-start: 0.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .zenda-tl-content {
+      grid-template-columns: 0.5fr 1fr;
+    }
+    /* zenda drops this gutter above 479px, safe there because the lead cell
+     * holds "3 cities". Ours holds "Regular Deadline", long enough to fill the
+     * column and sit flush against the rule, so the gutter stays. */
+    .zenda-tl-lead {
+      justify-content: center;
+      text-align: center;
+      padding-inline-end: 0.75rem;
+      font-weight: inherit;
+    }
+    .zenda-tl-detail {
+      margin-block-start: 0;
+      border-inline-start: 1px solid #000000;
+      padding-inline-start: 1.5rem;
+    }
+  }
+
+  /* The pill's resting width is a variable so the reveal can transition from
+   * 100% down to it -- `width: auto` is not transitionable, which is why the
+   * reference reaches for GSAP and animates left/right instead (and why that
+   * version cannot mirror). Anchored to the end side, so it collapses toward
+   * the end in both directions. */
+  .zenda-tl-pill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tl-pill-w);
+    padding: 2rem;
+    border: 1px solid #000000;
+    border-radius: 100vw;
+    background-color: #ffffff;
+  }
+
+  .zenda-tl-date {
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+    color: #000000;
+    text-align: center;
+  }
+
+  @media (min-width: 480px) {
+    .zenda-tl-date {
+      font-size: 2rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .zenda-tl-item {
+      --tl-pad: 2rem;
+      --tl-pill-w: 16rem;
+    }
+    .zenda-tl-content {
+      font-size: 1.25rem;
+    }
+    .zenda-tl-date {
+      font-size: 3rem;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .zenda-tl-item {
+      --tl-pad: 3rem;
+      --tl-pill-w: 24rem;
+      --tl-measure: 44rem;
+    }
+    .zenda-tl-content {
+      grid-template-columns: 0.25fr 1fr;
+      font-size: 1.5rem;
+    }
+    .zenda-tl-detail {
+      padding-inline-start: 2rem;
+    }
+    .zenda-tl-pill {
+      padding: 3rem 4rem;
+    }
+    .zenda-tl-date {
+      font-size: 3.5rem;
+    }
+  }
+
+  /* ===== THE REVEAL =====
+   * Every number below was sampled at 100ms off zenda's own `/about-us` running
+   * locally, not read off the source -- reading it the first time produced the
+   * wrong motion entirely (a width collapse; see below).
+   *
+   * What the reference actually does, per row:
+   *   pill     starts at the START edge, 24rem wide, beige #F4F2EC, and SLIDES
+   *            to the end edge over 1s, fading to white. Its width is constant
+   *            (measured 384px throughout, give or take a ~40px mid-flight
+   *            bulge from GSAP tweening left and right at once -- not worth
+   *            reproducing).
+   *   content  fades 0 -> 1 and slides in from 8% over 0.6s.
+   *   timing   pill delay 0.3s x i; content delay 0.4s x i + 0.2s. The two
+   *            staggers differ, which is not obvious from the source: the
+   *            content tween is positioned with a relative `-=` offset that
+   *            shrinks by 0.1s each row. Measured starts, rows 1..5:
+   *            content at 200/600/1000/1400/1800ms exactly.
+   *   ease     power2.out, i.e. cubic out.
+   *
+   * The slide is expressed as `inset-inline-end` from `100% - pill` to 0, so
+   * the travel is exactly (row width - pill width) with no measurement, and it
+   * mirrors under RTL for free. (The reference tweens `left`/`right` in px via
+   * GSAP, which cannot mirror.) `--tl-pill-w` exists for this.
+   *
+   * Note the direction of the pending state: the list ships SETTLED from the
+   * server and <DatesReveal/> adds `pending` on mount, so a bundle that never
+   * executes leaves the dates readable rather than blank -- no failsafe timer
+   * needed, and none wanted (this is the sixth section, so any timer short
+   * enough to matter fires before the reader arrives). */
+  .zenda-tl-list[data-reveal="pending"] .zenda-tl-pill {
+    inset-inline-end: calc(100% - var(--tl-pill-w));
+    background-color: #f4f2ec; /* zenda beige, the sweep's start color */
+  }
+
+  .zenda-tl-list[data-reveal="pending"] .zenda-tl-content {
+    opacity: 0;
+    translate: var(--tl-slide, 8%) 0;
+  }
+
+  :root[dir="rtl"] .zenda-tl-list {
+    --tl-slide: -8%;
+  }
+
+  .zenda-tl-pill {
+    transition:
+      inset-inline-end 1s cubic-bezier(0.215, 0.61, 0.355, 1),
+      background-color 1s cubic-bezier(0.215, 0.61, 0.355, 1);
+    transition-delay: calc(var(--i, 0) * 0.3s);
+  }
+
+  .zenda-tl-content {
+    transition:
+      opacity 0.6s cubic-bezier(0.215, 0.61, 0.355, 1),
+      translate 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+    transition-delay: calc(var(--i, 0) * 0.4s + 0.2s);
+  }
+
+  /* Reduced motion: neutralize the pending state itself, so the rows sit
+   * settled and no transition ever runs. */
+  @media (prefers-reduced-motion: reduce) {
+    .zenda-tl-list[data-reveal="pending"] .zenda-tl-pill {
+      inset-inline-end: 0;
+      background-color: #ffffff;
+    }
+    .zenda-tl-list[data-reveal="pending"] .zenda-tl-content {
+      opacity: 1;
+      translate: none;
+    }
+    .zenda-tl-pill,
+    .zenda-tl-content {
+      transition: none;
+    }
+  }
+
+  /* ===== ADMISSION JOURNEY (zenda `p-services` scroll switcher) =====
+   * zenda's /parents "Switch to smarter school payments": a two-column
+   * switcher where the start column of content blocks scrolls past a sticky
+   * end column, and only the block crossing the viewport centre -- plus its
+   * paired panel -- is shown. It merges what used to be two sections here
+   * (Admission Process + Admission Requirements) into one: the step on the
+   * start side, the documents that step needs on the end side.
+   *
+   * Transcribed from `.p-services_*` in zenda-clone.css onto logical
+   * properties, for the reason the rest of this page exists: that scope is
+   * English/LTR-only and /admissions is bilingual. Nothing here is
+   * directional, so the whole switcher mirrors under `dir="rtl"` for free.
+   *
+   * Mobile-first, whereas zenda's sheet is desktop-first with max-width
+   * queries at 991/767 -- the same values read in the other direction.
+   *
+   * BELOW 768px THERE IS NO SWITCHER. zenda hides its scrolling list
+   * (`.p-services_list-wrap{display:none}`) and unsticks the panels so every
+   * item renders in full, stacked, with its copy duplicated underneath. Ours
+   * does the same, which is why <JourneyStep> renders its copy twice: once in
+   * the scrolling column (desktop) and once inside the panel (mobile). Exactly
+   * one copy is ever visible. */
+  .adm-jrn_grid {
+    display: block;
+  }
+
+  .adm-jrn_list-wrap {
+    display: none;
+  }
+
+  .adm-jrn_track {
+    block-size: auto;
+  }
+
+  .adm-jrn_sticky {
+    display: block;
+    block-size: auto;
+    position: static;
+  }
+
+  .adm-jrn_panels {
+    display: flex;
+    flex-flow: column;
+    gap: 3rem;
+  }
+
+  .adm-jrn_item {
+    padding-block: 2rem;
+  }
+
+  .adm-jrn_content {
+    display: flex;
+    flex-flow: column;
+    align-items: flex-start;
+    inline-size: 100%;
+    max-inline-size: 30rem;
+    gap: 1.25rem;
+  }
+
+  /* The pill above each step's heading -- zenda's `.services_tag`, whose
+   * `letter-spacing: -0.04em` is dropped under RTL for the usual reason
+   * (it breaks Arabic letter joins). */
+  .adm-jrn_tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 100vw;
+    padding: 0.375rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+    background-color: #614d76; /* zenda --secondary--dark-purple */
+    color: #ffffff;
+  }
+
+  :root[dir="rtl"] .adm-jrn_tag {
+    letter-spacing: 0;
+  }
+
+  .adm-jrn_panel {
+    /* zenda's `.p-services_img`: a tinted, deeply-rounded box at a fixed
+     * ratio, holding art anchored to its foot. Ours stacks the step's
+     * checklist above that art, so it also carries `min-block-size:
+     * fit-content` -- the ratio must never clip Arabic, which sets longer than
+     * its English twin at the same size. */
+    position: relative;
+    display: flex;
+    flex-flow: column;
+    inline-size: 100%;
+    aspect-ratio: 1.1;
+    min-block-size: fit-content;
+    border-radius: 2rem;
+    padding: 2rem;
+    overflow: hidden;
+  }
+
+  /* The animated wrapper is also the panel's layout: checklist pinned to the
+   * top, art pushed to the bottom, whatever slack is left between them. */
+  .adm-jrn_panel-body {
+    display: flex;
+    flex: 1;
+    flex-flow: column;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-block-size: 0;
+  }
+
+  /* zenda's `.p-services_img` sets `align-items: flex-end` so the artwork sits
+   * on the floor of the card rather than floating in it. Same here. */
+  .adm-jrn_panel-art {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: flex-end;
+    justify-content: center;
+    min-block-size: 5rem;
+  }
+
+  .adm-jrn_panel-art img {
+    inline-size: auto;
+    max-inline-size: 100%;
+    max-block-size: 100%;
+    object-fit: contain;
+    object-position: bottom;
+  }
+
+  /* zenda's `.services_para` is `.text-size-xlarge` -- 1.5rem, stepping to
+   * 1.25rem below 992. Body copy at display scale; the step descriptions are
+   * one line each and are meant to be read at a glance, not scanned. */
+  .adm-jrn_para {
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .adm-jrn_panel-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #00000099;
+  }
+
+  :root[dir="rtl"] .adm-jrn_panel-label {
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* The checklist is sized to FILL the panel, because it is standing in for
+   * the reference's full-bleed product screenshot. At body scale it left the
+   * card two-thirds empty and the tint read as a mistake. */
+  .adm-jrn_panel-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #000000;
+  }
+
+  .adm-jrn_needs {
+    font-size: 1.125rem;
+    line-height: 1.4;
+    color: #1a1a1a;
+  }
+
+  .adm-jrn_check {
+    flex-shrink: 0;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    /* The switcher proper. The scrolling column is padded by 48vh top and
+     * bottom so the first and last steps can each reach the centre line, and
+     * the panel column is a single sticky 100vh cell that every panel is
+     * stacked into. */
+    .adm-jrn_grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+      gap: 2rem;
+    }
+
+    .adm-jrn_list-wrap {
+      display: block;
+      padding-block: 48vh;
+    }
+
+    /* zenda's own negative pair, which tightens the gap its 8rem item padding
+     * opens between adjacent blocks. Keep them together. */
+    .adm-jrn_list {
+      margin-block: -200px;
+    }
+
+    .adm-jrn_item {
+      padding-block: 8rem;
+    }
+
+    .adm-jrn_track {
+      position: relative;
+      block-size: 100%;
+    }
+
+    .adm-jrn_sticky {
+      position: sticky;
+      inset-block-start: 0;
+      display: flex;
+      flex-flow: column;
+      align-items: center;
+      justify-content: center;
+      inline-size: 100%;
+      block-size: 100vh;
+    }
+
+    /* One named cell, so all panels occupy the same grid area and cross-fade
+     * in place instead of stacking. */
+    .adm-jrn_panels {
+      display: grid;
+      grid-template: "adm-jrn-panel" / 1fr;
+      inline-size: 100%;
+      gap: 0;
+    }
+
+    .adm-jrn_panel-slot {
+      grid-area: adm-jrn-panel;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.44s cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+
+    .adm-jrn_panel-slot.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Inside the panel, the checklist repeats zenda's image entrance --
+     * rising from 34% with a slight scale-up as its slot fades in. */
+    .adm-jrn_panel-body {
+      opacity: 0;
+      transform: translateY(34%) scale(0.8);
+      transform-origin: 50% 100%;
+      transition:
+        transform 0.58s cubic-bezier(0.215, 0.61, 0.355, 1),
+        opacity 0.58s cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+
+    .adm-jrn_panel-slot.is-active .adm-jrn_panel-body {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Above the breakpoint the scrolling column carries the copy, so the
+     * duplicate riding under each panel goes away. */
+    .adm-jrn_mobile-copy {
+      display: none;
+    }
+
+    .adm-jrn_content {
+      gap: 1.5rem;
+    }
+
+    .adm-jrn_tag {
+      padding: 0.5rem 1.25rem;
+      font-size: 1.125rem;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .adm-jrn_content {
+      gap: 4rem;
+    }
+    .adm-jrn_panel {
+      border-radius: 3rem;
+      padding: 3rem;
+    }
+    .adm-jrn_para {
+      font-size: 1.5rem;
+    }
+    .adm-jrn_panel-title {
+      font-size: 2rem;
+    }
+    .adm-jrn_needs {
+      font-size: 1.25rem;
+    }
+    .adm-jrn_check {
+      inline-size: 1.75rem;
+      block-size: 1.75rem;
+    }
+  }
+
+  /* Reduced motion: the switcher still switches -- it is a scroll POSITION
+   * mapping, not decoration, and without it the panel column would show one
+   * frozen step. Only the entrance tween is neutralized. */
+  @media (prefers-reduced-motion: reduce) {
+    .adm-jrn_panel-body {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .adm-jrn_panel-slot {
+      transition: none;
+    }
+  }
+
+  /* ===== ZENDA EXPLORE BUTTON =====
+   * A line-for-line port of zenda's `.button-v2` (the EXPLORE pill on
+   * zenda.com, which the homepage clone relabels "Apply"), unscoped so
+   * bilingual pages can use it. Render it with <ZendaButton> -- the effect
+   * needs the exact nested spans that component emits.
+   *
+   * It is entirely CSS; there is no GSAP here despite how it looks. The parts:
+   *   - the <a> is a 1-cell grid, so bg / label / hover-label stack
+   *   - `_bg` is the purple pill, `overflow: clip`, holding two `_bg-inner`
+   *     panels parked below-right at -12deg; on hover they swing to 0deg and
+   *     wipe across, staggered by `--index`
+   *   - `_inner::after` re-renders the label from `data-text` and rolls in as
+   *     `_text` rolls out
+   * Values are zenda's own, including the two custom easings. Verified against
+   * the live pill on the homepage clone.
+   *
+   * `.is-alternate` is zenda's inverse: white pill, black label, purple wipe. */
+  .zenda-btn {
+    --elastic-ease-out: linear(
+      0,
+      0.5737 7.6%,
+      0.8382 11.87%,
+      0.9463 14.19%,
+      1.0292 16.54%,
+      1.0886 18.97%,
+      1.1258 21.53%,
+      1.137 22.97%,
+      1.1424 24.48%,
+      1.1423 26.1%,
+      1.1366 27.86%,
+      1.1165 31.01%,
+      1.0507 38.62%,
+      1.0219 42.57%,
+      0.9995 46.99%,
+      0.9872 51.63%,
+      0.9842 58.77%,
+      1.0011 81.26%,
+      1
+    );
+    --smooth-ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.125rem; /* 18px */
+    font-weight: 500;
+    line-height: 1.04;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    color: #ffffff;
+    gap: 0.75rem;
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    transform-style: preserve-3d;
+    transition: transform 0.45s var(--elastic-ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .zenda-btn:active {
+    transform: scaleX(0.955) scaleY(0.954);
+  }
+
+  .zenda-btn.is-alternate {
+    color: #000000;
+  }
+
+  .zenda-btn_bg {
+    background-color: #ac6cf4; /* zenda --primary--purple */
+    border-radius: 1rem;
+    grid-area: 1 / 1;
+    width: 100%;
+    display: grid;
+    overflow: clip;
+  }
+
+  .zenda-btn_bg.is-alternate {
+    background-color: #ffffff;
+  }
+
+  .zenda-btn_bg-inner {
+    transform: translate(-10%, 100%) rotate(-12deg);
+    transform-origin: 100% 0px;
+    backface-visibility: hidden;
+    grid-area: 1 / 1;
+    width: 120%;
+    padding: 1.5rem 0px;
+    display: block;
+    transition: transform 0.45s var(--smooth-ease);
+    transition-delay: calc(var(--index) * -0.042s);
+  }
+
+  .zenda-btn_bg-inner.is-first {
+    background-color: #ed6e92; /* zenda --secondary--dark-pink */
+  }
+
+  .zenda-btn_bg-inner.is-second {
+    background-color: #000000;
+  }
+
+  .zenda-btn_bg-inner.is-second.is-alternate {
+    background-color: #ac6cf4;
+  }
+
+  .zenda-btn_inner {
+    z-index: 1;
+    grid-area: 1 / 1;
+    width: 100%;
+    padding: 1rem 2rem;
+    display: grid;
+    overflow: clip;
+    position: relative;
+  }
+
+  .zenda-btn_inner::after {
+    content: attr(data-text);
+    color: #ffffff;
+    display: block;
+    grid-area: 1 / 1;
+    transform: translateY(2em) rotate(-30deg);
+    transform-origin: right top;
+    opacity: 0;
+    transition:
+      transform 0.75s var(--elastic-ease-out),
+      opacity 0.2s ease-out;
+  }
+
+  .zenda-btn_text {
+    transform-origin: 0px 0px;
+    grid-area: 1 / 1;
+    display: block;
+    transition:
+      transform 0.75s var(--elastic-ease-out),
+      opacity 0.2s ease-out;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .zenda-btn:hover .zenda-btn_bg-inner,
+    .zenda-btn:hover .zenda-btn_inner::after,
+    .zenda-btn:hover .zenda-btn_text {
+      will-change: transform;
+    }
+    .zenda-btn:hover .zenda-btn_bg-inner {
+      transform: translate(-10%, -10%) rotate(0deg);
+    }
+    .zenda-btn:hover .zenda-btn_inner::after {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    .zenda-btn:hover .zenda-btn_text {
+      transform: translateY(-2em) rotate(30deg);
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zenda-btn:active {
+      transform: none;
+    }
+  }
+
+  /* Reduced motion keeps the color swap and the label change, drops the travel
+   * -- zenda ships this fallback too. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
+    .zenda-btn_bg-inner {
+      transform: translate(-10%, -10%) rotate(0deg);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .zenda-btn_inner::after,
+    .zenda-btn_text {
+      transform: none;
+      transition: opacity 0.15s ease;
+    }
+    .zenda-btn:hover .zenda-btn_bg-inner,
+    .zenda-btn:hover .zenda-btn_inner::after {
+      opacity: 1;
+    }
+    .zenda-btn:hover .zenda-btn_text {
+      opacity: 0;
+    }
+  }
+
+  /* Uppercase is a no-op in Arabic and letter-spacing breaks its joins. */
+  :root[dir="rtl"] .zenda-btn {
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* The wipe and the label roll are diagonal, so their origins and angles have
+   * to mirror under RTL or the motion runs against the reading direction.
+   *
+   * All of it lives inside the same no-preference query as the LTR motion, and
+   * every resting rule is paired with its :hover twin here. Two reasons, both
+   * learned the hard way: a bare `:root[dir=rtl] .zenda-btn_inner::after` ties
+   * the hover rule on specificity (0,3,1) and, coming later in the file, wins
+   * -- the Arabic label then never rolled in and the button hovered to a blank
+   * black pill. And outside the query these would also override the
+   * reduced-motion fallback, which deliberately neutralizes every transform. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    :root[dir="rtl"] .zenda-btn_bg-inner {
+      transform-origin: 0% 0px;
+      transform: translate(10%, 100%) rotate(12deg);
+    }
+    :root[dir="rtl"] .zenda-btn:hover .zenda-btn_bg-inner {
+      transform: translate(10%, -10%) rotate(0deg);
+    }
+
+    :root[dir="rtl"] .zenda-btn_inner::after {
+      transform-origin: left top;
+      transform: translateY(2em) rotate(30deg);
+    }
+    :root[dir="rtl"] .zenda-btn:hover .zenda-btn_inner::after {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    :root[dir="rtl"] .zenda-btn_text {
+      transform-origin: 100% 0px;
+    }
+    :root[dir="rtl"] .zenda-btn:hover .zenda-btn_text {
+      transform: translateY(-2em) rotate(-30deg);
+    }
+  }
+
+  /* ===== KINETIC HERO HEADING =====
+   * Layout for the zenda /for-schools word-converge entrance (the motion lives
+   * in academic/sections/hero-kinetic.tsx). Reference: `.s-hero_heading` /
+   * `.s-hero_header-span` / `.hero_spn_wrap` / `.hero_spn_bg` in
+   * zenda-clone.css -- same structure, unscoped so it can run bilingual.
+   *
+   * The heading is an inline-flex row of wrapped words rather than flowing
+   * text: each word is transformed independently, and a transform on an inline
+   * box does nothing. Sizing rides .zenda-heading; only the box model is here.
+   *
+   * `overflow: clip` on the section is load-bearing -- the words start up to
+   * 880% of their own width outside the layout and would otherwise widen the
+   * document. Clip rather than hidden so no scroll container is created. */
+  .kinetic-heading {
+    display: inline-flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: center;
+    column-gap: 0.16em;
+    text-wrap: balance;
+  }
+
+  .kinetic-word_wrap {
+    display: inline-block;
+    position: relative;
+  }
+
+  .kinetic-word {
+    display: inline-block;
+    will-change: transform, opacity;
+  }
+
+  /* Keeps the word above the sweep panel that retracts out from behind it. */
+  .kinetic-word_lift {
+    position: relative;
+    z-index: 1;
+  }
+
+  .kinetic-word_sweep {
+    position: absolute;
+    inset: 0 0 0 -4%;
+    width: 0;
+    border-radius: 0.75rem;
+    background-color: #ac6cf4; /* zenda --primary--purple */
+    transform-origin: 0% center;
+  }
+
+  /* The sweep retracts toward its own start edge, so the origin and the inset
+   * that anchors it both have to flip -- otherwise the Arabic highlight peels
+   * off the wrong end of the word. */
+  :root[dir="rtl"] .kinetic-word_sweep {
+    inset: 0 -4% 0 0;
+    transform-origin: 100% center;
+  }
+
+  /* ===== STAGE ACCORDION =====
+   * zenda's "Our Values" accordion (`.about-values_*` in zenda-clone.css),
+   * rebuilt unscoped so the bilingual pages can carry it. One card is open at
+   * full width with its content shown; the rest collapse to a fixed rail
+   * showing a number and a vertical label. <StageAccordion> drives the GSAP.
+   *
+   * Why a port and not a reuse: the cloned original is entirely rem-based and
+   * zenda sizes rem off a viewport-derived `html { font-size }` (ZendaRootScale).
+   * `rem` resolves against the document root and cannot be class-scoped, so
+   * rendering the clone on a page that is otherwise native Tailwind is
+   * all-or-nothing -- either every native section rescales with it, or the
+   * cloned one runs ~20% large below 1440px. Porting sidesteps that entirely
+   * and keeps the section translatable, which the clone scope is not.
+   *
+   * Values are zenda's own. Breakpoints are zenda's two (768/479), not
+   * Tailwind's, so the ramp matches the chrome above it. */
+  .stage-accordion {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .stage-card {
+    display: flex;
+    justify-content: space-between;
+    width: 8rem;
+    min-height: 30rem;
+    max-height: 30rem;
+    padding: 3rem;
+    background-color: #ffffff;
+    border-radius: 1.75rem;
+    cursor: pointer;
+    transition: background-color 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  .stage-card.is-active {
+    width: 100%;
+    background-color: #ccd5fd; /* zenda's open-card lavender */
+  }
+
+  .stage-card_content {
+    display: none;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.8rem;
+    width: 100%;
+    max-width: 36rem;
+    overflow: hidden;
+  }
+
+  .stage-card.is-active .stage-card_content {
+    display: flex;
+  }
+
+  /* zenda's filled glyph, sized to its own `.about-values_img-wrap` (6.25rem),
+   * not the 2.5rem outline pictogram this used to carry.
+   *
+   * `align-self: flex-start` is doing real work: the content column stretches
+   * its children, so without it the image box runs the full 36rem and any
+   * `object-position` we picked would be right in one language and wrong in the
+   * other. Letting the flex start edge place it mirrors for free.
+   *
+   * The step-down below 768 is deliberately the OPPOSITE direction to zenda's,
+   * which grows this to 8rem — zenda's rem is viewport-derived, so 8rem there
+   * is fewer px than 6.25rem here at a fixed 16px root. Same reasoning as the
+   * type ramp above. */
+  .stage-card_icon {
+    display: block;
+    align-self: flex-start;
+    width: 6.25rem;
+    max-width: 100%;
+    /* All four glyphs are square (~801x800..853x852). Declaring it here rather
+     * than per-image reserves the box before the file decodes -- with
+     * `height: auto` and no intrinsic size the element measures 0 tall, and the
+     * heading under it jumps when the image arrives. */
+    aspect-ratio: 1 / 1;
+    height: auto;
+    margin-bottom: 0.4rem;
+  }
+
+  @media screen and (max-width: 768px) {
+    .stage-card_icon {
+      width: 4.5rem;
+    }
+  }
+
+  .stage-card_heading {
+    margin: 0;
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 2.5rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: #000000;
+  }
+
+  .stage-card_content p {
+    margin: 0;
+    font-size: 1.125rem;
+    line-height: 1.5;
+    color: #000000;
+  }
+
+  .stage-card_rail {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .stage-card_number {
+    margin: 0;
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: #000000;
+  }
+
+  /* The collapsed label. `vertical-lr` + rotate(180deg) is zenda's own pair
+   * (`.about-values_text-vertical`), kept byte-identical.
+   *
+   * What it actually produces, measured per glyph with Range rects rather than
+   * eyeballed (2026-08-06): the LATIN label reads BOTTOM-TO-TOP, glyphs turned
+   * 90deg anticlockwise -- the ordinary Western convention for a vertical
+   * label, and what zenda.com renders. The ARABIC label reads top-to-bottom,
+   * because RTL flows bottom-to-top in a vertical writing mode and the same
+   * 180deg reverses it back. The two scripts therefore start from opposite
+   * ends; both are legible, and this is a consequence of matching the
+   * reference, not a choice. An earlier version of this comment claimed the
+   * pair made both read top-to-bottom. It does not. Measure before believing
+   * either version -- it reads plausible when wrong. */
+  .stage-card_label {
+    margin: 0;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+    color: #000000;
+    white-space: nowrap;
+  }
+
+  .stage-card.is-active .stage-card_label {
+    display: none;
+  }
+
+  :root[dir="rtl"] .stage-card_heading,
+  :root[dir="rtl"] .stage-card_number,
+  :root[dir="rtl"] .stage-card_label {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0;
+  }
+
+  /* Below zenda's 768 the grid stacks and every card is open -- the accordion
+   * is off (StageAccordion bails at the same width), so there is nothing to
+   * collapse to and no hover to collapse it with. The vertical label goes with
+   * it; the rail's number stays, as the stage marker. */
+  @media screen and (max-width: 768px) {
+    .stage-accordion {
+      flex-direction: column;
+    }
+    .stage-card {
+      width: auto;
+      min-height: auto;
+      max-height: none;
+      padding: 2rem;
+      cursor: auto;
+    }
+    .stage-card.is-active {
+      background-color: #ffffff;
+    }
+    .stage-card .stage-card_content {
+      display: flex;
+    }
+    .stage-card .stage-card_label {
+      display: none;
+    }
+    .stage-card_number {
+      font-size: 1.5rem;
+    }
+  }
+
+  @media screen and (max-width: 479px) {
+    .stage-card {
+      padding: 1.5rem;
+    }
+    .stage-card_heading {
+      font-size: 1.5rem;
+    }
+    .stage-card_number {
+      font-size: 1.125rem;
+    }
+  }
+
   /* Muted text that stays legible on a colored band -- the global
    * --muted-foreground assumes the page background and goes invisible on ink. */
   .band-ink .band-muted,
@@ -275,6 +1401,371 @@
     .tile {
       min-height: 420px;
     }
+  }
+
+  /* ===== FOR-SCHOOLS HERO: TYPE + HEADER COLUMN =====
+   * The /academic hero mirrors zenda's /for-schools hero, which is a NARROW
+   * centred column (40rem) -- not the full-width h1 the rest of this page uses.
+   * Its heading also runs a size below `.heading-style-h1`: 3.5rem, stepping at
+   * zenda's own 991/767 breakpoints.
+   *
+   * `.is-kinetic` is a modifier rather than a `text-*` utility for the reason
+   * documented above `.is-section`: both land in @layer utilities and a bare
+   * .zenda-heading would win or lose on emitted order alone. */
+  .zenda-heading.is-kinetic {
+    font-size: 2.25rem; /* 36px -- zenda .s-hero_heading @max-767 */
+  }
+
+  @media (min-width: 768px) {
+    .zenda-heading.is-kinetic {
+      font-size: 3rem; /* 48px -- @max-991 */
+    }
+  }
+
+  @media (min-width: 992px) {
+    .zenda-heading.is-kinetic {
+      font-size: 3.5rem; /* 56px -- zenda .s-hero_heading */
+    }
+  }
+
+  /* zenda `.schs-hero_header`: the column the heading and lede share. */
+  .kinetic-header {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 40rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  /* zenda `.s-hero_para` -- body scale, NOT the 40px display `.zenda-lede` the
+   * other heroes carry. This hero's lede sits under a 3.5rem heading in a 34rem
+   * measure; at display scale it would out-shout the headline. */
+  .kinetic-para {
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.125rem; /* 18px -- zenda @max-767 */
+    font-weight: 400;
+    line-height: 1.5;
+    color: #000000;
+    width: 100%;
+    max-width: 34rem;
+    margin-inline: auto;
+  }
+
+  @media (min-width: 768px) {
+    .kinetic-para {
+      font-size: 1.25rem; /* 20px -- zenda .s-hero_para */
+    }
+  }
+
+  :root[dir="rtl"] .kinetic-para {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* A hard line break inside the wrapped word row. zenda hard-codes its two
+   * lines; ours come from a `\n` in the dictionary, so a translation chooses
+   * its own break instead of inheriting English's. */
+  .kinetic-break {
+    flex-basis: 100%;
+    width: 100%;
+    height: 0;
+  }
+
+  /* ===== HERO BUILDING ART =====
+   * zenda `.schools-hero_lottie-wrap`: a 2:1 letterbox that the ~1.49:1
+   * illustration fills by WIDTH and is bottom-aligned inside, so the sky is
+   * cropped and the building is grounded on the box's lower edge.
+   *
+   * `.hero-art_flyer` is the same box again, but fixed and driven in px by the
+   * merge controller in academic/sections/hero-art.tsx. It is portalled to
+   * <body> so no `overflow: clip` or transformed ancestor can clip or trap it. */
+  .hero-art_slot {
+    aspect-ratio: 2 / 1;
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+  }
+
+  .hero-art_box {
+    display: flex;
+    flex-flow: column;
+    justify-content: flex-end;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .hero-art_flyer {
+    position: fixed;
+    z-index: 60;
+    pointer-events: none;
+    will-change: left, top, width, height;
+  }
+
+  .hero-art_inner {
+    flex: none;
+    width: 100%;
+  }
+
+  /* ===== THREE-ROW WORD MARQUEE =====
+   * zenda `.schs-marquee_*`: three rows of school-life words separated by
+   * coloured dots, the middle one travelling the other way, fading out at both
+   * viewport edges. Transcribed rather than reused -- the `.zenda-clone` port is
+   * English/LTR-only and this page runs bilingual.
+   *
+   * Direction is pinned to ltr on the track: the row order is decorative, and
+   * under `dir=rtl` the flex row would lay the duplicate copy on the wrong side
+   * of the original and the loop would tear. Each word isolates its own bidi, so
+   * Arabic still shapes and reads right-to-left inside its box. */
+  .mq-section {
+    position: relative;
+    overflow: hidden;
+    padding-block: 3rem;
+    /* Escape the 80rem content rail to the viewport edge. Percentage margins,
+     * not 100vw -- vw overshoots by the scrollbar width on desktop. */
+    margin-inline: calc(50% - 50vw);
+  }
+
+  .mq-container {
+    width: 100%;
+    max-width: 94rem;
+    margin-inline: auto;
+  }
+
+  .mq-component {
+    display: flex;
+    flex-flow: column;
+    gap: 3rem;
+  }
+
+  .mq-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 3rem;
+    overflow: hidden;
+  }
+
+  .mq-track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    direction: ltr;
+    animation: mq-left 48s linear infinite;
+  }
+
+  .mq-row.is-reverse .mq-track {
+    animation-name: mq-right;
+  }
+
+  /* Two identical copies; the track slides exactly one copy's width, so the
+   * seam is invisible and the loop never shows a gap. */
+  .mq-copy {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 2.5rem;
+    padding-inline-end: 2.5rem;
+  }
+
+  .mq-word {
+    unicode-bidi: isolate;
+    white-space: nowrap;
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.875rem; /* 30px -- zenda .schs-marquee_title */
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: -0.04em;
+    color: #000000;
+  }
+
+  :root[dir="rtl"] .mq-word {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0;
+  }
+
+  .mq-dot {
+    flex: none;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 100vw;
+    background-color: #b098cc;
+  }
+
+  .mq-dot.is-blue {
+    background-color: #8fa5ff;
+  }
+  .mq-dot.is-pink {
+    background-color: #f7ccd8;
+  }
+  .mq-dot.is-orange {
+    background-color: #f8a475;
+  }
+  .mq-dot.is-purple {
+    background-color: #b070f4;
+  }
+
+  /* Physical left/right on purpose: these fade the two VIEWPORT edges, which do
+   * not swap when the reading direction does. */
+  .mq-fade {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 10%;
+    pointer-events: none;
+    background-image: linear-gradient(to right, #f5f4ee, #f5f4ee00);
+  }
+
+  .mq-fade.is-end {
+    left: auto;
+    right: 0;
+    background-image: linear-gradient(to left, #f5f4ee, #f5f4ee00);
+  }
+
+  @media (max-width: 767px) {
+    .mq-component {
+      gap: 1.5rem;
+    }
+    .mq-word {
+      font-size: 1.25rem;
+    }
+    .mq-copy {
+      gap: 1.5rem;
+      padding-inline-end: 1.5rem;
+    }
+  }
+
+  /* ===== INTRO CARD (the building's landing slot) =====
+   * zenda `.schs-zenda_*`: a white rounded panel whose image slot is pulled up
+   * out of the card so the illustration overhangs its top edge. `top` here is a
+   * relative offset -- it moves the slot visually without changing the layout
+   * box, and the content's negative margin is what closes the gap that leaves.
+   * Both numbers are zenda's; they are tuned to each other, so move them
+   * together or not at all. */
+  .acad-intro {
+    width: 100%;
+    max-width: 66rem;
+    margin-inline: auto;
+  }
+
+  .acad-intro_wrap {
+    position: relative;
+    padding-bottom: 6rem;
+  }
+
+  .acad-intro_slot {
+    position: relative;
+    z-index: 1;
+    top: -13rem;
+    aspect-ratio: 3 / 2;
+    width: 100%;
+    max-width: 40rem;
+    margin-inline: auto;
+    margin-bottom: 4rem;
+  }
+
+  .acad-intro_content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 45.2rem;
+    margin-top: -16rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .acad-intro_bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 2.375rem;
+    background-color: #ffffff;
+  }
+
+  @media (max-width: 991px) {
+    .acad-intro_wrap {
+      padding-bottom: 4rem;
+      padding-inline: 6%;
+    }
+    .acad-intro_slot {
+      width: 80%;
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .acad-intro_wrap {
+      padding-top: 8.4rem;
+    }
+    .acad-intro_slot {
+      top: -10rem;
+      width: 112%;
+      max-height: 14rem;
+      margin-inline: -6%;
+    }
+    .acad-intro_content {
+      margin-top: -12rem;
+    }
+    .acad-intro_bg {
+      border-radius: 2rem;
+    }
+  }
+
+  @media (max-width: 479px) {
+    .acad-intro_slot {
+      top: -8rem;
+      width: 148%;
+      max-height: 13rem;
+      margin-inline: -24%;
+    }
+    .acad-intro_bg {
+      border-radius: 1.5rem;
+    }
+  }
+}
+
+/* Marquee keyframes. One copy's width is exactly half the track, so -50% lands
+ * the duplicate precisely where the original started. */
+@keyframes mq-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes mq-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mq-track {
+    animation: none;
+  }
+
+  /* No merge under `reduce`, so the illustration stays in the hero and this
+   * slot would otherwise reserve 427px of empty white inside the card. Collapse
+   * it and give the copy back its own top padding. */
+  .acad-intro_slot {
+    display: none;
+  }
+
+  .acad-intro_content {
+    margin-top: 0;
+  }
+
+  .acad-intro_wrap {
+    padding-top: 4rem;
   }
 }
 

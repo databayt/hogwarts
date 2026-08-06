@@ -10049,10 +10049,13 @@
           "weeks": "أسبوعان",
           "weeksLabel": "كحد أقصى لتلقي الرد"
         },
-        "process": {
+        "journey": {
           "eyebrow": "الخطوات",
-          "title": "عملية القبول",
-          "subtitle": "أربع خطوات بسيطة للانضمام إلى مجتمعنا التعليمي",
+          "title": "كل ما تحتاجه أربع خطوات",
+          "step": "الخطوة",
+          "whatYouNeed": "ما تحتاجه",
+          "nothingToBring": "لا تحتاج إحضار شيء",
+          "nothingToBringItem": "احجز الموعد الذي يناسبك فحسب",
           "submitApplication": "تقديم الطلب",
           "submitApplicationDesc": "أكمل استمارة التقديم عبر الإنترنت مع جميع المستندات المطلوبة",
           "campusTour": "جولة في الحرم",
@@ -10060,11 +10063,7 @@
           "meetGreet": "لقاء التعارف",
           "meetGreetDesc": "تواصل مع فريق القبول وأعضاء هيئة التدريس",
           "joinFamily": "انضم للعائلة",
-          "joinFamilyDesc": "أكمل التسجيل وابدأ رحلتك التعليمية معنا"
-        },
-        "requirements": {
-          "eyebrow": "ما تحتاجه",
-          "title": "متطلبات القبول",
+          "joinFamilyDesc": "أكمل التسجيل وابدأ رحلتك التعليمية معنا",
           "academicRecords": "السجلات الأكاديمية",
           "officialTranscripts": "الشهادات الرسمية",
           "testScores": "درجات الاختبارات (إن وجدت)",

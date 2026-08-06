@@ -549,7 +549,7 @@
   "marketing": {
     "phoneMockup": {
       "heading": "Your school, in every pocket",
-      "subheading": "Discover, enroll, organize, pay and track all transactions in one place",
+      "subheading": "Discover, apply, enroll, track lessons, grades and attendance in one place",
       "phoneAlt": "School management mobile app",
       "items": {
         "grades": "Grades",
@@ -1250,10 +1250,26 @@
       },
       "academic": {
         "hero": {
-          "title": "Academic\nExcellence",
-          "subtitle": "Discover your potential through rigorous academics and innovative learning. Our comprehensive programs are designed to unlock every student's capabilities.",
+          "title": "Where curiosity becomes\nreal understanding",
+          "subtitle": "Rigorous academics, taught with care.",
           "explorePrograms": "Explore Programs",
           "viewCurriculum": "View Curriculum"
+        },
+        "marquee": {
+          "words": [
+            "Science",
+            "Mathematics",
+            "Literature",
+            "Robotics",
+            "Music",
+            "Athletics",
+            "Languages",
+            "Debate",
+            "Visual Arts",
+            "Coding",
+            "Library",
+            "Field Trips"
+          ]
         },
         "cta": {
           "title": "Ready to Begin Your Academic Journey?",
@@ -1262,6 +1278,7 @@
           "contactAdmissions": "Contact Admissions"
         },
         "programs": {
+          "eyebrow": "Educational Pathways",
           "title": "Academic Programs",
           "subtitle": "Comprehensive educational pathways designed to unlock every student's potential and prepare them for future success.",
           "items": {
@@ -1300,11 +1317,23 @@
           "graduationRate": "Graduation Rate"
         },
         "curriculum": {
+          "eyebrow": "Curriculum Structure",
           "title": "Curriculum Overview",
           "subtitle": "Our progressive curriculum is designed to build knowledge systematically while fostering critical thinking and creativity at every stage.",
-          "earlyYears": {
-            "title": "Early Years (K-5)",
-            "description": "Foundation building with hands-on learning, literacy development, and social skills through play-based education.",
+          "kindergarten": {
+            "title": "Kindergarten (Ages 3-5)",
+            "description": "The first classroom. Children learn through play, build the language and number sense the rest of school rests on, and get used to being part of a group.",
+            "features": {
+              "play": "Play-Based Learning",
+              "language": "Early Language",
+              "numbers": "Numbers & Shapes",
+              "motor": "Motor Skills",
+              "social": "Social Skills"
+            }
+          },
+          "elementary": {
+            "title": "Elementary (Grades 1-5)",
+            "description": "Foundation building with hands-on learning, literacy development, and social skills through structured, curiosity-led lessons.",
             "features": {
               "phonics": "Phonics & Reading",
               "math": "Math Foundations",
@@ -1314,7 +1343,7 @@
             }
           },
           "middleSchool": {
-            "title": "Middle School (6-8)",
+            "title": "Middle School (Grades 6-8)",
             "description": "Transitional years focusing on critical thinking, independent learning, and preparation for advanced studies.",
             "features": {
               "math": "Advanced Mathematics",
@@ -1325,7 +1354,7 @@
             }
           },
           "highSchool": {
-            "title": "High School (9-12)",
+            "title": "High School (Grades 9-12)",
             "description": "College preparatory curriculum with specialized tracks, AP courses, and career exploration opportunities.",
             "features": {
               "prep": "College Prep Courses",
@@ -1339,9 +1368,9 @@
       },
       "admission": {
         "hero": {
-          "title": "Your place\nstarts here",
-          "subtitle": "Applications are free and take about twenty minutes. Save halfway and come back whenever you like — we answer every application within two weeks.",
-          "startApplication": "Start application",
+          "title": "A great journey\nis about to begin.",
+          "subtitle": "Apply in five minutes.",
+          "startApplication": "Application",
           "learnMore": "Learn more"
         },
         "cta": {
@@ -1447,6 +1476,7 @@
         "subscribe": "Subscribe"
       },
       "faqs": {
+        "eyebrow": "FAQ",
         "title": "Questions we get asked",
         "subtitle": "If yours isn't here, call the office — someone picks up.",
         "questions": [
@@ -1805,7 +1835,7 @@
       },
       "admissions": {
         "eyebrow": "Admissions",
-        "title": "Applying takes\nabout twenty minutes.",
+        "title": "Applying takes\nabout five minutes.",
         "description": "It is free, it is online, and you can stop halfway and come back. We answer every application, whichever way it goes.",
         "primaryCta": "Start an application",
         "secondaryCta": "Book a visit first",

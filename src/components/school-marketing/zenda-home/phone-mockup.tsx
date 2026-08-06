@@ -222,12 +222,16 @@ export function PhoneMockup() {
                 feature-element=""
                 className="features_heading heading-style-h2"
               >
-                You juggle life—we handle fees
+                You juggle life—we handle school
               </h2>
               <div feature-element="" className="max-width is-32rem">
+                {/* The school's copy at the reference's exact word counts (6
+                    and 11) so the header keeps its line breaks. "pay" is
+                    deliberately out of the verb list: applying is always free
+                    here, and fees only arrive after an offer is accepted. */}
                 <p className="heading-style-h4">
-                  Discover, enroll, organize, pay and track all transactions in
-                  one place
+                  Discover, apply, enroll, track lessons, grades and attendance
+                  in one place
                 </p>
               </div>
             </div>

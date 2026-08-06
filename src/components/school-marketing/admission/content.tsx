@@ -7,9 +7,9 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { School } from "../types"
 import { AdmissionCTA } from "./sections/cta"
 import { AdmissionDates } from "./sections/dates"
+import { AdmissionFaq } from "./sections/faq"
 import { AdmissionHero } from "./sections/hero"
-import { AdmissionProcess } from "./sections/process"
-import { AdmissionRequirements } from "./sections/requirements"
+import { AdmissionJourney } from "./sections/journey"
 import { AdmissionStats } from "./sections/stats"
 import { AdmissionValues } from "./sections/values"
 
@@ -32,9 +32,13 @@ export default function AdmissionContent({ school, dictionary, lang }: Props) {
       <AdmissionHero lang={lang} dictionary={dictionary} />
       <AdmissionStats lang={lang} dictionary={dictionary} />
       <AdmissionValues lang={lang} dictionary={dictionary} />
-      <AdmissionProcess lang={lang} dictionary={dictionary} />
-      <AdmissionRequirements lang={lang} dictionary={dictionary} />
+      {/* "How it works" and "What you need" are one section: each step carries
+       * the documents that step needs, on zenda's /parents scroll switcher. */}
+      <AdmissionJourney lang={lang} dictionary={dictionary} />
       <AdmissionDates lang={lang} dictionary={dictionary} />
+      {/* Last stop before the CTA: answer the objection, then ask for the
+       * application. Anything after the CTA would be read by nobody. */}
+      <AdmissionFaq lang={lang} dictionary={dictionary} />
       <AdmissionCTA lang={lang} dictionary={dictionary} />
     </main>
   )

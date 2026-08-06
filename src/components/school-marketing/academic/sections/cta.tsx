@@ -1,15 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Link from "next/link"
-
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
-import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { SectionContainer } from "../../admission/shared/section-container"
+import { ZendaButton } from "../../admission/shared/zenda-button"
 
 interface AcademicCTAProps {
   lang: Locale
@@ -28,7 +24,7 @@ export function AcademicCTA({ lang, dictionary }: AcademicCTAProps) {
     <SectionContainer>
       <div className="band-charcoal rounded-[2.5rem] px-6 py-16 md:px-16 md:py-24">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="font-heading mb-6 text-3xl font-bold text-white md:text-4xl">
+          <h2 className="zenda-heading is-section is-inverse mb-6">
             {t?.title || "Ready to Begin Your Academic Journey?"}
           </h2>
           <p className="band-muted mb-8 text-lg md:text-xl">
@@ -36,27 +32,19 @@ export function AcademicCTA({ lang, dictionary }: AcademicCTAProps) {
               "Explore our rigorous academic programs designed to prepare students for success in higher education and beyond."}
           </p>
 
-          <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Link
-              href={`/${lang}/application`}
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "gap-2 bg-white text-neutral-900 hover:bg-white/90"
-              )}
-            >
-              {t?.scheduleVisit || "Schedule a Visit"}
-              <AnthropicIcons.ArrowRight className="h-4 w-4 rtl:rotate-180" />
-            </Link>
-            <Link
+          {/* Both pills are zenda's EXPLORE button so the page closes in the
+           * same language the hero opens in. `alternate` is zenda's own
+           * white/purple inverse, which is what reads on the charcoal panel. */}
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <ZendaButton
+              href={`/${lang}/tour`}
+              label={t?.scheduleVisit || "Schedule a Visit"}
+              variant="alternate"
+            />
+            <ZendaButton
               href={`/${lang}/inquiry`}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "gap-2 border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white"
-              )}
-            >
-              <AnthropicIcons.Chat className="h-4 w-4" />
-              {t?.contactAdmissions || "Contact Admissions"}
-            </Link>
+              label={t?.contactAdmissions || "Contact Admissions"}
+            />
           </div>
         </div>
       </div>

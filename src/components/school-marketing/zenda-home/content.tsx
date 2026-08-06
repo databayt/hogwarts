@@ -18,8 +18,8 @@ export function HomeContent({ lang = "en" }: { lang?: string }) {
     <>
       <Hero lang={lang} />
       <PhoneMockup />
-      <Rewards />
-      <Schools />
+      <Rewards lang={lang} />
+      <Schools lang={lang} />
       <HowItWorks />
       <Testimonials />
       <Benefits />

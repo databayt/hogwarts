@@ -154,8 +154,12 @@ school-marketing/
 │   │   └── tour.ts              # Tour booking actions
 │   ├── sections/                # Admission landing page sections
 │   │   ├── hero.tsx, hero-illustration.tsx
-│   │   ├── process.tsx, requirements.tsx
+│   │   ├── stats.tsx
+│   │   ├── journey.tsx                  # process + requirements, merged
+│   │   ├── journey-switch.tsx           # IntersectionObserver for the switcher
 │   │   ├── values.tsx, dates.tsx, cta.tsx
+│   │   ├── faq.tsx, faq-accordion.tsx   # reads marketing.site.faqs
+│   │   ├── dates-reveal.tsx             # IntersectionObserver for the timeline
 │   ├── portal/                  # Application portal views
 │   │   ├── campaign-selector-content.tsx
 │   │   ├── application-form-content.tsx
@@ -174,7 +178,8 @@ school-marketing/
 │   │   ├── tour-wizard.tsx
 │   │   └── tour-booking-content.tsx
 │   └── shared/
-│       └── section-container.tsx
+│       ├── section-container.tsx
+│       └── zenda-button.tsx     # zenda's EXPLORE pill, bilingual (.zenda-btn*)
 │
 ├── apply/                       # Multi-step application form (new flow)
 │   ├── index.ts                 # Barrel exports
@@ -214,11 +219,16 @@ school-marketing/
 │       ├── date-step.tsx, time-step.tsx
 │       ├── info-step.tsx, confirm-step.tsx
 │
-├── academic/                    # Academic programs page
-│   ├── content.tsx
+├── academic/                    # Academic programs page (zenda /for-schools)
+│   ├── content.tsx              # hero → marquee → intro → programs → …
 │   └── sections/
-│       ├── hero.tsx, hero-illustration.tsx
+│       ├── hero.tsx             # Section shell + [data-zenda-tuck] marker
+│       ├── hero-kinetic.tsx     # Splash + per-word converge entrance
+│       ├── hero-art.tsx         # Building/stars Lottie + scroll-merge flyer
+│       ├── marquee.tsx          # Three-row infinite word ticker
+│       ├── intro.tsx            # White card — the building's landing slot
 │       ├── programs.tsx, curriculum.tsx
+│       ├── stage-accordion.tsx  # Curriculum's one-open-at-a-time stages
 │       ├── stats.tsx, cta.tsx
 │
 ├── about/                       # About page

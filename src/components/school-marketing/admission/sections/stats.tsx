@@ -14,8 +14,14 @@ interface AdmissionStatsProps {
 /*
  * Zenda's stat-trio pattern (big figure, small label, three across). The
  * figures are the application promises the hero already makes -- free, about
- * twenty minutes, an answer within two weeks -- not invented school metrics,
+ * five minutes, an answer within two days -- not invented school metrics,
  * which this template must never fabricate.
+ *
+ * They are also a commitment the school has to keep, so all four places that
+ * state them move together: this trio, the hero subtitle
+ * (`marketing.site.admission.hero.subtitle`), the process page title and its
+ * decision step (`marketing.site.admissions.*`). Change one and the page
+ * contradicts itself two screens apart.
  */
 export function AdmissionStats({ lang, dictionary }: AdmissionStatsProps) {
   const dict =
@@ -33,12 +39,12 @@ export function AdmissionStats({ lang, dictionary }: AdmissionStatsProps) {
       label: dict.freeLabel || "to apply — no application fee",
     },
     {
-      value: dict.minutes || "20 min",
+      value: dict.minutes || "5 min",
       label: dict.minutesLabel || "to complete the application",
     },
     {
-      value: dict.weeks || "2 weeks",
-      label: dict.weeksLabel || "at most to receive a decision",
+      value: dict.decision || "2 days",
+      label: dict.decisionLabel || "at most to receive a decision",
     },
   ]
 

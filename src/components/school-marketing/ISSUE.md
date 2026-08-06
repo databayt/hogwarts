@@ -130,6 +130,37 @@ Active step order: **attachments → personal → location → academic → fees
 - [x] Hero with illustration
 - [x] Programs, curriculum, stats sections
 - [x] CTA section
+- [x] **Mirrors zenda.com/for-schools closely (2026-08-06)** — the parity pass
+      that finished what the 08-06 rebuild started. Header tuck (page loads
+      scrolled down one nav height, hero flush at the top edge, nav above the
+      fold until the first scroll up), hero type dropped to zenda's own
+      `.s-hero_heading` ramp (56/48/36px) with the lede at 20px body scale, the
+      hero CTA removed, the headline broken where the dictionary says
+      (`\n` → `.kinetic-break`), the building + gold stars Lottie restored from
+      `~/zenda/public/lottie/school-header.json`, the three-row infinite word
+      marquee, and the scroll-merge that flies the building from the hero into
+      the new intro card's slot. Geometry verified number-for-number against
+      `~/zenda` on :3100 at 1440; no horizontal overflow at 1440 or 390 in
+      either language.
+- [x] **Curriculum Overview is four stages with zenda's filled icons
+      (2026-08-06)** — Kindergarten / Elementary / Middle / High, which is also
+      the reference accordion's own card count. "Early Years (K-5)" used to
+      collapse kindergarten and elementary into one card. The outline
+      pictograms are replaced by zenda's four solid glyphs, reused from
+      `/images/about/values/` and loaded eagerly (three of four cards are
+      `display: none`, and a lazy image there is never fetched).
+- [ ] **Stats row is still four invented figures** (95% acceptance, 98%
+      graduation) on a page that renders for every tenant — marked PLACEHOLDER
+      in-file. Give it the admissions treatment (only promises the school
+      controls) or drop it before a real tenant publishes.
+- [ ] Curriculum's High School card and `programs.items.ap` both name
+      **"AP" / "Advanced Placement"**, a US College Board program, on a page
+      that renders for tenants in Sudan and the UAE. Rename to something
+      curriculum-neutral ("Advanced & Honours") before a non-US tenant
+      publishes.
+- [ ] Marquee words (`academic.marquee.words`) are twelve generic subject areas.
+      They are safe to publish as-is, but a tenant that wants its own list has
+      no UI for it — the words come from the dictionary, not the DB.
 
 ### About Page
 

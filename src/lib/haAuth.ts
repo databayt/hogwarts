@@ -76,7 +76,7 @@ function getImportMetaEnv(key: string): string | undefined {
     // Next.js doesn't support import.meta.env (throws error)
     // Check existence to avoid errors in Next.js
     // Cast to any to bypass TypeScript's ImportMeta type (no env property in Next.js)
-    const meta = import.meta as { env?: Record<string, string> }
+    const meta = import.meta as unknown as { env?: Record<string, string> }
     return meta.env?.[key]
   } catch {
     return undefined
