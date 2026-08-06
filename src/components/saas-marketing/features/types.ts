@@ -195,6 +195,33 @@ export interface FeaturePageData {
 
 // ─── Showcase (zenda Services–style sticky deck) ───
 
+export interface ShowcaseChip {
+  /** Lucide icon name resolved via getIconComponent. */
+  icon: string
+  /** Short UI-echo label, e.g. "Grade 12 · A12" — copy visible in the shot. */
+  label: string
+}
+
+/** Tuning for a card's composed visual (pastel panel + browser window). */
+export interface ShowcaseVisual {
+  /** Panel color; defaults cycle the zenda pastel palette by card index. */
+  panel?: string
+  /** Zoom into the screenshot (1 = full frame, the default). */
+  zoom?: number
+  /**
+   * transform-origin steering the zoom crop — the frame point that stays put
+   * while the shot scales up, so higher values reveal content further right
+   * and further down. For the standard 1280x1000 dashboard capture, `zoom:
+   * 1.29` + `origin: "89% <y>%"` crops the app sidebar away and lands the
+   * table's right edge flush; raise the y to skip more page header.
+   */
+  origin?: string
+  /** Floating chips overlapping the window edge (first top-end, second bottom-start; max 2 render). */
+  chips?: ShowcaseChip[]
+  /** Short factual line for the tinted band at the window's foot. */
+  stat?: string
+}
+
 export interface ShowcaseCard {
   /** Pill label, e.g. "DIRECTORY". */
   tag: string
@@ -206,6 +233,8 @@ export interface ShowcaseCard {
   image: string
   width: number
   height: number
+  /** Composed-visual tuning; omit for the framed full-frame default. */
+  visual?: ShowcaseVisual
 }
 
 export interface ShowcaseData {
@@ -223,10 +252,10 @@ export interface WhyCard {
   topic: string
   headline: string
   body: string
-  /** Product screenshot under public/. */
+  /** Line-art illustration under public/ (transparent, sits on `panel`). */
   image: string
   /** Locale-relative href, e.g. "/pricing" → `/${lang}/pricing`. */
   href: string
-  /** CSS object-position for the cropped image; defaults to "center top". */
-  objectPosition?: string
+  /** Pastel backdrop behind the art; defaults to a cycled palette entry. */
+  panel?: string
 }

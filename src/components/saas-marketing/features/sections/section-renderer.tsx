@@ -16,12 +16,26 @@ interface Props {
   section: FeaturePageSection
   lang: string
   ctaLabel: string
+  title?: string
+  description?: string
 }
 
-export function SectionRenderer({ section, lang, ctaLabel }: Props) {
+export function SectionRenderer({
+  section,
+  lang,
+  ctaLabel,
+  title,
+  description,
+}: Props) {
   switch (section.type) {
     case "hero":
-      return <HeroSectionComponent section={section} />
+      return (
+        <HeroSectionComponent
+          section={section}
+          title={title}
+          description={description}
+        />
+      )
     case "role-cards":
       return <RoleCardsSectionComponent section={section} />
     case "benefits-grid":

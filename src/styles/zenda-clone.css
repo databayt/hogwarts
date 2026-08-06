@@ -1043,7 +1043,7 @@
 }
 .zenda-clone .section_services {
   position: relative;
-  background-color: transparent;
+  background-color: inherit;
 }
 .zenda-clone .services_wrap {
   position: relative;

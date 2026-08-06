@@ -9,7 +9,14 @@ import { buttonVariants } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
-import { CATEGORIES, FEATURE_DETAILS, FEATURES } from "./constants"
+import {
+  CATEGORIES,
+  FEATURE_DETAILS,
+  FEATURE_GROUPS,
+  FEATURES,
+  GROUP_OF,
+} from "./constants"
+import { GROUP_LABEL_AR, localizeFeature } from "./i18n"
 import { FEATURE_PAGE_DATA } from "./page-data"
 import { FEATURE_SHOWCASE } from "./page-data/showcase"
 import { BottomCta } from "./sections/bottom-cta"
@@ -46,28 +53,76 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
     )
   }
 
+  const localized = localizeFeature(feature, lang)
   const category = CATEGORIES.find((c) => c.id === feature.category)
   const resolveRelated = (ids?: string[]) =>
     (ids
       ?.map((rid) => FEATURES.find((f) => f.id === rid))
       .filter(Boolean) as typeof FEATURES) ?? []
 
-  // Shared chrome: back link + a subtle category pill.
-  const header = (
-    <div className="mb-12 flex items-center justify-between gap-4">
-      <Link
-        href={`/${lang}/features`}
-        className="text-muted-foreground hover:text-foreground group inline-flex items-center gap-2 text-sm transition-colors"
-      >
-        <BackArrow className="size-4 transition-transform group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5" />
-        {t.backToFeatures}
-      </Link>
-      {category && (
-        <span className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-medium">
-          {category.label}
-        </span>
-      )}
-    </div>
+  const groupId = GROUP_OF[feature.id]
+  const groupLabel = groupId
+    ? isRTL
+      ? (GROUP_LABEL_AR[groupId] ??
+        FEATURE_GROUPS.find((g) => g.id === groupId)?.label)
+      : FEATURE_GROUPS.find((g) => g.id === groupId)?.label
+    : undefined
+
+  // The hero copy: the page-data hero carries a fuller paragraph than the grid
+  // card's one-liner, so prefer it in English. Arabic has no page-data copy yet
+  // and falls back to the localized catalog description.
+  const heroDescription =
+    (!isRTL && FEATURE_PAGE_DATA[id]?.sections[0]?.type === "hero"
+      ? FEATURE_PAGE_DATA[id].sections[0].description
+      : undefined) ?? localized.description
+
+  // Page heading: large glyph in a row with the title + description, the
+  // category/group pills under them, then the primary calls to action.
+  const hero = (
+    <section className="mb-12">
+      <div className="flex items-start gap-4 md:gap-6">
+        <Glyph
+          title={feature.title}
+          size={80}
+          className="size-14 shrink-0 md:size-20"
+        />
+        <div className="flex flex-col gap-1">
+          <h1 className="text-4xl font-semibold tracking-tight">
+            {localized.title}
+          </h1>
+          <p className="text-foreground max-w-lg text-base leading-7 font-light text-pretty sm:text-lg">
+            {heroDescription}
+          </p>
+
+          {(category || groupLabel) && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {category && (
+                <span className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-medium">
+                  {category.label}
+                </span>
+              )}
+              {groupLabel && (
+                <span className="text-muted-foreground rounded-full border px-3 py-1 text-xs font-medium">
+                  {groupLabel}
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href={`/${lang}/onboarding`} className={cn(buttonVariants())}>
+              {t.ctaGetStarted}
+            </Link>
+            <Link
+              href={`/${lang}/pricing`}
+              className={cn(buttonVariants({ variant: "ghost" }))}
+            >
+              {t.ctaViewPricing}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
   )
 
   const bottomCta = (
@@ -93,16 +148,7 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
 
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="py-12 md:py-16">
-        {header}
-
-        {pageData.sections.slice(0, heroCount).map((section, i) => (
-          <SectionRenderer
-            key={i}
-            section={section}
-            lang={lang}
-            ctaLabel={t.ctaGetStarted}
-          />
-        ))}
+        {hero}
 
         {showcaseBlock}
 
@@ -133,17 +179,7 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="py-12 md:py-16">
-      {header}
-
-      <section className="mb-16 max-w-3xl">
-        <Glyph title={feature.title} size={56} className="mb-6" />
-        <h1 className="font-heading text-4xl font-bold tracking-tight text-balance md:text-5xl md:leading-[1.08]">
-          {feature.title}
-        </h1>
-        <p className="text-muted-foreground mt-5 text-lg leading-relaxed text-pretty md:text-xl">
-          {details?.longDescription || feature.description}
-        </p>
-      </section>
+      {hero}
 
       {showcaseBlock}
 

@@ -10,11 +10,16 @@
   scroll-padding-inline: max(22px, calc((100% - 1160px) / 2));
 }
 
-/* Swiper inside the scoped zenda testimonial must clip its looped track so the
- * off-screen duplicate slides don't push a horizontal page scrollbar. */
-.zenda-clone .swiper,
-.zenda-clone .testimonial_swiper_component,
-.zenda-clone .testimonial_swiper_wrap {
+/* Swiper inside the zenda clone clips its looped track so the off-screen
+ * duplicate slides don't push a horizontal page scrollbar.
+ *
+ * The testimonial's own wrappers are deliberately NOT in this list: the
+ * reference leaves `.testimonial_swiper_wrap` and `.testimonial_swiper_component`
+ * visible so the previous/next cards peek past the container on both sides of
+ * the centred one. `.section_testimonial` is already `overflow: hidden` (in the
+ * generated sheet, as on zenda), which clips the peek at the viewport edge --
+ * that is what keeps the page from scrolling sideways, not these two. */
+.zenda-clone .swiper {
   overflow: hidden;
 }
 

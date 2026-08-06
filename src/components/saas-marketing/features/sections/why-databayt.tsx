@@ -1,223 +1,190 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-// "Why Databayt" band — the apple mac/why-apple horizontally scrollable
-// value-props gallery with paddle nav, filled with the shared battle-card
-// deck (page-data/showcase/why.ts) and real product screenshots. Fixed
-// light band by design, matching the showcase deck above it.
+// "Why Databayt" band — mirrors the products carousel in ~/marketing:
+// an embla rail that peeks past the screen edges, three token-styled
+// cards per view, and apple-style paddle nav aligned to the container end.
 
 /* eslint-disable @next/next/no-img-element */
 
 "use client"
 
-import { useRef, useState } from "react"
+import * as React from "react"
 import Link from "next/link"
+import useEmblaCarousel, {
+  type UseEmblaCarouselType,
+} from "embla-carousel-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
 import { WHY_CARDS, WHY_HEADING, WHY_LINK } from "../page-data/showcase/why"
+import type { WhyCard } from "../types"
 
-function PaddleButton({
-  direction,
-  disabled,
-  onClick,
-}: {
-  direction: "prev" | "next"
-  disabled: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      aria-label={
-        direction === "prev"
-          ? "Previous item in Why Databayt gallery"
-          : "Next item in Why Databayt gallery"
-      }
-      className={cn(
-        "flex size-[36px] items-center justify-center rounded-full",
-        "bg-[rgb(232,232,237)] text-[rgba(0,0,0,0.56)]",
-        "transition-[background-color,color,opacity] duration-[100ms]",
-        "hover:bg-[rgb(223,223,227)] disabled:cursor-default disabled:opacity-[0.32]",
-        "cursor-pointer"
-      )}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 36 36"
-        className="size-[18px] fill-current rtl:rotate-180"
-        aria-hidden="true"
-      >
-        {direction === "prev" ? (
-          <path d="M20 25c-.384 0-.768-.146-1.06-.44l-5.5-5.5a1.5 1.5 0 0 1 0-2.12l5.5-5.5a1.5 1.5 0 1 1 2.12 2.12L16.622 18l4.44 4.44A1.5 1.5 0 0 1 20 25z" />
-        ) : (
-          <path d="M22.56 16.938l-5.508-5.5a1.493 1.493 0 0 0-2.116.003 1.502 1.502 0 0 0 .004 2.121L19.384 18l-4.444 4.438A1.502 1.502 0 0 0 15.996 25c.382 0 .764-.145 1.056-.438l5.508-5.5a1.502 1.502 0 0 0 0-2.125z" />
-        )}
-      </svg>
-    </button>
-  )
-}
+type EmblaApi = UseEmblaCarouselType[1]
 
 interface Props {
   lang: string
 }
 
 export function WhyDatabayt({ lang }: Props) {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [atStart, setAtStart] = useState(true)
-  const [atEnd, setAtEnd] = useState(false)
+  const isRTL = lang === "ar"
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "start",
+    direction: isRTL ? "rtl" : "ltr",
+    loop: false,
+    containScroll: "trimSnaps",
+  })
+  const [canPrev, setCanPrev] = React.useState(false)
+  const [canNext, setCanNext] = React.useState(false)
 
-  function scrollByCard(dir: -1 | 1) {
-    const el = scrollRef.current
-    if (!el) return
-    const card = el.querySelector<HTMLElement>("[data-card]")
-    const step = card ? card.offsetWidth + 20 : el.clientWidth * 0.5
-    el.scrollBy({ left: dir * step, behavior: "smooth" })
-  }
+  const onSelect = React.useCallback((api: EmblaApi) => {
+    if (!api) return
+    setCanPrev(api.canScrollPrev())
+    setCanNext(api.canScrollNext())
+  }, [])
 
-  function onScroll() {
-    const el = scrollRef.current
-    if (!el) return
-    setAtStart(el.scrollLeft <= 1)
-    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1)
-  }
+  React.useEffect(() => {
+    if (!emblaApi) return
+    onSelect(emblaApi)
+    emblaApi.on("select", onSelect).on("reInit", onSelect)
+    return () => {
+      emblaApi.off("select", onSelect).off("reInit", onSelect)
+    }
+  }, [emblaApi, onSelect])
+
+  // In RTL the visual "previous" arrow points right, "next" points left.
+  const PrevIcon = isRTL ? ChevronRight : ChevronLeft
+  const NextIcon = isRTL ? ChevronLeft : ChevronRight
 
   const headingLines = WHY_HEADING.split("\n")
 
   return (
-    <div className="relative ml-[calc(50%-50vw)] w-screen overflow-x-clip">
-      <section className="w-full overflow-hidden bg-[rgb(245,245,247)] pt-[144px] pb-[144px] max-[1068px]:pt-[100px] max-[1068px]:pb-[100px] max-[734px]:pt-[80px] max-[734px]:pb-[80px]">
-        {/* Section header row */}
-        <div className="mx-auto mb-[48px] flex max-w-[1260px] flex-wrap items-end justify-between gap-x-[80px] gap-y-[20px] px-[90px] max-[734px]:flex-col max-[734px]:items-start max-[734px]:px-[24px]">
-          <h2 className="max-w-[75%] min-w-[50%] flex-grow text-[48px] leading-[52.0077px] font-[600] tracking-[-0.144px] text-[rgba(0,0,0,0.88)] max-[1068px]:text-[40px] max-[1068px]:leading-[1.1] max-[734px]:max-w-full max-[734px]:text-[32px] max-[734px]:leading-[1.125]">
-            <span>
-              {headingLines.map((line, i) => (
-                <span key={line}>
-                  {i > 0 && <br />}
-                  {line}
-                </span>
-              ))}
-            </span>
+    // Symmetric logical margins break out of the centered container in both
+    // directions — a physical `ml-…` + `w-screen` only escapes to the left and
+    // gives /ar horizontal overflow.
+    <div className="bg-muted/40 relative mx-[calc(50%-50vw)] overflow-x-clip py-16 md:py-24">
+      <section className="container mx-auto">
+        {/* Section header */}
+        <div className="mx-auto mb-12 flex max-w-full flex-col items-center space-y-4 text-center">
+          <h2 className="font-heading text-3xl leading-[1.1] tracking-tight text-balance sm:text-4xl md:text-5xl">
+            {headingLines.map((line, i) => (
+              <span key={line}>
+                {i > 0 && <br />}
+                {line}
+              </span>
+            ))}
           </h2>
-          <div className="max-w-[75%] min-w-min">
-            <ul className="flex flex-wrap gap-x-[34px] gap-y-[5px] pb-[2px]">
-              <li>
-                <Link
-                  href={`/${lang}${WHY_LINK.href}`}
-                  className="inline-flex items-center text-[17px] leading-[21.0012px] text-[rgb(0,102,204)] hover:underline"
-                >
-                  <span>{WHY_LINK.label}</span>
-                  <svg
-                    viewBox="0 0 9 12"
-                    className="ms-[2px] size-[10px] fill-current rtl:rotate-180"
-                    aria-hidden="true"
-                  >
-                    <path d="M1.5 0L0 1.4 4.8 6 0 10.6 1.5 12l6.2-6z" />
-                  </svg>
-                </Link>
-              </li>
-            </ul>
-          </div>
+          <Link
+            href={`/${lang}${WHY_LINK.href}`}
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm transition-colors sm:text-base"
+          >
+            {WHY_LINK.label}
+            <NextIcon className="size-4" strokeWidth={2.25} />
+          </Link>
         </div>
 
-        {/* Gallery */}
-        <div className="relative">
-          <div
-            ref={scrollRef}
-            onScroll={onScroll}
-            data-rsc-scrollable="true"
-            className="mt-[-7.56px] mb-[-28px] overflow-x-auto overflow-y-hidden pb-[28px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            <ul className="flex items-stretch gap-[20px] ps-[90px] pe-[90px] max-[734px]:ps-[24px] max-[734px]:pe-[24px]">
-              {WHY_CARDS.map((card) => (
-                <li
-                  key={card.id}
-                  data-card
-                  className="w-[372px] shrink-0 max-[1068px]:w-[344px] max-[734px]:w-[260px]"
-                >
-                  <div className="mt-[7.56px]">
-                    <div
-                      className={cn(
-                        "relative box-border grid overflow-hidden",
-                        "min-h-[494.984px] grid-rows-[179px_1fr]",
-                        "max-[1068px]:min-h-[470px] max-[1068px]:grid-rows-[auto_1fr] max-[734px]:min-h-[420px]",
-                        "rounded-[28px] bg-white text-[rgba(0,0,0,0.88)]",
-                        "outline outline-[1px] outline-[rgb(245,245,247)]"
-                      )}
-                    >
-                      {/* Copy lockup (row 1) */}
-                      <div className="row-start-1">
-                        <h3 className="px-[32px] pt-[32px] text-[17px] leading-[21.0012px] font-[600] text-[rgba(0,0,0,0.88)] max-[734px]:px-[24px] max-[734px]:text-[14px]">
-                          <span>{card.topic}</span>
-                        </h3>
-                        <div className="px-[32px] pt-[8px] max-[734px]:px-[24px]">
-                          <p className="max-w-[496px] text-[28px] leading-[32px] font-[600] tracking-[0.196px] text-[rgba(0,0,0,0.88)] max-[1068px]:text-[24px] max-[1068px]:leading-[28px] max-[734px]:text-[21px] max-[734px]:leading-[25px]">
-                            <span>{card.headline}</span>
-                          </p>
-                          <p className="mt-[12px] max-w-[496px] text-[17px] leading-[21.0012px] text-[rgba(0,0,0,0.88)] max-[734px]:text-[14px] max-[734px]:leading-[18px]">
-                            <span>{card.body}</span>
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Image (row 2) fills the bottom of the card */}
-                      <div className="relative row-start-2 overflow-hidden">
-                        <img
-                          src={card.image}
-                          alt={card.headline}
-                          loading="lazy"
-                          className="absolute inset-0 size-full object-cover"
-                          style={{
-                            objectPosition: card.objectPosition ?? "center top",
-                          }}
-                        />
-                      </div>
-
-                      {/* Card link overlay */}
-                      <Link
-                        href={`/${lang}${card.href}`}
-                        className="absolute inset-0 z-[1] block cursor-pointer"
-                      >
-                        <span
-                          className="absolute end-[16px] bottom-[16px] z-[2] flex size-[44px] items-center justify-center"
-                          aria-hidden="true"
-                        >
-                          <span className="flex size-[36px] items-center justify-center rounded-full bg-[rgb(29,29,31)] text-white transition-[background-color,color,opacity] duration-[100ms]">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 20 20"
-                              className="size-[19.7969px] fill-current rtl:rotate-180"
-                            >
-                              <path d="M13.94 9.06l-4.5-4.5a1.5 1.5 0 0 0-2.12 2.12L10.755 10l-3.435 3.32a1.5 1.5 0 1 0 2.12 2.12l4.5-4.5a1.5 1.5 0 0 0 0-1.88z" />
-                            </svg>
-                          </span>
-                        </span>
-                        <span className="sr-only">{card.headline}</span>
-                      </Link>
-                    </div>
+        {/* Carousel — `@container` makes 100cqi resolve to the container
+            width, so three cards + two gaps match a `grid-cols-3 gap-4`. */}
+        <div className="@container">
+          <div className="[margin-inline:calc(50%_-_50vw)] overflow-x-clip">
+            <div className="mx-auto w-[100cqi] overflow-visible" ref={emblaRef}>
+              <div className="flex gap-4">
+                {WHY_CARDS.map((card) => (
+                  <div
+                    key={card.id}
+                    className="min-w-0 shrink-0 grow-0 basis-[100cqi] md:basis-[calc((100cqi-2rem)/3)]"
+                  >
+                    <WhyProductCard card={card} lang={lang} />
                   </div>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Paddle nav */}
-          <div className="mx-auto mt-[20px] flex max-w-[1260px] justify-center gap-[20px] px-[90px] max-[734px]:px-[24px] min-[1069px]:absolute min-[1069px]:top-[-104px] min-[1069px]:right-[90px] min-[1069px]:mt-0 min-[1069px]:w-auto min-[1069px]:px-0">
+          {/* Apple-style paddle nav, aligned to the end of the container */}
+          <div className="mt-8 flex justify-end gap-3">
             <PaddleButton
-              direction="prev"
-              disabled={atStart}
-              onClick={() => scrollByCard(-1)}
-            />
+              onClick={() => emblaApi?.scrollPrev()}
+              disabled={!canPrev}
+              label={isRTL ? "السابق" : "Previous"}
+            >
+              <PrevIcon className="size-5" strokeWidth={2.25} />
+            </PaddleButton>
             <PaddleButton
-              direction="next"
-              disabled={atEnd}
-              onClick={() => scrollByCard(1)}
-            />
+              onClick={() => emblaApi?.scrollNext()}
+              disabled={!canNext}
+              label={isRTL ? "التالي" : "Next"}
+            >
+              <NextIcon className="size-5" strokeWidth={2.25} />
+            </PaddleButton>
           </div>
         </div>
       </section>
     </div>
+  )
+}
+
+function WhyProductCard({ card, lang }: { card: WhyCard; lang: string }) {
+  return (
+    <Link
+      href={`/${lang}${card.href}`}
+      className="group bg-card text-card-foreground relative flex min-h-[440px] flex-col overflow-hidden rounded-3xl text-start"
+    >
+      {/* label / title / description — the title holds one line, the body two */}
+      <div className="p-8 md:p-10">
+        <p className="text-foreground/80 mb-1 text-sm font-medium tracking-tight">
+          {card.topic}
+        </p>
+        <h3 className="font-heading line-clamp-1 text-xl leading-[1.2] font-semibold tracking-tight">
+          {card.headline}
+        </h3>
+        <p className="text-foreground/70 mt-2 line-clamp-2 text-[15px] leading-snug">
+          {card.body}
+        </p>
+      </div>
+
+      {/* art — the bare line illustration, no tinted plate behind it.
+          `dark:invert` keeps the dark strokes legible on a dark card, the same
+          treatment the feature glyphs get elsewhere in this block. */}
+      <div className="pointer-events-none flex flex-1 items-center justify-center px-8 pb-8 md:px-10 md:pb-10">
+        <img
+          src={card.image}
+          alt=""
+          loading="lazy"
+          aria-hidden="true"
+          className="max-h-[180px] w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-[1.04] dark:invert"
+        />
+      </div>
+    </Link>
+  )
+}
+
+function PaddleButton({
+  onClick,
+  disabled,
+  label,
+  children,
+}: {
+  onClick: () => void
+  disabled?: boolean
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className={cn(
+        "bg-muted text-foreground/70 flex size-9 items-center justify-center rounded-full",
+        "hover:bg-muted-foreground/20 hover:text-foreground transition-colors",
+        "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+        "disabled:pointer-events-none disabled:opacity-40"
+      )}
+    >
+      {children}
+    </button>
   )
 }

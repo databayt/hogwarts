@@ -60,7 +60,7 @@ src/components/saas-marketing/
 │   │   ├── cta-banner-section.tsx
 │   │   ├── section-heading.tsx
 │   │   ├── related-features.tsx    # Related-feature cards (reuses the `Card` atom + Glyph)
-│   │   ├── feature-showcase.tsx    # zenda Services deck per feature (GSAP sticky cards + real screenshots, .zenda-clone band)
+│   │   ├── feature-showcase.tsx    # zenda Services deck per feature (GSAP sticky cards; composes pastel panel + browser window + cropped shot + chips; bg-muted band)
 │   │   ├── why-databayt.tsx        # apple why-Mac gallery (battle-card deck, paddle nav) on every detail page
 │   │   ├── bottom-cta.tsx          # Clean centered closing CTA (border-top, dual buttons)
 │   │   ├── info-card.tsx           # Clean content card mirroring the `Card` atom (Glyph + title + desc)

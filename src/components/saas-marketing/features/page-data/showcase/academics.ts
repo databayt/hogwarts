@@ -25,6 +25,16 @@ export const academicsShowcase: Record<string, ShowcaseData> = {
         image: `${SHOT}/students.png`,
         width: W,
         height: H,
+        // Crop past the app sidebar (source x≈257) to the table's right edge.
+        visual: {
+          zoom: 1.7,
+          origin: "49% 16%",
+          chips: [
+            { icon: "GraduationCap", label: "Grade 12 · A12" },
+            { icon: "CheckCircle", label: "Active" },
+          ],
+          stat: "Search, filter and export from one view",
+        },
       },
       {
         tag: "360° PROFILE",
@@ -35,6 +45,19 @@ export const academicsShowcase: Record<string, ShowcaseData> = {
         image: `${SHOT}/students-profile.png`,
         width: W,
         height: H,
+        visual: {
+          // Frames the tabs and activity heatmap only. The demo student's
+          // avatar is an initials placeholder and everything below the heatmap
+          // reads "No activity recorded yet" — both are cropped out, and the
+          // chips carry the identity the crop drops.
+          zoom: 2.05,
+          origin: "78% 24%",
+          chips: [
+            { icon: "BookOpen", label: "24 subjects" },
+            { icon: "CalendarCheck", label: "Enrolled June 2026" },
+          ],
+          stat: "Overview, subjects and achievements on one page",
+        },
       },
       {
         tag: "GUARDIANS",
@@ -45,6 +68,15 @@ export const academicsShowcase: Record<string, ShowcaseData> = {
         image: `${SHOT}/parents.png`,
         width: W,
         height: H,
+        visual: {
+          zoom: 1.7,
+          origin: "49% 16%",
+          chips: [
+            { icon: "UserPlus", label: "Link Child" },
+            { icon: "Shield", label: "Guardian portal access" },
+          ],
+          stat: "One login per guardian, every child linked",
+        },
       },
     ],
   },

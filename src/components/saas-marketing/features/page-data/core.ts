@@ -348,9 +348,9 @@ export const corePageData: Record<string, FeaturePageData> = {
     sections: [
       {
         type: "hero",
-        heading: "Student Information System",
+        heading: "Student",
         description:
-          "One record per student — identity, guardians, enrollment, attendance, results and documents — created at admission and kept current until graduation. No parallel spreadsheets, no retyping the same child into five systems.",
+          "One record per student, from first application to alumni — profiles, guardians, attendance and fees in one searchable directory.",
       },
       {
         type: "role-cards",
@@ -455,7 +455,7 @@ export const corePageData: Record<string, FeaturePageData> = {
         type: "checklist",
         heading: "Why schools pick this student system",
         items: [
-          { text: "Free for your first 200 students" },
+          { text: "Free for your first 100 students" },
           { text: "Arabic-first, RTL-native interface" },
           { text: "Import from a spreadsheet in minutes" },
           { text: "Export everything to CSV or JSON, anytime" },

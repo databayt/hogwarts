@@ -22,7 +22,7 @@ export function BottomCta({
   viewPricingLabel,
 }: Props) {
   return (
-    <section className="border-t pt-16 text-center">
+    <section className="pt-16 text-center">
       <h2 className="font-heading mx-auto max-w-2xl text-2xl font-bold tracking-tight text-balance md:text-3xl">
         {title}
       </h2>
