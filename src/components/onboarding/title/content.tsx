@@ -20,6 +20,7 @@ export default function TitleContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
   const schoolId = params.id as string
+  const lang = params.lang as string
   const formRef = useRef<TitleFormRef>(null)
   const { enableNext, disableNext, setCustomNavigation } = useHostValidation()
   const { data: titleData, loading } = useTitle(schoolId)
@@ -42,7 +43,7 @@ export default function TitleContent({ dictionary }: Props) {
     const handleNext = async () => {
       try {
         await formRef.current?.saveAndNext()
-        router.push(`/onboarding/${schoolId}/description`)
+        router.push(`/${lang}/onboarding/${schoolId}/description`)
       } catch {
         // Error handled in form
       }

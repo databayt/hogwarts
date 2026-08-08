@@ -21,6 +21,7 @@ export default function DescriptionContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
   const schoolId = params.id as string
+  const lang = params.lang as string
   const { enableNext, setCustomNavigation } = useHostValidation()
   const { data: descriptionData, loading } = useDescription(schoolId)
   const [step, setStep] = useState<"type" | "level">("type")
@@ -46,7 +47,7 @@ export default function DescriptionContent({ dictionary }: Props) {
   // Set up custom navigation to handle the Next button
   useEffect(() => {
     const handleNext = () => {
-      router.push(`/onboarding/${schoolId}/location`)
+      router.push(`/${lang}/onboarding/${schoolId}/location`)
     }
 
     setCustomNavigation({

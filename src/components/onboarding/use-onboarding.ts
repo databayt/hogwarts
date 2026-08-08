@@ -137,9 +137,11 @@ export function useOnboarding(schoolId?: string) {
   const goToStep = useCallback(
     (step: OnboardingStep) => {
       if (!currentSchoolId) return
-      router.push(`/onboarding/${currentSchoolId}/${step}`)
+      router.push(
+        `/${params.lang as string}/onboarding/${currentSchoolId}/${step}`
+      )
     },
-    [currentSchoolId, router]
+    [currentSchoolId, params.lang, router]
   )
 
   // Validate current step

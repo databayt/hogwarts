@@ -27,6 +27,7 @@ export default function BrandingContent({ dictionary }: Props) {
   const dict = dictionary?.onboarding || {}
   const router = useRouter()
   const params = useParams()
+  const lang = params.lang as string
   const { setCustomNavigation, enableNext } = useHostValidation()
   const { listing, updateListingData } = useListing()
   const [logo, setLogo] = useState<string>()
@@ -52,7 +53,7 @@ export default function BrandingContent({ dictionary }: Props) {
       if (logo) {
         updateListingData({ logoUrl: logo })
       }
-      router.push(`/onboarding/${id}/import`)
+      router.push(`/${lang}/onboarding/${id}/import`)
     } catch (error) {
       console.error("Error updating branding:", error)
     }

@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useMemo, useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
@@ -27,6 +27,7 @@ export function LocationForm({
   dictionary,
 }: LocationFormProps) {
   const router = useRouter()
+  const lang = useParams().lang as string
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string>("")
   const [locationData, setLocationData] = useState<LocationFormData>({
@@ -79,7 +80,7 @@ export function LocationForm({
 
       // If no address entered (Mapbox unavailable), just skip to next step
       if (!locationData.address) {
-        router.push(`/onboarding/${schoolId}/stand-out`)
+        router.push(`/${lang}/onboarding/${schoolId}/stand-out`)
         return
       }
 
@@ -92,7 +93,7 @@ export function LocationForm({
 
           if (result.success) {
             onSuccess?.()
-            router.push(`/onboarding/${schoolId}/stand-out`)
+            router.push(`/${lang}/onboarding/${schoolId}/stand-out`)
           } else {
             setError(
               (result.code && ERROR_MAP[result.code]) ??

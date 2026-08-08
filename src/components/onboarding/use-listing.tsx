@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { createContext, useCallback, useContext, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import { getListing } from "./actions"
 
@@ -298,6 +298,7 @@ export function useListing() {
 // Helper hook for navigation between steps
 export function useHostNavigation(currentStep: string) {
   const router = useRouter()
+  const lang = useParams().lang as string
   const { listing } = useListing()
 
   const goToStep = useCallback(
@@ -305,9 +306,9 @@ export function useHostNavigation(currentStep: string) {
       if (!listing?.id) {
         return
       }
-      router.push(`/onboarding/${listing.id}/${step}`)
+      router.push(`/${lang}/onboarding/${listing.id}/${step}`)
     },
-    [listing?.id, router]
+    [lang, listing?.id, router]
   )
 
   const goToNextStep = useCallback(
@@ -325,8 +326,8 @@ export function useHostNavigation(currentStep: string) {
   )
 
   const goToOverview = useCallback(() => {
-    router.push("/onboarding/overview")
-  }, [router])
+    router.push(`/${lang}/onboarding/overview`)
+  }, [lang, router])
 
   return {
     goToStep,
