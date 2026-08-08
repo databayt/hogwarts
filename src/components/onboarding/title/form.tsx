@@ -2,10 +2,17 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useImperativeHandle, useTransition } from "react"
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+  useTransition,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { PRIMARY_ROOT_DOMAIN, rootDomainFromLocation } from "@/lib/root-domain"
 import { generateSubdomain } from "@/lib/subdomain"
 import {
   Form,
@@ -39,6 +46,12 @@ export interface TitleFormRef {
 export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
   ({ schoolId, initialData, onSuccess, onTitleChange, dictionary }, ref) => {
     const [isPending, startTransition] = useTransition()
+    // Resolve after mount: the server can't know which root domain the visitor
+    // arrived on, and rendering it directly would hydration-mismatch on balqalam.
+    const [rootDomain, setRootDomain] = useState(PRIMARY_ROOT_DOMAIN as string)
+    useEffect(() => {
+      setRootDomain(rootDomainFromLocation())
+    }, [])
     const { isRTL } = useLocale()
     const dict = dictionary?.onboarding || {}
 
@@ -176,7 +189,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                       disabled={isPending}
                     />
                     <span className="bg-muted text-muted-foreground rounded-e-lg border-s px-3 py-2 font-mono text-sm whitespace-nowrap">
-                      .databayt.org
+                      .{rootDomain}
                     </span>
                   </div>
                 </FormControl>

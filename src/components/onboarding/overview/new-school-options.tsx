@@ -45,7 +45,7 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
       <div className="space-y-2">
         {/* Create a new school */}
         <Link
-          href="/onboarding/overview"
+          href={`/${locale}/onboarding/overview`}
           onClick={handleCreateNew}
           className="border-border group flex h-auto min-h-[50px] w-full items-center justify-between border-b py-2 transition-all sm:min-h-[60px] sm:py-3"
         >
@@ -66,7 +66,7 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
 
         {/* Create from template */}
         <Link
-          href="/onboarding/overview"
+          href={`/${locale}/onboarding/overview`}
           onClick={handleCreateFromTemplate}
           className="border-border group flex h-auto min-h-[50px] w-full items-center justify-between border-b py-2 transition-all sm:min-h-[60px] sm:py-3"
         >
