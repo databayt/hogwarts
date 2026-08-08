@@ -10,6 +10,8 @@ import { useEffect } from "react"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
+import { mx } from "../shared/rtl-motion"
+
 /**
  * Scroll-driven assembly for the "You juggle life—we handle fees" section —
  * a faithful port of zenda.com's `featureHeader` + `sectionFeature` timelines.
@@ -71,7 +73,7 @@ export function FeaturesScroll() {
         "[feature-left-1]",
         {
           y: "-12rem",
-          x: "-26rem",
+          x: mx("-26rem"),
           scale: 1.2,
           rotate: "-20deg",
           duration: 0.8,
@@ -82,7 +84,7 @@ export function FeaturesScroll() {
         "[feature-left-2]",
         {
           y: "-4rem",
-          x: "-28rem",
+          x: mx("-28rem"),
           scale: 1.15,
           rotate: "-8deg",
           duration: 0.9,
@@ -93,7 +95,7 @@ export function FeaturesScroll() {
         "[feature-left-3]",
         {
           y: "-5rem",
-          x: "-30rem",
+          x: mx("-30rem"),
           scale: 1.1,
           rotate: "-12deg",
           duration: 0.9,
@@ -102,19 +104,31 @@ export function FeaturesScroll() {
       )
       tl.from(
         "[feature-left-4]",
-        { y: "-3rem", x: "-34rem", scale: 1.25, rotate: "-6deg", duration: 1 },
+        {
+          y: "-3rem",
+          x: mx("-34rem"),
+          scale: 1.25,
+          rotate: "-6deg",
+          duration: 1,
+        },
         "<"
       )
       tl.from(
         "[feature-left-5]",
-        { y: "-6rem", x: "-38rem", scale: 1.2, rotate: "-9deg", duration: 1 },
+        {
+          y: "-6rem",
+          x: mx("-38rem"),
+          scale: 1.2,
+          rotate: "-9deg",
+          duration: 1,
+        },
         "<"
       )
       tl.from(
         "[feature-left-6]",
         {
           y: "-5rem",
-          x: "-40rem",
+          x: mx("-40rem"),
           scale: 1.18,
           rotate: "-7deg",
           duration: 1.2,
@@ -125,7 +139,7 @@ export function FeaturesScroll() {
         "[feature-left-7]",
         {
           y: "-4rem",
-          x: "-44rem",
+          x: mx("-44rem"),
           scale: 1.22,
           rotate: "-11deg",
           duration: 1.2,
@@ -134,48 +148,96 @@ export function FeaturesScroll() {
       )
       tl.from(
         "[feature-left-8]",
-        { y: "-3rem", x: "-46rem", scale: 1.1, rotate: "-5deg", duration: 1.2 },
+        {
+          y: "-3rem",
+          x: mx("-46rem"),
+          scale: 1.1,
+          rotate: "-5deg",
+          duration: 1.2,
+        },
         "<"
       )
 
       tl.from(
         "[feature-right-1]",
-        { y: "-12rem", x: "26rem", scale: 1.2, rotate: "18deg", duration: 0.8 },
+        {
+          y: "-12rem",
+          x: mx("26rem"),
+          scale: 1.2,
+          rotate: "18deg",
+          duration: 0.8,
+        },
         0
       )
       tl.from(
         "[feature-right-2]",
-        { y: "-4rem", x: "28rem", scale: 1.15, rotate: "8deg", duration: 0.9 },
+        {
+          y: "-4rem",
+          x: mx("28rem"),
+          scale: 1.15,
+          rotate: "8deg",
+          duration: 0.9,
+        },
         "<"
       )
       tl.from(
         "[feature-right-3]",
-        { y: "-5rem", x: "30rem", scale: 1.1, rotate: "12deg", duration: 0.9 },
+        {
+          y: "-5rem",
+          x: mx("30rem"),
+          scale: 1.1,
+          rotate: "12deg",
+          duration: 0.9,
+        },
         "<"
       )
       tl.from(
         "[feature-right-4]",
-        { y: "-3rem", x: "34rem", scale: 1.25, rotate: "6deg", duration: 1 },
+        {
+          y: "-3rem",
+          x: mx("34rem"),
+          scale: 1.25,
+          rotate: "6deg",
+          duration: 1,
+        },
         "<"
       )
       tl.from(
         "[feature-right-5]",
-        { y: "-6rem", x: "38rem", scale: 1.2, rotate: "9deg", duration: 1 },
+        { y: "-6rem", x: mx("38rem"), scale: 1.2, rotate: "9deg", duration: 1 },
         "<"
       )
       tl.from(
         "[feature-right-6]",
-        { y: "-5rem", x: "40rem", scale: 1.18, rotate: "7deg", duration: 1.2 },
+        {
+          y: "-5rem",
+          x: mx("40rem"),
+          scale: 1.18,
+          rotate: "7deg",
+          duration: 1.2,
+        },
         "<"
       )
       tl.from(
         "[feature-right-7]",
-        { y: "-4rem", x: "44rem", scale: 1.22, rotate: "11deg", duration: 1.2 },
+        {
+          y: "-4rem",
+          x: mx("44rem"),
+          scale: 1.22,
+          rotate: "11deg",
+          duration: 1.2,
+        },
         "<"
       )
       tl.from(
         "[feature-right-8]",
-        { y: "-3rem", x: "46rem", scale: 1.1, rotate: "5deg", duration: 1.2 },
+        {
+          y: "-3rem",
+          x: mx("46rem"),
+          scale: 1.1,
+          rotate: "5deg",
+          duration: 1.2,
+        },
         "<"
       )
 
@@ -187,38 +249,38 @@ export function FeaturesScroll() {
 
       tl.from(
         "[mockup-item-left-1]",
-        { x: "-18rem", scale: 1.2, duration: 1.2 },
+        { x: mx("-18rem"), scale: 1.2, duration: 1.2 },
         "<"
       )
       tl.from(
         "[mockup-item-left-2]",
-        { x: "-20rem", scale: 1.1, duration: 1.2 },
+        { x: mx("-20rem"), scale: 1.1, duration: 1.2 },
         "<"
       )
       tl.from(
         "[mockup-item-left-3]",
-        { x: "-24rem", scale: 1.15, duration: 1.2 },
+        { x: mx("-24rem"), scale: 1.15, duration: 1.2 },
         "<"
       )
 
       tl.from(
         "[mockup-item-right-1]",
-        { x: "14rem", scale: 1.2, duration: 1.2 },
+        { x: mx("14rem"), scale: 1.2, duration: 1.2 },
         "<"
       )
       tl.from(
         "[mockup-item-right-2]",
-        { x: "18rem", scale: 1.1, duration: 1.2 },
+        { x: mx("18rem"), scale: 1.1, duration: 1.2 },
         "<"
       )
       tl.from(
         "[mockup-item-right-3]",
-        { x: "20rem", scale: 1.15, duration: 1.2 },
+        { x: mx("20rem"), scale: 1.15, duration: 1.2 },
         "<"
       )
       tl.from(
         "[mockup-item-right-4]",
-        { x: "24rem", scale: 1.1, duration: 1.2 },
+        { x: mx("24rem"), scale: 1.1, duration: 1.2 },
         "<"
       )
     })

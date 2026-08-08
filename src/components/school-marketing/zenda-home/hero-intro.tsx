@@ -9,6 +9,8 @@
 import { useEffect } from "react"
 import { gsap } from "gsap"
 
+import { mx } from "../shared/rtl-motion"
+
 /**
  * Home hero intro — a faithful port of zenda.com's GSAP `heroLoad` timeline.
  *
@@ -89,7 +91,7 @@ export function HeroIntro() {
           window.innerWidth / 2 - (logoRect.left + logoRect.width / 2)
         tl.from(heroLogo, { x: logoToCentre, duration: 0.8 }, 1.8)
         // ...and the video from centre (scaled up) out to the right.
-        tl.from(heroVideo, { x: "-32%", scale: 1.4, duration: 0.8 }, 1.8)
+        tl.from(heroVideo, { x: mx("-32%"), scale: 1.4, duration: 0.8 }, 1.8)
         // Nav links fade in, staggered, finishing as the split lands.
         tl.fromTo(
           heroLinks,
@@ -100,11 +102,11 @@ export function HeroIntro() {
         // Heading + paragraph slide in from the right.
         tl.from(
           heroElements,
-          { x: "40%", opacity: 0, stagger: 0.18, duration: 0.8 },
+          { x: mx("40%"), opacity: 0, stagger: 0.18, duration: 0.8 },
           "<"
         )
         // Button trails just behind the text.
-        tl.from(heroBtn, { x: "30%", opacity: 0, duration: 0.8 }, "<.2")
+        tl.from(heroBtn, { x: mx("30%"), opacity: 0, duration: 0.8 }, "<.2")
       } else {
         // ---------- Mobile: staggered slide-in from the right ----------
         const heroElements = gsap.utils.toArray<HTMLElement>("[hero-element]")
@@ -117,11 +119,11 @@ export function HeroIntro() {
 
         tl.from(
           heroElements,
-          { x: "4rem", opacity: 0, stagger: 0.18, duration: 1.2 },
+          { x: mx("4rem"), opacity: 0, stagger: 0.18, duration: 1.2 },
           0
         )
-        tl.from(heroBtn, { x: "4rem", opacity: 0, duration: 0.8 }, "<.4")
-        tl.from(heroVideo, { x: "4rem", opacity: 0, duration: 0.8 }, "<.2")
+        tl.from(heroBtn, { x: mx("4rem"), opacity: 0, duration: 0.8 }, "<.4")
+        tl.from(heroVideo, { x: mx("4rem"), opacity: 0, duration: 0.8 }, "<.2")
       }
     })
 

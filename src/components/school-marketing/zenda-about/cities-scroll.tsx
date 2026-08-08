@@ -10,6 +10,8 @@ import { useEffect } from "react"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
+import { mx, rtlSign } from "../shared/rtl-motion"
+
 /**
  * "Our Growth Journey" timeline reveal — a faithful port of zenda.com/about-us'
  * `aboutCitiesIntro`.
@@ -48,11 +50,20 @@ export function AboutCitiesScroll() {
         const content = item.querySelector("[about-cities-content]")
         if (!block || !content) return
 
+        // The pill settles on the END side (`inset-inline: auto 0`), and this
+        // sweeps it in from the START side. Both edges are named physically
+        // because GSAP writes them as physical CSS, so they have to be swapped
+        // by hand under RTL -- left unflipped, the "from" state would be the
+        // side the pill already settles on and the sweep would not happen at
+        // all. `mx()` cannot help here: it mirrors a translate offset, and this
+        // animates the inset edges themselves.
+        const startEdge = rtlSign() === -1 ? "right" : "left"
+        const endEdge = rtlSign() === -1 ? "left" : "right"
         tl.from(
           block,
           {
-            right: "auto",
-            left: "0%",
+            [endEdge]: "auto",
+            [startEdge]: "0%",
             backgroundColor: "#F4F2EC",
             duration: 1,
             ease: "power2.out",
@@ -61,7 +72,7 @@ export function AboutCitiesScroll() {
         )
         tl.from(
           content,
-          { opacity: 0, x: "8%", duration: 0.6, ease: "power2.out" },
+          { opacity: 0, x: mx("8%"), duration: 0.6, ease: "power2.out" },
           `-=${0.8 - i * 0.1}` // overlap a touch more each row
         )
       })

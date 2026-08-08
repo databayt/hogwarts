@@ -183,9 +183,44 @@ const RENAME_RULES = [...LOGICAL_RENAMES]
     `$1$2${to}$3`,
   ])
 
+// `inset` is a rename's blind spot AND rtlcss's: verified against rtlcss 4.3,
+// it flips `margin`, `padding`, `border-width/color/style` and `border-radius`
+// shorthands but leaves `inset` completely untouched. This sheet carries ~70 of
+// them and they position nearly every decorative absolute in the clone
+// (`inset: 28% auto auto -6%` and friends), so without this the art stays
+// pinned to the physical side it was authored on while the layout around it
+// mirrors.
+//
+// The four-value form `inset: T R B L` splits exactly into the two logical
+// shorthands — `inset-block: T B` and `inset-inline: L R`, where inset-inline
+// takes START then END. In LTR start is left, so `inset-inline: L R` is
+// literally the same box; in RTL start becomes right and it mirrors for free.
+//
+// Only the four-value form is touched. One, two and three values are all
+// horizontally symmetric (`T H B` puts the same H on both sides), so they need
+// no flip and are left exactly as authored.
+const INSET_RE = /(^|;)(\s*)inset(\s*:\s*)([^;}]+)/g
+let insetSplitCount = 0
+
+function splitInset(body) {
+  return body.replace(INSET_RE, (whole, lead, ws, colon, rawValue) => {
+    const bang = /!\s*important/i.test(rawValue)
+    const value = rawValue.replace(/!\s*important/i, "").trim()
+    // A `calc()` or `var()` can hide spaces, which would break token counting —
+    // leave anything with parentheses alone rather than mangle it.
+    if (/[()]/.test(value)) return whole
+    const parts = value.split(/\s+/).filter(Boolean)
+    if (parts.length !== 4) return whole
+    const [top, right, bottom, left] = parts
+    const imp = bang ? " !important" : ""
+    insetSplitCount++
+    return `${lead}${ws}inset-block${colon}${top} ${bottom}${imp}; inset-inline: ${left} ${right}${imp}`
+  })
+}
+
 let renameCount = 0
 function logicalize(body) {
-  let outBody = body
+  let outBody = splitInset(body)
   for (const [re, sub] of RENAME_RULES) {
     outBody = outBody.replace(re, (...m) => {
       renameCount++
@@ -439,7 +474,7 @@ const css =
 writeFileSync("/Users/abdout/hogwarts/src/styles/zenda-clone.css", css, "utf8")
 console.log(
   `keyframes=${keyframes.length} rules=${out.length} bytes=${css.length}\n` +
-    `  Pass A  logical renames : ${renameCount}\n` +
+    `  Pass A  logical renames : ${renameCount} (+${insetSplitCount} inset shorthands split)\n` +
     `  Pass B  rtl overlay rules: ${overlayRuleCount} ` +
     `(${flipDeclCount} flipped, ${typoDeclCount} arabic-typography)`
 )

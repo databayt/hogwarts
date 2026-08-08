@@ -52,7 +52,7 @@ export function Benefits() {
               </div>
               <div benefits-heading="" className="benefits_heading-wrap">
                 <h2 className="benefits_heading heading-style-h3">
-                  Rewards for everything school related
+                  Discounts for everything school related
                 </h2>
               </div>
               <div benefits-coin-1="" className="benefits_coin-wrap">
@@ -63,7 +63,10 @@ export function Benefits() {
               </div>
             </div>
 
-            {/* Top-right card — dark "450+ institutions" with three stars. */}
+            {/* Top-right card — dark headline with three stars. Zenda's "450+
+                institutions" was its own customer count; a single school has no
+                countable equivalent, so this states who sets the discounts
+                instead of inventing a metric (same call `schools.tsx` made). */}
             <div
               benefits-block-right=""
               className="benefits_block is-institutes"
@@ -72,7 +75,7 @@ export function Benefits() {
                 benefits-heading-right=""
                 className="benefits_sub-heading heading-style-h2"
               >
-                450+ institutions
+                Set by your school
               </h3>
               <div benefits-star-1="" className="benefits_star-wrap">
                 <img src={STAR} loading="lazy" alt="" className="img-auto" />

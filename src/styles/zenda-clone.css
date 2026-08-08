@@ -475,7 +475,8 @@
   border-radius: 0.75rem;
   width: 0%;
   position: absolute;
-  inset: 0% 0% 0% -4%;
+  inset-block: 0% 0%;
+  inset-inline: -4% 0%;
 }
 .zenda-clone .hero_spn_bg.is-partnering,
 .zenda-clone .hero_spn_bg.is-designed {
@@ -483,7 +484,8 @@
   perspective-origin: 100% center;
   transform-origin: 100% center;
   width: 0%;
-  inset: 0% -3% 0% auto;
+  inset-block: 0% 0%;
+  inset-inline: auto -3%;
 }
 .zenda-clone .schools-hero_lottie-parent {
   display: block;
@@ -1042,7 +1044,8 @@
   padding-top: 12%;
   padding-bottom: 24%;
   position: absolute;
-  inset: 0% auto 0% -3%;
+  inset-block: 0% 0%;
+  inset-inline: -3% auto;
 }
 .zenda-clone .services_link {
   background-color: var(--_primitives---background--dark-beige);
@@ -1327,7 +1330,8 @@
   width: 40%;
   max-width: 30.75rem;
   position: absolute;
-  inset: -18% 0% auto auto;
+  inset-block: -18% auto;
+  inset-inline: auto 0%;
 }
 .zenda-clone .section_parents-hero {
   padding-bottom: 4rem;
@@ -1368,7 +1372,8 @@
   width: 120%;
   max-width: 109.4rem;
   position: absolute;
-  inset: auto auto -26% -8%;
+  inset-block: auto -26%;
+  inset-inline: -8% auto;
   transform: none;
 }
 .zenda-clone .parents-hero_heading {
@@ -2506,14 +2511,16 @@
 }
 .zenda-clone .about-hero_card_component.is-1 {
   z-index: 1;
-  inset: 10% auto auto 4%;
+  inset-block: 10% auto;
+  inset-inline: 4% auto;
   transform: rotate(3.6deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-1 {
   transform: rotate(-3.6deg);
 }
 .zenda-clone .about-hero_card_component.is-2 {
-  inset: 0% auto auto 19%;
+  inset-block: 0% auto;
+  inset-inline: 19% auto;
   transform: rotate(-3.8deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-2 {
@@ -2521,28 +2528,32 @@
 }
 .zenda-clone .about-hero_card_component.is-3 {
   z-index: 1;
-  inset: 14% auto auto 34%;
+  inset-block: 14% auto;
+  inset-inline: 34% auto;
   transform: rotate(2deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-3 {
   transform: rotate(-2deg);
 }
 .zenda-clone .about-hero_card_component.is-4 {
-  inset: 0% 34% auto auto;
+  inset-block: 0% auto;
+  inset-inline: auto 34%;
   transform: rotate(-2deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-4 {
   transform: rotate(2deg);
 }
 .zenda-clone .about-hero_card_component.is-5 {
-  inset: 20% 21% auto auto;
+  inset-block: 20% auto;
+  inset-inline: auto 21%;
   transform: rotate(7.2deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-5 {
   transform: rotate(-7.2deg);
 }
 .zenda-clone .about-hero_card_component.is-6 {
-  inset: 0% 5% auto auto;
+  inset-block: 0% auto;
+  inset-inline: auto 5%;
   transform: rotate(-2deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-6 {
@@ -2803,7 +2814,8 @@
 }
 .zenda-clone .about-cities_year-block {
   position: absolute;
-  inset: 0 0 0 auto;
+  inset-block: 0 0;
+  inset-inline: auto 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -3016,7 +3028,8 @@
   max-width: 11.2rem;
   background-color: #edeae3;
   border-radius: 0.875rem;
-  inset: 28% auto auto -6%;
+  inset-block: 28% auto;
+  inset-inline: -6% auto;
 }
 .zenda-clone .about-team_bg-block.is-2nd {
   width: 6%;
@@ -3024,7 +3037,8 @@
   max-width: 5.4rem;
   background-color: #e2dfd6;
   border-radius: 0.5rem;
-  inset: 10% auto auto 14%;
+  inset-block: 10% auto;
+  inset-inline: 14% auto;
 }
 .zenda-clone .about-team_bg-block.is-3rd {
   width: 6%;
@@ -3032,10 +3046,12 @@
   max-width: 5.4rem;
   background-color: #e2dfd6;
   border-radius: 0.5rem;
-  inset: 26% 6% auto auto;
+  inset-block: 26% auto;
+  inset-inline: auto 6%;
 }
 .zenda-clone .about-team_bg-block.is-4th {
-  inset: auto auto 9% 30%;
+  inset-block: auto 9%;
+  inset-inline: 30% auto;
 }
 @media screen and (max-width: 991px) {
   .zenda-clone .about-team_wrap {
@@ -4183,7 +4199,8 @@
   text-decoration: none !important;
   display: inline-block !important;
   position: fixed !important;
-  inset: auto 12px 12px auto !important;
+  inset-block: auto 12px !important;
+  inset-inline: auto 12px !important;
   transform: none !important;
 }
 .zenda-clone .w-webflow-badge > img {
@@ -6146,7 +6163,8 @@
   background-size: auto;
   width: 36%;
   position: absolute;
-  inset: 0% 0% 0% auto;
+  inset-block: 0% 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone[dir="rtl"] .black-segment {
   background-position: 0%;
@@ -6487,7 +6505,8 @@
   background-size: auto;
   width: 50%;
   position: absolute;
-  inset: 0% 0% 0% auto;
+  inset-block: 0% 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone[dir="rtl"] .split-absolute-black {
   background-position: 0%;
@@ -6975,7 +6994,8 @@
   height: 28px;
   display: flex;
   position: absolute;
-  inset: auto 0% 0% auto;
+  inset-block: auto 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone .testimonial-portrait {
   align-items: center;
@@ -8574,7 +8594,8 @@
   z-index: 999;
   display: block;
   position: fixed;
-  inset: auto auto 1.25rem 1.25rem;
+  inset-block: auto 1.25rem;
+  inset-inline: 1.25rem auto;
 }
 .zenda-clone .fs-cc-banner_close-icon {
   width: 1.5rem;
@@ -8597,7 +8618,8 @@
   font-size: 1.25rem;
   text-decoration: none;
   position: absolute;
-  inset: -0.75rem -0.75rem auto auto;
+  inset-block: -0.75rem auto;
+  inset-inline: auto -0.75rem;
   box-shadow: -1px 1px 12px #3333331a;
 }
 .zenda-clone[dir="rtl"] .fs-cc-prefs_close {
@@ -9635,7 +9657,8 @@
 }
 .zenda-clone .search-icon {
   position: absolute;
-  inset: 22px 0% 0% 22px;
+  inset-block: 22px 0%;
+  inset-inline: 22px 0%;
 }
 .zenda-clone .stick-wrapper {
   position: sticky;
@@ -9672,7 +9695,8 @@
 .zenda-clone .search-button-wrapper {
   height: 100%;
   position: absolute;
-  inset: 0% 0% auto auto;
+  inset-block: 0% auto;
+  inset-inline: auto 0%;
 }
 .zenda-clone .paragraph-detials-medium {
   color: var(--black);
@@ -9723,7 +9747,8 @@
   width: 60px;
   height: 100%;
   position: static;
-  inset: 0% 0% auto auto;
+  inset-block: 0% auto;
+  inset-inline: auto 0%;
 }
 .zenda-clone .profile-block {
   align-items: center;
@@ -10718,7 +10743,8 @@
   inset-inline-start: -97.5%;
 }
 .zenda-clone .extra-img.last-slide {
-  inset: 0 -97.5% 0 auto;
+  inset-block: 0 0;
+  inset-inline: auto -97.5%;
 }
 .zenda-clone .slider-arrow-icon {
   color: #000;
@@ -11659,7 +11685,8 @@
   border-radius: 30px;
   max-width: 40%;
   position: absolute;
-  inset: -10% auto auto 0%;
+  inset-block: -10% auto;
+  inset-inline: 0% auto;
   box-shadow: 0 4px 50px #3333330d;
 }
 .zenda-clone .content-number {
@@ -12073,7 +12100,8 @@
   max-height: 200%;
 }
 .zenda-clone .slider-9 {
-  inset: auto 0% 0% auto;
+  inset-block: auto 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone .mask-5 {
   width: 100%;
@@ -12093,7 +12121,8 @@
 .zenda-clone .arrow-right {
   width: 50px;
   height: 50px;
-  inset: auto 0% 0% auto;
+  inset-block: auto 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone .container-19 {
   width: 90%;
@@ -12154,7 +12183,8 @@
 .zenda-clone .arrow-left {
   width: 50px;
   height: 50px;
-  inset: auto auto 0% 0%;
+  inset-block: auto 0%;
+  inset-inline: 0% auto;
 }
 .zenda-clone .btn-2 {
   letter-spacing: 1px;
@@ -12200,7 +12230,8 @@
   width: 50px;
   height: 50px;
   display: block;
-  inset: auto 0% 0% auto;
+  inset-block: auto 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone .carousel-copy {
   background-color: #0000;
@@ -12236,7 +12267,8 @@
   width: 50px;
   height: 50px;
   display: block;
-  inset: auto auto 0% 0%;
+  inset-block: auto 0%;
+  inset-inline: 0% auto;
 }
 .zenda-clone .card-body-2 {
   border-radius: 1rem;
@@ -12596,7 +12628,8 @@
   font-weight: 600;
   display: flex;
   position: absolute;
-  inset: 0% 0% auto auto;
+  inset-block: 0% auto;
+  inset-inline: auto 0%;
 }
 .zenda-clone[dir="rtl"] .text-block-29 {
   font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
@@ -12799,7 +12832,8 @@
   margin-bottom: 40px;
   margin-inline-end: 40px;
   position: fixed;
-  inset: auto 0% 0% auto;
+  inset-block: auto 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone .back-to-top-arrow {
   transform: translate(0);
@@ -14994,14 +15028,16 @@
   display: flex;
 }
 .zenda-clone .slider-arrow-v2.is-bottom-next {
-  inset: auto 0% 0% auto;
+  inset-block: auto 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone .slider-arrow-v2.is-centre-previous,
 .zenda-clone .slider-arrow-v2.is-centre-next {
   bottom: 4rem;
 }
 .zenda-clone .slider-arrow-v2.is-bottom-previous {
-  inset: auto 4rem 0% auto;
+  inset-block: auto 0%;
+  inset-inline: auto 4rem;
 }
 .zenda-clone .rl-styleguide_icons-list {
   grid-column-gap: 1rem;
@@ -15703,7 +15739,8 @@
 .zenda-clone .global-styles {
   display: block;
   position: fixed;
-  inset: 0% auto auto 0%;
+  inset-block: 0% auto;
+  inset-inline: 0% auto;
 }
 .zenda-clone .nav_component {
   z-index: 999;
@@ -16011,7 +16048,8 @@
   width: 38%;
   max-width: 10.875rem;
   position: absolute;
-  inset: auto auto -9% 50%;
+  inset-block: auto -9%;
+  inset-inline: 50% auto;
   transform: translate(-50%);
 }
 .zenda-clone[dir="rtl"] .testimonial_abs-wrap {
@@ -16025,7 +16063,8 @@
   align-items: center;
   display: flex;
   position: absolute;
-  inset: auto auto 2rem 4rem;
+  inset-block: auto 2rem;
+  inset-inline: 4rem auto;
 }
 .zenda-clone .testimonial_slider_btn {
   border: 0.1875rem solid var(--black);
@@ -16495,7 +16534,8 @@
   width: 79.89%;
   height: 25.13%;
   position: absolute;
-  inset: -12% -14% auto auto;
+  inset-block: -12% auto;
+  inset-inline: auto -14%;
 }
 .zenda-clone .features_mobile_block.is-2 {
   background-color: var(--_primitives---primary--blue);
@@ -16504,7 +16544,8 @@
   width: 40%;
   height: 16%;
   position: absolute;
-  inset: 14% -16% auto auto;
+  inset-block: 14% auto;
+  inset-inline: auto -16%;
 }
 .zenda-clone .features_mobile_block.is-3 {
   background-image: radial-gradient(circle at 0 0, #a768f1 30%, #0c209c);
@@ -16536,7 +16577,8 @@
   padding-inline-start: 3.75rem;
   display: flex;
   position: absolute;
-  inset: 30% auto auto 18%;
+  inset-block: 30% auto;
+  inset-inline: 18% auto;
 }
 .zenda-clone[dir="rtl"] .features_mobile_block.is-4 {
   background-image: linear-gradient(-170deg, #879cd7cc, #703ccccc);
@@ -16561,7 +16603,8 @@
   width: 79.89%;
   height: 25.13%;
   position: absolute;
-  inset: auto auto 23% -48%;
+  inset-block: auto 23%;
+  inset-inline: -48% auto;
 }
 .zenda-clone .features_mobile_block.is-7 {
   background-color: var(--_primitives---primary--purple);
@@ -16570,7 +16613,8 @@
   width: 79.89%;
   height: 25.13%;
   position: absolute;
-  inset: auto auto -4% -10%;
+  inset-block: auto -4%;
+  inset-inline: -10% auto;
   box-shadow:
     inset 0 2px 6.99125rem #881bc8,
     1.125rem 1.125rem 2rem #fff;
@@ -16688,7 +16732,8 @@
   border-radius: 0.875rem;
   width: 6%;
   position: absolute;
-  inset: 0% auto auto 0%;
+  inset-block: 0% auto;
+  inset-inline: 0% auto;
 }
 .zenda-clone .rewards_bg-block.is-2 {
   opacity: 0.8;
@@ -16738,22 +16783,26 @@
 .zenda-clone .rewards_bg-img.is-ulta {
   border-radius: 0.5625rem;
   width: 13.36%;
-  inset: 32% auto auto -12%;
+  inset-block: 32% auto;
+  inset-inline: -12% auto;
 }
 .zenda-clone .rewards_bg-img.is-ribbon {
   border-radius: 1.75rem;
   width: 10%;
-  inset: 32% 28% auto auto;
+  inset-block: 32% auto;
+  inset-inline: auto 28%;
 }
 .zenda-clone .rewards_bg-img.is-givingli {
   border-radius: 1.5rem;
   width: 9.53%;
-  inset: 6% 11% auto auto;
+  inset-block: 6% auto;
+  inset-inline: auto 11%;
 }
 .zenda-clone .rewards_bg-coin {
   width: 6.25%;
   position: absolute;
-  inset: 26% auto auto 58%;
+  inset-block: 26% auto;
+  inset-inline: 58% auto;
   transform: rotate(10deg);
 }
 .zenda-clone[dir="rtl"] .rewards_bg-coin {
@@ -16785,7 +16834,8 @@
   min-width: auto;
   max-width: 9.25rem;
   padding: 0;
-  inset: 7% auto auto 4%;
+  inset-block: 7% auto;
+  inset-inline: 4% auto;
 }
 .zenda-clone .rewards_coupon.is-2 {
   background-color: var(--_primitives---opacity--transparent);
@@ -16795,7 +16845,8 @@
   min-width: auto;
   max-width: 9.25rem;
   padding: 0;
-  inset: 33% auto auto 20%;
+  inset-block: 33% auto;
+  inset-inline: 20% auto;
 }
 .zenda-clone .rewards_coupon.is-3 {
   background-color: var(--_primitives---opacity--transparent);
@@ -16805,7 +16856,8 @@
   min-width: auto;
   max-width: 11.375rem;
   padding: 0;
-  inset: 24% 0% auto auto;
+  inset-block: 24% auto;
+  inset-inline: auto 0%;
 }
 .zenda-clone .rewards_coupon-title {
   color: var(--_primitives---opacity--neutral-darkest-30);
@@ -16822,7 +16874,8 @@
   width: 40%;
   max-width: 5rem;
   position: absolute;
-  inset: -32% auto auto 50%;
+  inset-block: -32% auto;
+  inset-inline: 50% auto;
   overflow: hidden;
   transform: translate(-50%);
 }
@@ -17340,7 +17393,8 @@
   padding-top: 12%;
   padding-bottom: 24%;
   position: absolute;
-  inset: 0% auto 0% -3%;
+  inset-block: 0% 0%;
+  inset-inline: -3% auto;
 }
 .zenda-clone .services_link {
   background-color: var(--_primitives---background--dark-beige);
@@ -17772,7 +17826,8 @@
   pointer-events: none;
   width: 10%;
   position: absolute;
-  inset: 0% auto 0% 0%;
+  inset-block: 0% 0%;
+  inset-inline: 0% auto;
 }
 .zenda-clone[dir="rtl"] .schs-marquee_gradient {
   background-image: linear-gradient(
@@ -17787,7 +17842,8 @@
     #f4f2ec00,
     var(--_primitives---background--beige-light)
   );
-  inset: 0% 0% 0% auto;
+  inset-block: 0% 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone[dir="rtl"] .schs-marquee_gradient.is-right-side {
   background-image: linear-gradient(
@@ -17888,7 +17944,8 @@
   width: 32%;
   max-width: 10rem;
   position: absolute;
-  inset: auto 0% -15% auto;
+  inset-block: auto -15%;
+  inset-inline: auto 0%;
 }
 .zenda-clone .parents_item {
   grid-column-gap: 3rem;
@@ -17965,7 +18022,8 @@
   border-radius: 0.75rem;
   width: 0%;
   position: absolute;
-  inset: 0% 0% 0% -4%;
+  inset-block: 0% 0%;
+  inset-inline: -4% 0%;
 }
 .zenda-clone[dir="rtl"] .hero_spn_bg {
   perspective-origin: 100%;
@@ -17977,7 +18035,8 @@
   perspective-origin: 100%;
   transform-origin: 100%;
   width: 0%;
-  inset: 0% -3% 0% auto;
+  inset-block: 0% 0%;
+  inset-inline: auto -3%;
 }
 .zenda-clone[dir="rtl"] .hero_spn_bg.is-partnering,
 .zenda-clone[dir="rtl"] .hero_spn_bg.is-designed {
@@ -18115,7 +18174,8 @@
   width: 40%;
   max-width: 30.75rem;
   position: absolute;
-  inset: -18% 0% auto auto;
+  inset-block: -18% auto;
+  inset-inline: auto 0%;
 }
 .zenda-clone .section_parents-hero {
   padding-bottom: 4rem;
@@ -18156,7 +18216,8 @@
   width: 120%;
   max-width: 109.4rem;
   position: absolute;
-  inset: auto auto -26% -8%;
+  inset-block: auto -26%;
+  inset-inline: -8% auto;
   transform: none;
 }
 .zenda-clone .section_parents-ease {
@@ -18749,7 +18810,8 @@
   transition: transform 0.8s cubic-bezier(0.455, 0.03, 0.515, 0.955);
   display: flex;
   position: absolute;
-  inset: 0% 0% 0% auto;
+  inset-block: 0% 0%;
+  inset-inline: auto 0%;
   transform: none;
 }
 .zenda-clone .about-cities_year {
@@ -18863,7 +18925,8 @@
   min-width: 8rem;
   max-width: 11.2rem;
   position: absolute;
-  inset: 28% auto auto -6%;
+  inset-block: 28% auto;
+  inset-inline: -6% auto;
 }
 .zenda-clone .about-team_bg-block.is-2nd {
   background-color: #e2dfd6;
@@ -19079,14 +19142,16 @@
 }
 .zenda-clone .about-hero_card_component.is-1 {
   z-index: 1;
-  inset: 10% auto auto 4%;
+  inset-block: 10% auto;
+  inset-inline: 4% auto;
   transform: rotate(3.6deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-1 {
   transform: rotate(-3.6deg);
 }
 .zenda-clone .about-hero_card_component.is-2 {
-  inset: 0% auto auto 19%;
+  inset-block: 0% auto;
+  inset-inline: 19% auto;
   transform: rotate(-3.8deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-2 {
@@ -19094,28 +19159,32 @@
 }
 .zenda-clone .about-hero_card_component.is-3 {
   z-index: 1;
-  inset: 14% auto auto 34%;
+  inset-block: 14% auto;
+  inset-inline: 34% auto;
   transform: rotate(2deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-3 {
   transform: rotate(-2deg);
 }
 .zenda-clone .about-hero_card_component.is-4 {
-  inset: 0% 34% auto auto;
+  inset-block: 0% auto;
+  inset-inline: auto 34%;
   transform: rotate(-2deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-4 {
   transform: rotate(2deg);
 }
 .zenda-clone .about-hero_card_component.is-5 {
-  inset: 20% 21% auto auto;
+  inset-block: 20% auto;
+  inset-inline: auto 21%;
   transform: rotate(7.2deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-5 {
   transform: rotate(-7.2deg);
 }
 .zenda-clone .about-hero_card_component.is-6 {
-  inset: 0% 5% auto auto;
+  inset-block: 0% auto;
+  inset-inline: auto 5%;
   transform: rotate(-2deg);
 }
 .zenda-clone[dir="rtl"] .about-hero_card_component.is-6 {
@@ -19809,7 +19878,8 @@
   transition: background-color 0.1s;
   display: flex;
   position: absolute;
-  inset: 0% 0% auto auto;
+  inset-block: 0% auto;
+  inset-inline: auto 0%;
 }
 .zenda-clone .lightbox_close:hover {
   background-color: #363636;
@@ -19918,7 +19988,8 @@
   background-image: linear-gradient(90deg, #f4f2ec 1%, #fff0);
   width: 8%;
   position: absolute;
-  inset: 0% auto 0% -1px;
+  inset-block: 0% 0%;
+  inset-inline: -1px auto;
 }
 .zenda-clone[dir="rtl"] .home-partners_bg {
   background-image: linear-gradient(-90deg, #f4f2ec 1%, #fff0);
@@ -20240,14 +20311,16 @@
   background-image: linear-gradient(90deg, #f4f2ec, #0000);
   width: 6%;
   position: absolute;
-  inset: 0% auto 0% 0%;
+  inset-block: 0% 0%;
+  inset-inline: 0% auto;
 }
 .zenda-clone[dir="rtl"] .marquee_bg_gradient {
   background-image: linear-gradient(-90deg, #f4f2ec, #0000);
 }
 .zenda-clone .marquee_bg_gradient.is-right {
   background-image: linear-gradient(90deg, #0000, #f4f2ec);
-  inset: 0% 0% 0% auto;
+  inset-block: 0% 0%;
+  inset-inline: auto 0%;
 }
 .zenda-clone[dir="rtl"] .marquee_bg_gradient.is-right {
   background-image: linear-gradient(-90deg, #0000, #f4f2ec);
@@ -21072,7 +21145,8 @@
     justify-content: space-between;
   }
   .zenda-clone .content-image-card {
-    inset: 0% auto auto 0%;
+    inset-block: 0% auto;
+    inset-inline: 0% auto;
   }
   .zenda-clone .content-number {
     font-size: 55px;
@@ -21142,7 +21216,8 @@
   .zenda-clone .text-block-29 {
     color: #ead9ff;
     margin-inline-end: 10px;
-    inset: 0% 0% auto auto;
+    inset-block: 0% auto;
+    inset-inline: auto 0%;
   }
   .zenda-clone .paragraph-5 {
     width: 95%;
@@ -21167,7 +21242,8 @@
     padding-inline-end: 0;
     display: flex;
     position: fixed;
-    inset: auto 0% 0% auto;
+    inset-block: auto 0%;
+    inset-inline: auto 0%;
   }
   .zenda-clone .image-45 {
     align-self: center;
@@ -24416,7 +24492,8 @@
   }
   .zenda-clone .fs-cc-banner_close {
     position: absolute;
-    inset: -1.5rem 0.75rem auto auto;
+    inset-block: -1.5rem auto;
+    inset-inline: auto 0.75rem;
   }
   .zenda-clone .fs-cc-prefs_content {
     padding: 1.5rem;
@@ -24987,7 +25064,8 @@
   .zenda-clone .content-image-card {
     background-color: var(--ghost-white);
     max-width: 60%;
-    inset: auto 4% -12% auto;
+    inset-block: auto -12%;
+    inset-inline: auto 4%;
   }
   .zenda-clone .content-paragraph {
     font-size: 18px;
@@ -25135,7 +25213,8 @@
     font-family: Poppins, sans-serif;
     font-size: 11px;
     font-weight: 600;
-    inset: auto 0% 0% auto;
+    inset-block: auto 0%;
+    inset-inline: auto 0%;
   }
   .zenda-clone[dir="rtl"] .text-block-29 {
     font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;

@@ -10,15 +10,17 @@ import { useEffect } from "react"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
+import { mx } from "../shared/rtl-motion"
+
 /**
- * Benefits "Rewards for everything school related" reveal — a faithful port of
+ * Benefits "Discounts for everything school related" reveal — a faithful port of
  * zenda.com's `benefitsIntro`. Everything is scrubbed across [benefits-wrap]
  * (start "top 60%" → end "bottom 64%") and starts at time 0, so the whole
  * tableau assembles together:
  *  - the left card slides in from the left while its gift scales down from 1.3,
  *    the heading rises, and the two coins drop in and spin to rest,
- *  - the right cards slide in from the right (staggered): the dark "450+
- *    institutions" card — its heading + three stars trailing progressively
+ *  - the right cards slide in from the right (staggered): the dark "Set by your
+ *    school" card — its heading + three stars trailing progressively
  *    further right — then the pill list whose items stagger in from the right.
  */
 export function BenefitsScroll() {
@@ -41,12 +43,18 @@ export function BenefitsScroll() {
 
       tl.from(
         wrap.querySelector("[benefits-block-left]"),
-        { x: "-20%", opacity: 0, duration: 1, ease: "power2.out" },
+        { x: mx("-20%"), opacity: 0, duration: 1, ease: "power2.out" },
         0
       )
       tl.from(
         wrap.querySelectorAll("[benefits-block-right]"),
-        { x: "20%", opacity: 0, duration: 1, ease: "power2.out", stagger: 0.2 },
+        {
+          x: mx("20%"),
+          opacity: 0,
+          duration: 1,
+          ease: "power2.out",
+          stagger: 0.2,
+        },
         0
       )
       tl.from(
@@ -83,27 +91,33 @@ export function BenefitsScroll() {
       )
       tl.from(
         wrap.querySelector("[benefits-heading-right]"),
-        { x: "40%", opacity: 0, duration: 1, ease: "power2.out" },
+        { x: mx("40%"), opacity: 0, duration: 1, ease: "power2.out" },
         0
       )
       tl.from(
         wrap.querySelector("[benefits-star-1]"),
-        { x: "40%", opacity: 0, duration: 1, ease: "power2.out" },
+        { x: mx("40%"), opacity: 0, duration: 1, ease: "power2.out" },
         0
       )
       tl.from(
         wrap.querySelector("[benefits-star-2]"),
-        { x: "80%", opacity: 0, duration: 1, ease: "power2.out" },
+        { x: mx("80%"), opacity: 0, duration: 1, ease: "power2.out" },
         0
       )
       tl.from(
         wrap.querySelector("[benefits-star-3]"),
-        { x: "120%", opacity: 0, duration: 1, ease: "power2.out" },
+        { x: mx("120%"), opacity: 0, duration: 1, ease: "power2.out" },
         0
       )
       tl.from(
         wrap.querySelectorAll("[benefits-item]"),
-        { x: "20%", opacity: 0, duration: 1, ease: "power2.out", stagger: 0.2 },
+        {
+          x: mx("20%"),
+          opacity: 0,
+          duration: 1,
+          ease: "power2.out",
+          stagger: 0.2,
+        },
         0
       )
     })
