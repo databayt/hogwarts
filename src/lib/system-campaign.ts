@@ -83,6 +83,11 @@ export async function getOrCreateSystemCampaign(
  * callers (admin single-student wizard, CSV import) will use once they adopt
  * `provisionStudent`.
  */
+function normalizeGender(value: string | null | undefined): Gender | undefined {
+  const upper = value?.trim().toUpperCase()
+  return upper === "MALE" || upper === "FEMALE" ? (upper as Gender) : undefined
+}
+
 export async function ensureDirectAdmitApplication(
   tx: Prisma.TransactionClient,
   input: ProvisionStudentInput,
@@ -107,9 +112,11 @@ export async function ensureDirectAdmitApplication(
       middleName: input.middleName ?? undefined,
       lastName: input.lastName,
       dateOfBirth: input.dateOfBirth ?? undefined,
-      // Student.gender is a free-form String; Application.gender is the
-      // Gender enum — cast at this boundary only (never on the Student side).
-      gender: (input.gender ?? undefined) as Gender | undefined,
+      // Student.gender is a free-form String ("male"/"female"); Application.gender
+      // is the MALE/FEMALE enum. Map by value — a TS cast passes "female" through
+      // verbatim and Prisma rejects the whole create (wizard finish dies).
+      // Unmappable legacy values degrade to undefined (the field is optional).
+      gender: normalizeGender(input.gender),
       nationality: input.nationality ?? "",
       // provisionStudent always passes a normalized email (real or synthesized
       // placeholder) into the shadow-Application path; coalesce for the type.
