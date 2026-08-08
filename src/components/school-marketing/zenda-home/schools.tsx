@@ -7,6 +7,8 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { InstitutesLottie } from "./schools-lottie"
 import { SchoolsScroll } from "./schools-scroll"
 
@@ -35,7 +37,15 @@ const LOGOS = [
   CDN + "67f6139b8894ac8994256618_school-logo06.webp",
 ]
 
-export function Schools({ lang = "en" }: { lang?: string }) {
+export function Schools({
+  lang = "en",
+  dictionary,
+}: {
+  lang?: string
+  dictionary?: Dictionary
+}) {
+  const cta = dictionary?.marketing?.site?.home?.schools?.cta ?? "Explore"
+
   return (
     <section id="schools" className="section_schools">
       <div className="padding-global-v2 padding-section-large">
@@ -52,21 +62,25 @@ export function Schools({ lang = "en" }: { lang?: string }) {
                   />
                 </div>
                 <div school-element="" className="tag is-text">
-                  SCHOOLS
+                  {dictionary?.marketing?.site?.home?.schools?.eyebrow ??
+                    "SCHOOLS"}
                 </div>
                 <h2
                   school-element=""
                   className="schools_heading heading-style-h2"
                 >
-                  Everything in one place
+                  {dictionary?.marketing?.site?.home?.schools?.heading ??
+                    "Everything in one place"}
                 </h2>
                 {/* The school's copy at the reference's word counts (4 and 6).
                     Claim-free by design: "Trusted by 450+ institutions" is a
                     vendor's number, and a single school has no countable claim
                     to put in its place -- so this asserts nothing a tenant
-                    would have to back. */}
+                    would have to back. Copy now lives in
+                    marketing.site.home.schools.{heading,subheading}. */}
                 <p school-element="" className="schools_para">
-                  for families, teachers and everyone between
+                  {dictionary?.marketing?.site?.home?.schools?.subheading ??
+                    "for families, teachers and everyone between"}
                 </p>
               </div>
 
@@ -77,16 +91,17 @@ export function Schools({ lang = "en" }: { lang?: string }) {
 
             <div className="schools_content_wrap">
               <h3 className="schools_content_heading heading-style-h3">
-                Enrolled. Informed. Involved.
+                {dictionary?.marketing?.site?.home?.schools?.contentHeading ??
+                  "Enrolled. Informed. Involved."}
               </h3>
               {/* 26 words, as the reference's fintech paragraph was. It names
                   only what ships -- the application wizard, the student record
                   and the parent portal -- so nothing here needs a figure or a
-                  partner to stand up. */}
+                  partner to stand up. Copy now lives in
+                  marketing.site.home.schools.description. */}
               <p className="text-size-medium">
-                From the first application to the last report card, the school
-                keeps one record of every child, and gives families a window
-                onto it, any hour.
+                {dictionary?.marketing?.site?.home?.schools?.description ??
+                  "From the first application to the last report card, the school keeps one record of every child, and gives families a window onto it, any hour."}
               </p>
             </div>
 
@@ -126,8 +141,8 @@ export function Schools({ lang = "en" }: { lang?: string }) {
                       className="button-v2_bg-inner is-second"
                     ></span>
                   </span>
-                  <span data-text="Explore" className="button-v2_inner">
-                    <span className="button-v2_text">Explore</span>
+                  <span data-text={cta} className="button-v2_inner">
+                    <span className="button-v2_text">{cta}</span>
                   </span>
                 </Link>
               </div>

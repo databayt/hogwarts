@@ -12,11 +12,22 @@
 
 import Link from "next/link"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 // The intro animation is driven by GSAP in <HeroIntro/> (rendered on the home
 // page). The elements below are tagged with `hero-element` / `hero-btn` /
 // `hero-video` so that timeline can target them; the logo + nav links it also
 // animates live in the Header (`hero-logo` / `hero-link`).
-export function Hero({ lang = "en" }: { lang?: string }) {
+export function Hero({
+  lang = "en",
+  dictionary,
+}: {
+  lang?: string
+  dictionary?: Dictionary
+}) {
+  const applyLabel =
+    dictionary?.marketing?.site?.home?.hero?.applyLabel ?? "Application"
+
   return (
     <header className="section_home-hero">
       <div className="padding-global-v2 padding-section-large">
@@ -28,12 +39,14 @@ export function Hero({ lang = "en" }: { lang?: string }) {
                 hero-element=""
                 className="home-hero_heading heading-style-h1"
               >
-                Smart, simple, magical
+                {dictionary?.marketing?.site?.home?.hero?.heading ??
+                  "Clear, close, always here."}
               </h1>
               <div className="padding-bottom padding-xsmall"></div>
               <div className="max-width is-27rem">
                 <p id="hero-para" hero-element="" className="home-hero_para">
-                  The app parents love.
+                  {dictionary?.marketing?.site?.home?.hero?.lede ??
+                    "A place worth joining."}
                 </p>
               </div>
               <div className="padding-bottom padding-medium"></div>
@@ -56,8 +69,8 @@ export function Hero({ lang = "en" }: { lang?: string }) {
                     {/* `data-text` is the label's rolled duplicate -- it must
                         match the visible text exactly or the hover roll shows
                         two different words. */}
-                    <span data-text="APPLICATION" className="button-v2_inner">
-                      <span className="button-v2_text">APPLICATION</span>
+                    <span data-text={applyLabel} className="button-v2_inner">
+                      <span className="button-v2_text">{applyLabel}</span>
                     </span>
                   </Link>
                 </div>

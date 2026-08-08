@@ -4,6 +4,8 @@
 // Ported verbatim from zenda (home/content). Renders under the `.zenda-clone`
 // CSS scope (see src/styles/zenda-clone.css).
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { Benefits } from "./benefits"
 import { CTA } from "./cta"
 import { Hero } from "./hero"
@@ -13,17 +15,22 @@ import { Rewards } from "./rewards"
 import { Schools } from "./schools"
 import { Testimonials } from "./testimonials"
 
-export function HomeContent({ lang = "en" }: { lang?: string }) {
+interface HomeContentProps {
+  lang?: string
+  dictionary?: Dictionary
+}
+
+export function HomeContent({ lang = "en", dictionary }: HomeContentProps) {
   return (
     <>
-      <Hero lang={lang} />
-      <PhoneMockup />
-      <Rewards lang={lang} />
-      <Schools lang={lang} />
-      <HowItWorks />
-      <Testimonials />
-      <Benefits />
-      <CTA />
+      <Hero lang={lang} dictionary={dictionary} />
+      <PhoneMockup dictionary={dictionary} />
+      <Rewards lang={lang} dictionary={dictionary} />
+      <Schools lang={lang} dictionary={dictionary} />
+      <HowItWorks dictionary={dictionary} />
+      <Testimonials dictionary={dictionary} />
+      <Benefits dictionary={dictionary} />
+      <CTA dictionary={dictionary} />
     </>
   )
 }

@@ -8,6 +8,8 @@
 
 import { Fragment } from "react"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { AboutCitiesScroll } from "./cities-scroll"
 
 /**
@@ -20,35 +22,68 @@ import { AboutCitiesScroll } from "./cities-scroll"
  * homepage's class-size and placement numbers — every tenant must replace them
  * with its own history before publishing. Keep the row count at five: the
  * reveal timeline staggers per row and the layout is tuned for this length.
+ *
+ * Copy now lives in the dictionary at `marketing.site.about.cities` (en + ar).
+ * `EN_FALLBACK_MILESTONES` below is the previously-hardcoded English, kept
+ * in-file as the fallback for a missing/short translation.
  */
 
-type Milestone = {
-  count: [string, string] // e.g. ["3", "grades"] / ["To be", "Live"]
-  details: string[] // grade lines (joined by <br>)
+type MilestoneCopy = {
+  countValue: string // e.g. "3" / "To be"
+  countLabel: string // e.g. "grades" / "Live"
+  details: string // grade lines, joined by "\n" (split + <br> at render)
   year: string
-  isLast?: boolean
 }
 
-const MILESTONES: Milestone[] = [
+type Milestone = MilestoneCopy & { isLast?: boolean }
+
+// English fallback copy, verbatim from the previous hardcoded MILESTONES
+// array. Used when the dictionary is unavailable, or a translated milestone
+// entry is missing — index by index, never assume the whole set is present.
+const EN_FALLBACK_MILESTONES: MilestoneCopy[] = [
   {
-    count: ["3", "grades"],
-    details: ["Kindergarten,", "Primary 1 and 2"],
+    countValue: "3",
+    countLabel: "grades",
+    details: "Kindergarten,\nPrimary 1 and 2",
     year: "2021",
   },
-  { count: ["+2", "grades"], details: ["Primary 3 and 4"], year: "2022" },
-  { count: ["+2", "grades"], details: ["Primary 5 and 6"], year: "2023" },
   {
-    count: ["+3", "grades"],
-    details: ["Middle school opens,", "Grades 7, 8 and 9"],
+    countValue: "+2",
+    countLabel: "grades",
+    details: "Primary 3 and 4",
+    year: "2022",
+  },
+  {
+    countValue: "+2",
+    countLabel: "grades",
+    details: "Primary 5 and 6",
+    year: "2023",
+  },
+  {
+    countValue: "+3",
+    countLabel: "grades",
+    details: "Middle school opens,\nGrades 7, 8 and 9",
     year: "2024",
   },
   {
-    count: ["To be", "Live"],
-    details: ["Secondary 1, 2 and 3,", "science and arts streams"],
+    countValue: "To be",
+    countLabel: "Live",
+    details: "Secondary 1, 2 and 3,\nscience and arts streams",
     year: "2025",
-    isLast: true,
   },
 ]
+
+// Copy comes from `marketing.site.about.cities.milestones`, a plain array. The
+// English fallback governs the row COUNT so a truncated translation cannot
+// silently shorten the timeline — `isLast` drives the closing row's styling,
+// and it has to land on a row that exists.
+function getMilestones(dictionary?: Dictionary): Milestone[] {
+  const milestones = dictionary?.marketing?.site?.about?.cities?.milestones
+  return EN_FALLBACK_MILESTONES.map((fallback, i) => ({
+    ...(milestones?.[i] ?? fallback),
+    isLast: i === EN_FALLBACK_MILESTONES.length - 1,
+  }))
+}
 
 // Join an array of strings into JSX separated by <br/>.
 function withBreaks(lines: string[]) {
@@ -60,7 +95,13 @@ function withBreaks(lines: string[]) {
   ))
 }
 
-export function Cities() {
+export function Cities({ dictionary }: { dictionary?: Dictionary }) {
+  const citiesDict = dictionary?.marketing?.site?.about?.cities
+  const heading = citiesDict?.heading ?? "Our Growth Journey"
+  const subtitle =
+    citiesDict?.subtitle ?? "From our first classroom to a full campus"
+  const milestones = getMilestones(dictionary)
+
   return (
     <section className="section_about-cities">
       <div className="padding-global-v2 padding-section-large">
@@ -92,47 +133,50 @@ export function Cities() {
               </div>
               <div>
                 <h2 className="about-cities_heading heading-style-h2">
-                  Our Growth Journey
+                  {heading}
                 </h2>
-                <p className="text-size-xlarge">
-                  From our first classroom to a full campus
-                </p>
+                <p className="text-size-xlarge">{subtitle}</p>
               </div>
             </div>
 
             <div className="padding-bottom padding-large" />
 
             <div about-cities-wrap="" className="about-cities_list">
-              {MILESTONES.map(({ count, details, year, isLast }) => (
-                <div
-                  key={year}
-                  about-cities-item=""
-                  className="about-cities_item"
-                >
-                  <div about-cities-content="" className="about-cities_content">
-                    <div className="about-cities_partner-wrap">
-                      <div className="text-size-xlarge">
-                        {count[0]}
-                        <br />
-                        {count[1]}
+              {milestones.map(
+                ({ countValue, countLabel, details, year, isLast }) => (
+                  <div
+                    key={year}
+                    about-cities-item=""
+                    className="about-cities_item"
+                  >
+                    <div
+                      about-cities-content=""
+                      className="about-cities_content"
+                    >
+                      <div className="about-cities_partner-wrap">
+                        <div className="text-size-xlarge">
+                          {countValue}
+                          <br />
+                          {countLabel}
+                        </div>
+                      </div>
+                      <div
+                        className={`about-cities_details ${isLast ? "is-last" : ""}`.trim()}
+                      >
+                        <div className="text-size-xlarge">
+                          {withBreaks(details.split("\n"))}
+                        </div>
                       </div>
                     </div>
                     <div
-                      className={`about-cities_details ${isLast ? "is-last" : ""}`.trim()}
+                      about-cities-block=""
+                      className="about-cities_year-block"
                     >
-                      <div className="text-size-xlarge">
-                        {withBreaks(details)}
-                      </div>
+                      <div className="about-cities_year">{year}</div>
                     </div>
                   </div>
-                  <div
-                    about-cities-block=""
-                    className="about-cities_year-block"
-                  >
-                    <div className="about-cities_year">{year}</div>
-                  </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           </div>
         </div>

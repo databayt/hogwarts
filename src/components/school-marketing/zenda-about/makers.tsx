@@ -5,6 +5,8 @@
 // the school tenant. Renders under the `.zenda-clone` CSS scope (see
 // src/styles/zenda-clone.css).
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 /**
  * About "OUR PEOPLE" — a grey eyebrow + heading, then a two-up grid of white
  * cards. Each card has a square portrait area (a cut-out photo bottom-aligned
@@ -34,30 +36,35 @@ type Person = {
   bio: string[] // paragraphs, separated by a blank line
 }
 
-const PEOPLE: Person[] = [
-  {
-    title: "Office of the Principal",
-    role: "School Leadership",
-    img: "raman",
-    href: "/inquiry",
-    linkLabel: "Contact the principal's office",
-    bio: [
-      "Our principal still teaches one class a week — the person who sets the standard should be in the room where it is met. Every family gets an open door, not an appointment three weeks out, and most weeks somebody takes it.",
-      "Leadership here is measured by how each child is doing, not by how the school looks from outside.",
-    ],
-  },
-  {
-    title: "Our Teaching Faculty",
-    role: "Academics",
-    img: "haseeb",
-    href: "/academic",
-    linkLabel: "See what we teach",
-    bio: [
-      "Our teachers are subject specialists, and they stay with a year group long enough to know what each child finds easy, what they avoid, and what finally makes it click.",
-      "They plan together, sit in on one another's lessons, and keep studying themselves — the same thing we ask of our students.",
-    ],
-  },
-]
+// English fallbacks stored with a single "\n" between paragraphs — the house
+// pattern (see hero.tsx's .split("\n")) — not a blank-line "\n\n". Copy now
+// lives at marketing.site.about.makers.{principal,faculty}.bio in en/ar.json.
+const EN_PRINCIPAL_BIO =
+  "Our principal still teaches one class a week — the person who sets the standard should be in the room where it is met. Every family gets an open door, not an appointment three weeks out, and most weeks somebody takes it.\nLeadership here is measured by how each child is doing, not by how the school looks from outside."
+const EN_FACULTY_BIO =
+  "Our teachers are subject specialists, and they stay with a year group long enough to know what each child finds easy, what they avoid, and what finally makes it click.\nThey plan together, sit in on one another's lessons, and keep studying themselves — the same thing we ask of our students."
+
+function getPeople(dictionary?: Dictionary): Person[] {
+  const t = dictionary?.marketing?.site?.about?.makers
+  return [
+    {
+      title: t?.principal?.title ?? "Office of the Principal",
+      role: t?.principal?.role ?? "School Leadership",
+      img: "raman",
+      href: "/inquiry",
+      linkLabel: t?.principal?.linkLabel ?? "Contact the principal's office",
+      bio: (t?.principal?.bio ?? EN_PRINCIPAL_BIO).split("\n").filter(Boolean),
+    },
+    {
+      title: t?.faculty?.title ?? "Our Teaching Faculty",
+      role: t?.faculty?.role ?? "Academics",
+      img: "haseeb",
+      href: "/academic",
+      linkLabel: t?.faculty?.linkLabel ?? "See what we teach",
+      bio: (t?.faculty?.bio ?? EN_FACULTY_BIO).split("\n").filter(Boolean),
+    },
+  ]
+}
 
 function LinkedInIcon() {
   return (
@@ -79,23 +86,33 @@ function LinkedInIcon() {
   )
 }
 
-export function Makers({ lang = "en" }: { lang?: string }) {
+export function Makers({
+  lang = "en",
+  dictionary,
+}: {
+  lang?: string
+  dictionary?: Dictionary
+}) {
+  const t = dictionary?.marketing?.site?.about?.makers
+  const people = getPeople(dictionary)
   return (
     <section className="section_about-makers">
       <div className="padding-global-v2 padding-section-large">
         <div className="container-medium">
           <div className="about-makers_wrap">
             <div className="about-makers_header">
-              <div className="tag is-text is-grey">OUR PEOPLE</div>
+              <div className="tag is-text is-grey">
+                {t?.tag ?? "OUR PEOPLE"}
+              </div>
               <h2 className="about-makers_heading heading-style-h2">
-                Meet the people your child sees every day
+                {t?.heading ?? "Meet the people your child sees every day"}
               </h2>
             </div>
 
             <div className="padding-bottom padding-xlarge" />
 
             <div className="about-makers_grid">
-              {PEOPLE.map((m) => (
+              {people.map((m) => (
                 <div key={m.title} className="about-makers_block">
                   <div className="about-makers_img-parent">
                     <div className="about-makers_img-wrap">

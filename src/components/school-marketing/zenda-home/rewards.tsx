@@ -7,6 +7,8 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { RewardsScroll } from "./rewards-scroll"
 
 // The reference also floats three real brand logos (Amazon, talabat, noon) as
@@ -28,7 +30,27 @@ const IMG = {
 // Render the literal attribute the GSAP timeline selects on (e.g. rewards-block-1).
 const target = (name: string): Record<string, string> => ({ [name]: "" })
 
-export function Rewards({ lang = "en" }: { lang?: string }) {
+export function Rewards({
+  lang = "en",
+  dictionary,
+}: {
+  lang?: string
+  dictionary?: Dictionary
+}) {
+  const eyebrow =
+    dictionary?.marketing?.site?.home?.rewards?.eyebrow ?? "Discounts"
+  const heading =
+    dictionary?.marketing?.site?.home?.rewards?.heading ??
+    "Pay less for siblings, early birds and scholars"
+  const description =
+    dictionary?.marketing?.site?.home?.rewards?.description ??
+    "Register early, enroll a second child or win a scholarship — every discount the school offers comes off your fees."
+  // Feeds BOTH the data-text hover duplicate and the visible label below --
+  // must stay a single read so the two can never drift (rule 4).
+  const cta = dictionary?.marketing?.site?.home?.rewards?.cta ?? "EXPLORE"
+  const pointsLabel =
+    dictionary?.marketing?.site?.home?.rewards?.pointsLabel ?? "Discounts"
+
   return (
     <section rewards-section="" className="section_rewards">
       <div className="padding-global-v2 padding-section-large">
@@ -36,14 +58,14 @@ export function Rewards({ lang = "en" }: { lang?: string }) {
           <div rewards-wrap="" className="rewards_wrap">
             <div className="rewards_header">
               <div rewards-element="" className="tag is-text">
-                DISCOUNTS
+                {eyebrow}
               </div>
               <div className="padding-bottom padding-xxsmall"></div>
               <h2
                 rewards-element=""
                 className="rewards_heading heading-style-h2"
               >
-                Pay less for siblings, early birds and scholars
+                {heading}
               </h2>
               <div className="padding-bottom padding-small"></div>
               <div
@@ -58,10 +80,7 @@ export function Rewards({ lang = "en" }: { lang?: string }) {
                     offers", never "automatic": a discount lands on a student's
                     fee when it is assigned (StudentFee.discounts /
                     totalDiscount), it is not computed on its own. */}
-                <p className="text-size-medium">
-                  Register early, enroll a second child or win a scholarship —
-                  every discount the school offers comes off your fees.
-                </p>
+                <p className="text-size-medium">{description}</p>
               </div>
               <div className="padding-bottom padding-large"></div>
               <div rewards-element="" className="button-group is-align-center">
@@ -84,8 +103,8 @@ export function Rewards({ lang = "en" }: { lang?: string }) {
                         className="button-v2_bg-inner is-second"
                       ></span>
                     </span>
-                    <span data-text="EXPLORE" className="button-v2_inner">
-                      <span className="button-v2_text">EXPLORE</span>
+                    <span data-text={cta} className="button-v2_inner">
+                      <span className="button-v2_text">{cta}</span>
                     </span>
                   </Link>
                 </div>
@@ -98,7 +117,7 @@ export function Rewards({ lang = "en" }: { lang?: string }) {
                   {/* Class names stay `rewards_*` throughout -- they are the
                       generated zenda-clone.css selectors and the GSAP targets.
                       Only the words change. */}
-                  <div className="rewards_points-number">Discounts</div>
+                  <div className="rewards_points-number">{pointsLabel}</div>
                   <div className="rewards_points-title hide">POINTS</div>
                   <div className="rewards_points-img-wrap">
                     <img

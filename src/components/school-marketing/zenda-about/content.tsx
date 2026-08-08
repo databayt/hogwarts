@@ -10,6 +10,8 @@
 // blocking notes in those two files before this page goes in front of a real
 // school — their marks have to be replaced or the sections dropped.
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { Cities } from "./cities"
 import { Events } from "./events"
 import { Hero } from "./hero"
@@ -21,19 +23,24 @@ import { Trusted } from "./trusted"
 import { Values } from "./values"
 import { Work } from "./work"
 
-export function AboutContent({ lang = "en" }: { lang?: string }) {
+interface AboutContentProps {
+  lang?: string
+  dictionary?: Dictionary
+}
+
+export function AboutContent({ lang = "en", dictionary }: AboutContentProps) {
   return (
     <>
-      <Hero />
-      <Work />
-      <Cities />
-      <Team />
-      <Makers lang={lang} />
-      <Investors />
-      <Mission />
-      <Values />
-      <Trusted />
-      <Events lang={lang} />
+      <Hero dictionary={dictionary} />
+      <Work dictionary={dictionary} />
+      <Cities dictionary={dictionary} />
+      <Team dictionary={dictionary} />
+      <Makers lang={lang} dictionary={dictionary} />
+      <Investors dictionary={dictionary} />
+      <Mission dictionary={dictionary} />
+      <Values dictionary={dictionary} />
+      <Trusted dictionary={dictionary} />
+      <Events lang={lang} dictionary={dictionary} />
     </>
   )
 }

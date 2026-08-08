@@ -16,6 +16,8 @@ import "swiper/css"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 const CDN = "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/"
 const STAR =
   "M12.0587 1.71266C12.418 0.607083 13.982 0.607083 14.3413 1.71266L16.5677 8.56494C16.7284 9.05937 17.1891 9.39412 17.709 9.39412H24.9139C26.0764 9.39412 26.5597 10.8817 25.6192 11.5649L19.7903 15.7999C19.3698 16.1055 19.1938 16.6471 19.3544 17.1415L21.5809 23.9938C21.9401 25.0994 20.6747 26.0187 19.7342 25.3354L13.9053 21.1005C13.4848 20.7949 12.9152 20.7949 12.4947 21.1005L6.66576 25.3354C5.7253 26.0187 4.45992 25.0994 4.81915 23.9938L7.04559 17.1415C7.20624 16.6471 7.03025 16.1055 6.60966 15.7999L0.780762 11.5649C-0.159695 10.8817 0.323637 9.39412 1.4861 9.39412H8.69102C9.21089 9.39412 9.67164 9.05937 9.83229 8.56494L12.0587 1.71266Z"
@@ -28,54 +30,76 @@ type Story = {
   img: string
 }
 
-const STORIES: Story[] = [
-  {
-    name: "Thyge Foss",
-    role: "Clarion School Parent",
-    date: "April 18, 2025",
-    quote:
-      "Very user-friendly and easy to use app. The integration is seamless, and making payments is quick and simple.",
-    img:
-      CDN +
-      "68dcf96810fac966e824df62_e5f87bca899b7ff284cfe815b184b530_Thyge%20Foss%20-%20Theodore%20Foss.webp",
-  },
-  {
-    name: "Priya Sankpal",
-    role: "Parent and zenda user",
-    date: "17 April, 2025",
-    quote:
-      "An amazing & user-friendly app for hassle free fee payment. It's a boon for working parents. Grateful that my kids' school has adopted this feature. I am very happy with the support team as well!!!",
-    img: CDN + "68714f1466cc69580e48d872_Priya%20Sankpal.webp",
-  },
-  {
-    name: "Aseel Shiddo",
-    role: "Scholars International Academy Parent",
-    date: "May 20, 2025",
-    quote:
-      "Love the zenda app! It’s incredibly easy to use and navigate. We’re on the monthly plan and really appreciate the flexible payment options. Being able to pay directly through the app - without extra fees or the hassle of bank transfers is a huge plus. I also love that it supports Apple Pay.",
-    img:
-      CDN +
-      "68dcf9d044f9cb52dd123b91_ba1f6d434cf2d11bf44da624ba43e955_Aseel%20Shiddo.webp",
-  },
-  {
-    name: "Akshay Nayak",
-    role: "Parent and zenda user",
-    date: "May 19, 2025",
-    quote:
-      "zenda makes paying school fees convenient and hassle-free. The app is easy to understand and offers faster payment solutions with added convenience.",
-    img: CDN + "68dcfa2a9249b5ec20bbf56d_Akshay%20Nayak.webp",
-  },
-  {
-    name: "Saiqua Jabeen & Mohammad Tarique Ashraf",
-    role: "Dubai Scholars Private School Parents",
-    date: "May 17, 2025",
-    quote:
-      "I’m extremely satisfied with the zenda app. It has made school fee payments simple, fast, and incredibly convenient. Whether it’s regular tuition or one-time events like field trips, I can easily make payments from my phone without any hassle.",
-    img:
-      CDN +
-      "68dcd04573aa7436537f37e9_SAIQUA%20JABEEN%20-%20MOHAMMAD%20TARIQUE%20ASHRAF.webp",
-  },
-]
+// PLACEHOLDER — the words now live at marketing.site.home.testimonials (en +
+// ar) in the dictionary, but the faces are still not the school's. These five
+// photos are zenda's real, identifiable customers on zenda's CDN, and the
+// quotes are written copy, not collected feedback. Attributions are kept
+// role-shaped (first name + year group) rather than inventing full
+// identities, but a real tenant must swap the imagery and use its own
+// parents' words before publishing.
+//
+// Copy comes from `marketing.site.home.testimonials.items`, a plain array. The
+// English fallbacks below govern the COUNT, deliberately: the Swiper's loop and
+// the zoom-by-progress tween index into these five slides, so a translation
+// that dropped one would leave the slider a card short mid-loop.
+function getStories(dictionary?: Dictionary): Story[] {
+  const items = dictionary?.marketing?.site?.home?.testimonials?.items ?? []
+  const fallbacks: Story[] = [
+    {
+      name: "Thyge",
+      role: "Parent, Grade 6",
+      date: "April 18, 2025",
+      quote:
+        "I can see the week's lessons, this term's grades and yesterday's attendance in a minute, without emailing anyone.",
+      img:
+        CDN +
+        "68dcf96810fac966e824df62_e5f87bca899b7ff284cfe815b184b530_Thyge%20Foss%20-%20Theodore%20Foss.webp",
+    },
+    {
+      name: "Priya",
+      role: "Parent, Grade 2",
+      date: "17 April, 2025",
+      quote:
+        "We applied online in an evening and heard back two days later. For a working parent that is the whole difference — no forms to print, no queue at the office, and everything stayed on file.",
+      img: CDN + "68714f1466cc69580e48d872_Priya%20Sankpal.webp",
+    },
+    {
+      name: "Aseel",
+      role: "Parent, Grades 4 and 9",
+      date: "May 20, 2025",
+      quote:
+        "With two children in the school I used to keep two folders and a wall calendar. Now both timetables, both report cards and every announcement arrive in the same place, and the sibling discount is already on the fees. Nothing gets missed now, and I am not the one holding it together.",
+      img:
+        CDN +
+        "68dcf9d044f9cb52dd123b91_ba1f6d434cf2d11bf44da624ba43e955_Aseel%20Shiddo.webp",
+    },
+    {
+      name: "Akshay",
+      role: "Parent, Grade 1",
+      date: "May 19, 2025",
+      quote:
+        "Starting school somewhere new is nerve-wracking. Booking the tour, meeting the teacher and getting the first timetable happened without one phone call.",
+      img: CDN + "68dcfa2a9249b5ec20bbf56d_Akshay%20Nayak.webp",
+    },
+    {
+      name: "Saiqua & Tarique",
+      role: "Parents, Grade 11",
+      date: "May 17, 2025",
+      quote:
+        "What we value most is being told early. A missed class, a slipping grade, a trip next week — the school tells us while there is still time to do something about it, rather than at the end of term.",
+      img:
+        CDN +
+        "68dcd04573aa7436537f37e9_SAIQUA%20JABEEN%20-%20MOHAMMAD%20TARIQUE%20ASHRAF.webp",
+    },
+  ]
+  return fallbacks.map((fallback, i) => ({
+    name: items[i]?.name ?? fallback.name,
+    role: items[i]?.title ?? fallback.role,
+    date: items[i]?.date ?? fallback.date,
+    quote: items[i]?.quote ?? fallback.quote,
+    img: fallback.img,
+  }))
+}
 
 function Stars() {
   return (
@@ -122,9 +146,11 @@ function syncSlideTransition(swiper: SwiperClass, duration: number) {
   }
 }
 
-export function Testimonials() {
+export function Testimonials({ dictionary }: { dictionary?: Dictionary }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const swiperRef = useRef<SwiperClass | null>(null)
+  const t = dictionary?.marketing?.site?.home?.testimonials
+  const STORIES = getStories(dictionary)
 
   // First slide doubles as the section's "active card": the reference tags its
   // name/rating/quote (and photo) so they animate in on scroll, while the other
@@ -187,14 +213,14 @@ export function Testimonials() {
           <div ref={wrapRef} testimonial-wrap="" className="testimonial_wrap">
             <div className="testimonial_header">
               <div testimonial-element="" className="tag is-text">
-                PARENTS VOICE
+                {t?.eyebrow ?? "PARENTS VOICE"}
               </div>
               <div className="padding-bottom padding-xsmall"></div>
               <h2
                 testimonial-element=""
                 className="testimonial_heading heading-style-h1"
               >
-                Stories from our parent community
+                {t?.title ?? "Stories from our parent community"}
               </h2>
             </div>
             <div className="padding-bottom padding-xlarge"></div>
@@ -287,7 +313,7 @@ export function Testimonials() {
                   href="#"
                   className="testimonial_slider_btn swiper-prev w-inline-block"
                   role="button"
-                  aria-label="Previous slide"
+                  aria-label={t?.prevSlideLabel ?? "Previous slide"}
                   onClick={(e) => {
                     e.preventDefault()
                     swiperRef.current?.slidePrev()
@@ -314,7 +340,7 @@ export function Testimonials() {
                   href="#"
                   className="testimonial_slider_btn swiper-next w-inline-block"
                   role="button"
-                  aria-label="Next slide"
+                  aria-label={t?.nextSlideLabel ?? "Next slide"}
                   onClick={(e) => {
                     e.preventDefault()
                     swiperRef.current?.slideNext()

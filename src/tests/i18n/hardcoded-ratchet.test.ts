@@ -66,8 +66,15 @@ const BASELINE_BY_PATTERN: Record<PatternName, number> = {
  * land for the zenda clone pages, this returns to 0. The two zenda-clone
  * routes are the ONLY sanctioned entries — do not raise this for any route
  * that is not a verbatim zenda clone.
+ *
+ * Back to 0 on 2026-08-08, honouring exactly that contract: Arabic and RTL
+ * landed for both zenda-clone routes. They now load `getDictionary(lang)` and
+ * their 202 strings live in `marketing.site.home` / `marketing.site.about`,
+ * so `auditRoutes()` reports no STATIC-GAP route at all. The floor is 0 again
+ * and there is no sanctioned reason to raise it — a new hardcoded-English page
+ * is a bug, not a deferral.
  */
-const BASELINE_STATIC_GAP = 2
+const BASELINE_STATIC_GAP = 0
 
 describe("hardcoded-string ratchet", () => {
   const report = scanHardcodedStrings()

@@ -6,6 +6,8 @@
 // src/styles/zenda-clone.css). The flip cards stay PARENT/SCHOOL: the card
 // faces ARE letter artwork, so the two pill words are art-locked.
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { AboutHeroCards } from "./hero-cards"
 
 /**
@@ -60,20 +62,25 @@ const CARDS: Card[] = [
   },
 ]
 
-export function Hero() {
+export function Hero({ dictionary }: { dictionary?: Dictionary }) {
+  const t = dictionary?.marketing?.site?.about?.hero
   return (
     <header className="section_about-hero">
       <div className="padding-global-v2 padding-section-large">
         <div className="container-large">
           <div className="about-hero_wrap">
             <div className="about-hero_header">
-              <div className="tag is-text">WHO ARE WE</div>
+              <div className="tag is-text">{t?.eyebrow ?? "Who are we"}</div>
               <div className="padding-bottom padding-xsmall" />
               <h1 className="about-hero_heading">
                 <span className="about-hero_inline">
-                  We are educators devoted to those who raise tomorrow - The
-                  nurturers -
+                  {t?.heading ??
+                    "We are educators devoted to those who raise tomorrow - The nurturers -"}
                 </span>
+                {/* PARENT/SCHOOL pill buttons are art-locked, not sourced from
+                    the dictionary — the card faces are letter artwork spelling
+                    these exact words, so translating the label would break the
+                    reader's link to what the flip reveals. See file header. */}
                 <button
                   type="button"
                   hero-btn-parents=""

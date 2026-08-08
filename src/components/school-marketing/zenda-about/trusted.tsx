@@ -4,6 +4,8 @@
 // Ported from zenda (about/trusted) — UI and motion verbatim. Renders under the
 // `.zenda-clone` CSS scope (see src/styles/zenda-clone.css).
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 /**
  * About "Trusted by the best" — a centred heading over a row of school-council
  * logos at per-brand widths, darken-blended into the beige. Static.
@@ -18,34 +20,36 @@
  * wrote it rather than reworded, because no wording makes these logos true:
  * either swap them for bodies the school is genuinely accredited by, or delete
  * this section and its <Trusted/> line from content.tsx. Kept for now only so
- * the page's section rhythm can be reviewed.
+ * the page's section rhythm can be reviewed. Copy (heading + alt text) now
+ * lives at marketing.site.about.trusted in en.json/ar.json — translation does
+ * not fix the underlying claim, only the fallback strings below still name it.
  */
-const LOGOS = [
-  {
-    key: "nesa",
-    alt: "NESA — Near East South Asia Council of Overseas Schools",
-  },
-  { key: "fobisia", alt: "FOBISIA" },
-  { key: "bsme", alt: "BSME — British Schools in the Middle East" },
-  { key: "earcos", alt: "EARCOS — East Asia Regional Council of Schools" },
-] as const
+const LOGOS_FALLBACK = {
+  nesa: "NESA — Near East South Asia Council of Overseas Schools",
+  fobisia: "FOBISIA",
+  bsme: "BSME — British Schools in the Middle East",
+  earcos: "EARCOS — East Asia Regional Council of Schools",
+} as const
 
-export function Trusted() {
+const LOGO_KEYS = ["nesa", "fobisia", "bsme", "earcos"] as const
+
+export function Trusted({ dictionary }: { dictionary?: Dictionary }) {
+  const t = dictionary?.marketing?.site?.about?.trusted
   return (
     <section className="section_trusted">
       <div className="padding-global-v2 padding-section-large">
         <div className="trusted_wrap">
           <h2 className="trusted_heading heading-style-h2">
-            Trusted by the best
+            {t?.heading ?? "Trusted by the best"}
           </h2>
           <div className="padding-bottom padding-xxlarge" />
           <div className="trusted_grid">
-            {LOGOS.map(({ key, alt }) => (
+            {LOGO_KEYS.map((key) => (
               <div key={key} className={`trusted_img-wrap is-${key}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/images/about/trusted/${key}.webp`}
-                  alt={alt}
+                  alt={t?.logos?.[key] ?? LOGOS_FALLBACK[key]}
                   loading="lazy"
                   className="img-auto"
                 />

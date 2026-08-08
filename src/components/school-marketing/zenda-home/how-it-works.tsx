@@ -5,13 +5,21 @@
 // CSS scope (see src/styles/zenda-clone.css).
 
 /* eslint-disable @next/next/no-img-element */
+import { Fragment } from "react"
+
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { HiwScroll } from "./hiw-scroll"
 
 const CDN = "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/"
 
 type Block = { h: string; img: string; wrap: string; p: string }
 
-const B: Record<string, Block> = {
+// No `Record<string, Block>` annotation here on purpose -- keeping the object
+// literal's inferred type gives `keyof typeof B` the ten literal card keys
+// instead of `string`, which is what lets resolveBlock index the dictionary's
+// (equally literal-keyed) `cards` object without a cast.
+const B = {
   uniform: {
     h: "Uniform",
     img: CDN + "67ecd573d52fd02665fc093c_Group%201244838934.webp",
@@ -95,6 +103,32 @@ const COLUMNS: Col[] = [
   },
 ]
 
+// Cards' img/wrap are asset path + CSS class, never copy -- those stay on B.
+// h/p resolve from the dictionary's howItWorks.cards.<key>, falling back to
+// B's English text so the marquee never renders empty while a locale loads.
+function resolveBlock(key: keyof typeof B, dictionary?: Dictionary): Block {
+  const base = B[key]
+  const card = dictionary?.marketing?.site?.home?.howItWorks?.cards?.[key]
+  return {
+    h: card?.title ?? base.h,
+    img: base.img,
+    wrap: base.wrap,
+    p: card?.text ?? base.p,
+  }
+}
+
+// A string authored with "\n" may break in a different number of places once
+// translated -- map over every part instead of assuming exactly two.
+function splitLines(text: string) {
+  const parts = text.split("\n")
+  return parts.map((line, i) => (
+    <Fragment key={i}>
+      {line}
+      {i < parts.length - 1 && <br />}
+    </Fragment>
+  ))
+}
+
 function MarqueeBlock({ b }: { b: Block }) {
   return (
     <div className="hiw_marquee_block">
@@ -109,7 +143,7 @@ function MarqueeBlock({ b }: { b: Block }) {
   )
 }
 
-function Columns() {
+function Columns({ dictionary }: { dictionary?: Dictionary }) {
   return (
     <>
       {COLUMNS.map((col, i) => (
@@ -119,7 +153,7 @@ function Columns() {
           className={`hiw_marquee_col ${col.cls}`.trim()}
         >
           {col.items.map((key, j) => (
-            <MarqueeBlock key={j} b={B[key]} />
+            <MarqueeBlock key={j} b={resolveBlock(key, dictionary)} />
           ))}
         </div>
       ))}
@@ -127,7 +161,17 @@ function Columns() {
   )
 }
 
-export function HowItWorks() {
+export function HowItWorks({ dictionary }: { dictionary?: Dictionary }) {
+  const hiw = dictionary?.marketing?.site?.home?.howItWorks
+  const eyebrow = hiw?.eyebrow ?? "HOW IT WORKS"
+  const heading = hiw?.heading ?? "One place for everything school asks"
+  const free = hiw?.stats?.free ?? "Free"
+  const freeLabel = hiw?.stats?.freeLabel ?? "to apply,\nalways"
+  const minutes = hiw?.stats?.minutes ?? "5 min"
+  const minutesLabel = hiw?.stats?.minutesLabel ?? "to finish an\napplication"
+  const decision = hiw?.stats?.decision ?? "2 days"
+  const decisionLabel = hiw?.stats?.decisionLabel ?? "to hear\nback from us"
+
   return (
     <section className="section_hiw">
       <div className="padding-global-small-v2 padding-section-large">
@@ -136,18 +180,18 @@ export function HowItWorks() {
             <div hiw-content-wrap="" className="hiw_wrap">
               <div className="hiw_header">
                 <div hiw-element="" className="tag is-text">
-                  HOW IT WORKS
+                  {eyebrow}
                 </div>
                 <div className="padding-bottom padding-xxsmall"></div>
                 <h2 hiw-element="" className="hiw_heading heading-style-h2">
-                  Transform the way you pay fees
+                  {heading}
                 </h2>
               </div>
 
               <div className="hiw_marquee_component">
                 {/* Desktop: 4 scroll-parallax columns */}
                 <div hiw-marquee-wrap="" className="hiw_marquee_wrap">
-                  <Columns />
+                  <Columns dictionary={dictionary} />
                 </div>
 
                 {/* Mobile/tablet: two continuously-scrolling tracks */}
@@ -156,12 +200,12 @@ export function HowItWorks() {
                     <div className="hiw_marquee_m_wrap">
                       <div m-marquee-track="" className="hiw_marquee_m_track">
                         <div hiw-marquee-wrap="" className="hiw_marquee_m_list">
-                          <Columns />
+                          <Columns dictionary={dictionary} />
                         </div>
                       </div>
                       <div m-marquee-track="" className="hiw_marquee_m_track">
                         <div hiw-marquee-wrap="" className="hiw_marquee_m_list">
-                          <Columns />
+                          <Columns dictionary={dictionary} />
                         </div>
                       </div>
                     </div>
@@ -173,7 +217,7 @@ export function HowItWorks() {
                         className="hiw_marquee_m_track"
                       >
                         <div hiw-marquee-wrap="" className="hiw_marquee_m_list">
-                          <Columns />
+                          <Columns dictionary={dictionary} />
                         </div>
                       </div>
                       <div
@@ -181,7 +225,7 @@ export function HowItWorks() {
                         className="hiw_marquee_m_track"
                       >
                         <div hiw-marquee-wrap="" className="hiw_marquee_m_list">
-                          <Columns />
+                          <Columns dictionary={dictionary} />
                         </div>
                       </div>
                     </div>
@@ -193,28 +237,32 @@ export function HowItWorks() {
               </div>
             </div>
 
+            {/* The reference ends on its own corporate metrics -- "$2Bn+
+                institutions tuition fees", "150k+ parents globally", "4.8 avg
+                rating on play store". None of that survives on a school's site
+                (there is no app on any store), and a single school has no
+                figures of its own to swap in. These three are PROMISES the
+                school controls instead, the same ones /admissions makes.
+                They are now stated in five places that must move together:
+                here, the admissions stat trio, the admissions hero lede,
+                `marketing.site.admissions.title`, and its decision step. */}
             <div hiw-grid-wrap="" className="hiw_grid">
               <div hiw-grid-item="" className="hiw_item">
-                <h3 className="hiw_sub-heading heading-style-h3">$2Bn+</h3>
+                <h3 className="hiw_sub-heading heading-style-h3">{free}</h3>
                 <p className="hiw_sub-para heading-style-h5">
-                  Institutions
-                  <br />
-                  tuition fees
+                  {splitLines(freeLabel)}
                 </p>
               </div>
               <div hiw-grid-item="" className="hiw_item">
-                <h3 className="hiw_sub-heading heading-style-h3">150k+ </h3>
+                <h3 className="hiw_sub-heading heading-style-h3">{minutes}</h3>
                 <p className="hiw_sub-para heading-style-h5">
-                  Parents <br />
-                  globally
+                  {splitLines(minutesLabel)}
                 </p>
               </div>
               <div hiw-grid-item="" className="hiw_item">
-                <h3 className="hiw_sub-heading heading-style-h3">4.8</h3>
+                <h3 className="hiw_sub-heading heading-style-h3">{decision}</h3>
                 <p className="hiw_sub-para heading-style-h5">
-                  Avg. rating on
-                  <br />
-                  play store
+                  {splitLines(decisionLabel)}
                 </p>
               </div>
             </div>

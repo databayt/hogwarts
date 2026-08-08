@@ -5,6 +5,8 @@
 // the school tenant. Renders under the `.zenda-clone` CSS scope (see
 // src/styles/zenda-clone.css).
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 /**
  * About "Our Team" — a centred header over an infinite horizontal marquee of
  * photos, with a few soft beige blocks floating behind. The marquee is two
@@ -98,18 +100,21 @@ function MarqueeList() {
   )
 }
 
-export function Team() {
+export function Team({ dictionary }: { dictionary?: Dictionary }) {
+  const t = dictionary?.marketing?.site?.about?.team
   return (
     <section className="section_about-team">
       <div className="padding-global-v2">
         <div className="container-large">
           <div className="about-team_wrap">
             <div className="about-team_header">
-              <h2 className="about-team_heading heading-style-h2">Our Team</h2>
+              <h2 className="about-team_heading heading-style-h2">
+                {t?.heading ?? "Our Team"}
+              </h2>
               <div className="padding-bottom padding-small" />
               <p className="heading-style-h4 font-dm-sans">
-                A great school is a room full of adults who care intensely about
-                every child in front of them
+                {t?.subheading ??
+                  "A great school is a room full of adults who care intensely about every child in front of them"}
               </p>
             </div>
           </div>

@@ -8,6 +8,7 @@ import { notFound } from "next/navigation"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { isRTL, type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   generateDefaultMetadata,
   generateSchoolMetadata,
@@ -46,7 +47,12 @@ export async function generateMetadata({
 
 export default async function About({ params }: AboutProps) {
   const { lang, subdomain } = await params
-  const result = await getSchoolBySubdomain(subdomain)
+  // The layout already loaded this; `getDictionary` is wrapped in React
+  // `cache()`, so the second call is free rather than a second merge.
+  const [result, dictionary] = await Promise.all([
+    getSchoolBySubdomain(subdomain),
+    getDictionary(lang),
+  ])
 
   if (!result.success || !result.data) {
     notFound()
@@ -85,7 +91,7 @@ export default async function About({ params }: AboutProps) {
       <div className="zenda-clone" dir={isRTL(lang) ? "rtl" : "ltr"}>
         <div className="body-v2 bg-beige-home">
           <div className="about-page">
-            <AboutContent lang={lang} />
+            <AboutContent lang={lang} dictionary={dictionary} />
           </div>
         </div>
       </div>

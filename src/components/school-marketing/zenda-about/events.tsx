@@ -10,6 +10,8 @@
 import { Keyboard, Mousewheel } from "swiper/modules"
 import { Swiper, SwiperSlide } from "swiper/react"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import "swiper/css"
 
 /**
@@ -27,92 +29,119 @@ import "swiper/css"
  * swap them for the school's own photography. The link glyph is a LinkedIn mark
  * left over from the reference and now points at `/tour` — replace it with a
  * calendar or arrow icon.
+ *
+ * Copy now lives in the dictionary at `marketing.site.about.events` (en + ar).
+ * `EN_FALLBACK_ITEMS` below is the previously-hardcoded English, kept in-file
+ * as the fallback for a missing/short translation.
  */
 
-type EventItem = {
+type ImageMeta = {
   img: string
   fit?: "left" | "right" // object-position variant for a couple of shots
+}
+
+type EventCopy = {
   heading: string
   details: string
   para: string
 }
 
-const EVENTS: EventItem[] = [
+type EventItem = ImageMeta & EventCopy
+
+// Non-translatable half: which photo each card uses, and its crop variant.
+// Order and length are load-bearing — the Swiper slides index into this.
+const IMAGE_META: ImageMeta[] = [
+  { img: "e1.webp" },
+  { img: "e2.webp" },
+  { img: "e3.webp" },
+  { img: "e4.webp" },
+  { img: "e5.webp", fit: "left" },
+  { img: "e6.jpeg" },
+  { img: "e7.webp", fit: "right" },
+  { img: "e8.jpg" },
+  { img: "e9.webp" },
+  { img: "e10.webp" },
+  { img: "e11.webp" },
+  { img: "e12.webp" },
+]
+
+// English fallback copy, verbatim from the previous hardcoded EVENTS array.
+// Used when the dictionary is unavailable, or a translated items array runs
+// shorter than 12 — index by index, never assume the whole array is present.
+const EN_FALLBACK_ITEMS: EventCopy[] = [
   {
-    img: "e1.webp",
     heading: "Prize Giving Evening",
     details: "20 Jun '25  I  Main Hall",
     para: "An evening for the people who make a school year work — the students who kept at it, and the parents who kept them at it. We handed out awards for academic progress, for service to the school, and for the quiet persistence that never shows up on a report card. Every graduating student left with a photograph and a handshake, and the hall stayed full long after the last certificate.",
   },
   {
-    img: "e2.webp",
     heading: "Science and Innovation Fair",
     details: "29 May '25 | Main Hall",
     para: "Ninety projects, from a Grade 4 water filter to a Grade 11 solar tracker, judged by teachers and two visiting engineers. Students defended their work at their own tables all morning and answered better questions than most of us expected. Three projects went forward to the regional fair.",
   },
   {
-    img: "e3.webp",
     heading: "Parent Partnership Evening",
     details: "28-30 Jan '25 | Campus",
     para: "Three evenings of one-to-one meetings between families and every teacher who takes their child. No queues and no ten-minute bell — each family booked the slots it needed. Alongside the meetings, our heads of department ran short sessions on how reading, arithmetic and revision are actually taught here, so what happens at home can pull in the same direction.",
   },
   {
-    img: "e4.webp",
     heading: "Careers and Universities Day",
     details: "17-20 Oct '24 | Main Hall",
     para: "Former students came back to talk about what they actually do all day — medicine, engineering, teaching, running a business — and stayed to answer the questions our seniors were too polite to ask in front of the room. Admissions officers from four universities took walk-ins all afternoon.",
   },
   {
-    img: "e5.webp",
-    fit: "left",
     heading: "Inter-House Sports Day",
     details: "9 Nov '24 | School Field",
     para: "The whole school on the field for a day, from the kindergarten shuttle run to the staff relay that the staff would rather not discuss. Every student competed in something, which is the point — the trophy goes to the house with the widest participation, not the fastest runner.",
   },
   {
-    img: "e6.jpeg",
     heading: "Debate and Public Speaking Final",
     details: "3-4 Dec '24 | Main Hall",
     para: "Our senior debaters argued both sides of a motion they only saw an hour beforehand, in front of a hall of students who were, remarkably, silent. Public speaking is on the timetable here from Grade 6 precisely so this evening is possible — being able to hold a room is a skill we teach, not a talent we wait for.",
   },
   {
-    img: "e7.webp",
-    fit: "right",
     heading: "Open Day for New Families",
     details: "13-14 Nov '24 | Campus",
     para: "Families walked the school while it was running — lessons in progress, no staged classrooms — and asked our students, not our brochures, what it is like here. Our leadership team and heads of year took questions until everyone had run out, and applications for the next intake opened that evening.",
   },
   {
-    img: "e8.jpg",
     heading: "Reading Week and Book Fair",
     details: "9 Dec '23 | Library",
     para: "A week where every class stopped for twenty minutes a day to read whatever they liked, teachers included. A visiting author spent an afternoon with our middle school, the library ran a book swap, and our youngest students came dressed as their favourite characters — which remains the most photographed morning of the year.",
   },
   {
-    img: "e9.webp",
     heading: "Arts and Music Showcase",
     details: "5-6 Dec '23 | Main Hall",
     para: "A term of art, drama and music put in front of an audience: the choir, two class plays, a first-time student band, and a gallery of work from every year group along the corridor. Nothing here is auditioned — every child who wanted a place on the programme had one.",
   },
   {
-    img: "e10.webp",
     heading: "Community Service Week",
     details: "20-21 Nov '23 | Around the City",
     para: "Our senior years spent the week outside the school — a neighbourhood clean-up, reading sessions at a nearby primary, and a food drive our own students ran end to end. Service is a graduation requirement here, and the point of the week is that the requirement is the easy part.",
   },
   {
-    img: "e11.webp",
     heading: "Graduation Ceremony",
     details: "4-5 Oct '23 | Main Hall",
     para: "The class we have taught since primary walked across the stage, some of them for the last time in a uniform they have worn for a decade. Every graduate was named by the teacher who knew them best, with a sentence about who they actually are — which took considerably longer than the schedule allowed, and was worth it.",
   },
   {
-    img: "e12.webp",
     heading: "Welcome Morning for New Students",
     details: "8-9 May '23 | Campus",
     para: "New students met their class, their teacher and their assigned buddy a week before term started, so the first day was a return rather than an arrival. Parents had coffee with the year head in the hall while the children were shown where everything is — most importantly, the canteen.",
   },
 ]
+
+// Copy comes from `marketing.site.about.events.items`, a plain array in the
+// same order as IMAGE_META. The pairing is positional, so the two must stay
+// the same length: the images are this school's, the words are the
+// dictionary's, and index i of one describes index i of the other.
+function getEvents(dictionary?: Dictionary): EventItem[] {
+  const items = dictionary?.marketing?.site?.about?.events?.items
+  return IMAGE_META.map((meta, i) => ({
+    ...meta,
+    ...(items?.[i] ?? EN_FALLBACK_ITEMS[i]),
+  }))
+}
 
 function LinkedInOutlineIcon() {
   return (
@@ -157,18 +186,30 @@ function LinkedInOutlineIcon() {
   )
 }
 
-export function Events({ lang = "en" }: { lang?: string }) {
+export function Events({
+  lang = "en",
+  dictionary,
+}: {
+  lang?: string
+  dictionary?: Dictionary
+}) {
+  const eventsCopy = dictionary?.marketing?.site?.about?.events
+  const tag = eventsCopy?.tag ?? "Our school year"
+  const heading = eventsCopy?.heading ?? "Life & Events"
+  const bookVisitLabel = eventsCopy?.bookVisit ?? "Book a visit"
+  const bookVisitAriaTemplate =
+    eventsCopy?.bookVisitAria ?? "Book a visit — {event}"
+  const events = getEvents(dictionary)
+
   return (
     <section className="section_events">
       <div className="padding-global-v2 padding-section-large">
         <div className="container-large">
           <div className="events_wrap">
             <div className="events_header">
-              <div className="tag is-text">Our school year</div>
+              <div className="tag is-text">{tag}</div>
               <div className="padding-bottom padding-xxsmall" />
-              <h2 className="events_heading heading-style-h2">
-                Life &amp; Events
-              </h2>
+              <h2 className="events_heading heading-style-h2">{heading}</h2>
             </div>
 
             <div className="padding-bottom padding-xlarge" />
@@ -189,7 +230,7 @@ export function Events({ lang = "en" }: { lang?: string }) {
                   992: { slidesPerView: 1.2, spaceBetween: "2%" },
                 }}
               >
-                {EVENTS.map((e, i) => (
+                {events.map((e, i) => (
                   <SwiperSlide key={i} className="is-events-slider">
                     <div className="events_slider_slide">
                       <div className="events_slide_grid">
@@ -226,7 +267,10 @@ export function Events({ lang = "en" }: { lang?: string }) {
                             </p>
                             <a
                               href={`/${lang}/tour`}
-                              aria-label={`Book a visit — ${e.heading}`}
+                              aria-label={bookVisitAriaTemplate.replace(
+                                "{event}",
+                                e.heading
+                              )}
                               className="events_slide_social_wrap w-inline-block"
                             >
                               <div className="events_slide_social_icon">
@@ -235,7 +279,7 @@ export function Events({ lang = "en" }: { lang?: string }) {
                                 </div>
                               </div>
                               <div className="text-size-medium">
-                                Book a visit
+                                {bookVisitLabel}
                               </div>
                             </a>
                           </div>

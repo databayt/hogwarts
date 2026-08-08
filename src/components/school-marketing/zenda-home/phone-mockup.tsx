@@ -5,6 +5,8 @@
 // CSS scope (see src/styles/zenda-clone.css).
 
 /* eslint-disable @next/next/no-img-element */
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { FeaturesScroll } from "./features-scroll"
 
 // Reference assets live on the Webflow CDN (same project bucket the site loads
@@ -39,143 +41,160 @@ type Item = {
 
 // The grid: each row is a flex line of pills; left/right items fly in from the
 // matching side as you scroll. Items without a `attr` are static filler pills.
-const ROWS: { row: string; items: Item[] }[] = [
-  {
-    row: "is-space-between",
-    items: [
-      {
-        attr: "feature-left-1",
-        item: "is-1",
-        wrap: "is-activities",
-        img: "basketball",
-        title: "Activities",
-      },
-      {
-        attr: "feature-right-1",
-        item: "is-transport is-2",
-        wrap: "is-transport",
-        img: "transport",
-        title: "Transport",
-      },
-    ],
-  },
-  {
-    row: "",
-    items: [
-      {
-        attr: "feature-left-2",
-        item: "is-padding-left",
-        wrap: "is-uniform",
-        img: "uniform",
-        title: "Uniform",
-      },
-      {
-        attr: "feature-left-3",
-        item: "is-img-only",
-        wrap: "is-cloth",
-        img: "cloth",
-      },
-      {
-        item: "is-padding-left",
-        wrap: "is-compass",
-        img: "compass",
-        title: "Supplies",
-      },
-      {
-        attr: "feature-right-3",
-        item: "is-img-only",
-        wrap: "is-bread",
-        img: "bread",
-      },
-      {
-        attr: "feature-right-2",
-        item: "is-transparent-center",
-        title: "Security",
-      },
-    ],
-  },
-  {
-    row: "",
-    items: [
-      {
-        attr: "feature-left-4",
-        item: "is-img-only",
-        wrap: "is-juice-package",
-        img: "juice",
-      },
-      {
-        attr: "feature-left-5",
-        item: "is-transparent",
-        img: "textbooks",
-        title: "Notebooks",
-      },
-      {
-        item: "is-padding-left",
-        wrap: "is-compass",
-        img: "compass",
-        title: "Supplies",
-      },
-      {
-        attr: "feature-right-4",
-        item: "is-fees",
-        wrap: "is-fees",
-        img: "fee",
-        title: "Fees",
-      },
-      {
-        attr: "feature-right-5",
-        item: "is-img-only",
-        wrap: "is-clock",
-        img: "clock",
-      },
-      {
-        attr: "feature-right-6",
-        item: "is-padding-left",
-        wrap: "is-compass",
-        img: "compass",
-        title: "Supplies",
-      },
-    ],
-  },
-  {
-    row: "is-right-align",
-    items: [
-      {
-        attr: "feature-left-6",
-        item: "is-padding-left",
-        wrap: "is-compass",
-        img: "compass",
-        title: "Laboratory equipment",
-      },
-      {
-        attr: "feature-left-7",
-        item: "is-img-only",
-        wrap: "is-paint-brush",
-        img: "paintbrush",
-      },
-      {
-        attr: "feature-left-8",
-        item: "is-padding-left",
-        wrap: "is-compass",
-        img: "compass",
-        title: "Supplies",
-      },
-      {
-        attr: "feature-right-7",
-        item: "is-padding-left",
-        wrap: "is-compass",
-        img: "events",
-        title: "Events",
-      },
-      {
-        attr: "feature-right-8",
-        item: "is-supplies",
-        img: "supplies",
-        title: "Trips & Tours",
-      },
-    ],
-  },
-]
+// Titles resolve from the dictionary (reusing the existing marketing.phoneMockup.items.*
+// keys that already feed the older, non-clone phone-mockup.tsx) so this
+// function is called from the component body once `dictionary` is in scope.
+function buildRows(dictionary?: Dictionary): { row: string; items: Item[] }[] {
+  const t = dictionary?.marketing?.phoneMockup?.items
+  const activities = t?.activities ?? "Activities"
+  const transport = t?.transport ?? "Transport"
+  const uniform = t?.uniform ?? "Uniform"
+  const security = t?.security ?? "Security"
+  const notebooks = t?.notebooks ?? "Notebooks"
+  const fees = t?.fees ?? "Fees"
+  const supplies = t?.supplies ?? "Supplies"
+  const laboratoryEquipment = t?.laboratoryEquipment ?? "Laboratory equipment"
+  const events = t?.events ?? "Events"
+  const tripsAndTours = t?.tripsAndTours ?? "Trips & Tours"
+
+  return [
+    {
+      row: "is-space-between",
+      items: [
+        {
+          attr: "feature-left-1",
+          item: "is-1",
+          wrap: "is-activities",
+          img: "basketball",
+          title: activities,
+        },
+        {
+          attr: "feature-right-1",
+          item: "is-transport is-2",
+          wrap: "is-transport",
+          img: "transport",
+          title: transport,
+        },
+      ],
+    },
+    {
+      row: "",
+      items: [
+        {
+          attr: "feature-left-2",
+          item: "is-padding-left",
+          wrap: "is-uniform",
+          img: "uniform",
+          title: uniform,
+        },
+        {
+          attr: "feature-left-3",
+          item: "is-img-only",
+          wrap: "is-cloth",
+          img: "cloth",
+        },
+        {
+          item: "is-padding-left",
+          wrap: "is-compass",
+          img: "compass",
+          title: supplies,
+        },
+        {
+          attr: "feature-right-3",
+          item: "is-img-only",
+          wrap: "is-bread",
+          img: "bread",
+        },
+        {
+          attr: "feature-right-2",
+          item: "is-transparent-center",
+          title: security,
+        },
+      ],
+    },
+    {
+      row: "",
+      items: [
+        {
+          attr: "feature-left-4",
+          item: "is-img-only",
+          wrap: "is-juice-package",
+          img: "juice",
+        },
+        {
+          attr: "feature-left-5",
+          item: "is-transparent",
+          img: "textbooks",
+          title: notebooks,
+        },
+        {
+          item: "is-padding-left",
+          wrap: "is-compass",
+          img: "compass",
+          title: supplies,
+        },
+        {
+          attr: "feature-right-4",
+          item: "is-fees",
+          wrap: "is-fees",
+          img: "fee",
+          title: fees,
+        },
+        {
+          attr: "feature-right-5",
+          item: "is-img-only",
+          wrap: "is-clock",
+          img: "clock",
+        },
+        {
+          attr: "feature-right-6",
+          item: "is-padding-left",
+          wrap: "is-compass",
+          img: "compass",
+          title: supplies,
+        },
+      ],
+    },
+    {
+      row: "is-right-align",
+      items: [
+        {
+          attr: "feature-left-6",
+          item: "is-padding-left",
+          wrap: "is-compass",
+          img: "compass",
+          title: laboratoryEquipment,
+        },
+        {
+          attr: "feature-left-7",
+          item: "is-img-only",
+          wrap: "is-paint-brush",
+          img: "paintbrush",
+        },
+        {
+          attr: "feature-left-8",
+          item: "is-padding-left",
+          wrap: "is-compass",
+          img: "compass",
+          title: supplies,
+        },
+        {
+          attr: "feature-right-7",
+          item: "is-padding-left",
+          wrap: "is-compass",
+          img: "events",
+          title: events,
+        },
+        {
+          attr: "feature-right-8",
+          item: "is-supplies",
+          img: "supplies",
+          title: tripsAndTours,
+        },
+      ],
+    },
+  ]
+}
 
 type Block = {
   attr: string
@@ -185,33 +204,55 @@ type Block = {
   iconClass?: string
 }
 
-const MOCKUP_BLOCKS: Block[] = [
-  { attr: "mockup-item-right-1", block: "is-1" },
-  { attr: "mockup-item-right-2", block: "is-2" },
-  { attr: "mockup-item-left-1", block: "is-3", title: "Uniform" },
-  {
-    attr: "mockup-item-right-3",
-    block: "is-4",
-    title: "Supplies",
-    icon: "bag",
-  },
-  {
-    attr: "mockup-item-right-4",
-    block: "is-5",
-    title: "Rewards",
-    icon: "cup",
-    iconClass: "is-cup",
-  },
-  { attr: "mockup-item-left-2", block: "is-6" },
-  { attr: "mockup-item-left-3", block: "is-7" },
-]
+// "Rewards" has no existing marketing.phoneMockup match (see note in the map
+// JSON re: the loyalty concept dropped from rewards.tsx) so it's minted fresh
+// under marketing.site.home.phoneMockup.items.rewards; the rest reuse the
+// same marketing.phoneMockup.items.* keys as buildRows() above.
+function buildMockupBlocks(dictionary?: Dictionary): Block[] {
+  const uniform =
+    dictionary?.marketing?.phoneMockup?.items?.uniform ?? "Uniform"
+  const supplies =
+    dictionary?.marketing?.phoneMockup?.items?.supplies ?? "Supplies"
+  const rewards =
+    dictionary?.marketing?.site?.home?.phoneMockup?.items?.rewards ?? "Rewards"
+
+  return [
+    { attr: "mockup-item-right-1", block: "is-1" },
+    { attr: "mockup-item-right-2", block: "is-2" },
+    { attr: "mockup-item-left-1", block: "is-3", title: uniform },
+    {
+      attr: "mockup-item-right-3",
+      block: "is-4",
+      title: supplies,
+      icon: "bag",
+    },
+    {
+      attr: "mockup-item-right-4",
+      block: "is-5",
+      title: rewards,
+      icon: "cup",
+      iconClass: "is-cup",
+    },
+    { attr: "mockup-item-left-2", block: "is-6" },
+    { attr: "mockup-item-left-3", block: "is-7" },
+  ]
+}
 
 // Render the literal attribute the GSAP timeline selects on (e.g. feature-left-1).
 // React passes unknown attributes straight through to the DOM.
 const target = (name?: string): Record<string, string> =>
   name ? { [name]: "" } : {}
 
-export function PhoneMockup() {
+export function PhoneMockup({ dictionary }: { dictionary?: Dictionary }) {
+  const heading =
+    dictionary?.marketing?.site?.home?.phoneMockup?.heading ??
+    "You juggle life—we handle school"
+  const subheading =
+    dictionary?.marketing?.phoneMockup?.subheading ??
+    "Discover, apply, enroll, track lessons, grades and attendance in one place"
+  const rows = buildRows(dictionary)
+  const mockupBlocks = buildMockupBlocks(dictionary)
+
   return (
     <section className="section_features">
       <div className="padding-global-v2 padding-section-large">
@@ -222,22 +263,23 @@ export function PhoneMockup() {
                 feature-element=""
                 className="features_heading heading-style-h2"
               >
-                You juggle life—we handle school
+                {heading}
               </h2>
               <div feature-element="" className="max-width is-32rem">
                 {/* The school's copy at the reference's exact word counts (6
                     and 11) so the header keeps its line breaks. "pay" is
                     deliberately out of the verb list: applying is always free
-                    here, and fees only arrive after an offer is accepted. */}
-                <p className="heading-style-h4">
-                  Discover, apply, enroll, track lessons, grades and attendance
-                  in one place
-                </p>
+                    here, and fees only arrive after an offer is accepted.
+                    Now sourced from marketing.site.home.phoneMockup.heading
+                    and marketing.phoneMockup.subheading (the latter reused
+                    verbatim from the older, currently-unrendered
+                    school-marketing/phone-mockup.tsx — keep them in sync). */}
+                <p className="heading-style-h4">{subheading}</p>
               </div>
             </div>
 
             <div className="features_grid">
-              {ROWS.map((r, ri) => (
+              {rows.map((r, ri) => (
                 <div key={ri} className={`features_row ${r.row}`.trim()}>
                   {r.items.map((it, ii) => (
                     <div
@@ -278,7 +320,7 @@ export function PhoneMockup() {
                 />
               </div>
               <div className="features_mobile_bg-wrap">
-                {MOCKUP_BLOCKS.map((b, bi) => (
+                {mockupBlocks.map((b, bi) => (
                   <div
                     key={bi}
                     {...target(b.attr)}

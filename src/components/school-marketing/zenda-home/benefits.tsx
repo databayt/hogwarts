@@ -5,6 +5,8 @@
 // CSS scope (see src/styles/zenda-clone.css).
 
 /* eslint-disable @next/next/no-img-element */
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { BenefitsScroll } from "./benefits-scroll"
 
 const CDN = "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/"
@@ -14,6 +16,8 @@ const GIFT_800 = CDN + "67da6096879cc0328843d835_gift-p-800.webp"
 const COIN = CDN + "67e4dfdecfe71e2e85fb7a29_coin1.webp"
 const STAR = CDN + "682586d57eae34fbb9b8f719_star.webp"
 
+// English fallback, same order the dictionary's `benefits.items` object keys
+// (0-7) resolve in -- getItems() below reads whichever source is present.
 const ITEMS = [
   "Activities",
   "Events",
@@ -25,7 +29,24 @@ const ITEMS = [
   "Counselling",
 ]
 
-export function Benefits() {
+// Dictionary stores this list as an object keyed "0".."7" (not a JSON array),
+// so it is normalized here rather than mapped over directly. Numeric-string
+// keys are enumerated in ascending numeric order by the JS spec, so
+// Object.values() preserves the 0-7 order regardless.
+function getItems(dictionary?: Dictionary): string[] {
+  const items = dictionary?.marketing?.site?.home?.benefits?.items
+  return items ? Object.values(items) : ITEMS
+}
+
+export function Benefits({ dictionary }: { dictionary?: Dictionary }) {
+  const heading =
+    dictionary?.marketing?.site?.home?.benefits?.heading ??
+    "Discounts for everything school related"
+  const subheading =
+    dictionary?.marketing?.site?.home?.benefits?.subheading ??
+    "Set by your school"
+  const items = getItems(dictionary)
+
   return (
     <section className="section_benefits">
       <div className="padding-global-v2 padding-section-large">
@@ -51,9 +72,7 @@ export function Benefits() {
                 />
               </div>
               <div benefits-heading="" className="benefits_heading-wrap">
-                <h2 className="benefits_heading heading-style-h3">
-                  Discounts for everything school related
-                </h2>
+                <h2 className="benefits_heading heading-style-h3">{heading}</h2>
               </div>
               <div benefits-coin-1="" className="benefits_coin-wrap">
                 <img src={COIN} loading="lazy" alt="" className="img-auto" />
@@ -75,7 +94,7 @@ export function Benefits() {
                 benefits-heading-right=""
                 className="benefits_sub-heading heading-style-h2"
               >
-                Set by your school
+                {subheading}
               </h3>
               <div benefits-star-1="" className="benefits_star-wrap">
                 <img src={STAR} loading="lazy" alt="" className="img-auto" />
@@ -91,7 +110,7 @@ export function Benefits() {
             {/* Bottom-right card — the category pill list. */}
             <div benefits-block-right="" className="benefits_block">
               <div className="benefits_list">
-                {ITEMS.map((item) => (
+                {items.map((item) => (
                   <div key={item} benefits-item="" className="benefits_item">
                     <div>{item}</div>
                   </div>
