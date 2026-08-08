@@ -56,7 +56,8 @@ Ownership enforced by `requireSchoolOwnership(id)` on every step's load. Cross-t
 
 ## Multi-tenant integration
 
-- **Subdomain routing** — `/onboarding` and children live on the main domain (`ed.databayt.org`), not on a subdomain. Subdomain assignment happens at the Subdomain step.
+- **Subdomain routing** — `/onboarding` and children live on a main domain (`ed.databayt.org` or `balqalam.com`), not on a subdomain. Subdomain assignment happens at the Subdomain step, and the suffix shown there follows the root the visitor actually arrived on (`rootDomainFromLocation()`), so a school signing up via balqalam.com is quoted a balqalam.com URL.
+- **Locale in step URLs** — every onboarding URL must carry its `[lang]` segment. A bare `/onboarding/...` path is treated as locale-less by `proxy.ts`, which then re-derives the locale from the `NEXT_LOCALE` cookie or `Accept-Language` header rather than the page the user was on — flipping Arabic users to English mid-wizard. `FormFooter` navigates correctly on its own; steps overriding `onNext` should save only, or prefix `params.lang` themselves.
 - **Database scoping** — every read uses `requireSchoolOwnership(id)` first, then queries scoped by `schoolId`.
 - **Session schoolId** — JWT carries `schoolId` after step 1; subsequent steps trust it after re-verification.
 

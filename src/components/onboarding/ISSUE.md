@@ -8,14 +8,14 @@ maturity: Built
 completion: 75
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-05-25
+last_audited: 2026-08-08
 ---
 
 # Onboarding -- Production Readiness Tracker
 
 **Status:** 🟡 IN PROGRESS
 **Completion:** 75%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-08-08
 
 ---
 
@@ -66,6 +66,8 @@ last_audited: 2026-05-25
 
 ## Resolved Issues
 
+- [x] **Wizard dropped the locale on every step (2026-08-08)** — Arabic users were silently switched to English mid-flow: clicking التالي on `/ar/onboarding/<id>/title` landed on `/en/onboarding/<id>/description`, and every step after stayed English. `FormFooter.handleNext` is locale-safe, but steps that override it via `setCustomNavigation({ onNext })` (so they can save before navigating) pushed bare `/onboarding/...` paths with no `[lang]` segment; `proxy.ts` then treats the path as locale-less and re-derives the locale from the `NEXT_LOCALE` cookie / `Accept-Language` header rather than the page the user was on — resolving to `en` for most Arabic users. Fixed by prefixing `params.lang` on every onboarding `router.push`, including the two shared hooks (`use-listing` `goToStep`/`goToOverview`, `use-onboarding` `goToStep`) so all steps are covered, plus the two `<Link href>` entry cards in `overview/new-school-options.tsx` which dropped it on the very first click. Verified end to end in Arabic on localhost. **When adding a step, never build an onboarding URL without the locale — prefer letting `FormFooter` navigate and use `onNext` only to save.**
+- [x] **School-name step showed the wrong tenant domain (2026-08-08)** — the subdomain suffix was the hardcoded string `.databayt.org`, so a school signing up via balqalam.com was told the wrong URL for its own tenant. Now uses `rootDomainFromLocation()` from `src/lib/root-domain.ts` (which exists for exactly this and stays reachable on Vercel previews and localhost), resolved in an effect so SSR doesn't hydration-mismatch across the two roots.
 - [x] School-level naming standardized to US terms (2026-07-12) -- English labels renamed Primary→Elementary, Secondary→High across the description/capacity steps, dictionaries, config fallbacks, and `formatSchoolType`/`formatSchoolLevel` (`util.ts`). Stored values (`primary`/`middle`/`secondary`/`both`) unchanged — display-only. Arabic labels already correct. Also fixed: `schoolLevel="middle"` previously provisioned ZERO year levels (catalog `setup.ts` now maps middle→Grades 7-9 + MIDDLE catalog level) and the configuration description form was missing the Middle option that onboarding offers.
 - [x] Authentication fallback logic -- Implemented atomic transactions with Prisma `$transaction` in `school-access.ts`. Race conditions handled with idempotent responses.
 - [x] Legacy code cleanup (Dec 2024) -- Removed `action.ts` (superseded), `use-optimized-listing.tsx` (unused), `enums.ts` (Airbnb legacy), `host-refactor-plan.md` (old planning doc).
@@ -88,4 +90,4 @@ last_audited: 2026-05-25
 
 ---
 
-**Last Review:** 2026-03-19
+**Last Review:** 2026-08-08

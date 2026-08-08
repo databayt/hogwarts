@@ -8,7 +8,7 @@ maturity: Built
 completion: 75
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-05-25
+last_audited: 2026-08-08
 ---
 
 # Onboarding Block
@@ -35,6 +35,7 @@ last_audited: 2026-05-25
 
 ## Danger Zones
 
+- **Never build an onboarding URL without the locale.** A bare `/onboarding/...` push or href has no `[lang]` segment, so `proxy.ts` re-derives the locale from the `NEXT_LOCALE` cookie / `Accept-Language` header instead of the page the user was on — which silently flips Arabic users to English mid-wizard. `FormFooter.handleNext` already navigates correctly; prefer using `setCustomNavigation({ onNext })` only to SAVE and letting the footer navigate. If a step must push itself, prefix `params.lang`. Regression fixed 2026-08-08 — see `ISSUE.md`.
 - `config.ts` step ordering -- changing the array order breaks all wizard navigation
 - `actions.ts` (root) -- shared server actions with excessive `console.log` (P0 to fix)
 - `use-listing.tsx` ListingProvider -- shared state for all steps; breaking this breaks everything
