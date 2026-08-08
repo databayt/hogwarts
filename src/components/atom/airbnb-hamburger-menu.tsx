@@ -179,7 +179,7 @@ export function AirbnbHamburgerMenu({
 
               {/* Notification Red Dot Badge */}
               {isLoggedIn && (activeUser.unreadCount || 0) > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
+                <span className="absolute -end-0.5 -top-0.5 flex size-2.5">
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-rose-400 opacity-75" />
                   <span className="ring-background relative inline-flex size-2.5 rounded-full bg-rose-500 ring-2" />
                 </span>

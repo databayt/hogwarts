@@ -30,7 +30,7 @@ export function HomeContent({ lang = "en", dictionary }: HomeContentProps) {
       <HowItWorks dictionary={dictionary} />
       <Testimonials dictionary={dictionary} />
       <Benefits dictionary={dictionary} />
-      <CTA dictionary={dictionary} />
+      <CTA lang={lang} dictionary={dictionary} />
     </>
   )
 }
