@@ -326,20 +326,47 @@ first screen; zenda has nothing there. It is a product feature, not clone drift.
 
 Open, deliberately deferred:
 
-- [ ] **Arabic + RTL** — the whole clone is forced `dir="ltr"` and `/ar` serves
-      the English page. Real RTL means either mirroring the Webflow CSS or
-      rebuilding the sections; neither is worth doing while the copy is zenda's.
-      Until then the homepage has no dictionary wiring, which is why
-      `BASELINE_STATIC_GAP` in `src/tests/i18n/hardcoded-ratchet.test.ts` was
-      raised 0 → 1. Put it back when this lands.
-- [ ] **The copy is zenda's product, not a school's** — "The app parents love",
-      "Download App" linking to zenda's App Store listing, testimonials from
-      zenda's parents, "Trusted by 450+ institutions". Every tenant publishes
-      this today.
-- [ ] **Footer links point at zenda's routes** — `/for-schools`, `/parents`,
-      `/blogs`, `/contact`, `/about-us`, `/privacy-policy` and the socials all
-      404 or leave the site. Kept verbatim on request; needs remapping before
-      any tenant sees it.
+- [x] **Arabic + RTL** — landed 2026-08-08. The mirror is generated, not
+      hand-written: `scope-zenda.mjs` renames 1,282 physical declarations to
+      their logical twins in the BASE rule (a no-op in LTR, so `/en` is
+      unchanged and RTL mirrors for free) and emits a 445-rule
+      `.zenda-clone[dir="rtl"]` overlay for the value-level flips no rename can
+      express. All three wrappers now take `dir` from the locale.
+      `BASELINE_STATIC_GAP` is back to **0** as the contract promised.
+      Measured at 1440 and 390 in both locales: zero horizontal overflow, nav
+      and hero cards mirror to the pixel, `/ar` is 1.00 Arabic by character
+      ratio and `/ar/about` 0.99. See `CLAUDE.md` for the three traps that cost
+      real time (rtlcss ignores `inset`; zenda routes type through a token so a
+      literal-value test misses it; direction PINS must not be flipped).
+- [x] **The copy is zenda's product, not a school's** — drained 2026-08-08.
+      Section-by-section: SCHOOLS, REWARDS/discounts, "You juggle life", HOW IT
+      WORKS and the footer wordmark (2026-08-06); PARENTS VOICE testimonials and
+      the BENEFITS card (2026-08-07); HERO and CTA (2026-08-08), which were the
+      last two — "The app parents love" and the Download-App button pointing at
+      zenda's real iOS App Store listing, a product this school does not have.
+      All 202 strings across both clone pages now live in
+      `marketing.site.home` / `marketing.site.about`, en + ar.
+      **Still owed, and copy cannot fix it:** the five testimonial portraits are
+      zenda's real, identifiable customers on zenda's CDN, and the quotes under
+      them are written copy rather than collected feedback. Swap the imagery and
+      use real parents' words before any tenant publishes — same class of
+      blocker as `/about`'s team photos and investor logos. The Arabic name
+      spellings for those five are invented transliterations of real people,
+      which makes the swap more urgent, not less.
+- [x] **Footer links point at zenda's routes** — remapped 2026-08-08.
+      `/for-schools`, `/parents`, `/blogs`, `/contact`, `/about-us`,
+      `/privacy-policy` all 404 on a school subdomain, and translating a label
+      on a link that cannot resolve is not i18n — so the remap came with the
+      Arabic pass rather than after it. Six inward destinations, dictionary-keyed,
+      sharing the nav's keys for the three routes both name. The third column
+      holds two links instead of the reference's three because there is no terms
+      or privacy page at tenant level yet.
+      **The three social links are NOT fixed** and are a different decision:
+      they still point at zenda's real Instagram/LinkedIn/Facebook. Unlike the
+      404ing columns these resolve, so they silently send a school's visitors to
+      a competitor. `School` has `website`/`email`/`phoneNumber` but no social
+      fields, so wiring them needs a schema call — drop the row or add the
+      fields before any tenant publishes.
 - [ ] **Imagery is hotlinked from zenda's Webflow CDN** — everything except the
       four files copied into `public/` (`images/hero/hero-poster.webp`,
       `videos/hero-3d.mp4`, `images/parents/img_1087.png`,
