@@ -142,6 +142,25 @@
   white-space: nowrap;
 }
 
+/* The about hero's six flip cards are LETTER ARTWORK: their faces spell PARENT
+ * on the front and SCHOOL on the back, and the two pill buttons in the heading
+ * name those exact words, which is why they are art-locked and stay English
+ * (see zenda-about/hero.tsx). Their order therefore carries meaning rather than
+ * decoration — and the RTL mirror reversed it, so /ar rendered "T N E R A P".
+ *
+ * Pinning the row to `direction: ltr` restores the reading order, and takes the
+ * cards' own `inset-inline-*` with it so they fan out the way they were drawn.
+ * Same call the academic marquee makes on its track, for the same reason: a
+ * sequence that spells something is not a layout to be mirrored. Everything
+ * else on the page still mirrors.
+ *
+ * If the cards ever become Arabic letter artwork, delete this rule — then the
+ * order SHOULD mirror. */
+:root[dir="rtl"] .zenda-clone .about-hero_list,
+.zenda-clone[dir="rtl"] .about-hero_list {
+  direction: ltr;
+}
+
 /* This file is hand-maintained, so scope-zenda.mjs's Arabic pass never sees it:
  * the wordmark kept zenda's -0.04em display tracking on /ar, which breaks
  * Arabic letter joining. Same call `.zenda-heading` makes in
