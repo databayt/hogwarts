@@ -6,7 +6,7 @@ import { notFound } from "next/navigation"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { Chatbot } from "@/components/chatbot"
-import { type Locale } from "@/components/internationalization/config"
+import { isRTL, type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { ApplicationStatusBanner } from "@/components/school-marketing/admission/application-status-banner"
@@ -67,9 +67,19 @@ export default async function SiteLayout({
   const displayName = await resolveSchoolDisplayName(school, lang)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const navLabels = (dictionary as any)?.marketing?.site?.nav as
-    | Record<string, string>
-    | undefined
+  const site = (dictionary as any)?.marketing?.site
+  const navLabels = site?.nav as Record<string, string> | undefined
+  const footerLabels = site?.footer as Record<string, string> | undefined
+
+  // The chrome now follows the locale. It was pinned `dir="ltr"` because the
+  // vendored Webflow sheet had no RTL handling at all; scope-zenda.mjs now
+  // emits a `.zenda-clone[dir="rtl"]` overlay for every directional rule, so
+  // the attribute is what activates it. It has to sit on the SAME element that
+  // carries `.zenda-clone`: the overlay keys off `.zenda-clone[dir="rtl"]`, and
+  // the logical properties in the base sheet resolve against this element's own
+  // computed direction — put the two on different elements and the stylesheet
+  // and the layout engine disagree about which way the page runs.
+  const dir = isRTL(lang as Locale) ? "rtl" : "ltr"
 
   return (
     <DictionaryProvider dictionary={dictionary}>
@@ -96,8 +106,8 @@ export default async function SiteLayout({
           The shell classes are hand-ported unscoped into
           src/styles/zenda-shell.css for the same reason. `body-v2 bg-beige-home`
           are zenda's own <body> classes, which its CSS keys off for the cream
-          background and the black nav links. dir="ltr" because zenda's Webflow
-          CSS has no RTL handling; Arabic is deferred.
+          background and the black nav links. `dir` follows the locale as of
+          2026-08-08 -- see the note on `const dir` above.
 
           The font variables are here to pull DM Sans and Poppins onto these
           routes -- the Webflow rules ask for them by literal name, and the
@@ -108,7 +118,7 @@ export default async function SiteLayout({
           <div
             className={`page-wrapper ${fontDmSans.variable} ${fontPoppins.variable}`}
           >
-            <div className="zenda-clone" dir="ltr">
+            <div className="zenda-clone" dir={dir}>
               <div className="body-v2 bg-beige-home">
                 <ZendaNav
                   locale={lang}
@@ -122,9 +132,14 @@ export default async function SiteLayout({
             <main data-slot="main-content" role="main" className="main-wrapper">
               {children}
             </main>
-            <div className="zenda-footer-slot zenda-clone" dir="ltr">
+            <div className="zenda-footer-slot zenda-clone" dir={dir}>
               <div className="body-v2 bg-beige-home">
-                <ZendaFooter displayName={displayName} locale={lang} />
+                <ZendaFooter
+                  displayName={displayName}
+                  locale={lang}
+                  footerLabels={footerLabels}
+                  navLabels={navLabels}
+                />
               </div>
             </div>
           </div>

@@ -19,28 +19,34 @@ import Link from "next/link"
  * sticky element, but here it sits inside the wrapper that carries the
  * `.zenda-clone` scope class, so the wrapper takes the sticky instead.
  *
- * The link entries below use a `text` key rather than the reference's `label`.
- * That is not cosmetic: `scripts/i18n-hardcoded-ratchet.ts` flags
- * `label: "Capitalized"` as an untranslated string, and ten new matches here
- * would push the suite past its baseline. Rendered output is unchanged.
+ * The link entries below carry a dictionary KEY rather than literal text —
+ * which also keeps `scripts/i18n-hardcoded-ratchet.ts` quiet, since it flags
+ * `label: "Capitalized"` as an untranslated string.
+ *
+ * The hrefs point INWARD (2026-08-08). They used to be zenda's own routes —
+ * `/for-schools`, `/parents`, `/blogs`, `/contact`, `/about-us`,
+ * `/institution-terms-conditions-…`, `/privacy-policy` — every one of which
+ * 404s on a school subdomain. Translating a label on a link that cannot
+ * resolve is not i18n, so the remap came with the Arabic pass rather than
+ * after it. The six destinations are the marketing routes this block actually
+ * serves; there is no terms or privacy page at tenant level yet, which is why
+ * the third column holds two links instead of the reference's three. The grid
+ * is driven by the three `.footer_links-col` wrappers, not the link count, so
+ * the layout is unchanged.
  */
 
-const LINK_COLUMNS = [
+const LINK_COLUMNS: { key: string; href: string }[][] = [
   [
-    { text: "Schools", href: "/for-schools" },
-    { text: "Parents", href: "/parents" },
+    { key: "about", href: "/about" },
+    { key: "academic", href: "/academic" },
   ],
   [
-    { text: "Blog", href: "/blogs" },
-    { text: "Contact Us", href: "/contact" },
+    { key: "admissions", href: "/admissions" },
+    { key: "apply", href: "/application" },
   ],
   [
-    { text: "About Us", href: "/about-us" },
-    {
-      text: "Terms and Conditions",
-      href: "/institution-terms-conditions-a567-g8905",
-    },
-    { text: "Privacy policy", href: "/privacy-policy" },
+    { key: "visit", href: "/tour" },
+    { key: "enquire", href: "/inquiry" },
   ],
 ]
 
@@ -67,9 +73,25 @@ interface FooterProps {
   displayName: string
   /** Locale prefix for the home link, e.g. "en". */
   locale: string
+  /** Translated labels, keyed as in `dictionary.marketing.site.footer`. */
+  footerLabels?: Record<string, string>
+  /**
+   * Translated nav labels (`dictionary.marketing.site.nav`). The first three
+   * footer links name the same three destinations as the nav, so they read
+   * from the same keys — one translation per route, not two that can drift.
+   */
+  navLabels?: Record<string, string>
 }
 
-export function Footer({ displayName, locale }: FooterProps) {
+export function Footer({
+  displayName,
+  locale,
+  footerLabels,
+  navLabels,
+}: FooterProps) {
+  // Footer-specific first, then the nav's, then the key itself as a last
+  // resort — a missing key renders its own name rather than blanking a link.
+  const label = (key: string) => footerLabels?.[key] ?? navLabels?.[key] ?? key
   return (
     <footer className="footer_component z-0">
       <div className="padding-global-v2 padding-section-medium">
@@ -82,7 +104,7 @@ export function Footer({ displayName, locale }: FooterProps) {
             <div className="footer_company-wrap">
               <Link
                 href={`/${locale}`}
-                aria-label="Go to the Home page"
+                aria-label={navLabels?.home ?? "Go to the home page"}
                 className="footer_logo-link w-inline-block"
               >
                 <span className="footer_logo-text">{displayName}</span>
@@ -98,11 +120,11 @@ export function Footer({ displayName, locale }: FooterProps) {
                 <div key={i} className="footer_links-col">
                   {col.map((link) => (
                     <Link
-                      key={link.text}
-                      href={link.href}
+                      key={link.key}
+                      href={`/${locale}${link.href}`}
                       className="footer_link w-inline-block"
                     >
-                      <div>{link.text}</div>
+                      <div>{label(link.key)}</div>
                     </Link>
                   ))}
                 </div>
@@ -117,7 +139,7 @@ export function Footer({ displayName, locale }: FooterProps) {
               {SOCIAL_LINKS.map((social) => (
                 <a
                   key={social.text}
-                  aria-label={`Go to the ${social.text} profile`}
+                  aria-label={`${footerLabels?.socialAria ?? "Follow us on"} ${social.text}`}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -151,17 +173,20 @@ export function Footer({ displayName, locale }: FooterProps) {
                   its two- and three-line shape. Deliberately claims nothing
                   tenant-specific -- no grade range, no founding year, no
                   accreditation -- because this footer renders for every
-                  school. */}
+                  school.
+
+                  The school's name is interpolated rather than concatenated:
+                  Arabic puts it in the same opening position as English here,
+                  but a `{name} …` string lets a future translation move it
+                  without touching this file. */}
               <p className="footer_para text-size-small margin-bottom">
-                {displayName} is a school for curious children and the families
-                who back them, building a place where learning feels worth
-                doing.
+                {(footerLabels?.about1 ?? "{name}").replace(
+                  "{name}",
+                  displayName
+                )}
               </p>
               <p className="footer_para text-size-small">
-                It is a welcoming place for children that helps make sense of
-                lessons, friendships and the stretch of a school year, with
-                patience. On the other side, it keeps families close to what
-                their child does daily.
+                {footerLabels?.about2 ?? ""}
               </p>
             </div>
           </div>

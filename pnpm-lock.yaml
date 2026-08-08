@@ -693,6 +693,9 @@ importers:
       prisma:
         specifier: ^6.19.0
         version: 6.19.0(typescript@5.8.3)
+      rtlcss:
+        specifier: ^4.3.0
+        version: 4.3.0
       tailwindcss:
         specifier: ^4
         version: 4.1.11
@@ -15663,6 +15666,14 @@ packages:
         integrity: sha512-ZUz/69+SYpFN/g/lUlo2FXcIjRkSu3nDarreVdGGndHEBJ6cXPdKguS8JGxwj5HA5xIbVKSmLgr5b3AWxtRfvQ==,
       }
 
+  rtlcss@4.3.0:
+    resolution:
+      {
+        integrity: sha512-FI+pHEn7Wc4NqKXMXFM+VAYKEj/mRIcW4h24YVwVtyjI+EqGrLc2Hx/Ny0lrZ21cBWU2goLy36eqMcNj3AQJig==,
+      }
+    engines: { node: ">=12.0.0" }
+    hasBin: true
+
   run-parallel@1.2.0:
     resolution:
       {
@@ -28310,6 +28321,13 @@ snapshots:
       path-data-parser: 0.1.0
       points-on-curve: 0.2.0
       points-on-path: 0.2.1
+
+  rtlcss@4.3.0:
+    dependencies:
+      escalade: 3.2.0
+      picocolors: 1.1.1
+      postcss: 8.5.23
+      strip-json-comments: 3.1.1
 
   run-parallel@1.2.0:
     dependencies:

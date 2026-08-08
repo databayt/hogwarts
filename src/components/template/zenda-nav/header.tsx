@@ -258,7 +258,7 @@ export function ZendaNav({
       <div className="nav_wrap">
         <Link
           hero-logo=""
-          aria-label="Go to the Home page"
+          aria-label={navLabels?.home ?? "Go to the home page"}
           href={`/${locale}`}
           className={`nav_logo-link w-nav-brand ${isActiveLink("/") ? "w--current" : ""}`}
         >
@@ -315,7 +315,11 @@ export function ZendaNav({
             nav-menu-btn=""
             className={`nav_menu-btn ${isActive ? "is-active" : ""}`}
             onClick={() => setIsActive((prev) => !prev)}
-            aria-label={isActive ? "Close menu" : "Open menu"}
+            aria-label={
+              isActive
+                ? (navLabels?.closeMenu ?? "Close menu")
+                : (navLabels?.openMenu ?? "Open menu")
+            }
             aria-expanded={isActive}
             aria-controls="nav-menu"
           >

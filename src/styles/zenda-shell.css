@@ -142,6 +142,17 @@
   white-space: nowrap;
 }
 
+/* This file is hand-maintained, so scope-zenda.mjs's Arabic pass never sees it:
+ * the wordmark kept zenda's -0.04em display tracking on /ar, which breaks
+ * Arabic letter joining. Same call `.zenda-heading` makes in
+ * school-marketing.css, and the same one the generated sheet now makes for its
+ * own 70 tracked rules. The face itself needs no override here — the wordmark
+ * inherits from the token the generated overlay already flips. */
+.zenda-clone[dir="rtl"] .nav_logo-text,
+.zenda-clone[dir="rtl"] .footer_logo-text {
+  letter-spacing: 0;
+}
+
 /* A school name is arbitrarily long where "zenda" is five letters, so the
  * lockup steps back down on small screens rather than crowding the hamburger. */
 @media screen and (max-width: 767px) {
@@ -153,6 +164,17 @@
   .zenda-clone .nav_logo-text {
     font-size: 1.375rem;
   }
+}
+
+/* The how-it-works header. The reference caps it at 30rem, which fits its own
+ * six-word headline ("Transform the way you pay fees") on two lines; ours runs
+ * wider and broke to three. 38rem is the smallest cap that holds it to two
+ * ("One place for everything" / "school asks") with room to spare -- the first
+ * line measures ~519px against 38rem ≈ 552px at the 1440 anchor. Below the
+ * tablet breakpoints the box is governed by the section's own padding, so this
+ * only bites on desktop. */
+.zenda-clone .hiw_header {
+  max-width: 38rem;
 }
 
 /* The chip on the rewards globe. The reference sizes it for a points figure
@@ -192,9 +214,16 @@
 
 /* The reference cancels the last link's 1.5rem padding so its text sits flush
  * with the container edge. The hamburger now follows the links, so that pull
- * would drag it under them. */
+ * would drag it under them.
+ *
+ * Logical, not `margin-right`, and the distinction is load-bearing since the
+ * generated sheet went logical: the rule this cancels is now
+ * `margin-inline-end: -1.5rem`. In LTR both spell the same physical edge and a
+ * `margin-right: 0` here still won on order — but in RTL the base resolves to
+ * the LEFT while `margin-right` cancels the right, so the -1.5rem pull would
+ * come back on the other side and drag the links under the hamburger. */
 .zenda-clone .nav_menu {
-  margin-right: 0;
+  margin-inline-end: 0;
 }
 
 /* On at every width now -- the utility panel is behind it, so hiding it above

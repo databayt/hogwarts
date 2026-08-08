@@ -285,6 +285,7 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "pretty-quick": "^4.2.2",
     "prisma": "^6.19.0",
+    "rtlcss": "^4.3.0",
     "tailwindcss": "^4",
     "tsx": "^4.19.2",
     "tw-animate-css": "^1.3.6",

@@ -1238,7 +1238,10 @@
         "platform": "Platform",
         "login": "Login",
         "logout": "Logout",
-        "search": "Search"
+        "search": "Search",
+        "home": "Go to the home page",
+        "openMenu": "Open menu",
+        "closeMenu": "Close menu"
       },
       "hero": {
         "eyebrow": "Now enrolling",
@@ -1652,7 +1655,13 @@
         "buildBy": "Build by",
         "sourceCode": ", source code available on",
         "terms": "Terms",
-        "privacy": "Privacy"
+        "privacy": "Privacy",
+        "visit": "Book a Visit",
+        "enquire": "Enquire",
+        "apply": "Apply",
+        "socialAria": "Follow us on",
+        "about1": "{name} is a school for curious children and the families who back them, building a place where learning feels worth doing.",
+        "about2": "It is a welcoming place for children that helps make sense of lessons, friendships and the stretch of a school year, with patience. On the other side, it keeps families close to what their child does daily."
       },
       "trust": {
         "label": "What we teach",

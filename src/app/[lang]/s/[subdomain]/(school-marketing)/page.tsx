@@ -7,7 +7,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
-import { type Locale } from "@/components/internationalization/config"
+import { isRTL, type Locale } from "@/components/internationalization/config"
 import {
   generateDefaultMetadata,
   generateSchoolMetadata,
@@ -63,8 +63,10 @@ export default async function Site({ params }: SiteProps) {
     >
       {/*
         The zenda homepage, copied verbatim. `.zenda-clone` scopes the Webflow
-        stylesheet to this subtree only; dir="ltr" because that CSS has no RTL
-        handling, so /ar renders the same left-to-right page for now.
+        stylesheet to this subtree only, and `dir` follows the locale -- the
+        attribute activates the `.zenda-clone[dir="rtl"]` overlay that
+        scope-zenda.mjs emits, and must stay on the same element as the scope
+        class so the sheet and the layout engine agree on reading direction.
 
         <ZendaRootScale/> restores zenda's fluid root font size on <html>, which
         cannot be class-scoped -- hence rendering it from the page, so it applies
@@ -91,7 +93,7 @@ export default async function Site({ params }: SiteProps) {
       <noscript>
         <style>{`.page-wrapper{opacity:1!important}`}</style>
       </noscript>
-      <div className="zenda-clone" dir="ltr">
+      <div className="zenda-clone" dir={isRTL(lang) ? "rtl" : "ltr"}>
         <div className="body-v2 bg-beige-home">
           <HomeContent lang={lang} />
         </div>
