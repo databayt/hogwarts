@@ -23,6 +23,7 @@ import type {
   SubmitApplicationResult,
 } from "../types"
 import { sessionDataSchema } from "../validation"
+import { tenantUrl } from "./urls"
 
 // Initialize Resend for email
 const resend = process.env.RESEND_API_KEY
@@ -211,7 +212,10 @@ export async function saveApplicationSession(
     email: string
     campaignId?: string
   },
-  sessionToken?: string
+  sessionToken?: string,
+  // Optional so existing callers are unaffected; it only steers the locale of
+  // the resume link in the email below.
+  lang?: string
 ): Promise<ActionResult<{ sessionToken: string }>> {
   try {
     const schoolResult = await getSchoolBySubdomain(subdomain)
@@ -296,7 +300,11 @@ export async function saveApplicationSession(
       if (resend) {
         const resumeEmail = buildResumeApplicationEmail({
           school: schoolResult.data,
-          resumeUrl: `https://${subdomain}.databayt.org/application/continue?token=${newToken}`,
+          resumeUrl: await tenantUrl(
+            subdomain,
+            `/application/continue?token=${newToken}`,
+            lang
+          ),
         })
         resend.emails
           .send({
@@ -848,7 +856,11 @@ export async function submitApplication(
           `${validated.firstName} ${validated.lastName}`,
         studentName: `${validated.firstName} ${validated.lastName}`,
         applicationNumber,
-        trackUrl: `https://${subdomain}.databayt.org/application/status?token=${accessToken}`,
+        trackUrl: await tenantUrl(
+          subdomain,
+          `/application/status?token=${accessToken}`,
+          lang
+        ),
       })
       resend.emails
         .send({

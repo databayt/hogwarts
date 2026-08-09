@@ -370,6 +370,39 @@ function rtlOverlay(body, where) {
 // diffable against it. Each entry asserts the upstream value it replaces, so if
 // zenda ever changes that declaration the script fails instead of quietly
 // dropping our intent on the floor.
+// ------------------------------------------------------- RTL exemptions ----
+// Rules whose content is ARTWORK with an authored orientation, not layout to be
+// mirrored. They get no RTL overlay at all.
+//
+// This exists because a CSS `direction` pin CANNOT hold them. `zenda-shell.css`
+// pins `.about-hero_list { direction: ltr }` so the six flip cards keep the
+// order that spells PARENT/SCHOOL, and that works for their positions —
+// `inset-inline-*` resolves against the inherited direction. But the overlay
+// matches on `.zenda-clone[dir="rtl"]`, an ATTRIBUTE selector on an ancestor,
+// which does not care what `direction` any descendant inherits. So the cards
+// held their positions and had their decorative tilt negated anyway
+// (+3.6/-3.8/+2 in English became -3.6/+3.8/-2 in Arabic) — a hybrid matching
+// neither the original composition nor a full mirror, on the most visible
+// section of /about.
+//
+// A pin in the markup and an exemption here are two different jobs: the pin
+// governs what the browser computes, this governs what the generator emits.
+// Art that is pinned needs both.
+const RTL_EXEMPT = [
+  // The /about hero's letter cards: faces are letterforms spelling PARENT on
+  // the front and SCHOOL on the back, and the heading's two pill buttons name
+  // those exact words. Their fan angles and flip transforms are drawn, not
+  // laid out. The HEADING above them is not exempt and still mirrors.
+  /^\.about-hero_card(_|\b)/,
+]
+const isRtlExempt = (sel) =>
+  sel
+    .split(",")
+    .map((s) => s.trim())
+    .some((s) => RTL_EXEMPT.some((re) => re.test(s)))
+
+let rtlExemptCount = 0
+
 const LOCAL_OVERRIDES = [
   {
     selector: ".section_services",
@@ -431,7 +464,9 @@ function emitRules(units, sink) {
     // could not already express as a direction-agnostic property.
     const body = applyLocalOverrides(p, logicalize(u.body))
     sink.push(`${prefixSelectorList(p)} {${body}}`)
-    const overlay = rtlOverlay(body, p)
+    const overlay = isRtlExempt(p)
+      ? (rtlExemptCount++, "")
+      : rtlOverlay(body, p)
     // Emitted immediately after its own base rule, so it lands inside the same
     // @media/@supports block and outranks it by exactly one attribute selector.
     // Adding the same +1 to every rule preserves the sheet's internal ordering.
@@ -476,5 +511,6 @@ console.log(
   `keyframes=${keyframes.length} rules=${out.length} bytes=${css.length}\n` +
     `  Pass A  logical renames : ${renameCount} (+${insetSplitCount} inset shorthands split)\n` +
     `  Pass B  rtl overlay rules: ${overlayRuleCount} ` +
-    `(${flipDeclCount} flipped, ${typoDeclCount} arabic-typography)`
+    `(${flipDeclCount} flipped, ${typoDeclCount} arabic-typography, ` +
+    `${rtlExemptCount} art-locked rules exempted)`
 )

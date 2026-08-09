@@ -12,6 +12,7 @@ import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 import type { ActionResult, InquiryFormData } from "../types"
 import { createInquirySchema } from "../validation"
+import { tenantUrl } from "./urls"
 
 // Initialize Resend for email
 const resend = process.env.RESEND_API_KEY
@@ -27,7 +28,10 @@ const resend = process.env.RESEND_API_KEY
  */
 export async function submitInquiry(
   subdomain: string,
-  data: InquiryFormData
+  data: InquiryFormData,
+  // Optional so existing callers are unaffected; it only steers the locale of
+  // the two follow-up links in the confirmation email below.
+  lang?: string
 ): Promise<ActionResult<{ message: string }>> {
   try {
     const schoolResult = await getSchoolBySubdomain(subdomain)
@@ -166,8 +170,8 @@ export async function submitInquiry(
             ${validated.studentName ? `<p>We look forward to learning more about <strong>${validated.studentName}</strong>.</p>` : ""}
             <p>In the meantime, you can:</p>
             <ul>
-              <li><a href="https://${subdomain}.databayt.org/tour">Schedule a Campus Tour</a></li>
-              <li><a href="https://${subdomain}.databayt.org/application">Start an Application</a></li>
+              <li><a href="${await tenantUrl(subdomain, "/tour", lang)}">Schedule a Campus Tour</a></li>
+              <li><a href="${await tenantUrl(subdomain, "/application", lang)}">Start an Application</a></li>
             </ul>
             <p>Best regards,<br>Admissions Team<br>${schoolResult.data.name}</p>
           `,

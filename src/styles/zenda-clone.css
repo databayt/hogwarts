@@ -2515,16 +2515,10 @@
   inset-inline: 4% auto;
   transform: rotate(3.6deg);
 }
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-1 {
-  transform: rotate(-3.6deg);
-}
 .zenda-clone .about-hero_card_component.is-2 {
   inset-block: 0% auto;
   inset-inline: 19% auto;
   transform: rotate(-3.8deg);
-}
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-2 {
-  transform: rotate(3.8deg);
 }
 .zenda-clone .about-hero_card_component.is-3 {
   z-index: 1;
@@ -2532,32 +2526,20 @@
   inset-inline: 34% auto;
   transform: rotate(2deg);
 }
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-3 {
-  transform: rotate(-2deg);
-}
 .zenda-clone .about-hero_card_component.is-4 {
   inset-block: 0% auto;
   inset-inline: auto 34%;
   transform: rotate(-2deg);
-}
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-4 {
-  transform: rotate(2deg);
 }
 .zenda-clone .about-hero_card_component.is-5 {
   inset-block: 20% auto;
   inset-inline: auto 21%;
   transform: rotate(7.2deg);
 }
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-5 {
-  transform: rotate(-7.2deg);
-}
 .zenda-clone .about-hero_card_component.is-6 {
   inset-block: 0% auto;
   inset-inline: auto 5%;
   transform: rotate(-2deg);
-}
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-6 {
-  transform: rotate(2deg);
 }
 .zenda-clone .about-hero_card_item {
   position: relative;
@@ -2609,9 +2591,6 @@
   backdrop-filter: blur(0.5rem);
   transform-style: preserve-3d;
   transform: rotateY(180deg);
-}
-.zenda-clone[dir="rtl"] .about-hero_card_back {
-  transform: rotateY(-180deg);
 }
 .zenda-clone .about-hero_card_back.is-c {
   background-color: #8e8eb7;
@@ -19146,16 +19125,10 @@
   inset-inline: 4% auto;
   transform: rotate(3.6deg);
 }
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-1 {
-  transform: rotate(-3.6deg);
-}
 .zenda-clone .about-hero_card_component.is-2 {
   inset-block: 0% auto;
   inset-inline: 19% auto;
   transform: rotate(-3.8deg);
-}
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-2 {
-  transform: rotate(3.8deg);
 }
 .zenda-clone .about-hero_card_component.is-3 {
   z-index: 1;
@@ -19163,32 +19136,20 @@
   inset-inline: 34% auto;
   transform: rotate(2deg);
 }
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-3 {
-  transform: rotate(-2deg);
-}
 .zenda-clone .about-hero_card_component.is-4 {
   inset-block: 0% auto;
   inset-inline: auto 34%;
   transform: rotate(-2deg);
-}
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-4 {
-  transform: rotate(2deg);
 }
 .zenda-clone .about-hero_card_component.is-5 {
   inset-block: 20% auto;
   inset-inline: auto 21%;
   transform: rotate(7.2deg);
 }
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-5 {
-  transform: rotate(-7.2deg);
-}
 .zenda-clone .about-hero_card_component.is-6 {
   inset-block: 0% auto;
   inset-inline: auto 5%;
   transform: rotate(-2deg);
-}
-.zenda-clone[dir="rtl"] .about-hero_card_component.is-6 {
-  transform: rotate(2deg);
 }
 .zenda-clone .about-hero_card_item {
   transform-style: preserve-3d;
@@ -19205,9 +19166,6 @@
 .zenda-clone .about-hero_card_item.is-active {
   transform-style: preserve-3d;
   transform: rotateX(0) rotateY(180deg) rotate(0);
-}
-.zenda-clone[dir="rtl"] .about-hero_card_item.is-active {
-  transform: rotateX(0) rotateY(-180deg) rotate(0);
 }
 .zenda-clone .about-hero_card_front {
   border: 1px solid var(--black);
@@ -19671,9 +19629,6 @@
   position: absolute;
   inset: 0%;
   transform: rotateX(0) rotateY(180deg) rotate(0);
-}
-.zenda-clone[dir="rtl"] .about-hero_card_back {
-  transform: rotateX(0) rotateY(-180deg) rotate(0);
 }
 .zenda-clone .about-hero_card_back.is-c {
   background-color: #8e8eb7;

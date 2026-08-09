@@ -185,7 +185,7 @@ export function TourWizard({
         specialRequests: data.specialRequests,
       }
 
-      const result = await createTourBooking(subdomain, bookingData)
+      const result = await createTourBooking(subdomain, bookingData, lang)
 
       if (result.success && result.data) {
         setConfirmation(result.data)
@@ -278,8 +278,15 @@ export function TourWizard({
       {/* Content */}
       <div className="flex flex-1 items-center justify-center overflow-y-auto px-4 py-6">
         <div
+          /* The step entrance follows the READING direction, so "forward"
+             enters from the trailing edge in both languages. These are
+             physical Tailwind utilities with no logical form, so the side is
+             chosen here rather than by the class — same reason the back arrow
+             above carries `rtl:rotate-180`. Left unmirrored, advancing a step
+             in Arabic slid the panel in against the direction the reader is
+             moving. */
           className={`w-full transition-all duration-300 ease-out ${
-            direction === "forward"
+            (direction === "forward") !== isRTL
               ? "animate-in fade-in slide-in-from-right-4"
               : "animate-in fade-in slide-in-from-left-4"
           }`}

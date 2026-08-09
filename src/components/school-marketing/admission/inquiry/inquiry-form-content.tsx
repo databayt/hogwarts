@@ -121,7 +121,7 @@ export default function InquiryFormContent({
         subscribeNewsletter: data.subscribeNewsletter,
       }
 
-      const result = await submitInquiry(subdomain, inquiryData)
+      const result = await submitInquiry(subdomain, inquiryData, lang)
 
       if (result.success) {
         setIsSubmitted(true)

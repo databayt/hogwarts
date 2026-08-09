@@ -24,6 +24,7 @@ import type {
 } from "../types"
 import { createTourBookingSchema } from "../validation"
 import { getAdmissionPortalFlags } from "./portal-flags"
+import { tenantUrl } from "./urls"
 
 // Initialize Resend for email
 const resend = process.env.RESEND_API_KEY
@@ -158,7 +159,10 @@ function generateBookingNumber(): string {
  */
 export async function createTourBooking(
   subdomain: string,
-  data: TourBookingData
+  data: TourBookingData,
+  // Optional so existing callers are unaffected; it only steers the locale of
+  // the manage-booking link in the confirmation email below.
+  lang?: string
 ): Promise<ActionResult<TourBookingConfirmation>> {
   try {
     const schoolResult = await getSchoolBySubdomain(subdomain)
@@ -390,7 +394,7 @@ export async function createTourBooking(
               </tr>
             </table>
             <p>If you need to reschedule or cancel, please visit:</p>
-            <p><a href="https://${subdomain}.databayt.org/tour/${bookingNumber}">Manage Booking</a></p>
+            <p><a href="${await tenantUrl(subdomain, `/tour/${bookingNumber}`, lang)}">Manage Booking</a></p>
             <p>We look forward to meeting you!</p>
             <p>Best regards,<br>${schoolResult.data.name}</p>
           `,

@@ -26,6 +26,14 @@ const NewApplicationOptions: React.FC<NewApplicationOptionsProps> = ({
 }) => {
   const dict = dictionary?.school?.admission?.portal || {}
   const isRTL = locale === "ar"
+  // Both links are intercepted by onClick, which navigates with the locale —
+  // but the href is what a Cmd/Ctrl-click, a middle-click or a "copy link
+  // address" actually uses, and those bypass the handler entirely. A bare
+  // path there drops the locale for exactly the users who open things in a
+  // new tab.
+  const overviewHref = locale
+    ? `/${locale}/application/overview`
+    : "/application/overview"
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight
 
   const handleCreateNew = (e: React.MouseEvent) => {
@@ -45,7 +53,7 @@ const NewApplicationOptions: React.FC<NewApplicationOptionsProps> = ({
       <div className="space-y-2">
         {/* Start from scratch */}
         <Link
-          href="/application/overview"
+          href={overviewHref}
           onClick={handleCreateNew}
           className="border-border group flex h-auto min-h-[50px] w-full items-center justify-between border-b py-2 transition-all sm:min-h-[60px] sm:py-3"
         >
@@ -66,7 +74,7 @@ const NewApplicationOptions: React.FC<NewApplicationOptionsProps> = ({
 
         {/* Import from profile */}
         <Link
-          href="/application/overview"
+          href={overviewHref}
           onClick={handleCreateFromTemplate}
           className="border-border group flex h-auto min-h-[50px] w-full items-center justify-between border-b py-2 transition-all sm:min-h-[60px] sm:py-3"
         >
