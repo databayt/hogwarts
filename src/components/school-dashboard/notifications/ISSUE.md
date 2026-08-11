@@ -45,6 +45,7 @@ last_audited: 2026-05-25
 ### P2 — Medium
 
 - User preferred language defaults to school language; per-user translation override is scheduled for a future phase.
+- `GET /api/notifications/bell` bypasses the tenant middleware (no `x-subdomain` header), so schoolId resolves from the session (or the impersonation cookie). A DEVELOPER browsing a tenant dashboard **without** setting `impersonate_schoolId` now gets 401/empty bell where the old action path resolved the school from the subdomain header. School-scoped roles are unaffected; the designed impersonation mechanism still works.
 
 ## Resolved Issues
 
