@@ -40,7 +40,7 @@ last_audited: 2026-05-25
 
 ### P1 — High
 
-- Real-time bell icon polling runs on a fallback interval when Socket.IO server is disconnected (requires deployment of socket-server #262).
+- Real-time bell icon polling runs on a fallback interval when Socket.IO server is disconnected (requires deployment of socket-server #262). Note for #262: the hook now always runs an initial fetch regardless of transport — a live socket only pushes NEW events, so without that fetch a freshly-connected bell would sit empty until the first event. Don't remove it when wiring the socket server.
 
 ### P2 — Medium
 
@@ -49,6 +49,59 @@ last_audited: 2026-05-25
 ## Resolved Issues
 
 _Chronological close log — appended as items ship._
+
+- **2026-08-11 — Production bell was DEAD for ~3 weeks (silent regression) +
+  polling engine optimized.**
+
+  **Regression:** `4dacd0288` (2026-07-19) added a short-circuit to
+  `socket-service.ts` so production (no `NEXT_PUBLIC_SOCKET_URL` in Vercel
+  env) stops hammering `localhost:3001` — but that made `connect()` RESOLVE
+  without a socket. `useNotifications` treated resolution as connected
+  (`setIsConnected(true)`), which disabled the 30 s polling fallback: no
+  socket + no polling = bell frozen at 0/empty for every production user.
+  Dev never reproduced it (localhost attempts a real connection, fails,
+  rejects → polling proceeds), which is why the 07-20 browser verification
+  passed while prod was already dark. Fixed: connected-state now comes from
+  `socketService.isConnected()` after the promise settles, never from
+  resolution; the concurrent-connect waiter in socket-service also settles
+  (it used to spin a 100 ms interval forever when the attempt failed).
+
+  **Optimization (the same pass):**
+  1. **Polls moved off server actions onto `GET /api/notifications/bell`** —
+     `auth()` rotates the session cookie inside action requests
+     (`x-action-revalidated: 1`), so every action-based poll shipped a full
+     RSC re-render of the current page (~1 MB observed in dev) instead of
+     data. The route returns ~2 KB of JSON: two indexed queries + one batched
+     `localize`. The action was demoted to a `server-only` module (one less
+     public POST endpoint); the route wraps it.
+  2. **Visibility-aware polling** — hidden tabs skip the round-trip
+     entirely; on `visibilitychange` → visible the bell catches up
+     immediately when the last poll is stale (> interval/2). School dashboards
+     live in background tabs all day; this eliminates most poll load.
+  3. **Shared in-flight dedupe** (module scope, keyed by locale, 5 s window,
+     nulls never cached) — header bell + mobile bell + notification center
+     collapse into ONE request instead of parallel identical polls.
+  4. **Session-identity churn fixed** — effects now depend on
+     `session.user.id/schoolId/role` primitives; `useSession()` returns a
+     fresh object on every window-focus refetch, which was tearing down and
+     re-creating the socket connection and poll timers on every focus.
+  5. **Initial fetch always runs** regardless of transport (see the #262
+     note above) — merged via new pure `poll-merge.ts` (forward-only
+     read-state sync: server `read: true` clears a stale unread from another
+     tab, but never downgrades a local optimistic read; `unreadCount` always
+     follows the server).
+  6. Latent fixes: `getDisplayLocale` now `await`s `headers()` (Next 16 made
+     it async; the sync call silently forced the "ar" fallback and used an
+     `as any`), socket `notification:new` rows get `lang` from
+     `detectScript()` instead of `(data as any).lang ?? "ar"`, and
+     `markAsRead` rollback now reverts the item's read flag, not just the
+     count.
+
+  Tests: 287/287 (6 new in `poll-merge.test.ts`), tsc clean.
+  Browser-verified on demo.localhost: one `GET /api/notifications/bell` on
+  load (dedupe collapsed both mount-time polls), Arabic bell content, badge 2. **Prod confirmation must happen post-deploy via /watch — the dev
+  environment cannot exercise the prod short-circuit path** (localhost
+  hostname + `.env` socket URL both bypass it).
 
 - **2026-07-20 — "Notifications I don't understand" (user report) fixed at
   data + dispatch + card level.**

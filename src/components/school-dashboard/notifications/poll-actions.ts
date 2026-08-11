@@ -1,7 +1,7 @@
-"use server"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import "server-only"
+
 import { headers } from "next/headers"
 import { auth } from "@/auth"
 
@@ -21,14 +21,13 @@ export interface NotificationBellData {
  * Detect the current display locale from the request URL.
  * Falls back to "ar" if not determinable.
  */
-function getDisplayLocale(): Lang {
+async function getDisplayLocale(): Promise<Lang> {
   try {
-    const headersList = headers()
+    // headers() is async in Next 16 — the previous sync call returned a
+    // Promise whose .get is undefined, silently forcing the "ar" fallback
+    const headersList = await headers()
     const pathname =
-      (headersList as any).get?.("x-pathname") ||
-      (headersList as any).get?.("x-invoke-path") ||
-      (headersList as any).get?.("referer") ||
-      ""
+      headersList.get("x-pathname") || headersList.get("referer") || ""
     // Match /{lang}/ at the start of the path or after the domain
     const match = pathname.match(/\/(?:s\/[^/]+\/)?(en|ar)(?:\/|$)/)
     return (match?.[1] as Lang) ?? "ar"
@@ -38,13 +37,16 @@ function getDisplayLocale(): Lang {
 }
 
 /**
- * Server action for polling notification data.
+ * Bell polling data, served to clients via GET /api/notifications/bell.
  * Used as fallback when Socket.IO is unavailable.
  * Translates notification title/body to the user's display locale.
  *
+ * Deliberately NOT a client-callable server action: auth() rotates the
+ * session cookie inside action requests, which makes Next ship a full RSC
+ * re-render of the page with every poll response.
+ *
  * @param locale - The display locale passed from the client. Falls back to
- *   header-based detection when omitted (unreliable for server actions called
- *   from client components).
+ *   header-based detection when omitted.
  */
 export async function fetchNotificationBellData(
   locale?: Lang
@@ -61,7 +63,7 @@ export async function fetchNotificationBellData(
       getRecentNotifications(schoolId, session.user.id, 5),
     ])
 
-    const displayLocale = locale ?? getDisplayLocale()
+    const displayLocale = locale ?? (await getDisplayLocale())
 
     // Translate title+body — ONE batched localize() pass for the whole list
     // (this is the polled bell endpoint; per-row getText would be N×2 lookups)

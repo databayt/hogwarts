@@ -249,9 +249,12 @@ class SocketService {
       }
 
       if (this.isConnecting) {
-        // Wait for existing connection attempt
+        // Wait for the in-flight attempt to SETTLE (connected, failed, or
+        // short-circuited) — checking only `connected` left this interval
+        // spinning forever whenever the attempt didn't succeed. Resolve
+        // either way; callers read the truth from isConnected().
         const checkConnection = setInterval(() => {
-          if (this.socket?.connected) {
+          if (this.socket?.connected || !this.isConnecting) {
             clearInterval(checkConnection)
             resolve()
           }
@@ -264,7 +267,10 @@ class SocketService {
       // No socket server configured: outside localhost the default
       // http://localhost:3001 can never be reachable — attempting it just
       // spams every user's console with ERR_CONNECTION_REFUSED retries.
-      // Realtime features degrade silently (polling/refresh paths still work).
+      // NOTE: this resolves WITHOUT a socket. Callers must read
+      // isConnected() after connect() resolves and fall back to polling when
+      // false — treating resolution as "connected" is what froze the
+      // notification bell in production (2026-07-19 → 2026-08-11).
       if (
         !process.env.NEXT_PUBLIC_SOCKET_URL &&
         typeof window !== "undefined" &&

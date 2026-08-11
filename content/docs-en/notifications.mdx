@@ -94,7 +94,9 @@ await dispatchNotificationsToAudience({
 
 Domain dispatchers all call `dispatchNotification()`. No domain code touches `db.notification.create` directly.
 
-Real-time delivery uses Socket.IO with rooms keyed by `user:${userId}`. The client singleton is `src/lib/websocket/socket-service.ts`. **The Socket.IO server is external to this repo** — without it, the client falls back to 30 s polling.
+Real-time delivery uses Socket.IO with rooms keyed by `user:${userId}`. The client singleton is `src/lib/websocket/socket-service.ts`. **The Socket.IO server is external to this repo** — without it, the client falls back to 30 s polling against `GET /api/notifications/bell` (a route handler on purpose: `auth()` rotates the session cookie inside server-action requests, so an action-based poll would ship a full RSC page re-render every 30 s; the route returns ~2 KB of JSON). Polling is visibility-aware — hidden tabs skip the round-trip and catch up when foregrounded — and concurrent hook instances share one in-flight request.
+
+One hard-won gotcha: when no socket server is configured, `socketService.connect()` **resolves without a socket**. Connected-state must be read from `socketService.isConnected()` after the promise settles — trusting the resolution disabled the polling fallback and froze the production bell for three weeks (2026-07-19 → 2026-08-11).
 
 ## RBAC
 
@@ -198,9 +200,9 @@ Enums: `NotificationType`, `NotificationPriority`, `NotificationChannel`.
 
 ## UI
 
-`bell-icon.tsx` (badge + recent popover), `card.tsx` (per-item rendering), `list.tsx` (tabbed all/unread, date grouping), `center.tsx` (bulk select + filters), `notification-center-client.tsx` (SSR + socket merge), and `preferences-form.tsx` (per-type per-channel toggle matrix).
+`bell-icon.tsx` (badge + recent popover), `card.tsx` (per-item rendering), `list.tsx` (tabbed all/unread, date grouping), `notification-center-client.tsx` (SSR + socket merge), and `preferences-form.tsx` (per-type per-channel toggle matrix).
 
-Hooks expose the data — dual-channel (Socket.IO when available, 30 s polling fallback), with optimistic updates:
+Hooks expose the data — dual-channel (Socket.IO when available, 30 s polling fallback), with optimistic updates. An initial fetch always runs regardless of transport (a live socket only pushes _new_ events), and polled snapshots merge through `poll-merge.ts` — forward-only read-state sync, so a notification read in another tab clears here without fighting optimistic updates:
 
 ```typescript
 const {

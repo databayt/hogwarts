@@ -8,13 +8,11 @@ import { useSession } from "next-auth/react"
 
 import socketService from "@/lib/websocket/socket-service"
 import { toast } from "@/components/ui/use-toast"
+import { detectScript } from "@/components/translation/util"
 
 import { markAllNotificationsAsRead, markNotificationAsRead } from "./actions"
-import { NOTIFICATION_TYPE_CONFIG } from "./config"
-import {
-  fetchNotificationBellData,
-  type NotificationBellData,
-} from "./poll-actions"
+import type { NotificationBellData } from "./poll-actions"
+import { mergePolledNotifications } from "./poll-merge"
 import type { NotificationDTO } from "./types"
 
 interface UseNotificationsOptions {
@@ -40,6 +38,66 @@ interface UseNotificationsReturn {
   clearRecent: () => void
 }
 
+const DEFAULT_POLL_INTERVAL = 30000
+
+// ---------------------------------------------------------------------------
+// Shared bell fetch — module scope so every hook instance in the tab (header
+// bell, mobile bell, notification center) collapses into ONE server action
+// call per window instead of issuing parallel identical polls.
+// ---------------------------------------------------------------------------
+const POLL_SHARE_WINDOW_MS = 5000
+
+let inflightPoll: Promise<NotificationBellData | null> | null = null
+let inflightLocale: string | undefined
+let lastPollAt = 0
+let lastPollLocale: string | undefined
+let lastPollData: NotificationBellData | null = null
+
+// GET route, NOT the server action: auth() rotates the session cookie inside
+// action requests, so every action response ships a full RSC re-render of the
+// current page — ~1MB per poll instead of ~2KB of JSON.
+async function requestBellData(
+  locale?: "ar" | "en"
+): Promise<NotificationBellData | null> {
+  const search = locale ? `?locale=${locale}` : ""
+  const res = await fetch(`/api/notifications/bell${search}`, {
+    cache: "no-store",
+  })
+  if (!res.ok) return null
+  return (await res.json()) as NotificationBellData
+}
+
+async function fetchBellDataShared(
+  locale?: "ar" | "en"
+): Promise<NotificationBellData | null> {
+  if (
+    lastPollData &&
+    lastPollLocale === locale &&
+    Date.now() - lastPollAt < POLL_SHARE_WINDOW_MS
+  ) {
+    return lastPollData
+  }
+  if (inflightPoll && inflightLocale === locale) {
+    return inflightPoll
+  }
+  inflightLocale = locale
+  inflightPoll = requestBellData(locale)
+    .then((data) => {
+      // Never cache null — an auth/tenant hiccup shouldn't blank the next
+      // subscriber's poll.
+      if (data) {
+        lastPollData = data
+        lastPollLocale = locale
+        lastPollAt = Date.now()
+      }
+      return data
+    })
+    .finally(() => {
+      inflightPoll = null
+    })
+  return inflightPoll
+}
+
 /**
  * useNotifications Hook - Real-Time Notifications via WebSocket
  *
@@ -54,12 +112,16 @@ interface UseNotificationsReturn {
  * - DUAL PERSISTENCE: Updates via Socket.IO AND server action for reliability
  * - OPTIMISTIC UPDATES: UI updates immediately, reverts if server call fails
  * - MULTI-EVENT LISTENERS: Subscribes to new/read/deleted/count events
- * - CLEANUP: Removes listeners on unmount to prevent memory leaks
+ * - INITIAL FETCH ALWAYS RUNS: sockets only push NEW events, so the first
+ *   paint comes from one poll regardless of transport
+ * - VISIBILITY-AWARE POLLING: hidden tabs skip polls; returning to the tab
+ *   catches up immediately when the data is stale
  *
  * GOTCHAS:
- * - Must call connect() before events are subscribed (check isConnected)
+ * - `isConnected` truth comes from socketService.isConnected(), NEVER from
+ *   connect() resolving — in production (no NEXT_PUBLIC_SOCKET_URL) connect()
+ *   resolves without a socket, and trusting it disables the polling fallback
  * - Toast disabled by default in NotificationBell (UI has own display)
- * - Unread count may be stale if multiple tabs open (no cross-tab sync)
  * - Old notifications (>10 recent) are not kept in memory (server has full history)
  */
 export function useNotifications(
@@ -71,37 +133,44 @@ export function useNotifications(
   const [recentNotifications, setRecentNotifications] = useState<
     NotificationDTO[]
   >([])
+
+  // Primitives, not the session object: useSession() returns a fresh object
+  // on every focus refetch, and depending on it tears down/re-creates the
+  // socket connection and poll timers on every window focus.
+  const userId = session?.user?.id
+  const schoolId = session?.user?.schoolId
+  const role = session?.user?.role
+
   const connect = useCallback(async () => {
-    if (!session?.user) {
+    if (!userId) {
       console.warn("No session available for WebSocket connection")
       return
     }
 
     try {
-      await socketService.connect(
-        session.user.schoolId || "",
-        session.user.id || "",
-        session.user.role
-      )
-      setIsConnected(true)
+      await socketService.connect(schoolId || "", userId, role ?? "")
+      // connect() resolving does NOT imply a live socket (the no-server
+      // short-circuit resolves with none) — read the truth from the socket.
+      const connected = socketService.isConnected()
+      setIsConnected(connected)
 
       // Subscribe to notifications if enabled
-      if (options.autoSubscribe !== false) {
-        socketService.subscribeToNotifications(session.user.id)
+      if (connected && options.autoSubscribe !== false) {
+        socketService.subscribeToNotifications(userId)
       }
     } catch (error) {
       console.error("Failed to connect WebSocket:", error)
       setIsConnected(false)
     }
-  }, [session, options.autoSubscribe])
+  }, [userId, schoolId, role, options.autoSubscribe])
 
   const disconnect = useCallback(() => {
-    if (session?.user?.id) {
-      socketService.unsubscribeFromNotifications(session.user.id)
+    if (userId) {
+      socketService.unsubscribeFromNotifications(userId)
     }
     socketService.disconnect()
     setIsConnected(false)
-  }, [session])
+  }, [userId])
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -123,6 +192,11 @@ export function useNotifications(
       if (!result.success) {
         console.error("Failed to mark notification as read:", result.error)
         // Revert optimistic update if persistence fails
+        setRecentNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notificationId ? { ...n, read: false, readAt: null } : n
+          )
+        )
         setUnreadCount((prev) => prev + 1)
       }
     } catch (error) {
@@ -131,7 +205,7 @@ export function useNotifications(
   }, [])
 
   const markAllAsRead = useCallback(async () => {
-    if (!session?.user?.id) return
+    if (!userId) return
 
     try {
       // Optimistic update
@@ -146,12 +220,10 @@ export function useNotifications(
       setUnreadCount(0)
 
       // Send to server via Socket.IO
-      socketService.markAllNotificationsRead(session.user.id)
+      socketService.markAllNotificationsRead(userId)
 
       // Also call server action for persistence
-      const result = await markAllNotificationsAsRead({
-        userId: session.user.id,
-      })
+      const result = await markAllNotificationsAsRead({ userId })
       if (!result.success) {
         console.error("Failed to mark all notifications as read:", result.error)
         // Revert optimistic update
@@ -160,7 +232,7 @@ export function useNotifications(
     } catch (error) {
       console.error("Error marking all notifications as read:", error)
     }
-  }, [session, unreadCount])
+  }, [userId, unreadCount])
 
   const removeNotification = useCallback((notificationId: string) => {
     setRecentNotifications((prev) =>
@@ -174,7 +246,7 @@ export function useNotifications(
 
   // Auto-connect if enabled
   useEffect(() => {
-    if (options.autoConnect && session?.user) {
+    if (options.autoConnect && userId) {
       connect()
     }
 
@@ -183,29 +255,51 @@ export function useNotifications(
         disconnect()
       }
     }
-  }, [options.autoConnect, session, connect, disconnect])
+  }, [options.autoConnect, userId, connect, disconnect])
+
+  // Initial fetch — runs regardless of transport. A live socket only pushes
+  // NEW events, so without this the bell stays empty until something happens.
+  useEffect(() => {
+    if (!userId || !schoolId) return
+
+    let active = true
+    fetchBellDataShared(options.locale).then((data) => {
+      if (!active || !data) return
+      setUnreadCount(data.unreadCount)
+      setRecentNotifications(
+        (prev) => mergePolledNotifications(prev, data.recent).merged
+      )
+    })
+    return () => {
+      active = false
+    }
+  }, [userId, schoolId, options.locale])
 
   // Polling fallback when Socket.IO is unavailable
   useEffect(() => {
-    if (isConnected || !session?.user?.id || !session?.user?.schoolId) return
+    if (isConnected || !userId || !schoolId) return
 
-    const interval = options.pollInterval ?? 30000
+    const interval = options.pollInterval ?? DEFAULT_POLL_INTERVAL
 
     let active = true
     const poll = async () => {
-      if (!active) return
+      // Hidden tabs skip the round-trip entirely; the visibilitychange
+      // handler below catches up the moment the tab is foregrounded.
+      if (!active || document.visibilityState === "hidden") return
       try {
-        const data = await fetchNotificationBellData(options.locale)
+        const data = await fetchBellDataShared(options.locale)
         if (!active || !data) return
         setUnreadCount(data.unreadCount)
         if (data.recent.length > 0) {
           setRecentNotifications((prev) => {
-            const prevIds = new Set(prev.map((n) => n.id))
-            const newItems = data.recent.filter((n) => !prevIds.has(n.id))
-            if (newItems.length === 0) return prev
+            const { merged, fresh, changed } = mergePolledNotifications(
+              prev,
+              data.recent
+            )
+            if (!changed) return prev
             // Show toast for genuinely new notifications
             if (options.showToast !== false) {
-              for (const n of newItems) {
+              for (const n of fresh) {
                 if (!n.read) {
                   toast({
                     title: n.title,
@@ -216,7 +310,7 @@ export function useNotifications(
                 }
               }
             }
-            return [...newItems, ...prev].slice(0, 10)
+            return merged
           })
         }
       } catch {
@@ -228,13 +322,25 @@ export function useNotifications(
     poll()
     const timer = setInterval(poll, interval)
 
+    const onVisibilityChange = () => {
+      if (
+        document.visibilityState === "visible" &&
+        Date.now() - lastPollAt > interval / 2
+      ) {
+        poll()
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange)
+
     return () => {
       active = false
       clearInterval(timer)
+      document.removeEventListener("visibilitychange", onVisibilityChange)
     }
   }, [
     isConnected,
-    session,
+    userId,
+    schoolId,
     options.pollInterval,
     options.showToast,
     options.locale,
@@ -251,13 +357,15 @@ export function useNotifications(
       socketService.on("notification:new", (data) => {
         const notification: NotificationDTO = {
           id: data.id,
-          schoolId: session?.user?.schoolId || "",
-          userId: session?.user?.id || "",
+          schoolId: schoolId || "",
+          userId: userId || "",
           type: data.type as NotificationType,
           priority: data.priority as NotificationPriority,
           title: data.title,
           body: data.body,
-          lang: (data as any).lang ?? "ar",
+          // Socket payloads carry no lang — key off the actual script so the
+          // row stays translatable (a mislabeled lang can never be localized)
+          lang: detectScript(`${data.title} ${data.body}`),
           metadata: null,
           actorId: data.actorId || null,
           actor: null,
@@ -278,7 +386,6 @@ export function useNotifications(
 
         // Show toast notification if enabled
         if (options.showToast !== false) {
-          const config = NOTIFICATION_TYPE_CONFIG[notification.type]
           toast({
             title: notification.title,
             description: notification.body,
@@ -332,7 +439,8 @@ export function useNotifications(
     }
   }, [
     isConnected,
-    session,
+    userId,
+    schoolId,
     options.showToast,
     options.onNewNotification,
     options.onNotificationRead,

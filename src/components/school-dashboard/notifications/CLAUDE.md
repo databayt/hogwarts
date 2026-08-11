@@ -33,6 +33,11 @@ Real-time multi-channel notification system. 24 types × 4 priorities × 5 chann
 
 ## Danger Zones
 
+- **Connected-state truth**: `socketService.connect()` RESOLVES even when no socket server is configured (the production short-circuit). Read `socketService.isConnected()` after the promise settles — `setIsConnected(true)` on resolution disabled the polling fallback and froze the production bell for 3 weeks (2026-07-19 → 2026-08-11).
+- **Bell polls go through `GET /api/notifications/bell`, never a server action**: `auth()` rotates the session cookie inside action requests, so an action-based poll makes Next ship a full RSC re-render of the current page (~1 MB) with every 30 s response. This applies to ANY client-side polling read in the app — actions are for mutations.
+- **Keep the initial fetch in `useNotifications`** even after socket-server #262 deploys — sockets only push NEW events; without the fetch a connected bell starts empty.
+- **Poll merges are forward-only on read-state** (`poll-merge.ts`): server `read: true` wins, server `read: false` never downgrades a local optimistic read. Don't "fix" it to full sync — it would fight optimistic updates and flicker.
+
 - Adding a new `NotificationType` to Prisma without updating: `NOTIFICATION_TYPE_CONFIG`, `NOTIFICATION_EXPIRATION`, `ROLE_SEND_TYPES` (if role-restricted), `dictionaries/{en,ar}/notifications.json` `types` map, `email-service.ts > typeLabels`. Tests fail loudly on the first three; the dictionary and email-service drift silently — review them by hand.
 - Adding a new `NotificationChannel` to Prisma without updating: `CHANNEL_CONFIG`, `DEFAULT_NOTIFICATION_PREFERENCES` (every role), `preferences-form.tsx` channel grid, `dictionaries/{en,ar}/notifications.json > channels`.
 - Cross-tenant leak: every server action calls `getTenantContext()` and includes `schoolId` in every where clause. Don't accept `schoolId` from client input — always read from the tenant context.
