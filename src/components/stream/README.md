@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 90
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-07-17
+last_audited: 2026-08-11
 ---
 
 ## Stream — Learning Management System (LMS)
@@ -114,6 +114,7 @@ src/components/stream/
 ├── shared/
 │   ├── url-validators.ts          # URL validation (video, image, document)
 │   ├── email-service.ts           # Resend email integration
+│   ├── tenant-url.ts              # streamTenantUrl — tenant-aware absolute URLs (emails, Stripe redirects)
 │   └── video-player/              # Enterprise video player (~1,800 lines)
 │       ├── video-player.tsx        # Main player component (inline controls)
 │       ├── video-progress-bar.tsx  # Seek bar
@@ -166,6 +167,15 @@ engineering debt only (Float→Decimal, action error-code migration,
 browser-crash orphan sweep, legacy `streamEnrollment` on the payment-success
 path); see `ISSUE.md`. QA guide:
 [hogwarts#377](https://github.com/databayt/hogwarts/issues/377).
+
+The 2026-08-11 trace + fix round: **governance decision recorded** (schools
+are governed by the unified catalog hierarchy — hide/activate + lesson-level
+contributions only; the chapter/lesson proposal actions stay deliberately
+unwired), tenant-aware absolute URLs via `shared/tenant-url.ts` (emails +
+Stripe redirects no longer point at the main host), lesson `Material` rows now
+render in the lesson player's Resources section, and the completion/
+certificate denominator respects `ContentOverride` hides — all student-facing
+progress denominators now agree. See `ISSUE.md` → 2026-08-11 close log.
 
 ### Data Architecture
 

@@ -32,6 +32,7 @@ vi.mock("@/lib/db", () => ({
     subject: { findUnique: vi.fn() },
     lessonProgress: { findUnique: vi.fn(), findMany: vi.fn() },
     attachment: { findMany: vi.fn() },
+    material: { findMany: vi.fn() },
     video: { findMany: vi.fn() },
     videoPurchase: { findMany: vi.fn() },
     instructorPreference: { findUnique: vi.fn() },
@@ -47,6 +48,7 @@ const mSubject = db.subject.findUnique as ReturnType<typeof vi.fn>
 const mProgress = db.lessonProgress.findUnique as ReturnType<typeof vi.fn>
 const mSiblingProgress = db.lessonProgress.findMany as ReturnType<typeof vi.fn>
 const mAttachments = db.attachment.findMany as ReturnType<typeof vi.fn>
+const mMaterials = db.material.findMany as ReturnType<typeof vi.fn>
 const mVideos = db.video.findMany as ReturnType<typeof vi.fn>
 const mPurchases = db.videoPurchase.findMany as ReturnType<typeof vi.fn>
 
@@ -108,6 +110,7 @@ beforeEach(() => {
   mSubject.mockResolvedValue({ price: 0 })
   mProgress.mockResolvedValue(null)
   mAttachments.mockResolvedValue([])
+  mMaterials.mockResolvedValue([])
   mVideos.mockResolvedValue([videoRow()])
   mPurchases.mockResolvedValue([])
   mLessons.mockResolvedValue([
@@ -254,5 +257,45 @@ describe("getLessonWithProgress — visibility scoping (PRIVATE isolation)", () 
       (arm) => "schoolId" in arm && !("visibility" in arm) && !("userId" in arm)
     )
     expect(leaksPrivate).toBe(false)
+  })
+})
+
+describe("getLessonWithProgress — lesson materials", () => {
+  it("returns materials with the approval gate and school-or-public visibility", async () => {
+    mMaterials.mockResolvedValueOnce([
+      {
+        id: "m1",
+        title: "Worksheet",
+        description: null,
+        type: "WORKSHEET",
+        fileUrl: "https://cdn/x.pdf",
+        externalUrl: null,
+      },
+      {
+        id: "m2",
+        title: "Reading list",
+        description: "Chapter 2",
+        type: "REFERENCE",
+        fileUrl: null,
+        externalUrl: "https://example.com/reading",
+      },
+    ])
+    const lesson = await getLessonWithProgress("lesson-1")
+    expect(lesson?.materials).toEqual([
+      expect.objectContaining({ id: "m1", url: "https://cdn/x.pdf" }),
+      expect.objectContaining({ id: "m2", url: "https://example.com/reading" }),
+    ])
+    // Only approved+published rows, PUBLIC or contributed by the viewer's
+    // own school — a foreign school's SCHOOL/PRIVATE material must not leak.
+    expect(mMaterials).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          catalogLessonId: "lesson-1",
+          approvalStatus: "APPROVED",
+          status: "PUBLISHED",
+          OR: [{ visibility: "PUBLIC" }, { contributedSchoolId: "school-1" }],
+        }),
+      })
+    )
   })
 })

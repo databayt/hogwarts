@@ -7,7 +7,6 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import Stripe from "stripe"
 
-import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { stripe } from "@/lib/stripe"
@@ -18,6 +17,7 @@ import {
   getAuthContext,
 } from "@/components/stream/authorization"
 import { sendEnrollmentEmail } from "@/components/stream/shared/email-service"
+import { streamTenantUrl } from "@/components/stream/shared/tenant-url"
 
 function extractLocaleFromUrl(url: string): string | null {
   try {
@@ -135,7 +135,10 @@ export async function enrollInSubject(catalogSubjectId: string) {
             to: session.user.email,
             studentName: session.user.name || "Student",
             courseTitle: subject.name,
-            courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${subject.slug}`,
+            courseUrl: await streamTenantUrl(
+              `/stream/courses/${subject.slug}`,
+              locale
+            ),
             schoolName: school?.name || "Platform",
           }).catch((err) =>
             console.error("Failed to send enrollment email:", err)
@@ -201,8 +204,11 @@ export async function enrollInSubject(catalogSubjectId: string) {
           },
         ],
         mode: "payment",
-        success_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${subject.slug}?enrolled=true`,
-        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses`,
+        success_url: await streamTenantUrl(
+          `/stream/courses/${subject.slug}?enrolled=true`,
+          locale
+        ),
+        cancel_url: await streamTenantUrl("/stream/courses", locale),
         metadata: {
           userId: session.user.id,
           catalogSubjectId: subject.id,

@@ -5,6 +5,7 @@
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 export interface CourseProgressData {
   totalLessons: number
@@ -25,17 +26,49 @@ export async function getCourseProgress(
 ): Promise<CourseProgressData | null> {
   const session = await auth()
   if (!session?.user?.id) return null
+  const { schoolId } = await getTenantContext()
 
-  // Get all lessons in this subject
-  const lessons = await db.lesson.findMany({
-    where: {
-      chapter: { subjectId },
-    },
-    select: {
-      id: true,
-      durationMinutes: true,
-    },
-  })
+  // All published lessons in this subject, minus the school's hidden
+  // chapters/lessons — the SAME denominator the course view (get-course.ts)
+  // and the certificate gate (markLessonComplete) use. Counting DRAFT/
+  // ARCHIVED or school-hidden lessons here capped the dashboard progress
+  // below 100% forever.
+  const [allLessons, overrides] = await Promise.all([
+    db.lesson.findMany({
+      where: {
+        chapter: { subjectId },
+        status: "PUBLISHED",
+      },
+      select: {
+        id: true,
+        chapterId: true,
+        durationMinutes: true,
+      },
+    }),
+    schoolId
+      ? db.contentOverride.findMany({
+          where: {
+            schoolId,
+            isHidden: true,
+            OR: [
+              { catalogChapterId: { not: null } },
+              { catalogLessonId: { not: null } },
+            ],
+          },
+          select: { catalogChapterId: true, catalogLessonId: true },
+        })
+      : Promise.resolve([]),
+  ])
+
+  const hiddenChapterIds = new Set(
+    overrides.map((o) => o.catalogChapterId).filter(Boolean)
+  )
+  const hiddenLessonIds = new Set(
+    overrides.map((o) => o.catalogLessonId).filter(Boolean)
+  )
+  const lessons = allLessons.filter(
+    (l) => !hiddenLessonIds.has(l.id) && !hiddenChapterIds.has(l.chapterId)
+  )
 
   if (lessons.length === 0) return null
 

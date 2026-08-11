@@ -8,14 +8,14 @@ maturity: Built+Polish
 completion: 90
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-07-17
+last_audited: 2026-08-11
 ---
 
 # Stream (LMS) — Production Readiness Tracker
 
 **Status:** BUILT
 **Completion:** 90%
-**Last Updated:** 2026-07-17
+**Last Updated:** 2026-08-11
 **QA guide:** [hogwarts#377](https://github.com/databayt/hogwarts/issues/377) — full flow, sub-flows & test cases (mermaid charts + walkable checklists + release gate)
 
 ---
@@ -163,9 +163,183 @@ isCorrect}]`. The quiz renderer now reads `text ?? label` to survive both,
       curriculum) shows no quiz at all. Only the generated `content.ts` filler is
       lesson-attached. Verified via psql on 2026-07-17.
 
+## Known Issues (added 2026-08-11 — school-authored-curriculum trace)
+
+_Full e2e trace of: new school onboards its own courses across all grades → video
+lessons + materials → quizzes + exams → completion tracking → certification.
+Original verdict (superseded in part — see the governance decision below): the
+PLATFORM-catalog path works end-to-end; the school-authored path stops at
+chapter/lesson creation, and every absolute URL the block emails/redirects to
+pointed at the wrong host for tenant users (fixed same day, see close log)._
+
+### Governance decision (Abdout, 2026-08-11) — supersedes the "empty shell" P0
+
+The trace initially filed "schools cannot create chapters or lessons" as a P0
+blocker. **Abdout's call: that is the intended model.** Schools are governed by
+a unified hierarchy — Subject → Chapter → Lesson order comes from the platform
+catalog. Schools can only (a) hide/activate content per school
+(`ContentOverride`), and (b) contribute at LESSON level: videos, materials,
+quizzes. Consequences:
+
+- `submitChapterProposal` / `submitLessonProposal`
+  (`school-dashboard/listings/subjects/catalog/proposal-actions.ts:109,145`)
+  stay **deliberately unwired** — do NOT add UI for them. P2 cleanup below:
+  either delete the two dead actions (plus the `CHAPTER`/`LESSON` arms of
+  `approveProposal`) or leave them carrying a comment pointing here.
+- The lesson-level contribution lanes must therefore actually work — the
+  materials read-path and the hide-vs-certificate bug were fixed 2026-08-11
+  (close log). The remaining lesson-level asymmetries (quiz lane
+  PENDING-gated, qbank can't lesson-attach) stay open as P1s below.
+- Subject proposals (`propose-subject.tsx`) remain live: a school may REQUEST
+  a subject; the platform authors its chapter/lesson structure after approval.
+
+### P0 — flow blockers
+
+- [x] **Every absolute stream URL was built from `env.NEXT_PUBLIC_APP_URL` (the
+      MAIN host), so on tenant subdomains all email links and Stripe redirects
+      dead-ended on a 404** — a paying student was redirected to a not-found
+      page immediately after checkout (webhook still activated access
+      server-side, so UX-broken, not access-lost). **FIXED 2026-08-11** — see
+      close log: new `shared/tenant-url.ts` (`streamTenantUrl`), all 6 call
+      sites migrated.
+
+### P1 — completion / certification integrity
+
+- [x] **Certificates became unreachable the moment a school hid any content.**
+      `markLessonComplete`'s all-complete check counted ALL PUBLISHED lessons
+      and ignored `ContentOverride`, while the student course view filters
+      hidden chapters/lessons out — hiding one lesson made
+      `completedLessons === allLessons.length` impossible forever. **FIXED
+      2026-08-11** (close log): the certificate gate now counts only
+      school-visible lessons (lesson- AND chapter-level hides), matching
+      `get-course.ts` semantics.
+- [x] **Three different progress denominators disagreed.**
+      `get-course-progress.ts` counted ALL lessons (DRAFT/ARCHIVED included, no
+      overrides), `markLessonComplete` counted published-only (no overrides),
+      `get-course.ts` counted published-minus-hidden. **FIXED 2026-08-11**
+      (close log): all three now use published-minus-hidden. (The dashboard
+      sidebar fetcher `get-course-sidebar-data.ts` remains its own surface —
+      see the pre-existing P1 tenant-scope item above; align it when that hole
+      is closed.)
+- [x] **Materials were a double dead end in the lesson experience.** The lesson
+      player rendered `lesson.attachments` (a table nothing writes) while the
+      `Material` rows schools contribute (`submitMaterial`, lesson-attachable)
+      were never queried by any stream fetcher. **FIXED 2026-08-11** (close
+      log): `getLessonWithProgress` now returns lesson materials
+      (APPROVED+PUBLISHED, PUBLIC-or-own-school) and the lesson player renders
+      them in the Resources section. `Attachment` remains writer-less — P2
+      cleanup: decide whether to delete the model or keep it for platform-side
+      uploads.
+- [ ] **Catalog practice attempts are throwaway.** `/exams/mock` + `/exams/quiz`
+      read catalog `Exam` directly and students can take them
+      (`exams/mock/take-actions.ts:55`), but `submitMockExam` (:133-270) never
+      writes `Result`/`ExamResult` — and the Attempt History on those pages reads
+      only `ExamResult`, so mock/quiz attempts never appear anywhere. Contrast:
+      the stream lesson quiz DOES persist via `upsertGradebookResult`
+      (`quiz-actions.ts:165`).
+
+### P1 — authoring asymmetries (school-authored content lanes)
+
+- [ ] **The only lane for school-authored LESSON quiz questions is
+      platform-review-gated, while the qbank lane self-approves but cannot
+      lesson-attach.** `submitQuestion`
+      (`listings/subjects/catalog/contribution-actions.ts:97-99`) writes
+      `approvalStatus: PENDING, status: DRAFT` — invisible to the school's own
+      lesson quiz (`get-lesson-content.ts` requires APPROVED) until a platform
+      DEVELOPER approves, even at SCHOOL visibility. The qbank wizard
+      (`exams/qbank/actions/question-crud.ts:76`) self-approves instantly but
+      never sets `catalogLessonId` (only duplicate copies it, :614). Videos have
+      a school-side approval lane for SCHOOL/PRIVATE — questions don't.
+- [ ] **`contributeExamToCatalog` self-approves into the global catalog**
+      (`exams/generate/actions/catalog-contribute.ts:135` sets
+      `approvalStatus: "APPROVED"` directly), bypassing the
+      `saas-dashboard/catalog/exam-approval-actions.ts` PENDING queue that exists
+      for exactly this. Same for qbank `createQuestion`/AI-generate (PRIVATE
+      default, so blast radius is small — but the moderation model is
+      inconsistent: `submitQuestion` PENDING vs everything else instant).
+- [ ] **`submitQuestion` defaults `visibility: "PUBLIC"`**
+      (`contribution-actions.ts:98`) — school-authored content goes
+      globally-visible-by-default once approved. Default should be SCHOOL.
+
+### P2 — design gaps to decide, not bugs
+
+- [ ] **Dead code left by the 2026-08-11 governance decision.**
+      `submitChapterProposal`/`submitLessonProposal` and the
+      `CHAPTER`/`LESSON` arms of `approveProposal` are deliberately unwired —
+      delete them (or annotate with a pointer to the governance note). The
+      `Attachment` model is still writer-less now that materials serve the
+      lesson Resources section — delete it or adopt it for platform-side file
+      uploads.
+- [ ] **No school-private curriculum exists.** Proposal-approved subjects land
+      global (`status: PUBLISHED`, no visibility field on Subject/Chapter/Lesson,
+      no contribution fields either) — every school with a matching country sees
+      them. `approveProposal` also never sets `curriculum` (defaults `"SD"`
+      regardless of proposer). A school "owning" its curriculum privately is
+      architecturally impossible today; if that's the intent, say so in docs.
+- [ ] **Multi-grade subject footgun.** `propose-subject.tsx` accepts
+      comma-separated grades → ONE Subject spanning them; `get-course.ts` has no
+      grade filtering, so a grade-1 enrollee sees grade-12 lessons. The SD seed
+      sidesteps this (one subject per grade); nothing guides proposers to do the
+      same.
+- [ ] **Enrollment at scale is subject-by-subject and account-gated.**
+      `bulkEnrollStudents` (`settings/enrollments/actions.ts:79`) takes one
+      subject + explicit userIds — no "enroll grade N in its subjects" operation
+      (12 grades × ~10 subjects = ~120 manual passes), its member filter has no
+      role filter (teachers/guardians enrollable as students), and
+      `Enrollment.userId → User` means students without linked User accounts are
+      unreachable.
+- [ ] **Certificates gate on watching, not assessment** — quiz/exam scores never
+      factor into issuance, and the certificate page has no print/PDF affordance.
+- [ ] **Dead models**: catalog `Quiz`/`QuizQuestion` — zero references repo-wide;
+      `SchoolExam.catalogLessonId`/`catalogChapterId` are written by `adoptExam`
+      but never read back (no provenance surfaced).
+
+### Needs prod verification (cannot confirm from code)
+
+- [ ] **SD lesson-quiz data on prod.** This file's 2026-07-17 P1 says SD g1
+      lesson quizzes are empty (psql-verified then); catalog `CLAUDE.md` (same
+      date) says `sd-content.ts` sets `catalogLessonId` via the slug scan
+      (sd-content.ts:521 confirms the code). The ingest is LOCAL-only
+      (`curriculum/` is .vercelignore'd) — whether prod lessons have quizzes
+      depends on whether the ingest ever ran against prod. Verify via psql before
+      trusting either record.
+- [ ] `NEXT_PUBLIC_APP_URL` production value (assumed `https://ed.databayt.org`;
+      local `.env` = `http://localhost:3000`, which reproduces the wrong-host bug
+      locally against `demo.localhost:3000`).
+
 ## Resolved Issues
 
 _Chronological close log — appended as items ship._
+
+- **2026-08-11 — tenant URLs + lesson-level materials + override-aware
+  completion (the trace's fix round, scoped by Abdout's governance note).**
+  tsc 0, stream suite 283/283 (19 files; +6 new cases). NOT yet deployed.
+  1. **Tenant-aware URLs everywhere stream leaves the app.** New
+     `shared/tenant-url.ts` → `streamTenantUrl(path, lang?)`: builds the
+     origin from the request's `x-subdomain` + `host` headers via
+     `tenantOriginForHost` (same-root, localhost-aware; falls back to
+     `NEXT_PUBLIC_APP_URL` outside a tenant request) and carries the locale
+     (caller's, else `x-locale`). Migrated all 6 sites: completion-email
+     `certificateUrl`, free-enrollment `courseUrl`, catalog Stripe
+     `success_url`/`cancel_url`, video-purchase redirects, legacy enrollment
+     `courseUrl`. The `env` import left those four files entirely.
+  2. **Lesson materials reach students.** `getLessonWithProgress` fetches the
+     lesson's `Material` rows (APPROVED + PUBLISHED, `visibility: PUBLIC` or
+     `contributedSchoolId` = viewer's school — a foreign school's
+     SCHOOL/PRIVATE material never leaks) in the existing Wave-1
+     `Promise.all`; the lesson player's Resources section renders them
+     (title + description, external-or-file link) alongside the legacy
+     attachments, and the hero resource count includes both.
+  3. **Hide/activate no longer bricks certification.** `markLessonComplete`
+     filters the completion denominator by the school's `ContentOverride`
+     rows (lesson-level AND chapter-level hides; `hideQuiz`-only rows
+     correctly ignored; platform enrollments with `schoolId: null` skip the
+     lookup). `getCourseProgress` got the same treatment plus the missing
+     `status: "PUBLISHED"` filter, so all student-facing denominators now
+     agree with `get-course.ts`.
+  4. Tests: `contentOverride`/`material`/`headers` added to the relevant
+     mocks; 4 new completion-denominator cases + 1 materials-gate case; the
+     stale `list-params` baseline expectation (missing `search` key) fixed.
 
 - **2026-07-17 (second pass) — readiness fixes: quiz→gradebook, certificate,
   refunds, real home-page data.** tsc 0, 347/347 (stream + webhooks). All browser-

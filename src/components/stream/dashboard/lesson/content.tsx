@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Circle,
   FileDown,
+  FileText,
   Loader2,
   Lock,
   Play,
@@ -99,6 +100,9 @@ export function StreamLessonContent({
   // the hero's own "C1 L2" badge) rather than duplicated under videoPlayer —
   // everything else is new (stream.videoPlayer namespace).
   const vp = (dictionary as Record<string, any>)?.videoPlayer
+  // Downloadable resources = legacy attachments + catalog lesson materials
+  // (worksheets/notes contributed by schools or the platform).
+  const resourceCount = lesson.attachments.length + lesson.materials.length
   const playerLabels: VideoPlayerLabels = {
     play: vp?.play,
     pause: vp?.pause,
@@ -409,12 +413,12 @@ export function StreamLessonContent({
                     </span>
                   </>
                 )}
-                {lesson.attachments.length > 0 && (
+                {resourceCount > 0 && (
                   <>
                     <span>&middot;</span>
                     <span>
-                      {lesson.attachments.length}{" "}
-                      {lesson.attachments.length > 1
+                      {resourceCount}{" "}
+                      {resourceCount > 1
                         ? d?.resourceMany || "resources"
                         : d?.resourceOne || "resource"}
                     </span>
@@ -983,8 +987,8 @@ export function StreamLessonContent({
         </CardContent>
       </Card>
 
-      {/* Resources */}
-      {lesson.attachments.length > 0 && (
+      {/* Resources — legacy attachments + catalog lesson materials */}
+      {resourceCount > 0 && (
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">
             {d?.resources || "Resources"}
@@ -998,10 +1002,45 @@ export function StreamLessonContent({
                 rel="noopener noreferrer"
                 className="hover:bg-accent flex items-center gap-2 rounded-md border p-2 transition-colors"
               >
-                <FileDown className="text-muted-foreground size-4" />
+                <FileDown className="text-muted-foreground size-4 shrink-0" />
                 <span className="text-sm">{attachment.name}</span>
               </a>
             ))}
+            {lesson.materials.map((material) => {
+              const body = (
+                <>
+                  <FileText className="text-muted-foreground size-4 shrink-0" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm">
+                      {material.title}
+                    </span>
+                    {material.description && (
+                      <span className="text-muted-foreground block truncate text-xs">
+                        {material.description}
+                      </span>
+                    )}
+                  </span>
+                </>
+              )
+              return material.url ? (
+                <a
+                  key={material.id}
+                  href={material.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:bg-accent flex items-center gap-2 rounded-md border p-2 transition-colors"
+                >
+                  {body}
+                </a>
+              ) : (
+                <div
+                  key={material.id}
+                  className="flex items-center gap-2 rounded-md border p-2"
+                >
+                  {body}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

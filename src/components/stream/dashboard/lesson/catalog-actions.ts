@@ -6,11 +6,11 @@ import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { auth } from "@/auth"
 
-import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
 import { checkUserRateLimit } from "@/lib/rate-limit"
 import { i18n, type Locale } from "@/components/internationalization/config"
 import { sendCompletionEmail } from "@/components/stream/shared/email-service"
+import { streamTenantUrl } from "@/components/stream/shared/tenant-url"
 
 /** Resolve the user's locale from cookie */
 async function resolveLocale(): Promise<Locale> {
@@ -97,9 +97,10 @@ export async function markLessonComplete(
       return { status: "success", message: "Progress noted (no enrollment)" }
     }
 
-    // The upsert and the subject's lesson list are independent — run them
-    // together. The completion count below still depends on both.
-    const [, allLessons] = await Promise.all([
+    // The upsert, the subject's lesson list, and the school's hide overrides
+    // are independent — run them together. The completion count below still
+    // depends on all three.
+    const [, allLessons, overrides] = await Promise.all([
       db.lessonProgress.upsert({
         where: {
           userId_catalogLessonId: {
@@ -127,22 +128,51 @@ export async function markLessonComplete(
           chapter: { subjectId },
           status: "PUBLISHED",
         },
-        select: { id: true },
+        select: { id: true, chapterId: true },
       }),
+      // The school's hidden chapters/lessons. Hidden content is invisible to
+      // students (get-course.ts filters it out of the course view), so it
+      // must not count toward completion — otherwise a school hiding a single
+      // lesson makes `completedLessons === allLessons.length` impossible and
+      // the certificate permanently unreachable. hideQuiz-only rows carry
+      // isHidden=false and are correctly ignored here.
+      enrollment.schoolId
+        ? db.contentOverride.findMany({
+            where: {
+              schoolId: enrollment.schoolId,
+              isHidden: true,
+              OR: [
+                { catalogChapterId: { not: null } },
+                { catalogLessonId: { not: null } },
+              ],
+            },
+            select: { catalogChapterId: true, catalogLessonId: true },
+          })
+        : Promise.resolve([]),
     ])
+
+    const hiddenChapterIds = new Set(
+      overrides.map((o) => o.catalogChapterId).filter(Boolean)
+    )
+    const hiddenLessonIds = new Set(
+      overrides.map((o) => o.catalogLessonId).filter(Boolean)
+    )
+    const visibleLessons = allLessons.filter(
+      (l) => !hiddenLessonIds.has(l.id) && !hiddenChapterIds.has(l.chapterId)
+    )
 
     const completedLessons = await db.lessonProgress.count({
       where: {
         userId: session.user.id,
-        catalogLessonId: { in: allLessons.map((l) => l.id) },
+        catalogLessonId: { in: visibleLessons.map((l) => l.id) },
         isCompleted: true,
       },
     })
 
-    // If all lessons completed, issue certificate
+    // If all school-visible lessons completed, issue certificate
     if (
-      completedLessons === allLessons.length &&
-      allLessons.length > 0 &&
+      completedLessons === visibleLessons.length &&
+      visibleLessons.length > 0 &&
       enrollment
     ) {
       // Update enrollment to COMPLETED
@@ -195,7 +225,10 @@ export async function markLessonComplete(
             to: user.email,
             studentName: user.username || "Student",
             courseTitle: subject.name,
-            certificateUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${subject.slug}/certificate`,
+            certificateUrl: await streamTenantUrl(
+              `/stream/courses/${subject.slug}/certificate`,
+              locale
+            ),
             schoolName: school?.name || "Platform",
             completionDate: new Date().toLocaleDateString("en-US", {
               year: "numeric",

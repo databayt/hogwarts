@@ -6,12 +6,12 @@ import { cookies } from "next/headers"
 import { auth } from "@/auth"
 import Stripe from "stripe"
 
-import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
 import { i18n, type Locale } from "@/components/internationalization/config"
 import { sendEnrollmentEmail } from "@/components/stream/shared/email-service"
+import { streamTenantUrl } from "@/components/stream/shared/tenant-url"
 
 /** Resolve the user's locale from cookie or accept-language header */
 async function resolveLocale(): Promise<Locale> {
@@ -128,7 +128,10 @@ export async function verifyPaymentAndActivateEnrollment(sessionId: string) {
         to: user.email,
         studentName: user.username || "Student",
         courseTitle: enrollment.course.title,
-        courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${emailLocale}/stream/courses/${enrollment.course.slug}`,
+        courseUrl: await streamTenantUrl(
+          `/stream/courses/${enrollment.course.slug}`,
+          emailLocale
+        ),
         schoolName: school?.name || "School",
       }).catch((err) => console.error("Failed to send enrollment email:", err))
     }

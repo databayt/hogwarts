@@ -11,6 +11,7 @@ describe("streamCoursesSearchParams", () => {
     expect(result).toEqual({
       page: 1,
       perPage: 12,
+      search: "",
       title: "",
       category: "",
       level: "1",

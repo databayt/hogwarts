@@ -11,6 +11,9 @@ vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("next/headers", () => ({
   cookies: vi.fn().mockResolvedValue({ get: () => ({ value: "en" }) }),
+  // streamTenantUrl reads host/x-subdomain/x-locale; null values exercise its
+  // main-host fallback, which is the right behavior outside a tenant request.
+  headers: vi.fn().mockResolvedValue({ get: () => null }),
 }))
 vi.mock("@/components/stream/shared/email-service", () => ({
   sendCompletionEmail: vi.fn().mockResolvedValue(undefined),
@@ -21,6 +24,7 @@ vi.mock("@/lib/db", () => ({
     enrollment: { findFirst: vi.fn(), update: vi.fn() },
     lessonProgress: { upsert: vi.fn(), count: vi.fn() },
     subjectCertificate: { findFirst: vi.fn(), create: vi.fn() },
+    contentOverride: { findMany: vi.fn() },
     user: { findUnique: vi.fn() },
     school: { findUnique: vi.fn() },
   },
@@ -35,6 +39,7 @@ const mUpsert = db.lessonProgress.upsert as ReturnType<typeof vi.fn>
 const mCount = db.lessonProgress.count as ReturnType<typeof vi.fn>
 const mCertFind = db.subjectCertificate.findFirst as ReturnType<typeof vi.fn>
 const mCertCreate = db.subjectCertificate.create as ReturnType<typeof vi.fn>
+const mOverrides = db.contentOverride.findMany as ReturnType<typeof vi.fn>
 const mUser = db.user.findUnique as ReturnType<typeof vi.fn>
 
 const LESSON = {
@@ -54,6 +59,7 @@ beforeEach(() => {
   mEnrollUpdate.mockResolvedValue({})
   mCertFind.mockResolvedValue(null)
   mCertCreate.mockResolvedValue({})
+  mOverrides.mockResolvedValue([])
   mUser.mockResolvedValue({ email: "s@x.com", username: "stu" })
 })
 
@@ -108,5 +114,68 @@ describe("markLessonComplete (catalog)", () => {
     const r = await markLessonComplete("lesson-1", "math")
     expect(r.status).toBe("success")
     expect(mUpsert).not.toHaveBeenCalled()
+  })
+
+  it("school-hidden lessons don't count: certificate issues on the visible set", async () => {
+    // l3 is hidden by the school — completing l1+l2 IS full completion.
+    mLessons.mockResolvedValueOnce([
+      { id: "l1", chapterId: "ch-1" },
+      { id: "l2", chapterId: "ch-1" },
+      { id: "l3", chapterId: "ch-2" },
+    ])
+    mOverrides.mockResolvedValueOnce([
+      { catalogChapterId: null, catalogLessonId: "l3" },
+    ])
+    mCount.mockResolvedValueOnce(2) // both visible lessons done
+    const r = await markLessonComplete("lesson-1", "math")
+    expect(r.status).toBe("success")
+    // The completion count must be taken over the visible ids only.
+    expect(mCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          catalogLessonId: { in: ["l1", "l2"] },
+        }),
+      })
+    )
+    expect(mCertCreate).toHaveBeenCalledOnce()
+  })
+
+  it("a hidden chapter hides all its lessons from the denominator", async () => {
+    mLessons.mockResolvedValueOnce([
+      { id: "l1", chapterId: "ch-1" },
+      { id: "l2", chapterId: "ch-2" },
+      { id: "l3", chapterId: "ch-2" },
+    ])
+    mOverrides.mockResolvedValueOnce([
+      { catalogChapterId: "ch-2", catalogLessonId: null },
+    ])
+    mCount.mockResolvedValueOnce(1) // the single visible lesson is done
+    await markLessonComplete("lesson-1", "math")
+    expect(mCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ catalogLessonId: { in: ["l1"] } }),
+      })
+    )
+    expect(mCertCreate).toHaveBeenCalledOnce()
+  })
+
+  it("issues NO certificate when the school hid every lesson", async () => {
+    mLessons.mockResolvedValueOnce([{ id: "l1", chapterId: "ch-1" }])
+    mOverrides.mockResolvedValueOnce([
+      { catalogChapterId: "ch-1", catalogLessonId: null },
+    ])
+    mCount.mockResolvedValueOnce(0)
+    const r = await markLessonComplete("lesson-1", "math")
+    expect(r.status).toBe("success")
+    expect(mCertCreate).not.toHaveBeenCalled()
+  })
+
+  it("platform enrollment (no schoolId) skips the override lookup", async () => {
+    mEnroll.mockResolvedValueOnce({ id: "enr-1", schoolId: null })
+    mLessons.mockResolvedValueOnce([{ id: "l1", chapterId: "ch-1" }])
+    mCount.mockResolvedValueOnce(1)
+    await markLessonComplete("lesson-1", "math")
+    expect(mOverrides).not.toHaveBeenCalled()
+    expect(mCertCreate).toHaveBeenCalledOnce()
   })
 })

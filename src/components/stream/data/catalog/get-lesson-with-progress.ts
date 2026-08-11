@@ -72,6 +72,17 @@ export interface LessonWithProgress {
     name: string
     url: string
   }>
+  // Lesson-level study materials (worksheets, notes, references) — contributed
+  // by schools via the subjects catalog surface (submitMaterial) or authored
+  // on the platform lane. Same gate as the lesson quiz: APPROVED + PUBLISHED,
+  // visible when PUBLIC or contributed by the viewer's own school.
+  materials: Array<{
+    id: string
+    title: string
+    description: string | null
+    type: string
+    url: string | null
+  }>
   progress: {
     isCompleted: boolean
     watchedSeconds: number
@@ -174,111 +185,136 @@ export const getLessonWithProgress = cache(async function getLessonWithProgress(
     // ── Wave 1: independent reads in parallel ──────────────────────────────
     // (progress, attachments, videos, all-lessons) have no inter-dependency,
     // so collapse ~4 serial Neon round-trips into one.
-    const [progress, attachments, videos, allLessons] = await Promise.all([
-      // Lesson progress
-      db.lessonProgress.findUnique({
-        where: {
-          userId_catalogLessonId: {
-            userId: session.user.id,
+    const [progress, attachments, materials, videos, allLessons] =
+      await Promise.all([
+        // Lesson progress
+        db.lessonProgress.findUnique({
+          where: {
+            userId_catalogLessonId: {
+              userId: session.user.id,
+              catalogLessonId: lessonId,
+            },
+          },
+          select: {
+            isCompleted: true,
+            watchedSeconds: true,
+            totalSeconds: true,
+          },
+        }),
+        // Attachments
+        db.attachment.findMany({
+          where: { catalogLessonId: lessonId },
+          select: { id: true, name: true, url: true },
+        }),
+        // Lesson materials. Mirrors the lesson-quiz gate in
+        // get-lesson-content.ts: only approved+published rows, PUBLIC or
+        // contributed by the viewer's own school (a school's SCHOOL/PRIVATE
+        // material must never surface to other tenants).
+        db.material.findMany({
+          where: {
             catalogLessonId: lessonId,
+            approvalStatus: "APPROVED",
+            status: "PUBLISHED",
+            OR: [
+              { visibility: "PUBLIC" },
+              ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
+            ],
           },
-        },
-        select: {
-          isCompleted: true,
-          watchedSeconds: true,
-          totalSeconds: true,
-        },
-      }),
-      // Attachments
-      db.attachment.findMany({
-        where: { catalogLessonId: lessonId },
-        select: { id: true, name: true, url: true },
-      }),
-      // ALL approved videos for this lesson (multi-instructor support).
-      // Excludes videos hidden by the school via ContentOverride.
-      // PAID videos surface across all schools — payment gate happens per-user.
-      db.video.findMany({
-        where: {
-          catalogLessonId: lessonId,
-          approvalStatus: "APPROVED",
-          // Visibility gate. PRIVATE is owner-only — the bare `{ schoolId }`
-          // arm used to leak every PRIVATE video to all school members (and
-          // turned `revokeVideoAccess` → PRIVATE into a free-for-the-school
-          // paywall bypass). Now: owner sees their own (any visibility);
-          // school members see the school's SCHOOL/PUBLIC/PAID videos; everyone
-          // sees PUBLIC/PAID.
-          ...(schoolId
-            ? {
-                OR: [
-                  { userId: session.user.id },
-                  {
-                    schoolId,
-                    visibility: { in: ["SCHOOL", "PUBLIC", "PAID"] },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            type: true,
+            fileUrl: true,
+            externalUrl: true,
+          },
+          orderBy: { createdAt: "asc" },
+        }),
+        // ALL approved videos for this lesson (multi-instructor support).
+        // Excludes videos hidden by the school via ContentOverride.
+        // PAID videos surface across all schools — payment gate happens per-user.
+        db.video.findMany({
+          where: {
+            catalogLessonId: lessonId,
+            approvalStatus: "APPROVED",
+            // Visibility gate. PRIVATE is owner-only — the bare `{ schoolId }`
+            // arm used to leak every PRIVATE video to all school members (and
+            // turned `revokeVideoAccess` → PRIVATE into a free-for-the-school
+            // paywall bypass). Now: owner sees their own (any visibility);
+            // school members see the school's SCHOOL/PUBLIC/PAID videos; everyone
+            // sees PUBLIC/PAID.
+            ...(schoolId
+              ? {
+                  OR: [
+                    { userId: session.user.id },
+                    {
+                      schoolId,
+                      visibility: { in: ["SCHOOL", "PUBLIC", "PAID"] },
+                    },
+                    { visibility: "PUBLIC" },
+                    { visibility: "PAID" },
+                  ],
+                  NOT: {
+                    overrides: { some: { schoolId, isHidden: true } },
                   },
-                  { visibility: "PUBLIC" },
-                  { visibility: "PAID" },
-                ],
-                NOT: {
-                  overrides: { some: { schoolId, isHidden: true } },
-                },
-              }
-            : {
-                OR: [
-                  { userId: session.user.id },
-                  { visibility: "PUBLIC" },
-                  { visibility: "PAID" },
-                ],
-              }),
-        },
-        orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
-        select: {
-          id: true,
-          videoUrl: true,
-          thumbnailUrl: true,
-          durationSeconds: true,
-          isFeatured: true,
-          schoolId: true,
-          visibility: true,
-          price: true,
-          currency: true,
-          user: {
-            select: { id: true, username: true, image: true, role: true },
+                }
+              : {
+                  OR: [
+                    { userId: session.user.id },
+                    { visibility: "PUBLIC" },
+                    { visibility: "PAID" },
+                  ],
+                }),
           },
-          school: { select: { id: true, name: true } },
-        },
-      }),
-      // All lessons in the subject for navigation (hidden chapters/lessons
-      // excluded via ContentOverride).
-      db.lesson.findMany({
-        where: {
-          chapter: {
-            subjectId: lesson.chapter.subject.id,
+          orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
+          select: {
+            id: true,
+            videoUrl: true,
+            thumbnailUrl: true,
+            durationSeconds: true,
+            isFeatured: true,
+            schoolId: true,
+            visibility: true,
+            price: true,
+            currency: true,
+            user: {
+              select: { id: true, username: true, image: true, role: true },
+            },
+            school: { select: { id: true, name: true } },
+          },
+        }),
+        // All lessons in the subject for navigation (hidden chapters/lessons
+        // excluded via ContentOverride).
+        db.lesson.findMany({
+          where: {
+            chapter: {
+              subjectId: lesson.chapter.subject.id,
+              ...(schoolId
+                ? { NOT: { overrides: { some: { schoolId, isHidden: true } } } }
+                : {}),
+            },
+            status: "PUBLISHED",
             ...(schoolId
               ? { NOT: { overrides: { some: { schoolId, isHidden: true } } } }
               : {}),
           },
-          status: "PUBLISHED",
-          ...(schoolId
-            ? { NOT: { overrides: { some: { schoolId, isHidden: true } } } }
-            : {}),
-        },
-        select: {
-          id: true,
-          name: true,
-          sequenceOrder: true,
-          thumbnail: true,
-          color: true,
-          durationMinutes: true,
-          chapter: {
-            select: { sequenceOrder: true, name: true, color: true },
+          select: {
+            id: true,
+            name: true,
+            sequenceOrder: true,
+            thumbnail: true,
+            color: true,
+            durationMinutes: true,
+            chapter: {
+              select: { sequenceOrder: true, name: true, color: true },
+            },
           },
-        },
-        orderBy: [
-          { chapter: { sequenceOrder: "asc" } },
-          { sequenceOrder: "asc" },
-        ],
-      }),
-    ])
+          orderBy: [
+            { chapter: { sequenceOrder: "asc" } },
+            { sequenceOrder: "asc" },
+          ],
+        }),
+      ])
 
     // ── Wave 2: reads that depend on Wave 1 results, also parallelized ──────
     const paidVideoIds = videos
@@ -457,6 +493,15 @@ export const getLessonWithProgress = cache(async function getLessonWithProgress(
         lesson.chapter.subject.color ??
         null,
       attachments,
+      materials: materials.map((m) => ({
+        id: m.id,
+        title: m.title,
+        description: m.description,
+        type: m.type,
+        // Prefer the external link; self-hosted files carry fileUrl. A row
+        // with neither still renders (title-only study note).
+        url: m.externalUrl ?? m.fileUrl ?? null,
+      })),
       progress: progress
         ? {
             isCompleted: progress.isCompleted,

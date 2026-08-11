@@ -115,6 +115,29 @@ Stream (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~90% complete 
   (→ PRIVATE) bypass the paywall. Owners change visibility via
   `updateVideoVisibility`; remove a paywall via `removeVideoPaywall` (PAID →
   free audience, clears price) — the generic toggle deliberately refuses PAID.
+- **Governance: the hierarchy is platform-owned (Abdout, 2026-08-11).**
+  Subject → Chapter → Lesson structure comes from the catalog; schools only
+  hide/activate (`ContentOverride`) and contribute at LESSON level (videos,
+  materials, quiz questions). `submitChapterProposal`/`submitLessonProposal`
+  are deliberately unwired — do not add UI for them (subject proposals stay
+  live). Corollary: every student-facing completion/progress denominator must
+  be published-minus-hidden — `markLessonComplete`, `getCourseProgress`, and
+  `get-course.ts` all agree on this now; keep new surfaces consistent.
+- **Absolute URLs that leave the app go through `shared/tenant-url.ts`**
+  (`streamTenantUrl(path, lang?)`) — email links, Stripe success/cancel,
+  anything a user follows from outside the app. Never build them from
+  `env.NEXT_PUBLIC_APP_URL`: that is the MAIN host, no `/stream` route exists
+  there, and every such link 404'd for tenant users (the paid-checkout
+  redirect included). The helper reads `x-subdomain` + `host` and keeps the
+  link on the request's own root domain (databayt.org / balqalam.com /
+  localhost); in-app navigation stays relative (`/${locale}/...`) as before.
+- **Lesson materials render from catalog `Material`, not `Attachment`.**
+  `getLessonWithProgress` fetches the lesson's materials gated exactly like
+  the lesson quiz — `approvalStatus: APPROVED`, `status: PUBLISHED`,
+  `visibility: PUBLIC` or `contributedSchoolId` = viewer's school — and the
+  lesson player's Resources section renders them. Keep that OR shape: a bare
+  school arm would leak other schools' SCHOOL/PRIVATE materials. `Attachment`
+  has no writer anywhere (P2: delete or adopt).
 
 ## Danger Zones
 

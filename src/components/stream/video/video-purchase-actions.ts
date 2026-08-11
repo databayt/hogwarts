@@ -7,12 +7,12 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import Stripe from "stripe"
 
-import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
 import { i18n } from "@/components/internationalization/config"
+import { streamTenantUrl } from "@/components/stream/shared/tenant-url"
 
 function extractLocaleFromUrl(url: string): string | null {
   try {
@@ -141,8 +141,14 @@ export async function purchaseVideo(
   }
 
   const subjectSlug = video.lesson.chapter.subject.slug
-  const successUrl = `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${subjectSlug}?purchased=${video.id}`
-  const cancelUrl = `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${subjectSlug}`
+  const successUrl = await streamTenantUrl(
+    `/stream/courses/${subjectSlug}?purchased=${video.id}`,
+    locale
+  )
+  const cancelUrl = await streamTenantUrl(
+    `/stream/courses/${subjectSlug}`,
+    locale
+  )
 
   try {
     const checkoutSession = await stripe.checkout.sessions.create({
