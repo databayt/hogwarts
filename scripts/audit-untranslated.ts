@@ -237,8 +237,8 @@ const PREWARM_EXEMPT: Record<string, string> = {
     "provisioning engine (onboarding, no request scope; backfill warms)",
   "src/components/catalog/setup.ts":
     "provisioning engine (onboarding, no request scope; backfill warms)",
-  "src/components/school-dashboard/conference/actions/tokens.ts":
-    "non-content: token/roomSid bookkeeping only",
+  "src/components/school-dashboard/conference/actions/join-core.ts":
+    "non-content: token/roomSid bookkeeping only (was tokens.ts before the join-core split)",
   "src/components/school-dashboard/conference/livekit/webhook.ts":
     "non-content: status/timestamp transitions only",
   "src/app/api/mobile/events/[id]/register/route.ts":

@@ -21,6 +21,7 @@ Three meeting back-ends behind a single UI:
 conference/
 ├── content.tsx · queries.ts · actions.ts · list-actions.ts   server entry + reads + barrels
 ├── form-steps.tsx                                             the 5 wizard steps (Basics/Schedule/Meeting/References/Access)
+│                                                              Basics opens with the timetable-slot picker — the physical class
 ├── actions/                                                   rich sessions-layer server actions
 │   ├── helpers.ts        requireContext · canAccessSession · conferenceRevalidatePath
 │   ├── sessions.ts       lifecycle state machine (create/start/end/cancel/list/get + fromTimetable)
@@ -79,6 +80,8 @@ The Prisma models are in `prisma/models/conference.prisma`.
 | Prisma models (`Conference*` + link + resources)  | ✅ schema; visibility/resources DDL staged  |
 | External pasted-link provider                     | ✅ live                                     |
 | LiveKit-first dashboard create (5-step wizard)    | ✅ coded (in-app option gated on env)       |
+| Timetable-anchored create (online school)         | ✅ live (slot → teacher/subject/section+id) |
+| Grade-scoped subject + catalog-lesson pickers     | ✅ live                                     |
 | Private/public control (`visibility`)             | ✅ coded (section default / school-wide)    |
 | Lesson + exam/quiz/assignment/link references     | ✅ coded (`catalogLessonId` + resources)    |
 | Provider-aware Join (table/detail/room redirect)  | ✅ coded                                    |

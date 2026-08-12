@@ -49,6 +49,8 @@ interface LiveClassesTableProps {
   formOptions: LiveClassFormOptions
   /** Whether the in-app (LiveKit) room back-end is provisioned. */
   liveKitAvailable?: boolean
+  /** Localized day names (Sunday-first) for the timetable slot picker. */
+  dayNames?: string[]
 }
 
 function LiveClassesTableInner({
@@ -60,6 +62,7 @@ function LiveClassesTableInner({
   permissions = FULL_UI_PERMISSIONS,
   formOptions,
   liveKitAvailable = false,
+  dayNames,
 }: LiveClassesTableProps) {
   const t = dictionary
   const { openModal } = useModal()
@@ -297,6 +300,7 @@ function LiveClassesTableInner({
             dictionary={t}
             options={formOptions}
             liveKitAvailable={liveKitAvailable}
+            dayNames={dayNames}
           />
         }
       />

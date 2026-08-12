@@ -38,10 +38,12 @@ import {
 import { roomNameFor } from "./livekit/room-naming"
 import { getProviderAdapter, type ProviderId } from "./providers"
 import {
+  getConferenceSlotOptions,
   getLiveClassDetail,
   getLiveClassesList,
   getLiveClassReferenceData,
   resolveViewerSectionScope,
+  type ConferenceSlotOption,
   type LiveClassReferenceData,
 } from "./queries"
 
@@ -230,6 +232,8 @@ export async function getLiveClass(params: { id: string }): Promise<
     id: string
     title: string
     description: string | null
+    /** Non-null = anchored to a timetable slot; the form locks who/what then. */
+    timetableId: string | null
     teacherId: string
     subjectId: string | null
     sectionId: string | null
@@ -288,6 +292,7 @@ export async function getLiveClass(params: { id: string }): Promise<
         id: liveClass.id,
         title: liveClass.title,
         description: liveClass.description,
+        timetableId: liveClass.timetableId,
         teacherId: liveClass.teacherId,
         subjectId: liveClass.subjectId,
         sectionId: liveClass.sectionId,
@@ -322,6 +327,8 @@ export async function getLiveClass(params: { id: string }): Promise<
  */
 export async function getLiveClassReferenceOptions(params: {
   subjectId: string
+  /** Section's grade — narrows catalog lessons to that grade's chapters. */
+  gradeNumber?: number
 }): Promise<ActionResponse<LiveClassReferenceData>> {
   try {
     const session = await auth()
@@ -340,7 +347,11 @@ export async function getLiveClassReferenceOptions(params: {
       }
     }
 
-    const data = await getLiveClassReferenceData(schoolId, params.subjectId)
+    const data = await getLiveClassReferenceData(
+      schoolId,
+      params.subjectId,
+      params.gradeNumber
+    )
     return { success: true, data }
   } catch (error) {
     console.error("[getLiveClassReferenceOptions]", error)
@@ -349,16 +360,13 @@ export async function getLiveClassReferenceOptions(params: {
 }
 
 /**
- * Load the dropdown data for the create/edit form (teachers, subjects,
- * sections) — all scoped to the school. The teacher select is required, so the
- * caller must handle the empty-teacher case gracefully.
+ * The school's real class slots for the active term — the wizard's "Class"
+ * picker. Fetched on demand when the wizard opens (never as page props: a
+ * term's timetable is easily 1000+ rows and would bloat every /conference
+ * load). TEACHERs see only their own slots; staff see the whole schedule.
  */
-export async function getLiveClassFormData(): Promise<
-  ActionResponse<{
-    teachers: { id: string; name: string }[]
-    subjects: { id: string; name: string }[]
-    sections: { id: string; name: string }[]
-  }>
+export async function getConferenceSlots(): Promise<
+  ActionResponse<ConferenceSlotOption[]>
 > {
   try {
     const session = await auth()
@@ -367,50 +375,30 @@ export async function getLiveClassFormData(): Promise<
 
     if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    // Form rosters (teachers/subjects/sections) are management data — only
-    // roles that can create/edit a class may load them.
     if (!canManageLiveClasses(role)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
-    const [teachers, subjects, sections] = await Promise.all([
-      db.teacher.findMany({
-        where: { schoolId },
-        select: { id: true, firstName: true, lastName: true },
-        orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
-      }),
-      // Catalog Subject is global (no schoolId) — scope to the subjects this
-      // school offers via the SubjectSelection bridge. A subject can be selected
-      // for multiple grades, so dedupe by catalogSubjectId.
-      db.subjectSelection.findMany({
-        where: { schoolId, isActive: true },
-        select: { subject: { select: { id: true, name: true } } },
-        distinct: ["catalogSubjectId"],
-        orderBy: { subject: { name: "asc" } },
-      }),
-      db.section.findMany({
-        where: { schoolId },
-        select: { id: true, name: true },
-        orderBy: { name: "asc" },
-      }),
-    ])
+    const { term } = await resolveActiveTerm(schoolId)
+    if (!term) return { success: true, data: [] }
 
-    return {
-      success: true,
-      data: {
-        teachers: teachers.map((t) => ({
-          id: t.id,
-          name: `${t.firstName ?? ""} ${t.lastName ?? ""}`.trim(),
-        })),
-        subjects: subjects.map((s) => ({
-          id: s.subject.id,
-          name: s.subject.name,
-        })),
-        sections: sections.map((s) => ({ id: s.id, name: s.name })),
-      },
+    // A teacher scheduling online classes picks from their OWN timetable —
+    // mirrors the ownership rule the rich `createLiveClassFromTimetable` path
+    // enforces. Staff/admins schedule for the whole school.
+    let ownTeacherId: string | undefined
+    if (role === "TEACHER") {
+      const teacher = await db.teacher.findFirst({
+        where: { schoolId, userId: session.user.id },
+        select: { id: true },
+      })
+      if (!teacher) return { success: true, data: [] }
+      ownTeacherId = teacher.id
     }
+
+    const data = await getConferenceSlotOptions(schoolId, term.id, ownTeacherId)
+    return { success: true, data }
   } catch (error) {
-    console.error("[getLiveClassFormData]", error)
+    console.error("[getConferenceSlots]", error)
     return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
@@ -439,10 +427,45 @@ export async function createLiveClass(
     }
     const d = validated.data
 
+    // When the session is anchored to a real class, the TIMETABLE SLOT is
+    // authoritative: teacher/subject/section come from the schedule row, not
+    // from the client's copies (which a crafted payload could mismatch —
+    // e.g. section A's roster attached to section B's period). Mirrors the
+    // derivation in actions/sessions.ts createLiveClassFromTimetable so the
+    // two entry points can never disagree.
+    let timetableId: string | null = null
+    let teacherId = d.teacherId
+    let subjectId = d.subjectId || null
+    let sectionId = d.sectionId || null
+
+    if (d.timetableId) {
+      const slot = await db.timetable.findFirst({
+        where: { id: d.timetableId, schoolId },
+        select: {
+          id: true,
+          teacherId: true,
+          subjectId: true,
+          sectionId: true,
+        },
+      })
+      if (!slot) return actionError(ACTION_ERRORS.NOT_FOUND)
+      // Conference.teacherId is required and attendance needs a roster, so an
+      // unassigned or sectionless slot can't anchor a session.
+      if (!slot.teacherId || !slot.sectionId) {
+        return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+      }
+      timetableId = slot.id
+      teacherId = slot.teacherId
+      subjectId = slot.subjectId
+      sectionId = slot.sectionId
+    }
+
     // Verify the teacher belongs to this school (tenant safety on a FK we
     // set). userId feeds the HOST participant upsert on the in-app-room path.
+    // A slot-derived teacherId is already school-scoped; this also covers the
+    // ad-hoc path where the client picked the teacher.
     const teacher = await db.teacher.findFirst({
-      where: { id: d.teacherId, schoolId },
+      where: { id: teacherId, schoolId },
       select: { id: true, userId: true },
     })
     if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
@@ -458,9 +481,9 @@ export async function createLiveClass(
           timezone: true,
         },
       }),
-      d.sectionId
+      sectionId
         ? db.section.findFirst({
-            where: { id: d.sectionId, schoolId },
+            where: { id: sectionId, schoolId },
             select: { conferenceRecordingOptOut: true },
           })
         : Promise.resolve(null),
@@ -514,12 +537,17 @@ export async function createLiveClass(
     // Fields shared by both providers.
     const commonData = {
       schoolId,
-      teacherId: d.teacherId,
-      subjectId: d.subjectId || null,
-      sectionId: d.sectionId || null,
+      // Slot-derived when anchored to a real class, client-picked otherwise.
+      timetableId,
+      teacherId,
+      subjectId,
+      sectionId,
       scheduledStart,
       scheduledEnd,
-      status: d.status ?? "scheduled",
+      // Always born `scheduled` — status is not a create input (a crafted
+      // payload must not mint a session already `live`, which would skip room
+      // provisioning and inflate the concurrent-room cap).
+      status: "scheduled" as const,
       visibility: d.visibility ?? "section",
       catalogLessonId: d.catalogLessonId || null,
       recordingEnabled,
@@ -646,8 +674,8 @@ export async function createLiveClass(
       d.provider === "external" &&
       d.saveAsDefault &&
       meetingUrl &&
-      d.subjectId &&
-      d.sectionId
+      subjectId &&
+      sectionId
     ) {
       try {
         const { term } = await resolveActiveTerm(schoolId)
@@ -656,15 +684,15 @@ export async function createLiveClass(
             where: {
               schoolId_subjectId_sectionId_termId: {
                 schoolId,
-                subjectId: d.subjectId,
-                sectionId: d.sectionId,
+                subjectId,
+                sectionId,
                 termId: term.id,
               },
             },
             create: {
               schoolId,
-              subjectId: d.subjectId,
-              sectionId: d.sectionId,
+              subjectId,
+              sectionId,
               termId: term.id,
               provider: "external",
               meetingUrl,
@@ -738,6 +766,10 @@ export async function updateLiveClass(
           actualEnd: true,
           scheduledStart: true,
           scheduledEnd: true,
+          timetableId: true,
+          teacherId: true,
+          subjectId: true,
+          sectionId: true,
         },
       }),
       db.school.findUnique({
@@ -760,9 +792,31 @@ export async function updateLiveClass(
     }
     if (d.description !== undefined)
       updateData.description = d.description ?? null
-    if (d.teacherId !== undefined) updateData.teacherId = d.teacherId
-    if (d.subjectId !== undefined) updateData.subjectId = d.subjectId || null
-    if (d.sectionId !== undefined) updateData.sectionId = d.sectionId || null
+
+    // On an anchored session the timetable slot stays authoritative for the
+    // whole edit, not just at create: moving the section here (the edit form
+    // leaves those selects open) would leave `sectionId` pointing at section B
+    // while `timetableId` still points at slot A — and the attendance sync
+    // would then mark section B's roster against slot A's period. The anchor
+    // itself is immutable, so who/what can only change by re-anchoring, which
+    // we don't allow.
+    const anchored = Boolean(existing.timetableId)
+    const wouldMoveAnchoredClass =
+      anchored &&
+      ((d.teacherId !== undefined && d.teacherId !== existing.teacherId) ||
+        (d.subjectId !== undefined &&
+          (d.subjectId || null) !== existing.subjectId) ||
+        (d.sectionId !== undefined &&
+          (d.sectionId || null) !== existing.sectionId))
+    if (wouldMoveAnchoredClass) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
+
+    if (!anchored) {
+      if (d.teacherId !== undefined) updateData.teacherId = d.teacherId
+      if (d.subjectId !== undefined) updateData.subjectId = d.subjectId || null
+      if (d.sectionId !== undefined) updateData.sectionId = d.sectionId || null
+    }
     if (d.meetingUrl !== undefined) updateData.meetingUrl = d.meetingUrl
     if (d.meetingProvider !== undefined)
       updateData.meetingProvider = d.meetingProvider || null

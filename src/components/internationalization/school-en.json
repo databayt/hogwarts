@@ -5101,7 +5101,11 @@
         "addLink": "Add link",
         "removeResource": "Remove",
         "noneOption": "None",
-        "pickSubjectFirst": "Pick a subject first to attach lessons and quizzes"
+        "pickSubjectFirst": "Pick a subject first to attach lessons and quizzes",
+        "slotLabel": "Class",
+        "slotPlaceholder": "Pick a class from the timetable",
+        "slotHint": "Delivers this class online — fills the teacher, subject, section and time from the schedule, and records attendance from who joins.",
+        "slotNone": "Not tied to a class (one-off session)"
       },
       "steps": {
         "basics": "Basics",

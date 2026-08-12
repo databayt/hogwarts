@@ -49,6 +49,35 @@ AWS S3 `me-central-1` with PDPL-configurable retention.
   (tokens), `canAccessSession` (recordings + rich detail), and every list
   read (`buildLiveClassWhere` OR, `listForStudent`/`listForGuardian`,
   content.tsx SSR). School-wide sessions notify ALL school users via the hub.
+- **A session is the online delivery of a REAL class**: the wizard's first
+  field is the timetable-slot picker (`getConferenceSlots` → the active term's
+  slots, break periods and unassigned/sectionless rows excluded; TEACHERs see
+  only their own). When `timetableId` is submitted the SLOT IS AUTHORITATIVE —
+  the server re-derives teacher/subject/section from the slot row and ignores
+  the client's copies, mirroring `createLiveClassFromTimetable` so the two
+  entry points can't disagree. That anchor is what makes a session
+  attendance-capable (`syncConferenceAttendance` needs sectionId + timetableId)
+  and what lights the slot up on the weekly grid (`getLiveClassIndicators` keys
+  on `timetableId`). Sessions with no slot stay possible — assemblies, town
+  halls, one-off tutorials. The anchor is IMMUTABLE on edit (like `provider`):
+  re-anchoring would re-key already-written attendance. **Authority holds for
+  the whole life of the session, not just at create**: `updateLiveClass`
+  rejects a teacher/subject/section change on an anchored row (re-sending the
+  unchanged values is a no-op, since the edit form always submits them).
+  Otherwise `sectionId` could point at section B while `timetableId` still
+  points at slot A, and the sync would mark B's roster against A's period.
+- **The catalog is grade-scoped through the section**: subject options come
+  from `SubjectSelection` filtered to the chosen section's `gradeId` (label =
+  `customName ?? subject.name` — the school's own name for the subject), and
+  catalog lessons are filtered by `Chapter.grades` containing the section's
+  `gradeNumber`. `Chapter.grades` defaults to `[]`, so the filter is
+  `OR: [{ has: n }, { isEmpty: true }]` — a bare `has` would silently hide
+  every not-yet-grade-tagged chapter.
+- **`status` is not a create input**: every session is born `scheduled`. A
+  client-supplied status would mint a session already `live` (skipping room
+  provisioning and the concurrent cap) or `ended`. Transitions go through
+  `startLiveClass` / `endLiveClass` / the webhook / the guarded list-layer
+  update only.
 - **Provider choice lives in the wizard (list layer too)**: `list-actions.ts
 createLiveClass` branches on `provider` — `livekit` mirrors
   `actions/sessions.ts` (placeholder → `roomNameFor`, HOST upsert, duration

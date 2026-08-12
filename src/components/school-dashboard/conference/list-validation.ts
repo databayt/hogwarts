@@ -108,6 +108,12 @@ export function createLiveClassSchema(dict?: V) {
 
   const base = z.object({
     title: z.string().min(1, m.titleRequired).max(200, m.titleMax),
+    // The physical class this session delivers online. When present it is
+    // AUTHORITATIVE: the server derives teacher/subject/section from the slot
+    // row and ignores the client's copies (see list-actions.createLiveClass).
+    // It is also what makes the session attendance-capable — the sync keys on
+    // sectionId + timetableId. Absent = ad-hoc session (assembly, town hall).
+    timetableId: z.string().optional().nullable(),
     teacherId: z.string().min(1, m.teacherRequired),
     subjectId: z.string().optional().nullable(),
     sectionId: z.string().optional().nullable(),
@@ -121,7 +127,10 @@ export function createLiveClassSchema(dict?: V) {
     endDate: z.coerce.date({ message: m.endDateRequired }),
     startTime: z.string().regex(TIME_REGEX, m.startTimeInvalid),
     endTime: z.string().regex(TIME_REGEX, m.endTimeInvalid),
-    status: z.enum(LIVE_CLASS_STATUS_VALUES).default("scheduled"),
+    // NOTE: `status` is deliberately NOT a create input. Every session is born
+    // `scheduled`; a client-supplied status would let a crafted payload create
+    // a session already `live` (skipping room provisioning + the concurrent
+    // cap) or already `ended`. Transitions go through the guarded paths only.
     visibility: z.enum(LIVE_CLASS_VISIBILITY_VALUES).default("section"),
     description: z.string().max(2000, m.descriptionMax).optional().nullable(),
     // In-app room knobs (ignored for external links).

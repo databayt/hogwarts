@@ -33,7 +33,11 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type { LiveClassFormData } from "./list-validation"
-import type { LiveClassFormOptions, LiveClassReferenceData } from "./queries"
+import type {
+  ConferenceSlotOption,
+  LiveClassFormOptions,
+  LiveClassReferenceData,
+} from "./queries"
 
 // Schema fields + UI-only picker fields (composed into `resources` on submit;
 // the zod resolver strips them from the validated payload).
@@ -42,6 +46,22 @@ export type WizardFormValues = LiveClassFormData & {
   assignmentRefId: string
   linkUrl: string
   linkTitle: string
+}
+
+/** Sunday-first, indexed by Timetable.dayOfWeek (0 = Sun … 6 = Sat). */
+const DAY_FALLBACK_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+/**
+ * "Mathematics · Grade 1-A · Sun 08:00" — the physical class, as a teacher
+ * would recognize it on the timetable.
+ */
+export function slotLabel(
+  slot: ConferenceSlotOption,
+  dayNames?: string[]
+): string {
+  const day = dayNames?.[slot.dayOfWeek] ?? DAY_FALLBACK_EN[slot.dayOfWeek]
+  const head = [slot.subjectName, slot.sectionName].filter(Boolean).join(" · ")
+  return `${head} · ${day} ${slot.startTime}`
 }
 
 // Sentinel for "no selection" in optional pickers — Radix Select forbids an
@@ -69,16 +89,59 @@ export function StepBasics({
   f,
   options,
   isPending,
+  isEdit,
+  slots,
+  slotsLoading,
+  dayNames,
+  onSlotChange,
 }: {
   f: FormDict
   options: LiveClassFormOptions
   isPending: boolean
+  isEdit: boolean
+  /** The school's real class slots for the active term (lazy-loaded). */
+  slots: ConferenceSlotOption[]
+  slotsLoading: boolean
+  dayNames?: string[]
+  onSlotChange: (timetableId: string) => void
 }) {
+  const form = useFormContext<WizardFormValues>()
   const { teachers, subjects, sections } = options
   const noTeachers = teachers.length === 0
+  const timetableId = form.watch("timetableId")
+  const sectionId = form.watch("sectionId")
+
+  // A slot-anchored session takes teacher/subject/section from the schedule —
+  // the server derives them from the slot row regardless, so the selects are
+  // shown filled-and-locked rather than pretending to be editable.
+  const anchored = Boolean(timetableId && timetableId !== NONE)
+
+  // Only offer subjects the chosen section's grade actually studies. Without a
+  // section we can't narrow, so the school's whole catalog stays available.
+  const gradeId = sections.find((s) => s.id === sectionId)?.gradeId
+  const subjectOptions = (
+    gradeId ? subjects.filter((s) => s.gradeIds.includes(gradeId)) : subjects
+  ).map((s) => ({ value: s.id, label: s.name }))
 
   return (
     <div className="space-y-4">
+      {/* Editing never re-anchors a session: the timetable link is what keys
+          its attendance, so moving it would orphan already-written rows. */}
+      <SelectField
+        name="timetableId"
+        label={f.slotLabel}
+        placeholder={slotsLoading ? "…" : f.slotPlaceholder}
+        description={f.slotHint}
+        disabled={isPending || slotsLoading || isEdit}
+        onValueChange={onSlotChange}
+        options={[
+          { value: NONE, label: f.slotNone },
+          ...slots.map((s) => ({
+            value: s.timetableId,
+            label: slotLabel(s, dayNames),
+          })),
+        ]}
+      />
       <InputField
         name="title"
         label={f.titleLabel}
@@ -91,7 +154,7 @@ export function StepBasics({
         label={f.teacherLabel}
         placeholder={noTeachers ? f.noTeachers : f.teacherPlaceholder}
         required
-        disabled={isPending || noTeachers}
+        disabled={isPending || noTeachers || anchored}
         options={teachers.map((t) => ({ value: t.id, label: t.name }))}
       />
       <div className="grid grid-cols-2 gap-4">
@@ -99,14 +162,14 @@ export function StepBasics({
           name="subjectId"
           label={f.subjectLabel}
           placeholder={f.subjectPlaceholder}
-          disabled={isPending}
-          options={subjects.map((s) => ({ value: s.id, label: s.name }))}
+          disabled={isPending || anchored}
+          options={subjectOptions}
         />
         <SelectField
           name="sectionId"
           label={f.sectionLabel}
           placeholder={f.sectionPlaceholder}
-          disabled={isPending}
+          disabled={isPending || anchored}
           options={sections.map((s) => ({ value: s.id, label: s.name }))}
         />
       </div>

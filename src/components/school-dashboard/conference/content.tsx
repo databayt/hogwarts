@@ -148,6 +148,9 @@ export default async function LiveClassesContent({
         permissions={permissions}
         formOptions={formOptions}
         liveKitAvailable={isLiveKitConfigured()}
+        // Sunday-first day names, indexed by Timetable.dayOfWeek — labels the
+        // wizard's class picker in the reader's language.
+        dayNames={dictionary.timetable?.dayNames}
       />
     </div>
   )

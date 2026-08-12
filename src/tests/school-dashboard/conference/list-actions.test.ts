@@ -29,6 +29,7 @@ vi.mock("@/lib/db", () => ({
     teacher: { findFirst: vi.fn() },
     school: { findUnique: vi.fn() },
     section: { findFirst: vi.fn() },
+    timetable: { findFirst: vi.fn() },
     conference: { create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
     conferenceLink: { upsert: vi.fn() },
   },
@@ -133,6 +134,77 @@ describe("createLiveClass — saveAsDefault", () => {
   })
 })
 
+describe("createLiveClass — timetable anchoring (the online-school link)", () => {
+  const SLOT = {
+    id: "tt-1",
+    teacherId: "t-slot",
+    subjectId: "sub-slot",
+    sectionId: "sec-slot",
+  }
+
+  it("derives teacher/subject/section from the slot and ignores the client's copies", async () => {
+    vi.mocked(db.timetable.findFirst).mockResolvedValue(SLOT as never)
+    const result = await createLiveClass({
+      ...baseInput,
+      timetableId: "tt-1",
+      // A crafted payload naming a different teacher/section must not win —
+      // otherwise section A's roster gets attached to section B's period.
+      teacherId: "t-attacker",
+      sectionId: "sec-attacker",
+      subjectId: "sub-attacker",
+    })
+    expect(result.success).toBe(true)
+    const data = vi.mocked(db.conference.create).mock.calls[0][0]
+      .data as Record<string, unknown>
+    expect(data.timetableId).toBe("tt-1")
+    expect(data.teacherId).toBe("t-slot")
+    expect(data.subjectId).toBe("sub-slot")
+    expect(data.sectionId).toBe("sec-slot")
+  })
+
+  it("rejects a slot from another school (tenant-scoped lookup misses)", async () => {
+    vi.mocked(db.timetable.findFirst).mockResolvedValue(null as never)
+    const result = await createLiveClass({
+      ...baseInput,
+      timetableId: "tt-other-school",
+    })
+    expect(result.success).toBe(false)
+    expect(db.conference.create).not.toHaveBeenCalled()
+  })
+
+  it("rejects an unassigned or sectionless slot (no host / no roster)", async () => {
+    vi.mocked(db.timetable.findFirst).mockResolvedValue({
+      ...SLOT,
+      teacherId: null,
+    } as never)
+    const result = await createLiveClass({ ...baseInput, timetableId: "tt-1" })
+    expect(result.success).toBe(false)
+    expect(db.conference.create).not.toHaveBeenCalled()
+  })
+
+  it("leaves timetableId null for an ad-hoc session (assembly, town hall)", async () => {
+    const result = await createLiveClass({ ...baseInput })
+    expect(result.success).toBe(true)
+    const data = vi.mocked(db.conference.create).mock.calls[0][0]
+      .data as Record<string, unknown>
+    expect(data.timetableId).toBeNull()
+    expect(db.timetable.findFirst).not.toHaveBeenCalled()
+  })
+
+  it("is always born `scheduled` — a client-supplied status is ignored", async () => {
+    const result = await createLiveClass({
+      ...baseInput,
+      // Not a schema field; a crafted payload must not mint a live session
+      // (which would skip room provisioning and inflate the concurrent cap).
+      status: "live",
+    } as never)
+    expect(result.success).toBe(true)
+    const data = vi.mocked(db.conference.create).mock.calls[0][0]
+      .data as Record<string, unknown>
+    expect(data.status).toBe("scheduled")
+  })
+})
+
 describe("createLiveClass — school-timezone schedule combine", () => {
   it("stores the wall time as the SCHOOL-TZ instant, not the server's", async () => {
     // School is Asia/Dubai (+04): 09:00 wall on 2026-06-01 → 05:00Z. The old
@@ -162,12 +234,57 @@ describe("updateLiveClass — status transitions + change-scoped notifications",
       actualEnd: null,
       scheduledStart: EXISTING_START,
       scheduledEnd: EXISTING_END,
+      timetableId: null,
+      teacherId: "t-1",
+      subjectId: "sub-1",
+      sectionId: "sec-1",
       ...overrides,
     } as never)
     vi.mocked(db.conference.updateMany).mockResolvedValue({
       count: 1,
     } as never)
   }
+
+  it("refuses to move an anchored session to another section", async () => {
+    // The slot stays authoritative for the whole life of the session: moving
+    // the section here would leave sectionId on B while timetableId points at
+    // slot A, and attendance would mark B's roster against A's period.
+    existingRow({ timetableId: "tt-1" })
+    const result = await updateLiveClass({
+      id: "lcs-1",
+      sectionId: "sec-OTHER",
+    })
+    expect(result.success).toBe(false)
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("allows editing everything else on an anchored session", async () => {
+    existingRow({ timetableId: "tt-1" })
+    const result = await updateLiveClass({
+      id: "lcs-1",
+      title: "New title",
+      // Re-sending the unchanged who/what (the form always submits them) is
+      // a no-op, not a rejection.
+      teacherId: "t-1",
+      sectionId: "sec-1",
+    })
+    expect(result.success).toBe(true)
+    const args = vi.mocked(db.conference.updateMany).mock.calls[0][0] as {
+      data: Record<string, unknown>
+    }
+    expect(args.data.title).toBe("New title")
+    expect(args.data.sectionId).toBeUndefined()
+  })
+
+  it("still allows re-assigning an ad-hoc (unanchored) session", async () => {
+    existingRow({ timetableId: null })
+    const result = await updateLiveClass({ id: "lcs-1", sectionId: "sec-NEW" })
+    expect(result.success).toBe(true)
+    const args = vi.mocked(db.conference.updateMany).mock.calls[0][0] as {
+      data: Record<string, unknown>
+    }
+    expect(args.data.sectionId).toBe("sec-NEW")
+  })
 
   it("rejects resurrecting an ended session back to scheduled", async () => {
     existingRow({ status: "ended" })

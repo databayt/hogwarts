@@ -33,6 +33,7 @@ import {
 } from "./form-steps"
 import {
   createLiveClass,
+  getConferenceSlots,
   getLiveClass,
   getLiveClassReferenceOptions,
   updateLiveClass,
@@ -42,6 +43,7 @@ import {
   type LiveClassFormData,
 } from "./list-validation"
 import {
+  type ConferenceSlotOption,
   type LiveClassFormOptions,
   type LiveClassReferenceData,
 } from "./queries"
@@ -54,13 +56,17 @@ interface LiveClassFormProps {
   dictionary: Dictionary["school"]["liveClasses"]
   /**
    * Dropdown options resolved on the server and passed in as stable props.
-   * The form deliberately does NOT fetch these on mount: a parent re-render
-   * loop would turn an on-mount fetch into a request storm and flicker the
-   * option-backed selects on every remount.
+   * These deliberately are NOT fetched on mount: a parent re-render loop would
+   * turn an on-mount fetch into a request storm and flicker the option-backed
+   * selects on every remount. (The timetable-slot list is the one exception —
+   * it is far too big to ship on every page load, so it is fetched once when
+   * the wizard mounts, inside the modal that only opens on demand.)
    */
   options: LiveClassFormOptions
   /** Whether the in-app (LiveKit) room back-end is provisioned. */
   liveKitAvailable?: boolean
+  /** Localized day names, Sunday-first — labels the timetable slot picker. */
+  dayNames?: string[]
 }
 
 export function LiveClassForm({
@@ -69,6 +75,7 @@ export function LiveClassForm({
   dictionary,
   options,
   liveKitAvailable = false,
+  dayNames,
 }: LiveClassFormProps) {
   const { modal, closeModal } = useModal()
   // `isPending` reflects ONLY an in-flight submit — it drives the "Saving…"
@@ -91,6 +98,7 @@ export function LiveClassForm({
     resolver: zodResolver(schema) as any,
     defaultValues: {
       title: "",
+      timetableId: NONE,
       teacherId: "",
       subjectId: "",
       sectionId: "",
@@ -101,7 +109,6 @@ export function LiveClassForm({
       endDate: new Date(),
       startTime: "09:00",
       endTime: "10:00",
-      status: "scheduled",
       visibility: "section",
       description: "",
       recordingEnabled: true,
@@ -122,16 +129,67 @@ export function LiveClassForm({
   const [refLoading, setRefLoading] = useState(false)
   const refLoadedFor = useRef<string | null>(null)
 
-  const loadRefData = async (subjectId: string) => {
-    if (!subjectId || refLoadedFor.current === subjectId) return
-    refLoadedFor.current = subjectId
+  /** The grade of the currently chosen section — narrows catalog lessons. */
+  const gradeNumberForSection = (sectionId: string | null | undefined) =>
+    options.sections.find((s) => s.id === sectionId)?.gradeNumber
+
+  const loadRefData = async (subjectId: string, gradeNumber?: number) => {
+    const key = `${subjectId}:${gradeNumber ?? ""}`
+    if (!subjectId || refLoadedFor.current === key) return
+    refLoadedFor.current = key
     setRefLoading(true)
     try {
-      const res = await getLiveClassReferenceOptions({ subjectId })
+      const res = await getLiveClassReferenceOptions({ subjectId, gradeNumber })
       if (res.success && res.data) setRefData(res.data)
     } finally {
       setRefLoading(false)
     }
+  }
+
+  // The school's real class slots. Fetched once when the wizard opens (a term's
+  // timetable is far too big to ship as page props), not per step.
+  const [slots, setSlots] = useState<ConferenceSlotOption[]>([])
+  const [slotsLoading, setSlotsLoading] = useState(false)
+  useEffect(() => {
+    let active = true
+    setSlotsLoading(true)
+    ;(async () => {
+      const res = await getConferenceSlots()
+      if (!active) return
+      if (res.success && res.data) setSlots(res.data)
+      setSlotsLoading(false)
+    })()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  /**
+   * Anchoring to a real class fills the whole "who/what/when" block from the
+   * schedule: teacher, subject, section, the period's time window, and the
+   * next date that weekday falls on. The server re-derives the first three
+   * from the slot row, so these values are a preview of what will be saved,
+   * not the source of truth.
+   */
+  const handleSlotChange = (timetableId: string) => {
+    if (!timetableId || timetableId === NONE) return
+    const slot = slots.find((s) => s.timetableId === timetableId)
+    if (!slot) return
+    form.setValue("teacherId", slot.teacherId, { shouldValidate: true })
+    form.setValue("subjectId", slot.subjectId ?? "")
+    form.setValue("sectionId", slot.sectionId)
+    form.setValue("startTime", slot.startTime, { shouldValidate: true })
+    form.setValue("endTime", slot.endTime, { shouldValidate: true })
+    const nextDate = nextDateForWeekday(slot.dayOfWeek)
+    form.setValue("startDate", nextDate)
+    form.setValue("endDate", nextDate)
+    // Name the session after the class unless the teacher already typed one.
+    if (!form.getValues("title")) {
+      form.setValue("title", `${slot.subjectName} · ${slot.sectionName}`.trim())
+    }
+    // Refresh the reference pickers for the slot's subject + grade.
+    refLoadedFor.current = null
+    if (slot.subjectId) void loadRefData(slot.subjectId, slot.gradeNumber)
   }
 
   // Load existing data for edit mode. Plain async — prefilling values must not
@@ -151,6 +209,9 @@ export function LiveClassForm({
           form.reset({
             ...form.getValues(),
             title: d.title,
+            // Anchored sessions show (and lock) their class; the server also
+            // refuses to move who/what on one, so the lock isn't the only gate.
+            timetableId: d.timetableId ?? NONE,
             teacherId: d.teacherId,
             subjectId: d.subjectId ?? "",
             sectionId: d.sectionId ?? "",
@@ -161,7 +222,6 @@ export function LiveClassForm({
             endDate: end,
             startTime: toTimeString(start),
             endTime: toTimeString(end),
-            status: d.status as LiveClassFormData["status"],
             visibility: d.visibility === "school" ? "school" : "section",
             description: d.description ?? "",
             recordingEnabled: d.recordingEnabled,
@@ -173,7 +233,9 @@ export function LiveClassForm({
             linkTitle: linkRef?.title ?? "",
           })
           // Pre-load picker labels so saved references display on step 4.
-          if (d.subjectId) void loadRefData(d.subjectId)
+          if (d.subjectId) {
+            void loadRefData(d.subjectId, gradeNumberForSection(d.sectionId))
+          }
         }
       })()
       return () => {
@@ -213,7 +275,7 @@ export function LiveClassForm({
     return rows
   }
 
-  const onSubmit = async (data: LiveClassFormData) => {
+  const onSubmit = async (data: WizardFormValues) => {
     startTransition(async () => {
       const catalogLessonId =
         data.catalogLessonId && data.catalogLessonId !== NONE
@@ -236,16 +298,23 @@ export function LiveClassForm({
             endDate: data.endDate,
             startTime: data.startTime,
             endTime: data.endTime,
-            status: data.status,
             visibility: data.visibility,
             recordingEnabled: data.recordingEnabled,
             maxParticipants: data.maxParticipants,
             catalogLessonId,
             resources: data.resources,
             description: data.description || null,
+            // `status` and `timetableId` are deliberately not sent: the wizard
+            // has no status field (transitions belong to the guarded paths),
+            // and a session's timetable anchor is immutable — re-anchoring
+            // would re-key its attendance.
           })
         : await createLiveClass({
             ...data,
+            timetableId:
+              data.timetableId && data.timetableId !== NONE
+                ? data.timetableId
+                : null,
             subjectId: data.subjectId || null,
             sectionId: data.sectionId || null,
             meetingProvider: data.meetingProvider || null,
@@ -272,10 +341,16 @@ export function LiveClassForm({
       const valid = fields.length ? await form.trigger(fields) : true
       if (!valid) return
       const next = currentStep + 1
-      // Entering References: fetch pickers for the chosen subject once.
+      // Entering References: fetch pickers for the chosen subject once,
+      // narrowed to the section's grade.
       if (next === 4) {
         const subjectId = form.getValues("subjectId")
-        if (subjectId) void loadRefData(subjectId)
+        if (subjectId) {
+          void loadRefData(
+            subjectId,
+            gradeNumberForSection(form.getValues("sectionId"))
+          )
+        }
       }
       setCurrentStep(next)
       return
@@ -329,7 +404,18 @@ export function LiveClassForm({
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <StepBasics f={f} options={options} isPending={isPending} />
+        return (
+          <StepBasics
+            f={f}
+            options={options}
+            isPending={isPending}
+            isEdit={isEdit}
+            slots={slots}
+            slotsLoading={slotsLoading}
+            dayNames={dayNames}
+            onSlotChange={handleSlotChange}
+          />
+        )
       case 2:
         return <StepSchedule f={f} lang={lang} isPending={isPending} />
       case 3:
@@ -397,6 +483,19 @@ function toTimeString(date: Date): string {
   const h = String(date.getHours()).padStart(2, "0")
   const m = String(date.getMinutes()).padStart(2, "0")
   return `${h}:${m}`
+}
+
+/**
+ * The next calendar date falling on `dayOfWeek` (0 = Sun … 6 = Sat), today
+ * included. A timetable slot is a weekly pattern; the session needs one
+ * concrete date. Browser-local, like every other date the picker produces —
+ * the server re-reads the day in the school's timezone on submit.
+ */
+function nextDateForWeekday(dayOfWeek: number): Date {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() + ((dayOfWeek - d.getDay() + 7) % 7))
+  return d
 }
 
 export default LiveClassForm

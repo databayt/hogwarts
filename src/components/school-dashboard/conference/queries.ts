@@ -215,8 +215,14 @@ export async function getLiveClassesList(
 
 export type LiveClassFormOptions = {
   teachers: { id: string; name: string }[]
-  subjects: { id: string; name: string }[]
-  sections: { id: string; name: string }[]
+  /**
+   * Catalog subjects this school actually teaches, each carrying the grades
+   * that adopted it — the client narrows the picker to the chosen section's
+   * grade so a Grade 1 class can't be scheduled against a Grade 12 subject.
+   */
+  subjects: { id: string; name: string; gradeIds: string[] }[]
+  /** `gradeNumber` drives the catalog lesson filter (Chapter.grades). */
+  sections: { id: string; name: string; gradeId: string; gradeNumber: number }[]
 }
 
 /**
@@ -229,36 +235,165 @@ export type LiveClassFormOptions = {
 export async function getLiveClassFormOptions(
   schoolId: string
 ): Promise<LiveClassFormOptions> {
-  const [teachers, subjects, sections] = await Promise.all([
+  const [teachers, selections, sections] = await Promise.all([
     db.teacher.findMany({
       where: { schoolId },
       select: { id: true, firstName: true, lastName: true },
       orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     }),
-    // Catalog Subject is global (no schoolId) — scope to the subjects this
-    // school offers via the SubjectSelection bridge. A subject can be selected
-    // for multiple grades, so dedupe by catalogSubjectId.
+    // Catalog Subject is global (no schoolId) — the SubjectSelection bridge is
+    // what makes it a subject THIS school teaches, per grade. Keep every row
+    // (no `distinct`) so we can build the subject → grades map; `customName` is
+    // the school's own name for the subject and wins over the catalog name.
     db.subjectSelection.findMany({
       where: { schoolId, isActive: true },
-      select: { subject: { select: { id: true, name: true } } },
-      distinct: ["catalogSubjectId"],
+      select: {
+        gradeId: true,
+        customName: true,
+        subject: { select: { id: true, name: true } },
+      },
       orderBy: { subject: { name: "asc" } },
     }),
     db.section.findMany({
       where: { schoolId },
-      select: { id: true, name: true },
+      select: {
+        id: true,
+        name: true,
+        gradeId: true,
+        grade: { select: { gradeNumber: true } },
+      },
       orderBy: { name: "asc" },
     }),
   ])
+
+  // Collapse the per-grade selection rows into one option per catalog subject.
+  const bySubject = new Map<
+    string,
+    { id: string; name: string; gradeIds: string[] }
+  >()
+  for (const sel of selections) {
+    const existing = bySubject.get(sel.subject.id)
+    if (existing) {
+      existing.gradeIds.push(sel.gradeId)
+      continue
+    }
+    bySubject.set(sel.subject.id, {
+      id: sel.subject.id,
+      name: sel.customName || sel.subject.name,
+      gradeIds: [sel.gradeId],
+    })
+  }
 
   return {
     teachers: teachers.map((t) => ({
       id: t.id,
       name: `${t.firstName ?? ""} ${t.lastName ?? ""}`.trim(),
     })),
-    subjects: subjects.map((s) => ({ id: s.subject.id, name: s.subject.name })),
-    sections: sections.map((s) => ({ id: s.id, name: s.name })),
+    subjects: [...bySubject.values()],
+    sections: sections.map((s) => ({
+      id: s.id,
+      name: s.name,
+      gradeId: s.gradeId,
+      gradeNumber: s.grade?.gradeNumber ?? 0,
+    })),
   }
+}
+
+export type ConferenceSlotOption = {
+  timetableId: string
+  dayOfWeek: number
+  periodName: string
+  /** "HH:mm" wall-clock, from the Period's UTC-anchored TIME column. */
+  startTime: string
+  endTime: string
+  teacherId: string
+  teacherName: string
+  subjectId: string | null
+  subjectName: string
+  sectionId: string
+  sectionName: string
+  gradeNumber: number
+}
+
+/**
+ * Period times are `DateTime @db.Time()` — epoch-anchored and stored in UTC.
+ * Read them with the UTC getters; the local ones drift by the server offset
+ * (the documented timetable-seed bug). Mirrors settings/content.tsx.
+ */
+function periodTimeString(date: Date): string {
+  const d = new Date(date)
+  const h = String(d.getUTCHours()).padStart(2, "0")
+  const m = String(d.getUTCMinutes()).padStart(2, "0")
+  return `${h}:${m}`
+}
+
+/**
+ * The school's real (physical) class slots for the active term — the options
+ * behind the wizard's "Class" picker. Anchoring a session to one of these is
+ * what turns it into the online delivery of a real class: it fills
+ * teacher/subject/section from the schedule, lights the slot up on the weekly
+ * timetable grid (`getLiveClassIndicators` keys on `timetableId`), and makes
+ * the session attendance-capable (the sync needs sectionId + timetableId).
+ *
+ * Excluded: break periods (never a class — `Period.isBreak` is the source of
+ * truth, never the name), slots with no section (nothing to take attendance
+ * for) and slots with no teacher (`Conference.teacherId` is required).
+ *
+ * @param schoolId - School ID for multi-tenant filtering (REQUIRED)
+ * @param teacherId - When set, only this teacher's slots (TEACHER-scoped view)
+ */
+export async function getConferenceSlotOptions(
+  schoolId: string,
+  termId: string,
+  teacherId?: string
+): Promise<ConferenceSlotOption[]> {
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId,
+      weekOffset: 0,
+      sectionId: { not: null },
+      teacherId: teacherId ?? { not: null },
+      period: { isBreak: false },
+    },
+    select: {
+      id: true,
+      dayOfWeek: true,
+      teacherId: true,
+      subjectId: true,
+      sectionId: true,
+      subject: { select: { name: true } },
+      section: {
+        select: { name: true, grade: { select: { gradeNumber: true } } },
+      },
+      teacher: { select: { firstName: true, lastName: true } },
+      period: { select: { name: true, startTime: true, endTime: true } },
+    },
+    orderBy: [{ dayOfWeek: "asc" }, { period: { startTime: "asc" } }],
+    take: 500,
+  })
+
+  return slots.flatMap((s) =>
+    s.teacherId && s.sectionId
+      ? [
+          {
+            timetableId: s.id,
+            dayOfWeek: s.dayOfWeek,
+            periodName: s.period.name,
+            startTime: periodTimeString(s.period.startTime),
+            endTime: periodTimeString(s.period.endTime),
+            teacherId: s.teacherId,
+            teacherName:
+              `${s.teacher?.firstName ?? ""} ${s.teacher?.lastName ?? ""}`.trim(),
+            subjectId: s.subjectId,
+            subjectName: s.subject?.name ?? "",
+            sectionId: s.sectionId,
+            sectionName: s.section?.name ?? "",
+            gradeNumber: s.section?.grade?.gradeNumber ?? 0,
+          },
+        ]
+      : []
+  )
 }
 
 export type LessonReferenceContent = {
@@ -328,14 +463,32 @@ export type LiveClassReferenceData = {
  * Fetched on demand when a subject is chosen — never on form mount.
  * @param schoolId - School ID for multi-tenant filtering (REQUIRED)
  * @param subjectId - Catalog subject id the session teaches
+ * @param gradeNumber - When set, narrows lessons to chapters taught at this
+ *   grade. `Chapter.grades` defaults to `[]` (not yet grade-tagged), so an
+ *   `isEmpty` branch keeps untagged chapters visible instead of silently
+ *   hiding most of the catalog.
  */
 export async function getLiveClassReferenceData(
   schoolId: string,
-  subjectId: string
+  subjectId: string,
+  gradeNumber?: number
 ): Promise<LiveClassReferenceData> {
   const [lessons, exams, assignments] = await Promise.all([
     db.lesson.findMany({
-      where: { chapter: { subjectId }, status: "PUBLISHED" },
+      where: {
+        chapter: {
+          subjectId,
+          ...(gradeNumber
+            ? {
+                OR: [
+                  { grades: { has: gradeNumber } },
+                  { grades: { isEmpty: true } },
+                ],
+              }
+            : {}),
+        },
+        status: "PUBLISHED",
+      },
       select: { id: true, name: true },
       orderBy: [
         { chapter: { sequenceOrder: "asc" } },

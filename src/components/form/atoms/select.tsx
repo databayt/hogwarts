@@ -20,8 +20,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useOptionalDictionary } from "@/components/internationalization/dictionary-context"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { SelectFieldProps } from "../types"
+
+/**
+ * Resolves the "nothing selected yet" prompt from, in priority order:
+ *   1. the explicit `placeholder` prop
+ *   2. `school.common.selectOption` in the dictionary context
+ *   3. an ar/en literal (only reachable outside a DictionaryProvider —
+ *      tests, Storybook, standalone previews)
+ *
+ * WHY this is a hook and not a default parameter: the default used to be the
+ * literal "Select an option", and 49 of the 66 call sites pass no placeholder
+ * at all — so Arabic users read English on most selects in the app. Defaulting
+ * from the dictionary makes the localized string the one you get for free.
+ */
+function useSelectPlaceholder(explicit?: string): string {
+  const { locale } = useLocale()
+  const dictionary = useOptionalDictionary()
+  const common = dictionary?.school?.common as
+    | Record<string, string>
+    | undefined
+
+  return (
+    explicit ||
+    common?.selectOption ||
+    (locale === "ar" ? "اختر" : "Select an option")
+  )
+}
 
 /**
  * Select Field (Atom)
@@ -56,13 +84,15 @@ export function SelectField({
   name,
   label,
   description,
-  placeholder = "Select an option",
+  placeholder,
   required,
   disabled,
   className,
   options,
+  onValueChange,
 }: SelectFieldProps) {
   const form = useFormContext()
+  const resolvedPlaceholder = useSelectPlaceholder(placeholder)
 
   return (
     <FormField
@@ -77,13 +107,16 @@ export function SelectField({
             </FormLabel>
           )}
           <Select
-            onValueChange={field.onChange}
+            onValueChange={(value) => {
+              field.onChange(value)
+              onValueChange?.(value)
+            }}
             value={field.value}
             disabled={disabled}
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder={placeholder} />
+                <SelectValue placeholder={resolvedPlaceholder} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>

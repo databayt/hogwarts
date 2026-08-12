@@ -255,6 +255,12 @@ export interface SelectFieldProps extends BaseFieldProps {
     description?: string
     disabled?: boolean
   }>
+  /**
+   * Optional side effect on selection, fired AFTER the field updates — for a
+   * choice that drives other fields (e.g. picking a timetable slot fills in
+   * teacher/subject/section). Leave unset for a plain field.
+   */
+  onValueChange?: (value: string) => void
 }
 
 /** Textarea field props */

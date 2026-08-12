@@ -129,6 +129,63 @@
 
 ## Done
 
+### Online-school pass — wizard anchored to the timetable + catalog (2026-08-12)
+
+"Add conference" was disconnected from the school it belongs to: three free
+selects (teacher / subject / section) with nothing tying them to a real class.
+The consequence was concrete, not cosmetic — **`liveClassSchema` had no
+`timetableId` and `createLiveClass` never set one, so every dashboard-created
+session was invisible to `syncConferenceAttendance`** (which needs sectionId
+AND timetableId). Only the teacher's "Start live class" button produced an
+attendance-capable session. A school could hold all its classes online and
+record no attendance for any of them.
+
+- **The wizard now opens on the physical class.** Step 1 leads with a
+  timetable-slot picker ("Mathematics · Grade 1-A · Sunday 08:00") sourced from
+  the active term via a new `getConferenceSlots` action — lazily, when the
+  wizard opens, never as page props (a term's timetable is easily 1000+ rows).
+  Break periods (`Period.isBreak`, never the name), unassigned slots and
+  sectionless slots are excluded; a TEACHER sees only their own slots.
+  Picking one fills teacher/subject/section, the period's time window, the next
+  date that weekday falls on, and a default title.
+- **The slot is authoritative server-side.** `timetableId` now flows through
+  the schema and the action, which re-derives teacher/subject/section from the
+  slot row and IGNORES the client's copies — a crafted payload can't staple
+  section A's roster onto section B's period. Mirrors
+  `createLiveClassFromTimetable`. Authority holds on EDIT too — `updateLiveClass`
+  rejects a teacher/subject/section change on an anchored row (the edit form
+  leaves those selects open otherwise, so an admin could have moved the section
+  while the anchor still pointed at the old slot, and the sync would then mark
+  the wrong roster against that period). The anchor itself is immutable
+  (re-anchoring would re-key attendance). Two knock-on wins: those sessions
+  now sync attendance, and they
+  appear as live/scheduled dots on the weekly timetable grid
+  (`getLiveClassIndicators` keys on `timetableId`).
+- **Catalog scoped by grade.** Subject options were flattened across ALL grades
+  (`distinct: ["catalogSubjectId"]`) — scheduling for Grade 1-A offered Grade
+  12 subjects. Now filtered to the section's `gradeId`, labeled with the
+  school's own `customName` when set. Catalog lessons are filtered by
+  `Chapter.grades` against the section's `gradeNumber`, with an `isEmpty`
+  branch so not-yet-grade-tagged chapters stay visible.
+- **`status` dropped as a create input** — every session is born `scheduled`;
+  a crafted payload could previously mint one already `live` (skipping room
+  provisioning + the concurrent cap) or `ended`. Completes the transition guard
+  added on update in the previous pass.
+- **Removed the dead duplicate** `getLiveClassFormData` (defined in
+  `list-actions.ts`, imported nowhere — the live copy is
+  `queries.getLiveClassFormOptions`), so the two can't drift apart now that one
+  is grade-scoped.
+- `SelectField` gained an optional `onValueChange` side-effect hook (additive,
+  used by the slot picker to fill the dependent fields).
+
+tsc 0 · conference 261/261 (12 new) · i18n + timetable suites green. The
+`bilingualField` hardcoded-ratchet failure is pre-existing drift in
+school-marketing/template files (untouched here).
+
+**Deliberately NOT built** (natural follow-up, needs its own decision): bulk
+auto-provisioning of rooms for every timetable slot — "turn the whole school
+online" in one click, with a recurrence policy.
+
 ### Production-readiness pass (2026-08-12)
 
 Full block + LiveKit + open-issues trace ("optimize and trace any gaps until

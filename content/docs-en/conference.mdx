@@ -141,7 +141,25 @@ on update. The wizard's References step loads its pickers per chosen subject
 
 The dashboard form is a 5-step compact wizard (`form.tsx` + `form-steps.tsx`) on the house
 stepped-modal pattern — **Basics → Schedule → Meeting → References → Access**, a handful of fields
-per step. The Meeting step picks the back-end: **In-app room** (LiveKit — default whenever
+per step.
+
+Basics opens with the **Class** picker: the school's real timetable slots for the active term
+("Mathematics · Grade 1-A · Sunday 08:00"). This is what makes a session the _online delivery of a
+physical class_ rather than a standalone meeting — picking a slot fills in the teacher, subject,
+section, the period's time window and the next date that weekday falls on, and stores the
+`timetableId`. That anchor is load-bearing: it is what lets the session **mark attendance** from who
+actually joins (the sync needs a section roster _and_ a period) and what makes the class show up as
+a live/scheduled dot on the weekly timetable grid. The server re-derives teacher/subject/section
+from the slot row, so the schedule — not the form — is the source of truth. Leave the picker on
+_"Not tied to a class"_ for assemblies, parent town halls and one-off tutorials. The anchor cannot
+be changed later (re-anchoring would re-key attendance that has already been written).
+
+The subject and lesson pickers follow the **catalog, scoped to the section's grade**: subjects are
+the ones this school adopted for that grade (shown under the school's own name for them), and
+catalog lessons come from that grade's chapters. Every session is created `scheduled`; going live
+and ending are separate, guarded steps.
+
+The Meeting step picks the back-end: **In-app room** (LiveKit — default whenever
 `isLiveKitConfigured()`, with recording + max-participants knobs) or **External link** (pasted
 Meet/Zoom/Teams URL + optional weekly-recurring default). Provider is immutable after creation;
 Join is provider-aware everywhere (table menu, detail page, and the room route hands external
