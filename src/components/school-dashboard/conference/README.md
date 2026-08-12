@@ -24,12 +24,13 @@ conference/
 ├── actions/                                                   rich sessions-layer server actions
 │   ├── helpers.ts        requireContext · canAccessSession · conferenceRevalidatePath
 │   ├── sessions.ts       lifecycle state machine (create/start/end/cancel/list/get + fromTimetable)
-│   ├── tokens.ts         joinLiveClass / refreshLiveClassToken (eligibility → 5-min JWT)
+│   ├── join-core.ts      shared eligibility + token mint (plain module — action AND refresh route)
+│   ├── tokens.ts         joinLiveClass (initial SSR join → 5-min JWT; refresh = GET route)
 │   ├── recordings.ts     list / signed-URL / delete
 │   ├── notifications.ts  5 live_class_* events → notification hub (in-app + email, not a server action)
 │   ├── attendance-sync.ts presence → Attendance (opt-in, LiveKit-only; not a server action)
 │   ├── settings.ts       school capacity knobs + recording opt-out + attendance-sync toggle
-│   ├── moderation.ts     kickParticipant (SFU evict + DB status="removed")
+│   ├── moderation.ts     kickParticipant (DB status="removed" first, then SFU evict)
 │   └── recurring.ts      carry-forward ConferenceLink across terms + listConferenceTerms
 ├── authorization.ts · permissions.ts · validation.ts         rich sessions layer (strict gate)
 ├── list-permissions.ts · list-validation.ts · list-params.ts list layer (CRUD gate)
@@ -38,7 +39,7 @@ conference/
 ├── recordings.tsx · recording-player.tsx                     recordings list · signed-URL player
 ├── settings-form.tsx · section-recording-policy.tsx          admin policy + per-section opt-out
 ├── network-test.tsx · network-protocol.ts                    LiveKit diagnostic + ICE-path classifier
-├── empty-state.tsx · loading-skeleton.tsx
+├── loading-skeleton.tsx
 ├── types.ts · error-map.ts                                   domain types · error-code → string
 ├── livekit/   client · token · rooms · egress · recording-urls · room-naming · webhook
 ├── providers/ types · external(live) · google-meet/zoom/teams(dark) · token-cache · index · README.md
@@ -63,12 +64,13 @@ The Prisma models are in `prisma/models/conference.prisma`.
 
 ## API
 
-| Path                               | Method | Purpose                                                               |
-| ---------------------------------- | ------ | --------------------------------------------------------------------- |
-| `/api/webhooks/livekit`            | POST   | LiveKit event ingestion (HMAC, idempotent)                            |
-| `/api/cron/live-class-reminders`   | GET    | 5–10-min start reminders (runs every 5 min)                           |
-| `/api/cron/end-stale-live-classes` | GET    | Close sessions stuck `live` past end + attendance sync (every 15 min) |
-| `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500)                           |
+| Path                               | Method | Purpose                                                                 |
+| ---------------------------------- | ------ | ----------------------------------------------------------------------- |
+| `/api/webhooks/livekit`            | POST   | LiveKit event ingestion (HMAC, idempotent)                              |
+| `/api/conference/token`            | GET    | In-room ~4-min token refresh (route handler, NOT an action — bell rule) |
+| `/api/cron/live-class-reminders`   | GET    | 5–20-min start reminders (every 15 min, idempotent window)              |
+| `/api/cron/end-stale-live-classes` | GET    | Close sessions stuck `live` past end + attendance sync (every 30 min)   |
+| `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500)                             |
 
 ## Status
 
@@ -89,7 +91,14 @@ The Prisma models are in `prisma/models/conference.prisma`.
 | Attendance-from-presence (opt-in)                 | ✅ live (DB applied); VIRTUAL visible in UI |
 | Native Meet/Zoom/Teams `createMeeting`            | 🟡 wired, dark until OAuth creds            |
 | LiveKit SFU rooms + Egress recording              | 🟡 coded, dormant until infra               |
-| Capacity dashboard (`/observability/conf.`)       | ⏸️ backlog                                  |
+| Capacity dashboard (`/observability/conference`)  | ✅ live (DEVELOPER-only)                    |
+
+Production-readiness pass 2026-08-12: school-timezone schedule storage, GET
+token-refresh route, list-layer status-transition guard, attendance-sync
+provider guard, recording delete/egress race closed, perPage clamp. The
+visibility/resources DDL is **verified applied in prod**; the only remaining
+gates for the LiveKit path are the six infra gates in `RUNBOOK.md` (no
+`LIVEKIT_*` env vars exist in the prod Vercel project yet).
 
 See `ISSUE.md` for the open backlog and `RUNBOOK.md` for the 6-gate LiveKit provisioning sequence.
 

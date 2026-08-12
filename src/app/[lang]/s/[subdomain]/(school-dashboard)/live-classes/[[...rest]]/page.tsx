@@ -5,14 +5,24 @@
 // Preserves any sub-path (`/live-classes/{id}/room` → `/conference/{id}/room`)
 // and query string so existing bookmarks keep working.
 
-import { redirect } from "next/navigation"
+import { permanentRedirect } from "next/navigation"
 
 interface Props {
   params: Promise<{ lang: string; rest?: string[] }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function LiveClassesRedirect({ params }: Props) {
-  const { lang, rest } = await params
+export default async function LiveClassesRedirect({
+  params,
+  searchParams,
+}: Props) {
+  const [{ lang, rest }, sp] = await Promise.all([params, searchParams])
   const sub = rest?.length ? `/${rest.join("/")}` : ""
-  redirect(`/${lang}/conference${sub}`)
+  const qs = new URLSearchParams()
+  for (const [key, value] of Object.entries(sp)) {
+    if (Array.isArray(value)) for (const v of value) qs.append(key, v)
+    else if (value !== undefined) qs.append(key, value)
+  }
+  const query = qs.size > 0 ? `?${qs.toString()}` : ""
+  permanentRedirect(`/${lang}/conference${sub}${query}`)
 }

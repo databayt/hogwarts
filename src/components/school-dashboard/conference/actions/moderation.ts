@@ -25,7 +25,7 @@ export async function kickParticipant(sessionId: string, userId: string) {
   if (!isLiveKitConfigured()) return actionError(ACTION_ERRORS.NOT_IMPLEMENTED)
 
   const session = await db.conference.findFirst({
-    where: { id: sessionId, schoolId: ctx.schoolId },
+    where: { id: sessionId, schoolId: ctx.schoolId, deletedAt: null },
     select: { roomName: true, teacherId: true },
   })
   if (!session) return actionError(ACTION_ERRORS.NOT_FOUND)
@@ -49,13 +49,19 @@ export async function kickParticipant(sessionId: string, userId: string) {
   })
   if (!participant) return actionError(ACTION_ERRORS.NOT_FOUND)
 
+  // DB first, SFU second. The `removed` row is what blocks a rejoin (join +
+  // token refresh both check it), so if the pair can only half-complete the
+  // safe half is the DB: a failed eviction leaves them in the room for at
+  // most the token TTL, whereas the old order (SFU first) could evict them
+  // yet leave the row active — free to rejoin, moderation defeated.
   try {
-    await removeParticipant(session.roomName, userId)
     await db.conferenceParticipant.updateMany({
       where: { sessionId, userId, schoolId: ctx.schoolId },
       data: { status: "removed", leftAt: new Date() },
     })
-  } catch {
+    await removeParticipant(session.roomName, userId)
+  } catch (err) {
+    console.error("[kickParticipant]", err)
     return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 

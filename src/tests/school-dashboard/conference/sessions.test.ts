@@ -26,6 +26,7 @@ vi.mock("@/lib/db", () => ({
     conference: {
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(async () => ({ count: 1 })),
       findFirst: vi.fn(),
       findMany: vi.fn(),
       count: vi.fn(),
@@ -439,8 +440,11 @@ describe("endLiveClass", () => {
     vi.mocked(endRoom).mockRejectedValueOnce(new Error("404"))
     const result = await endLiveClass({ id: SESSION_ID })
     expect("success" in result && result.success).toBe(true)
-    expect(db.conference.update).toHaveBeenCalledWith(
+    // Status-guarded write: only a still-live row is flipped, so a racing
+    // room_finished webhook keeps its earlier actualEnd.
+    expect(db.conference.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: expect.objectContaining({ status: "live" }),
         data: expect.objectContaining({ status: "ended" }),
       })
     )

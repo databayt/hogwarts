@@ -165,7 +165,7 @@ async function createLiveClassWithCtx(
     void notifyClassScheduled(ctx.schoolId, session.id)
 
     after(() => prewarm("Conference", session, { schoolId: ctx.schoolId }))
-    revalidatePath(conferenceRevalidatePath())
+    revalidatePath(conferenceRevalidatePath(), "page")
     return { success: true as const, data: session }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_CREATE_FAILED)
@@ -292,8 +292,8 @@ export async function cancelLiveClass(input: CancelInput) {
 
     void notifyClassCancelled(ctx.schoolId, session.id, parsed.data.reason)
 
-    revalidatePath(conferenceRevalidatePath())
-    revalidatePath(conferenceRevalidatePath(session.id))
+    revalidatePath(conferenceRevalidatePath(), "page")
+    revalidatePath(conferenceRevalidatePath(session.id), "page")
     return { success: true as const, data: { id: session.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_UPDATE_FAILED)
@@ -354,8 +354,8 @@ export async function startLiveClass(input: IdOnly) {
       data: { status: "live", actualStart: new Date() },
     })
 
-    revalidatePath(conferenceRevalidatePath())
-    revalidatePath(conferenceRevalidatePath(session.id))
+    revalidatePath(conferenceRevalidatePath(), "page")
+    revalidatePath(conferenceRevalidatePath(session.id), "page")
     return { success: true as const, data: { id: session.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_UPDATE_FAILED)
@@ -418,13 +418,15 @@ export async function endLiveClass(input: IdOnly) {
     } catch {
       // best-effort — the room may have already auto-closed
     }
-    await db.conference.update({
-      where: { id: session.id },
+    // Status-guarded so a webhook `room_finished` racing this action keeps its
+    // earlier actualEnd; count 0 just means the webhook won — still a success.
+    await db.conference.updateMany({
+      where: { id: session.id, schoolId: ctx.schoolId, status: "live" },
       data: { status: "ended", actualEnd: new Date() },
     })
 
-    revalidatePath(conferenceRevalidatePath())
-    revalidatePath(conferenceRevalidatePath(session.id))
+    revalidatePath(conferenceRevalidatePath(), "page")
+    revalidatePath(conferenceRevalidatePath(session.id), "page")
     return { success: true as const, data: { id: session.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_UPDATE_FAILED)

@@ -141,6 +141,10 @@ export async function concurrentCapError(
  * Path used by `revalidatePath` after a live-class mutation.
  * Includes `/s/[subdomain]` because revalidatePath references the
  * internal file-system route, not the client-facing URL.
+ *
+ * The returned path keeps its dynamic `[param]` segments, and Next ignores a
+ * bracketed path unless the `type` argument is passed — so every call site
+ * must be `revalidatePath(conferenceRevalidatePath(...), "page")`.
  */
 export function conferenceRevalidatePath(subPath = ""): string {
   const sub = subPath ? `/${subPath.replace(/^\//, "")}` : ""

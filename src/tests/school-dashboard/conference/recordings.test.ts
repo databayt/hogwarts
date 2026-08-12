@@ -18,6 +18,7 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       findFirst: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     conference: {
       findFirst: vi.fn(),
@@ -182,11 +183,24 @@ describe("deleteRecording", () => {
       s3Key: "k",
       s3Region: "me-central-1",
     } as never)
-    vi.mocked(db.conferenceRecording.update).mockResolvedValue({} as never)
+    vi.mocked(db.conferenceRecording.updateMany).mockResolvedValue({
+      count: 1,
+    } as never)
     const result = await deleteRecording("rec-1")
     expect("success" in result && result.success).toBe(true)
-    expect(db.conferenceRecording.update).toHaveBeenCalledWith(
+    // Only settled recordings are deletable — the lookup filters status so an
+    // in-flight egress can't be raced (its egress_ended would orphan the S3
+    // object), and the write stays tenant-scoped (updateMany {id, schoolId}).
+    expect(db.conferenceRecording.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: expect.objectContaining({
+          status: { in: ["ready", "failed", "expired"] },
+        }),
+      })
+    )
+    expect(db.conferenceRecording.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: "rec-1", schoolId: SCHOOL_ID }),
         data: expect.objectContaining({
           status: "expired",
           deletedAt: expect.any(Date),

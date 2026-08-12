@@ -13,6 +13,11 @@ import { db } from "@/lib/db"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
+import {
+  schoolCalendarDayOf,
+  schoolTimeStringOf,
+  schoolWallTimeToUtc,
+} from "@/lib/timezone"
 import { prewarm } from "@/components/translation/prewarm"
 import { detectLang, withLang } from "@/components/translation/util"
 
@@ -23,6 +28,7 @@ import {
 } from "./actions/notifications"
 import { canDeleteLiveClasses, canManageLiveClasses } from "./list-permissions"
 import {
+  getLiveClassesSchema,
   liveClassSchema,
   updateLiveClassSchema,
   type LiveClassFormData,
@@ -43,15 +49,25 @@ import {
 // Helpers
 // ============================================================================
 
+// School.timezone default — mirrors the Prisma column default.
+const DEFAULT_SCHOOL_TZ = "Africa/Khartoum"
+
 /**
- * Combine a date and an "HH:mm" time string into a single Date.
- * The date provides the day; the time string provides hours/minutes.
+ * Combine a picked calendar day and an "HH:mm" wall-clock time into the UTC
+ * instant they denote in the SCHOOL's timezone. Never combine with
+ * `setHours()` — that reads the server TZ (UTC on Vercel), which shifts every
+ * stored instant by the school's UTC offset (10:00 entered → 14:00 shown in
+ * Dubai) and breaks the reminder/live-now windows.
+ *
+ * The wizard sends the picked day as a browser-local-midnight Date; the day
+ * the user MEANT is that instant read in the school TZ (browser ≈ school TZ
+ * for school staff). Known edge: a browser far east of the school TZ
+ * submitting near midnight can land on the previous school day — accepted.
  */
-function combineDateAndTime(date: Date, time: string): Date {
+function combineDateAndTime(date: Date, time: string, timeZone: string): Date {
+  const { year, month, day } = schoolCalendarDayOf(date, timeZone)
   const [h, m] = time.split(":").map((n) => parseInt(n, 10))
-  const result = new Date(date)
-  result.setHours(h ?? 0, m ?? 0, 0, 0)
-  return result
+  return schoolWallTimeToUtc(timeZone, year, month, day, h ?? 0, m ?? 0)
 }
 
 /** Map the form's free-text provider label to a provider-adapter id. */
@@ -150,6 +166,14 @@ export async function getLiveClasses(params: {
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     if (!role) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
+    // Server actions are public endpoints — never feed raw client params into
+    // a query. The schema clamps perPage (≤200) and types page/title/status.
+    const parsedParams = getLiveClassesSchema.safeParse(params ?? {})
+    if (!parsedParams.success) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
+    const q = parsedParams.data
+
     // Role-scope rows: STUDENT/GUARDIAN only see their own section's sessions
     // (and never another section's meetingUrl); staff see the whole school.
     const scope = await resolveViewerSectionScope(
@@ -162,10 +186,10 @@ export async function getLiveClasses(params: {
     }
 
     const { rows, count } = await getLiveClassesList(schoolId, {
-      title: params.title,
-      status: params.status,
-      page: params.page,
-      perPage: params.perPage,
+      title: q.title,
+      status: q.status,
+      page: q.page,
+      perPage: q.perPage,
       sectionIds: scope === "all" ? undefined : scope.sectionIds,
     })
 
@@ -239,8 +263,10 @@ export async function getLiveClass(params: { id: string }): Promise<
     if (!liveClass) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     // Enrollment-level access: STUDENT/GUARDIAN may only read a session in a
-    // section they (or their ward) belong to. Return NOT_FOUND (not UNAUTHORIZED)
-    // so the existence of other sections' sessions isn't revealed.
+    // section they (or their ward) belong to — or any school-wide session
+    // (`visibility: school`), mirroring buildLiveClassWhere's list OR. Return
+    // NOT_FOUND (not UNAUTHORIZED) so the existence of other sections'
+    // sessions isn't revealed.
     const scope = await resolveViewerSectionScope(
       schoolId,
       session.user.id,
@@ -249,6 +275,7 @@ export async function getLiveClass(params: { id: string }): Promise<
     if (
       scope === "none" ||
       (scope !== "all" &&
+        liveClass.visibility !== "school" &&
         (!liveClass.sectionId ||
           !scope.sectionIds.includes(liveClass.sectionId)))
     ) {
@@ -428,6 +455,7 @@ export async function createLiveClass(
         select: {
           conferenceRecordingDefault: true,
           conferenceMaxDuration: true,
+          timezone: true,
         },
       }),
       d.sectionId
@@ -446,8 +474,13 @@ export async function createLiveClass(
         : (schoolCfg?.conferenceRecordingDefault ?? true)) &&
       !(sectionCfg?.conferenceRecordingOptOut ?? false)
 
-    const scheduledStart = combineDateAndTime(d.startDate, d.startTime)
-    const scheduledEnd = combineDateAndTime(d.endDate, d.endTime)
+    const schoolTz = schoolCfg?.timezone || DEFAULT_SCHOOL_TZ
+    const scheduledStart = combineDateAndTime(
+      d.startDate,
+      d.startTime,
+      schoolTz
+    )
+    const scheduledEnd = combineDateAndTime(d.endDate, d.endTime, schoolTz)
 
     // In-app rooms hold an SFU slot — enforce the per-school duration cap
     // (external links are just calendar entries; no resource to cap).
@@ -655,8 +688,8 @@ export async function createLiveClass(
     // never fail the create.
     void notifyClassScheduled(schoolId, created.id)
 
-    revalidatePath(conferenceRevalidatePath())
-    revalidatePath("/[lang]/s/[subdomain]/timetable")
+    revalidatePath(conferenceRevalidatePath(), "page")
+    revalidatePath("/[lang]/s/[subdomain]/timetable", "page")
     return { success: true, data: { id: created.id } }
   } catch (error) {
     console.error("[createLiveClass]", error)
@@ -693,6 +726,28 @@ export async function updateLiveClass(
       if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
     }
 
+    // The existing row anchors the status-transition guard, the schedule
+    // recompute, and the change-detection for notifications; the school row
+    // supplies the timezone the schedule fields are expressed in.
+    const [existing, schoolRow] = await Promise.all([
+      db.conference.findFirst({
+        where: { id: d.id, schoolId, deletedAt: null },
+        select: {
+          status: true,
+          provider: true,
+          actualEnd: true,
+          scheduledStart: true,
+          scheduledEnd: true,
+        },
+      }),
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { timezone: true },
+      }),
+    ])
+    if (!existing) return actionError(ACTION_ERRORS.NOT_FOUND)
+    const schoolTz = schoolRow?.timezone || DEFAULT_SCHOOL_TZ
+
     // Build the update payload only from provided fields. Typed `any` (matching
     // the announcements pattern) so FK scalars (teacherId/subjectId/sectionId)
     // can be set directly on the unchecked updateMany input.
@@ -711,7 +766,27 @@ export async function updateLiveClass(
     if (d.meetingUrl !== undefined) updateData.meetingUrl = d.meetingUrl
     if (d.meetingProvider !== undefined)
       updateData.meetingProvider = d.meetingProvider || null
-    if (d.status !== undefined) updateData.status = d.status
+    if (d.status !== undefined && d.status !== existing.status) {
+      // The list layer is a CRUD surface, not the room lifecycle: it may
+      // close or cancel, never resurrect an ended/cancelled session or flip
+      // one to `live` (that path belongs to startLiveClass/the webhook, which
+      // enforce the SFU room + concurrent cap). `live → ended` is allowed for
+      // external links only — a LiveKit room must end via endLiveClass so the
+      // SFU room and egress are torn down with it.
+      const allowedTransition =
+        (existing.status === "scheduled" &&
+          (d.status === "cancelled" || d.status === "ended")) ||
+        (existing.status === "live" &&
+          d.status === "ended" &&
+          existing.provider === "external")
+      if (!allowedTransition) {
+        return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
+      }
+      updateData.status = d.status
+      if (d.status === "ended" && !existing.actualEnd) {
+        updateData.actualEnd = new Date()
+      }
+    }
     if (d.visibility !== undefined) updateData.visibility = d.visibility
     if (d.recordingEnabled !== undefined)
       updateData.recordingEnabled = d.recordingEnabled
@@ -731,28 +806,26 @@ export async function updateLiveClass(
       if (!verifiedRefs.ok) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    // Recompute schedule when date or time changed. Need both date+time for a
-    // boundary; load the existing row if only one half changed.
+    // Recompute schedule when date or time changed (school-TZ combine, same
+    // as create). Missing halves fall back to the existing boundary read in
+    // the school's timezone — never the server's.
     const needsStart = d.startDate !== undefined || d.startTime !== undefined
     const needsEnd = d.endDate !== undefined || d.endTime !== undefined
-    if (needsStart || needsEnd) {
-      const existing = await db.conference.findFirst({
-        where: { id: d.id, schoolId, deletedAt: null },
-        select: { scheduledStart: true, scheduledEnd: true },
-      })
-      if (!existing) return actionError(ACTION_ERRORS.NOT_FOUND)
-
-      if (needsStart) {
-        const baseDate = d.startDate ?? existing.scheduledStart
-        const baseTime =
-          d.startTime ?? formatTimeFromDate(existing.scheduledStart)
-        updateData.scheduledStart = combineDateAndTime(baseDate, baseTime)
-      }
-      if (needsEnd) {
-        const baseDate = d.endDate ?? existing.scheduledEnd
-        const baseTime = d.endTime ?? formatTimeFromDate(existing.scheduledEnd)
-        updateData.scheduledEnd = combineDateAndTime(baseDate, baseTime)
-      }
+    if (needsStart) {
+      const baseDate = d.startDate ?? existing.scheduledStart
+      const baseTime =
+        d.startTime ?? schoolTimeStringOf(existing.scheduledStart, schoolTz)
+      updateData.scheduledStart = combineDateAndTime(
+        baseDate,
+        baseTime,
+        schoolTz
+      )
+    }
+    if (needsEnd) {
+      const baseDate = d.endDate ?? existing.scheduledEnd
+      const baseTime =
+        d.endTime ?? schoolTimeStringOf(existing.scheduledEnd, schoolTz)
+      updateData.scheduledEnd = combineDateAndTime(baseDate, baseTime, schoolTz)
     }
 
     // Tenant-safe scoped write: updateMany with {id, schoolId}.
@@ -783,17 +856,25 @@ export async function updateLiveClass(
       )
     }
 
-    // Re-notify enrolled students/guardians when the class moved or its status
-    // changed. A status flip to "cancelled" sends the cancel notice; any other
-    // schedule/status change re-sends the scheduled notice (carrying the new
-    // time). Best-effort — never fail the update.
-    if (d.status === "cancelled") {
+    // Re-notify enrolled students/guardians ONLY when something they care
+    // about actually changed: a flip to "cancelled" sends the cancel notice;
+    // a moved boundary re-sends the scheduled notice (carrying the new time).
+    // The edit form always submits the schedule fields, so compare computed
+    // instants against the row — a title typo fix must not ping the roster.
+    // Best-effort — never fail the update.
+    const startMoved =
+      updateData.scheduledStart instanceof Date &&
+      updateData.scheduledStart.getTime() !== existing.scheduledStart.getTime()
+    const endMoved =
+      updateData.scheduledEnd instanceof Date &&
+      updateData.scheduledEnd.getTime() !== existing.scheduledEnd.getTime()
+    if (updateData.status === "cancelled") {
       void notifyClassCancelled(schoolId, d.id)
-    } else if (needsStart || needsEnd || d.status !== undefined) {
+    } else if (startMoved || endMoved) {
       void notifyClassScheduled(schoolId, d.id)
     }
 
-    revalidatePath(conferenceRevalidatePath())
+    revalidatePath(conferenceRevalidatePath(), "page")
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateLiveClass]", error)
@@ -827,17 +908,10 @@ export async function deleteLiveClass(params: {
     // {id, schoolId} without a deletedAt filter, so it still works post-delete.
     void notifyClassCancelled(schoolId, params.id)
 
-    revalidatePath(conferenceRevalidatePath())
+    revalidatePath(conferenceRevalidatePath(), "page")
     return { success: true, data: null }
   } catch (error) {
     console.error("[deleteLiveClass]", error)
     return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
-}
-
-/** Format a Date into an "HH:mm" string. */
-function formatTimeFromDate(date: Date): string {
-  const h = String(date.getHours()).padStart(2, "0")
-  const m = String(date.getMinutes()).padStart(2, "0")
-  return `${h}:${m}`
 }

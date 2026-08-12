@@ -13,7 +13,7 @@ real meetings via each vendor's API but ship dark until OAuth credentials land.
 
 <ConferenceStructure />
 
-Routes mirror this block (see [Routes](#routes)). The 4 Prisma models + 1 recurring-link model live
+Routes mirror this block (see [Routes](#routes)). The 6 Prisma models live
 in `prisma/models/conference.prisma`. Tests live under `src/tests/` (URL-mirror reorg), not in a
 `__tests__/` folder inside the block.
 
@@ -50,7 +50,7 @@ detail (/conference/[id])      detail.tsx → Join (live/scheduled) | Recordings
    └─ Join
 room  (/conference/[id]/room)  joinLiveClass → eligibility → 5-min JWT → room.tsx (LiveKit prebuilt)
                                               ↑ refreshLiveClassToken every ~60s re-runs eligibility
-recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S3 URL, re-signed/4min)
+recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S3 URL, 4h; re-mints on expiry via onError)
 ```
 
 - **Session state machine** (`actions/sessions.ts`): `scheduled → live → ended`, plus `cancelled`
@@ -88,9 +88,11 @@ recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S
 
 The room route lives under a separate **`(live-room)`** group with a bare full-viewport layout (no
 sidebar / dashboard chrome) so the SFU stream owns the screen; it is `force-dynamic` for OOM-safe
-builds. API (external / scheduler-invoked → stay routes, not server actions): `api/webhooks/livekit`
-(HMAC), `api/cron/live-class-reminders` (every 5 min), `api/cron/end-stale-live-classes` (every 15 min
-— closes sessions stuck `live` past their end + runs the attendance sync), `api/cron/expire-live-recordings` (daily).
+builds. API (external / scheduler-invoked / polled → stay routes, not server actions): `api/webhooks/livekit`
+(HMAC), `api/conference/token` (the in-room ~4-min token refresh — a GET route because a server-action
+poll would ship a full RSC re-render per response), `api/cron/live-class-reminders` (every 15 min,
+5–20-min idempotent window), `api/cron/end-stale-live-classes` (every 30 min — closes sessions stuck
+`live` past their end + runs the attendance sync), `api/cron/expire-live-recordings` (daily).
 
 ## Schema — `prisma/models/conference.prisma`
 

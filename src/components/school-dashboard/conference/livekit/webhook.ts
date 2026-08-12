@@ -282,9 +282,18 @@ export async function handleWebhookEvent(
         // Only mark "ready" when egress actually produced an object key —
         // otherwise getRecordingUrl would sign a URL against an empty s3Key.
         // No file → keep prior status (processing) + record metadata only.
+        // Guarded to in-flight rows only: a late/retried egress_ended must
+        // never resurrect a row an admin already deleted (deletedAt set,
+        // status "expired") — that would leave an invisible "ready" row whose
+        // S3 object the retention cron can never purge.
         const hasFile = filename.length > 0
-        await db.conferenceRecording.updateMany({
-          where: { egressId, schoolId },
+        const { count } = await db.conferenceRecording.updateMany({
+          where: {
+            egressId,
+            schoolId,
+            deletedAt: null,
+            status: { in: ["pending", "processing"] },
+          },
           data: {
             ...(hasFile ? { status: "ready", s3Key: filename, expiresAt } : {}),
             completedAt: new Date(),
@@ -292,8 +301,9 @@ export async function handleWebhookEvent(
             durationSeconds: duration,
           },
         })
-        // Only announce a playable recording when one actually exists.
-        if (hasFile) {
+        // Only announce a playable recording when one actually exists AND the
+        // row transitioned here (a guarded no-op must not re-notify).
+        if (hasFile && count > 0) {
           void notifyClassRecordingReady(schoolId, sessionId)
         }
       }

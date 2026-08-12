@@ -76,12 +76,20 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   schools and the webhook handler recovers `schoolId` from the room name
   alone via `parseRoomName()` (`livekit/room-naming.ts`).
 - **Token TTL is 5 minutes** with client-side refresh ~60s before expiry
-  (see `room.tsx`). Refresh re-runs the eligibility check, so
-  revoked access takes effect at the **next refresh boundary** — revocation
-  latency = TTL (≤5 min), NOT instant. LiveKit JWTs are stateless; there is
-  no server-side invalidation of an already-issued token (no `removeParticipant`
-  is wired to access-revoke). `tokenIssuedAt` is reserved for future instant
-  revocation but is not yet read.
+  (see `room.tsx`). The refresh polls **`GET /api/conference/token`** — a
+  route handler, NEVER a server action (auth() rotates the session cookie in
+  action requests → every action-based poll ships a full RSC page re-render;
+  the notifications-bell rule). The shared logic lives in
+  `actions/join-core.ts` (plain `server-only` module): the `joinLiveClass`
+  action (initial SSR join, may auto-start as HOST) and the route (refresh
+  only, `allowAutoStart: false`) both call it. Refresh re-runs the
+  eligibility check, so revoked access takes effect at the **next refresh
+  boundary** — revocation latency = TTL (≤5 min), NOT instant. The client
+  treats deny codes as immediate ejects and transient failures as quiet
+  retries (3× 20s) — an established WebRTC session outlives its token; the
+  fresh token only matters for reconnects. LiveKit JWTs are stateless; there
+  is no server-side invalidation of an already-issued token.
+  `tokenIssuedAt` is reserved for future instant revocation but is not yet read.
 - **Role → LiveKit grants** mapping is in `livekit/token.ts`:
   HOST = full + roomAdmin, CO_HOST = publish + subscribe, PARTICIPANT
   = publish + subscribe, OBSERVER = subscribe only.
@@ -128,6 +136,30 @@ createLiveClass` branches on `provider` — `livekit` mirrors
 
 ## Danger Zones
 
+- **Schedule instants combine in the SCHOOL timezone**: the wizard sends
+  `startDate` (browser-midnight Date) + `"HH:mm"`; `list-actions.ts` combines
+  them with the precise helpers in `src/lib/timezone.ts`
+  (`schoolWallTimeToUtc` / `schoolCalendarDayOf` / `schoolTimeStringOf`)
+  using `School.timezone`. NEVER combine with `setHours()`/`getHours()` —
+  that reads the server TZ (UTC on Vercel) and shifts every stored instant
+  by the school's UTC offset, breaking reminders and live-now windows.
+- **List-layer status writes are transition-guarded**: `updateLiveClass`
+  allows no-change, `scheduled → cancelled|ended`, and `live → ended` for
+  EXTERNAL sessions only. `→ live` belongs to `startLiveClass`/the webhook
+  (room + concurrent cap); a LiveKit `live → ended` must go through
+  `endLiveClass` (stops egress, tears down the room). Everything else is
+  `LIVE_CLASS_INVALID_STATE` — never let a CRUD surface resurrect rows.
+- **Attendance sync is provider-guarded**: `syncConferenceAttendance` skips
+  `provider !== "livekit"` — an external session has NO participant rows, so
+  syncing one marks the entire roster ABSENT. Keep the guard even though
+  external sessions "shouldn't" reach `ended` via the cron.
+- **`revalidatePath` needs `"page"`**: `conferenceRevalidatePath()` returns a
+  bracketed dynamic path, which Next silently ignores without the second
+  argument. Every call site is `revalidatePath(conferenceRevalidatePath(…), "page")`.
+- **Recording deletes only settle**: `deleteRecording` filters
+  `status in [ready, failed, expired]`, and the webhook's `egress_ended`
+  write is guarded (`deletedAt: null` + in-flight status, notify on count>0)
+  — a late egress retry must never resurrect an admin-deleted row.
 - **Tenant leak**: every read/write MUST filter by `schoolId` resolved
   from `getTenantContext()` — never from client input. `getLiveClass`
   in `actions/sessions.ts` resolves `schoolId` by trying dashboard,

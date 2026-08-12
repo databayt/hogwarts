@@ -21,7 +21,7 @@ vi.mock("@/lib/db", () => ({
     school: { findUnique: vi.fn(), update: vi.fn() },
     conference: { findFirst: vi.fn() },
     conferenceParticipant: { findFirst: vi.fn(), updateMany: vi.fn() },
-    conferenceLink: { findMany: vi.fn(), create: vi.fn() },
+    conferenceLink: { findMany: vi.fn(), createMany: vi.fn() },
     teacher: { findFirst: vi.fn() },
     term: { findFirst: vi.fn() },
   },
@@ -152,17 +152,21 @@ describe("carryForwardConferenceLinks", () => {
         },
       ] as never) // source (fromTerm)
       .mockResolvedValueOnce([{ subjectId: "su1", sectionId: "se1" }] as never) // existing (toTerm)
-    vi.mocked(db.conferenceLink.create).mockResolvedValue({} as never)
+    vi.mocked(db.conferenceLink.createMany).mockResolvedValue({
+      count: 1,
+    } as never)
 
     const res = await carryForwardConferenceLinks("term-1", "term-2")
     expect("success" in res && res.success).toBe(true)
     if ("success" in res && res.success) {
       expect(res.data.created).toBe(1) // only su2/se2 (su1/se1 already exists)
     }
-    expect(db.conferenceLink.create).toHaveBeenCalledTimes(1)
-    expect(db.conferenceLink.create).toHaveBeenCalledWith(
+    // One batched insert; skipDuplicates absorbs the concurrent-create race.
+    expect(db.conferenceLink.createMany).toHaveBeenCalledTimes(1)
+    expect(db.conferenceLink.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ subjectId: "su2", termId: "term-2" }),
+        data: [expect.objectContaining({ subjectId: "su2", termId: "term-2" })],
+        skipDuplicates: true,
       })
     )
   })

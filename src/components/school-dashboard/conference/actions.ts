@@ -13,7 +13,7 @@ export {
   startLiveClass,
 } from "./actions/sessions"
 
-export { joinLiveClass, refreshLiveClassToken } from "./actions/tokens"
+export { joinLiveClass } from "./actions/tokens"
 
 export {
   deleteRecording,

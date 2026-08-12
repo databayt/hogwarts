@@ -1,8 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 //
-// Cron: every 15 minutes — closes conference sessions stuck in `live` long
-// past their scheduled end. A LiveKit `room_finished` webhook normally ends a
+// Cron: every 30 minutes (vercel.json `*/30`) — closes conference sessions
+// stuck in `live` long past their scheduled end. A LiveKit `room_finished` webhook normally ends a
 // session, but if it's never delivered (SFU restart, network blip) the row
 // would stay `live` forever and its attendance would never sync. This is the
 // backstop: flip those to `ended` (status-guarded so a concurrent webhook can't

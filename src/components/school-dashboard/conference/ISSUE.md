@@ -4,6 +4,24 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Post-deploy verification (next deploy)
+
+- [ ] `GET /api/conference/token?sessionId=…` resolves tenant context on a
+      tenant host (same class as the bell route — BOTH GET routes are local,
+      neither has run in prod yet; verify alongside the bell check).
+
+## P3 — Hygiene (non-blocking, noted 2026-08-12)
+
+- [ ] Route files hardcode their `ALLOWED_ROLES` arrays instead of importing
+      `PERMISSION_MATRIX` from `authorization.ts` (6 files; verified in-sync
+      today — duplication only bites on the next matrix edit).
+- [ ] Dropdown/option queries are unbounded (`getLiveClassFormOptions`,
+      `listSectionRecordingPolicy`) — realistic school sizes bound them.
+- [ ] Zoom/Teams `createMeeting` carry no idempotency key (Google Meet does);
+      both adapters are dark until OAuth creds land.
+- [ ] `content.tsx` / `recordings.tsx` render a load failure as an empty list
+      (logged server-side, invisible to the user).
+
 ## P0 — Pre-signature gates (Aldar)
 
 > **All P0 items below are INFRA / OPS, not code** — provisioning + credentials +
@@ -111,6 +129,77 @@
 
 ## Done
 
+### Production-readiness pass (2026-08-12)
+
+Full block + LiveKit + open-issues trace ("optimize and trace any gaps until
+production ready"). Ground truth first: prod DB has ALL conference DDL applied
+(visibility/resources/attendance-sync/VIRTUAL — the July "deploy gate" was
+stale), prod has ZERO `LIVEKIT_*` env vars (SFU dormant by design), 0 sessions
+created yet. tsc 0 · **269/269** conference-area tests green (25 new/updated).
+
+- **School-timezone schedule storage (P1, live path):** the wizard combined
+  date+time via `setHours()` — the SERVER's timezone (UTC on Vercel), so
+  10:00 entered in Dubai stored 10:00Z and displayed 14:00; reminder and
+  live-now windows shifted with it. New precise Intl-based helpers in
+  `src/lib/timezone.ts` (`schoolWallTimeToUtc` / `schoolCalendarDayOf` /
+  `schoolTimeStringOf`, server-TZ-independent, DST-aware); create + update
+  combine in `School.timezone`. The rich schedule-form path (client-side
+  combine) was already correct.
+- **Token refresh off server actions (org-wide bell rule):** the in-room
+  ~4-min refresh was a server action — auth() rotates the session cookie in
+  action requests, so EVERY refresh shipped a full RSC re-render (~1MB ×
+  participant × 4 min; a 30-student lesson ≈ 330MB of pointless payload).
+  Join logic extracted to `actions/join-core.ts` (plain module), new
+  `GET /api/conference/token` (refresh-only semantics: `allowAutoStart:
+false`), `room.tsx` polls it via fetch. Refresh failures now discriminate:
+  deny verdicts eject immediately; transient errors retry 3× (20s apart)
+  instead of tearing down a WORKING call on one blip.
+- **List-layer status machine (P1):** `updateLiveClass.status` was a free
+  field — could resurrect ended/cancelled rows or flip anything `live`
+  (bypassing room + cap), and a fabricated live external session ending via
+  the stale-cron would have attendance-marked a whole roster ABSENT. Now:
+  no-change always OK; `scheduled → cancelled|ended`; `live → ended` external
+  only (LiveKit must go through `endLiveClass` for room/egress teardown);
+  everything else `LIVE_CLASS_INVALID_STATE`; `actualEnd` stamped on end.
+  **Defense in depth:** `syncConferenceAttendance` now hard-guards
+  `provider === "livekit"` (its "no-op for external" comment was wrong — an
+  external session has NO participant rows, so a sync = all-ABSENT).
+- **Unbounded perPage (HIGH):** `?perPage=999999999` reached Prisma `take`
+  unclamped from the URL (list-params has no bound; the capped schema was
+  dead code). Clamped at the choke point (`buildPagination`, ≤200) + the
+  schema now actually parses `getLiveClasses` params.
+- **Recording delete/egress race:** deletes now allowed only for settled
+  recordings (`ready|failed|expired`); webhook `egress_ended` write is
+  guarded (`deletedAt: null`, status in-flight, notify only on count>0) — a
+  late retry can no longer resurrect an admin-deleted row into an invisible
+  "ready" orphan. `listRecordings` stops shipping S3 bucket/key/egressId to
+  the client (display fields only). Playback URLs signed for a 4h session —
+  the old 5-min TTL + 4-min `src` swap reset playback to 0:00 mid-watch and
+  its one-shot refresh chain died permanently on first failure (error path
+  was unreachable); expiry now surfaces via the video `onError` → Play again.
+- **revalidatePath was a structural no-op** at all 14 call sites — bracketed
+  dynamic paths are ignored without the `type` arg; all now pass `"page"`.
+- **School-wide visibility in the list layer:** list `getLiveClass` denied
+  assemblies to students/guardians (only the WHERE honored
+  `visibility: school`); scope now also treats a member-with-no-section as
+  an empty scope (assemblies still reach them) instead of "none".
+- **Notification spam:** every edit re-sent "class scheduled" to the roster
+  (the form always submits schedule fields) — now only an actually-moved
+  boundary or a real cancel notifies.
+- **Moderation ordering:** kick writes DB `removed` BEFORE the SFU evict —
+  the old order could evict-then-fail and leave the row active (instant
+  rejoin, moderation defeated). Failure mode now bounded by token TTL.
+- Smaller: `carryForwardConferenceLinks` → one `createMany({skipDuplicates})`
+  (real failures no longer mislabeled "skipped"); catalog lesson links on the
+  detail page scheme-locked at render (`javascript:`/`data:` from weaker
+  sibling schemas render as text); legacy `/live-classes/*` redirect is now
+  `permanentRedirect` (308) and preserves the query string; orphaned
+  `empty-state.tsx` deleted; `endLiveClass` final write status-guarded;
+  moderation lookup filters `deletedAt`; silent catches now log;
+  `absence_unreported_followup` email labels added (sibling drift the block
+  CLAUDE.md warns about); cron cadence doc drift fixed (reminders _/15,
+  end-stale _/30) in README/docs/route comment.
+
 ### LiveKit-first production pass (2026-07-12)
 
 Made the block LiveKit-first end-to-end, added private/public room control,
@@ -179,9 +268,12 @@ once space frees (options: approve a one-time >90d delivery-log prune, or
 the planned account#1 toggle-back). Until applied, `/conference` reads that
 select the new columns will fail — deploy after DDL.
 
-- [ ] **Apply staged visibility/resources DDL** (blocked on Neon space —
-      see above; the June-20 attendance-sync DDL is confirmed LIVE, the
-      "deploy-pending" note in the 2026-06-20 entry below is stale).
+- [x] **Apply staged visibility/resources DDL** — **verified applied in prod
+      2026-08-12** (information_schema check: `visibility` +
+      `catalogLessonId` columns, `live_class_resources` table, FKs/indexes
+      all present; `LiveClassVisibility` enum = section,school). The staged
+      copy at `scratchpad/conference_visibility_resources_ddl.sql` is now
+      historical. The June-20 attendance-sync DDL is likewise confirmed LIVE.
 
 ### Integration optimization pass (2026-06-20)
 

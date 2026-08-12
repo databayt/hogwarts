@@ -37,6 +37,7 @@ const LATE = new Date("2026-06-19T08:20:00.000Z") // past the 10-min grace
 function happySession() {
   mockDb.conference.findFirst.mockResolvedValue({
     id: "c1",
+    provider: "livekit",
     sectionId: "sec1",
     timetableId: "tt1",
     scheduledStart: START,
@@ -88,9 +89,26 @@ describe("syncConferenceAttendance", () => {
     expect(mockDb.student.findMany).not.toHaveBeenCalled()
   })
 
+  it("skips external sessions — no presence telemetry, roster must NOT be marked absent", async () => {
+    mockDb.conference.findFirst.mockResolvedValue({
+      id: "c1",
+      provider: "external",
+      sectionId: "sec1",
+      timetableId: "tt1",
+      scheduledStart: START,
+      actualStart: null,
+      school: { conferenceAttendanceSync: true },
+    })
+    const res = await syncConferenceAttendance("school1", "c1")
+    expect(res.skipped).toBe("external_provider")
+    expect(mockDb.student.findMany).not.toHaveBeenCalled()
+    expect(mockDb.attendance.createMany).not.toHaveBeenCalled()
+  })
+
   it("skips ad-hoc sessions with no section or timetable", async () => {
     mockDb.conference.findFirst.mockResolvedValue({
       id: "c1",
+      provider: "livekit",
       sectionId: null,
       timetableId: "tt1",
       scheduledStart: START,
@@ -104,6 +122,7 @@ describe("syncConferenceAttendance", () => {
   it("skips when the section has no students", async () => {
     mockDb.conference.findFirst.mockResolvedValue({
       id: "c1",
+      provider: "livekit",
       sectionId: "sec1",
       timetableId: "tt1",
       scheduledStart: START,
@@ -175,6 +194,7 @@ describe("syncConferenceAttendance", () => {
     // Room actually started at 08:15 — uB's 08:20 join is now within grace.
     mockDb.conference.findFirst.mockResolvedValue({
       id: "c1",
+      provider: "livekit",
       sectionId: "sec1",
       timetableId: "tt1",
       scheduledStart: START,

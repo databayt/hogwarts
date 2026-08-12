@@ -58,6 +58,11 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
               description: "lifecycle state machine",
             },
             {
+              name: "join-core.ts",
+              type: "file",
+              description: "shared eligibility + token mint (action + route)",
+            },
+            {
               name: "tokens.ts",
               type: "file",
               description: "join → 5-min JWT",
@@ -174,7 +179,6 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
           type: "file",
           description: "LiveKit RTT/ICE diagnostic",
         },
-        { name: "empty-state.tsx", type: "file", description: "empty state" },
         {
           name: "loading-skeleton.tsx",
           type: "file",

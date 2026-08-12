@@ -49,7 +49,7 @@ export async function updateConferenceSettings(input: unknown) {
     return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 
-  revalidatePath(conferenceRevalidatePath("settings"))
+  revalidatePath(conferenceRevalidatePath("settings"), "page")
   return { success: true as const, data: parsed.data }
 }
 
@@ -80,6 +80,6 @@ export async function setSectionRecordingOptOut(
   })
   if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-  revalidatePath(conferenceRevalidatePath("settings"))
+  revalidatePath(conferenceRevalidatePath("settings"), "page")
   return { success: true as const, data: { sectionId, optOut } }
 }

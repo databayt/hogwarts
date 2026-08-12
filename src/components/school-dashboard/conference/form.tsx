@@ -180,7 +180,6 @@ export function LiveClassForm({
         active = false
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, itemId, form])
 
   /** Compose the resources array from the three UI pickers. */

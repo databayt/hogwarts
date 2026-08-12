@@ -34,16 +34,32 @@ export async function listRecordings(sessionId: string) {
     if (!(await canAccessSession(ctx, session.sectionId, session.visibility))) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+    // Display fields only — never ship the S3 layout (bucket/key/region) or
+    // egressId to the client; playback goes through getRecordingUrl's
+    // short-lived signed URL, which those internals would undermine.
     const recordings = await db.conferenceRecording.findMany({
       where: {
         schoolId: ctx.schoolId,
         sessionId,
         deletedAt: null,
       },
+      select: {
+        id: true,
+        sessionId: true,
+        status: true,
+        durationSeconds: true,
+        fileSizeBytes: true,
+        mimeType: true,
+        startedAt: true,
+        completedAt: true,
+        expiresAt: true,
+        createdAt: true,
+      },
       orderBy: { createdAt: "desc" },
     })
     return { success: true as const, data: recordings }
-  } catch {
+  } catch (err) {
+    console.error("[listRecordings]", err)
     return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
@@ -85,9 +101,14 @@ export async function getRecordingUrl(recordingId: string) {
     ) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_NOT_FOUND)
     }
-    const url = await getRecordingPlaybackUrl(recording, 300)
+    // Signed for a full viewing session: a mid-playback URL swap reloads the
+    // <video> element and resets it to 0:00, so the TTL must outlast the
+    // longest realistic sitting rather than lean on client-side refresh. The
+    // player re-requests on the video element's error event after expiry.
+    const url = await getRecordingPlaybackUrl(recording, 4 * 3600)
     return { success: true as const, data: { url } }
-  } catch {
+  } catch (err) {
+    console.error("[getRecordingUrl]", err)
     return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_FAILED)
   }
 }
@@ -99,10 +120,15 @@ export async function deleteRecording(recordingId: string) {
   const ctx = await requireContext("delete_recording")
   if (!ctx.ok) return ctx.response
   try {
+    // Only settled recordings are deletable. While egress is in flight
+    // (pending/processing) the S3 object doesn't exist yet — deleting the row
+    // now would race the SFU's egress_ended write and orphan the upload. End
+    // the class (which stops egress) and delete once it settles.
     const recording = await db.conferenceRecording.findFirst({
       where: {
         id: recordingId,
         schoolId: ctx.schoolId,
+        status: { in: ["ready", "failed", "expired"] },
         deletedAt: null,
       },
       select: {
@@ -121,15 +147,17 @@ export async function deleteRecording(recordingId: string) {
       // Don't mark the row deleted while the S3 object still exists.
       return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_FAILED)
     }
-    await db.conferenceRecording.update({
-      where: { id: recording.id },
+    await db.conferenceRecording.updateMany({
+      where: { id: recording.id, schoolId: ctx.schoolId },
       data: { status: "expired", deletedAt: new Date() },
     })
     revalidatePath(
-      conferenceRevalidatePath(`${recording.sessionId}/recordings`)
+      conferenceRevalidatePath(`${recording.sessionId}/recordings`),
+      "page"
     )
     return { success: true as const, data: { id: recording.id } }
-  } catch {
+  } catch (err) {
+    console.error("[deleteRecording]", err)
     return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_FAILED)
   }
 }

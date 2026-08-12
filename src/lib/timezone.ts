@@ -357,3 +357,76 @@ export const {
   isSupportedTimezone,
   getSupportedTimezones,
 } = TimezoneHelper
+
+// ---------------------------------------------------------------------------
+// Precise wall-time ⇄ instant conversions (Intl-based, server-TZ independent)
+//
+// Unlike TimezoneHelper.createSchoolDateTime (hardcoded base offsets + a
+// server-local `new Date(string)` parse), these derive the zone offset from
+// Intl.DateTimeFormat, so they return the same instant on any server TZ and
+// honor DST where the zone has it. Exact for fixed-offset zones (all Gulf /
+// Sudan markets); within one iteration for DST zones.
+// ---------------------------------------------------------------------------
+
+/** The wall clock that `instantMs` shows in `timeZone`, as a Date.UTC ms value. */
+function wallClockOfInstant(instantMs: number, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(instantMs))
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0)
+  const hour = get("hour")
+  return Date.UTC(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    hour === 24 ? 0 : hour, // some ICU builds render midnight as "24"
+    get("minute"),
+    get("second")
+  )
+}
+
+/**
+ * Convert a wall-clock time in a named IANA zone to the UTC instant it
+ * denotes: 10:00 Asia/Dubai → 06:00Z regardless of the server's own TZ.
+ */
+export function schoolWallTimeToUtc(
+  timeZone: string,
+  year: number,
+  month: number, // 1-based
+  day: number,
+  hour: number,
+  minute: number
+): Date {
+  const guess = Date.UTC(year, month - 1, day, hour, minute, 0, 0)
+  const shown = wallClockOfInstant(guess, timeZone)
+  return new Date(guess - (shown - guess))
+}
+
+/** The calendar day an instant falls on in `timeZone` (1-based month). */
+export function schoolCalendarDayOf(
+  instant: Date,
+  timeZone: string
+): { year: number; month: number; day: number } {
+  const wall = new Date(wallClockOfInstant(instant.getTime(), timeZone))
+  return {
+    year: wall.getUTCFullYear(),
+    month: wall.getUTCMonth() + 1,
+    day: wall.getUTCDate(),
+  }
+}
+
+/** The "HH:mm" an instant shows on the wall clock in `timeZone`. */
+export function schoolTimeStringOf(instant: Date, timeZone: string): string {
+  const wall = new Date(wallClockOfInstant(instant.getTime(), timeZone))
+  const h = String(wall.getUTCHours()).padStart(2, "0")
+  const m = String(wall.getUTCMinutes()).padStart(2, "0")
+  return `${h}:${m}`
+}

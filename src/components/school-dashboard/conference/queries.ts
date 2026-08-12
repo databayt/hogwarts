@@ -119,10 +119,14 @@ export async function resolveViewerSectionScope(
       where: { schoolId, userId },
       select: { sectionId: true },
     })
+    // Membership (a student row) is what matters — a student not yet placed
+    // in a section returns an EMPTY scope, not "none", so school-wide
+    // sessions (assemblies) still reach them via buildLiveClassWhere's OR.
+    if (students.length === 0) return "none"
     const ids = students
       .map((s) => s.sectionId)
       .filter((x): x is string => Boolean(x))
-    return ids.length ? { sectionIds: ids } : "none"
+    return { sectionIds: ids }
   }
   if (role === "GUARDIAN") {
     const guardians = await db.guardian.findMany({
@@ -133,6 +137,7 @@ export async function resolveViewerSectionScope(
         },
       },
     })
+    if (guardians.length === 0) return "none"
     const ids = [
       ...new Set(
         guardians
@@ -140,7 +145,7 @@ export async function resolveViewerSectionScope(
           .filter((x): x is string => Boolean(x))
       ),
     ]
-    return ids.length ? { sectionIds: ids } : "none"
+    return { sectionIds: ids }
   }
   return "none"
 }
@@ -158,10 +163,21 @@ export function buildLiveClassOrderBy(
   return [{ scheduledStart: Prisma.SortOrder.desc }]
 }
 
+// Hard ceiling on rows per page. list-params' URL parser has no upper bound,
+// so clamp at the query layer — the one choke point every caller (action +
+// content.tsx SSR) goes through. Without this, `?perPage=999999999` is an
+// unbounded findMany any authenticated viewer can trigger.
+const MAX_PER_PAGE = 200
+
 export function buildPagination(page: number, perPage: number) {
+  const safePage = Math.max(1, Math.floor(page) || 1)
+  const safePerPage = Math.min(
+    Math.max(1, Math.floor(perPage) || 20),
+    MAX_PER_PAGE
+  )
   return {
-    skip: (page - 1) * perPage,
-    take: perPage,
+    skip: (safePage - 1) * safePerPage,
+    take: safePerPage,
   }
 }
 

@@ -13,8 +13,8 @@ description: مؤتمرات الفيديو — كتلة واحدة قائمة ب
 
 <ConferenceStructure />
 
-المسارات تعكس هذه الكتلة (انظر [المسارات](#المسارات)). النماذج الأربعة في Prisma بالإضافة إلى نموذج
-الرابط المتكرّر تقع في `prisma/models/conference.prisma`. الاختبارات تقع تحت `src/tests/` (إعادة تنظيم
+المسارات تعكس هذه الكتلة (انظر [المسارات](#المسارات)). نماذج Prisma الستة تقع في
+`prisma/models/conference.prisma`. الاختبارات تقع تحت `src/tests/` (إعادة تنظيم
 بمحاكاة المسارات)، لا في مجلّد `__tests__/` داخل الكتلة.
 
 ## المكوّنات
@@ -50,7 +50,7 @@ detail (/conference/[id])      detail.tsx → Join (live/scheduled) | Recordings
    └─ Join
 room  (/conference/[id]/room)  joinLiveClass → eligibility → 5-min JWT → room.tsx (LiveKit prebuilt)
                                               ↑ refreshLiveClassToken every ~60s re-runs eligibility
-recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S3 URL, re-signed/4min)
+recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S3 URL, 4h; re-mints on expiry via onError)
 ```
 
 - **آلة حالة الجلسة** (`actions/sessions.ts`): `scheduled → live → ended`، إضافةً إلى `cancelled`
@@ -87,9 +87,11 @@ recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S
 
 تقع غرفة المسار تحت مجموعة **`(live-room)`** منفصلة بتخطيط عارٍ بملء الشاشة (بلا شريط جانبي / زخارف
 لوحة التحكّم) كي يمتلك بثّ الـ SFU الشاشة؛ وهي `force-dynamic` لبناءات آمنة من نفاد الذاكرة. واجهات
-API (مُستدعاة خارجياً / عبر المجدول → تبقى مسارات، لا إجراءات خادمية): `api/webhooks/livekit` (HMAC)،
-`api/cron/live-class-reminders` (كل 5 دقائق)، `api/cron/end-stale-live-classes` (كل 15 دقيقة — يُنهي
-الجلسات العالقة في حالة `live` بعد وقتها ويشغّل مزامنة الحضور)، `api/cron/expire-live-recordings` (يومياً).
+API (مُستدعاة خارجياً / عبر المجدول / بالاستطلاع → تبقى مسارات، لا إجراءات خادمية): `api/webhooks/livekit` (HMAC)،
+`api/conference/token` (تجديد رمز الغرفة كل ~4 دقائق — مسار GET لأن استطلاعاً عبر إجراء خادمي يشحن
+إعادة تصيير RSC كاملة مع كل استجابة)، `api/cron/live-class-reminders` (كل 15 دقيقة، بنافذة 5–20 دقيقة
+غير مكرِّرة)، `api/cron/end-stale-live-classes` (كل 30 دقيقة — يُنهي الجلسات العالقة في حالة `live`
+بعد وقتها ويشغّل مزامنة الحضور)، `api/cron/expire-live-recordings` (يومياً).
 
 ## المخطّط — `prisma/models/conference.prisma`
 

@@ -20,6 +20,14 @@ interface Props {
   dictionary: Dictionary
 }
 
+// Catalog lesson content (videos/attachments/materials) is validated by other
+// blocks' weaker schemas — bare `.url()` admits `javascript:`/`data:`, and
+// material.externalUrl isn't URL-validated at all. Re-check the scheme here
+// before rendering as an <a href> (same threat model as meetingUrl).
+function safeHttpUrl(url: string | null | undefined): string | null {
+  return url && /^https?:\/\//i.test(url) ? url : null
+}
+
 function formatWhen(d: Date | string, locale: string): string {
   const date = typeof d === "string" ? new Date(d) : d
   try {
@@ -204,18 +212,25 @@ export async function LiveClassDetailContent({
                     {r?.videos ?? "Videos"}
                   </h3>
                   <ul className="space-y-1 text-sm">
-                    {lessonContent.videos.map((v) => (
-                      <li key={v.id}>
-                        <a
-                          className="underline underline-offset-2"
-                          href={v.videoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {v.title}
-                        </a>
-                      </li>
-                    ))}
+                    {lessonContent.videos.map((v) => {
+                      const href = safeHttpUrl(v.videoUrl)
+                      return (
+                        <li key={v.id}>
+                          {href ? (
+                            <a
+                              className="underline underline-offset-2"
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {v.title}
+                            </a>
+                          ) : (
+                            <span>{v.title}</span>
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 </div>
               )}
@@ -228,20 +243,27 @@ export async function LiveClassDetailContent({
                       {r?.materials ?? "Materials"}
                     </h3>
                     <ul className="space-y-1 text-sm">
-                      {lessonContent.attachments.map((a) => (
-                        <li key={a.id}>
-                          <a
-                            className="underline underline-offset-2"
-                            href={a.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {a.name}
-                          </a>
-                        </li>
-                      ))}
+                      {lessonContent.attachments.map((a) => {
+                        const href = safeHttpUrl(a.url)
+                        return (
+                          <li key={a.id}>
+                            {href ? (
+                              <a
+                                className="underline underline-offset-2"
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {a.name}
+                              </a>
+                            ) : (
+                              <span>{a.name}</span>
+                            )}
+                          </li>
+                        )
+                      })}
                       {lessonContent.materials.map((m) => {
-                        const href = m.fileUrl ?? m.externalUrl
+                        const href = safeHttpUrl(m.fileUrl ?? m.externalUrl)
                         return (
                           <li key={m.id}>
                             {href ? (

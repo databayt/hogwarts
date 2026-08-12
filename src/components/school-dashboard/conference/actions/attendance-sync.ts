@@ -35,6 +35,7 @@ export async function syncConferenceAttendance(
       where: { id: sessionId, schoolId },
       select: {
         id: true,
+        provider: true,
         sectionId: true,
         timetableId: true,
         scheduledStart: true,
@@ -45,6 +46,13 @@ export async function syncConferenceAttendance(
     if (!session) return { marked: 0, updated: 0, skipped: "session_not_found" }
     if (!session.school.conferenceAttendanceSync) {
       return { marked: 0, updated: 0, skipped: "disabled" }
+    }
+    // Hard provider guard, not just "external never ends": an external
+    // session carries NO participant telemetry, so syncing one would mark the
+    // entire roster ABSENT. If an external row ever reaches `ended` (manual
+    // status edit + the stale-session cron), this must stay a no-op.
+    if (session.provider !== "livekit") {
+      return { marked: 0, updated: 0, skipped: "external_provider" }
     }
     // Need a section (roster) AND a timetable slot (→ periodId) so the
     // section-based unique key dedupes properly. Ad-hoc sessions don't sync.

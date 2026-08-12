@@ -27,7 +27,7 @@ vi.mock("@/lib/db", () => ({
     conferenceRecording: {
       findFirst: vi.fn(),
       upsert: vi.fn(),
-      updateMany: vi.fn(),
+      updateMany: vi.fn(async () => ({ count: 1 })),
     },
     conferenceEvent: {
       findUnique: vi.fn(),
@@ -94,7 +94,9 @@ beforeEach(() => {
   vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 1 } as never)
   vi.mocked(db.conferenceRecording.findFirst).mockResolvedValue(null as never)
   vi.mocked(db.conferenceRecording.upsert).mockResolvedValue({} as never)
-  vi.mocked(db.conferenceRecording.updateMany).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceRecording.updateMany).mockResolvedValue({
+    count: 1,
+  } as never)
   vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue({} as never)
 })
 
@@ -297,9 +299,16 @@ describe("handleWebhookEvent — egress / recording", () => {
       })
     )
     expect(ok).toBe(true)
+    // Guarded to live, in-flight rows: a late/retried egress_ended must never
+    // resurrect an admin-deleted row (deletedAt set, status "expired").
     expect(db.conferenceRecording.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { egressId: "egr-1", schoolId: SCHOOL_ID },
+        where: {
+          egressId: "egr-1",
+          schoolId: SCHOOL_ID,
+          deletedAt: null,
+          status: { in: ["pending", "processing"] },
+        },
         data: expect.objectContaining({
           status: "ready",
           completedAt: expect.any(Date),
@@ -312,6 +321,25 @@ describe("handleWebhookEvent — egress / recording", () => {
       SCHOOL_ID,
       SESSION_ID
     )
+  })
+
+  it("egress_ended on an already-deleted/settled row → guarded no-op, no notify", async () => {
+    vi.mocked(db.conferenceRecording.updateMany).mockResolvedValueOnce({
+      count: 0,
+    } as never)
+    const ok = await handleWebhookEvent(
+      evt({
+        event: "egress_ended",
+        egressInfo: {
+          egressId: "egr-9",
+          fileResults: [
+            { filename: "schools/sch1/live-class/lcs1/9.mp4", size: 1n },
+          ],
+        },
+      })
+    )
+    expect(ok).toBe(true)
+    expect(notifyClassRecordingReady).not.toHaveBeenCalled()
   })
 
   it("egress_ended with no fileResults → does NOT flip to ready (would sign an empty s3Key)", async () => {

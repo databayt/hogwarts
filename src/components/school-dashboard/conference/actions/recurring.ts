@@ -49,26 +49,34 @@ export async function carryForwardConferenceLinks(
   ])
 
   const seen = new Set(existing.map((e) => `${e.subjectId}:${e.sectionId}`))
-  let created = 0
+  const rows = source
+    .filter((link) => !seen.has(`${link.subjectId}:${link.sectionId}`))
+    .map((link) => ({
+      schoolId: ctx.schoolId,
+      subjectId: link.subjectId,
+      sectionId: link.sectionId,
+      termId: toTermId,
+      provider: link.provider,
+      meetingUrl: link.meetingUrl,
+      meetingProvider: link.meetingProvider,
+      createdBy: ctx.userId,
+    }))
 
-  for (const link of source) {
-    if (seen.has(`${link.subjectId}:${link.sectionId}`)) continue
+  // One batched insert; `skipDuplicates` absorbs the concurrent-create race
+  // on the unique tuple. Unlike the old per-row create with a blanket catch,
+  // a real write failure (connection drop, constraint bug) now surfaces as an
+  // error instead of being mislabeled a benign "skip".
+  let created = 0
+  if (rows.length > 0) {
     try {
-      await db.conferenceLink.create({
-        data: {
-          schoolId: ctx.schoolId,
-          subjectId: link.subjectId,
-          sectionId: link.sectionId,
-          termId: toTermId,
-          provider: link.provider,
-          meetingUrl: link.meetingUrl,
-          meetingProvider: link.meetingProvider,
-          createdBy: ctx.userId,
-        },
+      const res = await db.conferenceLink.createMany({
+        data: rows,
+        skipDuplicates: true,
       })
-      created++
-    } catch {
-      // Unique-constraint race (a link appeared concurrently) — skip, stay idempotent.
+      created = res.count
+    } catch (err) {
+      console.error("[carryForwardConferenceLinks]", err)
+      return actionError(ACTION_ERRORS.CREATE_FAILED)
     }
   }
 
