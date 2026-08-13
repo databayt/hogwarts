@@ -5,10 +5,10 @@ title: Stream (LMS)
 file_type: issue
 owner: Abdout
 maturity: Built+Polish
-completion: 90
+completion: 91
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-08-11
+last_audited: 2026-08-12
 ---
 
 # Stream (LMS) — Production Readiness Tracker
@@ -307,9 +307,238 @@ quizzes. Consequences:
       local `.env` = `http://localhost:3000`, which reproduces the wrong-host bug
       locally against `demo.localhost:3000`).
 
+## Navigation rebrand + merge (2026-08-11)
+
+The block is **Lumos** in the UI and at `/lumos`. Renamed from `/stream`, which
+had no navigation entry to its settings surface at all: `StreamHeader` carried
+an admin-gated Settings link but was dead code with zero importers, so settings
+was reachable only via three tab-specific quick-action buttons, the
+`teach/videos` redirect, or by typing the URL. The `/stream` hero's second
+button also read "My Learning" while sending admins to a stats dashboard.
+
+What changed:
+
+- Route `/stream/*` → `/lumos/*`; UI strings, sidebar (`platform.sidebar.Lumos`)
+  and breadcrumb (`platform.breadcrumb.lumos`) keys rebranded in both languages.
+- One `PageHeadingSetter` + `PageNav` strip (`components/stream/nav.tsx`),
+  rendered by the `dashboard/` and `settings/` layouts only.
+- Settings tabs promoted to top-level routes — `/lumos/{enrollments,`
+  `instructors,review,videos}`, no `/settings` segment; they share the
+  `lumos/(app)/` route-group layout. The inner `Tabs` component
+  (`settings/content.tsx`) and `header.tsx` were deleted. `/lumos/settings` and
+  `/lumos/settings/[tab]` remain as redirects, because `Notification.url` rows
+  written earlier still carry the old shapes.
+- Hero second button reads "Dashboard" for every role — `/lumos/dashboard` is
+  already role-unique (admin stats / teach overview / children's progress /
+  enrolled courses).
+
+### Videos surface adopted the listing chrome (2026-08-11)
+
+`/lumos/videos` was a hand-rolled `<Table>` in a Card with its own `<h1>`, a
+status `Tabs` strip and no search. It now uses `PlatformToolbar` + `DataTable`
+with `teach/videos-columns.tsx`, matching `/students`. The status tabs became a
+faceted Status filter (plus a new Visibility one) and the page-level `<h1>` went
+away — the section heading already names the surface. One behaviour change: the
+reviewer-feedback row that rejected videos used to render as an extra
+full-width `<TableRow>` now sits under the title cell, since a `DataTable`
+can't express a spanning sub-row.
+
+### Upload language replaced proposal language (2026-08-12)
+
+The contributor flow read as a submission for permission — "Propose a Video",
+"Video submitted for review. You'll be notified when it's approved.", statuses
+Approved / Pending / Rejected. It now reads as a direct upload that publishes:
+"Upload Video", "Video uploaded. It'll appear on the lesson shortly.", statuses
+**Live / Publishing / Needs changes**, in both languages. The catalog approval
+step is unchanged — only the words are. Reviewer-facing copy (Review queue,
+admin notification, `approveVideo.*`) deliberately still says review; see the
+Danger Zones note in CLAUDE.md before editing either side.
+
+The same "submitted for review" toast survives on the subjects/catalog block's
+**other** contribution types (materials, questions, assignments, subject
+proposals). Only the video path was restyled — worth aligning if that flow gets
+the same treatment.
+
+### P2 — mirror-pattern gap
+
+Routes live at `(school-dashboard)/lumos/` but components are still
+`src/components/stream/`. The mirror pattern says these should match. Renaming
+the component directory is ~200 import rewrites and was deliberately left out
+of the rebrand — do it as its own change, not bundled with a behaviour edit.
+
+### P2 — stacked titles on the settings surfaces
+
+The section heading now sits above each surface's own inner title, so
+`/lumos/dashboard` reads "Lumos" → "Lumos Admin Dashboard". Not wrong, but the
+inner `<h2>`s in `settings/overview.tsx`, `teach/overview-content.tsx` and
+`dashboard/parent/content.tsx` could be dropped now that the section owns the
+heading.
+
+### Resolved by the merge
+
+- `/lumos/dashboard` and the old `settings?tab=overview` rendered the **same**
+  `StreamAdminDashboardContent`. Promoting the tabs to routes collapsed them.
+- `adminDashboard.manageEnrollments` / `.instructorSettings` / `.browseCatalog`
+  / `.manageVideos` / `.view` were referenced by `settings/overview.tsx` but
+  present in **neither** dictionary, so the admin dashboard rendered five
+  English strings on `/ar`. Added to both.
+
 ## Resolved Issues
 
 _Chronological close log — appended as items ship._
+
+- **2026-08-12 (third pass) — step 1 became a two-pane drill-down mirroring
+  /lumos/courses.** tsc 0, picker suite 36/36, stream + catalog 505/505,
+  browser-verified en + ar/RTL. NOT yet deployed.
+  1. **Pane one = numbered grade pills + that grade's subjects** (Abdout,
+     pointing at `/lumos/courses`). Same control as
+     `courses/content.tsx` — `rounded-full px-3 py-1`, active
+     `bg-primary text-primary-foreground` — carrying the zero-padded number
+     only (`01`…`12`); the spelled "Grade 01" survives where a word is needed
+     (breadcrumb, step-2 chip, confirm). Subjects list below with their lesson
+     counts and a chevron. **Grade is now always concrete** (defaults to the
+     first) — the "All grades / All subjects" selects are gone.
+  2. **Pane two = chapter select + search inside the chosen subject**, with a
+     Back button and a `Grade 01 · Mathematics` breadcrumb. Picking a lesson
+     still auto-advances to step 2.
+  3. **Search moved to the client, and that fixed a real bug.** The server
+     matched `contains` against SOURCE text while the list displayed
+     TRANSLATED text — typing "seven" against a visible "the number seven"
+     returned nothing (reproduced in the browser). Since a pane-two page now
+     holds one whole subject, typing filters the fetched page on the text the
+     user can actually see. `query` is deleted from `searchProposableLessons`
+     and its route; `MAX_PROPOSABLE_RESULTS` 50 → **200** so a subject
+     (~30-60 lessons) always fits, which is what makes client filtering
+     complete. Bonus: no round-trip per keystroke — one fetch per
+     (subject, chapter). **If cross-subject search ever returns, it must use
+     the cache-backed bilingual `search()` in `translation/search.ts`, never a
+     raw `contains`.** This supersedes the P3 note in the second-pass entry.
+  4. **New dict key** `proposeVideo.search.lessonCount` (en+ar, parity
+     573/573). GOTCHA re-confirmed: **a new dictionary key renders the English
+     fallback until the dev server restarts** — `getDictionary` caches at boot,
+     and Turbopack's hot reload does NOT refresh it. "31 lessons" persisted in
+     Arabic through hard reloads and only became "31 درس" after `pnpm dev`
+     was restarted.
+
+- **2026-08-12 (second pass) — upload dialog UX polish + LMS-hide fidelity +
+  translated picker.** tsc 0, `get-proposable-lessons` suite 37/37, stream +
+  catalog 506/506, **browser-verified locally on demo.localhost (en + ar/RTL,
+  screenshots in `.claude/screenshots/propose-*.png`, local session artifacts, not committed)**. NOT yet deployed.
+  1. **The picker is bridge-minus-hidden now (Abdout's rule).** The bridge
+     (`SubjectSelection.isActive`) was honored but `ContentOverride` was not —
+     a teacher could propose a video for a lesson their school hides from
+     Lumos. All three fetchers now exclude `isHidden` chapters/lessons (same
+     rows `get-course.ts` filters by): hidden chapters never reach counts or
+     search, hidden lessons subtract inside the relation count
+     (`_count.lessons.where.id.notIn`), and a hidden chapter named directly by
+     id yields nothing (the id conditions ride in `chapter.AND`, never merged
+     as object keys). Verified end-to-end with a real override row on the demo
+     school: the lesson vanished from the live API while its 22 same-named
+     siblings stayed.
+  2. **Picker names translate (Abdout's ask).** Grade/subject/chapter/lesson
+     names go through one batched `getLabels` per response — string-keyed
+     cache, so "الرياضيات" costs one translation for all 12 grades carrying
+     it; misses fall back to source text and never block. `lang` flows page →
+     dialog prop → `locale=` on both routes. Verified live both directions
+     ("Protein Synthesis" → "تكوين البروتينات" on /ar; Arabic lessons in
+     English on /en). Platform scope (DEVELOPER) deliberately stays raw — that
+     audience manages the source content and the cache is school-scoped.
+  3. **Smoothness pass, all browser-verified:** flicker-free search (stale
+     results stay dimmed with a corner spinner while in flight; retyping after
+     a failure resets the error), auto-advance on lesson pick (Back and the
+     step dots recover; the pick is pinned in step 1 and echoed as a context
+     chip on step 2), completed step dots are buttons back, dialog is a capped
+     flex frame (`max-h-[85vh]`) whose body scrolls under a pinned
+     header/dots/footer and scrolls to top per step, search input autofocuses,
+     title autofocuses on step 2 and prefills from an uploaded file name,
+     drag-and-drop on the dropzone, bad URLs die at step 2 with an inline
+     destructive hint (client mirrors the server's `isValidVideoUrl` — the
+     shared pure module, so they cannot drift), audience is three compact icon
+     cards + one dynamic helper line (was three stacked helper paragraphs),
+     pricing matches, `has-[[data-state=checked]]` styling per the
+     card-payment-method precedent with sr-only radios (keyboard reachable via
+     `has-[:focus-visible]` ring).
+  4. **Grade labels are numbered, not named** (Abdout). `ProposableGrade`
+     dropped its `name` — the tree carries `gradeNumber` and the dialog renders
+     zero-padded `Grade 01`…`Grade 12` / `الصف 01`…`الصف 12`. School grade
+     names are prose that translates inconsistently and sorts badly; the number
+     is the same fact in both locales, and dropping the field also dropped a
+     translation call per response. Verified in both locales.
+  5. **New dict keys** `proposeVideo.fields.urlInvalid` + `uploadDragHint`
+     (en+ar, parity 572/572).
+  6. ~~Known limitation (P3): the search term matches SOURCE text only.~~
+     **RESOLVED by the third pass** — it bit immediately once names were
+     translated, and search moved client-side onto the displayed text.
+  7. **Prod smoke still owed on next deploy** (`/watch`): dev now covers the
+     full behavior matrix locally, so the deploy check is the routine one —
+     dialog opens, search 200s, names translate.
+
+- **2026-08-12 — the propose dialog's lesson picker became the catalog's own
+  hierarchy.** tsc 0, `get-proposable-lessons` suite 31/31 (was 12), stream +
+  catalog 500/500. NOT yet deployed.
+  1. **The long list is gone; step 1 is grade → subject → chapter → lesson.**
+     It rendered every proposable lesson as one flat scroll box (`take: 500`,
+     grouped by subject) — impractical the moment a school selects a handful of
+     curricula, and silently truncated past 500 with no way to reach lesson 501. It is now three cascading selects (each resets the tiers below it)
+     over a cmdk search of lesson / chapter / subject name, one bounded page of
+     ≤50 at a time, with the pick pinned above the list so it survives a new
+     search.
+  2. **Grade had to be the first tier — a subject list alone is unusable.**
+     The catalog seeds ONE Subject per grade and leaves the grade out of
+     `Subject.name`, so a K-12 school's ~120 selections show "الرياضيات" a
+     dozen times over. `SubjectSelection.gradeId → AcademicGrade` already
+     carried the answer; the scope resolver now reads it, and every subject
+     rendered outside a chosen grade carries its grade in the label. The school
+     `customName` wins over the catalog name, and the per-stream duplicate rows
+     are deduped.
+  3. **The catalog no longer ships to the browser.** The two pages fed the
+     dialog up to 500 lesson rows in the RSC payload on every load, whether or
+     not anyone opened it. They now send `getProposableCatalog()` — the grade →
+     subject tree, subjects not lessons — and chapters (`GET
+/api/stream/proposable-chapters`) and lessons load as the user walks down.
+  4. **Search is a route handler, not a server action.** `auth()` rotates the
+     session cookie inside action requests, so an action-backed search would
+     have shipped a full RSC page re-render per keystroke (the notifications
+     bell finding, 2026-08-11). New `GET /api/stream/proposable-lessons`
+     (`q` / `subjectId` / `take`, `take` clamped server-side, term capped at
+     100 chars, `Cache-Control: no-store`); `get-proposable-lessons.ts` dropped
+     its `"use server"` directive so the search can't be reached as a POST stub
+     either. The client debounces 250ms and races through an `AbortController`.
+  5. **`subjectIds` are AND-ed with the caller's scope, never merged into it.**
+     Caught while writing the test: `{ ...subjectWhere, id: subjectId }`
+     overwrites `id: { in: selectedSubjectIds }`, which would have let a
+     teacher browse any published subject in the global catalog by id. Both the
+     permission probe and the lesson query now use `AND: [scope, { id: { in } }]`,
+     and a test asserts the shape. `chapterId` rides inside the same `chapter`
+     clause as the subject scope, so it needs no probe of its own.
+  6. **The upload-button gate got stricter, not looser.** It used to be
+     "≥1 lesson in the payload"; it is now "≥1 grade holding a subject that
+     actually has lessons" — `getProposableCatalog()` drops zero-lesson
+     subjects and the grades left empty by that, so the button can no longer
+     open a dialog with nothing to pick.
+  7. **The fetch effect keys on a query string, not a scope object.** An
+     object identity there re-fires the effect on every render, and
+     `d.search ?? {}` guarantees a fresh identity whenever a caller passes a
+     dictionary without that subtree — an infinite fetch loop waiting for the
+     first partial dictionary. Same reason `gradeLabel` depends on primitives.
+  8. **i18n + dark mode.** New `stream.proposeVideo.search.*` (11 keys, en+ar,
+     parity held at 570/570). The old sticky subject header was `bg-white` —
+     a light-mode-only bar that came out of the markup with it.
+
+  Known edge, DEVELOPER only: browsing a _platform_ grade holding more than
+  `MAX_PROPOSABLE_SUBJECT_IDS` (100) subjects sends every id and the server
+  slices to the first 100, so the tail is silently out of scope for that
+  search. School grades hold ~10 subjects, so no school role can reach it; the
+  fix, if it ever matters, is a grade filter on the server rather than an id
+  list from the client.
+
+  ~~Browser verification owed.~~ **Superseded by the second pass above**: the
+  "no catalog tables locally" diagnosis was wrong (the tables are `@@map`-ed —
+  `catalog_subjects`, not `"Subject"`), and the full matrix was then verified
+  live on demo.localhost: 12 grades populate, subjects narrow per grade,
+  chapters load per subject, search pages at 50 with the truncation hint, the
+  pick survives and auto-advances, and the whole step mirrors correctly on
+  /ar.
 
 - **2026-08-11 — tenant URLs + lesson-level materials + override-aware
   completion (the trace's fix round, scoped by Abdout's governance note).**

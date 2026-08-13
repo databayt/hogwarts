@@ -136,7 +136,7 @@ export async function enrollInSubject(catalogSubjectId: string) {
             studentName: session.user.name || "Student",
             courseTitle: subject.name,
             courseUrl: await streamTenantUrl(
-              `/stream/courses/${subject.slug}`,
+              `/lumos/courses/${subject.slug}`,
               locale
             ),
             schoolName: school?.name || "Platform",
@@ -205,10 +205,10 @@ export async function enrollInSubject(catalogSubjectId: string) {
         ],
         mode: "payment",
         success_url: await streamTenantUrl(
-          `/stream/courses/${subject.slug}?enrolled=true`,
+          `/lumos/courses/${subject.slug}?enrolled=true`,
           locale
         ),
-        cancel_url: await streamTenantUrl("/stream/courses", locale),
+        cancel_url: await streamTenantUrl("/lumos/courses", locale),
         metadata: {
           userId: session.user.id,
           catalogSubjectId: subject.id,
@@ -250,8 +250,8 @@ export async function enrollInSubject(catalogSubjectId: string) {
     } else {
       // Free enrollment — redirect directly to first lesson (avoids double redirect)
       const dashboardPath = result.firstLessonId
-        ? `/${locale}/stream/courses/${subject.slug}/${result.firstLessonId}`
-        : `/${locale}/stream/courses/${subject.slug}`
+        ? `/${locale}/lumos/courses/${subject.slug}/${result.firstLessonId}`
+        : `/${locale}/lumos/courses/${subject.slug}`
       redirect(dashboardPath)
     }
   } catch (error) {

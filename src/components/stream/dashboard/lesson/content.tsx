@@ -184,7 +184,7 @@ export function StreamLessonContent({
       ? activeVideo
       : null
 
-  const baseUrl = `/${lang}/stream/courses/${lesson.chapter.course.slug}`
+  const baseUrl = `/${lang}/lumos/courses/${lesson.chapter.course.slug}`
 
   const handleUnlock = useCallback(
     (videoId: string) => {

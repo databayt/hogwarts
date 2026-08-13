@@ -37,7 +37,7 @@ export function ContinueWatchingSection({ items, lang, dictionary }: Props) {
         {items.map((item) => (
           <Link
             key={item.lessonId}
-            href={`/${lang}/stream/courses/${item.courseSlug}/${item.lessonId}`}
+            href={`/${lang}/lumos/courses/${item.courseSlug}/${item.lessonId}`}
             className="group relative w-64 shrink-0 overflow-hidden rounded-lg"
           >
             {/* Thumbnail */}

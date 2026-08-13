@@ -137,6 +137,7 @@ export interface StreamDictionary {
     home: string
     courses: string
     myLearning: string
+    dashboard: string
     settings: string
     signIn: string
     profile: string

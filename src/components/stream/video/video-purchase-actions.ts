@@ -142,11 +142,11 @@ export async function purchaseVideo(
 
   const subjectSlug = video.lesson.chapter.subject.slug
   const successUrl = await streamTenantUrl(
-    `/stream/courses/${subjectSlug}?purchased=${video.id}`,
+    `/lumos/courses/${subjectSlug}?purchased=${video.id}`,
     locale
   )
   const cancelUrl = await streamTenantUrl(
-    `/stream/courses/${subjectSlug}`,
+    `/lumos/courses/${subjectSlug}`,
     locale
   )
 

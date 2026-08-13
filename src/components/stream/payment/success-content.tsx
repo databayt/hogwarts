@@ -65,7 +65,7 @@ export function StreamPaymentSuccessContent({
               </p>
 
               <Link
-                href={`/${lang}/stream/courses`}
+                href={`/${lang}/lumos/courses`}
                 className={buttonVariants({
                   variant: "outline",
                   className: "mt-5 w-full",
@@ -102,7 +102,7 @@ export function StreamPaymentSuccessContent({
 
               <div className="mt-5 space-y-2">
                 <Link
-                  href={`/${lang}/stream/courses`}
+                  href={`/${lang}/lumos/courses`}
                   className={buttonVariants({ className: "w-full" })}
                 >
                   <ArrowIcon className="size-4" />
@@ -138,7 +138,7 @@ export function StreamPaymentSuccessContent({
             <div className="mt-5 space-y-2">
               {verificationResult.courseSlug && (
                 <Link
-                  href={`/${lang}/stream/courses/${verificationResult.courseSlug}`}
+                  href={`/${lang}/lumos/courses/${verificationResult.courseSlug}`}
                   className={buttonVariants({ className: "w-full" })}
                 >
                   <ArrowIcon className="size-4" />
@@ -146,7 +146,7 @@ export function StreamPaymentSuccessContent({
                 </Link>
               )}
               <Link
-                href={`/${lang}/stream/dashboard`}
+                href={`/${lang}/lumos/dashboard`}
                 className={buttonVariants({
                   variant: "outline",
                   className: "w-full",

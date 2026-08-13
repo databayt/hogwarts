@@ -34,7 +34,7 @@ async function loginAsAdmin(page: import("@playwright/test").Page) {
 /** Navigate to the first lesson of elementary-arts and wait for it to load */
 async function goToFirstLesson(page: import("@playwright/test").Page) {
   await page.goto(
-    buildSchoolUrl("demo", "/stream/dashboard/elementary-arts", "en", env)
+    buildSchoolUrl("demo", "/lumos/dashboard/elementary-arts", "en", env)
   )
   // Wait for server-side redirect to the first lesson
   await page
@@ -57,15 +57,15 @@ test.describe("Stream Dashboard @stream", () => {
   })
 
   test("ST-001: Can access stream dashboard", async ({ page }) => {
-    await page.goto(buildSchoolUrl("demo", "/stream/dashboard", "en", env))
+    await page.goto(buildSchoolUrl("demo", "/lumos/dashboard", "en", env))
     await page.waitForLoadState("domcontentloaded")
 
-    expect(page.url()).toContain("/stream/dashboard")
+    expect(page.url()).toContain("/lumos/dashboard")
     await assertNoSSE(page)
   })
 
   test("ST-002: Stream dashboard shows enrolled courses", async ({ page }) => {
-    await page.goto(buildSchoolUrl("demo", "/stream/dashboard", "en", env))
+    await page.goto(buildSchoolUrl("demo", "/lumos/dashboard", "en", env))
     await page.waitForLoadState("domcontentloaded")
 
     await expect(page.locator("body")).not.toBeEmpty()
@@ -87,7 +87,7 @@ test.describe("Stream Course Detail @stream", () => {
   test("ST-003: Course slug redirects to first lesson", async ({ page }) => {
     // Use domcontentloaded to avoid timeout on server redirect chain
     await page.goto(
-      buildSchoolUrl("demo", "/stream/dashboard/elementary-arts", "en", env),
+      buildSchoolUrl("demo", "/lumos/dashboard/elementary-arts", "en", env),
       { waitUntil: "domcontentloaded", timeout: 30_000 }
     )
     // Wait for server redirect to append lessonId

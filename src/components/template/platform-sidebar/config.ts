@@ -201,8 +201,8 @@ export const platformNav: PlatformNavItem[] = [
   },
   {
     key: "stream",
-    title: "Stream",
-    href: "/stream",
+    title: "Lumos",
+    href: "/lumos",
     icon: "video",
     roles: ALL_ROLES,
   },

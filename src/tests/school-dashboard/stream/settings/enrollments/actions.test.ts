@@ -243,7 +243,7 @@ describe("bulkEnrollStudents — flow", () => {
   it("revalidates the settings page (the route that renders the list)", async () => {
     await bulkEnrollStudents(input)
     expect(revalidatePath).toHaveBeenCalledWith(
-      "/[lang]/s/[subdomain]/stream/settings"
+      "/[lang]/s/[subdomain]/lumos/enrollments"
     )
   })
 })

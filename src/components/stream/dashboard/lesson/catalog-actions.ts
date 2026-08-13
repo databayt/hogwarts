@@ -226,7 +226,7 @@ export async function markLessonComplete(
             studentName: user.username || "Student",
             courseTitle: subject.name,
             certificateUrl: await streamTenantUrl(
-              `/stream/courses/${subject.slug}/certificate`,
+              `/lumos/courses/${subject.slug}/certificate`,
               locale
             ),
             schoolName: school?.name || "Platform",
@@ -242,7 +242,7 @@ export async function markLessonComplete(
       }
     }
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/courses/${slug}`)
+    revalidatePath(`/[lang]/s/[subdomain]/lumos/courses/${slug}`)
     return { status: "success", message: "Progress updated" }
   } catch (error) {
     console.error("Failed to mark catalog lesson complete:", error)
@@ -276,7 +276,7 @@ export async function markLessonIncomplete(
       },
     })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/courses/${slug}`)
+    revalidatePath(`/[lang]/s/[subdomain]/lumos/courses/${slug}`)
     return { status: "success", message: "Progress updated" }
   } catch (error) {
     console.error("Failed to mark catalog lesson incomplete:", error)

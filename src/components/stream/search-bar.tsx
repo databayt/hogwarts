@@ -90,7 +90,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
       params.set("search", trimmed)
       params.delete("page")
       setIsDropdownOpen(false)
-      router.push(`/${lang}/stream/courses?${params.toString()}`)
+      router.push(`/${lang}/lumos/courses?${params.toString()}`)
     },
     [router, searchParams, lang]
   )
@@ -315,7 +315,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                     className="mt-6"
                   >
                     <Link
-                      href={`/${lang}/stream/courses`}
+                      href={`/${lang}/lumos/courses`}
                       onClick={() => setIsDropdownOpen(false)}
                       className="text-primary inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
                     >

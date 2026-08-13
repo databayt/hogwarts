@@ -77,9 +77,9 @@ export function VideoSettingsDialog({
   const isPaid = visibility === "PAID"
 
   const statusLabel: Record<string, string> = {
-    APPROVED: dt.statusApproved ?? "Approved",
-    PENDING: dt.statusPending ?? "Pending",
-    REJECTED: dt.statusRejected ?? "Rejected",
+    APPROVED: dt.statusApproved ?? "Live",
+    PENDING: dt.statusPending ?? "Publishing",
+    REJECTED: dt.statusRejected ?? "Needs changes",
   }
 
   const visibilityOptions: Array<{

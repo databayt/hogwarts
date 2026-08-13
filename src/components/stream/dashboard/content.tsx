@@ -110,7 +110,7 @@ export function StreamDashboardContent({
                 </p>
                 <Link
                   className={buttonVariants()}
-                  href={`/${lang}/stream/courses`}
+                  href={`/${lang}/lumos/courses`}
                 >
                   {d?.browseCourses || "Browse Courses"}
                 </Link>
@@ -172,8 +172,8 @@ export function StreamDashboardContent({
                   <Link
                     href={
                       course.chapters[0]?.lessons[0]?.id
-                        ? `/${lang}/stream/courses/${course.slug}/${course.chapters[0].lessons[0].id}`
-                        : `/${lang}/stream/courses/${course.slug}`
+                        ? `/${lang}/lumos/courses/${course.slug}/${course.chapters[0].lessons[0].id}`
+                        : `/${lang}/lumos/courses/${course.slug}`
                     }
                     className={buttonVariants({ className: "w-full" })}
                   >
@@ -201,7 +201,7 @@ export function StreamDashboardContent({
               </p>
             </div>
             <Link
-              href={`/${lang}/stream/courses`}
+              href={`/${lang}/lumos/courses`}
               className={buttonVariants({ variant: "outline" })}
             >
               {d?.viewAll || "View All"}
@@ -256,7 +256,7 @@ export function StreamDashboardContent({
                     </span>
                   </div>
                   <Link
-                    href={`/${lang}/stream/courses/${course.slug}`}
+                    href={`/${lang}/lumos/courses/${course.slug}`}
                     className={buttonVariants({
                       variant: "outline",
                       size: "sm",

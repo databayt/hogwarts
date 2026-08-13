@@ -54,7 +54,7 @@ export function HotReleasesSection({ dictionary, lang, courses }: Props) {
             {dictionary?.hotReleases?.title || "New releases"}
           </h2>
           <Link
-            href={`/${lang}/stream/courses`}
+            href={`/${lang}/lumos/courses`}
             className="text-foreground hover:text-primary transition-colors"
           >
             <ArrowRight className="h-5 w-5 rtl:rotate-180" />
@@ -74,7 +74,7 @@ export function HotReleasesSection({ dictionary, lang, courses }: Props) {
             return (
               <Link
                 key={course.id}
-                href={`/${lang}/stream/courses/${course.slug}`}
+                href={`/${lang}/lumos/courses/${course.slug}`}
                 className="group bg-background block overflow-hidden rounded-xl"
               >
                 {/* Card Image — the catalog thumbnail, or the subject's own

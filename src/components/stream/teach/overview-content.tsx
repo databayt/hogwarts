@@ -9,22 +9,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import type { TeacherStats } from "./actions"
+import type { ProposableGrade } from "./get-proposable-lessons"
 import { ProposeVideoDialog } from "./propose-video-dialog"
-
-interface LessonOption {
-  id: string
-  name: string
-  chapterName: string
-  subjectName: string
-  subjectSlug: string
-}
 
 interface Props {
   dictionary: Record<string, any>
   lang: string
   stats: TeacherStats
   subdomain: string
-  proposableLessons?: LessonOption[]
+  proposableGrades?: ProposableGrade[]
 }
 
 export function TeachOverviewContent({
@@ -32,9 +25,9 @@ export function TeachOverviewContent({
   lang,
   stats,
   subdomain,
-  proposableLessons = [],
+  proposableGrades = [],
 }: Props) {
-  const base = `/${lang}/stream/settings`
+  const base = `/${lang}/lumos/videos`
   const d = dictionary?.teachDashboard
 
   return (
@@ -48,7 +41,7 @@ export function TeachOverviewContent({
             {d?.description || "Manage your content contributions and uploads"}
           </p>
         </div>
-        <Link href={`${base}?tab=videos`}>
+        <Link href={base}>
           <Button>
             <Film className="me-2 size-4" />
             {d?.myVideos || "My Videos"}
@@ -85,7 +78,7 @@ export function TeachOverviewContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {d?.approved || "Approved"}
+              {d?.approved || "Live"}
             </CardTitle>
             <CheckCircle2 className="text-muted-foreground size-4" />
           </CardHeader>
@@ -114,16 +107,17 @@ export function TeachOverviewContent({
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <ProposeVideoDialog
-            lessons={proposableLessons}
+            grades={proposableGrades}
+            lang={lang}
             dictionary={dictionary}
           />
-          <Link href={`${base}?tab=videos`}>
+          <Link href={base}>
             <Button variant="outline">
               <Film className="me-2 size-4" />
               {d?.viewMyVideos || "View My Videos"}
             </Button>
           </Link>
-          <Link href={`/${lang}/stream/courses`}>
+          <Link href={`/${lang}/lumos/courses`}>
             <Button variant="outline">
               {d?.browseCatalog || "Browse Catalog"}
             </Button>

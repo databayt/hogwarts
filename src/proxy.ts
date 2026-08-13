@@ -200,7 +200,7 @@ export async function proxy(req: NextRequest) {
     publicRoutes.includes(pathWithoutLocale) ||
     pathWithoutLocale.startsWith("/docs") ||
     pathWithoutLocale.startsWith("/features") ||
-    pathWithoutLocale.startsWith("/stream") ||
+    pathWithoutLocale.startsWith("/lumos") ||
     pathWithoutLocale.startsWith("/community") ||
     pathWithoutLocale.startsWith("/wa-preview") ||
     isPublicShareRoute(pathWithoutLocale)

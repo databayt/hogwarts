@@ -50,8 +50,8 @@ export function CatalogEnrollmentButton({
         className="h-9 w-auto px-6 text-sm font-medium"
         onClick={() => {
           window.location.href = firstLessonId
-            ? `/${lang}/stream/courses/${subjectSlug}/${firstLessonId}`
-            : `/${lang}/stream/courses/${subjectSlug}`
+            ? `/${lang}/lumos/courses/${subjectSlug}/${firstLessonId}`
+            : `/${lang}/lumos/courses/${subjectSlug}`
         }}
       >
         {d?.continueLearning ?? "Continue Learning"}

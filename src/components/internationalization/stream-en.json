@@ -30,7 +30,7 @@
       "remaining": "remaining",
       "left": "left"
     },
-    "title": "Stream LMS",
+    "title": "Lumos",
     "description": "Learning Management System",
     "home": {
       "badge": "Welcome to balqalam",
@@ -105,7 +105,7 @@
       "completionRate": "completion"
     },
     "settings": {
-      "title": "Stream Settings",
+      "title": "Lumos Settings",
       "description": "Manage enrollments, instructor preferences, and video content",
       "overview": "Overview",
       "enrollments": "Enrollments",
@@ -236,6 +236,7 @@
       "home": "Home",
       "courses": "Courses",
       "myLearning": "My Learning",
+      "dashboard": "Dashboard",
       "settings": "Settings",
       "signIn": "Sign In",
       "profile": "Profile"
@@ -273,7 +274,7 @@
       "enrolled": "enrolled"
     },
     "adminDashboard": {
-      "title": "Stream LMS Admin Dashboard",
+      "title": "Lumos Admin Dashboard",
       "description": "Manage your courses, track enrollments, and monitor revenue",
       "totalCourses": "Total Courses",
       "noCoursesYet": "No courses yet",
@@ -301,7 +302,12 @@
       "edit": "Edit",
       "noCoursesCreated": "No courses yet",
       "createFirstCourse": "Create your first course to get started",
-      "createCourse": "Create Course"
+      "createCourse": "Create Course",
+      "manageEnrollments": "Manage Enrollments",
+      "instructorSettings": "Instructor Settings",
+      "browseCatalog": "Browse Catalog",
+      "manageVideos": "Video Library",
+      "view": "View"
     },
     "parentDashboard": {
       "title": "Children's Progress",
@@ -374,10 +380,10 @@
       "delete": "Delete"
     },
     "teachingHero": {
-      "title": "Share your lessons with your students",
-      "description": "Record a lesson once and reach every student in your class — right here on the platform.",
-      "cta": "Start teaching",
-      "learnMore": "Browse courses"
+      "title": "Come teach with us",
+      "description": "Become an instructor and change lives — including your own",
+      "cta": "Get started",
+      "learnMore": "Learn more"
     },
     "hotReleases": {
       "title": "Hot new releases"
@@ -425,16 +431,16 @@
       "HIGH": "High"
     },
     "proposeVideo": {
-      "trigger": "Propose a Video",
+      "trigger": "Upload Video",
       "steps": {
         "selectLesson": "Select Lesson",
         "addVideo": "Add Your Video",
-        "confirm": "Review & Submit"
+        "confirm": "Confirm & Publish"
       },
       "descriptions": {
-        "selectLesson": "Choose which lesson you want to contribute a video for.",
-        "addVideo": "Provide the video URL and details. Your video will be reviewed before going live.",
-        "confirm": "Review your submission. You retain full ownership and control over your video."
+        "selectLesson": "Choose the lesson this video belongs to.",
+        "addVideo": "Add the video and its details. It appears on the lesson once processing finishes.",
+        "confirm": "Check the details and publish. You keep full ownership and control of your video."
       },
       "fields": {
         "title": "Video Title",
@@ -444,12 +450,14 @@
         "sourceUpload": "Upload",
         "urlPlaceholder": "https://youtube.com/watch?v=... or https://vimeo.com/...",
         "urlHelper": "Supports YouTube, Vimeo, or direct video URLs.",
+        "urlInvalid": "That link doesn't look like a video \u2014 use YouTube, Vimeo, or a direct video file link.",
         "description": "Description (optional)",
         "descriptionPlaceholder": "Brief description of what this video covers...",
         "price": "Price",
         "currency": "Currency",
         "pricePlaceholder": "9.99",
         "uploadDrop": "Click to choose a video file",
+        "uploadDragHint": "\u2026or drag and drop it here",
         "uploadHint": "MP4, WebM, MOV or AVI — up to 5GB",
         "uploading": "Uploading…",
         "uploadCancel": "Cancel upload",
@@ -463,7 +471,7 @@
       "audience": {
         "label": "Audience",
         "public": "Public catalog",
-        "publicHelper": "Visible to every school once approved.",
+        "publicHelper": "Visible to every school in the catalog.",
         "school": "Just my school",
         "schoolHelper": "Only users in your school can see this video.",
         "private": "Private",
@@ -473,7 +481,7 @@
         "label": "Pricing",
         "free": "Free",
         "paid": "Paid",
-        "helper": "A reviewer may adjust audience or pricing before approving.",
+        "helper": "Audience and pricing stay editable after publishing.",
         "paidSummary": "Paid · {price} {currency}"
       },
       "confirm": {
@@ -486,7 +494,7 @@
         "rightsTitle": "Your rights are protected",
         "rightsOwnership": "You retain full ownership of your video",
         "rightsVisibility": "You can change visibility or delete at any time",
-        "rightsReview": "Admin review is required before the video goes live",
+        "rightsReview": "Videos are checked for quality before students see them",
         "rightsControl": "Even after approval, you control who can see your video"
       },
       "actions": {
@@ -495,15 +503,29 @@
         "review": "Review",
         "submit": "Submit for Review"
       },
-      "empty": "No lessons available for video proposals.",
+      "empty": "No lessons available to upload to.",
+      "search": {
+        "placeholder": "Search lessons\u2026",
+        "allSubjects": "All subjects",
+        "lessonCount": "{count} lessons",
+        "allGrades": "All grades",
+        "allChapters": "All chapters",
+        "grade": "Grade",
+        "ungraded": "Ungraded",
+        "loading": "Searching\u2026",
+        "empty": "No lessons match that search.",
+        "failed": "Search failed \u2014 check your connection and try again.",
+        "truncated": "Showing the first {count} \u2014 pick a chapter or search to narrow it down.",
+        "clear": "Clear selection"
+      },
       "toast": {
-        "success": "Video submitted for review. You'll be notified when it's approved."
+        "success": "Video uploaded. It'll appear on the lesson shortly."
       }
     },
     "approveVideo": {
       "dialogTitle": "Review & Approve Video",
       "dialogDescription": "Finalize visibility, pricing, and featured status before approving.",
-      "proposer": "Proposed by",
+      "proposer": "Uploaded by",
       "visibility": "Visibility",
       "visibilityOptions": {
         "public": "Public — any school",
@@ -534,19 +556,19 @@
       }
     },
     "teachVideos": {
-      "rejectionReasonLabel": "Reviewer feedback",
+      "rejectionReasonLabel": "What to fix",
       "title": "My Videos",
       "videosUnit": "videos",
       "emptyNone": "You haven't uploaded any videos yet.",
-      "emptyHint": "Use the \"Propose a Video\" button from your dashboard.",
+      "emptyHint": "Use the \"Upload Video\" button to add your first one.",
       "statTotal": "Total",
-      "statApproved": "Approved",
-      "statPending": "Pending",
+      "statApproved": "Live",
+      "statPending": "Publishing",
       "statTotalViews": "Total Views",
       "tabAll": "All",
-      "tabApproved": "Approved",
-      "tabPending": "Pending",
-      "tabRejected": "Rejected",
+      "tabApproved": "Live",
+      "tabPending": "Publishing",
+      "tabRejected": "Needs changes",
       "colTitle": "Title",
       "colSubject": "Subject",
       "colLesson": "Lesson",
@@ -557,11 +579,12 @@
       "colDate": "Date",
       "featured": "Featured",
       "free": "Free",
-      "statusApproved": "Approved",
-      "statusPending": "Pending",
-      "statusRejected": "Rejected",
+      "statusApproved": "Live",
+      "statusPending": "Publishing",
+      "statusRejected": "Needs changes",
       "noVideosFound": "No videos found.",
-      "ownershipNote": "You retain full ownership of all your videos. Use the settings button to manage visibility or delete."
+      "ownershipNote": "You retain full ownership of all your videos. Use the settings button to manage visibility or delete.",
+      "searchPlaceholder": "Search videos..."
     },
     "videoReview": {
       "emptyState": "No videos pending review.",
@@ -587,7 +610,7 @@
       "removePaywall": "Remove paywall",
       "visibility": "Visibility",
       "visibilityNote": "You can change visibility at any time. Your video, your choice.",
-      "publicResubmitNote": "Making an approved video public resubmits it for platform review.",
+      "publicResubmitNote": "Making a video public re-runs publishing checks before other schools see it.",
       "optionPrivate": "Private",
       "optionPrivateDesc": "Only you can see",
       "optionSchool": "School",
@@ -603,7 +626,7 @@
       "ownershipTitle": "You own this video",
       "ownershipBody": "You retain all rights. The platform only displays your video while visibility is non-private. You can revoke access or delete at any time.",
       "toastVisibility": "Visibility updated",
-      "toastResubmitted": "Set to public — resubmitted for platform review",
+      "toastResubmitted": "Set to public — publishing to the catalog",
       "toastPaywallRemoved": "Paywall removed",
       "toastRevoked": "Access revoked — video is now private",
       "toastDeleted": "Video deleted",

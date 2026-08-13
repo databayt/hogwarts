@@ -181,7 +181,7 @@ export async function reviewVideo(
           metadata: {
             entityType: "video",
             entityId: video.id,
-            url: "/stream/settings?tab=videos",
+            url: "/lumos/videos",
           },
         },
       })
@@ -191,8 +191,8 @@ export async function reviewVideo(
 
     // Refresh the review queue (settings) and the catalog/lesson views where an
     // approved video now surfaces.
-    revalidatePath("/[lang]/s/[subdomain]/stream/settings")
-    revalidatePath("/[lang]/s/[subdomain]/stream")
+    revalidatePath("/[lang]/s/[subdomain]/lumos/review")
+    revalidatePath("/[lang]/s/[subdomain]/lumos")
     return {
       status: "success",
       message: `Video ${decision.toLowerCase()}`,

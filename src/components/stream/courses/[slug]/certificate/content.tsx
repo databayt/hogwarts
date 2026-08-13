@@ -68,7 +68,7 @@ export function StreamCertificateContent({
 
           <div className="pt-2">
             <Link
-              href={`/${lang}/stream/courses`}
+              href={`/${lang}/lumos/courses`}
               className={buttonVariants({ variant: "outline", size: "sm" })}
             >
               {dictionary?.courses?.title || "All Courses"}

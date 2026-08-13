@@ -17,8 +17,8 @@ export const publicRoutes = [
   "/pricing",
   "/community",
   "/docs",
-  "/stream",
-  "/stream/courses",
+  "/lumos",
+  "/lumos/courses",
   // Public transcript verification (Phase 5 of Aldar parent portal).
   // Anyone with a transcript's verificationCode can confirm its
   // authenticity without an account — the page only renders the same

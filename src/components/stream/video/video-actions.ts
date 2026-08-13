@@ -222,7 +222,7 @@ export async function uploadVideo(
             metadata: {
               entityType: "video",
               entityId: created.id,
-              url: "/stream/settings?tab=review",
+              url: "/lumos/review",
             },
           })),
         })
@@ -232,14 +232,14 @@ export async function uploadVideo(
     })
 
     revalidatePath(
-      `/[lang]/s/[subdomain]/stream/admin/courses/${lesson.chapter.subject.slug}`
+      `/[lang]/s/[subdomain]/lumos/admin/courses/${lesson.chapter.subject.slug}`
     )
-    revalidatePath(`/[lang]/s/[subdomain]/stream/settings`)
+    revalidatePath(`/[lang]/s/[subdomain]/lumos/review`)
     revalidatePath(`/[lang]/catalog/approvals`)
 
     return {
       status: "success",
-      message: "Video submitted for review",
+      message: "Video uploaded",
       videoId: created.id,
     }
   } catch (error) {

@@ -11,7 +11,11 @@ docs: https://ed.databayt.org/en/docs/lms
 last_audited: 2026-07-17
 ---
 
-# Stream (LMS) Block
+# Lumos (LMS) Block
+
+> URL-facing name is **Lumos** (`/lumos`); the component directory is still
+> `src/components/stream/` — a deliberate, recorded gap in the mirror pattern
+> (see ISSUE.md P2).
 
 ## Context
 
@@ -87,9 +91,62 @@ Stream (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~90% complete 
   `DELETE /api/blob/presign` (own-prefix only; refuses keys a Video row
   references) on remove/tab-switch/close-without-submit. Upload entry points:
   teacher dashboard overview AND the settings Videos tab
-  (ADMIN/DEVELOPER/TEACHER, fed by `getProposableLessons()`). New PENDING
+  (ADMIN/DEVELOPER/TEACHER, fed by `getProposableCatalog()`). New PENDING
   submissions notify the school's other ADMINs (off-response-path,
   failure-tolerant).
+- **The lesson picker walks grade → subject → chapter → lesson; it never
+  enumerates.** **Grade is the first tier and is not optional decoration**: the
+  catalog seeds **one Subject row per grade** (`grades: [n]`, `gradeRange`) and
+  leaves the grade OUT of `Subject.name`, so a school teaching 12 grades holds
+  ~120 selections in which "الرياضيات" appears a dozen times, mutually
+  indistinguishable. `SubjectSelection.gradeId → AcademicGrade` is where the
+  grade lives, which is why `resolveProposableScope()` selects the grade
+  relation and `getProposableCatalog()` returns a grade → subject tree (the
+  school's `customName` wins over the catalog name; one row per academic stream
+  is deduped). Any list of subjects rendered without their grade is a bug.
+  **Grade LABELS are derived from `gradeNumber`, never from
+  `AcademicGrade.name`** (Abdout, 2026-08-12): the tree carries the number
+  only and the dialog renders zero-padded "Grade 01"/"الصف 01". School grade
+  names are prose ("الصف الحادي عشر"), translate inconsistently, and don't sort
+  visually — so don't reintroduce `name` here, and don't spend a translation
+  call on it.
+  Below that, tiers load on demand: chapters from
+  **`GET /api/stream/proposable-chapters?subjectId=`**, lessons from
+  **`GET /api/stream/proposable-lessons`** (`q` / `subjectIds` / `chapterId`).
+  Route handlers, NOT server actions: `auth()` rotates the session cookie
+  inside action requests, so an action would ship a full RSC re-render of the
+  page on every keystroke (the notifications-bell finding, 2026-08-11).
+  `get-proposable-lessons.ts` therefore carries **no `"use server"` directive**
+  — one would compile the search into a browser-reachable POST stub and buy
+  back that cost. Every entry point funnels through `resolveProposableScope()`
+  (proposer roles → the school's active `SubjectSelection`s; DEVELOPER gets the
+  global catalog bucketed by `Subject.grades`). Caller-supplied `subjectIds`
+  are **AND-ed** with that scope, never spread over it: `{ ...scope, id }`
+  overwrites `id: { in: selectedIds }` and hands the caller any published
+  subject they name. `chapterId` needs no probe — it rides inside the same
+  `chapter` clause as the subject scope. Pages cap at 50 + a `hasMore` flag;
+  the dialog says "narrow it down", it does not paginate. The client's fetch
+  effect keys on a **query string**, not a scope object — an object identity
+  there re-fires on every render, and `d.search ?? {}` makes that happen
+  whenever a caller passes a dictionary without the subtree.
+  **The picker is bridge-minus-hidden (Abdout, 2026-08-12):** the scope also
+  loads the school's `ContentOverride` `isHidden` rows (the same rows
+  `get-course.ts` filters the student catalog by) and every tier excludes
+  them — nobody proposes a video for content the school's own LMS never
+  shows. Hidden-lesson subtraction happens inside the relation count
+  (`_count.lessons.where.id.notIn`), and id-vs-notIn conditions ride in `AND`
+  arrays, never merged as object keys. Picker names are **translated** through
+  one batched school-scoped `getLabels` per response (`lang` flows page →
+  dialog prop → `locale=` on the routes); platform scope stays raw on purpose.
+  **Because names are translated, the lesson list has NO server-side text
+  search** — a database `contains` matches source text the reader cannot see
+  ("seven" missed a lesson displayed as "the number seven"). A page holds one
+  whole subject (`MAX_PROPOSABLE_RESULTS` 200) and the dialog filters it
+  client-side on the displayed text. Anyone restoring cross-subject search
+  must use the cache-backed bilingual `search()` in `translation/search.ts`.
+  The dialog's URL field mirrors the server's `isValidVideoUrl` from the
+  shared pure module `shared/url-validators.ts` — keep both sides importing
+  that one module so they cannot drift.
 - **Stream client i18n is dict-key-with-English-fallback everywhere** —
   `stream.videoReview.*`, `stream.videoSettings.*`, `stream.search.*`,
   `stream.proposeVideo.fields.upload*`, `stream.lesson.unlock/purchaseFailed`
@@ -146,18 +203,47 @@ Stream (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~90% complete 
   queries them — don't delete those models until that path migrates to
   `Enrollment`. (The dead `enrollInCourseAction`/`checkEnrollmentStatus` were
   removed 2026-06-14.)
-- **The admin "Review" tab is wired via a `reviewContent` prop** that
-  `settings/page.tsx` builds from `getPendingVideos()` and passes to
-  `StreamSettingsContent` (re-wired 2026-06-14 after a merge regression had
-  dropped it). If you refactor the settings page, keep that prop wired or the
-  Review tab silently renders empty again. `reviewVideo` writes via tenant-scoped
-  `updateMany` (schoolId on the write) — don't revert it to `findFirst+update`.
+- **The Review surface is a route now, and fetches its own queue.** It used to
+  be a tab fed by a `reviewContent` prop that `settings/page.tsx` built from
+  `getPendingVideos()` — a merge regression dropped that prop once and the tab
+  silently rendered empty. `settings/review/page.tsx` calls `getPendingVideos()`
+  directly so the wiring can't come undone; keep it that way. `reviewVideo`
+  still writes via tenant-scoped `updateMany` (schoolId on the write) — don't
+  revert it to `findFirst+update`.
+- **`/lumos/settings` is redirect-only; the surfaces are top-level.** The old
+  "Overview" tab rendered the same `StreamAdminDashboardContent` as
+  `/lumos/dashboard`, so the two collapsed. Real surfaces are
+  `lumos/(app)/<name>/page.tsx` → `/lumos/<name>`, each guarded by
+  `requireSettingsAccess` from `settings/guard.ts` (ADMIN/DEVELOPER everywhere,
+  TEACHER on videos only via `teacherAllowed: true`). `settings/page.tsx` and
+  `settings/[tab]/page.tsx` exist purely to forward links written before the
+  move — `Notification.url` rows carry both `/settings?tab=x` and
+  `/settings/x`. Validate against `LUMOS_SURFACES` when adding a surface, or
+  the legacy redirect will drop it to the dashboard.
+- **The section chrome lives in the `(app)` route group, not `lumos/layout.tsx`.**
+  `StreamSectionNav` (`components/stream/nav.tsx`) is rendered by
+  `lumos/(app)/layout.tsx`; the group adds chrome without a URL segment. `/lumos` and
+  `/lumos/courses` deliberately have none — the landing page owns its hero and
+  the catalog is entered from it. Adding the nav to `lumos/layout.tsx` would
+  put a page heading on top of that hero again.
+- **Contributor copy says "upload"; reviewer copy says "review".** The catalog
+  approval step is real, but the person uploading never sees proposal
+  mechanics: the button is "Upload Video", the success toast is "Video
+  uploaded. It'll appear on the lesson shortly.", and `approvalStatus` renders
+  as **Live / Publishing / Needs changes** (not Approved / Pending / Rejected).
+  The reviewer-facing surfaces — the Review queue, the admin notification
+  ("New video pending review"), `approveVideo.*` — deliberately keep the
+  literal review language, because that audience is the review step. Don't
+  "fix" the asymmetry in either direction, and when adding a contributor-facing
+  string, describe what the user gets, not what the system is waiting on.
+  Rejection feedback still surfaces in full (labelled "What to fix") — hiding
+  the mechanics must never hide actionable feedback.
 - **Video-player hooks run ~4Hz during playback** (every `timeupdate`). Any
   effect/listener whose deps include `currentTime`/`duration` will churn — use
   the ref-mirror pattern (`currentTimeRef`/`durationRef`) and keep `actions`
   referentially stable (it's `useMemo`'d in `use-video-player.ts`).
 - **`revalidatePath` in stream uses the internal file-system path**
-  `/[lang]/s/[subdomain]/stream/...` (with `/s/`), NOT a clean URL — the one
+  `/[lang]/s/[subdomain]/lumos/...` (with `/s/`), NOT a clean URL — the one
   place `/s/` is correct.
 
 ## Related Blocks

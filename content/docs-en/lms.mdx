@@ -51,7 +51,7 @@ Three invariants hold everywhere:
 
 <Mermaid
   chart={`flowchart TD
-    V["🧑‍🎓 Student opens /stream"] --> Cat["Browse course catalog<br/>(search + filters)"]
+    V["🧑‍🎓 Student opens /lumos"] --> Cat["Browse course catalog<br/>(search + filters)"]
     Cat --> Det["Course detail — chapters & lessons"]
     Det --> Q{"Free or paid course?"}
     Q -->|"Free"| Free["Enroll — instant, no payment UI"]
@@ -89,7 +89,7 @@ A lesson with no videos — or one whose file is dead or undecodable — plays t
 <Mermaid
   chart={`flowchart TD
     T["👩‍🏫 Teacher / 👨‍💼 Admin"] --> Btn["'Propose a Video' button<br/>(Settings → Videos tab)"]
-    Btn --> S1["1️⃣ Pick the lesson"]
+    Btn --> S1["1️⃣ Find the lesson<br/>pick the grade, then the subject,<br/>then the chapter — or search inside it"]
     S1 --> S2["2️⃣ Add the video"]
     S2 --> Src{"Source?"}
     Src -->|"URL"| U["YouTube / Vimeo / direct link"]
@@ -100,7 +100,7 @@ A lesson with no videos — or one whose file is dead or undecodable — plays t
     S3 --> P["⏳ Pending review — school admins notified,<br/>visible in My Videos"]`}
 />
 
-Teachers, admins, and developers contribute through the same three-step dialog. Direct uploads go straight to storage with a progress bar; wrong types, oversized files, and a full storage quota are refused before any bytes move, and an uploaded-but-unsubmitted file cleans itself up when the dialog is abandoned. Quota counts the file's real size on storage, not what the client claims. Every submission lands as Pending — no role skips review — and the school's other admins are notified.
+Teachers, admins, and developers contribute through the same three-step dialog. Step one walks the catalog's own hierarchy rather than listing it flat, the same way the course catalog does: numbered grade buttons with that grade's subjects beneath them, then the chapters and lessons inside the subject you pick, with a search box for the last stretch. Grade comes first because a subject is defined per grade, so "Mathematics" means nothing on its own. Only what the school actually teaches is on offer — content the school has hidden from its LMS never appears — names read in your own language, picking a lesson moves you straight to the next step, and lessons come back a page at a time. Direct uploads go straight to storage with a progress bar — click to choose or drag the file in, and the file name becomes the title if you haven't typed one; a link that isn't a video is flagged right on the field; wrong types, oversized files, and a full storage quota are refused before any bytes move, and an uploaded-but-unsubmitted file cleans itself up when the dialog is abandoned. Quota counts the file's real size on storage, not what the client claims. Every submission lands as Pending — no role skips review — and the school's other admins are notified.
 
 ### Review & publish
 
@@ -159,7 +159,7 @@ Settings tabs are role-gated (teachers see only Videos; admins see all five, wit
 
 ## Structure
 
-The block follows the [mirror pattern](/docs/architecture): routes under `app/[lang]/s/[subdomain]/(school-dashboard)/stream/` are thin wrappers, and everything lives in `src/components/stream/`. Read fetchers in `data/catalog/` are server-only modules wrapped in React `cache()` — deliberately **not** `"use server"` actions.
+The block follows the [mirror pattern](/docs/architecture): routes under `app/[lang]/s/[subdomain]/(school-dashboard)/lumos/` are thin wrappers, and everything lives in `src/components/stream/` (the component directory keeps the old name; the URL and UI are **Lumos**). Read fetchers in `data/catalog/` are server-only modules wrapped in React `cache()` — deliberately **not** `"use server"` actions.
 
 <StreamStructure />
 

@@ -122,7 +122,7 @@ export function StreamCoursesContent({
             {isAdmin && (
               <div className="mt-4">
                 <Link
-                  href={`/${lang}/stream/settings`}
+                  href={`/${lang}/lumos/dashboard`}
                   className={buttonVariants({ size: "sm" })}
                 >
                   <Plus className="me-2 size-4" />

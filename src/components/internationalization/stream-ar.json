@@ -30,7 +30,7 @@
       "remaining": "متبقٍّ",
       "left": "متبقٍّ"
     },
-    "title": "ستريم - نظام إدارة التعلم",
+    "title": "لوموس - نظام إدارة التعلم",
     "description": "نظام إدارة التعلم الإلكتروني",
     "home": {
       "badge": "أهلاً بك في بالقلم",
@@ -105,7 +105,7 @@
       "completionRate": "نسبة الإنجاز"
     },
     "settings": {
-      "title": "إعدادات ستريم",
+      "title": "إعدادات لوموس",
       "description": "إدارة التسجيلات وتفضيلات المدربين ومحتوى الفيديو",
       "overview": "نظرة عامة",
       "enrollments": "التسجيلات",
@@ -236,6 +236,7 @@
       "home": "الرئيسية",
       "courses": "الدورات",
       "myLearning": "تعلمي",
+      "dashboard": "لوحة التحكم",
       "settings": "الإعدادات",
       "signIn": "تسجيل الدخول",
       "profile": "الملف الشخصي"
@@ -273,7 +274,7 @@
       "enrolled": "مسجل"
     },
     "adminDashboard": {
-      "title": "لوحة تحكم المسؤول - Stream",
+      "title": "لوحة تحكم المسؤول - لوموس",
       "description": "إدارة الدورات، تتبع التسجيلات، ومراقبة الإيرادات",
       "totalCourses": "إجمالي الدورات",
       "noCoursesYet": "لا توجد دورات بعد",
@@ -301,7 +302,12 @@
       "edit": "تعديل",
       "noCoursesCreated": "لا توجد دورات بعد",
       "createFirstCourse": "أنشئ أول دورة للبدء",
-      "createCourse": "إنشاء دورة"
+      "createCourse": "إنشاء دورة",
+      "manageEnrollments": "إدارة التسجيلات",
+      "instructorSettings": "إعدادات المدربين",
+      "browseCatalog": "تصفح الكتالوج",
+      "manageVideos": "مكتبة الفيديو",
+      "view": "عرض"
     },
     "parentDashboard": {
       "title": "تقدم الأبناء",
@@ -374,10 +380,10 @@
       "delete": "حذف"
     },
     "teachingHero": {
-      "title": "شارك دروسك مع طلابك",
-      "description": "سجّل الدرس مرة واحدة وصِل إلى كل طالب في صفّك — هنا على المنصة مباشرة.",
-      "cta": "ابدأ التدريس",
-      "learnMore": "تصفّح المقررات"
+      "title": "تعال وعلّم معنا",
+      "description": "كن مدربًا وغيّر حياة الآخرين — بما في ذلك حياتك",
+      "cta": "ابدأ الآن",
+      "learnMore": "اعرف المزيد"
     },
     "hotReleases": {
       "title": "إصدارات جديدة رائجة"
@@ -425,16 +431,16 @@
       "HIGH": "ثانوي"
     },
     "proposeVideo": {
-      "trigger": "اقترح فيديو",
+      "trigger": "رفع فيديو",
       "steps": {
         "selectLesson": "اختر الدرس",
         "addVideo": "أضف فيديوك",
-        "confirm": "المراجعة والإرسال"
+        "confirm": "التأكيد والنشر"
       },
       "descriptions": {
-        "selectLesson": "اختر الدرس الذي تود المساهمة بفيديو له.",
-        "addVideo": "أدخل رابط الفيديو وتفاصيله. ستخضع المشاركة للمراجعة قبل النشر.",
-        "confirm": "راجع إرسالك. أنت تحتفظ بالملكية الكاملة والتحكم في فيديوك."
+        "selectLesson": "اختر الدرس الذي ينتمي إليه هذا الفيديو.",
+        "addVideo": "أضف الفيديو وتفاصيله. سيظهر في الدرس بمجرد انتهاء المعالجة.",
+        "confirm": "راجع التفاصيل وانشر. تحتفظ بالملكية الكاملة والتحكم في فيديوك."
       },
       "fields": {
         "title": "عنوان الفيديو",
@@ -444,12 +450,14 @@
         "sourceUpload": "رفع",
         "urlPlaceholder": "https://youtube.com/watch?v=... أو https://vimeo.com/...",
         "urlHelper": "يدعم YouTube و Vimeo أو روابط الفيديو المباشرة.",
+        "urlInvalid": "هذا الرابط لا يبدو رابط فيديو — استخدم YouTube أو Vimeo أو رابط ملف فيديو مباشرًا.",
         "description": "الوصف (اختياري)",
         "descriptionPlaceholder": "وصف موجز لما يغطيه هذا الفيديو...",
         "price": "السعر",
         "currency": "العملة",
         "pricePlaceholder": "9.99",
         "uploadDrop": "انقر لاختيار ملف فيديو",
+        "uploadDragHint": "…أو اسحب الملف وأفلته هنا",
         "uploadHint": "MP4 أو WebM أو MOV أو AVI — حتى 5 جيجابايت",
         "uploading": "جارٍ الرفع…",
         "uploadCancel": "إلغاء الرفع",
@@ -463,7 +471,7 @@
       "audience": {
         "label": "الجمهور",
         "public": "الكاتالوج العام",
-        "publicHelper": "مرئي لكل مدرسة بعد الاعتماد.",
+        "publicHelper": "مرئي لكل مدرسة في الكاتالوج.",
         "school": "مدرستي فقط",
         "schoolHelper": "يظهر فقط لمستخدمي مدرستك.",
         "private": "خاص",
@@ -473,7 +481,7 @@
         "label": "التسعير",
         "free": "مجاني",
         "paid": "مدفوع",
-        "helper": "قد يُعدّل المراجع الجمهور أو التسعير قبل الاعتماد.",
+        "helper": "يمكن تعديل الجمهور والتسعير بعد النشر.",
         "paidSummary": "مدفوع · {price} {currency}"
       },
       "confirm": {
@@ -486,7 +494,7 @@
         "rightsTitle": "حقوقك محفوظة",
         "rightsOwnership": "تحتفظ بالملكية الكاملة لفيديوك",
         "rightsVisibility": "يمكنك تغيير الظهور أو الحذف في أي وقت",
-        "rightsReview": "يجب اعتماد الإدارة قبل نشر الفيديو",
+        "rightsReview": "تُفحص الفيديوهات للتأكد من جودتها قبل أن يراها الطلاب",
         "rightsControl": "حتى بعد الاعتماد، أنت تتحكم في من يرى فيديوك"
       },
       "actions": {
@@ -495,15 +503,29 @@
         "review": "مراجعة",
         "submit": "إرسال للمراجعة"
       },
-      "empty": "لا توجد دروس متاحة لاقتراح الفيديوهات.",
+      "empty": "لا توجد دروس متاحة للرفع إليها.",
+      "search": {
+        "placeholder": "ابحث عن درس…",
+        "allSubjects": "كل المواد",
+        "lessonCount": "{count} درس",
+        "allGrades": "كل الصفوف",
+        "allChapters": "كل الوحدات",
+        "grade": "الصف",
+        "ungraded": "غير مصنّف",
+        "loading": "جارٍ البحث…",
+        "empty": "لا توجد دروس تطابق بحثك.",
+        "failed": "تعذّر البحث — تحقّق من الاتصال وحاول مرة أخرى.",
+        "truncated": "تُعرض أول {count} نتيجة — اختر وحدة أو ابحث لتضييق النتائج.",
+        "clear": "إلغاء الاختيار"
+      },
       "toast": {
-        "success": "تم إرسال الفيديو للمراجعة. سيتم إشعارك عند الاعتماد."
+        "success": "تم رفع الفيديو. سيظهر في الدرس قريبًا."
       }
     },
     "approveVideo": {
       "dialogTitle": "مراجعة الفيديو واعتماده",
       "dialogDescription": "حدد الظهور والتسعير وحالة التمييز قبل الاعتماد.",
-      "proposer": "اقترحه",
+      "proposer": "رفعه",
       "visibility": "الظهور",
       "visibilityOptions": {
         "public": "عام — لكل مدرسة",
@@ -534,19 +556,19 @@
       }
     },
     "teachVideos": {
-      "rejectionReasonLabel": "ملاحظات المراجع",
+      "rejectionReasonLabel": "ما يجب تعديله",
       "title": "فيديوهاتي",
       "videosUnit": "فيديو",
       "emptyNone": "لم تقم برفع أي فيديوهات بعد.",
-      "emptyHint": "استخدم زر «اقتراح فيديو» من لوحة التحكم.",
+      "emptyHint": "استخدم زر \"رفع فيديو\" لإضافة أول فيديو لك.",
       "statTotal": "الإجمالي",
-      "statApproved": "معتمد",
-      "statPending": "قيد المراجعة",
+      "statApproved": "منشور",
+      "statPending": "قيد النشر",
       "statTotalViews": "إجمالي المشاهدات",
       "tabAll": "الكل",
-      "tabApproved": "معتمد",
-      "tabPending": "قيد المراجعة",
-      "tabRejected": "مرفوض",
+      "tabApproved": "منشور",
+      "tabPending": "قيد النشر",
+      "tabRejected": "يحتاج تعديل",
       "colTitle": "العنوان",
       "colSubject": "المادة",
       "colLesson": "الدرس",
@@ -557,11 +579,12 @@
       "colDate": "التاريخ",
       "featured": "مميز",
       "free": "مجاني",
-      "statusApproved": "معتمد",
-      "statusPending": "قيد المراجعة",
-      "statusRejected": "مرفوض",
+      "statusApproved": "منشور",
+      "statusPending": "قيد النشر",
+      "statusRejected": "يحتاج تعديل",
       "noVideosFound": "لا توجد فيديوهات.",
-      "ownershipNote": "تحتفظ بالملكية الكاملة لجميع فيديوهاتك. استخدم زر الإعدادات لإدارة الظهور أو الحذف."
+      "ownershipNote": "تحتفظ بالملكية الكاملة لجميع فيديوهاتك. استخدم زر الإعدادات لإدارة الظهور أو الحذف.",
+      "searchPlaceholder": "ابحث في الفيديوهات..."
     },
     "videoReview": {
       "emptyState": "لا توجد مقاطع فيديو بانتظار المراجعة.",
@@ -587,7 +610,7 @@
       "removePaywall": "إزالة حاجز الدفع",
       "visibility": "الظهور",
       "visibilityNote": "يمكنك تغيير الظهور في أي وقت. الفيديو ملكك والقرار قرارك.",
-      "publicResubmitNote": "جعل فيديو معتمد عامًا يعيد إرساله لمراجعة المنصة.",
+      "publicResubmitNote": "جعل الفيديو عامًا يعيد تشغيل فحوصات النشر قبل أن تراه المدارس الأخرى.",
       "optionPrivate": "خاص",
       "optionPrivateDesc": "أنت فقط من يمكنه المشاهدة",
       "optionSchool": "المدرسة",
@@ -603,7 +626,7 @@
       "ownershipTitle": "أنت تملك هذا الفيديو",
       "ownershipBody": "تحتفظ بجميع الحقوق. تعرض المنصة الفيديو فقط ما دام ظهوره غير خاص. يمكنك سحب الوصول أو الحذف في أي وقت.",
       "toastVisibility": "تم تحديث الظهور",
-      "toastResubmitted": "أصبح عامًا — أُعيد إرساله لمراجعة المنصة",
+      "toastResubmitted": "أصبح عامًا — يُنشر إلى الكاتالوج",
       "toastPaywallRemoved": "تمت إزالة حاجز الدفع",
       "toastRevoked": "تم سحب الوصول — الفيديو خاص الآن",
       "toastDeleted": "تم حذف الفيديو",

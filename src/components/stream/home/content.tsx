@@ -100,7 +100,7 @@ export function StreamHomeContent({
                 className={buttonVariants({
                   size: "lg",
                 })}
-                href={`/${lang}/stream/courses`}
+                href={`/${lang}/lumos/courses`}
               >
                 {dictionary?.home?.exploreCourses || "Explore Courses"}
               </Link>
@@ -111,9 +111,9 @@ export function StreamHomeContent({
                     size: "lg",
                     variant: "ghost",
                   })}
-                  href={`/${lang}/stream/dashboard`}
+                  href={`/${lang}/lumos/dashboard`}
                 >
-                  {dictionary?.header?.myLearning ?? "My Learning"}
+                  {dictionary?.header?.dashboard ?? "Dashboard"}
                 </Link>
               ) : null}
             </div>

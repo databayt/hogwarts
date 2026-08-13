@@ -171,28 +171,28 @@ export function StreamAdminDashboardContent({
       <div className="flex flex-wrap gap-3">
         <Link
           className={buttonVariants({ variant: "outline" })}
-          href={`/${lang}/stream/courses`}
+          href={`/${lang}/lumos/courses`}
         >
           <BookOpen className="me-2 size-4" />
           {d?.viewAllCourses || "Browse Courses"}
         </Link>
         <Link
           className={buttonVariants({ variant: "outline" })}
-          href={`/${lang}/stream/settings?tab=enrollments`}
+          href={`/${lang}/lumos/enrollments`}
         >
           <Users className="me-2 size-4" />
           {d?.manageEnrollments || "Manage Enrollments"}
         </Link>
         <Link
           className={buttonVariants({ variant: "outline" })}
-          href={`/${lang}/stream/settings?tab=instructors`}
+          href={`/${lang}/lumos/instructors`}
         >
           <UserCog className="me-2 size-4" />
           {d?.instructorSettings || "Instructor Settings"}
         </Link>
         <Link
           className={buttonVariants({ variant: "outline" })}
-          href={`/${lang}/stream/settings?tab=videos`}
+          href={`/${lang}/lumos/videos`}
         >
           <Video className="me-2 size-4" />
           {d?.manageVideos || "Video Library"}
@@ -212,7 +212,7 @@ export function StreamAdminDashboardContent({
             </div>
             <Link
               className={buttonVariants({ variant: "outline" })}
-              href={`/${lang}/stream/courses`}
+              href={`/${lang}/lumos/courses`}
             >
               {d?.viewAllCourses || "View All"}
             </Link>
@@ -255,7 +255,7 @@ export function StreamAdminDashboardContent({
                   </div>
                   <Link
                     className={buttonVariants({ variant: "ghost", size: "sm" })}
-                    href={`/${lang}/stream/courses/${course.slug}`}
+                    href={`/${lang}/lumos/courses/${course.slug}`}
                   >
                     {d?.view || "View"}
                   </Link>

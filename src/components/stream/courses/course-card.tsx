@@ -55,7 +55,7 @@ function CourseCardImpl({ course, lang, dictionary }: CourseCardProps) {
 
   return (
     <Link
-      href={`/${lang}/stream/courses/${course.slug}`}
+      href={`/${lang}/lumos/courses/${course.slug}`}
       className="group block"
     >
       {/* Card Image */}

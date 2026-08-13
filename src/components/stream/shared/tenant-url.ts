@@ -13,7 +13,7 @@ import { i18n, type Locale } from "@/components/internationalization/config"
  * completion/certificate) and Stripe success/cancel redirects.
  *
  * These were all built from `env.NEXT_PUBLIC_APP_URL` — the MAIN host — but
- * no `/stream` route exists outside the tenant segment, so on production
+ * no `/lumos` route exists outside the tenant segment, so on production
  * every such link 404'd for tenant users (a paying student was redirected to
  * a not-found page immediately after checkout). Same class of bug the
  * admission emails fixed with `tenantUrl` in

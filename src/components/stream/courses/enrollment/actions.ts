@@ -129,7 +129,7 @@ export async function verifyPaymentAndActivateEnrollment(sessionId: string) {
         studentName: user.username || "Student",
         courseTitle: enrollment.course.title,
         courseUrl: await streamTenantUrl(
-          `/stream/courses/${enrollment.course.slug}`,
+          `/lumos/courses/${enrollment.course.slug}`,
           emailLocale
         ),
         schoolName: school?.name || "School",

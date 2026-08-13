@@ -108,7 +108,7 @@ export async function updateVideoVisibility(
       },
     })
 
-    revalidatePath("/[lang]/s/[subdomain]/stream")
+    revalidatePath("/[lang]/s/[subdomain]/lumos")
     return {
       status: "success",
       message: needsPlatformReview
@@ -148,7 +148,7 @@ export async function removeVideoPaywall(
       data: { visibility: newVisibility, price: null, currency: null },
     })
 
-    revalidatePath("/[lang]/s/[subdomain]/stream")
+    revalidatePath("/[lang]/s/[subdomain]/lumos")
     return {
       status: "success",
       message: `Paywall removed — video is now ${newVisibility.toLowerCase()}`,
@@ -196,7 +196,7 @@ export async function deleteOwnVideo(videoId: string): Promise<ActionResponse> {
       }
     }
 
-    revalidatePath("/[lang]/s/[subdomain]/stream")
+    revalidatePath("/[lang]/s/[subdomain]/lumos")
     return { status: "success", message: "Video deleted" }
   } catch (error) {
     console.error("Failed to delete video:", error)
@@ -233,7 +233,7 @@ export async function revokeVideoAccess(
       }
     }
 
-    revalidatePath("/[lang]/s/[subdomain]/stream")
+    revalidatePath("/[lang]/s/[subdomain]/lumos")
     return {
       status: "success",
       message: "Access revoked — video is now private",
@@ -285,7 +285,7 @@ export async function replaceVideoFile(
       }
     }
 
-    revalidatePath("/[lang]/s/[subdomain]/stream")
+    revalidatePath("/[lang]/s/[subdomain]/lumos")
     return {
       status: "success",
       message: "Video replaced — pending re-approval",

@@ -5,17 +5,17 @@ title: Stream (LMS)
 file_type: readme
 owner: Abdout
 maturity: Built+Polish
-completion: 90
+completion: 91
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-08-11
+last_audited: 2026-08-12
 ---
 
 ## Stream — Learning Management System (LMS)
 
 ### Overview
 
-Full-featured LMS module for the Hogwarts platform supporting catalog-based course enrollment (free and Stripe-paid), video lessons with instructor preferences, progress tracking, certificates, analytics, parent views, and email notifications. Built with the mirror pattern linking routes under `(school-dashboard)/stream/` to components here.
+Full-featured LMS module for the Hogwarts platform supporting catalog-based course enrollment (free and Stripe-paid), video lessons with instructor preferences, progress tracking, certificates, analytics, parent views, and email notifications. Built with the mirror pattern linking routes under `(school-dashboard)/lumos/` to components here.
 
 The stream block uses a catalog-based architecture where courses map to subjects from the school catalog. Schools configure instructor preferences (platform, school, or teacher content) per subject.
 
@@ -29,19 +29,52 @@ The stream block uses a catalog-based architecture where courses map to subjects
 
 ### Routes
 
-| Route                                                      | Page                     | Status |
-| ---------------------------------------------------------- | ------------------------ | ------ |
-| `/{lang}/s/{subdomain}/stream`                             | Home / landing page      | Ready  |
-| `/{lang}/s/{subdomain}/stream/courses`                     | Course catalog           | Ready  |
-| `/{lang}/s/{subdomain}/stream/courses/[slug]`              | Course detail            | Ready  |
-| `/{lang}/s/{subdomain}/stream/courses/[slug]/[lessonId]`   | Lesson viewer            | Ready  |
-| `/{lang}/s/{subdomain}/stream/dashboard`                   | Student enrolled courses | Ready  |
-| `/{lang}/s/{subdomain}/stream/dashboard/[slug]`            | Course progress          | Ready  |
-| `/{lang}/s/{subdomain}/stream/dashboard/[slug]/[lessonId]` | Lesson player            | Ready  |
-| `/{lang}/s/{subdomain}/stream/settings`                    | Admin settings (4 tabs)  | Ready  |
-| `/{lang}/s/{subdomain}/stream/teach/videos`                | Teacher video management | Ready  |
-| `/{lang}/s/{subdomain}/stream/payment/success`             | Stripe payment success   | Ready  |
-| `/{lang}/s/{subdomain}/stream/payment/cancel`              | Stripe payment cancel    | Ready  |
+| Route                                                      | Page                                                                                   | Status |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------ |
+| `/{lang}/s/{subdomain}/lumos`                              | Home / landing page (no nav chrome)                                                    | Ready  |
+| `/{lang}/s/{subdomain}/lumos/courses`                      | Course catalog                                                                         | Ready  |
+| `/{lang}/s/{subdomain}/lumos/courses/[slug]`               | Course detail                                                                          | Ready  |
+| `/{lang}/s/{subdomain}/lumos/courses/[slug]/[lessonId]`    | Lesson viewer                                                                          | Ready  |
+| `/{lang}/s/{subdomain}/lumos/dashboard`                    | Role dashboard (admin stats / teach overview / children's progress / enrolled courses) | Ready  |
+| `/{lang}/s/{subdomain}/lumos/dashboard/[slug]`             | Course progress                                                                        | Ready  |
+| `/{lang}/s/{subdomain}/lumos/dashboard/[slug]/[lessonId]`  | Lesson player                                                                          | Ready  |
+| `/{lang}/s/{subdomain}/lumos/enrollments`                  | Enrollments (ADMIN)                                                                    | Ready  |
+| `/{lang}/s/{subdomain}/lumos/instructors`                  | Instructor preferences (ADMIN)                                                         | Ready  |
+| `/{lang}/s/{subdomain}/lumos/review`                       | Video review queue (ADMIN)                                                             | Ready  |
+| `/{lang}/s/{subdomain}/lumos/videos`                       | Video library (ADMIN + TEACHER)                                                        | Ready  |
+| `/{lang}/s/{subdomain}/lumos/settings`, `…/settings/[tab]` | Legacy → redirect to the routes above                                                  | Ready  |
+| `/{lang}/s/{subdomain}/lumos/teach/videos`                 | Redirects to `/lumos/videos`                                                           | Ready  |
+| `/{lang}/s/{subdomain}/lumos/payment/success`              | Stripe payment success                                                                 | Ready  |
+| `/{lang}/s/{subdomain}/lumos/payment/cancel`               | Stripe payment cancel                                                                  | Ready  |
+
+### Navigation
+
+The block is branded **Lumos** in the UI and served from `/lumos`. The section
+heading + tab strip (`components/stream/nav.tsx` → `PageHeadingSetter` +
+`PageNav`) is rendered by the `lumos/(app)/` route-group layout — a group, so
+the five managed surfaces sit at `/lumos/<name>` with no extra URL segment. The
+`/lumos` landing page and `/lumos/courses` sit outside the group: the landing
+page keeps its own hero, and the catalog is reached from its primary button. Tabs come from `getTabsForRole` in
+`components/stream/permissions.ts`:
+
+| Role             | Tabs                                                    |
+| ---------------- | ------------------------------------------------------- |
+| ADMIN, DEVELOPER | Dashboard · Enrollments · Instructors · Review · Videos |
+| TEACHER          | Dashboard · Videos                                      |
+| everyone else    | none (no strip rendered)                                |
+
+`/lumos/videos` uses the house listing chrome — `PlatformToolbar` +
+`DataTable` (`teach/videos-columns.tsx`), same as `/students`: search, faceted
+Status/Visibility filters, column-visibility toggle, sortable headers, and the
+Propose-a-Video action in `additionalActions`. Filtering and sorting are
+client-side (`enableClientFiltering`/`enableClientSorting`) because
+`getMyVideos()` already returns the full set; the view toggle is hidden — there
+is no grid card design for videos.
+
+The Review tab carries a pending-queue badge. There is no second, inner tab
+strip and no `/settings` segment: the old `settings?tab=` surfaces are
+top-level routes. `/lumos/settings` and `/lumos/settings/[tab]` survive only as
+redirects for links written before the move.
 
 ### File Structure
 
@@ -100,7 +133,7 @@ src/components/stream/
 │   ├── videos-content.tsx          # Teacher video management UI
 │   ├── propose-video-dialog.tsx    # Multi-step video proposal wizard
 │   ├── video-settings-dialog.tsx   # Video settings/visibility dialog
-│   └── get-proposable-lessons.ts   # Fetch lessons available for video submission
+│   └── get-proposable-lessons.ts   # Grade→subject tree, chapters, lesson search
 ├── video/
 │   ├── video-input.tsx             # Video URL input component
 │   ├── video-actions.ts            # Upload video server action

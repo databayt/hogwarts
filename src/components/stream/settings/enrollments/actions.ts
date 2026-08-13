@@ -157,9 +157,9 @@ export async function bulkEnrollStudents(data: {
   })
 
   // Settings page (where getSchoolEnrollments is consumed) — the old
-  // "/stream/admin/enrollments" path matched no route, so the list never
+  // "/lumos/admin/enrollments" path matched no route, so the list never
   // refreshed after a bulk enroll.
-  revalidatePath("/[lang]/s/[subdomain]/stream/settings")
+  revalidatePath("/[lang]/s/[subdomain]/lumos/enrollments")
 
   return {
     success: true,

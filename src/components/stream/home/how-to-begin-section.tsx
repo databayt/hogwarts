@@ -3,19 +3,31 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import { ClipboardCheck, Users, Video } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 
 import type { StreamContentProps } from "../types"
 
 // The real teacher contribution flow this block supports: record → submit for
-// review → goes live for enrolled students. Replaces the verbatim Udemy
-// "become an instructor" copy + hotlinked Udemy images. Icons are lucide.
+// review → goes live for enrolled students. The copy describes THIS flow —
+// it deliberately does not return to the verbatim Udemy "become an instructor"
+// text this section once carried.
+//
+// Each step gets its own illustration, served from our own CDN rather than
+// hotlinked off a competitor (published via scripts/upload-anthropic-assets.ts).
+//
+// `tile` is a literal hex, not a theme token, on purpose: this art is drawn in
+// #141413 on #FAF9F5 and only reads on a LIGHT ground, so a themed surface
+// (bg-muted) would swallow it in dark mode. Same brand-art pairing the
+// saas-marketing mission cards use for the sibling illustrations.
 const steps = [
   {
     id: "record",
-    Icon: Video,
+    image: asset(
+      "https://cdn.databayt.org/anthropic/illustrations/hand-keyboard.svg"
+    ),
+    tile: "#E3DACC",
     title: "Record your lesson",
     description:
       "Use your phone or a screen recorder to capture a lesson — no studio needed.",
@@ -26,7 +38,10 @@ const steps = [
   },
   {
     id: "review",
-    Icon: ClipboardCheck,
+    image: asset(
+      "https://cdn.databayt.org/anthropic/illustrations/scale-shapes.svg"
+    ),
+    tile: "#BCD1CA",
     title: "Submit for review",
     description:
       "Attach the video to a lesson and send it in. Your school admin reviews it before it goes live.",
@@ -37,7 +52,10 @@ const steps = [
   },
   {
     id: "live",
-    Icon: Users,
+    image: asset(
+      "https://cdn.databayt.org/anthropic/illustrations/node-globe.svg"
+    ),
+    tile: "#CBCADB",
     title: "It goes live for your students",
     description:
       "Once approved, your video appears inside the lesson for every enrolled student.",
@@ -52,7 +70,6 @@ export function HowToBeginSection({
   dictionary,
 }: Omit<StreamContentProps, "schoolId">) {
   const [activeStep, setActiveStep] = useState(0)
-  const ActiveIcon = steps[activeStep].Icon
 
   return (
     <section className="py-16 sm:py-20 md:py-24">
@@ -111,13 +128,20 @@ export function HowToBeginSection({
           </div>
         </div>
 
-        {/* Illustration */}
+        {/* Illustration — decorative; the active tab already names the step */}
         <div className="flex justify-center md:w-[60%]">
-          <div className="bg-muted flex aspect-video w-full max-w-lg items-center justify-center rounded-xl">
-            <ActiveIcon
-              className="text-muted-foreground/60 h-24 w-24"
-              strokeWidth={1}
-              aria-hidden="true"
+          <div
+            className="flex aspect-video w-full max-w-lg items-center justify-center rounded-xl p-8"
+            style={{ backgroundColor: steps[activeStep].tile }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              key={steps[activeStep].id}
+              src={steps[activeStep].image}
+              alt=""
+              width={512}
+              height={512}
+              className="h-full w-auto max-w-full rtl:[transform:scaleX(-1)]"
             />
           </div>
         </div>

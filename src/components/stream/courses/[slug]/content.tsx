@@ -159,7 +159,7 @@ export function StreamCourseDetailContent({
               style={{ color: colors.muted }}
             >
               <Link
-                href={`/${lang}/stream`}
+                href={`/${lang}/lumos`}
                 className="hover:underline"
                 style={{ color: colors.muted }}
               >
@@ -167,7 +167,7 @@ export function StreamCourseDetailContent({
               </Link>
               <span>/</span>
               <Link
-                href={`/${lang}/stream/courses`}
+                href={`/${lang}/lumos/courses`}
                 className="hover:underline"
                 style={{ color: colors.muted }}
               >
@@ -216,7 +216,7 @@ export function StreamCourseDetailContent({
                 userRole === "DEVELOPER" ||
                 userRole === "TEACHER") && (
                 <Link
-                  href={`/${lang}/stream/courses/${course.slug}/edit`}
+                  href={`/${lang}/lumos/courses/${course.slug}/edit`}
                   className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors"
                   style={{
                     backgroundColor: colors.card,

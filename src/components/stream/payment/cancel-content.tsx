@@ -32,7 +32,7 @@ export default function PaymentCancelContent({ dictionary, lang }: Props) {
             </p>
 
             <Link
-              href={`/${lang}/stream/courses`}
+              href={`/${lang}/lumos/courses`}
               className={buttonVariants({ className: "mt-5 w-full" })}
             >
               <ArrowLeft className="size-4 rtl:rotate-180" />
