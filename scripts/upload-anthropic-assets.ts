@@ -11,6 +11,10 @@
  *   pnpm tsx scripts/upload-anthropic-assets.ts          # dry run
  *   pnpm tsx scripts/upload-anthropic-assets.ts --upload  # download + upload
  *   pnpm tsx scripts/upload-anthropic-assets.ts --manifest # output JSON manifest
+ *   pnpm tsx scripts/upload-anthropic-assets.ts --upload --only=illustrations/hand-keyboard,illustrations/chat
+ *
+ * `--only=` takes comma-separated substrings matched against the S3 key, so a
+ * single missing asset can be published without walking the whole manifest.
  */
 import "dotenv/config"
 
@@ -45,6 +49,12 @@ const MIME_MAP: Record<string, string> = {
 // Config
 // ---------------------------------------------------------------------------
 
+// GOTCHA: the CloudFront distribution behind cdn.databayt.org has `databayt-cdn`
+// as its origin — NOT `hogwarts-databayt`, which is what AWS_S3_BUCKET is set to
+// in .env for the app's own uploads. Publishing here with the default bucket
+// "succeeds" and then every URL 403s, because the CDN never sees the object.
+// Pass the origin bucket explicitly when publishing CDN assets:
+//   AWS_S3_BUCKET=databayt-cdn pnpm tsx scripts/upload-anthropic-assets.ts --upload
 const BUCKET = process.env.AWS_S3_BUCKET || "hogwarts-databayt"
 const REGION = process.env.AWS_REGION || "us-east-1"
 const CACHE_CONTROL = "public, max-age=31536000, immutable"
@@ -477,7 +487,27 @@ async function main() {
   const doUpload = args.includes("--upload")
   const doManifest = args.includes("--manifest")
 
-  const entries = Object.entries(ASSETS)
+  const onlyArg = args.find((a) => a.startsWith("--only="))
+  const onlyFilters = onlyArg
+    ? onlyArg
+        .slice("--only=".length)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : []
+
+  const entries = Object.entries(ASSETS).filter(
+    ([, s3Key]) =>
+      onlyFilters.length === 0 || onlyFilters.some((f) => s3Key.includes(f))
+  )
+
+  if (onlyFilters.length > 0 && entries.length === 0) {
+    console.error(
+      `\n  No manifest entry matches --only=${onlyFilters.join(",")}\n`
+    )
+    process.exit(1)
+  }
+
   const cdnDomain =
     process.env.NEXT_PUBLIC_CDN_DOMAIN || "d1dlwtcfl0db67.cloudfront.net"
 

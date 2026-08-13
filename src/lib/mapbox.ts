@@ -113,7 +113,18 @@ export async function reverseGeocode(
       }
     }
 
-    return featureToLocationResult(feature)
+    // Keep the coordinates the caller ASKED about — only the address text and
+    // its components come from the matched feature.
+    //
+    // WHY: featureToLocationResult reads `feature.center`, which is the matched
+    // feature's CENTROID. That is right for forward search (you picked that
+    // place) but wrong here: the caller already has an exact point — a GPS fix,
+    // a map click, a dragged pin — and `types` above includes place, locality
+    // and region, so when no address-level feature exists (common outside
+    // dense-address countries) features[0] can be a whole locality or region
+    // and its centroid sits kilometres from the real point. That centroid was
+    // then handed back as "your location".
+    return { ...featureToLocationResult(feature), latitude, longitude }
   } catch {
     return null
   }

@@ -280,7 +280,7 @@ export async function approveContent(
                 metadata: {
                   entityType: "video",
                   entityId: id,
-                  url: "/stream/settings?tab=videos",
+                  url: "/lumos/videos",
                 },
               },
             })
@@ -382,7 +382,7 @@ export async function rejectContent(
                 metadata: {
                   entityType: "video",
                   entityId: id,
-                  url: "/stream/settings?tab=videos",
+                  url: "/lumos/videos",
                   rejectionReason,
                 },
               },

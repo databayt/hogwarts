@@ -55,7 +55,7 @@ export function TranscriptsTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Input
           placeholder={dict.searchPlaceholder}
           value={search}
@@ -66,7 +66,7 @@ export function TranscriptsTable({
         <Button variant="outline" onClick={handleSearch} disabled={isPending}>
           {dict.search}
         </Button>
-        <div className="ms-auto flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <Input
             placeholder={dict.studentIdPlaceholder}
             value={studentId}

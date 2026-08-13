@@ -220,8 +220,8 @@ export function CatalogContentSections({
   materialsHref = `/${lang}/subjects/${subjectSlug}/materials`,
   qbankHref = `/${lang}/exams/qbank?catalogSubjectId=${catalogSubjectId}`,
   examsHref = `/${lang}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`,
-  videosHref = `/${lang}/stream/dashboard/${subjectSlug}`,
-  videoTileBasePath = `/${lang}/stream/dashboard/${subjectSlug}`,
+  videosHref = `/${lang}/lumos/dashboard/${subjectSlug}`,
+  videoTileBasePath = `/${lang}/lumos/dashboard/${subjectSlug}`,
 }: Props) {
   // This component needs dictionary passed as prop - for now use useDictionary
   // since it's a client component that doesn't receive dictionary prop

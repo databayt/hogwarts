@@ -1966,6 +1966,7 @@
       "viewClasses": "عرض الفصول",
       "noAccountMessage": "هذا الطالب ليس لديه حساب مستخدم",
       "noEmail": "لا يوجد بريد",
+      "noPhone": "لا يوجد هاتف",
       "failedToDeleteStudent": "فشل حذف الطالب",
       "archive": "أرشفة",
       "restore": "استعادة",
@@ -2127,6 +2128,12 @@
         "academicStreamId": "المسار",
         "sectionId": "الشعبة",
         "sectionIdPlaceholder": "أدخل معرف الشعبة",
+        "selectGrade": "اختر الصف",
+        "selectStream": "اختر المسار",
+        "selectSection": "اختر الشعبة",
+        "selectGradeFirst": "اختر الصف أولاً",
+        "streamNotApplicable": "لا ينطبق على هذا الصف",
+        "noSections": "لا توجد شعب لهذا الصف",
         "statusOptions": {
           "active": "نشط",
           "inactive": "غير نشط",
@@ -9229,7 +9236,8 @@
       "hasAccount": "حساب نشط",
       "noAccount": "لا يوجد حساب",
       "priority": "الأولوية",
-      "priorityLevels": "مستويات الأولوية"
+      "priorityLevels": "مستويات الأولوية",
+      "selectOption": "اختر"
     },
     "admission": {
       "title": "القبول",

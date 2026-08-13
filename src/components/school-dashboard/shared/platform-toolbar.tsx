@@ -323,8 +323,8 @@ function PlatformToolbarInner<TData>({
         )}
       </ToolbarGroup>
 
-      {/* End: actions */}
-      <ToolbarGroup position="end">
+      {/* Actions — same side as the filters, never pushed to the far edge */}
+      <ToolbarGroup>
         {view === "table" && table && showColumnToggle && (
           <DataTableViewOptions
             table={table}

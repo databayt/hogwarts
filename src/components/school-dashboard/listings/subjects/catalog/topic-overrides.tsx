@@ -157,7 +157,7 @@ export function TopicOverrides({ chapters, lang }: Props) {
         })
 
         if (result.status === "success") {
-          toast.success("Video submitted for review")
+          toast.success("Video uploaded. It'll appear on the lesson shortly.")
           setIsVideoOpen(false)
         } else {
           toast.error(result.message)
@@ -200,8 +200,8 @@ export function TopicOverrides({ chapters, lang }: Props) {
           <DialogHeader>
             <DialogTitle>Upload Video</DialogTitle>
             <DialogDescription>
-              Add a video for &quot;{videoLessonName}&quot;. It will be
-              submitted for review before becoming visible to students.
+              Add a video for &quot;{videoLessonName}&quot;. It appears on the
+              lesson once processing finishes.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

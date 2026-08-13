@@ -41,6 +41,11 @@ export function Toolbar({
 
 /**
  * Toolbar group for positioning items
+ *
+ * NOTE: `position="end"` (ms-auto) is intentionally unused across the app.
+ * Toolbars keep every control — filters AND actions — on the start side so
+ * the row reads as one cluster instead of splitting across the full width.
+ * Only reach for "end" if a surface genuinely needs the split.
  */
 interface ToolbarGroupProps {
   /** Group children */

@@ -176,7 +176,7 @@ export function LessonContributionDialog({
           provider,
         })
         if (result.status === "success") {
-          toast.success("Video submitted for review")
+          toast.success("Video uploaded. It'll appear on the lesson shortly.")
           resetAll()
           onOpenChange(false)
         } else {

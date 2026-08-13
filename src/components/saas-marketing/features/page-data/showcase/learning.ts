@@ -18,7 +18,7 @@ export const learningShowcase: Record<string, ShowcaseData> = {
         title: "Courses built from your curriculum",
         description:
           "Structured courses per grade and subject — lessons, materials and progress aligned to the same catalog as your timetable.",
-        image: `${SHOT}/stream-courses.png`,
+        image: `${SHOT}/lumos-courses.png`,
         width: W,
         height: H,
       },
@@ -28,7 +28,7 @@ export const learningShowcase: Record<string, ShowcaseData> = {
         title: "Lessons that travel",
         description:
           "Students continue at home on any device — low-bandwidth friendly for schools where connectivity is a daily variable.",
-        image: `${SHOT}/stream.png`,
+        image: `${SHOT}/lumos.png`,
         width: W,
         height: H,
       },

@@ -119,7 +119,7 @@ export function ReportCardsTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Select value={termId} onValueChange={handleTermChange}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder={dict.filters.selectTerm} />
@@ -147,7 +147,7 @@ export function ReportCardsTable({
           </SelectContent>
         </Select>
 
-        <div className="ms-auto flex gap-2">
+        <div className="flex gap-2">
           <Button
             onClick={handleGenerate}
             disabled={!termId || isPending}

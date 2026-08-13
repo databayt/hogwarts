@@ -1966,6 +1966,7 @@
       "viewClasses": "View Classes",
       "noAccountMessage": "This student does not have a user account",
       "noEmail": "No email",
+      "noPhone": "No phone",
       "failedToDeleteStudent": "Failed to delete student",
       "archive": "Archive",
       "restore": "Restore",
@@ -2127,6 +2128,12 @@
         "academicStreamId": "Stream",
         "sectionId": "Section",
         "sectionIdPlaceholder": "Enter section ID",
+        "selectGrade": "Select a grade",
+        "selectStream": "Select a stream",
+        "selectSection": "Select a section",
+        "selectGradeFirst": "Select a grade first",
+        "streamNotApplicable": "Not applicable for this grade",
+        "noSections": "No sections for this grade",
         "statusOptions": {
           "active": "Active",
           "inactive": "Inactive",
@@ -9221,7 +9228,8 @@
       "hasAccount": "Has Account",
       "noAccount": "No Account",
       "priority": "Priority",
-      "priorityLevels": "Priority Levels"
+      "priorityLevels": "Priority Levels",
+      "selectOption": "Select an option"
     },
     "admission": {
       "title": "Admission",

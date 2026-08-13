@@ -34,19 +34,24 @@ export function Hero({
         <div className="container-large">
           <header className="home-hero_wrap">
             <div className="home-hero_content">
+              {/* `pre-line` honours the newline the dictionary heading carries,
+                  so the headline breaks into two balanced lines in both
+                  languages instead of wherever the column edge happens to fall.
+                  Each line still wraps on its own if the viewport is narrower. */}
               <h1
                 id="hero-header"
                 hero-element=""
                 className="home-hero_heading heading-style-h1"
+                style={{ whiteSpace: "pre-line" }}
               >
                 {dictionary?.marketing?.site?.home?.hero?.heading ??
-                  "Clear, close, always here."}
+                  "The questions\ncome first."}
               </h1>
               <div className="padding-bottom padding-xsmall"></div>
               <div className="max-width is-27rem">
                 <p id="hero-para" hero-element="" className="home-hero_para">
                   {dictionary?.marketing?.site?.home?.hero?.lede ??
-                    "A place worth joining."}
+                    "Wonder is the start."}
                 </p>
               </div>
               <div className="padding-bottom padding-medium"></div>

@@ -249,7 +249,7 @@ function InvoiceTableInner({
         noResults: il?.noInvoicesFound,
       }}
     >
-      {/* Atom-based toolbar — start group holds filters, end group holds view + create */}
+      {/* Atom-based toolbar — filters then view + create, all on the start side */}
       <Toolbar className="p-1">
         <ToolbarGroup>
           {invoiceNoCol && (
@@ -291,7 +291,7 @@ function InvoiceTableInner({
           )}
         </ToolbarGroup>
 
-        <ToolbarGroup position="end">
+        <ToolbarGroup>
           <DataTableViewOptions
             table={table}
             translations={{

@@ -8,11 +8,11 @@ export default function Loading() {
     <div className="space-y-6">
       {/* PlatformToolbar skeleton */}
       <div className="flex w-full flex-wrap items-center gap-2 p-1">
-        {/* Left: search input */}
+        {/* Search input */}
         <div className="flex flex-wrap items-center gap-2">
           <Skeleton className="h-9 w-40 lg:w-56" />
         </div>
-        {/* Right: column toggle, view toggle, export, create */}
+        {/* Actions: column toggle, view toggle, export, create */}
         <div className="flex items-center gap-2">
           <Skeleton className="h-9 w-9 rounded-full" />
           <Skeleton className="h-9 w-9 rounded-full" />

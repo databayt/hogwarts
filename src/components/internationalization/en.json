@@ -2162,8 +2162,8 @@
           ]
         },
         "hero": {
-          "heading": "Clear, close, always here.",
-          "lede": "A place worth joining.",
+          "heading": "The questions\ncome first.",
+          "lede": "Wonder is the start.",
           "applyLabel": "Application"
         },
         "cta": {
@@ -2359,7 +2359,7 @@
       "Reports": "Reports",
       "Timetable": "Timetable",
       "Library": "Library",
-      "Stream": "Stream",
+      "Lumos": "Lumos",
       "Conference": "Conference",
       "Profile": "Profile",
       "School": "School",
@@ -2397,7 +2397,7 @@
       "reports": "Reports",
       "timetable": "Timetable",
       "library": "Library",
-      "stream": "Stream",
+      "lumos": "Lumos",
       "courses": "Courses",
       "profile": "Profile",
       "school": "School",

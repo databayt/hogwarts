@@ -253,7 +253,7 @@ export const platformSearchConfig: SearchConfig = {
       id: "stream",
       title: "Stream",
       type: "navigation",
-      href: "/stream",
+      href: "/lumos",
       icon: Video,
       roles: ALL_ROLES,
       keywords: ["videos", "live", "broadcasts"],
