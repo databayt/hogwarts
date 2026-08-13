@@ -25,6 +25,28 @@ import {
 // Mocks
 // =============================================================================
 
+// The submit action is gated: a session is required, the school comes from the
+// request's tenant context (not the argument), and "admin"/"staff" cannot be
+// self-assigned. Default these mocks to an authorised ADMIN of school-1 so the
+// existing behavioural tests exercise the happy path; the gate itself has its
+// own describe block below.
+const mockSession = vi.hoisted(() => ({
+  current: {
+    user: { id: "caller-1", role: "ADMIN", schoolId: "school-1" },
+  } as { user: { id: string; role: string; schoolId: string | null } } | null,
+}))
+const mockTenant = vi.hoisted(() => ({
+  current: { schoolId: "school-1" as string | null },
+}))
+
+vi.mock("@/auth", () => ({
+  auth: vi.fn(async () => mockSession.current),
+}))
+
+vi.mock("@/lib/tenant-context", () => ({
+  getTenantContext: vi.fn(async () => mockTenant.current),
+}))
+
 vi.mock("@/lib/email", () => ({
   sendEmail: vi.fn().mockResolvedValue({ success: true }),
 }))
@@ -135,6 +157,11 @@ const createStudentDetails = (overrides = {}) => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Restore the authorised default; the gate tests override per-case.
+  mockSession.current = {
+    user: { id: "caller-1", role: "ADMIN", schoolId: "school-1" },
+  }
+  mockTenant.current = { schoolId: "school-1" }
 })
 
 // =============================================================================
@@ -336,6 +363,111 @@ describe("submitInternalOnboarding", () => {
   }
 
   // ---------------------------------------------------------------------------
+  // Security gate
+  //
+  // A `"use server"` function is a public POST endpoint. This action used to
+  // have no auth check at all, trusted the caller-supplied `schoolId`, and
+  // mapped a caller-chosen `role: "admin"` straight to the ADMIN User role --
+  // i.e. anyone reaching it could mint themselves an admin account at any
+  // school they could name.
+  // ---------------------------------------------------------------------------
+
+  describe("security gate", () => {
+    const submit = (role: "admin" | "staff" | "teacher" | "student") =>
+      submitInternalOnboarding("school-1", {
+        role,
+        personal: createPersonalData(),
+        contact: createContactData(),
+        roleDetails:
+          role === "teacher" ? createTeacherDetails() : createStaffDetails(),
+      } as never)
+
+    it("refuses an unauthenticated caller", async () => {
+      mockSession.current = null
+
+      const result = await submit("teacher")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("NOT_AUTHENTICATED")
+      expect(db.user.create).not.toHaveBeenCalled()
+    })
+
+    it("refuses a schoolId that is not the request's tenant", async () => {
+      mockTenant.current = { schoolId: "some-other-school" }
+
+      const result = await submit("teacher")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+      expect(db.user.create).not.toHaveBeenCalled()
+    })
+
+    it("refuses self-assignment of the admin role", async () => {
+      mockSession.current = {
+        user: { id: "caller-1", role: "STUDENT", schoolId: "school-1" },
+      }
+
+      const result = await submit("admin")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+      expect(db.user.create).not.toHaveBeenCalled()
+    })
+
+    it("refuses self-assignment of the staff role", async () => {
+      mockSession.current = {
+        user: { id: "caller-1", role: "TEACHER", schoolId: "school-1" },
+      }
+
+      const result = await submit("staff")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+      expect(db.user.create).not.toHaveBeenCalled()
+    })
+
+    it("refuses an admin of ANOTHER school granting privileges here", async () => {
+      mockSession.current = {
+        user: { id: "caller-1", role: "ADMIN", schoolId: "other-school" },
+      }
+
+      const result = await submit("admin")
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+      expect(db.user.create).not.toHaveBeenCalled()
+    })
+
+    it("allows an unprivileged role for any authenticated tenant member", async () => {
+      mockSession.current = {
+        user: { id: "caller-1", role: "USER", schoolId: "school-1" },
+      }
+      const txMock = createTxMock()
+      txMock.user.create.mockResolvedValue({ id: "user-1" })
+      txMock.teacher.create.mockResolvedValue({ id: "teacher-1" })
+      setupSuccessfulTransaction(txMock)
+
+      const result = await submit("teacher")
+
+      expect(result.success).toBe(true)
+    })
+
+    it("allows this school's own admin to grant the admin role", async () => {
+      mockSession.current = {
+        user: { id: "caller-1", role: "ADMIN", schoolId: "school-1" },
+      }
+      const txMock = createTxMock()
+      txMock.user.create.mockResolvedValue({ id: "user-1" })
+      txMock.staffMember.create.mockResolvedValue({ id: "staff-1" })
+      setupSuccessfulTransaction(txMock)
+
+      const result = await submit("admin")
+
+      expect(result.success).toBe(true)
+    })
+  })
+
+  // ---------------------------------------------------------------------------
   // Error Cases
   // ---------------------------------------------------------------------------
 
@@ -353,6 +485,12 @@ describe("submitInternalOnboarding", () => {
     })
 
     it("should return error when school is not found", async () => {
+      // The tenant gate runs first, so point the request's tenant at the same
+      // (nonexistent) school -- otherwise this asserts the gate, not the lookup.
+      mockTenant.current = { schoolId: "nonexistent-school" }
+      mockSession.current = {
+        user: { id: "caller-1", role: "DEVELOPER", schoolId: null },
+      }
       vi.mocked(db.school.findUnique).mockResolvedValue(null)
 
       const result = await submitInternalOnboarding("nonexistent-school", {

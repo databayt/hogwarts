@@ -52,6 +52,10 @@ const studentCsvSchema = z.object({
   section: z.string().optional(),
   enrollmentDate: z.string().optional(),
   status: z.string().optional(),
+  // The STUDENT's own number, distinct from guardianPhone. Without this the
+  // import had no way to populate Student.mobileNumber at all, so every
+  // CSV-imported student showed a blank phone in the students list.
+  phone: z.string().optional(),
   guardianName: z.string().optional(),
   guardianEmail: z.string().email().optional(),
   guardianPhone: z.string().optional(),
@@ -478,6 +482,7 @@ class CsvImportService {
             : null,
           gender: provisionGender,
           email: r.email,
+          phone: r.validated.phone ?? null,
           academicGradeId: academicGradeId ?? null,
           sectionId: sectionId ?? null,
           applyingForClass:

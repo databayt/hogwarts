@@ -90,7 +90,7 @@ vi.mock("@/lib/db", () => ({
     },
     guardianPhoneNumber: {
       upsert: vi.fn(),
-      findFirst: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
     },
     studentDocument: {
       create: vi.fn(),
@@ -244,6 +244,7 @@ function setupDefaultMocks() {
   vi.mocked(db.guardian.create).mockResolvedValue({ id: "g-2" } as any)
   vi.mocked(db.studentGuardian.findMany).mockResolvedValue([])
   vi.mocked(db.studentGuardian.upsert).mockResolvedValue({} as any)
+  vi.mocked(db.guardianPhoneNumber.findMany).mockResolvedValue([])
   vi.mocked(db.guardianPhoneNumber.upsert).mockResolvedValue({} as any)
   vi.mocked(db.studentDocument.create).mockResolvedValue({} as any)
   vi.mocked(db.section.findMany).mockResolvedValue([])
@@ -547,11 +548,11 @@ describe("confirmEnrollment - full pipeline", () => {
     // An existing Guardian already has this phone number on file (e.g. from
     // a sibling's earlier application) — createOrLinkGuardian must reuse it
     // instead of creating a duplicate Guardian row.
-    vi.mocked(db.guardianPhoneNumber.findFirst).mockImplementation(
+    vi.mocked(db.guardianPhoneNumber.findMany).mockImplementation(
       async (args: any) =>
         args?.where?.phoneNumber === "+249222222222"
-          ? ({ guardianId: "existing-guardian-mother" } as any)
-          : null
+          ? ([{ guardianId: "existing-guardian-mother" }] as any)
+          : ([] as any)
     )
     vi.mocked(db.guardian.findFirst).mockResolvedValue({
       id: "existing-guardian-mother",
@@ -560,7 +561,7 @@ describe("confirmEnrollment - full pipeline", () => {
     const result = await confirmEnrollment({ id: "app-1" })
 
     expect(result.success).toBe(true)
-    expect(db.guardianPhoneNumber.findFirst).toHaveBeenCalledWith(
+    expect(db.guardianPhoneNumber.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { schoolId: SCHOOL_ID, phoneNumber: "+249222222222" },
       })
@@ -580,7 +581,7 @@ describe("confirmEnrollment - full pipeline", () => {
       motherEmail: null,
     } as any)
     // No existing GuardianPhoneNumber row matches — genuinely new guardian.
-    vi.mocked(db.guardianPhoneNumber.findFirst).mockResolvedValue(null)
+    vi.mocked(db.guardianPhoneNumber.findMany).mockResolvedValue([])
 
     const result = await confirmEnrollment({ id: "app-1" })
 
@@ -594,6 +595,35 @@ describe("confirmEnrollment - full pipeline", () => {
         }),
       })
     )
+  })
+
+  it("does not reuse the OTHER parent's guardian when both share a phone", async () => {
+    vi.mocked(db.application.findUnique).mockResolvedValue({
+      ...mockApplication,
+      motherEmail: null,
+      motherPhone: "+249111111111", // same household number as the father
+    } as any)
+    // The father was linked first and owns this phone row.
+    vi.mocked(db.guardianPhoneNumber.findMany).mockResolvedValue([
+      { guardianId: "existing-guardian-father" },
+    ] as any)
+    // ...and he is already this student's guardian under a DIFFERENT type.
+    vi.mocked(db.studentGuardian.findMany).mockResolvedValue([
+      { guardianId: "existing-guardian-father" },
+    ] as any)
+
+    const result = await confirmEnrollment({ id: "app-1" })
+
+    expect(result.success).toBe(true)
+    // The phone match is excluded, so the mother gets her own Guardian row
+    // instead of collapsing into the father's (which would have dropped her
+    // name entirely — the StudentGuardian upsert would hit his existing link).
+    expect(db.guardian.findFirst).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "existing-guardian-father", schoolId: SCHOOL_ID },
+      })
+    )
+    expect(db.guardian.create).toHaveBeenCalled()
   })
 
   // =========================================================================

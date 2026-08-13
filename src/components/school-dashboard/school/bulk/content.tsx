@@ -168,7 +168,7 @@ interface DropZoneConfig {
 }
 
 const STUDENT_TEMPLATE =
-  "name,email,studentId,yearLevel,guardianName,guardianEmail,guardianPhone,dateOfBirth,gender\nJohn Doe,john@example.com,STD001,Grade 10,Jane Doe,jane@example.com,+1234567890,2008-05-15,male\nSarah Smith,,STD002,Grade 9,Mike Smith,mike@example.com,+0987654321,2009-03-22,female"
+  "name,email,phone,studentId,yearLevel,guardianName,guardianEmail,guardianPhone,dateOfBirth,gender\nJohn Doe,john@example.com,+249911111111,STD001,Grade 10,Jane Doe,jane@example.com,+1234567890,2008-05-15,male\nSarah Smith,,,STD002,Grade 9,Mike Smith,mike@example.com,+0987654321,2009-03-22,female"
 
 const TEACHER_TEMPLATE =
   'name,email,employeeId,department,phoneNumber,subjects,qualification\nDr. Alice Johnson,alice@school.edu,TCH001,Mathematics,+1234567890,"Algebra,Calculus",PhD in Mathematics\nMr. Bob Wilson,bob@school.edu,TCH002,Science,+0987654321,Physics,MSc in Physics'

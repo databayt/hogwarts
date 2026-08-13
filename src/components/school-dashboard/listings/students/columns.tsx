@@ -42,7 +42,7 @@ export type StudentRow = {
   gradeName: string | null
   status: string
   createdAt: string
-  email: string | null
+  phone: string | null
   dateOfBirth: string | null
   enrollmentDate: string | null
   wizardStep: string | null
@@ -79,7 +79,7 @@ export const getStudentColumns = (
     grade: d?.grade || "Grade",
     status: d?.status || "Status",
     created: d?.created || "Created",
-    email: d?.email || "Email",
+    phone: d?.phone || "Phone",
     dateOfBirth: d?.dateOfBirth || "Date of Birth",
     enrollmentDate: d?.enrollmentDate || "Enrollment Date",
     actions: d?.actions || "Actions",
@@ -100,7 +100,7 @@ export const getStudentColumns = (
     viewGrades: d?.viewGrades || "View Grades",
     viewAttendance: d?.viewAttendance || "View Attendance",
     viewClasses: d?.viewClasses || "View Classes",
-    noEmail: d?.noEmail || "No email",
+    noPhone: d?.noPhone || "No phone",
     archive: d?.archive || "Archive",
     restore: d?.restore || "Restore",
     permanentlyDelete: d?.permanentlyDelete || "Permanently delete",
@@ -156,7 +156,7 @@ export const getStudentColumns = (
                 </Link>
               </div>
               <span className="text-muted-foreground max-w-[180px] truncate text-xs">
-                {student.email || t.noEmail}
+                {student.phone || t.noPhone}
               </span>
             </div>
           </div>
@@ -282,12 +282,17 @@ export const getStudentColumns = (
       meta: { label: t.created, variant: "text" },
     },
     {
-      accessorKey: "email",
-      id: "email",
+      accessorKey: "phone",
+      id: "phone",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.email} />
+        <DataTableColumnHeader column={column} title={t.phone} />
       ),
-      meta: { label: t.email, variant: "text" },
+      meta: { label: t.phone, variant: "text" },
+      // Not sortable: sorting is server-side (manualSorting), and the sort id
+      // is mapped straight into a Prisma `orderBy` key. `phone` is DERIVED
+      // (mobileNumber || alternatePhone) and has no Student column, so a sort
+      // click here would send Prisma an unknown field.
+      enableSorting: false,
     },
     {
       accessorKey: "dateOfBirth",

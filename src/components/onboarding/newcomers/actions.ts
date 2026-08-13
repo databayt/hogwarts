@@ -7,6 +7,7 @@ import { addMinutes } from "date-fns"
 
 import { db } from "@/lib/db"
 import { sendVerificationCodeEmail } from "@/lib/email"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import type { NewcomerFormData } from "./validation"
 
@@ -85,11 +86,13 @@ export async function verifyEmailCode(email: string, code: string) {
       }
     }
 
-    // Delete used token
-    await db.verificationToken.delete({
-      where: { id: token.id },
-    })
-
+    // Deliberately does NOT consume the token: this is the wizard's
+    // "is that the right code?" step, and the account is not created until
+    // submitNewcomerApplication, which re-checks and consumes it there. When
+    // this function deleted the token, the proof of ownership was gone by the
+    // time it actually mattered, and the submit action -- a public POST
+    // endpoint like every "use server" function -- trusted the client's word
+    // that verification had happened.
     return { success: true, verified: true }
   } catch (error) {
     console.error("[Newcomer] Failed to verify code:", error)
@@ -118,6 +121,29 @@ export async function submitNewcomerApplication(
       return { success: false, errorCode: "SCHOOL_NOT_FOUND" }
     }
 
+    // The emailed code IS the credential for this flow (it is open to people
+    // with no account yet), so it must be proven HERE, where the account is
+    // created -- not left to a separate client-invoked step. Pinning to the
+    // request's tenant additionally stops school A's page being used to create
+    // an account at school B by naming its id.
+    const tenant = await getTenantContext()
+    if (!tenant.schoolId || tenant.schoolId !== schoolId) {
+      return { success: false, errorCode: "SCHOOL_NOT_FOUND" }
+    }
+
+    const verification = await db.verificationToken.findFirst({
+      where: {
+        email: data.email,
+        token: data.verificationCode,
+        expires: { gt: new Date() },
+      },
+      select: { id: true },
+    })
+
+    if (!verification) {
+      return { success: false, errorCode: "INVALID_OR_EXPIRED_CODE" }
+    }
+
     // Check if email is already registered in this school
     const existingUser = await db.user.findFirst({
       where: { email: data.email, schoolId },
@@ -132,6 +158,16 @@ export async function submitNewcomerApplication(
 
     // Create the application based on role
     const application = await db.$transaction(async (tx) => {
+      // Consume the code as part of the same transaction that mints the
+      // account, so it is single-use even under concurrent submits: a second
+      // caller racing with the same code deletes zero rows and is rejected.
+      const consumed = await tx.verificationToken.deleteMany({
+        where: { id: verification.id },
+      })
+      if (consumed.count === 0) {
+        throw new Error("INVALID_OR_EXPIRED_CODE")
+      }
+
       // Create user with pending status
       const user = await tx.user.create({
         data: {
@@ -203,6 +239,12 @@ export async function submitNewcomerApplication(
       },
     }
   } catch (error) {
+    // The race-loser of a concurrent same-code submit throws this from inside
+    // the transaction; surface it as the code error the UI already maps rather
+    // than a generic failure.
+    if (error instanceof Error && error.message === "INVALID_OR_EXPIRED_CODE") {
+      return { success: false, errorCode: "INVALID_OR_EXPIRED_CODE" }
+    }
     console.error("[Newcomer] Failed to submit application:", error)
     return {
       success: false,

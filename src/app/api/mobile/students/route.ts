@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { provisionStudent } from "@/lib/student-provisioning"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
 
@@ -125,25 +126,46 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const student = await db.student.create({
-      data: {
-        schoolId: auth.schoolId,
-        firstName: given_name,
-        lastName: family_name || "",
-        gender: gender || null,
-        email: email || null,
-        sectionId: section_id || null,
-        dateOfBirth: date_of_birth ? new Date(date_of_birth) : new Date(),
-        status: "ACTIVE",
-      },
+    // Admin-authenticated creation from the mobile app is the same act as the
+    // dashboard's single-student wizard, so it takes the same road: the shared
+    // intake core, which mints the Application (channel ADMIN_DIRECT), the
+    // per-school student code, the login and the fee assignments. A bare
+    // `db.student.create` here produced a student none of those surfaces knew
+    // about. See content/docs-en/admission.mdx, "four channels, one pipeline".
+    const result = await db.$transaction(
+      (tx) =>
+        provisionStudent(
+          {
+            schoolId: auth.schoolId,
+            firstName: given_name,
+            lastName: family_name || "",
+            gender: gender || null,
+            email: email || null,
+            sectionId: section_id || null,
+            // Omitted DOB stays NULL. It used to default to `new Date()`,
+            // stamping every mobile-created student as born today.
+            dateOfBirth: date_of_birth ? new Date(date_of_birth) : null,
+          },
+          {
+            notify: false,
+            credentialDelivery: "temp-password",
+            origin: "ADMIN_DIRECT",
+          },
+          tx
+        ),
+      { timeout: 30000 }
+    )
+
+    const student = await db.student.findUnique({
+      where: { id: result.studentId },
       select: { id: true, firstName: true, lastName: true, status: true },
     })
 
     return NextResponse.json(
       {
-        id: student.id,
-        given_name: student.firstName,
-        family_name: student.lastName,
+        id: result.studentId,
+        given_name: student?.firstName ?? given_name,
+        family_name: student?.lastName ?? family_name ?? "",
       },
       { status: 201 }
     )

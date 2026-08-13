@@ -8,8 +8,9 @@
  * Phase 3: People
  */
 
-import type { PrismaClient } from "@prisma/client"
+import type { AdmissionChannel, PrismaClient } from "@prisma/client"
 
+import { getOrCreateSystemCampaign } from "../../src/lib/system-campaign"
 import {
   BLOOD_GROUPS,
   getEnglishGivenName,
@@ -698,6 +699,73 @@ export async function seedTeacherPhoneNumbers(
  * Seed students (1000 total, distributed across K-12)
  * Links to existing user accounts and year levels
  */
+/**
+ * Every student is born from an Application, tagged with the channel it came
+ * through — see content/docs-en/admission.mdx, "Student intake — four
+ * channels, one pipeline". Production honours that because all four intake
+ * paths run `provisionStudent`; the seed writes rows directly (calling the
+ * 12-step core ~1000x would slow every deploy's prebuild), so it has to mint
+ * the shadow Application itself. Without this the demo contradicted its own
+ * docs: 972 students, one Application between them.
+ *
+ * Channel is spread across the three DIRECT-ADMIT channels only. PORTAL is
+ * deliberately left to the admission seed's real applications: the Applications
+ * tab filters on channel alone (`buildApplicationWhere` defaults to PORTAL and
+ * never looks at the campaign), so tagging enrolled students PORTAL would bury
+ * the review queue under hundreds of already-admitted rows.
+ */
+const SEED_CHANNELS: AdmissionChannel[] = [
+  "ADMIN_DIRECT",
+  "ONBOARDING_IMPORT",
+  "BULK_IMPORT",
+]
+
+async function linkSeedApplication(
+  prisma: PrismaClient,
+  schoolId: string,
+  campaignId: string,
+  student: { id: string; firstName: string; lastName: string },
+  grNumber: string,
+  index: number
+): Promise<void> {
+  // Deterministic, NOT timestamped: `applicationNumber` is globally unique, so
+  // the school fragment is required, and a stable value is what makes a repeat
+  // `seedMain` upsert the same row instead of piling up duplicates.
+  const applicationNumber = `SEED-${schoolId.slice(-8)}-${grNumber}`
+  const channel = SEED_CHANNELS[index % SEED_CHANNELS.length]
+
+  const application = await prisma.application.upsert({
+    where: { applicationNumber },
+    update: { channel },
+    create: {
+      schoolId,
+      campaignId,
+      applicationNumber,
+      channel,
+      status: "ADMITTED",
+      firstName: student.firstName,
+      lastName: student.lastName,
+      nationality: "SD",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "SD",
+      applyingForClass: "",
+      admissionConfirmed: true,
+      confirmationDate: new Date(),
+    },
+    select: { id: true },
+  })
+
+  await prisma.student.update({
+    where: { id: student.id },
+    data: { applicationId: application.id },
+  })
+}
+
 export async function seedStudents(
   prisma: PrismaClient,
   schoolId: string,
@@ -725,6 +793,11 @@ export async function seedStudents(
     ),
     order: level.order,
   }))
+
+  // One hidden per-school campaign for every direct-admit shadow Application
+  // (the same helper provisionStudent uses). Resolved once — it is a
+  // find-or-create, so calling it per student would be ~1000 wasted reads.
+  const systemCampaignId = await getOrCreateSystemCampaign(prisma, schoolId)
 
   let studentIndex = 0
 
@@ -810,6 +883,15 @@ export async function seedStudents(
           },
         })
 
+        await linkSeedApplication(
+          prisma,
+          schoolId,
+          systemCampaignId,
+          student,
+          generateGrNumber(globalIndex),
+          globalIndex
+        )
+
         // Link student to year level
         await prisma.studentYearLevel.upsert({
           where: {
@@ -847,6 +929,17 @@ export async function seedStudents(
           where: { schoolId, grNumber: generateGrNumber(globalIndex) },
         })
         if (existing) {
+          // The row already existed, so the happy path above never ran — link
+          // its Application here too, or a re-seed leaves these students as the
+          // only orphans in the school.
+          await linkSeedApplication(
+            prisma,
+            schoolId,
+            systemCampaignId,
+            existing,
+            generateGrNumber(globalIndex),
+            globalIndex
+          )
           students.push({
             id: existing.id,
             userId: user.id,

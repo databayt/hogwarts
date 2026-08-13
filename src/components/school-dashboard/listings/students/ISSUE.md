@@ -2,7 +2,62 @@
 
 **Status:** 🟡 IN PROGRESS
 **Completion:** 93%
-**Last Updated:** 2026-07-17
+**Last Updated:** 2026-08-12
+
+---
+
+## 2026-08-12 — intake unification: closing the leaks (LOCAL, not pushed)
+
+The four documented channels already funnelled through `provisionStudent`; what
+was false was the invariant around them. Demo school had **972 students and 1
+`applicationId`** because `prisma/seeds/people.ts` wrote rows directly, while
+`deriveIsSelfOnboarded` (actions.ts) already reads `student.application.channel`
+as if every student had one.
+
+Shipped:
+
+- [x] Lint + vitest guard so `db.student.create` outside the core cannot land
+      (`eslint.config.mjs` `STUDENT_CREATE_ALLOWLIST`, shared with
+      `src/tests/school-dashboard/listings/student-intake-invariant.test.ts`).
+- [x] `school/membership` `changeRole` and `POST /api/mobile/students` routed
+      through `provisionStudent` (`ADMIN_DIRECT`); the mobile route also stopped
+      defaulting `dateOfBirth` to `new Date()` ("born today").
+- [x] `seedStudents` mints a deterministic shadow Application per student
+      (system campaign, channel spread over the three direct-admit values).
+      **PORTAL is deliberately excluded** — `buildApplicationWhere` filters on
+      channel alone, so tagging enrolled students PORTAL would bury the review
+      queue. **Written but NOT yet run — the seed run was declined.**
+- [x] `scripts/backfill-legacy-applications.ts` (dry-run default). Local dry run
+      reports 970 orphans, correctly skipping the 1 wizard draft.
+- [x] Seams: `warnings`/`accessCodes` now reach the import UI; student `phone`
+      added to `studentCsvSchema` + header map + template (imported students
+      showed a blank phone once the list column moved from email to phone);
+      inert `notify: true` in `completeStudentWizard` corrected to `false`.
+
+Open:
+
+- [ ] Run the backfill against prod (needs approval — ~971 rows on the demo).
+- [ ] `internal-onboarding` / `newcomers` still create students outside the
+      pipeline. They are now auth-gated (see below) but their `AdmissionChannel`
+      is undecided; they sit in the allowlist until that is settled.
+- [ ] `importGuardians` (standalone guardians CSV) hand-rolls guardian creation
+      instead of `createOrLinkGuardian`, so it misses the parent-conflict guard.
+- [ ] Sorting the students list by a DERIVED column (`name`, `gradeName`,
+      `classroom`) maps the sort id straight into a Prisma `orderBy` key and
+      would send an unknown field. `phone` was marked `enableSorting: false`;
+      the other three are still live.
+
+### Security (found while mapping the pipeline)
+
+`submitInternalOnboarding` had **no `auth()` call**, took `schoolId` as a
+caller-supplied argument, and passed a caller-chosen `role: "admin"` through
+`mapRole()` to the ADMIN User role with `emailVerified` stamped — i.e. a caller
+could mint themselves an admin account at any school they could name. Server
+actions are public POST endpoints, so the page being unlinked protected nothing.
+Now: session required, school taken from the request's tenant context, and
+`admin`/`staff` never self-assignable. `submitNewcomerApplication` trusted the
+client to have called `verifyEmailCode` (which consumed the token); the code is
+now re-checked and consumed inside the account-creating transaction.
 
 ---
 

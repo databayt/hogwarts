@@ -109,13 +109,34 @@ export async function createOrLinkGuardian(
       update: {},
     })
   } else if (phone) {
-    const existingPhone = await tx.guardianPhoneNumber.findFirst({
+    //    The phone match is school-wide ON PURPOSE (siblings share a father),
+    //    but it must never resolve to a guardian who is already THIS student's
+    //    other parent. Families routinely give one household number for both
+    //    parents; without this exclusion the mother resolved to the father's
+    //    Guardian row, the StudentGuardian upsert below then hit the existing
+    //    father link and no-op'd, and her name was silently discarded — the
+    //    father's details showed up as the mother's.
+    const phoneMatches = await tx.guardianPhoneNumber.findMany({
       where: { schoolId, phoneNumber: phone },
       select: { guardianId: true },
     })
-    const existingGuardian = existingPhone
+    const candidateIds = [...new Set(phoneMatches.map((p) => p.guardianId))]
+    const conflicting = candidateIds.length
+      ? await tx.studentGuardian.findMany({
+          where: {
+            schoolId,
+            studentId,
+            guardianId: { in: candidateIds },
+            guardianTypeId: { not: guardianType.id },
+          },
+          select: { guardianId: true },
+        })
+      : []
+    const takenByAnotherRole = new Set(conflicting.map((c) => c.guardianId))
+    const reusableId = candidateIds.find((id) => !takenByAnotherRole.has(id))
+    const existingGuardian = reusableId
       ? await tx.guardian.findFirst({
-          where: { id: existingPhone.guardianId, schoolId },
+          where: { id: reusableId, schoolId },
         })
       : null
     guardian =

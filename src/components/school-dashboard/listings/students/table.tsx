@@ -213,7 +213,7 @@ function StudentsTableInner({
       columnVisibility: {
         studentId: false,
         createdAt: false,
-        email: false,
+        phone: false,
         dateOfBirth: false,
         enrollmentDate: false,
       },

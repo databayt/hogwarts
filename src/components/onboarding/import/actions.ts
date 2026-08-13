@@ -29,6 +29,12 @@ interface SmartImportResult {
   failed: number
   skipped: number
   errors: Array<{ row: number; error: string; details?: string }>
+  // Non-fatal per-row notes — a skipped duplicate, an unmatched grade. These
+  // explain the gap between the row count and `imported`, so the caller must
+  // be able to show them.
+  warnings?: Array<{ row: number; warning: string }>
+  // Access codes generated for imported students (the "link parent" codes).
+  accessCodes?: Array<{ studentId: string; code: string; expiresAt: string }>
   // Plaintext temp credentials minted for the imported users. Passwords are
   // crypto-random + single-use (mustChangePassword), so this is the only place
   // the admin can read them to distribute. Mirrors school/bulk's
@@ -178,5 +184,11 @@ export async function smartImport(
     skipped: result.skipped,
     errors: result.errors,
     credentials: result.credentials,
+    // The engine computes these per row and this wrapper used to drop them on
+    // the floor: `warnings` is where a skipped duplicate or an unmatched grade
+    // is explained, and `accessCodes` is the only place the generated codes
+    // surface. Both were invisible to whoever ran the import.
+    warnings: result.warnings,
+    accessCodes: result.accessCodes,
   }
 }

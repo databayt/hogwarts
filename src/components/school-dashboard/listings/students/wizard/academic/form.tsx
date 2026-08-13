@@ -90,14 +90,22 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
       })
     }, [locale])
 
+    // Tracked so the Section prompt doesn't flash "no sections" while the
+    // fetch for the newly picked grade is still in flight.
+    const [sectionsLoading, setSectionsLoading] = useState(false)
+
     useEffect(() => {
       if (!selectedGradeId) {
         setSectionOptions([])
+        setSectionsLoading(false)
         return
       }
-      getSectionOptions(selectedGradeId, locale).then((res) => {
-        if (res.success && res.data) setSectionOptions(res.data)
-      })
+      setSectionsLoading(true)
+      getSectionOptions(selectedGradeId, locale)
+        .then((res) => {
+          setSectionOptions(res.success && res.data ? res.data : [])
+        })
+        .finally(() => setSectionsLoading(false))
     }, [selectedGradeId, locale])
 
     const streamEnabled = useMemo(() => {
@@ -187,18 +195,38 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
               <SelectField
                 name="academicGradeId"
                 label={tEnrollment?.academicGradeId || "Grade"}
+                placeholder={tEnrollment?.selectGrade}
                 options={gradeOptions}
                 disabled={isPending}
               />
+              {/* Streams only exist for the upper grades, and sections only
+                  after a grade is chosen. Say WHY the control is inert instead
+                  of prompting for a choice that cannot be made here. */}
               <SelectField
                 name="academicStreamId"
                 label={tEnrollment?.academicStreamId || "Stream"}
+                placeholder={
+                  !selectedGradeId
+                    ? tEnrollment?.selectGradeFirst
+                    : !streamEnabled
+                      ? tEnrollment?.streamNotApplicable
+                      : tEnrollment?.selectStream
+                }
                 options={streamOptions}
                 disabled={isPending || !streamEnabled}
               />
               <SelectField
                 name="sectionId"
                 label={tEnrollment?.sectionId || "Section"}
+                placeholder={
+                  !selectedGradeId
+                    ? tEnrollment?.selectGradeFirst
+                    : sectionsLoading
+                      ? tRoot?.loading
+                      : sectionOptions.length === 0
+                        ? tEnrollment?.noSections
+                        : tEnrollment?.selectSection
+                }
                 options={sectionOptions}
                 disabled={isPending || !selectedGradeId}
               />

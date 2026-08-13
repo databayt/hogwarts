@@ -3,11 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { sendEmail } from "@/lib/email"
 import { normalizePhoneNumber, sendSMS } from "@/lib/notifications/sms"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import type {
   AdminDetailsData,
@@ -122,6 +124,55 @@ export async function submitInternalOnboarding(
   try {
     if (!schoolId) {
       return { success: false, error: "Missing schoolId" }
+    }
+
+    // ---------------------------------------------------------------------
+    // SECURITY GATE
+    //
+    // A `"use server"` function is a public POST endpoint — reachable by
+    // anyone who can hit the app, whether or not the page that calls it is
+    // reachable. This action had no `auth()` call at all, took `schoolId` as a
+    // caller-supplied argument, and passed `data.role` straight through
+    // `mapRole()` — which maps "admin" to the ADMIN role — while stamping the
+    // new User `emailVerified`. So a caller could mint themselves an ADMIN
+    // account at ANY school by naming its id. Three things close that:
+    //
+    //   1. a session is required;
+    //   2. the school comes from the request's tenant context, not the
+    //      argument (the argument now only has to agree with it);
+    //   3. a privileged role can never be SELF-assigned — "admin"/"staff" are
+    //      only honoured for a caller who already holds that authority here.
+    //
+    // Note this remains a self-registration flow: it still creates a live
+    // account rather than something an admin approves, despite the
+    // confirmation email saying "pending approval". Reconciling those two is
+    // tracked separately (see the block records) — this gate stops the
+    // escalation without redesigning the flow.
+    // ---------------------------------------------------------------------
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: "NOT_AUTHENTICATED" }
+    }
+
+    const tenant = await getTenantContext()
+    if (!tenant.schoolId || tenant.schoolId !== schoolId) {
+      return { success: false, error: "UNAUTHORIZED" }
+    }
+
+    // DEVELOPER is cross-school by design; ADMIN/STAFF authority is confined
+    // to their OWN school, so an admin of school A browsing school B's
+    // subdomain cannot mint privileged accounts there.
+    const callerRole = session.user.role
+    const callerAdministers =
+      callerRole === "DEVELOPER" ||
+      ((callerRole === "ADMIN" || callerRole === "STAFF") &&
+        session.user.schoolId === schoolId)
+
+    if (
+      (data.role === "admin" || data.role === "staff") &&
+      !callerAdministers
+    ) {
+      return { success: false, error: "UNAUTHORIZED" }
     }
 
     // Verify the school exists and get plan limits

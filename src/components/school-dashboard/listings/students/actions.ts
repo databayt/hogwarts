@@ -98,6 +98,7 @@ import {
   assertStudentPermission,
   getAuthContext,
 } from "@/components/school-dashboard/listings/students/authorization"
+import { buildStudentOrderBy } from "@/components/school-dashboard/listings/students/list-params"
 import {
   getStudentsSchema,
   studentUpdateSchema,
@@ -1029,7 +1030,7 @@ export async function getStudents(
       gradeName: string | null
       status: string
       createdAt: string
-      email: string | null
+      phone: string | null
       dateOfBirth: string | null
       enrollmentDate: string | null
       wizardStep: string | null
@@ -1119,11 +1120,9 @@ export async function getStudents(
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
 
-    // Build order by clause
-    const orderBy =
-      sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-        : [{ createdAt: "desc" }]
+    // Build order by clause (shared with content.tsx so the server-rendered
+    // first page and load-more/search cannot disagree about ordering)
+    const orderBy = buildStudentOrderBy(sp.sort)
 
     // Execute queries in parallel
     const studentModel = getModelOrThrow("student")
@@ -1208,7 +1207,11 @@ export async function getStudents(
         gradeName,
         status: deriveStudentDisplayStatus(s),
         createdAt: (s.createdAt as Date).toISOString(),
-        email: (s.email as string | null) || null,
+        // The list shows a reachable contact number, not the login email.
+        phone:
+          (s.mobileNumber as string | null) ||
+          (s.alternatePhone as string | null) ||
+          null,
         dateOfBirth: s.dateOfBirth
           ? (s.dateOfBirth as Date).toISOString()
           : null,

@@ -67,6 +67,20 @@ export const STUDENT_HEADER_MAP: Record<string, string[]> = {
     "بريد ولي الأمر",
     "parent e-mail",
   ],
+  // The student's OWN number. Listed before guardianPhone so the generic
+  // "phone"/"mobile"/"الهاتف" headers bind to the student, not the guardian --
+  // the guardian's aliases are all explicitly parent/guardian-qualified.
+  phone: [
+    "phone",
+    "phone number",
+    "mobile",
+    "mobile number",
+    "student phone",
+    "الهاتف",
+    "رقم الهاتف",
+    "الجوال",
+    "هاتف الطالب",
+  ],
   guardianPhone: [
     "parent phone",
     "guardian phone",

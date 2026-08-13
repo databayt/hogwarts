@@ -229,7 +229,13 @@ export async function completeStudentWizard(
             userId: student.userId,
           },
           {
-            notify: true,
+            // false, not true: `notify` is informational (provisionStudent
+            // never dispatches — the caller does), and this path deliberately
+            // sends nothing. The credential comes back through `result` and
+            // the admin hands it over via the credentials dialog; wizard
+            // students have no real email, just the synthesized
+            // `@student.local` placeholder, so a welcome mail would bounce.
+            notify: false,
             credentialDelivery: "temp-password",
             origin: "ADMIN_DIRECT",
           },

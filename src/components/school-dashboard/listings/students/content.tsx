@@ -11,7 +11,10 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type StudentRow } from "@/components/school-dashboard/listings/students/columns"
-import { studentsSearchParams } from "@/components/school-dashboard/listings/students/list-params"
+import {
+  buildStudentOrderBy,
+  studentsSearchParams,
+} from "@/components/school-dashboard/listings/students/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/students/permissions"
 import { StudentsTable } from "@/components/school-dashboard/listings/students/table"
 import { getLabels, getNames } from "@/components/translation/person"
@@ -142,10 +145,7 @@ export default async function StudentsContent({
     const where: any = withArchiveScope(baseFilters, sp.scope)
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
-    const orderBy =
-      sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-        : [{ createdAt: "desc" }]
+    const orderBy = buildStudentOrderBy(sp.sort)
     const [rows, count] = await Promise.all([
       studentModel.findMany({
         where,
@@ -237,7 +237,7 @@ export default async function StudentsContent({
         gradeName,
         status: deriveDisplayStatus(s),
         createdAt: (s.createdAt as Date).toISOString(),
-        email: s.email || null,
+        phone: s.mobileNumber || s.alternatePhone || null,
         dateOfBirth: s.dateOfBirth
           ? (s.dateOfBirth as Date).toISOString()
           : null,

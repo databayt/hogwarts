@@ -78,10 +78,11 @@ export async function getOrCreateSystemCampaign(
  * campaign. Required Application fields are backfilled from `input` with safe
  * fallbacks — never fabricated data written back onto Student itself.
  *
- * Not exercised by the admission dashboard's `confirmEnrollment` path (which
- * always reuses an existing PORTAL Application) — this is the path future
- * callers (admin single-student wizard, CSV import) will use once they adopt
- * `provisionStudent`.
+ * Not exercised by the admission dashboard's `confirmEnrollment` path, which
+ * always reuses the existing PORTAL Application. Every OTHER caller of
+ * `provisionStudent` comes through here: the admin single-student wizard
+ * (ADMIN_DIRECT), both CSV imports (ONBOARDING_IMPORT / BULK_IMPORT), the
+ * membership role change and the mobile students API.
  */
 function normalizeGender(value: string | null | undefined): Gender | undefined {
   const upper = value?.trim().toUpperCase()

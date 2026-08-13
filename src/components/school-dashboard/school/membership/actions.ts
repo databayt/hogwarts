@@ -17,6 +17,7 @@ import {
   isInvitationExpired,
   MAX_RESEND_COUNT,
 } from "@/lib/invitation-utils"
+import { provisionStudent } from "@/lib/student-provisioning"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertMembershipPermission, getAuthContext } from "./authorization"
@@ -90,8 +91,15 @@ export async function changeRole(
             "Date of birth and gender are required for student role"
           )
         }
-        await tx.student.create({
-          data: {
+        // Promoting a member to STUDENT goes through the shared intake core,
+        // not a bare `tx.student.create`. Otherwise this produced a student
+        // with no Application, no channel, no student code and no fee
+        // assignments — invisible to every surface that keys off those (see
+        // content/docs-en/admission.mdx, "four channels, one pipeline").
+        // ADMIN_DIRECT because an admin is doing the adding, same as the
+        // single-student wizard.
+        await provisionStudent(
+          {
             schoolId,
             userId: parsed.userId,
             firstName:
@@ -101,9 +109,17 @@ export async function changeRole(
             lastName: "",
             dateOfBirth: new Date(parsed.dateOfBirth),
             gender: parsed.gender,
-            status: "ACTIVE",
+            email: targetUser.email,
           },
-        })
+          {
+            notify: false,
+            // The member already has an account and a password they use — do
+            // not mint or mail a new credential just because their role moved.
+            credentialDelivery: "none",
+            origin: "ADMIN_DIRECT",
+          },
+          tx
+        )
       }
 
       if (parsed.newRole === "TEACHER" && !targetUser.teacher) {

@@ -28,8 +28,9 @@ interface GuardianFormProps {
   studentId: string
   initialData?: Partial<PersonalGuardianFormData>
   onValidChange?: (isValid: boolean) => void
-  // When provided, only that parent's fields are shown. The form still holds
-  // both parents' state so saveAndNext can persist both in one transaction.
+  // Which parent's fields are visible. Both parents' fields stay mounted (the
+  // inactive one is hidden), and one form holds both parents' state so
+  // saveAndNext can persist them in a single transaction.
   controlledParent: "father" | "mother"
 }
 
@@ -120,44 +121,63 @@ export const GuardianForm = forwardRef<WizardFormRef, GuardianFormProps>(
         }),
     }))
 
-    const isFather = controlledParent === "father"
-    const namePrefix = isFather ? "father" : "mother"
+    const phonePlaceholder =
+      t?.phonePlaceholder || tContact?.phonePlaceholder || "Enter phone number"
+
+    /**
+     * Both parents' fields are always mounted; the inactive one is hidden with
+     * CSS (same trick `content.tsx` uses for the student tab).
+     *
+     * WHY NOT one field set with a swapped `name` prop — which is what this
+     * used to do: react-hook-form seeds a Controller's value through
+     * `useWatch`, whose `useState` initializer only runs on mount. Changing
+     * `name` on an already-mounted Controller re-subscribes but never re-reads,
+     * so switching to the Mother tab kept showing the father's value AND
+     * re-registered it under `motherName` — the father's data was literally
+     * copied onto the mother and saved that way, which also defeated the
+     * "either parent alone is enough, the other is optional" rule because the
+     * second parent was never actually blank.
+     *
+     * Keeping every field's `name` fixed for its whole lifetime is what makes
+     * the two parents independent.
+     */
+    const parentFields = (parent: "father" | "mother") => (
+      <div
+        key={parent}
+        className={controlledParent === parent ? "space-y-6" : "hidden"}
+      >
+        <InputField
+          name={`${parent}Name`}
+          label={
+            parent === "father"
+              ? t?.fatherName || "Father's Name"
+              : t?.motherName || "Mother's Name"
+          }
+          placeholder={t?.namePlaceholder || "Enter full name"}
+          disabled={isPending}
+        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
+          <PhoneField
+            name={`${parent}Phone`}
+            label={t?.phone || tContact?.phone || "Phone"}
+            placeholder={phonePlaceholder}
+            disabled={isPending}
+          />
+          <PhoneField
+            name={`${parent}Whatsapp`}
+            label={tContact?.whatsapp || "WhatsApp"}
+            placeholder={phonePlaceholder}
+            disabled={isPending}
+          />
+        </div>
+      </div>
+    )
 
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <InputField
-            name={`${namePrefix}Name`}
-            label={
-              isFather
-                ? t?.fatherName || "Father's Name"
-                : t?.motherName || "Mother's Name"
-            }
-            placeholder={t?.namePlaceholder || "Enter full name"}
-            disabled={isPending}
-          />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
-            <PhoneField
-              name={`${namePrefix}Phone`}
-              label={t?.phone || tContact?.phone || "Phone"}
-              placeholder={
-                t?.phonePlaceholder ||
-                tContact?.phonePlaceholder ||
-                "Enter phone number"
-              }
-              disabled={isPending}
-            />
-            <PhoneField
-              name={`${namePrefix}Whatsapp`}
-              label={tContact?.whatsapp || "WhatsApp"}
-              placeholder={
-                t?.phonePlaceholder ||
-                tContact?.phonePlaceholder ||
-                "Enter phone number"
-              }
-              disabled={isPending}
-            />
-          </div>
+          {parentFields("father")}
+          {parentFields("mother")}
         </form>
       </Form>
     )

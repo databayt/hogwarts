@@ -30,6 +30,17 @@ A student can enter the system four ways. **All four funnel through one shared c
 
 The non-`PORTAL` channels create a "direct-admit" `Application` in the `ADMITTED` state, hung off a hidden per-school system campaign, so they never appear in the review queue. The Applications and Enrollment tabs **default to `PORTAL`** — a channel filter reveals the rest. Everything below describes the `PORTAL` (public application → enrollment) path in detail; the other three channels reuse the same `provisionStudent` step from enrollment onward.
 
+### Keeping the invariant true
+
+"Every student is born from an Application" only holds while every write goes through `provisionStudent`, and it is easy to break by accident — a new feature reaches for `db.student.create` and the student it makes is invisible to every surface that reads `Application.channel`. Two guards enforce it:
+
+- **Lint** — a `no-restricted-syntax` rule in `eslint.config.mjs` rejects `*.student.create/upsert/createMany` outside a short, commented allowlist (`STUDENT_CREATE_ALLOWLIST`).
+- **Test** — `src/tests/school-dashboard/listings/student-intake-invariant.test.ts` re-scans the tracked tree and imports that same allowlist, so an inline `eslint-disable` or a drifting config still fails CI. It also fails if an allowlist entry stops matching any file.
+
+Legitimate exceptions are the core itself, the seeds, snapshot restore, ops scripts, and `createDraftStudent` — a wizard draft carries a non-null `wizardStep` and is deliberately Application-less until `completeStudentWizard` runs the core.
+
+Students that predate the unification are linked retroactively by `scripts/backfill-legacy-applications.ts`. It mints a `LEGACY_BACKFILL` shadow Application per orphan and sets only `Student.applicationId` — never the other eleven provisioning steps, which those students already have. Dry run is the default; `--execute` writes, `--school <id>` scopes to one tenant. It is idempotent: the `applicationId IS NULL` filter plus the column's `@unique` mean a re-run only picks up what is still unlinked.
+
 ## Flow
 
 A family moves through six stages. The first four happen on the public website (driven by the family); the last two happen in the staff dashboard.
