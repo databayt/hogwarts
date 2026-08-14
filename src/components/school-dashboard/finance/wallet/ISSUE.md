@@ -2,6 +2,14 @@
 
 > 75% ready · Student / staff digital wallets, topup, spend, balances
 
+## 2026-08-14 — performance pass (local, not deployed)
+
+- [x] Overview gate collapsed from 5 sequential `checkCurrentUserPermission`
+      calls to one `resolveFinanceAccess("wallet", WALLET_ACTIONS)`. Each of those calls
+      re-ran `auth()` and its own user lookup; they now share one session read
+      and one per-request-memoized user row (see `../lib/permissions.ts`).
+      Deny UI and every permission outcome are unchanged.
+
 ## MVP Checklist
 
 - [x] Wallet CRUD per user
