@@ -13,13 +13,10 @@
 
 - [ ] Neon branch first (protocol), then `prisma db push` (NEVER
       `--accept-data-loss`) on the prod lane. Additive only — one new enum type
-      and eight nullable/defaulted columns:
-      - `CREATE TYPE "LiveClassOnlineMode"` (`timetable` · `open` · `both`)
-      - `schools`: `liveClassOnlineFrom`, `liveClassOnlineUntil`,
-        `liveClassOnlineNote`, `liveClassOnlineMode`, `liveClassFallbackUrl`
-      - from the FIRST 08-14 pass, also still unpushed:
-        `schools.liveClassOnlineDefault`, `schools.liveClassProviderDefault`,
-        `sections.liveClassOnline`
+      and eight nullable/defaulted columns: - `CREATE TYPE "LiveClassOnlineMode"` (`timetable` · `open` · `both`) - `schools`: `liveClassOnlineFrom`, `liveClassOnlineUntil`,
+      `liveClassOnlineNote`, `liveClassOnlineMode`, `liveClassFallbackUrl` - from the FIRST 08-14 pass, also still unpushed:
+      `schools.liveClassOnlineDefault`, `schools.liveClassProviderDefault`,
+      `sections.liveClassOnline`
 - [ ] After the push, confirm `/conference/settings` loads for
       `admin@…` and that one `*/15` cron run reports `materialized` without an
       error line.

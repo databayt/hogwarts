@@ -192,11 +192,12 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   The window sits INSIDE the inherit deliberately. It is a temporary lift of
   the school-wide DEFAULT, so the tri-state rule survives verbatim — an
   explicit `Section.conferenceOnline` still wins in both directions, even
-  mid-emergency. Do NOT "fix" this to `(sectionOverride ?? schoolDefault) ||
-  windowActive`: that makes a closure override a decision someone deliberately
-  made about a section, and it was rejected on exactly those grounds. An admin
-  who wants a held-back section online during a closure clears its override —
-  the control they already have.
+  mid-emergency.
+
+  Do NOT "fix" this by moving the window outside the inherit. That makes a
+  closure override a decision someone deliberately made about a section, and it
+  was rejected on exactly those grounds. An admin who wants a held-back section
+  online during a closure clears its override — the control they already have.
 
 - **The emergency window is day-granular and open-ended.**
   `School.conferenceOnlineFrom` / `…Until` / `…Note`. `from` is REQUIRED for a
