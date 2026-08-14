@@ -37,54 +37,49 @@ export function formatMoney(
 }
 
 // Below this, the full figure is short enough to read at a glance, so it is
-// rendered verbatim. At or above it, summary tiles abbreviate (k / m / b) so a
-// seven-digit total does not overflow a KPI card.
+// rendered verbatim. At or above it, summary tiles abbreviate so a seven-digit
+// total does not overflow a KPI card.
 const COMPACT_THRESHOLD = 10_000
-
-const COMPACT_UNITS = [
-  { divisor: 1_000_000_000, suffix: "b" },
-  { divisor: 1_000_000, suffix: "m" },
-  { divisor: 1_000, suffix: "k" },
-] as const
-
-/**
- * Append the compact suffix directly after the last numeric part, so the unit
- * stays glued to the digits regardless of where the locale puts the currency
- * symbol (Arabic renders it trailing, English leading).
- */
-function appendUnit(parts: Intl.NumberFormatPart[], suffix: string): string {
-  const NUMERIC = new Set(["integer", "group", "decimal", "fraction"])
-  let last = -1
-  parts.forEach((part, i) => {
-    if (NUMERIC.has(part.type)) last = i
-  })
-  return parts.map((p, i) => (i === last ? p.value + suffix : p.value)).join("")
-}
 
 /**
  * Format a whole-currency-unit amount for summary tiles, abbreviating large
- * figures (2,005,940 SDG → "2m ج.س."). Use on dashboard KPIs and card headers;
- * ledgers, invoices and tables must keep `formatMoney` so figures stay exact.
+ * figures. Use on dashboard KPIs and card headers; ledgers, invoices and
+ * tables must keep `formatMoney` so figures stay exact.
+ *
+ * Abbreviation comes from `Intl`'s own compact notation rather than a hand-
+ * rolled suffix table, because the abbreviation is a translatable word, not a
+ * letter: Arabic reads ١٠٫٦ مليون / ١٦٤٫٥ ألف / ١٫٥ مليار. Gluing a Latin "m"
+ * onto Arabic digits produced "١٠٫٦m ج.س.", which is not a thing anyone reads.
+ *
+ *   en  10,593,000 SDG -> "SDG 10.6m"
+ *   ar  10,593,000 SDG -> "‏١٠٫٦ مليون ج.س."
  */
 export function formatCompactMoney(
   amount: number,
   currency: string = "USD",
   locale: string = "en"
 ): string {
-  const abs = Math.abs(amount)
-  if (abs < COMPACT_THRESHOLD) return formatMoney(amount, currency, locale)
-
-  const unit = COMPACT_UNITS.find((u) => abs >= u.divisor)
-  if (!unit) return formatMoney(amount, currency, locale)
+  if (Math.abs(amount) < COMPACT_THRESHOLD)
+    return formatMoney(amount, currency, locale)
 
   const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
   const parts = new Intl.NumberFormat(bcp47, {
     style: "currency",
     currency: currency.toUpperCase(),
+    notation: "compact",
     maximumFractionDigits: 1,
-  }).formatToParts(amount / unit.divisor)
+  }).formatToParts(amount)
 
-  return appendUnit(parts, unit.suffix)
+  // Intl gives "10.6M"; the house style is lowercase. Only the `compact` part
+  // is touched, so the currency code keeps its capitals and a translated word
+  // like "مليون" is left exactly as the locale wrote it.
+  return parts
+    .map((part) =>
+      part.type === "compact" && /^[A-Za-z]+$/.test(part.value)
+        ? part.value.toLowerCase()
+        : part.value
+    )
+    .join("")
 }
 
 /**
