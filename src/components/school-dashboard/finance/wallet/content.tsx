@@ -74,26 +74,29 @@ export default async function WalletContent({ dictionary, lang }: Props) {
 
   if (schoolId) {
     try {
-      const school = await db.school.findUnique({
-        where: { id: schoolId },
-        select: { currency: true },
-      })
-      if (school?.currency) currency = school.currency
-      ;[walletsCount, transactionsCount] = await Promise.all([
-        db.wallet.count({ where: { schoolId, isActive: true } }),
-        db.walletTransaction.count({ where: { schoolId } }),
-      ])
+      // The school row, both counts and both aggregates are independent —
+      // one round-trip rather than three.
+      const [school, wallets, transactions, balanceAgg, topupsAgg] =
+        await Promise.all([
+          db.school.findUnique({
+            where: { id: schoolId },
+            select: { currency: true },
+          }),
+          db.wallet.count({ where: { schoolId, isActive: true } }),
+          db.walletTransaction.count({ where: { schoolId } }),
+          db.wallet.aggregate({
+            where: { schoolId, isActive: true },
+            _sum: { balance: true },
+          }),
+          db.walletTransaction.aggregate({
+            where: { schoolId, type: "CREDIT" },
+            _sum: { amount: true },
+          }),
+        ])
 
-      const [balanceAgg, topupsAgg] = await Promise.all([
-        db.wallet.aggregate({
-          where: { schoolId, isActive: true },
-          _sum: { balance: true },
-        }),
-        db.walletTransaction.aggregate({
-          where: { schoolId, type: "CREDIT" },
-          _sum: { amount: true },
-        }),
-      ])
+      if (school?.currency) currency = school.currency
+      walletsCount = wallets
+      transactionsCount = transactions
 
       totalBalance = balanceAgg._sum?.balance
         ? Number(balanceAgg._sum.balance)

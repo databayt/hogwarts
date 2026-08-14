@@ -83,18 +83,24 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
 
   if (schoolId) {
     try {
-      ;[periodsCount, entriesCount, pendingEntriesCount, approvedEntriesCount] =
+      // The hours aggregate does not depend on the counts, so it rides along
+      // instead of costing a second round-trip.
+      const [periods, entries, pendingEntries, approvedEntries, hoursAgg] =
         await Promise.all([
           db.timesheetPeriod.count({ where: { schoolId, status: "OPEN" } }),
           db.timesheetEntry.count({ where: { schoolId } }),
           db.timesheetEntry.count({ where: { schoolId, status: "SUBMITTED" } }),
           db.timesheetEntry.count({ where: { schoolId, status: "APPROVED" } }),
+          db.timesheetEntry.aggregate({
+            where: { schoolId, status: "APPROVED" },
+            _sum: { hoursWorked: true },
+          }),
         ])
 
-      const hoursAgg = await db.timesheetEntry.aggregate({
-        where: { schoolId, status: "APPROVED" },
-        _sum: { hoursWorked: true },
-      })
+      periodsCount = periods
+      entriesCount = entries
+      pendingEntriesCount = pendingEntries
+      approvedEntriesCount = approvedEntries
       totalHours = hoursAgg._sum?.hoursWorked
         ? Number(hoursAgg._sum.hoursWorked)
         : 0

@@ -45,13 +45,6 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
     "expenses",
     EXPENSES_ACTIONS
   )
-  const school = schoolId
-    ? await db.school.findUnique({
-        where: { id: schoolId },
-        select: { currency: true },
-      })
-    : null
-  const currency = school?.currency ?? "USD"
   const bcp = lang === "ar" ? "ar-SA" : "en-US"
 
   if (!schoolId) {
@@ -90,25 +83,33 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
   let pendingExpensesCount = 0
   let approvedExpensesCount = 0
   let totalExpenses = 0
+  let currency = "USD"
 
   if (schoolId) {
     try {
-      ;[
-        categoriesCount,
-        expensesCount,
-        pendingExpensesCount,
-        approvedExpensesCount,
-      ] = await Promise.all([
-        db.expenseCategory.count({ where: { schoolId } }),
-        db.expense.count({ where: { schoolId } }),
-        db.expense.count({ where: { schoolId, status: "PENDING" } }),
-        db.expense.count({ where: { schoolId, status: "APPROVED" } }),
-      ])
+      // The school row, the four counts and the aggregate are independent —
+      // one round-trip rather than three.
+      const [school, categories, expenses, pending, approved, expensesAgg] =
+        await Promise.all([
+          db.school.findUnique({
+            where: { id: schoolId },
+            select: { currency: true },
+          }),
+          db.expenseCategory.count({ where: { schoolId } }),
+          db.expense.count({ where: { schoolId } }),
+          db.expense.count({ where: { schoolId, status: "PENDING" } }),
+          db.expense.count({ where: { schoolId, status: "APPROVED" } }),
+          db.expense.aggregate({
+            where: { schoolId, status: "APPROVED" },
+            _sum: { amount: true },
+          }),
+        ])
 
-      const expensesAgg = await db.expense.aggregate({
-        where: { schoolId, status: "APPROVED" },
-        _sum: { amount: true },
-      })
+      currency = school?.currency ?? "USD"
+      categoriesCount = categories
+      expensesCount = expenses
+      pendingExpensesCount = pending
+      approvedExpensesCount = approved
 
       totalExpenses = expensesAgg._sum?.amount
         ? Number(expensesAgg._sum.amount)

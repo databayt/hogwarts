@@ -37,13 +37,6 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   const c = fd?.common as Record<string, string> | undefined
 
   const { schoolId, can } = await resolveFinanceAccess("budget", BUDGET_ACTIONS)
-  const school = schoolId
-    ? await db.school.findUnique({
-        where: { id: schoolId },
-        select: { currency: true },
-      })
-    : null
-  const currency = school?.currency ?? "USD"
   const bcp = lang === "ar" ? "ar-SA" : "en-US"
 
   if (!schoolId) {
@@ -80,24 +73,33 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   let allocationsCount = 0
   let totalBudget = 0
   let totalSpent = 0
+  let currency = "USD"
 
   if (schoolId) {
     try {
-      ;[budgetsCount, allocationsCount] = await Promise.all([
-        db.budget.count({ where: { schoolId, status: "ACTIVE" } }),
-        db.budgetAllocation.count({ where: { schoolId } }),
-      ])
+      // The school row, both counts and both aggregates are independent —
+      // one round-trip rather than three.
+      const [school, budgets, allocations, budgetAgg, spentAgg] =
+        await Promise.all([
+          db.school.findUnique({
+            where: { id: schoolId },
+            select: { currency: true },
+          }),
+          db.budget.count({ where: { schoolId, status: "ACTIVE" } }),
+          db.budgetAllocation.count({ where: { schoolId } }),
+          db.budget.aggregate({
+            where: { schoolId, status: "ACTIVE" },
+            _sum: { totalAmount: true },
+          }),
+          db.budgetAllocation.aggregate({
+            where: { schoolId },
+            _sum: { spent: true },
+          }),
+        ])
 
-      const [budgetAgg, spentAgg] = await Promise.all([
-        db.budget.aggregate({
-          where: { schoolId, status: "ACTIVE" },
-          _sum: { totalAmount: true },
-        }),
-        db.budgetAllocation.aggregate({
-          where: { schoolId },
-          _sum: { spent: true },
-        }),
-      ])
+      currency = school?.currency ?? "USD"
+      budgetsCount = budgets
+      allocationsCount = allocations
 
       totalBudget = budgetAgg._sum?.totalAmount
         ? Number(budgetAgg._sum.totalAmount)
