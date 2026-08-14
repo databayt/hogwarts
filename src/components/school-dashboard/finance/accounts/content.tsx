@@ -11,27 +11,32 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { resolveFinanceAccess } from "../guard"
 import {
   DashboardGrid,
   FeatureCard,
   StatsCard,
 } from "../lib/dashboard-components"
-import { checkCurrentUserPermission } from "../lib/permissions"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
+/** Every action this page gates on, resolved in a single pass. */
+const ACCOUNTS_ACTIONS = ["view", "create", "edit", "approve"] as const
+
 export default async function AccountsContent({ dictionary, lang }: Props) {
   const fc = (dictionary as any)?.finance?.common as
     | Record<string, string>
     | undefined
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess(
+    "accounts",
+    ACCOUNTS_ACTIONS
+  )
 
   if (!schoolId) {
     return (
@@ -44,22 +49,12 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
   }
 
   // Check permissions for current user
-  const canView = await checkCurrentUserPermission(schoolId, "accounts", "view")
-  const canCreate = await checkCurrentUserPermission(
-    schoolId,
-    "accounts",
-    "create"
-  )
-  const canPencil = await checkCurrentUserPermission(
-    schoolId,
-    "accounts",
-    "edit"
-  )
-  const canApprove = await checkCurrentUserPermission(
-    schoolId,
-    "accounts",
-    "approve"
-  )
+  const {
+    view: canView,
+    create: canCreate,
+    edit: canPencil,
+    approve: canApprove,
+  } = can
 
   // If user can't view accounts, show empty state
   if (!canView) {

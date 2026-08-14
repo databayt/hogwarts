@@ -11,27 +11,38 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { resolveFinanceAccess } from "../guard"
 import {
   DashboardGrid,
   FeatureCard,
   StatsCard,
 } from "../lib/dashboard-components"
-import { checkCurrentUserPermission } from "../lib/permissions"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
+/** Every action this page gates on, resolved in a single pass. */
+const TIMESHEET_ACTIONS = [
+  "view",
+  "create",
+  "edit",
+  "approve",
+  "export",
+] as const
+
 export default async function TimesheetContent({ dictionary, lang }: Props) {
   const fc = (dictionary as any)?.finance?.common as
     | Record<string, string>
     | undefined
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess(
+    "timesheet",
+    TIMESHEET_ACTIONS
+  )
 
   if (!schoolId) {
     return (
@@ -44,31 +55,13 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
   }
 
   // Check permissions for current user
-  const canView = await checkCurrentUserPermission(
-    schoolId,
-    "timesheet",
-    "view"
-  )
-  const canCreate = await checkCurrentUserPermission(
-    schoolId,
-    "timesheet",
-    "create"
-  )
-  const canEdit = await checkCurrentUserPermission(
-    schoolId,
-    "timesheet",
-    "edit"
-  )
-  const canApprove = await checkCurrentUserPermission(
-    schoolId,
-    "timesheet",
-    "approve"
-  )
-  const canExport = await checkCurrentUserPermission(
-    schoolId,
-    "timesheet",
-    "export"
-  )
+  const {
+    view: canView,
+    create: canCreate,
+    edit: canEdit,
+    approve: canApprove,
+    export: canExport,
+  } = can
 
   // If user can't view timesheet, show empty state
   if (!canView) {

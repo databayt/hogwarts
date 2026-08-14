@@ -11,29 +11,40 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { resolveFinanceAccess } from "../guard"
 import {
   DashboardGrid,
   FeatureCard,
   formatCurrency,
   StatsCard,
 } from "../lib/dashboard-components"
-import { checkCurrentUserPermission } from "../lib/permissions"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
+/** Every action this page gates on, resolved in a single pass. */
+const EXPENSES_ACTIONS = [
+  "view",
+  "create",
+  "edit",
+  "approve",
+  "export",
+] as const
+
 export default async function ExpensesContent({ dictionary, lang }: Props) {
   const fd = (dictionary as any)?.finance
   const ep = fd?.expensesPage as Record<string, string> | undefined
   const c = fd?.common as Record<string, string> | undefined
 
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess(
+    "expenses",
+    EXPENSES_ACTIONS
+  )
   const school = schoolId
     ? await db.school.findUnique({
         where: { id: schoolId },
@@ -54,27 +65,13 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
   }
 
   // Check permissions for current user
-  const canView = await checkCurrentUserPermission(schoolId, "expenses", "view")
-  const canCreate = await checkCurrentUserPermission(
-    schoolId,
-    "expenses",
-    "create"
-  )
-  const canPencil = await checkCurrentUserPermission(
-    schoolId,
-    "expenses",
-    "edit"
-  )
-  const canApprove = await checkCurrentUserPermission(
-    schoolId,
-    "expenses",
-    "approve"
-  )
-  const canExport = await checkCurrentUserPermission(
-    schoolId,
-    "expenses",
-    "export"
-  )
+  const {
+    view: canView,
+    create: canCreate,
+    edit: canPencil,
+    approve: canApprove,
+    export: canExport,
+  } = can
 
   // If user can't view expenses, show empty state
   if (!canView) {

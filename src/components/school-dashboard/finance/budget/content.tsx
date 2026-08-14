@@ -11,10 +11,10 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { resolveFinanceAccess } from "../guard"
 import {
   DashboardGrid,
   FeatureCard,
@@ -22,19 +22,21 @@ import {
   formatPercentage,
   StatsCard,
 } from "../lib/dashboard-components"
-import { checkCurrentUserPermission } from "../lib/permissions"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
+/** Every action this page gates on, resolved in a single pass. */
+const BUDGET_ACTIONS = ["view", "create", "edit", "approve", "export"] as const
+
 export default async function BudgetContent({ dictionary, lang }: Props) {
   const fd = (dictionary as any)?.finance
   const bp = fd?.budgetPage as Record<string, string> | undefined
   const c = fd?.common as Record<string, string> | undefined
 
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("budget", BUDGET_ACTIONS)
   const school = schoolId
     ? await db.school.findUnique({
         where: { id: schoolId },
@@ -55,23 +57,13 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   }
 
   // Check permissions for current user
-  const canView = await checkCurrentUserPermission(schoolId, "budget", "view")
-  const canCreate = await checkCurrentUserPermission(
-    schoolId,
-    "budget",
-    "create"
-  )
-  const canPencil = await checkCurrentUserPermission(schoolId, "budget", "edit")
-  const canApprove = await checkCurrentUserPermission(
-    schoolId,
-    "budget",
-    "approve"
-  )
-  const canExport = await checkCurrentUserPermission(
-    schoolId,
-    "budget",
-    "export"
-  )
+  const {
+    view: canView,
+    create: canCreate,
+    edit: canPencil,
+    approve: canApprove,
+    export: canExport,
+  } = can
 
   // If user can't view budget, show empty state
   if (!canView) {

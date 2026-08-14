@@ -11,28 +11,30 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { resolveFinanceAccess } from "../guard"
 import {
   DashboardGrid,
   FeatureCard,
   formatCurrency,
   StatsCard,
 } from "../lib/dashboard-components"
-import { checkCurrentUserPermission } from "../lib/permissions"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
+/** Every action this page gates on, resolved in a single pass. */
+const WALLET_ACTIONS = ["view", "create", "edit", "process", "export"] as const
+
 export default async function WalletContent({ dictionary, lang }: Props) {
   const fd = (dictionary as any)?.finance
   const c = fd?.common as Record<string, string> | undefined
 
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("wallet", WALLET_ACTIONS)
 
   if (!schoolId) {
     return (
@@ -45,23 +47,13 @@ export default async function WalletContent({ dictionary, lang }: Props) {
   }
 
   // Check permissions for current user
-  const canView = await checkCurrentUserPermission(schoolId, "wallet", "view")
-  const canCreate = await checkCurrentUserPermission(
-    schoolId,
-    "wallet",
-    "create"
-  )
-  const canEdit = await checkCurrentUserPermission(schoolId, "wallet", "edit")
-  const canProcess = await checkCurrentUserPermission(
-    schoolId,
-    "wallet",
-    "process"
-  )
-  const canExport = await checkCurrentUserPermission(
-    schoolId,
-    "wallet",
-    "export"
-  )
+  const {
+    view: canView,
+    create: canCreate,
+    edit: canEdit,
+    process: canProcess,
+    export: canExport,
+  } = can
 
   // If user can't view wallet, show empty state
   if (!canView) {
