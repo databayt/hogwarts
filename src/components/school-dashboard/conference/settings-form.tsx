@@ -187,6 +187,10 @@ export function ConferenceSettingsForm({
   function save() {
     setStatus("idle")
     startTransition(async () => {
+      // `values` also carries the read-only fields the page spread in
+      // (`timezone`, `livekitReady`, `windowActive`). That is safe only because
+      // `liveClassSettingsSchema` is a plain z.object, which STRIPS unknown
+      // keys — adding `.strict()` to it would start rejecting every save.
       const res = await updateConferenceSettings(values)
       setStatus("success" in res && res.success ? "saved" : "error")
     })

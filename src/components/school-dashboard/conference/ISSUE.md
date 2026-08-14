@@ -4,6 +4,26 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## PRE-deploy — prod DDL that MUST land first
+
+> The code below is merged; the columns are **not** in prod. Deploying the code
+> without the DDL means `getConferenceSettings` throws P2022 behind the
+> settings-page error boundary AND the `*/15` reminders cron logs a
+> materialization failure every quarter hour, forever, in silence.
+
+- [ ] Neon branch first (protocol), then `prisma db push` (NEVER
+      `--accept-data-loss`) on the prod lane. Additive only — one new enum type
+      and eight nullable/defaulted columns:
+      - `CREATE TYPE "LiveClassOnlineMode"` (`timetable` · `open` · `both`)
+      - `schools`: `liveClassOnlineFrom`, `liveClassOnlineUntil`,
+        `liveClassOnlineNote`, `liveClassOnlineMode`, `liveClassFallbackUrl`
+      - from the FIRST 08-14 pass, also still unpushed:
+        `schools.liveClassOnlineDefault`, `schools.liveClassProviderDefault`,
+        `sections.liveClassOnline`
+- [ ] After the push, confirm `/conference/settings` loads for
+      `admin@…` and that one `*/15` cron run reports `materialized` without an
+      error line.
+
 ## Post-deploy verification (next deploy)
 
 - [ ] `GET /api/conference/token?sessionId=…` resolves tenant context on a
