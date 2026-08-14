@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { schoolCalendarDayOf, schoolWallTimeToUtc } from "@/lib/timezone"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -46,13 +47,6 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
     "payroll",
     PAYROLL_ACTIONS
   )
-  const school = schoolId
-    ? await db.school.findUnique({
-        where: { id: schoolId },
-        select: { currency: true },
-      })
-    : null
-  const currency = school?.currency ?? "USD"
   const bcp = lang === "ar" ? "ar-SA" : "en-US"
 
   const fd = (dictionary as any)?.finance
@@ -96,17 +90,26 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
   let pendingSlipsCount = 0
   let paidSlipsCount = 0
   let monthlyPayroll = 0
+  let currency = "USD"
 
   if (schoolId) {
     try {
-      ;[
-        totalRunsCount,
-        pendingRunsCount,
-        completedRunsCount,
-        totalSlipsCount,
-        pendingSlipsCount,
-        paidSlipsCount,
+      // The school row and the six counts are independent, so they share one
+      // round-trip. The month aggregate cannot join them: its lower bound
+      // depends on the school's timezone, which arrives with the school row.
+      const [
+        school,
+        totalRuns,
+        pendingRuns,
+        completedRuns,
+        slips,
+        pendingSlips,
+        paidSlips,
       ] = await Promise.all([
+        db.school.findUnique({
+          where: { id: schoolId },
+          select: { currency: true, timezone: true },
+        }),
         db.payrollRun.count({ where: { schoolId } }),
         db.payrollRun.count({
           where: { schoolId, status: { in: ["DRAFT", "PENDING_APPROVAL"] } },
@@ -123,10 +126,22 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
         }),
       ])
 
-      // Calculate current month payroll
-      const currentMonthStart = new Date()
-      currentMonthStart.setDate(1)
-      currentMonthStart.setHours(0, 0, 0, 0)
+      currency = school?.currency ?? "USD"
+      totalRunsCount = totalRuns
+      pendingRunsCount = pendingRuns
+      completedRunsCount = completedRuns
+      totalSlipsCount = slips
+      pendingSlipsCount = pendingSlips
+      paidSlipsCount = paidSlips
+
+      // "This month" means this month WHERE THE SCHOOL IS. `new Date()` +
+      // setDate(1) + setHours(0,0,0,0) resolves against the server's zone,
+      // which on Vercel is UTC — so for any school east or west of UTC the
+      // boundary landed hours off and slips near the month edge fell into the
+      // wrong month's total.
+      const tz = school?.timezone ?? "Africa/Khartoum"
+      const { year, month } = schoolCalendarDayOf(new Date(), tz)
+      const currentMonthStart = schoolWallTimeToUtc(tz, year, month, 1, 0, 0)
 
       const payrollAgg = await db.salarySlip.aggregate({
         where: {
