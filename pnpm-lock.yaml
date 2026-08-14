@@ -269,9 +269,6 @@ importers:
       canvas-confetti:
         specifier: ^1.9.3
         version: 1.9.3
-      chart.js:
-        specifier: ^4.5.1
-        version: 4.5.1
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -452,9 +449,6 @@ importers:
       react:
         specifier: 19.2.8
         version: 19.2.8
-      react-chartjs-2:
-        specifier: ^5.3.0
-        version: 5.3.0(chart.js@4.5.1)(react@19.2.8)
       react-circle-flags:
         specifier: ^0.0.27
         version: 0.0.27(react@19.2.8)
@@ -3219,12 +3213,6 @@ packages:
     resolution:
       {
         integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==,
-      }
-
-  "@kurkle/color@0.3.4":
-    resolution:
-      {
-        integrity: sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==,
       }
 
   "@langchain/core@1.0.2":
@@ -9026,13 +9014,6 @@ packages:
       {
         integrity: sha512-iBZ4F4wRbyORVsu0jPV7gXkOsGYjGHPmAyv+HiHG8gi5PtC9KI2j1+v8/tlibRvjoWX027ypmG/n0HtO5t7unw==,
       }
-
-  chart.js@4.5.1:
-    resolution:
-      {
-        integrity: sha512-GIjfiT9dbmHRiYi6Nl2yFCq7kkwdkp1W/lp2J99rX0yo9tgJGn3lKQATztIjb5tVtevcBtIdICNWqlq5+E8/Pw==,
-      }
-    engines: { pnpm: ">=8" }
 
   cheap-ruler@4.0.0:
     resolution:
@@ -14948,15 +14929,6 @@ packages:
         integrity: sha512-btXCnMmRIBINM2LDZoEmOogIZU7Qe7zn4BpomSKZ/ykbLObuBdvG+mFq11DL6fjH1DRwHhrlgtYWG96bJiC7Cg==,
       }
 
-  react-chartjs-2@5.3.0:
-    resolution:
-      {
-        integrity: sha512-UfZZFnDsERI3c3CZGxzvNJd02SHjaSJ8kgW1djn65H1KK8rehwTjyrRKOG3VTMG8wtHZ5rgAO5oTHtHi9GCCmw==,
-      }
-    peerDependencies:
-      chart.js: ^4.1.1
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
   react-circle-flags@0.0.27:
     resolution:
       {
@@ -19564,8 +19536,6 @@ snapshots:
       "@jridgewell/resolve-uri": 3.1.2
       "@jridgewell/sourcemap-codec": 1.5.5
 
-  "@kurkle/color@0.3.4": {}
-
   "@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.2.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14))":
     dependencies:
       "@cfworker/json-schema": 4.1.1
@@ -23697,10 +23667,6 @@ snapshots:
 
   character-reference-invalid@2.0.1: {}
 
-  chart.js@4.5.1:
-    dependencies:
-      "@kurkle/color": 0.3.4
-
   cheap-ruler@4.0.0: {}
 
   chokidar@3.6.0:
@@ -27731,11 +27697,6 @@ snapshots:
     dependencies:
       defu: 6.1.4
       destr: 2.0.5
-
-  react-chartjs-2@5.3.0(chart.js@4.5.1)(react@19.2.8):
-    dependencies:
-      chart.js: 4.5.1
-      react: 19.2.8
 
   react-circle-flags@0.0.27(react@19.2.8):
     dependencies:

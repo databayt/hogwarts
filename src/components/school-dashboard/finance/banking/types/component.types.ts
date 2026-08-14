@@ -193,21 +193,6 @@ export interface BankDropdownProps {
   dictionary?: BankingDictionary
 }
 
-export interface DoughnutChartProps {
-  accounts: BankAccount[]
-  showLegend?: boolean
-  size?: "sm" | "md" | "lg"
-  className?: string
-}
-
-export interface TotalBalanceBoxProps {
-  accounts: BankAccountWithTransactions[]
-  totalBanks: number
-  totalCurrentBalance: number
-  showAddBank?: boolean
-  dictionary?: BankingDictionary
-}
-
 export interface PlaidLinkProps {
   userId: string
   userEmail: string
