@@ -229,6 +229,16 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   `timetable` whenever the particular answer came back offline, so a school
   online only through per-section overrides would lose its mode.
 
+- **"Already over" is compared against the CLOCK, never against `ctx.date`.**
+  Both materializers take a target `date`, and every caller passes it carrying
+  the current time-of-day. `materializeOpenRoom` compared its `dayEnd` to
+  `ctx.date` and so refused to build ANY future day once the wall clock passed
+  the last period's end — a 15:20 run would not build tomorrow's rooms because
+  tomorrow's classes end at 12:10. The cron passes `date = new Date()`, which
+  makes the two coincide, so nothing caught it until the resolver was run
+  against real data for a future day. Use `Date.now()`, as
+  `materializeSlotSession`'s `period_over` already did.
+
 - **An open room is an ordinary slot-less session** (`actions/open-room.ts`),
   not a new concept: `timetableId: null`, `subjectId: null`, a section, and a
   schedule spanning the first period's start to the last period's end (falling
@@ -418,9 +428,10 @@ createLiveClass` branches on `provider` — `livekit` mirrors
 - [Timetable](../timetable/) — renders an **Online** marker beside the physical
   room on all three role views when a slot has a session TODAY (`OnlineBadge`,
   gated on `liveClass.sessionId` — a bare recurring link is not "online
-  today"), and a **closure notice** from `findSchoolClosure`. Note an open room
-  has no `subjectId`, so `attachLiveClasses` cannot see it and a `mode: "open"`
-  school gets neither on any card — ISSUE.md. Anchors scheduled sessions
+  today"), and a **closure notice** from `findSchoolClosure`. An open room has
+  neither a slot nor a `subjectId`, so `attachLiveClasses` reaches it through a
+  SEPARATE section-level lookup, ranked last behind the per-slot session and the
+  subject's own recurring link. Anchors scheduled sessions
   (`Conference.timetableId` is optional); `attachLiveClasses` resolves the Join
   target for teacher/student/guardian today-cards (guardian via
   `getChildTodaySchedule`).

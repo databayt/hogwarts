@@ -361,16 +361,30 @@ Two things the any-time-online pass left the timetable unable to say.
       rendering, and the predicate's school-calendar-day window, type filter
       (EVENT / MODIFIED_SCHEDULE are still teaching days) and tie-break.
 
-### Open — noticed while wiring the badge
+### Open-mode reachability + a future-day bug (2026-08-14)
 
-- [ ] **Open rooms are invisible to the today cards by construction.**
-      `attachLiveClasses` keys on (section, subject), and an open room has no
-      `subjectId` — so a school running `mode: "open"` gets no badge and no
-      Join affordance on ANY timetable card, and `/conference` is its only
-      surface. That is a discoverability hole in the delivery mode this pass
-      shipped. The fix is a separate section-level lookup in
-      `attachLiveClasses` (or a card of its own above the day), not a tweak to
-      the existing key.
+Both found only by running the sweep and the resolver against the seeded demo
+school; both invisible to the unit tests.
+
+- [x] **Open rooms were unreachable from the timetable.** `attachLiveClasses`
+      keys on (section, subject) and an open room has neither a slot nor a
+      subject, so a `mode: "open"` school got no badge and no Join on ANY card
+      — `/conference` was its only surface, which defeats the point of the
+      loose mode. A section-level lookup now resolves it, ranked LAST (a
+      per-slot session and the subject's own link are both more specific). It
+      resolves for EVERY period of the section's day, which is correct: the
+      room is open for all of them.
+- [x] **`materializeOpenRoom` would not build any future day after lunchtime.**
+      The "already over" guard compared `dayEnd` against `ctx.date`, which
+      callers pass carrying the current TIME-OF-DAY on the target date — so
+      once the wall clock passed the last period's end, every future day looked
+      over (a 15:20 run refused to build tomorrow's rooms because tomorrow's
+      classes end at 12:10). Now `Date.now()`, matching
+      `materializeSlotSession`'s `period_over`. The cron passes
+      `ctx.date = new Date()`, so the two comparisons coincide there and
+      nothing caught it — yesterday's drill passed by three minutes.
+      **General shape to watch: any "is it past yet" check whose right-hand
+      side is a caller-supplied DATE rather than the clock.**
 
 ### Any-time online — window · delivery mode · fallback link (2026-08-14)
 

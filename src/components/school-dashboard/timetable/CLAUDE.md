@@ -267,10 +267,11 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   live class from a slot; `attachLiveClasses` (`live-class-join.ts`) resolves the
   Join target for the teacher/student/guardian today-cards, which also carry
   the `<OnlineBadge>` and `<ClosureNotice>` from `views/live-join-button.tsx`.
-  **A conference "open room" (delivery mode `open`) has no `subjectId`, so
-  `attachLiveClasses` — keyed on (section, subject) — cannot see it**: those
-  schools get no badge and no Join on any timetable card. Tracked in the
-  conference block's ISSUE.md. Guardian uses
+  `attachLiveClasses` resolves a Join target most-specific-first: this slot's
+  session → this (section, subject)'s session → the subject's recurring link →
+  **the section's all-day OPEN ROOM** (conference delivery mode `open`, which
+  has neither a slot nor a subject and so needs its own section-level lookup —
+  without it those schools had no path from any card to their room). Guardian uses
   `getChildTodaySchedule` (mirrors the STUDENT branch of `getTodaySchedule`
   behind the guardian-access gate) so `<LiveJoinButton>` can render on
   `guardian-view.tsx`. Attendance can be auto-marked from a slot's live-class
