@@ -20,23 +20,16 @@ import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { formatAmount } from "../lib/utils"
 import type { BankAccount } from "../types"
 import { createTransfer } from "./actions"
-
-// Utility function to format currency
-function formatAmount(amount: number, locale: string = "ar"): string {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount)
-}
 
 interface Props {
   accounts: BankAccount[]
   dictionary: Awaited<ReturnType<typeof getDictionary>>["banking"]
   lang: Locale
+  /** ISO 4217 from `School.currency` -- this form used to hardcode USD. */
+  currency: string
 }
 
 interface AccountSelectProps {
@@ -44,6 +37,8 @@ interface AccountSelectProps {
   selectedAccount: string
   onValueChange: (value: string) => void
   dictionary: any
+  locale: string
+  currency: string
 }
 
 /**
@@ -56,6 +51,8 @@ function AccountSelect({
   selectedAccount,
   onValueChange,
   dictionary,
+  locale,
+  currency,
 }: AccountSelectProps) {
   return (
     <Select
@@ -75,7 +72,7 @@ function AccountSelect({
             <div className="flex w-full items-center justify-between">
               <span>{account.name}</span>
               <span className="text-muted-foreground ms-2 text-sm">
-                {formatAmount(Number(account.currentBalance))}
+                {formatAmount(Number(account.currentBalance), locale, currency)}
               </span>
             </div>
           </SelectItem>
@@ -85,7 +82,17 @@ function AccountSelect({
   )
 }
 
+/** The school's currency symbol on its own, for the amount input's prefix. */
+function symbolFor(currency: string, locale: string): string {
+  const parts = new Intl.NumberFormat(locale === "ar" ? "ar-SD" : "en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).formatToParts(0)
+  return parts.find((p) => p.type === "currency")?.value ?? currency
+}
+
 function PaymentTransferForm(props: Props) {
+  const currencySymbol = symbolFor(props.currency, props.lang)
   const [selectedFromAccount, setSelectedFromAccount] = useState("")
   const [selectedToAccount, setSelectedToAccount] = useState("")
   const [transferType, setTransferType] = useState<"internal" | "external">(
@@ -200,7 +207,11 @@ function PaymentTransferForm(props: Props) {
                 <div className="flex w-full items-center justify-between">
                   <span>{account.name}</span>
                   <span className="text-muted-foreground ms-2 text-sm">
-                    {formatCurrency(account.currentBalance)}
+                    {formatAmount(
+                      Number(account.currentBalance),
+                      props.lang,
+                      props.currency
+                    )}
                   </span>
                 </div>
               </SelectItem>
@@ -210,7 +221,7 @@ function PaymentTransferForm(props: Props) {
         {selectedAccountData && (
           <p className="text-muted-foreground text-sm">
             {props.dictionary.availableBalance}:{" "}
-            {formatCurrency(availableBalance)}
+            {formatAmount(availableBalance, props.lang, props.currency)}
           </p>
         )}
       </div>
@@ -235,7 +246,11 @@ function PaymentTransferForm(props: Props) {
                     <div className="flex w-full items-center justify-between">
                       <span>{account.name}</span>
                       <span className="text-muted-foreground ms-2 text-sm">
-                        {formatCurrency(account.currentBalance)}
+                        {formatAmount(
+                          Number(account.currentBalance),
+                          props.lang,
+                          props.currency
+                        )}
                       </span>
                     </div>
                   </SelectItem>
@@ -266,7 +281,7 @@ function PaymentTransferForm(props: Props) {
         <Label htmlFor="amount">{props.dictionary.amount}</Label>
         <div className="relative">
           <span className="text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2">
-            $
+            {currencySymbol}
           </span>
           <Input
             id="amount"
@@ -283,7 +298,8 @@ function PaymentTransferForm(props: Props) {
         </div>
         {availableBalance > 0 && (
           <p className="text-muted-foreground text-xs">
-            {props.dictionary.maxAmount}: {formatCurrency(availableBalance)}
+            {props.dictionary.maxAmount}:{" "}
+            {formatAmount(availableBalance, props.lang, props.currency)}
           </p>
         )}
       </div>
@@ -325,14 +341,6 @@ function PaymentTransferForm(props: Props) {
 }
 
 // Utility function
-function formatCurrency(amount: number, locale: string = "ar"): string {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount)
-}
 
 // Export memoized component
 export default memo(PaymentTransferForm)

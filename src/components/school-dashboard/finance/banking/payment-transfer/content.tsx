@@ -6,6 +6,8 @@ import Link from "next/link"
 import { CircleAlert, CreditCard } from "lucide-react"
 import type { User } from "next-auth"
 
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +20,7 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { formatAmount } from "../lib/utils"
 import { getAccounts } from "./actions"
 import PaymentTransferForm from "./form"
 
@@ -37,7 +40,20 @@ export default async function PaymentTransferContent(props: Props) {
     )
   }
 
-  const accounts = await getAccounts({ userId: props.user.id })
+  // Money renders in the school's own currency -- BankAccount carries no
+  // currency column, so School.currency is the source (same as the banking
+  // dashboard). This tile used to hardcode USD.
+  const { schoolId } = await getTenantContext()
+  const [accounts, school] = await Promise.all([
+    getAccounts({ userId: props.user.id }),
+    schoolId
+      ? db.school.findUnique({
+          where: { id: schoolId },
+          select: { currency: true },
+        })
+      : null,
+  ])
+  const currency = school?.currency ?? "USD"
 
   // Check if user has enough accounts for transfer
   if (!accounts || accounts.length === 0) {
@@ -84,7 +100,7 @@ export default async function PaymentTransferContent(props: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(totalAvailable)}
+              {formatAmount(totalAvailable, props.lang, currency)}
             </div>
           </CardContent>
         </Card>
@@ -113,6 +129,7 @@ export default async function PaymentTransferContent(props: Props) {
               accounts={accounts}
               dictionary={props.dictionary}
               lang={props.lang}
+              currency={currency}
             />
           </Suspense>
         </CardContent>
@@ -133,14 +150,4 @@ function FormSkeleton() {
       <div className="bg-muted h-10 w-32 animate-pulse rounded" />
     </div>
   )
-}
-
-// Utility function
-function formatCurrency(amount: number, locale: string = "ar"): string {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount)
 }
