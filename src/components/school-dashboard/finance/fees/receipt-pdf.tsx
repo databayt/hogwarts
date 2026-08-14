@@ -4,13 +4,12 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { pdf } from "@react-pdf/renderer"
 import { Download, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { ReceiptDocument, type ReceiptData } from "./receipt-document"
+import type { ReceiptData } from "./receipt-document"
 
 interface DownloadReceiptProps {
   data: ReceiptData
@@ -33,6 +32,13 @@ export function DownloadReceipt({
   const handleDownload = useCallback(async () => {
     setIsGenerating(true)
     try {
+      // @react-pdf/renderer plus the receipt template is the heaviest thing on
+      // any fees route and is only ever needed after this click — keep it out
+      // of the page's initial JS.
+      const [{ pdf }, { ReceiptDocument }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("./receipt-document"),
+      ])
       const blob = await pdf(
         <ReceiptDocument data={data} t={t || {}} />
       ).toBlob()

@@ -2,6 +2,21 @@
 
 Status legend: [x] done, [~] in progress, [ ] todo
 
+## 2026-08-14 — performance pass (local, not deployed)
+
+- [x] **`@react-pdf/renderer` + all six document templates split out of the
+      initial JS.** `DownloadInvoiceButton` statically pulled `useGenerate`,
+      which imports the renderer and every template, into every route that
+      renders the invoice toolbar. The implementation moved to
+      `download-invoice-button.tsx`; `download-invoice.tsx` now `next/dynamic`s
+      it (`ssr: false`), so the chunk loads after hydration rather than as part
+      of the route's first-load JS.
+- [x] **recharts split out of `/finance/invoice/analysis`.** `ChartInvoice` is
+      `next/dynamic`'d with a placeholder matching the card's own height, so
+      nothing shifts while it loads.
+- [x] Revenue stat tile abbreviates money (`formatCompactMoney`) instead of a
+      full-digit `Intl.NumberFormat` built inline at the call site.
+
 ## Recently Completed (2026-07-19 — Production-readiness + integrations + Milan print/share pass)
 
 ### Bug fixes

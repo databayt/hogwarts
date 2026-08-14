@@ -7,6 +7,8 @@ import CountUp from "react-countup"
 
 import { formatAmount } from "@/components/school-dashboard/finance/banking/lib/utils"
 
+import { formatCompactMoney } from "../../lib/format"
+
 interface AnimatedCounterProps {
   amount: number
   /** ISO 4217 code from `School.currency`. */
@@ -14,6 +16,12 @@ interface AnimatedCounterProps {
   /** UI locale ("ar" | "en") -- drives digit shaping and symbol placement. */
   locale?: string
   duration?: number
+  /**
+   * Abbreviate large figures (SDG 16.4m) instead of printing every digit.
+   * For summary tiles, where a nine-digit balance overflows the card and is
+   * read at a glance anyway. Amounts under 10,000 stay exact either way.
+   */
+  compact?: boolean
 }
 
 /**
@@ -30,13 +38,17 @@ export const AnimatedCounter = memo(function AnimatedCounter({
   currency = "USD",
   locale = "ar",
   duration = 2,
+  compact = false,
 }: AnimatedCounterProps) {
   // Validate amount to prevent NaN issues
   const validAmount = typeof amount === "number" && !isNaN(amount) ? amount : 0
 
   const format = useCallback(
-    (value: number) => formatAmount(value, locale, currency),
-    [locale, currency]
+    (value: number) =>
+      compact
+        ? formatCompactMoney(value, currency, locale)
+        : formatAmount(value, locale, currency),
+    [locale, currency, compact]
   )
 
   // A <span>, not a <div>: this renders inside the <p> of a stat card, and a

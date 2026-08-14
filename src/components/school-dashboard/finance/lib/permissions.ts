@@ -12,6 +12,7 @@
  * - Granular permissions (fine-tuning)
  */
 
+import { cache } from "react"
 import { auth } from "@/auth"
 import { UserRole } from "@prisma/client"
 
@@ -52,6 +53,44 @@ export type FinanceAction =
 const FINANCE_ADMIN_ROLES: UserRole[] = ["ADMIN", "ACCOUNTANT", "DEVELOPER"]
 
 /**
+ * Per-request memo of the caller's role + tenant.
+ *
+ * A finance page evaluates several actions on the same module (fees checks
+ * view/edit/approve/create/export), and every one of those used to repeat this
+ * identical lookup. React's `cache()` dedupes them within a single request
+ * only -- an authorization answer must never survive into the next request, so
+ * do NOT reach for `unstable_cache` or a module-level map here.
+ */
+const getFinanceUser = cache(
+  async (userId: string) =>
+    await db.user.findUnique({
+      where: { id: userId },
+      select: { role: true, schoolId: true },
+    })
+)
+
+/**
+ * Per-request memo of every granular action granted on one module.
+ *
+ * Reading the whole module in one `findMany` collapses the N per-action
+ * `findUnique`s a page used to issue into a single query, and `cache()` then
+ * shares that one result across all N checks.
+ */
+const getGrantedActions = cache(
+  async (
+    schoolId: string,
+    userId: string,
+    module: FinanceModule
+  ): Promise<ReadonlySet<string>> => {
+    const rows = await db.financePermission.findMany({
+      where: { schoolId, userId, module },
+      select: { action: true },
+    })
+    return new Set(rows.map((r) => r.action))
+  }
+)
+
+/**
  * Check if user has permission to perform action on module
  *
  * @param userId - User ID to check
@@ -80,11 +119,8 @@ export async function checkFinancePermission(
   action: FinanceAction
 ): Promise<boolean> {
   try {
-    // Get user with role
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { role: true, schoolId: true },
-    })
+    // Get user with role (memoized per request)
+    const user = await getFinanceUser(userId)
 
     if (!user) return false
 
@@ -94,22 +130,15 @@ export async function checkFinancePermission(
     // Check if user belongs to this school
     if (user.schoolId !== schoolId) return false
 
-    // Check role-based access (base layer)
+    // Check role-based access (base layer) -- short-circuits before the
+    // granular table is ever touched, which is the common case for
+    // ADMIN/ACCOUNTANT.
     if (FINANCE_ADMIN_ROLES.includes(user.role)) return true
 
     // Check granular permissions (fine-tuning)
-    const permission = await db.financePermission.findUnique({
-      where: {
-        schoolId_userId_module_action: {
-          schoolId,
-          userId,
-          module,
-          action,
-        },
-      },
-    })
+    const granted = await getGrantedActions(schoolId, userId, module)
 
-    return !!permission
+    return granted.has(action)
   } catch (error) {
     console.error("Error checking finance permission:", error)
     return false
@@ -180,10 +209,7 @@ export async function getUserModulePermissions(
   module: FinanceModule
 ): Promise<FinanceAction[]> {
   try {
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { role: true, schoolId: true },
-    })
+    const user = await getFinanceUser(userId)
 
     if (!user || user.schoolId !== schoolId) return []
 
@@ -200,17 +226,11 @@ export async function getUserModulePermissions(
       ]
     }
 
-    // Get granular permissions
-    const permissions = await db.financePermission.findMany({
-      where: {
-        schoolId,
-        userId,
-        module,
-      },
-      select: { action: true },
-    })
+    // Get granular permissions (shares the per-request memo with
+    // checkFinancePermission, so a page that calls both pays for one query)
+    const granted = await getGrantedActions(schoolId, userId, module)
 
-    return permissions.map((p) => p.action as FinanceAction)
+    return [...granted] as FinanceAction[]
   } catch (error) {
     console.error("Error getting user module permissions:", error)
     return []
@@ -323,10 +343,7 @@ export async function hasFinanceRole(
   roles: UserRole[]
 ): Promise<boolean> {
   try {
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    })
+    const user = await getFinanceUser(userId)
 
     if (!user) return false
     return roles.includes(user.role)

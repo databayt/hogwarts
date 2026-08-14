@@ -5,6 +5,31 @@
 > Last updated: 2026-06-13
 > Aldar UAE source of truth: [hogwarts#356](https://github.com/databayt/hogwarts/issues/356)
 
+## 2026-08-14 — performance pass (local, not deployed)
+
+- [x] **Overview gate collapsed from five serialized permission checks to one.**
+      `content.tsx` used five sequential `checkCurrentUserPermission` calls; each
+      re-ran `auth()` and its own `db.user.findUnique`. Now a single
+      `resolveFinanceAccess("fees", FEES_ACTIONS)` — one session read, all five
+      actions evaluated concurrently against a per-request-memoized user row
+      (see `../lib/permissions.ts`).
+- [x] **Overview stats collapsed from three round-trips to one.** The school
+      row, five counts and three aggregates share no dependency and now run in
+      one `Promise.all`.
+- [x] **`@react-pdf/renderer` split out of the initial JS.** `receipt-pdf.tsx`
+      dynamic-imports the renderer and `receipt-document` inside the click
+      handler, so the PDF graph is fetched only when a receipt is downloaded.
+- [x] **KPI tiles abbreviate money** — `formatCompactMoney` (SDG 10.6m,
+      SDG 164.5k) instead of full digits. Tables, fines, payments and
+      installment rows keep exact `formatCurrency`.
+
+### Behavior change to be aware of
+
+`selfHealFeeProvisioning` now runs **after** the `canView` gate instead of
+before it. It still runs ahead of every count that reads the rows it repairs
+(the reason it exists), but a user who cannot view fees no longer triggers it.
+Admins — the only audience that ever benefited — are unaffected.
+
 ## 4-Level Fee Inheritance (owner's core spec — shipped 2026-06-13)
 
 The fee system enforces a strict four-level cascade. All four levels are now implemented:

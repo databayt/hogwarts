@@ -15,21 +15,26 @@ import {
 
 import { db } from "@/lib/db"
 import { selfHealFeeProvisioning } from "@/lib/fee-provisioning-self-heal"
-import { formatCurrency } from "@/lib/i18n-format"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { checkCurrentUserPermission } from "../lib/permissions"
+import { resolveFinanceAccess } from "../guard"
+import { formatCompactMoney } from "../lib/format"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
+/** Every action this page gates on, resolved in a single pass. */
+const FEES_ACTIONS = ["view", "edit", "approve", "create", "export"] as const
+
 export default async function FeesContent({ dictionary, lang }: Props) {
-  const { schoolId } = await getTenantContext()
+  // One tenant + session resolution, then all five permissions concurrently.
+  // Previously five sequential `checkCurrentUserPermission` calls, each
+  // re-running `auth()` and its own `user` lookup.
+  const { schoolId, can } = await resolveFinanceAccess("fees", FEES_ACTIONS)
 
   if (!schoolId) {
     const ov = (dictionary as any)?.finance?.fees?.overview as
@@ -44,20 +49,13 @@ export default async function FeesContent({ dictionary, lang }: Props) {
     )
   }
 
-  const canView = await checkCurrentUserPermission(schoolId, "fees", "view")
-  const canPencil = await checkCurrentUserPermission(schoolId, "fees", "edit")
-  const canApprove = await checkCurrentUserPermission(
-    schoolId,
-    "fees",
-    "approve"
-  )
-  const canCreate = await checkCurrentUserPermission(schoolId, "fees", "create")
-  const canExport = await checkCurrentUserPermission(schoolId, "fees", "export")
-
-  // Best-effort: if onboarding's after() was killed before fee provisioning
-  // completed, heal it now so the admin sees fees instead of an empty page.
-  // Idempotent and silent — returns immediately if nothing to do.
-  await selfHealFeeProvisioning(schoolId)
+  const {
+    view: canView,
+    edit: canPencil,
+    approve: canApprove,
+    create: canCreate,
+    export: canExport,
+  } = can
 
   if (!canView) {
     const ov = (dictionary as any)?.finance?.fees?.overview as
@@ -72,12 +70,13 @@ export default async function FeesContent({ dictionary, lang }: Props) {
     )
   }
 
-  const schoolForCurrency = await db.school.findUnique({
-    where: { id: schoolId },
-    select: { currency: true },
-  })
-  const currency = schoolForCurrency?.currency ?? "USD"
+  // Best-effort: if onboarding's after() was killed before fee provisioning
+  // completed, heal it now so the admin sees fees instead of an empty page.
+  // Idempotent and silent — returns immediately if nothing to do. Must stay
+  // ahead of the counts below, which read the rows it repairs.
+  await selfHealFeeProvisioning(schoolId)
 
+  let currency = "USD"
   let feeStructuresCount = 0
   let activeAssignmentsCount = 0
   let paymentsCount = 0
@@ -88,13 +87,23 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   let finesCount = 0
 
   try {
-    ;[
-      feeStructuresCount,
-      activeAssignmentsCount,
-      paymentsCount,
-      scholarshipsCount,
-      finesCount,
+    // One round-trip for the school row, the five counts and the three
+    // aggregates — they share no dependency, so there is nothing to serialize.
+    const [
+      schoolForCurrency,
+      structures,
+      assignments,
+      payments,
+      scholarships,
+      fines,
+      collectedAgg,
+      pendingAgg,
+      overdueAgg,
     ] = await Promise.all([
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true },
+      }),
       db.feeStructure.count({ where: { schoolId } }),
       db.feeAssignment.count({
         where: {
@@ -105,9 +114,6 @@ export default async function FeesContent({ dictionary, lang }: Props) {
       db.payment.count({ where: { schoolId, status: "SUCCESS" } }),
       db.scholarship.count({ where: { schoolId } }),
       db.fine.count({ where: { schoolId } }),
-    ])
-
-    const [collectedAgg, pendingAgg, overdueAgg] = await Promise.all([
       db.payment.aggregate({
         where: { schoolId, status: "SUCCESS" },
         _sum: { amount: true },
@@ -121,6 +127,13 @@ export default async function FeesContent({ dictionary, lang }: Props) {
         _sum: { finalAmount: true },
       }),
     ])
+
+    currency = schoolForCurrency?.currency ?? "USD"
+    feeStructuresCount = structures
+    activeAssignmentsCount = assignments
+    paymentsCount = payments
+    scholarshipsCount = scholarships
+    finesCount = fines
 
     totalFeesCollected = collectedAgg._sum?.amount
       ? Number(collectedAgg._sum.amount)
@@ -240,7 +253,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(totalFeesCollected, lang, currency)}
+              {formatCompactMoney(totalFeesCollected, currency, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {fp.completedPayments || "Completed payments"}
@@ -257,7 +270,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(pendingPayments, lang, currency)}
+              {formatCompactMoney(pendingPayments, currency, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {activeAssignmentsCount} {fp.assignments || "assignments"}
@@ -274,7 +287,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(overduePayments, lang, currency)}
+              {formatCompactMoney(overduePayments, currency, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {c.requiresAction || fp.requiresAction || "Requires action"}

@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import dynamic from "next/dynamic"
 import type { UserInvoice } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
@@ -11,9 +12,22 @@ import { Badge } from "@/components/ui/badge"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
+import { formatCompactMoney } from "../../lib/format"
 import { RecentInvoicesCard, StatsCards } from "./card"
-import { ChartInvoice } from "./chart-invoice"
 import { getChartConfig } from "./config"
+
+// recharts is the largest dependency on this route and the chart is a
+// client-only canvas anyway — load it after the dashboard paints. The
+// placeholder matches the card's own height so nothing shifts.
+const ChartInvoice = dynamic(
+  () => import("./chart-invoice").then((m) => m.ChartInvoice),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-card col-span-2 h-80 rounded-xl border lg:h-96" />
+    ),
+  }
+)
 
 interface DashboardData {
   totalRevenue: number
@@ -35,6 +49,8 @@ export function DashboardContent({ dictionary, lang, initialData }: Props) {
   const fd = (dictionary as any)?.finance
   const ip = fd?.invoicePage as Record<string, string> | undefined
   const dateLocale = lang === "ar" ? ar : enUS
+
+  const currency = initialData?.currency ?? "USD"
 
   const data = {
     totalRevenue: initialData?.totalRevenue ?? 0,
@@ -83,10 +99,9 @@ export function DashboardContent({ dictionary, lang, initialData }: Props) {
       <div className="grid gap-6 lg:grid-cols-4">
         <StatsCards
           stats={{
-            totalRevenue: new Intl.NumberFormat(lang, {
-              style: "currency",
-              currency: initialData?.currency ?? "USD",
-            }).format(data.totalRevenue),
+            // Summary tile — abbreviate (SDG 2.4m) so a seven-figure total
+            // does not overflow the card.
+            totalRevenue: formatCompactMoney(data.totalRevenue, currency, lang),
             totalInvoice: data.totalInvoice,
             paidInvoice: data.paidInvoice,
             UnpaidInvoice: data.UnpaidInvoice,

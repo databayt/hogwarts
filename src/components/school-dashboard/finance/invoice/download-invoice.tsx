@@ -4,50 +4,35 @@
 "use client"
 
 import { useState } from "react"
-import { CheckCircle2, Download, Loader2, Send } from "lucide-react"
+import dynamic from "next/dynamic"
+import { CheckCircle2, Loader2, Send } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { useGenerate } from "@/components/file/generate/use-generate"
-import type { Locale } from "@/components/internationalization/config"
 
-import { mapInvoiceToInvoiceData, type InvoiceForPdf } from "./invoice-pdf-data"
-
-interface DownloadInvoiceButtonProps {
-  invoice: InvoiceForPdf
-  lang: Locale
-  label?: string
-}
+import type { DownloadInvoiceButtonProps } from "./download-invoice-button"
 
 /**
- * Client "Download PDF" trigger. Wires the existing (previously unwired)
- * InvoiceTemplate into the invoice view via useGenerate().generateInvoice,
- * which renders the PDF and triggers the browser download.
+ * Lazy boundary for the PDF download button. The real implementation pulls
+ * @react-pdf/renderer and all six document templates through `useGenerate`;
+ * splitting it here keeps that graph out of the initial JS for every invoice
+ * route while leaving the call site unchanged.
  */
-export function DownloadInvoiceButton({
-  invoice,
-  lang,
-  label,
-}: DownloadInvoiceButtonProps) {
-  const { generateInvoice, isGenerating } = useGenerate()
-
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={isGenerating}
-      onClick={() => {
-        void generateInvoice(mapInvoiceToInvoiceData(invoice, lang))
-      }}
-    >
-      {isGenerating ? (
+const DownloadInvoiceButtonImpl = dynamic(
+  () =>
+    import("./download-invoice-button").then((m) => m.DownloadInvoiceButton),
+  {
+    ssr: false,
+    loading: () => (
+      <Button variant="outline" size="sm" disabled>
         <Loader2 className="size-4 animate-spin" />
-      ) : (
-        <Download className="size-4" />
-      )}
-      {label ?? "Download PDF"}
-    </Button>
-  )
+      </Button>
+    ),
+  }
+)
+
+export function DownloadInvoiceButton(props: DownloadInvoiceButtonProps) {
+  return <DownloadInvoiceButtonImpl {...props} />
 }
 
 interface SendInvoiceButtonProps {

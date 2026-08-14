@@ -76,6 +76,7 @@ export function DashboardHeader({
               amount={totalCurrentBalance}
               currency={currency}
               locale={lang}
+              compact
             />
           }
         />

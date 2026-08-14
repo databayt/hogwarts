@@ -2,6 +2,15 @@
 
 > 75% ready · Salary structures, allowances, deductions, bands
 
+## 2026-08-14 — performance pass (local, not deployed)
+
+- [x] Overview gate collapsed from four serialized `checkCurrentUserPermission`
+      calls to one `resolveFinanceAccess("salary", SALARY_ACTIONS)`.
+- [x] Overview stats collapsed from three round-trips to one `Promise.all`
+      (school row + four counts + the salary aggregate were serialized).
+- [x] KPI tiles abbreviate money via `formatCompactMoney` (SDG 16.4m,
+      SDG 164.5k). `columns.tsx` keeps exact per-row currency.
+
 ## MVP Checklist
 
 - [x] Salary structure CRUD (basic + allowances + deductions)

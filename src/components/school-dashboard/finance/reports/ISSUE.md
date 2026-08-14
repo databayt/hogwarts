@@ -2,6 +2,20 @@
 
 > 75% ready · Balance sheet, P&L, trial balance, cash flow
 
+## 2026-08-14 — performance pass (local, not deployed)
+
+- [x] Overview gate collapsed to one `resolveFinanceAccess("reports", ["view"])`.
+- [x] Dropped the `export` permission check — it was resolved on every render
+      and never read. The export routes gate themselves.
+
+### Left alone deliberately
+
+`actions.ts` `getLedgerAccountActivity` reads `LedgerEntry` with a findMany +
+in-memory rollup. That is a documented decision (the `AccountBalance` cache is
+a per-posting-date delta row written by only one of the two posting paths, and
+has no fiscal-year column). Volume is a few hundred rows per school. Do not
+"optimize" it into the cache table.
+
 ## MVP Checklist
 
 - [x] Balance sheet generator

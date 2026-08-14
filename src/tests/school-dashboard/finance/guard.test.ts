@@ -12,7 +12,7 @@ vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/db", () => ({
   db: {
     user: { findUnique: vi.fn() },
-    financePermission: { findUnique: vi.fn() },
+    financePermission: { findMany: vi.fn() },
   },
 }))
 
@@ -40,7 +40,7 @@ function signedInAs(role: string, schoolId: string | null = SCHOOL) {
     role,
     schoolId,
   } as never)
-  vi.mocked(db.financePermission.findUnique).mockResolvedValue(null as never)
+  vi.mocked(db.financePermission.findMany).mockResolvedValue([] as never)
 }
 
 describe("finance/guard — resolveFinanceAccess", () => {
@@ -102,14 +102,11 @@ describe("finance/guard — resolveFinanceAccess", () => {
 
   it("grants a STAFF member only the explicitly granted action", async () => {
     signedInAs("STAFF")
-    vi.mocked(db.financePermission.findUnique).mockImplementation(
-      (async (args: {
-        where: { schoolId_userId_module_action: { action: string } }
-      }) =>
-        args.where.schoolId_userId_module_action.action === "view"
-          ? { id: "perm-1" }
-          : null) as never
-    )
+    // The granular grants for a module are read in one findMany, not one
+    // findUnique per action.
+    vi.mocked(db.financePermission.findMany).mockResolvedValue([
+      { action: "view" },
+    ] as never)
 
     const { can } = await resolveFinanceAccess("payroll", ["view", "approve"])
 
@@ -128,5 +125,21 @@ describe("finance/guard — resolveFinanceAccess", () => {
     ])
 
     expect(auth).toHaveBeenCalledTimes(1)
+  })
+
+  it("never reads the grant table for a role that already has access", async () => {
+    signedInAs("ACCOUNTANT")
+
+    const { can } = await resolveFinanceAccess("payroll", [
+      "view",
+      "create",
+      "process",
+      "approve",
+    ])
+
+    expect(can.view).toBe(true)
+    // Role-based access short-circuits ahead of the granular lookup, so the
+    // common admin/accountant path costs one user read and nothing else.
+    expect(db.financePermission.findMany).not.toHaveBeenCalled()
   })
 })

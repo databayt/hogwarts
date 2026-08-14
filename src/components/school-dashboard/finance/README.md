@@ -163,8 +163,9 @@ src/components/school-dashboard/finance/
 3. **Multi-tenant**: Row-level isolation using `schoolId` in every query
 4. **Hybrid permissions**: Role-based defaults + granular `FinancePermission` model (12 modules x 7 actions)
 5. **Mirror pattern**: Routes at `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/<module>/` import from `src/components/school-dashboard/finance/<module>/content.tsx`
-6. **Locale-aware formatting**: `formatCurrency` / `formatMoney` / `formatDate` from `finance/lib/format.ts` -- never hardcode `$`, `SDG`, or English month names
-7. **Dictionary-driven notifications**: Server actions load `finance.notifications.*` via `getDictionary(school.preferredLanguage)` -- no bilingual ternaries
+6. **Locale-aware formatting**: `formatCurrency` / `formatMoney` / `formatCompactMoney` / `formatDate` from `finance/lib/format.ts` -- never hardcode `$`, `SDG`, or English month names. Summary/KPI tiles use `formatCompactMoney` (`SDG 10.6m`); anything a person reconciles against -- tables, ledgers, invoices, receipts -- keeps the exact formatter
+7. **One gate per page, not one per action**: pages resolve permissions through `guard.ts` `resolveFinanceAccess(module, actions)`, which reads session + tenant once and evaluates every action concurrently. A chain of `checkCurrentUserPermission` calls serializes a session read and a user lookup per action
+8. **Dictionary-driven notifications**: Server actions load `finance.notifications.*` via `getDictionary(school.preferredLanguage)` -- no bilingual ternaries
 
 ### Integration Points
 

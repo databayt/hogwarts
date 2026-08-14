@@ -12,7 +12,6 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -24,18 +23,26 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { checkCurrentUserPermission } from "../lib/permissions"
+import { resolveFinanceAccess } from "../guard"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
+/** Every action this page gates on. The overview renders no export control,
+ *  so "export" is not resolved here — the export routes gate themselves. */
+const REPORTS_ACTIONS = ["view"] as const
+
 export default async function ReportsContent({ dictionary, lang }: Props) {
   const fd = (dictionary as any)?.finance
   const rp = fd?.reportsPage as Record<string, string> | undefined
   const c = fd?.common as Record<string, string> | undefined
-  const { schoolId } = await getTenantContext()
+  // One tenant + session resolution, then both permissions concurrently.
+  const { schoolId, can } = await resolveFinanceAccess(
+    "reports",
+    REPORTS_ACTIONS
+  )
 
   if (!schoolId) {
     return (
@@ -47,13 +54,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
     )
   }
 
-  // Check permissions for current user
-  const canView = await checkCurrentUserPermission(schoolId, "reports", "view")
-  const canExport = await checkCurrentUserPermission(
-    schoolId,
-    "reports",
-    "export"
-  )
+  const { view: canView } = can
 
   // If user can't view reports, show empty state
   if (!canView) {
@@ -70,15 +71,13 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
   let reportsCount = 0
   let generatedReportsCount = 0
 
-  if (schoolId) {
-    try {
-      ;[reportsCount, generatedReportsCount] = await Promise.all([
-        db.financialReport.count({ where: { schoolId } }),
-        db.financialReport.count({ where: { schoolId, status: "COMPLETED" } }),
-      ])
-    } catch (error) {
-      console.error("Error fetching report stats:", error)
-    }
+  try {
+    ;[reportsCount, generatedReportsCount] = await Promise.all([
+      db.financialReport.count({ where: { schoolId } }),
+      db.financialReport.count({ where: { schoolId, status: "COMPLETED" } }),
+    ])
+  } catch (error) {
+    console.error("Error fetching report stats:", error)
   }
 
   const d = dictionary?.finance?.reports

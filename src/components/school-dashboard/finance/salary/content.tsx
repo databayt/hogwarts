@@ -14,7 +14,6 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -26,16 +25,20 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { formatMoney } from "../lib/format"
-import { checkCurrentUserPermission } from "../lib/permissions"
+import { resolveFinanceAccess } from "../guard"
+import { formatCompactMoney } from "../lib/format"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
+/** Every action this page gates on, resolved in a single pass. */
+const SALARY_ACTIONS = ["view", "create", "edit", "export"] as const
+
 export default async function SalaryContent({ dictionary, lang }: Props) {
-  const { schoolId } = await getTenantContext()
+  // One tenant + session resolution, then all four permissions concurrently.
+  const { schoolId, can } = await resolveFinanceAccess("salary", SALARY_ACTIONS)
 
   const fd = (dictionary as any)?.finance
   const c = fd?.common as Record<string, string> | undefined
@@ -50,19 +53,12 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
     )
   }
 
-  // Check permissions for current user
-  const canView = await checkCurrentUserPermission(schoolId, "salary", "view")
-  const canCreate = await checkCurrentUserPermission(
-    schoolId,
-    "salary",
-    "create"
-  )
-  const canEdit = await checkCurrentUserPermission(schoolId, "salary", "edit")
-  const canExport = await checkCurrentUserPermission(
-    schoolId,
-    "salary",
-    "export"
-  )
+  const {
+    view: canView,
+    create: canCreate,
+    edit: canEdit,
+    export: canExport,
+  } = can
 
   // If user can't view salary, show empty state
   if (!canView) {
@@ -84,21 +80,17 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
   let deductionsCount = 0
   let currency = "USD"
 
-  if (schoolId) {
-    try {
-      const school = await db.school
-        .findUnique({
-          where: { id: schoolId },
-          select: { currency: true },
-        })
-        .catch(() => null)
-      currency = school?.currency ?? "USD"
-      ;[
-        activeStructuresCount,
-        totalStaffCount,
-        allowancesCount,
-        deductionsCount,
-      ] = await Promise.all([
+  try {
+    // The school row, the four counts and the salary aggregate are
+    // independent — one round-trip instead of three.
+    const [school, structures, staff, allowances, deductions, salaryAgg] =
+      await Promise.all([
+        db.school
+          .findUnique({
+            where: { id: schoolId },
+            select: { currency: true },
+          })
+          .catch(() => null),
         db.salaryStructure.count({
           where: { schoolId, isActive: true },
         }),
@@ -109,24 +101,27 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
         db.salaryDeduction.count({
           where: { schoolId },
         }),
+        db.salaryStructure.aggregate({
+          where: { schoolId, isActive: true },
+          _sum: { baseSalary: true },
+          _avg: { baseSalary: true },
+        }),
       ])
 
-      // Calculate salary totals
-      const salaryAgg = await db.salaryStructure.aggregate({
-        where: { schoolId, isActive: true },
-        _sum: { baseSalary: true },
-        _avg: { baseSalary: true },
-      })
+    currency = school?.currency ?? "USD"
+    activeStructuresCount = structures
+    totalStaffCount = staff
+    allowancesCount = allowances
+    deductionsCount = deductions
 
-      totalMonthlySalary = salaryAgg._sum?.baseSalary
-        ? Number(salaryAgg._sum.baseSalary)
-        : 0
-      averageSalary = salaryAgg._avg?.baseSalary
-        ? Number(salaryAgg._avg.baseSalary)
-        : 0
-    } catch (error) {
-      console.error("Error fetching salary stats:", error)
-    }
+    totalMonthlySalary = salaryAgg._sum?.baseSalary
+      ? Number(salaryAgg._sum.baseSalary)
+      : 0
+    averageSalary = salaryAgg._avg?.baseSalary
+      ? Number(salaryAgg._avg.baseSalary)
+      : 0
+  } catch (error) {
+    console.error("Error fetching salary stats:", error)
   }
 
   const sp = fd?.salaryPage as Record<string, string> | undefined
@@ -144,7 +139,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatMoney(totalMonthlySalary, currency, lang)}
+              {formatCompactMoney(totalMonthlySalary, currency, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {sp?.totalBasicSalary || "Total basic salary"}
@@ -177,7 +172,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatMoney(averageSalary, currency, lang)}
+              {formatCompactMoney(averageSalary, currency, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {sp?.perStaffMember || "Per staff member"}
