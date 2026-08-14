@@ -66,13 +66,27 @@ import type { BankAccount, BankingDictionary, Transaction } from "../types"
 interface TransactionsTableImprovedProps {
   transactions: Transaction[]
   accounts: BankAccount[]
+  /** Starting page; the table owns paging from there (see `page` below). */
   currentPage?: number
+  /** Rows the caller owns in total -- may exceed `transactions.length`. */
+  totalTransactions?: number
+  /** Ceiling the server applied, so the gap can be stated rather than hidden. */
+  windowSize?: number
   dictionary?: BankingDictionary
   isLoading?: boolean
   onPageChange?: (page: number) => void
   onExport?: (format: "csv" | "pdf") => void
   className?: string
 }
+
+/**
+ * Radix rejects `<SelectItem value="">` -- an empty value is reserved for
+ * clearing the selection -- and throws hard enough to take the whole route
+ * down via the error boundary. The "all accounts" row therefore carries a
+ * sentinel, which the filter maps back to "" (no filter). This crashed the
+ * page for any user with more than one linked account.
+ */
+const ALL_ACCOUNTS = "__all__"
 
 interface FilterState {
   search: string
@@ -92,6 +106,8 @@ function TransactionsTableImprovedInner({
   transactions,
   accounts,
   currentPage = 1,
+  totalTransactions,
+  windowSize,
   dictionary,
   isLoading = false,
   onPageChange,
@@ -99,6 +115,18 @@ function TransactionsTableImprovedInner({
   className,
 }: TransactionsTableImprovedProps) {
   const { locale } = useLocale()
+  // Paging is local state, not a URL round-trip: filtering and sorting already
+  // happen here, so a server hop per page click would re-render the route to
+  // reorder rows the browser is already holding. `onPageChange` stays optional
+  // for callers that do want to drive it.
+  const [page, setPage] = useState(currentPage)
+  const goToPage = useCallback(
+    (next: number) => {
+      setPage(next)
+      onPageChange?.(next)
+    },
+    [onPageChange]
+  )
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     category: "",
@@ -112,6 +140,16 @@ function TransactionsTableImprovedInner({
     column: "date",
     direction: "desc",
   })
+
+  // Narrowing a filter should land the viewer on page 1, not wherever they
+  // happened to be. Adjusting during render (rather than in an effect) keeps a
+  // deep-linked `?page=` intact on mount -- an effect would clobber it.
+  const filterKey = JSON.stringify(filters)
+  const [lastFilterKey, setLastFilterKey] = useState(filterKey)
+  if (filterKey !== lastFilterKey) {
+    setLastFilterKey(filterKey)
+    setPage(1)
+  }
 
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
@@ -181,10 +219,16 @@ function TransactionsTableImprovedInner({
     })
   }, [filteredTransactions, sortState])
 
-  // Pagination
+  // Pagination. `safePage` clamps rather than trusts `page`: narrowing a filter
+  // while on page 5 can leave fewer pages than that, and an unclamped slice
+  // renders an empty table with no way back.
   const pageSize = 20
-  const totalPages = Math.ceil(sortedTransactions.length / pageSize)
-  const startIndex = (currentPage - 1) * pageSize
+  const totalPages = Math.max(
+    1,
+    Math.ceil(sortedTransactions.length / pageSize)
+  )
+  const safePage = Math.min(Math.max(page, 1), totalPages)
+  const startIndex = (safePage - 1) * pageSize
   const paginatedTransactions = sortedTransactions.slice(
     startIndex,
     startIndex + pageSize
@@ -366,16 +410,19 @@ function TransactionsTableImprovedInner({
 
             {accounts.length > 1 && (
               <Select
-                value={filters.account}
+                value={filters.account || ALL_ACCOUNTS}
                 onValueChange={(value) =>
-                  setFilters((prev) => ({ ...prev, account: value }))
+                  setFilters((prev) => ({
+                    ...prev,
+                    account: value === ALL_ACCOUNTS ? "" : value,
+                  }))
                 }
               >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder={dictionary?.account || "Account"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">
+                  <SelectItem value={ALL_ACCOUNTS}>
                     {dictionary?.allAccounts || "All Accounts"}
                   </SelectItem>
                   {accounts.map((account) => (
@@ -527,7 +574,11 @@ function TransactionsTableImprovedInner({
                           )}
                         >
                           {transaction.type === "credit" ? "+" : "-"}
-                          {formatAmount(Math.abs(transaction.amount), locale)}
+                          {formatAmount(
+                            Math.abs(transaction.amount),
+                            locale,
+                            transaction.isoCurrencyCode
+                          )}
                         </span>
                       </TableCell>
                     )}
@@ -566,26 +617,37 @@ function TransactionsTableImprovedInner({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onPageChange?.(currentPage - 1)}
-                disabled={currentPage === 1}
+                onClick={() => goToPage(safePage - 1)}
+                disabled={safePage === 1}
               >
                 {dictionary?.previous || "Previous"}
               </Button>
               <span className="text-sm">
-                {dictionary?.page || "Page"} {currentPage}{" "}
-                {dictionary?.of || "of"} {totalPages}
+                {dictionary?.page || "Page"} {safePage} {dictionary?.of || "of"}{" "}
+                {totalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onPageChange?.(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                onClick={() => goToPage(safePage + 1)}
+                disabled={safePage === totalPages}
               >
                 {dictionary?.next || "Next"}
               </Button>
             </div>
           </div>
         )}
+
+        {/* The server caps how many rows it ships. Say so -- a page that
+            quietly holds rows back reads as "this is everything". */}
+        {typeof totalTransactions === "number" &&
+          totalTransactions > transactions.length && (
+            <p className="text-muted-foreground text-xs">
+              {dictionary?.showingMostRecent || "Showing the most recent"}{" "}
+              {windowSize ?? transactions.length} {dictionary?.of || "of"}{" "}
+              {totalTransactions} {dictionary?.transactions || "transactions"}
+            </p>
+          )}
 
         {/* Empty state */}
         {sortedTransactions.length === 0 && (
@@ -646,7 +708,11 @@ function TransactionsTableImprovedInner({
                   )}
                 >
                   {detailsSheet.type === "credit" ? "+" : "-"}
-                  {formatAmount(Math.abs(detailsSheet.amount), locale)}
+                  {formatAmount(
+                    Math.abs(detailsSheet.amount),
+                    locale,
+                    detailsSheet.isoCurrencyCode
+                  )}
                 </p>
               </div>
               <div className="space-y-2">

@@ -11,25 +11,51 @@
       are already `react` `cache()`-memoized and the dashboard already resolves
       the school row, profile and accounts in one `Promise.all`.
 
-### Found, NOT fixed — needs a decision
+### The three findings above — all fixed the same day
 
-1. **Transaction history shows at most 5 transactions per account.**
-   `transaction-history/content.tsx` builds its list from `getAccounts()`,
-   whose include is `transactions: { take: 5 }`. The table then paginates that
-   list client-side at 20/page, so the pager is decorative and the page
-   silently omits history. This is a correctness bug, not a performance one —
-   fixing it means a real paginated query (`skip`/`take` + a total count) and
-   moving the table from client-side to server-side pagination.
-2. **`payment-transfer/content.tsx:139` hardcodes USD.** A local
-   `formatCurrency` helper ignores `School.currency`, so the available-balance
-   tile prints the wrong symbol for every non-USD school. Violates the
-   per-school-currency rule in the block `CLAUDE.md`. Needs `currency` threaded
-   into the component.
-3. **`TotalBalanceBox` → `DoughnutChart` is dead code.** Nothing imports
-   `TotalBalanceBox`; it is the only consumer of `DoughnutChart`, which is the
-   only consumer of `chart.js` and `react-chartjs-2`. Deleting the two files
-   would make both dependencies removable. Left in place — dropping packages
-   changes the lockfile and is the owner's call.
+1. **[x] Transaction history no longer truncates at 5 rows per account.**
+   The list was stitched from `getAccounts()`, whose include is
+   `transactions: { take: 5 }`, then paginated client-side at 20/page — so the
+   pager was decorative and the page silently omitted history. History now
+   comes from `transaction-history/queries.ts` (`server-only`, NOT the
+   `"use server"` actions module — a read is not a public POST endpoint),
+   ownership-scoped from the session and `schoolId`-scoped, newest first.
+   Demo went from **5 visible rows to all 100, across 5 working pages**.
+   - The window is `TRANSACTION_WINDOW = 500` and is **stated in the UI**
+     ("showing the most recent 500 of N") whenever it bites. A silent cap is
+     what caused this bug; do not reintroduce one.
+   - The pager buttons called an optional `onPageChange` that no caller ever
+     passed — they were inert. Paging is now local state (a URL round-trip
+     would re-render the route just to reorder rows the browser already has).
+   - `safePage` clamps: narrowing a filter while on page 5 used to be able to
+     strand the viewer on an empty table.
+   - Two bugs found while verifying, both pre-existing and both fixed here:
+     `<SelectItem value="">` for "All Accounts" **crashed the whole route**
+     via the error boundary for any user with >1 linked account (Radix
+     reserves the empty value), and amounts rendered `$` because the table
+     called `formatAmount` without a currency. Rows now format in their own
+     `isoCurrencyCode`, which the DB already carried.
+   - The mapper in `queries.ts` is not ceremony: the Prisma row and the view
+     `Transaction` genuinely differ (flat `location*` columns vs a nested
+     object, `subcategory` string vs list, `amount` Decimal vs number). The
+     old path hid the mismatch behind `parseStringify`, which is why the
+     details sheet's Location block could never render.
+2. **[x] `payment-transfer` renders the school's currency.** Both the content
+   tile and the form had their own hardcoded-USD formatters (the form's even
+   shadowed the shared `formatAmount`), plus a hardcoded `$` on the amount
+   input. All three now derive from `School.currency`, fetched in the server
+   component like the banking dashboard does. Kept **exact**, not compact — a
+   transfer is a reconcile-against surface.
+3. **[x] `TotalBalanceBox` + `DoughnutChart` deleted**, along with their
+   orphaned `component.types.ts` interfaces, and `chart.js` +
+   `react-chartjs-2` removed from `package.json`.
+
+### Still dead, flagged not deleted
+
+`hooks/use-url-state.ts` and `hooks/use-transaction-filter.ts` have no
+importers anywhere in the repo. They read as deliberate infrastructure (the
+filter hook duplicates what `transaction-history/table.tsx` does inline), so
+deleting them is an owner call rather than cleanup.
 
 ## MVP Checklist
 

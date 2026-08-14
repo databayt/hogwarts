@@ -33,6 +33,9 @@ export interface Transaction {
   id: string
   bankAccountId: string
   amount: number
+  /** ISO 4217 the bank reported for THIS transaction -- authoritative over
+   *  `School.currency`, since a linked account can transact in any currency. */
+  isoCurrencyCode?: string
   date: Date | string
   name: string
   merchantName?: string
@@ -132,6 +135,7 @@ export interface BankingDictionary {
   allAccounts?: string
   selectAll?: string
   showing?: string
+  showingMostRecent?: string
   to?: string
   of?: string
   previous?: string

@@ -5,6 +5,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getAccounts } from "@/components/school-dashboard/finance/banking/actions/bank.actions"
 
+import { getTransactionHistory, TRANSACTION_WINDOW } from "./queries"
 import { TransactionsTableImproved as TransactionsTable } from "./table"
 
 interface TransactionHistoryContentProps {
@@ -24,7 +25,10 @@ export async function TransactionHistoryContent({
   const fullDict = await getDictionary(lang as Locale)
   const fd = (fullDict as any)?.finance
   const bt = fd?.bankingTransactions as Record<string, string> | undefined
-  const accountsResult = await getAccounts({ userId: user.id })
+  const [accountsResult, history] = await Promise.all([
+    getAccounts({ userId: user.id }),
+    getTransactionHistory(),
+  ])
 
   if (
     !accountsResult.success ||
@@ -46,20 +50,17 @@ export async function TransactionHistoryContent({
 
   const accounts = accountsResult.data.data
 
-  // Get all transactions from all accounts
-  const allTransactions = accounts
-    .flatMap((account: any) => account.transactions || [])
-    .sort(
-      (a: any, b: any) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
-
+  // History comes from its own query. It used to be stitched together from
+  // `getAccounts`, whose include is `transactions: { take: 5 }` — so this page
+  // silently showed at most five rows per account while advertising a pager.
   return (
     <div className="space-y-6">
       <TransactionsTable
-        transactions={allTransactions}
+        transactions={history.transactions}
         accounts={accounts}
         currentPage={page}
+        totalTransactions={history.total}
+        windowSize={TRANSACTION_WINDOW}
         dictionary={bt}
       />
     </div>
