@@ -671,6 +671,7 @@
     },
     "bulk": {
       "people": "الأشخاص",
+      "notifyFamilies": "إشعار الأسر بالبريد الإلكتروني",
       "academic": "أكاديمي",
       "structure": "الهيكل",
       "downloadTemplate": "تحميل القالب",
@@ -1677,6 +1678,7 @@
     },
     "students": {
       "title": "الطلاب",
+      "unplaced": "بلا صف أو فصل",
       "navigation": {
         "all": "الكل",
         "enroll": "تسجيل",
@@ -3904,6 +3906,8 @@
       "conflict": "تعارض",
       "noConflicts": "لا يوجد تعارضات",
       "liveNow": "مباشر الآن",
+      "online": "أونلاين",
+      "closedToday": "المدرسة مغلقة اليوم",
       "printTimetable": "طباعة الجدول",
       "exportTimetable": "تصدير الجدول",
       "studentView": {
@@ -5120,7 +5124,8 @@
         "slotLabel": "الحصة",
         "slotPlaceholder": "اختر حصة من الجدول الدراسي",
         "slotHint": "يقدّم هذه الحصة عبر الإنترنت — يملأ المعلّم والمادة والشعبة والوقت من الجدول، ويسجّل الحضور ممّن ينضم.",
-        "slotNone": "غير مرتبطة بحصة (جلسة منفردة)"
+        "slotNone": "غير مرتبطة بحصة (جلسة منفردة)",
+        "slotLoadError": "تعذّر تحميل قائمة الحصص. حاول مرة أخرى."
       },
       "steps": {
         "basics": "الأساسيات",
@@ -5148,6 +5153,7 @@
         "startTimeInvalid": "أدخل وقت بدء صحيح (HH:mm)",
         "endTimeInvalid": "أدخل وقت انتهاء صحيح (HH:mm)",
         "endDateAfterStart": "يجب أن يكون تاريخ الانتهاء في أو بعد تاريخ البدء",
+        "endBeforeStart": "يجب أن يكون وقت الانتهاء بعد وقت البدء",
         "descriptionMax": "يجب ألا يتجاوز الوصف 2000 حرف",
         "resourceOneRef": "اختر اختبارًا أو واجبًا أو أدخل رابطًا",
         "resourceUrlInvalid": "أدخل رابط مرجع صحيحًا"
@@ -6025,7 +6031,14 @@
           "tagPlaceholder": "اكتب واضغط Enter",
           "updated": "تم تحديث السؤال!",
           "created": "تم إنشاء السؤال!",
-          "saveFailed": "فشل حفظ السؤال"
+          "saveFailed": "فشل حفظ السؤال",
+          "attachLesson": "الدرس (اختياري)",
+          "attachChapter": "كل الوحدات",
+          "attachNone": "غير مرتبط",
+          "attachHint": "اربط هذا السؤال بدرس ليظهر ضمن الاختبار التدريبي لذلك الدرس.",
+          "attachPickSubject": "اختر المادة أولًا.",
+          "attachLoading": "جارٍ التحميل…",
+          "attachEmpty": "لا توجد دروس متاحة لهذه المادة."
         },
         "aiGenerate": {
           "subject": "المادة",
@@ -9270,8 +9283,16 @@
         "ADMITTED": "مقبول",
         "WITHDRAWN": "منسحب"
       },
+      "channel": {
+        "PORTAL": "البوابة",
+        "ADMIN_DIRECT": "إضافة مباشرة",
+        "ONBOARDING_IMPORT": "استيراد التهيئة",
+        "BULK_IMPORT": "استيراد جماعي",
+        "LEGACY_BACKFILL": "سجل سابق"
+      },
       "columns": {
         "applicant": "المتقدم",
+        "channel": "قناة الالتحاق",
         "applicationNumber": "رقم الطلب",
         "campaign": "الحملة",
         "class": "الصف",
@@ -10129,11 +10150,11 @@
         "importFromProfile": "استيراد من ملف شخصي",
         "importFromProfileDesc": "استخرج البيانات من المستندات أو LinkedIn",
         "enrollmentClosed": "التسجيل مغلق حالياً",
-        "enrollmentClosedDesc": "{schoolName} لا تقبل طلبات في الوقت الحالي. يرجى زيارة صفحة القبول للاطلاع على المواعيد القادمة.",
+        "enrollmentClosedDesc": "{schoolName} لا تقبل طلبات في الوقت الحالي. سجّل اهتمامك وسنبلغك فور فتح باب القبول.",
         "viewAdmissions": "صفحة القبول",
         "submittedApplications": "طلباتك",
         "viewOffer": "عرض القبول",
-        "contactUs": "تواصل معنا",
+        "registerInterest": "سجّل اهتمامك",
         "applicationFallback": "طلب القبول",
         "today": "اليوم",
         "tomorrow": "غدا",

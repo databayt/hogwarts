@@ -73,6 +73,11 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import { applyTimetableStructureForNewSchool } from "@/components/catalog/provision"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import {
+  DEFAULT_SCHOOL_TZ,
+  schoolDayOfWeek,
+} from "@/components/school-dashboard/conference/day-window"
+import { findSchoolClosure } from "@/components/school-dashboard/conference/school-calendar"
 import { getDisplayLang } from "@/components/translation/locale"
 import { getLabels, getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
@@ -3638,7 +3643,18 @@ export async function getChildTodaySchedule(input: {
   }
 
   const targetDate = input.date || new Date()
-  const dayOfWeek = targetDate.getDay()
+  // Which weekday it is depends on the SCHOOL's timezone, not the server's
+  // (UTC on Vercel). Outside school hours a bare `getDay()` disagreed with the
+  // day the conference sweep materializes sessions for, so this card could show
+  // yesterday's slots while today's live classes already existed.
+  const schoolTz =
+    (
+      await db.school.findUnique({
+        where: { id: schoolId },
+        select: { timezone: true },
+      })
+    )?.timezone || DEFAULT_SCHOOL_TZ
+  const dayOfWeek = schoolDayOfWeek(schoolTz, targetDate)
 
   const { term } = await getActiveTerm()
   if (!term) return { schedule: [], dayOfWeek, message: "No active term" }
@@ -3734,17 +3750,17 @@ export async function getChildTodaySchedule(input: {
     }
   })
 
-  const scheduleWithLiveClasses = await attachLiveClasses(
-    schoolId,
-    term.id,
-    targetDate,
-    fullSchedule
-  )
+  const [scheduleWithLiveClasses, closure] = await Promise.all([
+    attachLiveClasses(schoolId, term.id, targetDate, fullSchedule),
+    // Same as getTodaySchedule — informs, never blanks. See the note there.
+    findSchoolClosure(schoolId, schoolTz, targetDate),
+  ])
 
   return {
     schedule: scheduleWithLiveClasses,
     dayOfWeek,
     date: targetDate.toISOString(),
+    closure,
   }
 }
 
@@ -3763,7 +3779,15 @@ export async function getTodaySchedule(input?: { date?: Date }) {
   if (!userId) throw new Error("NOT_AUTHENTICATED")
 
   const targetDate = input?.date || new Date()
-  const dayOfWeek = targetDate.getDay() // 0 = Sunday
+  // School timezone, not the server's — see the note in getChildTodaySchedule.
+  const schoolTz =
+    (
+      await db.school.findUnique({
+        where: { id: schoolId },
+        select: { timezone: true },
+      })
+    )?.timezone || DEFAULT_SCHOOL_TZ
+  const dayOfWeek = schoolDayOfWeek(schoolTz, targetDate) // 0 = Sunday
 
   // Get active term
   const { term } = await getActiveTerm()
@@ -3893,18 +3917,22 @@ export async function getTodaySchedule(input?: { date?: Date }) {
 
   // Attach the Join target (today's session, else the recurring default link)
   // for each entry. Scoped by schoolId + active term.
-  const scheduleWithLiveClasses = await attachLiveClasses(
-    schoolId,
-    term.id,
-    targetDate,
-    fullSchedule
-  )
+  const [scheduleWithLiveClasses, closure] = await Promise.all([
+    attachLiveClasses(schoolId, term.id, targetDate, fullSchedule),
+    // Informs, never blanks. A declared holiday is reported alongside the
+    // normal day so the view can say so; the pattern still renders, because
+    // ScheduleException rows are hand-entered and a stale one must not take a
+    // school's whole timetable away with no explanation. The conference sweep
+    // reads the SAME predicate and suppresses — see conference/school-calendar.
+    findSchoolClosure(schoolId, schoolTz, targetDate),
+  ])
 
   return {
     schedule: scheduleWithLiveClasses,
     dayOfWeek,
     date: targetDate.toISOString(),
     termLabel: term.label,
+    closure,
   }
 }
 

@@ -27,7 +27,13 @@ import {
   getGuardianChildren,
 } from "../actions"
 import { TimetableGridSkeleton } from "./grid-skeleton"
-import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
+import {
+  ClosureNotice,
+  isLiveJoinable,
+  LiveJoinButton,
+  OnlineBadge,
+  type SchoolClosureInfo,
+} from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -79,6 +85,11 @@ export default function GuardianView({
 }: Props) {
   const d = dictionary?.timetable as Record<string, any> | undefined
   const gv = (d as Record<string, any>)?.guardianView
+  // "Online" marker beside the physical room — set once here, used on both the
+  // Current/Next card and the day list.
+  const ONLINE_LABEL = (d as Record<string, any>)?.online ?? "Online"
+  const CLOSED_LABEL =
+    (d as Record<string, any>)?.closedToday ?? "School is closed today"
   const isRTL = lang === "ar"
 
   const [isLoadingData, setIsLoadingData] = useState(false)
@@ -99,6 +110,7 @@ export default function GuardianView({
 
   // View state
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
+  const [closure, setClosure] = useState<SchoolClosureInfo>(null)
 
   // Load children on mount
   useEffect(() => {
@@ -157,6 +169,7 @@ export default function GuardianView({
       // narrow with `in` rather than casting.
       setLiveIndicators("liveIndicators" in result ? result.liveIndicators : {})
       setTodaySchedule(today.schedule)
+      setClosure(today.closure ?? null)
     } catch (err) {
       setError(
         err instanceof Error
@@ -338,6 +351,11 @@ export default function GuardianView({
         </Alert>
       )}
 
+      {/* Declared holiday / cancelled day — informs, never blanks. */}
+      {!isLoadingData && (
+        <ClosureNotice closure={closure} label={CLOSED_LABEL} />
+      )}
+
       {/* Current/Next Class Card */}
       {currentClassInfo && !isLoadingData && (
         <Card
@@ -376,10 +394,16 @@ export default function GuardianView({
                   {currentClassInfo.item.subject ||
                     currentClassInfo.item.periodName}
                 </p>
-                <p className="text-muted-foreground text-sm">
-                  {currentClassInfo.item.teacher &&
-                    `${currentClassInfo.item.teacher} • `}
-                  {currentClassInfo.item.room}
+                <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+                  <span>
+                    {currentClassInfo.item.teacher &&
+                      `${currentClassInfo.item.teacher} • `}
+                    {currentClassInfo.item.room}
+                  </span>
+                  <OnlineBadge
+                    liveClass={currentClassInfo.item.liveClass}
+                    label={ONLINE_LABEL}
+                  />
                 </p>
               </div>
               <div className="text-end">
@@ -450,8 +474,14 @@ export default function GuardianView({
                           : item.subject || (gv?.freePeriod ?? "Free Period")}
                       </p>
                       {!item.isBreak && item.teacher && (
-                        <p className="text-muted-foreground text-sm">
-                          {item.teacher} {item.room && `• ${item.room}`}
+                        <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+                          <span>
+                            {item.teacher} {item.room && `• ${item.room}`}
+                          </span>
+                          <OnlineBadge
+                            liveClass={item.liveClass}
+                            label={ONLINE_LABEL}
+                          />
                         </p>
                       )}
                     </div>

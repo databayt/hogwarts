@@ -671,6 +671,7 @@
     },
     "bulk": {
       "people": "People",
+      "notifyFamilies": "Notify families by email",
       "academic": "Academic",
       "structure": "Structure",
       "downloadTemplate": "Download Template",
@@ -1677,6 +1678,7 @@
     },
     "students": {
       "title": "Students",
+      "unplaced": "Unplaced (no grade or class)",
       "navigation": {
         "all": "All",
         "enroll": "Enroll",
@@ -3904,6 +3906,8 @@
       "conflict": "Conflict",
       "noConflicts": "No Conflicts",
       "liveNow": "Live now",
+      "online": "Online",
+      "closedToday": "School is closed today",
       "printTimetable": "Print Timetable",
       "exportTimetable": "Export Timetable",
       "studentView": {
@@ -5112,7 +5116,8 @@
         "slotLabel": "Class",
         "slotPlaceholder": "Pick a class from the timetable",
         "slotHint": "Delivers this class online — fills the teacher, subject, section and time from the schedule, and records attendance from who joins.",
-        "slotNone": "Not tied to a class (one-off session)"
+        "slotNone": "Not tied to a class (one-off session)",
+        "slotLoadError": "Couldn't load the class list. Please try again."
       },
       "steps": {
         "basics": "Basics",
@@ -5140,6 +5145,7 @@
         "startTimeInvalid": "Enter a valid start time (HH:mm)",
         "endTimeInvalid": "Enter a valid end time (HH:mm)",
         "endDateAfterStart": "End date must be on or after start date",
+        "endBeforeStart": "End must be after the start of the session",
         "descriptionMax": "Description must be at most 2000 characters",
         "resourceOneRef": "Pick an exam, an assignment, or enter a link",
         "resourceUrlInvalid": "Enter a valid link URL"
@@ -6017,7 +6023,14 @@
           "tagPlaceholder": "Type and press Enter",
           "updated": "Question updated!",
           "created": "Question created!",
-          "saveFailed": "Failed to save question"
+          "saveFailed": "Failed to save question",
+          "attachLesson": "Lesson (optional)",
+          "attachChapter": "All chapters",
+          "attachNone": "Not attached",
+          "attachHint": "Attach this question to a lesson to include it in that lesson's practice quiz.",
+          "attachPickSubject": "Choose a subject first.",
+          "attachLoading": "Loading…",
+          "attachEmpty": "No lessons available for this subject."
         },
         "aiGenerate": {
           "subject": "Subject",
@@ -9262,8 +9275,16 @@
         "ADMITTED": "Admitted",
         "WITHDRAWN": "Withdrawn"
       },
+      "channel": {
+        "PORTAL": "Portal",
+        "ADMIN_DIRECT": "Direct admission",
+        "ONBOARDING_IMPORT": "Onboarding import",
+        "BULK_IMPORT": "Bulk import",
+        "LEGACY_BACKFILL": "Legacy record"
+      },
       "columns": {
         "applicant": "Applicant",
+        "channel": "Channel",
         "applicationNumber": "Application #",
         "campaign": "Campaign",
         "class": "Class",
@@ -10121,11 +10142,11 @@
         "importFromProfile": "Import from profile",
         "importFromProfileDesc": "Auto-fill from documents or LinkedIn",
         "enrollmentClosed": "Enrollment is Currently Closed",
-        "enrollmentClosedDesc": "{schoolName} is not accepting applications at this time. Please visit the admissions page for upcoming enrollment dates.",
+        "enrollmentClosedDesc": "{schoolName} is not accepting applications at this time. Register your interest and we will let you know as soon as admissions open.",
         "viewAdmissions": "View Admissions",
         "submittedApplications": "Your applications",
         "viewOffer": "View offer",
-        "contactUs": "Contact Us",
+        "registerInterest": "Register your interest",
         "applicationFallback": "Application",
         "today": "Today",
         "tomorrow": "Tomorrow",

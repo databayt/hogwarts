@@ -3,19 +3,25 @@
 //
 // "Is the school actually running on this date?"
 //
-// The materialization sweep needs this and the timetable read path does not,
-// and that asymmetry is deliberate. A weekly timetable is a PATTERN: rendering
-// the pattern on Eid is cosmetically wrong and costs nothing. Materializing it
-// is not — it writes Conference rows, lights up Join buttons, and mails every
-// student and guardian a reminder for a class that will never happen. Writes
-// are consequential; reads are not. So the holiday gate lives on the write
-// side only, and the read-side gap is tracked in ISSUE.md rather than fixed
-// here (blanking the grid is a timetable-block change with its own blast
-// radius).
+// ONE predicate, three callers, deliberately reacting DIFFERENTLY:
 //
-// The predicate deliberately MIRRORS the one already in
-// `src/app/api/cron/build-tomorrow-trips/route.ts` — two crons must not
-// disagree about what a holiday is. If one changes, change both.
+//   - the conference materialization sweep SUPPRESSES. It writes Conference
+//     rows, lights up Join buttons, and mails every student and guardian a
+//     reminder — none of which should happen for a class on Eid.
+//   - the transportation `build-tomorrow-trips` cron SUPPRESSES, same reason.
+//   - the timetable today-schedule INFORMS: it returns the closure alongside
+//     the normal day so the views can say "school is closed — عيد الفطر"
+//     while still showing the pattern.
+//
+// The read path informs rather than blanks on purpose. A weekly timetable is a
+// PATTERN, and `ScheduleException` rows are hand-entered and easy to get
+// wrong; blanking the hottest read path on a stale row would take a school's
+// whole timetable away with no explanation. Suppressing a WRITE is recoverable
+// (the next sweep re-materializes); hiding a read just looks broken.
+//
+// Lives in the conference block because that is where it was first needed and
+// where `schoolDayWindow` lives; timetable already imports from
+// `conference/day-window`, so the dependency direction is established.
 import "server-only"
 
 import { db } from "@/lib/db"
@@ -25,19 +31,30 @@ import { schoolDayWindow } from "./day-window"
 /** Exception types that mean "no classes today". */
 const CLOSED_TYPES = ["HOLIDAY", "CANCELLED"]
 
+/** The closure covering a date, or null. `title` is what the UI names. */
+export type SchoolClosure = {
+  title: string
+  /** HOLIDAY or CANCELLED — the two types that mean "no classes". */
+  exceptionType: string
+}
+
 /**
- * Is `date` covered by a HOLIDAY / CANCELLED `ScheduleException` for this
- * school?
+ * The HOLIDAY / CANCELLED `ScheduleException` covering `date` for this school,
+ * or null.
  *
  * Overlap is tested against the school-calendar DAY, not the raw instant, so a
  * holiday stored as a bare date still covers the whole of that day in the
  * school's timezone.
+ *
+ * Returns the row rather than a boolean because the two callers want different
+ * things from it: the materialization sweep only asks whether to stop, while
+ * the timetable read path names the closure to the reader.
  */
-export async function isSchoolClosedOn(
+export async function findSchoolClosure(
   schoolId: string,
   timeZone: string,
   date: Date = new Date()
-): Promise<boolean> {
+): Promise<SchoolClosure | null> {
   const { start, end } = schoolDayWindow(timeZone, date)
   const hit = await db.scheduleException.findFirst({
     where: {
@@ -49,7 +66,18 @@ export async function isSchoolClosedOn(
       startDate: { lt: end },
       endDate: { gte: start },
     },
-    select: { id: true },
+    select: { title: true, exceptionType: true },
+    // Deterministic when two exceptions overlap one day.
+    orderBy: { startDate: "asc" },
   })
-  return hit !== null
+  return hit
+}
+
+/** Boolean convenience for the write side, which only asks whether to stop. */
+export async function isSchoolClosedOn(
+  schoolId: string,
+  timeZone: string,
+  date: Date = new Date()
+): Promise<boolean> {
+  return (await findSchoolClosure(schoolId, timeZone, date)) !== null
 }

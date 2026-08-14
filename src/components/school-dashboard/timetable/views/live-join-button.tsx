@@ -80,3 +80,67 @@ export function isLiveJoinable(
   const startMin = start.getUTCHours() * 60 + start.getUTCMinutes()
   return startMin - nowMin <= windowMin && startMin - nowMin >= 0
 }
+
+/**
+ * "Online" marker for a timetable card whose class is ALSO being delivered
+ * live today.
+ *
+ * Shown beside the physical room, never instead of it: online delivery is
+ * additive — the room is still where the class meets for anyone who can get
+ * there — so the card has to say both. Without this the only difference
+ * between a normal Tuesday and a Tuesday the school went online is a Join
+ * button that appears ten minutes before the bell.
+ *
+ * Gated on `sessionId`, NOT on `liveClass` being present: a recurring default
+ * link means "there is a room you could use", which every school with a
+ * standing Zoom link has. A materialized session for today means "this class
+ * is online today", which is the only thing worth a badge.
+ */
+export function OnlineBadge({
+  liveClass,
+  label,
+}: {
+  liveClass: LiveClassJoinInfo | null | undefined
+  label: string
+}) {
+  if (!liveClass?.sessionId) return null
+  return (
+    <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+      <Video className="h-3 w-3" />
+      {label}
+    </span>
+  )
+}
+
+/** A declared HOLIDAY / CANCELLED day, from `getTodaySchedule().closure`. */
+export type SchoolClosureInfo = {
+  title: string
+  exceptionType: string
+} | null
+
+/**
+ * "School is closed today — عيد الفطر" above the day's cards.
+ *
+ * Deliberately a notice and not a blank day. `ScheduleException` rows are
+ * hand-entered and easy to get wrong, so hiding the whole timetable on one
+ * would look broken and leave the reader no way to tell a data error from a
+ * real holiday. The pattern still renders underneath; this just says it is not
+ * happening. (The conference materialization sweep reads the same predicate and
+ * genuinely suppresses — a WRITE on a wrong row is recoverable, a hidden read
+ * is not.)
+ */
+export function ClosureNotice({
+  closure,
+  label,
+}: {
+  closure: SchoolClosureInfo
+  label: string
+}) {
+  if (!closure) return null
+  return (
+    <div className="border-muted-foreground/30 bg-muted/40 text-muted-foreground rounded-lg border border-dashed p-3 text-sm">
+      <span className="font-medium">{label}</span>
+      {closure.title ? ` — ${closure.title}` : null}
+    </div>
+  )
+}

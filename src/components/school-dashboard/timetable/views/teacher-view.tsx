@@ -35,7 +35,13 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getTimetableByTeacher, getTodaySchedule } from "../actions"
 import { TimetableGridSkeleton } from "./grid-skeleton"
-import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
+import {
+  ClosureNotice,
+  isLiveJoinable,
+  LiveJoinButton,
+  OnlineBadge,
+  type SchoolClosureInfo,
+} from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 import { StartLiveClassButton } from "./start-live-class-button"
 
@@ -88,6 +94,11 @@ export default function TeacherView({
 }: Props) {
   const d = dictionary?.timetable as Record<string, any> | undefined
   const tv = (d as Record<string, any>)?.teacherViewUi
+  // "Online" marker beside the physical room — set once here, used on both the
+  // Current/Next card and the day list.
+  const ONLINE_LABEL = (d as Record<string, any>)?.online ?? "Online"
+  const CLOSED_LABEL =
+    (d as Record<string, any>)?.closedToday ?? "School is closed today"
   const dayNames: string[] = (d?.dayNames as string[]) ?? DAY_NAMES_EN
   const isRTL = lang === "ar"
 
@@ -108,6 +119,7 @@ export default function TeacherView({
 
   // Today's schedule
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
+  const [closure, setClosure] = useState<SchoolClosureInfo>(null)
   const [currentDay, setCurrentDay] = useState<number>(new Date().getDay())
 
   // Filters
@@ -141,6 +153,7 @@ export default function TeacherView({
       setWorkload(weeklyResult.workload)
       setLiveIndicators(weeklyResult.liveIndicators ?? {})
       setTodaySchedule(todayResult.schedule)
+      setClosure(todayResult.closure ?? null)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
       setError(
@@ -297,6 +310,11 @@ export default function TeacherView({
         )}
       </Card>
 
+      {/* Declared holiday / cancelled day — informs, never blanks. */}
+      {!isLoadingData && (
+        <ClosureNotice closure={closure} label={CLOSED_LABEL} />
+      )}
+
       {/* Current/Next Class Card */}
       {currentClassInfo && !isLoadingData && defaultTab === "today" && (
         <Card
@@ -329,10 +347,16 @@ export default function TeacherView({
                   {currentClassInfo.item.subject ||
                     currentClassInfo.item.className}
                 </p>
-                <p className="text-muted-foreground text-sm">
-                  {currentClassInfo.item.sectionName
-                    ? `${currentClassInfo.item.sectionName} · ${currentClassInfo.item.room || ""}`
-                    : `${currentClassInfo.item.className || ""} · ${currentClassInfo.item.room || ""}`}
+                <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+                  <span>
+                    {currentClassInfo.item.sectionName
+                      ? `${currentClassInfo.item.sectionName} · ${currentClassInfo.item.room || ""}`
+                      : `${currentClassInfo.item.className || ""} · ${currentClassInfo.item.room || ""}`}
+                  </span>
+                  <OnlineBadge
+                    liveClass={currentClassInfo.item.liveClass}
+                    label={ONLINE_LABEL}
+                  />
                 </p>
               </div>
               <div className="text-end">
@@ -471,9 +495,15 @@ export default function TeacherView({
                       </p>
                       {!item.isBreak &&
                         (item.className || item.sectionName) && (
-                          <p className="text-muted-foreground text-sm">
-                            {item.sectionName || item.className}{" "}
-                            {item.room && `· ${item.room}`}
+                          <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+                            <span>
+                              {item.sectionName || item.className}{" "}
+                              {item.room && `· ${item.room}`}
+                            </span>
+                            <OnlineBadge
+                              liveClass={item.liveClass}
+                              label={ONLINE_LABEL}
+                            />
                           </p>
                         )}
                     </div>

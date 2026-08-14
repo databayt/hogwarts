@@ -5,8 +5,10 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
 import {
+  ClosureNotice,
   isLiveJoinable,
   LiveJoinButton,
+  OnlineBadge,
 } from "@/components/school-dashboard/timetable/views/live-join-button"
 
 // startTime is read via getUTCHours/getUTCMinutes (matching the timetable
@@ -120,6 +122,57 @@ describe("LiveJoinButton", () => {
         lang="en"
         label="Join"
       />
+    )
+    expect(container).toBeEmptyDOMElement()
+  })
+})
+
+describe("OnlineBadge", () => {
+  const link = {
+    sessionId: null,
+    provider: "external" as const,
+    meetingUrl: "https://meet.example.com/standing",
+    status: null,
+  }
+  const session = { ...link, sessionId: "lcs-1", status: "scheduled" }
+
+  it("marks a class that has a session today", () => {
+    render(<OnlineBadge liveClass={session} label="Online" />)
+    expect(screen.getByText("Online")).toBeInTheDocument()
+  })
+
+  it("does NOT mark a class that merely has a standing link", () => {
+    // Every school with a permanent Zoom room has one of these. It means
+    // "there is a room you could use", not "this class is online today" — and
+    // badging it would put "Online" on every card, forever, in a school that
+    // never went online.
+    render(<OnlineBadge liveClass={link} label="Online" />)
+    expect(screen.queryByText("Online")).not.toBeInTheDocument()
+  })
+
+  it("renders nothing with no live class at all", () => {
+    const { container } = render(
+      <OnlineBadge liveClass={null} label="Online" />
+    )
+    expect(container).toBeEmptyDOMElement()
+  })
+})
+
+describe("ClosureNotice", () => {
+  it("names the closure so a data error is distinguishable from a real one", () => {
+    render(
+      <ClosureNotice
+        closure={{ title: "عيد الفطر", exceptionType: "HOLIDAY" }}
+        label="School is closed today"
+      />
+    )
+    expect(screen.getByText(/School is closed today/)).toBeInTheDocument()
+    expect(screen.getByText(/عيد الفطر/)).toBeInTheDocument()
+  })
+
+  it("renders nothing on an ordinary day", () => {
+    const { container } = render(
+      <ClosureNotice closure={null} label="School is closed today" />
     )
     expect(container).toBeEmptyDOMElement()
   })
