@@ -4,6 +4,10 @@
 
 ## 2026-08-14 — performance pass (local, not deployed)
 
+- [x] Overview stats folded into one `Promise.all`. The school row, the counts
+      and the aggregates were fetched in two serial steps though none depends on
+      the one before it.
+
 - [x] Overview gate collapsed from 5 sequential `checkCurrentUserPermission`
       calls to one `resolveFinanceAccess("timesheet", TIMESHEET_ACTIONS)`. Each of those calls
       re-ran `auth()` and its own user lookup; they now share one session read

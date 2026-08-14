@@ -62,6 +62,13 @@ School finance module with 14 sub-modules and a shared double-entry bookkeeping 
   formatter must be verified in a browser. `format-money.ts` holds the pure
   Intl formatters (`formatMoney`, `formatCompactMoney`, `formatNumber`) and is
   safe from either side.
+- **A "this month" / "today" bound built with `new Date()` + `setHours`/`setDate` is
+  wrong for every non-UTC school.** Those resolve against the server's zone, which is
+  UTC on Vercel, not the school's. Payroll's monthly total had this (fixed 2026-08-14):
+  for a UTC+4 school the month started 4 hours late, so slips at the edge fell into the
+  wrong month. Derive the bound from `School.timezone` with `schoolCalendarDayOf` +
+  `schoolWallTimeToUtc` from `src/lib/timezone.ts`. **Assume siblings share it** — any
+  finance figure scoped to a period is suspect until checked.
 - **Posting-rules edits can retroactively break balance sheets** -- always add new rules rather than modify existing ones for historical integrity
 - **Stripe webhook idempotency**: `webhooks/stripe/route.ts` uses event IDs to dedupe. Don't short-circuit it
 - **Missing `schoolId` in a finance query = cross-tenant ledger corruption** -- multi-tenant boundary is stricter here than anywhere else in the platform

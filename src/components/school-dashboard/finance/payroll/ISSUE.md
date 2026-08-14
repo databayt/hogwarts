@@ -4,6 +4,20 @@
 
 ## 2026-08-14 — performance pass (local, not deployed)
 
+- [x] Overview stats folded into one `Promise.all` (school row + six counts).
+- [x] **"This month" was computed in the SERVER's timezone.** The monthly
+      payroll total bounded its aggregate with `new Date()` + `setDate(1)` +
+      `setHours(0,0,0,0)`, which resolve against the server's zone — UTC on
+      Vercel. For any school east or west of UTC the boundary sat hours away
+      from the school's real month start, so slips near the edge landed in the
+      wrong month's figure. Now derived from `School.timezone` via
+      `schoolCalendarDayOf` + `schoolWallTimeToUtc`; for a UTC+4 school the
+      boundary moves from `2026-08-01T00:00Z` to `2026-07-31T20:00Z`.
+      Same bug class as the conference scheduling fix — the helpers in
+      `src/lib/timezone.ts` exist for exactly this.
+      **Sibling risk: any other finance figure scoped to "this month" or
+      "today" that builds its bound with `new Date()` + `setHours` has it too.**
+
 - [x] Overview gate collapsed from 4 sequential `checkCurrentUserPermission`
       calls to one `resolveFinanceAccess("payroll", PAYROLL_ACTIONS)`. Each of those calls
       re-ran `auth()` and its own user lookup; they now share one session read
