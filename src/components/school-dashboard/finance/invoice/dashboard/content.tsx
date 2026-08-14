@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
-import { formatCompactMoney } from "../../lib/format"
+import { formatCompactMoney } from "../../lib/format-money"
 import { RecentInvoicesCard, StatsCards } from "./card"
 import { getChartConfig } from "./config"
 

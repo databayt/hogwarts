@@ -14,6 +14,12 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [x] **recharts split out of `/finance/invoice/analysis`.** `ChartInvoice` is
       `next/dynamic`'d with a placeholder matching the card's own height, so
       nothing shifts while it loads.
+- [x] **Caught in browser verification, not by tsc/build:** importing the
+      `lib/format` barrel from the `"use client"` dashboard dragged Prisma into
+      the browser and killed the analysis route ("PrismaClient is unable to run
+      in this browser environment"). Pure formatters now live in
+      `lib/format-money.ts`; client components import that. See the block
+      `CLAUDE.md` danger zone.
 - [x] Revenue stat tile abbreviates money (`formatCompactMoney`) instead of a
       full-digit `Intl.NumberFormat` built inline at the call site.
 

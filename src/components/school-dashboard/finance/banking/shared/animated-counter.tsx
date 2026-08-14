@@ -7,7 +7,7 @@ import CountUp from "react-countup"
 
 import { formatAmount } from "@/components/school-dashboard/finance/banking/lib/utils"
 
-import { formatCompactMoney } from "../../lib/format"
+import { formatCompactMoney } from "../../lib/format-money"
 
 interface AnimatedCounterProps {
   amount: number

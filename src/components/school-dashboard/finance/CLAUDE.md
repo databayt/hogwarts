@@ -52,6 +52,16 @@ School finance module with 14 sub-modules and a shared double-entry bookkeeping 
   and parity tests still pass. Also: `d?.key || "English"` fallbacks are near-useless as a signal —
   they resolve fine, so real i18n gaps are _no-lookup strings and raw enums_, which no parity check
   can see. Verify /ar in a browser.
+- **`lib/format.ts` is server-only — client components must import `lib/format-money.ts`.**
+  The barrel re-exports `formatCurrency` / `toCents` / `fromCents` from
+  `./accounting/utils`, which imports `@/lib/db`. Pull the barrel into a
+  `"use client"` module and Prisma lands in the browser bundle; the route then
+  dies at runtime with "PrismaClient is unable to run in this browser
+  environment". **Neither `tsc --noEmit` nor `next build` catches this** — both
+  pass clean and the page only breaks when it renders, so a client-side money
+  formatter must be verified in a browser. `format-money.ts` holds the pure
+  Intl formatters (`formatMoney`, `formatCompactMoney`, `formatNumber`) and is
+  safe from either side.
 - **Posting-rules edits can retroactively break balance sheets** -- always add new rules rather than modify existing ones for historical integrity
 - **Stripe webhook idempotency**: `webhooks/stripe/route.ts` uses event IDs to dedupe. Don't short-circuit it
 - **Missing `schoolId` in a finance query = cross-tenant ledger corruption** -- multi-tenant boundary is stricter here than anywhere else in the platform
@@ -65,7 +75,7 @@ School finance module with 14 sub-modules and a shared double-entry bookkeeping 
 - [Accounting engine](./lib/accounting/) -- double-entry primitives
 - [Notifications](../notifications/) -- delivery pipeline for finance events
 - [Admission](../admission/) -- feeds `FeeAssignment` at enrollment
-- [Stream](../../stream/) -- uses same Stripe integration for subscriptions
+- [Lumos](../../lumos/) -- uses same Stripe integration for subscriptions
 
 ## After You Finish
 
