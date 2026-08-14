@@ -83,32 +83,33 @@ The Prisma models are in `prisma/models/conference.prisma`.
 
 ## Status
 
-| Capability                                            | Status                                      |
-| ----------------------------------------------------- | ------------------------------------------- |
-| Prisma models (`Conference*` + link + resources)      | ✅ schema; visibility/resources DDL staged  |
-| External pasted-link provider                         | ✅ live                                     |
-| LiveKit-first dashboard create (5-step wizard)        | ✅ coded (in-app option gated on env)       |
-| Timetable-anchored create (online school)             | ✅ live (slot → teacher/subject/section+id) |
-| **School-wide "teach online" + per-section override** | ✅ coded (policy on School/Section)         |
-| **Temporary "go online" window (war / weather)**      | ✅ coded (dated, open-ended, auto-reverts)  |
-| **Delivery mode: timetable-bound · loose · both**     | ✅ coded (`ConferenceOnlineMode`)           |
-| **Standing fallback link + link-coverage panel**      | ✅ coded (makes an overnight flip joinable) |
-| **Holiday gate on the materialization sweep**         | ✅ coded (`ScheduleException`, write side)  |
-| **Per-day session materialization from timetable**    | ✅ coded (in the `*/15` reminders cron)     |
-| Grade-scoped subject + catalog-lesson pickers         | ✅ live                                     |
-| Private/public control (`visibility`)                 | ✅ coded (section default / school-wide)    |
-| Lesson + exam/quiz/assignment/link references         | ✅ coded (`catalogLessonId` + resources)    |
-| Provider-aware Join (table/detail/room redirect)      | ✅ coded                                    |
-| List CRUD + detail + schedule + settings UI           | ✅ live                                     |
-| Per-section recording opt-out                         | ✅ live                                     |
-| In-room HOST moderation (kick)                        | ✅ live                                     |
-| Timetable Start / Join (teacher+student+guardian)     | ✅ live (`Conference.timetableId`)          |
-| Timetable weekly-grid live indicators (all roles)     | ✅ coded                                    |
-| Notifications → hub (in-app + email)                  | ✅ live (+ school-wide fan-out)             |
-| Attendance-from-presence (opt-in)                     | ✅ live (DB applied); VIRTUAL visible in UI |
-| Native Meet/Zoom/Teams `createMeeting`                | 🟡 wired, dark until OAuth creds            |
-| LiveKit SFU rooms + Egress recording                  | 🟡 coded, dormant until infra               |
-| Capacity dashboard (`/observability/conference`)      | ✅ live (DEVELOPER-only)                    |
+| Capability                                             | Status                                       |
+| ------------------------------------------------------ | -------------------------------------------- |
+| Prisma models (`Conference*` + link + resources)       | ✅ schema; visibility/resources DDL staged   |
+| External pasted-link provider                          | ✅ live                                      |
+| LiveKit-first dashboard create (5-step wizard)         | ✅ coded (in-app option gated on env)        |
+| Timetable-anchored create (online school)              | ✅ live (slot → teacher/subject/section+id)  |
+| **School-wide "teach online" + per-section override**  | ✅ coded (policy on School/Section)          |
+| **Temporary "go online" window (war / weather)**       | ✅ coded (dated, open-ended, auto-reverts)   |
+| **Delivery mode: timetable-bound · loose · both**      | ✅ coded (`ConferenceOnlineMode`)            |
+| **Standing fallback link + link-coverage panel**       | ✅ coded (makes an overnight flip joinable)  |
+| **Holiday gate — sweep suppresses, timetable informs** | ✅ coded (one `ScheduleException` predicate) |
+| **"Online" marker on the timetable today cards**       | ✅ coded (3 role views; open rooms exempt)   |
+| **Per-day session materialization from timetable**     | ✅ coded (in the `*/15` reminders cron)      |
+| Grade-scoped subject + catalog-lesson pickers          | ✅ live                                      |
+| Private/public control (`visibility`)                  | ✅ coded (section default / school-wide)     |
+| Lesson + exam/quiz/assignment/link references          | ✅ coded (`catalogLessonId` + resources)     |
+| Provider-aware Join (table/detail/room redirect)       | ✅ coded                                     |
+| List CRUD + detail + schedule + settings UI            | ✅ live                                      |
+| Per-section recording opt-out                          | ✅ live                                      |
+| In-room HOST moderation (kick)                         | ✅ live                                      |
+| Timetable Start / Join (teacher+student+guardian)      | ✅ live (`Conference.timetableId`)           |
+| Timetable weekly-grid live indicators (all roles)      | ✅ coded                                     |
+| Notifications → hub (in-app + email)                   | ✅ live (+ school-wide fan-out)              |
+| Attendance-from-presence (opt-in)                      | ✅ live (DB applied); VIRTUAL visible in UI  |
+| Native Meet/Zoom/Teams `createMeeting`                 | 🟡 wired, dark until OAuth creds             |
+| LiveKit SFU rooms + Egress recording                   | 🟡 coded, dormant until infra                |
+| Capacity dashboard (`/observability/conference`)       | ✅ live (DEVELOPER-only)                     |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any
 time, for any length, and either way round**, without ever closing the

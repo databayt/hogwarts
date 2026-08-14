@@ -278,17 +278,28 @@ createLiveClass` branches on `provider` — `livekit` mirrors
     a joinable-only check would resurrect a class the teacher cancelled, all
     day long. The interactive Start button keeps the joinable-only default so a
     teacher can hold a second sitting after one ends.
-- **The holiday gate is on the WRITE side only, on purpose.**
-  `school-calendar.ts isSchoolClosedOn` short-circuits the sweep on a
-  `ScheduleException` of type HOLIDAY/CANCELLED. `getTodaySchedule` does NOT
-  consult it, so this breaks the "mirror the read path exactly" rule above —
-  deliberately. Rendering a weekly pattern on Eid is cosmetically wrong and
-  costs nothing; materializing it writes rows, lights up Join buttons, and
-  mails every student and guardian a reminder for a class that will never
-  happen. Writes are consequential; reads are not. The predicate MIRRORS the
-  one in `src/app/api/cron/build-tomorrow-trips/route.ts` — two crons must not
-  disagree about what a holiday is; change both or neither. (The read-side gap
-  is tracked in ISSUE.md.)
+- **One holiday predicate, two deliberately DIFFERENT reactions.**
+  `school-calendar.ts findSchoolClosure` is the single source; the
+  materialization sweep calls it (via `isSchoolClosedOn`) and **suppresses**,
+  while `getTodaySchedule` / `getChildTodaySchedule` call it and **inform** —
+  returning `closure` alongside the normal day so the views render a notice
+  over an otherwise-intact timetable.
+
+  This is NOT the "mirror the read path exactly" rule being broken by
+  accident. Materializing writes rows, lights up Join buttons and mails every
+  student a reminder for a class that will never happen — worth suppressing.
+  Blanking the read would be worse than the bug: `ScheduleException` rows are
+  hand-entered, and one stale row would take a school's whole timetable away
+  with no explanation. A suppressed write is recoverable (the next sweep
+  re-materializes); a hidden read just looks broken. Keep the asymmetry, and
+  keep it in one predicate so the two can't disagree about what a holiday IS.
+
+  `src/app/api/cron/build-tomorrow-trips/route.ts` still holds a third,
+  inline copy. Do not point it at `findSchoolClosure` on its own: that cron
+  derives `tomorrow` and `weekday` in UTC throughout, so a school-timezone
+  holiday gate bolted onto a UTC day check would look at the WRONG day for any
+  school west of Greenwich. Move the whole cron onto `schoolDayWindow`, or
+  leave it. Tracked in ISSUE.md.
 
 - **A period that is already over is never materialized.**
   `materializeSlotSession` returns `period_over` for any slot whose
@@ -404,7 +415,12 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   preference filtering, `expiresAt`, `prewarm`, and URL absolutification (all 4
   were silently missing before 2026-06-20). All 4 mutating paths fan out:
   `sessions.ts` (LiveKit) AND `list-actions.ts` create/update/delete (external).
-- [Timetable](../timetable/) — anchors scheduled sessions
+- [Timetable](../timetable/) — renders an **Online** marker beside the physical
+  room on all three role views when a slot has a session TODAY (`OnlineBadge`,
+  gated on `liveClass.sessionId` — a bare recurring link is not "online
+  today"), and a **closure notice** from `findSchoolClosure`. Note an open room
+  has no `subjectId`, so `attachLiveClasses` cannot see it and a `mode: "open"`
+  school gets neither on any card — ISSUE.md. Anchors scheduled sessions
   (`Conference.timetableId` is optional); `attachLiveClasses` resolves the Join
   target for teacher/student/guardian today-cards (guardian via
   `getChildTodaySchedule`).

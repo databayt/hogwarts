@@ -284,16 +284,20 @@
 
 ## Open — carried forward from the any-time-online pass (2026-08-14, second)
 
-- [ ] **`getTodaySchedule` still renders the timetable on a declared holiday.**
-      The materialization sweep now skips one (`school-calendar.ts`), but the
-      read path does not, so the grid and today-cards show a normal day on Eid.
-      Deliberately asymmetric for now — writes mail reminders, reads do not —
-      but it is a real seam. Fixing it is a timetable-block change: blank the
-      day in `getTodaySchedule` / `getChildTodaySchedule` / the weekly grid,
-      and reuse `isSchoolClosedOn` so the two cannot disagree. Note the
-      transportation cron carries a THIRD copy of the same predicate
-      (`build-tomorrow-trips/route.ts:78`) — the three should collapse into one
-      shared helper.
+- [ ] **The transportation cron still carries its own holiday predicate.**
+      `build-tomorrow-trips/route.ts:78` duplicates what `school-calendar.ts`
+      now owns. Left alone on purpose this round: that cron derives `tomorrow`
+      AND `weekday` in UTC throughout, so pointing only its holiday gate at
+      `findSchoolClosure` would make one arm school-timezone-aware and leave
+      the rest naive — and for a school west of Greenwich it would then check
+      the WRONG day. Fixing it properly means moving the whole cron onto
+      `schoolDayWindow`, and it has no tests to catch a regression. Do those
+      together or not at all.
+- [ ] **The weekly grid still shows a normal week through a holiday.** The
+      today-cards now carry the closure notice, and the materialization sweep
+      suppresses, but `SimpleGrid` has no closure signal — it renders a weekly
+      PATTERN, so marking one day inside it needs a per-day input the grid
+      does not currently take.
 - [ ] **An ended open room does not reopen the same day.** The idempotency
       check runs against every DECIDED status, so a teacher who ends the
       section's standing room at 09:00 has no room for the rest of the day
@@ -329,6 +333,45 @@
 
 ## Done
 
+### Timetable seams — online badge + closure notice (2026-08-14)
+
+Two things the any-time-online pass left the timetable unable to say.
+
+- [x] **An "Online" marker beside the physical room** on all three role views'
+      Current/Next card and day list (`OnlineBadge` in
+      `timetable/views/live-join-button.tsx`). Shown BESIDE the room, never
+      instead of it — online delivery is additive, so the card has to say both.
+      Gated on `liveClass.sessionId`, deliberately NOT on `liveClass` being
+      truthy: a recurring default link means "there is a room you could use",
+      which every school with a standing Zoom link has, and badging that would
+      print "Online" on every card forever in a school that never went online.
+- [x] **A closure notice** — `getTodaySchedule` / `getChildTodaySchedule` now
+      return the HOLIDAY / CANCELLED `ScheduleException` covering the day, and
+      the views render it above the cards (`ClosureNotice`).
+
+      It **informs rather than blanks**, which reverses what this file
+      prescribed a few hours earlier. The reason: `ScheduleException` rows are
+      hand-entered, and blanking the hottest read path on a stale one would
+      take a school's whole timetable away with no explanation. Suppressing a
+      WRITE is recoverable — the next sweep re-materializes. A hidden read just
+      looks broken. So the sweep and the read path share ONE predicate
+      (`findSchoolClosure`) and react to it differently, on purpose.
+
+- [x] +9 tests: badge gating (session vs bare link vs nothing), closure notice
+      rendering, and the predicate's school-calendar-day window, type filter
+      (EVENT / MODIFIED_SCHEDULE are still teaching days) and tie-break.
+
+### Open — noticed while wiring the badge
+
+- [ ] **Open rooms are invisible to the today cards by construction.**
+      `attachLiveClasses` keys on (section, subject), and an open room has no
+      `subjectId` — so a school running `mode: "open"` gets no badge and no
+      Join affordance on ANY timetable card, and `/conference` is its only
+      surface. That is a discoverability hole in the delivery mode this pass
+      shipped. The fix is a separate section-level lookup in
+      `attachLiveClasses` (or a card of its own above the day), not a tweak to
+      the existing key.
+
 ### Any-time online — window · delivery mode · fallback link (2026-08-14)
 
 The block could already make a school online PERMANENTLY. It could not make one
@@ -359,9 +402,8 @@ schedule". Both are now covered, without ever closing the building.
       skipped as `no_link` into a cron log — a school that flipped online
       overnight got nothing, silently. The settings page now names the
       uncovered pairs and offers a standing link that makes them all joinable.
-- [x] **Holiday gate on the sweep** (`school-calendar.ts`), mirroring the
-      transportation cron's predicate. Write side only — see the open item
-      above for the read side.
+- [x] **Holiday gate on the sweep** (`school-calendar.ts`). The read side is
+      now covered too, but DIFFERENTLY — see the next entry.
 - [x] **Past periods are skipped** (`period_over`), so a mid-day flip stops
       filling the table with rows the end-stale cron immediately cancels.
 - [x] **Saving settings materializes the day inline** via `after()`, instead of

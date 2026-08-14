@@ -126,6 +126,26 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   country/structure/date — `computeTermDates` guarantees exactly one
   `isActive` term. Structures may carry a `calendar` override (sd-british →
   GB). Consumed by `catalog/provision.ts` and `lib/term-resolver.ts`.
+- **The today-schedule reports a declared holiday, it does NOT hide the day**
+  (2026-08-14): `getTodaySchedule` / `getChildTodaySchedule` return
+  `closure: { title, exceptionType } | null` from
+  `conference/school-calendar.ts findSchoolClosure`, and the three role views
+  render `<ClosureNotice>` above the cards. Blanking was the obvious move and
+  is the wrong one: `ScheduleException` rows are typed by hand, so one stale
+  row would take a school's whole timetable away with no explanation, and the
+  reader could not tell a data error from a real holiday. The conference
+  materialization sweep reads the SAME predicate and genuinely suppresses —
+  a suppressed write is recoverable, a hidden read just looks broken. Keep the
+  asymmetry; keep one predicate. (The header's "No automatic holiday handling"
+  note is now half true: reads inform, the weekly grid is still unaware.)
+- **The Online marker is gated on `liveClass.sessionId`, not on `liveClass`**
+  (2026-08-14): `attachLiveClasses` returns a `liveClass` for a session today
+  OR for a recurring default `ConferenceLink`. The link means "there is a room
+  you could use" — every school with a standing Zoom URL has one — so badging
+  it would stamp "Online" on every card forever in a school that never went
+  online. Only a materialized session for today earns the badge. It renders
+  BESIDE the room, never instead of it: online delivery is additive, and the
+  room is still where the class meets for anyone who can get there.
 - **Errors are CAPS codes** (`SLOT_NOT_FOUND`, `SECTION_NOT_FOUND`,
   `TEACHER_NOT_QUALIFIED`) — translated client-side, never literal English.
 
@@ -245,7 +265,12 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   `markPeriodAttendance` resolves sectionId from `timetableId`
 - [Conference](../conference/CLAUDE.md) — `Conference.timetableId` starts a
   live class from a slot; `attachLiveClasses` (`live-class-join.ts`) resolves the
-  Join target for the teacher/student/guardian today-cards. Guardian uses
+  Join target for the teacher/student/guardian today-cards, which also carry
+  the `<OnlineBadge>` and `<ClosureNotice>` from `views/live-join-button.tsx`.
+  **A conference "open room" (delivery mode `open`) has no `subjectId`, so
+  `attachLiveClasses` — keyed on (section, subject) — cannot see it**: those
+  schools get no badge and no Join on any timetable card. Tracked in the
+  conference block's ISSUE.md. Guardian uses
   `getChildTodaySchedule` (mirrors the STUDENT branch of `getTodaySchedule`
   behind the guardian-access gate) so `<LiveJoinButton>` can render on
   `guardian-view.tsx`. Attendance can be auto-marked from a slot's live-class

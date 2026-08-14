@@ -219,7 +219,8 @@ still on the page, rather than at the next quarter-hour.
   a storm rarely reproduces its bell schedule on day one, and a school that is
   online by design may not want one at all. Hosted by the section's homeroom
   teacher. Because it is not tied to a period, it does not write period
-  attendance.
+  attendance, and it does not appear on the timetable cards either — open rooms
+  are reached from **Conference**.
 - **Timetable + open room** — both, so a section can follow its schedule and
   still have somewhere to meet in the gaps.
 
@@ -267,13 +268,18 @@ no-ops, and a class an admin cancelled is **not** resurrected.
 
 Nothing is created on a day the school has declared closed — a HOLIDAY or
 CANCELLED entry in the schedule exceptions stops the sweep for that day, so
-nobody is reminded about a class on Eid. Periods that have already finished are
-skipped too, so flipping the switch at lunchtime does not publish Join buttons
-for the morning.
+nobody is reminded about a class on Eid. The timetable itself still shows the
+day, with a "school is closed today" notice over it: holiday entries are typed
+by hand, and a wrong one should not make a whole timetable disappear with no
+explanation. Periods that have already finished are skipped too, so flipping
+the switch at lunchtime does not publish Join buttons for the morning.
 
 Because a real row exists before anyone clicks, the rest of the product wakes
 up: students get the start-reminder notification, the weekly grid shows the
-scheduled/live dot on the slot, the teacher's Current card offers **Start**,
+scheduled/live dot on the slot, every timetable card marks the class
+**Online** — beside the room, not instead of it, because the room is still
+where the class meets for anyone who can get there — the teacher's Current card
+offers **Start**,
 and — on the LiveKit path with attendance sync enabled — presence is written
 back as `VIRTUAL` attendance when the class ends. Sessions nobody ever starts
 are closed as `cancelled` by the end-stale cron rather than lingering.
