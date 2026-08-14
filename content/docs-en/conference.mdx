@@ -165,6 +165,136 @@ Meet/Zoom/Teams URL + optional weekly-recurring default). Provider is immutable 
 Join is provider-aware everywhere (table menu, detail page, and the room route hands external
 sessions to their vendor URL).
 
+## Teaching online
+
+A school that delivers its classes online does not schedule them one at a time.
+It declares the intent once, and every timetable slot becomes a live class.
+
+Going online never closes the building. Online delivery is **additive** — a
+live channel opened alongside the physical class — so a school can be open and
+online on the same day, online on Sunday and in person on Monday, or online for
+one section and not another. Nothing here cancels a lesson.
+
+Three independent switches can put a class online, and they combine rather than
+compete:
+
+| Switch                                     | Where                                   | Means                                                                      |
+| ------------------------------------------ | --------------------------------------- | -------------------------------------------------------------------------- |
+| **Teach online**                           | `/conference/settings`                  | The standing "we are an online school" setting.                            |
+| **Online teaching by section**             | same page, per section                  | Overrides the school default in both directions. "School default" inherits. |
+| **Go online temporarily**                  | same page, a date range                 | The emergency switch — see below. Lifts the school default for those days.  |
+
+The per-section decision always wins over the two school-wide ones, including
+during an emergency: the window raises the school's *default*, it does not
+overrule a choice someone made about a section. A section held back that you
+now want online is one click — set it back to "School default".
+
+### Going online at short notice
+
+Weather, a closed road, an outbreak, a war. `/conference/settings` →
+**Go online temporarily**:
+
+- **From** — the first day. Required.
+- **Until** — the last day, **inclusive**. Leave it empty to stay online *until
+  further notice*, which is usually what you know on day one.
+- **Reason** — free text, shown to staff on this page.
+
+Both dates are read in the school's own timezone and cover whole school days.
+Clearing **From** ends the period — there is no separate "cancel" button to
+forget. When the end date passes, the school simply goes back to whatever it
+was doing, with no manual step.
+
+Saving takes effect immediately: today's classes are created while you are
+still on the page, rather than at the next quarter-hour.
+
+### Timetable-bound or free timing
+
+**How online classes run** is a separate choice from whether they run:
+
+- **Follow the timetable** — one live class per timetable slot, starting and
+  ending with the period. The strict version, and the one that feeds period
+  attendance.
+- **Open room, any time** — one standing room per section for the whole
+  teaching day, with no period boundaries. A school that went online because of
+  a storm rarely reproduces its bell schedule on day one, and a school that is
+  online by design may not want one at all. Hosted by the section's homeroom
+  teacher. Because it is not tied to a period, it does not write period
+  attendance.
+- **Timetable + open room** — both, so a section can follow its schedule and
+  still have somewhere to meet in the gaps.
+
+### Set it up
+
+1. **Choose the back-end.** `/conference/settings` (ADMIN / DEVELOPER) →
+   **Teach online**, then **Meeting back-end**:
+   - **External link** — Google Meet / Zoom / Teams URLs. Works today, no infra.
+   - **In-app room** — LiveKit. Selectable immediately, but it only takes
+     effect once the SFU is provisioned (the six gates in
+     `conference/RUNBOOK.md`). Until then classes quietly run on external
+     links and switch over on their own the day the infra lands — no
+     migration, no re-setup.
+2. **For external links, set one link per class.** Create a session from the
+   wizard with **Save as default**, which stores a recurring `ConferenceLink`
+   for that (subject, section, term). This is where a materialized class gets
+   its meeting URL — a slot with no link is skipped rather than published with
+   a dead Join button. At term rollover, **Carry forward recurring links** on
+   the same settings page clones them into the next term.
+
+   **Meeting-link coverage** on the same page tells you how far you have got:
+   how many (section, subject) pairs in the active term have their own link,
+   and which do not. Check it before you need it.
+3. **Set a standing meeting link as the floor.** A school going online at short
+   notice will not have a link per class ready. **Standing meeting link** is
+   used for any class that has none of its own, so the flip produces joinable
+   classes instead of nothing at all. It is **one shared room** — every class
+   falling back to it lands in the same meeting — so treat it as the emergency
+   floor and add per-class links as you go. An open room has no other source of
+   a URL, since it belongs to no subject.
+4. **Tune per section if the school is hybrid.** The **Online teaching by
+   section** list overrides the school-wide switch in both directions: hold one
+   section back from a school that went online, or put one section online in a
+   school that has not. "School default" means inherit.
+
+### What then happens
+
+Every 15 minutes the reminders cron materializes the current school day's
+online slots — one `Conference` row per slot, per day, in the school's own
+timezone. It mirrors the timetable's own filter (active term, that weekday,
+`weekOffset: 0`, no break periods, slots that have both a section and a
+teacher), so it can never invent a class the schedule doesn't show. Re-runs are
+no-ops, and a class an admin cancelled is **not** resurrected.
+
+Nothing is created on a day the school has declared closed — a HOLIDAY or
+CANCELLED entry in the schedule exceptions stops the sweep for that day, so
+nobody is reminded about a class on Eid. Periods that have already finished are
+skipped too, so flipping the switch at lunchtime does not publish Join buttons
+for the morning.
+
+Because a real row exists before anyone clicks, the rest of the product wakes
+up: students get the start-reminder notification, the weekly grid shows the
+scheduled/live dot on the slot, the teacher's Current card offers **Start**,
+and — on the LiveKit path with attendance sync enabled — presence is written
+back as `VIRTUAL` attendance when the class ends. Sessions nobody ever starts
+are closed as `cancelled` by the end-stale cron rather than lingering.
+
+Each session's own page says how attendance is being handled for it — marked
+automatically when it ends, or to be marked as usual, with a link to the
+register. External meetings carry no attendance data at all, which is the
+common case for a school that has just gone online, so it is stated rather than
+left to be discovered from an empty register.
+
+### What each back-end gives you
+
+|                             | External link       | In-app room (LiveKit)                |
+| --------------------------- | ------------------- | ------------------------------------ |
+| Works today                 | ✅                  | ⛔ six infra gates                   |
+| Join from the timetable     | ✅                  | ✅                                   |
+| Reminders + notifications   | ✅                  | ✅                                   |
+| Live dot on the weekly grid | ✅                  | ✅                                   |
+| Recording                   | ⛔ vendor-side only | ✅ Egress → S3, per-school retention |
+| Attendance from presence    | ⛔ no presence data | ✅ opt-in                            |
+| In-room moderation (kick)   | ⛔                  | ✅                                   |
+
 ## Providers
 
 | Provider        | Status                         | Missing                                          |

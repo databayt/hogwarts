@@ -265,7 +265,112 @@
       A third `getDay()` remains at ~line 6887 — a substitution-planning loop
       over a generated date range, a different concern, left alone deliberately.
 
+## Open — carried forward from the any-time-online pass (2026-08-14, second)
+
+- [ ] **`getTodaySchedule` still renders the timetable on a declared holiday.**
+      The materialization sweep now skips one (`school-calendar.ts`), but the
+      read path does not, so the grid and today-cards show a normal day on Eid.
+      Deliberately asymmetric for now — writes mail reminders, reads do not —
+      but it is a real seam. Fixing it is a timetable-block change: blank the
+      day in `getTodaySchedule` / `getChildTodaySchedule` / the weekly grid,
+      and reuse `isSchoolClosedOn` so the two cannot disagree. Note the
+      transportation cron carries a THIRD copy of the same predicate
+      (`build-tomorrow-trips/route.ts:78`) — the three should collapse into one
+      shared helper.
+- [ ] **An ended open room does not reopen the same day.** The idempotency
+      check runs against every DECIDED status, so a teacher who ends the
+      section's standing room at 09:00 has no room for the rest of the day
+      (they can create an ad-hoc session from the wizard). The conservative
+      choice: auto-reopening would spawn a fresh row every 15 minutes. If loose
+      mode gets real use, the right fix is an explicit "reopen" action, not a
+      change to the sweep.
+- [ ] **The delivery mode is school-wide only.** A school cannot run
+      timetable-bound classes for its senior sections and a loose room for the
+      juniors. `ConferenceOnlineMode` would move to `Section` as a tri-state,
+      exactly like `conferenceOnline`.
+- [ ] **The standing fallback link is one shared room.** Every (section,
+      subject) without its own `ConferenceLink` falls back to the same URL, so
+      two classes running at the same period land in one meeting. Acceptable as
+      the emergency floor — it is the difference between joinable and nothing —
+      and the settings copy says so, but a per-section fallback is the obvious
+      next step, and an open room has no other source at all.
+- [ ] **`SubstitutionRecord` is not resolved into the materialized host.** A
+      slot whose teacher is absent with a confirmed substitute still
+      materializes with the ORIGINAL teacher as HOST, so the substitute cannot
+      start the class. Left alone deliberately for now, on the `rotationWeek`
+      precedent: no read path in the app resolves substitutes into the grid
+      either, and fixing only the sweep would break the mirror. Fix both, or
+      neither.
+- [ ] **`Timetable.classroomId` is REQUIRED**, so a fully-online school must
+      still assign physical rooms to build a timetable at all, and the
+      today-card shows that room with no hint the class is being delivered
+      online. Do NOT relax the schema — the timetable engine's uniqueness
+      constraints are built on it. The cheap version is a "Virtual" row in
+      `ClassroomType` by convention plus an Online badge on the card; the
+      honest version is a nullable `classroomId` with the engine's room
+      constraints made conditional, which is a timetable-block project.
+
 ## Done
+
+### Any-time online — window · delivery mode · fallback link (2026-08-14)
+
+The block could already make a school online PERMANENTLY. It could not make one
+go online **for a while**, and its one delivery shape was "reproduce the bell
+schedule". Both are now covered, without ever closing the building.
+
+- [x] **Online is additive, so the policy is a UNION** —
+      `sectionOverride ?? (schoolDefault || windowActive)`. The window sits
+      inside the inherit, so an explicit per-section decision still wins in both
+      directions during an emergency. The alternative (window overrides
+      everything) was considered and rejected: going online takes nothing away,
+      so there is nothing to override.
+- [x] **`School.conferenceOnlineFrom` / `…Until` / `…Note`** — the emergency
+      switch. Day-granular in the school's calendar, inclusive at both ends,
+      `until = null` meaning "until further notice". Clearing `from` ends it,
+      so there is no separate cancel verb. Days travel as `"YYYY-MM-DD"` and
+      store at NOON school time (a `Date` parses as UTC midnight and lands a day
+      early west of Greenwich; a stored midnight can be pushed across the date
+      line by any later offset read).
+- [x] **`ConferenceOnlineMode` — `timetable` · `open` · `both`.** `open` gives
+      each section one standing room for the whole teaching day with no period
+      boundaries (`actions/open-room.ts`), modelled as an ordinary slot-less
+      session so nothing downstream learns a new concept. Host is the section's
+      homeroom teacher; a section without one skips with `no_teacher`.
+- [x] **`School.conferenceFallbackUrl` + `getConferenceLinkCoverage`.** THE
+      blocker on the whole promise: prod has no SFU, so an emergency school
+      degrades to external, and every pair without a `ConferenceLink` was
+      skipped as `no_link` into a cron log — a school that flipped online
+      overnight got nothing, silently. The settings page now names the
+      uncovered pairs and offers a standing link that makes them all joinable.
+- [x] **Holiday gate on the sweep** (`school-calendar.ts`), mirroring the
+      transportation cron's predicate. Write side only — see the open item
+      above for the read side.
+- [x] **Past periods are skipped** (`period_over`), so a mid-day flip stops
+      filling the table with rows the end-stale cron immediately cancels.
+- [x] **Saving settings materializes the day inline** via `after()`, instead of
+      waiting up to 15 minutes for the next `*/15` tick.
+- [x] **The session detail page states how attendance is handled** for that
+      session (`describeAttendanceSync`) and links to the register when it is
+      manual. An external meeting carries no presence — the common case for an
+      emergency school — and the previous silence read as "handled" right up
+      until the register was empty.
+- [x] **Verified end-to-end** against the seeded demo school (666 slots, 24
+      sections, zero meeting links): offline → 154 `not_online`; window with no
+      link → 154 `no_link`; window + standing link → **154 sessions**; re-run →
+      154 `exists`; one section opted out under an active window → 7 skipped
+      and 0 sessions for it; `open` mode → 24 rooms spanning 07:15–14:10 school
+      time; declared holiday → 0 with `holiday: 1`; expired window → back to
+      `not_online` with no manual step.
+- [x] **Tests**: +55 (policy union / window boundaries / indefinite window /
+      section-beats-window / source+note / mode plumbing; day↔instant
+      round-trip across UTC+14, UTC-11, DST and a :45 offset; open-room
+      creation, idempotency, cancelled, no_teacher, no_link, day_over, livekit
+      two-step; sweep holiday / fallback precedence / three modes; slot
+      `period_over` with a pinned clock; settings window normalisation).
+      Also repaired two specs that had drifted from the FIRST 08-14 pass and
+      were failing before this one started (`end-stale-live-classes` gained
+      `abandoned`/`cancelled` in its body, `live-class-reminders` moved from
+      per-session `create` to one batched `createMany`).
 
 ### Online school — policy + per-day materialization (2026-08-14)
 

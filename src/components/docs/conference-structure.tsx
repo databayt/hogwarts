@@ -43,6 +43,22 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
           description: "list-layer CRUD (create/update/delete/list)",
         },
         {
+          name: "online-policy.ts",
+          type: "file",
+          description:
+            "is this online, over which back-end, delivered how (one resolver)",
+        },
+        {
+          name: "day-window.ts",
+          type: "file",
+          description: "school-calendar day math (pure, DST-safe)",
+        },
+        {
+          name: "school-calendar.ts",
+          type: "file",
+          description: "holiday gate for the sweep (write side only)",
+        },
+        {
           name: "actions/",
           type: "directory",
           description: "rich sessions-layer server actions",
@@ -51,6 +67,21 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
               name: "helpers.ts",
               type: "file",
               description: "requireContext · canAccessSession",
+            },
+            {
+              name: "slot-session.ts",
+              type: "file",
+              description: "day-qualified slot lookup + cron writer",
+            },
+            {
+              name: "materialize-day.ts",
+              type: "file",
+              description: "online policy → one school day of sessions",
+            },
+            {
+              name: "open-room.ts",
+              type: "file",
+              description: "loose mode — one standing room per section per day",
             },
             {
               name: "sessions.ts",
@@ -85,7 +116,8 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
             {
               name: "settings.ts",
               type: "file",
-              description: "capacity + recording + attendance-sync opt-in",
+              description:
+                "capacity · recording · attendance sync · online window + mode + standing link",
             },
             {
               name: "moderation.ts",
@@ -152,6 +184,11 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
           name: "section-recording-policy.tsx",
           type: "file",
           description: "per-section recording opt-out",
+        },
+        {
+          name: "section-online-policy.tsx",
+          type: "file",
+          description: "per-section online override (inherit/on/off)",
         },
         {
           name: "detail.tsx",

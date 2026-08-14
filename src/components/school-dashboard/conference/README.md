@@ -22,19 +22,22 @@ conference/
 ├── content.tsx · queries.ts · actions.ts · list-actions.ts   server entry + reads + barrels
 ├── form-steps.tsx                                             the 5 wizard steps (Basics/Schedule/Meeting/References/Access)
 │                                                              Basics opens with the timetable-slot picker — the physical class
-├── online-policy.ts                                           "does this school teach online, over which back-end" (single resolver)
-├── day-window.ts                                              school-calendar day math (pure: window · weekday · slot instants)
+├── online-policy.ts                                           "is this online, over which back-end, delivered how" (single resolver)
+├── day-window.ts                                              school-calendar day math (pure: window · weekday · slot instants · day↔instant)
+├── school-calendar.ts                                         "is the school running today" — ScheduleException holiday gate (write side only)
 ├── actions/                                                   rich sessions-layer server actions
 │   ├── helpers.ts        requireContext · canAccessSession · conferenceRevalidatePath
 │   ├── slot-session.ts   day-qualified slot lookup + the cron's direct writer
-│   ├── materialize-day.ts  turns online-school POLICY into one day's sessions
+│   ├── materialize-day.ts  turns online-school POLICY into one day's sessions (both modes)
+│   ├── open-room.ts      the LOOSE mode — one standing room per section per school day
 │   ├── sessions.ts       lifecycle state machine (create/start/end/cancel/list/get + fromTimetable)
 │   ├── join-core.ts      shared eligibility + token mint (plain module — action AND refresh route)
 │   ├── tokens.ts         joinLiveClass (initial SSR join → 5-min JWT; refresh = GET route)
 │   ├── recordings.ts     list / signed-URL / delete
 │   ├── notifications.ts  5 live_class_* events → notification hub (in-app + email, not a server action)
 │   ├── attendance-sync.ts presence → Attendance (opt-in, LiveKit-only; not a server action)
-│   ├── settings.ts       school capacity knobs + recording opt-out + attendance-sync toggle
+│   ├── settings.ts       capacity knobs · recording opt-out · attendance sync · the online
+│   │                     window + delivery mode + standing link + link-coverage report
 │   ├── moderation.ts     kickParticipant (DB status="removed" first, then SFU evict)
 │   └── recurring.ts      carry-forward ConferenceLink across terms + listConferenceTerms
 ├── authorization.ts · permissions.ts · validation.ts         rich sessions layer (strict gate)
@@ -87,6 +90,10 @@ The Prisma models are in `prisma/models/conference.prisma`.
 | LiveKit-first dashboard create (5-step wizard)        | ✅ coded (in-app option gated on env)       |
 | Timetable-anchored create (online school)             | ✅ live (slot → teacher/subject/section+id) |
 | **School-wide "teach online" + per-section override** | ✅ coded (policy on School/Section)         |
+| **Temporary "go online" window (war / weather)**      | ✅ coded (dated, open-ended, auto-reverts)  |
+| **Delivery mode: timetable-bound · loose · both**     | ✅ coded (`ConferenceOnlineMode`)           |
+| **Standing fallback link + link-coverage panel**      | ✅ coded (makes an overnight flip joinable) |
+| **Holiday gate on the materialization sweep**         | ✅ coded (`ScheduleException`, write side)  |
 | **Per-day session materialization from timetable**    | ✅ coded (in the `*/15` reminders cron)     |
 | Grade-scoped subject + catalog-lesson pickers         | ✅ live                                     |
 | Private/public control (`visibility`)                 | ✅ coded (section default / school-wide)    |
@@ -103,12 +110,43 @@ The Prisma models are in `prisma/models/conference.prisma`.
 | LiveKit SFU rooms + Egress recording                  | 🟡 coded, dormant until infra               |
 | Capacity dashboard (`/observability/conference`)      | ✅ live (DEVELOPER-only)                    |
 
-Online-school pass 2026-08-14: a school (or individual sections) can be marked
-as taught online and every timetable slot becomes a live class automatically —
-policy stored on `School`/`Section`, sessions materialized one school day at a
-time by the reminders cron, provider degrading to external until the SFU is
-provisioned. See `ISSUE.md` for what it deliberately leaves open (in-room
-strings, no-show attendance policy).
+Any-time-online pass 2026-08-14 (second): a school can now go online **at any
+time, for any length, and either way round**, without ever closing the
+building. Online delivery is ADDITIVE to the physical class, so the policy is a
+union of three independent sources rather than a precedence contest:
+
+```
+online = sectionOverride ?? (schoolDefault || windowActive)
+```
+
+- **`schoolDefault`** — `School.conferenceOnlineDefault`, the standing "we are
+  an online school" switch.
+- **`sectionOverride`** — `Section.conferenceOnline`, tri-state (`null`
+  inherits). Still wins in BOTH directions, including during a window: the
+  window lifts the school-wide _default_, it does not override a decision
+  someone made about a section.
+- **`windowActive`** — `School.conferenceOnlineFrom` / `…Until` / `…Note`. The
+  emergency switch: day-granular in the school's calendar, inclusive at both
+  ends, and open-ended (`until = null` = "until further notice", the shape an
+  emergency actually has). Clearing the start date ends it — there is no
+  separate "cancel closure" verb to forget to call.
+
+**HOW** those classes run is orthogonal, `ConferenceOnlineMode` on the school:
+`timetable` (sessions bound to their period — the strict version), `open` (one
+standing room per section for the whole teaching day, free timing), or `both`.
+
+Verified end-to-end against the seeded demo school (666 slots, 24 sections, no
+meeting links): offline → 154 `not_online`; window with no link → 154
+`no_link`; window + standing link → **154 sessions**; re-run → 154 `exists`;
+one section opted out → 7 skipped and 0 sessions for it; `open` mode → 24 rooms
+spanning 07:15–14:10 school time; declared holiday → 0; expired window → back
+to `not_online` with no manual step.
+
+Online-school pass 2026-08-14 (first): the policy + per-day materialization
+that the above builds on — sessions materialized one school day at a time by
+the reminders cron, provider degrading to external until the SFU is
+provisioned. See `ISSUE.md` for what both passes deliberately leave open
+(in-room strings, no-show attendance policy).
 
 Production-readiness pass 2026-08-12: school-timezone schedule storage, GET
 token-refresh route, list-layer status-transition guard, attendance-sync

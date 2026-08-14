@@ -178,6 +178,79 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   When you add/rename block files, update that component's node tree — NOT a code
   fence in the mdx.
 
+- **Online is ADDITIVE, never a closure.** Turning a class online does not send
+  the building home: a school can be physically open and online on the same
+  day, online on Sunday and in person on Monday, or online for one section and
+  not another. Nothing in this block ever cancels a physical class — it decides
+  whether a live channel is opened ALONGSIDE it. That framing is what makes the
+  policy a union rather than a precedence contest:
+
+  ```
+  online = sectionOverride ?? (schoolDefault || windowActive)
+  ```
+
+  The window sits INSIDE the inherit deliberately. It is a temporary lift of
+  the school-wide DEFAULT, so the tri-state rule survives verbatim — an
+  explicit `Section.conferenceOnline` still wins in both directions, even
+  mid-emergency. Do NOT "fix" this to `(sectionOverride ?? schoolDefault) ||
+  windowActive`: that makes a closure override a decision someone deliberately
+  made about a section, and it was rejected on exactly those grounds. An admin
+  who wants a held-back section online during a closure clears its override —
+  the control they already have.
+
+- **The emergency window is day-granular and open-ended.**
+  `School.conferenceOnlineFrom` / `…Until` / `…Note`. `from` is REQUIRED for a
+  window to exist; `until` may be null, meaning "until further notice" — the
+  shape an emergency actually has, since nobody knows on day one when the roads
+  reopen. Both ends are INCLUSIVE, compared as the school-calendar day
+  CONTAINING the stored instant. Clearing `from` clears the whole window, which
+  is how a school comes back off the switch: there is deliberately no separate
+  "cancel closure" verb to forget to call. An `until` with no `from` is NOT a
+  validation error — it simply describes no window, and the action drops it
+  (rejecting it turned "the admin cleared the start date" into an unexplained
+  save failure, at precisely the wrong moment).
+
+- **Window days travel as `"YYYY-MM-DD"` strings and are stored at NOON school
+  time.** A `Date` on the wire is parsed as UTC midnight and lands on the
+  PREVIOUS day for every school west of Greenwich. And midnight is the wrong
+  storage instant even once converted: any later rounding or offset read can
+  push it across the date line, silently moving the window by a day. Noon is
+  ~12 hours from either boundary, so the day round-trips under every offset on
+  earth (`schoolDayToInstant` / `schoolDayOfInstant` in `day-window.ts`; the
+  zero-padded strings also compare correctly with `<`/`>=`, which is why the
+  schema's ordering refine uses no `new Date()` at all).
+
+- **Delivery mode is orthogonal to being online.** `ConferenceOnlineMode` on
+  the school: `timetable` (a session per slot, bounded by the period — the
+  strict version), `open` (one standing room per section for the whole teaching
+  day, no period boundaries — the loose version), `both`. Read the STORED
+  column when branching, not a resolved `policy.mode`: that field is pinned to
+  `timetable` whenever the particular answer came back offline, so a school
+  online only through per-section overrides would lose its mode.
+
+- **An open room is an ordinary slot-less session** (`actions/open-room.ts`),
+  not a new concept: `timetableId: null`, `subjectId: null`, a section, and a
+  schedule spanning the first period's start to the last period's end (falling
+  back to the whole calendar day when the school has no bell schedule — a
+  school with no periods is precisely the one most likely to want loose
+  delivery). Three consequences, all intentional: it cannot write period
+  attendance (no `timetableId`); it cannot draw on `ConferenceLink` (keyed on
+  subject) so an external one depends entirely on the school's standing link;
+  and its host is `Section.homeroomTeacherId` — a section without one is
+  skipped with `no_teacher`, because `Conference.teacherId` is required and
+  there is no slot to borrow a teacher from. Identity is the deterministic
+  tuple (section, no slot, no subject, exact start), not a unique constraint.
+
+- **`School.conferenceFallbackUrl` is what makes the switch mean anything.**
+  Prod has no SFU, so an emergency school degrades to `external` — and an
+  external session IS its link. Before the fallback, every (section, subject)
+  without a `ConferenceLink` was skipped with `no_link` into a cron log, so a
+  school that flipped online overnight materialized NOTHING and had no way to
+  find out. `getConferenceLinkCoverage` now names the uncovered pairs on
+  `/conference/settings`. It is ONE SHARED ROOM across every pair that falls
+  back to it — say so in any copy you write; per-section links stay the private
+  option.
+
 ## Danger Zones
 
 - **Schedule instants combine in the SCHOOL timezone**: the wizard sends
@@ -204,6 +277,45 @@ createLiveClass` branches on `provider` — `livekit` mirrors
     a joinable-only check would resurrect a class the teacher cancelled, all
     day long. The interactive Start button keeps the joinable-only default so a
     teacher can hold a second sitting after one ends.
+- **The holiday gate is on the WRITE side only, on purpose.**
+  `school-calendar.ts isSchoolClosedOn` short-circuits the sweep on a
+  `ScheduleException` of type HOLIDAY/CANCELLED. `getTodaySchedule` does NOT
+  consult it, so this breaks the "mirror the read path exactly" rule above —
+  deliberately. Rendering a weekly pattern on Eid is cosmetically wrong and
+  costs nothing; materializing it writes rows, lights up Join buttons, and
+  mails every student and guardian a reminder for a class that will never
+  happen. Writes are consequential; reads are not. The predicate MIRRORS the
+  one in `src/app/api/cron/build-tomorrow-trips/route.ts` — two crons must not
+  disagree about what a holiday is; change both or neither. (The read-side gap
+  is tracked in ISSUE.md.)
+
+- **A period that is already over is never materialized.**
+  `materializeSlotSession` returns `period_over` for any slot whose
+  `scheduledEnd` has passed, unconditionally (so back-filling a past date is a
+  no-op too). This only became necessary once a school could flip online
+  MID-DAY: without it, a 13:00 flip materializes every morning slot as
+  `scheduled`, publishes Join buttons for classes that finished hours ago, and
+  hands the end-stale cron a pile of instantly-stranded rows to cancel. A slot
+  that has STARTED but not finished is still created — a teacher flipping the
+  switch mid-lesson should get a room for the rest of it. Because of this the
+  slot-session specs are time-dependent by construction and pin their clock
+  with `vi.setSystemTime`; keep that or the file starts failing on its own the
+  day the fixture date passes.
+
+- **`materializeOnlineSchools`'s candidate filter must include the window arm**,
+  or a school that is online ONLY through a window never sweeps. That arm is
+  deliberately coarse (any `conferenceOnlineFrom` whose `until` is null or
+  within 48h of now) because activeness depends on the school's own timezone
+  and only `materializeSchoolDay` knows it. The grace bound matters: without
+  it, a school whose closure ended two years ago occupies a slot in
+  `MAX_SCHOOLS_PER_RUN` forever and can crowd out schools that are online today.
+
+- **Saving settings materializes the day inline via `after()`.** An emergency is
+  exactly the moment a 15-minute wait for the next cron tick is unacceptable.
+  Best-effort by design — the cron re-runs the same idempotent sweep, so a
+  failure costs latency, never correctness — but it must stay `after()`, never
+  a bare `void` (see the note below).
+
 - **Materialized sessions deliberately do NOT notify.** `notifyClassScheduled`
   fires for a human scheduling a class; firing it per slot per day would mail
   every student their whole timetable every morning. The reminder cron (which
@@ -295,7 +407,11 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   (`Conference.timetableId` is optional); `attachLiveClasses` resolves the Join
   target for teacher/student/guardian today-cards (guardian via
   `getChildTodaySchedule`).
-- [Attendance](../attendance/CLAUDE.md) — `actions/attendance-sync.ts`
+- [Attendance](../attendance/CLAUDE.md) — the session detail page states how
+  attendance is handled for THAT session (`describeAttendanceSync`), because an
+  external meeting carries no presence and silence read as "handled" right up
+  until the register was empty. This is the common case for an emergency
+  school. `actions/attendance-sync.ts`
   `syncConferenceAttendance` writes `Attendance` (method `VIRTUAL`) from
   participant presence on `room_finished` + the `end-stale-live-classes` cron.
   **Opt-in** per-school (`School.conferenceAttendanceSync`), **LiveKit-only**
