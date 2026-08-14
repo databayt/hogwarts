@@ -203,4 +203,24 @@ describe("materializeOpenRoom", () => {
     expect(out).toEqual({ created: false, reason: "day_over" })
     expect(db.conference.create).not.toHaveBeenCalled()
   })
+
+  it("still builds a FUTURE day after today's classes have finished", async () => {
+    // The regression this locks: "over" was compared against `ctx.date`, which
+    // callers pass carrying the current TIME-OF-DAY on the target date. Once
+    // the wall clock passed the last period's end, every future day looked
+    // already over — a 15:20 run refused to build tomorrow's rooms because
+    // tomorrow's classes end at 12:10. Caught only against real data, because
+    // the cron's `ctx.date === now` makes the two comparisons coincide.
+    const tomorrow = new Date(Date.now() + 86_400_000)
+    const out = await materializeOpenRoom(
+      SECTION,
+      ctx({
+        // A target date carrying a time-of-day LATER than the day's own end.
+        date: tomorrow,
+        dayStart: new Date(tomorrow.getTime() - 6 * 60 * 60 * 1000),
+        dayEnd: new Date(tomorrow.getTime() - 60 * 1000),
+      })
+    )
+    expect(out).toMatchObject({ created: true })
+  })
 })

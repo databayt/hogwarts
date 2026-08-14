@@ -133,7 +133,14 @@ export async function materializeOpenRoom(
   // can use it, the reminder window has passed, and the end-stale cron would
   // cancel it on its next pass. This is what stops an afternoon flip from
   // filling the table with dead-on-arrival rows.
-  if (ctx.dayEnd.getTime() <= ctx.date.getTime()) {
+  //
+  // Compared against NOW, never against `ctx.date` — same as
+  // `materializeSlotSession`'s `period_over`. `ctx.date` is the target DAY, and
+  // callers pass it carrying the current time-of-day; comparing to that makes
+  // every FUTURE day look already over the moment the wall clock passes the
+  // last period's end. (Which is exactly what happened: a run at 15:20 UTC
+  // refused to build tomorrow's rooms because tomorrow's classes end at 12:10.)
+  if (ctx.dayEnd.getTime() <= Date.now()) {
     return { created: false, reason: "day_over" }
   }
   if (!section.homeroomTeacherId) {
