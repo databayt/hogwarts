@@ -61,8 +61,60 @@ describe("updateConferenceSettings", () => {
     const res = await updateConferenceSettings(valid)
     expect("success" in res && res.success).toBe(true)
     expect(db.school.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: SCHOOL }, data: valid })
+      expect.objectContaining({
+        where: { id: SCHOOL },
+        // The action normalises the "not set" fields to null on the way in —
+        // an empty string is the admin CLEARING a value, never a value.
+        data: expect.objectContaining(valid),
+      })
     )
+  })
+
+  it("clearing the window start clears the whole window", async () => {
+    // How a school comes back off the emergency switch: there is no separate
+    // "cancel closure" verb to forget to call. An `until` or a reason with no
+    // start is meaningless and must not linger.
+    asRole("ADMIN")
+    vi.mocked(db.school.update).mockResolvedValue({} as never)
+    await updateConferenceSettings({
+      ...valid,
+      conferenceOnlineFrom: "",
+      conferenceOnlineUntil: "2026-03-20",
+      conferenceOnlineNote: "flooding",
+    })
+    const data = vi.mocked(db.school.update).mock.calls[0]?.[0]?.data as Record<
+      string,
+      unknown
+    >
+    expect(data.conferenceOnlineFrom).toBeNull()
+    expect(data.conferenceOnlineUntil).toBeNull()
+    expect(data.conferenceOnlineNote).toBeNull()
+  })
+
+  it("stores a window day as an instant inside that day in the SCHOOL's zone", async () => {
+    // Stored at noon, not midnight: a midnight instant can be pushed across
+    // the date line by any later rounding or offset read, silently moving the
+    // window by a day.
+    asRole("ADMIN")
+    vi.mocked(db.school.update).mockResolvedValue({} as never)
+    await updateConferenceSettings({
+      ...valid,
+      conferenceOnlineFrom: "2026-03-10",
+    })
+    const data = vi.mocked(db.school.update).mock.calls[0]?.[0]?.data as Record<
+      string,
+      unknown
+    >
+    const from = data.conferenceOnlineFrom as Date
+    expect(from).toBeInstanceOf(Date)
+    expect(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Africa/Khartoum",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(from)
+    ).toBe("2026-03-10")
   })
 
   it("invalid input (out of range) → VALIDATION_ERROR, no write", async () => {

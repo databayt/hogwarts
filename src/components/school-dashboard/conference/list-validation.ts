@@ -18,6 +18,38 @@ type V = NonNullable<Dictionary["school"]["liveClasses"]["validation"]>
 
 const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/
 
+/**
+ * Is the end boundary strictly after the start boundary?
+ *
+ * The two halves (a date and an "HH:mm" wall time) are combined into instants
+ * much later, in the SCHOOL's timezone (`combineDateAndTime` in
+ * `list-actions.ts`). One offset applies to both, so ordering can be decided
+ * here without building any instant: compare the calendar day first, then the
+ * wall time — "HH:mm" is zero-padded, so a lexicographic compare IS a
+ * chronological one. Doing it with `new Date()` instead would silently mix in
+ * the *browser's* timezone on the client and the server's on the server.
+ *
+ * This is what stops a session whose end precedes its start: such a row carries
+ * a negative duration (which is never `>` the per-school cap, so it slips the
+ * duration guard) and reads as already-stranded to the end-stale cron, which
+ * would end a genuinely live class and attendance-sync a partial roster.
+ */
+function endsAfterStart(
+  startDate: Date,
+  startTime: string,
+  endDate: Date,
+  endTime: string
+): boolean {
+  const startDay = new Date(startDate)
+  startDay.setHours(0, 0, 0, 0)
+  const endDay = new Date(endDate)
+  endDay.setHours(0, 0, 0, 0)
+  if (endDay.getTime() !== startDay.getTime()) {
+    return endDay.getTime() > startDay.getTime()
+  }
+  return endTime > startTime
+}
+
 function v(dict?: V) {
   return {
     titleRequired: dict?.titleRequired || "Title is required",
@@ -32,6 +64,8 @@ function v(dict?: V) {
     endTimeInvalid: dict?.endTimeInvalid || "Enter a valid end time (HH:mm)",
     endDateAfterStart:
       dict?.endDateAfterStart || "End date must be on or after start date",
+    endBeforeStart:
+      dict?.endBeforeStart || "End must be after the start of the session",
     descriptionMax:
       dict?.descriptionMax || "Description must be at most 2000 characters",
     resourceOneRef:
@@ -58,6 +92,14 @@ export type ConferenceStatusValue = (typeof LIVE_CLASS_STATUS_VALUES)[number]
 // the room is provisioned on start and joined via /conference/[id]/room);
 // `external` = pasted/auto-created vendor link (Meet / Zoom / Teams).
 export const LIVE_CLASS_PROVIDER_VALUES = ["livekit", "external"] as const
+
+/** Mirrors the ConferenceOnlineMode Prisma enum. */
+export const LIVE_CLASS_ONLINE_MODE_VALUES = [
+  "timetable",
+  "open",
+  "both",
+] as const
+export type LiveClassOnlineMode = (typeof LIVE_CLASS_ONLINE_MODE_VALUES)[number]
 export type ConferenceProviderValue =
   (typeof LIVE_CLASS_PROVIDER_VALUES)[number]
 
@@ -152,18 +194,18 @@ export function createLiveClassSchema(dict?: V) {
 
   return base
     .refine(
-      (data) => {
-        // Compare date-only (time is applied separately on submit); require the
-        // end date to be on or after the start date.
-        const start = new Date(data.startDate)
-        start.setHours(0, 0, 0, 0)
-        const end = new Date(data.endDate)
-        end.setHours(0, 0, 0, 0)
-        return end >= start
-      },
+      (data) =>
+        endsAfterStart(
+          data.startDate,
+          data.startTime,
+          data.endDate,
+          data.endTime
+        ),
       {
-        message: m.endDateAfterStart,
-        path: ["endDate"],
+        message: m.endBeforeStart,
+        // Anchor on endTime: same-day is the common case, and that is the
+        // field the teacher has to change.
+        path: ["endTime"],
       }
     )
     .superRefine((data, ctx) => {
@@ -232,16 +274,28 @@ export function createUpdateLiveClassSchema(dict?: V) {
     })
     .refine(
       (data) => {
-        if (!data.startDate || !data.endDate) return true
-        const start = new Date(data.startDate)
-        start.setHours(0, 0, 0, 0)
-        const end = new Date(data.endDate)
-        end.setHours(0, 0, 0, 0)
-        return end >= start
+        // Every field is optional here (a partial edit is legal), so this can
+        // only judge a fully-supplied schedule — which is what the edit form
+        // always submits. `updateLiveClass` re-checks the ordering server-side
+        // against the stored row, so a half-supplied payload is still caught.
+        if (
+          !data.startDate ||
+          !data.endDate ||
+          !data.startTime ||
+          !data.endTime
+        ) {
+          return true
+        }
+        return endsAfterStart(
+          data.startDate,
+          data.startTime,
+          data.endDate,
+          data.endTime
+        )
       },
       {
-        message: m.endDateAfterStart,
-        path: ["endDate"],
+        message: m.endBeforeStart,
+        path: ["endTime"],
       }
     )
 }

@@ -22,8 +22,12 @@ conference/
 ├── content.tsx · queries.ts · actions.ts · list-actions.ts   server entry + reads + barrels
 ├── form-steps.tsx                                             the 5 wizard steps (Basics/Schedule/Meeting/References/Access)
 │                                                              Basics opens with the timetable-slot picker — the physical class
+├── online-policy.ts                                           "does this school teach online, over which back-end" (single resolver)
+├── day-window.ts                                              school-calendar day math (pure: window · weekday · slot instants)
 ├── actions/                                                   rich sessions-layer server actions
 │   ├── helpers.ts        requireContext · canAccessSession · conferenceRevalidatePath
+│   ├── slot-session.ts   day-qualified slot lookup + the cron's direct writer
+│   ├── materialize-day.ts  turns online-school POLICY into one day's sessions
 │   ├── sessions.ts       lifecycle state machine (create/start/end/cancel/list/get + fromTimetable)
 │   ├── join-core.ts      shared eligibility + token mint (plain module — action AND refresh route)
 │   ├── tokens.ts         joinLiveClass (initial SSR join → 5-min JWT; refresh = GET route)
@@ -39,6 +43,7 @@ conference/
 ├── detail.tsx · room.tsx · participants-panel.tsx            session detail · in-app room · kick UI
 ├── recordings.tsx · recording-player.tsx                     recordings list · signed-URL player
 ├── settings-form.tsx · section-recording-policy.tsx          admin policy + per-section opt-out
+├── section-online-policy.tsx                                 per-section online override (inherit / online / in person)
 ├── network-test.tsx · network-protocol.ts                    LiveKit diagnostic + ICE-path classifier
 ├── loading-skeleton.tsx
 ├── types.ts · error-map.ts                                   domain types · error-code → string
@@ -65,36 +70,45 @@ The Prisma models are in `prisma/models/conference.prisma`.
 
 ## API
 
-| Path                               | Method | Purpose                                                                 |
-| ---------------------------------- | ------ | ----------------------------------------------------------------------- |
-| `/api/webhooks/livekit`            | POST   | LiveKit event ingestion (HMAC, idempotent)                              |
-| `/api/conference/token`            | GET    | In-room ~4-min token refresh (route handler, NOT an action — bell rule) |
-| `/api/cron/live-class-reminders`   | GET    | 5–20-min start reminders (every 15 min, idempotent window)              |
-| `/api/cron/end-stale-live-classes` | GET    | Close sessions stuck `live` past end + attendance sync (every 30 min)   |
-| `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500)                             |
+| Path                               | Method | Purpose                                                                                                       |
+| ---------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------- |
+| `/api/webhooks/livekit`            | POST   | LiveKit event ingestion (HMAC, idempotent)                                                                    |
+| `/api/conference/token`            | GET    | In-room ~4-min token refresh (route handler, NOT an action — bell rule)                                       |
+| `/api/cron/live-class-reminders`   | GET    | Materializes today's online-school slots, then dispatches 5–20-min start reminders (every 15 min, idempotent) |
+| `/api/cron/end-stale-live-classes` | GET    | Close sessions stuck `live` past end + attendance sync; cancel never-started `scheduled` rows (every 30 min)  |
+| `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500)                                                                   |
 
 ## Status
 
-| Capability                                        | Status                                      |
-| ------------------------------------------------- | ------------------------------------------- |
-| Prisma models (`Conference*` + link + resources)  | ✅ schema; visibility/resources DDL staged  |
-| External pasted-link provider                     | ✅ live                                     |
-| LiveKit-first dashboard create (5-step wizard)    | ✅ coded (in-app option gated on env)       |
-| Timetable-anchored create (online school)         | ✅ live (slot → teacher/subject/section+id) |
-| Grade-scoped subject + catalog-lesson pickers     | ✅ live                                     |
-| Private/public control (`visibility`)             | ✅ coded (section default / school-wide)    |
-| Lesson + exam/quiz/assignment/link references     | ✅ coded (`catalogLessonId` + resources)    |
-| Provider-aware Join (table/detail/room redirect)  | ✅ coded                                    |
-| List CRUD + detail + schedule + settings UI       | ✅ live                                     |
-| Per-section recording opt-out                     | ✅ live                                     |
-| In-room HOST moderation (kick)                    | ✅ live                                     |
-| Timetable Start / Join (teacher+student+guardian) | ✅ live (`Conference.timetableId`)          |
-| Timetable weekly-grid live indicators (all roles) | ✅ coded                                    |
-| Notifications → hub (in-app + email)              | ✅ live (+ school-wide fan-out)             |
-| Attendance-from-presence (opt-in)                 | ✅ live (DB applied); VIRTUAL visible in UI |
-| Native Meet/Zoom/Teams `createMeeting`            | 🟡 wired, dark until OAuth creds            |
-| LiveKit SFU rooms + Egress recording              | 🟡 coded, dormant until infra               |
-| Capacity dashboard (`/observability/conference`)  | ✅ live (DEVELOPER-only)                    |
+| Capability                                            | Status                                      |
+| ----------------------------------------------------- | ------------------------------------------- |
+| Prisma models (`Conference*` + link + resources)      | ✅ schema; visibility/resources DDL staged  |
+| External pasted-link provider                         | ✅ live                                     |
+| LiveKit-first dashboard create (5-step wizard)        | ✅ coded (in-app option gated on env)       |
+| Timetable-anchored create (online school)             | ✅ live (slot → teacher/subject/section+id) |
+| **School-wide "teach online" + per-section override** | ✅ coded (policy on School/Section)         |
+| **Per-day session materialization from timetable**    | ✅ coded (in the `*/15` reminders cron)     |
+| Grade-scoped subject + catalog-lesson pickers         | ✅ live                                     |
+| Private/public control (`visibility`)                 | ✅ coded (section default / school-wide)    |
+| Lesson + exam/quiz/assignment/link references         | ✅ coded (`catalogLessonId` + resources)    |
+| Provider-aware Join (table/detail/room redirect)      | ✅ coded                                    |
+| List CRUD + detail + schedule + settings UI           | ✅ live                                     |
+| Per-section recording opt-out                         | ✅ live                                     |
+| In-room HOST moderation (kick)                        | ✅ live                                     |
+| Timetable Start / Join (teacher+student+guardian)     | ✅ live (`Conference.timetableId`)          |
+| Timetable weekly-grid live indicators (all roles)     | ✅ coded                                    |
+| Notifications → hub (in-app + email)                  | ✅ live (+ school-wide fan-out)             |
+| Attendance-from-presence (opt-in)                     | ✅ live (DB applied); VIRTUAL visible in UI |
+| Native Meet/Zoom/Teams `createMeeting`                | 🟡 wired, dark until OAuth creds            |
+| LiveKit SFU rooms + Egress recording                  | 🟡 coded, dormant until infra               |
+| Capacity dashboard (`/observability/conference`)      | ✅ live (DEVELOPER-only)                    |
+
+Online-school pass 2026-08-14: a school (or individual sections) can be marked
+as taught online and every timetable slot becomes a live class automatically —
+policy stored on `School`/`Section`, sessions materialized one school day at a
+time by the reminders cron, provider degrading to external until the SFU is
+provisioned. See `ISSUE.md` for what it deliberately leaves open (in-room
+strings, no-show attendance policy).
 
 Production-readiness pass 2026-08-12: school-timezone schedule storage, GET
 token-refresh route, list-layer status-transition guard, attendance-sync

@@ -14,6 +14,12 @@
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { isOwnStorageUrl } from "@/lib/storage-key"
+import {
+  buildProtectedFileUrl,
+  buildProtectedVideoUrl,
+  isExternallyHostedVideo,
+} from "@/components/lumos/video/media-access"
 
 // ============================================================================
 // Types
@@ -342,11 +348,18 @@ function periodTimeString(date: Date): string {
  * @param schoolId - School ID for multi-tenant filtering (REQUIRED)
  * @param teacherId - When set, only this teacher's slots (TEACHER-scoped view)
  */
+/**
+ * Hard ceiling on wizard slot options. Above any realistic term timetable —
+ * see the note at the `take` below. Exported so the action can tell the caller
+ * it truncated instead of silently serving a short list.
+ */
+export const SLOT_OPTION_CAP = 2000
+
 export async function getConferenceSlotOptions(
   schoolId: string,
   termId: string,
   teacherId?: string
-): Promise<ConferenceSlotOption[]> {
+): Promise<{ slots: ConferenceSlotOption[]; truncated: boolean }> {
   const slots = await db.timetable.findMany({
     where: {
       schoolId,
@@ -370,10 +383,19 @@ export async function getConferenceSlotOptions(
       period: { select: { name: true, startTime: true, endTime: true } },
     },
     orderBy: [{ dayOfWeek: "asc" }, { period: { startTime: "asc" } }],
-    take: 500,
+    // A 15-section school running 6 days × 8 periods is 720 slots, and the
+    // seeded Albayan term is 840 — the old cap of 500 silently dropped the end
+    // of the WEEK (the ordering is day-then-time), so Thursday's classes could
+    // not be scheduled online at all, with nothing in the UI to say so.
+    // Raised past any realistic single-term timetable; the caller reports the
+    // count so a school that somehow exceeds it is told, not truncated.
+    take: SLOT_OPTION_CAP + 1,
   })
 
-  return slots.flatMap((s) =>
+  const truncated = slots.length > SLOT_OPTION_CAP
+  const rows = truncated ? slots.slice(0, SLOT_OPTION_CAP) : slots
+
+  const options = rows.flatMap((s) =>
     s.teacherId && s.sectionId
       ? [
           {
@@ -394,6 +416,7 @@ export async function getConferenceSlotOptions(
         ]
       : []
   )
+  return { slots: options, truncated }
 }
 
 export type LessonReferenceContent = {
@@ -412,15 +435,38 @@ export type LessonReferenceContent = {
 /**
  * The linked catalog lesson's teachable content, surfaced on the session
  * detail page (videos, attachments, materials, practice-question count).
- * Catalog content is platform-global — no schoolId axis; access is gated by
- * the session read that precedes this call.
+ *
+ * Catalog *structure* is platform-global, but the contributed content hanging
+ * off a lesson is NOT: videos and materials carry their own approval state and
+ * visibility, and this used to ignore both. Filtering only on
+ * `catalogLessonId` listed every school's PRIVATE and still-PENDING
+ * contributions to anyone who could open the session page, and handed out a
+ * PAID video's URL with no purchase check. The gate below is the same one
+ * `lumos/data/catalog/get-lesson-with-progress.ts` applies — keep them in
+ * step.
+ *
+ * PAID videos are omitted outright rather than gated: this listing has no
+ * per-user purchase context to gate them with.
  */
 export async function getLessonReferenceContent(
-  catalogLessonId: string
+  catalogLessonId: string,
+  schoolId: string | null
 ): Promise<LessonReferenceContent> {
   const [videos, attachments, materials, questionCount] = await Promise.all([
     db.video.findMany({
-      where: { catalogLessonId },
+      where: {
+        catalogLessonId,
+        approvalStatus: "APPROVED",
+        OR: schoolId
+          ? [
+              { schoolId, visibility: { in: ["SCHOOL", "PUBLIC"] } },
+              { visibility: "PUBLIC" },
+            ]
+          : [{ visibility: "PUBLIC" }],
+        ...(schoolId
+          ? { NOT: { overrides: { some: { schoolId, isHidden: true } } } }
+          : {}),
+      },
       select: { id: true, title: true, videoUrl: true },
       orderBy: { createdAt: "asc" },
       take: 20,
@@ -432,7 +478,15 @@ export async function getLessonReferenceContent(
       take: 20,
     }),
     db.material.findMany({
-      where: { catalogLessonId },
+      where: {
+        catalogLessonId,
+        approvalStatus: "APPROVED",
+        status: "PUBLISHED",
+        OR: [
+          { visibility: "PUBLIC" },
+          ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
+        ],
+      },
       select: {
         id: true,
         title: true,
@@ -447,7 +501,33 @@ export async function getLessonReferenceContent(
       where: { catalogLessonId, approvalStatus: "APPROVED" },
     }),
   ])
-  return { videos, attachments, materials, questionCount }
+
+  // Self-hosted files resolve to the authorizing Lumos routes; external links
+  // (YouTube, someone else's host) stay as they are.
+  return {
+    videos: videos.map((v) => ({
+      id: v.id,
+      title: v.title,
+      videoUrl: isExternallyHostedVideo(v.videoUrl)
+        ? v.videoUrl
+        : buildProtectedVideoUrl(v.id),
+    })),
+    attachments: attachments.map((a) => ({
+      id: a.id,
+      name: a.name,
+      url: isOwnStorageUrl(a.url)
+        ? buildProtectedFileUrl("attachment", a.id)
+        : a.url,
+    })),
+    materials: materials.map((m) => ({
+      id: m.id,
+      title: m.title,
+      type: m.type,
+      fileUrl: m.fileUrl ? buildProtectedFileUrl("material", m.id) : null,
+      externalUrl: m.externalUrl,
+    })),
+    questionCount,
+  }
 }
 
 export type LiveClassReferenceData = {
@@ -559,4 +639,19 @@ export async function getLiveClassDetail(schoolId: string, id: string) {
       },
     },
   })
+}
+
+/**
+ * Whether this school has opted into writing attendance from live-class
+ * presence. One boolean, read on the session detail page so it can say which
+ * way attendance is being handled for the session in front of you.
+ */
+export async function getAttendanceSyncEnabled(
+  schoolId: string
+): Promise<boolean> {
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { conferenceAttendanceSync: true },
+  })
+  return school?.conferenceAttendanceSync ?? false
 }

@@ -104,6 +104,15 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   embeds the tenant boundary, so the SFU namespace can't leak across
   schools and the webhook handler recovers `schoolId` from the room name
   alone via `parseRoomName()` (`livekit/room-naming.ts`).
+- **The in-room token poll is an ELIGIBILITY HEARTBEAT, not a token pump.**
+  Verified against the SDK: `Room.connect` returns early when the room is
+  already connected, so the polled token never reaches the live room, and the
+  SFU refreshes tokens for reconnects itself over the signal channel
+  (`SignalClient.onTokenRefresh`). A call in progress is therefore unaffected
+  by the poll failing — so transient failures retry with backoff FOREVER and
+  never tear down the call; only a deny verdict ejects. Revocation is
+  consequently client-cooperative; deliberate removal (`kickParticipant` → SFU
+  evict + `status: "removed"`) is the server-enforced path.
 - **Token TTL is 5 minutes** with client-side refresh ~60s before expiry
   (see `room.tsx`). The refresh polls **`GET /api/conference/token`** — a
   route handler, NEVER a server action (auth() rotates the session cookie in
@@ -138,9 +147,15 @@ createLiveClass` branches on `provider` — `livekit` mirrors
 - **Recordings live in AWS S3 `me-central-1`** (PDPL via region, not
   premises). Decision locked in plan — escalate if Aldar procurement
   bounces "cloud". Bucket name from `LIVEKIT_RECORDING_BUCKET`.
-- **Notifications are best-effort**: dispatched via `void` from actions
-  - webhook. Notification failures must never roll back the underlying
-    state transition. See `actions/notifications.ts`.
+- **Notifications and attendance sync are best-effort, but must still RUN**:
+  dispatched via `after()` from `next/server` in actions, the webhook, and the
+  end-stale cron — never a bare `void`. A dangling promise is not guaranteed to
+  execute once the response is sent (the platform may freeze the function), and
+  `syncConferenceAttendance` had NO other trigger: the webhook `room_finished`
+  path and its backstop cron were both `void`, so opt-in attendance could
+  silently never be written. Failures must never roll back the underlying state
+  transition — `after()` preserves that (its callback runs off the response path
+  and its rejection is logged, not propagated). See `actions/notifications.ts`.
 - **Bare room layout**: full-screen LiveKit UI lives under
   `src/app/[lang]/s/[subdomain]/(live-room)/` (NOT under
   `(school-dashboard)`) so it can use a minimal layout without sidebar.
@@ -172,6 +187,42 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   using `School.timezone`. NEVER combine with `setHours()`/`getHours()` —
   that reads the server TZ (UTC on Vercel) and shifts every stored instant
   by the school's UTC offset, breaking reminders and live-now windows.
+- **Online school = stored POLICY + per-day materialization.** A term's
+  timetable is a weekly PATTERN, so a school that "teaches online"
+  (`School.conferenceOnlineDefault`, overridden per section by the TRI-STATE
+  `Section.conferenceOnline` — `null` inherits) never gets a term's worth of
+  pre-created rows. The reminders cron materializes ONE school day
+  (`actions/materialize-day.ts`), and `actions/slot-session.ts` is the single
+  writer + the single day-qualified lookup. Two consequences to preserve:
+  - the sweep's slot filter must MIRROR `getTodaySchedule` (`termId`,
+    school-TZ `dayOfWeek`, `weekOffset: 0`, `period.isBreak: false`,
+    section+teacher present). `rotationWeek` is deliberately ignored — no read
+    path in the app resolves an A/B rotation, so filtering on it would put
+    sessions on days the timetable doesn't show.
+  - the existence check runs against every DECIDED status (incl. `cancelled`
+    and `ended`), NOT just joinable ones. The sweep re-runs every 15 minutes;
+    a joinable-only check would resurrect a class the teacher cancelled, all
+    day long. The interactive Start button keeps the joinable-only default so a
+    teacher can hold a second sitting after one ends.
+- **Materialized sessions deliberately do NOT notify.** `notifyClassScheduled`
+  fires for a human scheduling a class; firing it per slot per day would mail
+  every student their whole timetable every morning. The reminder cron (which
+  runs in the same pass) is the notification an online school actually wants.
+- **`revalidatePath` on a SINGLE session needs the literal `[id]` segment.** A
+  BLENDED path — a real cuid inside an otherwise-bracketed route — matches no
+  cache tag at all, even with `"page"`: Next registers a page under its route
+  PATTERN or its concrete URL, never a mix. Use
+  `conferenceSessionRevalidatePaths()` (helpers.ts); it is coarser by
+  construction (all sessions share one tag) and that is the trade Next offers.
+- **Schedule ordering + the duration cap are enforced on UPDATE too**, against
+  the EFFECTIVE boundaries (the supplied half merged with the stored one) —
+  `list-actions.ts updateLiveClass`. Any new path that mutates
+  `scheduledStart`/`scheduledEnd` must run both. Ordering is checked BEFORE the
+  cap because the cap divides the two instants: an inverted schedule yields a
+  negative duration, which is never `> cap`, so it would slip both guards at
+  once. Ordering in the schemas goes through `endsAfterStart()` — day first,
+  then the zero-padded `"HH:mm"` string, never a `new Date()` (that would mix in
+  the browser's or the server's timezone, not the school's).
 - **List-layer status writes are transition-guarded**: `updateLiveClass`
   allows no-change, `scheduled → cancelled|ended`, and `live → ended` for
   EXTERNAL sessions only. `→ live` belongs to `startLiveClass`/the webhook

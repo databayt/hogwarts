@@ -178,3 +178,36 @@ export async function syncConferenceAttendance(
     return { marked: 0, updated: 0, skipped: "error" }
   }
 }
+
+/**
+ * Why a session will — or will not — have its attendance written from
+ * presence. The exact conditions `syncConferenceAttendance` checks above,
+ * factored out so the session detail page can TELL the teacher instead of
+ * leaving them to discover it after the class.
+ *
+ * This matters most in the case the block was extended for: a school that goes
+ * online in an emergency runs on external links (the SFU is not provisioned),
+ * and an external meeting emits no presence at all. Silence there reads as
+ * "attendance is handled" right up until the register is empty.
+ */
+export type AttendanceSyncReason =
+  | "auto"
+  | "disabled"
+  | "external_provider"
+  | "no_section_or_timetable"
+
+export function describeAttendanceSync(
+  session: {
+    provider: string
+    sectionId: string | null
+    timetableId: string | null
+  },
+  syncEnabled: boolean
+): AttendanceSyncReason {
+  if (!syncEnabled) return "disabled"
+  if (session.provider !== "livekit") return "external_provider"
+  if (!session.sectionId || !session.timetableId) {
+    return "no_section_or_timetable"
+  }
+  return "auto"
+}

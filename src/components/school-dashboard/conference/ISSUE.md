@@ -10,6 +10,116 @@
       tenant host (same class as the bell route — BOTH GET routes are local,
       neither has run in prod yet; verify alongside the bell check).
 
+## Review findings — 2026-08-13 (read-only pass, nothing fixed)
+
+> Baseline at the time of the review: `tsc` 0, **267/267** conference-area
+> tests green (23 files). Every item below was traced in the code, not
+> inferred from these records. Ranked; the P0 infra gates and the P3 hygiene
+> list further down are unchanged and not repeated here.
+>
+> **The three P1s were fixed the same day** — see _P1 review fixes (2026-08-13)_
+> under Done for what changed and why. The P2/P3 items below remain open.
+
+### P1 — the list layer accepts an end BEFORE the start — FIXED
+
+- [x] `list-validation.ts` (create `.refine` ~line 152, update `.refine` ~line 233) compares **dates only** (`endDate >= startDate`) and never compares
+      the combined instants — `startTime` / `endTime` are validated against
+      `TIME_REGEX` alone. The wizard's step 2 exposes both as free inputs
+      (`form-steps.tsx:254-262`), so `10:00 → 08:00` on one day is accepted and
+      stores `scheduledEnd < scheduledStart`. The rich sessions layer gets this
+      right (`validation.ts:64` and `:109`) — this is drift between the two
+      deliberately-separate layers, on the layer that is actually live.
+      Knock-on effects, both real: - the per-school duration cap is bypassed (`list-actions.ts:513`
+      computes a **negative** `durationMin`, which is never `> cap`); - `end-stale-live-classes` treats the row as stranded on its very first
+      pass (`scheduledEnd < now − 30m` is already true), so the cron ends a
+      class that is genuinely live and fires `syncConferenceAttendance`
+      against a partial presence set — the roster is marked from whoever
+      happened to have joined.
+
+### P1 — `updateLiveClass` never re-checks `conferenceMaxDuration` — FIXED
+
+- [x] Create enforces the cap in both paths (`list-actions.ts:513`,
+      `actions/sessions.ts:107`). The update path recomputes **both** instants
+      (`list-actions.ts:865-883`) and applies them with no duration check and no
+      end-after-start check. Create a 60-minute in-app room, edit it to 23
+      hours. The cap on `/conference/settings` is effectively advisory once a
+      row exists.
+
+### P1 — 10 fire-and-forget promises on a serverless runtime — FIXED
+
+- [x] `void notifyClass*` / `void syncConferenceAttendance` at
+      `list-actions.ts:717,926,928,963` · `actions/sessions.ts:165,293` ·
+      `livekit/webhook.ts:118,168,307` ·
+      `src/app/api/cron/end-stale-live-classes/route.ts:54`. On Vercel the
+      function may be frozen once the response is returned, so unawaited work
+      is not guaranteed to run. `list-actions.ts:7` and `actions/sessions.ts:6`
+      **already import `after` from `next/server`** and use it correctly for
+      `prewarm` (`:660`, `:904`, `:167`) — the same treatment was never applied
+      to the notification and attendance calls.
+      Sharpest instance: attendance-from-presence has **no** reliable execution
+      path — the primary trigger (`webhook.ts:168`) and the backstop cron
+      (`route.ts:54`) are both bare `void`.
+      ("Best-effort" is the right policy; `after()` is how it is spelled.)
+
+### P2 — the slot picker silently truncates at 500 — FIXED
+
+- [x] `queries.ts:373` caps `getConferenceSlotOptions` at `take: 500`, ordered
+      by `dayOfWeek` then period start. A 6-day × 8-period × 15-section school
+      is 720 slots (the seeded Albayan term is 840), so the **end of the week
+      disappears** and those classes simply cannot be scheduled online — with no
+      "showing 500 of N" signal anywhere. Also ships the whole 500-row joined
+      payload to the client on wizard open, in a `Select` with no search.
+
+### P2 — the token-refresh loop rests on an incorrect model of the SDK — FIXED
+
+- [x] Verified in `node_modules`: `Room.connect` early-returns when the room is
+      already connected (`livekit-client.esm.mjs:29563`), and the SFU pushes
+      refreshed tokens over the signal channel (`SignalClient.onTokenRefresh`).
+      So the token polled by `room.tsx:70-110` **never reaches the connected
+      `Room`**, and reconnects were already covered by the SDK. The comment at
+      `room.tsx:32-37` ("the fresh token only matters for RECONNECTS") states
+      the opposite of what this SDK does. Two consequences: - the poll's only real function is a **client-cooperative** eligibility
+      heartbeat — mid-class enrollment revocation holds only if the browser
+      keeps calling. (Deliberate removal is a different, genuinely
+      server-enforced path: `kickParticipant` evicts on the SFU and
+      `status: "removed"` blocks rejoin — that one is fine.) - `room.tsx:99-103` tears down a **working** call after 3 failed
+      heartbeats (~60s of API trouble), which contradicts the file's own
+      stated rationale now that the token is known to be inert for the
+      established session.
+
+### P2 — wizard load failure is indistinguishable from "no data" — FIXED
+
+- [x] `form.tsx:154-164` — when `getConferenceSlots()` returns
+      `success: false` the picker just renders empty. A teacher reads that as
+      "this school has no timetable". Same class as the tracked
+      `content.tsx` / `recordings.tsx` item below, but on the primary create
+      path.
+
+### P3 — the in-room UI is the one surface the dictionary never reaches — PARTLY FIXED
+
+- [x] `room.tsx:137` renders LiveKit's prebuilt `<VideoConference />`: its
+      controls, chat and leave affordances are English-only, and
+      `data-lk-theme="default"` pins a fixed theme regardless of the app theme
+      or `dir`. For an Arabic-RTL-default product this is a visible seam the
+      moment the LiveKit path goes live.
+
+### P3 — reminders cron cannot finish a large window — FIXED
+
+- [x] `src/app/api/cron/live-class-reminders/route.ts:60-75` dispatches
+      sequentially — up to 1000 sessions × (`loadSession` + hub fan-out with
+      email) under `maxDuration = 60`. On timeout the processed prefix has its
+      `reminder_starting_soon` rows and the tail does not; 15 minutes later the
+      5–20-minute window has moved past those sessions, so **they are never
+      reminded**. (`dispatch` swallows its own errors — `actions/notifications.ts:223`
+      — so a single failure does not abort the run; only the wall clock does.)
+
+### P3 — retention purge only ever sees `ready` — PARTLY FIXED
+
+- [x] `src/app/api/cron/expire-live-recordings/route.ts:26` filters
+      `status: "ready"`. Rows stranded in `pending` / `processing` (egress died
+      before `egress_ended`) and `failed` rows are never swept and have no S3
+      cleanup path — they accumulate indefinitely once the SFU is live.
+
 ## P3 — Hygiene (non-blocking, noted 2026-08-12)
 
 - [ ] Route files hardcode their `ALLOWED_ROLES` arrays instead of importing
@@ -127,7 +237,210 @@
       content components. (Dropped from all 8 call sites; type already
       inferred from JSON imports.)
 
+## Open — carried forward from the online-school pass (2026-08-14)
+
+- [ ] **In-room UI is still English-only.** `dir="ltr"` now pins the LiveKit
+      subtree so its layout stops being mirrored under RTL, but the strings
+      themselves are hardcoded inside `@livekit/components-react` — the package
+      exposes NO i18n hook (verified: `ControlBarProps` has `variation` and
+      `controls`, no labels; the prefab bundle carries literal "Camera",
+      "Chat", "Leave", "Microphone", "Settings"). Translating them means
+      composing our own control bar + chat from the primitives instead of using
+      `<VideoConference />`. Feature-sized; do it before the LiveKit path goes
+      live to real Arabic-speaking students.
+- [ ] **Recordings stuck `pending`/`processing` still have no sweeper.** The
+      retention cron now also purges `failed`, but an egress that dies
+      mid-flight leaves a row no cron will ever settle. Deliberately not
+      auto-purged: deleting the object under an egress still writing it is
+      worse than an orphan row. Needs an ops surface (age-out to `failed` after
+      N hours, or a dashboard count) rather than a silent delete.
+- [ ] **Should a no-show online class mark its roster absent?** The end-stale
+      cron now closes abandoned `scheduled` sessions as `cancelled` WITHOUT
+      running `syncConferenceAttendance` — a cleanup cron must not decide that
+      an entire section was absent. Product call, then wire it (or don't).
+- [x] **`getTodaySchedule` derived its weekday from the SERVER clock** — FIXED.
+      Both today-card paths (`getTodaySchedule` and `getChildTodaySchedule` in
+      `timetable/actions.ts`) now resolve the weekday with `schoolDayOfWeek`
+      against `School.timezone`, so they agree with the materialization sweep.
+      A third `getDay()` remains at ~line 6887 — a substitution-planning loop
+      over a generated date range, a different concern, left alone deliberately.
+
 ## Done
+
+### Online school — policy + per-day materialization (2026-08-14)
+
+"A school wants to teach online" had no switch: online teaching worked one
+class at a time, driven by whoever clicked. Now an admin marks the school (or
+individual sections) as taught online, picks a back-end, and every timetable
+slot becomes a live class — reminded, attendance-capable, and lit on the weekly
+grid — with no per-session data entry. tsc 0 · **474/474** conference +
+timetable + observability (37 new). The `bilingualField` hardcoded-ratchet
+failure remains pre-existing school-marketing/template drift.
+
+- **Policy, not sessions.** `School.conferenceOnlineDefault` +
+  `School.conferenceProviderDefault`, overridden by the tri-state
+  `Section.conferenceOnline` (`null` inherits, so a section can be held back
+  from a school that went online AND go online in one that hasn't).
+  `online-policy.ts` is the single resolver; it DEGRADES a `livekit`
+  preference to `external` whenever `isLiveKitConfigured()` is false, so a
+  school can opt into in-app rooms before the six RUNBOOK gates land and be
+  promoted with no migration and no re-setup.
+- **Materialized one school day at a time**, inside the existing reminders
+  cron (`*/15`) so a slot created now is reminded on the same run. A term's
+  worth would be ~8,600 guesses per school; a day is ~120 rows.
+  `maxDuration` 60 → 300 to fit both halves.
+- **Day math extracted and tested** (`day-window.ts`): `schoolDayWindow`,
+  `schoolDayOfWeek`, `slotInstantsOn` — pure, and correct across DST (a
+  spring-forward day is 23 hours, not 24) and on both sides of the UTC date
+  line.
+- **Prereq: slot idempotency was not date-qualified.**
+  `createLiveClassFromTimetable` reused ANY `scheduled|live` session on the
+  slot — fine for one-offs, but a weekly slot would have dropped the teacher
+  into last week's row the moment sessions recurred, keying today's attendance
+  to the wrong date.
+- **Prereq: the timetable read path computed "today" in the SERVER zone.**
+  `attachLiveClasses` and `getLiveClassIndicators` used `setHours()` — UTC on
+  Vercel — so the Join button and the grid dot landed on the wrong day for any
+  school whose local day straddles the boundary. The read-side twin of the bug
+  the 2026-08-12 pass fixed for storage.
+- **Join now matches by SLOT first.** A subject taught twice in one day
+  produced two sessions under one `section:subject` key, and "earliest wins"
+  resolved the afternoon card to the morning session — a Join there would write
+  attendance against the wrong slot. Latent before; a daily event once every
+  slot is materialized.
+- **Abandoned sessions are swept.** Materialization creates rows nothing else
+  closes (external sessions never even reach `live`), so the end-stale cron
+  gained a second arm: `scheduled` past its end + grace → `cancelled`,
+  deliberately without attendance sync (see the open question above).
+- **Join matching is slot-first, and tested.** Four cases locked: two sessions
+  on one (section, subject) resolve to their OWN period; an entry with no
+  anchor still falls back to section+subject; an ad-hoc session with no
+  `timetableId` is still found by an anchored card; and a real session always
+  beats the recurring link.
+- **Blended `revalidatePath` calls were dead.** A real cuid inside a bracketed
+  route matches no cache tag even with `"page"` — Next registers a page under
+  its route PATTERN or its concrete URL, never a mix. Four per-session call
+  sites now use the literal `[id]` pattern via
+  `conferenceSessionRevalidatePaths()`.
+- Admin surface on `/conference/settings` (toggle + provider select + the
+  provisioning hint + a per-section override list), full en/ar dictionary
+  coverage, and `DEFAULT_SCHOOL_TZ` de-duplicated into `day-window.ts`.
+
+#### Staging manifest (2026-08-14)
+
+The working tree carries **271 changed files** across three concurrent sessions
+(a `stream` → `lumos` rename, earlier `listings/students` work, and this pass),
+so a commit must be staged from an explicit list, not `git add -A`. These 43
+files — and only these — are this pass:
+
+```
+content/docs-ar/conference.mdx
+content/docs-en/conference.mdx
+prisma/models/classrooms.prisma
+prisma/models/school.prisma
+src/app/[lang]/s/[subdomain]/(school-dashboard)/conference/settings/page.tsx
+src/app/api/cron/end-stale-live-classes/route.ts
+src/app/api/cron/live-class-reminders/route.ts
+src/components/docs/conference-structure.tsx
+src/components/internationalization/dictionaries/ar/live-classes.json
+src/components/internationalization/dictionaries/en/live-classes.json
+src/components/internationalization/school-ar.json
+src/components/internationalization/school-en.json
+src/components/school-dashboard/conference/CLAUDE.md
+src/components/school-dashboard/conference/ISSUE.md
+src/components/school-dashboard/conference/README.md
+src/components/school-dashboard/conference/actions/helpers.ts
+src/components/school-dashboard/conference/actions/materialize-day.ts
+src/components/school-dashboard/conference/actions/recordings.ts
+src/components/school-dashboard/conference/actions/sessions.ts
+src/components/school-dashboard/conference/actions/settings.ts
+src/components/school-dashboard/conference/actions/slot-session.ts
+src/components/school-dashboard/conference/day-window.ts
+src/components/school-dashboard/conference/form-steps.tsx
+src/components/school-dashboard/conference/form.tsx
+src/components/school-dashboard/conference/list-actions.ts
+src/components/school-dashboard/conference/list-validation.ts
+src/components/school-dashboard/conference/livekit/webhook.ts
+src/components/school-dashboard/conference/online-policy.ts
+src/components/school-dashboard/conference/queries.ts
+src/components/school-dashboard/conference/room.tsx
+src/components/school-dashboard/conference/section-online-policy.tsx
+src/components/school-dashboard/conference/settings-form.tsx
+src/components/school-dashboard/conference/validation.ts
+src/components/school-dashboard/timetable/actions.ts
+src/components/school-dashboard/timetable/live-class-join.ts
+src/tests/school-dashboard/conference/day-window.test.ts
+src/tests/school-dashboard/conference/list-actions.test.ts
+src/tests/school-dashboard/conference/list-validation.test.ts
+src/tests/school-dashboard/conference/materialize-day.test.ts
+src/tests/school-dashboard/conference/online-policy.test.ts
+src/tests/school-dashboard/conference/queries.test.ts
+src/tests/school-dashboard/conference/slot-session.test.ts
+src/tests/school-dashboard/timetable/live-class-join.test.ts
+```
+
+Nine of them are new (`online-policy.ts`, `day-window.ts`,
+`actions/slot-session.ts`, `actions/materialize-day.ts`,
+`section-online-policy.tsx`, and four test files), and the modified files import
+them — staging a partial list ships a build that does not compile.
+
+### P2/P3 review fixes (2026-08-14)
+
+- **Slot picker no longer truncates silently** — cap raised past any realistic
+  term timetable and the query fetches `CAP + 1` so the action can WARN with a
+  count instead of quietly serving half a week.
+- **The token poll no longer tears down a working call.** Transient failures
+  now retry with backoff indefinitely; only a deny verdict ejects. The old
+  3-strikes teardown contradicted the file's own rationale — and that rationale
+  was itself wrong for this SDK, so the comment was corrected too.
+- **The wizard says when the slot list FAILED to load** instead of rendering an
+  empty picker that reads as "this school has no timetable".
+- **Reminders cron batched** (concurrency 10 + one `createMany`), dispatch
+  before the idempotency stamp so a crash costs a duplicate rather than a
+  permanently suppressed reminder.
+- **Retention purge also sweeps `failed`** recordings.
+- **In-room UI pinned to `dir="ltr"`** so an English-only interface stops being
+  laid out right-to-left. The strings themselves remain open (above).
+
+### P1 review fixes (2026-08-13)
+
+The three P1s from the review pass above, fixed. tsc 0 · conference
+**276/276** (9 new). The `bilingualField` hardcoded-ratchet failure is the
+same pre-existing school-marketing/template drift noted in the 08-12 pass —
+every offender it lists is a file this change never touched.
+
+- **End-before-start is now impossible on the list layer.** New
+  `endsAfterStart()` in `list-validation.ts` decides ordering day-first, then
+  by the zero-padded `"HH:mm"` string — deliberately WITHOUT building a
+  `Date`, because both halves are combined much later in the school's
+  timezone and a `new Date()` here would mix in the browser's (client) or the
+  server's (server) instead. Both schemas use it; the message is a new
+  `endBeforeStart` dictionary key (en + ar) anchored on `endTime`, which is
+  the field the teacher actually has to change on the common same-day case.
+  The old `endDateAfterStart` key stays — it is still the right message when
+  only dates are in play.
+- **Both guards now run server-side too, against the EFFECTIVE boundaries.**
+  `createLiveClass` rejects `scheduledEnd <= scheduledStart` BEFORE the
+  duration cap, because the cap divides those two instants and a negative
+  duration is never `> cap` — an inverted schedule slipped both guards at
+  once. `updateLiveClass` applies the same ordering check AND re-applies
+  `conferenceMaxDuration` (for `provider === "livekit"`; provider is immutable
+  on edit, so the stored one decides) whenever either boundary moves,
+  resolving the untouched half from the stored row. The cap had been
+  create-only: book a 60-minute room, then stretch it to 23 hours.
+  Two existing update tests moved only the start past an untouched end — a
+  genuinely inverted schedule the old code stored silently; their fixtures now
+  move both boundaries and keep testing what they were written to test (the
+  school-TZ recompute).
+- **`void` → `after()` at all 10 dispatch sites** (`list-actions.ts` ×4,
+  `actions/sessions.ts` ×2, `livekit/webhook.ts` ×3, the end-stale cron ×1).
+  A dangling promise is not guaranteed to run once the response is sent. Both
+  action files already imported `after` and used it for `prewarm`, so this was
+  drift, not a missing idea. Sharpest case: `syncConferenceAttendance` had NO
+  reliable trigger at all — its primary path (webhook `room_finished`) and its
+  backstop cron were both bare `void`, so opt-in attendance could silently
+  never be written. "Best-effort" is preserved: `after()` runs off the response
+  path and its rejection is logged, never propagated into the state transition.
 
 ### Online-school pass — wizard anchored to the timetable + catalog (2026-08-12)
 

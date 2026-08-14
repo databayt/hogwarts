@@ -12,7 +12,11 @@ vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))
 vi.mock("@/lib/db", () => ({
   db: {
     conference: { findMany: vi.fn() },
-    conferenceEvent: { findMany: vi.fn(), create: vi.fn() },
+    conferenceEvent: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      createMany: vi.fn(),
+    },
   },
 }))
 vi.mock(
@@ -31,6 +35,9 @@ beforeEach(() => {
   vi.mocked(db.conference.findMany).mockResolvedValue([] as never)
   vi.mocked(db.conferenceEvent.findMany).mockResolvedValue([] as never)
   vi.mocked(db.conferenceEvent.create).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceEvent.createMany).mockResolvedValue({
+    count: 0,
+  } as never)
 })
 
 afterEach(() => {
@@ -92,14 +99,18 @@ describe("live-class-reminders cron — dispatch + idempotency", () => {
       "school-1",
       "lcs-fresh"
     )
-    expect(db.conferenceEvent.create).toHaveBeenCalledTimes(1)
-    expect(db.conferenceEvent.create).toHaveBeenCalledWith(
+    // One insert for the whole batch — the route stopped issuing a create per
+    // session when the sweep was batched under the 60s budget.
+    expect(db.conferenceEvent.createMany).toHaveBeenCalledTimes(1)
+    expect(db.conferenceEvent.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          schoolId: "school-1",
-          sessionId: "lcs-fresh",
-          eventType: "reminder_starting_soon",
-        }),
+        data: [
+          expect.objectContaining({
+            schoolId: "school-1",
+            sessionId: "lcs-fresh",
+            eventType: "reminder_starting_soon",
+          }),
+        ],
       })
     )
   })

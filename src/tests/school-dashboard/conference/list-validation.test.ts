@@ -155,7 +155,81 @@ describe("createLiveClassSchema — resources", () => {
   })
 })
 
+describe("createLiveClassSchema — schedule ordering", () => {
+  // Regression: the refine used to compare DATES only, so a same-day
+  // 10:00 → 08:00 passed. That stores a negative duration, which is never
+  // `> cap` (slipping the duration guard) and reads as already-stranded to
+  // the end-stale cron — which would end a live class and attendance-sync a
+  // partial roster.
+  const EXT = { provider: "external", meetingUrl: "https://meet.example.com/x" }
+
+  it("rejects an end time before the start time on the same day", () => {
+    const r = liveClassSchema.safeParse({
+      ...BASE,
+      ...EXT,
+      startTime: "10:00",
+      endTime: "08:00",
+    })
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      expect(r.error.issues.map((i) => i.path.join("."))).toContain("endTime")
+    }
+  })
+
+  it("rejects a zero-length session", () => {
+    const r = liveClassSchema.safeParse({
+      ...BASE,
+      ...EXT,
+      startTime: "09:00",
+      endTime: "09:00",
+    })
+    expect(r.success).toBe(false)
+  })
+
+  it("accepts an earlier wall time on a LATER day", () => {
+    // Ordering is decided day-first, so 23:00 → 01:00 overnight is legal.
+    const r = liveClassSchema.safeParse({
+      ...BASE,
+      ...EXT,
+      endDate: new Date("2026-07-16"),
+      startTime: "23:00",
+      endTime: "01:00",
+    })
+    expect(r.success).toBe(true)
+  })
+
+  it("still rejects an end DATE before the start date", () => {
+    const r = liveClassSchema.safeParse({
+      ...BASE,
+      ...EXT,
+      endDate: new Date("2026-07-14"),
+    })
+    expect(r.success).toBe(false)
+  })
+})
+
 describe("updateLiveClassSchema", () => {
+  it("rejects a fully-supplied schedule whose end precedes its start", () => {
+    const r = updateLiveClassSchema.safeParse({
+      id: "lc-1",
+      startDate: new Date("2026-07-15"),
+      endDate: new Date("2026-07-15"),
+      startTime: "10:00",
+      endTime: "08:00",
+    })
+    expect(r.success).toBe(false)
+  })
+
+  it("passes a PARTIAL schedule through — the action checks it against the row", () => {
+    // Only one half is present, so the schema can't judge ordering; the
+    // effective-boundary check in `updateLiveClass` is what catches it.
+    const r = updateLiveClassSchema.safeParse({
+      id: "lc-1",
+      startTime: "10:00",
+    })
+    expect(r.success).toBe(true)
+  })
+
   it("provider is not an updatable field (immutable after create)", () => {
     const r = updateLiveClassSchema.safeParse({
       id: "lc-1",

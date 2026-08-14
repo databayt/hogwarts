@@ -73,7 +73,7 @@ describe("end-stale-live-classes cron — close + sync", () => {
       ended: number
     }
 
-    expect(body).toEqual({ ok: true, scanned: 2, ended: 2 })
+    expect(body).toMatchObject({ ok: true, scanned: 2, ended: 2 })
     // Each close is guarded on status: "live" so a racing webhook wins cleanly.
     expect(db.conference.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({

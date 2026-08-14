@@ -12,6 +12,7 @@ import {
   getConferenceSlotOptions,
   getLiveClassFormOptions,
   getLiveClassReferenceData,
+  SLOT_OPTION_CAP,
 } from "@/components/school-dashboard/conference/queries"
 
 vi.mock("@/lib/db", () => ({
@@ -82,7 +83,9 @@ describe("getConferenceSlotOptions", () => {
       },
     ] as never)
 
-    const [slot] = await getConferenceSlotOptions(SCHOOL, "term-1")
+    const {
+      slots: [slot],
+    } = await getConferenceSlotOptions(SCHOOL, "term-1")
     expect(slot).toMatchObject({
       timetableId: "tt-1",
       startTime: "08:05",
@@ -112,7 +115,48 @@ describe("getConferenceSlotOptions", () => {
         },
       },
     ] as never)
-    expect(await getConferenceSlotOptions(SCHOOL, "term-1")).toEqual([])
+    expect(await getConferenceSlotOptions(SCHOOL, "term-1")).toEqual({
+      slots: [],
+      truncated: false,
+    })
+  })
+
+  it("reports truncation instead of silently serving a short list", async () => {
+    // The old cap was 500 with no signal, and the ordering is day-then-time —
+    // so a 720-slot school (6 days x 8 periods x 15 sections; the seeded
+    // Albayan term is 840) silently lost the END of its week and simply could
+    // not schedule Thursday online.
+    const row = (i: number) => ({
+      id: `tt-${i}`,
+      dayOfWeek: 1,
+      teacherId: "t-1",
+      sectionId: "sec-1",
+      subjectId: "sub-1",
+      subject: { name: "Maths" },
+      section: { name: "Grade 1-A", grade: { gradeNumber: 1 } },
+      teacher: { firstName: "A", lastName: "B" },
+      period: {
+        name: "P1",
+        startTime: new Date(Date.UTC(1970, 0, 1, 8, 0)),
+        endTime: new Date(Date.UTC(1970, 0, 1, 8, 45)),
+      },
+    })
+
+    // Comfortably past a real term timetable — not truncated.
+    vi.mocked(db.timetable.findMany).mockResolvedValue(
+      Array.from({ length: 840 }, (_, i) => row(i)) as never
+    )
+    const ok = await getConferenceSlotOptions(SCHOOL, "term-1")
+    expect(ok.slots).toHaveLength(840)
+    expect(ok.truncated).toBe(false)
+
+    // Past the cap: the query fetches CAP + 1 to detect it.
+    vi.mocked(db.timetable.findMany).mockResolvedValue(
+      Array.from({ length: SLOT_OPTION_CAP + 1 }, (_, i) => row(i)) as never
+    )
+    const over = await getConferenceSlotOptions(SCHOOL, "term-1")
+    expect(over.slots).toHaveLength(SLOT_OPTION_CAP)
+    expect(over.truncated).toBe(true)
   })
 })
 

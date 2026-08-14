@@ -26,6 +26,7 @@ import {
   notifyClassCancelled,
   notifyClassScheduled,
 } from "./actions/notifications"
+import { DEFAULT_SCHOOL_TZ } from "./day-window"
 import { canDeleteLiveClasses, canManageLiveClasses } from "./list-permissions"
 import {
   getLiveClassesSchema,
@@ -50,9 +51,6 @@ import {
 // ============================================================================
 // Helpers
 // ============================================================================
-
-// School.timezone default — mirrors the Prisma column default.
-const DEFAULT_SCHOOL_TZ = "Africa/Khartoum"
 
 /**
  * Combine a picked calendar day and an "HH:mm" wall-clock time into the UTC
@@ -395,8 +393,21 @@ export async function getConferenceSlots(): Promise<
       ownTeacherId = teacher.id
     }
 
-    const data = await getConferenceSlotOptions(schoolId, term.id, ownTeacherId)
-    return { success: true, data }
+    const { slots, truncated } = await getConferenceSlotOptions(
+      schoolId,
+      term.id,
+      ownTeacherId
+    )
+    if (truncated) {
+      // Never truncate silently — a wizard that quietly omits half the week
+      // looks like a school with half a timetable.
+      console.warn("[getConferenceSlots] slot options truncated", {
+        schoolId,
+        termId: term.id,
+        returned: slots.length,
+      })
+    }
+    return { success: true, data: slots }
   } catch (error) {
     console.error("[getConferenceSlots]", error)
     return actionError(ACTION_ERRORS.LOAD_FAILED)
@@ -504,6 +515,13 @@ export async function createLiveClass(
       schoolTz
     )
     const scheduledEnd = combineDateAndTime(d.endDate, d.endTime, schoolTz)
+
+    // Ordering is re-checked here, not just in the schema: the duration cap
+    // below divides these two instants, and a negative duration is never
+    // `> cap` — so without this an inverted schedule would slip BOTH guards.
+    if (scheduledEnd.getTime() <= scheduledStart.getTime()) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
 
     // In-app rooms hold an SFU slot — enforce the per-school duration cap
     // (external links are just calendar entries; no resource to cap).
@@ -714,7 +732,7 @@ export async function createLiveClass(
     // external-link path is the only live backend until LiveKit lands, so
     // without this a scheduled class would notify nobody. Failures here must
     // never fail the create.
-    void notifyClassScheduled(schoolId, created.id)
+    after(() => notifyClassScheduled(schoolId, created.id))
 
     revalidatePath(conferenceRevalidatePath(), "page")
     revalidatePath("/[lang]/s/[subdomain]/timetable", "page")
@@ -774,7 +792,9 @@ export async function updateLiveClass(
       }),
       db.school.findUnique({
         where: { id: schoolId },
-        select: { timezone: true },
+        // The cap is re-applied on edit, not only at create — see the
+        // schedule recompute below.
+        select: { timezone: true, conferenceMaxDuration: true },
       }),
     ])
     if (!existing) return actionError(ACTION_ERRORS.NOT_FOUND)
@@ -882,6 +902,31 @@ export async function updateLiveClass(
       updateData.scheduledEnd = combineDateAndTime(baseDate, baseTime, schoolTz)
     }
 
+    // The same two guards create applies, against the EFFECTIVE boundaries —
+    // a partial edit (new start time, untouched end) can invert a schedule or
+    // stretch a room past the cap just as well as a full one, and the schema
+    // can't see the stored half. Without this the cap was create-only: book a
+    // 60-minute room, then edit it to 23 hours.
+    if (needsStart || needsEnd) {
+      const effectiveStart =
+        (updateData.scheduledStart as Date | undefined) ??
+        existing.scheduledStart
+      const effectiveEnd =
+        (updateData.scheduledEnd as Date | undefined) ?? existing.scheduledEnd
+      if (effectiveEnd.getTime() <= effectiveStart.getTime()) {
+        return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+      }
+      // Provider is immutable on edit, so the stored one decides whether this
+      // session holds an SFU slot.
+      if (existing.provider === "livekit") {
+        const durationMin =
+          (effectiveEnd.getTime() - effectiveStart.getTime()) / 60_000
+        if (durationMin > (schoolRow?.conferenceMaxDuration ?? 240)) {
+          return actionError(ACTION_ERRORS.LIVE_CLASS_MAX_DURATION_EXCEEDED)
+        }
+      }
+    }
+
     // Tenant-safe scoped write: updateMany with {id, schoolId}.
     const result = await db.conference.updateMany({
       where: { id: d.id, schoolId, deletedAt: null },
@@ -923,9 +968,9 @@ export async function updateLiveClass(
       updateData.scheduledEnd instanceof Date &&
       updateData.scheduledEnd.getTime() !== existing.scheduledEnd.getTime()
     if (updateData.status === "cancelled") {
-      void notifyClassCancelled(schoolId, d.id)
+      after(() => notifyClassCancelled(schoolId, d.id))
     } else if (startMoved || endMoved) {
-      void notifyClassScheduled(schoolId, d.id)
+      after(() => notifyClassScheduled(schoolId, d.id))
     }
 
     revalidatePath(conferenceRevalidatePath(), "page")
@@ -960,7 +1005,7 @@ export async function deleteLiveClass(params: {
 
     // Tell the section the class is off. loadSession resolves the row by
     // {id, schoolId} without a deletedAt filter, so it still works post-delete.
-    void notifyClassCancelled(schoolId, params.id)
+    after(() => notifyClassCancelled(schoolId, params.id))
 
     revalidatePath(conferenceRevalidatePath(), "page")
     return { success: true, data: null }

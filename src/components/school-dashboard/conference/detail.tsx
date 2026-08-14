@@ -4,12 +4,15 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { typography } from "@/lib/typography"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { describeAttendanceSync } from "@/components/school-dashboard/conference/actions/attendance-sync"
 import { getLiveClass } from "@/components/school-dashboard/conference/actions/sessions"
 import {
+  getAttendanceSyncEnabled,
   getLessonReferenceContent,
   type LessonReferenceContent,
 } from "@/components/school-dashboard/conference/queries"
@@ -68,12 +71,33 @@ export async function LiveClassDetailContent({
   const canJoin = session.status === "live" || session.status === "scheduled"
   const isExternal = session.provider === "external"
 
+  /** Roles that can open the manual register (mirrors /attendance/manual). */
+  const ATTENDANCE_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
+  const at = t?.attendanceNote
+  const { schoolId: tenantSchoolId, role: viewerRole } =
+    await getTenantContext()
+  const attendanceMode = tenantSchoolId
+    ? describeAttendanceSync(
+        session,
+        await getAttendanceSyncEnabled(tenantSchoolId)
+      )
+    : "disabled"
+  // Only the roles that can actually open the manual register get the link.
+  const canMarkAttendance = ATTENDANCE_ROLES.includes(viewerRole ?? "")
+
   // The linked catalog lesson's teachable content (videos, materials,
   // practice questions) — one FK, whole payload.
   let lessonContent: LessonReferenceContent | null = null
   if (session.catalogLessonId) {
     try {
-      lessonContent = await getLessonReferenceContent(session.catalogLessonId)
+      // schoolId scopes the contributed content: without it the listing
+      // showed every school's private and unapproved videos/materials.
+      lessonContent = tenantSchoolId
+        ? await getLessonReferenceContent(
+            session.catalogLessonId,
+            tenantSchoolId
+          )
+        : null
     } catch {
       lessonContent = null
     }
@@ -156,6 +180,36 @@ export async function LiveClassDetailContent({
           </dd>
         </div>
       </dl>
+
+      {/* How attendance is handled for THIS session. An external meeting emits
+          no presence, so an online school running on pasted links has manual
+          marking as its only path — say so here rather than let a teacher find
+          out from an empty register. */}
+      {session.sectionId && (
+        <div className="text-muted-foreground rounded-lg border p-4 text-sm">
+          <p>
+            {attendanceMode === "auto"
+              ? (at?.auto ??
+                "Attendance is marked automatically when this class ends.")
+              : attendanceMode === "external_provider"
+                ? (at?.external ??
+                  "This class runs on an external meeting link, which carries no attendance data. Mark attendance as usual.")
+                : attendanceMode === "no_section_or_timetable"
+                  ? (at?.unanchored ??
+                    "This class is not tied to a timetable period, so attendance is not recorded against one.")
+                  : (at?.disabled ??
+                    "Automatic attendance is turned off for this school. Mark attendance as usual.")}
+          </p>
+          {attendanceMode !== "auto" && canMarkAttendance && (
+            <Link
+              className="mt-2 inline-block underline underline-offset-4"
+              href={`/${locale}/attendance/manual`}
+            >
+              {at?.markLink ?? "Go to attendance"}
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-2">
         {canJoin &&

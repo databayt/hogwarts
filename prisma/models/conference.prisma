@@ -21,6 +21,26 @@ enum ConferenceProvider {
   @@map("LiveClassProvider")
 }
 
+// How an online school delivers its classes.
+//
+//   timetable — one session per timetable slot, bounded by the period's times.
+//               "Restricted to the defined timetable."
+//   open      — one open room per section for the whole school day, with no
+//               period boundaries. "Loose" / free-timing delivery: the teacher
+//               and the roster meet whenever they need to.
+//   both      — the slot sessions AND the open room. A section can follow its
+//               timetable and still have a standing room for the gaps.
+//
+// Orthogonal to WHETHER the school is online (that is the policy union in
+// conference/online-policy.ts) — this is only HOW.
+enum ConferenceOnlineMode {
+  timetable
+  open
+  both
+
+  @@map("LiveClassOnlineMode")
+}
+
 enum ConferenceStatus {
   scheduled
   live
@@ -179,12 +199,12 @@ model ConferenceResource {
 
 // One row per user invited to a conference (host, students, observers).
 model ConferenceParticipant {
-  id         String     @id @default(cuid())
-  schoolId   String
-  sessionId  String
-  session Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User       @relation("ConferenceParticipations", fields: [userId], references: [id], onDelete: Cascade)
+  id        String     @id @default(cuid())
+  schoolId  String
+  sessionId String
+  session   Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation("ConferenceParticipations", fields: [userId], references: [id], onDelete: Cascade)
 
   role   ConferenceParticipantRole
   status ConferenceParticipantStatus @default(invited)
@@ -210,11 +230,11 @@ model ConferenceParticipant {
 
 // Composite room recording produced by LiveKit Egress.
 model ConferenceRecording {
-  id         String     @id @default(cuid())
-  schoolId   String
-  school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  sessionId  String
-  session Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id        String     @id @default(cuid())
+  schoolId  String
+  school    School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   egressId String @unique // LiveKit Egress ID
   s3Bucket String
@@ -243,10 +263,10 @@ model ConferenceRecording {
 
 // Lightweight audit log for room lifecycle + webhook idempotency.
 model ConferenceEvent {
-  id         String     @id @default(cuid())
-  schoolId   String
-  sessionId  String
-  session Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id        String     @id @default(cuid())
+  schoolId  String
+  sessionId String
+  session   Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   eventType   String // 'room_started','participant_joined','egress_started',...
   actorUserId String?

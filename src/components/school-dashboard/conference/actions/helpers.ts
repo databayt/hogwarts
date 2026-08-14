@@ -150,3 +150,25 @@ export function conferenceRevalidatePath(subPath = ""): string {
   const sub = subPath ? `/${subPath.replace(/^\//, "")}` : ""
   return `/[lang]/s/[subdomain]/conference${sub}`
 }
+
+/**
+ * Revalidate a SINGLE session's pages.
+ *
+ * Separate from the helper above because a BLENDED path — a real id inside an
+ * otherwise-bracketed route — matches no cache tag at all, even with `"page"`.
+ * Next registers a page under either its route PATTERN or its concrete URL,
+ * never a mix of the two (`next/dist/server/lib/implicit-tags.js`), so
+ * `.../conference/<cuid>` invalidated nothing. Passing the literal `[id]`
+ * segment invalidates the pattern, which is what these dynamic pages are
+ * registered under.
+ *
+ * Coarser than per-session invalidation by construction: every session's
+ * detail page shares one tag. That is the trade Next offers here, and a
+ * slightly wider revalidation beats one that never fires.
+ */
+export function conferenceSessionRevalidatePaths(): string[] {
+  return [
+    "/[lang]/s/[subdomain]/conference/[id]",
+    "/[lang]/s/[subdomain]/conference/[id]/recordings",
+  ]
+}

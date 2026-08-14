@@ -13,7 +13,7 @@ import {
 
 import {
   canAccessSession,
-  conferenceRevalidatePath,
+  conferenceSessionRevalidatePaths,
   requireContext,
 } from "./helpers"
 
@@ -151,10 +151,9 @@ export async function deleteRecording(recordingId: string) {
       where: { id: recording.id, schoolId: ctx.schoolId },
       data: { status: "expired", deletedAt: new Date() },
     })
-    revalidatePath(
-      conferenceRevalidatePath(`${recording.sessionId}/recordings`),
-      "page"
-    )
+    for (const path of conferenceSessionRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     return { success: true as const, data: { id: recording.id } }
   } catch (err) {
     console.error("[deleteRecording]", err)

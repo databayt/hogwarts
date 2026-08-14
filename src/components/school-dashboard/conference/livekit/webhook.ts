@@ -3,6 +3,7 @@
 
 import "server-only"
 
+import { after } from "next/server"
 import { Prisma } from "@prisma/client"
 import { WebhookReceiver, type WebhookEvent } from "livekit-server-sdk"
 
@@ -115,7 +116,7 @@ export async function handleWebhookEvent(
       })
       if (count > 0) {
         // Best-effort fan-out to enrolled students + guardians + teacher.
-        void notifyClassStarted(schoolId, sessionId)
+        after(() => notifyClassStarted(schoolId, sessionId))
         // Auto-start recording when the session opted in. Create the recording
         // row immediately (status "pending") from the egress result so an early
         // endLiveClass can find + stop the in-flight egress before the SFU's
@@ -165,7 +166,7 @@ export async function handleWebhookEvent(
         // Best-effort: auto-mark attendance from participant presence (opt-in
         // per-school, LiveKit-only). An attendance failure must never affect
         // the webhook's at-least-once delivery semantics.
-        void syncConferenceAttendance(schoolId, sessionId)
+        after(() => syncConferenceAttendance(schoolId, sessionId))
       }
       break
     }
@@ -304,7 +305,7 @@ export async function handleWebhookEvent(
         // Only announce a playable recording when one actually exists AND the
         // row transitioned here (a guarded no-op must not re-notify).
         if (hasFile && count > 0) {
-          void notifyClassRecordingReady(schoolId, sessionId)
+          after(() => notifyClassRecordingReady(schoolId, sessionId))
         }
       }
       break

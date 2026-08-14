@@ -92,6 +92,7 @@ export function StepBasics({
   isEdit,
   slots,
   slotsLoading,
+  slotsFailed,
   dayNames,
   onSlotChange,
 }: {
@@ -102,6 +103,8 @@ export function StepBasics({
   /** The school's real class slots for the active term (lazy-loaded). */
   slots: ConferenceSlotOption[]
   slotsLoading: boolean
+  /** The load failed — distinct from "this school has no slots". */
+  slotsFailed: boolean
   dayNames?: string[]
   onSlotChange: (timetableId: string) => void
 }) {
@@ -142,6 +145,11 @@ export function StepBasics({
           })),
         ]}
       />
+      {/* An empty picker reads as "no timetable" — say when it's a failure
+          instead, so the teacher retries rather than giving up. */}
+      {slotsFailed && (
+        <p className="text-destructive -mt-2 text-xs">{f.slotLoadError}</p>
+      )}
       <InputField
         name="title"
         label={f.titleLabel}

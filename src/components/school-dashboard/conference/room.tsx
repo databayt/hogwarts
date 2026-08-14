@@ -31,10 +31,17 @@ interface Props {
 }
 
 // Eligibility verdicts — the server said no. Eject immediately; retrying
-// would only stretch the ≤5-min revocation window. Anything else (network
-// blip, 5xx, SFU hiccup) is transient: the established WebRTC session keeps
-// running past token expiry, the fresh token only matters for RECONNECTS —
-// so retry quietly instead of tearing down a working call.
+// would only stretch the ≤5-min revocation window.
+//
+// Everything else (network blip, 5xx, SFU hiccup) is transient and must NEVER
+// tear down the call. Verified against the SDK: `Room.connect` returns early
+// when the room is already connected, so the token this poll fetches never
+// reaches the live room at all, and the SFU refreshes tokens for reconnects
+// itself over the signal channel (`SignalClient.onTokenRefresh`). This poll is
+// therefore an ELIGIBILITY HEARTBEAT, not a token pump — a class in progress
+// is completely unaffected by it failing, so ejecting a working call because a
+// heartbeat endpoint had a bad minute is pure self-harm.
+//
 // Literals mirror ACTION_ERRORS values (not imported — keep server-only
 // modules out of this client bundle).
 const DENY_CODES = new Set([
@@ -45,8 +52,9 @@ const DENY_CODES = new Set([
   "LIVE_CLASS_PARTICIPANT_DENIED",
   "LIVE_CLASS_INVALID_STATE",
 ])
-const MAX_TRANSIENT_RETRIES = 3
 const RETRY_DELAY_MS = 20_000
+/** Back off on repeated failure instead of hammering a struggling endpoint. */
+const MAX_RETRY_DELAY_MS = 5 * 60_000
 
 /**
  * Full-screen LiveKit conferencing UI. Uses the official prebuilt
@@ -97,12 +105,14 @@ export function RoomClient({
         // fall through to the transient-retry path
       }
       if (cancelled) return
-      if (retries < MAX_TRANSIENT_RETRIES) {
-        retries++
-        timer = setTimeout(refresh, RETRY_DELAY_MS)
-      } else {
-        setError(labels.error)
-      }
+      // Keep trying, with backoff, for as long as the user is in the room.
+      // There is no failure count at which giving up helps: the call is fine,
+      // and the only thing lost is the revocation check.
+      retries++
+      timer = setTimeout(
+        refresh,
+        Math.min(RETRY_DELAY_MS * retries, MAX_RETRY_DELAY_MS)
+      )
     }
 
     const expiresAtMs = new Date(ticket.expiresAt).getTime()
@@ -130,7 +140,18 @@ export function RoomClient({
   }
 
   return (
-    <div data-lk-theme="default" className="bg-background h-screen w-screen">
+    // `dir="ltr"` is deliberate. LiveKit's prebuilt UI has no i18n hook — its
+    // control-bar and chat strings are hardcoded English inside the package —
+    // so letting it inherit the page's RTL direction mirrors the LAYOUT of an
+    // interface whose text is still left-to-right, which is worse than either
+    // language on its own. Pin it until the control bar is composed from our
+    // own primitives (tracked in ISSUE.md); everything we DO render around it
+    // stays translated.
+    <div
+      data-lk-theme="default"
+      dir="ltr"
+      className="bg-background h-screen w-screen"
+    >
       <LiveKitRoom
         token={ticket.token}
         serverUrl={ticket.wsUrl}

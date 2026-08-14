@@ -359,6 +359,10 @@ describe("updateLiveClass — status transitions + change-scoped notifications",
       id: "lcs-1",
       startDate: new Date("2026-06-02"),
       startTime: "09:00",
+      // The end moves with it — leaving the end on the old day would now be
+      // rejected as an inverted schedule (see the ordering test below).
+      endDate: new Date("2026-06-02"),
+      endTime: "10:00",
     })
     expect(result.success).toBe(true)
     const args = vi.mocked(db.conference.updateMany).mock.calls[0][0] as {
@@ -372,10 +376,13 @@ describe("updateLiveClass — status transitions + change-scoped notifications",
   })
 
   it("keeps the existing wall time (school TZ) when only the date changes", async () => {
-    existingRow() // existing start 05:00Z = 09:00 Dubai
+    existingRow() // existing start 05:00Z = 09:00 Dubai, end 06:00Z = 10:00
     const result = await updateLiveClass({
       id: "lcs-1",
+      // Both dates move, neither time — each boundary keeps its own stored
+      // wall time, which is the behaviour under test.
       startDate: new Date("2026-06-03"),
+      endDate: new Date("2026-06-03"),
     })
     expect(result.success).toBe(true)
     const args = vi.mocked(db.conference.updateMany).mock.calls[0][0] as {
@@ -385,5 +392,50 @@ describe("updateLiveClass — status transitions + change-scoped notifications",
     expect(args.data.scheduledStart.toISOString()).toBe(
       "2026-06-03T05:00:00.000Z"
     )
+  })
+
+  it("rejects an edit that leaves the end before the start", async () => {
+    // A PARTIAL edit can invert a schedule just as well as a full one, and the
+    // schema can't see the stored half — so the check runs against the
+    // EFFECTIVE boundaries. Here only the start moves, past the stored end.
+    existingRow() // 2026-06-01 05:00Z → 06:00Z
+    const result = await updateLiveClass({
+      id: "lcs-1",
+      startDate: new Date("2026-06-02"),
+      startTime: "09:00",
+    })
+    expect(result.success).toBe(false)
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("re-applies the per-school duration cap on edit (livekit)", async () => {
+    // The cap used to be create-only: book a 60-minute room, then stretch it.
+    existingRow({ provider: "livekit" })
+    const result = await updateLiveClass({
+      id: "lcs-1",
+      startDate: new Date("2026-06-01"),
+      startTime: "09:00",
+      endDate: new Date("2026-06-02"),
+      endTime: "09:00", // 24h, against a 240-minute cap
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error).toBe("LIVE_CLASS_MAX_DURATION_EXCEEDED")
+    }
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("leaves an external session's duration uncapped on edit", async () => {
+    // External links are calendar entries — they hold no SFU slot, so the cap
+    // does not apply (mirrors create).
+    existingRow({ provider: "external" })
+    const result = await updateLiveClass({
+      id: "lcs-1",
+      startDate: new Date("2026-06-01"),
+      startTime: "09:00",
+      endDate: new Date("2026-06-02"),
+      endTime: "09:00",
+    })
+    expect(result.success).toBe(true)
   })
 })

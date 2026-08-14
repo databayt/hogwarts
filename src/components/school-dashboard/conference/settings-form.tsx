@@ -17,6 +17,24 @@ export interface ConferenceSettingsValues {
   conferenceMaxDuration: number
   conferenceRecordingDefault: boolean
   conferenceAttendanceSync: boolean
+  conferenceOnlineDefault: boolean
+  conferenceProviderDefault: "livekit" | "external"
+  conferenceOnlineMode: "timetable" | "open" | "both"
+  /** `"YYYY-MM-DD"` or `""` — the native date input's own format. */
+  conferenceOnlineFrom: string
+  conferenceOnlineUntil: string
+  conferenceOnlineNote: string
+  conferenceFallbackUrl: string
+}
+
+/** Link coverage for the active term — see `getConferenceLinkCoverage`. */
+export interface ConferenceLinkCoverage {
+  total: number
+  covered: number
+  gapCount: number
+  gaps: Array<{ section: string; subject: string }>
+  hasFallback: boolean
+  truncated: boolean
 }
 
 export interface ConferenceTerm {
@@ -29,6 +47,19 @@ export interface ConferenceTerm {
 interface Props {
   initial: ConferenceSettingsValues
   terms: ConferenceTerm[]
+  /**
+   * Whether the SFU is actually provisioned. The school's provider preference
+   * is stored either way; this only drives the hint, mirroring how the create
+   * wizard disables its in-app option until the infra lands.
+   */
+  livekitReady: boolean
+  /**
+   * Whether the stored window is in force TODAY, resolved server-side in the
+   * SCHOOL's timezone. Never recompute this in the browser — the reader's zone
+   * is not the school's, and a window is day-granular.
+   */
+  windowActive: boolean
+  coverage: ConferenceLinkCoverage | null
   labels: {
     retention: string
     maxConcurrent: string
@@ -36,6 +67,37 @@ interface Props {
     recordingDefault: string
     attendanceSync: string
     attendanceSyncHint: string
+    online: string
+    onlineHint: string
+    provider: string
+    providerLivekit: string
+    providerExternal: string
+    providerPendingHint: string
+    mode: string
+    modeTimetable: string
+    modeOpen: string
+    modeBoth: string
+    modeHint: string
+    window: string
+    windowHint: string
+    windowFrom: string
+    windowUntil: string
+    windowUntilHint: string
+    windowNote: string
+    windowNotePlaceholder: string
+    windowActive: string
+    windowClear: string
+    fallbackUrl: string
+    fallbackUrlHint: string
+    coverage: {
+      title: string
+      /** "{covered} of {total} …" */
+      summary: string
+      allCovered: string
+      withFallback: string
+      withoutFallback: string
+      andMore: string
+    }
     save: string
     saving: string
     saved: string
@@ -53,7 +115,14 @@ interface Props {
   }
 }
 
-export function ConferenceSettingsForm({ initial, terms, labels }: Props) {
+export function ConferenceSettingsForm({
+  initial,
+  terms,
+  livekitReady,
+  windowActive,
+  coverage,
+  labels,
+}: Props) {
   const [values, setValues] = useState<ConferenceSettingsValues>(initial)
   const [pending, startTransition] = useTransition()
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle")
@@ -94,6 +163,26 @@ export function ConferenceSettingsForm({ initial, terms, labels }: Props) {
     setStatus("idle")
     setValues((v) => ({ ...v, [key]: Number(raw) }))
   }
+
+  function setText(key: keyof ConferenceSettingsValues, raw: string) {
+    setStatus("idle")
+    setValues((v) => ({ ...v, [key]: raw }))
+  }
+
+  function clearWindow() {
+    setStatus("idle")
+    setValues((v) => ({
+      ...v,
+      conferenceOnlineFrom: "",
+      conferenceOnlineUntil: "",
+      conferenceOnlineNote: "",
+    }))
+  }
+
+  // Online delivery is ADDITIVE — it never closes the building — so these two
+  // controls only matter once *something* has put the school online: the
+  // standing switch above, or a window below.
+  const anyOnline = values.conferenceOnlineDefault || windowActive
 
   function save() {
     setStatus("idle")
@@ -169,6 +258,194 @@ export function ConferenceSettingsForm({ initial, terms, labels }: Props) {
           }}
         />
       </div>
+
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <Label htmlFor="online-default">{labels.online}</Label>
+          <p className="text-muted-foreground text-xs">{labels.onlineHint}</p>
+        </div>
+        <Switch
+          id="online-default"
+          checked={values.conferenceOnlineDefault}
+          onCheckedChange={(checked) => {
+            setStatus("idle")
+            setValues((v) => ({ ...v, conferenceOnlineDefault: checked }))
+          }}
+        />
+      </div>
+
+      {/* The emergency switch. Deliberately NOT gated behind the standing
+          "we are an online school" toggle: a school that teaches in person is
+          exactly the school that needs to open a window because of a storm,
+          a closed road, or a war. */}
+      <div className="space-y-3 border-t pt-6">
+        <div className="space-y-1">
+          <Label>{labels.window}</Label>
+          <p className="text-muted-foreground text-xs">{labels.windowHint}</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="window-from">{labels.windowFrom}</Label>
+            <Input
+              id="window-from"
+              type="date"
+              value={values.conferenceOnlineFrom}
+              onChange={(e) => setText("conferenceOnlineFrom", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="window-until">{labels.windowUntil}</Label>
+            <Input
+              id="window-until"
+              type="date"
+              value={values.conferenceOnlineUntil}
+              onChange={(e) => setText("conferenceOnlineUntil", e.target.value)}
+            />
+          </div>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          {labels.windowUntilHint}
+        </p>
+        <div className="space-y-2">
+          <Label htmlFor="window-note">{labels.windowNote}</Label>
+          <Input
+            id="window-note"
+            maxLength={280}
+            placeholder={labels.windowNotePlaceholder}
+            value={values.conferenceOnlineNote}
+            onChange={(e) => setText("conferenceOnlineNote", e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          {windowActive && (
+            <span className="text-muted-foreground text-xs">
+              {labels.windowActive}
+            </span>
+          )}
+          {(values.conferenceOnlineFrom || values.conferenceOnlineUntil) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearWindow}
+            >
+              {labels.windowClear}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {anyOnline && (
+        <div className="space-y-2">
+          <Label htmlFor="online-mode">{labels.mode}</Label>
+          <select
+            id="online-mode"
+            className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+            value={values.conferenceOnlineMode}
+            onChange={(e) => {
+              setStatus("idle")
+              setValues((v) => ({
+                ...v,
+                conferenceOnlineMode: e.target.value as
+                  | "timetable"
+                  | "open"
+                  | "both",
+              }))
+            }}
+          >
+            <option value="timetable">{labels.modeTimetable}</option>
+            <option value="open">{labels.modeOpen}</option>
+            <option value="both">{labels.modeBoth}</option>
+          </select>
+          <p className="text-muted-foreground text-xs">{labels.modeHint}</p>
+        </div>
+      )}
+
+      {anyOnline && (
+        <div className="space-y-2">
+          <Label htmlFor="fallback-url">{labels.fallbackUrl}</Label>
+          <Input
+            id="fallback-url"
+            type="url"
+            inputMode="url"
+            dir="ltr"
+            placeholder="https://"
+            value={values.conferenceFallbackUrl}
+            onChange={(e) => setText("conferenceFallbackUrl", e.target.value)}
+          />
+          <p className="text-muted-foreground text-xs">
+            {labels.fallbackUrlHint}
+          </p>
+        </div>
+      )}
+
+      {anyOnline && coverage && coverage.total > 0 && (
+        <div className="space-y-2 border-t pt-6">
+          <p className="font-medium">{labels.coverage.title}</p>
+          <p className="text-muted-foreground text-sm">
+            {labels.coverage.summary
+              .replace("{covered}", String(coverage.covered))
+              .replace("{total}", String(coverage.total))}
+          </p>
+          {coverage.gapCount === 0 ? (
+            <p className="text-muted-foreground text-xs">
+              {labels.coverage.allCovered}
+            </p>
+          ) : (
+            <>
+              <p className="text-muted-foreground text-xs">
+                {coverage.hasFallback
+                  ? labels.coverage.withFallback
+                  : labels.coverage.withoutFallback}
+              </p>
+              <ul className="text-muted-foreground space-y-1 text-xs">
+                {coverage.gaps.map((g) => (
+                  <li key={`${g.section}:${g.subject}`}>
+                    {g.section} · {g.subject}
+                  </li>
+                ))}
+              </ul>
+              {coverage.gapCount > coverage.gaps.length && (
+                <p className="text-muted-foreground text-xs">
+                  {labels.coverage.andMore.replace(
+                    "{count}",
+                    String(coverage.gapCount - coverage.gaps.length)
+                  )}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {anyOnline && (
+        <div className="space-y-2">
+          <Label htmlFor="provider-default">{labels.provider}</Label>
+          <select
+            id="provider-default"
+            className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+            value={values.conferenceProviderDefault}
+            onChange={(e) => {
+              setStatus("idle")
+              setValues((v) => ({
+                ...v,
+                conferenceProviderDefault: e.target.value as
+                  | "livekit"
+                  | "external",
+              }))
+            }}
+          >
+            <option value="external">{labels.providerExternal}</option>
+            <option value="livekit">{labels.providerLivekit}</option>
+          </select>
+          {/* The preference is saved as chosen; it just isn't in force yet. */}
+          {values.conferenceProviderDefault === "livekit" && !livekitReady && (
+            <p className="text-muted-foreground text-xs">
+              {labels.providerPendingHint}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center gap-3">
         <Button type="button" onClick={save} disabled={pending}>

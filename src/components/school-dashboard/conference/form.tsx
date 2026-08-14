@@ -150,14 +150,25 @@ export function LiveClassForm({
   // timetable is far too big to ship as page props), not per step.
   const [slots, setSlots] = useState<ConferenceSlotOption[]>([])
   const [slotsLoading, setSlotsLoading] = useState(false)
+  // A failed load must not look like "this school has no timetable" — that
+  // reading is indistinguishable from an empty picker, and it is the wrong
+  // one to hand a teacher who cannot schedule their class.
+  const [slotsFailed, setSlotsFailed] = useState(false)
   useEffect(() => {
     let active = true
     setSlotsLoading(true)
+    setSlotsFailed(false)
     ;(async () => {
-      const res = await getConferenceSlots()
-      if (!active) return
-      if (res.success && res.data) setSlots(res.data)
-      setSlotsLoading(false)
+      try {
+        const res = await getConferenceSlots()
+        if (!active) return
+        if (res.success && res.data) setSlots(res.data)
+        else setSlotsFailed(true)
+      } catch {
+        if (active) setSlotsFailed(true)
+      } finally {
+        if (active) setSlotsLoading(false)
+      }
     })()
     return () => {
       active = false
@@ -412,6 +423,7 @@ export function LiveClassForm({
             isEdit={isEdit}
             slots={slots}
             slotsLoading={slotsLoading}
+            slotsFailed={slotsFailed}
             dayNames={dayNames}
             onSlotChange={handleSlotChange}
           />

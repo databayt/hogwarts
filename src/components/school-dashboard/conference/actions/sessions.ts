@@ -25,13 +25,16 @@ import {
 } from "@/components/school-dashboard/conference/validation"
 import { prewarm } from "@/components/translation/prewarm"
 
+import { DEFAULT_SCHOOL_TZ } from "../day-window"
 import {
   canAccessSession,
   concurrentCapError,
   conferenceRevalidatePath,
+  conferenceSessionRevalidatePaths,
   requireContext,
 } from "./helpers"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
+import { findSlotSessionForDay } from "./slot-session"
 
 /**
  * Create a scheduled or ad-hoc live class. Teachers schedule own; admins
@@ -162,7 +165,7 @@ async function createLiveClassWithCtx(
     }
 
     // Best-effort fan-out — failures here must not roll back the create.
-    void notifyClassScheduled(ctx.schoolId, session.id)
+    after(() => notifyClassScheduled(ctx.schoolId, session.id))
 
     after(() => prewarm("Conference", session, { schoolId: ctx.schoolId }))
     revalidatePath(conferenceRevalidatePath(), "page")
@@ -188,43 +191,43 @@ export async function createLiveClassFromTimetable(input: {
   const parsed = timetableStartSchema.safeParse(input)
   if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
-  const slot = await db.timetable.findFirst({
-    where: { id: parsed.data.timetableId, schoolId: ctx.schoolId },
-    select: {
-      id: true,
-      teacherId: true,
-      sectionId: true,
-      subjectId: true,
-      subject: { select: { name: true } },
-      section: { select: { name: true } },
-      period: { select: { startTime: true, endTime: true } },
-    },
-  })
-  if (!slot) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
-  if (!slot.teacherId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
-
-  // Idempotent: reuse a scheduled/live session already on this slot.
-  const existing = await db.conference.findFirst({
-    where: {
-      schoolId: ctx.schoolId,
-      timetableId: slot.id,
-      status: { in: ["scheduled", "live"] },
-      deletedAt: null,
-    },
-    select: { id: true },
-    orderBy: { createdAt: "desc" },
-  })
-
-  let sessionId = existing?.id
-  if (!sessionId) {
-    const school = await db.school.findUnique({
+  const [slot, school] = await Promise.all([
+    db.timetable.findFirst({
+      where: { id: parsed.data.timetableId, schoolId: ctx.schoolId },
+      select: {
+        id: true,
+        teacherId: true,
+        sectionId: true,
+        subjectId: true,
+        subject: { select: { name: true } },
+        section: { select: { name: true } },
+        period: { select: { startTime: true, endTime: true } },
+      },
+    }),
+    db.school.findUnique({
       where: { id: ctx.schoolId },
       select: {
         conferenceMaxDuration: true,
         conferenceRecordingDefault: true,
         preferredLanguage: true,
+        timezone: true,
       },
-    })
+    }),
+  ])
+  if (!slot) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+  if (!slot.teacherId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+
+  // Idempotent WITHIN THE SCHOOL DAY. A slot recurs weekly, so an undated
+  // lookup ("any scheduled/live session on this slot") reuses last week's row
+  // the moment the slot is taught online every week — the teacher would be
+  // dropped into a stale session and today's attendance would key to the wrong
+  // date. `findSlotSessionForDay` is the one place that decides which row
+  // belongs to a day; the materialization cron uses it too.
+  const timeZone = school?.timezone || DEFAULT_SCHOOL_TZ
+  const existing = await findSlotSessionForDay(ctx.schoolId, slot.id, timeZone)
+
+  let sessionId = existing?.id
+  if (!sessionId) {
     const maxDuration = school?.conferenceMaxDuration ?? 120
     const periodMin = slot.period
       ? Math.round(
@@ -290,10 +293,14 @@ export async function cancelLiveClass(input: CancelInput) {
       data: { status: "cancelled" },
     })
 
-    void notifyClassCancelled(ctx.schoolId, session.id, parsed.data.reason)
+    after(() =>
+      notifyClassCancelled(ctx.schoolId, session.id, parsed.data.reason)
+    )
 
     revalidatePath(conferenceRevalidatePath(), "page")
-    revalidatePath(conferenceRevalidatePath(session.id), "page")
+    for (const path of conferenceSessionRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     return { success: true as const, data: { id: session.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_UPDATE_FAILED)
@@ -355,7 +362,9 @@ export async function startLiveClass(input: IdOnly) {
     })
 
     revalidatePath(conferenceRevalidatePath(), "page")
-    revalidatePath(conferenceRevalidatePath(session.id), "page")
+    for (const path of conferenceSessionRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     return { success: true as const, data: { id: session.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_UPDATE_FAILED)
@@ -426,7 +435,9 @@ export async function endLiveClass(input: IdOnly) {
     })
 
     revalidatePath(conferenceRevalidatePath(), "page")
-    revalidatePath(conferenceRevalidatePath(session.id), "page")
+    for (const path of conferenceSessionRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     return { success: true as const, data: { id: session.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_UPDATE_FAILED)

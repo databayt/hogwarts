@@ -50,13 +50,42 @@ model School {
   videoStorageQuotaBytes BigInt? // null = unlimited
 
   // Conference (LiveKit) — per-school capacity + PDPL retention
-  conferenceRetentionDays    Int     @default(90) @map("liveClassRecordingRetentionDays")
-  conferenceMaxConcurrent    Int     @default(50) @map("liveClassMaxConcurrentPerSchool")
-  conferenceMaxDuration      Int     @default(120) @map("liveClassMaxDurationMinutes")
-  conferenceRecordingDefault Boolean @default(true) @map("liveClassRecordingDefault")
+  conferenceRetentionDays    Int                  @default(90) @map("liveClassRecordingRetentionDays")
+  conferenceMaxConcurrent    Int                  @default(50) @map("liveClassMaxConcurrentPerSchool")
+  conferenceMaxDuration      Int                  @default(120) @map("liveClassMaxDurationMinutes")
+  conferenceRecordingDefault Boolean              @default(true) @map("liveClassRecordingDefault")
   // Opt-in: when a live class ends, auto-mark attendance from participant
   // presence (LiveKit sessions only — external links carry no presence data).
-  conferenceAttendanceSync   Boolean @default(false) @map("liveClassAttendanceSync")
+  conferenceAttendanceSync   Boolean              @default(false) @map("liveClassAttendanceSync")
+  // "This school teaches online": every timetable slot is delivered as a live
+  // class, with the session materialized per school-calendar day rather than
+  // pre-created for the whole term. Overridable per section
+  // (Section.conferenceOnline). See conference/online-policy.ts.
+  conferenceOnlineDefault    Boolean              @default(false) @map("liveClassOnlineDefault")
+  // Preferred back-end for those sessions. Degrades to `external` at read time
+  // whenever isLiveKitConfigured() is false, so a school can select `livekit`
+  // before the SFU is provisioned and be promoted automatically when it lands.
+  conferenceProviderDefault  ConferenceProvider   @default(external) @map("liveClassProviderDefault")
+  // Temporary "go online" window — the emergency switch (war, weather, an
+  // outbreak, a closed road). Day-granular in the SCHOOL's calendar and
+  // INCLUSIVE at both ends; `from` is required for a window to exist, `until`
+  // is optional and null means "until further notice". It temporarily raises
+  // the school-wide default — it does NOT override an explicit per-section
+  // decision, because going online never closes the building: online delivery
+  // is ADDITIVE to the physical class, so there is nothing to override.
+  conferenceOnlineFrom       DateTime?            @map("liveClassOnlineFrom")
+  conferenceOnlineUntil      DateTime?            @map("liveClassOnlineUntil")
+  // Why the school went online — shown to staff on the settings page and in
+  // the reason tally. Free text, single-language (see the translation rule).
+  conferenceOnlineNote       String?              @map("liveClassOnlineNote")
+  // HOW online classes are delivered: bound to the timetable, a loose open
+  // room per section, or both. See ConferenceOnlineMode.
+  conferenceOnlineMode       ConferenceOnlineMode @default(timetable) @map("liveClassOnlineMode")
+  // Standing meeting URL used when a (section, subject) has no ConferenceLink
+  // of its own — the difference between "the school went online overnight and
+  // every class is joinable" and "nothing materialized". Shared across every
+  // section that falls back to it; per-section links stay the private option.
+  conferenceFallbackUrl      String?              @map("liveClassFallbackUrl")
 
   // Join code for users to self-enroll (6-char alphanumeric, regeneratable)
   joinCode String? @unique
@@ -411,13 +440,13 @@ model School {
   whatsappMessageTemplates WhatsAppMessageTemplate[]
 
   // Transportation relations
-  vehicles               Vehicle[]
-  drivers                Driver[]
-  routes                 Route[]
-  routeStops             RouteStop[]
-  routeAssignments       RouteAssignment[]
-  trips                  Trip[]
-  tripBoardings          TripBoarding[]
+  vehicles                 Vehicle[]
+  drivers                  Driver[]
+  routes                   Route[]
+  routeStops               RouteStop[]
+  routeAssignments         RouteAssignment[]
+  trips                    Trip[]
+  tripBoardings            TripBoarding[]
   transportationSettings   TransportationSettings?
   apiTokens                SchoolApiToken[]
   studentTransportProfiles StudentTransportProfile[]
