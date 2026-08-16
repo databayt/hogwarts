@@ -47,7 +47,7 @@ import {
 
 const PASSWORD = "1234"
 const DOMAIN = "alqabs"
-const EMAIL_DOMAIN = "alqabs.edu"
+const EMAIL_DOMAIN = "alqabs.com"
 const ACADEMIC_YEAR = "2026-2027"
 
 const email = (local: string) => `${local}@${EMAIL_DOMAIN}`
@@ -412,6 +412,99 @@ async function upsertGuardian(
 }
 
 // ============================================================================
+// School year freshness
+// ============================================================================
+
+/**
+ * Roll a stale academic year (and its terms) forward to the current one.
+ *
+ * `computeTermDates` derives the year from `now`: months before the calendar's
+ * yearStartMonth resolve to `fullYear - 1`. Seed a school during the summer gap
+ * — after June's end, before September's start — and it is provisioned with the
+ * year that has just ENDED, so every "current term" surface reads empty on a
+ * brand-new tenant. Shifting by whole years keeps the row identity, so the
+ * enrollment and the 600+ timetable slots that reference it are untouched.
+ *
+ * Refuses to move a year that already carries history — a shift there would be
+ * silently rewriting the calendar under real attendance and grades.
+ */
+async function refreshStaleSchoolYear(schoolId: string) {
+  console.log("\n📅 School year...")
+
+  const year = await db.schoolYear.findFirst({
+    where: { schoolId },
+    orderBy: { startDate: "desc" },
+    select: { id: true, yearName: true, startDate: true, endDate: true },
+  })
+  if (!year) {
+    console.warn("  ⚠️  no school year — nothing to refresh")
+    return
+  }
+
+  const now = new Date()
+  if (year.endDate > now) {
+    console.log(
+      `  ✅ ${year.yearName} current (${year.startDate.toISOString().slice(0, 10)} → ${year.endDate.toISOString().slice(0, 10)})`
+    )
+    return
+  }
+
+  const [attendance, results] = await Promise.all([
+    db.attendance.count({ where: { schoolId } }),
+    db.result.count({ where: { schoolId } }),
+  ])
+  if (attendance > 0 || results > 0) {
+    console.warn(
+      `  ⚠️  ${year.yearName} ended but carries history (${attendance} attendance, ${results} results) — leaving it alone`
+    )
+    return
+  }
+
+  // Whole-year shift so month/day boundaries survive intact.
+  const shift = (d: Date, years: number) => {
+    const next = new Date(d)
+    next.setFullYear(next.getFullYear() + years)
+    return next
+  }
+  let years = 1
+  while (shift(year.endDate, years) <= now) years++
+
+  const newStart = shift(year.startDate, years)
+  const newEnd = shift(year.endDate, years)
+  const yearName = `${newStart.getFullYear()}/${newEnd.getFullYear()}`
+
+  const terms = await db.term.findMany({
+    where: { schoolId, yearId: year.id },
+    orderBy: { termNumber: "asc" },
+    select: { id: true, startDate: true, endDate: true },
+  })
+
+  await db.$transaction([
+    db.schoolYear.update({
+      where: { id: year.id },
+      data: { yearName, startDate: newStart, endDate: newEnd },
+      select: { id: true },
+    }),
+    ...terms.map((t, i) =>
+      db.term.update({
+        where: { id: t.id },
+        data: {
+          startDate: shift(t.startDate, years),
+          endDate: shift(t.endDate, years),
+          // Exactly one term is active; the first upcoming one takes it.
+          isActive: i === 0,
+        },
+        select: { id: true },
+      })
+    ),
+  ])
+
+  console.log(
+    `  ✅ ${year.yearName} had ended — rolled forward ${years}y to ${yearName} (${newStart.toISOString().slice(0, 10)} → ${newEnd.toISOString().slice(0, 10)}), ${terms.length} terms`
+  )
+}
+
+// ============================================================================
 // Logo
 // ============================================================================
 
@@ -627,6 +720,7 @@ async function main() {
   await upsertGuardian(schoolId, parentUser.id, student.id)
 
   await upsertAdmission(schoolId)
+  await refreshStaleSchoolYear(schoolId)
   await uploadLogo(schoolId)
 
   // --- Report ---
