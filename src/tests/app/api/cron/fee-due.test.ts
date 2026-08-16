@@ -38,6 +38,9 @@ vi.mock("@/lib/db", () => ({
     },
     student: {
       findUnique: vi.fn(),
+      // Part D: unplaced-student discovery + per-school count.
+      groupBy: vi.fn(),
+      count: vi.fn(),
     },
     school: {
       findUnique: vi.fn(),
@@ -47,6 +50,7 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/dispatch-notification", () => ({
   dispatchNotification: vi.fn().mockResolvedValue("notif-sent"),
+  dispatchNotificationsToAudience: vi.fn().mockResolvedValue({ created: 0 }),
   resolveActionUrl: vi.fn((path: string) => `https://demo.databayt.org${path}`),
 }))
 
@@ -88,6 +92,9 @@ describe("fee-due cron — auth", () => {
     process.env.CRON_SECRET = "secret"
     // Part C (auto-expire) runs for every processed school — default: no rows
     mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
+    // Part D (unplaced students) — default: none anywhere.
+    mockDb.student.groupBy.mockResolvedValue([] as any)
+    mockDb.student.count.mockResolvedValue(0)
   })
 
   it("returns 401 with no Authorization header", async () => {
@@ -118,6 +125,9 @@ describe("fee-due cron — per-school batching", () => {
     process.env.CRON_SECRET = "secret"
     // Part C (auto-expire) runs for every processed school — default: no rows
     mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
+    // Part D (unplaced students) — default: none anywhere.
+    mockDb.student.groupBy.mockResolvedValue([] as any)
+    mockDb.student.count.mockResolvedValue(0)
   })
 
   it("iterates over distinct school IDs from both fee and offer groupBy", async () => {
@@ -170,6 +180,9 @@ describe("fee-due cron — FeeAssignment reminders", () => {
     process.env.CRON_SECRET = "secret"
     // Part C (auto-expire) runs for every processed school — default: no rows
     mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
+    // Part D (unplaced students) — default: none anywhere.
+    mockDb.student.groupBy.mockResolvedValue([] as any)
+    mockDb.student.count.mockResolvedValue(0)
 
     mockDb.feeAssignment.groupBy.mockResolvedValue([
       { schoolId: "school-1" },
@@ -212,6 +225,40 @@ describe("fee-due cron — FeeAssignment reminders", () => {
         schoolId: "school-1",
         metadata: expect.objectContaining({ feeAssignmentId: "fa-1" }),
       })
+    )
+  })
+
+  it("renders the reminder from the school-language dictionary, with placeholders filled", async () => {
+    const dueSoon = daysFromNow(3).toISOString()
+    const assignment = {
+      id: "fa-lang",
+      studentId: "student-1",
+      finalAmount: { toString: () => "1000" },
+      feeStructure: {
+        name: "Tuition",
+        paymentSchedule: [{ dueDate: dueSoon, amount: 1000 }],
+      },
+    }
+    mockDb.feeAssignment.findMany.mockResolvedValue([assignment] as any)
+
+    // Arabic school (the beforeEach default)
+    await GET(makeRequest("secret") as any)
+    const arCall = mockDispatch.mock.calls.at(-1)?.[0]
+    expect(arCall?.title).toBe("تذكير: رسوم مستحقة قريباً")
+    expect(arCall?.body).toContain("1000")
+    expect(arCall?.body).toContain("Tuition")
+    expect(arCall?.body).not.toMatch(/\{(amount|feeName|days)\}/)
+
+    // English school
+    mockDispatch.mockClear()
+    mockDb.school.findUnique.mockResolvedValue({
+      preferredLanguage: "en",
+    } as any)
+    await GET(makeRequest("secret") as any)
+    const enCall = mockDispatch.mock.calls.at(-1)?.[0]
+    expect(enCall?.title).toBe("Reminder: Fee Due Soon")
+    expect(enCall?.body).toBe(
+      'Fee payment of 1000 for "Tuition" is due within 7 days.'
     )
   })
 
@@ -297,6 +344,9 @@ describe("fee-due cron — UserInvoice reminders", () => {
     process.env.CRON_SECRET = "secret"
     // Part C (auto-expire) runs for every processed school — default: no rows
     mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
+    // Part D (unplaced students) — default: none anywhere.
+    mockDb.student.groupBy.mockResolvedValue([] as any)
+    mockDb.student.count.mockResolvedValue(0)
 
     mockDb.feeAssignment.groupBy.mockResolvedValue([
       { schoolId: "school-1" },
@@ -381,6 +431,9 @@ describe("fee-due cron — offer expiry reminders", () => {
     process.env.CRON_SECRET = "secret"
     // Part C (auto-expire) runs for every processed school — default: no rows
     mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
+    // Part D (unplaced students) — default: none anywhere.
+    mockDb.student.groupBy.mockResolvedValue([] as any)
+    mockDb.student.count.mockResolvedValue(0)
 
     mockDb.feeAssignment.groupBy.mockResolvedValue([])
     mockDb.application.groupBy.mockResolvedValue([

@@ -30,7 +30,14 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { verifyCronSecret } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { dispatchNotification } from "@/lib/dispatch-notification"
+import {
+  dispatchNotification,
+  dispatchNotificationsToAudience,
+} from "@/lib/dispatch-notification"
+import {
+  getFinanceNotificationCopy,
+  interp,
+} from "@/components/school-dashboard/finance/lib/notification-copy"
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -158,8 +165,16 @@ interface SchoolCounts {
   invoiceReminders: number
   offerExpiryReminders: number
   offersExpired: number
+  unplacedStudentAlerts: number
   notificationsCreated: number
 }
+
+/**
+ * How often to re-nag admins about students who are still unplaced. Weekly,
+ * not daily: this is a backlog to work through, not an emergency, and a daily
+ * repeat of the same number trains people to ignore it.
+ */
+const UNPLACED_REMINDER_INTERVAL_DAYS = 7
 
 async function processSchool(
   schoolId: string,
@@ -171,12 +186,13 @@ async function processSchool(
   schoolLangCache: Map<string, string>
 ): Promise<SchoolCounts> {
   const lang = await getSchoolLang(schoolId, schoolLangCache)
-  const isAr = lang === "ar"
+  const copy = await getFinanceNotificationCopy(lang)
 
   let feeAssignmentReminders = 0
   let invoiceReminders = 0
   let offerExpiryReminders = 0
   let offersExpired = 0
+  let unplacedStudentAlerts = 0
   let notificationsCreated = 0
 
   // ── A1: FeeAssignments due within the window ──────────────────────────────
@@ -235,10 +251,12 @@ async function processSchool(
         schoolId,
         userId,
         type: "fee_due",
-        title: isAr ? "تذكير: رسوم مستحقة قريباً" : "Reminder: Fee Due Soon",
-        body: isAr
-          ? `دفعة ${amount} لـ "${feeName}" مستحقة خلال ${FEE_DUE_WINDOW_DAYS} أيام.`
-          : `Fee payment of ${amount} for "${feeName}" is due within ${FEE_DUE_WINDOW_DAYS} days.`,
+        title: copy.feeDueSoonTitle,
+        body: interp(copy.feeDueSoonBody, {
+          amount,
+          feeName,
+          days: FEE_DUE_WINDOW_DAYS,
+        }),
         priority: "high",
         channels: ["in_app", "email"],
         lang,
@@ -302,12 +320,12 @@ async function processSchool(
       schoolId,
       userId: invoice.userId,
       type: "fee_due",
-      title: isAr
-        ? "تذكير: فاتورة مستحقة قريباً"
-        : "Reminder: Invoice Due Soon",
-      body: isAr
-        ? `فاتورة رقم ${invoice.invoice_no} بمبلغ ${amount} مستحقة خلال ${daysUntilDue} يوم.`
-        : `Invoice #${invoice.invoice_no} for ${amount} is due in ${daysUntilDue} day(s).`,
+      title: copy.invoiceDueSoonTitle,
+      body: interp(copy.invoiceDueSoonBody, {
+        invoiceNo: invoice.invoice_no,
+        amount,
+        days: daysUntilDue,
+      }),
       priority: "high",
       channels: ["in_app", "email"],
       lang,
@@ -369,12 +387,12 @@ async function processSchool(
       ? `/application/${application.id}/offer?token=${encodeURIComponent(application.accessToken)}`
       : "/application"
 
-    const title = isAr
-      ? "تنبيه: ينتهي عرض القبول قريباً"
-      : "Reminder: Admission Offer Expiring Soon"
-    const body = isAr
-      ? `عرض القبول لـ "${studentName}" سينتهي بتاريخ ${expiryDate} (خلال ${daysUntilExpiry} يوم). يرجى قبول العرض قبل انتهاء المهلة.`
-      : `The admission offer for "${studentName}" expires on ${expiryDate} (in ${daysUntilExpiry} day(s)). Please accept the offer before the deadline.`
+    const title = copy.offerExpiringTitle
+    const body = interp(copy.offerExpiringBody, {
+      studentName,
+      date: expiryDate,
+      days: daysUntilExpiry,
+    })
 
     if (application.userId) {
       // Linked user account — normal in-app + email dispatch.
@@ -435,11 +453,78 @@ async function processSchool(
   })
   offersExpired = expired.count
 
+  // ── D: Students who never got a grade or a seat ───────────────────────────
+  // A student with no `academicGradeId` is the quiet failure mode of the whole
+  // intake pipeline: `ensureStudentFeeAssignments` short-circuits on a null
+  // grade, so they are assigned no fees, raise no invoices, and are therefore
+  // invisible to sections A1/A2 above — the money flow never starts for them
+  // and nothing ever complains. Bulk CSV import is the usual source (a
+  // `section` column that does not parse leaves the row gradeless).
+  //
+  // Surfaced to admins here rather than in its own cron: this job already
+  // visits every school daily and already owns the same-day idempotency
+  // helpers.
+  try {
+    const unplacedCount = await db.student.count({
+      where: {
+        schoolId,
+        archivedAt: null,
+        wizardStep: null, // drafts are deliberately incomplete
+        status: "ACTIVE",
+        OR: [{ academicGradeId: null }, { sectionId: null }],
+      },
+    })
+
+    if (unplacedCount > 0) {
+      const since = new Date(now)
+      since.setDate(since.getDate() - UNPLACED_REMINDER_INTERVAL_DAYS)
+      const recent = await db.notification.findFirst({
+        where: {
+          schoolId,
+          type: "system_alert",
+          createdAt: { gte: since },
+          metadata: { path: ["action"], equals: "unplaced_students" },
+        },
+        select: { id: true },
+      })
+
+      if (!recent) {
+        const admins = await db.user.findMany({
+          where: { schoolId, role: { in: ["ADMIN", "STAFF"] } },
+          select: { id: true },
+        })
+        if (admins.length > 0) {
+          await dispatchNotificationsToAudience({
+            schoolId,
+            type: "system_alert",
+            title: copy.unplacedStudentsTitle,
+            body: interp(copy.unplacedStudentsBody, { count: unplacedCount }),
+            lang,
+            priority: "normal",
+            channels: ["in_app", "email"],
+            targetUserIds: admins.map((a) => a.id),
+            metadata: {
+              action: "unplaced_students",
+              count: unplacedCount,
+              url: "/students?unplaced=any",
+            },
+          })
+          unplacedStudentAlerts = admins.length
+          notificationsCreated += admins.length
+        }
+      }
+    }
+  } catch (err) {
+    // Best-effort: never let this take the fee reminders down with it.
+    console.error("[fee-due] unplaced-students check failed:", err)
+  }
+
   return {
     feeAssignmentReminders,
     invoiceReminders,
     offerExpiryReminders,
     offersExpired,
+    unplacedStudentAlerts,
     notificationsCreated,
   }
 }
@@ -467,6 +552,7 @@ export async function GET(request: NextRequest) {
     let totalInvoiceReminders = 0
     let totalOfferExpiryReminders = 0
     let totalOffersExpired = 0
+    let totalUnplacedStudentAlerts = 0
     let totalNotificationsCreated = 0
     let schoolsProcessed = 0
 
@@ -493,11 +579,27 @@ export async function GET(request: NextRequest) {
       where: { status: "SELECTED", offerExpiryDate: { lt: now } },
     })
 
+    // And schools with unplaced students (part D). This set is NOT implied by
+    // any of the three above, and missing it would have defeated the check
+    // entirely: a gradeless student is assigned no fees, so a school whose
+    // only problem IS gradeless students has no pending fee assignments, no
+    // upcoming offer expiry and no lapsed offer — it would never be visited.
+    const unplacedSchoolRows = await db.student.groupBy({
+      by: ["schoolId"],
+      where: {
+        archivedAt: null,
+        wizardStep: null,
+        status: "ACTIVE",
+        OR: [{ academicGradeId: null }, { sectionId: null }],
+      },
+    })
+
     const allSchoolIds = [
       ...new Set([
         ...schoolRows.map((r) => r.schoolId),
         ...offerSchoolRows.map((r) => r.schoolId),
         ...lapsedOfferSchoolRows.map((r) => r.schoolId),
+        ...unplacedSchoolRows.map((r) => r.schoolId),
       ]),
     ]
 
@@ -515,6 +617,7 @@ export async function GET(request: NextRequest) {
       totalInvoiceReminders += counts.invoiceReminders
       totalOfferExpiryReminders += counts.offerExpiryReminders
       totalOffersExpired += counts.offersExpired
+      totalUnplacedStudentAlerts += counts.unplacedStudentAlerts
       totalNotificationsCreated += counts.notificationsCreated
       schoolsProcessed++
     }
@@ -526,6 +629,7 @@ export async function GET(request: NextRequest) {
       invoiceReminders: totalInvoiceReminders,
       offerExpiryReminders: totalOfferExpiryReminders,
       offersExpired: totalOffersExpired,
+      unplacedStudentAlerts: totalUnplacedStudentAlerts,
       notificationsCreated: totalNotificationsCreated,
       duration: Date.now() - startTime,
     })

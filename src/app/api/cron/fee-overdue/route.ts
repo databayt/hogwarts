@@ -28,6 +28,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { verifyCronSecret } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import {
+  getFinanceNotificationCopy,
+  interp,
+} from "@/components/school-dashboard/finance/lib/notification-copy"
 
 interface PaymentScheduleEntry {
   dueDate: string
@@ -156,7 +160,7 @@ async function notifyOverdue(
 
   const amount = assignment.finalAmount.toString()
   const feeName = assignment.feeStructure.name
-  const isAr = lang === "ar"
+  const copy = await getFinanceNotificationCopy(lang)
 
   let count = 0
   for (const userId of recipientIds) {
@@ -164,10 +168,8 @@ async function notifyOverdue(
       schoolId: assignment.schoolId,
       userId,
       type: "fee_overdue",
-      title: isAr ? "إشعار دفعة متأخرة" : "Overdue Payment Notice",
-      body: isAr
-        ? `دفعة ${amount} لـ "${feeName}" متأخرة. يرجى الدفع فوراً.`
-        : `Fee payment of ${amount} for "${feeName}" is overdue. Please make payment immediately.`,
+      title: copy.feeOverdueNoticeTitle,
+      body: interp(copy.feeOverdueNoticeBody, { amount, feeName }),
       priority: "urgent",
       channels: ["in_app", "email", "whatsapp"],
       lang,
