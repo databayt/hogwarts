@@ -17,6 +17,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { gsap } from "gsap"
@@ -262,9 +263,22 @@ export function ZendaNav({
           href={`/${locale}`}
           className={`nav_logo-link w-nav-brand ${isActiveLink("/") ? "w--current" : ""}`}
         >
-          {/* No mark, by request: like zenda's, the lockup is a wordmark -- the
-              school's name set on its own. `logoUrl` is still accepted so the
-              callers don't have to change if a crest comes back. */}
+          {/* The crest came back. Zenda's own lockup is a bare wordmark, so the
+              mark only appears for a school that has actually uploaded one --
+              a school without a logo still gets the original name-alone
+              treatment rather than a placeholder. `.nav_logo-link img` in
+              zenda-shell.css has carried the sizing since the mark was first
+              removed. */}
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt={displayName}
+              width={32}
+              height={32}
+              className="img-auto"
+              priority
+            />
+          ) : null}
           <span className="nav_logo-text">{displayName}</span>
         </Link>
 

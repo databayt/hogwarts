@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Al-Qabas Schools (مدارس القبس) Tenant Seed — Port Sudan
+ * Al-Qabas (القبس) Tenant Seed — Port Sudan
  *
  * Private Sudanese-curriculum school covering elementary, middle and high.
  * The tenant is its bare subdomain (School.domain — see src/lib/root-domain.ts),
@@ -75,11 +75,11 @@ type SchoolRole =
 // ============================================================================
 
 async function upsertSchool() {
-  console.log("🏫 Al-Qabas schools...")
+  console.log("🏫 Al-Qabas school...")
 
   const common = {
-    name: "مدارس القبس",
-    nameEn: "Al-Qabas Schools",
+    name: "القبس",
+    nameEn: "Al-Qabas",
     address: "بورتسودان، ولاية البحر الأحمر، السودان",
     city: "بورتسودان",
     state: "البحر الأحمر",
@@ -614,7 +614,7 @@ async function upsertAdmission(schoolId: string) {
 
 async function main() {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  console.log("🏫 مدارس القبس — Al-Qabas Tenant Setup")
+  console.log("🏫 القبس — Al-Qabas Tenant Setup")
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   const school = await upsertSchool()
