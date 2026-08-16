@@ -153,6 +153,58 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
           description: "Zod (table)",
         },
         { name: "list-params.ts", type: "file", description: "nuqs URL cache" },
+        {
+          name: "nav.tsx",
+          type: "file",
+          description: "heading + tab strip for the (app) surfaces",
+        },
+        {
+          name: "landing/",
+          type: "directory",
+          description: "the /conference landing page (hero + bands)",
+          children: [
+            {
+              name: "content.tsx",
+              type: "file",
+              description: "composes the sections",
+            },
+            {
+              name: "hero.tsx",
+              type: "file",
+              description: "copy + room collage (student photo + tiles)",
+            },
+            {
+              name: "features-section.tsx",
+              type: "file",
+              description: "four value cards",
+            },
+            {
+              name: "now-section.tsx",
+              type: "file",
+              description: "live / coming-up strip, section-scoped",
+            },
+            {
+              name: "everything-section.tsx",
+              type: "file",
+              description: "full-bleed value band",
+            },
+            {
+              name: "how-to-section.tsx",
+              type: "file",
+              description: "three setup steps",
+            },
+            {
+              name: "welcome-section.tsx",
+              type: "file",
+              description: "closing band + settings CTA",
+            },
+            {
+              name: "types.ts",
+              type: "file",
+              description: "shared section props + LandingSession",
+            },
+          ],
+        },
         { name: "table.tsx", type: "file", description: "DataTable + grid" },
         {
           name: "columns.tsx",

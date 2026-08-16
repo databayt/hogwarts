@@ -197,7 +197,12 @@ describe("schoolDayToInstant / schoolDayOfInstant", () => {
       "America/New_York", // DST
       "Asia/Kathmandu", // :45 offset
     ]) {
-      for (const d of ["2026-01-01", "2026-03-10", "2026-11-01", "2026-12-31"]) {
+      for (const d of [
+        "2026-01-01",
+        "2026-03-10",
+        "2026-11-01",
+        "2026-12-31",
+      ]) {
         const instant = schoolDayToInstant(tz, d)
         expect(instant).not.toBeNull()
         expect(schoolDayOfInstant(tz, instant)).toBe(d)

@@ -156,6 +156,18 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   silently never be written. Failures must never roll back the underlying state
   transition — `after()` preserves that (its callback runs off the response path
   and its rejection is logged, not propagated). See `actions/notifications.ts`.
+- **`/conference` is a landing page, not the list.** The block opens the way
+  lumos does: a hero, value cards, a live/coming-up strip, then the long-form
+  bands (`landing/`). The sessions table moved to `/conference/dashboard`,
+  behind the `(app)` route group that supplies the heading + tab strip
+  (`nav.tsx` → `list-permissions.getTabsForRole`, the tab strip actually on
+  screen — `permissions.ts` has a second, dormant one). Students are
+  deliberately NOT redirected past the landing the way lumos redirects them:
+  the strip is section-scoped, so the landing answers "can I join my class"
+  for them too. Two consequences: the strip's start times are formatted in the
+  SCHOOL's timezone on the server (a bare `toLocaleTimeString` there would use
+  the runtime's — UTC on Vercel), and its read is wrapped in try/catch so a
+  query failure leaves the landing standing instead of taking the block down.
 - **Bare room layout**: full-screen LiveKit UI lives under
   `src/app/[lang]/s/[subdomain]/(live-room)/` (NOT under
   `(school-dashboard)`) so it can use a minimal layout without sidebar.
@@ -370,6 +382,14 @@ createLiveClass` branches on `provider` — `livekit` mirrors
 - **`revalidatePath` needs `"page"`**: `conferenceRevalidatePath()` returns a
   bracketed dynamic path, which Next silently ignores without the second
   argument. Every call site is `revalidatePath(conferenceRevalidatePath(…), "page")`.
+- **The session list lives on TWO pages, so mutations revalidate both.**
+  `/conference` is the landing page (hero + the live/coming-up strip) and
+  `/conference/dashboard` is the table. `conferenceListRevalidatePaths()`
+  (helpers.ts) returns both; every mutating action loops it rather than calling
+  `conferenceRevalidatePath()` bare, which would leave one of the two stale.
+  The dashboard sits inside the `(app)` route GROUP, and a route group
+  contributes no URL segment — so the path is `…/conference/dashboard`, NOT
+  `…/conference/(app)/dashboard`, which matches no cache tag at all.
 - **Recording deletes only settle**: `deleteRecording` filters
   `status in [ready, failed, expired]`, and the webhook's `egress_ended`
   write is guarded (`deletedAt: null` + in-flight status, notify on count>0)

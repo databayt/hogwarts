@@ -333,6 +333,45 @@
 
 ## Done
 
+### Landing page + nested surfaces (2026-08-16)
+
+`/conference` was the sessions table with a one-tab "All" strip over it. It now
+opens the way `/lumos` does, and the table moved behind a route group.
+
+- [x] **`/conference` is a landing page** (`landing/`): hero (copy + a room
+      collage — a student in a real class as the speaker tile, two smaller
+      tiles and the control bar around it), four value cards, a live/coming-up
+      strip, a full-bleed value band, three setup steps, and a closing band.
+      All copy is dictionary-driven under `school.liveClasses.landing` in BOTH
+      `school-en.json` and `school-ar.json` — no `d?.key || "English"` lookups
+      with no key behind them.
+- [x] **The table moved to `/conference/dashboard`**, inside a new `(app)`
+      route group whose layout supplies the heading + tab strip (`nav.tsx`).
+      `schedule` / `settings` / `network-test` moved into the same group, so
+      their URLs are unchanged and they gained the strip for free (each also
+      dropped its own `p-6`, which the layout now supplies).
+- [x] **A real tab strip.** `list-permissions.getTabsForRole` returned a single
+      "All" tab; it now returns Sessions · Schedule · Settings · Network test,
+      narrowing by role (STUDENT/GUARDIAN see only Sessions, so there is no tab
+      they'd be bounced out of). Covered by `src/tests/school-dashboard/conference/nav-tabs.test.ts`.
+- [x] **Mutations revalidate both list pages.** `conferenceListRevalidatePaths()`
+      returns `/conference` and `/conference/dashboard`; the eight bare
+      `conferenceRevalidatePath()` call sites loop it. The route group
+      contributes no URL segment, so the second path has no `(app)` in it.
+- [x] **The live/coming-up strip is section-scoped** through the same
+      `resolveViewerSectionScope` the table uses, batch-translated in one pass
+      (localize + getNames + getLabels), and its start times are formatted in
+      the SCHOOL's timezone server-side. The whole read is try/caught — a query
+      failure leaves the landing standing rather than taking the block down.
+- [x] Assets under `public/conference/`: the student hero photo, two Figma
+      participant/screen-share tiles, and Google's Meet `warm_welcome` +
+      `agenda_empty_state` illustrations, **served locally rather than
+      hotlinked off gstatic**. Note these last two are Google's own Meet
+      artwork — replace them if that matters for a customer-facing release.
+- [x] Verified in the browser at `/en/conference` and `/ar/conference` (RTL
+      mirrors correctly, all copy Arabic) plus every `(app)` surface. tsc 0 ·
+      361 conference tests green.
+
 ### Timetable seams — online badge + closure notice (2026-08-14)
 
 Two things the any-time-online pass left the timetable unable to say.

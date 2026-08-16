@@ -32,11 +32,17 @@ export function getTabsForRole(
   const tabs: LiveClassTab[] = [
     {
       name: t.upcoming ?? "Upcoming",
-      href: `/${lang}/conference`,
+      href: `/${lang}/conference/dashboard`,
       exact: true,
     },
-    { name: t.live ?? "Live now", href: `/${lang}/conference?status=live` },
-    { name: t.past ?? "Past", href: `/${lang}/conference?status=ended` },
+    {
+      name: t.live ?? "Live now",
+      href: `/${lang}/conference/dashboard?status=live`,
+    },
+    {
+      name: t.past ?? "Past",
+      href: `/${lang}/conference/dashboard?status=ended`,
+    },
   ]
   if (HOST_ROLES.includes(role)) {
     tabs.push({

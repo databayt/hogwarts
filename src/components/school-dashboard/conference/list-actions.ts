@@ -21,7 +21,10 @@ import {
 import { prewarm } from "@/components/translation/prewarm"
 import { detectLang, withLang } from "@/components/translation/util"
 
-import { conferenceRevalidatePath } from "./actions/helpers"
+import {
+  conferenceListRevalidatePaths,
+  conferenceRevalidatePath,
+} from "./actions/helpers"
 import {
   notifyClassCancelled,
   notifyClassScheduled,
@@ -734,7 +737,9 @@ export async function createLiveClass(
     // never fail the create.
     after(() => notifyClassScheduled(schoolId, created.id))
 
-    revalidatePath(conferenceRevalidatePath(), "page")
+    for (const path of conferenceListRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     revalidatePath("/[lang]/s/[subdomain]/timetable", "page")
     return { success: true, data: { id: created.id } }
   } catch (error) {
@@ -973,7 +978,9 @@ export async function updateLiveClass(
       after(() => notifyClassScheduled(schoolId, d.id))
     }
 
-    revalidatePath(conferenceRevalidatePath(), "page")
+    for (const path of conferenceListRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateLiveClass]", error)
@@ -1007,7 +1014,9 @@ export async function deleteLiveClass(params: {
     // {id, schoolId} without a deletedAt filter, so it still works post-delete.
     after(() => notifyClassCancelled(schoolId, params.id))
 
-    revalidatePath(conferenceRevalidatePath(), "page")
+    for (const path of conferenceListRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     return { success: true, data: null }
   } catch (error) {
     console.error("[deleteLiveClass]", error)

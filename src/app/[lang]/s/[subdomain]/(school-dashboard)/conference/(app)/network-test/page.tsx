@@ -33,7 +33,7 @@ export default async function Page({ params }: Props) {
   const readiness = getLiveKitReadiness()
   if (!readiness.configured) {
     return (
-      <div className="mx-auto max-w-xl space-y-3 p-6">
+      <div className="mx-auto max-w-xl space-y-3">
         <p className="text-muted-foreground text-sm">
           {t?.errors?.providerUnavailable ??
             "LiveKit SFU is not yet provisioned for this deployment."}

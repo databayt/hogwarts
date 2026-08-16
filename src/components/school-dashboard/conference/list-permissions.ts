@@ -14,18 +14,63 @@ import type { PageNavItem } from "@/components/atom/page-nav"
 // Roles allowed to create/edit live classes (write access without delete/import).
 const WRITE_ROLES: readonly Role[] = ["STAFF", "TEACHER"] as const
 
+/** Shape of the slice of the conference dictionary the tab labels read. */
+export interface ConferenceNavDictionary {
+  tabs?: {
+    sessions?: string
+    schedule?: string
+    settings?: string
+    networkTest?: string
+  }
+}
+
 /**
- * Page navigation tabs for the live classes block.
- * Single "All" tab for now (the listing has one home).
+ * The tab strip over the conference app surfaces.
+ *
+ * The landing page (`/conference`) is deliberately NOT a tab: it is reached
+ * from the sidebar and owns its own hero, exactly as `/lumos` does. What's
+ * left is one flat row over the surfaces that manage sessions.
+ *
+ * Tabs narrow with the role — a student sees only Sessions, so no strip of
+ * links they'd be redirected out of.
  */
 export function getTabsForRole(
   role: Role | null | undefined,
   lang: string,
-  d?: Record<string, string>
+  d?: ConferenceNavDictionary
 ): PageNavItem[] {
   if (!role) return []
 
-  return [{ name: d?.navAll || "All", href: `/${lang}/conference` }]
+  const t = d?.tabs
+  const isAdmin = isRoleIn(role, ADMIN_ROLES)
+  const canSchedule = isAdmin || role === "TEACHER"
+
+  return [
+    {
+      name: t?.sessions ?? "Sessions",
+      href: `/${lang}/conference/dashboard`,
+    },
+    ...(canSchedule
+      ? [
+          {
+            name: t?.schedule ?? "Schedule",
+            href: `/${lang}/conference/schedule`,
+          },
+        ]
+      : []),
+    ...(isAdmin
+      ? [
+          {
+            name: t?.settings ?? "Settings",
+            href: `/${lang}/conference/settings`,
+          },
+          {
+            name: t?.networkTest ?? "Network test",
+            href: `/${lang}/conference/network-test`,
+          },
+        ]
+      : []),
+  ]
 }
 
 /**

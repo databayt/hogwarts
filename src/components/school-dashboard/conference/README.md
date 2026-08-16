@@ -42,6 +42,14 @@ conference/
 │   └── recurring.ts      carry-forward ConferenceLink across terms + listConferenceTerms
 ├── authorization.ts · permissions.ts · validation.ts         rich sessions layer (strict gate)
 ├── list-permissions.ts · list-validation.ts · list-params.ts list layer (CRUD gate)
+├── nav.tsx                                                    heading + tab strip for the (app) surfaces
+├── landing/                                                   the /conference landing page
+│   ├── content.tsx           composes the sections below
+│   ├── hero.tsx              copy + the room collage (student photo, tiles, control bar)
+│   ├── features-section.tsx  the four value cards
+│   ├── now-section.tsx       live / coming-up strip — section-scoped, school-TZ times
+│   ├── everything-section.tsx · how-to-section.tsx · welcome-section.tsx
+│   └── types.ts              shared section props + LandingSession
 ├── table.tsx · columns.tsx · form.tsx · schedule-form.tsx    DataTable + the two create forms
 ├── detail.tsx · room.tsx · participants-panel.tsx            session detail · in-app room · kick UI
 ├── recordings.tsx · recording-player.tsx                     recordings list · signed-URL player
@@ -60,16 +68,22 @@ The Prisma models are in `prisma/models/conference.prisma`.
 
 ## Routes
 
-| Path                          | Layout           | Roles                                              |
-| ----------------------------- | ---------------- | -------------------------------------------------- |
-| `/conference`                 | school-dashboard | all 7 school roles                                 |
-| `/conference/[id]`            | school-dashboard | all 7 school roles                                 |
-| `/conference/[id]/recordings` | school-dashboard | all except ACCOUNTANT                              |
-| `/conference/schedule`        | school-dashboard | DEVELOPER · ADMIN · TEACHER                        |
-| `/conference/settings`        | school-dashboard | DEVELOPER · ADMIN                                  |
-| `/conference/network-test`    | school-dashboard | DEVELOPER · ADMIN (env-gated)                      |
-| `/conference/[id]/room`       | **(live-room)**  | session participants (bare full-screen layout)     |
-| `/live-classes/*`             | —                | legacy redirect → `/conference` (pre-rename links) |
+| Path                          | Layout                   | Roles                                              |
+| ----------------------------- | ------------------------ | -------------------------------------------------- |
+| `/conference`                 | school-dashboard         | all 7 school roles — **landing page**              |
+| `/conference/dashboard`       | school-dashboard `(app)` | all 7 school roles — **the sessions table**        |
+| `/conference/schedule`        | school-dashboard `(app)` | DEVELOPER · ADMIN · TEACHER                        |
+| `/conference/settings`        | school-dashboard `(app)` | DEVELOPER · ADMIN                                  |
+| `/conference/network-test`    | school-dashboard `(app)` | DEVELOPER · ADMIN (env-gated)                      |
+| `/conference/[id]`            | school-dashboard         | all 7 school roles                                 |
+| `/conference/[id]/recordings` | school-dashboard         | all except ACCOUNTANT                              |
+| `/conference/[id]/room`       | **(live-room)**          | session participants (bare full-screen layout)     |
+| `/live-classes/*`             | —                        | legacy redirect → `/conference` (pre-rename links) |
+
+`(app)` is a route GROUP: it contributes no URL segment, it only supplies the
+heading + tab strip (`nav.tsx`). `/conference` and `/conference/[id]` sit
+outside it — the landing page owns its own hero, and a session detail is a leaf
+reached from a row, not a tab.
 
 ## API
 

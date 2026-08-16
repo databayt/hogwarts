@@ -20,8 +20,12 @@ const env = getTestEnv()
 const SUBDOMAIN = "demo"
 
 const ROUTES = [
+  // The landing page, then every surface behind the (app) tab strip. The
+  // route group adds no URL segment, so these are the client-facing paths.
   "/conference",
+  "/conference/dashboard",
   "/conference/schedule",
+  "/conference/settings",
   "/conference/network-test",
 ] as const
 
@@ -64,7 +68,9 @@ test.describe("Conference — feature pages smoke @conference @smoke", () => {
 
   test("LC-SMK-overview-renders-empty-state-or-list", async ({ page }) => {
     test.setTimeout(60_000)
-    await page.goto(buildSchoolUrl(SUBDOMAIN, "/conference", "en", env))
+    await page.goto(
+      buildSchoolUrl(SUBDOMAIN, "/conference/dashboard", "en", env)
+    )
     await page.waitForLoadState("domcontentloaded")
 
     if (page.url().includes("chrome-error://")) {
@@ -92,7 +98,9 @@ test.describe("Conference — feature pages smoke @conference @smoke", () => {
 
   test("LC-SMK-ar-overview-renders-rtl", async ({ page }) => {
     test.setTimeout(60_000)
-    await page.goto(buildSchoolUrl(SUBDOMAIN, "/conference", "ar", env))
+    await page.goto(
+      buildSchoolUrl(SUBDOMAIN, "/conference/dashboard", "ar", env)
+    )
     await page.waitForLoadState("domcontentloaded")
 
     if (page.url().includes("chrome-error://")) {

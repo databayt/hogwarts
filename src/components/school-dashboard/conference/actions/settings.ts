@@ -24,7 +24,11 @@ import {
 } from "@/components/school-dashboard/conference/online-policy"
 import { liveClassSettingsSchema } from "@/components/school-dashboard/conference/validation"
 
-import { conferenceRevalidatePath, requireContext } from "./helpers"
+import {
+  conferenceListRevalidatePaths,
+  conferenceRevalidatePath,
+  requireContext,
+} from "./helpers"
 import { materializeSchoolDay } from "./materialize-day"
 
 const SETTINGS_SELECT = {
@@ -148,7 +152,9 @@ export async function updateConferenceSettings(input: unknown) {
   }
 
   revalidatePath(conferenceRevalidatePath("settings"), "page")
-  revalidatePath(conferenceRevalidatePath(), "page")
+  for (const path of conferenceListRevalidatePaths()) {
+    revalidatePath(path, "page")
+  }
   return { success: true as const, data }
 }
 

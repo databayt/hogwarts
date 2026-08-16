@@ -152,6 +152,23 @@ export function conferenceRevalidatePath(subPath = ""): string {
 }
 
 /**
+ * Every page that renders the school's session list, for the mutations that
+ * change it.
+ *
+ * There are two since the block grew a landing page: `/conference` (hero +
+ * the live/coming-up strip) and `/conference/dashboard` (the table). The
+ * table lives inside an `(app)` route group, and a route group contributes no
+ * URL segment — so it is `…/conference/dashboard` here, NOT `…/(app)/dashboard`,
+ * which would match no cache tag at all.
+ *
+ * Call sites still pass `"page"`: `for (const p of conferenceListRevalidatePaths())
+ * revalidatePath(p, "page")`.
+ */
+export function conferenceListRevalidatePaths(): string[] {
+  return [conferenceRevalidatePath(), conferenceRevalidatePath("dashboard")]
+}
+
+/**
  * Revalidate a SINGLE session's pages.
  *
  * Separate from the helper above because a BLENDED path — a real id inside an

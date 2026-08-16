@@ -5160,6 +5160,92 @@
         "descriptionMax": "Description must be at most 2000 characters",
         "resourceOneRef": "Pick an exam, an assignment, or enter a link",
         "resourceUrlInvalid": "Enter a valid link URL"
+      },
+      "tabs": {
+        "sessions": "Sessions",
+        "schedule": "Schedule",
+        "settings": "Settings",
+        "networkTest": "Network test"
+      },
+      "landing": {
+        "tagline": "Class, wherever everyone is.",
+        "description": "Run every lesson live — join straight from the timetable, record it, and mark attendance from who actually showed up.",
+        "viewSessions": "View sessions",
+        "scheduleClass": "Schedule a class",
+        "heroAlt": "A student joining her class from home",
+        "features": {
+          "timetable": {
+            "title": "Straight from the timetable",
+            "description": "Every scheduled period becomes a joinable room — no second calendar to keep in sync."
+          },
+          "recording": {
+            "title": "Recorded and kept",
+            "description": "Classes are recorded on request and kept for as long as your school's retention policy allows."
+          },
+          "attendance": {
+            "title": "Attendance marks itself",
+            "description": "Who joined, and for how long, becomes the attendance register when the session ends."
+          },
+          "access": {
+            "title": "Only the right people",
+            "description": "Rooms are scoped to a section or the whole school, and links never reach anyone who may not join."
+          }
+        },
+        "now": {
+          "liveTitle": "Live now",
+          "upcomingTitle": "Coming up",
+          "emptyTitle": "Nothing scheduled yet",
+          "emptyDescription": "Once a class is scheduled it shows up here, ready to join.",
+          "emptyAlt": "An empty schedule",
+          "viewAll": "View all sessions",
+          "joinNow": "Join now",
+          "open": "Open"
+        },
+        "everything": {
+          "title": "Everything a live class needs",
+          "description": "Rooms, recordings, attendance, and the network checks that keep them working — in one place.",
+          "items": {
+            "rooms": {
+              "title": "In-app rooms",
+              "description": "Video, audio and screen share, hosted for your school."
+            },
+            "links": {
+              "title": "External links",
+              "description": "Already on Meet or Zoom? Paste a link and everything else still works."
+            },
+            "recordings": {
+              "title": "Recordings",
+              "description": "Replay a lesson a student missed, for as long as you keep it."
+            },
+            "diagnostics": {
+              "title": "Network test",
+              "description": "Confirm the school's network can hold a session before the first class."
+            }
+          }
+        },
+        "howTo": {
+          "title": "How to begin",
+          "steps": {
+            "one": {
+              "title": "Turn on online teaching",
+              "description": "In settings, tell the school which sections teach online and add a standing meeting link."
+            },
+            "two": {
+              "title": "Let the timetable fill up",
+              "description": "Sessions are created for each school day from the periods already on the timetable."
+            },
+            "three": {
+              "title": "Start the class",
+              "description": "Open the room from the sessions list or the timetable — students join from theirs."
+            }
+          }
+        },
+        "welcome": {
+          "title": "Built for the whole school",
+          "description": "Teachers host, students join from their own timetable, and guardians see what their child attended. One room, the right door for everyone.",
+          "alt": "People in a video call",
+          "cta": "Open settings"
+        }
       }
     },
     "stream": {

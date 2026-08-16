@@ -38,7 +38,7 @@ export default async function Page({ params }: Props) {
       getConferenceLinkCoverage(),
     ])
   if (!("success" in settings) || !settings.success) {
-    redirect(`/${lang}/conference`)
+    redirect(`/${lang}/conference/dashboard`)
   }
   const terms =
     "success" in termsResult && termsResult.success ? termsResult.data : []
@@ -59,7 +59,7 @@ export default async function Page({ params }: Props) {
     ?.onlinePolicy
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div className="space-y-1">
         <h2 className="text-lg font-semibold">
           {t?.title ?? "Conference settings"}

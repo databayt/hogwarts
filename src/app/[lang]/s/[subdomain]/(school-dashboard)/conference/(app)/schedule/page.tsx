@@ -64,7 +64,7 @@ export default async function Page({ params }: Props) {
   }
 
   return (
-    <div className="p-6">
+    <div>
       <ScheduleLiveClassForm
         locale={lang}
         dictionary={dictionary}

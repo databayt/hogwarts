@@ -655,3 +655,48 @@ export async function getAttendanceSyncEnabled(
   })
   return school?.conferenceAttendanceSync ?? false
 }
+
+/**
+ * The handful of sessions the landing page puts in front of the reader:
+ * everything currently live, then the next few still to start.
+ *
+ * Separate from `getLiveClassesList` because the landing page wants two
+ * differently-ordered slices, not one paginated table — live sessions newest
+ * first (you join the one that just started), upcoming soonest first (you look
+ * at what is next). Both are section-scoped by the caller so a student never
+ * sees another section's room.
+ */
+export async function getConferenceLandingSessions(
+  schoolId: string,
+  opts: { sectionIds?: string[]; now: Date; take?: number } = {
+    now: new Date(),
+  }
+) {
+  const take = opts.take ?? 4
+  const scope: Prisma.ConferenceWhereInput = {
+    schoolId,
+    deletedAt: null,
+    ...(opts.sectionIds ? { sectionId: { in: opts.sectionIds } } : {}),
+  }
+
+  const [live, upcoming] = await Promise.all([
+    db.conference.findMany({
+      where: { ...scope, status: "live" },
+      orderBy: { scheduledStart: "desc" },
+      take,
+      include: liveClassListInclude,
+    }),
+    db.conference.findMany({
+      where: {
+        ...scope,
+        status: "scheduled",
+        scheduledStart: { gte: opts.now },
+      },
+      orderBy: { scheduledStart: "asc" },
+      take,
+      include: liveClassListInclude,
+    }),
+  ])
+
+  return { live, upcoming }
+}

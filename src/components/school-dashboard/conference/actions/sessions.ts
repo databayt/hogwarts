@@ -29,6 +29,7 @@ import { DEFAULT_SCHOOL_TZ } from "../day-window"
 import {
   canAccessSession,
   concurrentCapError,
+  conferenceListRevalidatePaths,
   conferenceRevalidatePath,
   conferenceSessionRevalidatePaths,
   requireContext,
@@ -168,7 +169,9 @@ async function createLiveClassWithCtx(
     after(() => notifyClassScheduled(ctx.schoolId, session.id))
 
     after(() => prewarm("Conference", session, { schoolId: ctx.schoolId }))
-    revalidatePath(conferenceRevalidatePath(), "page")
+    for (const path of conferenceListRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     return { success: true as const, data: session }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_CREATE_FAILED)
@@ -297,7 +300,9 @@ export async function cancelLiveClass(input: CancelInput) {
       notifyClassCancelled(ctx.schoolId, session.id, parsed.data.reason)
     )
 
-    revalidatePath(conferenceRevalidatePath(), "page")
+    for (const path of conferenceListRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     for (const path of conferenceSessionRevalidatePaths()) {
       revalidatePath(path, "page")
     }
@@ -361,7 +366,9 @@ export async function startLiveClass(input: IdOnly) {
       data: { status: "live", actualStart: new Date() },
     })
 
-    revalidatePath(conferenceRevalidatePath(), "page")
+    for (const path of conferenceListRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     for (const path of conferenceSessionRevalidatePaths()) {
       revalidatePath(path, "page")
     }
@@ -434,7 +441,9 @@ export async function endLiveClass(input: IdOnly) {
       data: { status: "ended", actualEnd: new Date() },
     })
 
-    revalidatePath(conferenceRevalidatePath(), "page")
+    for (const path of conferenceListRevalidatePaths()) {
+      revalidatePath(path, "page")
+    }
     for (const path of conferenceSessionRevalidatePaths()) {
       revalidatePath(path, "page")
     }

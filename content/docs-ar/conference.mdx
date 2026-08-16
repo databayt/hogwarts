@@ -33,6 +33,7 @@ description: مؤتمرات الفيديو — كتلة واحدة قائمة ب
 | `permissions.ts` · `list-permissions.ts`                                          | التحكّم في الواجهة (التبويبات + الإظهار/الإخفاء حسب الدور) للطبقتين الغنية والقائمة.                                                                    |
 | `validation.ts` · `list-validation.ts`                                            | مخطّطات Zod والأنواع المستنتجة (جلسات غنية / نماذج الجدول).                                                                                             |
 | `columns.tsx` · `table.tsx` · `form.tsx` · `schedule-form.tsx` · `list-params.ts` | واجهة DataTable والشبكة على العميل ونموذجا الإنشاء (المنبثق + صفحة مستقلّة).                                                                            |
+| `landing/` · `nav.tsx`                                                            | صفحة الوصول لـ `/conference` (الواجهة الرئيسة · بطاقات القيمة · شريط المباشر/القادم · الأقسام الطويلة) والعنوان وشريط التبويبات فوق أسطح `(app)`.       |
 | `detail.tsx` · `room.tsx` · `participants-panel.tsx`                              | تفاصيل الجلسة · غرفة LiveKit داخل التطبيق · طبقة إشراف المضيف/المضيف المساعد (الطرد).                                                                   |
 | `recordings.tsx` · `recording-player.tsx` · `section-recording-policy.tsx`        | قائمة التسجيلات · مشغّل برابط موقّع كسول · إلغاء التسجيل لكل شعبة.                                                                                      |
 | `settings-form.tsx`                                                               | نموذج سياسة المدرسة للمدير (الاحتفاظ / الحد الأقصى للتزامن / المدة القصوى / التسجيل الافتراضي) + ترحيل الفصول.                                          |
@@ -44,7 +45,9 @@ description: مؤتمرات الفيديو — كتلة واحدة قائمة ب
 ## تدفّق البيانات
 
 ```
-index (/conference)            content.tsx (server) → table.tsx (client) → form.tsx (modal create)
+landing (/conference)          landing/content.tsx (server) → hero · cards · live/upcoming strip · bands
+   └─ عرض الجلسات
+index (/conference/dashboard)  content.tsx (server) → table.tsx (client) → form.tsx (modal create)
    └─ row Join / detail
 detail (/conference/[id])      detail.tsx → Join (live/scheduled) | Recordings (ended)
    └─ Join
@@ -74,16 +77,21 @@ recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S
 
 ## المسارات
 
-| المسار                        | التخطيط          | يعرض                                                 | الأدوار                                       |
-| ----------------------------- | ---------------- | ---------------------------------------------------- | --------------------------------------------- |
-| `/conference`                 | school-dashboard | فهرس DataTable                                       | كل أدوار المدرسة السبعة                       |
-| `/conference/[id]`            | school-dashboard | `detail.tsx`                                         | كل أدوار المدرسة السبعة                       |
-| `/conference/[id]/recordings` | school-dashboard | `recordings.tsx`                                     | الكل عدا المحاسب (أكاديمي لا مالي)            |
-| `/conference/schedule`        | school-dashboard | `schedule-form.tsx`                                  | المطوّر · المدير · المعلّم                    |
-| `/conference/settings`        | school-dashboard | `settings-form.tsx` + `section-recording-policy.tsx` | المطوّر · المدير                              |
-| `/conference/network-test`    | school-dashboard | `network-test.tsx`                                   | المطوّر · المدير (محكوم بالبيئة)              |
-| `/conference/[id]/room`       | **(live-room)**  | `room.tsx`                                           | أي مشارك جلسة مُصادَق                         |
-| `/live-classes/*`             | —                | إعادة توجيه → `/conference`                          | حشوة توافق قديمة (روابط ما قبل إعادة التسمية) |
+| المسار                        | التخطيط                  | يعرض                                                 | الأدوار                                       |
+| ----------------------------- | ------------------------ | ---------------------------------------------------- | --------------------------------------------- |
+| `/conference`                 | school-dashboard         | `landing/content.tsx` — صفحة الوصول                  | كل أدوار المدرسة السبعة                       |
+| `/conference/dashboard`       | school-dashboard `(app)` | فهرس DataTable                                       | كل أدوار المدرسة السبعة                       |
+| `/conference/schedule`        | school-dashboard `(app)` | `schedule-form.tsx`                                  | المطوّر · المدير · المعلّم                    |
+| `/conference/settings`        | school-dashboard `(app)` | `settings-form.tsx` + `section-recording-policy.tsx` | المطوّر · المدير                              |
+| `/conference/network-test`    | school-dashboard `(app)` | `network-test.tsx`                                   | المطوّر · المدير (محكوم بالبيئة)              |
+| `/conference/[id]`            | school-dashboard         | `detail.tsx`                                         | كل أدوار المدرسة السبعة                       |
+| `/conference/[id]/recordings` | school-dashboard         | `recordings.tsx`                                     | الكل عدا المحاسب (أكاديمي لا مالي)            |
+| `/conference/[id]/room`       | **(live-room)**          | `room.tsx`                                           | أي مشارك جلسة مُصادَق                         |
+| `/live-classes/*`             | —                        | إعادة توجيه → `/conference`                          | حشوة توافق قديمة (روابط ما قبل إعادة التسمية) |
+
+`(app)` مجموعة مسارات: لا تضيف مقطعاً إلى الرابط، بل تضيف العنوان وشريط التبويبات المشترك فقط
+(الجلسات · الجدولة · الإعدادات · فحص الشبكة، بحسب الدور). يقع `/conference` و`/conference/[id]`
+خارجها عمداً — صفحة الوصول تملك واجهتها الرئيسة، وتفاصيل الجلسة ورقة يُوصل إليها من صفٍّ لا من تبويب.
 
 تقع غرفة المسار تحت مجموعة **`(live-room)`** منفصلة بتخطيط عارٍ بملء الشاشة (بلا شريط جانبي / زخارف
 لوحة التحكّم) كي يمتلك بثّ الـ SFU الشاشة؛ وهي `force-dynamic` لبناءات آمنة من نفاد الذاكرة. واجهات
