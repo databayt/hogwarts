@@ -5,15 +5,17 @@
 import { unstable_cache } from "next/cache"
 import { auth } from "@/auth"
 import { Decimal } from "@prisma/client/runtime/library"
-import {
-  endOfMonth,
-  endOfYear,
-  startOfMonth,
-  startOfYear,
-  subMonths,
-} from "date-fns"
 
 import { db } from "@/lib/db"
+import {
+  schoolCalendarDayOf,
+  schoolEndOfMonth,
+  schoolEndOfYear,
+  schoolMonthsBack,
+  schoolStartOfMonth,
+  schoolStartOfYear,
+  schoolWallTimeToUtc,
+} from "@/lib/timezone"
 import type { Locale } from "@/components/internationalization/config"
 import { getFinanceDictionary } from "@/components/internationalization/dictionaries"
 
@@ -49,14 +51,18 @@ const getCachedDashboardData = unstable_cache(
     startIso: string,
     endIso: string,
     todayIso: string,
+    timeZone: string,
     academicYear: string
   ) => {
     const startDate = new Date(startIso)
     const endDate = new Date(endIso)
-    const today = new Date(todayIso)
+    // `todayIso` is the school's own calendar day; the overdue cutoff is the
+    // instant that day BEGINS where the school is, not at UTC midnight.
+    const [ty, tm, td] = todayIso.split("-").map(Number)
+    const today = schoolWallTimeToUtc(timeZone, ty, tm, td, 0, 0)
     const invoiceWindow = {
       schoolId,
-      invoice_date: { gte: startDate, lte: endDate },
+      invoice_date: { gte: startDate, lt: endDate },
     }
     const overdueWhere = {
       ...invoiceWindow,
@@ -98,14 +104,14 @@ const getCachedDashboardData = unstable_cache(
       db.payment.aggregate({
         where: {
           schoolId,
-          paymentDate: { gte: startDate, lte: endDate },
+          paymentDate: { gte: startDate, lt: endDate },
           status: "SUCCESS",
         },
         _sum: { amount: true },
       }),
       db.expense.groupBy({
         by: ["categoryId"],
-        where: { schoolId, expenseDate: { gte: startDate, lte: endDate } },
+        where: { schoolId, expenseDate: { gte: startDate, lt: endDate } },
         _sum: { amount: true },
       }),
       db.expenseCategory.findMany({
@@ -140,7 +146,7 @@ const getCachedDashboardData = unstable_cache(
       }),
       db.payrollRun.groupBy({
         by: ["status"],
-        where: { schoolId, payDate: { gte: startDate, lte: endDate } },
+        where: { schoolId, payDate: { gte: startDate, lt: endDate } },
         _sum: { totalNet: true },
         _count: { _all: true },
       }),
@@ -234,31 +240,49 @@ export async function getDashboardStats(
   const schoolId = session.user.schoolId
   const now = new Date()
 
-  // Calculate date range
+  // Every figure below is bounded by this window, so it has to mean the
+  // school's month — not the server's. date-fns' startOfMonth/endOfMonth
+  // resolve against the runtime zone, which on Vercel is UTC: for a UTC+3
+  // school the month opened three hours late and swallowed the first three
+  // hours of the next one.
+  const [school, academicYear] = await Promise.all([
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { timezone: true },
+    }),
+    resolveCurrentAcademicYear(schoolId),
+  ])
+  const timeZone = school?.timezone ?? "Africa/Khartoum"
+
+  // Half-open: `endDate` is the first instant OUTSIDE the window, so every
+  // query above pairs it with `lt`, never `lte`.
   let startDate: Date
-  let endDate = endOfMonth(now)
+  let endDate = schoolEndOfMonth(timeZone, now)
 
   switch (dateRange) {
     case "year":
-      startDate = startOfYear(now)
-      endDate = endOfYear(now)
+      startDate = schoolStartOfYear(timeZone, now)
+      endDate = schoolEndOfYear(timeZone, now)
       break
     case "quarter":
-      startDate = startOfMonth(subMonths(now, 2))
+      startDate = schoolMonthsBack(timeZone, now, 2)
       break
     case "month":
     default:
-      startDate = startOfMonth(now)
+      startDate = schoolStartOfMonth(timeZone, now)
       break
   }
 
-  // Aggregated in the DB, cached 5 min. Date-only args keep the key stable.
-  const academicYear = await resolveCurrentAcademicYear(schoolId)
+  // Aggregated in the DB, cached 5 min. Date-only args keep the key stable —
+  // and the day now turns over where the school is, not at UTC midnight.
+  const { year, month, day } = schoolCalendarDayOf(now, timeZone)
+  const todayIso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
   const data = await getCachedDashboardData(
     schoolId,
     startDate.toISOString(),
     endDate.toISOString(),
-    now.toISOString().slice(0, 10),
+    todayIso,
+    timeZone,
     academicYear
   )
 
@@ -526,8 +550,16 @@ export async function getFinancialAlerts(
   const now = new Date()
   const alerts: FinancialAlert[] = []
 
-  // Load dictionary for i18n
-  const dictionary = await getFinanceDictionary(lang)
+  // Load dictionary for i18n. The school row rides along for its timezone —
+  // the month window below has to mean the school's month.
+  const [dictionary, school] = await Promise.all([
+    getFinanceDictionary(lang),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { timezone: true },
+    }),
+  ])
+  const timeZone = school?.timezone ?? "Africa/Khartoum"
   const da = (dictionary as any)?.finance?.dashboardAlerts as
     | Record<string, string>
     | undefined
@@ -572,8 +604,8 @@ export async function getFinancialAlerts(
     where: {
       schoolId,
       expenseDate: {
-        gte: startOfMonth(now),
-        lte: endOfMonth(now),
+        gte: schoolStartOfMonth(timeZone, now),
+        lt: schoolEndOfMonth(timeZone, now),
       },
     },
     _avg: {
@@ -660,12 +692,13 @@ export async function getFinancialAlerts(
     })
   }
 
-  // Success alert if collection rate is good
+  // Success alert if collection rate is good — the copy says "this month",
+  // so the window is the school's current month, not a rolling 30 days.
   const recentPayments = await db.payment.count({
     where: {
       schoolId,
       paymentDate: {
-        gte: subMonths(now, 1),
+        gte: schoolStartOfMonth(timeZone, now),
       },
       status: "SUCCESS",
     },

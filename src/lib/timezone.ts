@@ -430,3 +430,71 @@ export function schoolTimeStringOf(instant: Date, timeZone: string): string {
   const m = String(wall.getUTCMinutes()).padStart(2, "0")
   return `${h}:${m}`
 }
+
+// ---------------------------------------------------------------------------
+// Period bounds in a school's own zone
+//
+// `date-fns`' startOfMonth/endOfMonth/startOfYear resolve against the RUNTIME's
+// zone, which on Vercel is UTC — not the school's. Every figure bounded by them
+// is therefore wrong at the edges for any school east or west of UTC: for a
+// UTC+3 school, "this month" began three hours late and swallowed the first
+// three hours of the next one.
+//
+// All bounds below are HALF-OPEN: `start` is inclusive, `end` is the first
+// instant NOT in the period. Query them with `{ gte: start, lt: end }` — an
+// `lte` against these would re-admit the boundary instant and reintroduce the
+// very bug they exist to fix.
+// ---------------------------------------------------------------------------
+
+/** Start of the calendar month `instant` falls in, in `timeZone`. */
+export function schoolStartOfMonth(timeZone: string, instant: Date): Date {
+  const { year, month } = schoolCalendarDayOf(instant, timeZone)
+  return schoolWallTimeToUtc(timeZone, year, month, 1, 0, 0)
+}
+
+/** First instant AFTER that month (exclusive upper bound). */
+export function schoolEndOfMonth(timeZone: string, instant: Date): Date {
+  const { year, month } = schoolCalendarDayOf(instant, timeZone)
+  return startOfMonthAt(timeZone, year, month + 1)
+}
+
+/** Start of the calendar year `instant` falls in, in `timeZone`. */
+export function schoolStartOfYear(timeZone: string, instant: Date): Date {
+  const { year } = schoolCalendarDayOf(instant, timeZone)
+  return schoolWallTimeToUtc(timeZone, year, 1, 1, 0, 0)
+}
+
+/** First instant AFTER that year (exclusive upper bound). */
+export function schoolEndOfYear(timeZone: string, instant: Date): Date {
+  const { year } = schoolCalendarDayOf(instant, timeZone)
+  return schoolWallTimeToUtc(timeZone, year + 1, 1, 1, 0, 0)
+}
+
+/**
+ * Start of the month `back` months before the one `instant` falls in.
+ * `schoolMonthsBack(tz, jan15, 2)` is the previous November — the rollover is
+ * why this is a helper rather than arithmetic at the call site.
+ */
+export function schoolMonthsBack(
+  timeZone: string,
+  instant: Date,
+  back: number
+): Date {
+  const { year, month } = schoolCalendarDayOf(instant, timeZone)
+  return startOfMonthAt(timeZone, year, month - back)
+}
+
+/** Normalises a possibly out-of-range 1-based month into its year. */
+function startOfMonthAt(timeZone: string, year: number, month: number): Date {
+  let y = year
+  let m = month
+  while (m > 12) {
+    m -= 12
+    y += 1
+  }
+  while (m < 1) {
+    m += 12
+    y -= 1
+  }
+  return schoolWallTimeToUtc(timeZone, y, m, 1, 0, 0)
+}
