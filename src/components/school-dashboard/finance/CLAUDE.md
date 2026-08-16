@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 79
 tracker: https://github.com/databayt/hogwarts/issues/313
 docs: https://ed.databayt.org/en/docs/fees
-last_audited: 2026-05-25
+last_audited: 2026-08-15
 ---
 
 # Finance Block
@@ -69,6 +69,36 @@ School finance module with 14 sub-modules and a shared double-entry bookkeeping 
   wrong month. Derive the bound from `School.timezone` with `schoolCalendarDayOf` +
   `schoolWallTimeToUtc` from `src/lib/timezone.ts`. **Assume siblings share it** — any
   finance figure scoped to a period is suspect until checked.
+- **A `d?.key || "English"` fallback whose KEY does not exist is invisible to every parity
+  test and renders English on /ar** (2026-08-15: 28 of them — the whole offline-payment form,
+  the reports hub tiles). Parity checks compare en↔ar JSON; they cannot see a lookup that names
+  a key neither file has. `pnpm tsx scripts/finance-i18n-audit.ts --list` resolves every
+  `const x = dictionary…` alias to its slice and checks each `x?.key`; the ratchet in
+  `src/tests/school-dashboard/finance/i18n-audit.test.ts` holds it at 0. It cannot see a
+  PARAMETER-bound alias (`col?: Record<string,string>` in a columns file) — check those
+  against the slice the table passes (fees/columns.tsx `lock`/`unlock` slipped that way).
+- **`toast.error(result.error || label)` toasts the raw CODE.** Finance actions return
+  `actionError(CODE)`, so `result.error` is `"UNAUTHORIZED"`, not a sentence — 29 sites showed
+  enum codes to users in both languages. Use `actionErrorMessage(result.error, dictionary,
+label)` from `@/lib/resolve-action-error` (never surfaces a bare `SNAKE_CASE`).
+- **Never `error: error.message` from an action.** A Prisma/exception message is untranslatable
+  and leaks internals; catch blocks return a code (`ZodError` → `VALIDATION_ERROR`, otherwise the
+  matching `*_FAILED`). Tests that asserted the raw message were asserting the leak.
+- **A "skip the first run" ref in a client effect loops under StrictMode + a server action.**
+  Dev double-mount keeps the ref, the second run fires the fetch, the action's response
+  re-renders the segment (a `loading.tsx` boundary remounts the table with a fresh ref) and
+  the pair repeats — the invoice dashboard did 37 POSTs in 15s. Compare the filter VALUES to
+  what was last fetched (as `usePlatformData` does); a boolean "first" flag is never enough.
+- **`page.tsx` is not a "render surface" to `scripts/audit-untranslated.ts`**, so a fat page
+  that composes `firstName lastName` raw is never flagged. Names go through `getNames`
+  (batched, transliteration fallback), stored labels through `getLabels`; the fees lists now
+  share `fees/rows.ts` for exactly this. In a `"use server"` action the viewer's language is
+  `getDisplayLang()` from `@/components/translation/locale` — no prop-drilling.
+- **The shared dashboard charts (`InteractiveBarChart`, `AreaChartStacked`, `RadialTextChart`)
+  render shadcn SAMPLE DATA when given no `data`** — English month names, `desktop/mobile`
+  series, on a page titled "Revenue & Expenses". The hub feeds them from
+  `lib/monthly-series.ts` (school-month buckets via `date_trunc` in the school zone; the
+  column is `timestamp(3)` holding UTC, so tag it `AT TIME ZONE 'UTC'` before shifting).
 - **Posting-rules edits can retroactively break balance sheets** -- always add new rules rather than modify existing ones for historical integrity
 - **Stripe webhook idempotency**: `webhooks/stripe/route.ts` uses event IDs to dedupe. Don't short-circuit it
 - **Missing `schoolId` in a finance query = cross-tenant ledger corruption** -- multi-tenant boundary is stricter here than anywhere else in the platform

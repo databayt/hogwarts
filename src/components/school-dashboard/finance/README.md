@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 79
 tracker: https://github.com/databayt/hogwarts/issues/313
 docs: https://ed.databayt.org/en/docs/fees
-last_audited: 2026-05-25
+last_audited: 2026-08-15
 ---
 
 ## Finance Block -- Comprehensive School Finance Management
@@ -22,6 +22,19 @@ The Finance Block is a feature-based financial management system for multi-tenan
 ### Honest Status Matrix
 
 This matrix is the readiness view, mirrored in `ISSUE.md` and at `/docs/finance`. The **Ledger** column is the key honesty signal — it now tracks whether a money event can actually _reach_ the ledger from the UI, not merely whether a posting function has a caller.
+
+> **2026-08-15 — production-readiness pass: RBAC · i18n/RTL · error codes · invoice
+> loop · hub charts (see `ISSUE.md`, dated section).** All 80 route pages traced to
+> their `db.` calls: 6 open data paths closed (the five fees list pages fetched with only a
+> tenant check; the Schematic billing-portal token was mintable by any authenticated user),
+> 8 pages gained the standard deny UI, `guard-audit` ratchet 8 → 4 (own-data pages only).
+> Users no longer see raw error CODES or exception text (29 toast sites, ~20 leaks); the
+> two crons read the dictionary; 28 `d?.key || "English"` lookups that named non-existent
+> keys were fixed (the whole offline-payment form); bare English JSX 72 → 29 with a new
+> ratchet (`i18n-audit.test.ts`); stored names/labels go through `getNames`/`getLabels`
+> (`fees/rows.ts` shared by pages + actions). The invoice dashboard's refetch loop (37
+> POSTs/15 s) is fixed and the hub charts show real school-month aggregates instead of
+> shadcn sample data. Browser-verified on /ar as accountant and as a denied teacher.
 
 > **2026-07-19 — security + ledger-integrity pass (see `ISSUE.md` for the full
 > record).** Supersedes parts of the 07-17 banner below: **payroll's ledger is

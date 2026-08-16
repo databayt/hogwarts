@@ -8,8 +8,125 @@ maturity: Built+Polish
 completion: 88
 tracker: https://github.com/databayt/hogwarts/issues/313
 docs: https://ed.databayt.org/en/docs/fees
-last_audited: 2026-06-13
+last_audited: 2026-08-15
 ---
+
+## 2026-08-15 — production-readiness pass: RBAC, i18n/RTL, error codes, invoice loop, hub charts (LOCAL, not pushed)
+
+Scope: the whole block, four lenses at once — role-gating, internationalization,
+RTL, and the bugs a browser pass surfaces. Verified: tsc 0 · `pnpm build` green ·
+395 finance/cron/i18n tests · headless-Playwright pass over 39 finance routes on
+`/ar` as **accountant** (all 200, `dir=rtl`) and as **teacher** (every module
+page shows the deny UI; own-data pages `/finance/receipt`, `/finance/payroll/my`
+still render).
+
+### Role-based access (all 80 `page.tsx` traced to their `db.` calls)
+
+- [x] **6 OPEN data paths closed.** `fees/{assignments,fines,payments,scholarships,structures}`
+      fetched straight from `fees/queries.ts` with only a tenant check — any authenticated
+      member of the school could list every student's assignments, payments, fines and
+      scholarships (the paginated refetch WAS gated, the first paint was not). All five now
+      `resolveFinanceAccess("fees",["view"])` + `<FinanceAccessDenied>`. And
+      `receipt/manage-plan` minted a **school-scoped Schematic billing-portal token for any
+      authenticated user** (`getTemporaryAccessToken` checked only `auth()`); now ADMIN /
+      DEVELOPER only, page + action.
+- [x] **8 pages that were data-safe but had no deny UI** now render the standard one:
+      `invoice/add/[id]/{details,items}` (gate on `invoice/edit`, matching the wizard's
+      writes), `fees/{structures,scholarships}/new` (`fees/create`), and the four stubs
+      `accounts/{chart,journal}/new`, `budget/new`, `expenses/new` (`*/create`).
+- [x] `guard-audit` ratchet **8 → 4**; the 4 left are verified own-data pages
+      (`banking/{my-banks,payment-transfer,transaction-history}`, `payroll/my`).
+- [x] `reports/actions.ts` returned `PAYMENT_FAILED` for "not signed in" (4 sites) →
+      `NOT_AUTHENTICATED`; its catch blocks leaked `error.message` → `LOAD_FAILED`.
+
+### Errors that reached users as codes or exception text
+
+- [x] **29 client sites** did `toast.error(result.error || label)` — with `actionError()`
+      responses that toasts `UNAUTHORIZED`/`CREATE_FAILED` verbatim in both languages. New
+      `actionErrorMessage(code, dictionary, fallback)` in `@/lib/resolve-action-error`
+      (translated code, or the caller's label — never a bare `SNAKE_CASE`); the shared
+      wizard layout's error state (10 wizards platform-wide) uses it too.
+- [x] **~20 `error: error.message` leaks** in accounts/budget/invoice/share/wizard actions →
+      codes; **8 catch blocks** in accounts/budget/timesheet/wallet now branch
+      `ZodError → VALIDATION_ERROR` instead of conflating it with `CREATE_FAILED`.
+- [x] `banking/actions/bank.actions.ts` English `error:` strings → codes; two finance codes
+      (`PAYMENT_GATEWAY_UNAVAILABLE`, `PAYMENT_REFERENCE_ALREADY_USED`) had no translation —
+      added to `common.errors` (en+ar).
+
+### i18n / RTL
+
+- [x] **Crons** `fee-due` (5 sites) + `fee-overdue` no longer inline `isAr ? … : …`; both read
+      `finance.notifications.*` through the new server helper
+      `finance/lib/notification-copy.ts` (`getFinanceNotificationCopy(lang)` + `interp`), 10
+      keys added en+ar, rendered per school language and asserted by test.
+- [x] **28 `d?.key || "English"` lookups named keys that did not exist** — invisible to parity
+      (both files lacked them): the entire offline-payment form (19 `paymentForm.*` keys —
+      ATM deposit, bank name/branch, IBAN, cheque number, deposit slip…), the reports hub
+      tiles (5, remapped to existing keys), `common.{edit,back,pending,selectAll}`,
+      `receiptDetail.extractionFailedRetry`, `structureColumns.{lock,unlock}`.
+- [x] **Bare English JSX 72 → 29** across ~20 files: the fat list pages (chart of accounts,
+      journal, ledger, timesheet entries/periods, budget/all, expenses/all, wallet/all +
+      transactions, the four `new` stubs), `banking/error.tsx`, fees Auto/Locked badges,
+      `sr-only` "Open menu" (fees + salary), Active/Inactive & Posted/Draft ternaries, raw
+      `account.type`/`normalBalance`/wallet-type/bank-type enums, the payroll KPI
+      "processed, pending" split hack (Arabic uses "،" so it always fell back to English),
+      alt texts. The 29 left are the `d?.key ?? (isRTL ? ar : en)` bilingual fallbacks in
+      `fees/manual-payment-rail.tsx` + `fee-payment-methods.tsx` (dictionary resolves first;
+      style debt, not a leak).
+- [x] **Tables that never received their dictionary**: `salary/structures` (English column
+      headers since it shipped), `InstallmentTimeline` on the assignment detail page,
+      `ExpenseRowActions` (Approve/Reject/Mark paid) — all wired.
+- [x] **DB-stored text now goes through the batched helpers**: `getLabels` on the three
+      report pages (account names + a `currentYearEarnings` key for the computed line),
+      chart of accounts, expenses/categories, budget detail, wallets, budgets, fee-structure
+      names; `getNames` (transliteration fallback) for student/teacher names on
+      `payments/new`, `payments/[id]`, `fines/[id]`, `fees/reports`, `payroll/runs/[id]`,
+      `payroll/slips/[id]`, `fees/my`. The four fees list pages and their `fetchXRows`
+      actions share **`fees/rows.ts`** (one mapper, one resolution per list; the action
+      reads the viewer's language ambiently via `getDisplayLang()`). Invoice list client
+      names moved from `getText`-in-a-loop to one `getLabels` call.
+- [x] RTL: zero physical utilities in the block; navigation arrows already `rtl:rotate-180`;
+      diagonal in/out arrows are semantic; `dir="ltr"` only on IBAN/URL/key inputs. Verified
+      `dir=rtl` on all 39 routes.
+- [x] Dead files removed: `invoice/dashboard/header.tsx`, `banking/reconciliation-panel.tsx`.
+
+### Bugs the browser pass surfaced
+
+- [x] **`/finance/invoice` refetched in a loop — 37 server-action POSTs in 15 s, 1,466 console
+      errors.** A "skip the first run" ref in the table's filter effect: StrictMode's dev
+      double-mount keeps the ref so the second run fires, the action's response re-renders
+      the segment (`loading.tsx` boundary), the table remounts with a fresh ref, repeat.
+      Now compares filter VALUES to what was last fetched (as `usePlatformData` does):
+      **0 POSTs** after load. Same page shipped Prisma `Decimal` `total` to the client table.
+- [x] **`/finance` hub charts were shadcn SAMPLE DATA** (`desktop/mobile` April-2024 series,
+      English month names, `NaN` transforms in the console) — `content.tsx` passed no
+      `data`. New `finance/lib/monthly-series.ts`: 12 school-month buckets of SUCCESS
+      payments vs APPROVED+PAID expenses via `date_trunc` in the school zone; the shared
+      bar chart gained `granularity`/`timeZone` props; radial = margin %, area = last 6
+      months, trends computed with zero-denominator guards.
+- [x] `dashboard/actions.ts` — adopted a prior session's orphaned school-timezone rewrite
+      (with `src/lib/timezone.ts` period helpers + 6 tests) and fixed its dangling
+      `subMonths` (the "this month" alert now uses `schoolStartOfMonth`).
+
+### New ratchets
+
+- `src/tests/school-dashboard/finance/i18n-audit.test.ts` on `scripts/finance-i18n-audit.ts`:
+  missing dictionary keys **0**, bare JSX English **29** (drive down, never up).
+- `guard-audit.test.ts` baseline **4**.
+
+### Still open after this pass
+
+- The 25 `isRTL ? … : …` fallbacks in `fees/manual-payment-rail.tsx` / `fee-payment-methods.tsx`
+  should become plain dictionary reads (style; both languages already covered).
+- Platform breadcrumb still renders raw URL segments ("Chart") on /ar — outside the block.
+- `wallet/transactions` prints `tx.sourceModule` (`fees`, `topup`) raw — wants a label map.
+- Local demo: translation providers were rate-limited during the pass, so seeded English
+  names (chart of accounts, categories, fine reasons) rendered as source — the documented
+  degraded fallback; on prod `getLabels` translates. Payments in the seed are dated 2024,
+  so the new 12-month hub revenue series reads 0 on the demo school.
+- Concurrent-session note: `dashboard/actions.ts` + `timezone.ts` were adopted from another
+  session's in-flight work; the receipt-delivery hunks in `fees/actions.ts` and the
+  2026-08-14 section below stay that session's (unstaged here).
 
 # Finance -- Readiness & Verified Gap Register
 
@@ -109,22 +226,22 @@ suites green.
 
 | Sub-module  | Readiness | Ledger wired                                    | i18n | Tests  | Docs |
 | ----------- | --------- | ----------------------------------------------- | ---- | ------ | ---- |
-| invoice     | 95%       | 🟡 `postInvoicePayment` wired (markInvoicePaid) | ⚠️   | 🟢 131 | ✅   |
+| invoice     | 95%       | 🟡 `postInvoicePayment` wired (markInvoicePaid) | ✅   | 🟢 131 | ✅   |
 | fees        | 96%       | 🟢 payments + assignments (no rollback)         | ✅   | 🟡 17+ | ✅   |
 | budget      | 85%       | ➖ n/a                                          | ✅   | ❌     | ✅   |
 | receipt     | 90%       | ➖ n/a                                          | ✅   | ❌     | ✅   |
-| banking     | 85%       | 🔗 reconciliation live                          | ⚠️   | 🟡 5   | ✅   |
-| dashboard   | 80%       | ➖ n/a (trends are mock)                        | ✅   | ❌     | ✅   |
-| expenses    | 80%       | 🟡 `postExpensePayment` wired (markExpensePaid) | ⚠️   | ❌     | ✅   |
-| accounts    | 75%       | 🟢 engine home (fee payments only)              | ⚠️   | 🟡 10  | ✅   |
-| permissions | 75%       | ➖ n/a                                          | ⚠️   | ❌     | ✅   |
-| reports     | 75%       | 🔗 reads ledger (fee-only data)                 | ⚠️   | ❌     | ✅   |
+| banking     | 85%       | 🔗 reconciliation live                          | ✅   | 🟡 5   | ✅   |
+| dashboard   | 80%       | ➖ n/a (hub charts real; KPI sparklines empty)  | ✅   | ❌     | ✅   |
+| expenses    | 80%       | 🟡 `postExpensePayment` wired (markExpensePaid) | ✅   | ❌     | ✅   |
+| accounts    | 75%       | 🟢 engine home (fee payments only)              | ✅   | 🟡 10  | ✅   |
+| permissions | 75%       | ➖ n/a                                          | ✅   | ❌     | ✅   |
+| reports     | 75%       | 🔗 reads ledger (fee-only data)                 | ✅   | ❌     | ✅   |
 | salary      | 75%       | ➖ n/a                                          | ✅   | ❌     | ✅   |
-| timesheet   | 75%       | ➖ n/a                                          | ⚠️   | ❌     | ✅   |
-| wallet      | 75%       | 🟡 `postWalletTopup` wired (no rollback)        | ⚠️   | ❌     | ✅   |
+| timesheet   | 75%       | ➖ n/a                                          | ✅   | ❌     | ✅   |
+| wallet      | 75%       | 🟡 `postWalletTopup` wired (no rollback)        | ✅   | ❌     | ✅   |
 | payroll     | 65%       | 🟡 `postSalaryPayment` wired (processPayments)  | ✅   | ❌     | ✅   |
 
-Legend — **Ledger**: 🟢 posts journal entries · 🟡 posts but not transactional · ❌ posting fn exists but has zero callers · 🔗 consumes the ledger · ➖ not a money-mover. **i18n**: ✅ ready · ⚠️ validation strings still hardcoded English (separate from the cross-cutting DB-`lang` gap below). **Tests**: 🟢 strong · 🟡 partial · ❌ none.
+Legend — **Ledger**: 🟢 posts journal entries · 🟡 posts but not transactional · ❌ posting fn exists but has zero callers · 🔗 consumes the ledger · ➖ not a money-mover. **i18n**: ✅ UI copy dictionary-driven, verified on /ar in a browser (2026-08-15); the static `validation.ts` messages are still English but never reach a user — actions map `ZodError` → `VALIDATION_ERROR` and clients resolve codes. Separate from the cross-cutting DB-`lang` gap below. **Tests**: 🟢 strong · 🟡 partial · ❌ none.
 
 **Overall ≈ 88%** (average of the readiness column after the 2026-06-13 admission+finance production-readiness pass).
 
@@ -144,7 +261,7 @@ Legend — **Ledger**: 🟢 posts journal entries · 🟡 posts but not transact
 - [ ] Test coverage for the 11 untested sub-modules
 - [ ] PDF rendering wired for invoice (fees receipt PDF already works)
 - [ ] Plaid live-credential sandbox run + Dwolla webhook handler
-- [ ] AR mirror of the new public docs (`content/docs-ar/finance*.mdx`)
+- [ ] AR mirror of the new public docs (`content/docs-ar/finance*.mdx`) — hub `finance.mdx` done 2026-08-15; the 13 sub-block pages still EN-only
 
 ## Verified Gap Register
 
@@ -164,7 +281,7 @@ The block-level "P0: none" of prior cycles was inaccurate. These are silent-data
 
 ### P1 -- functional / misleading
 
-- **Dashboard trend charts are `Math.random()` mock data** (`dashboard/actions.ts:278-288` — `generateTrend()` for revenues/expenses/profit/collection). KPI totals are real DB aggregations; only the sparkline trends are fabricated.
+- ~~Dashboard trend charts are `Math.random()` mock data~~ — **stale**: `dashboard/actions.ts` returns empty trend series (honest-empty), and since 2026-08-15 the `/finance` hub charts are real school-month aggregates (`lib/monthly-series.ts`). Sparkline trends on the dashboard KPI cards remain empty pending a monthly series there too.
 - ✅ **Payroll tax now uses progressive brackets** (2026-06-20 `e637129ee`) — a marginal `calculateProgressiveTax` over `payroll/config.TAX_BRACKETS` replaces the flat 15% in both `payroll/actions.ts` and `salary/actions.ts`; unit-tested. Follow-up: payroll taxes gross incl. non-taxable allowances (salary correctly taxes taxableIncome); `SOCIAL_SECURITY_RATE` still unused.
 - ✅ **Invoice PDF + branded RTL email — DONE (2026-06-21 `eb4e88574`).** Adapter + Download button were already wired; added the school logo into the PDF (`getInvoiceById` → `InvoiceForPdf` → adapter → template) and rebuilt the email on `@react-email/components` (RTL, logo/name header, itemized table, signature footer, en/ar labels). Remaining polish: Print button, DataTable row PDF action, PDF-footer signature.
 - **No finance Prisma model has a `lang` field.** DB-stored, user-facing finance text (`Fine.reason`, `Scholarship` name/description, `ExpenseCategory`, `ChartOfAccount` account names, `FeeStructure` name/description) renders English-only on the Arabic side. The rest of the platform uses the `lang` + `getText` convention; finance can't.
@@ -202,7 +319,7 @@ Deleted references to files that no longer exist: `content-enhanced.tsx`, `invoi
 Forward-looking work beyond closing the gaps above.
 
 - **Accounting integrity** — wire the 5 orphaned posting functions (or remove the false posting claims from sub-READMEs); make `postFeePayment` transactional with rollback; add a `debit = credit` invariant test plus a per-school trial-balance test.
-- **Remove mock data** — replace the dashboard `Math.random()` trends with real historical aggregation off the ledger / payment tables.
+- **Dashboard sparklines** — feed the KPI-card trends from `lib/monthly-series.ts` (the hub charts already are); the `Math.random()` walk is gone.
 - **Payments interface** — add `verifyWebhook` + `createRefund` to `PaymentProvider`; generalize the Stripe-only refund to fees/invoice/wallet; finish `bankak` once the BoK spec lands.
 - **i18n migration** — add `lang` to `FeeStructure`, `Scholarship`, `ExpenseCategory`, `ChartOfAccount`, `Fine`; route display through `getText` / `getFields`; wire the 11 `validation.ts` factories to `ValidationHelper`.
 - **Code-reuse / perf** — consolidate the duplicated DataTable + columns + list-params patterns across sub-modules; audit N+1 in dashboard and report aggregations; verify the Decimal whole-units-vs-cents convention per model against `lib/format.ts` (`formatMoney` vs `formatCurrency`) to prevent off-by-100 bugs.

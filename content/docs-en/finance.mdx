@@ -105,15 +105,21 @@ The interface today declares only `supportsCurrency`, `isConfigured`, and `creat
 
 See [Double-entry model](#double-entry-model) above and the [Accounts](/docs/finance-accounts) page. Posting rules are append-only — add new rules rather than editing existing ones, or historical balance sheets shift.
 
-### i18n and the `lang` gap
+### i18n, RTL and the `lang` gap
 
-UI strings flow through the dictionary system, and notifications dispatch via the school's `preferredLanguage`. But **no finance Prisma model has a `lang` field**, so DB-stored, user-facing finance text — `Fine.reason`, `Scholarship` / `ExpenseCategory` / `ChartOfAccount` names, `FeeStructure` name/description — can't use the platform's `getText` convention and renders in its stored language only. This is the block's biggest i18n debt.
+UI strings flow through the dictionary system, notifications dispatch via the school's `preferredLanguage`, and since 2026-08-15 the two fee crons read `finance.notifications.*` too (no `isAr ? … : …` left). Server actions return **error codes**, and clients resolve them with `actionErrorMessage(code, dictionary, fallback)` — never a raw `SNAKE_CASE` code, never an exception message. Two ratchets keep it that way: the platform hardcoded-string ratchet, plus a finance-specific one (`scripts/finance-i18n-audit.ts`) that catches the class parity tests cannot — a `d?.key || "English"` lookup whose **key does not exist** in either language file, which silently renders English on `/ar` (28 of those shipped in the offline-payment form and the reports hub before the ratchet existed) — and bare English JSX text.
+
+DB-stored text is the remaining debt. **No finance Prisma model has a `lang` field**, so `Fine.reason`, `Scholarship` / `ExpenseCategory` / `ChartOfAccount` names and `FeeStructure` name/description are stored in one language. Every finance list and report now routes them through the batched translation helpers (`getLabels` for labels, `getNames` for people — one resolution per list, transliteration fallback when the API is down), so a school's viewers see them in their locale once the translation cache is warm; a proper `lang` column is still the long-term fix.
+
+RTL: the block uses logical utilities only (`ms-`/`me-`/`text-start`), navigation arrows carry `rtl:rotate-180`, and `dir="ltr"` appears only on IBAN / URL / key inputs. All 39 routes were verified rendering `dir="rtl"` on `/ar`.
 
 ## RBAC
 
 Role defaults, refined by the granular `FinancePermission` model and enforced by `checkCurrentUserPermission()` before every mutation.
 
 Pages resolve their gate through `finance/guard.ts`: `resolveFinanceAccess(module, actions)` reads the session and tenant once, then evaluates every action concurrently. Every finance overview page now uses it; a chain of `checkCurrentUserPermission` calls is the anti-pattern it replaced, where gating on five actions serialized five session reads and five identical user lookups. Underneath, the caller's row and the granular grants for a module are each memoized per request with React `cache()`, and a role that already has finance access short-circuits before the grant table is touched at all.
+
+Coverage is audited, not assumed. On 2026-08-15 all 80 finance route pages were traced to their database calls: the five fees list pages (structures, assignments, payments, fines, scholarships) fetched their first page with only a tenant check — a teacher or student could list every family's payments — and the subscription-portal page minted a school-scoped billing token for any signed-in user. Both are closed; every module page renders the block's inline deny UI to a role without permission (verified in a browser as a teacher), and a `guard-audit` ratchet fails the build if a new database-querying page appears without a gate (the four it still lists are own-data pages: a user's own bank accounts and own payslips, which are session-scoped rather than module-gated).
 
 | Role               | Access                                                       |
 | ------------------ | ------------------------------------------------------------ |
@@ -130,7 +136,7 @@ Finance models span several files under `prisma/models/`: `finance-core` (chart 
 ## Known gaps & roadmap
 
 - Wire (or honestly retire) the 5 orphaned posting functions; make `postFeePayment` transactional.
-- Replace the dashboard `Math.random()` trend charts with real aggregation.
+- Feed the dashboard KPI sparklines from the monthly series the hub charts now use (`finance/lib/monthly-series.ts`); the random-walk trends are gone.
 - Payroll tax is a hardcoded flat 15% — needs real brackets (its `config.ts` already ships unused ones).
 - Wire the invoice PDF (the fees receipt PDF already works); add payslip PDF.
 - Add `lang` to user-facing finance models; route through `getText`.
