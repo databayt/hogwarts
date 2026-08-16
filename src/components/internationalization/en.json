@@ -420,7 +420,9 @@
       "UPLOAD_FAILED": "Upload failed",
       "FILE_NOT_FOUND": "File not found",
       "FILE_TOO_LARGE": "File is too large",
-      "INVALID_FILE_TYPE": "Invalid file type"
+      "INVALID_FILE_TYPE": "Invalid file type",
+      "PAYMENT_GATEWAY_UNAVAILABLE": "The payment gateway is unavailable right now. Please try again later.",
+      "PAYMENT_REFERENCE_ALREADY_USED": "This payment reference has already been used."
     },
     "tryAgain": "Try again"
   },

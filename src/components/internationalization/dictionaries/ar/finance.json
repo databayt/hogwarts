@@ -663,7 +663,14 @@
       "edit": "تعديل",
       "deactivate": "تعطيل",
       "activate": "تفعيل",
-      "delete": "حذف"
+      "delete": "حذف",
+      "auto": "تلقائي",
+      "autoTitle": "يُدار بواسطة محرك مزامنة الرسوم",
+      "locked": "مقفل",
+      "lockedTitle": "مقفل — يتجاهله المزامن",
+      "lock": "قفل عن المزامنة",
+      "unlock": "إلغاء القفل",
+      "openMenu": "فتح القائمة"
     },
     "csvHeaders": {
       "paymentNumber": "رقم الدفعة",
@@ -733,7 +740,25 @@
     "upi": "UPI",
     "netBanking": "خدمات مصرفية إلكترونية",
     "wallet": "محفظة",
-    "other": "أخرى"
+    "other": "أخرى",
+    "atmDeposit": "إيداع عبر الصراف الآلي",
+    "applePay": "Apple Pay",
+    "googlePay": "Google Pay",
+    "mada": "مدى",
+    "knet": "كي نت",
+    "transferReference": "مرجع التحويل *",
+    "transferReferencePlaceholder": "مرجع البنك / رقم إيصال الصراف",
+    "bankName": "اسم البنك *",
+    "bankNamePlaceholder": "مثال: بنك الإمارات دبي الوطني",
+    "bankBranch": "الفرع",
+    "bankBranchPlaceholder": "اسم الفرع أو رمزه",
+    "depositorIban": "آيبان المُرسِل",
+    "ibanPlaceholder": "AE07 0331 ...",
+    "chequeNumber": "رقم الشيك *",
+    "chequeNumberPlaceholder": "مثال: 000123",
+    "depositSlip": "رابط إيصال الإيداع",
+    "depositSlipPlaceholder": "https://... (ارفع الملف ثم الصق الرابط)",
+    "depositSlipHint": "ستبقى الحالة \"قيد التحقق\" حتى يطابقها المحاسب مع كشف الحساب البنكي."
   },
   "invoice": {
     "title": "الفواتير",
@@ -1047,7 +1072,8 @@
     "fineType": "نوع الغرامة",
     "reason": "السبب",
     "dueDate": "تاريخ الاستحقاق",
-    "waived": "معفى"
+    "waived": "معفى",
+    "openMenu": "فتح القائمة"
   },
   "common": {
     "schoolNotFound": "لم يتم العثور على سياق المدرسة",
@@ -1134,7 +1160,12 @@
     "errorDescription": "حدث خطأ أثناء تحميل البيانات.",
     "errorReference": "رقم المرجع",
     "tryAgain": "حاول مرة أخرى",
-    "noResults": "لا توجد نتائج."
+    "goToDashboard": "الذهاب إلى لوحة التحكم",
+    "noResults": "لا توجد نتائج.",
+    "edit": "تعديل",
+    "back": "رجوع",
+    "pending": "قيد الانتظار",
+    "selectAll": "تحديد الكل"
   },
   "feeDrift": {
     "title": "تغيّرت إعدادات المدرسة منذ إنشاء هذه الرسوم",
@@ -1530,7 +1561,8 @@
     "accountBalances": "أرصدة الحسابات",
     "allPeriods": "جميع الفترات",
     "profitLabel": "ربح",
-    "lossLabel": "خسارة"
+    "lossLabel": "خسارة",
+    "currentYearEarnings": "أرباح السنة الحالية"
   },
   "dashboardPage": {
     "financialDashboard": "لوحة التحكم المالية",
@@ -1609,7 +1641,17 @@
     "quickActions": "إجراءات سريعة",
     "pending": "قيد الانتظار",
     "viewAll": "عرض الكل",
-    "noHistoricalData": "لا توجد بيانات تاريخية بعد"
+    "noHistoricalData": "لا توجد بيانات تاريخية بعد",
+    "bankAccountTypes": {
+      "checking": "جارٍ",
+      "depository": "إيداع",
+      "savings": "توفير",
+      "credit": "ائتمان",
+      "loan": "قرض",
+      "investment": "استثمار",
+      "other": "أخرى"
+    },
+    "processed": "معالج"
   },
   "mainPage": {
     "unpaid": "غير مدفوع",
@@ -2186,7 +2228,8 @@
     "filterByMerchant": "تصفية حسب التاجر...",
     "noReceiptsFound": "لم يتم العثور على إيصالات.",
     "previous": "السابق",
-    "next": "التالي"
+    "next": "التالي",
+    "extractionFailedRetry": "فشل الاستخراج. يرجى إعادة المحاولة."
   },
   "salaryConfig": {
     "allowanceTypes": {
@@ -2242,7 +2285,8 @@
       "BI_WEEKLY": "نصف شهري",
       "WEEKLY": "أسبوعي",
       "DAILY": "يومي"
-    }
+    },
+    "openMenu": "فتح القائمة"
   },
   "payrollConfig": {
     "frequencies": {
@@ -2646,6 +2690,16 @@
     "feeDueGuardianBody": "تم تعيين رسوم بقيمة {amount} لحساب {studentName}",
     "feeOverdueTitle": "رسوم متأخرة",
     "feeOverdueBody": "الرسوم بقيمة {amount} متأخرة السداد",
+    "feeDueSoonTitle": "تذكير: رسوم مستحقة قريباً",
+    "feeDueSoonBody": "دفعة {amount} لـ \"{feeName}\" مستحقة خلال {days} أيام.",
+    "invoiceDueSoonTitle": "تذكير: فاتورة مستحقة قريباً",
+    "invoiceDueSoonBody": "فاتورة رقم {invoiceNo} بمبلغ {amount} مستحقة خلال {days} يوم.",
+    "feeOverdueNoticeTitle": "إشعار دفعة متأخرة",
+    "feeOverdueNoticeBody": "دفعة {amount} لـ \"{feeName}\" متأخرة. يرجى الدفع فوراً.",
+    "offerExpiringTitle": "تنبيه: ينتهي عرض القبول قريباً",
+    "offerExpiringBody": "عرض القبول لـ \"{studentName}\" سينتهي بتاريخ {date} (خلال {days} يوم). يرجى قبول العرض قبل انتهاء المهلة.",
+    "unplacedStudentsTitle": "طلاب بلا صف أو فصل",
+    "unplacedStudentsBody": "{count} طالباً لم يُسنَد لهم صف أو فصل. الطالب بلا صف لا تُحتسب له رسوم ولا تصدر له فواتير.",
     "paymentReceivedTitle": "تم استلام الدفعة",
     "paymentRecordedStudentFull": "تم تسجيل دفعة بقيمة {amount}. تم سداد الرسوم بالكامل.",
     "paymentRecordedStudentPartial": "تم تسجيل دفعة بقيمة {amount}. المتبقي: {remaining}",
@@ -2843,5 +2897,14 @@
     "print": "طباعة",
     "notFoundTitle": "الفاتورة غير متاحة",
     "notFoundDescription": "رابط الفاتورة غير صالح أو منتهي الصلاحية أو تم إلغاؤه."
+  },
+  "expenseActions": {
+    "approve": "اعتماد",
+    "reject": "رفض",
+    "markPaid": "تعليم كمدفوع",
+    "approved": "تم اعتماد المصروف",
+    "rejected": "تم رفض المصروف",
+    "paid": "تم تعليم المصروف كمدفوع",
+    "failed": "فشل الإجراء"
   }
 }

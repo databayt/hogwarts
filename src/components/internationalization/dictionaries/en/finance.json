@@ -663,7 +663,14 @@
       "edit": "Edit",
       "deactivate": "Deactivate",
       "activate": "Activate",
-      "delete": "Delete"
+      "delete": "Delete",
+      "auto": "Auto",
+      "autoTitle": "Managed by the fee sync engine",
+      "locked": "Locked",
+      "lockedTitle": "Locked — ignored by sync",
+      "lock": "Lock from sync",
+      "unlock": "Unlock",
+      "openMenu": "Open menu"
     },
     "csvHeaders": {
       "paymentNumber": "Payment #",
@@ -733,7 +740,25 @@
     "upi": "UPI",
     "netBanking": "Net Banking",
     "wallet": "Wallet",
-    "other": "Other"
+    "other": "Other",
+    "atmDeposit": "ATM Deposit",
+    "applePay": "Apple Pay",
+    "googlePay": "Google Pay",
+    "mada": "mada",
+    "knet": "KNET",
+    "transferReference": "Transfer Reference *",
+    "transferReferencePlaceholder": "Bank reference / ATM receipt number",
+    "bankName": "Bank Name *",
+    "bankNamePlaceholder": "e.g. Emirates NBD",
+    "bankBranch": "Branch",
+    "bankBranchPlaceholder": "Branch name or code",
+    "depositorIban": "Sender IBAN",
+    "ibanPlaceholder": "AE07 0331 ...",
+    "chequeNumber": "Cheque Number *",
+    "chequeNumberPlaceholder": "e.g. 000123",
+    "depositSlip": "Deposit Slip URL",
+    "depositSlipPlaceholder": "https://... (upload to S3 then paste URL)",
+    "depositSlipHint": "Status will be Pending Verification until an admin reconciles against the bank statement."
   },
   "invoice": {
     "title": "Invoices",
@@ -1047,7 +1072,8 @@
     "fineType": "Fine Type",
     "reason": "Reason",
     "dueDate": "Due Date",
-    "waived": "Waived"
+    "waived": "Waived",
+    "openMenu": "Open menu"
   },
   "common": {
     "schoolNotFound": "School context not found",
@@ -1132,9 +1158,14 @@
     "errorDescription": "An unexpected error occurred while loading finance information.",
     "errorReference": "Error reference",
     "tryAgain": "Try again",
+    "goToDashboard": "Go to Dashboard",
     "deleteConfirm": "This action cannot be undone.",
     "delete": "Delete",
-    "noResults": "No results."
+    "noResults": "No results.",
+    "edit": "Edit",
+    "back": "Back",
+    "pending": "Pending",
+    "selectAll": "Select All"
   },
   "feeDrift": {
     "title": "School settings changed since these fees were provisioned",
@@ -1530,7 +1561,8 @@
     "accountBalances": "Account Balances",
     "allPeriods": "All periods",
     "profitLabel": "Profit",
-    "lossLabel": "Loss"
+    "lossLabel": "Loss",
+    "currentYearEarnings": "Current Year Earnings"
   },
   "dashboardPage": {
     "financialDashboard": "Financial Dashboard",
@@ -1609,7 +1641,17 @@
     "quickActions": "Quick Actions",
     "pending": "Pending",
     "viewAll": "View All",
-    "noHistoricalData": "No historical data yet"
+    "noHistoricalData": "No historical data yet",
+    "bankAccountTypes": {
+      "checking": "Checking",
+      "depository": "Depository",
+      "savings": "Savings",
+      "credit": "Credit",
+      "loan": "Loan",
+      "investment": "Investment",
+      "other": "Other"
+    },
+    "processed": "processed"
   },
   "mainPage": {
     "unpaid": "unpaid",
@@ -2186,7 +2228,8 @@
     "filterByMerchant": "Filter by merchant...",
     "noReceiptsFound": "No receipts found.",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "extractionFailedRetry": "Extraction failed. Please retry."
   },
   "salaryConfig": {
     "allowanceTypes": {
@@ -2242,7 +2285,8 @@
       "BI_WEEKLY": "Bi-Weekly",
       "WEEKLY": "Weekly",
       "DAILY": "Daily"
-    }
+    },
+    "openMenu": "Open menu"
   },
   "payrollConfig": {
     "frequencies": {
@@ -2646,6 +2690,16 @@
     "feeDueGuardianBody": "A fee of {amount} has been assigned to {studentName}",
     "feeOverdueTitle": "Fee Overdue",
     "feeOverdueBody": "Your fee of {amount} is overdue",
+    "feeDueSoonTitle": "Reminder: Fee Due Soon",
+    "feeDueSoonBody": "Fee payment of {amount} for \"{feeName}\" is due within {days} days.",
+    "invoiceDueSoonTitle": "Reminder: Invoice Due Soon",
+    "invoiceDueSoonBody": "Invoice #{invoiceNo} for {amount} is due in {days} day(s).",
+    "feeOverdueNoticeTitle": "Overdue Payment Notice",
+    "feeOverdueNoticeBody": "Fee payment of {amount} for \"{feeName}\" is overdue. Please make payment immediately.",
+    "offerExpiringTitle": "Reminder: Admission Offer Expiring Soon",
+    "offerExpiringBody": "The admission offer for \"{studentName}\" expires on {date} (in {days} day(s)). Please accept the offer before the deadline.",
+    "unplacedStudentsTitle": "Students without a grade or class",
+    "unplacedStudentsBody": "{count} student(s) have no grade or no class assigned. A student with no grade is assigned no fees and raises no invoices.",
     "paymentReceivedTitle": "Payment Received",
     "paymentRecordedStudentFull": "Payment of {amount} recorded. Fee fully paid.",
     "paymentRecordedStudentPartial": "Payment of {amount} recorded. Remaining: {remaining}",
@@ -2843,5 +2897,14 @@
     "print": "Print",
     "notFoundTitle": "Invoice unavailable",
     "notFoundDescription": "This invoice link is invalid, expired, or has been revoked."
+  },
+  "expenseActions": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "markPaid": "Mark paid",
+    "approved": "Expense approved",
+    "rejected": "Expense rejected",
+    "paid": "Expense marked paid",
+    "failed": "Action failed"
   }
 }

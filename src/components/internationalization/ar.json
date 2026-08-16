@@ -420,7 +420,9 @@
       "UPLOAD_FAILED": "فشل في الرفع",
       "FILE_NOT_FOUND": "الملف غير موجود",
       "FILE_TOO_LARGE": "الملف كبير جداً",
-      "INVALID_FILE_TYPE": "نوع الملف غير صالح"
+      "INVALID_FILE_TYPE": "نوع الملف غير صالح",
+      "PAYMENT_GATEWAY_UNAVAILABLE": "بوابة الدفع غير متاحة حالياً. يرجى المحاولة لاحقاً.",
+      "PAYMENT_REFERENCE_ALREADY_USED": "هذا المرجع للدفع مستخدم من قبل."
     },
     "tryAgain": "إعادة المحاولة"
   },
