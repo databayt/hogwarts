@@ -54,3 +54,24 @@ export function resolveActionError(
   // Return original string if no translation found
   return error
 }
+
+/**
+ * User-facing message for an action failure.
+ *
+ * Prefer the translated meaning of the code the action returned; if the code
+ * has no translation, fall back to the caller's own label instead of showing
+ * a raw `SNAKE_CASE` enum. Use this wherever a component would otherwise write
+ * `toast.error(result.error || label)` — with `actionError()` responses that
+ * expression toasts the code itself.
+ */
+export function actionErrorMessage(
+  error: string | undefined | null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dictionary: Record<string, any> | null | undefined,
+  fallback: string
+): string {
+  if (!error) return fallback
+  const resolved = resolveActionError(error, dictionary)
+  if (resolved !== error) return resolved
+  return /^[A-Z0-9_]+$/.test(error) ? fallback : error
+}

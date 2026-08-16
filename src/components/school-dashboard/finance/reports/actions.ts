@@ -110,7 +110,7 @@ export async function generateBalanceSheet(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     if (
@@ -181,10 +181,9 @@ export async function generateBalanceSheet(
     return { success: true, data }
   } catch (error) {
     console.error("Error generating balance sheet:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "UNKNOWN",
-    }
+    // The exception text is for the log, not the page — a Prisma message
+    // reaching the UI is untranslatable and leaks internals.
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -195,7 +194,7 @@ export async function generateIncomeStatement(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     if (
@@ -234,10 +233,9 @@ export async function generateIncomeStatement(
     return { success: true, data }
   } catch (error) {
     console.error("Error generating income statement:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "UNKNOWN",
-    }
+    // The exception text is for the log, not the page — a Prisma message
+    // reaching the UI is untranslatable and leaks internals.
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -248,7 +246,7 @@ export async function generateTrialBalance(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     if (
@@ -299,10 +297,9 @@ export async function generateTrialBalance(
     return { success: true, data }
   } catch (error) {
     console.error("Error generating trial balance:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "UNKNOWN",
-    }
+    // The exception text is for the log, not the page — a Prisma message
+    // reaching the UI is untranslatable and leaks internals.
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -310,7 +307,7 @@ export async function getAvailableReports() {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     if (

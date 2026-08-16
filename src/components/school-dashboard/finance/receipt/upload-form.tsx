@@ -13,6 +13,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import {
   ACCEPT_DOCUMENTS,
@@ -88,9 +89,11 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
         router.refresh()
       } else {
         toast.error(
-          result.error ||
-            rp?.processingFailed ||
-            "Processing failed. Please try again."
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            rp?.processingFailed || "Processing failed. Please try again."
+          )
         )
       }
     } catch (error) {

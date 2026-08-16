@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import {
   Accordion,
   AccordionContent,
@@ -137,7 +138,11 @@ export function SettingsContent({ dictionary, lang }: Props) {
         fetchData()
       } else {
         ErrorToast(
-          result.error || is?.somethingWentWrong || "Something went wrong"
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            is?.somethingWentWrong || "Something went wrong"
+          )
         )
       }
     } catch (error) {
@@ -167,7 +172,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
                       src={logo || schoolLogo}
                       width={250}
                       height={96}
-                      alt="Invoice logo"
+                      alt={is?.invoiceLogo || ""}
                     />
                     {/* Only a custom logo can be removed — the inherited school
                         logo is the fallback, not a per-user value. */}
@@ -246,7 +251,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
                       src={signatureData.image}
                       width={250}
                       height={96}
-                      alt="Signature sign"
+                      alt={is?.invoiceSignature || ""}
                     />
                     <Button
                       type="button"

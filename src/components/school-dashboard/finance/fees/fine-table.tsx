@@ -6,6 +6,7 @@ import * as React from "react"
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -78,7 +79,13 @@ function FinesTableInner({
         DeleteToast()
       } else {
         refresh()
-        ErrorToast(result.error || "Failed to delete")
+        ErrorToast(
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            dictionary?.common?.failedToDelete || "Failed to delete"
+          )
+        )
       }
     },
     [col, fc, optimisticRemove, refresh]
@@ -157,7 +164,13 @@ function FinesTableInner({
         const result = await deleteFine(row.id)
         if (!result.success) {
           refresh()
-          ErrorToast(result.error || "Failed to delete")
+          ErrorToast(
+            actionErrorMessage(
+              result.error,
+              dictionary,
+              dictionary?.common?.failedToDelete || "Failed to delete"
+            )
+          )
           return
         }
       }

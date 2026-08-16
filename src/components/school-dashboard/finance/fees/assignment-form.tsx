@@ -7,6 +7,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -106,7 +107,11 @@ export function FeeAssignmentForm({
           const result = await assignFee(formData)
           if (!result.success) {
             toast.error(
-              result.error || af?.failedAssignFee || "Failed to assign fee"
+              actionErrorMessage(
+                result.error,
+                dictionary,
+                af?.failedAssignFee || "Failed to assign fee"
+              )
             )
             return
           }
@@ -123,7 +128,11 @@ export function FeeAssignmentForm({
           const result = await bulkAssignFees(formData)
           if (!result.success) {
             toast.error(
-              result.error || af?.failedAssignFees || "Failed to assign fees"
+              actionErrorMessage(
+                result.error,
+                dictionary,
+                af?.failedAssignFees || "Failed to assign fees"
+              )
             )
             return
           }

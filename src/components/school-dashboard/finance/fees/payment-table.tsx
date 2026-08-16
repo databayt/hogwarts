@@ -6,6 +6,7 @@ import * as React from "react"
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -104,7 +105,9 @@ function PaymentsTableInner({
       for (const row of rows) {
         const result = await deletePayment(row.id)
         if (!result.success) {
-          errors.push(`${row.paymentNumber}: ${result.error}`)
+          errors.push(
+            `${row.paymentNumber}: ${actionErrorMessage(result.error, dictionary, dictionary?.common?.failedToDelete || "Failed to delete")}`
+          )
         }
       }
 

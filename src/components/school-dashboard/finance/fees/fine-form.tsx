@@ -7,6 +7,7 @@ import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -66,7 +67,11 @@ export function FineForm({ students, lang }: FineFormProps) {
         router.push(`/${lang}/finance/fees/fines`)
       } else {
         toast.error(
-          result.error || ff?.failedIssueFine || "Failed to issue fine"
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            ff?.failedIssueFine || "Failed to issue fine"
+          )
         )
       }
     })

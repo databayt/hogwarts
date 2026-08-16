@@ -9,6 +9,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
@@ -73,6 +74,9 @@ export async function createAccount(
     return { success: true, data: account as any }
   } catch (error) {
     console.error("Error creating account:", error)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
@@ -119,11 +123,10 @@ export async function updateAccount(
     return { success: true, data: account as any }
   } catch (error) {
     console.error("Error updating account:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update account",
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -163,11 +166,7 @@ export async function deleteAccount(
     return { success: true, data: account as any }
   } catch (error) {
     console.error("Error deleting account:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to delete account",
-    }
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
 }
 
@@ -257,13 +256,10 @@ export async function createJournalEntry(
     return { success: true, data: journalEntry as any }
   } catch (error) {
     console.error("Error creating journal entry:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create journal entry",
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -328,11 +324,7 @@ export async function postJournalEntry(
     return { success: true, data: updated as any }
   } catch (error) {
     console.error("Error posting journal entry:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to post journal entry",
-    }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 

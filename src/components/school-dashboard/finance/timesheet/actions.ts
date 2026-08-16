@@ -8,6 +8,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
@@ -51,6 +52,9 @@ export async function createTimesheet(
     return { success: true, data: timesheet as any }
   } catch (error) {
     console.error("Error creating timesheet:", error)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     return {
       success: false,
       error: "UNKNOWN",
@@ -108,6 +112,9 @@ export async function addTimesheetEntry(formData: FormData) {
     return { success: true, data: result }
   } catch (error) {
     console.error("Error adding timesheet entry:", error)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     return {
       success: false,
       error: "UNKNOWN",
@@ -180,6 +187,9 @@ export async function approveTimesheet(formData: FormData) {
     return { success: true, data: timesheet }
   } catch (error) {
     console.error("Error approving timesheet:", error)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     return {
       success: false,
       error: "UNKNOWN",

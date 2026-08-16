@@ -8,6 +8,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
@@ -51,6 +52,9 @@ export async function createBudget(
     return { success: true, data: budget as any }
   } catch (error) {
     console.error("Error creating budget:", error)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
@@ -91,10 +95,10 @@ export async function updateBudget(
     return { success: true, data: budget as any }
   } catch (error) {
     console.error("Error updating budget:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update budget",
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -129,11 +133,10 @@ export async function createBudgetAllocation(formData: FormData) {
     return { success: true, data: allocation }
   } catch (error) {
     console.error("Error creating allocation:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create allocation",
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 

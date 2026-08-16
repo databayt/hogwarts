@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus, Trash2 } from "lucide-react"
 import { useFieldArray, useForm } from "react-hook-form"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { Separator } from "@/components/ui/separator"
@@ -127,7 +128,13 @@ export const ItemsForm = forwardRef<WizardFormRef, ItemsFormProps>(
               const data = form.getValues()
               const result = await updateInvoiceItems(invoiceId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  actionErrorMessage(
+                    result.error,
+                    dictionary,
+                    dictionary?.common?.failedToSave || "Failed to save"
+                  )
+                )
                 reject(new Error(result.error))
                 return
               }

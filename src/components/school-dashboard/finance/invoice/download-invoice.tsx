@@ -8,7 +8,9 @@ import dynamic from "next/dynamic"
 import { CheckCircle2, Loader2, Send } from "lucide-react"
 import { toast } from "sonner"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { DownloadInvoiceButtonProps } from "./download-invoice-button"
 
@@ -58,6 +60,7 @@ export function SendInvoiceButton({
   sentLabel,
   errorLabel,
 }: SendInvoiceButtonProps) {
+  const { dictionary } = useDictionary()
   const [isSending, setIsSending] = useState(false)
 
   const handleSend = async () => {
@@ -69,7 +72,13 @@ export function SendInvoiceButton({
       if (res.success) {
         toast.success(sentLabel ?? "Invoice sent")
       } else {
-        toast.error(res.error || errorLabel || "Failed to send invoice")
+        toast.error(
+          actionErrorMessage(
+            res.error,
+            dictionary,
+            errorLabel ?? "Failed to send invoice"
+          )
+        )
       }
     } catch {
       toast.error(errorLabel ?? "Failed to send invoice")
@@ -114,6 +123,7 @@ export function MarkInvoicePaidButton({
   paidLabel,
   errorLabel,
 }: MarkInvoicePaidButtonProps) {
+  const { dictionary } = useDictionary()
   const [isMarking, setIsMarking] = useState(false)
 
   const handleMark = async () => {
@@ -124,7 +134,13 @@ export function MarkInvoicePaidButton({
       if (res.success) {
         toast.success(paidLabel ?? "Invoice marked as paid")
       } else {
-        toast.error(res.error || errorLabel || "Failed to mark invoice paid")
+        toast.error(
+          actionErrorMessage(
+            res.error,
+            dictionary,
+            errorLabel ?? "Failed to mark invoice paid"
+          )
+        )
       }
     } catch {
       toast.error(errorLabel ?? "Failed to mark invoice paid")

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { formatCurrency } from "@/lib/i18n-format"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -87,7 +88,11 @@ export function ScholarshipForm({ lang, initialData }: ScholarshipFormProps) {
         router.push(`/${lang}/finance/fees/scholarships`)
       } else {
         toast.error(
-          result.error || sf?.failedSave || "Failed to save scholarship"
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            sf?.failedSave || "Failed to save scholarship"
+          )
         )
       }
     })

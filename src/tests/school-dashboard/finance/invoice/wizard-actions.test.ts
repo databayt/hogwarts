@@ -154,12 +154,14 @@ describe("wizard/actions.ts", () => {
       expect(result.error).toBe("NOT_AUTHENTICATED")
     })
 
-    it("handles transaction errors gracefully", async () => {
+    it("handles transaction errors gracefully — as a code, never the raw message", async () => {
       vi.mocked(db.$transaction).mockRejectedValue(new Error("TX failed"))
 
       const result = await createDraftInvoice()
       expect(result.success).toBe(false)
-      expect(result.error).toBe("TX failed")
+      // The exception text is untranslatable and may leak internals; the
+      // client resolves the code through the dictionary instead.
+      expect(result.error).toBe("INVOICE_CREATE_FAILED")
     })
   })
 

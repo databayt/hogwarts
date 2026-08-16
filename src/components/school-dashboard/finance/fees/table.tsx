@@ -6,6 +6,7 @@ import * as React from "react"
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -105,7 +106,13 @@ function FeeStructuresTableInner({
       if (result.success) {
         refresh()
       } else {
-        ErrorToast(result.error || "Failed to toggle status")
+        ErrorToast(
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            dictionary?.common?.errors?.UPDATE_FAILED || "Failed to update"
+          )
+        )
       }
     },
     [refresh]
@@ -117,7 +124,13 @@ function FeeStructuresTableInner({
       if (result.success) {
         refresh()
       } else {
-        ErrorToast(result.error || "Failed to toggle lock")
+        ErrorToast(
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            dictionary?.common?.errors?.UPDATE_FAILED || "Failed to update"
+          )
+        )
       }
     },
     [refresh]
@@ -132,7 +145,13 @@ function FeeStructuresTableInner({
         optimisticRemove(id)
         DeleteToast()
       } else {
-        ErrorToast(result.error || "Failed to delete")
+        ErrorToast(
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            dictionary?.common?.failedToDelete || "Failed to delete"
+          )
+        )
       }
     },
     [optimisticRemove]

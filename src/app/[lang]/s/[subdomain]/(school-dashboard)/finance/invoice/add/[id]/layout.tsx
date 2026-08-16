@@ -26,7 +26,6 @@ export default function InvoiceWizardLayout({
       onStepChange={(entityId, step) => {
         updateInvoiceWizardStep(entityId, step)
       }}
-      finalLabel="Create Invoice"
     >
       {children}
     </WizardLayout>

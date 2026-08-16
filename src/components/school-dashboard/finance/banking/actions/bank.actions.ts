@@ -7,6 +7,7 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache"
 import { auth } from "@/auth"
 import { CountryCode } from "plaid"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import { plaidClient } from "../lib/plaid"
@@ -29,7 +30,7 @@ export const getAccounts = cache(async ({ userId }: { userId: string }) => {
   try {
     const session = await auth()
     if (!session?.user?.id || session.user.id !== userId) {
-      return { success: false as const, error: "Unauthorized" }
+      return { success: false as const, error: ACTION_ERRORS.UNAUTHORIZED }
     }
 
     const accounts = await db.bankAccount.findMany({
@@ -61,7 +62,7 @@ export const getAccounts = cache(async ({ userId }: { userId: string }) => {
     }
   } catch (error) {
     console.error("Error getting accounts:", error)
-    return { success: false as const, error: "Failed to load accounts" }
+    return { success: false as const, error: ACTION_ERRORS.LOAD_FAILED }
   }
 })
 
@@ -227,7 +228,7 @@ export async function syncTransactions({
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: ACTION_ERRORS.UNAUTHORIZED }
     }
 
     // Ownership gate: the account must belong to the caller. This also uses
@@ -238,7 +239,7 @@ export async function syncTransactions({
     })
 
     if (!account) {
-      return { success: false, error: "Account not found" }
+      return { success: false, error: ACTION_ERRORS.NOT_FOUND }
     }
 
     // Default date range: last 90 days

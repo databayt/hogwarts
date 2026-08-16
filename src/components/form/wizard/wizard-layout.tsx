@@ -11,6 +11,7 @@ import React, {
 } from "react"
 import { useParams, useRouter } from "next/navigation"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FormFooter } from "@/components/form/footer"
 import type { StepConfig } from "@/components/form/footer"
@@ -271,19 +272,30 @@ function WizardLayoutContent({
   }
 
   if (error) {
+    // `error` is an action error CODE (e.g. UNAUTHORIZED) — resolve it through
+    // the dictionary; never print the code, and never a fixed English string.
+    const common = (dictionary as any)?.common as
+      | Record<string, string>
+      | undefined
     return (
       <div className="flex min-h-full items-center justify-center pb-24">
         <div className="mx-auto w-full max-w-5xl">
           <div className="mx-auto max-w-md text-center">
-            <h2>Unable to Load</h2>
-            <p className="text-muted-foreground mb-4">{error}</p>
+            <h2>{common?.failedToLoad || "Failed to load"}</h2>
+            <p className="text-muted-foreground mb-4">
+              {actionErrorMessage(
+                error,
+                dictionary as any,
+                common?.error || "Something went wrong"
+              )}
+            </p>
             <button
               onClick={() =>
                 reload ? reload() : entityId && loadData(entityId)
               }
               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors"
             >
-              Try Again
+              {common?.tryAgain || "Try again"}
             </button>
           </div>
         </div>

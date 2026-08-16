@@ -61,10 +61,7 @@ export async function shareInvoice(
 
     return { success: true, data: { token } }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to share invoice",
-    }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -260,12 +257,6 @@ export async function revokeInvoiceShare(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to revoke invoice share",
-    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }

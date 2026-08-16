@@ -8,6 +8,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
@@ -53,6 +54,9 @@ export async function createWallet(
     return { success: true, data: wallet as any }
   } catch (error) {
     console.error("Error creating wallet:", error)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     return {
       success: false,
       error: "UNKNOWN",
@@ -134,6 +138,9 @@ export async function topupWallet(formData: FormData) {
     return { success: true, data: result }
   } catch (error) {
     console.error("Error topping up wallet:", error)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     return {
       success: false,
       error: "UNKNOWN",
@@ -202,6 +209,9 @@ export async function refundWallet(formData: FormData) {
     return { success: true, data: result }
   } catch (error) {
     console.error("Error refunding wallet:", error)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     return {
       success: false,
       error: "UNKNOWN",

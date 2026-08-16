@@ -45,10 +45,7 @@ export async function getInvoiceForWizard(
 
     return { success: true, data: invoice as unknown as InvoiceWizardData }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load invoice",
-    }
+    return actionError(ACTION_ERRORS.INVOICE_FETCH_FAILED)
   }
 }
 
@@ -136,11 +133,7 @@ export async function createDraftInvoice(): Promise<
 
     return { success: true, data: { id: invoice.id } }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create invoice",
-    }
+    return actionError(ACTION_ERRORS.INVOICE_CREATE_FAILED)
   }
 }
 
@@ -179,13 +172,7 @@ export async function completeInvoiceWizard(
     revalidatePath("/finance/invoice")
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to complete invoice wizard",
-    }
+    return actionError(ACTION_ERRORS.INVOICE_UPDATE_FAILED)
   }
 }
 
@@ -248,12 +235,6 @@ export async function deleteDraftInvoice(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete draft invoice",
-    }
+    return actionError(ACTION_ERRORS.INVOICE_DELETE_FAILED)
   }
 }

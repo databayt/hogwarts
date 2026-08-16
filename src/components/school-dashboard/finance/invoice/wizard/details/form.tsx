@@ -11,6 +11,7 @@ import React, {
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import {
@@ -122,7 +123,13 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
               const data = form.getValues()
               const result = await updateInvoiceDetails(invoiceId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  actionErrorMessage(
+                    result.error,
+                    dictionary,
+                    dictionary?.common?.failedToSave || "Failed to save"
+                  )
+                )
                 reject(new Error(result.error))
                 return
               }

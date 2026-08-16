@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -97,7 +98,11 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
         router.refresh()
       } else {
         toast.error(
-          result.error || rd?.failedDeleteReceipt || "Failed to delete receipt"
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            rd?.failedDeleteReceipt || "Failed to delete receipt"
+          )
         )
       }
     } catch (error) {
@@ -118,9 +123,11 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
         router.refresh()
       } else {
         toast.error(
-          result.error ||
-            rd?.failedRetryExtraction ||
-            "Failed to retry extraction"
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            rd?.failedRetryExtraction || "Failed to retry extraction"
+          )
         )
       }
     } catch (error) {

@@ -31,6 +31,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -775,7 +776,11 @@ function CopyPermissionsDialog({
         onClose()
       } else {
         toast.error(
-          result.error || t?.error?.copyFailed || "Failed to copy permissions"
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            t?.error?.copyFailed || "Failed to copy permissions"
+          )
         )
       }
     } catch (error) {

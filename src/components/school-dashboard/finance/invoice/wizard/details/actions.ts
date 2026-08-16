@@ -2,6 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { z } from "zod"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
@@ -53,10 +55,7 @@ export async function getInvoiceDetails(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -130,9 +129,9 @@ export async function updateInvoiceDetails(
     ) {
       return actionError(ACTION_ERRORS.INVOICE_DUPLICATE_NUMBER)
     }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

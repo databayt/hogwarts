@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { formatCurrency } from "@/lib/i18n-format"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -106,7 +107,13 @@ export function FineDetail({ fine, lang, currency = "USD" }: FineDetailProps) {
         setWaiveDialogOpen(false)
         router.refresh()
       } else {
-        toast.error(result.error || ff?.failedWaive || "Failed to waive fine")
+        toast.error(
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            ff?.failedWaive || "Failed to waive fine"
+          )
+        )
       }
     })
   }
@@ -124,7 +131,13 @@ export function FineDetail({ fine, lang, currency = "USD" }: FineDetailProps) {
         setPayDialogOpen(false)
         router.refresh()
       } else {
-        toast.error(result.error || ff?.failedPay || "Failed to record payment")
+        toast.error(
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            ff?.failedPay || "Failed to record payment"
+          )
+        )
       }
     })
   }
@@ -137,7 +150,13 @@ export function FineDetail({ fine, lang, currency = "USD" }: FineDetailProps) {
         setEditMode(false)
         router.refresh()
       } else {
-        toast.error(result.error || ff?.failedUpdate || "Failed to update fine")
+        toast.error(
+          actionErrorMessage(
+            result.error,
+            dictionary,
+            ff?.failedUpdate || "Failed to update fine"
+          )
+        )
       }
     })
   }
