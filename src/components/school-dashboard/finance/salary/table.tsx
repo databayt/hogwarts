@@ -38,6 +38,7 @@ type SalaryColumnsDict = {
   actions?: string
   view?: string
   edit?: string
+  openMenu?: string
   payFrequencyOptions?: Record<string, string>
 }
 

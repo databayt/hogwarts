@@ -51,6 +51,7 @@ type SalaryColumnsDict = {
   actions?: string
   view?: string
   edit?: string
+  openMenu?: string
   payFrequencyOptions?: Record<string, string>
 }
 
@@ -75,6 +76,7 @@ export const getSalaryStructureColumns = (
     actions: d?.actions || "Actions",
     view: d?.view || "View",
     edit: d?.edit || "Edit",
+    openMenu: d?.openMenu || "Open menu",
   }
 
   return [
@@ -237,7 +239,7 @@ export const getSalaryStructureColumns = (
       cell: ({ row }) => {
         const salary = row.original
         return (
-          <ActionMenu align={isAr ? "start" : "end"}>
+          <ActionMenu align={isAr ? "start" : "end"} srLabel={t.openMenu}>
             <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <ActionMenuItem

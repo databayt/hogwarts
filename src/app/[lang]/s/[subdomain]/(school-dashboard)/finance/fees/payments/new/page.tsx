@@ -9,6 +9,8 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import PaymentForm from "@/components/school-dashboard/finance/fees/payment-form"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { getLabels, getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -50,6 +52,16 @@ export default async function RecordPaymentPage({ params }: Props) {
     orderBy: { createdAt: "desc" },
   })
 
+  // One batched resolution for student names and structure labels — never
+  // per row. Stored text is in the school's language, the viewer's may differ.
+  const [names, labels] = await Promise.all([
+    getNames(assignments, (a) => a.student ?? {}, lang, schoolId),
+    getLabels(
+      assignments.map((a) => a.feeStructure?.name),
+      lang,
+      schoolId
+    ),
+  ])
   const mapped = assignments.map((a: any) => {
     const totalPaid = (a.payments ?? []).reduce(
       (sum: number, p: any) => sum + Number(p.amount),
@@ -58,10 +70,12 @@ export default async function RecordPaymentPage({ params }: Props) {
     const finalAmount = Number(a.finalAmount)
     return {
       id: a.id,
-      studentName: [a.student?.firstName, a.student?.lastName]
-        .filter(Boolean)
-        .join(" "),
-      feeStructureName: a.feeStructure?.name ?? "Unnamed",
+      studentName: a.student
+        ? (names.get(fullName(a.student)) ?? fullName(a.student))
+        : "",
+      feeStructureName: a.feeStructure?.name
+        ? (labels.get(a.feeStructure.name) ?? a.feeStructure.name)
+        : "-",
       finalAmount,
       totalPaid,
       remaining: finalAmount - totalPaid,

@@ -21,6 +21,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { PaymentDetailActions } from "@/components/school-dashboard/finance/fees/payment-detail-actions"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { getName } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
@@ -93,9 +94,9 @@ export default async function PaymentDetailPage({ params }: Props) {
 
   const currency = school?.currency ?? "USD"
 
-  const studentName = [payment.student?.firstName, payment.student?.lastName]
-    .filter(Boolean)
-    .join(" ")
+  const studentName = payment.student
+    ? await getName(payment.student, lang, schoolId)
+    : ""
 
   return (
     <div className="space-y-6">

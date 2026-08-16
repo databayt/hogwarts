@@ -65,9 +65,12 @@ export function BankAccountsSummary({
     const colorClass =
       typeColors[type.toLowerCase()] || "bg-gray-100 text-gray-800"
 
+    const typeLabels = fd?.dashboardPage?.bankAccountTypes as
+      | Record<string, string>
+      | undefined
     return (
       <Badge variant="secondary" className={colorClass}>
-        {type}
+        {typeLabels?.[type.toLowerCase()] ?? type}
       </Badge>
     )
   }

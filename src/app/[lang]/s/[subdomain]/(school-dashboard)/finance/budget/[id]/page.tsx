@@ -14,6 +14,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
@@ -72,6 +73,11 @@ export default async function BudgetDetailPage({ params }: Props) {
 
   const currency = schoolForCurrency?.currency ?? "USD"
 
+  const categoryLabels = await getLabels(
+    budget.allocations.map((a) => a.category.name),
+    lang,
+    schoolId
+  )
   const totalAllocated = budget.allocations.reduce(
     (sum, a) => sum + Number(a.allocated),
     0
@@ -165,7 +171,10 @@ export default async function BudgetDetailPage({ params }: Props) {
                 <Card key={alloc.id}>
                   <CardContent className="flex items-center justify-between py-3">
                     <div>
-                      <p className="font-medium">{alloc.category.name}</p>
+                      <p className="font-medium">
+                        {categoryLabels.get(alloc.category.name) ??
+                          alloc.category.name}
+                      </p>
                       {alloc.notes && (
                         <p className="text-muted-foreground text-sm">
                           {alloc.notes}

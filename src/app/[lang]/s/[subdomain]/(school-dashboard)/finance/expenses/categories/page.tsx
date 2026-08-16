@@ -12,6 +12,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -61,6 +62,15 @@ export default async function ExpenseCategoriesPage({ params }: Props) {
     },
   })
 
+  // Seeded category names are English; one batched lookup covers parents and
+  // children alike.
+  const labels = await getLabels(
+    categories.flatMap((c) => [c.name, ...c.children.map((ch) => ch.name)]),
+    lang,
+    schoolId
+  )
+  const labelOf = (name: string) => labels.get(name) ?? name
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -79,7 +89,7 @@ export default async function ExpenseCategoriesPage({ params }: Props) {
               <CardContent className="py-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{category.name}</p>
+                    <p className="font-medium">{labelOf(category.name)}</p>
                     {category.description && (
                       <p className="text-muted-foreground text-sm">
                         {category.description}
@@ -112,7 +122,7 @@ export default async function ExpenseCategoriesPage({ params }: Props) {
                         key={child.id}
                         className="flex items-center justify-between text-sm"
                       >
-                        <p>{child.name}</p>
+                        <p>{labelOf(child.name)}</p>
                         <span className="text-muted-foreground">
                           {child._count.expenses} {c?.expenses || "expenses"}
                         </span>

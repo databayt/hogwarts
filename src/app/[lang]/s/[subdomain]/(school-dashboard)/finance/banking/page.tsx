@@ -25,7 +25,7 @@ export default async function BankingDashboardPage({
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>{dictionary?.common?.loading}</div>}>
       <BankingDashboardContent
         user={session.user}
         searchParams={resolvedSearchParams}

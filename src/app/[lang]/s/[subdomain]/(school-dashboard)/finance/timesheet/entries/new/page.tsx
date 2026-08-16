@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function NewTimesheetEntryPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const tp = dictionary?.finance?.timesheetPage
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -40,17 +41,21 @@ export default async function NewTimesheetEntryPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Record Time Entry</h3>
+        <h3 className="text-lg font-medium">
+          {tp?.recordTimeEntry || "Record Time Entry"}
+        </h3>
         <p className="text-muted-foreground text-sm">
-          Log hours worked for a teacher
+          {tp?.logHoursForTeacher || "Log hours worked for a teacher"}
         </p>
       </div>
-      <p className="text-muted-foreground">Time entry form coming soon.</p>
+      <p className="text-muted-foreground">
+        {tp?.timeEntryFormComingSoon || "Time entry form coming soon."}
+      </p>
       <Link
         href={`/${lang}/finance/timesheet/entries`}
         className={buttonVariants({ variant: "outline" })}
       >
-        Back to Entries
+        {tp?.backToEntries || "Back to Entries"}
       </Link>
     </div>
   )

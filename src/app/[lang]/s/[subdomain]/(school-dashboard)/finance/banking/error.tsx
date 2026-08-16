@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export default function BankingError({
   error,
@@ -22,6 +23,9 @@ export default function BankingError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const { dictionary } = useDictionary()
+  const c = dictionary?.finance?.common
+
   useEffect(() => {
     // Log the error to an error reporting service
     console.error("Banking module error:", error)
@@ -33,18 +37,22 @@ export default function BankingError({
         <CardHeader>
           <div className="flex items-center gap-2">
             <Icons.alertTriangle className="text-destructive h-5 w-5" />
-            <CardTitle>Something went wrong!</CardTitle>
+            <CardTitle>
+              {c?.errorTitle || "Unable to load finance data"}
+            </CardTitle>
           </div>
           <CardDescription>
             {error.message ||
-              "An error occurred while loading your banking information."}
+              c?.errorDescription ||
+              "An unexpected error occurred while loading finance information."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-sm">
             {error.digest && (
               <>
-                Error ID: <code className="text-xs">{error.digest}</code>
+                {c?.errorReference || "Error reference"}:{" "}
+                <code className="text-xs">{error.digest}</code>
               </>
             )}
           </p>
@@ -54,11 +62,11 @@ export default function BankingError({
             variant="outline"
             onClick={() => (window.location.href = "/banking")}
           >
-            Go to Dashboard
+            {c?.goToDashboard || "Go to Dashboard"}
           </Button>
           <Button onClick={reset}>
             <Icons.refresh className="me-2 h-4 w-4" />
-            Try again
+            {c?.tryAgain || "Try again"}
           </Button>
         </CardFooter>
       </Card>

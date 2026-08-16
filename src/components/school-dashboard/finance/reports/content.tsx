@@ -142,7 +142,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardContent>
             <div className="text-2xl font-bold">-</div>
             <p className="text-muted-foreground text-xs">
-              {rp?.exportFormats || "PDF, Excel, CSV"}
+              {rp?.pdfExcelCsv || "PDF, Excel, CSV"}
             </p>
           </CardContent>
         </Card>
@@ -153,10 +153,10 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="text-primary h-5 w-5" />
-              {rp?.profitLossStatement || "Profit & Loss Statement"}
+              {rp?.profitLoss || "Profit & Loss Statement"}
             </CardTitle>
             <CardDescription>
-              {rp?.incomeStatementDesc ||
+              {rp?.profitLossDesc ||
                 "Income statement showing revenue and expenses"}
             </CardDescription>
           </CardHeader>
@@ -176,7 +176,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
               {rp?.balanceSheet || "Balance Sheet"}
             </CardTitle>
             <CardDescription>
-              {rp?.assetsLiabilitiesEquity ||
+              {rp?.balanceSheetDesc ||
                 "Assets, liabilities, and equity statement"}
             </CardDescription>
           </CardHeader>
@@ -216,7 +216,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
               {rp?.allReports || "All Reports"}
             </CardTitle>
             <CardDescription>
-              {rp?.viewManageReports || "View and manage all generated reports"}
+              {rp?.allReportsDesc || "View and manage all generated reports"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">

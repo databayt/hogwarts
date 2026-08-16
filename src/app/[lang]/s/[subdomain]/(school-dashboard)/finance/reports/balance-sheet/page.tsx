@@ -6,6 +6,7 @@ import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +16,7 @@ import { FinanceAccessDenied } from "@/components/school-dashboard/finance/acces
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 import { generateBalanceSheet } from "@/components/school-dashboard/finance/reports/actions"
 import type { BalanceSheetData } from "@/components/school-dashboard/finance/reports/types"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -101,15 +103,31 @@ export default async function BalanceSheetPage({ params }: Props) {
           </Link>
         </div>
         <p className="text-destructive py-8 text-center">
-          {result.error ??
-            d?.failedGenerateBalanceSheet ??
-            "Failed to generate balance sheet."}
+          {actionErrorMessage(
+            result.error,
+            dictionary,
+            d?.failedGenerateBalanceSheet ?? "Failed to generate balance sheet."
+          )}
         </p>
       </div>
     )
   }
 
   const data = result.data as BalanceSheetData
+
+  // Seeded chart-of-account names are English; one batched lookup, no per-row
+  // round-trip. The computed earnings line has no account of its own.
+  const names = await getLabels(
+    [...data.assets, ...data.liabilities, ...data.equity].map(
+      (a) => a.accountName
+    ),
+    lang,
+    schoolId
+  )
+  const nameOf = (a: { accountName: string; isComputed?: boolean }) =>
+    a.isComputed
+      ? (d?.currentYearEarnings ?? a.accountName)
+      : (names.get(a.accountName) ?? a.accountName)
 
   return (
     <div className="space-y-6">
@@ -163,7 +181,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                 {data.assets.map((a) => (
                   <tr key={a.accountCode} className="border-b last:border-0">
                     <td className="py-2 font-mono">{a.accountCode}</td>
-                    <td className="py-2">{a.accountName}</td>
+                    <td className="py-2">{nameOf(a)}</td>
                     <td className="py-2 text-end">
                       {formatCurrency(a.balance, lang, currency)}
                     </td>
@@ -208,7 +226,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                 {data.liabilities.map((l) => (
                   <tr key={l.accountCode} className="border-b last:border-0">
                     <td className="py-2 font-mono">{l.accountCode}</td>
-                    <td className="py-2">{l.accountName}</td>
+                    <td className="py-2">{nameOf(l)}</td>
                     <td className="py-2 text-end">
                       {formatCurrency(l.balance, lang, currency)}
                     </td>
@@ -253,7 +271,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                 {data.equity.map((e) => (
                   <tr key={e.accountCode} className="border-b last:border-0">
                     <td className="py-2 font-mono">{e.accountCode}</td>
-                    <td className="py-2">{e.accountName}</td>
+                    <td className="py-2">{nameOf(e)}</td>
                     <td className="py-2 text-end">
                       {formatCurrency(e.balance, lang, currency)}
                     </td>

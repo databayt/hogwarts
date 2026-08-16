@@ -6,6 +6,7 @@ import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +16,7 @@ import { FinanceAccessDenied } from "@/components/school-dashboard/finance/acces
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 import { generateTrialBalance } from "@/components/school-dashboard/finance/reports/actions"
 import type { TrialBalanceData } from "@/components/school-dashboard/finance/reports/types"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -101,15 +103,23 @@ export default async function TrialBalancePage({ params }: Props) {
           </Link>
         </div>
         <p className="text-destructive py-8 text-center">
-          {result.error ??
-            d?.failedGenerateTrialBalance ??
-            "Failed to generate trial balance."}
+          {actionErrorMessage(
+            result.error,
+            dictionary,
+            d?.failedGenerateTrialBalance ?? "Failed to generate trial balance."
+          )}
         </p>
       </div>
     )
   }
 
   const data = result.data as TrialBalanceData
+
+  const names = await getLabels(
+    data.accounts.map((a) => a.accountName),
+    lang,
+    schoolId
+  )
 
   return (
     <div className="space-y-6">
@@ -164,7 +174,9 @@ export default async function TrialBalancePage({ params }: Props) {
                 {data.accounts.map((a) => (
                   <tr key={a.accountCode} className="border-b last:border-0">
                     <td className="py-2 font-mono">{a.accountCode}</td>
-                    <td className="py-2">{a.accountName}</td>
+                    <td className="py-2">
+                      {names.get(a.accountName) ?? a.accountName}
+                    </td>
                     <td className="py-2">
                       <Badge variant="secondary" className="text-xs">
                         {a.accountType}

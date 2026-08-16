@@ -30,7 +30,9 @@ export default async function MyBanksContent(props: Props) {
   if (!props.user.id) {
     return (
       <div className="py-8">
-        <p className="text-muted-foreground">{"User ID not found"}</p>
+        <p className="text-muted-foreground">
+          {props.dictionary.transferErrorUnauthorized}
+        </p>
       </div>
     )
   }

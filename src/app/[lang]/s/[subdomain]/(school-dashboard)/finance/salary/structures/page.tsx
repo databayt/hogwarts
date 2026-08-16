@@ -71,5 +71,13 @@ export default async function SalaryStructuresPage({ params }: Props) {
         : String(s.createdAt),
   }))
 
-  return <SalaryStructuresTable initialData={data} total={count} lang={lang} />
+  return (
+    <SalaryStructuresTable
+      initialData={data}
+      total={count}
+      lang={lang}
+      columnsDict={dictionary?.finance?.salaryColumns}
+      configDict={dictionary?.finance?.salaryConfig}
+    />
+  )
 }

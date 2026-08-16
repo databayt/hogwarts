@@ -151,7 +151,7 @@ export async function FinanceDashboardContent({
         value: stats.totalPayroll,
         icon: "💼",
         color: "orange",
-        description: `${stats.payrollProcessed} ${dp?.processedPending || "processed, pending".split(", ")[0]}, ${stats.pendingPayroll} ${(dp?.processedPending || "processed, pending").split(", ")[1] || "pending"}`,
+        description: `${stats.payrollProcessed} ${dp?.processed || "processed"}, ${stats.pendingPayroll} ${dp?.pending || "pending"}`,
       },
     ]
 

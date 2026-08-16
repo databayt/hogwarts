@@ -10,6 +10,8 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { MyFees } from "@/components/school-dashboard/finance/fees/my-fees"
+import { getName, getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -42,9 +44,7 @@ export default async function MyFeesPage({ params }: Props) {
     })
     if (!student) notFound()
     studentIds = [student.id]
-    studentNameMap[student.id] = [student.firstName, student.lastName]
-      .filter(Boolean)
-      .join(" ")
+    studentNameMap[student.id] = await getName(student, lang, schoolId)
   } else if (role === "GUARDIAN") {
     const guardian = await db.guardian.findFirst({
       where: { userId: session.user.id, schoolId },
@@ -60,13 +60,15 @@ export default async function MyFeesPage({ params }: Props) {
     })
     if (!guardian?.studentGuardians?.length) notFound()
     studentIds = guardian.studentGuardians.map((sg) => sg.student.id)
+    const names = await getNames(
+      guardian.studentGuardians,
+      (sg) => sg.student,
+      lang,
+      schoolId
+    )
     for (const sg of guardian.studentGuardians) {
-      studentNameMap[sg.student.id] = [
-        sg.student.firstName,
-        sg.student.lastName,
-      ]
-        .filter(Boolean)
-        .join(" ")
+      const raw = fullName(sg.student)
+      studentNameMap[sg.student.id] = names.get(raw) ?? raw
     }
   } else {
     // Admin/Accountant/etc — redirect to full fees page

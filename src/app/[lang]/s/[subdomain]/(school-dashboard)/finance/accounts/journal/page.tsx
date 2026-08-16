@@ -30,6 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function JournalEntriesPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const ap = dictionary?.finance?.accountsPage
+  const c = dictionary?.finance?.common
   const { schoolId, can } = await resolveFinanceAccess("accounts", ["view"])
 
   if (!schoolId) {
@@ -65,17 +67,19 @@ export default async function JournalEntriesPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Journal Entries</h3>
+        <h3 className="text-lg font-medium">
+          {ap?.journalEntries || "Journal Entries"}
+        </h3>
         <Link
           href={`/${lang}/finance/accounts/journal/new`}
           className={buttonVariants()}
         >
-          New Journal Entry
+          {ap?.newJournalEntry || "New Journal Entry"}
         </Link>
       </div>
       {entries.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No journal entries yet.
+          {ap?.noJournalEntriesYet || "No journal entries yet."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -94,7 +98,9 @@ export default async function JournalEntriesPage({ params }: Props) {
                   <div>
                     <p className="font-medium">
                       #{entry.entryNumber} &mdash;{" "}
-                      {entry.description || "No description"}
+                      {entry.description ||
+                        ap?.noDescription ||
+                        "No description"}
                     </p>
                     <p className="text-muted-foreground text-sm">
                       {formatDate(entry.entryDate, lang)} &middot;{" "}
@@ -106,7 +112,9 @@ export default async function JournalEntriesPage({ params }: Props) {
                       {formatCurrency(totalDebits, lang, currency)}
                     </p>
                     <Badge variant={entry.isPosted ? "default" : "secondary"}>
-                      {entry.isPosted ? "Posted" : "Draft"}
+                      {entry.isPosted
+                        ? c?.posted || "Posted"
+                        : c?.draft || "Draft"}
                     </Badge>
                   </div>
                 </CardContent>

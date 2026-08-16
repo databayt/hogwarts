@@ -14,6 +14,8 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 import { PayrollRunActions } from "@/components/school-dashboard/finance/payroll/run-actions"
+import { getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
@@ -78,6 +80,12 @@ export default async function PayrollRunDetailPage({ params }: Props) {
   if (!run) notFound()
 
   const currency = schoolForCurrency?.currency ?? "USD"
+  const staffNames = await getNames(
+    run.salarySlips,
+    (slip) => slip.teacher ?? {},
+    lang,
+    schoolId
+  )
 
   return (
     <div className="space-y-6">
@@ -153,9 +161,10 @@ export default async function PayrollRunDetailPage({ params }: Props) {
                 <CardContent className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-medium">
-                      {[slip.teacher?.firstName, slip.teacher?.lastName]
-                        .filter(Boolean)
-                        .join(" ")}
+                      {slip.teacher
+                        ? (staffNames.get(fullName(slip.teacher)) ??
+                          fullName(slip.teacher))
+                        : ""}
                     </p>
                     <p className="text-muted-foreground text-xs">
                       {slip.slipNumber}

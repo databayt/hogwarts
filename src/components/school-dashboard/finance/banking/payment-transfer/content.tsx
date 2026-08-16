@@ -35,7 +35,9 @@ export default async function PaymentTransferContent(props: Props) {
   if (!props.user.id) {
     return (
       <div>
-        <p className="text-muted-foreground">User ID not found</p>
+        <p className="text-muted-foreground">
+          {props.dictionary.transferErrorUnauthorized}
+        </p>
       </div>
     )
   }

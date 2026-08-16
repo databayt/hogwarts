@@ -6,6 +6,7 @@ import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +16,7 @@ import { FinanceAccessDenied } from "@/components/school-dashboard/finance/acces
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 import { generateIncomeStatement } from "@/components/school-dashboard/finance/reports/actions"
 import type { IncomeStatementData } from "@/components/school-dashboard/finance/reports/types"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -101,15 +103,26 @@ export default async function ProfitLossPage({ params }: Props) {
           </Link>
         </div>
         <p className="text-destructive py-8 text-center">
-          {result.error ??
+          {actionErrorMessage(
+            result.error,
+            dictionary,
             d?.failedGenerateIncomeStatement ??
-            "Failed to generate income statement."}
+              "Failed to generate income statement."
+          )}
         </p>
       </div>
     )
   }
 
   const data = result.data as IncomeStatementData
+
+  const names = await getLabels(
+    [...data.revenue, ...data.expenses].map((a) => a.accountName),
+    lang,
+    schoolId
+  )
+  const nameOf = (a: { accountName: string }) =>
+    names.get(a.accountName) ?? a.accountName
   const isProfit = data.netIncome >= 0
 
   return (
@@ -157,7 +170,7 @@ export default async function ProfitLossPage({ params }: Props) {
                 {data.revenue.map((r) => (
                   <tr key={r.accountCode} className="border-b last:border-0">
                     <td className="py-2 font-mono">{r.accountCode}</td>
-                    <td className="py-2">{r.accountName}</td>
+                    <td className="py-2">{nameOf(r)}</td>
                     <td className="py-2 text-end">
                       {formatCurrency(r.balance, lang, currency)}
                     </td>
@@ -202,7 +215,7 @@ export default async function ProfitLossPage({ params }: Props) {
                 {data.expenses.map((e) => (
                   <tr key={e.accountCode} className="border-b last:border-0">
                     <td className="py-2 font-mono">{e.accountCode}</td>
-                    <td className="py-2">{e.accountName}</td>
+                    <td className="py-2">{nameOf(e)}</td>
                     <td className="py-2 text-end">
                       {formatCurrency(e.balance, lang, currency)}
                     </td>

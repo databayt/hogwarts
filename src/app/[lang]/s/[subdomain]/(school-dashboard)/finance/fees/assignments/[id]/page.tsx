@@ -298,6 +298,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
             totalAmount={finalAmount}
             totalPaid={totalPaid}
             lang={lang}
+            dictionary={dictionary}
           />
         )
       })()}

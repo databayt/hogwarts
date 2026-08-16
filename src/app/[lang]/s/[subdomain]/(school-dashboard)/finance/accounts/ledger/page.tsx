@@ -11,6 +11,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -29,6 +30,7 @@ export default async function GeneralLedgerPage({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.accountsPage
   const c = dictionary?.finance?.common
+  const acctTypeLabels = dictionary?.finance?.accountsConfig?.accountTypeLabels
   const { schoolId, can } = await resolveFinanceAccess("accounts", ["view"])
 
   if (!schoolId) {
@@ -62,6 +64,14 @@ export default async function GeneralLedgerPage({ params }: Props) {
     }),
   ])
   const currency = schoolForCurrency?.currency ?? "USD"
+
+  // Batched, deduped translation of DB-stored (English seed) account names —
+  // one resolution for the whole list, never per-row.
+  const labels = await getLabels(
+    ledgerEntries.map((e) => e.account.name),
+    lang,
+    schoolId
+  )
 
   return (
     <div className="space-y-4">
@@ -120,10 +130,12 @@ export default async function GeneralLedgerPage({ params }: Props) {
                         <span className="font-medium">
                           {entry.account.code}
                         </span>{" "}
-                        &mdash; {entry.account.name}
+                        &mdash;{" "}
+                        {labels.get(entry.account.name) ?? entry.account.name}
                       </td>
                       <td className="text-muted-foreground py-2 pe-4">
-                        {entry.account.type}
+                        {acctTypeLabels?.[entry.account.type] ??
+                          entry.account.type}
                       </td>
                       <td className="py-2 pe-4 text-end">
                         {Number(entry.debit) > 0

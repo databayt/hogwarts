@@ -10,6 +10,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { FineDetail } from "@/components/school-dashboard/finance/fees/fine-detail"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { getName } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
@@ -47,9 +48,7 @@ export default async function FineDetailPage({ params }: Props) {
 
   const data = {
     id: fine.id,
-    studentName: [fine.student.firstName, fine.student.lastName]
-      .filter(Boolean)
-      .join(" "),
+    studentName: await getName(fine.student, lang, schoolId),
     studentId: fine.student.id,
     fineType: fine.fineType,
     amount: Number(fine.amount),

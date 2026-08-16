@@ -14,6 +14,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { checkFinancePermission } from "@/components/school-dashboard/finance/lib/permissions"
 import { PayslipBreakdown } from "@/components/school-dashboard/finance/payroll/payslip/breakdown"
+import { getName } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
@@ -82,6 +83,10 @@ export default async function PayslipPage({ params }: Props) {
     select: { currency: true },
   })
 
+  const employeeName = slip.teacher
+    ? await getName(slip.teacher, lang, schoolId)
+    : ""
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -120,9 +125,7 @@ export default async function PayslipPage({ params }: Props) {
           totalDeductions: Number(slip.totalDeductions),
           netSalary: Number(slip.netSalary),
           daysWorked: slip.daysWorked,
-          employeeName: [slip.teacher?.firstName, slip.teacher?.lastName]
-            .filter(Boolean)
-            .join(" "),
+          employeeName,
         }}
       />
     </div>

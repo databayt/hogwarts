@@ -12,6 +12,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -26,6 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BudgetsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const bp = dictionary?.finance?.budgetPage
+  const statusLabels = dictionary?.finance?.budgetConfig?.statusLabels
   const { schoolId, can } = await resolveFinanceAccess("budget", ["view"])
 
   if (!schoolId) {
@@ -51,17 +54,25 @@ export default async function BudgetsPage({ params }: Props) {
     },
   })
 
+  // Batched, deduped translation of DB-stored (English seed) budget names —
+  // one resolution for the whole list, never per-row.
+  const labels = await getLabels(
+    budgets.map((b) => b.name),
+    lang,
+    schoolId
+  )
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Budgets</h3>
+        <h3 className="text-lg font-medium">{bp?.budgets || "Budgets"}</h3>
         <Link href={`/${lang}/finance/budget/new`} className={buttonVariants()}>
-          Create Budget
+          {bp?.createBudget || "Create Budget"}
         </Link>
       </div>
       {budgets.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No budgets yet.
+          {bp?.noBudgetsYet || "No budgets yet."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -70,10 +81,13 @@ export default async function BudgetsPage({ params }: Props) {
               <Card className="hover:bg-muted/50 transition-colors">
                 <CardContent className="flex items-center justify-between py-4">
                   <div>
-                    <p className="font-medium">{budget.name}</p>
+                    <p className="font-medium">
+                      {labels.get(budget.name) ?? budget.name}
+                    </p>
                     <p className="text-muted-foreground text-sm">
                       {budget.fiscalYear.name} &mdash;{" "}
-                      {budget._count.allocations} allocations
+                      {budget._count.allocations}{" "}
+                      {bp?.allocations || "allocations"}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -88,7 +102,7 @@ export default async function BudgetsPage({ params }: Props) {
                         budget.status === "ACTIVE" ? "default" : "secondary"
                       }
                     >
-                      {budget.status}
+                      {statusLabels?.[budget.status] ?? budget.status}
                     </Badge>
                   </div>
                 </CardContent>

@@ -60,7 +60,7 @@ export default async function FeeStructureDetailPage({ params }: Props) {
         <h3 className="text-lg font-medium">{feeStructure.name}</h3>
         <p className="text-muted-foreground text-sm">
           {feeStructure.academicYear} — {feeStructure._count.feeAssignments}{" "}
-          assignments
+          {dictionary?.finance?.fees?.structureColumns?.assignments}
         </p>
       </div>
       <FeeStructureForm

@@ -26,6 +26,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function WalletsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const wp = dictionary?.finance?.walletPage
+  const c = dictionary?.finance?.common
+  const walletTypeLabels = dictionary?.finance?.walletConfig?.walletTypes
   const { schoolId, can } = await resolveFinanceAccess("wallet", ["view"])
 
   if (!schoolId) {
@@ -52,14 +55,14 @@ export default async function WalletsPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Wallets</h3>
+        <h3 className="text-lg font-medium">{wp?.wallets || "Wallets"}</h3>
         <Link href={`/${lang}/finance/wallet/new`} className={buttonVariants()}>
-          Create Wallet
+          {wp?.createWallet || "Create Wallet"}
         </Link>
       </div>
       {wallets.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No wallets yet.
+          {wp?.noWalletsYet || "No wallets yet."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -70,7 +73,8 @@ export default async function WalletsPage({ params }: Props) {
                   <div>
                     <p className="font-medium">{wallet.ownerId}</p>
                     <p className="text-muted-foreground text-sm">
-                      {wallet._count.transactions} transactions
+                      {wallet._count.transactions}{" "}
+                      {c?.transactions || "transactions"}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -80,9 +84,14 @@ export default async function WalletsPage({ params }: Props) {
                         minimumFractionDigits: 2,
                       })}
                     </p>
-                    <Badge>{wallet.walletType}</Badge>
+                    <Badge>
+                      {walletTypeLabels?.[wallet.walletType] ??
+                        wallet.walletType}
+                    </Badge>
                     <Badge variant={wallet.isActive ? "default" : "secondary"}>
-                      {wallet.isActive ? "Active" : "Inactive"}
+                      {wallet.isActive
+                        ? c?.active || "Active"
+                        : c?.inactive || "Inactive"}
                     </Badge>
                   </div>
                 </CardContent>

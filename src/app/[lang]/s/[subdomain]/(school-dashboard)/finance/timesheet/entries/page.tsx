@@ -31,6 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TimesheetEntriesPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const tp = dictionary?.finance?.timesheetPage
+  const entryStatusLabels = dictionary?.finance?.timesheetConfig?.entryStatus
   const { schoolId, can } = await resolveFinanceAccess("timesheet", ["view"])
 
   if (!schoolId) {
@@ -59,17 +61,19 @@ export default async function TimesheetEntriesPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Timesheet Entries</h3>
+        <h3 className="text-lg font-medium">
+          {tp?.timesheetEntries || "Timesheet Entries"}
+        </h3>
         <Link
           href={`/${lang}/finance/timesheet/entries/new`}
           className={buttonVariants()}
         >
-          Record Time Entry
+          {tp?.recordTimeEntry || "Record Time Entry"}
         </Link>
       </div>
       {entries.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No timesheet entries yet.
+          {tp?.noTimesheetEntriesYet || "No timesheet entries yet."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -89,9 +93,18 @@ export default async function TimesheetEntriesPage({ params }: Props) {
                   </p>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
-                  <span>{Number(entry.hoursWorked)}h worked</span>
-                  <span>{Number(entry.overtimeHours)}h OT</span>
-                  <span>{Number(entry.leaveHours)}h leave</span>
+                  <span>
+                    {Number(entry.hoursWorked)}
+                    {tp?.hoursWorked || "h worked"}
+                  </span>
+                  <span>
+                    {Number(entry.overtimeHours)}
+                    {tp?.hoursOT || "h OT"}
+                  </span>
+                  <span>
+                    {Number(entry.leaveHours)}
+                    {tp?.hoursLeave || "h leave"}
+                  </span>
                   <Badge
                     variant={
                       entry.status === "DRAFT"
@@ -103,7 +116,7 @@ export default async function TimesheetEntriesPage({ params }: Props) {
                             : "destructive"
                     }
                   >
-                    {entry.status}
+                    {entryStatusLabels?.[entry.status] ?? entry.status}
                   </Badge>
                 </div>
               </CardContent>

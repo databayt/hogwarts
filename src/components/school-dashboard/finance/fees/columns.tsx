@@ -64,6 +64,7 @@ export const getFeeStructureColumns = (
     lock: col?.lock || "Lock from sync",
     unlock: col?.unlock || "Unlock",
     delete: col?.delete || "Delete",
+    openMenu: col?.openMenu || "Open menu",
   }
 
   return [
@@ -87,18 +88,18 @@ export const getFeeStructureColumns = (
               <Badge
                 variant="secondary"
                 className="text-[10px] tracking-wide uppercase"
-                title="Managed by the fee sync engine"
+                title={col?.autoTitle}
               >
-                Auto
+                {col?.auto}
               </Badge>
             )}
             {fee.isLocked && (
               <Badge
                 variant="outline"
                 className="text-[10px] tracking-wide uppercase"
-                title="Locked — ignored by sync"
+                title={col?.lockedTitle}
               >
-                Locked
+                {col?.locked}
               </Badge>
             )}
           </div>
@@ -219,7 +220,7 @@ export const getFeeStructureColumns = (
       cell: ({ row }) => {
         const fee = row.original
         return (
-          <ActionMenu align={isAr ? "start" : "end"}>
+          <ActionMenu align={isAr ? "start" : "end"} srLabel={t.openMenu}>
             <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <ActionMenuItem

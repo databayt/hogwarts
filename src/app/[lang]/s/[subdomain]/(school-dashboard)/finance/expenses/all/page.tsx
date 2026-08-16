@@ -14,6 +14,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { ExpenseRowActions } from "@/components/school-dashboard/finance/expenses/expense-row-actions"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -45,6 +46,8 @@ const statusVariant = (status: string) => {
 export default async function ExpensesListPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const ep = dictionary?.finance?.expensesPage
+  const statusLabels = dictionary?.finance?.expensesConfig?.statusLabels
   const { schoolId, can } = await resolveFinanceAccess("expenses", ["view"])
 
   if (!schoolId) {
@@ -76,20 +79,28 @@ export default async function ExpensesListPage({ params }: Props) {
   ])
   const currency = schoolForCurrency?.currency ?? "USD"
 
+  // Batched, deduped translation of DB-stored (English seed) category names —
+  // one resolution for the whole list, never per-row.
+  const labels = await getLabels(
+    expenses.map((e) => e.category.name),
+    lang,
+    schoolId
+  )
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Expenses</h3>
+        <h3 className="text-lg font-medium">{ep?.expenses || "Expenses"}</h3>
         <Link
           href={`/${lang}/finance/expenses/new`}
           className={buttonVariants()}
         >
-          Submit Expense
+          {ep?.submitExpense || "Submit Expense"}
         </Link>
       </div>
       {expenses.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No expenses yet.
+          {ep?.noExpensesYet || "No expenses yet."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -108,8 +119,8 @@ export default async function ExpensesListPage({ params }: Props) {
                     {expense.vendor && ` \u2014 ${expense.vendor}`}
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    {expense.category.name} &mdash;{" "}
-                    {formatDate(expense.expenseDate, lang)}
+                    {labels.get(expense.category.name) ?? expense.category.name}{" "}
+                    &mdash; {formatDate(expense.expenseDate, lang)}
                   </p>
                 </Link>
                 <div className="flex shrink-0 items-center gap-3">
@@ -117,11 +128,12 @@ export default async function ExpensesListPage({ params }: Props) {
                     {formatCurrency(Number(expense.amount), lang, currency)}
                   </p>
                   <Badge variant={statusVariant(expense.status)}>
-                    {expense.status}
+                    {statusLabels?.[expense.status] ?? expense.status}
                   </Badge>
                   <ExpenseRowActions
                     expenseId={expense.id}
                     status={expense.status}
+                    labels={dictionary?.finance?.expenseActions}
                   />
                 </div>
               </CardContent>

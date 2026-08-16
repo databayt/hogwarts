@@ -31,6 +31,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TimesheetPeriodsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const tp = dictionary?.finance?.timesheetPage
+  const c = dictionary?.finance?.common
+  const periodStatusLabels = dictionary?.finance?.timesheetConfig?.periodStatus
   const { schoolId, can } = await resolveFinanceAccess("timesheet", ["view"])
 
   if (!schoolId) {
@@ -57,17 +60,19 @@ export default async function TimesheetPeriodsPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Timesheet Periods</h3>
+        <h3 className="text-lg font-medium">
+          {tp?.timesheetPeriods || "Timesheet Periods"}
+        </h3>
         <Link
           href={`/${lang}/finance/timesheet/entries`}
           className={buttonVariants({ variant: "outline" })}
         >
-          View Entries
+          {tp?.viewEntries || "View Entries"}
         </Link>
       </div>
       {periods.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No timesheet periods yet.
+          {tp?.noTimesheetPeriodsYet || "No timesheet periods yet."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -82,7 +87,7 @@ export default async function TimesheetPeriodsPage({ params }: Props) {
                   <p className="text-muted-foreground text-sm">
                     {formatDate(period.startDate, lang)} &mdash;{" "}
                     {formatDate(period.endDate, lang)} &mdash;{" "}
-                    {period._count.entries} entries
+                    {period._count.entries} {c?.entries || "entries"}
                   </p>
                 </div>
                 <Badge
@@ -94,7 +99,7 @@ export default async function TimesheetPeriodsPage({ params }: Props) {
                         : "destructive"
                   }
                 >
-                  {period.status}
+                  {periodStatusLabels?.[period.status] ?? period.status}
                 </Badge>
               </CardContent>
             </Card>

@@ -29,6 +29,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function WalletTransactionsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const wp = dictionary?.finance?.walletPage
+  const c = dictionary?.finance?.common
+  const walletTypeLabels = dictionary?.finance?.walletConfig?.walletTypes
+  const transactionTypeLabels =
+    dictionary?.finance?.walletConfig?.transactionTypes
   const { schoolId, can } = await resolveFinanceAccess("wallet", ["view"])
 
   if (!schoolId) {
@@ -62,10 +67,12 @@ export default async function WalletTransactionsPage({ params }: Props) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Wallet Transactions</h3>
+      <h3 className="text-lg font-medium">
+        {wp?.walletTransactions || "Wallet Transactions"}
+      </h3>
       {transactions.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No transactions yet.
+          {wp?.noTransactionsYet || "No transactions yet."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -74,11 +81,16 @@ export default async function WalletTransactionsPage({ params }: Props) {
               <CardContent className="flex items-center justify-between py-4">
                 <div>
                   <p className="font-medium">
-                    {tx.description || tx.reference || "Transaction"}
+                    {tx.description ||
+                      tx.reference ||
+                      c?.transaction ||
+                      "Transaction"}
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    {tx.wallet.walletType} &mdash; {tx.wallet.ownerId}
-                    {tx.sourceModule && ` &mdash; ${tx.sourceModule}`}
+                    {walletTypeLabels?.[tx.wallet.walletType] ??
+                      tx.wallet.walletType}{" "}
+                    &mdash; {tx.wallet.ownerId}
+                    {tx.sourceModule && <> &mdash; {tx.sourceModule}</>}
                   </p>
                   <p className="text-muted-foreground text-sm">
                     {formatDate(tx.createdAt, lang)}
@@ -94,7 +106,7 @@ export default async function WalletTransactionsPage({ params }: Props) {
                       )}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      Balance:{" "}
+                      {c?.balance || "Balance"}:{" "}
                       {formatCurrency(
                         Number(tx.balanceAfter),
                         lang,
@@ -105,7 +117,7 @@ export default async function WalletTransactionsPage({ params }: Props) {
                   <Badge
                     variant={tx.type === "CREDIT" ? "default" : "destructive"}
                   >
-                    {tx.type}
+                    {transactionTypeLabels?.[tx.type] ?? tx.type}
                   </Badge>
                 </div>
               </CardContent>

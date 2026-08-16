@@ -28,6 +28,8 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { getFeeStats } from "@/components/school-dashboard/finance/fees/queries"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -88,6 +90,13 @@ export default async function FeeReportsPage({ params }: Props) {
         select: { currency: true },
       }),
     ])
+
+  const payerNames = await getNames(
+    recentPayments,
+    (p) => p.student ?? {},
+    lang,
+    schoolId
+  )
   const currency = schoolForCurrency?.currency ?? "USD"
 
   const totalExpected =
@@ -275,9 +284,10 @@ export default async function FeeReportsPage({ params }: Props) {
                 {recentPayments.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">
-                      {[p.student?.firstName, p.student?.lastName]
-                        .filter(Boolean)
-                        .join(" ")}
+                      {p.student
+                        ? (payerNames.get(fullName(p.student)) ??
+                          fullName(p.student))
+                        : ""}
                     </TableCell>
                     <TableCell className="tabular-nums">
                       {formatCurrency(Number(p.amount), lang, currency)}
