@@ -39,6 +39,9 @@ interface EnrollmentTableProps {
   lang: Locale
   perPage?: number
   campaignId?: string
+  /** Viewer's role — gates row actions the server would reject (see
+   *  enrollment-columns `EnrollmentActionsCell`). */
+  role?: string | null
   stats: {
     awaitingEnrollment: number
     enrolled: number
@@ -56,6 +59,7 @@ export function EnrollmentTable({
   perPage = 20,
   campaignId,
   stats,
+  role,
 }: EnrollmentTableProps) {
   const t = dictionary
   const router = useRouter()
@@ -110,7 +114,10 @@ export function EnrollmentTable({
     filters,
   })
 
-  const columns = useMemo(() => getEnrollmentColumns(t, lang), [t, lang])
+  const columns = useMemo(
+    () => getEnrollmentColumns(t, lang, role),
+    [t, lang, role]
+  )
 
   const { table } = useDataTable<EnrollmentRow>({
     data,

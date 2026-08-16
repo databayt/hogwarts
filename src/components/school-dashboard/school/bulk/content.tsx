@@ -26,8 +26,14 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ModalProvider } from "@/components/atom/modal/context"
+import {
+  downloadCredentialsCsv,
+  ImportResultPanel,
+  type ImportResultData,
+} from "@/components/file/import/result-panel"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -71,10 +77,12 @@ function BulkCard({
   item,
   isActive,
   onClick,
+  soonLabel,
 }: {
   item: BulkCardItem
   isActive: boolean
   onClick: () => void
+  soonLabel: string
 }) {
   const Icon = item.icon
   return (
@@ -91,7 +99,7 @@ function BulkCard({
         <Icon className="text-muted-foreground h-5 w-5" />
         {item.placeholder && (
           <Badge variant="secondary" className="text-[10px]">
-            Soon
+            {soonLabel}
           </Badge>
         )}
       </div>
@@ -105,10 +113,12 @@ function ScrollRow({
   items,
   activeId,
   onSelect,
+  soonLabel,
 }: {
   items: BulkCardItem[]
   activeId: string | null
   onSelect: (id: string) => void
+  soonLabel: string
 }) {
   return (
     <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1">
@@ -118,6 +128,7 @@ function ScrollRow({
           item={item}
           isActive={activeId === item.id}
           onClick={() => !item.placeholder && onSelect(item.id)}
+          soonLabel={soonLabel}
         />
       ))}
     </div>
@@ -128,20 +139,11 @@ function ScrollRow({
 
 type ImportType = "students" | "teachers" | "staff" | "guardians"
 
-interface ImportResult {
-  imported: number
-  failed: number
-  skipped: number
-  errors: Array<{ row: number; error: string; details?: string }>
-  credentials?: Array<{
-    row: number
-    name: string
-    username: string
-    email: string | null
-    role: string
-    password: string
-  }>
-}
+// Shared with the onboarding import — see `file/import/result-panel.tsx`.
+// This used to be a local interface that declared `credentials` but not
+// `warnings` / `accessCodes`, so those two were dropped between the server
+// action and the screen.
+type ImportResult = ImportResultData
 
 interface SectionState {
   uploading: boolean
@@ -189,33 +191,6 @@ function downloadTemplate(content: string, filename: string) {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
-}
-
-// Escape a CSV cell (quote + double inner quotes; guard against formula
-// injection by prefixing leading =,+,-,@).
-function csvCell(value: string): string {
-  const v = value ?? ""
-  const guarded = /^[=+\-@]/.test(v) ? `'${v}` : v
-  return `"${guarded.replace(/"/g, '""')}"`
-}
-
-// Build + download the minted-credentials sheet so the admin can distribute
-// logins (passwords are crypto-random + single-use, so this is the only place
-// to read them).
-function downloadCredentials(
-  credentials: NonNullable<ImportResult["credentials"]>,
-  type: ImportType
-) {
-  const header = ["name", "username", "email", "role", "password"]
-  const lines = [
-    header.join(","),
-    ...credentials.map((c) =>
-      [c.name, c.username, c.email ?? "", c.role, c.password]
-        .map((cell) => csvCell(String(cell)))
-        .join(",")
-    ),
-  ]
-  downloadTemplate(lines.join("\n"), `${type}-logins.csv`)
 }
 
 // One-click upload card. Click anywhere → file picker; drag a file onto it →
@@ -294,11 +269,11 @@ function UploadCard({
             type="button"
             onClick={(e) => {
               e.stopPropagation()
-              downloadCredentials(state.result!.credentials!, config.type)
+              downloadCredentialsCsv(state.result!.credentials!, config.type)
             }}
             className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
-            title={t.downloadCredentials ?? "Download logins"}
-            aria-label={t.downloadCredentials ?? "Download logins"}
+            title={t.downloadLogins}
+            aria-label={t.downloadLogins}
           >
             <KeyRound className="h-4 w-4" />
           </button>
@@ -381,67 +356,77 @@ export default function BulkContent({ dictionary, lang }: Props) {
     },
   ]
 
-  const handleUpload = useCallback(async (file: File, type: ImportType) => {
-    const setState = (updater: (prev: SectionState) => SectionState) => {
-      setSectionStates((prev) => ({
-        ...prev,
-        [type]: updater(prev[type]),
-      }))
-    }
+  // Off by default: a bulk import has always been silent, and a trial run
+  // must never mail hundreds of real families by accident. When on, the
+  // notifications are queued and drained by the email cron (50 per 15 min),
+  // so a large file spreads over hours rather than bursting.
+  const [notifyFamilies, setNotifyFamilies] = useState(false)
 
-    setState(() => ({
-      uploading: true,
-      importing: false,
-      result: null,
-      error: null,
-    }))
+  const handleUpload = useCallback(
+    async (file: File, type: ImportType) => {
+      const setState = (updater: (prev: SectionState) => SectionState) => {
+        setSectionStates((prev) => ({
+          ...prev,
+          [type]: updater(prev[type]),
+        }))
+      }
 
-    try {
-      // Phase 1: Fast parse + validate
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("type", type)
-
-      const preview = await bulkParseAndValidate(formData)
-
-      // Show optimistic result immediately
       setState(() => ({
-        uploading: false,
-        importing: true,
-        result: {
-          imported: preview.validRows,
-          failed: preview.invalidRows.length,
-          skipped: 0,
-          errors: preview.invalidRows,
-        },
+        uploading: true,
+        importing: false,
+        result: null,
         error: null,
       }))
 
-      // Phase 2: Background DB import
-      const importData = new FormData()
-      importData.append("csvContent", preview.csvContent)
-      importData.append("type", type)
+      try {
+        // Phase 1: Fast parse + validate
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("type", type)
 
-      bulkSmartImport(importData)
-        .then((result) => {
-          setState((prev) => ({ ...prev, result, importing: false }))
-        })
-        .catch((err) => {
-          setState((prev) => ({
-            ...prev,
-            error: err instanceof Error ? err.message : "Import failed",
-            importing: false,
-          }))
-        })
-    } catch (err) {
-      setState(() => ({
-        uploading: false,
-        importing: false,
-        result: null,
-        error: err instanceof Error ? err.message : "Import failed",
-      }))
-    }
-  }, [])
+        const preview = await bulkParseAndValidate(formData)
+
+        // Show optimistic result immediately
+        setState(() => ({
+          uploading: false,
+          importing: true,
+          result: {
+            imported: preview.validRows,
+            failed: preview.invalidRows.length,
+            skipped: 0,
+            errors: preview.invalidRows,
+          },
+          error: null,
+        }))
+
+        // Phase 2: Background DB import
+        const importData = new FormData()
+        importData.append("csvContent", preview.csvContent)
+        importData.append("type", type)
+        importData.append("notifyFamilies", String(notifyFamilies))
+
+        bulkSmartImport(importData)
+          .then((result) => {
+            setState((prev) => ({ ...prev, result, importing: false }))
+          })
+          .catch((err) => {
+            setState((prev) => ({
+              ...prev,
+              error: err instanceof Error ? err.message : t.importFailed,
+              importing: false,
+            }))
+          })
+      } catch (err) {
+        setState(() => ({
+          uploading: false,
+          importing: false,
+          result: null,
+          error: err instanceof Error ? err.message : t.importFailed,
+        }))
+      }
+    },
+    [notifyFamilies]
+  )
 
   const academicCards: BulkCardItem[] = [
     {
@@ -550,7 +535,23 @@ export default function BulkContent({ dictionary, lang }: Props) {
           file picker (or accepts a drop) and shows status inline; no second
           row. */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">{t.people || "People"}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">{t.people || "People"}</h2>
+          {/*
+            Off by default. Imported students and their guardians hear nothing
+            unless an admin deliberately asks — credentials still come back in
+            the result for the admin to hand out either way. When on, the mail
+            is queued and drained by the email cron, so a large file arrives
+            over a few hours rather than all at once.
+          */}
+          <label className="text-muted-foreground flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={notifyFamilies}
+              onCheckedChange={(checked) => setNotifyFamilies(checked === true)}
+            />
+            {t.notifyFamilies || "Notify families by email"}
+          </label>
+        </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {dropZoneConfigs.map((config) => (
             <UploadCard
@@ -562,12 +563,51 @@ export default function BulkContent({ dictionary, lang }: Props) {
             />
           ))}
         </div>
+
+        {/* Import details — the same panel the onboarding import renders. The
+            cards above stay one-line on purpose; the per-row errors, warnings
+            (why `imported` is lower than the row count), parent access codes
+            and the credentials download all live here. Before this strip
+            existed, /school/bulk showed counts only and silently dropped the
+            rest of what the server returned. */}
+        {dropZoneConfigs.some((c) => sectionStates[c.type].result) && (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {dropZoneConfigs
+              .filter((c) => sectionStates[c.type].result)
+              .map((config) => (
+                <div
+                  key={`${config.type}-result`}
+                  className="space-y-2 rounded-lg border p-4"
+                >
+                  <p className="text-sm font-medium">{config.label}</p>
+                  <ImportResultPanel
+                    result={sectionStates[config.type].result!}
+                    isImporting={sectionStates[config.type].importing}
+                    entityLabel={config.type}
+                    lang={lang}
+                    t={{
+                      importing: t.importing,
+                      imported: t.imported,
+                      skipped: t.skipped,
+                      failed: t.failed,
+                      row: t.row,
+                      warnings: t.warnings,
+                      accessCodes: t.accessCodes,
+                      expires: t.expires,
+                      downloadLogins: t.downloadLogins,
+                    }}
+                  />
+                </div>
+              ))}
+          </div>
+        )}
       </section>
 
       {/* Academic */}
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t.academic || "Academic"}</h2>
         <ScrollRow
+          soonLabel={t.soon}
           items={academicCards}
           activeId={activeAcademic}
           onSelect={setActiveAcademic}
@@ -598,7 +638,12 @@ export default function BulkContent({ dictionary, lang }: Props) {
       {/* Structure */}
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t.structure || "Structure"}</h2>
-        <ScrollRow items={structureCards} activeId={null} onSelect={() => {}} />
+        <ScrollRow
+          items={structureCards}
+          activeId={null}
+          onSelect={() => {}}
+          soonLabel={t.soon}
+        />
       </section>
 
       {/* Placeholder sections */}
@@ -606,6 +651,7 @@ export default function BulkContent({ dictionary, lang }: Props) {
         <section key={section.title} className="space-y-3">
           <h2 className="text-lg font-semibold">{section.title}</h2>
           <ScrollRow
+            soonLabel={t.soon}
             items={section.cards}
             activeId={null}
             onSelect={() => {}}

@@ -17,6 +17,7 @@ import { ErrorToast, SuccessToast, WarningToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { confirmEnrollment, updateApplicationStatus } from "./actions"
+import { canPerformAdmissionAction } from "./authorization"
 import { getAllowedTransitions } from "./status-machine"
 import { translateEnrollmentWarning } from "./warning-messages"
 
@@ -35,6 +36,14 @@ interface Props {
    * always reject with FORBIDDEN.
    */
   readOnly?: boolean
+  /**
+   * Viewer's role. `confirmEnrollment` is ADMIN/DEVELOPER-only on the server
+   * (authorization.ts) while STAFF may review and change status — without
+   * this the button rendered for STAFF and every click died with FORBIDDEN.
+   * Resolved through the SAME permission table the server asserts against,
+   * so the two cannot drift.
+   */
+  role?: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -62,6 +71,7 @@ export default function ApplicationDetailActions({
   dictionary,
   placement = "sidebar",
   readOnly = false,
+  role,
 }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -159,16 +169,18 @@ export default function ApplicationDetailActions({
         </DropdownMenu>
       )}
 
-      {currentStatus === "SELECTED" && (
-        <Button
-          variant="outline"
-          onClick={onConfirmEnrollment}
-          disabled={isPending}
-          className="h-9 w-52"
-        >
-          {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
-        </Button>
-      )}
+      {currentStatus === "SELECTED" &&
+        !!role &&
+        canPerformAdmissionAction(role, "confirmEnrollment") && (
+          <Button
+            variant="outline"
+            onClick={onConfirmEnrollment}
+            disabled={isPending}
+            className="h-9 w-52"
+          >
+            {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
+          </Button>
+        )}
     </div>
   )
 }

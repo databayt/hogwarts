@@ -535,7 +535,7 @@ export async function provisionStudent(
         where: { id: student.id },
         select: { academicGradeId: true },
       })
-      await ensureStudentFeeAssignments(
+      const feeResult = await ensureStudentFeeAssignments(
         {
           schoolId,
           studentId: student.id,
@@ -545,6 +545,23 @@ export async function provisionStudent(
         },
         tx
       )
+      // The helper never throws for the two most common "no fees" outcomes —
+      // it returns them. This return value used to be discarded, so a school
+      // that had not yet configured a FeeStructure for the grade, or a student
+      // provisioned without a grade, produced a student with NO fees, NO
+      // invoices, and NO signal to anyone. Both codes already have translated
+      // copy (admission/warning-messages.ts) — they were just never emitted.
+      if (feeResult.skipped > 0) {
+        warnings.push({ code: "FEES_SKIPPED_NO_GRADE" })
+      } else if (feeResult.warnings.length > 0) {
+        warnings.push({
+          code: "NO_FEE_STRUCTURE_MATCH",
+          meta: {
+            academicGradeId: studentGrade?.academicGradeId ?? null,
+            detail: feeResult.warnings,
+          },
+        })
+      }
     } catch (feeError) {
       console.warn("[provisionStudent] Fee auto-assignment failed:", feeError)
       warnings.push({ code: "FEE_AUTO_ASSIGN_FAILED" })

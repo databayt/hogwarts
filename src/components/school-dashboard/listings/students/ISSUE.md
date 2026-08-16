@@ -1,10 +1,112 @@
 # Students — Production Readiness Tracker
 
+## 2026-08-14 — intake unification finished: the invariant is now unconditional (LOCAL, not pushed)
+
+The 08-12 pass left two flows exempt from the "every student is born from an
+Application" rule because their `AdmissionChannel` was undecided. It was the
+wrong question: `internal-onboarding` and `newcomers` are flows for the ADULTS
+who join a school, and their `student` option was a leftover that wrote a stub
+`Student` (placeholder DOB `2010-01-01`, gender "Not Specified") with no
+Application, no student code, no fees and no seat.
+
+Shipped:
+
+- [x] `student` branch deleted from both flows; a self-registering student is
+      sent to `/{lang}/application` and enters the reviewed `PORTAL` pipeline.
+      No new `AdmissionChannel` value. **Both entries removed from
+      `STUDENT_CREATE_ALLOWLIST`** — the allowlist is now only the core, seeds,
+      snapshot restore, ops scripts and `createDraftStudent`.
+- [x] `src/lib/student-provisioning-notify.ts` — the post-commit dispatch,
+      extracted out of `confirmEnrollment` (**replaced**, not duplicated; a
+      regression test pins exactly one `account_created` per enrollment) and
+      wired into all five channels. Before this, only PORTAL students were ever
+      told anything.
+- [x] Bulk import gained a **"notify families" checkbox, default off**. When on
+      it uses `delivery: "queue"`, so the email cron drains 50 per run instead
+      of bursting.
+- [x] `POST /api/mobile/students` gained an opt-in `notify` body param
+      (**default false**) rather than silently starting to mail on behalf of
+      existing clients.
+- [x] **Unplaced filter** (`?unplaced=seat|grade|any`) + toolbar chip, plus a
+      weekly admin alert folded into the `fee-due` cron. A gradeless student is
+      assigned no fees and raises no invoices, so they were invisible to every
+      money screen.
+- [x] Invoice + receipt delivery: the fee notice states the instalment schedule
+      and stamps `UserInvoice.sentAt`; a cleared payment links the payer to
+      `/api/payment/[id]/receipt`.
+
+Gotchas worth keeping:
+
+- **`dispatchAdmissionNotification` sends email INLINE**, not via the cron
+  ("Send email immediately instead of waiting for daily cron"). Any bulk path
+  routed through it would burst Resend — hence the immediate/queue split.
+- **A placeholder `@student.local` address must lose the `email` channel on the
+  row itself.** `processPendingEmailNotifications` skips recipients with NO
+  address; a placeholder is an address, so the cron would try to deliver.
+- **`after()`, not bare `void`** for the post-commit dispatch. The tests then
+  need a multi-tick flush, because the chain awaits a dynamic `import()`.
+- **The `fee-due` cron discovers schools by unioning groupBy queries.** Adding a
+  check for gradeless students required a FOURTH discovery query — a school
+  whose only problem is gradeless students has no pending fees, so it appeared
+  in none of the existing three and would never have been visited.
+- **`enrollment-notifications.test.ts` shares one module-level `db` mock**, so a
+  test asserting on a newly-mocked model must run first or it sees accumulated
+  state.
+
+Still open:
+
+- [ ] Run `scripts/backfill-legacy-applications.ts` against prod (~970 rows;
+      needs explicit approval). Note it only links an Application — it does NOT
+      heal the stub students the deleted branches left behind; the unplaced
+      filter is what catches those.
+- [ ] `/newcomers` is a **dead link**: `my-school/page.tsx:32,43` redirects to it
+      and `auth/user-button.tsx:230` links to it, but no route exists.
+- [ ] `internal-onboarding` has NO dictionary wiring at all — every label falls
+      back to hardcoded English (pre-existing).
+- [ ] `importGuardians` still hand-rolls guardian creation instead of
+      `createOrLinkGuardian`, missing the parent-conflict guard.
+
+---
+
 **Status:** 🟡 IN PROGRESS
 **Completion:** 93%
 **Last Updated:** 2026-08-12
 
 ---
+
+## 2026-08-15 — every channel trackable + wizard/import parity (LOCAL, not pushed)
+
+Read with `admission/ISSUE.md` (same date) — that entry holds the journey audit.
+Student-block half:
+
+- [x] **Profile → application link** in the UNIFIED profile sidebar
+      (`school-dashboard/profile/sidebar.tsx`, gated ADMIN/STAFF via
+      `getPermissionLevel`; null-safe — 971 of 972 demo students have no
+      application until the backfill runs). NOTE: `listings/students/profile/
+student-profile.tsx` is DEAD CODE — nothing renders it; the route
+      redirects to `/profile/[userId]`. Left in place, flagged.
+- [x] `completeStudentWizard` returns provisioning `warnings`; the academic
+      step toasts them via `translateEnrollmentWarning`. `provisionStudent`
+      now EMITS `NO_FEE_STRUCTURE_MATCH` / `FEES_SKIPPED_NO_GRADE` (it used to
+      discard `ensureStudentFeeAssignments`'s return — a school with no fee
+      structure for the grade produced a student with no fees and no signal).
+      CSV import aggregates the former into one summary line.
+- [x] Wizard revalidate fixed: bare `revalidatePath("/students")` matched no
+      cache tag; now the route pattern + `"page"`, plus
+      `/admission/applications` (the tab lists ADMIN_DIRECT rows now).
+- [x] Attachments schema hoisted to `@/components/form/attachments-schema`
+      (byte-identical copies in the students wizard and the public application
+      wizard); both `validation.ts` re-export. NOT the teachers copy — different
+      document set.
+- [x] `DocumentCard` rejection/aria copy dictionary-driven (`students.
+attachments.tooLarge|invalidType|invalidFile|remove|pdf`, en+ar) — was
+      hardcoded English on the Arabic wizard; the applicant-side card already
+      took them as props.
+- [ ] `STUDENTS_PATH = "/students"` in `listings/students/actions.ts` — 7
+      bare `revalidatePath` sites are still no-ops (route pattern + "page"
+      needed). Not touched here.
+- [ ] Sorting/`groupLabels`: every wizard config's `i18nGroupLabels` renders
+      no text — `FormFooter` uses `groupLabels` only for its length.
 
 ## 2026-08-12 — intake unification: closing the leaks (LOCAL, not pushed)
 
@@ -29,7 +131,11 @@ Shipped:
       queue. **Written but NOT yet run — the seed run was declined.**
 - [x] `scripts/backfill-legacy-applications.ts` (dry-run default). Local dry run
       reports 970 orphans, correctly skipping the 1 wizard draft.
-- [x] Seams: `warnings`/`accessCodes` now reach the import UI; student `phone`
+- [x] Seams: `warnings`/`accessCodes` now reach the import UI — **corrected
+      2026-08-15: only the SERVER half had landed.** Both `actions.ts` files
+      returned them and neither `content.tsx` rendered them (onboarding's
+      local `ImportResult` did not even declare `credentials`). Now rendered by
+      the shared `file/import/result-panel.tsx` in both flows; student `phone`
       added to `studentCsvSchema` + header map + template (imported students
       showed a blank phone once the list column moved from email to phone);
       inert `notify: true` in `completeStudentWizard` corrected to `false`.
@@ -42,10 +148,23 @@ Open:
       is undecided; they sit in the allowlist until that is settled.
 - [ ] `importGuardians` (standalone guardians CSV) hand-rolls guardian creation
       instead of `createOrLinkGuardian`, so it misses the parent-conflict guard.
-- [ ] Sorting the students list by a DERIVED column (`name`, `gradeName`,
-      `classroom`) maps the sort id straight into a Prisma `orderBy` key and
-      would send an unknown field. `phone` was marked `enableSorting: false`;
-      the other three are still live.
+- [x] FIXED — sorting the students list by a DERIVED column (`name`,
+      `gradeName`, `classroom`, `phone`) spread the sort id straight into a
+      Prisma `orderBy` key. All four throw ("Unknown argument `name`"), and
+      `StudentsContent` has no try/catch, so any URL carrying one took the page
+      down — a shared link, a reload after clicking the header, the back
+      button. Invisible while clicking because nuqs runs `shallow: true`, so
+      the header rewrites the URL without asking the server. Now mapped by
+      `buildStudentOrderBy` in `list-params.ts` (shared by `content.tsx` and
+      `actions.ts` so they cannot disagree), with an allowlist so an arbitrary
+      `?sort=` id is dropped rather than passed to Prisma. Pinned by
+      `src/tests/school-dashboard/listings/student-sort-order.test.ts`; every
+      emitted clause verified against the real database.
+- [ ] Sorting still does not re-query: `shallow: true` means the header click
+      never reaches the server, and `manualSorting: true` means TanStack will
+      not sort client-side either. The control is inert until either
+      `enableClientSorting` or a non-shallow query state is chosen — a
+      behaviour decision, not a bug fix.
 
 ### Security (found while mapping the pipeline)
 

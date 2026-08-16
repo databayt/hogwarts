@@ -27,6 +27,19 @@
 - [ ] Session management (view/revoke active sessions) (enhancement)
 - [ ] Privacy settings (control profile visibility) (enhancement)
 
+## 2026-08-15 — student → application link
+
+- [x] `getProfileView` selects the student's `application` (id, number,
+      channel, status) on both the User-backed and orphan-entity paths;
+      `ProfileViewData.application` (typed `ProfileApplicationView | null`).
+      Populated only for `ADMIN` / `STAFF` viewers (`ADMISSION_VIEWERS`) — the
+      admission detail page is RBAC-gated, so the link is not offered to
+      OWNER/RELATED/PUBLIC who cannot open it.
+- [x] Sidebar renders an "Application <number>" row linking to
+      `/{lang}/admission/applications/{id}` (clean path). Null-safe: most
+      demo students have no application until the legacy backfill runs.
+- [x] `school.profile.sidebar.application` key (en + ar).
+
 ## Done This Pass (2026-07-19 — data-alive + role polish)
 
 - **New seed `profile-activity`** (wired into `seedMain` + `db:seed:single`):

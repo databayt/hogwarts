@@ -676,6 +676,12 @@
       "structure": "Structure",
       "downloadTemplate": "Download Template",
       "uploadAnother": "Upload another file",
+      "warnings": "warning(s)",
+      "accessCodes": "parent access code(s)",
+      "expires": "expires",
+      "downloadLogins": "Download logins",
+      "soon": "Soon",
+      "importFailed": "Import failed",
       "dropFile": "Drop",
       "fileSuffix": "file or browse",
       "importing": "Importing...",
@@ -2050,7 +2056,12 @@
         "resume": "Resume",
         "other": "Other",
         "photo": "Photo",
-        "uploaded": "Uploaded"
+        "uploaded": "Uploaded",
+        "tooLarge": "File too large (10MB max)",
+        "invalidType": "Unsupported file type",
+        "invalidFile": "Invalid file",
+        "remove": "Remove attachment",
+        "pdf": "PDF"
       },
       "photo": {
         "title": "Photo",
@@ -7658,7 +7669,8 @@
       "missingSchoolContext": "Missing school context",
       "missingSchoolContextDesc": "You must access this page from your school's subdomain.",
       "originalPrice": "was",
-      "viewReceipt": "View Receipt"
+      "viewReceipt": "View Receipt",
+      "payAndInvoices": "Pay & view invoices"
     },
     "profile": {
       "title": "Profile",
@@ -7703,7 +7715,8 @@
         "tasks": "tasks",
         "enrolled": "Enrolled",
         "joined": "Joined",
-        "memberSince": "Member since"
+        "memberSince": "Member since",
+        "application": "Application"
       },
       "overview": {
         "pinned": "Pinned",
@@ -7928,6 +7941,11 @@
       "skippedAlreadyExist": "skipped (already exist)",
       "failed": "failed",
       "row": "Row",
+      "importWarnings": "warning(s)",
+      "importAccessCodes": "parent access code(s)",
+      "importExpires": "expires",
+      "importDownloadLogins": "Download logins",
+      "notifyFamilies": "Notify families by email",
       "uploadAnotherFile": "Upload another file",
       "dropFile": "Drop",
       "fileOrBrowse": "file or browse",
@@ -9455,6 +9473,9 @@
         "noDocuments": "No documents uploaded yet.",
         "statusUpdated": "Status updated successfully",
         "statusUpdateFailed": "Failed to update status",
+        "viewStudent": "View student profile",
+        "billing": "Billing",
+        "billedViaFinance": "Billed through Finance → Fees, like every enrolled student",
         "back": "Back",
         "print": "Print",
         "personal": "Personal Information",
@@ -9576,6 +9597,7 @@
       },
       "warnings": {
         "noFeeStructureMatch": "No fee structure matched — fees skipped. Configure a fee structure in Finance > Fees.",
+        "feesSkippedNoGrade": "No grade set — fees were not assigned. Set the student's grade to assign fees.",
         "applicationFeeUnpaid": "Application fee is unpaid. Enrollment confirmed, but consider collecting payment.",
         "feeAutoAssignFailed": "Fee auto-assignment failed — assign fees manually from Finance > Fees.",
         "invoiceGenerationFailed": "Invoice generation failed — create the invoice manually.",
@@ -10261,7 +10283,11 @@
         "waitlisted": "Waitlisted",
         "approved": "Approved",
         "rejected": "Rejected",
-        "enrolled": "Enrolled"
+        "enrolled": "Enrolled",
+        "checkApplicationSubmitted": "Application submitted",
+        "checkApplicationFee": "Application fee paid",
+        "checkTour": "Campus tour",
+        "checkInterview": "Interview"
       },
       "formSteps": {
         "firstName": "First Name",
@@ -11711,11 +11737,14 @@
         "namePlaceholder": "e.g. Ministry certificate",
         "pickFile": "Choose .docx file",
         "available": "Available fields",
-        "loopHint": "Repeating sections use loop tags for questions and subjects.",
+        "loopHint": "Repeating sections use loop tags — single braces do not work:",
         "detected": "Detected in your template",
         "uploaded": "Template saved",
         "done": "Done",
-        "saveFailed": "Could not save the template."
+        "saveFailed": "Could not save the template.",
+        "noTagsTitle": "No tags found in this file",
+        "noTagsBody": "It will be saved, but filling it returns an unchanged copy. Add tags like {{examTitle}} in Word, or start from our file below.",
+        "starterHint": "New to this? Start from a .docx that already has the right tags."
       },
       "useDialog": {
         "title": "Use this template",
@@ -11746,8 +11775,17 @@
         "submit": "Generate and download",
         "generating": "Generating…",
         "cancel": "Cancel",
-        "failed": "Could not generate the paper."
-      }
+        "failed": "Could not generate the paper.",
+        "shortfallTitle": "The paper is short",
+        "shortfallBody": "Downloaded with {count} questions. The question bank could not fill every slot in the blueprint — add questions for the categories below, then generate again."
+      },
+      "starter": "Starter template",
+      "starterHint": "A ready-made Word file with the right tags — edit the styling, keep the tags.",
+      "starterFailed": "Could not build the starter template.",
+      "generateAll": "Generate all",
+      "generateAllHint": "Fills your template for every report card in the current filter, {size} at a time.",
+      "generateAllProgress": "{done} of {total}",
+      "noTemplate": "No template uploaded yet — add one under Templates."
     }
   },
   "finance": {

@@ -23,6 +23,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { provisionStudent } from "@/lib/student-provisioning"
+import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 import { importStudents } from "@/components/file/import/csv-import"
 
 // ---------------------------------------------------------------------------
@@ -53,6 +54,10 @@ vi.mock("@/lib/db", () => ({
     },
     $transaction: transactionMock,
   },
+}))
+
+vi.mock("@/lib/student-provisioning-notify", () => ({
+  notifyProvisionedStudent: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock("@/lib/student-provisioning", () => ({
@@ -126,6 +131,31 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe("importStudents (students path via provisionStudent)", () => {
+  it("notifies nobody by default — a bulk import stays silent unless asked", async () => {
+    vi.mocked(provisionStudent).mockResolvedValueOnce(mockProvisionResult())
+
+    const content = csv(["Sara Ahmed,sara.a@school.local,Grade 7,female,,,,"])
+
+    await importStudents(content, SCHOOL_ID, "BULK_IMPORT")
+
+    expect(notifyProvisionedStudent).not.toHaveBeenCalled()
+  })
+
+  it("queues (never sends inline) when the admin opts in", async () => {
+    vi.mocked(provisionStudent).mockResolvedValueOnce(mockProvisionResult())
+
+    const content = csv(["Sara Ahmed,sara.a@school.local,Grade 7,female,,,,"])
+
+    await importStudents(content, SCHOOL_ID, "BULK_IMPORT", true)
+
+    expect(notifyProvisionedStudent).toHaveBeenCalledTimes(1)
+    const [arg] = vi.mocked(notifyProvisionedStudent).mock.calls[0]
+    // "queue" is what keeps a 500-row import from bursting Resend: rows are
+    // written and the email cron drains them 50 at a time.
+    expect(arg.delivery).toBe("queue")
+    expect(arg.origin).toBe("BULK_IMPORT")
+  })
+
   it("maps a row to ProvisionStudentInput, resolves grade, includes a guardian with createLogin:true, and threads origin", async () => {
     vi.mocked(provisionStudent).mockResolvedValueOnce(mockProvisionResult())
 

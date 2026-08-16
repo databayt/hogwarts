@@ -5,6 +5,7 @@
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs"
 
 import { asset } from "@/lib/asset-url"
 import { usePlatformData } from "@/hooks/use-platform-data"
@@ -63,12 +64,25 @@ export function ApplicationsTable({
   const [searchInput, setSearchInput] = useState("")
   const deferredSearch = useDeferredValue(searchInput)
 
+  // The Channel facet is rendered from column meta by PlatformToolbar, and
+  // `useDataTable` mirrors its selection into this very query param. But it
+  // does so with `shallow: true`, so the server component never re-renders —
+  // subscribing to the param here is what carries the filter into the fetcher
+  // below, i.e. what makes it filter the whole table instead of just the pages
+  // already loaded. Parser must match `useDataTable`'s (array, "," separator)
+  // and `list-params.ts`'s.
+  const [channel] = useQueryState(
+    "channel",
+    parseAsArrayOf(parseAsString, ",").withDefault([])
+  )
+
   const filters = useMemo(() => {
     const f: Record<string, unknown> = {}
     if (deferredSearch) f.search = deferredSearch
     if (campaignId) f.campaignId = campaignId
+    if (channel.length > 0) f.channel = channel
     return f
-  }, [deferredSearch, campaignId])
+  }, [deferredSearch, campaignId, channel])
 
   const {
     data,
@@ -86,6 +100,7 @@ export function ApplicationsTable({
         ...params,
         search: deferredSearch || undefined,
         campaignId: campaignId || undefined,
+        channel: channel.length > 0 ? channel : undefined,
       })
       if (result.success && result.data) {
         return {

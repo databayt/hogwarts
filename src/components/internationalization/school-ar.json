@@ -676,6 +676,12 @@
       "structure": "الهيكل",
       "downloadTemplate": "تحميل القالب",
       "uploadAnother": "رفع ملف آخر",
+      "warnings": "تنبيه/تنبيهات",
+      "accessCodes": "رمز/رموز ربط ولي الأمر",
+      "expires": "ينتهي في",
+      "downloadLogins": "تنزيل بيانات الدخول",
+      "soon": "قريباً",
+      "importFailed": "فشل الاستيراد",
       "dropFile": "اسحب ملف",
       "fileSuffix": "أو تصفح",
       "importing": "جاري الاستيراد...",
@@ -2050,7 +2056,12 @@
         "resume": "السيرة الذاتية",
         "other": "أخرى",
         "photo": "الصورة",
-        "uploaded": "تم الرفع"
+        "uploaded": "تم الرفع",
+        "tooLarge": "الملف كبير جدًا (10 ميجابايت كحد أقصى)",
+        "invalidType": "نوع ملف غير مدعوم",
+        "invalidFile": "ملف غير صالح",
+        "remove": "إزالة المرفق",
+        "pdf": "PDF"
       },
       "photo": {
         "title": "الصورة",
@@ -7666,7 +7677,8 @@
       "missingSchoolContext": "سياق المدرسة مفقود",
       "missingSchoolContextDesc": "يجب الوصول إلى هذه الصفحة من النطاق الفرعي لمدرستك.",
       "originalPrice": "كان",
-      "viewReceipt": "عرض الإيصال"
+      "viewReceipt": "عرض الإيصال",
+      "payAndInvoices": "الدفع وعرض الفواتير"
     },
     "profile": {
       "title": "الملف الشخصي",
@@ -7711,7 +7723,8 @@
         "tasks": "المهام",
         "enrolled": "التحق في",
         "joined": "انضم في",
-        "memberSince": "عضو منذ"
+        "memberSince": "عضو منذ",
+        "application": "الطلب"
       },
       "overview": {
         "pinned": "المثبتة",
@@ -7935,6 +7948,11 @@
       "skippedAlreadyExist": "تم التخطي (موجود مسبقاً)",
       "failed": "فشل",
       "row": "صف",
+      "importWarnings": "تنبيه/تنبيهات",
+      "importAccessCodes": "رمز/رموز ربط ولي الأمر",
+      "importExpires": "ينتهي في",
+      "importDownloadLogins": "تنزيل بيانات الدخول",
+      "notifyFamilies": "إشعار الأسر بالبريد الإلكتروني",
       "uploadAnotherFile": "رفع ملف آخر",
       "dropFile": "أسقط ملف",
       "fileOrBrowse": "أو تصفح",
@@ -9463,6 +9481,9 @@
         "noDocuments": "لم يتم رفع أي وثائق بعد.",
         "statusUpdated": "تم تحديث الحالة بنجاح",
         "statusUpdateFailed": "فشل تحديث الحالة",
+        "viewStudent": "عرض ملف الطالب",
+        "billing": "الفوترة",
+        "billedViaFinance": "تُحتسب الرسوم عبر المالية ← الرسوم مثل أي طالب مسجّل",
         "back": "رجوع",
         "print": "طباعة",
         "personal": "المعلومات الشخصية",
@@ -9584,6 +9605,7 @@
       },
       "warnings": {
         "noFeeStructureMatch": "لا يوجد هيكل رسوم مطابق — تم تخطي الرسوم. قم بتكوين هيكل رسوم في المالية > الرسوم.",
+        "feesSkippedNoGrade": "لم يُحدَّد الصف — لم تُعيَّن الرسوم. حدِّد صف الطالب لتعيين الرسوم.",
         "applicationFeeUnpaid": "رسوم الطلب غير مدفوعة. تم تأكيد التسجيل، ولكن يُفضّل تحصيل الدفع.",
         "feeAutoAssignFailed": "فشل تخصيص الرسوم تلقائياً — قم بتخصيص الرسوم يدوياً من المالية > الرسوم.",
         "invoiceGenerationFailed": "فشل إنشاء الفاتورة — أنشئ الفاتورة يدوياً.",
@@ -10269,7 +10291,11 @@
         "waitlisted": "في قائمة الانتظار",
         "approved": "تمت الموافقة",
         "rejected": "مرفوض",
-        "enrolled": "مسجل"
+        "enrolled": "مسجل",
+        "checkApplicationSubmitted": "تم تقديم الطلب",
+        "checkApplicationFee": "دفع رسوم التقديم",
+        "checkTour": "جولة الحرم المدرسي",
+        "checkInterview": "المقابلة"
       },
       "formSteps": {
         "firstName": "الاسم الأول",
@@ -11719,11 +11745,14 @@
         "namePlaceholder": "مثال: شهادة الوزارة",
         "pickFile": "اختر ملف .docx",
         "available": "الحقول المتاحة",
-        "loopHint": "الأقسام المتكررة تستخدم وسوم التكرار للأسئلة والمواد.",
+        "loopHint": "الأقسام المتكررة تستخدم وسوم التكرار، والأقواس المفردة لا تعمل:",
         "detected": "اكتُشف في قالبك",
         "uploaded": "تم حفظ القالب",
         "done": "تم",
-        "saveFailed": "تعذّر حفظ القالب."
+        "saveFailed": "تعذّر حفظ القالب.",
+        "noTagsTitle": "لا توجد وسوم في هذا الملف",
+        "noTagsBody": "سيتم حفظه، لكن تعبئته ستعيد نسخة كما هي دون تغيير. أضف وسومًا مثل {{examTitle}} في Word، أو ابدأ من ملفنا بالأسفل.",
+        "starterHint": "تبدأ لأول مرة؟ ابدأ من ملف .docx يحتوي على الوسوم الصحيحة."
       },
       "useDialog": {
         "title": "استخدام هذا القالب",
@@ -11754,8 +11783,17 @@
         "submit": "إنشاء وتنزيل",
         "generating": "جارٍ الإنشاء…",
         "cancel": "إلغاء",
-        "failed": "تعذّر إنشاء الورقة."
-      }
+        "failed": "تعذّر إنشاء الورقة.",
+        "shortfallTitle": "الورقة ناقصة",
+        "shortfallBody": "تم التنزيل بـ {count} سؤالًا. لم يستطع بنك الأسئلة تغطية كل متطلبات المخطط — أضف أسئلة للفئات التالية ثم أعد الإنشاء."
+      },
+      "starter": "قالب مبدئي",
+      "starterHint": "ملف وورد جاهز بالحقول الصحيحة — عدّل التنسيق واترك الحقول كما هي.",
+      "starterFailed": "تعذّر إنشاء القالب المبدئي.",
+      "generateAll": "إنشاء الكل",
+      "generateAllHint": "يملأ قالبك لكل بطاقات النتائج في التصفية الحالية، {size} في كل دفعة.",
+      "generateAllProgress": "{done} من {total}",
+      "noTemplate": "لم يتم رفع قالب بعد — أضف واحداً من صفحة القوالب."
     }
   },
   "finance": {

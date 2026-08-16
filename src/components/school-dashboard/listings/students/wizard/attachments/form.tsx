@@ -60,6 +60,16 @@ function DocumentCard({
   disabled,
   uploadedLabel,
   onUploaded,
+  // Dropzone rejection + a11y copy. These were hardcoded English literals,
+  // which rendered untranslated on the Arabic wizard — the applicant-side
+  // DocumentCard (school-marketing/application/attachments/form.tsx) already
+  // took them as props, so this adopts the more mature of the two. Defaults
+  // kept so a caller that forgets them degrades to the old behaviour rather
+  // than rendering blank.
+  tooLargeLabel = "File too large (10MB max)",
+  invalidTypeLabel = "Unsupported file type",
+  invalidFileLabel = "Invalid file",
+  removeLabel = "Remove attachment",
 }: {
   name: string
   label: string
@@ -67,6 +77,10 @@ function DocumentCard({
   disabled?: boolean
   uploadedLabel?: string
   onUploaded?: (fileUrl: string) => void
+  tooLargeLabel?: string
+  invalidTypeLabel?: string
+  invalidFileLabel?: string
+  removeLabel?: string
 }) {
   const form = useFormContext()
   const currentValue = form.watch(name)
@@ -107,11 +121,11 @@ function DocumentCard({
     onDropRejected: (rejections) => {
       const code = rejections[0]?.errors[0]?.code
       if (code === "file-too-large") {
-        setRejectionError("10MB max")
+        setRejectionError(tooLargeLabel)
       } else if (code === "file-invalid-type") {
-        setRejectionError("PDF, DOC, XLS, TXT")
+        setRejectionError(invalidTypeLabel)
       } else {
-        setRejectionError("Invalid file")
+        setRejectionError(invalidFileLabel)
       }
     },
     accept: getAcceptedTypes(),
@@ -169,7 +183,7 @@ function DocumentCard({
             type="button"
             onClick={handleClear}
             className="absolute end-1.5 top-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
-            aria-label="Remove attachment"
+            aria-label={removeLabel}
           >
             <X className="h-3 w-3" />
           </button>
@@ -351,6 +365,10 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
               icon={icon}
               disabled={isPending}
               uploadedLabel={t?.uploaded}
+              tooLargeLabel={t?.tooLarge}
+              invalidTypeLabel={t?.invalidType}
+              invalidFileLabel={t?.invalidFile}
+              removeLabel={t?.remove}
               onUploaded={(fileUrl) => onDocumentUploaded?.(key, fileUrl)}
             />
           ))}

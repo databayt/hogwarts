@@ -11,6 +11,7 @@ import { getClientIp } from "@/lib/client-ip"
 import { db } from "@/lib/db"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import type {
   ActionResult,
@@ -42,6 +43,10 @@ const STATUS_ORDER: AdmissionApplicationStatus[] = [
   "ADMITTED",
 ]
 
+// FALLBACK only — the real labels come from `dictionary.school.admission.status`
+// in the applicant's locale (see `getApplicationStatus`). These Arabic literals
+// used to be the ONLY source, so an English-locale applicant's timeline rendered
+// in Arabic regardless of `lang`.
 const STATUS_LABELS: Record<AdmissionApplicationStatus, string> = {
   DRAFT: "مسودة",
   SUBMITTED: "تم التقديم",
@@ -332,9 +337,22 @@ export async function verifyStatusOTP(
  */
 export async function getApplicationStatus(
   subdomain: string,
-  accessToken: string
+  accessToken: string,
+  /** Applicant's locale — labels are rendered server-side, so it must come
+   *  from the page, not be assumed. Defaults to Arabic (the school default). */
+  lang: "ar" | "en" = "ar"
 ): Promise<ActionResult<ApplicationStatus>> {
   try {
+    const dictionary = await getDictionary(lang)
+    const statusDict = (dictionary?.school?.admission?.status ?? {}) as Record<
+      string,
+      string
+    >
+    const displayDict = (dictionary?.school?.admission?.statusDisplay ??
+      {}) as Record<string, string>
+    const labelFor = (status: AdmissionApplicationStatus): string =>
+      statusDict[status] ?? STATUS_LABELS[status]
+
     // Resolve schoolId for tenant isolation
     const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
@@ -379,18 +397,24 @@ export async function getApplicationStatus(
     const timeline: StatusTimelineEntry[] = STATUS_ORDER.map(
       (status, index) => ({
         status,
-        label: STATUS_LABELS[status],
+        label: labelFor(status),
         completed: index < currentStatusIndex,
         current: status === application.status,
         date: status === application.status ? application.updatedAt : undefined,
       })
     )
 
-    // Handle special statuses (waitlisted, rejected, withdrawn)
-    if (["WAITLISTED", "REJECTED", "WITHDRAWN"].includes(application.status)) {
+    // Handle special statuses (waitlisted, rejected, withdrawn, expired).
+    // EXPIRED is cron-set when a SELECTED offer lapses; it was missing here,
+    // so a lapsed applicant saw a timeline with nothing highlighted at all.
+    if (
+      ["WAITLISTED", "REJECTED", "WITHDRAWN", "EXPIRED"].includes(
+        application.status
+      )
+    ) {
       const specialStatus: StatusTimelineEntry = {
         status: application.status,
-        label: STATUS_LABELS[application.status],
+        label: labelFor(application.status),
         completed: false,
         current: true,
         date: application.updatedAt,
@@ -404,7 +428,7 @@ export async function getApplicationStatus(
     // Application submitted
     checklist.push({
       id: "application",
-      label: "تم تقديم الطلب",
+      label: displayDict.checkApplicationSubmitted ?? "تم تقديم الطلب",
       completed: application.submittedAt !== null,
       required: true,
       type: "other",
@@ -417,7 +441,7 @@ export async function getApplicationStatus(
     ) {
       checklist.push({
         id: "payment",
-        label: "دفع رسوم التقديم",
+        label: displayDict.checkApplicationFee ?? "دفع رسوم التقديم",
         completed: application.applicationFeePaid,
         required: true,
         type: "payment",
@@ -449,7 +473,7 @@ export async function getApplicationStatus(
       const latestBooking = application.tourBookings[0]
       checklist.push({
         id: "tour",
-        label: "جولة الحرم الجامعي",
+        label: displayDict.checkTour ?? "جولة الحرم الجامعي",
         completed: latestBooking.status === "COMPLETED",
         required: false,
         type: "tour",
@@ -464,7 +488,7 @@ export async function getApplicationStatus(
     ) {
       checklist.push({
         id: "interview",
-        label: "المقابلة",
+        label: displayDict.checkInterview ?? "المقابلة",
         completed: ["SELECTED", "ADMITTED"].includes(application.status),
         required: true,
         type: "interview",
@@ -478,7 +502,7 @@ export async function getApplicationStatus(
       currentStep: {
         current: currentStatusIndex + 1,
         total: STATUS_ORDER.length,
-        label: STATUS_LABELS[application.status],
+        label: labelFor(application.status),
       },
       timeline,
       checklist,

@@ -8,7 +8,7 @@ maturity: Built
 completion: 90
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-06-13
+last_audited: 2026-08-15
 ---
 
 # Admission — Production Readiness Tracker
@@ -18,6 +18,73 @@ last_audited: 2026-06-13
 **Last Updated:** 2026-07-18 (full-flow audit + fix pass — see #376)
 **Last Audited:** 2026-06-13 (production-readiness pass; tsc 0, ~1010 tests passing)
 **Ship Issue:** [#239](https://github.com/databayt/hogwarts/issues/239)
+
+---
+
+## 2026-08-15 — four intake channels, one trackable journey (LOCAL, not pushed)
+
+The ask: every way a student can be added (public application, `/students`
+wizard, onboarding CSV, `/school/bulk`) must arrive at an application id the
+school can track through shortlist → reply → payment → enrollment → invoices →
+reminders. The data layer already did this (`provisionStudent` + system
+campaign, `b26eea3bd`); the dashboard could not SEE three of the four channels.
+Both explorer traces (PORTAL journey; post-enrollment finance chain) are
+condensed in `content/docs-en/admission.mdx` → "The journey, audited end to end".
+
+Shipped (this block):
+
+- [x] Applications tab lists every `AdmissionChannel` by default; **Channel**
+      column + multi-select facet, server-side (`?channel=…`, deep-linkable,
+      garbage-safe via `normalizeChannelFilter`). Column carries an explicit
+      `id: "channel"` — REQUIRED for `useDataTable` to write the nuqs param;
+      the pre-existing `status` facet has no `id` and is client-only (giving it
+      one would start writing comma-joined arrays into a single-enum server
+      param — left alone, noted).
+- [x] Detail page: channel badge, **View student profile** link, campaign name
+      localized (`getLabels`), offer/registration-fee rows hidden for
+      non-PORTAL channels (replaced by "Billed through Finance → Fees").
+- [x] Enrollment tab: `registrationFeeMethod` added to `getEnrollmentList`'s
+      select + the SSR mapping — the "Confirm registration payment" action
+      never showed on first paint before; the per-page workaround query in
+      `getEnrollmentData` removed.
+- [x] `getOfferDetails` returns `offerState: "expired"` for status `EXPIRED`
+      (cron-flipped) — was a bare 404 after the cron ran.
+- [x] Confirm Enrollment gated on `canPerformAdmissionAction(role,
+"confirmEnrollment")` in BOTH the detail sidebar and the enrollment row
+      (STAFF saw a button the server always rejected). `role` threaded
+      content → table → columns → cell.
+- [x] `confirmEnrollment` dedupes warnings by code and passes
+      `lang: application.lang` to `notifyProvisionedStudent`.
+- [x] Offer email URL via `tenantUrl()` — hand-assembled `…databayt.org` was
+      wrong for balqalam.com schools. `tenantUrl` now tolerates no request
+      scope (crons/webhooks/tests).
+- [x] Public status tracker (`actions/status.ts`) takes `lang`; timeline +
+      checklist labels from the dictionary; `EXPIRED` rendered as a special
+      status. Status banner query is `channel: "PORTAL"` only.
+- [x] Registration-fee webhooks (Stripe + Tap): guests reached by
+      `directEmail`; ADMIN + ACCOUNTANT alerted (the one funding event the
+      dashboard never proactively learned of).
+- [x] Dictionary: `admission.channel.*`, `columns.channel`,
+      `applicationDetail.viewStudent|billing|billedViaFinance`,
+      `warnings.feesSkippedNoGrade`, `statusDisplay.check*` (en + ar).
+- [x] `src/tests/school-dashboard/admission/intake-channels.test.ts` (16) pins
+      the filter semantics, the derived wizard footer config, and warning copy.
+
+Open — flagged in the docs table, not fixed here:
+
+- [ ] Rejection reason: `reviewNotes` has no write site; the rejection notice
+      is contentless. Needs a small reason field on the status change.
+- [ ] `WAITLISTED → SELECTED` promotion and EXPIRED re-offer do not reset
+      `offerAccepted` / `registrationFeeMethod` — confirm as deliberate.
+- [ ] Sibling hazard: `provisionStudent` reuses a Student by `userId`; one
+      parent account applying for two children in different campaigns would
+      reuse child A's Student. `@@unique([schoolId,campaignId,userId])` also
+      blocks a legitimate second application regardless of
+      `allowMultipleApplications`. Product decision on the account model.
+- [ ] `ENTRANCE_SCHEDULED` / `INTERVIEW_SCHEDULED` carry no date/slot and
+      fall through to the generic status notice.
+- [ ] Bulk placement is dictionary-only (`school.admission.bulkPlacement`).
+- [ ] `registrationFeeProofUrl`, `waitlistNumber`: schema fields nothing writes.
 
 > The 2026-05-21 audit found 3 live P0-class breaks. The 2026-05-22 pass fixed offer flow, PII/enumeration, and
 > error-code UX. The 2026-06-13 production-readiness pass fixed the remaining core blockers: merit ranking (P0-3),

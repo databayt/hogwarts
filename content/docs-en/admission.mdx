@@ -28,7 +28,27 @@ A student can enter the system four ways. **All four funnel through one shared c
 | `/school/bulk`  | CSV upload later, from the dashboard                                               | `BULK_IMPORT`         |
 | Backfill script | Retroactive shadow application for a pre-unification student                       | `LEGACY_BACKFILL`     |
 
-The non-`PORTAL` channels create a "direct-admit" `Application` in the `ADMITTED` state, hung off a hidden per-school system campaign, so they never appear in the review queue. The Applications and Enrollment tabs **default to `PORTAL`** — a channel filter reveals the rest. Everything below describes the `PORTAL` (public application → enrollment) path in detail; the other three channels reuse the same `provisionStudent` step from enrollment onward.
+**A student who signs themselves up is not a fifth channel — they apply.** The
+`internal-onboarding` and `newcomers` self-registration flows are for the adults
+who join a school (teachers, staff, admins, parents); their `student` option was
+removed, and a self-registering student is sent to `/{lang}/application` so they
+enter the `PORTAL` pipeline like any other applicant. When a school has no open
+campaign, the closed screen offers the inquiry form instead, and the family lands
+in the **Leads** tab to be invited when admissions reopen.
+
+The non-`PORTAL` channels create a "direct-admit" `Application` in the `ADMITTED` state, hung off a hidden per-school system campaign (named in the school's language). Everything below describes the `PORTAL` (public application → enrollment) path in detail; the other three channels reuse the same `provisionStudent` step from enrollment onward.
+
+### Every channel is trackable
+
+Whichever way a student arrived, the school can find their application and follow it:
+
+- **Applications tab lists every channel by default.** A **Channel** column and facet filter (`?channel=PORTAL,BULK_IMPORT` — deep-linkable, multi-select, server-side) narrow back to the review queue. Until 2026-08-15 this tab hard-defaulted to `PORTAL`, so a direct-admit or imported student had a real application number that **no screen could look up**.
+- **Student profile → application.** The unified profile sidebar shows the application number and links to the detail page (ADMIN/STAFF only — the detail page is RBAC-gated, so the link is not offered to viewers who cannot open it). Legacy students with no application (pre-unification, backfill not yet run) simply show no row.
+- **Application → student.** The detail page shows the channel badge and, once a Student exists, a **View student profile** link — the loop closes both ways.
+- **Direct admits are terminal.** `ADMITTED` has no outgoing status transitions and `confirmEnrollment` refuses an already-admitted application server-side, so surfacing these rows cannot double-provision anyone. Their detail page hides the offer/registration-fee rows (that ledger never runs for them) and says fees are billed through Finance → Fees like any enrolled student.
+- **The Enrollment tab keeps its `PORTAL` default** — direct admits never pass through offer / registration-fee confirmation, so they have nothing to do there.
+
+**Expect the legacy backfill to be visible.** Once `scripts/backfill-legacy-applications.ts` runs, every pre-unification student gains a `LEGACY_BACKFILL` row in the default view (~970 on the demo school). The filter is one click and lives in the URL.
 
 ### Keeping the invariant true
 
@@ -37,9 +57,59 @@ The non-`PORTAL` channels create a "direct-admit" `Application` in the `ADMITTED
 - **Lint** — a `no-restricted-syntax` rule in `eslint.config.mjs` rejects `*.student.create/upsert/createMany` outside a short, commented allowlist (`STUDENT_CREATE_ALLOWLIST`).
 - **Test** — `src/tests/school-dashboard/listings/student-intake-invariant.test.ts` re-scans the tracked tree and imports that same allowlist, so an inline `eslint-disable` or a drifting config still fails CI. It also fails if an allowlist entry stops matching any file.
 
-Legitimate exceptions are the core itself, the seeds, snapshot restore, ops scripts, and `createDraftStudent` — a wizard draft carries a non-null `wizardStep` and is deliberately Application-less until `completeStudentWizard` runs the core.
+Legitimate exceptions are the core itself, the seeds, snapshot restore, ops scripts, and `createDraftStudent` — a wizard draft carries a non-null `wizardStep` and is deliberately Application-less until `completeStudentWizard` runs the core. As of the self-registration change above, that is the **complete** list: no intake path is exempt any more.
+
+## Telling the family — one dispatcher, every channel
+
+`provisionStudent` runs inside a caller-owned transaction and deliberately never notifies, so the telling happens after the commit. That work used to live inline in `confirmEnrollment`, which meant only `PORTAL` students were ever told anything: a student added through the wizard or a CSV import got a login, fees and invoices in silence, and so did their guardian.
+
+`src/lib/student-provisioning-notify.ts` is that dispatch, shared by all five channels. It sends the student's account notice (with a password-setup link when the account is new), a `fee_due` notice covering the instalment schedule, and a guardian notice — falling back to the guardian's own address, since guardians made by `createOrLinkGuardian` are contact records with no login.
+
+Two rules it must keep:
+
+- **Placeholder addresses lose the email channel at row-creation time.** A student with no address of their own gets a synthesized `…@student.local`. Skipping only the inline send is not enough — the email cron skips recipients with _no_ address, and a placeholder is an address, so it would have tried to deliver later.
+- **Bulk queues, single sends.** `delivery: "immediate"` sends inline so an admin who just clicked "Create" sees the mail land. A CSV import always passes `delivery: "queue"`, which writes the notification rows and lets the `process-email-notifications` cron drain them 50 at a time — a 500-row import spreads over hours instead of bursting. Bulk notification is **opt-in and off by default**; unchecked, an import stays as silent as it has always been.
+
+## Nobody falls out of the flow
+
+A student with no `academicGradeId` was the pipeline's quiet failure mode: `ensureStudentFeeAssignments` short-circuits on a null grade, so no fees were assigned, no invoices raised, and neither the `fee-due` nor the `fee-overdue` cron ever chased them. A CSV `section` column that did not parse was enough to cause it, and nothing surfaced the result.
+
+The students list now has an **unplaced** filter (no grade **or** no class), and the daily `fee-due` cron alerts admins weekly while any remain. Setting a grade from the list re-runs the fee assignment and backfills what was missed.
+
+Invoices and receipts are also delivered now, not merely generated: the fee notice states the instalment schedule and stamps `UserInvoice.sentAt`, and a cleared payment links the payer to their receipt.
 
 Students that predate the unification are linked retroactively by `scripts/backfill-legacy-applications.ts`. It mints a `LEGACY_BACKFILL` shadow Application per orphan and sets only `Student.applicationId` — never the other eleven provisioning steps, which those students already have. Dry run is the default; `--execute` writes, `--school <id>` scopes to one tenant. It is idempotent: the `applicationId IS NULL` filter plus the column's `@unique` mean a re-run only picks up what is still unlinked.
+
+## The journey, audited end to end (2026-08-15)
+
+The whole path — apply → review → shortlist / reject → offer → the family's reply → registration fee → enroll → place in a section → tuition invoices → instalment reminders → payment → receipt — was traced across the admission, notification, finance and invoice blocks. The core money movement (fee assignment → invoices → allocation on payment → PAID/PARTIAL/OVERDUE) is sound; every break was at an edge. Fixed in that pass:
+
+| Journey step                                         | What was broken                                                                                                                          | Now                                                                                                                                                                  |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Track the application                                | Applications tab hard-defaulted to `PORTAL`; direct-admit / imported students unreachable                                                | Every channel listed; Channel column + facet; profile ↔ application links both ways                                                                                  |
+| Family pays registration fee at the office           | "Confirm registration payment" row action never appeared on first paint (`registrationFeeMethod` missing from the SSR select)            | In the select; the extra per-page lookup is gone                                                                                                                     |
+| Offer link after the deadline                        | Once the cron flipped the offer to `EXPIRED` the family's link was a bare 404                                                            | Renders the "offer expired, contact the school" card                                                                                                                 |
+| STAFF reviews an offer                               | Saw a "Confirm Enrollment" button the server always rejected                                                                             | Gated on the same permission table the server asserts against (detail page + enrollment row)                                                                         |
+| Family pays online (Stripe / Tap)                    | Only the student was told; guardians heard nothing; the school got no admin notice for a registration fee; guest applicants were skipped | One shared fan-out (`finance/lib/payment-notify.ts`) tells student + every guardian; registration-fee webhooks also alert ADMIN/ACCOUNTANT and reach guests by email |
+| Family opens the "fees due" notification             | Linked to `/my-fees`, which shows what is owed but cannot pay                                                                            | Links to `/finance/fees/my` (pay online, receipts); `/my-fees` gained a "Pay & view invoices" CTA; dead admin-only links removed from the family page                |
+| Admin adds a student, no fee structure for the grade | Fees silently not assigned; no signal anywhere                                                                                           | `provisionStudent` emits `NO_FEE_STRUCTURE_MATCH` / `FEES_SKIPPED_NO_GRADE`; the wizard toasts them, the CSV import summarises them                                  |
+| Applicant reads the public status tracker in English | Timeline and checklist were hardcoded Arabic; `EXPIRED` was invisible                                                                    | Localized via the dictionary in the applicant's locale; `EXPIRED` shown                                                                                              |
+| Enrollment email to the family                       | School's language, not the family's                                                                                                      | Uses `Application.lang`                                                                                                                                              |
+| Offer email on a balqalam.com school                 | Hand-assembled `…databayt.org` URL pointed at the wrong root                                                                             | `tenantUrl()` (which now also survives being called outside a request — crons, webhooks)                                                                             |
+| Direct-admit student browses the public site         | Status banner greeted them with an application they never filed                                                                          | Banner is `PORTAL`-only                                                                                                                                              |
+| Invoice currency                                     | Re-read the live school currency instead of the assignment's snapshot                                                                    | Inherits the snapshot                                                                                                                                                |
+
+Still open — flagged, not fixed, each with its reason:
+
+- **Instalment reminders and OVERDUE detection read only `FeeStructure.paymentSchedule`** (`fee-due` / `fee-overdue` crons). That JSON is populated only for auto-generated quarterly structures; a single-instalment or unscheduled admin-created fee has perfectly good `UserInvoice.due_date` values that neither cron reads — so it never reminds, never goes overdue, never accrues a late fee. The fix belongs in both crons (an invoice-due-date path). _Both files were mid-edit by another session on 2026-08-15._
+- **Fee due dates and "today" windows are pure UTC** (`buildQuarterlySchedule`, `todayBounds`) — the same class of bug fixed in payroll; `src/lib/timezone.ts` has the helpers.
+- **A withdrawn / archived student's open fees keep accruing fines and reminders** — the `archivedAt: null` filter was in flight in the other session's cron edits.
+- **No rejection reason** — `Application.reviewNotes` exists but nothing writes it and the rejection notice is contentless. Needs a small UI (reason on the status change) — product call.
+- **No refund path** (`PaymentStatus.REFUNDED` is displayed, never set) and **withdrawal does not void invoices** — feature work.
+- **One parent account, two children** — `provisionStudent` reuses a Student by `userId`, and `@@unique([schoolId, campaignId, userId])` blocks a second application in the same campaign regardless of `allowMultipleApplications`. Needs a product decision on account model.
+- **Purging a student** leaves `UserInvoice` rows orphaned (`feeAssignmentId` is `ON DELETE SET NULL`) and keeps the `User`.
+- **Bulk section placement** exists only in the dictionary; placement is one row at a time.
+- **`groupLabels` / `i18nGroupLabels` in every wizard config render no text** — `FormFooter` uses the array only for its length. Localizing them further is wasted until the footer renders labels.
 
 ## Flow
 

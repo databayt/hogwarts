@@ -16,5 +16,5 @@ interface PageProps {
 export default async function Import({ params }: PageProps) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  return <ImportContent dictionary={dictionary.school} />
+  return <ImportContent dictionary={dictionary.school} lang={lang} />
 }

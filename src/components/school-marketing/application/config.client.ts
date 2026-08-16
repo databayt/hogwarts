@@ -4,6 +4,8 @@
 // Apply Block - Client Configuration
 // Following student wizard pattern
 
+import type { StepConfig } from "@/components/form/footer"
+
 export type ApplyStep =
   | "attachments"
   | "personal"
@@ -46,58 +48,32 @@ export const STEP_GROUP_LABELS = {
   3: { en: "Academic", ar: "الأكاديمية" },
 }
 
-// ---------------------------------------------------------------------------
-// Dictionary-first accessors
-// These provide i18n-correct labels when dictionary is available,
-// falling back to the hardcoded STEP_METADATA / STEP_GROUP_LABELS below.
-// ---------------------------------------------------------------------------
-
-/** Minimal shape expected from dictionary.school.admission.apply.steps */
-type StepDict = Record<string, Record<string, string>>
-
-/** Minimal shape expected from dictionary.school.admission.apply.groups */
-type GroupsDict = Record<string, string>
+// `getStepMeta` / `getGroupLabel` used to live here as "dictionary-first
+// accessors". Both had ZERO callers: every step's content.tsx reads its copy
+// through `getApplyDict` (utils.ts) instead, which resolves the same
+// `admission.apply.*` subtree. Two mechanisms for one job, one of them dead —
+// removed rather than left to look load-bearing.
 
 /**
- * Get step label + description from dictionary, falling back to STEP_METADATA.
+ * Footer/progress config for the application flow — DERIVED from the step
+ * definitions above, not hand-written.
  *
- * Usage:
- *   const meta = getStepMeta(dictionary.school.admission.apply.steps, "personal")
- */
-export function getStepMeta(stepsDict: StepDict | undefined, step: ApplyStep) {
-  const s = stepsDict?.[step]
-  return {
-    label: s?.label || STEP_METADATA[step].label(false),
-    description: s?.description || STEP_METADATA[step].description(false),
-  }
-}
-
-/**
- * Group label mapping: group number → dictionary key
- */
-const GROUP_KEY_MAP: Record<number, string> = {
-  1: "basicInfo",
-  2: "details",
-  3: "familyEducation",
-}
-
-/**
- * Get group label from dictionary, falling back to STEP_GROUP_LABELS.
+ * This used to be a fourth independent declaration of the same step order,
+ * hardcoded in `@/components/form/footer.tsx` alongside `APPLY_STEPS`,
+ * `STEP_NAVIGATION` and `STEP_GROUPS` here, with nothing keeping the four in
+ * sync — adding or reordering a step (as the guardian-step removal did) meant
+ * editing all four in lockstep or shipping a progress bar that disagreed with
+ * the wizard. Now there is one source of truth.
  *
- * Usage:
- *   const label = getGroupLabel(dictionary.school.admission.apply.groups, 1, isRTL)
+ * `groupLabels` is intentionally the English array: `FormFooter` consumes it
+ * only for `.length` (progress-bar segment count) and never renders the
+ * strings — see the note in `form/footer.tsx`. Localized group labels come
+ * from `admission.apply.groups` via `getApplyDict`.
  */
-export function getGroupLabel(
-  groupsDict: GroupsDict | undefined,
-  group: number,
-  isRTL: boolean
-) {
-  const key = GROUP_KEY_MAP[group]
-  if (key && groupsDict?.[key]) {
-    return groupsDict[key]
-  }
-  const fallback = STEP_GROUP_LABELS[group as keyof typeof STEP_GROUP_LABELS]
-  return fallback ? (isRTL ? fallback.ar : fallback.en) : ""
+export const ADMISSION_STEP_CONFIG: StepConfig = {
+  steps: APPLY_STEPS,
+  groups: STEP_GROUPS,
+  groupLabels: Object.values(STEP_GROUP_LABELS).map((g) => g.en),
 }
 
 // ---------------------------------------------------------------------------

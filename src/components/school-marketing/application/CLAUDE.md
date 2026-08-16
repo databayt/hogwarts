@@ -24,6 +24,12 @@ Public multi-step application form for prospective students (5 steps: attachment
 - This is the only application flow (old `admission/steps/` was removed)
 - Submission happens on the **Fees** step (final): it assembles the `documents[]` array from attachment URLs, then `submit-action.ts` validates required fields before creating the `Application` record
 - Success modal labels the generated credential 'Application Tracking Code' (not 'password')
+- **Step shape has ONE source (2026-08-15)**: `APPLY_STEPS` / `STEP_GROUPS` / `STEP_NAVIGATION` in `config.client.ts`, and the footer's `ADMISSION_STEP_CONFIG` is DERIVED from them there. It used to be a fourth hand-written copy (`ADMISSION_CONFIG` in `form/footer.tsx`) — adding a step meant editing four places. `getStepMeta` / `getGroupLabel` were removed: zero callers; every step reads copy through `getApplyDict` (utils.ts).
+- **Attachments schema is shared** with the admin `/students` wizard via `@/components/form/attachments-schema` (both `attachments/validation.ts` files re-export). Same six URLs, byte-identical before; the dashboard/marketing "validation.ts may need sync" warning in `.claude/rules/blocks/admission.md` is structural for this step now.
+- **Offer link after expiry (2026-08-15)**: `getOfferDetails` returns `offerState: "expired"` for status `EXPIRED` (the cron's flip), not only for a stale SELECTED — the family's link renders the "offer expired" card instead of a bare 404.
+- **Public status tracker is localized (2026-08-15)**: `getApplicationStatus(subdomain, token, lang)` reads timeline labels from `admission.status.*` and checklist labels from `admission.statusDisplay.check*`; `EXPIRED` renders as a special status. The Arabic `STATUS_LABELS` map in `actions/status.ts` is a fallback only.
+- **`tenantUrl()` survives no request scope** (crons, webhooks, tests) — falls back to the primary root + default locale rather than throwing.
+- **`ApplicationStatusBanner` is `channel: "PORTAL"` only** — a direct-admit / imported student also has an Application (ADMITTED, userId set) and would otherwise be greeted with a form they never filed.
 
 ## Danger Zones
 

@@ -81,6 +81,51 @@ Dependencies and references:
 
 ---
 
+## Resolved (2026-08-15) — bulk import parity with the onboarding import
+
+`/school/bulk` and the onboarding CSV step both call `importStudents`, but were
+two independently hand-rolled UIs sharing no code, no type and no result
+rendering — and between them dropped three of the five things the engine
+returns (`warnings`, `accessCodes` shown by neither; `credentials` by only one).
+
+- [x] Shared results renderer `src/components/file/import/result-panel.tsx`
+      (`ImportResultPanel`, `ImportResultData`, `downloadCredentialsCsv`) —
+      counts, per-row errors, **warnings** (why `imported` < row count),
+      **parent access codes**, credentials CSV. `/school/bulk` renders it in a
+      details strip beneath the compact People cards; onboarding renders it
+      inside the drop zone. One implementation, both flows.
+- [x] Local `ImportResult` interface + `csvCell` / `downloadCredentials`
+      removed from `bulk/content.tsx` in favour of the shared module.
+- [x] i18n: `<Badge>Soon</Badge>` (no key at all) → `bulk.soon`; two
+      `"Import failed"` literals → `bulk.importFailed`; `bulk.warnings|
+accessCodes|expires|downloadLogins` added (en + ar). Remaining
+      `t.key || "English"` fallbacks follow the house optional-chaining rule.
+- [x] `bulkSmartImport` also revalidates `/admission/applications` for
+      students — the Applications tab now lists BULK_IMPORT rows.
+- [ ] The four CSV templates (`STUDENT_TEMPLATE` etc.) carry English sample
+      rows regardless of locale. Header keys must stay canonical (the header
+      map matches them); sample data could be localized. Not done.
+- [ ] `bulk/actions.ts` still throws raw `Error`s (and imports
+      `ACTION_ERRORS`/`actionError` without calling them). The
+      `ActionResponse` migration is unfinished — same in
+      `onboarding/import/actions.ts`.
+- [ ] `src/components/file/import/importer.tsx` (`Importer`, 591 lines) is
+      dead code — exported by two barrels, imported by nothing. Delete or
+      finish as a separate decision.
+
+## Resolved (2026-08-14) — bulk import revalidated paths that don't exist
+
+`bulk/actions.ts` revalidated bare `/students`, `/teachers`, `/staff`,
+`/parents`. Those listing pages actually live at
+`/[lang]/s/[subdomain]/<name>` — the `(listings)` route group is not part of the
+path — so no call could match a cache tag. Now built as a route pattern with
+`"page"` (required once `[lang]`/`[subdomain]` are in the path).
+
+**Not a live bug today**: `pnpm build` reports 691 of 692 routes as `ƒ`
+(dynamic), so nothing was cached to go stale. It matters the day a listing
+adopts `'use cache'`. Repo-wide count and the three failure modes:
+`.claude/findings/revalidate-path-repo-wide.md`.
+
 ## Technology Stack & Version Requirements
 
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):

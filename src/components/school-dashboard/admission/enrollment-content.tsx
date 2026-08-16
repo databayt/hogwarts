@@ -27,7 +27,7 @@ export default async function EnrollmentContent({
   lang,
 }: Props) {
   const sp = await enrollmentSearchParams.parse(await searchParams)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
   const t = dictionary.admission
 
   let data: EnrollmentRow[] = []
@@ -87,6 +87,10 @@ export default async function EnrollmentContent({
           applicationFeePaid: a.applicationFeePaid,
           offerAccepted: a.offerAccepted ?? false,
           registrationFeePaid: a.registrationFeePaid ?? false,
+          // Gates the "Confirm registration payment" row action for cash /
+          // bank-transfer intents. Was never mapped on this SSR path, so the
+          // action only appeared after a client refetch.
+          registrationFeeMethod: a.registrationFeeMethod ?? null,
           paymentDate: a.paymentDate
             ? new Date(a.paymentDate).toISOString()
             : null,
@@ -120,6 +124,7 @@ export default async function EnrollmentContent({
         perPage={sp.perPage}
         campaignId={sp.campaignId || undefined}
         stats={stats}
+        role={role}
       />
     </div>
   )

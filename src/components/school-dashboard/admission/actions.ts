@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import type {
   AdmissionApplicationStatus,
@@ -21,6 +22,7 @@ import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import type { ProvisionGuardianInput } from "@/lib/student-provisioning"
 import { provisionStudent } from "@/lib/student-provisioning"
+import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
 
 import { assertAdmissionPermission, isPermissionDenied } from "./authorization"
@@ -74,33 +76,8 @@ const NOTIF = {
       en: `Application status has been updated`,
     }),
   },
-  enrollment: {
-    title: { ar: "تم تأكيد القبول", en: "Enrollment Confirmed" },
-    body: (enrollmentNumber: string) => ({
-      ar: `تهانينا! تم تأكيد تسجيلك بالمدرسة. رقم التسجيل: ${enrollmentNumber}`,
-      en: `Congratulations! Your enrollment has been confirmed. Enrollment #: ${enrollmentNumber}`,
-    }),
-    // New guest accounts have no password — this variant links to the
-    // password-set page so the student can actually log in for the first time.
-    bodyWithSetup: (enrollmentNumber: string, setupUrl: string) => ({
-      ar: `تهانينا! تم تأكيد تسجيلك بالمدرسة. رقم التسجيل: ${enrollmentNumber}. لإنشاء كلمة المرور وتسجيل الدخول لأول مرة، يرجى زيارة: ${setupUrl}`,
-      en: `Congratulations! Your enrollment has been confirmed. Enrollment #: ${enrollmentNumber}. To set your password and log in for the first time, visit: ${setupUrl}`,
-    }),
-  },
-  feeDue: {
-    title: { ar: "رسوم دراسية جديدة", en: "New Tuition Fees" },
-    body: (count: number, total: string) => ({
-      ar: `تم تعيين ${count} رسوم بقيمة ${total} لحسابك`,
-      en: `${count} fee(s) totaling ${total} have been assigned to your account`,
-    }),
-  },
-  guardianEnrollment: {
-    title: { ar: "تم تأكيد القبول", en: "Enrollment Confirmed" },
-    body: (name: string) => ({
-      ar: `تم تأكيد تسجيل ${name} في المدرسة`,
-      en: `${name} has been enrolled in the school`,
-    }),
-  },
+  // enrollment / feeDue / guardianEnrollment moved to
+  // `src/lib/student-provisioning-notify.ts` — every intake channel shares them.
   sectionPlacement: {
     title: { ar: "تعيين القسم", en: "Section Placement" },
     body: (sectionName: string) => ({
@@ -450,6 +427,8 @@ export async function getApplications(params: {
   campaignId?: string
   status?: string
   applyingForClass?: string
+  /** Unset lists every AdmissionChannel; pass one or more to narrow. */
+  channel?: string | string[]
 }): Promise<ActionResponse<{ rows: unknown[]; total: number }>> {
   try {
     const session = await auth()
@@ -470,6 +449,7 @@ export async function getApplications(params: {
         rows: result.rows.map((a) => ({
           id: a.id,
           applicationNumber: a.applicationNumber,
+          channel: a.channel,
           applicantName: `${a.firstName} ${a.lastName}`,
           firstName: a.firstName,
           lastName: a.lastName,
@@ -684,11 +664,19 @@ export async function updateApplicationStatus(params: {
             )
             throw new Error("SKIP_OFFER_EMAIL")
           }
-          const isProd = process.env.NODE_ENV === "production"
-          const baseUrl = isProd
-            ? `https://${schoolDomain}.databayt.org`
-            : `http://${schoolDomain}.localhost:3000`
-          const offerUrl = `${baseUrl}/${notifLang}/application/${params.id}/offer?token=${encodeURIComponent(application.accessToken)}`
+          // Same helper the other four admission emails use (see
+          // school-marketing/admission/actions/urls.ts). The previous
+          // hand-assembled `https://${domain}.databayt.org` was wrong for
+          // every school served from the balqalam.com root — the offer link
+          // pointed families at the other domain — and drifted from the
+          // locale/host rules the helper encodes.
+          const { tenantUrl } =
+            await import("@/components/school-marketing/admission/actions/urls")
+          const offerUrl = await tenantUrl(
+            schoolDomain,
+            `/application/${params.id}/offer?token=${encodeURIComponent(application.accessToken)}`,
+            notifLang
+          )
           const parentName =
             application.fatherName ||
             application.motherName ||
@@ -1024,24 +1012,11 @@ export async function getEnrollmentData(params: {
 
     assertAdmissionPermission(role, "viewApplications")
 
+    // registrationFeeMethod is now part of getEnrollmentList's select, so the
+    // extra per-page lookup this used to make (and the SSR/CSR mismatch it
+    // papered over — the server-rendered first page never had the field) is
+    // gone.
     const result = await getEnrollmentList(schoolId, params)
-
-    // registrationFeeMethod is not in getEnrollmentList's select (queries.ts,
-    // not owned here) — fetch it in one extra batched query keyed by id so
-    // the "Confirm Reg. Payment" row action can gate on cash/bank_transfer
-    // intents. TODO(queries.ts owner): fold registrationFeeMethod into
-    // applicationListSelect/getEnrollmentList's select to drop this query.
-    const ids = result.rows.map((a) => a.id)
-    const methodRows =
-      ids.length > 0
-        ? await db.application.findMany({
-            where: { id: { in: ids }, schoolId },
-            select: { id: true, registrationFeeMethod: true },
-          })
-        : []
-    const methodById = new Map(
-      methodRows.map((r) => [r.id, r.registrationFeeMethod])
-    )
 
     return {
       success: true,
@@ -1073,7 +1048,7 @@ export async function getEnrollmentData(params: {
           // select (queries.ts), just never threaded through this mapping.
           offerAccepted: a.offerAccepted,
           registrationFeePaid: a.registrationFeePaid,
-          registrationFeeMethod: methodById.get(a.id) ?? null,
+          registrationFeeMethod: a.registrationFeeMethod ?? null,
         })),
         total: result.count,
       },
@@ -1093,6 +1068,7 @@ export type EnrollmentWarningCode =
   | "GUARDIAN_CREATE_FAILED"
   | "NO_FEE_STRUCTURE_MATCH"
   | "REGISTRATION_FEE_NO_STRUCTURE"
+  | "FEES_SKIPPED_NO_GRADE"
 
 export interface EnrollmentWarning {
   code: EnrollmentWarningCode
@@ -1568,158 +1544,34 @@ export async function confirmEnrollment(params: {
       // Non-critical: suggestion is best-effort
     }
 
-    // Notify student about enrollment confirmation (non-blocking)
-    const schoolLang =
-      (
-        await db.school.findFirst({
-          where: { id: schoolId },
-          select: { preferredLanguage: true },
-        })
-      )?.preferredLanguage ?? "ar"
-
-    const effectiveUserId = txUserId || application.userId
-    if (effectiveUserId) {
-      // A brand-new guest User (created above because the applicant had no
-      // existing login) has NO password set — without a way to authenticate,
-      // the account is unusable. Mint a password-reset token and link to the
-      // root-domain /new-password page (there is no per-subdomain route;
-      // cross-subdomain SSO shares the session once a password is set).
-      let passwordSetupUrl: string | null = null
-      if (isNewGuestUser) {
-        try {
-          const { generatePasswordResetToken } =
-            await import("@/components/auth/tokens")
-          const reset = await generatePasswordResetToken(application.email)
-          const rootUrl =
-            process.env.NEXT_PUBLIC_APP_URL ?? "https://ed.databayt.org"
-          passwordSetupUrl = `${rootUrl}/${schoolLang}/new-password?token=${encodeURIComponent(reset.token)}`
-        } catch (err) {
-          console.warn(
-            "[confirmEnrollment] Failed to mint password-setup link:",
-            err
-          )
-        }
-      }
-
-      dispatchAdmissionNotification({
-        schoolId,
-        userId: effectiveUserId,
-        type: "account_created",
-        title: t(NOTIF.enrollment.title, schoolLang),
-        body: passwordSetupUrl
-          ? t(
-              NOTIF.enrollment.bodyWithSetup(
-                enrollmentNumber,
-                passwordSetupUrl
-              ),
-              schoolLang
-            )
-          : t(NOTIF.enrollment.body(enrollmentNumber), schoolLang),
-        lang: schoolLang,
-        priority: "high",
-        channels: ["in_app", "email"],
-        metadata: {
-          applicationId: params.id,
+    // Post-commit notification. Shared with every other intake channel via
+    // `notifyProvisionedStudent` -- this block used to live inline here, which
+    // is why a wizard- or CSV-created student was never told anything. The
+    // registration-fee ledger work above stays: it is PORTAL-specific.
+    if (enrolledStudentId) {
+      // `const` so the narrowing survives into the after() closure.
+      const studentId = enrolledStudentId
+      const notifyUserId = txUserId || application.userId
+      after(() =>
+        notifyProvisionedStudent({
+          schoolId,
+          studentId,
+          userId: notifyUserId,
+          origin: "PORTAL",
+          studentName: `${application.firstName} ${application.lastName}`,
+          email: application.email,
           enrollmentNumber,
-          url: passwordSetupUrl ?? "/",
-        },
-      }).catch((err) =>
-        console.error("[confirmEnrollment] Notification error:", err)
+          isNewUser: isNewGuestUser,
+          actorId: session.user?.id,
+          delivery: "immediate",
+          // The language the family filled the wizard in (Application.lang),
+          // not the school's default — an English-speaking applicant at an
+          // Arabic-preferring school was getting Arabic enrollment mail.
+          lang: application.lang,
+        }).catch((err) =>
+          console.error("[confirmEnrollment] Notification error:", err)
+        )
       )
-    }
-
-    // Dispatch fee_due notifications for auto-assigned fees (non-fatal)
-    try {
-      if (enrolledStudentId && effectiveUserId) {
-        const pendingFees = await db.feeAssignment.findMany({
-          where: {
-            schoolId,
-            studentId: enrolledStudentId,
-            status: "PENDING",
-          },
-          select: { finalAmount: true },
-        })
-        if (pendingFees.length > 0) {
-          const totalAmount = pendingFees.reduce(
-            (sum, fa) => sum + Number(fa.finalAmount),
-            0
-          )
-          dispatchAdmissionNotification({
-            schoolId,
-            userId: effectiveUserId,
-            type: "fee_due",
-            title: t(NOTIF.feeDue.title, schoolLang),
-            body: t(
-              NOTIF.feeDue.body(
-                pendingFees.length,
-                totalAmount.toLocaleString()
-              ),
-              schoolLang
-            ),
-            lang: schoolLang,
-            priority: "high",
-            channels: ["in_app", "email"],
-            metadata: {
-              studentId: enrolledStudentId,
-              feeCount: pendingFees.length,
-              totalAmount,
-              url: "/finance/fees",
-            },
-            actorId: session.user?.id,
-          }).catch((err) =>
-            console.error("[confirmEnrollment] Fee notification error:", err)
-          )
-        }
-      }
-    } catch {
-      // Non-critical: fee notification is best-effort
-    }
-
-    // Notify guardians about enrollment (non-blocking)
-    try {
-      if (enrolledStudentId) {
-        const guardianLinks = await db.studentGuardian.findMany({
-          where: { studentId: enrolledStudentId, schoolId },
-          select: {
-            guardian: { select: { userId: true, emailAddress: true } },
-          },
-        })
-        for (const link of guardianLinks) {
-          const guardianUserId = link.guardian?.userId
-          const guardianEmail = link.guardian?.emailAddress
-          // Guardians created by confirmEnrollment (via createOrLinkGuardian)
-          // never have a userId — they're contact records, not accounts —
-          // so this previously never fired for admission-created guardians.
-          // Fall back to directEmail when there's no linked account.
-          if (!guardianUserId && !guardianEmail) continue
-          const studentFullName = `${application.firstName} ${application.lastName}`
-          dispatchAdmissionNotification({
-            schoolId,
-            ...(guardianUserId
-              ? { userId: guardianUserId }
-              : { directEmail: guardianEmail! }),
-            type: "account_created",
-            title: t(NOTIF.guardianEnrollment.title, schoolLang),
-            body: t(NOTIF.guardianEnrollment.body(studentFullName), schoolLang),
-            lang: schoolLang,
-            priority: "high",
-            channels: guardianUserId ? ["in_app", "email"] : ["email"],
-            metadata: {
-              applicationId: params.id,
-              enrollmentNumber,
-              studentName: `${application.firstName} ${application.lastName}`,
-              url: "/",
-            },
-          }).catch((err) =>
-            console.error(
-              "[confirmEnrollment] Guardian notification error:",
-              err
-            )
-          )
-        }
-      }
-    } catch {
-      // Non-critical: guardian notification is best-effort
     }
 
     revalidatePath("/admission/enrollment")
@@ -1730,7 +1582,15 @@ export async function confirmEnrollment(params: {
         suggestedSectionId,
         suggestedSectionName,
         studentId: enrolledStudentId,
-        warnings: warnings.length > 0 ? warnings : undefined,
+        // Deduped by code: the school-wide "no fee structure this year"
+        // pre-check above and provisionStudent's per-grade check can both
+        // legitimately fire for the same enrollment — one toast is enough.
+        warnings:
+          warnings.length > 0
+            ? warnings.filter(
+                (w, i, all) => all.findIndex((o) => o.code === w.code) === i
+              )
+            : undefined,
       },
     }
   } catch (error) {

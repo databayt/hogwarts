@@ -297,13 +297,13 @@ export function MyFees({
                             redirecting: d?.redirecting,
                           }}
                         />
-                        <Button variant="outline" size="sm" asChild>
-                          <Link
-                            href={`/${lang}/finance/fees/assignments/${a.id}`}
-                          >
-                            {d?.view || "View"}
-                          </Link>
-                        </Button>
+                        {/* No "View" link here on purpose: this surface is
+                            rendered ONLY for STUDENT / GUARDIAN, and the
+                            assignment detail route it used to point at is
+                            gated by resolveFinanceAccess (ADMIN / ACCOUNTANT /
+                            DEVELOPER) — every family that clicked it landed on
+                            "access denied". Everything a family can act on
+                            (pay online, receipts) is on this page already. */}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -348,13 +348,11 @@ export function MyFees({
                   .slice(0, 20)
                   .map((p) => (
                     <TableRow key={p.id}>
-                      <TableCell>
-                        <Link
-                          href={`/${lang}/finance/fees/payments/${p.id}`}
-                          className="text-primary hover:underline"
-                        >
-                          {p.paymentNumber}
-                        </Link>
+                      <TableCell className="font-mono text-sm">
+                        {/* Plain text, not a link: /finance/fees/payments/[id]
+                            is admin-gated. The receipt button in this row is
+                            the family-facing artifact. */}
+                        {p.paymentNumber}
                       </TableCell>
                       <TableCell className="text-muted-foreground tabular-nums">
                         {new Date(p.paymentDate).toLocaleDateString(

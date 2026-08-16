@@ -39,9 +39,18 @@ export async function tenantUrl(
   path: string,
   lang?: Locale | string
 ): Promise<string> {
-  const h = await headers()
-  const origin = tenantOriginForHost(h.get("host"), subdomain)
-  const candidate = lang ?? h.get("x-locale") ?? undefined
+  // `headers()` only exists inside a request. Callers outside one — a cron, a
+  // payment webhook, a unit test — must still get a usable link rather than a
+  // thrown "called outside a request scope": fall back to the primary root
+  // (what `tenantOriginForHost(null, …)` returns) and the default locale.
+  let h: Awaited<ReturnType<typeof headers>> | null = null
+  try {
+    h = await headers()
+  } catch {
+    h = null
+  }
+  const origin = tenantOriginForHost(h?.get("host") ?? null, subdomain)
+  const candidate = lang ?? h?.get("x-locale") ?? undefined
   const locale = i18n.locales.includes(candidate as Locale)
     ? (candidate as Locale)
     : i18n.defaultLocale

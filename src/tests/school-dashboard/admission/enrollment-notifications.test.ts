@@ -8,12 +8,35 @@ import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { confirmEnrollment } from "@/components/school-dashboard/admission/actions"
 
+/**
+ * `confirmEnrollment` hands its post-commit notification work to `after()`
+ * (see `src/lib/student-provisioning-notify.ts`), so the dispatch no longer
+ * completes within the action's own await chain — it is genuinely deferred.
+ * The next/server test mock runs the `after()` callback inline but does not
+ * await it, so drain the microtask queue before asserting on what was sent.
+ */
+const flushDeferredNotifications = async () => {
+  // Several turns, not one: the chain awaits a school lookup and a dynamic
+  // `import("@/components/auth/tokens")` before it dispatches anything. A
+  // fixed budget of 10 turns proved flaky under load (1 in ~3 file runs), so
+  // this is generous — it costs nothing when the chain finishes early.
+  for (let i = 0; i < 40; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Mocks — follows the same pattern as actions.test.ts
 // ---------------------------------------------------------------------------
 
 vi.mock("@/lib/db", () => ({
   db: {
+    // The fee notice now also reports the instalment schedule and stamps
+    // `UserInvoice.sentAt`, so the notify path reads invoices too.
+    userInvoice: {
+      findMany: vi.fn(),
+      updateMany: vi.fn(),
+    },
     admissionCampaign: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
@@ -189,6 +212,10 @@ function setupEnrollmentMocks(overrides?: {
     (hasFees ? [{ finalAmount: "500.00" }, { finalAmount: "300.00" }] : [])
   const guardianLinks = overrides?.guardianLinks ?? []
 
+  // `vi.clearAllMocks()` clears calls but NOT implementations, so a test that
+  // stubs a different resolved value would leak into the next one. Re-prime.
+  vi.mocked(dispatchNotification).mockResolvedValue("notif-1")
+
   // Auth
   mockAuthenticated()
 
@@ -281,6 +308,10 @@ function setupEnrollmentMocks(overrides?: {
   vi.mocked(db.feeAssignment.create).mockResolvedValue({ id: "fa-new" } as any)
   vi.mocked(db.class.findMany).mockResolvedValue([] as any)
 
+  // Invoices raised for those fee assignments (one per instalment).
+  vi.mocked(db.userInvoice.findMany).mockResolvedValue([] as any)
+  vi.mocked(db.userInvoice.updateMany).mockResolvedValue({ count: 0 } as any)
+
   // Post-transaction fee query
   vi.mocked(db.feeAssignment.findMany).mockResolvedValue(
     pendingFees.map((fee: any, i: number) => ({
@@ -341,6 +372,48 @@ describe("confirmEnrollment - notifications", () => {
     vi.clearAllMocks()
   })
 
+  it("does NOT stamp sentAt when the notice failed to dispatch", async () => {
+    setupEnrollmentMocks({
+      feeStructures: [{ name: "Tuition", totalAmount: "1000.00" }],
+      pendingFees: [{ finalAmount: "1000.00" }],
+    })
+    vi.mocked(db.userInvoice.findMany).mockResolvedValue([
+      { id: "inv-1" },
+    ] as any)
+    // dispatchNotification swallows its own errors and returns null. Stamping
+    // anyway would mark invoices as "sent" that nobody was ever told about,
+    // and the fee-due cron would then chase a family for an invoice they
+    // never received.
+    vi.mocked(dispatchNotification).mockResolvedValue(null)
+
+    await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
+
+    expect(db.userInvoice.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("stamps UserInvoice.sentAt once the family has actually been told", async () => {
+    setupEnrollmentMocks({
+      feeStructures: [{ name: "Tuition", totalAmount: "1000.00" }],
+      pendingFees: [{ finalAmount: "1000.00" }],
+    })
+    vi.mocked(db.userInvoice.findMany).mockResolvedValue([
+      { id: "inv-1" },
+      { id: "inv-2" },
+    ] as any)
+
+    await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
+
+    // Before this, `sentAt` was stamped only by the manual admin "send
+    // invoice" button — so an enrolled family was chased by the fee-due and
+    // fee-overdue crons for invoices they had never been sent.
+    expect(db.userInvoice.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["inv-1", "inv-2"] } },
+      data: { sentAt: expect.any(Date) },
+    })
+  })
+
   it("dispatches fee_due notification after fee assignments are created", async () => {
     setupEnrollmentMocks({
       feeStructures: [
@@ -351,6 +424,7 @@ describe("confirmEnrollment - notifications", () => {
     })
 
     const result = await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
 
     expect(result.success).toBe(true)
 
@@ -379,6 +453,7 @@ describe("confirmEnrollment - notifications", () => {
     })
 
     const result = await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
 
     expect(result.success).toBe(true)
 
@@ -410,6 +485,7 @@ describe("confirmEnrollment - notifications", () => {
     })
 
     const result = await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
 
     expect(result.success).toBe(true)
 
@@ -435,6 +511,7 @@ describe("confirmEnrollment - notifications", () => {
     } as any)
 
     const result = await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
 
     expect(result.success).toBe(true)
 
@@ -453,6 +530,7 @@ describe("confirmEnrollment - notifications", () => {
     setupEnrollmentMocks({ hasUserId: false })
 
     const result = await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
 
     expect(result.success).toBe(true)
     // Confirms the guest-creation branch actually ran.
@@ -491,9 +569,38 @@ describe("confirmEnrollment - notifications", () => {
     // confirmEnrollment should still return success because fee notification
     // is non-fatal (caught by try/catch and .catch())
     const result = await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
 
     expect(result.success).toBe(true)
     expect(result.data).toHaveProperty("studentId")
+  })
+
+  /**
+   * The post-commit dispatch was extracted out of confirmEnrollment into the
+   * shared `notifyProvisionedStudent`. If the inline block were ever left in
+   * place alongside the shared call, every PORTAL enrollment would silently
+   * send everything twice — the exact regression this pins.
+   */
+  it("sends the student's account notice exactly once (no double-send after the extraction)", async () => {
+    setupEnrollmentMocks()
+
+    const result = await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
+
+    expect(result.success).toBe(true)
+
+    const studentAccountNotices = vi
+      .mocked(dispatchNotification)
+      .mock.calls.filter((call) => {
+        const arg = call[0] as any
+        // The student's own notice, not a guardian's: guardians are addressed
+        // by directEmail or their own userId.
+        return (
+          arg.type === "account_created" && arg.userId === APPLICANT_USER_ID
+        )
+      })
+
+    expect(studentAccountNotices).toHaveLength(1)
   })
 
   it("does not dispatch fee notification when no fees assigned", async () => {
@@ -503,6 +610,7 @@ describe("confirmEnrollment - notifications", () => {
     })
 
     const result = await confirmEnrollment({ id: APP_ID })
+    await flushDeferredNotifications()
 
     expect(result.success).toBe(true)
 

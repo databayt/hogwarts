@@ -176,6 +176,15 @@ export async function ensureStudentFeeAssignments(
   const missing = feeStructures.filter((s) => !existingStructureIds.has(s.id))
 
   if (missing.length === 0) {
+    // Nothing to assign — but the assignments that already exist may still be
+    // missing their invoices (see `fanOutInvoices`): the wizard's academic
+    // step assigns fees to a draft that has no login yet, so this is the path
+    // provisionStudent takes for every wizard student.
+    await fanOutInvoices(
+      schoolId,
+      existing.map((a) => a.id),
+      tx
+    )
     return {
       created: 0,
       existing: existing.length,
@@ -208,31 +217,9 @@ export async function ensureStudentFeeAssignments(
     ...created.map((c) => c.id),
   ]
 
-  // Invoice fan-out. In tx-mode it runs inside the caller's transaction
-  // (atomic); standalone it is best-effort after commit so a transient
-  // failure never rolls back the assignments themselves. Either way invoice
-  // errors are caught and logged, never propagated.
-  if (created.length > 0) {
-    try {
-      const { ensureInvoicesForAssignment } =
-        await import("@/lib/fee-invoice-sync")
-      for (const c of created) {
-        try {
-          await ensureInvoicesForAssignment(schoolId, c.id, tx)
-        } catch (err) {
-          console.warn(
-            `[ensureStudentFeeAssignments] Invoice sync failed for assignment=${c.id}:`,
-            err
-          )
-        }
-      }
-    } catch (err) {
-      console.warn(
-        "[ensureStudentFeeAssignments] Invoice sync batch failed:",
-        err
-      )
-    }
-  }
+  // Invoice fan-out over ALL assignments (existing + created) — see
+  // `fanOutInvoices` for why "existing" matters.
+  await fanOutInvoices(schoolId, allAssignmentIds, tx)
 
   // In tx-mode the caller owns post-commit notifications (dispatching mid-tx
   // would write notification rows that vanish on rollback), so suppress here.
@@ -320,6 +307,52 @@ async function selectAssignableStructures(
   }
 
   return chosen ? [...additive, chosen] : additive
+}
+
+/**
+ * Generate invoices for every assignment that does not have them yet.
+ *
+ * In tx-mode this runs inside the caller's transaction (atomic); standalone it
+ * is best-effort so a transient failure never rolls back the assignments
+ * themselves. Either way invoice errors are caught and logged, never
+ * propagated.
+ *
+ * Deliberately over ALL of the student's assignments, not only the ones just
+ * created. `ensureInvoicesForAssignment` is idempotent per assignment (returns
+ * early when invoices exist) and needs `Student.userId` to invoice at all. The
+ * admin wizard assigns fees on its academic step — while the student is still
+ * a DRAFT with no login — so those assignments are born un-invoiceable; when
+ * `provisionStudent` later links the User and calls the helper again, every
+ * assignment is `existing`, and the old created-only fan-out never ran. Net
+ * effect: every wizard-created student had fees and NO invoices, forever.
+ * Fanning out over the whole set turns any later call (provisioning, a grade
+ * edit, Finance → "Sync fees") into a self-heal for that gap.
+ */
+async function fanOutInvoices(
+  schoolId: string,
+  assignmentIds: string[],
+  tx?: Prisma.TransactionClient
+): Promise<void> {
+  if (assignmentIds.length === 0) return
+  try {
+    const { ensureInvoicesForAssignment } =
+      await import("@/lib/fee-invoice-sync")
+    for (const id of assignmentIds) {
+      try {
+        await ensureInvoicesForAssignment(schoolId, id, tx)
+      } catch (err) {
+        console.warn(
+          `[ensureStudentFeeAssignments] Invoice sync failed for assignment=${id}:`,
+          err
+        )
+      }
+    }
+  } catch (err) {
+    console.warn(
+      "[ensureStudentFeeAssignments] Invoice sync batch failed:",
+      err
+    )
+  }
 }
 
 /**

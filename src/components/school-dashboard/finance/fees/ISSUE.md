@@ -5,6 +5,48 @@
 > Last updated: 2026-06-13
 > Aldar UAE source of truth: [hogwarts#356](https://github.com/databayt/hogwarts/issues/356)
 
+## 2026-08-15 — family payment journey (local, not deployed)
+
+Traced from the admission side ("family pays → is told → sees receipt"). See
+`content/docs-en/admission.mdx` → "The journey, audited end to end" for the
+full table. Fees-block half:
+
+- [x] **`finance/lib/payment-notify.ts` — `notifyFeePaymentReceived`.** One
+      fan-out (student + every linked guardian, school language, receipt URL,
+      copy from `finance.notifications.*` via `notification-copy.ts`). Wired
+      into the **Stripe and Tap fee-payment webhooks**, which notified the
+      student ONLY with an inline `isAr` ternary — the parent who had just paid
+      online heard nothing. `recordPayment` still carries its own inline copy
+      of the same fan-out (file was mid-edit in another session) — it should
+      adopt the helper next.
+- [x] Family surface links: the enrollment `fee_due` notice now points at
+      `/finance/fees/my` (pay online, receipts) instead of `/my-fees`
+      (preferences only); `/my-fees` gained a "Pay & view invoices" CTA; the
+      "View" assignment link and the payment-number link on `my-fees.tsx`
+      removed — both landed STUDENT/GUARDIAN on `FinanceAccessDenied`.
+- [x] `fee-invoice-sync.ts`: `UserInvoice.currency` inherits
+      `FeeAssignment.currency` (the B7 snapshot) instead of re-reading the
+      live school currency.
+- [x] `provisionStudent` now surfaces `ensureStudentFeeAssignments`'s
+      non-throwing outcomes (`NO_FEE_STRUCTURE_MATCH`, `FEES_SKIPPED_NO_GRADE`)
+      to the wizard / CSV import — the return value was discarded at every
+      call site.
+- [ ] **Instalment reminders + OVERDUE detection depend on
+      `FeeStructure.paymentSchedule`** (`fee-due` A1 gate, `fee-overdue`
+      `hasOverdueScheduleEntry`). Admin-created structures leave it null, so a
+      single-instalment or unscheduled fee never reminds, never flips OVERDUE,
+      never accrues a late fee — although every `UserInvoice.due_date` is
+      right there. Fix: an invoice-due-date path in both crons. _Not touched
+      here — both crons were being edited by another session._
+- [ ] Fee due dates / "today" windows are pure UTC (`buildQuarterlySchedule`
+      `Date.UTC(startYear, 8, 1)`, `todayBounds`) — the payroll timezone bug's
+      sibling. `src/lib/timezone.ts` has the helpers.
+- [ ] Refunds: `PaymentStatus.REFUNDED` is displayed, never set — no
+      `refundPayment` action / provider method.
+- [ ] Withdrawal / archive does not void open assignments or invoices.
+- [ ] Two family fee surfaces (`/my-fees` prefs vs `/finance/fees/my` pay) —
+      merge or redirect eventually.
+
 ## 2026-08-14 — performance pass (local, not deployed)
 
 - [x] **Overview gate collapsed from five serialized permission checks to one.**

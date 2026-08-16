@@ -289,6 +289,13 @@ export async function getOfferDetails(
       offerState = "declined"
     } else if (application.status === "ADMITTED") {
       offerState = "already_enrolled"
+    } else if (application.status === "EXPIRED") {
+      // The daily cron flips a lapsed SELECTED offer to EXPIRED. Before this
+      // branch existed, that flip turned the parent's link into a bare 404 —
+      // the friendly "offer expired, contact the school" card below was only
+      // reachable in the <24h window between the real deadline and the next
+      // cron run. Same card, whether we noticed the lapse or the cron did.
+      offerState = "expired"
     } else if (application.status !== "SELECTED") {
       return { success: false, error: "OFFER_NOT_AVAILABLE" }
     } else if (isOfferExpired(application.offerExpiryDate)) {

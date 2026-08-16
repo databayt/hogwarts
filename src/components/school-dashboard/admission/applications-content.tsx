@@ -37,6 +37,7 @@ export default async function ApplicationsContent({
         campaignId: sp.campaignId,
         status: sp.status,
         applyingForClass: sp.applyingForClass,
+        channel: sp.channel,
         page: sp.page,
         perPage: sp.perPage,
         sort: sp.sort,
@@ -55,6 +56,7 @@ export default async function ApplicationsContent({
         return {
           id: a.id,
           applicationNumber: a.applicationNumber,
+          channel: a.channel,
           applicantName: labels.get(applicantName) ?? applicantName,
           firstName: a.firstName,
           lastName: a.lastName,

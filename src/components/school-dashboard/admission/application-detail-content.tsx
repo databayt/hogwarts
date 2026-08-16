@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import Image from "next/image"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
@@ -13,6 +14,7 @@ import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getFields } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 
 import { DocumentsSection } from "./ai/documents-section"
 import type {
@@ -154,6 +156,13 @@ export default async function ApplicationDetailContent({
   }
 
   const t = dictionary.admission
+  // Only PORTAL applications go through offer → accept → registration fee.
+  // Direct-admit channels (ADMIN_DIRECT / *_IMPORT / LEGACY_BACKFILL) are
+  // born ADMITTED and are billed through Finance → Fees like any enrolled
+  // student, so their offer/registration-fee fields are structurally empty —
+  // rendering "Registration Fee Paid: No" for them reads as unpaid when
+  // nothing was ever owed on this ledger.
+  const isPortal = application.channel === "PORTAL"
   const statusLabel =
     t?.status?.[application.status as keyof typeof t.status] ||
     application.status
@@ -195,6 +204,17 @@ export default async function ApplicationDetailContent({
     "guardianRelation",
     "reviewNotes",
   ]
+  // Campaign name is DB content in the school's language (the hidden system
+  // campaign for direct admits included) — localize it the way the list tab
+  // does, instead of printing it raw next to a fully translated page.
+  const campaignLabels = application.campaign?.name
+    ? await getLabels([application.campaign.name], lang, schoolId)
+    : new Map<string, string>()
+  const campaignName = application.campaign?.name
+    ? (campaignLabels.get(application.campaign.name) ??
+      application.campaign.name)
+    : null
+
   const translated = await getFields(
     application as unknown as Record<string, unknown>,
     translatableFields,
@@ -314,10 +334,34 @@ export default async function ApplicationDetailContent({
         <div className="space-y-1 text-sm">
           <div className="space-y-1">
             <h1 className="text-lg font-semibold">{fullName}</h1>
-            <Badge variant={getStatusVariant(application.status)}>
-              {statusLabel}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge variant={getStatusVariant(application.status)}>
+                {statusLabel}
+              </Badge>
+              {/* Which of the intake channels this Application came through.
+                  PORTAL = the reviewed pipeline; anything else was minted by
+                  provisionStudent for a direct admit and is already ADMITTED. */}
+              <Badge variant="outline">
+                {t?.channel?.[
+                  application.channel as keyof NonNullable<typeof t.channel>
+                ] || application.channel}
+              </Badge>
+            </div>
           </div>
+          {/* The Student this Application produced — the other half of the
+              student-profile → application link, so the loop closes both
+              ways. Absent until enrollment is confirmed (PORTAL) and for
+              legacy rows predating the intake invariant. */}
+          {application.student?.userId && (
+            <p>
+              <Link
+                href={`/${lang}/profile/${application.student.userId}`}
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                {t?.applicationDetail?.viewStudent || "View student profile"}
+              </Link>
+            </p>
+          )}
           {application.email && <p>{application.email}</p>}
           {application.phone && <p>{application.phone}</p>}
           {application.alternatePhone && <p>{application.alternatePhone}</p>}
@@ -335,6 +379,7 @@ export default async function ApplicationDetailContent({
           currentStatus={application.status}
           dictionary={dictionary}
           readOnly={uiConfig.readOnlyMode}
+          role={session?.user?.role ?? null}
         />
       </div>
 
@@ -347,7 +392,7 @@ export default async function ApplicationDetailContent({
             {application.campaign?.name && (
               <>
                 {" · "}
-                {application.campaign.name}
+                {campaignName}
                 {application.campaign.academicYear &&
                   ` (${application.campaign.academicYear})`}
               </>
@@ -586,24 +631,31 @@ export default async function ApplicationDetailContent({
           </h2>
           <Separator className="my-3" />
           <div className="grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
-            <InfoRow
-              label={
-                t?.applicationDetail?.admissionOffered || "Admission Offered"
-              }
-              value={
-                application.admissionOffered
-                  ? t?.applicationDetail?.yes || "Yes"
-                  : t?.applicationDetail?.no || "No"
-              }
-            />
-            <InfoRow
-              label={t?.applicationDetail?.offerDate || "Offer Date"}
-              value={formatDate(application.offerDate, lang)}
-            />
-            <InfoRow
-              label={t?.applicationDetail?.offerExpiryDate || "Offer Expiry"}
-              value={formatDate(application.offerExpiryDate, lang)}
-            />
+            {isPortal && (
+              <>
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.admissionOffered ||
+                    "Admission Offered"
+                  }
+                  value={
+                    application.admissionOffered
+                      ? t?.applicationDetail?.yes || "Yes"
+                      : t?.applicationDetail?.no || "No"
+                  }
+                />
+                <InfoRow
+                  label={t?.applicationDetail?.offerDate || "Offer Date"}
+                  value={formatDate(application.offerDate, lang)}
+                />
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.offerExpiryDate || "Offer Expiry"
+                  }
+                  value={formatDate(application.offerExpiryDate, lang)}
+                />
+              </>
+            )}
             <InfoRow
               label={
                 t?.applicationDetail?.admissionConfirmed ||
@@ -627,79 +679,95 @@ export default async function ApplicationDetailContent({
               }
               value={application.enrollmentNumber}
             />
-            <InfoRow
-              label={t?.applicationDetail?.feePaid || "Application Fee Paid"}
-              value={
-                application.applicationFeePaid
-                  ? t?.applicationDetail?.yes || "Yes"
-                  : t?.applicationDetail?.no || "No"
-              }
-            />
-            <InfoRow
-              label={t?.applicationDetail?.offerAccepted || "Offer Accepted"}
-              value={
-                application.offerAccepted
-                  ? t?.applicationDetail?.yes || "Yes"
-                  : t?.applicationDetail?.no || "No"
-              }
-            />
-            <InfoRow
-              label={
-                t?.applicationDetail?.offerAcceptedAt || "Offer Accepted At"
-              }
-              value={formatDate(application.offerAcceptedAt, lang)}
-            />
-            <InfoRow
-              label={
-                t?.applicationDetail?.registrationFeePaid ||
-                "Registration Fee Paid"
-              }
-              value={
-                application.registrationFeePaid
-                  ? t?.applicationDetail?.yes || "Yes"
-                  : t?.applicationDetail?.no || "No"
-              }
-            />
-            <InfoRow
-              label={
-                t?.applicationDetail?.registrationFeeAmount ||
-                "Registration Fee Amount"
-              }
-              value={
-                application.registrationFeeAmount != null
-                  ? String(application.registrationFeeAmount)
-                  : null
-              }
-            />
-            <InfoRow
-              label={
-                t?.applicationDetail?.registrationFeeMethod ||
-                "Registration Fee Method"
-              }
-              value={application.registrationFeeMethod}
-            />
-            <InfoRow
-              label={
-                t?.applicationDetail?.registrationFeeReference ||
-                "Registration Fee Reference"
-              }
-              value={application.registrationFeeReference}
-            />
-            <InfoRow
-              label={
-                t?.applicationDetail?.registrationFeeDate ||
-                "Registration Fee Date"
-              }
-              value={formatDate(application.registrationFeeDate, lang)}
-            />
-            <InfoRow
-              label={t?.applicationDetail?.paymentId || "Payment ID"}
-              value={application.paymentId}
-            />
-            <InfoRow
-              label={t?.applicationDetail?.paymentDate || "Payment Date"}
-              value={formatDate(application.paymentDate, lang)}
-            />
+            {isPortal ? (
+              <>
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.feePaid || "Application Fee Paid"
+                  }
+                  value={
+                    application.applicationFeePaid
+                      ? t?.applicationDetail?.yes || "Yes"
+                      : t?.applicationDetail?.no || "No"
+                  }
+                />
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.offerAccepted || "Offer Accepted"
+                  }
+                  value={
+                    application.offerAccepted
+                      ? t?.applicationDetail?.yes || "Yes"
+                      : t?.applicationDetail?.no || "No"
+                  }
+                />
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.offerAcceptedAt || "Offer Accepted At"
+                  }
+                  value={formatDate(application.offerAcceptedAt, lang)}
+                />
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.registrationFeePaid ||
+                    "Registration Fee Paid"
+                  }
+                  value={
+                    application.registrationFeePaid
+                      ? t?.applicationDetail?.yes || "Yes"
+                      : t?.applicationDetail?.no || "No"
+                  }
+                />
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.registrationFeeAmount ||
+                    "Registration Fee Amount"
+                  }
+                  value={
+                    application.registrationFeeAmount != null
+                      ? String(application.registrationFeeAmount)
+                      : null
+                  }
+                />
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.registrationFeeMethod ||
+                    "Registration Fee Method"
+                  }
+                  value={application.registrationFeeMethod}
+                />
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.registrationFeeReference ||
+                    "Registration Fee Reference"
+                  }
+                  value={application.registrationFeeReference}
+                />
+                <InfoRow
+                  label={
+                    t?.applicationDetail?.registrationFeeDate ||
+                    "Registration Fee Date"
+                  }
+                  value={formatDate(application.registrationFeeDate, lang)}
+                />
+                <InfoRow
+                  label={t?.applicationDetail?.paymentId || "Payment ID"}
+                  value={application.paymentId}
+                />
+                <InfoRow
+                  label={t?.applicationDetail?.paymentDate || "Payment Date"}
+                  value={formatDate(application.paymentDate, lang)}
+                />
+              </>
+            ) : (
+              <InfoRow
+                label={t?.applicationDetail?.billing || "Billing"}
+                value={
+                  t?.applicationDetail?.billedViaFinance ||
+                  "Billed through Finance → Fees"
+                }
+              />
+            )}
           </div>
         </section>
 

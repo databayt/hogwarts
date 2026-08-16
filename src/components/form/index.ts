@@ -118,7 +118,6 @@ export { FormHeading } from "./template/heading"
 export {
   FormFooter,
   ONBOARDING_CONFIG,
-  ADMISSION_CONFIG,
   APPLICATION_CONFIG,
   type StepConfig,
   type FormFooterProps,

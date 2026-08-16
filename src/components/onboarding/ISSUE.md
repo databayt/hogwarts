@@ -11,6 +11,56 @@ docs: https://ed.databayt.org/en/docs/admission
 last_audited: 2026-08-08
 ---
 
+## 2026-08-15 — import step: role gate + parity with /school/bulk (LOCAL, not pushed)
+
+- [x] **SECURITY — `import/actions.ts` had no role gate.** `parseAndValidate`
+      and `smartImport` accepted ANY signed-in user with a `schoolId`; server
+      actions are public POST endpoints and `joinSchool` promotes USER → STAFF,
+      so ordinary members could mass-create student accounts and mint their
+      credentials. Now `requireOnboardingImporter()`: ADMIN/DEVELOPER only,
+      **role read from the DB, not the JWT** — school creation promotes the
+      User row to ADMIN but the session is only documented to refresh
+      `schoolId`, so trusting `session.user.role` would lock the legitimate
+      onboarding admin out of their own import. `requireSchoolRole` was NOT
+      reused: it resolves the tenant via `getTenantContext()`, and onboarding
+      runs on the main host with no subdomain.
+- [x] Results panel shared with `/school/bulk`
+      (`file/import/result-panel.tsx`) — credentials, warnings and parent
+      access codes were returned by the action and dropped by this UI (its
+      local `ImportResult` did not declare them).
+- [x] `smartImport` revalidates the students listing + Applications tab
+      (route patterns + `"page"`; it revalidated nothing before).
+- [x] `onboarding.notifyFamilies` + `importWarnings|importAccessCodes|
+importExpires|importDownloadLogins` dictionary keys (en + ar); the
+      "Notify families by email" literal fallback is gone.
+- [ ] `dictionary?: any` prop on `import/content.tsx` — should be the typed
+      `Dictionary`.
+- [ ] Verify the role gate against a real onboarding run
+      (`user@databayt.org` → create school → import) before deploy.
+
+## 2026-08-14 — intake unification (LOCAL, not pushed)
+
+- [x] `newcomers` lost its `student` role. It is a flow for the adults who join
+      a school; the student branch wrote a stub `Student` (placeholder DOB
+      `2010-01-01`, gender "Not Specified") outside `provisionStudent`, so the
+      student had no Application, student code, fees or seat. A self-registering
+      student now applies at `/{lang}/application`. The file came off
+      `STUDENT_CREATE_ALLOWLIST` in `eslint.config.mjs`.
+- [x] The `import` step gained a **"notify families" checkbox, default off**,
+      threaded through `smartImport` into `importStudents`. When on, it passes
+      `delivery: "queue"` so the email cron drains 50 per run.
+
+Open / found while here:
+
+- [ ] **`/newcomers` is a dead link.** `src/app/[lang]/my-school/page.tsx:32,43`
+      redirects to it and `components/auth/user-button.tsx:230` links to it, but
+      no route exists anywhere under `src/app`. The block is unreachable; only
+      its server actions are live (they are public POST endpoints).
+- [ ] The onboarding-import UI has **no dictionary wiring**: `dictionary.onboarding`
+      contains only `newcomers`, so `dict.importData`, `dict.students`,
+      `dict.importFailed` and the new `dict.notifyFamilies` all fall back to
+      hardcoded English. Pre-existing; not papered over with an unreachable key.
+
 # Onboarding -- Production Readiness Tracker
 
 **Status:** 🟡 IN PROGRESS

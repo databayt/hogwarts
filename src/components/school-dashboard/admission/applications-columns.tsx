@@ -28,6 +28,9 @@ import { getAllowedTransitions } from "./status-machine"
 export type ApplicationRow = {
   id: string
   applicationNumber: string
+  /** AdmissionChannel — how this student entered. Every channel appears in
+   *  this table; the Channel filter narrows to one. */
+  channel: string
   applicantName: string
   firstName: string
   lastName: string
@@ -242,6 +245,61 @@ export const getApplicationColumns = (
         />
       ),
       meta: { label: t?.columns?.class || "Class", variant: "text" },
+    },
+    {
+      // How the student entered. PORTAL rows came through the reviewed
+      // admit→offer→pay pipeline; every other channel is a direct admit whose
+      // Application was minted by provisionStudent against the hidden system
+      // campaign. All of them are listed here — this filter is what narrows
+      // back to the review queue.
+      //
+      // Explicit `id` is REQUIRED for the facet to reach the URL: useDataTable
+      // keys its nuqs parsers by `column.id`, and a ColumnDef with only an
+      // `accessorKey` has none at that point — the filter would then narrow
+      // only the rows already loaded (client-side) and never reach the
+      // fetcher. Same convention as every `id: "status"` in listings/*.
+      id: "channel",
+      accessorKey: "channel",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.channel || "Channel"}
+        />
+      ),
+      cell: ({ getValue }) => {
+        const channel = getValue<string>()
+        const label = t?.channel?.[channel as keyof typeof t.channel] || channel
+        return (
+          <Badge variant={channel === "PORTAL" ? "secondary" : "outline"}>
+            {label}
+          </Badge>
+        )
+      },
+      meta: {
+        label: t?.columns?.channel || "Channel",
+        variant: "select",
+        options: [
+          { label: t?.channel?.PORTAL || "Portal", value: "PORTAL" },
+          {
+            label: t?.channel?.ADMIN_DIRECT || "Direct admission",
+            value: "ADMIN_DIRECT",
+          },
+          {
+            label: t?.channel?.ONBOARDING_IMPORT || "Onboarding import",
+            value: "ONBOARDING_IMPORT",
+          },
+          {
+            label: t?.channel?.BULK_IMPORT || "Bulk import",
+            value: "BULK_IMPORT",
+          },
+          {
+            label: t?.channel?.LEGACY_BACKFILL || "Legacy record",
+            value: "LEGACY_BACKFILL",
+          },
+        ],
+      },
+      enableColumnFilter: true,
+      filterFn: (row, id, value) => value.includes(row.getValue(id)),
     },
     {
       // applicationFee column removed — applying is always free (2026-06-12 decision).

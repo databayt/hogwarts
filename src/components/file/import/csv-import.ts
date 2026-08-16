@@ -25,12 +25,14 @@ import { z, ZodError } from "zod"
 
 import { generateTempPassword, makeUniqueUsername } from "@/lib/credentials"
 import { db } from "@/lib/db"
+import { extractGradeNumber } from "@/lib/grade-utils"
 import { logger } from "@/lib/logger"
 import {
   provisionStudent,
   type ProvisionGuardianInput,
   type ProvisionStudentInput,
 } from "@/lib/student-provisioning"
+import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 import { detectLang } from "@/components/translation/util"
 
 import {
@@ -207,7 +209,17 @@ class CsvImportService {
   async importStudents(
     csvContent: string,
     schoolId: string,
-    origin: AdmissionChannel
+    origin: AdmissionChannel,
+    /**
+     * Off by default, deliberately. A bulk import has always been silent —
+     * credentials come back in `result.credentials` for the admin to hand out
+     * — and turning a trial import into hundreds of real emails is not a
+     * default anyone should get by accident. When on, notifications are
+     * QUEUED (`delivery: "queue"`): rows are written and the
+     * process-email-notifications cron drains them 50 at a time, so a 500-row
+     * file spreads over hours instead of bursting Resend.
+     */
+    notifyFamilies = false
   ): Promise<ImportResult> {
     const result: ImportResult = {
       success: false,
@@ -396,6 +408,7 @@ class CsvImportService {
       // summary the old hand-rolled Phase 3/4 gave.
       let gradelessCount = 0
       let feeFailCount = 0
+      let noFeeStructureCount = 0
 
       // Phase 2: Provision each valid row through the shared core, one row at
       // a time (see the method doc comment above for why this can't be
@@ -422,6 +435,18 @@ class CsvImportService {
           if (parsed.gradeNumber != null) {
             academicGradeId = gradeByNumber.get(parsed.gradeNumber) || undefined
           }
+        }
+
+        // `parseSectionString` only reads "Grade N" / "N-X". A school that
+        // types its OWN grade names — "الصف الثاني", "2", "second grade" — got
+        // "no recognized grade" for every row and every student came in
+        // unbilled. `extractGradeNumber` (the same resolver provisionStudent's
+        // year-level cascade uses) understands Arabic + English ordinals,
+        // "الصف N", and bare numbers.
+        if (!academicGradeId) {
+          const raw = r.validated.yearLevel || r.validated.section
+          const n = raw ? extractGradeNumber(raw) : null
+          if (n != null) academicGradeId = gradeByNumber.get(n) || undefined
         }
 
         // Students whose CSV had no recognizable grade/section can't be
@@ -512,6 +537,28 @@ class CsvImportService {
           result.imported++
           provisionedStudentIds.push(provisionResult.studentId)
 
+          if (notifyFamilies) {
+            // Queued, never immediate — see the `notifyFamilies` note above.
+            // Awaited rather than fired-and-forgotten: this loop is already
+            // sequential, and an import that reports "done" should have
+            // finished writing what it promised to write.
+            await notifyProvisionedStudent({
+              schoolId,
+              studentId: provisionResult.studentId,
+              userId: provisionResult.userId,
+              origin,
+              studentName: r.validated.name,
+              email: r.email ?? null,
+              isNewUser: provisionResult.isNewUser,
+              delivery: "queue",
+            }).catch((err) =>
+              console.error(
+                `[importStudents] row ${r.rowNumber} notification failed:`,
+                err
+              )
+            )
+          }
+
           if (provisionResult.credentials) {
             result.credentials?.push({
               row: r.rowNumber,
@@ -526,6 +573,16 @@ class CsvImportService {
           for (const w of provisionResult.warnings) {
             if (w.code === "FEE_AUTO_ASSIGN_FAILED") {
               feeFailCount++
+              continue
+            }
+            // Counted once above via `gradelessCount` (we knew the grade was
+            // missing before provisioning) — don't report it a second time.
+            if (w.code === "FEES_SKIPPED_NO_GRADE") continue
+            // provisionStudent now surfaces "grade known, but the school has
+            // no FeeStructure for it". Aggregate into ONE summary line below
+            // rather than a per-row raw code.
+            if (w.code === "NO_FEE_STRUCTURE_MATCH") {
+              noFeeStructureCount++
               continue
             }
             result.warnings?.push({
@@ -555,6 +612,12 @@ class CsvImportService {
         result.warnings?.push({
           row: 0,
           warning: `Fee assignment failed for ${feeFailCount} student(s). You can re-sync fees from the Finance → Fees page.`,
+        })
+      }
+      if (noFeeStructureCount > 0) {
+        result.warnings?.push({
+          row: 0,
+          warning: `${noFeeStructureCount} student(s) imported but no fee structure exists for their grade — no fees or invoices were created. Configure fees in Finance → Fees, then use "Sync fees" to bill them.`,
         })
       }
 
@@ -1428,9 +1491,15 @@ const csvImportService = new CsvImportService()
 export async function importStudents(
   csvContent: string,
   schoolId: string,
-  origin: AdmissionChannel
+  origin: AdmissionChannel,
+  notifyFamilies = false
 ): Promise<ImportResult> {
-  return csvImportService.importStudents(csvContent, schoolId, origin)
+  return csvImportService.importStudents(
+    csvContent,
+    schoolId,
+    origin,
+    notifyFamilies
+  )
 }
 export async function importTeachers(csvContent: string, schoolId: string) {
   return csvImportService.importTeachers(csvContent, schoolId)

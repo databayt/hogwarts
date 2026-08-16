@@ -8,13 +8,14 @@ import { useParams, usePathname } from "next/navigation"
 import type { NameFormat } from "@/lib/name-utils"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ADMISSION_CONFIG, FormFooter } from "@/components/form/footer"
+import { FormFooter } from "@/components/form/footer"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import {
   ApplySessionProvider,
   useApplySession,
 } from "@/components/school-marketing/application/application-context"
+import { ADMISSION_STEP_CONFIG } from "@/components/school-marketing/application/config.client"
 import ErrorBoundary from "@/components/school-marketing/application/error-boundary"
 import {
   getApplyErrorDict,
@@ -96,7 +97,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
       <div className="mx-auto w-full max-w-5xl self-stretch pb-20">
         {renderSkeleton()}
         <FormFooter
-          config={ADMISSION_CONFIG}
+          config={ADMISSION_STEP_CONFIG}
           basePath="/application"
           dictionary={dict as Record<string, unknown>}
           locale={locale}
@@ -142,7 +143,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
           </div>
         </div>
         <FormFooter
-          config={ADMISSION_CONFIG}
+          config={ADMISSION_STEP_CONFIG}
           basePath="/application"
           dictionary={dict as Record<string, unknown>}
           locale={locale}
@@ -157,7 +158,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
     <div className="mx-auto w-full max-w-5xl pb-20">
       {children}
       <FormFooter
-        config={ADMISSION_CONFIG}
+        config={ADMISSION_STEP_CONFIG}
         basePath="/application"
         dictionary={dict as Record<string, unknown>}
         locale={locale}

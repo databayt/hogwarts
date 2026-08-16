@@ -23,6 +23,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { confirmEnrollment, confirmRegistrationPayment } from "./actions"
+import { canPerformAdmissionAction } from "./authorization"
 import { PlacementDialog } from "./placement-dialog"
 import { translateEnrollmentWarning } from "./warning-messages"
 
@@ -120,10 +121,16 @@ function EnrollmentActionsCell({
   enrollment,
   dictionary,
   locale,
+  role,
 }: {
   enrollment: EnrollmentRow
   dictionary: AdmissionDictWithPendingKeys
   locale: Locale
+  /** Viewer's role. `confirmEnrollment` is ADMIN/DEVELOPER-only on the server
+   *  (authorization.ts) while STAFF can review, change status and place — so
+   *  without this gate STAFF saw a "Confirm Enrollment" item that always died
+   *  with FORBIDDEN. Same permission table the server asserts against. */
+  role?: string | null
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -231,14 +238,17 @@ function EnrollmentActionsCell({
               {t?.enrollment?.verifyDocuments || "Verify Documents"}
             </DropdownMenuItem>
           )}
-          {enrollment.admissionOffered && !enrollment.admissionConfirmed && (
-            <DropdownMenuItem
-              onClick={onConfirmEnrollment}
-              disabled={isPending}
-            >
-              {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
-            </DropdownMenuItem>
-          )}
+          {enrollment.admissionOffered &&
+            !enrollment.admissionConfirmed &&
+            !!role &&
+            canPerformAdmissionAction(role, "confirmEnrollment") && (
+              <DropdownMenuItem
+                onClick={onConfirmEnrollment}
+                disabled={isPending}
+              >
+                {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
+              </DropdownMenuItem>
+            )}
           {showConfirmRegPayment && (
             <DropdownMenuItem
               onClick={onConfirmRegPayment}
@@ -276,7 +286,8 @@ function EnrollmentActionsCell({
 
 export const getEnrollmentColumns = (
   dictionary: AdmissionDictWithPendingKeys,
-  locale: Locale
+  locale: Locale,
+  role?: string | null
 ): ColumnDef<EnrollmentRow>[] => {
   const t = dictionary
 
@@ -434,6 +445,7 @@ export const getEnrollmentColumns = (
           enrollment={row.original}
           dictionary={dictionary}
           locale={locale}
+          role={role}
         />
       ),
       enableSorting: false,

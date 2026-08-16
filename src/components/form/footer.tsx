@@ -300,6 +300,15 @@ export function FormFooter({
   // Labels
   const dict = (dictionary || {}) as Record<string, string | undefined>
   const stepTemplate = dict.stepN || "Step {n}"
+  // NOTE: `groupLabels` is consumed ONLY for its length, to size the progress
+  // bar segments (see the `.map((_, index) => <Progress …>)` below — the label
+  // string is discarded). Nothing renders these strings. That makes the
+  // `i18nGroupLabels` machinery in every wizard's config.ts (and the several
+  // `get*WizardConfig` dictionary factories built to feed it) currently inert:
+  // they localize text that never reaches the screen. Fixing that means
+  // rendering the labels here, which changes the look of every wizard in the
+  // app — a deliberate design call, not a drive-by. Until then, don't invest
+  // more in localizing this array.
   const groupLabels =
     config.groupLabels ||
     Object.keys(config.groups).map((_, i) =>
@@ -483,16 +492,12 @@ export const ONBOARDING_CONFIG: StepConfig = {
   ],
 }
 
-/** Admission application flow configuration */
-export const ADMISSION_CONFIG: StepConfig = {
-  steps: ["attachments", "personal", "location", "academic", "fees"],
-  groups: {
-    1: ["attachments", "personal"],
-    2: ["location"],
-    3: ["academic", "fees"],
-  },
-  groupLabels: ["Basic Information", "Address", "Academic"],
-}
+// ADMISSION_CONFIG was here — a hardcoded fourth copy of the application
+// wizard's step order, which the wizard itself already declares in
+// `school-marketing/application/config.client.ts` (APPLY_STEPS / STEP_GROUPS /
+// STEP_NAVIGATION). It now lives there as `ADMISSION_STEP_CONFIG`, DERIVED
+// from those, so the progress bar cannot disagree with the wizard. Config for
+// a specific feature flow belongs with that feature, not in this shared module.
 
 /** Generic application flow configuration */
 export const APPLICATION_CONFIG: StepConfig = {

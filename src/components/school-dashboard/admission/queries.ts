@@ -30,9 +30,10 @@ export type ApplicationListFilters = {
   campaignId?: string
   status?: string
   applyingForClass?: string
-  /** Admission channel; defaults to "PORTAL" (the reviewed pipeline). Pass a
-   *  specific channel to filter, or "all" to include direct-admit/bulk rows. */
-  channel?: string
+  /** Admission channel. Unset (or "all") lists every channel — the default,
+   *  because a direct-admit Application is as real as a portal one. Pass one
+   *  AdmissionChannel, or several (the Channel facet is multi-select). */
+  channel?: string | string[]
 }
 
 export type MeritListFilters = {
@@ -86,6 +87,7 @@ export const campaignListSelect = {
 export const applicationListSelect = {
   id: true,
   applicationNumber: true,
+  channel: true,
   firstName: true,
   lastName: true,
   email: true,
@@ -109,6 +111,11 @@ export const applicationDetailSelect = {
   id: true,
   schoolId: true,
   applicationNumber: true,
+  // How the student entered + the Student this Application produced (set by
+  // provisionStudent at enrollment / direct admit). Together they let the
+  // detail page close the loop: student profile → application → student.
+  channel: true,
+  student: { select: { id: true, userId: true } },
   lang: true,
   firstName: true,
   middleName: true,
@@ -237,18 +244,54 @@ export function buildCampaignWhere(
   return where
 }
 
+/**
+ * Turn the `channel` filter — absent, `"all"`, one value, or the multi-select
+ * facet's array — into a Prisma clause, or `null` for "don't filter".
+ *
+ * Unknown strings are dropped rather than passed through: the value arrives
+ * from a URL query param, and an unrecognised one would otherwise reach Prisma
+ * as an invalid enum and throw — on a page with no error boundary, which is
+ * how a shared link took the students list down once before (see
+ * `listings/students/ISSUE.md`).
+ *
+ * `buildEnrollmentWhere` deliberately does NOT use this: that tab keeps its
+ * PORTAL default, because direct-admits are already ADMITTED and never pass
+ * through enrollment confirmation.
+ */
+function normalizeChannelFilter(
+  channel: string | string[] | undefined
+): Prisma.EnumAdmissionChannelFilter | AdmissionChannel | null {
+  if (!channel) return null
+  const values = (Array.isArray(channel) ? channel : [channel]).filter(
+    (c): c is AdmissionChannel =>
+      c !== "all" && ADMISSION_CHANNELS.includes(c as AdmissionChannel)
+  )
+  if (values.length === 0) return null
+  return values.length === 1 ? values[0] : { in: values }
+}
+
+const ADMISSION_CHANNELS: AdmissionChannel[] = [
+  "PORTAL",
+  "ADMIN_DIRECT",
+  "ONBOARDING_IMPORT",
+  "BULK_IMPORT",
+  "LEGACY_BACKFILL",
+]
+
 export function buildApplicationWhere(
   schoolId: string,
   filters: ApplicationListFilters = {}
 ): Prisma.ApplicationWhereInput {
   const where: Prisma.ApplicationWhereInput = { schoolId }
 
-  // Default the review surface to the reviewed pipeline (PORTAL). Direct-admit
-  // and bulk-imported students are real admission records but stay out of the
-  // Applications tab unless explicitly requested, so it isn't flooded.
-  if (filters.channel !== "all") {
-    where.channel = (filters.channel ?? "PORTAL") as AdmissionChannel
-  }
+  // Every student is born from an Application, whichever of the five
+  // AdmissionChannels they arrived through — so the Applications tab shows all
+  // of them by default and the Channel filter narrows. This used to default to
+  // PORTAL, which made direct-admit / onboarding / bulk students' Applications
+  // unreachable from any UI: they had a real application number that nothing
+  // could look up. Pass an explicit channel (or "all") to override.
+  const channelFilter = normalizeChannelFilter(filters.channel)
+  if (channelFilter) where.channel = channelFilter
 
   if (filters.search) {
     where.OR = [
@@ -593,6 +636,13 @@ export async function getEnrollmentList(
         documents: true,
         offerAccepted: true,
         registrationFeePaid: true,
+        // The "Confirm registration payment" row action (enrollment-columns)
+        // is gated on this being cash / bank_transfer. It was missing from
+        // this select, so on first paint (SSR initialData) every row read as
+        // undefined and the action never showed — a family that paid at the
+        // office sat "Unpaid" until the admin happened to search or page,
+        // which refetches through getEnrollmentData (actions.ts) instead.
+        registrationFeeMethod: true,
       },
     }),
     db.application.count({ where }),

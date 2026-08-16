@@ -36,6 +36,12 @@ export async function ApplicationStatusBanner({
       schoolId,
       userId: session.user.id,
       status: { not: "DRAFT" },
+      // Only applications the visitor actually filed. Every student is born
+      // from an Application, so a direct-admit / imported student also has one
+      // (channel ADMIN_DIRECT / *_IMPORT, status ADMITTED, userId set) — and
+      // this banner would greet them with "Application #DA-… approved" for a
+      // form they never saw.
+      channel: "PORTAL",
     },
     orderBy: { createdAt: "desc" },
     select: {

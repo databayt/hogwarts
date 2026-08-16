@@ -32,6 +32,11 @@ export function translateEnrollmentWarning(
         messages?.guardianCreateFailed ||
         "Guardian creation failed — add the guardian manually."
       )
+    case "FEES_SKIPPED_NO_GRADE":
+      return (
+        messages?.feesSkippedNoGrade ||
+        "No grade set — fees were not assigned. Set the student's grade to assign fees."
+      )
     case "REGISTRATION_FEE_NO_STRUCTURE":
       return (
         messages?.registrationFeeNoStructure ||

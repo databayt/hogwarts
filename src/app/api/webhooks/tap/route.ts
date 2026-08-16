@@ -240,16 +240,28 @@ export async function POST(req: Request) {
       try {
         const app = await db.application.findFirst({
           where: { id: applicationId, schoolId },
-          select: { userId: true, applicationNumber: true },
+          select: {
+            userId: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            applicationNumber: true,
+          },
         })
-        if (app?.userId) {
-          const { dispatchNotification, resolveSchoolLang } =
-            await import("@/lib/dispatch-notification")
+        if (app) {
+          const {
+            dispatchNotification,
+            dispatchNotificationsToAudience,
+            resolveSchoolLang,
+          } = await import("@/lib/dispatch-notification")
           const lang = await resolveSchoolLang(schoolId)
           const isAr = lang === "ar"
+          // Family: registered applicants in-app + email; GUEST applicants
+          // (no userId) by email — guests used to be skipped here entirely.
           await dispatchNotification({
             schoolId,
-            userId: app.userId,
+            userId: app.userId ?? undefined,
+            directEmail: app.userId ? undefined : (app.email ?? undefined),
             type: "fee_paid",
             title: isAr
               ? "تم استلام رسوم التسجيل"
@@ -264,6 +276,28 @@ export async function POST(req: Request) {
               applicationId,
               paymentType: "registration_fee",
               chargeId: charge.id,
+            },
+          })
+          // School: the online payment is the one funding event the dashboard
+          // never proactively learned of (accept/decline/cash-intent all
+          // alert ADMIN). Same audience as the Stripe rail.
+          await dispatchNotificationsToAudience({
+            schoolId,
+            targetRoles: ["ADMIN", "ACCOUNTANT"],
+            type: "fee_paid",
+            title: isAr
+              ? "تم استلام رسوم التسجيل"
+              : "Registration Fee Received",
+            body: isAr
+              ? `دفع ولي أمر ${app.firstName} ${app.lastName} رسوم التسجيل إلكترونياً (الطلب ${app.applicationNumber}). يمكن الآن تأكيد التسجيل.`
+              : `The family of ${app.firstName} ${app.lastName} paid the registration fee online (application ${app.applicationNumber}). Enrollment can now be confirmed.`,
+            lang,
+            priority: "normal",
+            channels: ["in_app"],
+            metadata: {
+              applicationId,
+              paymentType: "registration_fee",
+              url: `/admission/enrollment`,
             },
           })
         }
@@ -492,35 +526,22 @@ async function recordTapFeePayment(args: {
     console.error("[Tap webhook] Ledger posting threw:", postingErr)
   }
 
-  // Notify the student (non-fatal)
+  // Notify the family — student AND every linked guardian, via the shared
+  // fan-out every payment rail uses (non-fatal). This used to be a
+  // student-only inline notice, so the parent who had just paid heard nothing.
   try {
-    if (assignment.student?.userId) {
-      const { dispatchNotification, resolveSchoolLang } =
-        await import("@/lib/dispatch-notification")
-      const lang = await resolveSchoolLang(assignment.schoolId)
-      const isAr = lang === "ar"
-      await dispatchNotification({
-        schoolId: assignment.schoolId,
-        userId: assignment.student.userId,
-        type: "fee_paid",
-        title: isAr ? "تم استلام الدفعة" : "Payment Received",
-        body: isAr
-          ? `تم تأكيد الدفع عبر Tap بنجاح. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : ""}`
-          : `Payment via Tap confirmed. ${newStatus === "PAID" ? "The fee is fully paid." : ""}`,
-        lang,
-        priority: "normal",
-        channels: ["in_app", "email", "whatsapp"],
-        metadata: {
-          paymentId: payment.id,
-          feeAssignmentId,
-          amount: paymentAmount,
-          status: newStatus,
-          receiptNumber: payment.receiptNumber,
-          gateway: "tap",
-          url: `/api/payment/${payment.id}/receipt`,
-        },
-      })
-    }
+    const { notifyFeePaymentReceived } =
+      await import("@/components/school-dashboard/finance/lib/payment-notify")
+    await notifyFeePaymentReceived({
+      schoolId: assignment.schoolId,
+      studentId: assignment.studentId,
+      paymentId: payment.id,
+      receiptNumber: payment.receiptNumber,
+      feeAssignmentId,
+      amount: paymentAmount,
+      remaining: Math.max(0, finalAmount - newTotalPaid),
+      status: newStatus,
+    })
   } catch (notifErr) {
     console.error("[Tap webhook] Notification dispatch failed:", notifErr)
   }

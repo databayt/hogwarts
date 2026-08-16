@@ -269,7 +269,12 @@ export async function ensureInvoicesForAssignment(
         invoice_no: invoiceNo,
         invoice_date: new Date(),
         due_date: row.dueDate,
-        currency: school?.currency ?? "USD",
+        // The assignment snapshots School.currency at creation (B7, see
+        // fee-auto-assign.ts) precisely so a later currency change can't
+        // relabel historical amounts. Invoices must inherit that snapshot,
+        // not re-read the live school setting — otherwise the invoice and the
+        // assignment it belongs to can disagree.
+        currency: assignment.currency ?? school?.currency ?? "USD",
         fromAddressId: fromAddress.id,
         toAddressId: toAddress.id,
         sub_total: row.subTotal,

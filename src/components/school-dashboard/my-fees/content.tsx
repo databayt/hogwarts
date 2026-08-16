@@ -1,5 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
@@ -7,6 +8,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
@@ -51,6 +53,7 @@ interface MyFeesMethodDict {
 interface MyFeesDict {
   title?: string
   description?: string
+  payAndInvoices?: string
   preferredMethodLabel?: string
   preferredMethodUpdated?: string
   preferredMethodFailed?: string
@@ -154,12 +157,23 @@ export default async function MyFeesContent({ lang, dictionary }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t.title || "My Fees"}</h1>
-        <p className="text-muted-foreground text-sm">
-          {t.description ||
-            "View assigned fees and pick your preferred payment method."}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">{t.title || "My Fees"}</h1>
+          <p className="text-muted-foreground text-sm">
+            {t.description ||
+              "View assigned fees and pick your preferred payment method."}
+          </p>
+        </div>
+        {/* This page is the preferences view; paying, invoices and receipts
+            live on the finance "my fees" surface. Without this link a family
+            arriving from a notification could see what they owe and had no
+            way to act on it. */}
+        <Button asChild>
+          <Link href={`/${lang}/finance/fees/my`}>
+            {t.payAndInvoices || "Pay & view invoices"}
+          </Link>
+        </Button>
       </div>
 
       {students.map((student) => {

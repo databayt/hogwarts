@@ -131,6 +131,12 @@ export interface ProfileViewData {
   departmentName: string | null
   enrollmentDate: string | null
   joiningDate: string | null
+  /** The Application this student was admitted through. Null for non-students,
+   *  and for legacy students created before the intake invariant landed (the
+   *  backfill script has not been run — most demo rows are in this state, so
+   *  every consumer must handle null). Only populated for viewers who can act
+   *  on it: ADMIN / STAFF. */
+  application: ProfileApplicationView | null
 
   stats: ProfileStatValue[]
   info: ProfileInfoItem[]
@@ -141,11 +147,23 @@ export interface ProfileViewData {
   roleDetail: ProfileRoleDetail
 }
 
+export interface ProfileApplicationView {
+  id: string
+  applicationNumber: string
+  /** AdmissionChannel — localized in the view via
+   *  `dictionary.school.admission.channel`. */
+  channel: string
+  status: string
+}
+
 export type ProfileViewResult =
   | { success: true; data: ProfileViewData }
   | { success: false; errorCode: string }
 
 const PRIVILEGED: PermissionLevel[] = ["OWNER", "ADMIN", "STAFF"]
+
+/** Narrower than PRIVILEGED — deliberately excludes OWNER (see the call site). */
+const ADMISSION_VIEWERS: PermissionLevel[] = ["ADMIN", "STAFF"]
 
 function roleFromUserRole(role: string): ProfileRole {
   switch (role) {
@@ -206,6 +224,18 @@ export async function getProfileView(
           city: true,
           email: true,
           enrollmentDate: true,
+          // Every student is born from an Application (see
+          // `src/lib/student-provisioning.ts`), whichever AdmissionChannel they
+          // arrived through — this is the link back to it. Same select shape as
+          // `listings/students/actions.ts loadStudentForCredentials`.
+          application: {
+            select: {
+              id: true,
+              applicationNumber: true,
+              channel: true,
+              status: true,
+            },
+          },
           section: {
             select: { name: true, grade: { select: { name: true } } },
           },
@@ -370,6 +400,13 @@ async function buildFromUser(
     enrollmentDate: user.student?.enrollmentDate ?? null,
     joiningDate:
       user.teacher?.joiningDate ?? user.staffMember?.joiningDate ?? null,
+    // The link target is the admission detail page, which is itself RBAC-gated
+    // (`assertAdmissionPermission`). Surfacing it to OWNER/RELATED/PUBLIC would
+    // only offer them a door they cannot open, so it is scoped to the roles
+    // that actually review admissions.
+    application: ADMISSION_VIEWERS.includes(permission)
+      ? (user.student?.application ?? null)
+      : null,
     createdAt: user.createdAt,
     handleSeed:
       user.student?.grNumber ||
@@ -408,6 +445,14 @@ async function buildFromOrphanEntity(
       email: true,
       enrollmentDate: true,
       createdAt: true,
+      application: {
+        select: {
+          id: true,
+          applicationNumber: true,
+          channel: true,
+          status: true,
+        },
+      },
       section: { select: { name: true, grade: { select: { name: true } } } },
       _count: { select: { studentClasses: true } },
     },
@@ -447,6 +492,11 @@ async function buildFromOrphanEntity(
       entityId: e.id,
       stats: [],
       ...extra,
+      // Same gate as the User-backed path above — the admission detail page is
+      // RBAC-gated, so don't offer the link to viewers who can't open it.
+      application: ADMISSION_VIEWERS.includes(permission)
+        ? (extra.application ?? null)
+        : null,
     })
     return { success: true, data }
   }
@@ -460,6 +510,7 @@ async function buildFromOrphanEntity(
     return make("student", student, {
       sectionName,
       enrollmentDate: student.enrollmentDate ?? null,
+      application: student.application ?? null,
       stats: [{ key: "subjects", value: student._count.studentClasses }],
     })
   }
@@ -522,6 +573,7 @@ interface AssembleArgs {
   departmentName?: string | null
   enrollmentDate?: Date | null
   joiningDate?: Date | null
+  application?: ProfileApplicationView | null
   createdAt: Date
   handleSeed: string
   website?: string | null
@@ -730,6 +782,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     departmentName,
     enrollmentDate: args.enrollmentDate?.toISOString() ?? null,
     joiningDate: args.joiningDate?.toISOString() ?? null,
+    application: args.application ?? null,
     stats: args.stats,
     info,
     badges: badgeRows.map((b: any) => ({

@@ -205,22 +205,42 @@ export async function bulkSmartImport(
     csvContent = preprocessCSV(csvContent, type as ImportType)
   }
 
+  // Opt-in, default off: unchecked keeps today's silent import.
+  const notifyFamilies = formData.get("notifyFamilies") === "true"
+
   const result =
     type === "students"
-      ? await importStudents(csvContent, schoolId, "BULK_IMPORT")
+      ? await importStudents(
+          csvContent,
+          schoolId,
+          "BULK_IMPORT",
+          notifyFamilies
+        )
       : type === "teachers"
         ? await importTeachers(csvContent, schoolId)
         : type === "staff"
           ? await importStaff(csvContent, schoolId)
           : await importGuardians(csvContent, schoolId)
 
+  // File-system route patterns, not clean URLs: the listing pages live at
+  // `/[lang]/s/[subdomain]/<name>` (the `(listings)` route group is not part of
+  // the path). These used to be bare `/students` etc., which matched no cache
+  // tag at all — every bulk import left the listing it populated stale.
   const pathMap: Record<string, string> = {
-    students: "/students",
-    teachers: "/teachers",
-    staff: "/staff",
-    guardians: "/parents",
+    students: "students",
+    teachers: "teachers",
+    staff: "staff",
+    guardians: "parents",
   }
-  revalidatePath(pathMap[type] || "/school/bulk")
+  revalidatePath(
+    `/[lang]/s/[subdomain]/${pathMap[type] ?? "school/bulk"}`,
+    "page"
+  )
+  // Every imported student is born from an Application (BULK_IMPORT channel)
+  // and the Applications tab lists every channel — keep it fresh too.
+  if (type === "students") {
+    revalidatePath("/[lang]/s/[subdomain]/admission/applications", "page")
+  }
 
   return {
     imported: result.imported,

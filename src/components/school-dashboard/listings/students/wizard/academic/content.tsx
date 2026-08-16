@@ -5,13 +5,14 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
-import { ErrorToast } from "@/components/atom/toast"
+import { ErrorToast, WarningToast } from "@/components/atom/toast"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
+import { translateEnrollmentWarning } from "@/components/school-dashboard/admission/warning-messages"
 
 import { completeStudentWizard } from "../actions"
 import { useStudentWizard } from "../use-student-wizard"
@@ -116,6 +117,23 @@ export default function AcademicContent() {
         await formRef.current?.saveAndNext()
         const result = await completeStudentWizard(studentId)
         if (result.success) {
+          // Non-fatal provisioning notes ("no fee structure for this grade",
+          // "no grade set → no fees") used to be dropped on the floor here, so
+          // an admin created a student with zero fees and never knew. Same
+          // translator the admission Confirm-Enrollment button uses.
+          const admissionDict = (dictionary?.school as Record<string, unknown>)
+            ?.admission as
+            | Parameters<typeof translateEnrollmentWarning>[1]
+            | undefined
+          for (const w of result.data?.warnings ?? []) {
+            const msg = admissionDict
+              ? translateEnrollmentWarning(
+                  w as Parameters<typeof translateEnrollmentWarning>[0],
+                  admissionDict
+                )
+              : ""
+            if (msg) WarningToast(msg)
+          }
           router.push(`/${locale}/students`)
         } else {
           // completeStudentWizard returns { success: false } (it never throws).
@@ -140,7 +158,7 @@ export default function AcademicContent() {
 
     setCustomNavigation({ onNext: handleNext })
     return () => setCustomNavigation(undefined)
-  }, [studentId, router, locale, setCustomNavigation, t, tRoot])
+  }, [studentId, router, locale, setCustomNavigation, t, tRoot, dictionary])
 
   return (
     <WizardStep

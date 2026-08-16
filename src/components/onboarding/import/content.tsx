@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useCallback, useRef, useState } from "react"
-import { AlertCircle, CheckCircle2, Info, Loader2, Upload } from "lucide-react"
+import { AlertCircle, Info, Loader2, Upload } from "lucide-react"
 
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -10,16 +11,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  ImportResultPanel,
+  type ImportResultData,
+  type ImportResultTranslations,
+} from "@/components/file/import/result-panel"
+import type { Locale } from "@/components/internationalization/config"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
 import { parseAndValidate, smartImport } from "./actions"
 
-interface ImportResult {
-  imported: number
-  failed: number
-  skipped: number
-  errors: Array<{ row: number; error: string; details?: string }>
-}
+// Shared with /school/bulk — see `file/import/result-panel.tsx`. This used to
+// be a local interface declaring only the first four fields, which is why the
+// credentials / warnings / access codes the server action returns were
+// silently discarded on the way to the UI.
+type ImportResult = ImportResultData
 
 type ImportType = "students" | "teachers"
 
@@ -39,11 +45,29 @@ const initialState: SectionState = {
 
 const ACCEPTED_FORMATS = ".csv,.xlsx,.xls,.json"
 
-interface Props {
-  dictionary?: any
+/** Map this block's onboarding dictionary onto the shared panel's key names. */
+function resultTranslations(
+  dict: Record<string, string>
+): ImportResultTranslations {
+  return {
+    importing: dict.importingStatus,
+    imported: dict.importedSuccessfullyCount,
+    skipped: dict.skippedAlreadyExist,
+    failed: dict.failed,
+    row: dict.row,
+    warnings: dict.importWarnings,
+    accessCodes: dict.importAccessCodes,
+    expires: dict.importExpires,
+    downloadLogins: dict.importDownloadLogins,
+  }
 }
 
-export default function ImportContent({ dictionary }: Props) {
+interface Props {
+  dictionary?: any
+  lang?: Locale
+}
+
+export default function ImportContent({ dictionary, lang = "ar" }: Props) {
   const dict = dictionary?.onboarding || {}
   const { enableNext } = useHostValidation()
   const [students, setStudents] = useState<SectionState>(initialState)
@@ -55,56 +79,64 @@ export default function ImportContent({ dictionary }: Props) {
     enableNext()
   }, [enableNext])
 
-  const handleUpload = useCallback(async (file: File, type: ImportType) => {
-    const setState = type === "students" ? setStudents : setTeachers
-    setState({ uploading: true, result: null, error: null, importing: false })
+  // Off by default. During onboarding the school usually is not live yet, so
+  // mailing the families it just imported is almost never wanted here.
+  const [notifyFamilies, setNotifyFamilies] = useState(false)
 
-    try {
-      // Phase 1: Fast parse + validate (<500ms)
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("type", type)
+  const handleUpload = useCallback(
+    async (file: File, type: ImportType) => {
+      const setState = type === "students" ? setStudents : setTeachers
+      setState({ uploading: true, result: null, error: null, importing: false })
 
-      const preview = await parseAndValidate(formData)
+      try {
+        // Phase 1: Fast parse + validate (<500ms)
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("type", type)
 
-      // Show optimistic result immediately
-      setState({
-        uploading: false,
-        result: {
-          imported: preview.validRows,
-          failed: preview.invalidRows.length,
-          skipped: 0,
-          errors: preview.invalidRows,
-        },
-        error: null,
-        importing: true,
-      })
+        const preview = await parseAndValidate(formData)
 
-      // Phase 2: Background batch import (non-blocking)
-      const importData = new FormData()
-      importData.append("csvContent", preview.csvContent)
-      importData.append("type", type)
-
-      smartImport(importData)
-        .then((result) => {
-          setState((prev) => ({ ...prev, result, importing: false }))
+        // Show optimistic result immediately
+        setState({
+          uploading: false,
+          result: {
+            imported: preview.validRows,
+            failed: preview.invalidRows.length,
+            skipped: 0,
+            errors: preview.invalidRows,
+          },
+          error: null,
+          importing: true,
         })
-        .catch((err) => {
-          setState((prev) => ({
-            ...prev,
-            error: err instanceof Error ? err.message : dict.importFailed,
-            importing: false,
-          }))
+
+        // Phase 2: Background batch import (non-blocking)
+        const importData = new FormData()
+        importData.append("csvContent", preview.csvContent)
+        importData.append("type", type)
+        importData.append("notifyFamilies", String(notifyFamilies))
+
+        smartImport(importData)
+          .then((result) => {
+            setState((prev) => ({ ...prev, result, importing: false }))
+          })
+          .catch((err) => {
+            setState((prev) => ({
+              ...prev,
+              error: err instanceof Error ? err.message : dict.importFailed,
+              importing: false,
+            }))
+          })
+      } catch (err) {
+        setState({
+          uploading: false,
+          result: null,
+          error: err instanceof Error ? err.message : dict.importFailed,
+          importing: false,
         })
-    } catch (err) {
-      setState({
-        uploading: false,
-        result: null,
-        error: err instanceof Error ? err.message : dict.importFailed,
-        importing: false,
-      })
-    }
-  }, [])
+      }
+    },
+    [notifyFamilies, dict.importFailed]
+  )
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>, type: ImportType) => {
@@ -147,6 +179,7 @@ export default function ImportContent({ dictionary }: Props) {
             label={dict.students}
             state={students}
             dict={dict}
+            lang={lang}
             inputRef={studentInputRef}
             onFileChange={(e) => handleFileChange(e, "students")}
             onDrop={(e) => handleDrop(e, "students")}
@@ -159,12 +192,26 @@ export default function ImportContent({ dictionary }: Props) {
             label={dict.teachers}
             state={teachers}
             dict={dict}
+            lang={lang}
             inputRef={teacherInputRef}
             onFileChange={(e) => handleFileChange(e, "teachers")}
             onDrop={(e) => handleDrop(e, "teachers")}
             onDragOver={handleDragOver}
             onBrowse={() => teacherInputRef.current?.click()}
           />
+
+          {/*
+            Off by default. Imported people hear nothing unless this is
+            deliberately ticked; when on, the mail is queued and drained by
+            the email cron rather than sent all at once.
+          */}
+          <label className="text-muted-foreground flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={notifyFamilies}
+              onCheckedChange={(checked) => setNotifyFamilies(checked === true)}
+            />
+            {dict.notifyFamilies}
+          </label>
         </div>
       </div>
     </div>
@@ -181,6 +228,7 @@ function DropZone({
   onDragOver,
   onBrowse,
   dict,
+  lang,
 }: {
   type: ImportType
   label: string
@@ -191,6 +239,7 @@ function DropZone({
   onDragOver: (e: React.DragEvent) => void
   onBrowse: () => void
   dict: any
+  lang: Locale
 }) {
   const hasResult = state.result || state.error
 
@@ -214,46 +263,15 @@ function DropZone({
           </div>
         ) : hasResult ? (
           <div className="flex min-h-[140px] flex-col items-center justify-center space-y-2 p-4">
-            {/* Results */}
+            {/* Results — the shared panel, identical to /school/bulk's. */}
             {state.result && (
-              <div className="space-y-2 text-sm">
-                {state.result.imported > 0 && (
-                  <div
-                    className={`flex items-center justify-center gap-2 ${state.importing ? "text-orange-600" : "text-green-700 dark:text-green-400"}`}
-                  >
-                    {state.importing ? (
-                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    )}
-                    {state.result.imported}{" "}
-                    {state.importing
-                      ? dict.importingStatus
-                      : dict.importedSuccessfullyCount}
-                  </div>
-                )}
-                {state.result.skipped > 0 && (
-                  <div className="text-muted-foreground flex items-center gap-2">
-                    <Info className="h-4 w-4 shrink-0" />
-                    {state.result.skipped} {dict.skippedAlreadyExist}
-                  </div>
-                )}
-                {state.result.failed > 0 && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-red-600">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      {state.result.failed} {dict.failed}
-                    </div>
-                    <div className="max-h-[80px] overflow-y-auto rounded border p-2 text-xs">
-                      {state.result.errors.map((err, i) => (
-                        <div key={i} className="text-muted-foreground py-0.5">
-                          {dict.row} {err.row}: {err.error}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ImportResultPanel
+                result={state.result}
+                isImporting={state.importing}
+                entityLabel={type}
+                lang={lang}
+                t={resultTranslations(dict)}
+              />
             )}
 
             {/* Error */}

@@ -3,6 +3,7 @@
 
 import {
   createSearchParamsCache,
+  parseAsArrayOf,
   parseAsInteger,
   parseAsString,
 } from "nuqs/server"
@@ -71,6 +72,14 @@ export const applicationsSearchParams = createSearchParamsCache({
   campaignId: parseAsString.withDefault(""),
   status: parseAsString.withDefault(""),
   applyingForClass: parseAsString.withDefault(""),
+  // Empty = every AdmissionChannel. Set to narrow, e.g. `?channel=PORTAL` for
+  // the reviewed pipeline only — the filter is deep-linkable.
+  //
+  // MUST stay an array parser with the "," separator: `useDataTable` writes
+  // this param itself for any filterable column carrying `meta.options`
+  // (parseAsArrayOf(parseAsString, ARRAY_SEPARATOR)), so a plain string parser
+  // here would read "PORTAL,BULK_IMPORT" as one bogus enum value.
+  channel: parseAsArrayOf(parseAsString, ",").withDefault([]),
   sort: getSortingStateParser(APPLICATION_SORT_IDS).withDefault([]),
 })
 

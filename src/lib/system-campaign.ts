@@ -39,11 +39,22 @@ export async function getOrCreateSystemCampaign(
   const currentYear = new Date().getFullYear()
   const academicYear = `${currentYear}-${currentYear + 1}`
 
+  // Content is stored in ONE language — the school's (`School.preferredLanguage`,
+  // see CLAUDE.md "Single-Language Storage") — and translated on demand for the
+  // other locale. This name used to be hardcoded English, so an Arabic school's
+  // application detail page printed "Direct Admission" verbatim.
+  const school = await tx.school.findUnique({
+    where: { id: schoolId },
+    select: { preferredLanguage: true },
+  })
+  const name =
+    school?.preferredLanguage === "en" ? "Direct Admission" : "القبول المباشر"
+
   try {
     const created = await tx.admissionCampaign.create({
       data: {
         schoolId,
-        name: "Direct Admission",
+        name,
         academicYear,
         // Wide bounds — this campaign is never opened/closed by admission UI,
         // it exists only as a hook for shadow Applications.

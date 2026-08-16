@@ -1,7 +1,9 @@
 "use server"
 
+import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { db } from "@/lib/db"
 import {
   fileToCSV,
   parseCSVLine,
@@ -50,6 +52,56 @@ interface SmartImportResult {
 }
 
 /**
+ * Bulk import mass-creates User + Student rows and mints their credentials, so
+ * it is an admin-only operation. Both actions below are `"use server"`, i.e.
+ * public POST endpoints — before this guard existed they accepted ANY signed-in
+ * user with a schoolId, and `joinSchool` promotes USER -> STAFF
+ * (`src/lib/school-access.ts`), so ordinary school members could run it.
+ *
+ * `requireSchoolRole` (school-dashboard/school/require-school-admin.ts) is NOT
+ * reusable here: it resolves the tenant via `getTenantContext()`, and onboarding
+ * runs on the main host where there is no subdomain to resolve from.
+ *
+ * The role is read from the DATABASE, never from `session.user.role`. School
+ * creation promotes USER -> ADMIN on the User row (`school-access.ts`), but the
+ * session is only documented to pick up `schoolId` immediately — trusting a
+ * stale JWT role would lock the legitimate onboarding admin out of their own
+ * import step, i.e. break the very flow this guard protects.
+ */
+async function requireOnboardingImporter(): Promise<{
+  userId: string
+  schoolId: string
+}> {
+  const session = await auth()
+  const userId = session?.user?.id
+  if (!userId) {
+    throw new Error("Not authenticated")
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { role: true, schoolId: true },
+  })
+
+  if (user?.role !== "ADMIN" && user?.role !== "DEVELOPER") {
+    throw new Error("Unauthorized")
+  }
+
+  // DEVELOPER carries no schoolId of its own (platform admin, see CLAUDE.md) —
+  // fall back to the session's impersonation context for that role only.
+  const schoolId =
+    user.role === "DEVELOPER"
+      ? (user.schoolId ?? session?.user?.schoolId)
+      : user.schoolId
+
+  if (!schoolId) {
+    throw new Error("No school associated with user")
+  }
+
+  return { userId, schoolId }
+}
+
+/**
  * Phase 1: Fast parse + validate only (no DB writes).
  * Returns row counts and pre-processed CSV for Phase 2.
  * Target: <500ms for ~1000 rows.
@@ -57,15 +109,7 @@ interface SmartImportResult {
 export async function parseAndValidate(
   formData: FormData
 ): Promise<ParseResult> {
-  const session = await auth()
-  if (!session?.user) {
-    throw new Error("Not authenticated")
-  }
-
-  const schoolId = session.user.schoolId
-  if (!schoolId) {
-    throw new Error("No school associated with user")
-  }
+  await requireOnboardingImporter()
 
   const file = formData.get("file") as File | null
   const type = formData.get("type") as string
@@ -134,15 +178,7 @@ export async function parseAndValidate(
 export async function smartImport(
   formData: FormData
 ): Promise<SmartImportResult> {
-  const session = await auth()
-  if (!session?.user) {
-    throw new Error("Not authenticated")
-  }
-
-  const schoolId = session.user.schoolId
-  if (!schoolId) {
-    throw new Error("No school associated with user")
-  }
+  const { userId, schoolId } = await requireOnboardingImporter()
 
   const type = formData.get("type") as string
 
@@ -166,8 +202,28 @@ export async function smartImport(
   // Call existing import functions
   const result =
     type === "students"
-      ? await importStudents(csvContent, schoolId, "ONBOARDING_IMPORT")
+      ? await importStudents(
+          csvContent,
+          schoolId,
+          "ONBOARDING_IMPORT",
+          // Opt-in, default off. During onboarding the school is usually not
+          // live yet, so silence is almost always the right default here.
+          formData.get("notifyFamilies") === "true"
+        )
       : await importTeachers(csvContent, schoolId)
+
+  // Same route-pattern revalidation `/school/bulk` does. The onboarding user
+  // typically lands on the dashboard listing minutes after this step, and the
+  // Applications tab now lists ONBOARDING_IMPORT rows too — without this both
+  // pages served the pre-import cache. Route PATTERN, not a clean URL, and the
+  // `(listings)` route group is not part of the path.
+  revalidatePath(
+    `/[lang]/s/[subdomain]/${type === "students" ? "students" : "teachers"}`,
+    "page"
+  )
+  if (type === "students") {
+    revalidatePath("/[lang]/s/[subdomain]/admission/applications", "page")
+  }
 
   logger.info("Smart import completed", {
     action: "smart_import",
@@ -175,7 +231,7 @@ export async function smartImport(
     schoolId,
     imported: result.imported,
     failed: result.failed,
-    userId: session.user.id,
+    userId,
   })
 
   return {

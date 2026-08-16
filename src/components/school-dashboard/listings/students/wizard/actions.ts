@@ -3,12 +3,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { provisionStudent } from "@/lib/student-provisioning"
+import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { StudentWizardData } from "./use-student-wizard"
@@ -125,9 +127,16 @@ export async function createDraftStudent(): Promise<
 }
 
 /** Mark the student wizard as complete */
-export async function completeStudentWizard(
-  studentId: string
-): Promise<ActionResponse> {
+export async function completeStudentWizard(studentId: string): Promise<
+  ActionResponse<{
+    studentId: string
+    credentials: { username: string; password: string } | null
+    /** Non-fatal provisioning notes — e.g. no fee structure for the grade, or
+     *  no grade set so no fees. Codes map to translated copy via
+     *  `admission/warning-messages.ts`. */
+    warnings: Array<{ code: string; meta?: Record<string, unknown> }>
+  }>
+> {
   try {
     const session = await auth()
     if (!session?.user) {
@@ -149,6 +158,7 @@ export async function completeStudentWizard(
           firstName: true,
           middleName: true,
           lastName: true,
+          email: true,
           studentId: true,
           academicGradeId: true,
           sectionId: true,
@@ -229,12 +239,8 @@ export async function completeStudentWizard(
             userId: student.userId,
           },
           {
-            // false, not true: `notify` is informational (provisionStudent
-            // never dispatches — the caller does), and this path deliberately
-            // sends nothing. The credential comes back through `result` and
-            // the admin hands it over via the credentials dialog; wizard
-            // students have no real email, just the synthesized
-            // `@student.local` placeholder, so a welcome mail would bounce.
+            // `notify` is informational — provisionStudent never dispatches;
+            // the caller does, post-commit, via notifyProvisionedStudent.
             notify: false,
             credentialDelivery: "temp-password",
             origin: "ADMIN_DIRECT",
@@ -244,10 +250,42 @@ export async function completeStudentWizard(
       { timeout: 30000 }
     )
 
-    revalidatePath("/students")
+    // Post-commit, shared with every other intake channel. The student
+    // themselves usually has no real address (the core synthesizes an
+    // `@student.local` placeholder), so their notice stays in-app and the
+    // email channel is dropped from the row — but the GUARDIANS collected in
+    // the personal step do have addresses, and before this they were never
+    // told their child had been enrolled. Credentials still travel through
+    // `result` to the admin's dialog, not through mail.
+    after(() =>
+      notifyProvisionedStudent({
+        schoolId,
+        studentId,
+        userId: result.userId,
+        origin: "ADMIN_DIRECT",
+        studentName: `${student.firstName} ${student.lastName}`,
+        email: student.email,
+        isNewUser: result.isNewUser,
+        lang: student.lang,
+        delivery: "immediate",
+      }).catch((err) =>
+        console.error("[completeStudentWizard] Notification error:", err)
+      )
+    )
+
+    // Route PATTERNS with "page" — the previous bare `revalidatePath("/students")`
+    // matched no cache tag on a `[lang]/s/[subdomain]` route and was a no-op.
+    // The Applications tab is invalidated too: this student now has an
+    // ADMIN_DIRECT Application that the tab lists alongside portal ones.
+    revalidatePath("/[lang]/s/[subdomain]/students", "page")
+    revalidatePath("/[lang]/s/[subdomain]/admission/applications", "page")
     return {
       success: true,
-      data: { studentId, credentials: result.credentials ?? null },
+      data: {
+        studentId,
+        credentials: result.credentials ?? null,
+        warnings: result.warnings,
+      },
     }
   } catch (error) {
     return actionError(

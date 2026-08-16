@@ -159,6 +159,42 @@ describe("ensureStudentFeeAssignments", () => {
     expect(db.$transaction).not.toHaveBeenCalled()
   })
 
+  it("still fans out invoices for EXISTING assignments on re-run (self-heal)", async () => {
+    // The admin wizard assigns fees on its academic step while the student is
+    // still a draft with no login — invoices can't be generated then. When
+    // provisionStudent later links the User and calls the helper again, every
+    // assignment is "existing"; the fan-out must run for them anyway.
+    // (Regression: every wizard-created student had fees and no invoices.)
+    const { ensureInvoicesForAssignment } =
+      await import("@/lib/fee-invoice-sync")
+    setupBaselineMocks({
+      structures: [
+        { id: "fs-tuition", totalAmount: 5000 },
+        { id: "fs-bus", totalAmount: 600 },
+      ],
+      existing: [
+        { id: "assign-fs-tuition", feeStructureId: "fs-tuition" },
+        { id: "assign-fs-bus", feeStructureId: "fs-bus" },
+      ],
+    })
+
+    await ensureStudentFeeAssignments({
+      schoolId: SCHOOL_ID,
+      studentId: STUDENT_ID,
+      academicGradeId: GRADE_ID,
+      academicYear: ACADEMIC_YEAR,
+      notify: false,
+    })
+
+    const calledWith = vi
+      .mocked(ensureInvoicesForAssignment)
+      .mock.calls.map((c) => c[1])
+    expect(calledWith).toEqual(
+      expect.arrayContaining(["assign-fs-tuition", "assign-fs-bus"])
+    )
+    expect(calledWith).toHaveLength(2)
+  })
+
   it("creates only the missing assignments when some already exist", async () => {
     setupBaselineMocks({
       structures: [

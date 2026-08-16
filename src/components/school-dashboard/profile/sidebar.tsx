@@ -1,7 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, Link as LinkIcon, Mail, MapPin, Phone } from "lucide-react"
+import Link from "next/link"
+import {
+  Calendar,
+  FileText,
+  Link as LinkIcon,
+  Mail,
+  MapPin,
+  Phone,
+} from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
 import { formatDate as formatLocaleDate } from "@/lib/i18n-format"
@@ -290,6 +298,7 @@ export default function ProfileSidebar({
             {(data.info.length > 0 ||
               data.website ||
               socialEntries.length > 0 ||
+              data.application ||
               joinedDate) && (
               <div className="space-y-2">
                 {data.info.map((item, idx) => (
@@ -342,6 +351,24 @@ export default function ProfileSidebar({
                       })}
                     </span>
                   </div>
+                )}
+                {/* The Application every student is born from. Null for
+                    non-students, for viewers who can't open the admission
+                    detail page, and for legacy students predating the intake
+                    invariant — so this row simply isn't rendered then. */}
+                {data.application && (
+                  <Link
+                    href={`/${lang ?? "en"}/admission/applications/${data.application.id}`}
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+                  >
+                    <FileText className="text-muted-foreground/70 size-4 shrink-0" />
+                    <span className="truncate hover:underline">
+                      {p?.sidebar?.application ?? ""}{" "}
+                      <span className="font-mono" dir="ltr">
+                        {data.application.applicationNumber}
+                      </span>
+                    </span>
+                  </Link>
                 )}
               </div>
             )}
