@@ -10,12 +10,20 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { schematicClient } from "./client"
 
 /**
- * Get a temporary Schematic access token for the current user/school
+ * Roles allowed into the school's Schematic customer portal. The token is
+ * scoped to the SCHOOL (Schematic "company"), not the caller — it can change
+ * or cancel the school's plan — so it is a school-administrator capability,
+ * not a per-user one, and no FinancePermission grant widens it.
+ */
+const PLAN_MANAGER_ROLES = new Set(["ADMIN", "DEVELOPER"])
+
+/**
+ * Get a temporary Schematic access token for the current school
  *
- * This token allows the user to access the Schematic customer portal
- * to manage their subscription plan.
+ * This token allows a school administrator to access the Schematic customer
+ * portal to manage the school's subscription plan.
  *
- * @returns Temporary access token or null if not authenticated
+ * @returns Temporary access token or null if not authenticated / not allowed
  */
 export async function getTemporaryAccessToken(): Promise<string | null> {
   try {
@@ -27,11 +35,18 @@ export async function getTemporaryAccessToken(): Promise<string | null> {
       return null
     }
 
-    // 2. Get tenant context (schoolId)
-    const { schoolId } = await getTenantContext()
+    // 2. Get tenant context (schoolId + role)
+    const { schoolId, role } = await getTenantContext()
 
     if (!schoolId) {
       logger.warn("getTemporaryAccessToken: No schoolId found")
+      return null
+    }
+
+    if (!role || !PLAN_MANAGER_ROLES.has(role)) {
+      logger.warn(
+        `getTemporaryAccessToken: role ${role ?? "none"} may not manage the school plan`
+      )
       return null
     }
 

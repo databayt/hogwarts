@@ -3,9 +3,10 @@
 
 import type { Metadata } from "next"
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -22,7 +23,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function NewBudgetPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const bp = dictionary?.finance?.budgetPage
+  const { schoolId, can } = await resolveFinanceAccess("budget", ["create"])
 
   if (!schoolId) {
     return (
@@ -33,15 +35,17 @@ export default async function NewBudgetPage({ params }: Props) {
     )
   }
 
+  if (!can.create) {
+    return <FinanceAccessDenied dictionary={dictionary} module="budget" />
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Create Budget</h3>
-        <p className="text-muted-foreground text-sm">
-          Define a new budget for your school
-        </p>
+        <h3 className="text-lg font-medium">{bp?.createBudget}</h3>
+        <p className="text-muted-foreground text-sm">{bp?.defineNewBudget}</p>
       </div>
-      <p className="text-muted-foreground">Budget creation form coming soon.</p>
+      <p className="text-muted-foreground">{bp?.budgetFormComingSoon}</p>
     </div>
   )
 }

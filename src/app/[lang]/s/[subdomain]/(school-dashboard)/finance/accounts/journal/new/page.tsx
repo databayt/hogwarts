@@ -4,10 +4,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { buttonVariants } from "@/components/ui/button"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -25,7 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function NewJournalEntryPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const ap = dictionary?.finance?.accountsPage
+  const { schoolId, can } = await resolveFinanceAccess("accounts", ["create"])
 
   if (!schoolId) {
     return (
@@ -36,20 +38,22 @@ export default async function NewJournalEntryPage({ params }: Props) {
     )
   }
 
+  if (!can.create) {
+    return <FinanceAccessDenied dictionary={dictionary} module="accounts" />
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">New Journal Entry</h3>
-        <p className="text-muted-foreground text-sm">
-          Record a new journal entry for your school
-        </p>
+        <h3 className="text-lg font-medium">{ap?.newJournalEntry}</h3>
+        <p className="text-muted-foreground text-sm">{ap?.recordNewJournal}</p>
       </div>
-      <p className="text-muted-foreground">Journal entry form coming soon.</p>
+      <p className="text-muted-foreground">{ap?.journalEntryFormComingSoon}</p>
       <Link
         href={`/${lang}/finance/accounts/journal`}
         className={buttonVariants({ variant: "outline" })}
       >
-        Back to Journal Entries
+        {ap?.backToJournalEntries}
       </Link>
     </div>
   )

@@ -4,10 +4,20 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
-import { getFinanceDictionary } from "@/components/internationalization/dictionaries"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { getTemporaryAccessToken } from "@/components/school-dashboard/finance/receipt/schematic/get-temporary-access-token"
 import SchematicEmbed from "@/components/school-dashboard/finance/receipt/schematic/schematic-embed"
+
+/**
+ * The Schematic portal is scoped to the SCHOOL, so only a school administrator
+ * may open it. Mirrors the role gate inside getTemporaryAccessToken — the page
+ * check exists so a denied caller sees the block's standard deny UI instead of
+ * a misleading "unable to load" error.
+ */
+const PLAN_MANAGER_ROLES = new Set(["ADMIN", "DEVELOPER"])
 
 export default async function ManagePlanPage({
   params,
@@ -15,14 +25,18 @@ export default async function ManagePlanPage({
   params: Promise<{ lang: Locale; subdomain: string }>
 }) {
   const { lang } = await params
-  const dictionary = await getFinanceDictionary(lang)
+  const dictionary = await getDictionary(lang)
   const t = dictionary.finance.managePlan
 
-  // 1. Authenticate
-  const session = await auth()
+  // 1. Authenticate + authorize
+  const [session, { role }] = await Promise.all([auth(), getTenantContext()])
 
   if (!session?.user) {
-    redirect("/auth/signin")
+    redirect(`/${lang}/login`)
+  }
+
+  if (!role || !PLAN_MANAGER_ROLES.has(role)) {
+    return <FinanceAccessDenied dictionary={dictionary} module="receipt" />
   }
 
   // 2. Get Schematic access token

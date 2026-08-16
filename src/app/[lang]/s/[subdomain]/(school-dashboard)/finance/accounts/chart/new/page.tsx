@@ -4,10 +4,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { buttonVariants } from "@/components/ui/button"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function NewAccountPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const ap = dictionary?.finance?.accountsPage
+  const { schoolId, can } = await resolveFinanceAccess("accounts", ["create"])
 
   if (!schoolId) {
     return (
@@ -35,22 +37,22 @@ export default async function NewAccountPage({ params }: Props) {
     )
   }
 
+  if (!can.create) {
+    return <FinanceAccessDenied dictionary={dictionary} module="accounts" />
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Create Account</h3>
-        <p className="text-muted-foreground text-sm">
-          Add a new account to your chart of accounts
-        </p>
+        <h3 className="text-lg font-medium">{ap?.createAccount}</h3>
+        <p className="text-muted-foreground text-sm">{ap?.addNewAccount}</p>
       </div>
-      <p className="text-muted-foreground">
-        Account creation form coming soon.
-      </p>
+      <p className="text-muted-foreground">{ap?.accountFormComingSoon}</p>
       <Link
         href={`/${lang}/finance/accounts/chart`}
         className={buttonVariants({ variant: "outline" })}
       >
-        Back to Chart of Accounts
+        {ap?.backToChartOfAccounts}
       </Link>
     </div>
   )

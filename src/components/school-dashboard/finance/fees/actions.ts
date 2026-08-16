@@ -31,6 +31,7 @@ import type { PaymentGateway, WalletDetails } from "@/lib/payment/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getDisplayLang } from "@/components/translation/locale"
 
 import { allocatePaymentToInvoices } from "../lib/invoice-allocation"
 import { checkCurrentUserPermission } from "../lib/permissions"
@@ -43,6 +44,12 @@ import {
   getScholarshipList,
   type DiscountPolicy,
 } from "./queries"
+import {
+  toAssignmentRows,
+  toFineRows,
+  toPaymentRows,
+  toScholarshipRows,
+} from "./rows"
 import { buildTenantBaseUrl } from "./tenant-url"
 import { feeStructureSchema } from "./validation"
 
@@ -2526,25 +2533,11 @@ export async function fetchAssignmentRows(
       perPage,
       search,
     })
-    const rows = result.rows.map((fa: any) => ({
-      id: fa.id,
-      studentName: [fa.student?.firstName, fa.student?.lastName]
-        .filter(Boolean)
-        .join(" "),
-      studentId: fa.student?.id,
-      feeStructureName: fa.feeStructure?.name || "-",
-      academicYear: fa.academicYear,
-      finalAmount: Number(fa.finalAmount),
-      totalDiscount: Number(fa.totalDiscount),
-      paidAmount: (fa.payments ?? [])
-        .filter((p: any) => p.status === "SUCCESS")
-        .reduce((sum: number, p: any) => sum + Number(p.amount), 0),
-      status: fa.status,
-      createdAt:
-        fa.createdAt instanceof Date
-          ? fa.createdAt.toISOString()
-          : String(fa.createdAt),
-    }))
+    const rows = await toAssignmentRows(
+      result.rows,
+      await getDisplayLang(),
+      schoolId
+    )
     return { rows, total: result.count }
   } catch {
     return { rows: [], total: 0 }
@@ -2565,27 +2558,11 @@ export async function fetchPaymentRows(
   const search = typeof params.search === "string" ? params.search : undefined
   try {
     const result = await getPaymentList(schoolId, { page, perPage, search })
-    const rows = result.rows.map((p: any) => ({
-      id: p.id,
-      paymentNumber: p.paymentNumber,
-      studentName: [p.student?.firstName, p.student?.lastName]
-        .filter(Boolean)
-        .join(" "),
-      studentId: p.student?.id,
-      feeStructureName: p.feeAssignment?.feeStructure?.name || "-",
-      amount: Number(p.amount),
-      paymentDate:
-        p.paymentDate instanceof Date
-          ? p.paymentDate.toISOString()
-          : String(p.paymentDate),
-      paymentMethod: p.paymentMethod,
-      receiptNumber: p.receiptNumber,
-      status: p.status,
-      createdAt:
-        p.createdAt instanceof Date
-          ? p.createdAt.toISOString()
-          : String(p.createdAt),
-    }))
+    const rows = await toPaymentRows(
+      result.rows,
+      await getDisplayLang(),
+      schoolId
+    )
     return { rows, total: result.count }
   } catch {
     return { rows: [], total: 0 }
@@ -2606,26 +2583,7 @@ export async function fetchFineRows(
   const search = typeof params.search === "string" ? params.search : undefined
   try {
     const result = await getFineList(schoolId, { page, perPage, search })
-    const rows = result.rows.map((f: any) => ({
-      id: f.id,
-      studentName: [f.student?.firstName, f.student?.lastName]
-        .filter(Boolean)
-        .join(" "),
-      studentId: f.student?.id,
-      fineType: f.fineType,
-      amount: Number(f.amount),
-      reason: f.reason,
-      dueDate:
-        f.dueDate instanceof Date ? f.dueDate.toISOString() : String(f.dueDate),
-      isPaid: f.isPaid,
-      paidAmount: f.paidAmount ? Number(f.paidAmount) : 0,
-      isWaived: f.isWaived,
-      waiverReason: f.waiverReason,
-      createdAt:
-        f.createdAt instanceof Date
-          ? f.createdAt.toISOString()
-          : String(f.createdAt),
-    }))
+    const rows = await toFineRows(result.rows, await getDisplayLang(), schoolId)
     return { rows, total: result.count }
   } catch {
     return { rows: [], total: 0 }
@@ -2650,27 +2608,11 @@ export async function fetchScholarshipRows(
       perPage,
       search,
     })
-    const rows = result.rows.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      coverageType: s.coverageType,
-      coverageAmount: Number(s.coverageAmount),
-      academicYear: s.academicYear,
-      startDate:
-        s.startDate instanceof Date
-          ? s.startDate.toISOString()
-          : String(s.startDate),
-      endDate:
-        s.endDate instanceof Date ? s.endDate.toISOString() : String(s.endDate),
-      maxBeneficiaries: s.maxBeneficiaries,
-      currentBeneficiaries: s.currentBeneficiaries,
-      applicationCount: s._count?.applications || 0,
-      isActive: s.isActive,
-      createdAt:
-        s.createdAt instanceof Date
-          ? s.createdAt.toISOString()
-          : String(s.createdAt),
-    }))
+    const rows = await toScholarshipRows(
+      result.rows,
+      await getDisplayLang(),
+      schoolId
+    )
     return { rows, total: result.count }
   } catch {
     return { rows: [], total: 0 }

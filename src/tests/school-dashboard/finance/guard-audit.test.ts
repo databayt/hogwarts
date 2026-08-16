@@ -17,21 +17,18 @@ import { auditFinanceGuards } from "../../../../scripts/finance-guard-audit"
 
 // ── Ungated pages ───────────────────────────────────────────────────────────
 // Every finance route page whose import closure hits the DB must also reach a
-// permission gate. Measured 2026-07-17 after the RBAC fix. The 7 that remain
-// are NOT the payroll-style leak (all invoice/salary/payroll/reports pages are
-// gated); they are:
-//   • finance/page.tsx, finance/dashboard/page.tsx — intentionally multi-role
-//     hubs that render role-filtered content (like fees/my), pending an explicit
-//     own-data pattern rather than a blanket module gate.
-//   • banking/{my-banks,payment-transfer,transaction-history} — banking sub-block,
-//     under separate active work.
-//   • receipt/{page,[id]} — receipt sub-block, currently auth-only (no module gate).
+// permission gate. Measured 2026-07-17 after the RBAC fix at 8; the hub,
+// dashboard and receipt pages were gated since. The 4 that remain (2026-08-15)
+// are all verified OWN-DATA pages, where a module gate would be the wrong tool:
+//   • banking/{my-banks,payment-transfer,transaction-history} — the caller's
+//     own linked bank accounts; every fetch is keyed on session.user.id and
+//     createTransfer ownership-checks both accounts before writing.
 //   • payroll/my/page.tsx — a staff member's OWN payslips, scoped by
 //     teacher.userId = session.user.id (own-data, exactly like fees/my); a
-//     module gate would wrongly block staff from their own pay. (Added 2026-07-18.)
-// Drive this to 0 as each sub-block is reviewed. Do NOT raise it except for a
-// verified own-data page (session-scoped, no cross-user read).
-const BASELINE_UNGATED_PAGES = 8
+//     module gate would wrongly block staff from their own pay.
+// Do NOT raise it except for a verified own-data page (session-scoped, no
+// cross-user read).
+const BASELINE_UNGATED_PAGES = 4
 
 // ── Dead internal links ─────────────────────────────────────────────────────
 // Internal /finance/... <Link> targets with no route on disk. Was 93 (the

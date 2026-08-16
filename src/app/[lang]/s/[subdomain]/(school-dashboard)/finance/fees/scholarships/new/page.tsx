@@ -5,11 +5,12 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { ScholarshipForm } from "@/components/school-dashboard/finance/fees/scholarship-form"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -29,9 +30,13 @@ export default async function NewScholarshipPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.scholarshipForm
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["create"])
 
   if (!schoolId) notFound()
+
+  if (!can.create) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
+  }
 
   return (
     <div className="space-y-6">

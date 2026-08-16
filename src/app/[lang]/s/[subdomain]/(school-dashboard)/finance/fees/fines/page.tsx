@@ -3,12 +3,13 @@
 
 import type { Metadata } from "next"
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { type FineRow } from "@/components/school-dashboard/finance/fees/fine-columns"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { FinesTable } from "@/components/school-dashboard/finance/fees/fine-table"
 import { getFineList } from "@/components/school-dashboard/finance/fees/queries"
+import { toFineRows } from "@/components/school-dashboard/finance/fees/rows"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function FinesPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
   if (!schoolId) {
     return (
@@ -36,29 +37,16 @@ export default async function FinesPage({ params }: Props) {
     )
   }
 
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
+  }
+
   const { rows, count } = await getFineList(schoolId, {
     page: 1,
     perPage: 20,
   })
 
-  const data: FineRow[] = rows.map((f: any) => ({
-    id: f.id,
-    studentName: [f.student?.firstName, f.student?.lastName]
-      .filter(Boolean)
-      .join(" "),
-    studentId: f.studentId,
-    fineType: f.fineType,
-    amount: Number(f.amount),
-    reason: f.reason,
-    dueDate:
-      f.dueDate instanceof Date ? f.dueDate.toISOString() : String(f.dueDate),
-    isPaid: f.isPaid,
-    isWaived: f.isWaived,
-    createdAt:
-      f.createdAt instanceof Date
-        ? f.createdAt.toISOString()
-        : String(f.createdAt),
-  }))
+  const data = await toFineRows(rows, lang, schoolId)
 
   return <FinesTable initialData={data} total={count} lang={lang} />
 }

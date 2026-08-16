@@ -3,12 +3,13 @@
 
 import type { Metadata } from "next"
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { getScholarshipList } from "@/components/school-dashboard/finance/fees/queries"
-import { type ScholarshipRow } from "@/components/school-dashboard/finance/fees/scholarship-columns"
+import { toScholarshipRows } from "@/components/school-dashboard/finance/fees/rows"
 import { ScholarshipsTable } from "@/components/school-dashboard/finance/fees/scholarship-table"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ScholarshipsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
   if (!schoolId) {
     return (
@@ -36,32 +37,16 @@ export default async function ScholarshipsPage({ params }: Props) {
     )
   }
 
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
+  }
+
   const { rows, count } = await getScholarshipList(schoolId, {
     page: 1,
     perPage: 20,
   })
 
-  const data: ScholarshipRow[] = rows.map((s: any) => ({
-    id: s.id,
-    name: s.name,
-    coverageType: s.coverageType,
-    coverageAmount: Number(s.coverageAmount),
-    academicYear: s.academicYear,
-    startDate:
-      s.startDate instanceof Date
-        ? s.startDate.toISOString()
-        : String(s.startDate),
-    endDate:
-      s.endDate instanceof Date ? s.endDate.toISOString() : String(s.endDate),
-    maxBeneficiaries: s.maxBeneficiaries,
-    currentBeneficiaries: s.currentBeneficiaries,
-    applicationCount: s._count?.applications || 0,
-    isActive: s.isActive,
-    createdAt:
-      s.createdAt instanceof Date
-        ? s.createdAt.toISOString()
-        : String(s.createdAt),
-  }))
+  const data = await toScholarshipRows(rows, lang, schoolId)
 
   return <ScholarshipsTable initialData={data} total={count} lang={lang} />
 }
