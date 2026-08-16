@@ -33,6 +33,11 @@ export interface InteractiveBarChartProps {
   description?: string
   primaryLabel?: string
   secondaryLabel?: string
+  /** How to label the axis: one point per day (default) or per month. */
+  granularity?: "day" | "month"
+  /** IANA zone the points were bucketed in — keeps a month-start instant
+   *  from reading as the previous month for a viewer/server west of it. */
+  timeZone?: string
 }
 
 const defaultChartData = [
@@ -149,8 +154,18 @@ function InteractiveBarChartInner({
   description = "Showing total visitors for the last 3 months",
   primaryLabel = "Desktop",
   secondaryLabel = "Mobile",
+  granularity = "day",
+  timeZone,
 }: InteractiveBarChartProps) {
   const { locale } = useLocale()
+  const tickOptions: Intl.DateTimeFormatOptions =
+    granularity === "month"
+      ? { month: "short", timeZone }
+      : { month: "short", day: "numeric", timeZone }
+  const labelOptions: Intl.DateTimeFormatOptions =
+    granularity === "month"
+      ? { month: "long", year: "numeric", timeZone }
+      : { month: "short", day: "numeric", year: "numeric", timeZone }
   const { dictionary } = useDictionary()
   const cl = dictionary?.school?.dashboard?.chartLabels as
     | Record<string, string>
@@ -250,10 +265,7 @@ function InteractiveBarChartInner({
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value)
-                return date.toLocaleDateString(locale, {
-                  month: "short",
-                  day: "numeric",
-                })
+                return date.toLocaleDateString(locale, tickOptions)
               }}
             />
             <ChartTooltip
@@ -262,11 +274,10 @@ function InteractiveBarChartInner({
                   className="w-[150px]"
                   nameKey="views"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString(locale, {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
+                    return new Date(value).toLocaleDateString(
+                      locale,
+                      labelOptions
+                    )
                   }}
                 />
               }

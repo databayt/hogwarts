@@ -175,21 +175,34 @@ function InvoiceTableInner({
 
   const debouncedFetchFiltered = useDebouncedCallback(fetchFiltered, 300)
 
-  // content.tsx already runs the initial filtered fetch server-side from the
-  // URL's searchParams, so skip the redundant client fetch on mount and only
-  // react to filters actually changing afterward.
-  const isFirstFilterRun = useRef(true)
+  // content.tsx already ran the fetch for the URL's current filters on the
+  // server, so the client only refetches when the filters CHANGE from what was
+  // last fetched. Compare values, not a "first run" flag: a ref-based skip
+  // survives StrictMode's dev double-mount with `first=false` and fires; the
+  // server-action response then re-renders the segment (it has a loading.tsx
+  // boundary), the table remounts with a fresh ref, and the pair loops —
+  // 37 POSTs in 15s on the invoice dashboard before this was value-keyed.
+  const filtersKey = JSON.stringify({
+    invoice_no: invoiceNoFilter,
+    client_name: clientNameFilter,
+    status: statusFilter,
+  })
+  const lastFetchedFiltersRef = useRef(filtersKey)
   useEffect(() => {
-    if (isFirstFilterRun.current) {
-      isFirstFilterRun.current = false
-      return
-    }
+    if (filtersKey === lastFetchedFiltersRef.current) return
+    lastFetchedFiltersRef.current = filtersKey
     debouncedFetchFiltered({
       invoice_no: invoiceNoFilter,
       client_name: clientNameFilter,
       status: statusFilter,
     })
-  }, [invoiceNoFilter, clientNameFilter, statusFilter, debouncedFetchFiltered])
+  }, [
+    filtersKey,
+    invoiceNoFilter,
+    clientNameFilter,
+    statusFilter,
+    debouncedFetchFiltered,
+  ])
 
   const handleLoadMore = useCallback(async () => {
     if (isLoading || !hasMore) return

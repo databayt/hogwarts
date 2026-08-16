@@ -14,7 +14,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resend } from "@/components/school-dashboard/finance/invoice/email.config"
 import { SendInvoiceEmail } from "@/components/school-dashboard/finance/invoice/send-invoice-email"
-import { getText } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 
 import { isFinanceAuthError, requireFinanceActor } from "../guard"
 
@@ -147,7 +147,7 @@ export async function getInvoicesWithFilters(
           }))
         : [{ createdAt: "desc" as const }]
 
-    const [invoices, total, school] = await Promise.all([
+    const [invoices, total] = await Promise.all([
       db.userInvoice.findMany({
         where,
         include: { to: true },
@@ -156,36 +156,23 @@ export async function getInvoicesWithFilters(
         take,
       }),
       db.userInvoice.count({ where }),
-      // The school's preferred language is the proxy for `to.name`'s storage lang
-      // (UserInvoiceAddress has no `lang` column; matches students/actions.ts).
-      db.school.findUnique({
-        where: { id: ctx.schoolId },
-        select: { preferredLanguage: true },
-      }),
     ])
 
-    const storageLang = (school?.preferredLanguage as "ar" | "en") || "ar"
-
-    // Dedupe client names so each unique name hits Google Translate at most once
-    // per request (Translation covers subsequent requests).
-    const uniqueNames = Array.from(new Set(invoices.map((i) => i.to.name)))
-    const translations = new Map<string, string>(
-      await Promise.all(
-        uniqueNames.map(
-          async (name) =>
-            [
-              name,
-              await getText(name, storageLang, lang, ctx.schoolId),
-            ] as const
-        )
-      )
+    // One batched, deduped resolution for client names — never getText per
+    // row. Script detection per value stands in for the missing `lang` column.
+    const translations = await getLabels(
+      invoices.map((i) => i.to.name),
+      lang,
+      ctx.schoolId
     )
 
     const data = invoices.map((invoice) => ({
       id: invoice.id,
       invoice_no: invoice.invoice_no,
       client_name: translations.get(invoice.to.name) ?? invoice.to.name,
-      total: invoice.total,
+      // Decimal → number: a Prisma Decimal is not a plain object and cannot
+      // cross into the client table (React logs it per cell, ~1.4k per page).
+      total: Number(invoice.total),
       currency: invoice.currency,
       status: invoice.status,
       due_date: invoice.due_date.toISOString(),
@@ -337,11 +324,7 @@ export async function deleteInvoice({
     revalidatePath("/finance/invoice")
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to delete invoice",
-    }
+    return actionError(ACTION_ERRORS.INVOICE_DELETE_FAILED)
   }
 }
 

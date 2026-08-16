@@ -32,6 +32,10 @@ import { RadialTextChart } from "@/components/school-dashboard/dashboard/chart-r
 import { FinanceAccessDenied } from "./access-denied"
 import { resolveFinanceAccess } from "./guard"
 import { formatCompactMoney } from "./lib/format"
+import {
+  getMonthlyRevenueExpenses,
+  type MonthlyPoint,
+} from "./lib/monthly-series"
 
 interface Props {
   dictionary: Dictionary
@@ -68,16 +72,23 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   let totalExpenses = 0
   let pendingPayments = 0
   let unpaidInvoices = 0
+  let timeZone = "Africa/Khartoum"
+  // Real monthly series for the charts below (was shadcn sample data).
+  let monthly: MonthlyPoint[] = []
 
   if (schoolId) {
     try {
       const school = await db.school
         .findUnique({
           where: { id: schoolId },
-          select: { currency: true },
+          select: { currency: true, timezone: true },
         })
         .catch(() => null)
       currency = school?.currency ?? "USD"
+      timeZone = school?.timezone ?? timeZone
+      monthly = await getMonthlyRevenueExpenses(schoolId, timeZone, 12).catch(
+        () => []
+      )
       ;[
         invoicesCount,
         receiptsCount,
@@ -164,6 +175,12 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   const fd = (dictionary as any)?.finance
   const mp = fd?.mainPage as Record<string, string> | undefined
 
+  const monthName = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", {
+    month: "long",
+    timeZone,
+  })
+  const charts = summarizeMonthly(monthly)
+
   return (
     <div className="space-y-6">
       {/* Overview Stats - Financial Health */}
@@ -172,7 +189,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         <div className="flex items-center justify-center">
           <Image
             src={asset("/icons/master-card.png")}
-            alt="Bank Card"
+            alt=""
             width={1050}
             height={600}
             className="h-auto w-full max-w-md"
@@ -250,9 +267,16 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         </div>
       </div>
 
-      {/* Charts Section */}
+      {/* Charts Section — real school-month aggregates, never sample data */}
       <div className="space-y-4">
         <InteractiveBarChart
+          data={monthly.map((p) => ({
+            date: p.monthStart.toISOString(),
+            primary: p.revenue,
+            secondary: p.expenses,
+          }))}
+          granularity="month"
+          timeZone={timeZone}
           title={fd?.dashboardPage?.revenueExpenses ?? "Revenue & Expenses"}
           description={
             fd?.dashboardPage?.monthlyPerformance ??
@@ -263,12 +287,19 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         />
         <div className="grid gap-4 md:grid-cols-2">
           <RadialTextChart
-            label={fd?.dashboardPage?.profit ?? "Profit"}
-            trendLabel={
-              fd?.dashboardPage?.avgMonthlyProfit ?? "Avg Monthly Profit"
-            }
+            value={charts.marginPct}
+            maxValue={100}
+            trend={charts.marginTrendPts}
+            label={fd?.dashboardPage?.profitMargin ?? "profit margin"}
+            trendLabel={`${fd?.dashboardPage?.avgMonthlyProfit ?? "Avg Monthly Profit"}: ${formatCompactMoney(charts.avgMonthlyProfit, currency, lang)}`}
           />
           <AreaChartStacked
+            data={charts.lastSix.map((p) => ({
+              label: monthName.format(p.monthStart),
+              primary: p.revenue,
+              secondary: p.expenses,
+            }))}
+            trend={charts.netTrendPct}
             primaryLabel={fd?.dashboardPage?.revenue ?? "Revenue"}
             secondaryLabel={fd?.dashboardPage?.expenses ?? "Expenses"}
             trendLabel={
@@ -490,4 +521,31 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
       </div>
     </div>
   )
+}
+
+/**
+ * Chart figures derived from the monthly series. Percentages are rounded
+ * whole numbers; a zero denominator yields 0 rather than Infinity/NaN, which
+ * recharts renders as a broken `matrix(NaN…)` transform.
+ */
+function summarizeMonthly(monthly: MonthlyPoint[]) {
+  const lastSix = monthly.slice(-6)
+  const current = monthly.at(-1)
+  const previous = monthly.at(-2)
+  const net = (p?: MonthlyPoint) => (p ? p.revenue - p.expenses : 0)
+  const pct = (num: number, den: number) =>
+    den > 0 ? Math.round((num / den) * 100) : 0
+  const marginOf = (p?: MonthlyPoint) =>
+    p && p.revenue > 0 ? pct(net(p), p.revenue) : 0
+
+  const marginPct = Math.max(0, Math.min(100, marginOf(current)))
+  const marginTrendPts = marginOf(current) - marginOf(previous)
+  const netTrendPct = pct(net(current) - net(previous), Math.abs(net(previous)))
+  const withActivity = lastSix.filter((p) => p.revenue > 0 || p.expenses > 0)
+  const avgMonthlyProfit =
+    withActivity.length > 0
+      ? withActivity.reduce((sum, p) => sum + net(p), 0) / withActivity.length
+      : 0
+
+  return { lastSix, marginPct, marginTrendPts, netTrendPct, avgMonthlyProfit }
 }
