@@ -253,11 +253,13 @@ describe("repairProvisioning", () => {
     expect(db.school.update).toHaveBeenCalledWith({
       where: { id: schoolId },
       data: { timetableStructure: expect.any(String) },
+      select: { id: true },
     })
     // And the join code is still minted.
     expect(db.school.update).toHaveBeenCalledWith({
       where: { id: schoolId },
       data: { joinCode: "NEW123" },
+      select: { id: true },
     })
   })
 

@@ -5,10 +5,11 @@
  * Al-Qabas Schools (مدارس القبس) Tenant Seed — Port Sudan
  *
  * Private Sudanese-curriculum school covering elementary, middle and high.
- * Reachable on every registered root domain once seeded (School.domain is the
- * tenant identity — see src/lib/root-domain.ts):
- *   https://alqabs.balqalam.com   https://alqabs.databayt.org
- *   http://alqabs.localhost:3000  (dev)
+ * The tenant is its bare subdomain (School.domain — see src/lib/root-domain.ts),
+ * so it answers on every root that still serves this app:
+ *   https://alqabs.balqalam.com    http://alqabs.localhost:3000 (dev)
+ * NOT databayt.org — that root now serves a different application entirely,
+ * despite still being registered in ROOT_DOMAINS.
  *
  * Unlike seed-kingfahad.ts this does NOT hand-roll the academic structure — it
  * drives the production provisioning pipeline (setupDefaultsForSchool →
@@ -459,7 +460,11 @@ async function uploadLogo(schoolId: string) {
     })
   )
 
-  await db.school.update({ where: { id: schoolId }, data: { logoUrl: url } })
+  await db.school.update({
+    where: { id: schoolId },
+    data: { logoUrl: url },
+    select: { id: true },
+  })
   console.log(`  ✅ ${url}`)
 }
 
@@ -642,7 +647,6 @@ async function main() {
   console.log("✅ Al-Qabas tenant ready")
   console.log("")
   console.log("  https://alqabs.balqalam.com/ar")
-  console.log("  https://alqabs.databayt.org/ar")
   console.log("  http://alqabs.localhost:3000/ar   (dev)")
   console.log("")
   console.log(`  ${ADMIN_EMAIL.padEnd(26)} ADMIN`)

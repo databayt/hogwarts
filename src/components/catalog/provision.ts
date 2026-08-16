@@ -312,6 +312,10 @@ export async function autoProvisionSections(schoolId: string) {
               maxCapacity: studentsPerSection,
             },
             update: {},
+            // Nothing here reads the row back; without a select Prisma returns
+            // every column, which turns a schema the database has not caught up
+            // with yet into a hard P2022 mid-provisioning.
+            select: { id: true },
           })
           gradeSections++
         }
@@ -911,6 +915,7 @@ export async function repairProvisioning(
       await db.school.update({
         where: { id: schoolId },
         data: { timetableStructure: effectiveSlug },
+        select: { id: true },
       })
     } catch {
       // Non-fatal: provisioning can still proceed with the resolved slug.
@@ -987,7 +992,11 @@ export async function repairProvisioning(
 
   await run("joinCode", async () => {
     const joinCode = await generateUniqueJoinCode()
-    await db.school.update({ where: { id: schoolId }, data: { joinCode } })
+    await db.school.update({
+      where: { id: schoolId },
+      data: { joinCode },
+      select: { id: true },
+    })
   })
 
   const status = await getProvisioningStatus(schoolId)
