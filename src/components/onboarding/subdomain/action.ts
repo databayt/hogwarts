@@ -8,6 +8,7 @@ import { db } from "@/lib/db"
 
 import type { SubdomainFormData } from "./types"
 import { subdomainValidation } from "./validation"
+import { isReservedSubdomain } from "@/lib/reserved-subdomains"
 
 // TEMPORARILY: Local ActionResponse to bypass auth-security import chain
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,6 +86,17 @@ export async function checkSubdomainAvailability(
     const { auth } = await import("@/auth")
     const session = await auth()
     if (!session?.user) throw new Error("Not authenticated")
+
+    // Reserved names are checked first. The write path (updateSchoolSubdomain ->
+    // subdomainValidation) already rejects them, but this read path did not, so the
+    // form would show a reserved name as available and only fail on save.
+    if (isReservedSubdomain(subdomain)) {
+      return createActionResponse({
+        subdomain,
+        available: false,
+        message: "This subdomain is reserved and cannot be used",
+      })
+    }
 
     const existingSchool = await db.school.findFirst({
       where: { domain: subdomain },

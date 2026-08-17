@@ -8,6 +8,7 @@
  */
 
 import { z } from "zod"
+import { isReservedSubdomain } from "@/lib/reserved-subdomains"
 
 /**
  * Contact form schema
@@ -105,7 +106,13 @@ export const trialSignupSchema = z.object({
     .regex(
       /^[a-z0-9-]+$/,
       "Subdomain can only contain lowercase letters, numbers, and hyphens"
-    ),
+    )
+    // This is the public, unauthenticated trial path and it creates a real School.
+    // Without this refine, anyone could sign up as `hogwarts` or `cdn` and take over
+    // a host that another databayt property already answers on.
+    .refine((val) => !isReservedSubdomain(val), {
+      message: "This subdomain is reserved and cannot be used",
+    }),
   adminEmail: z.string().email("Please enter a valid email address"),
   adminName: z.string().min(2, "Name is required").max(100, "Name is too long"),
   password: z

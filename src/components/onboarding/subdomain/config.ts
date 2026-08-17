@@ -18,41 +18,9 @@ export const SUBDOMAIN_RULES = [
   "Cannot use reserved words",
 ] as const
 
-export const RESERVED_SUBDOMAINS = [
-  "www",
-  "mail",
-  "email",
-  "admin",
-  "api",
-  "app",
-  "blog",
-  "dev",
-  "test",
-  "staging",
-  "prod",
-  "production",
-  "support",
-  "help",
-  "docs",
-  "status",
-  "cdn",
-  "assets",
-  "static",
-  "files",
-  "images",
-  "media",
-  "ftp",
-  "sftp",
-  "ssh",
-  "ssl",
-  "secure",
-  "login",
-  "signup",
-  "register",
-  "account",
-  "dashboard",
-  "portal",
-] as const
+// Canonical list lives in src/lib/reserved-subdomains.ts -- re-exported here so the
+// existing import sites (validation.ts) keep working.
+export { RESERVED_SUBDOMAINS } from "@/lib/reserved-subdomains"
 
 export const SUBDOMAIN_SUGGESTIONS_SUFFIXES = [
   "school",

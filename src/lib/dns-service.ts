@@ -43,6 +43,7 @@
  */
 
 import { logger } from "@/lib/logger"
+import { isReservedSubdomain } from "@/lib/reserved-subdomains"
 
 // === TYPE DEFINITIONS ===
 
@@ -506,33 +507,7 @@ class DnsService {
   }
 
   private isReservedSubdomain(subdomain: string): boolean {
-    const reserved = [
-      "www",
-      "api",
-      "app",
-      "admin",
-      "dashboard",
-      "portal",
-      "mail",
-      "email",
-      "ftp",
-      "ssh",
-      "vpn",
-      "cdn",
-      "blog",
-      "shop",
-      "store",
-      "help",
-      "support",
-      "docs",
-      "dev",
-      "test",
-      "staging",
-      "demo",
-      "preview",
-    ]
-
-    return reserved.includes(subdomain.toLowerCase())
+    return isReservedSubdomain(subdomain)
   }
 
   private generateSuggestions(subdomain: string): string[] {
