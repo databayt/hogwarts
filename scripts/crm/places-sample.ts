@@ -50,6 +50,22 @@ const arg = (n: string, d = ''): string => {
 
 const KEY = process.env.GOOGLE_PLACES_API_KEY ?? process.env.GOOGLE_TRANSLATE_API_KEY ?? '';
 const SEARCH = 'https://places.googleapis.com/v1/places:searchText';
+const DETAILS = 'https://places.googleapis.com/v1/places';
+
+/**
+ * TWO calls per school, and the split is the whole point of the cost model.
+ *
+ * The field mask picks the SKU. Asking searchText for a phone bills the search
+ * itself at the Enterprise tier (~$40/1,000) -- so the cheap path is to ask
+ * search for NOTHING but the id, which is the "Text Search Essentials (IDs
+ * Only)" SKU at $0 with no monthly cap, and then pay once for the payload on
+ * Place Details Enterprise ($20/1,000, first 1,000/month free).
+ *
+ * Two requests, half the price. Getting this backwards is a silent 2x on a bill
+ * nobody re-reads.
+ */
+const SEARCH_MASK = 'places.id';
+const DETAILS_MASK = 'displayName,nationalPhoneNumber,internationalPhoneNumber,websiteUri,businessStatus';
 
 interface Company {
   id: string;
@@ -87,33 +103,41 @@ async function lookup(c: Company): Promise<Hit> {
     body.locationBias = { circle: { center: { latitude: lat, longitude: lng }, radius: 5000 } };
   }
 
+  // 1. Find the place. IDs only, so this call is free.
   const res = await fetch(SEARCH, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': KEY,
-      // ENTERPRISE-tier mask: phone + website are not in Essentials or Pro.
-      'X-Goog-FieldMask':
-        'places.id,places.displayName,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.businessStatus',
+      'X-Goog-FieldMask': SEARCH_MASK,
     },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(30_000),
   });
   const json = (await res.json()) as {
-    places?: {
-      displayName?: { text?: string };
-      nationalPhoneNumber?: string;
-      internationalPhoneNumber?: string;
-      websiteUri?: string;
-      businessStatus?: string;
-    }[];
+    places?: { id?: string }[];
     error?: { message?: string; status?: string };
   };
   if (json.error) throw new Error(`${json.error.status}: ${json.error.message}`);
 
-  const p = json.places?.[0];
   const base = { id: c.id, name: c.name ?? '', country: c.country ?? '' };
-  if (!p) return { ...base, matched: false };
+  const placeId = json.places?.[0]?.id;
+  if (!placeId) return { ...base, matched: false };
+
+  // 2. Pay once for the payload -- this is the billable half.
+  const dRes = await fetch(`${DETAILS}/${placeId}`, {
+    headers: { 'X-Goog-Api-Key': KEY, 'X-Goog-FieldMask': DETAILS_MASK },
+    signal: AbortSignal.timeout(30_000),
+  });
+  const p = (await dRes.json()) as {
+    displayName?: { text?: string };
+    nationalPhoneNumber?: string;
+    internationalPhoneNumber?: string;
+    websiteUri?: string;
+    businessStatus?: string;
+    error?: { message?: string; status?: string };
+  };
+  if (p.error) throw new Error(`${p.error.status}: ${p.error.message}`);
 
   const raw = p.internationalPhoneNumber ?? p.nationalPhoneNumber ?? '';
   const n = raw ? normalizePhone(raw, (c.country ?? '').toUpperCase()) : null;
@@ -201,7 +225,8 @@ async function main(): Promise<void> {
   row('ALL', hits);
 
   const phoneRate = hits.filter((h) => h.phone).length / (hits.length || 1);
-  const remaining = 2_941;
+  // The MAP_ONLY + WEBSITE-only population as measured after the OSM re-fetch.
+  const remaining = 2_935;
   const billable = Math.max(0, remaining - 1_000);
   console.log(
     `\n  Projected over ${remaining} unreachable schools at this phone rate: ` +
