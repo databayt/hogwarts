@@ -1,0 +1,3 @@
+# Working data: CRM snapshots and change logs. Regenerate with the scripts; they
+# carry lead contact details and have no business in git.
+.data/
