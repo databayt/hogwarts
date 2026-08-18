@@ -29,6 +29,10 @@ model School {
 
   // Subscription/billing info (high-level; detailed state in Subscription)
   planType    String  @default("basic") // basic, premium, enterprise
+  // The pilot/trial clock. Nullable because most schools never trial.
+  // isTenantOnTrial()/getTrialDaysRemaining() consume it; before this field
+  // existed they were passed undefined and the trial column was always blank.
+  trialEndsAt DateTime?
   maxStudents Int     @default(100)
   maxTeachers Int     @default(10)
   isActive    Boolean @default(true)
@@ -390,6 +394,8 @@ model School {
   subjectSelections     SubjectSelection[]
   contentOverrides      ContentOverride[]
   instructorPreferences InstructorPreference[]
+  instructorPolicy      SchoolInstructorPolicy?
+  instructorBlocks      InstructorBlock[]
   bookSelections        BookSelection[]
   proposals             Proposal[]
 
