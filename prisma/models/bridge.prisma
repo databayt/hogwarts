@@ -2,6 +2,8 @@
 // SubjectSelection — school adopts a Subject per grade+stream
 // ContentOverride — school hides Chapter/Lesson/Video
 // InstructorPreference — per-subject instructor preference
+// SchoolInstructorPolicy — school-wide instructor lock + default
+// InstructorBlock — instructors a school has disabled
 // BookSelection — school adopts a Book into its library
 
 model SubjectSelection {
@@ -82,6 +84,51 @@ model InstructorPreference {
   @@unique([schoolId, catalogSubjectId])
   @@index([schoolId])
   @@map("school_instructor_preferences")
+}
+
+// School-wide Lumos instructor policy — at most one row per school.
+//
+// Both columns speak the same instructor-key vocabulary:
+//   "platform"          — platform-featured content (isFeatured && no schoolId)
+//   "teacher:<userId>"  — one individual instructor
+//   "school:<schoolId>" — every instructor attributed to that school
+//
+// A single keyed string rather than a nullable userId/schoolId pair because
+// Postgres treats NULLs as distinct in a composite unique (so the pair shape
+// cannot enforce one row per instructor) and because platform content has
+// neither a stable userId nor a schoolId to key on.
+model SchoolInstructorPolicy {
+  id       String @id @default(cuid())
+  schoolId String @unique
+
+  // null = open. Set = serve only this instructor on the lessons they cover;
+  // lessons they do not cover fall back to the remaining allowed instructors.
+  lockedKey String?
+  // null = the platform-first ordering. Set = float this instructor to the top.
+  defaultKey String?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("school_instructor_policies")
+}
+
+// Instructors a school has disabled — their videos are never served to its
+// students, on any surface. Same instructor-key vocabulary as the policy above.
+model InstructorBlock {
+  id            String @id @default(cuid())
+  schoolId      String
+  instructorKey String
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([schoolId, instructorKey])
+  @@index([schoolId])
+  @@map("school_instructor_blocks")
 }
 
 model BookSelection {
