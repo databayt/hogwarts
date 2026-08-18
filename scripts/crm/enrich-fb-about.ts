@@ -92,8 +92,22 @@ const jitter = (ms: number): number => ms + Math.floor(Math.random() * ms * 0.6)
  * the most specific first. `about_contact_and_basic_info` is the panel that
  * actually holds phone/email/website when the page owner filled it in.
  */
+const SUBPATHS =
+  /\/(mentions|videos|photos|reels|community|followers|about|about_[a-z_]+|posts|events|reviews|shop|groups|likes|app|live)\/?$/i;
+
+/**
+ * Strip whatever tab the discovered URL happened to land on before building the
+ * About URL. The CRM holds pages as `/RiverNileSchool/mentions` and
+ * `/1000636.../mentions`, and appending `/about_contact_and_basic_info` to those
+ * produces a 404-ish shell that still renders the page chrome — which is exactly
+ * how the first pass "succeeded" on five pages and returned nothing.
+ */
 const aboutUrls = (pageUrl: string): string[] => {
-  const base = pageUrl.replace(/\/+$/, '').split('?')[0];
+  let base = pageUrl.replace(/\/+$/, '').split('?')[0];
+  for (let i = 0; i < 3 && SUBPATHS.test(base); i++) base = base.replace(SUBPATHS, '');
+  // `/about_contact_and_basic_info` is the one that matters: Facebook redirects
+  // it to `/directory_contact_info/`, which renders the phone and its own
+  // Mobile/Landline label. `/about` alone renders only the section headings.
   return [`${base}/about_contact_and_basic_info`, `${base}/about`, base];
 };
 
@@ -115,11 +129,15 @@ const SCRAPE_JS = `(() => {
   };
 })()`;
 
-/** The Intro block sits between "Intro" and the next section heading. */
+/**
+ * The contact panel is short — a few hundred characters — and anchoring on the
+ * word "Intro" lands on the tab strip ("Intro | Category | Details | Reels"),
+ * not on content. So the whole page text is the haystack; it is small, and the
+ * noise filters in contact-extract already reject follower counts and years.
+ */
 function introOf(text: string): string {
-  const i = text.search(/\bIntro\b|\bنبذة\b|\bمعلومات\b/);
-  if (i < 0) return text.slice(0, 1500);
-  return text.slice(i, i + 1500);
+  const i = text.search(/Contact info|معلومات الاتصال/);
+  return i >= 0 ? text.slice(Math.max(0, i - 100), i + 900) : text.slice(0, 2500);
 }
 
 const ADDRESS_RE =
@@ -145,7 +163,10 @@ async function scrapeOne(s: CdpSession, c: Company, url: string, delayMs: number
     if (r.loginWall) return { ...base, why: 'login wall — the scrape session is signed out' };
 
     const text = r.text ?? '';
-    if (!/Intro|نبذة|Page ·|صفحة ·|About/i.test(text) && target !== aboutUrls(url).at(-1)) continue;
+    // Only accept a variant that actually rendered the contact panel; fall
+    // through to the next URL form otherwise.
+    const rendered = /Contact info|معلومات الاتصال/i.test(text);
+    if (!rendered && target !== aboutUrls(url).at(-1)) continue;
 
     const intro = introOf(text);
     const hay = `${intro}\n${r.tel.join('\n')}\n${r.mail.join('\n')}\n${r.wa.join('\n')}`;
@@ -164,10 +185,17 @@ async function scrapeOne(s: CdpSession, c: Company, url: string, delayMs: number
       const n = normalizePhone(run, (c.country ?? 'SD').toUpperCase());
       if (!n.e164 || phones.some((p) => p.e164 === n.e164)) continue;
       const digits = n.e164.replace(/\D/g, '');
+      // Facebook prints its own label next to the number ("Phone 012 577 4487
+      // Mobile"). That is the page owner's declaration and beats a
+      // prefix heuristic, so it wins when present.
+      const labelled = new RegExp(`${run.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*(Mobile|Landline|Work|هاتف|جوال|محمول)`, 'i').exec(hay)?.[1];
+      const reach = labelled && /mobile|جوال|محمول/i.test(labelled) ? 'MOBILE'
+        : labelled && /landline/i.test(labelled) ? 'LANDLINE'
+        : n.reach;
       phones.push({
         e164: n.e164,
-        reach: n.reach,
-        whatsapp: n.reach === 'MOBILE' && (waNumbers.has(digits) || [...waNumbers].some((w) => digits.endsWith(w.replace(/\D/g, '').slice(-9))) || waLabelled),
+        reach,
+        whatsapp: reach === 'MOBILE' && (waNumbers.has(digits) || [...waNumbers].some((w) => digits.endsWith(w.replace(/\D/g, '').slice(-9))) || waLabelled),
       });
     }
 
