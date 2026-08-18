@@ -1,0 +1,62 @@
+/**
+ * Conversion funnel — inbound CRM events.
+ *
+ * See kun's `content/docs/funnel.mdx` for the lane this serves.
+ */
+
+/// A webhook delivery from Twenty CRM, stored before it is acted on.
+///
+/// WHY STORE RATHER THAN APPLY INLINE
+///
+/// Twenty gives a webhook **5 seconds and no retries**. A handler that does its
+/// database work inline turns any slow query into a permanently lost event, and
+/// the sender cannot tell the difference between "applied" and "dropped" — it
+/// sees a timeout either way. So the receiver's only job is to verify the
+/// signature, write one row, and answer 200 well inside the budget. Applying is
+/// a separate pass that can be slow, can retry, and can be re-run.
+///
+/// This is also the correction to a mistake already made once: mkan's receiver
+/// answered 200 for every delivery while processing none of them, and both ends
+/// read as healthy for months. A durable row makes "received" and "applied"
+/// two different, separately observable facts.
+///
+/// A human dragging a card in Twenty is ADVISORY here. hogwarts Postgres is the
+/// source of truth for gate state; this table records what a person did on the
+/// board so it can be reviewed, never so it can silently overwrite the funnel.
+model TwentyInboundEvent {
+  id String @id @default(cuid())
+
+  /// Which Twenty webhook produced this. Part of the idempotency key.
+  webhookId String
+  /// Full `object.action` string as Twenty sent it, e.g. "opportunity.updated".
+  eventName String
+  /// `objectMetadata.nameSingular` — authoritative for the object type.
+  objectName String
+  /// `record.id` from the payload.
+  recordId String
+  /// Twenty's own timestamp for the event, not our receipt time.
+  eventDate DateTime
+
+  /// Present on update events. Lets a consumer react only to the fields it
+  /// cares about instead of diffing the whole record.
+  updatedFields String[] @default([])
+  /// The verified delivery, kept whole. Storing only the fields we parse today
+  /// would make tomorrow's consumer re-request data Twenty already sent.
+  payload Json
+
+  /// pending → applied | ignored | failed. `pending` is the only state the
+  /// applier picks up; `ignored` records a deliberate no-op so an unhandled
+  /// object type is distinguishable from an unprocessed one.
+  status      String    @default("pending")
+  processedAt DateTime?
+  /// Why it was ignored or how it failed — the thing a silent 200 never told us.
+  note String?
+
+  createdAt DateTime @default(now())
+
+  /// Replay protection at the data layer. Twenty has no retries, but a proxy
+  /// or a manual re-send must not apply the same change twice.
+  @@unique([webhookId, eventDate, recordId])
+  @@index([status, createdAt])
+  @@map("twenty_inbound_events")
+}
