@@ -109,6 +109,36 @@ const SCHOOLish = /مدرس|مدارس|أكاديمي|اكاديمي|روضة|ر
 const NOT_A_SCHOOL =
   /كرة|القدم|الطائرة|سلة|رياضي|نادي|خريج|خريجو|طلاب وطالبات|دفعة|ذكريات|جروب|مجموعة|وظائف|توظيف|إعلان|اخبار|أخبار|قناة|صحيفة|جامعة|university|football|volleyball|club|alumni|jobs|vacanc|news|channel|شهادات|كورس|كورسات|course|دروس|مذكرات|ملخصات/i;
 
+/**
+ * The result name has to earn its place, because Facebook's search is an OR.
+ *
+ * Querying "مدرسة سودانية مصر" does NOT return Sudanese schools in Egypt -- it
+ * returns anything matching any word, which in the first live run meant 42 hits
+ * consisting of ordinary Egyptian schools, a bank's technology academy, a meme
+ * page, and a koshary restaurant called "مدرسة الكشري". Not one was Sudanese.
+ *
+ * So each lane must prove itself in the page's own name:
+ *
+ *   diaspora  the name must say Sudanese. A Sudanese school operating in Cairo
+ *             or Riyadh advertises exactly that -- it is how families find it --
+ *             so this is a cheap and very sharp test.
+ *   sudan     the name must contain the place that was searched for. A Khartoum
+ *             school will not call itself "Sudanese", but "مدرسة بورتسودان
+ *             الثانوية" does contain بورتسودان.
+ */
+const SUDANESE = /سوداني|سودانيه|سودانية|السودان|sudan|sudanese/i;
+
+const foldAr = (x: string): string =>
+  x.replace(/[ً-ْـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').toLowerCase();
+
+function isRelevant(name: string, query: string, kind: string): boolean {
+  const n = foldAr(name);
+  if (kind === 'diaspora') return SUDANESE.test(n);
+  // in-country: the searched place, or an explicit Sudan marker, must appear.
+  const place = foldAr(query.split(' ').slice(1).join(' ')).trim();
+  return (place.length > 2 && n.includes(place)) || SUDANESE.test(n);
+}
+
 const isPageUrl = (u: string): boolean =>
   /^https?:\/\/(?:www\.|web\.)?facebook\.com\//i.test(u) &&
   !/\/(groups|events|marketplace|watch|photo|videos|posts|permalink|story\.php|hashtag|search|help|policies|privacy|login|reel)\b/i.test(u) &&
@@ -162,6 +192,7 @@ async function searchOnce(s: CdpSession, query: string, kind: string, delayMs: n
     if (!isPageUrl(l.href)) continue;
     const name = l.text.trim();
     if (!SCHOOLish.test(name) || NOT_A_SCHOOL.test(name)) continue;
+    if (!isRelevant(name, query, kind)) continue;
     const url2 = normalizeUrl(l.href);
     if (seen.has(url2)) continue;
     seen.add(url2);
