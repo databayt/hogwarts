@@ -103,6 +103,21 @@ const SUBPATHS =
  * how the first pass "succeeded" on five pages and returned nothing.
  */
 const aboutUrls = (pageUrl: string): string[] => {
+  /**
+   * `profile.php?id=N` keeps its identity in the QUERY STRING, so splitting on
+   * '?' leaves the bare string "facebook.com/profile.php" -- which Facebook
+   * resolves to the SIGNED-IN USER'S OWN profile. 572 of the 640 discovered
+   * pages are that shape, so the first pass over them reported "page deleted or
+   * renamed" for essentially every row while the pages were perfectly alive.
+   *
+   * The numeric id works as a plain path segment, and that form is verified to
+   * render the contact panel, so normalise to it before doing anything else.
+   */
+  const pid = /facebook\.com\/profile\.php\?id=(\d+)/i.exec(pageUrl)?.[1];
+  if (pid) {
+    const b = `https://www.facebook.com/${pid}`;
+    return [`${b}/about_contact_and_basic_info`, `${b}/about`, b];
+  }
   let base = pageUrl.replace(/\/+$/, '').split('?')[0];
   for (let i = 0; i < 3 && SUBPATHS.test(base); i++) base = base.replace(SUBPATHS, '');
   // `/about_contact_and_basic_info` is the one that matters: Facebook redirects
