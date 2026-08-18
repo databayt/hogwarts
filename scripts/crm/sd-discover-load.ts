@@ -111,6 +111,7 @@ async function main(): Promise<void> {
   const rejected: Record<string, number> = {};
   const rej = (k: string): void => { rejected[k] = (rejected[k] ?? 0) + 1; };
   const seenSlug = new Set<string>();
+  const seenName = new Set<string>();
 
   for (const f of byUrl.values()) {
     if (!SCHOOLish.test(f.name)) { rej('not school-shaped'); continue; }
@@ -122,7 +123,17 @@ async function main(): Promise<void> {
     if (refs.has(`fb:${slug}`) || fbUrls.has(slug)) { rej('already in the CRM'); continue; }
     if (seenSlug.has(slug)) { rej('duplicate page in this batch'); continue; }
     if (names.has(foldAr(f.name))) { rej('a row with this exact name already exists'); continue; }
+    /**
+     * Two different Pages can carry the identical name -- "مدرسة الخرطوم"
+     * appeared twice in the first batch. Occasionally that is two campuses, but
+     * far more often it is one school with a duplicate or abandoned Page, and a
+     * sales list is damaged more by calling the same school twice than by
+     * missing a second campus that the About pass would reveal anyway. Keep the
+     * first, log the rest.
+     */
+    if (seenName.has(foldAr(f.name))) { rej('same name as another page in this batch'); continue; }
     seenSlug.add(slug);
+    seenName.add(foldAr(f.name));
 
     const country = countryOf(f);
     creates.push({
