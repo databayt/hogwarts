@@ -126,6 +126,13 @@ const SCRAPE_JS = `(() => {
     ext: grab(/l\\.facebook\\.com\\/l\\.php|https?:\\/\\/(?!.*facebook\\.com)/),
     loginWall: !!document.querySelector('input[name="email"][type="text"], input[name="pass"]'),
     checkpoint: /checkpoint|confirm your identity|we limit how often|temporarily blocked|suspicious/i.test(txt.slice(0, 4000)),
+    // Chrome's own error page. Without this the run records an empty result as
+    // a SUCCESS and the ledger never retries that page again.
+    netError: /ERR_INTERNET_DISCONNECTED|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION|ERR_TIMED_OUT|ERR_PROXY|No internet/i.test(txt.slice(0, 2000)),
+    // A deleted or renamed Page redirects to the SIGNED-IN USER'S OWN profile,
+    // which renders perfectly and contains no school whatsoever.
+    ownProfile: !!document.querySelector('[aria-label="Edit profile"]')
+      || /Add cover photo|Add to story|People You May Know/i.test(txt.slice(0, 1200)),
   };
 })()`;
 
@@ -154,13 +161,27 @@ async function scrapeOne(s: CdpSession, c: Company, url: string, delayMs: number
     await sleep(jitter(delayMs));
     const r = await s.evaluate<{
       title: string; text: string; tel: string[]; mail: string[]; wa: string[]; ext: string[];
-      loginWall: boolean; checkpoint: boolean;
+      loginWall: boolean; checkpoint: boolean; netError: boolean; ownProfile: boolean;
     }>(SCRAPE_JS);
 
     // Stop the whole run on a challenge rather than pushing through it. Burning
     // the dedicated account is cheap to recover from but pointless.
     if (r.checkpoint) return { ...base, why: 'CHECKPOINT' };
     if (r.loginWall) return { ...base, why: 'login wall — the scrape session is signed out' };
+    /**
+     * Two failures that look exactly like an empty page, and both were recorded
+     * as successes before this check existed.
+     *
+     * NETWORK is fatal for the whole run: once Chrome has lost its connection,
+     * every remaining page in the queue gets burned as "no content found" and
+     * the ledger never retries any of them. Six pages were lost that way.
+     *
+     * OWN_PROFILE is per-page: sixteen pages recorded the scrape account's own
+     * timeline — "Add cover photo … People You May Know" — as a school's About
+     * tab, because a dead Page redirects there.
+     */
+    if (r.netError) return { ...base, why: 'NETWORK' };
+    if (r.ownProfile) return { ...base, why: 'redirected to the scrape account profile — page deleted or renamed' };
 
     const text = r.text ?? '';
     // Only accept a variant that actually rendered the contact panel; fall
@@ -258,11 +279,13 @@ async function main(): Promise<void> {
     for (const [i, c] of queue.entries()) {
       const url = (c.facebook?.primaryLinkUrl ?? '').trim();
       const r = await scrapeOne(s, c, url, delayMs);
-      appendFileSync(LEDGER, `${JSON.stringify(r)}\n`);
+      // A network drop says nothing about this page, so it is not written to the
+      // ledger at all — the page must still be retried on the next run.
+      if (r.why !== 'NETWORK') appendFileSync(LEDGER, `${JSON.stringify(r)}\n`);
       results.push(r);
       const mark = r.ok ? (r.phones.length ? `☎${r.phones.length}` : r.emails.length ? 'mail' : ' —  ') : '✗';
       console.log(`  ${String(i + 1).padStart(3)}/${queue.length} ${mark}  ${(c.name ?? '').slice(0, 44).padEnd(44)} ${r.why ?? ''}`);
-      if (r.why === 'CHECKPOINT' || r.why?.startsWith('login wall')) {
+      if (r.why === 'CHECKPOINT' || r.why?.startsWith('login wall') || r.why === 'NETWORK') {
         stopped = r.why;
         break;
       }
