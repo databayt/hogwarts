@@ -1,0 +1,210 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+/**
+ * Take the Facebook About-tab harvest into Twenty.
+ *
+ * Reads the append-only ledger `enrich-fb-about.ts` writes and applies the same
+ * rules every other lane uses: fill empty, never replace populated, a populated
+ * disagreement becomes a dated note, and a row a human marked `contactVerified`
+ * keeps its contact fields.
+ *
+ * No browser and no network beyond Twenty -- the scraping already happened, and
+ * keeping the write separate means a bad extraction can be re-planned without
+ * re-visiting a single page, which is the expensive and account-risky half.
+ *
+ * ── One rule specific to this source ────────────────────────────────────────
+ *
+ * A phone whose country code does not belong to the row's country is NOT
+ * written; it is recorded as a note instead. The dork run tagged its finds
+ * `country=SD` from the query that found them rather than from anything in the
+ * page, and the About tab is the first place that assumption meets evidence:
+ * "River Nile School" turned out to be in Victoria, Australia, with a +61
+ * number. Writing that as a Sudanese school's phone would put a wrong number in
+ * front of a salesperson, which is worse than an empty field.
+ *
+ *   TWENTY_API_URL=http://localhost:3100 \
+ *   TWENTY_API_KEY=$(security find-generic-password -s databayt-twenty -a hogwarts -w) \
+ *     npx tsx scripts/crm/sd-fb-load.ts [--apply]
+ */
+import { readFileSync, existsSync, writeFileSync } from 'node:fs';
+
+import { twentyClient } from './twenty-rest';
+
+const APPLY = process.argv.includes('--apply');
+const DATA = 'scripts/crm/.data';
+const LEDGER = `${DATA}/fb-about.jsonl`;
+
+interface AboutResult {
+  id: string; name: string; url: string; ok: boolean; why?: string;
+  phones: { e164: string; reach: string; whatsapp: boolean }[];
+  emails: string[]; website?: string; address?: string;
+  category?: string; followers?: number; capturedAt: string;
+}
+interface Link { primaryLinkUrl?: string | null }
+interface Company {
+  id: string; name?: string | null; country?: string | null;
+  schoolPhone?: string | null; principalContact?: string | null;
+  contactVerified?: boolean | null; enrichmentNotes?: string | null;
+  operationalStatus?: string | null; lastSeenAt?: string | null;
+  domainName?: Link | null;
+  address?: { addressStreet1?: string | null } | null;
+}
+
+const txt = (s: string | null | undefined): string => (s ?? '').trim();
+const linkUrl = (l: Link | null | undefined): string => (l?.primaryLinkUrl ?? '').trim();
+
+/** Which calling code belongs to which country column. */
+const CC_OF: Record<string, string> = { SD: '249', SA: '966', AE: '971', EG: '20', QA: '974' };
+
+/**
+ * A country-coded TLD is the same kind of evidence as a calling code, and it
+ * catches the case the phone check cannot. "River Nile School" is filed SD by
+ * the dork run; its page publishes `admin@rivernileschool.vic.edu.au` and
+ * `rivernileschool.vic.edu.au`. Its +61 phone never reached the phone check
+ * because the Sudan normaliser had already rejected it, so without this the
+ * loader would have quietly written an Australian school's real email onto a
+ * row a salesperson would call as Sudanese.
+ */
+const TLD_COUNTRY: Record<string, string> = {
+  au: 'AU', uk: 'GB', iq: 'IQ', qa: 'QA', sa: 'SA', ae: 'AE', eg: 'EG', sd: 'SD',
+  tr: 'TR', ke: 'KE', ug: 'UG', et: 'ET', us: 'US', ca: 'CA', de: 'DE', fr: 'FR',
+};
+
+/** The country a domain or email address implies, if any. */
+const impliedCountry = (s: string): string | null => {
+  const host = /@([\w.-]+)$/.exec(s)?.[1] ?? /^https?:\/\/([^/]+)/.exec(s)?.[1] ?? '';
+  const tld = host.toLowerCase().split('.').pop() ?? '';
+  return TLD_COUNTRY[tld] ?? null;
+};
+
+async function main(): Promise<void> {
+  if (!existsSync(LEDGER)) { console.error(`no ledger at ${LEDGER} — run enrich-fb-about.ts first`); process.exit(1); }
+  const results = readFileSync(LEDGER, 'utf8').split('\n').filter(Boolean)
+    .map((l) => JSON.parse(l) as AboutResult);
+  // The ledger is append-only, so a page re-visited later wins.
+  const latest = new Map<string, AboutResult>();
+  for (const r of results) latest.set(r.url, r);
+  console.log(`Read ${results.length} ledger line(s) → ${latest.size} distinct page(s)`);
+
+  const { rest, all } = twentyClient();
+  const live = (await all('companies')) as unknown as Company[];
+  const byId = new Map(live.map((c) => [c.id, c]));
+
+  const updates: { id: string; name: string; patch: Record<string, unknown> }[] = [];
+  const stats: Record<string, number> = {};
+  const mismatched: string[] = [];
+  const bump = (k: string): void => { stats[k] = (stats[k] ?? 0) + 1; };
+  const today = new Date().toISOString().slice(0, 10);
+
+  for (const r of latest.values()) {
+    const c = byId.get(r.id);
+    if (!c) { bump('row gone from CRM'); continue; }
+    if (!r.ok) { bump(`no content: ${r.why ?? 'unknown'}`); continue; }
+
+    const patch: Record<string, unknown> = {};
+    const address: Record<string, unknown> = {};
+    const conflicts: string[] = [];
+
+    const offer = (field: string, liveVal: string, value: string | undefined, write: () => void, isContact = false): void => {
+      if (!value) return;
+      if (isContact && c.contactVerified) { bump(`skippedVerified.${field}`); return; }
+      if (!liveVal) { write(); bump(`filled.${field}`); return; }
+      if (liveVal === value) { bump(`alreadyCorrect.${field}`); return; }
+      if ((c.enrichmentNotes ?? '').includes(`fb:${field}`)) { bump(`alreadyNoted.${field}`); return; }
+      conflicts.push(`${today} fb:${field} — found "${value}", CRM has "${liveVal}", not overwritten`);
+      bump(`conflict.${field}`);
+    };
+
+    // Prefer a mobile: only a mobile can be reached on WhatsApp.
+    const phone = r.phones.find((p) => p.reach === 'MOBILE') ?? r.phones[0];
+    if (phone) {
+      const want = CC_OF[(c.country ?? '').toUpperCase()];
+      const got = /^\+(\d{1,3})/.exec(phone.e164)?.[1] ?? '';
+      if (want && !phone.e164.startsWith(`+${want}`)) {
+        // Evidence that the row's country is wrong — surface it, do not write it.
+        conflicts.push(
+          `${today} fb:phone — the page publishes +${got}… but this row is filed as ${c.country}. ` +
+            `Not written: the country came from the search query, not the page. Re-file the row first.`
+        );
+        mismatched.push(`${r.name.slice(0, 40)} — ${phone.e164} vs country=${c.country}`);
+        bump('country mismatch — phone withheld');
+      } else {
+        offer('phone', txt(c.schoolPhone), phone.e164, () => { patch.schoolPhone = phone.e164; }, true);
+      }
+    }
+
+    const email = r.emails.find((e) => /@/.test(e));
+    const site = r.website ? r.website.split(/[?&]fbclid=/)[0] : undefined;
+
+    // Does the page's own domain contradict where we filed this school?
+    const rowCountry = (c.country ?? '').toUpperCase();
+    const implied = [email, site].filter(Boolean).map((x) => impliedCountry(x!)).find(Boolean) ?? null;
+    const foreign = implied && rowCountry && implied !== rowCountry;
+
+    if (foreign) {
+      conflicts.push(
+        `${today} fb:country — the page's own domain is .${implied.toLowerCase()} but this row is filed as ` +
+          `${rowCountry}. Contact details withheld: the country came from the search query, not the page. ` +
+          `Re-file the row, then re-run.`
+      );
+      mismatched.push(`${r.name.slice(0, 40)} — domain implies ${implied}, filed ${rowCountry}`);
+      bump('country mismatch — contacts withheld');
+    } else {
+      if (email) offer('email', txt(c.principalContact), email, () => { patch.principalContact = email; }, true);
+      if (site) {
+        offer('website', linkUrl(c.domainName), site, () => {
+          patch.domainName = { primaryLinkUrl: site, primaryLinkLabel: '' };
+        });
+      }
+    }
+    if (r.address && !txt(c.address?.addressStreet1)) {
+      address.addressStreet1 = r.address;
+      bump('filled.street');
+    }
+    if (Object.keys(address).length) patch.address = address;
+
+    // The page rendered, so the school was publicly present when we looked.
+    if (txt(c.operationalStatus) === 'UNVERIFIED' && (r.phones.length || r.emails.length || r.website)) {
+      patch.operationalStatus = 'OPERATING';
+      bump('filled.operationalStatus');
+    }
+    if (!txt(c.lastSeenAt)) { patch.lastSeenAt = r.capturedAt; bump('filled.lastSeenAt'); }
+
+    if (conflicts.length) patch.enrichmentNotes = [txt(c.enrichmentNotes), ...conflicts].filter(Boolean).join('\n');
+    const meaningful = Object.keys(patch).filter((k) => k !== 'lastSeenAt');
+    if (!meaningful.length) continue;
+    patch.enrichedAt = new Date().toISOString();
+    updates.push({ id: r.id, name: r.name, patch });
+  }
+
+  console.log(`\n── plan — ${updates.length} row(s) would be updated\n`);
+  for (const [k, v] of Object.entries(stats).filter(([k]) => k.startsWith('filled.')).sort((a, b) => b[1] - a[1])) {
+    console.log(`  +${String(v).padStart(4)}  ${k.replace('filled.', '')}`);
+  }
+  const other = Object.entries(stats).filter(([k]) => !k.startsWith('filled.'));
+  if (other.length) {
+    console.log(`\n  other outcomes:`);
+    for (const [k, v] of other.sort((a, b) => b[1] - a[1])) console.log(`    ${String(v).padStart(4)}  ${k}`);
+  }
+  if (mismatched.length) {
+    console.log(`\n  ${mismatched.length} row(s) whose page phone contradicts their filed country — withheld, noted:`);
+    for (const m of mismatched.slice(0, 10)) console.log(`      ${m}`);
+  }
+
+  writeFileSync(`${DATA}/fb-load-plan.json`, JSON.stringify({ updates }, null, 2));
+  console.log(`\n  → ${DATA}/fb-load-plan.json`);
+  if (!APPLY) { console.log('\n  DRY RUN — nothing written. Re-run with --apply.\n'); return; }
+
+  let ok = 0;
+  const fails: string[] = [];
+  for (const u of updates) {
+    try { await rest('PATCH', `companies/${u.id}`, u.patch); ok++; }
+    catch (e) { fails.push(`${u.name}: ${e instanceof Error ? e.message : e}`); }
+  }
+  console.log(`\n  ${ok}/${updates.length} updated.`);
+  for (const f of fails.slice(0, 10)) console.log(`    ! ${f}`);
+  console.log('\n  Re-run without --apply: the plan must be 0.\n');
+}
+
+main().catch((e) => { console.error(e instanceof Error ? e.message : e); process.exit(1); });
