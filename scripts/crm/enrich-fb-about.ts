@@ -1,0 +1,265 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+/**
+ * Read a school's Facebook About tab -- the thing the old extractor never did.
+ *
+ * 113 CRM rows now carry a Facebook page and no phone. In Sudan that page is
+ * very often the school's only public surface: no website, no directory entry,
+ * and a ministry that is offline. The Intro block on the About tab carries the
+ * phone, the address and the website in plain text.
+ *
+ * ── Why this is a rebuild and not a patch ───────────────────────────────────
+ *
+ * The previous enricher visited 41 pages and produced almost nothing, for four
+ * reasons that are all visible in its own output:
+ *
+ *  1. **It never opened the About tab.** It loaded the bare page URL and read
+ *     `document.body.innerText`, truncated to 5,000 characters. Record 40 in its
+ *     JSONL is the proof: the captured text contains
+ *     `Intro … Page · School … Madani Street, Khartoum, Sudan … 018 321 5000`
+ *     while the stored record has `primaryPhone:null, whatsapp:null, emails:[]`.
+ *     The data was on the page and fell out of the pipeline.
+ *  2. **Its phone regex could not match a Sudanese landline.**
+ *     `(?:9[0-9]|1[0-2])` rejects `018 321 5000`. The same loose window let a
+ *     Facebook numeric page id (`100085602…`) through as a phone number.
+ *  3. **It invented WhatsApp.** Every phone became `wa.me/<phone>`, which is why
+ *     its WhatsApp coverage exactly equalled its phone coverage. A number is
+ *     recorded as WhatsApp here only when a `wa.me` link or an Arabic WhatsApp
+ *     label is actually present AND the number is a mobile -- a landline cannot
+ *     receive WhatsApp whatever the page says next to it.
+ *  4. **It scraped groups and news pages.** A `/groups/` URL is a community with
+ *     no Intro block at all, and about a third of the discovered pages are news
+ *     outlets or foreign institutions.
+ *
+ * ── The account rule, enforced twice ────────────────────────────────────────
+ *
+ * This drives a logged-in Chrome, so it refuses to start unless a dedicated
+ * scrape browser is declared -- see `requireScrapePort()`. The `scrape-guard`
+ * hook is the outer fence and this filename is chosen to match its
+ * `scripts/crm/enrich` pattern, but a hook that only reads command text cannot
+ * be the only defence.
+ *
+ *   FB_SCRAPE_PORT=9333 FB_SCRAPE_PROFILE="$HOME/.claude/chrome-fbscrape-profile" \
+ *   FB_SCRAPE_DELAY_MS=8000 \
+ *   TWENTY_API_URL=http://localhost:3100 \
+ *   TWENTY_API_KEY=$(security find-generic-password -s databayt-twenty -a hogwarts -w) \
+ *     npx tsx scripts/crm/enrich-fb-about.ts [--limit=N]
+ */
+import { appendFileSync, readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+
+import { createCdpSession, requireScrapePort, type CdpSession } from './cdp-session';
+import { extractContacts } from './contact-extract';
+import { normalizePhone } from './normalize-contacts';
+import { twentyClient } from './twenty-rest';
+
+const DATA = 'scripts/crm/.data';
+const LEDGER = `${DATA}/fb-about.jsonl`;
+const arg = (n: string, d = ''): string => {
+  const hit = process.argv.find((a) => a.startsWith(`--${n}=`));
+  return hit ? hit.split('=').slice(1).join('=') : d;
+};
+
+interface Link { primaryLinkUrl?: string | null }
+interface Company {
+  id: string; name?: string | null; country?: string | null;
+  schoolPhone?: string | null; principalContact?: string | null;
+  facebook?: Link | null; domainName?: Link | null;
+  address?: { addressStreet1?: string | null } | null;
+}
+
+export interface AboutResult {
+  id: string;
+  name: string;
+  url: string;
+  ok: boolean;
+  why?: string;
+  intro?: string;
+  phones: { e164: string; reach: string; whatsapp: boolean }[];
+  emails: string[];
+  website?: string;
+  address?: string;
+  category?: string;
+  followers?: number;
+  capturedAt: string;
+}
+
+const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+const jitter = (ms: number): number => ms + Math.floor(Math.random() * ms * 0.6);
+
+/**
+ * Facebook serves the About tab under a few paths depending on page type; try
+ * the most specific first. `about_contact_and_basic_info` is the panel that
+ * actually holds phone/email/website when the page owner filled it in.
+ */
+const aboutUrls = (pageUrl: string): string[] => {
+  const base = pageUrl.replace(/\/+$/, '').split('?')[0];
+  return [`${base}/about_contact_and_basic_info`, `${base}/about`, base];
+};
+
+/** Read the whole About panel, untruncated, plus every tel:/mailto:/wa.me link. */
+const SCRAPE_JS = `(() => {
+  const txt = document.body ? document.body.innerText : '';
+  const links = Array.from(document.querySelectorAll('a')).map(a => a.href || '');
+  const grab = (re) => links.filter(l => re.test(l));
+  const h1 = document.querySelector('h1');
+  return {
+    title: h1 ? h1.innerText.trim() : (document.title || '').replace(/\\s*\\|.*$/, '').trim(),
+    text: txt,
+    tel: grab(/^tel:/).map(l => l.replace(/^tel:/, '')),
+    mail: grab(/^mailto:/).map(l => l.replace(/^mailto:/, '')),
+    wa: grab(/wa\\.me|api\\.whatsapp\\.com/),
+    ext: grab(/l\\.facebook\\.com\\/l\\.php|https?:\\/\\/(?!.*facebook\\.com)/),
+    loginWall: !!document.querySelector('input[name="email"][type="text"], input[name="pass"]'),
+    checkpoint: /checkpoint|confirm your identity|we limit how often|temporarily blocked|suspicious/i.test(txt.slice(0, 4000)),
+  };
+})()`;
+
+/** The Intro block sits between "Intro" and the next section heading. */
+function introOf(text: string): string {
+  const i = text.search(/\bIntro\b|\bنبذة\b|\bمعلومات\b/);
+  if (i < 0) return text.slice(0, 1500);
+  return text.slice(i, i + 1500);
+}
+
+const ADDRESS_RE =
+  /^[^\n]{6,120}(?:Street|St\.|Road|Rd\.|Avenue|Ave|Khartoum|Omdurman|Bahri|Sudan|شارع|طريق|حي|الخرطوم|أم درمان|بحري|السودان)[^\n]{0,60}$/im;
+
+async function scrapeOne(s: CdpSession, c: Company, url: string, delayMs: number): Promise<AboutResult> {
+  const base: AboutResult = {
+    id: c.id, name: c.name ?? '', url, ok: false, phones: [], emails: [],
+    capturedAt: new Date().toISOString(),
+  };
+
+  for (const target of aboutUrls(url)) {
+    await s.navigate(target);
+    await sleep(jitter(delayMs));
+    const r = await s.evaluate<{
+      title: string; text: string; tel: string[]; mail: string[]; wa: string[]; ext: string[];
+      loginWall: boolean; checkpoint: boolean;
+    }>(SCRAPE_JS);
+
+    // Stop the whole run on a challenge rather than pushing through it. Burning
+    // the dedicated account is cheap to recover from but pointless.
+    if (r.checkpoint) return { ...base, why: 'CHECKPOINT' };
+    if (r.loginWall) return { ...base, why: 'login wall — the scrape session is signed out' };
+
+    const text = r.text ?? '';
+    if (!/Intro|نبذة|Page ·|صفحة ·|About/i.test(text) && target !== aboutUrls(url).at(-1)) continue;
+
+    const intro = introOf(text);
+    const hay = `${intro}\n${r.tel.join('\n')}\n${r.mail.join('\n')}\n${r.wa.join('\n')}`;
+
+    // WhatsApp only when the page says so — a wa.me link, or an Arabic label.
+    const waNumbers = new Set(
+      r.wa.map((l) => (/(?:wa\.me\/|phone=)(\+?\d{7,15})/.exec(l) ?? [])[1]).filter(Boolean) as string[]
+    );
+    const waLabelled = extractContacts(hay, 'fb-about').some((x) => x.kind === 'whatsapp');
+
+    const phones: AboutResult['phones'] = [];
+    const runs = hay
+      .split(/[\/,،|]|\s[-–—]\s|(?<=\d)[-–—](?=0)/)
+      .flatMap((p) => p.match(/(?:\+|00)?[\d][\d\s().]{6,18}\d/g) ?? []);
+    for (const run of runs) {
+      const n = normalizePhone(run, (c.country ?? 'SD').toUpperCase());
+      if (!n.e164 || phones.some((p) => p.e164 === n.e164)) continue;
+      const digits = n.e164.replace(/\D/g, '');
+      phones.push({
+        e164: n.e164,
+        reach: n.reach,
+        whatsapp: n.reach === 'MOBILE' && (waNumbers.has(digits) || [...waNumbers].some((w) => digits.endsWith(w.replace(/\D/g, '').slice(-9))) || waLabelled),
+      });
+    }
+
+    const emails = [...new Set([...r.mail, ...(hay.match(/[\w.+-]+@[\w-]+\.[\w.]{2,}/g) ?? [])])]
+      .filter((e) => !/facebook\.com|meta\.com|fbcdn/.test(e));
+
+    const website = r.ext
+      .map((l) => {
+        const m = /[?&]u=([^&]+)/.exec(l);
+        return m ? decodeURIComponent(m[1]) : l;
+      })
+      .find((l) => /^https?:\/\//.test(l) && !/facebook|instagram|whatsapp|youtube|tiktok|twitter|x\.com/.test(l));
+
+    const address = ADDRESS_RE.exec(intro)?.[0]?.trim();
+    const cat = /Page\s*·\s*([^\n]{2,40})/.exec(text)?.[1]?.trim();
+    const followers = Number(
+      (/([\d.,]+)([KkMm])?\s*(?:followers|متابع)/.exec(text)?.[1] ?? '').replace(/[.,]/g, '')
+    ) || undefined;
+
+    return { ...base, ok: true, intro: intro.slice(0, 600), phones, emails, website, address, category: cat, followers };
+  }
+  return { ...base, why: 'no About content found' };
+}
+
+async function main(): Promise<void> {
+  const { port, profile, delayMs } = requireScrapePort();
+  const limit = Number(arg('limit', '0')) || Infinity;
+  console.log(`Scrape browser: port ${port}, profile ${profile}, delay ~${delayMs}ms`);
+
+  const { all } = twentyClient();
+  const live = (await all('companies')) as unknown as Company[];
+
+  // Resume: never re-visit a page this ledger already records.
+  const done = new Set<string>();
+  if (existsSync(LEDGER)) {
+    for (const line of readFileSync(LEDGER, 'utf8').split('\n').filter(Boolean)) {
+      try { done.add((JSON.parse(line) as AboutResult).url); } catch { /* skip */ }
+    }
+  }
+
+  const queue = live
+    .filter((c) => {
+      const u = (c.facebook?.primaryLinkUrl ?? '').trim();
+      if (!u || /facebook\.com\/groups\//i.test(u)) return false;
+      if (done.has(u)) return false;
+      // Only rows that still need something.
+      return !(c.schoolPhone ?? '').trim() || !(c.principalContact ?? '').trim();
+    })
+    .slice(0, limit === Infinity ? undefined : limit);
+
+  console.log(`${queue.length} page(s) to visit (${done.size} already in the ledger)\n`);
+  if (!queue.length) { console.log('nothing to do.\n'); return; }
+
+  mkdirSync(DATA, { recursive: true });
+  const s = await createCdpSession(port, 'about:blank');
+  const results: AboutResult[] = [];
+  let stopped = '';
+
+  try {
+    for (const [i, c] of queue.entries()) {
+      const url = (c.facebook?.primaryLinkUrl ?? '').trim();
+      const r = await scrapeOne(s, c, url, delayMs);
+      appendFileSync(LEDGER, `${JSON.stringify(r)}\n`);
+      results.push(r);
+      const mark = r.ok ? (r.phones.length ? `☎${r.phones.length}` : r.emails.length ? 'mail' : ' —  ') : '✗';
+      console.log(`  ${String(i + 1).padStart(3)}/${queue.length} ${mark}  ${(c.name ?? '').slice(0, 44).padEnd(44)} ${r.why ?? ''}`);
+      if (r.why === 'CHECKPOINT' || r.why?.startsWith('login wall')) {
+        stopped = r.why;
+        break;
+      }
+      await sleep(jitter(delayMs));
+    }
+  } finally {
+    await s.close();
+  }
+
+  const withPhone = results.filter((r) => r.phones.length).length;
+  console.log(`\n═══ About-tab pass — ${results.length} page(s) visited ═══`);
+  console.log(`  ${withPhone} with a phone · ${results.filter((r) => r.emails.length).length} with an email`);
+  console.log(`  ${results.filter((r) => r.website).length} with a website · ${results.filter((r) => r.address).length} with an address`);
+  console.log(`  ${results.flatMap((r) => r.phones).filter((p) => p.whatsapp).length} number(s) evidenced as WhatsApp (a wa.me link or an Arabic label — never assumed)`);
+  console.log(`  ${results.filter((r) => !r.ok).length} page(s) yielded nothing`);
+  if (stopped) {
+    console.log(`\n  ⛔ STOPPED EARLY: ${stopped}`);
+    console.log(`     ${queue.length - results.length} page(s) not visited. Re-run to resume — the ledger skips what is done.`);
+  }
+  writeFileSync(`${DATA}/fb-about-latest.json`, JSON.stringify({ generatedAt: new Date().toISOString(), results }, null, 2));
+  console.log(`\n  → ${LEDGER} (append-only, resumable)`);
+  console.log('  Nothing written to Twenty. Load with sd-upsert.ts.\n');
+}
+
+main().catch((e) => {
+  console.error(e instanceof Error ? e.message : e);
+  process.exit(1);
+});
