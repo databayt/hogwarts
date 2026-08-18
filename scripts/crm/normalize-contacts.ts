@@ -48,6 +48,18 @@ const MARKETS: Record<string, { cc: string; mobile: RegExp; nsnLen: number[] }> 
   QA: { cc: '974', mobile: /^[35667]/, nsnLen: [8] },
   BH: { cc: '973', mobile: /^3/, nsnLen: [8] },
   KW: { cc: '965', mobile: /^[569]/, nsnLen: [8] },
+  OM: { cc: '968', mobile: /^[79]/, nsnLen: [8] },
+  /**
+   * Where the 2023 displacement went beyond the Gulf. A Sudanese school now
+   * operating in Kampala answers on +256, and without these markets that number
+   * is thrown away as "unrecognised country code" -- which reads in the report
+   * as a school with no phone rather than a school we declined to parse.
+   */
+  UG: { cc: '256', mobile: /^7/, nsnLen: [9] },
+  KE: { cc: '254', mobile: /^[71]/, nsnLen: [9] },
+  ET: { cc: '251', mobile: /^9/, nsnLen: [9] },
+  TD: { cc: '235', mobile: /^[69]/, nsnLen: [8] },
+  TR: { cc: '90', mobile: /^5/, nsnLen: [10] },
   // International school groups list a UK/US head office. Callable, never mobile here.
   GB: { cc: '44', mobile: /^7/, nsnLen: [10] },
 };

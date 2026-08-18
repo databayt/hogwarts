@@ -56,8 +56,14 @@ const txt = (s: string | null | undefined): string => (s ?? '').trim();
 const linkUrl = (l: Link | null | undefined): string => (l?.primaryLinkUrl ?? '').trim();
 
 /** Which calling code belongs to which country column. */
-const CC_OF: Record<string, string> = { SD: '249', SA: '966', AE: '971', EG: '20', QA: '974' };
-const COUNTRY_OF_CC: Record<string, string> = { '249': 'SD', '966': 'SA', '971': 'AE', '974': 'QA', '20': 'EG' };
+const CC_OF: Record<string, string> = {
+  SD: '249', SA: '966', AE: '971', EG: '20', QA: '974',
+  KW: '965', BH: '973', OM: '968', UG: '256', KE: '254', ET: '251', TD: '235', TR: '90',
+};
+const COUNTRY_OF_CC: Record<string, string> = {
+  '249': 'SD', '966': 'SA', '971': 'AE', '974': 'QA', '20': 'EG',
+  '965': 'KW', '973': 'BH', '968': 'OM', '256': 'UG', '254': 'KE', '251': 'ET', '235': 'TD', '90': 'TR',
+};
 
 /**
  * Read the calling code off an E.164 number by matching KNOWN codes, longest
@@ -69,7 +75,9 @@ const COUNTRY_OF_CC: Record<string, string> = { '249': 'SD', '966': 'SA', '971':
  * market, so the bug hid exactly the rows this job most wanted to find.
  */
 const ccOf = (e164: string): string | null =>
-  ['249', '966', '971', '974', '20'].find((cc) => e164.startsWith(`+${cc}`)) ?? null;
+  // Longest first: '20' must not shadow '249', and '90' must not shadow '968'.
+  ['249', '966', '971', '974', '965', '973', '968', '256', '254', '251', '235', '20', '90']
+    .find((cc) => e164.startsWith(`+${cc}`)) ?? null;
 
 /**
  * A country-coded TLD is the same kind of evidence as a calling code, and it
@@ -82,7 +90,8 @@ const ccOf = (e164: string): string | null =>
  */
 const TLD_COUNTRY: Record<string, string> = {
   au: 'AU', uk: 'GB', iq: 'IQ', qa: 'QA', sa: 'SA', ae: 'AE', eg: 'EG', sd: 'SD',
-  tr: 'TR', ke: 'KE', ug: 'UG', et: 'ET', us: 'US', ca: 'CA', de: 'DE', fr: 'FR',
+  kw: 'KW', bh: 'BH', om: 'OM', tr: 'TR', ke: 'KE', ug: 'UG', et: 'ET', td: 'TD',
+  us: 'US', ca: 'CA', de: 'DE', fr: 'FR',
 };
 
 /** The country a domain or email address implies, if any. */
