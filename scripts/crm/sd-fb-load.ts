@@ -46,6 +46,7 @@ interface Company {
   id: string; name?: string | null; country?: string | null;
   schoolPhone?: string | null; principalContact?: string | null;
   contactVerified?: boolean | null; enrichmentNotes?: string | null;
+  originCountry?: string | null;
   operationalStatus?: string | null; lastSeenAt?: string | null;
   domainName?: Link | null;
   address?: { addressStreet1?: string | null } | null;
@@ -56,6 +57,19 @@ const linkUrl = (l: Link | null | undefined): string => (l?.primaryLinkUrl ?? ''
 
 /** Which calling code belongs to which country column. */
 const CC_OF: Record<string, string> = { SD: '249', SA: '966', AE: '971', EG: '20', QA: '974' };
+const COUNTRY_OF_CC: Record<string, string> = { '249': 'SD', '966': 'SA', '971': 'AE', '974': 'QA', '20': 'EG' };
+
+/**
+ * Read the calling code off an E.164 number by matching KNOWN codes, longest
+ * first -- never by a greedy digit capture.
+ *
+ * `/^\+(\d{1,3})/` looks right and is not: on `+201156162267` it takes three
+ * digits and yields "201", so every Egyptian number failed the country lookup
+ * while the three-digit codes (966, 971) worked. Egypt is the largest diaspora
+ * market, so the bug hid exactly the rows this job most wanted to find.
+ */
+const ccOf = (e164: string): string | null =>
+  ['249', '966', '971', '974', '20'].find((cc) => e164.startsWith(`+${cc}`)) ?? null;
 
 /**
  * A country-coded TLD is the same kind of evidence as a calling code, and it
@@ -109,26 +123,72 @@ async function main(): Promise<void> {
     const offer = (field: string, liveVal: string, value: string | undefined, write: () => void, isContact = false): void => {
       if (!value) return;
       if (isContact && c.contactVerified) { bump(`skippedVerified.${field}`); return; }
+      // A note for this field means the situation was already adjudicated -- a
+      // conflict recorded, or a unique constraint that refused the write. This
+      // check must come BEFORE the empty test: a field that can never be written
+      // stays empty, so an empty-only guard re-plans it on every single run and
+      // the plan never reaches zero.
+      if ((c.enrichmentNotes ?? '').includes(`fb:${field}`)) { bump(`alreadyAdjudicated.${field}`); return; }
       if (!liveVal) { write(); bump(`filled.${field}`); return; }
       if (liveVal === value) { bump(`alreadyCorrect.${field}`); return; }
-      if ((c.enrichmentNotes ?? '').includes(`fb:${field}`)) { bump(`alreadyNoted.${field}`); return; }
       conflicts.push(`${today} fb:${field} — found "${value}", CRM has "${liveVal}", not overwritten`);
       bump(`conflict.${field}`);
     };
+
+    /**
+     * The country notes below are pushed outside `offer()`, so they need the
+     * same "already adjudicated" guard it applies -- without it the row is
+     * re-noted on every run and the plan never reaches zero. Same lesson as the
+     * OSM job: an idempotency check that cannot converge is one nobody can use.
+     */
+    const noted = (marker: string): boolean => (c.enrichmentNotes ?? '').includes(marker);
 
     // Prefer a mobile: only a mobile can be reached on WhatsApp.
     const phone = r.phones.find((p) => p.reach === 'MOBILE') ?? r.phones[0];
     if (phone) {
       const want = CC_OF[(c.country ?? '').toUpperCase()];
-      const got = /^\+(\d{1,3})/.exec(phone.e164)?.[1] ?? '';
+      const got = ccOf(phone.e164) ?? '';
       if (want && !phone.e164.startsWith(`+${want}`)) {
-        // Evidence that the row's country is wrong — surface it, do not write it.
-        conflicts.push(
-          `${today} fb:phone — the page publishes +${got}… but this row is filed as ${c.country}. ` +
-            `Not written: the country came from the search query, not the page. Re-file the row first.`
-        );
-        mismatched.push(`${r.name.slice(0, 40)} — ${phone.e164} vs country=${c.country}`);
-        bump('country mismatch — phone withheld');
+        /**
+         * A phone whose country contradicts the row is usually not an error --
+         * it is the diaspora, and it is the whole point of this exercise.
+         *
+         * "شركة الخرطوم للتعليم الخاص مدارس القبس", "أكاديمية الخرطوم للعلوم
+         * الإدارية", "Confluence International School of Khartoum" and
+         * "مدرسة الخرطوم العربية العالمية" all answer on Egyptian +20 numbers.
+         * They are Khartoum schools that moved to Cairo after April 2023 and
+         * kept their names. Withholding those numbers would discard precisely
+         * the reachable leads this whole job set out to find.
+         *
+         * So the phone re-files the row rather than being refused: the school
+         * keeps originCountry=SD (it is Sudanese) and gains the country it now
+         * operates in, which is what keeps phone normalisation and geography
+         * honest. The change is recorded, because it is an inference from one
+         * number and a human may want to check it.
+         *
+         * This applies only to rows already marked Sudanese. Anything else with
+         * a foreign number is a mis-tagged discovery, not a relocation, and is
+         * still refused below.
+         */
+        const refiled = COUNTRY_OF_CC[got];
+        if (noted('fb:country') || noted('fb:phone')) { bump('alreadyAdjudicated.country'); }
+        else if (refiled && txt(c.originCountry) === 'SD') {
+          patch.country = refiled;
+          patch.schoolPhone = phone.e164;
+          conflicts.push(
+            `${today} fb:country — the page answers on +${got}…, so this Sudanese school is operating in ` +
+              `${refiled}, not ${c.country}. Country re-filed from the page; originCountry stays SD.`
+          );
+          bump(`refiled to ${refiled} (diaspora)`);
+          bump('filled.phone');
+        } else {
+          conflicts.push(
+            `${today} fb:phone — the page publishes +${got}… but this row is filed as ${c.country}. ` +
+              `Not written: the country came from the search query, not the page. Re-file the row first.`
+          );
+          mismatched.push(`${r.name.slice(0, 40)} — ${phone.e164} vs country=${c.country}`);
+          bump('country mismatch — phone withheld');
+        }
       } else {
         offer('phone', txt(c.schoolPhone), phone.e164, () => { patch.schoolPhone = phone.e164; }, true);
       }
@@ -142,7 +202,9 @@ async function main(): Promise<void> {
     const implied = [email, site].filter(Boolean).map((x) => impliedCountry(x!)).find(Boolean) ?? null;
     const foreign = implied && rowCountry && implied !== rowCountry;
 
-    if (foreign) {
+    if (foreign && noted('fb:country')) {
+      bump('alreadyAdjudicated.domain');
+    } else if (foreign) {
       conflicts.push(
         `${today} fb:country — the page's own domain is .${implied.toLowerCase()} but this row is filed as ` +
           `${rowCountry}. Contact details withheld: the country came from the search query, not the page. ` +
@@ -198,10 +260,25 @@ async function main(): Promise<void> {
 
   let ok = 0;
   const fails: string[] = [];
+  let degraded = 0;
   for (const u of updates) {
     try { await rest('PATCH', `companies/${u.id}`, u.patch); ok++; }
-    catch (e) { fails.push(`${u.name}: ${e instanceof Error ? e.message : e}`); }
+    catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // domainName is UNIQUE and school groups legitimately share one website.
+      // Drop the contested field, keep everything else, and say why.
+      if (/duplicate entry/i.test(msg) && u.patch.domainName) {
+        const { domainName, ...rest2 } = u.patch;
+        const url = (domainName as { primaryLinkUrl?: string }).primaryLinkUrl ?? '';
+        rest2.enrichmentNotes = [String(rest2.enrichmentNotes ?? ''),
+          `${today} fb:website — "${url}" already belongs to another school (a group shares one site); not set here`]
+          .filter(Boolean).join('\n');
+        try { await rest('PATCH', `companies/${u.id}`, rest2); degraded++; }
+        catch (e2) { fails.push(`${u.name}: ${e2 instanceof Error ? e2.message : e2}`); }
+      } else fails.push(`${u.name}: ${msg}`);
+    }
   }
+  if (degraded) console.log(`  ${degraded} written without a contested unique field (noted, not lost)`);
   console.log(`\n  ${ok}/${updates.length} updated.`);
   for (const f of fails.slice(0, 10)) console.log(`    ! ${f}`);
   console.log('\n  Re-run without --apply: the plan must be 0.\n');
