@@ -35,7 +35,7 @@ description: PostgreSQL متعدّد المستأجرين مع Prisma — 302 ن
 | WhatsApp                                          |       5 | `whatsapp.prisma`                                                                                                                                                                                      |
 | الإعلانات                                         |       5 | `announcement.prisma`                                                                                                                                                                                  |
 | القبول                                            |      12 | `admission.prisma`, `visit.prisma`, `membership.prisma`, `promotion.prisma`                                                                                                                            |
-| Stream / LMS                                      |       8 | `stream.prisma`                                                                                                                                                                                        |
+| Lumos / LMS                                       |       8 | `stream.prisma`                                                                                                                                                                                        |
 | الجدول                                            |       9 | `timetable.prisma`, `schedule.prisma`                                                                                                                                                                  |
 | النقل                                             |       7 | `transportation.prisma`                                                                                                                                                                                |
 | المكتبة                                           |       4 | `book.prisma`, `school-book.prisma`, `textbook.prisma`                                                                                                                                                 |
@@ -98,7 +98,7 @@ await db.student.findMany()
 
 | النظام      | النطاق                             | النماذج                                                                                   | المصدر                |
 | ----------- | ---------------------------------- | ----------------------------------------------------------------------------------------- | --------------------- |
-| **Stream**  | بنطاق المدرسة (`schoolId`)         | `StreamCourse`, `StreamCategory`, `StreamEnrollment`, `StreamLesson`, `StreamCertificate` | مساقات تنشئها المدرسة |
+| **Lumos**   | بنطاق المدرسة (`schoolId`)         | `StreamCourse`, `StreamCategory`, `StreamEnrollment`, `StreamLesson`, `StreamCertificate` | مساقات تنشئها المدرسة |
 | **Catalog** | على مستوى المنصة (بدون `schoolId`) | `Subject`, `Chapter`, `Lesson`, `Material`, `Question`                                    | منتقى                 |
 
 نماذج `bridge.prisma` (`SubjectSelection`, `BookSelection`, `ContentOverride`, `InstructorPreference`) تربط محتوى الكتالوج بالبنية الأكاديمية الخاصة بالمدرسة. المدارس تختار المواد التي تستخدمها وتطبّق تجاوزات بدون لمس الأصول المشتركة.
@@ -272,10 +272,31 @@ ENTERPRISE_MAX_STUDENTS=2000
 
 ```bash
 pnpm prisma generate                       # إعادة توليد client
-pnpm prisma migrate dev --name <name>      # إنشاء + تطبيق ترحيل
-pnpm prisma migrate deploy                 # نشر إنتاج
+pnpm prisma migrate dev --name <name>      # محليًا فقط — إنشاء + تطبيق ترحيل
 pnpm db:seed:single <name>                 # seed وحدة — لا تستخدم pnpm db:seed
 ```
+
+> **`prisma migrate deploy` أداة خاطئة على الإنتاج، وهذه الصفحة كانت توصي بها.** تم التحقق في
+> 2026-08-18: قاعدة بيانات الإنتاج **لا تحتوي جدول `_prisma_migrations`** — فهي مُدارة عبر
+> `db push` — لذا سيحاول `migrate deploy` تطبيق كل الترحيلات الـ38 من الصفر فوق مخطط موجود
+> أصلًا. لا تشغّلها على الإنتاج.
+
+لتغيير مخطط الإنتاج، خذ الـ DDL من المقارنة وطبّق ما تقصده فقط:
+
+```bash
+# المجلد، وليس prisma/schema.prisma. ملف prisma.config.ts يحمّل النماذج من prisma/، لذا
+# الإشارة إلى ملف مصدر البيانات وحده تُنتج نموذجًا فارغًا — عندها تدّعي المقارنة حذف 719
+# مفتاحًا أجنبيًا و328 جدولًا. هذا أثر جانبي للأمر نفسه وليس انحرافًا حقيقيًا.
+pnpm prisma migrate diff --from-url "$PROD_DATABASE_URL" --to-schema-datamodel prisma --script
+```
+
+اقرأ ما يطبعه، وطبّق العبارات التي تقصدها فقط، ثم أعد تشغيل المقارنة للتأكد من أنها فارغة.
+إضافة عمود يقبل `null` بدون قيمة افتراضية تغييرٌ في الفهرس فقط في Postgres — فوري، بدون إعادة
+كتابة الجدول، وبدون المساس بالصفوف الموجودة.
+
+**الترتيب مهم: قاعدة البيانات تتغيّر قبل الكود الذي يتوقّعها.** بناء Vercel يشغّل
+`prisma generate` فقط (انظر `postinstall`) ولا يشغّل `migrate deploy` أبدًا، لذا أي حقل يُشحن
+قبل عموده يجعل كل استعلام على ذلك النموذج يفشل في الإنتاج.
 
 العمليات المدمّرة (`db execute`, `db push --accept-data-loss`, `migrate reset`, `DROP TABLE`, `TRUNCATE`) محظورة عبر hooks. استخدم بروتوكول **Branch-Before-Touch** على Neon للعمليات الخطرة.
 

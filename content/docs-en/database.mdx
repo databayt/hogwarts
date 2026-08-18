@@ -35,7 +35,7 @@ Hogwarts runs on a multi-tenant PostgreSQL database. All schools share the schem
 | WhatsApp                                        |      5 | `whatsapp.prisma`                                                                                                                                                                                      |
 | Announcements                                   |      5 | `announcement.prisma`                                                                                                                                                                                  |
 | Admission                                       |     12 | `admission.prisma`, `visit.prisma`, `membership.prisma`, `promotion.prisma`                                                                                                                            |
-| Stream / LMS                                    |      8 | `stream.prisma`                                                                                                                                                                                        |
+| Lumos / LMS                                     |      8 | `stream.prisma`                                                                                                                                                                                        |
 | Timetable                                       |      9 | `timetable.prisma`, `schedule.prisma`                                                                                                                                                                  |
 | Transportation                                  |      7 | `transportation.prisma`                                                                                                                                                                                |
 | Library                                         |      4 | `book.prisma`, `school-book.prisma`, `textbook.prisma`                                                                                                                                                 |
@@ -98,7 +98,7 @@ Two parallel content systems:
 
 | System      | Scope                         | Models                                                                                    | Source                 |
 | ----------- | ----------------------------- | ----------------------------------------------------------------------------------------- | ---------------------- |
-| **Stream**  | School-scoped (`schoolId`)    | `StreamCourse`, `StreamCategory`, `StreamEnrollment`, `StreamLesson`, `StreamCertificate` | School-created courses |
+| **Lumos**   | School-scoped (`schoolId`)    | `StreamCourse`, `StreamCategory`, `StreamEnrollment`, `StreamLesson`, `StreamCertificate` | School-created courses |
 | **Catalog** | Platform-wide (no `schoolId`) | `Subject`, `Chapter`, `Lesson`, `Material`, `Question`                                    | curated                |
 
 The `bridge.prisma` models (`SubjectSelection`, `BookSelection`, `ContentOverride`, `InstructorPreference`) connect catalog content to school-specific academic structure. Schools select which subjects they use and override content without touching shared originals.
@@ -233,7 +233,7 @@ const title = await getText("مرحبا", "ar", "ar", schoolId)
 
 ### Models with `lang`
 
-`Announcement`, `AnnouncementTemplate`, `NotificationTemplate`, `Subject`, `Class`, `YearLevel`, `Department`, `AcademicLevel`, `AcademicGrade`, `AcademicStream`, `AttendanceBadge`, `AttendanceCompetition`, `Chapter`, `Lesson`, `Book`, `Textbook`, `Material`, `CurriculumStandard`, `GradingScheme`, `QuickAssessment`, `Video`, `StreamCourse`, `StreamCategory`. Default `lang = "ar"` for school-content; `lang = "en"` for Stream/LMS.
+`Announcement`, `AnnouncementTemplate`, `NotificationTemplate`, `Subject`, `Class`, `YearLevel`, `Department`, `AcademicLevel`, `AcademicGrade`, `AcademicStream`, `AttendanceBadge`, `AttendanceCompetition`, `Chapter`, `Lesson`, `Book`, `Textbook`, `Material`, `CurriculumStandard`, `GradingScheme`, `QuickAssessment`, `Video`, `StreamCourse`, `StreamCategory`. Default `lang = "ar"` for school-content; `lang = "en"` for Lumos/LMS.
 
 See [Internationalization](/docs/internationalization) and [Translation](/docs/translation).
 
@@ -272,10 +272,32 @@ ENTERPRISE_MAX_STUDENTS=2000
 
 ```bash
 pnpm prisma generate                       # Regenerate client
-pnpm prisma migrate dev --name <name>      # Create + apply migration
-pnpm prisma migrate deploy                 # Production deploy
+pnpm prisma migrate dev --name <name>      # LOCAL only — creates + applies a migration
 pnpm db:seed:single <name>                 # Seed one module — never `pnpm db:seed`
 ```
+
+> **`prisma migrate deploy` is the wrong tool against production, and this page used to
+> recommend it.** Verified 2026-08-18: the production database has **no `_prisma_migrations`
+> table** — it is `db push`-managed — so `migrate deploy` would try to apply all 38 repo
+> migrations from scratch onto a schema that already exists. Do not run it against prod.
+
+To change the production schema, take the DDL from a diff and apply only what you meant:
+
+```bash
+# The FOLDER, not prisma/schema.prisma. prisma.config.ts loads models from prisma/, so
+# pointing at the lone datasource file yields an EMPTY datamodel — and the diff then claims
+# 719 dropped foreign keys and 328 dropped tables. That is an artifact of the argument, not
+# drift. Real drift is a couple of dozen lines.
+pnpm prisma migrate diff --from-url "$PROD_DATABASE_URL" --to-schema-datamodel prisma --script
+```
+
+Read what it prints, apply just the statements you intend, then re-run the diff to confirm it
+comes back empty. Adding a nullable column with no default is a catalog-only change in
+Postgres — instant, no table rewrite, existing rows untouched.
+
+**Order matters: the database changes before the code that expects it.** Vercel's build runs
+only `prisma generate` (see `postinstall`), never `migrate deploy`, so a schema field that
+ships ahead of its column makes every query on that model fail in production.
 
 Destructive ops (`db execute`, `db push --accept-data-loss`, `migrate reset`, `DROP TABLE`, `TRUNCATE`) are blocked by hooks. Use Neon's **Branch-Before-Touch** protocol for risky DB ops.
 
