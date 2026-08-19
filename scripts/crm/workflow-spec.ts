@@ -15,9 +15,21 @@
  *
  * `trigger` and `steps` are RAW_JSON columns marked `isUIEditable: false`, and
  * that flag turns out to be enforced server-side, not merely hidden in the UI.
- * The mutations that CAN write them — `createWorkflowVersionStep`,
- * `activateWorkflowVersion` — live on the core GraphQL schema, which an API key
- * does not reach; they need a logged-in user session.
+ *
+ * CORRECTION, 2026-08-19, after getting a signed-in session: the STEPS half IS
+ * automatable. `createWorkflowVersionStep` and `updateWorkflowVersionStep` are
+ * reachable with a user token — GraphQL introspection HIDES them (they do not
+ * appear under `__type(name:"Mutation")`, and their input types introspect as
+ * null) but they resolve when called. Both steps of this workflow were created
+ * and fully configured that way, with no UI clicks.
+ *
+ * The TRIGGER half is not. There is no trigger mutation anywhere: an
+ * `UpdateWorkflowVersionTriggerInput` DTO exists, but the only thing wired to it
+ * is an internal AI-agent tool, not a resolver. `updateWorkflowVersionStep` with
+ * the reserved id `trigger` answers "Step not found". So the trigger is created
+ * by a human picking a type in the workflow builder, and that menu did not
+ * respond to CDP clicks, synthetic pointer sequences, or direct invocation of
+ * its React onClick — so it is genuinely a hands-on-keyboard step.
  *
  * So a Twenty workflow at this version is built by a human in the UI. That is a
  * real constraint, not an oversight, and pretending otherwise would leave a
