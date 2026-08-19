@@ -72,9 +72,19 @@ export interface FieldDef {
 // The existing split of TRIAL from PILOT turns out to be better than a merged stage:
 // TRIAL is the self-serve sandbox, PILOT is the committed free 3-month engagement, and
 // the GTM ("free 3-month pilot converting to an annual contract") needs both.
+//
+// EXTENDED 2026-08-19 for the outbound slice. The brief's own ladder (New,
+// Researching, Shortlisted, Contacted, Engaged, Qualified, Demo, Won, Lost)
+// turned out to be almost entirely present already under other names — New is
+// COLD, Researching is PROSPECT, Engaged is WARM, Qualified is DISCOVERY, Won is
+// PAID. Only SHORTLISTED and CONTACTED were genuinely missing, so those two are
+// added and nothing is renamed. That keeps one field carrying the whole ladder
+// instead of splitting outreach state across `stage` and `leadStatus`.
 export const GATES = [
   'COLD',
   'PROSPECT',
+  'SHORTLISTED',
+  'CONTACTED',
   'WARM',
   'DISCOVERY',
   'DEMO',
@@ -86,12 +96,12 @@ export const GATES = [
 ] as const;
 export type Gate = (typeof GATES)[number];
 
-/** Live on `company.stage` as of 2026-08-18. NEVER remove one of these. */
+/** Live on `company.stage` as of 2026-08-19. NEVER remove one of these. */
 export const STAGE_OPTIONS_EXISTING = [
-  'COLD', 'PROSPECT', 'WARM', 'DISCOVERY', 'DEMO', 'TRIAL', 'PILOT', 'PAID', 'LOST',
+  'COLD', 'PROSPECT', 'WARM', 'DISCOVERY', 'DEMO', 'TRIAL', 'PILOT', 'PAID', 'DORMANT', 'LOST',
 ] as const;
 
-/** Exactly one option is genuinely new. Additive by construction. */
+/** Only what is genuinely new gets appended. Additive by construction. */
 export const STAGE_OPTIONS_TO_APPEND = GATES.filter(
   (g) => !STAGE_OPTIONS_EXISTING.includes(g as (typeof STAGE_OPTIONS_EXISTING)[number]),
 );
@@ -99,8 +109,10 @@ export const STAGE_OPTIONS_TO_APPEND = GATES.filter(
 /** What each gate means, so no session has to re-infer it from the option name. */
 export const GATE_MEANING: Record<Gate, string> = {
   COLD: 'never contacted — /scrape owns this, the funnel does not',
-  PROSPECT: 'tiered and worth working, but no reply yet',
-  WARM: 'replied — the funnel actually starts here',
+  PROSPECT: 'tiered and worth working, but not yet picked for a wave',
+  SHORTLISTED: 'a human chose this school for outreach — THE TRIGGER',
+  CONTACTED: 'the opening message has gone out; awaiting a reply',
+  WARM: 'they replied — the conversation actually starts here',
   DISCOVERY: 'the seven qualifying facts are known',
   DEMO: 'a proposal or consult has been shown',
   TRIAL: 'a self-serve sandbox is running in their own school name',
@@ -266,6 +278,27 @@ export const COMPANY_FUNNEL_FIELDS: FieldDef[] = [
     icon: 'IconDatabase',
     options: ['PAPER', 'EXCEL', 'COMPETITOR', 'NONE', 'UNKNOWN'],
     description: 'The switching cost, and the pain the first touch should name.',
+  },
+  {
+    name: 'outreachStatus',
+    label: 'Outreach status',
+    type: 'SELECT',
+    icon: 'IconSend',
+    options: ['NOT_STARTED', 'QUEUED', 'SENT', 'FAILED', 'OPTED_OUT'],
+    description:
+      'What happened to the message, which `stage` cannot express. QUEUED means the ' +
+      'request was accepted by the relay — NOT that a message reached anyone. Only a ' +
+      'human who actually sent it may set SENT. Claiming delivery we cannot observe is ' +
+      'how a funnel starts reporting success into a void.',
+  },
+  {
+    name: 'lastOutreachAt',
+    label: 'Last outreach',
+    type: 'DATE_TIME',
+    icon: 'IconClockHour4',
+    description:
+      'When we last reached out. Note `lastSeenAt` is NOT this — it means "last seen ' +
+      'active" and is a false friend that has already cost one investigation.',
   },
   {
     name: 'decisionAuthority',

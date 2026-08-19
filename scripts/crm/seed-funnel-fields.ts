@@ -25,6 +25,7 @@
 import { twentyClient } from './twenty-rest';
 import {
   FUNNEL_SCHEMA,
+  GATES,
   STAGE_OPTIONS_EXISTING,
   STAGE_OPTIONS_TO_APPEND,
   type FieldDef,
@@ -118,17 +119,34 @@ async function main() {
       findings.push(`company.stage is MISSING expected live option(s): ${lost.join(', ')} — investigate, do not auto-restore`);
     }
     const toAdd = STAGE_OPTIONS_TO_APPEND.filter((o) => !live.has(o));
+
+    // Positions carry no data — Twenty stores an option's VALUE on the record —
+    // so they can be rewritten freely to make the Kanban board read in ladder
+    // order. Appending alone would park SHORTLISTED and CONTACTED at the far
+    // right of the board, after LOST, which is exactly where nobody looks for
+    // the two stages they are supposed to work every day.
+    const ladderOrder = (v: string) => {
+      const i = (GATES as readonly string[]).indexOf(v);
+      return i === -1 ? GATES.length : i; // unknown values sort last, never dropped
+    };
+    const merged = [...(stage.options ?? []), ...toAdd.map((v, i) => toOption(v, i))]
+      .sort((a, b) => ladderOrder(a.value) - ladderOrder(b.value))
+      .map((o, i) => ({ ...o, position: i }));
+
+    const orderChanged =
+      JSON.stringify((stage.options ?? []).map((o) => o.value)) !==
+      JSON.stringify(merged.map((o) => o.value));
+
     console.log(`\ncompany.stage — live: ${[...live].join(', ') || '(none)'}`);
-    if (!toAdd.length) {
-      console.log('  = all funnel gates already present');
+    if (!toAdd.length && !orderChanged) {
+      console.log('  = all funnel gates present and in ladder order');
     } else {
-      console.log(`  + append: ${toAdd.join(', ')}  (${live.size} existing options preserved)`);
-      created += toAdd.length;
-      if (APPLY) {
-        const merged = [...(stage.options ?? [])];
-        toAdd.forEach((v, i) => merged.push(toOption(v, merged.length + i)));
-        await t.rest('PATCH', `metadata/fields/${stage.id}`, { options: merged });
+      if (toAdd.length) {
+        console.log(`  + append: ${toAdd.join(', ')}  (${live.size} existing options preserved)`);
+        created += toAdd.length;
       }
+      if (orderChanged) console.log(`  ~ reorder: ${merged.map((o) => o.value).join(' → ')}`);
+      if (APPLY) await t.rest('PATCH', `metadata/fields/${stage.id}`, { options: merged });
     }
   }
 
