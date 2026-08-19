@@ -286,14 +286,40 @@ async function main(): Promise<void> {
   if (!queue.length) { console.log('nothing to do.\n'); return; }
 
   mkdirSync(DATA, { recursive: true });
-  const s = await createCdpSession(port, 'about:blank');
+  let s = await createCdpSession(port, 'about:blank');
   const results: AboutResult[] = [];
   let stopped = '';
+  let reconnects = 0;
+
+  /**
+   * The CDP socket dies roughly every 170 pages -- Chrome drops the tab, the
+   * browser itself stays up. Twice now that has ended a long run outright, once
+   * here and once mid-discovery, each time costing the rest of the queue until
+   * somebody noticed and restarted it by hand.
+   *
+   * A dead socket says nothing about the page, so it is not a result: reopen a
+   * tab and retry the same page once. Only if the reconnect itself fails does
+   * the run stop.
+   */
+  const withSession = async (c: Company, url: string): Promise<AboutResult> => {
+    try {
+      return await scrapeOne(s, c, url, delayMs);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (!/socket is not open|CDP|WebSocket|Target closed/i.test(msg)) throw e;
+      reconnects++;
+      console.log(`    ↻ CDP socket dropped — reopening a tab (reconnect ${reconnects})`);
+      try { await s.close(); } catch { /* already gone */ }
+      await sleep(3000);
+      s = await createCdpSession(port, 'about:blank');
+      return await scrapeOne(s, c, url, delayMs);
+    }
+  };
 
   try {
     for (const [i, c] of queue.entries()) {
       const url = (c.facebook?.primaryLinkUrl ?? '').trim();
-      const r = await scrapeOne(s, c, url, delayMs);
+      const r = await withSession(c, url);
       // A network drop says nothing about this page, so it is not written to the
       // ledger at all — the page must still be retried on the next run.
       if (r.why !== 'NETWORK') appendFileSync(LEDGER, `${JSON.stringify(r)}\n`);
@@ -316,6 +342,7 @@ async function main(): Promise<void> {
   console.log(`  ${results.filter((r) => r.website).length} with a website · ${results.filter((r) => r.address).length} with an address`);
   console.log(`  ${results.flatMap((r) => r.phones).filter((p) => p.whatsapp).length} number(s) evidenced as WhatsApp (a wa.me link or an Arabic label — never assumed)`);
   console.log(`  ${results.filter((r) => !r.ok).length} page(s) yielded nothing`);
+  if (reconnects) console.log(`  ${reconnects} CDP socket drop(s) recovered without losing a page`);
   if (stopped) {
     console.log(`\n  ⛔ STOPPED EARLY: ${stopped}`);
     console.log(`     ${queue.length - results.length} page(s) not visited. Re-run to resume — the ledger skips what is done.`);
