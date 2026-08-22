@@ -23,19 +23,39 @@
  * null) but they resolve when called. Both steps of this workflow were created
  * and fully configured that way, with no UI clicks.
  *
- * The TRIGGER half is not. There is no trigger mutation anywhere: an
- * `UpdateWorkflowVersionTriggerInput` DTO exists, but the only thing wired to it
- * is an internal AI-agent tool, not a resolver. `updateWorkflowVersionStep` with
- * the reserved id `trigger` answers "Step not found". So the trigger is created
- * by a human picking a type in the workflow builder, and that menu did not
- * respond to CDP clicks, synthetic pointer sequences, or direct invocation of
- * its React onClick — so it is genuinely a hands-on-keyboard step.
+ * CORRECTION, 2026-08-22: the TRIGGER half is ALSO automatable, and the whole
+ * workflow was deployed + activated with zero UI clicks. The earlier claim
+ * ("no trigger mutation anywhere") was wrong: `updateWorkflowVersionTrigger`
+ * IS a resolver on WorkflowVersionStepResolver — it, like the step mutations,
+ * is introspection-masked, mounts on the WORKSPACE schema (`/graphql`), and
+ * resolves with a USER token (never an API key). The working sequence:
  *
- * So a Twenty workflow at this version is built by a human in the UI. That is a
- * real constraint, not an oversight, and pretending otherwise would leave a
- * script that silently no-ops. What remains version-controllable is the
- * definition below and the verifier — so the workflow can be rebuilt exactly
- * after a volume loss, and drift can be caught rather than discovered.
+ *   1. POST /metadata  getLoginTokenFromCredentials(email, password,
+ *      origin: "https://hogwarts.databayt.org")   ← origin picks the workspace;
+ *      credentials live in Keychain (`databayt-twenty-login`)
+ *   2. POST /metadata  getAuthTokensFromLoginToken(loginToken, origin)
+ *      → accessOrWorkspaceAgnosticToken (≈30 min TTL)
+ *   3. POST /graphql   createDraftFromWorkflowVersion({workflowId,
+ *      workflowVersionIdToCopy})   ← an ACTIVE version refuses trigger edits
+ *   4. POST /graphql   updateWorkflowVersionTrigger({workflowVersionId,
+ *      trigger})  — the trigger JSON MUST carry `nextStepIds: [<step-1 id>]`:
+ *      without it the run COMPLETES with every step NOT_STARTED, which reads
+ *      as success while doing nothing (measured, the hard way)
+ *   5. POST /graphql   activateWorkflowVersion(workflowVersionId)
+ *
+ * Filter shape that ran: settings.filter = { stepFilterGroups: [{id,
+ * logicalOperator:"AND"}], stepFilters: [{id, type, label, value (JSON-encoded),
+ * operand (UPPERCASE), displayValue, fieldMetadataId, stepOutputKey (full
+ * {{trigger.properties.…}} template), stepFilterGroupId,
+ * positionInStepFilterGroup}] }.
+ *
+ * Proven end-to-end 2026-08-22 on a throwaway company: trigger SUCCESS →
+ * HTTP step returned Hermes {"status":"delivered","target":"slack"} → record
+ * stamped CONTACTED/QUEUED → a re-flip with outreachStatus=QUEUED produced NO
+ * second run (the NOT_STARTED filter is the duplicate-send guard).
+ *
+ * The definition below and the verifier remain the canon — rebuild from here
+ * after a volume loss, and catch drift rather than discover it.
  *
  * ── Details taken from a live workflow, not inferred ────────────────────────
  *
