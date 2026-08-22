@@ -27,6 +27,7 @@ chatbot/
 ├── chat-window.tsx      # The panel: messages, quick-asks, CTA chips, input pill, mic
 ├── use-chatbot.ts       # Client state hook (messages, send, loading, error)
 ├── actions.ts           # "use server" — fetchSchoolData, resolveSystemPrompt, sendMessage
+├── capture.ts           # Funnel capture — deterministic identifier extraction → Prospect upsert
 ├── prompts.ts           # buildSaasMarketingPrompt / buildSchoolSitePrompt (data → prompt)
 ├── constant.ts          # Positions, sizes, DEFAULT_DICTIONARY fallback, pricing-nudge config
 ├── pricing-nudge.tsx    # One-shot proactive open on /pricing (30s, cooldown-gated)
@@ -60,6 +61,30 @@ chatbot/
 - **Generation params** (`actions.ts`): `temperature: 0.3` (factual, never invent
   prices) + `maxOutputTokens: 400` (2–3 sentences / short list) + history trimmed
   to the last 10 turns (the system prompt already carries the full context).
+
+## Capture + rate limit — the funnel surface (2026-08-22)
+
+`sendMessage` is a public, unauthenticated Server Action where every call costs a
+Groq request — so it now does two things before the model runs:
+
+- **Throttle.** `checkUserRateLimit` keyed on IP + truncated UA, two windows
+  (`RATE_LIMITS.CHATBOT` 12/min + `CHATBOT_HOURLY` 120/h). Distributed only when
+  `UPSTASH_REDIS_REST_URL` is configured; otherwise per-process counters — on
+  Vercel that means burst protection only, so getting `UPSTASH_*` into the prod
+  env is the real fix.
+- **Capture** (`capture.ts`). A parallel deterministic pass over the user's own
+  words: emails and phones (Arabic-Indic digits normalized, conservative E.164 —
+  a wrong number is worse than none) upsert a `Prospect` on the same synthetic
+  keys as the inbound forms (`inbound:<email>` / `inbound:wa:<e164>`), status
+  `replied`, with the last user turns in `notes`. It runs BEFORE the LLM call so
+  an identifier survives a Groq outage, never throws, and fires in
+  **`saasMarketing` mode only** — `schoolSite` visitors are the school's
+  prospective parents, not Databayt's sales pipeline, and they stay out of our CRM.
+- Sessions/transcripts are still NOT persisted — capture keeps identifiers, not
+  conversations. The `FunnelSession` design lives in kun's `/funnel` runbook §7.
+
+Tests: `src/tests/components/chatbot/capture.test.ts` (8 — extraction, E.164
+expansion, Arabic-Indic digits, the null-rather-than-guess cases).
 
 ## Input controls (UI)
 
@@ -95,8 +120,8 @@ files) — this block adds **zero** new violations.
 ## Known gaps / next
 
 - No `chatbot.mdx` docs page yet (user-facing — candidate for `content/docs-en/`).
-- No automated tests for the block (prompt assembly + mode selection would be
-  the highest-value units).
+- Automated tests cover capture only (`capture.test.ts`, 8 units); prompt
+  assembly + mode selection remain the highest-value untested paths.
 - Live visual QA still pending: a hogwarts dev server on :3000 was unavailable
   this session (port held by the reference codebase server).
 - Conversation is not persisted across reloads (`enablePersistence` is wired in
