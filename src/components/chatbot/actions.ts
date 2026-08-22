@@ -4,8 +4,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { createGroq } from "@ai-sdk/groq"
 import { CoreMessage, generateText } from "ai"
+import { headers } from "next/headers"
 
 import { db } from "@/lib/db"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+
+import { captureFromChat } from "./capture"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
@@ -216,6 +220,39 @@ export async function sendMessage(
   locale: string = "en"
 ) {
   try {
+    // Public, unauthenticated action → throttle before anything costs money.
+    // Key: IP + truncated UA (shared school networks stay fair; spoofing only
+    // buys friction). Two windows: burst and sustained.
+    const h = await headers()
+    const ip =
+      h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      h.get("x-real-ip") ||
+      "unknown"
+    const ua = (h.get("user-agent") ?? "").slice(0, 50)
+    const rlKey = `${ip}:${ua}`
+    const burst = await checkUserRateLimit(rlKey, RATE_LIMITS.CHATBOT, "chatbot")
+    const sustained = await checkUserRateLimit(
+      rlKey,
+      RATE_LIMITS.CHATBOT_HOURLY,
+      "chatbot-h"
+    )
+    if (!burst.allowed || !sustained.allowed) {
+      return {
+        success: false,
+        error:
+          locale === "ar"
+            ? "رسائل كثيرة خلال وقت قصير — انتظر قليلاً ثم حاول مجدداً."
+            : "Too many messages — please wait a moment and try again.",
+      }
+    }
+
+    // Capture runs BEFORE the model and never blocks it: if the visitor typed
+    // an email or phone, it persists even when the LLM call fails. SaaS mode
+    // only — schoolSite visitors are the school's parents, not our pipeline.
+    if (systemPromptType === "saasMarketing") {
+      await captureFromChat({ messages, locale })
+    }
+
     const apiKey = process.env.GROQ_API_KEY
 
     if (!apiKey) {

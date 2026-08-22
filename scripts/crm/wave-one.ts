@@ -29,6 +29,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { isMobile, openingMessage, waLink } from '../funnel/lib'
+
 const DECK_URL = 'https://balqalam.com/decks/balqalam.pdf'
 const WAVE_SIZE = 10
 
@@ -45,66 +47,8 @@ interface Row {
   contact: string
 }
 
-/**
- * Mobile detection per country. Deliberately conservative: anything not
- * recognisably mobile is dropped rather than guessed at.
- *
- *   SD  +249 9x ONLY        EG  +20 10/11/12/15
- *   SA  +966 5x             AE  +971 5x           QA  +974 3x/5x/6x/7x
- *
- * Sudan is the awkward one and worth explaining, because the first version of
- * this got it wrong. Sudanese mobiles run on 9x AND on some 1x prefixes, but
- * Khartoum landlines are also 1xx — 0183 is the Khartoum area code. There is no
- * way to separate them from the number alone, so accepting 1x put a school's
- * switchboard (+249 183 215 000) at the top of the wave. Only 9x is
- * unambiguously mobile; 1x is dropped as unknown. That loses a few real mobiles,
- * which is the cheaper mistake — a WhatsApp to a landline is never delivered and
- * reads back as a school that ignored us.
- */
-function isMobile(e164: string): boolean {
-  const n = e164.replace(/[^\d+]/g, '')
-  if (n.startsWith('+249')) return /^\+2499/.test(n)
-  if (n.startsWith('+20')) return /^\+20(10|11|12|15)/.test(n)
-  if (n.startsWith('+966')) return /^\+9665/.test(n)
-  if (n.startsWith('+971')) return /^\+9715/.test(n)
-  if (n.startsWith('+974')) return /^\+974[3567]/.test(n)
-  return false
-}
 
-/**
- * The opening message.
- *
- * Arabic only — every school in this wave is in SD/EG/SA/AE/QA and the deck is
- * Arabic, so an English opener would be the wrong first impression.
- *
- * Shape, and the reasoning behind it:
- *   - Who is speaking, immediately. A cold WhatsApp with no name is spam.
- *   - What it is, in one sentence, in the school's own vocabulary — admission,
- *     fees, parents, website — not "SaaS platform".
- *   - The offer, stated plainly and without conditions to read past.
- *   - ONE ask, and a small one. Not a demo, not a call — just a yes/no.
- *   - No urgency, no scarcity, no "quick question". Schools are institutions
- *     and respond badly to sales theatre.
- */
-export function openingMessage(schoolName: string): string {
-  return [
-    'السلام عليكم ورحمة الله وبركاته',
-    '',
-    `أكتب لكم بخصوص ${schoolName}.`,
-    '',
-    'معكم فريق داتابيت. طوّرنا منصة «بالقلم» لإدارة المدارس — القبول والتسجيل، الرسوم والفواتير والرواتب، التواصل مع أولياء الأمور، وموقع إلكتروني خاص بالمدرسة.',
-    '',
-    'أرفقنا لكم تعريفاً مختصراً.',
-    '',
-    'نتيح ثلاثة أشهر تجربة مجانية كاملة، بدون رسوم وبدون التزام.',
-    '',
-    'هل ترغبون أن نجهّز نسخة تجريبية باسم مدرستكم لتجربتها؟',
-  ].join('\n')
-}
 
-function waLink(e164: string, text: string): string {
-  return `https://wa.me/${e164.replace(/[^\d]/g, '')}?text=${encodeURIComponent(text)}`
-}
 
 function main() {
   const gapPath = join(process.cwd(), 'scripts/crm/.data/contact-gap.json')

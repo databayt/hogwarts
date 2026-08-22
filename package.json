@@ -54,7 +54,10 @@
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
     "test:e2e:prod": "TEST_ENV=production playwright test --project=production-chromium",
-    "test:e2e:prod:smoke": "TEST_ENV=production playwright test --project=production-smoke"
+    "test:e2e:prod:smoke": "TEST_ENV=production playwright test --project=production-smoke",
+    "crm:funnel-gates": "tsx scripts/funnel/gates.ts",
+    "crm:funnel-tick": "tsx scripts/funnel/tick.ts",
+    "crm:funnel-apply-inbox": "tsx scripts/funnel/apply-inbox.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.37",

@@ -77,6 +77,10 @@ export const RATE_LIMITS = {
   // Debug endpoints - very strict (only for DEVELOPER role)
   DEBUG: { windowMs: 60 * 1000, maxRequests: 20 }, // 20 requests per minute
 
+  // Public chatbot — every message is a paid Groq call, so burst + sustained
+  CHATBOT: { windowMs: 60 * 1000, maxRequests: 12 }, // 12 messages per minute
+  CHATBOT_HOURLY: { windowMs: 60 * 60 * 1000, maxRequests: 120 }, // 120 per hour
+
   // Public endpoints - moderate limits
   PUBLIC: { windowMs: 60 * 1000, maxRequests: 30 }, // 30 requests per minute
 
@@ -84,8 +88,13 @@ export const RATE_LIMITS = {
   GEO_LOCATION: { windowMs: 10 * 1000, maxRequests: 20 }, // 20 requests per 10 seconds
 
   // Stream endpoints - file upload/delete limits
-  STREAM_UPLOAD: { windowMs: 60 * 1000, maxRequests: 10 }, // 10 uploads per minute
-  STREAM_ENROLLMENT: { windowMs: 60 * 1000, maxRequests: 5 }, // 5 enrollments per minute
+  LUMOS_UPLOAD: { windowMs: 60 * 1000, maxRequests: 10 }, // 10 uploads per minute
+  LUMOS_ENROLLMENT: { windowMs: 60 * 1000, maxRequests: 5 }, // 5 enrollments per minute
+  // Protected-media URL minting. One lesson page mints a handful (default video
+  // + instructor switches + materials), and the player re-mints when a signed
+  // URL expires mid-session — generous enough for real viewing, tight enough
+  // that nobody enumerates the library through it.
+  LUMOS_MEDIA: { windowMs: 60 * 1000, maxRequests: 40 }, // 40 mints per minute
   STREAM_API: { windowMs: 60 * 1000, maxRequests: 60 }, // 60 requests per minute
 
   // Messaging endpoints - prevent spam
