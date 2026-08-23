@@ -80,11 +80,21 @@ Groq request — so it now does two things before the model runs:
   an identifier survives a Groq outage, never throws, and fires in
   **`saasMarketing` mode only** — `schoolSite` visitors are the school's
   prospective parents, not Databayt's sales pipeline, and they stay out of our CRM.
+- **Alert, create-only.** A NEW identifier emails `SALES_NOTIFY_EMAIL`
+  (fallback `hi@databayt.org`) with the conversation tail — the reply SLA
+  starts at capture, not when someone opens the CRM. `findUnique` before the
+  upsert gates it: every later turn re-upserts the same row, and without the
+  gate the founder gets one email per message and stops reading them. A mail
+  failure never blocks capture; capture never blocks the reply.
+- The normalizers live in `@/lib/funnel/identifiers` (ONE implementation,
+  shared with the inbox applier and the funnel scripts); this module
+  re-exports them.
 - Sessions/transcripts are still NOT persisted — capture keeps identifiers, not
   conversations. The `FunnelSession` design lives in kun's `/funnel` runbook §7.
 
-Tests: `src/tests/components/chatbot/capture.test.ts` (8 — extraction, E.164
-expansion, Arabic-Indic digits, the null-rather-than-guess cases).
+Tests: `src/tests/components/chatbot/capture.test.ts` (12 — extraction, E.164
+expansion, Arabic-Indic digits, null-rather-than-guess, and the four
+dedup/alert paths with mocked db + mail).
 
 ## Input controls (UI)
 
