@@ -21,48 +21,17 @@
  * starts in the widget and later lands on a form (or vice versa) stays ONE row.
  */
 import { db } from "@/lib/db"
+import { sendEmail } from "@/lib/email"
 
-/** Arabic-Indic (٠-٩) and Eastern Arabic-Indic (۰-۹) digits → ASCII. A naive
- * regex silently drops every phone number typed the way Sudanese (and Gulf)
- * users actually type them. */
-export function normalizeDigits(s: string): string {
-  return s
-    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
-}
+// Same target as the saas-marketing form notifier. The fallback only counts if
+// someone actually reads that box — set SALES_NOTIFY_EMAIL to a monitored
+// mailbox in prod. Trimmed: Vercel-pulled env values carry stray newlines.
+const SALES_INBOX = (process.env.SALES_NOTIFY_EMAIL ?? "hi@databayt.org").trim()
 
-const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/
-// 8+ digits with optional +/00 lead and common separators — then validated.
-const PHONE_RE = /(?:\+|00)?[\d][\d\s\-().]{7,18}\d/
+import { extractIdentifiers } from "@/lib/funnel/identifiers"
 
-/** Best-effort E.164 for the markets the funnel works (SD/EG/SA/AE/QA).
- * Returns null rather than guess — a wrong number is worse than none. */
-export function toE164(raw: string): string | null {
-  let n = normalizeDigits(raw).replace(/[^\d+]/g, "")
-  if (n.startsWith("00")) n = `+${n.slice(2)}`
-  if (!n.startsWith("+")) {
-    if (/^(249|20|966|971|974)\d{7,}$/.test(n)) n = `+${n}`
-    else if (/^09\d{8}$/.test(n)) n = `+249${n.slice(1)}` // Sudanese local mobile form
-    else if (/^05\d{8}$/.test(n)) n = `+966${n.slice(1)}` // Saudi local mobile form
-    else return null
-  }
-  return n.length >= 11 && n.length <= 16 ? n : null
-}
-
-export interface ChatIdentifiers {
-  email: string | null
-  phone: string | null
-}
-
-/** Scan free text for a self-given email / phone. Deterministic, zero tokens. */
-export function extractIdentifiers(text: string): ChatIdentifiers {
-  const normalized = normalizeDigits(text)
-  const email = normalized.match(EMAIL_RE)?.[0]?.toLowerCase() ?? null
-  let phone: string | null = null
-  const m = normalized.match(PHONE_RE)
-  if (m) phone = toE164(m[0])
-  return { email, phone }
-}
+// Re-exported so the unit tests and any existing consumers keep one import path.
+export { extractIdentifiers, normalizeDigits, toE164 } from "@/lib/funnel/identifiers"
 
 /**
  * Upsert the Prospect for identifiers a visitor typed into the chat.
@@ -92,6 +61,15 @@ export async function captureFromChat(args: {
     // The last few turns are the context a human needs to reply well.
     const tail = userTurns.slice(-4).join(" · ").slice(0, 600)
 
+    // Create-only alert dedup: every later message in the same conversation
+    // re-runs this scan and re-upserts the same row, so without this check the
+    // founder gets one email per chat turn from the same lead — and stops
+    // reading them. Notify exactly once, when the row is genuinely new.
+    const existing = await db.prospect.findUnique({
+      where: { gmapsPlaceId: key },
+      select: { id: true },
+    })
+
     await db.prospect.upsert({
       where: { gmapsPlaceId: key },
       create: {
@@ -115,6 +93,28 @@ export async function captureFromChat(args: {
         notes: `chatbot (${args.locale}): ${tail}`,
       },
     })
+
+    // A captured lead nobody hears about is a lead silently lost — the reply
+    // SLA starts now, not when someone happens to open the CRM. Isolated in
+    // its own try/catch: a mail failure must not fail the capture.
+    if (!existing) {
+      try {
+        await sendEmail({
+          to: SALES_INBOX,
+          subject: `🔥 chatbot lead: ${email ?? phone}`,
+          template: "sales-notify",
+          data: {
+            source: "chatbot",
+            locale: args.locale,
+            email: email ?? "—",
+            phone: phone ?? "—",
+            context: tail,
+          },
+        })
+      } catch (err) {
+        console.error("[chatbot] capture alert failed", err)
+      }
+    }
   } catch (err) {
     // Capture must never block a reply. Log and move on.
     console.error("[chatbot] capture failed", err)

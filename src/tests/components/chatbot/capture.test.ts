@@ -1,13 +1,21 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
+  captureFromChat,
   extractIdentifiers,
   normalizeDigits,
   toE164,
 } from "@/components/chatbot/capture"
+import { db } from "@/lib/db"
+import { sendEmail } from "@/lib/email"
+
+vi.mock("@/lib/db", () => ({
+  db: { prospect: { findUnique: vi.fn(), upsert: vi.fn() } },
+}))
+vi.mock("@/lib/email", () => ({ sendEmail: vi.fn() }))
 
 describe("normalizeDigits", () => {
   it("converts Arabic-Indic and Eastern Arabic-Indic digits", () => {
@@ -53,5 +61,49 @@ describe("extractIdentifiers", () => {
     const found = extractIdentifiers("كم سعر المنصة لمدرسة فيها ٢٠٠ طالب؟")
     expect(found.email).toBeNull()
     expect(found.phone).toBeNull()
+  })
+})
+
+describe("captureFromChat — create-only alert dedup", () => {
+  const msg = (text: string) => [{ role: "user", content: text }]
+  const findUnique = vi.mocked(db.prospect.findUnique)
+  const upsert = vi.mocked(db.prospect.upsert)
+  const mail = vi.mocked(sendEmail)
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    upsert.mockResolvedValue({} as never)
+    mail.mockResolvedValue({ success: true } as never)
+  })
+
+  it("notifies exactly once for a NEW lead", async () => {
+    findUnique.mockResolvedValue(null as never)
+    await captureFromChat({ messages: msg("رقمي ٠٩١٢٣٠٣٨٦٥"), locale: "ar" })
+    expect(upsert).toHaveBeenCalledTimes(1)
+    expect(mail).toHaveBeenCalledTimes(1)
+    expect(mail.mock.calls[0][0].subject).toContain("+249912303865")
+  })
+
+  it("does NOT notify again when the lead already exists", async () => {
+    findUnique.mockResolvedValue({ id: "p1" } as never)
+    await captureFromChat({ messages: msg("call +249912303865"), locale: "en" })
+    expect(upsert).toHaveBeenCalledTimes(1) // context still lands on the row
+    expect(mail).not.toHaveBeenCalled()
+  })
+
+  it("touches nothing when no identifier is present", async () => {
+    await captureFromChat({ messages: msg("كم السعر؟"), locale: "ar" })
+    expect(findUnique).not.toHaveBeenCalled()
+    expect(upsert).not.toHaveBeenCalled()
+    expect(mail).not.toHaveBeenCalled()
+  })
+
+  it("survives a mail failure — capture never throws", async () => {
+    findUnique.mockResolvedValue(null as never)
+    mail.mockRejectedValue(new Error("resend down"))
+    await expect(
+      captureFromChat({ messages: msg("info@school.sd"), locale: "en" })
+    ).resolves.toBeUndefined()
+    expect(upsert).toHaveBeenCalledTimes(1)
   })
 })

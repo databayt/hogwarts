@@ -120,6 +120,10 @@
     {
       "path": "/api/cron/translation-sweep",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/funnel-apply",
+      "schedule": "17 * * * *"
     }
   ]
 }

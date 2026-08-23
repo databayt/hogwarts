@@ -47,38 +47,10 @@ export function dbHostTag(url: string | undefined): string {
 
 // ── Phone + rail ─────────────────────────────────────────────────────────────
 
-/** Arabic-Indic (٠-٩) and Eastern Arabic-Indic (۰-۹) digits → ASCII. A naive
- * regex silently drops every Sudanese number written the way Sudanese people
- * actually write numbers. */
-export function normalizeDigits(s: string): string {
-  return s
-    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
-}
-
-const CC: Record<string, string> = { SD: '249', EG: '20', SA: '966', AE: '971', QA: '974' };
-
-/**
- * Best-effort E.164. Returns null rather than guess: a wrong number in a
- * WhatsApp campaign is worse than a dropped one.
- *   "+249 91 230 3865" → +249912303865
- *   "00966557411272"   → +966557411272
- *   "0912303865" + SD  → +249912303865   (local form needs the country)
- */
-export function toE164(raw: string | null | undefined, country?: string | null): string | null {
-  if (!raw) return null;
-  let n = normalizeDigits(raw).replace(/[^\d+]/g, '');
-  if (!n) return null;
-  if (n.startsWith('00')) n = `+${n.slice(2)}`;
-  if (!n.startsWith('+')) {
-    const cc = CC[(country ?? '').toUpperCase()];
-    if (n.startsWith('0') && cc) n = `+${cc}${n.slice(1)}`;
-    else if (cc && n.length >= 8 && n.length <= 10) n = `+${cc}${n}`;
-    else if (/^(249|20|966|971|974)\d{7,}$/.test(n)) n = `+${n}`;
-    else return null;
-  }
-  return n.length >= 11 && n.length <= 16 ? n : null;
-}
+// Identifier normalization is canonical in src — ONE implementation for the
+// chatbot capture, the applier core, and these scripts. Re-exported so every
+// funnel script keeps importing from './lib'.
+export { normalizeDigits, toE164, emailOf, extractIdentifiers } from '@/lib/funnel/identifiers';
 
 /**
  * Mobile detection per country. Deliberately conservative: anything not
@@ -116,12 +88,6 @@ export function railOf(country: string | null | undefined, e164: string | null):
     return 'gulf';
   return 'other';
 }
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-export const emailOf = (raw: string | null | undefined): string | null => {
-  const v = (raw ?? '').trim().toLowerCase();
-  return EMAIL_RE.test(v) ? v : null;
-};
 
 // ── The opening message (moved verbatim from wave-one.ts) ────────────────────
 
