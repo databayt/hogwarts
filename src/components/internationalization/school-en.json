@@ -11839,7 +11839,7 @@
         "done": "Done",
         "saveFailed": "Could not save the template.",
         "noTagsTitle": "No tags found in this file",
-        "noTagsBody": "It will be saved, but filling it returns an unchanged copy. Add tags like {{examTitle}} in Word, or start from our file below.",
+        "noTagsBody": "It will be saved, but filling it returns an unchanged copy. Add tags in Word — for example:",
         "starterHint": "New to this? Start from a .docx that already has the right tags.",
         "brokenTitle": "This template's tags don't match up",
         "brokenBody": "It was not saved. A section that is opened but never closed (or closed but never opened) stops the whole file from filling. Fix it in Word and upload again, or start from our file below.",
@@ -11848,7 +11848,7 @@
         "unknownTag": "not supported — fills blank",
         "unknownBody": "The marked tags are not in this category's field list, so they fill blank. Check their spelling against the available fields.",
         "singleBraceTitle": "Single-brace sections will not repeat",
-        "singleBraceBody": "These print into the document as plain text and their contents are dropped. Use double braces instead — {{#questions}} … {{/questions}}."
+        "singleBraceBody": "These print into the document as plain text and their contents are dropped. Use double braces instead:"
       },
       "useDialog": {
         "title": "Use this template",

@@ -185,7 +185,15 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
                   <AlertTriangle className="size-4" />
                   {d?.noTagsTitle}
                 </p>
-                <p className="text-muted-foreground text-xs">{d?.noTagsBody}</p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.noTagsBody}{" "}
+                  {/* dir=ltr: braces are bidi-NEUTRAL, so inside Arabic prose
+                      `{{examTitle}}` reorders and a school types back what it
+                      saw — the exact failure this dialog is here to prevent. */}
+                  <code dir="ltr" className="inline-block">
+                    {"{{examTitle}}"}
+                  </code>
+                </p>
                 {hasStarter && (
                   <StarterButton category={category} variant="outline" />
                 )}
@@ -202,7 +210,10 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
                   {d?.singleBraceTitle}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {d?.singleBraceBody}
+                  {d?.singleBraceBody}{" "}
+                  <code dir="ltr" className="inline-block">
+                    {"{{#questions}} … {{/questions}}"}
+                  </code>
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {stored.singleBraceMarkers.map((m) => (
