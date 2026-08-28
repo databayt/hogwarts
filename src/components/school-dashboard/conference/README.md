@@ -4,8 +4,9 @@ Video conferencing for schools — one self-contained block mirrored 1:1 to the 
 Three meeting back-ends behind a single UI:
 
 - **External pasted-link** — live everywhere, zero infra (the default every school gets).
-- **LiveKit SFU** — in-app rooms + recording, fully coded but **dormant** until infra is provisioned
-  (see `RUNBOOK.md`, gated by `isLiveKitConfigured()`).
+- **LiveKit SFU** — in-app rooms, gated by `isLiveKitConfigured()`. Four env vars away from live;
+  `RUNBOOK.md` has the LiveKit Cloud quick path and the Aldar self-host sequence. Recording is a
+  SEPARATE gate (`isRecordingConfigured()`) — rooms no longer wait on an S3 bucket.
 - **Native Meet / Zoom / Teams** — `createMeeting` wired through each vendor API, but **dark** until
   OAuth credentials land (gated by each adapter's `isConfigured()`).
 
@@ -94,6 +95,7 @@ reached from a row, not a tab.
 | `/api/cron/live-class-reminders`   | GET    | Materializes today's online-school slots, then dispatches 5–20-min start reminders (every 15 min, idempotent) |
 | `/api/cron/end-stale-live-classes` | GET    | Close sessions stuck `live` past end + attendance sync; cancel never-started `scheduled` rows (every 30 min)  |
 | `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500)                                                                   |
+| `/api/mobile/conference/[id]/join` | GET    | Mobile join ticket — same `join-core` eligibility as the web, JWT actor instead of a session cookie           |
 
 ## Status
 
@@ -122,7 +124,13 @@ reached from a row, not a tab.
 | Notifications → hub (in-app + email)                   | ✅ live (+ school-wide fan-out)              |
 | Attendance-from-presence (opt-in)                      | ✅ live (DB applied); VIRTUAL visible in UI  |
 | Native Meet/Zoom/Teams `createMeeting`                 | 🟡 wired, dark until OAuth creds             |
-| LiveKit SFU rooms + Egress recording                   | 🟡 coded, dormant until infra                |
+| LiveKit SFU rooms                                      | ✅ coded; 4 env vars from live (RUNBOOK)     |
+| Egress recording                                       | 🟡 separate gate — needs a bucket + creds    |
+| Cron bridge (materialization + reminders)              | ✅ GitHub Actions (Vercel crons are off)     |
+| Join on every Today row (student/teacher/guardian)     | ✅ live                                      |
+| Parent-portal "Today" strip with Join                  | ✅ live                                      |
+| Mobile: `live_class` on timetable + join endpoint      | ✅ live                                      |
+| Attendance: minimum-presence floor                     | ✅ live (5 min)                              |
 | Capacity dashboard (`/observability/conference`)       | ✅ live (DEVELOPER-only)                     |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any
@@ -162,6 +170,26 @@ that the above builds on — sessions materialized one school day at a time by
 the reminders cron, provider degrading to external until the SFU is
 provisioned. See `ISSUE.md` for what both passes deliberately leave open
 (in-room strings, no-show attendance policy).
+
+Production pass 2026-08-28: the two things that actually stood between this block and a student
+joining a class, neither of them the six RUNBOOK gates.
+
+**The prod database was missing the online-school columns.** `ConferenceOnlineMode` and 7 `schools`
+columns + `sections.liveClassOnline` were added to the Prisma models on 2026-08-14 with **no
+migration file**, so production ran for two weeks with a client expecting columns the database did
+not have — every `materializeSchoolDay` would have thrown P2022, silently, every 15 minutes.
+`periods.isBreak` was missing too, which the materialization sweep filters on. Applied additively and
+written up as `prisma/migrations/20260828000000_conference_online_school/`.
+
+**Every Vercel cron is off** (`"crons": []`, free-plan bridge — see `DEPLOYMENT.md`), and
+`live-class-reminders` is the only caller of `materializeOnlineSchools()`. An online school therefore
+materialized nothing after the day it saved its settings. Restored via
+`.github/workflows/conference-crons.yml`.
+
+Also: recording no longer gates rooms; `createLiveClass` gained the server-side provider check the
+wizard only had client-side; notifications for a _started_ class link straight to the room; and
+notification URLs are stored relative — they were being stored as `{subdomain}.databayt.org`, a host
+that does not serve this app for any school on `balqalam.com`.
 
 Production-readiness pass 2026-08-12: school-timezone schedule storage, GET
 token-refresh route, list-layer status-transition guard, attendance-sync

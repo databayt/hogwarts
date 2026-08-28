@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import {
   getLiveKitReadiness,
   isLiveKitConfigured,
+  isRecordingConfigured,
 } from "@/components/school-dashboard/conference/livekit/client"
 
 const ENV = [
@@ -43,13 +44,30 @@ describe("getLiveKitReadiness", () => {
         "LIVEKIT_WS_URL",
         "LIVEKIT_API_KEY",
         "LIVEKIT_API_SECRET",
-        "LIVEKIT_RECORDING_BUCKET",
       ])
     )
+    // The recording bucket is NOT a room prerequisite — it reports on its own.
+    expect(r.missing).not.toContain("LIVEKIT_RECORDING_BUCKET")
+    expect(r.recordingMissing).toEqual(["LIVEKIT_RECORDING_BUCKET"])
     expect(isLiveKitConfigured()).toBe(false)
+    expect(isRecordingConfigured()).toBe(false)
   })
 
-  it("configured once all required vars are set; S3 creds tracked separately", () => {
+  it("rooms are usable with no recording bucket at all", () => {
+    process.env.LIVEKIT_HOST = "https://lk.test"
+    process.env.LIVEKIT_WS_URL = "wss://lk.test"
+    process.env.LIVEKIT_API_KEY = "key"
+    process.env.LIVEKIT_API_SECRET = "secret-long-enough-for-hs256-signing"
+    const r = getLiveKitReadiness()
+    expect(r.configured).toBe(true)
+    expect(r.missing).toEqual([])
+    expect(isLiveKitConfigured()).toBe(true)
+    // ...and recording stays off, independently, without blocking the room.
+    expect(r.recordingConfigured).toBe(false)
+    expect(isRecordingConfigured()).toBe(false)
+  })
+
+  it("recording turns on separately once a bucket is set; creds tracked apart", () => {
     process.env.LIVEKIT_HOST = "https://lk.test"
     process.env.LIVEKIT_WS_URL = "wss://lk.test"
     process.env.LIVEKIT_API_KEY = "key"
@@ -58,10 +76,13 @@ describe("getLiveKitReadiness", () => {
     const r = getLiveKitReadiness()
     expect(r.configured).toBe(true)
     expect(r.missing).toEqual([])
-    expect(r.recordingMissing).toEqual([
+    expect(r.recordingConfigured).toBe(true)
+    expect(r.recordingMissing).toEqual([])
+    expect(r.recordingCredsMissing).toEqual([
       "LIVEKIT_S3_ACCESS_KEY",
       "LIVEKIT_S3_SECRET",
     ])
     expect(isLiveKitConfigured()).toBe(true)
+    expect(isRecordingConfigured()).toBe(true)
   })
 })

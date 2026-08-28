@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   getEgressClient,
-  getLiveKitConfig,
+  getLiveKitRecordingConfig,
 } from "@/components/school-dashboard/conference/livekit/client"
 import {
   startCompositeEgress,
@@ -15,7 +15,7 @@ import {
 
 vi.mock("@/components/school-dashboard/conference/livekit/client", () => ({
   getEgressClient: vi.fn(),
-  getLiveKitConfig: vi.fn(),
+  getLiveKitRecordingConfig: vi.fn(),
 }))
 
 const startRoomCompositeEgress = vi.fn()
@@ -23,7 +23,7 @@ const stopEgressFn = vi.fn()
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(getLiveKitConfig).mockReturnValue({
+  vi.mocked(getLiveKitRecordingConfig).mockReturnValue({
     recordingRegion: "me-central-1",
     recordingBucket: "rec-bucket",
   } as never)

@@ -109,18 +109,50 @@ export type JoinResult =
  * starts anything — by refresh time the room is already live, and a GET must
  * not carry start-a-room side effects.
  */
+/**
+ * Who is joining. The web lanes leave this off and it comes from the NextAuth
+ * session + subdomain tenant context; the mobile lane passes it explicitly
+ * because a phone authenticates with a Bearer JWT and has no cookie or host to
+ * resolve a tenant from.
+ *
+ * Passing an actor bypasses only IDENTITY resolution. Everything downstream —
+ * enrollment, visibility, removed-participant checks, session state, the
+ * concurrent-room cap, the grants baked into the token — is unchanged and runs
+ * exactly once, here, for every caller. That is the point: mobile must not grow
+ * a second eligibility path that can drift from the web one.
+ */
+export type JoinActor = {
+  userId: string
+  role: UserRole
+  schoolId: string
+}
+
 export async function performLiveClassJoin(
   sessionId: string,
-  { allowAutoStart = true }: { allowAutoStart?: boolean } = {}
+  {
+    allowAutoStart = true,
+    actor,
+  }: { allowAutoStart?: boolean; actor?: JoinActor } = {}
 ): Promise<JoinResult> {
-  const session = await auth()
-  const userId = session?.user?.id
-  const role = session?.user?.role as UserRole | undefined
-  if (!userId || !role) {
-    return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+  let userId: string
+  let role: UserRole
+  let schoolId: string
+
+  if (actor) {
+    ;({ userId, role, schoolId } = actor)
+  } else {
+    const session = await auth()
+    const sessionUserId = session?.user?.id
+    const sessionRole = session?.user?.role as UserRole | undefined
+    if (!sessionUserId || !sessionRole) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+    const tenant = await getTenantContext()
+    if (!tenant.schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    userId = sessionUserId
+    role = sessionRole
+    schoolId = tenant.schoolId
   }
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
   // Fetch the session, the joining user (display name), and any existing
   // participant row concurrently — all keyed only by ids known here.

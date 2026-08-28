@@ -54,8 +54,8 @@ function happySession() {
     { id: "sC", userId: "uC" },
   ])
   mockDb.conferenceParticipant.findMany.mockResolvedValue([
-    { userId: "uA", joinedAt: ON_TIME },
-    { userId: "uB", joinedAt: LATE },
+    { userId: "uA", joinedAt: ON_TIME, leftAt: null },
+    { userId: "uB", joinedAt: LATE, leftAt: null },
     // uC never joined → no row
   ])
   mockDb.attendance.findMany.mockResolvedValue([])
@@ -161,6 +161,32 @@ describe("syncConferenceAttendance", () => {
     }
     expect(byStudent.sA.checkInTime).toEqual(ON_TIME)
     expect(byStudent.sC.checkInTime).toBeNull()
+  })
+
+  it("marks a drive-by join ABSENT — presence needs a duration, not a ping", async () => {
+    happySession()
+    // uA connects and drops after 30 seconds. Before the floor existed this
+    // scored identically to sitting the whole lesson.
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([
+      {
+        userId: "uA",
+        joinedAt: ON_TIME,
+        leftAt: new Date(ON_TIME.getTime() + 30_000),
+      },
+      { userId: "uB", joinedAt: LATE, leftAt: null },
+    ])
+
+    await syncConferenceAttendance("school1", "c1")
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    const byStudent = Object.fromEntries(rows.map((r) => [r.studentId, r]))
+    expect(byStudent.sA.status).toBe("ABSENT")
+    expect(byStudent.sA.checkInTime).toBeNull()
+    // uB never recorded a leave, so it counts to the session end and still
+    // registers — the student who stayed must not be punished for the webhook
+    // ordering that leaves `leftAt` unset.
+    expect(byStudent.sB.status).toBe("LATE")
   })
 
   it("updates + revives an existing row instead of duplicating (idempotent)", async () => {

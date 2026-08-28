@@ -9,6 +9,7 @@ import { ar, enUS } from "date-fns/locale"
 import { motion } from "framer-motion"
 import { Check, Loader2, X } from "lucide-react"
 
+import { getRootDomain } from "@/lib/root-domain"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -114,14 +115,24 @@ export function NotificationCard({
     }
   }
 
-  // Stored action URLs are absolute (dispatch resolves them against the
-  // school's canonical host for email buttons). For in-app clicks, rebase
-  // same-host URLs onto the current locale so navigation stays client-side
-  // and language-correct; keep genuinely foreign hosts as full navigations.
+  // Action URLs are stored RELATIVE now, so the common path is a plain
+  // client-side push onto the current locale.
+  //
+  // Rows written before that change carry an absolute URL that dispatch built as
+  // `{subdomain}.databayt.org` by hand — which is the wrong host for every school
+  // on balqalam.com, and a host that does not serve this app at all. A bare
+  // `target.host !== window.location.host` check sent those clicks off the app
+  // with `location.assign`. So any host under one of OUR root domains is treated
+  // as internal and reduced to its path: same destination, same tenant, on the
+  // host the reader is already on. Only a genuinely third-party link (a payment
+  // provider, a vendor meeting URL) still leaves.
   const navigateToTarget = (raw: string) => {
     try {
       const target = new URL(raw, window.location.origin)
-      if (target.host !== window.location.host) {
+      const isOurs =
+        target.host === window.location.host ||
+        getRootDomain(target.host) !== null
+      if (!isOurs) {
         window.location.assign(target.href)
         return
       }

@@ -1,12 +1,12 @@
 ---
 title: Conference
-description: Video conferencing — one self-contained block at src/components/school-dashboard/conference, mirrored 1:1 to the /conference route. External pasted-link is live; LiveKit SFU is coded-but-dormant; native Meet/Zoom/Teams adapters are wired but dark.
+description: Video conferencing — one self-contained block at src/components/school-dashboard/conference, mirrored 1:1 to the /conference route. External pasted-link is live; the LiveKit SFU is four env vars from live (recording is a separate gate); native Meet/Zoom/Teams adapters are wired but dark.
 ---
 
 One self-contained block at `src/components/school-dashboard/conference/`, mirrored 1:1 to the
 `/conference` route. It runs three meeting back-ends behind a single UI: the **external
 pasted-link** provider is live everywhere; the **LiveKit SFU** (in-app rooms + recording) is fully
-coded but dormant until infra is provisioned; the **native Meet / Zoom / Teams** adapters create
+coded and gated only on four `LIVEKIT_*` env vars — see RUNBOOK.md for the LiveKit Cloud quick path; recording is a separate gate and no longer blocks a room; the **native Meet / Zoom / Teams** adapters create
 real meetings via each vendor's API but ship dark until OAuth credentials land.
 
 ## Structure
@@ -310,6 +310,41 @@ left to be discovered from an empty register.
 | Recording                   | ⛔ vendor-side only | ✅ Egress → S3, per-school retention |
 | Attendance from presence    | ⛔ no presence data | ✅ opt-in                            |
 | In-room moderation (kick)   | ⛔                  | ✅                                   |
+
+## How a student joins
+
+Five surfaces reach a live class, and they differ in how tightly they gate on time:
+
+| Surface                                                 | Gate                                                                                              |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Timetable **Today** rows (student · teacher · guardian) | in progress, or starting within 10 min (`isRowLiveJoinable`)                                      |
+| Timetable **Current/Next** card                         | the current class, or the next within 10 min (`isLiveJoinable`)                                   |
+| `/conference` landing "now" strip                       | live now + upcoming, section-scoped                                                               |
+| `/conference/dashboard` table                           | any `live` or `scheduled` row the viewer can see                                                  |
+| **Parent portal** → child → Timetable                   | a "Today" strip above the weekly table                                                            |
+| Notification                                            | `started` links straight to the room; the rest to the session detail                              |
+| **Mobile**                                              | `live_class` on `/api/mobile/timetable/:userId`, joined via `GET /api/mobile/conference/:id/join` |
+
+The timetable weekly grid deliberately shows only a live dot — awareness, not a Join affordance.
+
+A LiveKit session opens the in-app room at `/conference/[id]/room`; an external session opens its
+vendor URL directly. The room route redirects external sessions after the enrollment-gated read, so
+either provider works from every surface above.
+
+**Only the `started` notification deep-links to the room.** `startingSoon` fires 5–20 minutes before
+the class, and a non-HOST joining a still-`scheduled` session is refused — an early room link would
+land a student on an error rather than a waiting room.
+
+## Operating it
+
+- **The SFU**: four env vars (`LIVEKIT_HOST`, `LIVEKIT_WS_URL`, `LIVEKIT_API_KEY`,
+  `LIVEKIT_API_SECRET`). Recording is a separate gate (`LIVEKIT_RECORDING_BUCKET` plus S3
+  credentials) and no longer blocks holding a call. `/conference/network-test` reports both.
+- **A configured SFU does nothing on its own** — `School.conferenceProviderDefault` is `external`
+  until a school opts in on `/conference/settings`.
+- **The materialization sweep runs on GitHub Actions**, not Vercel Cron, while the project is on the
+  free plan (`.github/workflows/conference-crons.yml`). Without it an online school materializes no
+  sessions after the day it saved its settings — nothing to join, and no reminders.
 
 ## Providers
 

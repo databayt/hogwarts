@@ -38,6 +38,7 @@ import { TimetableGridSkeleton } from "./grid-skeleton"
 import {
   ClosureNotice,
   isLiveJoinable,
+  isRowLiveJoinable,
   LiveJoinButton,
   OnlineBadge,
   type SchoolClosureInfo,
@@ -510,6 +511,42 @@ export default function TeacherView({
                     {item.isBreak && (
                       <Badge variant="secondary">{tv?.break ?? "Break"}</Badge>
                     )}
+                    {/* Join — or Start, when no session exists yet — on every
+                        row of the day, mirroring the Current/Next card above.
+                        With the crons bridged rather than native, a teacher
+                        pressing Start is what brings a class online for a school
+                        that has not turned on the online-school policy at all. */}
+                    {!item.isBreak &&
+                      isRowLiveJoinable(item.startTime, item.endTime) &&
+                      (item.liveClass ? (
+                        <LiveJoinButton
+                          liveClass={item.liveClass}
+                          lang={lang}
+                          label={
+                            dictionary?.liveClasses?.join ??
+                            (isRTL ? "انضمام" : "Join")
+                          }
+                        />
+                      ) : item.timetableId ? (
+                        <StartLiveClassButton
+                          timetableId={item.timetableId}
+                          lang={lang}
+                          label={
+                            dictionary?.liveClasses?.start ??
+                            (isRTL ? "بدء البث المباشر" : "Start live class")
+                          }
+                          startingLabel={
+                            dictionary?.liveClasses?.starting ??
+                            (isRTL ? "جارٍ البدء…" : "Starting…")
+                          }
+                          errorLabel={
+                            dictionary?.liveClasses?.startError ??
+                            (isRTL
+                              ? "تعذّر بدء البث المباشر"
+                              : "Couldn't start the live class")
+                          }
+                        />
+                      ) : null)}
                   </div>
                 </CardContent>
               </Card>

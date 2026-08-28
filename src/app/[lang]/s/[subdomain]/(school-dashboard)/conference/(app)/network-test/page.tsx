@@ -55,6 +55,18 @@ export default async function Page({ params }: Props) {
       </div>
     )
   }
+  // Rooms are up. Recording is reported separately and never blocks: a school
+  // can hold live classes it does not record, and that is a normal shipping
+  // state rather than a half-provisioned one.
+  const recordingNote = !readiness.recordingConfigured
+    ? (t?.networkTest?.recordingOff ??
+      "Rooms are ready. Recording is off — set LIVEKIT_RECORDING_BUCKET to enable it.")
+    : readiness.recordingCredsMissing.length > 0
+      ? (t?.networkTest?.recordingCredsMissing ??
+        "Recording has a bucket but no upload credentials.")
+      : (t?.networkTest?.recordingOn ??
+        "Rooms and recording are both configured.")
+
   const { wsUrl } = getLiveKitConfig()
   // Use the real tenant + a PARTICIPANT-grant token (publish+subscribe is enough
   // to measure connectivity — no roomAdmin/roomCreate/roomRecord needed). The
@@ -71,33 +83,36 @@ export default async function Page({ params }: Props) {
     ttlSec: 120,
   })
   return (
-    <NetworkTestClient
-      wsUrl={wsUrl}
-      token={token}
-      labels={{
-        heading: t?.networkTest?.title ?? "Network test",
-        description:
-          t?.networkTest?.description ??
-          "Confirms a LiveKit session can be established from this network.",
-        run: t?.networkTest?.idle ?? "Run test",
-        running: t?.networkTest?.running ?? "Running…",
-        connected: t?.networkTest?.connected ?? "Connected",
-        setupTime: t?.networkTest?.setupTime ?? "Setup time",
-        quality: t?.networkTest?.quality ?? "Connection quality",
-        path: t?.networkTest?.path ?? "Inferred path",
-        error: t?.networkTest?.failed ?? "Error",
-        yes: t?.networkTest?.yes ?? "yes",
-        no: t?.networkTest?.no ?? "no",
-        qualityValues: {
-          excellent: t?.networkTest?.qualityExcellent ?? "Excellent",
-          good: t?.networkTest?.qualityGood ?? "Good",
-          poor: t?.networkTest?.qualityPoor ?? "Poor",
-          lost: t?.networkTest?.qualityLost ?? "Lost",
-          unknown: t?.networkTest?.qualityUnknown ?? "Unknown",
-        },
-        pathUnknown: t?.networkTest?.pathUnknown ?? "Unknown",
-        pathNotConnected: t?.networkTest?.pathNotConnected ?? "Not connected",
-      }}
-    />
+    <div className="space-y-3">
+      <p className="text-muted-foreground text-xs">{recordingNote}</p>
+      <NetworkTestClient
+        wsUrl={wsUrl}
+        token={token}
+        labels={{
+          heading: t?.networkTest?.title ?? "Network test",
+          description:
+            t?.networkTest?.description ??
+            "Confirms a LiveKit session can be established from this network.",
+          run: t?.networkTest?.idle ?? "Run test",
+          running: t?.networkTest?.running ?? "Running…",
+          connected: t?.networkTest?.connected ?? "Connected",
+          setupTime: t?.networkTest?.setupTime ?? "Setup time",
+          quality: t?.networkTest?.quality ?? "Connection quality",
+          path: t?.networkTest?.path ?? "Inferred path",
+          error: t?.networkTest?.failed ?? "Error",
+          yes: t?.networkTest?.yes ?? "yes",
+          no: t?.networkTest?.no ?? "no",
+          qualityValues: {
+            excellent: t?.networkTest?.qualityExcellent ?? "Excellent",
+            good: t?.networkTest?.qualityGood ?? "Good",
+            poor: t?.networkTest?.qualityPoor ?? "Poor",
+            lost: t?.networkTest?.qualityLost ?? "Lost",
+            unknown: t?.networkTest?.qualityUnknown ?? "Unknown",
+          },
+          pathUnknown: t?.networkTest?.pathUnknown ?? "Unknown",
+          pathNotConnected: t?.networkTest?.pathNotConnected ?? "Not connected",
+        }}
+      />
+    </div>
   )
 }

@@ -30,6 +30,7 @@ import { TimetableGridSkeleton } from "./grid-skeleton"
 import {
   ClosureNotice,
   isLiveJoinable,
+  isRowLiveJoinable,
   LiveJoinButton,
   OnlineBadge,
   type SchoolClosureInfo,
@@ -488,6 +489,19 @@ export default function GuardianView({
                     {item.isBreak && (
                       <Badge variant="secondary">{gv?.break ?? "Break"}</Badge>
                     )}
+                    {/* Same as the student view: a guardian sees Join on each
+                        of the child's online periods, not only the current one. */}
+                    {!item.isBreak &&
+                      isRowLiveJoinable(item.startTime, item.endTime) && (
+                        <LiveJoinButton
+                          liveClass={item.liveClass}
+                          lang={lang}
+                          label={
+                            (dictionary as any)?.liveClasses?.join ??
+                            (isRTL ? "انضمام" : "Join")
+                          }
+                        />
+                      )}
                   </div>
                 </CardContent>
               </Card>

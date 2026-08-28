@@ -14,7 +14,11 @@ import {
   notifyClassStarted,
 } from "@/components/school-dashboard/conference/actions/notifications"
 
-import { getLiveKitConfig, isLiveKitConfigured } from "./client"
+import {
+  getLiveKitConfig,
+  getLiveKitRecordingConfig,
+  isRecordingConfigured,
+} from "./client"
 import { startCompositeEgress } from "./egress"
 import { parseRoomName } from "./room-naming"
 
@@ -122,7 +126,7 @@ export async function handleWebhookEvent(
         // endLiveClass can find + stop the in-flight egress before the SFU's
         // egress_started webhook lands (which flips it to "processing").
         // Best-effort: an egress failure must never roll back the room going live.
-        if (session.recordingEnabled && isLiveKitConfigured()) {
+        if (session.recordingEnabled && isRecordingConfigured()) {
           try {
             const eg = await startCompositeEgress({
               roomName,
@@ -225,7 +229,7 @@ export async function handleWebhookEvent(
         let s3Bucket = ""
         let s3Region = "me-central-1"
         try {
-          const cfg = getLiveKitConfig()
+          const cfg = getLiveKitRecordingConfig()
           s3Bucket = cfg.recordingBucket
           s3Region = cfg.recordingRegion
         } catch {

@@ -1,17 +1,79 @@
 # Conference — LiveKit Provisioning Runbook
 
 > **Scope:** turn the dormant LiveKit SFU path **on**. The application code is complete and ships
-> gated; until the six gates below are met, `getLiveKitReadiness().configured === false` and the
-> feature serves only the **external pasted-link** path. None of these steps are code — they are
-> cloud/ops tasks. Run them in order; each ends with a check.
->
-> **Who runs this:** an operator with G42 Cloud + AWS + Vercel access. It is written to be executable
-> by a human or a computer-use agent. The agent driving this repo **cannot** perform these steps
-> (no cloud credentials / no in-school network access).
+> gated; until an SFU is reachable, `getLiveKitReadiness().configured === false` and the feature
+> serves only the **external pasted-link** path.
 >
 > **Readiness gate in code:** `getLiveKitReadiness()` in
 > [`livekit/client.ts`](./livekit/client.ts) reports exactly which env vars are still missing; the
 > admin **Network test** page (`/conference/network-test`, DEV/ADMIN) renders that list.
+
+---
+
+## Two paths, and which one you want
+
+The six gates below were written for the **Aldar UAE pilot**: a self-hosted SFU on G42 Cloud, in
+region, because PDPL made data residency the binding constraint. That is a real requirement for that
+customer and the sequence is preserved for them.
+
+It is not the requirement for the schools live today, which are Sudanese and served from
+`balqalam.com`. For those, a **managed SFU** collapses most of the sequence:
+
+| Gate               | Self-host (Aldar / G42)                                     | LiveKit Cloud                     |
+| ------------------ | ----------------------------------------------------------- | --------------------------------- |
+| 1 — SFU            | provision a VM, install `livekit-server`, TLS               | project signup, ~10 min           |
+| 2 — TURN/443       | install + configure coturn (**the biggest in-region risk**) | **included**                      |
+| 3 — S3 recording   | bucket + split IAM                                          | optional; only needed to record   |
+| 4 — webhook        | edit the server config                                      | paste the URL in project settings |
+| 5 — env vars       | 8 vars                                                      | **4 vars** for rooms              |
+| 6 — in-school test | required before signature                                   | still worth running               |
+
+**Recording is no longer a prerequisite for holding a call.** `LIVEKIT_RECORDING_BUCKET` used to sit
+in `REQUIRED_ENV`, so `isLiveKitConfigured()` stayed false — and the entire video feature stayed
+dark — until someone provisioned S3. Rooms and recording now report separately
+(`isLiveKitConfigured()` vs `isRecordingConfigured()`), and "rooms ready, recording off" is a normal
+shipping state.
+
+### Quick path — LiveKit Cloud
+
+1. Create a project at livekit.io. The free tier is $0 with no card.
+2. Set four vars in the central `.env` and in the Vercel project (Production):
+
+   ```bash
+   LIVEKIT_HOST=https://<project>.livekit.cloud
+   LIVEKIT_WS_URL=wss://<project>.livekit.cloud
+   LIVEKIT_API_KEY=...
+   LIVEKIT_API_SECRET=...
+   ```
+
+   **Trim trailing newlines.** Vercel stores them, and eight production values already carried one
+   (see `DEPLOYMENT.md`). Never create `.env.local` / `.env.*` — project rule.
+
+3. Register the webhook URL in the project's settings: `https://ed.databayt.org/api/webhooks/livekit`.
+4. Redeploy (`./scripts/deploy-hobby.sh` while on the free account — **not** `git push`).
+5. Open `/conference/network-test` as an ADMIN and confirm nothing is listed as missing.
+6. Flip the school to LiveKit on `/conference/settings` — `School.conferenceProviderDefault`
+   defaults to `external`, so a configured SFU does nothing until a school opts in.
+
+**Know what the free tier buys.** 5,000 WebRTC minutes/month, 100 concurrent connections, 1,000
+recording minutes. One 25-student, 45-minute class costs ~1,125 participant-minutes — so this
+verifies the feature and runs a demo or a small pilot, and it does **not** run a school. Real volume
+means the paid tier or a self-hosted `livekit-server` on any VM. The code is identical either way;
+only the values in those four vars change.
+
+To add recording later: set `LIVEKIT_RECORDING_BUCKET` plus `LIVEKIT_S3_ACCESS_KEY` /
+`LIVEKIT_S3_SECRET`. A managed SFU has **no instance IAM role**, so the empty-credential fallback
+documented in Gate 3 does not apply to it — without those two vars, egress starts and then fails to
+upload, leaving a `ConferenceRecording` row `pending` with nothing to sweep it. `isRecordingConfigured()`
+gates the auto-egress branch on the bucket; supply the credentials with it.
+
+---
+
+## Self-hosted path (Aldar / G42, UAE) — the six gates
+
+> **Who runs this:** an operator with G42 Cloud + AWS + Vercel access. It is written to be executable
+> by a human or a computer-use agent. The agent driving this repo **cannot** perform these steps
+> (no cloud credentials / no in-school network access).
 
 ---
 
@@ -70,14 +132,15 @@ The SFU is the authoritative writer for `live`/`ended` + recording rows.
 
 ## Gate 5 — Set the environment variables (Vercel + dev)
 
-All **eight**. `getLiveKitReadiness()` flips `configured: true` only when the required five are set.
+`getLiveKitReadiness()` flips `configured: true` on the required **four**; the recording vars are
+reported separately and do not gate a room.
 
 ```bash
 LIVEKIT_HOST=https://<sfu-host>            # SFU HTTPS API        (required)
 LIVEKIT_WS_URL=wss://<sfu-host>            # SFU WebSocket        (required)
 LIVEKIT_API_KEY=...                        # from Gate 1          (required)
 LIVEKIT_API_SECRET=...                     # from Gate 1          (required)
-LIVEKIT_RECORDING_BUCKET=aldar-recordings-me-central-1  #         (required)
+LIVEKIT_RECORDING_BUCKET=aldar-recordings-me-central-1  # recording only
 LIVEKIT_RECORDING_REGION=me-central-1      # defaults to me-central-1 if unset
 LIVEKIT_S3_ACCESS_KEY=...                  # SFU egress IAM (else host role)
 LIVEKIT_S3_SECRET=...                      # SFU egress IAM (else host role)
@@ -110,7 +173,7 @@ lastIceState}`.
 - [ ] Gate 2 — TURN/443/TCP fallback verified from a UDP-blocked network
 - [ ] Gate 3 — S3 `me-central-1` bucket + split SFU/app IAM
 - [ ] Gate 4 — webhook registered; `room_started` flips `live` + audit row
-- [ ] Gate 5 — all 8 env vars set; network-test lists no missing var
+- [ ] Gate 5 — the 4 room vars set (+ recording vars if recording); network-test lists no missing var
 - [ ] Gate 6 — Meeting-3 in-school test passes (no TURN/443 failure)
 
 When all six are green, LiveKit serves live in-app rooms + recordings; schools without infra keep
@@ -119,8 +182,9 @@ gate need no further change).
 
 ## Disaster recovery
 
-- **SFU down:** LiveKit Cloud (Bahrain) is the documented DR fallback — repoint `LIVEKIT_HOST`/
-  `LIVEKIT_WS_URL` + keys; note the data path leaves UAE (PDPL consideration).
+- **SFU down:** LiveKit Cloud is the DR fallback for the self-hosted deployment — repoint
+  `LIVEKIT_HOST`/`LIVEKIT_WS_URL` + keys; note the data path leaves UAE (PDPL consideration for
+  Aldar specifically, not for the balqalam.com schools that run on Cloud by default).
 - **Recordings storage:** the schema carries `s3Bucket`/`s3Region` per `ConferenceRecording` row, so
   an on-prem **MinIO** swap is a per-school config change, not a migration.
 

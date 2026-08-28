@@ -26,6 +26,17 @@ import { db } from "@/lib/db"
 // Minutes after the scheduled start beyond which a join counts as LATE.
 const LATE_GRACE_MINUTES = 10
 
+/**
+ * Minutes a student must actually be in the room before it counts as attending.
+ *
+ * Presence used to be binary on `joinedAt`: connect for five seconds, get marked
+ * PRESENT for the period, identically to a student who sat the whole lesson.
+ * `leftAt` and `durationSeconds` were written by the webhook and never read.
+ *
+ * Named rather than inlined because a school will eventually want to set it.
+ */
+const MIN_PRESENCE_MINUTES = 5
+
 export async function syncConferenceAttendance(
   schoolId: string,
   sessionId: string
@@ -39,6 +50,7 @@ export async function syncConferenceAttendance(
         sectionId: true,
         timetableId: true,
         scheduledStart: true,
+        scheduledEnd: true,
         actualStart: true,
         school: { select: { conferenceAttendanceSync: true } },
       },
@@ -84,10 +96,15 @@ export async function syncConferenceAttendance(
     // ConferenceParticipant is unique on (sessionId, userId), so one row each.
     const participants = await db.conferenceParticipant.findMany({
       where: { sessionId, schoolId, role: "PARTICIPANT" },
-      select: { userId: true, joinedAt: true },
+      select: { userId: true, joinedAt: true, leftAt: true },
     })
-    const joinedByUser = new Map<string, Date | null>()
-    for (const p of participants) joinedByUser.set(p.userId, p.joinedAt)
+    const presenceByUser = new Map<
+      string,
+      { joinedAt: Date | null; leftAt: Date | null }
+    >()
+    for (const p of participants) {
+      presenceByUser.set(p.userId, { joinedAt: p.joinedAt, leftAt: p.leftAt })
+    }
 
     const start = session.actualStart ?? session.scheduledStart
     const lateAfter = new Date(start.getTime() + LATE_GRACE_MINUTES * 60_000)
@@ -96,6 +113,21 @@ export async function syncConferenceAttendance(
     const dateObj = new Date(
       Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate())
     )
+
+    // A student still in the room when it closes may have no `leftAt` at all:
+    // the webhook writes it on `participant_left`, the sync runs from
+    // `room_finished`, and the two events have no guaranteed order. So an
+    // unset `leftAt` is read as "stayed until the session ended", NOT as a
+    // zero-length visit — otherwise the floor below would mark the student who
+    // sat through the whole lesson absent, and only the ones who left early
+    // present. `durationSeconds` has the same hazard and is deliberately not
+    // used as the source here.
+    const sessionEnd = session.scheduledEnd ?? new Date()
+    const attended = (joinedAt: Date, leftAt: Date | null): boolean => {
+      const end = leftAt ?? sessionEnd
+      const minutes = (end.getTime() - joinedAt.getTime()) / 60_000
+      return minutes >= MIN_PRESENCE_MINUTES
+    }
 
     const studentIds = roster.map((s) => s.id)
     // Prefetch existing rows in one query (no per-student findFirst N+1).
@@ -119,14 +151,16 @@ export async function syncConferenceAttendance(
       const toCreate: Prisma.AttendanceCreateManyInput[] = []
 
       for (const student of roster) {
-        // A real joinedAt → PRESENT (LATE past the grace window). No participant
-        // row, or a row that never recorded a join → ABSENT.
-        const joinedAt = student.userId
-          ? (joinedByUser.get(student.userId) ?? null)
+        // A join that LASTED → PRESENT (LATE past the grace window). No
+        // participant row, no recorded join, or a join too short to count →
+        // ABSENT.
+        const presence = student.userId
+          ? (presenceByUser.get(student.userId) ?? null)
           : null
+        const joinedAt = presence?.joinedAt ?? null
         let status: "PRESENT" | "ABSENT" | "LATE" = "ABSENT"
         let checkInTime: Date | null = null
-        if (joinedAt) {
+        if (joinedAt && attended(joinedAt, presence?.leftAt ?? null)) {
           checkInTime = joinedAt
           status = joinedAt.getTime() > lateAfter.getTime() ? "LATE" : "PRESENT"
         }

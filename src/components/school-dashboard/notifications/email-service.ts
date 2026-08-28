@@ -5,6 +5,7 @@ import { Resend } from "resend"
 
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
+import { resolveActionUrl } from "@/lib/dispatch-notification"
 import { prewarm } from "@/components/translation/prewarm"
 
 // Lazy-init to avoid crashing on import if RESEND_API_KEY is not set
@@ -478,6 +479,12 @@ export async function processPendingEmailNotifications(
           email: true,
         },
       },
+      // Needed to absolutify the action URL — see the note at the send call.
+      school: {
+        select: {
+          domain: true,
+        },
+      },
     },
   })
 
@@ -516,6 +523,19 @@ export async function processPendingEmailNotifications(
       continue
     }
 
+    // `metadata.url` is stored RELATIVE (the in-app bell pushes it as a path on
+    // whatever host the reader is on). An email has no such context, and the
+    // template only renders an <a> for an http(s) href — so resolve it here,
+    // against this school's canonical host, at the moment of sending.
+    const metadata = notification.metadata as Record<string, unknown> | null
+    const emailMetadata =
+      metadata && typeof metadata.url === "string"
+        ? {
+            ...metadata,
+            url: resolveActionUrl(metadata.url, notification.school?.domain),
+          }
+        : metadata
+
     const result = await sendNotificationEmail({
       notificationId: notification.id,
       to: notification.user.email,
@@ -524,7 +544,7 @@ export async function processPendingEmailNotifications(
       priority: notification.priority,
       title: notification.title,
       body: notification.body,
-      metadata: notification.metadata as Record<string, unknown> | null,
+      metadata: emailMetadata,
       actorName: notification.actor?.username || notification.actor?.email,
     })
 

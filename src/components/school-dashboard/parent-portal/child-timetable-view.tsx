@@ -17,13 +17,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { type Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getChildTodaySchedule } from "@/components/school-dashboard/timetable/actions"
 
 import { getChildTimetable } from "./actions"
+import { ChildTodayLive, type ChildTodayRow } from "./child-today-live"
 
 interface Props {
   studentId: string
   dictionary?: Dictionary
+  lang: Locale
 }
 
 // Map numeric dayOfWeek (0=Sunday, 1=Monday, etc.) to day names
@@ -57,9 +61,24 @@ const DAY_NAMES: Record<string, string> = {
   SUNDAY: "Sunday",
 }
 
-export async function ChildTimetableView({ studentId, dictionary }: Props) {
+export async function ChildTimetableView({
+  studentId,
+  dictionary,
+  lang,
+}: Props) {
   const t = dictionary?.parentPortal?.timetable
-  const { timetable } = await getChildTimetable({ studentId })
+  // The weekly table below is a PATTERN — it cannot say whether a class is
+  // online, because a live session only ever exists for a specific day. So the
+  // live answer comes from today's schedule, fetched through the timetable
+  // block's own guardian-gated action (which already runs `attachLiveClasses`)
+  // rather than a second, drifting copy of that resolution here.
+  //
+  // Best-effort: a failure here must leave the weekly timetable standing. A
+  // parent who cannot see the Join strip still needs to see the schedule.
+  const [{ timetable }, today] = await Promise.all([
+    getChildTimetable({ studentId }),
+    getChildTodaySchedule({ childId: studentId }).catch(() => null),
+  ])
 
   // Group timetable entries by day
   const timetableByDay = DAYS_ORDER.reduce(
@@ -83,6 +102,23 @@ export async function ChildTimetableView({ studentId, dictionary }: Props) {
 
   return (
     <div className="space-y-6">
+      {today && (
+        <ChildTodayLive
+          rows={today.schedule as ChildTodayRow[]}
+          closure={today.closure ?? null}
+          lang={lang}
+          labels={{
+            title: t?.todayTitle ?? "Today",
+            description:
+              t?.todayDescription ??
+              "Your child's classes today. Online classes show a Join button while they are running.",
+            online: t?.online ?? "Online",
+            join: t?.join ?? "Join",
+            empty: t?.noClassesToday ?? "No classes scheduled today.",
+            closed: t?.closed ?? "School is closed today",
+          }}
+        />
+      )}
       <Card>
         <CardHeader>
           <CardTitle>{t?.title ?? "Weekly Timetable"}</CardTitle>

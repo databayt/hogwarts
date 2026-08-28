@@ -82,6 +82,37 @@ export function isLiveJoinable(
 }
 
 /**
+ * Per-ROW version of the gate above, for the "Today" list.
+ *
+ * `isLiveJoinable` answers the Current/Next card's question ("is THIS the class
+ * happening now?"), which the card already knows. A row in the day's list has no
+ * such label — it has to work out from its own times whether it is in progress or
+ * about to start. Without this the list showed an "Online" badge on every online
+ * class of the day and a way to act on exactly one of them.
+ *
+ * Same local-vs-UTC convention as `isLiveJoinable` and `getCurrentClass`: now is
+ * read in the browser's local time, the period bounds are stored as UTC
+ * wall-clock. That is the timetable block's standing convention, not a choice
+ * made here — it lines up for a viewer in the school's timezone, which is the
+ * case that matters.
+ */
+export function isRowLiveJoinable(
+  startTime: Date | string,
+  endTime: Date | string,
+  windowMin = 10
+): boolean {
+  const now = new Date()
+  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const start = new Date(startTime)
+  const end = new Date(endTime)
+  const startMin = start.getUTCHours() * 60 + start.getUTCMinutes()
+  const endMin = end.getUTCHours() * 60 + end.getUTCMinutes()
+  // In progress, or starting within the window.
+  if (nowMin >= startMin && nowMin < endMin) return true
+  return startMin - nowMin > 0 && startMin - nowMin <= windowMin
+}
+
+/**
  * "Online" marker for a timetable card whose class is ALSO being delivered
  * live today.
  *

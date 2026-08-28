@@ -39,6 +39,7 @@ import {
   type LiveClassResourceInput,
   type UpdateLiveClassData,
 } from "./list-validation"
+import { isLiveKitConfigured } from "./livekit/client"
 import { roomNameFor } from "./livekit/room-naming"
 import { getProviderAdapter, type ProviderId } from "./providers"
 import {
@@ -577,6 +578,18 @@ export async function createLiveClass(
       description: content.description,
       lang: content.lang,
     } as const
+
+    // The wizard only offers LiveKit when the SFU is provisioned
+    // (`liveKitAvailable` → `disabled` on the radio), but that is a CLIENT gate
+    // and a server action is a public endpoint. Without this check a crafted
+    // POST mints a `provider: "livekit"` row with a real roomName against an SFU
+    // that does not exist — the row then fails at start/join time instead of at
+    // create time, which reads to a teacher as a broken class rather than an
+    // unavailable option. Provider is immutable on edit, so this is the only
+    // place the choice can enter.
+    if (d.provider === "livekit" && !isLiveKitConfigured()) {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
+    }
 
     let created: { id: string }
     let meetingUrl: string | null = d.meetingUrl || null

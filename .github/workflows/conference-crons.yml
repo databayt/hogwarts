@@ -1,0 +1,92 @@
+# Conference (live classes) cron bridge — a stand-in for Vercel Cron.
+#
+# `vercel.json` carries `"crons": []` because the Hobby plan rejects an entire
+# deployment that contains any sub-daily schedule, and 17 of our 31 jobs run
+# every 15–30 minutes (see DEPLOYMENT.md). The full array is preserved in
+# vercel.crons.full.json.
+#
+# The conference feature does not merely lose a nicety when its crons stop.
+# `live-class-reminders` is the ONLY caller of materializeOnlineSchools(), so
+# with it off a school that teaches online materializes zero sessions after the
+# day it saved its settings: nothing to join, and no reminders. This workflow
+# restores the three conference jobs and nothing else.
+#
+# Deliberately NOT restored here: process-email-notifications. There are ~19,996
+# unsent notification emails queued since 2026-04-13 addressed to real
+# recipients, and processPendingEmailNotifications() has no age gate — draining
+# it as-is is an unrecoverable send. Conference reminders enqueue rows but send
+# no mail while that job is off; students still get them through the in-app bell,
+# which polls a GET route and needs no scheduler. Add the age cutoff first.
+#
+# Delete this file when the Vercel Pro account is restored and vercel.json's
+# cron array goes back.
+name: Conference crons
+
+on:
+  schedule:
+    # Materialize the day + dispatch 5–20-min start reminders.
+    - cron: "*/15 * * * *"
+    # Close sessions stuck `live`, cancel external no-shows, attendance backstop.
+    - cron: "*/30 * * * *"
+    # Per-school recording retention purge.
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which job to run (all | reminders | stale | recordings)"
+        required: false
+        default: "all"
+
+# A slow run must never overlap the next tick: the writers are idempotent, but
+# two concurrent sweeps double the DB load on a compute that scales to zero.
+concurrency:
+  group: conference-crons
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    if: github.repository == 'databayt/hogwarts'
+    env:
+      BASE_URL: https://ed.databayt.org
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Guard — the secret must exist
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET repo secret is unset. isAuthorizedCron fails closed in production, so every ping would 401. Set it to the same value as the Vercel project env."
+            exit 1
+          fi
+
+      # GitHub gives no per-schedule step condition, only the cron expression
+      # that triggered the run, so each job tests for its own expression. A
+      # manual dispatch runs whichever job the `job` input names.
+      - name: live-class-reminders
+        if: |
+          github.event.schedule == '*/15 * * * *' ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.job == 'all' || inputs.job == 'reminders'))
+        run: |
+          curl -fsS --max-time 300 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$BASE_URL/api/cron/live-class-reminders"
+
+      - name: end-stale-live-classes
+        if: |
+          github.event.schedule == '*/30 * * * *' ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.job == 'all' || inputs.job == 'stale'))
+        run: |
+          curl -fsS --max-time 120 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$BASE_URL/api/cron/end-stale-live-classes"
+
+      - name: expire-live-recordings
+        if: |
+          github.event.schedule == '30 2 * * *' ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.job == 'all' || inputs.job == 'recordings'))
+        run: |
+          curl -fsS --max-time 120 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$BASE_URL/api/cron/expire-live-recordings"

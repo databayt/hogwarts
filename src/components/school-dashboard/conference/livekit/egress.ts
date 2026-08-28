@@ -6,7 +6,7 @@ import "server-only"
 import { randomUUID } from "node:crypto"
 import { EncodedFileType, type EncodedFileOutput } from "livekit-server-sdk"
 
-import { getEgressClient, getLiveKitConfig } from "./client"
+import { getEgressClient, getLiveKitRecordingConfig } from "./client"
 
 export interface StartRecordingInput {
   roomName: string
@@ -39,7 +39,7 @@ export interface StartRecordingResult {
 export async function startCompositeEgress(
   input: StartRecordingInput
 ): Promise<StartRecordingResult> {
-  const cfg = getLiveKitConfig()
+  const cfg = getLiveKitRecordingConfig()
   const egress = getEgressClient()
 
   const timestamp = Date.now()

@@ -4,22 +4,61 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
-## PRE-deploy — prod DDL that MUST land first
+## PRE-deploy — prod DDL ✅ APPLIED 2026-08-28
 
-> The code below is merged; the columns are **not** in prod. Deploying the code
-> without the DDL means `getConferenceSettings` throws P2022 behind the
-> settings-page error boundary AND the `*/15` reminders cron logs a
-> materialization failure every quarter hour, forever, in silence.
+> This was real, and worse than recorded: production had been running for two
+> weeks against a Prisma client expecting columns the database did not have.
+> Verified missing via `information_schema` on 2026-08-28, not assumed.
 
-- [ ] Neon branch first (protocol), then `prisma db push` (NEVER
-      `--accept-data-loss`) on the prod lane. Additive only — one new enum type
-      and eight nullable/defaulted columns: - `CREATE TYPE "LiveClassOnlineMode"` (`timetable` · `open` · `both`) - `schools`: `liveClassOnlineFrom`, `liveClassOnlineUntil`,
-      `liveClassOnlineNote`, `liveClassOnlineMode`, `liveClassFallbackUrl` - from the FIRST 08-14 pass, also still unpushed:
-      `schools.liveClassOnlineDefault`, `schools.liveClassProviderDefault`,
-      `sections.liveClassOnline`
-- [ ] After the push, confirm `/conference/settings` loads for
-      `admin@…` and that one `*/15` cron run reports `materialized` without an
-      error line.
+- [x] Applied additively to the prod default branch (`br-small-tooth-adscsfmb`)
+      behind the Neon safety branch `pre-conference-ddl-2026-08-28`
+      (`br-patient-poetry-adppmsfa`). Written up as
+      `prisma/migrations/20260828000000_conference_online_school/migration.sql`:
+      `CREATE TYPE "LiveClassOnlineMode"`; `schools.liveClassOnlineFrom` /
+      `…Until` / `…Note` / `…Mode` / `liveClassFallbackUrl` /
+      `liveClassOnlineDefault` / `liveClassProviderDefault`;
+      `sections.liveClassOnline`.
+- [x] **`periods.isBreak` was missing too** — not previously tracked here. The
+      materialization sweep filters `period: { isBreak: false }` in four places,
+      so every `materializeSchoolDay` would have thrown P2022. Added with
+      `DEFAULT false`.
+- [x] `prisma migrate diff` against prod now reports **no** conference drift.
+      (It still reports drift in other blocks — finance, admission, twenty,
+      lumos instructor policies, `schools.trialEndsAt`. Deliberately NOT touched:
+      out of scope for this pass, and the diff contains non-additive statements
+      — `roomName SET NOT NULL`, `PricingRule.updatedAt DROP DEFAULT` — that
+      must not be applied blind. Do **not** run `prisma db push` to close it.)
+
+- [ ] **Follow-up: re-flag break periods.** `isBreak` defaulted every existing
+      row to `false`, so a school whose فسحة predates the column now reads as
+      teaching time and can have a live session materialized into the break.
+      Re-derive from each school's schedule structure.
+
+## Closed 2026-08-28 — production pass
+
+- [x] Recording no longer gates rooms — `isLiveKitConfigured()` (4 vars) vs
+      `isRecordingConfigured()` (bucket). Was the single code defect standing
+      between the block and a working room.
+- [x] Cron bridge: `.github/workflows/conference-crons.yml`. Every Vercel cron
+      has been off since 2026-08-27 and `live-class-reminders` is the only
+      caller of `materializeOnlineSchools()`, so an online school materialized
+      nothing after the day it saved its settings.
+- [x] `createLiveClass` gained the server-side `isLiveKitConfigured()` check
+      (was client-gated only — listed as P3 hygiene, promoted and fixed).
+- [x] Join renders on EVERY row of the Today list in all three role views, not
+      only the Current/Next card (`isRowLiveJoinable`).
+- [x] Parent portal shows a "Today" strip with Join — guardians previously had
+      no discoverable path to a child's live class at all.
+- [x] Mobile can join: `live_class` on `/api/mobile/timetable/[userId]` +
+      `GET /api/mobile/conference/[id]/join` (shares `join-core`, JWT actor).
+      Conference notifications now request the `push` channel too.
+- [x] `started` notifications deep-link to `/room`; notification URLs are stored
+      relative (they were `{subdomain}.databayt.org` — a host that serves a
+      different app for every `balqalam.com` school).
+- [x] Attendance presence floor (`MIN_PRESENCE_MINUTES = 5`) — a 5-second join
+      scored the same as sitting the whole lesson.
+- [x] **Decided: a no-show online class does NOT mark its roster absent.** Keeps
+      current behaviour; see conference/CLAUDE.md for the reasoning.
 
 ## Post-deploy verification (next deploy)
 

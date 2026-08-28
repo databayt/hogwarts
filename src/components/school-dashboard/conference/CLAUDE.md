@@ -274,6 +274,65 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   back to it — say so in any copy you write; per-section links stay the private
   option.
 
+- **Rooms and recording are SEPARATE gates.** `isLiveKitConfigured()` needs
+  `LIVEKIT_HOST` / `LIVEKIT_WS_URL` / `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET`;
+  `isRecordingConfigured()` needs `LIVEKIT_RECORDING_BUCKET`. The bucket used to
+  live in `REQUIRED_ENV`, which meant the whole video feature stayed dark until
+  someone provisioned S3 — an optional add-on gating the core feature. Guard the
+  egress paths on `isRecordingConfigured()` (webhook `room_started`), never on
+  the room gate: starting an egress that cannot upload fails asynchronously on
+  the SFU side and strands a `ConferenceRecording` row at `pending`, which
+  nothing sweeps. A managed SFU (LiveKit Cloud) has no instance IAM role, so the
+  empty-credential fallback in `egress.ts` does not save it — set
+  `LIVEKIT_S3_ACCESS_KEY`/`SECRET` whenever you set the bucket.
+
+- **The materialization sweep runs on GitHub Actions, not Vercel Cron.**
+  `vercel.json` is `"crons": []` (free-plan bridge, `DEPLOYMENT.md`), and
+  `live-class-reminders` is the ONLY caller of `materializeOnlineSchools()` — so
+  with it off an online school materializes nothing after the day an admin saved
+  its settings. `.github/workflows/conference-crons.yml` restores the three
+  conference jobs and nothing else. Delete it when the Vercel cron array comes
+  back, or they fire twice. `process-email-notifications` is deliberately NOT in
+  the bridge: it drains ~19,996 unsent emails with no age gate.
+
+- **Only the `started` notification links to `/room`.** `startingSoon` fires 5–20
+  minutes BEFORE the class, and `join-core` refuses a non-HOST on a `scheduled`
+  session (`LIVE_CLASS_INVALID_STATE`) — a student following an early room link
+  would land on an error, not a waiting room. `scheduled` / `cancelled` /
+  `recordingReady` describe the session rather than an open room, so the detail
+  page is right for them.
+
+- **`metadata.url` on a notification is stored RELATIVE.** It used to be
+  absolutified at dispatch time into `{subdomain}.databayt.org` — the wrong host
+  for every school on `balqalam.com`, and one that does not serve this app. The
+  in-app bell reads the same field, so a stored cross-root URL navigated the
+  reader off the product entirely. The email channel absolutifies at render time
+  (`email-service.ts`), where a canonical host is actually needed;
+  `notifications/card.tsx` additionally treats any host under one of our
+  `ROOT_DOMAINS` as internal, which repairs rows written before the change.
+
+- **Attendance needs a DURATION, not a ping.** `MIN_PRESENCE_MINUTES` (5) in
+  `attendance-sync.ts`. Compute it as `(leftAt ?? scheduledEnd) - joinedAt` —
+  never from `durationSeconds`, and never treating a null `leftAt` as a
+  zero-length visit. The webhook writes `leftAt` on `participant_left`, the sync
+  runs from `room_finished`, and the two have no guaranteed order: the student
+  most likely to have a null `leftAt` is the one who stayed to the end, so the
+  naive read marks exactly the wrong person absent.
+
+- **A no-show online class does NOT mark its roster absent** (decided 2026-08-28,
+  closing the open question in ISSUE.md). The sync only ever runs from
+  `room_finished` or a session stuck in `live`, so a class that never started
+  writes nothing — and that is correct. A materialized session nobody attended
+  means the class did not happen; marking 25 students absent for it would be a
+  data-integrity bug wearing a feature's clothes. Do not "fix" the gap by having
+  the end-stale cron sync cancelled sessions.
+
+- **`createLiveClass` checks the provider server-side.** The wizard's
+  `disabled: !liveKitAvailable` is a CLIENT gate and a server action is a public
+  endpoint; without the check a crafted POST mints a `livekit` row against an SFU
+  that does not exist, which then fails at start/join time and reads to a teacher
+  as a broken class rather than an unavailable option.
+
 ## Danger Zones
 
 - **Schedule instants combine in the SCHOOL timezone**: the wizard sends

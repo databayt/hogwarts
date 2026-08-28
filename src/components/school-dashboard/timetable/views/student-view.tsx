@@ -44,6 +44,7 @@ import { TimetableGridSkeleton } from "./grid-skeleton"
 import {
   ClosureNotice,
   isLiveJoinable,
+  isRowLiveJoinable,
   LiveJoinButton,
   OnlineBadge,
   type SchoolClosureInfo,
@@ -449,6 +450,21 @@ export default function StudentView({
                     {item.isBreak && (
                       <Badge variant="secondary">{sv?.break ?? "Break"}</Badge>
                     )}
+                    {/* Join lives on every row of the day, not only on the
+                        Current/Next card above. A student whose 3rd and 5th
+                        periods are both online could previously act on only
+                        whichever one the card happened to be showing. */}
+                    {!item.isBreak &&
+                      isRowLiveJoinable(item.startTime, item.endTime) && (
+                        <LiveJoinButton
+                          liveClass={item.liveClass}
+                          lang={lang}
+                          label={
+                            dictionary?.liveClasses?.join ??
+                            (isRTL ? "انضمام" : "Join")
+                          }
+                        />
+                      )}
                   </div>
                 </CardContent>
               </Card>

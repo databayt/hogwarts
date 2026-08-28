@@ -131,7 +131,13 @@
       "FRIDAY": "Friday",
       "SATURDAY": "Saturday",
       "SUNDAY": "Sunday"
-    }
+    },
+    "todayTitle": "Today",
+    "todayDescription": "Your child's classes today. Online classes show a Join button while they are running.",
+    "online": "Online",
+    "join": "Join",
+    "noClassesToday": "No classes scheduled today.",
+    "closed": "School is closed today"
   },
   "reportCards": {
     "noAccess": "You don't have access to this student's report cards.",

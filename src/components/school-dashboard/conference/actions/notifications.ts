@@ -197,12 +197,25 @@ async function dispatch(
     }
     const title = render(template.title, vars)
     const body = render(template.body, vars)
+    // "The class is live" is the one notification whose whole point is to get
+    // the reader INTO the room, so it links straight there and skips the detail
+    // page's second Join click.
+    //
+    // Only that one. `startingSoon` fires 5–20 minutes BEFORE the start, and
+    // join-core rejects a non-HOST on a `scheduled` session with
+    // LIVE_CLASS_INVALID_STATE — a student following a /room link early would
+    // hit an error page instead of a waiting room. `scheduled`, `cancelled` and
+    // `recordingReady` all describe the session rather than an open room, so the
+    // detail page is their correct destination too.
+    const url =
+      kind === "started" ? `${session.routePath}/room` : session.routePath
+
     // Route through the shared notification hub so live-class notifications get
     // per-user channel-preference filtering, the email channel, `expiresAt`,
-    // translation `prewarm`, and an ABSOLUTE `metadata.url` (so email action
-    // buttons render). The hub resolves nothing here — we pass our own audience
-    // (teacher + section roster + guardians) via `targetUserIds`. The metadata
-    // key MUST be `url` (not `route`) for the hub's absolutifier to find it.
+    // and translation `prewarm`. The hub resolves nothing here — we pass our own
+    // audience (teacher + section roster + guardians) via `targetUserIds`. The
+    // metadata key MUST be `url` (not `route`): that is what the bell navigates
+    // to and what the email channel absolutifies at render time.
     const { created } = await dispatchNotificationsToAudience({
       schoolId,
       type,
@@ -211,12 +224,17 @@ async function dispatch(
       lang,
       priority:
         kind === "started" || kind === "startingSoon" ? "high" : "normal",
-      channels: ["in_app", "email"],
+      // Push is requested now that mobile can actually act on a live class
+      // (/api/mobile/conference/:id/join). Delivery still depends on the user
+      // having a registered device and on the push worker running; the hub
+      // filters per-user channel preferences either way, so a school with no
+      // mobile users simply never sends one.
+      channels: ["in_app", "email", "push"],
       metadata: {
         kind,
         sessionId,
         sectionId: session.sectionId,
-        url: session.routePath,
+        url,
       },
       targetUserIds: userIds,
     })

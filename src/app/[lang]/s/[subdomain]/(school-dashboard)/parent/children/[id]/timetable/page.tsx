@@ -12,5 +12,7 @@ interface Props {
 export default async function ChildTimetablePage({ params }: Props) {
   const { id, lang } = await params
   const dictionary = await getDictionary(lang)
-  return <ChildTimetableView studentId={id} dictionary={dictionary} />
+  return (
+    <ChildTimetableView studentId={id} dictionary={dictionary} lang={lang} />
+  )
 }

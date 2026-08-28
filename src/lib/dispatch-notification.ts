@@ -138,12 +138,23 @@ export async function dispatchNotification(params: {
   directEmail?: string
 }): Promise<string | null> {
   try {
-    // BUG-4: absolutify any relative `url` in metadata so email action buttons
-    // render correctly (the email template only renders <a> for http(s) URLs).
-    const resolvedMetadata = await absolutifyMetadataUrl(
-      params.metadata,
-      params.schoolId
-    )
+    // `metadata.url` is STORED RELATIVE and absolutified at email-render time.
+    //
+    // It used to be absolutified here, which baked `{subdomain}.databayt.org`
+    // into the row — the wrong host for every school on balqalam.com, and one
+    // that does not serve this app. The in-app bell reads the same field, so a
+    // stored cross-root URL navigated the reader off the product. Resolving late
+    // means the email renders against the school's canonical host while the bell
+    // just pushes a path onto whichever host the reader is already on.
+    //
+    // The directEmail branch below is the exception: it sends without ever
+    // writing a row, so it has to resolve here or the button renders blank (the
+    // email template only emits <a> for http(s)).
+    const emailMetadata =
+      !params.userId && params.directEmail
+        ? await absolutifyMetadataUrl(params.metadata, params.schoolId)
+        : params.metadata
+    const resolvedMetadata = params.metadata
 
     // BUG-3: directEmail path — when there is no userId (guest applicant) we
     // cannot create a Notification row (userId is non-nullable). Send the email
@@ -162,7 +173,7 @@ export async function dispatchNotification(params: {
             priority: params.priority ?? "normal",
             title: params.title,
             body: params.body,
-            metadata: resolvedMetadata as Record<string, unknown> | null,
+            metadata: emailMetadata as Record<string, unknown> | null,
           })
         } catch (emailErr) {
           console.error(
@@ -286,11 +297,9 @@ export async function dispatchNotificationsToAudience(params: {
   try {
     const requestedChannels = params.channels ?? ["in_app"]
 
-    // BUG-4: resolve relative URL in metadata to absolute before storing.
-    const resolvedMetadata = await absolutifyMetadataUrl(
-      params.metadata,
-      params.schoolId
-    )
+    // Stored relative on purpose — see the note in dispatchNotification above.
+    // This path only ever writes rows; the email channel absolutifies at render.
+    const resolvedMetadata = params.metadata
 
     // Resolve target user IDs. An explicit `targetUserIds` list short-circuits
     // scope/role resolution (the caller already knows its audience); otherwise

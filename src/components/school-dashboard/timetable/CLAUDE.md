@@ -138,6 +138,23 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   a suppressed write is recoverable, a hidden read just looks broken. Keep the
   asymmetry; keep one predicate. (The header's "No automatic holiday handling"
   note is now half true: reads inform, the weekly grid is still unaware.)
+- **Join renders on every Today row, not just the Current/Next card**
+  (2026-08-28): `isRowLiveJoinable(startTime, endTime)` in
+  `views/live-join-button.tsx` is the per-row gate — in progress, or starting
+  within the same 10-minute window. `isLiveJoinable` answers the card's
+  question ("is THIS the current/next class?"), which a row in the day's list
+  cannot ask. Before this, a student with two online periods saw an Online badge
+  on both and a Join button on whichever one the card happened to show. Both
+  helpers keep the block's local-vs-UTC convention (browser-local `now`,
+  UTC-extracted wall-clock period bounds) — match it, don't fix it in one place.
+  The teacher view falls through to `StartLiveClassButton` per row exactly as
+  the card does, which matters more now that the materialization cron runs on a
+  GitHub Actions bridge: a teacher pressing Start is what brings a class online
+  for a school that never turned the online-school policy on.
+
+- **The weekly grid is still awareness-only.** `simple-grid.tsx` renders a live
+  dot and no Join, deliberately — Join lives on the Today cards. Left as is.
+
 - **The Online marker is gated on `liveClass.sessionId`, not on `liveClass`**
   (2026-08-14): `attachLiveClasses` returns a `liveClass` for a session today
   OR for a recurring default `ConferenceLink`. The link means "there is a room

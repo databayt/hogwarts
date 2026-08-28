@@ -14,13 +14,13 @@ about an hour before the block.
 hogwarts was the only databayt product still on that team; kun, mkan, marketing, codebase and twenty
 had already moved to the free `databayt` account. It is now there too.
 
-| | |
-| --- | --- |
-| Account | `databayt` (Hobby) — `team_BrPSqGS4wSpLors2B9jYAAFs` |
-| Project | `hogwarts` — `prj_KEuI2aVzMHIeBkjVcpK7KQvWGIJe` |
-| Live hosts | `ed.databayt.org`, `demo.databayt.org`, `balqalam.com`, `www.balqalam.com`, `demo.balqalam.com` |
-| Git auto-deploy | **Disconnected on purpose** — see below |
-| Crons | **All 31 disabled** — see below |
+|                 |                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| Account         | `databayt` (Hobby) — `team_BrPSqGS4wSpLors2B9jYAAFs`                                            |
+| Project         | `hogwarts` — `prj_KEuI2aVzMHIeBkjVcpK7KQvWGIJe`                                                 |
+| Live hosts      | `ed.databayt.org`, `demo.databayt.org`, `balqalam.com`, `www.balqalam.com`, `demo.balqalam.com` |
+| Git auto-deploy | **Disconnected on purpose** — see below                                                         |
+| Crons           | **All 31 disabled** — see below                                                                 |
 
 > The Hobby plan's terms are non-commercial. This is a knowing, temporary exception; settle the
 > invoice and move back.
@@ -87,9 +87,21 @@ minutes. The original array is preserved verbatim in **`vercel.crons.full.json`*
 > remaining queue is small, then enable. Better still, add the age cutoff inside
 > `processPendingEmailNotifications()` so this cannot recur.
 
+### The three conference jobs run on GitHub Actions instead
+
+`.github/workflows/conference-crons.yml` pings `live-class-reminders` (`*/15`),
+`end-stale-live-classes` (`*/30`) and `expire-live-recordings` (daily) with a `Bearer $CRON_SECRET`
+header. This is not a nicety: `live-class-reminders` is the only caller of `materializeOnlineSchools()`,
+so with every cron off a school that teaches online materializes **zero** sessions after the day it
+saved its settings — nothing to join and no reminders. It needs a `CRON_SECRET` **repo secret**
+matching the Vercel project value.
+
+**Delete that workflow when you restore the cron array below**, or the three jobs fire twice.
+
 ## Moving back to the paid account
 
-1. Restore the cron array: copy `vercel.crons.full.json`'s `crons` back into `vercel.json`.
+1. Restore the cron array: copy `vercel.crons.full.json`'s `crons` back into `vercel.json`,
+   and delete `.github/workflows/conference-crons.yml` (see above).
 2. Move the five hostnames from the Hobby project to the Pro one.
 3. Redeploy from git on Pro. Its warm cache builds this in ~2.6 minutes.
 
