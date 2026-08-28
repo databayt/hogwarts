@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="relative mx-auto flex h-screen max-w-md items-center justify-center px-6">
+    <div className="relative flex min-h-screen w-full items-center justify-center px-6">
       {children}
       <div className="text-muted-foreground absolute start-6 bottom-4 text-sm">
         <ReportIssue />

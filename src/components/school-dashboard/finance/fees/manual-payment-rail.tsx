@@ -59,6 +59,8 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   dictionary?: ManualRailDictionary
+  /** Fired once a proof has been accepted (PENDING_VERIFICATION row exists). */
+  onSubmitted?: () => void
 }
 
 /**
@@ -76,6 +78,7 @@ export function ManualPaymentRail({
   open,
   onOpenChange,
   dictionary: d,
+  onSubmitted,
 }: Props) {
   const isRTL = lang === "ar"
   const [details, setDetails] = useState<{
@@ -194,6 +197,7 @@ export function ManualPaymentRail({
 
         if (result.success) {
           setDone(true)
+          onSubmitted?.()
           return
         }
         setError(

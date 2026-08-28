@@ -15,7 +15,7 @@
  */
 import type { Locale } from "./config"
 
-/** Spread flat into the dictionary root (general/school/stream/operator). */
+/** Spread flat into the dictionary root (general/school/lumos/operator). */
 export const flatDictionaries = {
   general: {
     en: () => import("./en.json").then((m) => m.default),
@@ -25,9 +25,9 @@ export const flatDictionaries = {
     en: () => import("./school-en.json").then((m) => m.default),
     ar: () => import("./school-ar.json").then((m) => m.default),
   },
-  stream: {
-    en: () => import("./stream-en.json").then((m) => m.default),
-    ar: () => import("./stream-ar.json").then((m) => m.default),
+  lumos: {
+    en: () => import("./lumos-en.json").then((m) => m.default),
+    ar: () => import("./lumos-ar.json").then((m) => m.default),
   },
   operator: {
     en: () => import("./operator-en.json").then((m) => m.default),

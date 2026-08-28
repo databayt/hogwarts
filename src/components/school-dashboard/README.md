@@ -26,7 +26,7 @@ The school-dashboard block is the admin control center for individual schools wi
 | `/{lang}/s/{subdomain}/(school-dashboard)/profile/[[...id]]` | User profile management                        | Ready  |
 | `/{lang}/s/{subdomain}/(school-dashboard)/messages`          | Messaging                                      | Ready  |
 | `/{lang}/s/{subdomain}/(school-dashboard)/library/*`         | Library management                             | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/stream/*`          | LMS / course streaming                         | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/lumos/*`           | LMS / course delivery                          | Ready  |
 | `/{lang}/s/{subdomain}/(school-dashboard)/lab`               | Experimental features                          | Ready  |
 | `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/*`      | Students, teachers, classes, subjects, etc.    | Ready  |
 

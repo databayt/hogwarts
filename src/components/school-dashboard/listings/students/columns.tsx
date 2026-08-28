@@ -288,11 +288,10 @@ export const getStudentColumns = (
         <DataTableColumnHeader column={column} title={t.phone} />
       ),
       meta: { label: t.phone, variant: "text" },
-      // Not sortable: sorting is server-side (manualSorting), and the sort id
-      // is mapped straight into a Prisma `orderBy` key. `phone` is DERIVED
-      // (mobileNumber || alternatePhone) and has no Student column, so a sort
-      // click here would send Prisma an unknown field.
-      enableSorting: false,
+      // Sorts on mobileNumber (see buildStudentOrderBy in list-params.ts) —
+      // the displayed value falls back to alternatePhone, so a row showing an
+      // alternate number sorts by its blank mobile. Sorting the fallback too
+      // would need a computed column.
     },
     {
       accessorKey: "dateOfBirth",

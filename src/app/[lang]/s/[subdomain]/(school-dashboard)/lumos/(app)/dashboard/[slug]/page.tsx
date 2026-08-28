@@ -3,21 +3,21 @@
 
 import { redirect } from "next/navigation"
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getCatalogCourseSidebarData } from "@/components/stream/data/catalog/get-course-sidebar-data"
+import { getCatalogCourseSidebarData } from "@/components/lumos/data/catalog/get-course-sidebar-data"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
 }
 
-export default async function StreamCourseSlugRoute({ params }: Props) {
-  const { lang, subdomain, slug } = await params
+export default async function LumosCourseSlugRoute({ params }: Props) {
+  const { lang, slug } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
 
-  const course = await getCatalogCourseSidebarData(slug, schoolId)
+  // The fetcher resolves the tenant itself — it is a POST endpoint, so a
+  // caller-supplied schoolId is attacker-controlled.
+  const course = await getCatalogCourseSidebarData(slug)
 
   const firstChapter = course.course.chapter[0]
   const firstLesson = firstChapter?.lessons[0]
@@ -26,7 +26,7 @@ export default async function StreamCourseSlugRoute({ params }: Props) {
     redirect(`/${lang}/lumos/courses/${slug}/${firstLesson.id}`)
   }
 
-  const d = dictionary.stream?.courses
+  const d = dictionary.lumos?.courses
 
   return (
     <div className="flex h-full items-center justify-center text-center">

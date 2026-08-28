@@ -5,10 +5,10 @@ title: Grades
 file_type: issue
 owner: Abdout
 maturity: Built+Polish
-completion: 94
+completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-06-14
+last_audited: 2026-08-14
 ---
 
 # Grades — Production Readiness Tracker
@@ -19,7 +19,30 @@ last_audited: 2026-06-14
 
 ---
 
+## POST-deploy — one manual step owed
+
+No DDL is owed (`document_templates` is already live). But **prod will not self-heal**:
+`ensure-demo` fast-paths on an already-seeded demo so the new seed never runs, and
+`/api/cron/term-end-report-cards` only generates for a term that has **zero** cards —
+prod term 1 already has ~970. So after pushing, the prod demo keeps its random GPAs and
+0 `ReportCardGrade` rows, i.e. exactly the bug this pass fixed.
+
+Run once against the prod demo after deploy:
+
+```bash
+pnpm db:seed:single grades
+```
+
+(Idempotent — projects graded submissions into `Result`, re-runs the aggregation, and
+publishes. A tenant admin can achieve the same from the UI: `/grades/reports` → pick the
+term → **Generate report cards** → **Publish**.)
+
 ## Recently Added
+
+- **Report-card generation made set-based; gradebook + report cards actually seeded (2026-08-14)** — `generateReportCardsCore` walked one student at a time, firing two score queries per enrolled class plus an attendance / year-level / card lookup per student, then one `updateMany` per student for the rank pass. On the demo school (972 students × 36 enrolled classes) that is **~70,000 sequential round-trips** — minutes to hours, past any server-action or cron timeout. That is why prod/demo had **0 `ReportCardGrade` rows**: nobody had ever completed a run at school scale, so every report card printed a header with an empty subject table, and the `.docx` `{{#subjects}}` loop rendered nothing for every school. Rewritten to read the whole cohort in a fixed handful of queries (classes-in-term → `studentClass` / `examResult` / `result` / `attendance.groupBy` / `academicGrade`, all `Promise.all`), aggregate in memory, resolve rank in memory so it rides the same write, and write in chunks (`createMany` for new cards, batched `$transaction` for existing, chunked `deleteMany` + `createMany` for grade rows). **Measured on the local demo: 1.02s for 970 cards / 14,738 subject grades.** Same de-dup rule (`Result` wins over `ExamResult` for the same `examId`) and same `percentageToGrade`; additionally `attendance` now filters `deletedAt: null` (soft-deleted rows had been counted).
+- **`revalidatePath` moved out of the core, and every grades path fixed (2026-08-14)** — the core is called by the term-end cron and the seed, which have no request scope; revalidation now lives in the `generateReportCards` action wrapper. All grades calls used bare `"/grades/reports"`-style strings, which match no cache tag — **every grades revalidation was a silent no-op**. New `grades/lib/paths.ts` (`gradesPath`, `parentPath`) returns the internal bracketed form and every call site passes `"page"` (report-cards ×2, promotion ×5, transcripts ×1).
+- **Seed derives the gradebook instead of inventing it (2026-08-14)** — the demo held ~14.3k GRADED `AssignmentSubmission` rows and ~30k `ExamResult` rows, and the unified `Result` gradebook had **2 rows**; `/grades` was empty. Report cards were seeded with a _random_ GPA, so a student with all-F exams could print an A+. `seedGradebookResults` now projects every graded submission into `Result` (scored with the spine's own `toPercentage` + `letterGradeFor` against the school's real `GradeBoundary` rows; de-duped on the spine's `assignmentId` match key, so re-runs insert nothing), and `seedReportCards` runs the production `generateReportCardsCore`. Demo now: **14,306 gradebook rows, 970 report cards, 14,738 subject grades, real ranks and attendance days** — one source of truth across the gradebook, the assignment module and the printed card. Idempotency verified (second run: 0 new rows, identical counts).
+- **Bulk `.docx` report cards (2026-08-14)** — `generateDocumentsBulk` existed but was **called from nowhere**; the only path to "the school's own template" was the per-row button, i.e. ~970 clicks for a term. New `generateFromDefaultTemplateBulk(category, entityIds)` + `getReportCardIdsForTemplate({termId, gradeId})` back a **Generate all** button on the report-cards table that fills the school's default `REPORT_CARD` template for the whole filtered cohort, chunked at `BULK_MAX_ENTITIES` (50) with a live count. Chunking is not cosmetic: measured 50 cards → 406 KB zip / 541 KB base64 with a minimal template, so a whole term in one action response is tens of megabytes.
 
 - **Term-end report-card auto-generation + cron-callable core (2026-07-19)** — extracted the aggregation into `grades/lib/report-cards-core.ts` (`generateReportCardsCore(schoolId, input)`, a plain module mirroring the gradebook-spine pattern); the `generateReportCards` action is now a thin `auth()`+`getTenantContext()` wrapper. The `/api/cron/term-end-report-cards` cron (daily 03:00) was rewritten from flag-only to actually **generate** report-card drafts for just-ended terms via the core — but only when the term has zero report cards yet, so an admin-processed term is never clobbered. It does NOT publish: the admin reviews in `/grades/reports` and clicks Publish, then `process-report-card-pdfs` renders PDFs. Also wired the `REPORT_CARD` docx template-fill (see the documents block): a new `documents/resolvers/report-card.ts` reads `ReportCard`+`ReportCardGrade[]`, surfaced as a "Generate (my template)" button on `report-cards/table.tsx`. The 4-step `grades/template/` report-card builder wizard was removed (`/grades/templates` now redirects to `/documents`). tsc 0.
 

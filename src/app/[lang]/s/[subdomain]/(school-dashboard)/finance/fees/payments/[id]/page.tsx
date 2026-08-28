@@ -110,6 +110,13 @@ export default async function PaymentDetailPage({ params }: Props) {
         <div className="flex gap-2">
           <PaymentDetailActions
             paymentId={payment.id}
+            dictionary={
+              (
+                dictionary?.finance?.fees as
+                  | { paymentActions?: Record<string, string> }
+                  | undefined
+              )?.paymentActions
+            }
             receiptData={{
               paymentNumber: payment.paymentNumber,
               receiptNumber: payment.receiptNumber,
@@ -177,7 +184,14 @@ export default async function PaymentDetailPage({ params }: Props) {
               <span className="text-muted-foreground">
                 {d?.method ?? "Method"}
               </span>
-              <span className="font-medium">{payment.paymentMethod}</span>
+              <span className="font-medium">
+                {payment.paymentMethod}
+                {payment.gatewayMethod && (
+                  <span className="text-muted-foreground ms-2 text-xs uppercase">
+                    {payment.gatewayMethod}
+                  </span>
+                )}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">
@@ -221,6 +235,34 @@ export default async function PaymentDetailPage({ params }: Props) {
                 <span className="font-medium">**** {payment.cardLastFour}</span>
               </div>
             )}
+            {payment.depositBankBranch && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  {d?.depositBankBranch ?? "Branch"}
+                </span>
+                <span className="font-medium">{payment.depositBankBranch}</span>
+              </div>
+            )}
+            {payment.depositorIban && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  {d?.depositorIban ?? "Sender IBAN"}
+                </span>
+                <span className="font-mono text-sm">
+                  {payment.depositorIban}
+                </span>
+              </div>
+            )}
+            {payment.verifiedAt && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  {d?.verifiedAt ?? "Verified"}
+                </span>
+                <span className="font-medium">
+                  {formatDate(payment.verifiedAt, lang)}
+                </span>
+              </div>
+            )}
             {payment.remarks && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
@@ -231,6 +273,42 @@ export default async function PaymentDetailPage({ params }: Props) {
             )}
           </CardContent>
         </Card>
+
+        {/* Proof of transfer — the bursar cannot verify a Bankak/Cashi/bank
+            payment without seeing what the payer sent. Images render inline;
+            a PDF proof opens in a new tab. */}
+        {payment.depositSlipUrl && (
+          <Card className="sm:col-span-2">
+            <CardHeader>
+              <CardTitle>{d?.proof ?? "Proof of payment"}</CardTitle>
+              <CardDescription>
+                {d?.proofDescription ??
+                  "Submitted by the payer. Compare the amount and reference before clearing."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/\.(png|jpe?g|webp|gif|heic)(\?|$)/i.test(
+                payment.depositSlipUrl
+              ) ? (
+                // eslint-disable-next-line @next/next/no-img-element -- user upload on the CDN, arbitrary dimensions
+                <img
+                  src={payment.depositSlipUrl}
+                  alt={d?.proof ?? "Proof of payment"}
+                  className="max-h-[32rem] w-auto max-w-full rounded-md border"
+                />
+              ) : null}
+              <Button variant="outline" size="sm" asChild>
+                <a
+                  href={payment.depositSlipUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {d?.openProof ?? "Open proof in new tab"}
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

@@ -3,9 +3,16 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { toCloudFrontUrl } from "@/lib/cloudfront-url"
 import { db } from "@/lib/db"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import {
+  applyInstructorPolicy,
+  getInstructorPolicy,
+} from "@/components/lumos/lib/instructor-policy"
+import {
+  buildProtectedVideoUrl,
+  isExternallyHostedVideo,
+} from "@/components/lumos/video/media-access"
 import { getText } from "@/components/translation/display"
 import type { Lang } from "@/components/translation/types"
 
@@ -212,25 +219,81 @@ async function buildResponse(
           where: {
             catalogLessonId: { in: allLessonIds },
             approvalStatus: "APPROVED",
+            // Visibility gate, matched to the one the lesson page applies.
+            // The old `{ schoolId }` arm had no visibility filter, so it
+            // handed every one of a school's PRIVATE videos to any member —
+            // the same leak already closed in get-lesson-with-progress.ts.
+            // PAID is excluded outright here: this listing has no per-user
+            // purchase check to gate it with.
             OR: schoolId
-              ? [{ schoolId }, { visibility: "PUBLIC" }]
+              ? [
+                  { schoolId, visibility: { in: ["SCHOOL", "PUBLIC"] } },
+                  { visibility: "PUBLIC" },
+                ]
               : [{ visibility: "PUBLIC" }],
           },
           orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
           select: {
+            id: true,
             catalogLessonId: true,
             videoUrl: true,
-            user: { select: { username: true } },
+            // Instructor attribution — the policy matcher reads all three.
+            schoolId: true,
+            isFeatured: true,
+            user: { select: { id: true, username: true } },
           },
         })
       : []
 
-  // Map: lessonId -> best video URL + instructor name
-  const videoByLesson = new Map<string, { url: string; instructor: string }>()
+  // The school's instructor policy governs this lane exactly as it governs the
+  // web lesson page. Skipping it here is how a mobile client keeps serving an
+  // instructor the school disabled.
+  const [policy, preference] = await Promise.all([
+    getInstructorPolicy(schoolId),
+    schoolId
+      ? db.instructorPreference.findUnique({
+          where: {
+            schoolId_catalogSubjectId: {
+              schoolId,
+              catalogSubjectId: subject.id,
+            },
+          },
+          select: { preferredSchoolId: true, preferredUserId: true },
+        })
+      : null,
+  ])
+
+  // Group by lesson, then let the shared resolver pick each lesson's winner —
+  // the lock is per lesson (it falls back where the locked instructor has no
+  // video), so it cannot be applied to the flat list.
+  const videosByLesson = new Map<string, typeof videos>()
   for (const v of videos) {
+    const bucket = videosByLesson.get(v.catalogLessonId)
+    if (bucket) bucket.push(v)
+    else videosByLesson.set(v.catalogLessonId, [v])
+  }
+  const allowedVideos = Array.from(videosByLesson.values()).flatMap((bucket) =>
+    applyInstructorPolicy(bucket, policy, preference).slice(0, 1)
+  )
+
+  // Map: lessonId -> best video URL + instructor name.
+  // Self-hosted videos resolve to the protected reference, never a storage URL.
+  //
+  // KNOWN GAP: `/api/lumos/video/<id>` authenticates with the session cookie
+  // (`auth()`), while this mobile lane authenticates with a Bearer JWT
+  // (`verifyToken`) — so a mobile client cannot follow that reference yet and
+  // needs a JWT-authenticated mint under `/api/mobile/`. Self-hosted mobile
+  // playback was already broken before this (the CloudFront-domain 403) and
+  // no self-hosted rows exist in production, so this changes nothing in
+  // practice — but it does need building before mobile ships self-hosted
+  // video. Tracked in the block's ISSUE.md.
+  const videoByLesson = new Map<string, { url: string; instructor: string }>()
+  for (const v of allowedVideos) {
     if (!videoByLesson.has(v.catalogLessonId)) {
       videoByLesson.set(v.catalogLessonId, {
-        url: toCloudFrontUrl(v.videoUrl),
+        url: isExternallyHostedVideo(v.videoUrl)
+          ? v.videoUrl
+          : buildProtectedVideoUrl(v.id),
         instructor: v.user?.username || "",
       })
     }

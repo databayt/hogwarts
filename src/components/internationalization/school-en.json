@@ -4164,7 +4164,15 @@
         "saveSettings": "Save Settings"
       },
       "lunchBreak": "Lunch Break",
-      "days": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      "days": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ],
       "exceptionTypes": {
         "holiday": "Holiday",
         "event": "Event",
@@ -6009,7 +6017,15 @@
           "noExamsDate": "No exams scheduled for this date",
           "scheduleNewExam": "Schedule New Exam",
           "roomTBD": "Room TBD",
-          "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+          "weekDays": [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+          ]
         },
         "analytics": {
           "gradeDistribution": "Grade Distribution",
@@ -10606,7 +10622,17 @@
         "alreadyEnrolledMessage": "This application has already been confirmed and enrolled. Contact the school for more information.",
         "payOnline": "Pay Online",
         "payOnlineDesc": "Pay online via a supported payment gateway",
-        "noPaymentMethodConfigured": "No payment method is configured yet. Please contact the school."
+        "noPaymentMethodConfigured": "No payment method is configured yet. Please contact the school.",
+        "walletTransferDetails": "Transfer to the school's account",
+        "merchantCode": "Merchant Code",
+        "scanQr": "Scan to pay",
+        "quoteReference": "Quote the reference above in the transfer note so the school can match your payment.",
+        "payWithTap": "mada / Card / Apple Pay",
+        "payWithTapDesc": "Pay with mada, credit card, KNET, or Apple Pay",
+        "payWithBankak": "Bankak",
+        "payWithBankakDesc": "Transfer in the Bankak app, then the school confirms it",
+        "payWithCashi": "Cashi",
+        "payWithCashiDesc": "Transfer in the MyCashi app, then the school confirms it"
       },
       "ai": {
         "extractedData": "Extracted Data",

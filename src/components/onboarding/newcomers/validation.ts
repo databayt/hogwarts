@@ -9,7 +9,7 @@ import { z } from "zod"
 
 // Step 1: Role Selection
 export const roleStepSchema = z.object({
-  role: z.enum(["teacher", "staff", "parent", "student"], {
+  role: z.enum(["teacher", "staff", "parent"], {
     message: "Please select a role",
   }),
 })
@@ -55,10 +55,6 @@ export const profileStepSchema = z.object({
   childName: z.string().optional(),
   childGrade: z.string().optional(),
 
-  // Student fields
-  gradeLevel: z.string().optional(),
-  previousSchool: z.string().optional(),
-
   // Staff fields
   department: z.string().optional(),
   position: z.string().optional(),
@@ -74,12 +70,6 @@ export const teacherProfileSchema = profileStepSchema.extend({
 export const parentProfileSchema = profileStepSchema.extend({
   relationship: z.string().min(1, "Please select your relationship"),
   childName: z.string().min(2, "Please enter your child's name"),
-})
-
-// Student-specific profile
-export const studentProfileSchema = profileStepSchema.extend({
-  gradeLevel: z.string().min(1, "Please select your grade level"),
-  dateOfBirth: z.string().min(1, "Please enter your date of birth"),
 })
 
 // Staff-specific profile

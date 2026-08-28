@@ -200,7 +200,7 @@ export const platformNav: PlatformNavItem[] = [
     roles: ["TEACHER"],
   },
   {
-    key: "stream",
+    key: "lumos",
     title: "Lumos",
     href: "/lumos",
     icon: "video",

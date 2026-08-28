@@ -27,6 +27,11 @@ qbank/
 ├── table.tsx                # Client component - data table
 ├── columns.tsx              # Table column definitions
 ├── form.tsx                 # Question creation/edit form
+├── lesson-attach-field.tsx  # Catalog chapter → lesson picker; attaching a
+│                            # question to a lesson is what puts it in that
+│                            # lesson's Lumos practice quiz. Calls Lumos'
+│                            # /api/lumos/proposable-* routes — don't build a
+│                            # second lesson enumerator.
 ├── tabbed-layout.tsx        # Tabbed view layout
 ├── catalog-tab.tsx          # Catalog browsing tab
 ├── ai-generate-content.tsx  # AI generation interface

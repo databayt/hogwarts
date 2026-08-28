@@ -109,7 +109,7 @@ export async function uploadReceipt(
       void extractReceiptData(receipt.id, cdnFileUrl, schoolId)
 
       // 7. Revalidate receipts list page
-      revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt`)
+      revalidatePath("/[lang]/s/[subdomain]/finance/receipt", "page")
 
       return {
         success: true,
@@ -173,7 +173,7 @@ export async function uploadReceipt(
     void extractReceiptData(receipt.id, fileUrl, schoolId)
 
     // 7. Revalidate receipts list page
-    revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt`)
+    revalidatePath("/[lang]/s/[subdomain]/finance/receipt", "page")
 
     return {
       success: true,
@@ -444,7 +444,7 @@ export async function deleteReceipt(id: string): Promise<ServerActionResponse> {
     })
 
     // 7. Revalidate receipts list page
-    revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt`)
+    revalidatePath("/[lang]/s/[subdomain]/finance/receipt", "page")
 
     return {
       success: true,
@@ -512,8 +512,8 @@ export async function retryReceiptExtraction(
     await retryExtraction(id, schoolId)
 
     // 5. Revalidate
-    revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt`)
-    revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt/${id}`)
+    revalidatePath("/[lang]/s/[subdomain]/finance/receipt", "page")
+    revalidatePath("/[lang]/s/[subdomain]/finance/receipt/[id]", "page")
 
     return {
       success: true,

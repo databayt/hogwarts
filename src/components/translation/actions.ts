@@ -64,8 +64,17 @@ export async function translate(
     return cached.translatedText
   }
 
+  // Specific tenant overrides
+  if (text.trim() === "القبس" && targetLang === "en") {
+    memoSet(schoolId, sourceLang, targetLang, text, "Alqabs")
+    return "Alqabs"
+  }
+
   // Translate via Google
-  const translated = await translateRaw(text, sourceLang, targetLang)
+  let translated = await translateRaw(text, sourceLang, targetLang)
+  if (targetLang === "en") {
+    translated = translated.replace(/\bAl-Qabas\b/gi, "Alqabs").replace(/\bAl Qabas\b/gi, "Alqabs")
+  }
 
   // Cache the result
   await db.translation

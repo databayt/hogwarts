@@ -23,9 +23,13 @@ import {
 } from "@/components/ui/table"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { BULK_MAX_ENTITIES } from "../../documents/config"
+import { downloadBase64 } from "../../documents/download"
+import { generateFromDefaultTemplateBulk } from "../../documents/generate"
 import { GenerateWithTemplateButton } from "../../documents/generate-with-template-button"
 import {
   generateReportCards,
+  getReportCardIdsForTemplate,
   getReportCards,
   publishReportCards,
 } from "../actions/report-cards"
@@ -48,11 +52,15 @@ export function ReportCardsTable({
   dictionary,
 }: ReportCardsTableProps) {
   const dict = dictionary.results.reportCards
+  const docs = dictionary.school?.documents
   const [data, setData] = useState(initialData)
   const [count, setCount] = useState(total)
   const [termId, setTermId] = useState(defaultTermId || "")
   const [gradeId, setGradeId] = useState("")
   const [isPending, startTransition] = useTransition()
+  const [bulkTotal, setBulkTotal] = useState(0)
+  const [bulkDone, setBulkDone] = useState(0)
+  const [bulkError, setBulkError] = useState<string | null>(null)
 
   const handleTermChange = (newTermId: string) => {
     setTermId(newTermId)
@@ -115,6 +123,52 @@ export function ReportCardsTable({
     })
   }
 
+  /**
+   * Fill the school's own `.docx` for EVERY card in the current filter.
+   *
+   * Chunked on purpose: each filled document is zipped and base64'd into the
+   * action response, so a whole term in one call is tens of megabytes. One zip
+   * part per `BULK_MAX_ENTITIES` cards, downloaded as it lands, with the count
+   * shown — the per-row button below is still there for a single student.
+   */
+  const handleGenerateAll = async () => {
+    if (!termId) return
+    setBulkError(null)
+    const listed = await getReportCardIdsForTemplate({
+      termId,
+      gradeId: gradeId && gradeId !== "all" ? gradeId : undefined,
+    })
+    if (!listed.success || !listed.data?.ids.length) {
+      setBulkError(
+        listed.success ? (dict.empty ?? null) : (docs?.generateFailed ?? null)
+      )
+      return
+    }
+
+    const ids = listed.data.ids
+    setBulkTotal(ids.length)
+    setBulkDone(0)
+
+    for (let i = 0; i < ids.length; i += BULK_MAX_ENTITIES) {
+      const slice = ids.slice(i, i + BULK_MAX_ENTITIES)
+      const res = await generateFromDefaultTemplateBulk("REPORT_CARD", slice)
+      if (!res.success || !res.data) {
+        // `error` carries an ACTION CODE, not a sentence — surfacing it raw
+        // prints "TEMPLATE_NOT_FOUND" at an Arabic admin.
+        setBulkError(
+          res.error === "TEMPLATE_NOT_FOUND"
+            ? (docs?.noTemplate ?? null)
+            : (docs?.generateFailed ?? null)
+        )
+        break
+      }
+      downloadBase64(res.data.filename, res.data.base64, res.data.mime)
+      setBulkDone(i + slice.length)
+    }
+
+    setBulkTotal(0)
+  }
+
   const unpublishedCount = data.filter((d: any) => !d.isPublished).length
 
   return (
@@ -155,6 +209,21 @@ export function ReportCardsTable({
           >
             {isPending ? dict.actions.generating : dict.actions.generate}
           </Button>
+          <Button
+            onClick={handleGenerateAll}
+            disabled={!termId || isPending || bulkTotal > 0}
+            variant="outline"
+            title={docs?.generateAllHint?.replace(
+              "{size}",
+              String(BULK_MAX_ENTITIES)
+            )}
+          >
+            {bulkTotal > 0
+              ? (docs?.generateAllProgress ?? "{done} / {total}")
+                  .replace("{done}", String(bulkDone))
+                  .replace("{total}", String(bulkTotal))
+              : (docs?.generateAll ?? "Generate all")}
+          </Button>
           {unpublishedCount > 0 && (
             <Button onClick={handlePublish} disabled={isPending}>
               {dict.actions.publish} ({unpublishedCount})
@@ -162,6 +231,8 @@ export function ReportCardsTable({
           )}
         </div>
       </div>
+
+      {bulkError && <p className="text-destructive text-sm">{bulkError}</p>}
 
       <div className="text-muted-foreground text-sm">
         {count} {dict.count}

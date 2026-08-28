@@ -1,8 +1,8 @@
 # Generate -- Production Readiness Tracker
 
 **Status:** IN PROGRESS
-**Completion:** 65%
-**Last Updated:** 2026-03-19
+**Completion:** 85%
+**Last Updated:** 2026-08-14
 
 ---
 
@@ -19,7 +19,7 @@
 - [x] Preview before finalization
 - [x] Server actions with Zod validation
 - [x] Multi-tenant isolation (schoolId scoping)
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (verified 2026-08-14 — the full tree exists under `src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/generate/`: `add/`, `catalog/`, `contributions/`, `templates/`, `versions/`, plus `page.tsx`/`error.tsx`/`loading.tsx`)
 
 ---
 
@@ -27,11 +27,12 @@
 
 ### P0 -- Critical
 
-1. **No route pages** -- `src/app/.../exams/generate/` directory does not exist
+_None._ ~~**No route pages**~~ — **STALE, corrected 2026-08-14.** The directory exists and is
+wired; see the MVP checklist above.
 
 ### P1 -- High
 
-1. **Hard failure on insufficient questions** -- If question bank lacks enough questions for a distribution requirement, generation fails entirely instead of degrading gracefully
+1. ~~**Hard failure on insufficient questions**~~ -- **STALE, corrected 2026-08-14.** `generateExamQuestions` has always degraded: it fills every distribution slot the bank can cover and reports the rest via `metadata.distributionMet` / `missingCategories`. Only a selection of _zero_ fails. The real defect was that callers **discarded** that metadata, so an under-stocked bank produced a silently short paper; `generateExamPaperFromTemplate` now returns `distributionMet` / `missingCategories` / `totalQuestions` alongside the document and the Use-template dialog names the unfilled slots.
 
 ### P2 -- Medium
 
@@ -51,4 +52,4 @@
 
 ---
 
-**Last Review:** 2026-03-19
+**Last Review:** 2026-08-14

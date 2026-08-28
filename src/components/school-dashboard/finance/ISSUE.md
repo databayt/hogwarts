@@ -128,6 +128,37 @@ still render).
   session's in-flight work; the receipt-delivery hunks in `fees/actions.ts` and the
   2026-08-14 section below stay that session's (unstaged here).
 
+## 2026-08-14 — invoices and receipts are now delivered, not just generated (LOCAL, not pushed)
+
+Two crons chased families for money (`fee-due` daily, `fee-overdue` daily with a
+7-day re-chase) while the invoice itself was never sent and the receipt was
+never delivered at all.
+
+- [x] **Receipt on payment.** `recordPayment` now points the `fee_paid`
+      notification at `/api/payment/[id]/receipt` and adds the email channel —
+      previously `channels: ["in_app"]` with `url: "/finance/fees"`, so a payer
+      got an in-app row and no receipt. A `PENDING_VERIFICATION` deposit keeps
+      the old link, because the receipt route only serves SUCCESS/REFUNDED and
+      would 404 before verification.
+- [x] **Invoice schedule at enrollment.** `UserInvoice.sentAt` was stamped only
+      by the manual admin "send invoice" button, so an enrolled family was
+      chased for invoices they had never been sent. The shared post-provision
+      notice (`src/lib/student-provisioning-notify.ts`) now states the instalment
+      count and stamps `sentAt` on the invoices it covered — **but only if the
+      notice actually dispatched**; `dispatchNotification` swallows its own
+      errors and returns null, so the stamp is gated on a real send.
+      `sendInvoiceEmail` and its button are unchanged.
+- [x] `sentAt` semantics widened to "the family has been told about this
+      invoice", not "this exact PDF was mailed". Both senders make that true.
+
+Open:
+
+- [ ] `ensureStudentFeeAssignments` short-circuits to `{ skipped: 1 }` on a null
+      `academicGradeId` **silently** — no warning, no log. That is what made
+      gradeless students invisible. Surfaced now via the students **unplaced**
+      filter and a weekly admin alert in the `fee-due` cron, but the helper
+      itself still returns quietly.
+
 # Finance -- Readiness & Verified Gap Register
 
 > Last updated: 2026-07-19 (security + money-integrity pass) · 14 sub-modules

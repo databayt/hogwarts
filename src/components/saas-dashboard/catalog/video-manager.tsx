@@ -14,7 +14,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   VideoInput,
   type VideoInputMetadata,
-} from "@/components/stream/video/video-input"
+} from "@/components/lumos/video/video-input"
 
 import {
   createVideo,

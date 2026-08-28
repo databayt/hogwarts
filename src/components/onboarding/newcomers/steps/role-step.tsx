@@ -22,7 +22,8 @@ import { NEWCOMER_ROLES, NEWCOMER_STEPS } from "../config"
  * Role Selection Step
  *
  * First step of newcomers onboarding.
- * User selects their role: teacher, staff, parent, or student.
+ * User selects their role: teacher, staff, or parent. Students are not a
+ * role here — they apply for admission instead (see `../config`).
  */
 export function RoleStep() {
   const form = useFormContext()

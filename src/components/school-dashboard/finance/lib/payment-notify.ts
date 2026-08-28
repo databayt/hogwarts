@@ -166,3 +166,81 @@ export async function notifyFeePaymentReceived(
 
   await Promise.all(sends)
 }
+
+export interface FeePaymentFailedNotifyInput {
+  schoolId: string
+  studentId: string
+  feeAssignmentId: string
+  /** Gateway's own reason text/code, if it gave one. */
+  reason?: string | null
+  /** Gateway charge / payment-intent id, for support lookups. */
+  transactionId?: string | null
+  lang?: string | null
+}
+
+/**
+ * "Payment failed — please retry" for a declined/abandoned online charge.
+ * Same audience as {@link notifyFeePaymentReceived}: the student AND every
+ * linked guardian, since it is usually the guardian who was holding the card.
+ * High priority, links back to the family portal where a retry is one click.
+ * No Payment row is written for a failed charge — it is not an accounting
+ * event; the gateway dashboard is the audit trail.
+ */
+export async function notifyFeePaymentFailed(
+  input: FeePaymentFailedNotifyInput
+): Promise<void> {
+  const { schoolId, studentId, feeAssignmentId, reason, transactionId } = input
+
+  const [school, student, guardianLinks] = await Promise.all([
+    input.lang
+      ? Promise.resolve(null)
+      : db.school.findUnique({
+          where: { id: schoolId },
+          select: { preferredLanguage: true },
+        }),
+    db.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: { userId: true },
+    }),
+    db.studentGuardian.findMany({
+      where: { studentId, schoolId },
+      select: { guardian: { select: { userId: true } } },
+    }),
+  ])
+
+  const lang = input.lang ?? school?.preferredLanguage ?? "ar"
+  const copy = await getFinanceNotificationCopy(lang)
+  const title = copy.paymentFailedTitle || "Payment failed"
+  const body = interp(
+    copy.paymentFailedBody ||
+      "Your online payment did not go through ({reason}). Please try again or use another payment method.",
+    { reason: reason || "—" }
+  )
+  const metadata = {
+    feeAssignmentId,
+    transactionId: transactionId ?? null,
+    url: "/finance/fees/my",
+  }
+
+  const recipients = new Set<string>()
+  if (student?.userId) recipients.add(student.userId)
+  for (const link of guardianLinks) {
+    if (link.guardian?.userId) recipients.add(link.guardian.userId)
+  }
+
+  await Promise.all(
+    [...recipients].map((userId) =>
+      dispatchNotification({
+        schoolId,
+        userId,
+        type: "fee_due",
+        title,
+        body,
+        lang,
+        priority: "high",
+        channels: ["in_app", "email"],
+        metadata,
+      }).catch((err) => console.error("[notifyFeePaymentFailed]:", err))
+    )
+  )
+}

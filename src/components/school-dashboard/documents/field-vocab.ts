@@ -76,6 +76,35 @@ export const FIELD_VOCAB: Record<DocumentTemplateCategory, FieldDef[]> = {
       labelAr: "المدة (دقائق)",
     },
     { tag: "totalMarks", labelEn: "Total marks", labelAr: "الدرجة الكلية" },
+    { tag: "startTime", labelEn: "Start time", labelAr: "وقت البداية" },
+    { tag: "endTime", labelEn: "End time", labelAr: "وقت النهاية" },
+    { tag: "instructions", labelEn: "Instructions", labelAr: "التعليمات" },
+    {
+      tag: "questionCount",
+      labelEn: "Number of questions",
+      labelAr: "عدد الأسئلة",
+    },
+    {
+      tag: "sectionCount",
+      labelEn: "Number of sections",
+      labelAr: "عدد الأقسام",
+    },
+    // Sectioned layout — questions grouped by type, the way a real paper reads.
+    {
+      tag: "sections",
+      labelEn: "Sections (loop)",
+      labelAr: "الأقسام (تكرار)",
+      loop: true,
+    },
+    { tag: "number", labelEn: "— section number", labelAr: "— رقم القسم" },
+    { tag: "title", labelEn: "— section title", labelAr: "— عنوان القسم" },
+    {
+      tag: "count",
+      labelEn: "— questions in section",
+      labelAr: "— عدد أسئلته",
+    },
+    // Flat layout — every question in one continuously numbered list. Also the
+    // per-section question loop; the children below belong to both.
     {
       tag: "questions",
       labelEn: "Questions (loop)",
@@ -83,8 +112,31 @@ export const FIELD_VOCAB: Record<DocumentTemplateCategory, FieldDef[]> = {
       loop: true,
     },
     { tag: "order", labelEn: "— question number", labelAr: "— رقم السؤال" },
+    {
+      tag: "numberInSection",
+      labelEn: "— number within section",
+      labelAr: "— رقمه داخل القسم",
+    },
     { tag: "text", labelEn: "— question text", labelAr: "— نص السؤال" },
-    { tag: "marks", labelEn: "— question marks", labelAr: "— درجة السؤال" },
+    { tag: "marks", labelEn: "— marks", labelAr: "— الدرجة" },
+    { tag: "type", labelEn: "— question type", labelAr: "— نوع السؤال" },
+    {
+      tag: "typeLabel",
+      labelEn: "— question type (readable)",
+      labelAr: "— نوع السؤال (مقروء)",
+    },
+    {
+      tag: "isMcq",
+      labelEn: "— only if multiple-choice (condition)",
+      labelAr: "— فقط للاختيار من متعدد (شرط)",
+      loop: true,
+    },
+    {
+      tag: "hasOptions",
+      labelEn: "— only if it has options (condition)",
+      labelAr: "— فقط إذا كان له خيارات (شرط)",
+      loop: true,
+    },
     {
       tag: "options",
       labelEn: "— options (loop)",
@@ -95,6 +147,12 @@ export const FIELD_VOCAB: Record<DocumentTemplateCategory, FieldDef[]> = {
       tag: "label",
       labelEn: "—— option label (A/B/C)",
       labelAr: "—— رمز الخيار",
+    },
+    {
+      tag: "answerLines",
+      labelEn: "— blank answer lines (loop)",
+      labelAr: "— أسطر الإجابة الفارغة (تكرار)",
+      loop: true,
     },
     ...COMMON,
   ],

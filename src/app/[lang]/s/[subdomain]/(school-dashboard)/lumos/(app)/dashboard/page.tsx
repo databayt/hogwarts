@@ -6,17 +6,22 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import type { Role } from "@/lib/rbac/types"
+import { isRoleIn } from "@/lib/rbac/ui-permissions"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { StreamDashboardContent } from "@/components/stream/dashboard/content"
-import { getChildrenProgress } from "@/components/stream/dashboard/parent/actions"
-import { ParentProgressContent } from "@/components/stream/dashboard/parent/content"
-import { getCatalogDashboardData } from "@/components/stream/data/catalog/get-dashboard-data"
-import { StreamAdminDashboardContent } from "@/components/stream/settings/overview"
-import { getTeacherStats } from "@/components/stream/teach/actions"
-import { getProposableCatalog } from "@/components/stream/teach/get-proposable-lessons"
-import { TeachOverviewContent } from "@/components/stream/teach/overview-content"
+import { LumosDashboardContent } from "@/components/lumos/dashboard/content"
+import { getChildrenProgress } from "@/components/lumos/dashboard/parent/actions"
+import { ParentProgressContent } from "@/components/lumos/dashboard/parent/content"
+import { getCatalogDashboardData } from "@/components/lumos/data/catalog/get-dashboard-data"
+import { LUMOS_ADMIN_ROLES } from "@/components/lumos/permissions"
+import { LumosAdminDashboardContent } from "@/components/lumos/settings/overview"
+import { getTeacherStats } from "@/components/lumos/teach/actions"
+import { getProposableCatalog } from "@/components/lumos/teach/get-proposable-lessons"
+import { TeachOverviewContent } from "@/components/lumos/teach/overview-content"
+import { getSchoolCurrency } from "@/components/lumos/teach/school-currency"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -27,9 +32,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dictionary = await getDictionary(lang)
 
   return {
-    title: dictionary.stream?.dashboard?.title || "My Learning Dashboard",
+    title: dictionary.lumos?.dashboard?.title || "My Learning Dashboard",
     description:
-      dictionary.stream?.dashboard?.description ||
+      dictionary.lumos?.dashboard?.description ||
       "Track your learning progress",
   }
 }
@@ -97,6 +102,8 @@ async function getCatalogAdminStats(schoolId: string) {
             name: true,
             slug: true,
             status: true,
+            thumbnail: true,
+            color: true,
             totalChapters: true,
             totalLessons: true,
             createdAt: true,
@@ -134,6 +141,8 @@ async function getCatalogAdminStats(schoolId: string) {
       slug: s.subject!.slug,
       isPublished: s.subject!.status === "PUBLISHED",
       createdAt: s.subject!.createdAt,
+      imageUrl: getCatalogImageUrl(s.subject!.thumbnail, "original"),
+      color: s.subject!.color,
       chapters: Array.from({ length: s.subject!.totalChapters }, () => ({
         lessons: Array.from(
           {
@@ -158,7 +167,7 @@ async function getCatalogAdminStats(schoolId: string) {
   }
 }
 
-export default async function StreamDashboardPage({ params }: Props) {
+export default async function LumosDashboardPage({ params }: Props) {
   const { lang, subdomain } = await params
   const [dictionary, { schoolId }, session] = await Promise.all([
     getDictionary(lang),
@@ -170,14 +179,14 @@ export default async function StreamDashboardPage({ params }: Props) {
     redirect(`/${lang}/auth/login`)
   }
 
-  const role = session.user.role || ""
+  const role = (session.user.role || null) as Role | null
 
   // Guardian: show children's progress
   if (role === "GUARDIAN") {
     const childrenProgress = await getChildrenProgress()
     return (
       <ParentProgressContent
-        dictionary={dictionary.stream || {}}
+        dictionary={dictionary.lumos || {}}
         lang={lang}
         childrenProgress={childrenProgress}
       />
@@ -185,7 +194,7 @@ export default async function StreamDashboardPage({ params }: Props) {
   }
 
   // Admin/Developer: show admin stats + enrolled courses
-  if (role === "ADMIN" || role === "DEVELOPER") {
+  if (isRoleIn(role, LUMOS_ADMIN_ROLES)) {
     const [stats, dashboardData] = await Promise.all([
       schoolId ? getCatalogAdminStats(schoolId) : null,
       schoolId
@@ -195,17 +204,17 @@ export default async function StreamDashboardPage({ params }: Props) {
 
     return (
       <div className="space-y-12">
-        <StreamAdminDashboardContent
+        <LumosAdminDashboardContent
           dictionary={dictionary}
           lang={lang}
           schoolId={schoolId}
           userId={session.user.id}
-          userRole={role}
+          userRole={role ?? ""}
           stats={stats}
         />
         {dashboardData.enrolledCourses.length > 0 && (
-          <StreamDashboardContent
-            dictionary={dictionary.stream}
+          <LumosDashboardContent
+            dictionary={dictionary.lumos}
             lang={lang}
             schoolId={schoolId}
             userId={session.user.id}
@@ -219,26 +228,29 @@ export default async function StreamDashboardPage({ params }: Props) {
 
   // Teacher: show teacher stats + enrolled courses
   if (role === "TEACHER") {
-    const [teacherStats, dashboardData, proposableGrades] = await Promise.all([
-      getTeacherStats(),
-      schoolId
-        ? getCatalogDashboardData(session.user.id, schoolId)
-        : { enrolledCourses: [], availableCourses: [] },
-      getProposableCatalog(lang),
-    ])
+    const [teacherStats, dashboardData, proposableGrades, currency] =
+      await Promise.all([
+        getTeacherStats(),
+        schoolId
+          ? getCatalogDashboardData(session.user.id, schoolId)
+          : { enrolledCourses: [], availableCourses: [] },
+        getProposableCatalog(lang),
+        getSchoolCurrency(),
+      ])
 
     return (
       <div className="space-y-12">
         <TeachOverviewContent
-          dictionary={dictionary.stream || {}}
+          dictionary={dictionary.lumos || {}}
           lang={lang}
           stats={teacherStats}
           subdomain={subdomain}
           proposableGrades={proposableGrades}
+          currency={currency}
         />
         {dashboardData.enrolledCourses.length > 0 && (
-          <StreamDashboardContent
-            dictionary={dictionary.stream}
+          <LumosDashboardContent
+            dictionary={dictionary.lumos}
             lang={lang}
             schoolId={schoolId}
             userId={session.user.id}
@@ -256,8 +268,8 @@ export default async function StreamDashboardPage({ params }: Props) {
     : { enrolledCourses: [], availableCourses: [] }
 
   return (
-    <StreamDashboardContent
-      dictionary={dictionary.stream}
+    <LumosDashboardContent
+      dictionary={dictionary.lumos}
       lang={lang}
       schoolId={schoolId}
       userId={session.user.id}

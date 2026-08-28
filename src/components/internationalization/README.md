@@ -47,7 +47,7 @@ src/components/internationalization/
 ├── AUDIT.md                  # Route-by-route i18n coverage audit
 ├── {en,ar}.json              # General/marketing (flat)
 ├── school-{en,ar}.json       # School dashboard (flat, the largest pair)
-├── stream-{en,ar}.json       # Stream/LMS (flat)
+├── lumos-{en,ar}.json        # Lumos/LMS (flat)
 ├── operator-{en,ar}.json     # SaaS operator (flat)
 └── dictionaries/{en,ar}/     # 19 nested feature namespaces (admin, attendance,
                               # banking, compliance, finance, generate, lab, library,

@@ -15,6 +15,23 @@
 - [ ] OCR fallback for low-quality images
 - [ ] Receipt-to-expense linking
 
+## Resolved (2026-08-14) — revalidatePath targets that never matched
+
+All 5 calls used `/s/[subdomain]/(school-dashboard)/finance/receipt`, which
+could never match a cache tag for two independent reasons: it carried the
+`(school-dashboard)` **route group** (groups are not part of a page's path) and
+it omitted `[lang]` entirely. The detail call also interpolated a real id into
+that path, a third failure mode. Now
+`revalidatePath("/[lang]/s/[subdomain]/finance/receipt", "page")` and
+`.../finance/receipt/[id]` — `type` is required once a path holds a dynamic
+segment. Three tests asserted the old string and were updated; they had been
+encoding the bug.
+
+Context and the repo-wide count live in `.claude/findings/revalidate-path-repo-wide.md`.
+**Not a live bug today**: `pnpm build` reports 691 of 692 routes as `ƒ` (dynamic),
+so nothing was cached to go stale. It becomes load-bearing the day any of these
+routes adopt `'use cache'` / Cache Components — so the paths are correct now.
+
 ## Known Issues
 
 ### P1

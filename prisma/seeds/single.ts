@@ -754,7 +754,7 @@ const SEEDS: Record<string, SeedEntry> = {
     },
   },
   grades: {
-    description: "Grade boundaries + report cards",
+    description: "Grade boundaries + gradebook results + report cards",
     run: async (prisma, schoolId) => {
       const students = await resolveStudents(prisma, schoolId)
       const yearLevels = await resolveYearLevels(prisma, schoolId)

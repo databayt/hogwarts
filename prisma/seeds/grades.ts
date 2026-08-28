@@ -3,21 +3,47 @@
 
 /**
  * Grades Seed
- * Creates Grade Boundaries and Report Cards
+ * Grade boundaries → unified gradebook (`Result`) → report cards.
  *
- * Phase 8: Exams, QBank & Grades
+ * Phase 10: Exams, QBank & Grades
  *
- * Note: Model is GradeBoundary (not ScoreRange)
- * - GradeBoundary has @@unique([schoolId, grade])
- * - ReportCard has @@unique([schoolId, studentId, termId])
- * - ReportCard uses overallGrade, overallGPA (not grade, gpa)
+ * The gradebook is DERIVED, not invented. By the time this phase runs the demo
+ * already holds ~14k GRADED `AssignmentSubmission` rows and ~30k `ExamResult`
+ * rows — real scores with real feedback — and none of them used to reach the
+ * `Result` table the grades UI lists or the `ReportCard` the school prints.
+ * So: project graded submissions into `Result`, then run the PRODUCTION
+ * aggregation (`generateReportCardsCore`) to build the report cards from that
+ * same data. One source of truth; the gradebook, the assignment module and the
+ * printed report card can no longer disagree.
+ *
+ * (The previous version rolled a random score per student and wrote it straight
+ * onto the report card, so a student with all-F exams could print an A+, and no
+ * `ReportCardGrade` row existed at all — the `.docx` subject loop rendered
+ * empty for every school.)
  */
 
 import type { PrismaClient } from "@prisma/client"
 
+import {
+  getGradeBoundaries,
+  letterGradeFor,
+  toPercentage,
+} from "@/components/school-dashboard/grades/lib/gradebook"
+import { generateReportCardsCore } from "@/components/school-dashboard/grades/lib/report-cards-core"
+
 import { GRADE_SCALE } from "./constants"
 import type { StudentRef, TermRef, YearLevelRef } from "./types"
-import { getRandomScore, logSuccess, processBatch } from "./utils"
+import { logSuccess, logWarning } from "./utils"
+
+/** Insert bound — keeps one statement well inside Postgres' parameter cap. */
+const INSERT_CHUNK = 2_000
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = []
+  for (let i = 0; i < items.length; i += size)
+    out.push(items.slice(i, i + size))
+  return out
+}
 
 // ============================================================================
 // GRADE BOUNDARIES SEEDING
@@ -62,13 +88,132 @@ export async function seedGradeBoundaries(
 }
 
 // ============================================================================
+// UNIFIED GRADEBOOK (Result) SEEDING
+// ============================================================================
+
+/**
+ * Project every GRADED `AssignmentSubmission` into the unified `Result`
+ * gradebook — the table `/grades` lists and `generateReportCardsCore` reads.
+ *
+ * Consistency with the gradebook spine (`grades/lib/gradebook.ts`) is kept two
+ * ways, deliberately, without calling `upsertGradebookResult` per row (14k rows
+ * × 2 queries each is minutes of round-trips for a seed):
+ *
+ *  - the SCORING is the spine's own pure helpers, `toPercentage` +
+ *    `letterGradeFor`, against the school's real `GradeBoundary` rows, so a
+ *    seeded row is byte-identical to one a teacher would produce; and
+ *  - the IDEMPOTENCY uses the spine's documented match key for this source —
+ *    `assignmentId` (+ student) — so a re-run inserts nothing and never
+ *    duplicates. `Result` has no unique constraint, so `skipDuplicates` alone
+ *    would not protect it.
+ *
+ * Exam scores are NOT projected here: `finalizeExamResults` owns that path, and
+ * the report-card core already reads `ExamResult` directly and de-dupes by
+ * `examId`. Writing them twice is exactly the double-count the spine warns of.
+ */
+export async function seedGradebookResults(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<number> {
+  const submissions = await prisma.assignmentSubmission.findMany({
+    where: { schoolId, status: "GRADED", score: { not: null } },
+    select: {
+      studentId: true,
+      assignmentId: true,
+      score: true,
+      feedback: true,
+      submittedAt: true,
+      gradedAt: true,
+      gradedBy: true,
+      assignment: {
+        select: {
+          title: true,
+          totalPoints: true,
+          classId: true,
+          class: { select: { subjectId: true } },
+        },
+      },
+      student: { select: { academicGradeId: true } },
+    },
+  })
+
+  if (submissions.length === 0) {
+    logWarning("No graded submissions — gradebook left empty")
+    return 0
+  }
+
+  // Same match rule as `upsertGradebookResult`'s assignment branch.
+  const existing = await prisma.result.findMany({
+    where: { schoolId, assignmentId: { not: null } },
+    select: { studentId: true, assignmentId: true },
+  })
+  const seen = new Set(existing.map((r) => `${r.assignmentId}:${r.studentId}`))
+
+  const boundaries = await getGradeBoundaries(schoolId)
+
+  // `Student` carries an `academicGradeId`; `Result.yearLevelId` is the level
+  // above it. Twelve rows, resolved once.
+  const academicGrades = await prisma.academicGrade.findMany({
+    where: { schoolId },
+    select: { id: true, yearLevelId: true },
+  })
+  const yearLevelByGrade = new Map(
+    academicGrades.map((g) => [g.id, g.yearLevelId ?? null])
+  )
+
+  const rows = submissions
+    .filter((s) => !seen.has(`${s.assignmentId}:${s.studentId}`))
+    .map((s) => {
+      const score = Number(s.score)
+      const maxScore = Number(s.assignment.totalPoints) || 100
+      const percentage = toPercentage(score, maxScore)
+      return {
+        schoolId,
+        studentId: s.studentId,
+        classId: s.assignment.classId,
+        subjectId: s.assignment.class?.subjectId ?? null,
+        assignmentId: s.assignmentId,
+        yearLevelId: s.student?.academicGradeId
+          ? (yearLevelByGrade.get(s.student.academicGradeId) ?? null)
+          : null,
+        score,
+        maxScore,
+        percentage,
+        grade: letterGradeFor(percentage, boundaries),
+        title: s.assignment.title,
+        feedback: s.feedback,
+        submittedAt: s.submittedAt,
+        gradedAt: s.gradedAt ?? new Date(),
+        gradedBy: s.gradedBy,
+      }
+    })
+
+  if (rows.length === 0) {
+    logSuccess("Gradebook Results", 0, "already seeded")
+    return 0
+  }
+
+  for (const batch of chunk(rows, INSERT_CHUNK)) {
+    await prisma.result.createMany({ data: batch })
+  }
+
+  logSuccess("Gradebook Results", rows.length, "from graded submissions")
+  return rows.length
+}
+
+// ============================================================================
 // REPORT CARDS SEEDING
 // ============================================================================
 
 /**
- * Seed report cards for students
- * Note: ReportCard has @@unique([schoolId, studentId, termId])
- * Uses overallGrade, overallGPA (not grade, gpa)
+ * Build report cards by running the PRODUCTION aggregation, so the demo
+ * exercises the same code path an admin hits on `/grades/reports` — real
+ * per-subject `ReportCardGrade` rows, real credit-weighted GPA, real rank, real
+ * attendance days.
+ *
+ * Idempotent: the core upserts on `schoolId_studentId_termId` and rewrites each
+ * card's grade rows, so a second run converges on the same values instead of
+ * duplicating.
  */
 export async function seedReportCards(
   prisma: PrismaClient,
@@ -77,58 +222,41 @@ export async function seedReportCards(
   yearLevels: YearLevelRef[],
   term: TermRef
 ): Promise<number> {
-  let reportCount = 0
+  void students
+  void yearLevels
 
-  await processBatch(students, 50, async (student) => {
-    if (!student.yearLevelId) return
+  const res = await generateReportCardsCore(schoolId, { termId: term.id })
 
-    const yearLevel = yearLevels.find((yl) => yl.id === student.yearLevelId)
-    if (!yearLevel) return
+  if (!res.success) {
+    logWarning(`Report cards not generated: ${res.error}`)
+    return 0
+  }
 
-    // Generate GPA based on random scores
-    const averageScore = getRandomScore(100)
-    const gpa = (averageScore / 100) * 4.0
+  const { created, updated, skipped } = res.data ?? {
+    created: 0,
+    updated: 0,
+    skipped: 0,
+  }
+  const total = created + updated
 
-    // Determine grade based on score
-    const gradeInfo =
-      GRADE_SCALE.find(
-        (g) => averageScore >= g.minScore && averageScore <= g.maxScore
-      ) || GRADE_SCALE[GRADE_SCALE.length - 1]
-
-    try {
-      await prisma.reportCard.upsert({
-        where: {
-          schoolId_studentId_termId: {
-            schoolId,
-            studentId: student.id,
-            termId: term.id,
-          },
-        },
-        update: {
-          overallGPA: Math.round(gpa * 100) / 100,
-          overallGrade: gradeInfo.grade,
-        },
-        create: {
-          schoolId,
-          studentId: student.id,
-          termId: term.id,
-          yearLevelId: yearLevel.id,
-          overallGPA: Math.round(gpa * 100) / 100,
-          overallGrade: gradeInfo.grade,
-          rank: null, // Will be calculated later
-          isPublished: true,
-          publishedAt: new Date(),
-        },
-      })
-      reportCount++
-    } catch {
-      // Skip if report card already exists
-    }
+  // The core generates DRAFTS — an admin reviews then publishes. A seeded demo
+  // has no admin to click, and an unpublished card is invisible to the student
+  // and guardian portals, so publish here. Written straight to the column rather
+  // than through `publishReportCards` so seeding never fans out a notification
+  // to every student and guardian in the school.
+  await prisma.reportCard.updateMany({
+    where: { schoolId, termId: term.id, isPublished: false },
+    data: { isPublished: true, publishedAt: new Date() },
   })
 
-  logSuccess("Report Cards", reportCount, "with GPA and grades")
+  const gradeRows = await prisma.reportCardGrade.count({ where: { schoolId } })
+  logSuccess(
+    "Report Cards",
+    total,
+    `${gradeRows} subject grades · ${skipped} students without scores`
+  )
 
-  return reportCount
+  return total
 }
 
 // ============================================================================
@@ -146,5 +274,6 @@ export async function seedGrades(
   term: TermRef
 ): Promise<number> {
   await seedGradeBoundaries(prisma, schoolId)
+  await seedGradebookResults(prisma, schoolId)
   return await seedReportCards(prisma, schoolId, students, yearLevels, term)
 }

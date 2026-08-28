@@ -347,7 +347,7 @@ export default async function SubjectDetailPage({ params }: Props) {
           lessons: ch.lessons.filter((l) => !l.isHidden),
         }))
 
-  // Build video cards from ALL lessons (matches stream dashboard "More from X");
+  // Build video cards from ALL lessons (matches lumos dashboard "More from X");
   // hidden content drops for non-customizers, same as the chapter list.
   const allLessons = await Promise.all(
     subject.chapters.flatMap((ch) =>

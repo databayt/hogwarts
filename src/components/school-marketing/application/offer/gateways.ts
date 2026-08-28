@@ -1,8 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { SchoolPaymentSettings } from "@prisma/client"
+
+import { filterConfiguredManualRails } from "@/lib/payment/manual-rail-settings"
 import { resolveAvailableMethods } from "@/lib/payment/provider"
-import type { PaymentGateway } from "@/lib/payment/types"
+import { isManualGateway, type PaymentGateway } from "@/lib/payment/types"
 
 /**
  * Resolve which payment gateways the registration fee may be paid with.
@@ -32,19 +35,44 @@ export function computeAvailableGateways(
   admissionSettings: {
     enableOnlinePayment: boolean
     paymentMethods: unknown
-  } | null
+  } | null,
+  /**
+   * The school's wallet-rail config. Bankak/Cashi are only offerable once the
+   * school has published an account to pay INTO — without this they would
+   * render a "pay here" card with no account number, exactly the failure the
+   * fees side fixed with `filterConfiguredManualRails`. Omit (undefined) and
+   * the wallet rails are dropped entirely, which is the safe default for a
+   * caller that has not loaded the settings.
+   */
+  paymentSettings?: SchoolPaymentSettings | null
 ): PaymentGateway[] {
-  const resolvedOnline = resolveAvailableMethods(
+  const resolved = resolveAvailableMethods(
     schoolCountry,
     schoolTimezone,
     currency
-  ).filter((gateway) => gateway !== "cash" && gateway !== "bank_transfer")
+  )
 
+  // Redirect rails (stripe/tap) are the only ones `enableOnlinePayment` gates
+  // — it is the school's switch for card processing, not for the wallet apps
+  // a Sudanese parent transfers from.
+  const redirectRails = resolved.filter((g) => !isManualGateway(g))
   const onlineGateways = admissionSettings?.enableOnlinePayment
-    ? resolvedOnline
+    ? redirectRails
     : []
 
-  let methods: PaymentGateway[] = [...onlineGateways, "cash", "bank_transfer"]
+  // Wallet rails (bankak/cashi) come from the region list, then are dropped
+  // unless this school actually configured them.
+  const walletRails = filterConfiguredManualRails(
+    resolved.filter((g) => g === "bankak" || g === "cashi"),
+    paymentSettings ?? null
+  )
+
+  let methods: PaymentGateway[] = [
+    ...onlineGateways,
+    ...walletRails,
+    "cash",
+    "bank_transfer",
+  ]
 
   const allowList = admissionSettings?.paymentMethods
   if (Array.isArray(allowList) && allowList.length > 0) {

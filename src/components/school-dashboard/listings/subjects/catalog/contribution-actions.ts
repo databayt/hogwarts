@@ -95,7 +95,12 @@ export async function submitQuestion(data: {
           contributedBy: userId,
           contributedSchoolId: schoolId,
           approvalStatus: "PENDING",
-          visibility: data.visibility ?? "PUBLIC",
+          // SCHOOL, not PUBLIC. A school authoring a question for its own
+          // curriculum is contributing to ITS catalog; defaulting to PUBLIC
+          // pushed school-authored content into the global catalog for every
+          // school in the country the moment a platform reviewer approved it.
+          // Contributing globally stays available — it just has to be asked for.
+          visibility: data.visibility ?? "SCHOOL",
           status: "DRAFT",
         },
       })

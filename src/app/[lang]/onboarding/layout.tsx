@@ -24,7 +24,7 @@ export default async function OnboardingLayout({
   const { lang } = await params
   // Route-scoped: the onboarding wizard only consumes core general/school keys
   // plus the `messages` namespace (validation/error helpers). The 18 other
-  // feature namespaces + stream are never accessed here, so the narrower
+  // feature namespaces + lumos are never accessed here, so the narrower
   // getPlatformCoreDictionary (core + messages) payload is safe at runtime.
   const dictionary = await getPlatformCoreDictionary(lang as Locale)
 

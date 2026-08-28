@@ -249,7 +249,7 @@ byte-for-byte, so Sudanese schools provision exactly as before.
 
 > Grade **slugs** are intentionally not configurable — they stay `grade-${n}`
 > everywhere because the `YearLevel` mapping in `setup.ts` matches on that slug
-> shape. Only the display name, level boundaries, and stream policy vary per
+> shape. Only the display name, level boundaries, and lumos policy vary per
 > curriculum.
 
 ## Proposals & Approval
@@ -373,7 +373,7 @@ dialog enforces a per-type whitelist:
 
 - **`SubjectSelection.isActive`** — turns an adopted subject on/off for the school.
 - **`ContentOverride.isHidden`** — hides a chapter/lesson/video. Enforced on
-  both school surfaces: the stream LMS (`get-course.ts` drops hidden nodes;
+  both school surfaces: the lumos LMS (`get-course.ts` drops hidden nodes;
   `admin-get-course.ts` tags everything with `_isHidden` instead) **and** the
   subject detail page (`subjects/[slug]/page.tsx` filters chapters/lessons and
   the video rail for non-admin roles, while ADMIN/DEVELOPER see everything plus
@@ -384,7 +384,7 @@ dialog enforces a per-type whitelist:
   so it never rendered).
 - **`ContentOverride.hideQuiz`** — hides a lesson's practice quiz for the school
   while keeping the lesson visible (set via `setLessonQuizHidden`; a lesson
-  override row can carry `isHidden` and/or `hideQuiz`). Enforced in stream's
+  override row can carry `isHidden` and/or `hideQuiz`). Enforced in lumos's
   `get-lesson-content.ts` (returns no questions when hidden).
 - **`InstructorPreference`** — the admin's preferred video source per subject
   (platform / school / a specific teacher); `get-lesson-with-progress.ts` ranks
@@ -528,7 +528,7 @@ ministry textbook structures are authored.
 that live next to each Sudan textbook
 (`curriculum/sd/g{1–12}/<subject>/{qbank,exams}.json`) into
 `Question`/`Exam`/`ExamQuestion`: 102 subjects, ~2,700 questions (100%
-chapter-mapped; 405 also lesson-mapped, which is what feeds the stream lesson
+chapter-mapped; 405 also lesson-mapped, which is what feeds the lumos lesson
 practice quiz), and one linked final exam per subject. Question ids resolve to
 chapters/lessons through a boundary-safe slug scan plus per-scheme parsers
 covering the seven authored id formats. A quality gate skips the 22 g11/g12
@@ -537,7 +537,7 @@ subjects keep synthetic content instead. Rows are tagged `"sd"`; ingest is
 delete-and-recreate per subject and runs **locally** (`pnpm db:seed:single
 sd-content`) since `curriculum/` is not deployed.
 
-Sudan lessons deliberately have **no Video rows** — the stream lesson player
+Sudan lessons deliberately have **no Video rows** — the lumos lesson player
 falls back to the shared `story.mp4` clip on every SD lesson, so the player
 surface is never empty and never points at a missing CDN object.
 

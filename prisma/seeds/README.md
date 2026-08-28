@@ -65,6 +65,16 @@ production pipeline that real schools get at onboarding:
 - `setupCatalogForSchool` → AcademicLevels / Grades / Streams / SubjectSelections, read from
   the school's `country`/`curriculum` (demo = SD). `skipIfExists` makes re-runs a no-op.
 
+Phase 10 follows the same rule for **grades**. `grades.ts` does not invent scores: it
+projects every GRADED `AssignmentSubmission` into the unified `Result` gradebook (scored
+with the gradebook spine's own `toPercentage` + `letterGradeFor` against the school's real
+`GradeBoundary` rows, de-duped on the spine's `assignmentId` match key), then calls the
+production `generateReportCardsCore` to build `ReportCard` + `ReportCardGrade` + rank +
+attendance days. Before this the seed rolled a _random_ GPA straight onto the report card —
+a student with all-F exams could print an A+ — and wrote no `ReportCardGrade` rows at all,
+so the `.docx` report-card template's subject loop rendered empty. Demo totals: 14,306
+gradebook rows, 970 report cards, 14,738 subject grades.
+
 The retired `catalog/demo.ts` (`seedDemoSchool`) used to duplicate this logic and drifted
 from `setup.ts`. `seedDepartments` reuses any pre-existing departments instead of inserting
 language-duplicate rows (the demo may already carry English departments from an earlier

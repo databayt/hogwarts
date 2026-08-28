@@ -15,14 +15,14 @@ interface Props {
   reset: () => void
 }
 
-export default function StreamPaymentCancelError({ error, reset }: Props) {
+export default function LumosPaymentCancelError({ error, reset }: Props) {
   const params = useParams()
   const lang = (params?.lang as string) || "en"
   const subdomain = params?.subdomain as string
   const isRTL = lang === "ar"
 
   useEffect(() => {
-    console.error("Stream Payment Cancel Error:", error)
+    console.error("Lumos Payment Cancel Error:", error)
   }, [error])
 
   return (

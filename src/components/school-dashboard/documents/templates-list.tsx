@@ -24,6 +24,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { deleteDocumentTemplate, setDefaultTemplate } from "./actions"
 import { downloadBase64 } from "./download"
 import { generateDocument } from "./generate"
+import { StarterButton } from "./starter-button"
 import { UploadTemplateDialog } from "./upload-template-dialog"
 import { UseExamTemplateDialog } from "./use-exam-template-dialog"
 
@@ -93,18 +94,26 @@ export function DocumentsManager({
               <h2 className="text-lg font-semibold">
                 {sections?.[category] ?? category}
               </h2>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setUploadFor(category)}
-              >
-                <Plus className="me-1 size-4" />
-                {d?.upload}
-              </Button>
+              <div className="flex items-center gap-2">
+                <StarterButton category={category} />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setUploadFor(category)}
+                >
+                  <Plus className="me-1 size-4" />
+                  {d?.upload}
+                </Button>
+              </div>
             </div>
 
             {rows.length === 0 ? (
-              <p className="text-muted-foreground text-sm">{d?.none}</p>
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">{d?.none}</p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.starterHint}
+                </p>
+              </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {rows.map((tpl) => (

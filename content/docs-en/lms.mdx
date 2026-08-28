@@ -1,9 +1,9 @@
 ---
-title: LMS (Stream)
+title: LMS (Lumos)
 description: Catalog-based video learning — free and paid enrollment, multi-instructor lessons, contributor uploads with a two-desk review pipeline, per-video unlocks, and full contributor ownership.
 ---
 
-Stream is the platform's learning module. Students browse the shared [catalog](/docs/catalog), enroll in courses, and watch lessons; teachers and admins contribute videos that flow through a review pipeline and stay under the contributor's control — including per-video paid unlocks. Two journeys meet at the lesson page, and this page documents both, then the code layout that implements them.
+Lumos is the platform's learning module. Students browse the shared [catalog](/docs/catalog), enroll in courses, and watch lessons; teachers and admins contribute videos that flow through a review pipeline and stay under the contributor's control — including per-video paid unlocks. Two journeys meet at the lesson page, and this page documents both, then the code layout that implements them.
 
 **Governance.** The Subject → Chapter → Lesson hierarchy is platform-owned: schools adopt it from the catalog and may request new subjects, but never author structure themselves. A school customizes by hiding/activating chapters, lessons, videos, or a lesson's quiz per school, and contributes at the **lesson level** — videos, study materials, and quiz questions. Approved lesson materials appear to students in the lesson's Resources section alongside the video.
 
@@ -65,6 +65,8 @@ Three invariants hold everywhere:
 
 The catalog shows only published subjects the school has selected; content a school hid via override never appears for its students. Free courses enroll in one click with no payment UI; paid courses activate only after the Stripe webhook confirms. Free-course lessons are open even without enrolling — paid-course lessons are blocked for non-enrolled students, including by direct link.
 
+Two ways in, on the same bar. **Explore** opens a shelf of six real courses with their artwork — scoped to the grade being browsed, one card per subject — above the popular search terms. **Typing** two characters raises a live list of matching courses, each with its thumbnail, grade and lesson count, so the six near-identical "Mathematics" rows in a K–12 catalog stay distinguishable; arrow keys and Enter open one, and _See all results_ falls through to the full grid. Search is bilingual — a term typed in Arabic finds a course stored in English, and vice-versa — and it reads only the translation cache, so a keystroke never costs a translation API call. The whole catalog is one grade-wide query away: the grade filter applies to browsing, not to search.
+
 ### Watch a lesson
 
 <Mermaid
@@ -82,7 +84,22 @@ The catalog shows only published subjects the school has selected; content a sch
     Endd --> Quiz["📝 Practice quiz → score lands in gradebook"]`}
 />
 
-A lesson with no videos — or one whose file is dead or undecodable — plays the story fallback clip instead of a black screen. Fallback playback records no progress and never auto-completes (the manual "Mark as Complete" still works). Real videos resume where the student left off, auto-complete on finish, and offer up-next. With multiple instructors, chips switch the player; the school's preferred instructor plays by default, and every video credits its uploader. The practice quiz writes into the school gradebook when the student belongs to a class for that subject.
+A lesson with no videos — or one whose file is dead or undecodable — plays the story fallback clip instead of a black screen. Fallback playback records no progress and never auto-completes (the manual "Mark as Complete" still works). Real videos resume where the student left off, auto-complete on finish, and offer up-next. With multiple instructors, chips switch the player; the school's preferred instructor plays by default, instructors the school has disabled never appear at all, and every video credits its uploader.
+
+### The practice quiz
+
+Below the video, a lesson can carry a short practice quiz drawn from the catalog's question bank — multiple choice, true/false, and fill-in-the-blank. A school can hide any lesson's quiz without hiding the lesson.
+
+The quiz is graded on the server, against exactly the questions it showed you. Nothing about the answers reaches the browser until you submit: you pick an option, the server says which one was right and why. Once you submit, each question shows the correct answer with any explanation, and the score appears with it.
+
+Scores reach the school gradebook when the student belongs to a class for that subject, and land there as their own row per lesson. **Only the first attempt is recorded** — you can retake a practice quiz as often as you like to study, and the quiz says plainly whether the attempt you just finished counted or not. Report cards read the same gradebook, which is why a retakeable practice score is not allowed to keep rewriting it.
+
+### Where quiz questions come from
+
+Questions live in the platform catalog and attach to a lesson. A school gets them there two ways:
+
+- **Question Bank** (Exams → Question Bank) — author a question, pick its subject, then optionally attach it to a chapter and lesson. Attaching it is what puts it in that lesson's practice quiz. The lesson picker offers only what the school actually teaches, minus anything it has hidden, and names read in your own language — the same picker the video upload dialog uses.
+- **Subject contributions** — submitted for platform review, and visible to the school's own lessons once approved. School-authored questions default to school visibility; contributing one to the global catalog is a deliberate choice, not the default.
 
 ### Contribute a video
 
@@ -148,24 +165,66 @@ The contributor owns the video for good: visibility changes apply instantly, exc
 <Mermaid
   chart={`flowchart LR
     Set["⚙️ Settings — overview · enrollments ·<br/>instructors · review · videos"] --> Shape["Shape the whole feature"]
-    Pref["🎚️ Instructor preference (per subject)"] --> Order["Which video plays first, school-wide"]
+    Pref["🎚️ Instructor roster — allow · default · lock"] --> Order["Who may teach, and who plays first"]
     Ovr["🙈 Content override"] --> Hide["Hide a chapter/lesson/video<br/>for this school only"]
     Quota["📦 Storage quota"] --> Cap["Caps direct uploads per school —<br/>checked up-front, counted from real bytes"]
     Par["👪 Parent view"] --> Kid["Child's progress, read-only"]
     Mail["📧 Resend emails"] --> Ev["Enrollment + completion emails"]`}
 />
 
-Settings tabs are role-gated (teachers see only Videos; admins see all five, with a pending-count badge on Review). Instructor preference sets the default video source per subject school-wide; content overrides hide catalog items for one school without affecting others; parents get a read-only view of their child's progress; enrollment and completion emails go out via Resend. The whole surface — player, dialogs, review desk, search — follows the school's language, Arabic RTL included.
+Settings tabs are role-gated (teachers see only Videos; admins see all five, with a pending-count badge on Review). The Instructors surface lists every instructor whose videos reach the school's own subjects — the platform library, the school's own teachers, and any partner school's — with the coverage each one has, in lessons. A school can disable an instructor (their videos are then served on no surface, including mobile), star one as the default so their video plays first wherever they have one, or lock Lumos to a single instructor — its own teachers, or anyone it prefers. The lock is deliberately not absolute: on a lesson the locked instructor never covered, the remaining allowed instructors still play, because a lesson with no video records no progress and would put completion out of reach. Content overrides hide catalog items for one school without affecting others; parents get a read-only view of their child's progress; enrollment and completion emails go out via Resend. The whole surface — player, dialogs, review desk, search — follows the school's language, Arabic RTL included.
+
+**Certificates.** Completing every lesson a school actually shows — hidden chapters and lessons don't count, so hiding content can never put a certificate out of reach — marks the enrollment complete and issues a certificate of completion. It carries the learner, the subject, the school, the date, and a certificate number, reads in the reader's own language, and is reachable from the course page as well as from the completion email. "Download" opens the browser's print dialog, which is also where Save as PDF lives. Certificates today attest to completing the course, not to passing an assessment — quiz and exam scores do not gate issuance.
+
+## Protecting school video
+
+A school's lesson video is its own work. Lumos treats the link to that video as
+the thing worth guarding, because the link is what actually leaks.
+
+Nothing playable in a Lumos page is a storage address. A lesson carries an
+opaque reference — `/api/lumos/video/<id>` for video, `/api/lumos/file/<kind>/<id>`
+for worksheets and notes — and that endpoint re-checks, on **every single
+request**, who is asking: their session, their school, whether the video is
+public or school-only or private, and whether a paid video has actually been
+paid for. Only then does it hand back a signed link that stops working after
+two hours. Revoke someone's access and the next request fails; there is no
+durable URL left behind to keep working.
+
+What that buys, concretely:
+
+- A URL copied out of the browser stops working the same afternoon, and only
+  ever worked for content that viewer was already allowed to watch.
+- A link forwarded to somebody outside the school is useless — it is checked
+  against _their_ session, not the sender's.
+- Videos from other schools, unapproved uploads, and unpurchased paid content
+  are not merely hidden in the UI; the server refuses to produce a link at all.
+
+Inside the player, downloading is discouraged the ordinary ways — no download
+control, no right-click save, no drag-to-desktop — and every frame carries a
+faint watermark identifying who is watching and when. Picture-in-Picture and
+casting are switched off for school video specifically because they would
+strip that watermark.
+
+<Callout type="warn">
+  **Screen recording cannot be prevented in a web browser** — by us or by
+  anyone. No web page can stop a phone camera, a screen recorder, or the
+  operating system's own screenshot key. The watermark is the answer to that
+  case: it does not stop a recording, it makes a leaked one traceable back to
+  the account that made it. Blocking capture outright requires studio DRM
+  (Widevine/FairPlay), which means moving video to a DRM-packaged streaming
+  provider. Tell schools what is true: casual copying is closed off, and
+  determined recording is attributable, not impossible.
+</Callout>
 
 ## Structure
 
-The block follows the [mirror pattern](/docs/architecture): routes under `app/[lang]/s/[subdomain]/(school-dashboard)/lumos/` are thin wrappers, and everything lives in `src/components/stream/` (the component directory keeps the old name; the URL and UI are **Lumos**). Read fetchers in `data/catalog/` are server-only modules wrapped in React `cache()` — deliberately **not** `"use server"` actions.
+The block follows the [mirror pattern](/docs/architecture): routes under `app/[lang]/s/[subdomain]/(school-dashboard)/lumos/` are thin wrappers, and everything lives in `src/components/lumos/` (the component directory keeps the old name; the URL and UI are **Lumos**). Read fetchers in `data/catalog/` are server-only modules wrapped in React `cache()` — deliberately **not** `"use server"` actions.
 
-<StreamStructure />
+<LumosStructure />
 
 ## Related
 
-- [Catalog](/docs/catalog) — owns `Subject`/`Chapter`/`Lesson`, selections, overrides, and instructor preferences that Stream reads.
+- [Catalog](/docs/catalog) — owns `Subject`/`Chapter`/`Lesson`, selections, overrides, and the instructor policy (per-subject preference, school-wide default, lock, block list) that Lumos reads.
 - [Architecture](/docs/architecture) — the mirror pattern and file contracts this block follows.
 - [Onboarding videos](/docs/onboarding-videos) — the marketing "story" clip that doubles as the lesson fallback.
 - [QA guide (hogwarts#377)](https://github.com/databayt/hogwarts/issues/377) — these flows as a walkable acceptance script.

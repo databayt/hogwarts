@@ -40,12 +40,26 @@ export function getCloudFrontUrl(s3Key: string): string {
  * - S3 URLs → CloudFront URL
  * - YouTube/Vimeo URLs → pass through
  * - Already CloudFront URLs → pass through
+ *
+ * GUARDED on `CLOUDFRONT_ORIGIN_BUCKET`. `CLOUDFRONT_DOMAIN` names a
+ * distribution, not a bucket, and the two are not interchangeable: the only
+ * distribution we run (cdn.databayt.org) fronts the curated `databayt-cdn`
+ * bucket, while uploads land in `AWS_S3_BUCKET` (hogwarts-databayt). Rewriting
+ * an upload-bucket URL onto that domain produced a guaranteed 403 — the object
+ * simply isn't behind that distribution — which silently broke every
+ * self-hosted video read. So the rewrite now only fires when the distribution
+ * is declared to actually serve the bucket the URL came from.
  */
 export function toCloudFrontUrl(url: string): string {
   const domain = process.env.CLOUDFRONT_DOMAIN
   if (!domain) return url
 
   if (url.includes(domain)) return url
+
+  // No declared origin, or it isn't the bucket we upload to → leave the URL
+  // alone rather than pointing it at a distribution that cannot serve it.
+  const originBucket = process.env.CLOUDFRONT_ORIGIN_BUCKET
+  if (!originBucket || originBucket !== process.env.AWS_S3_BUCKET) return url
 
   if (
     url.includes("youtube.com") ||

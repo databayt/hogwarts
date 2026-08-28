@@ -5,18 +5,27 @@
  * Report-card aggregation core — a plain (NOT "use server") helper so it can be
  * called BOTH by the tenant-authed `generateReportCards` action AND by the
  * term-end cron (which has no session and passes an explicit `schoolId` read
- * from the term row). Mirrors the gradebook-spine pattern: the auth/tenant
- * guard lives in the action wrapper; this core takes `schoolId` as a param and
- * scopes every query by it.
+ * from the term row) AND by the demo seed. Mirrors the gradebook-spine pattern:
+ * the auth/tenant guard lives in the action wrapper; this core takes `schoolId`
+ * as a param and scopes every query by it.
+ *
+ * IT IS DELIBERATELY SET-BASED. The first version walked one student at a time
+ * and fired two score queries per enrolled class plus an attendance/year-level/
+ * lookup round-trip per student, then one `updateMany` per student for the rank
+ * pass. On the demo school (972 students × 36 classes) that is ~70,000
+ * sequential round-trips — minutes to hours, far past any server-action or cron
+ * timeout, which is why the demo had zero `ReportCardGrade` rows. Everything
+ * below reads the whole cohort in a fixed handful of queries and writes in
+ * chunks, so cost scales with rows, not with students × classes.
+ *
+ * NOTE: no `revalidatePath` here. The core runs outside a request scope (cron,
+ * seed) where it would throw; the action wrapper revalidates.
  */
-import { revalidatePath } from "next/cache"
-
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
 interface SubjectGradeData {
   subjectId: string
-  name: string
   score: number
   maxScore: number
   percentage: number
@@ -60,6 +69,17 @@ function percentageToGrade(
   return { grade: "F", gpa: 0 }
 }
 
+/** Row writes are batched; these bound one statement / one transaction. */
+const WRITE_CHUNK = 200
+const ROW_CHUNK = 5_000
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = []
+  for (let i = 0; i < items.length; i += size)
+    out.push(items.slice(i, i + size))
+  return out
+}
+
 export interface GenerateReportCardsInput {
   termId: string
   gradeId?: string
@@ -78,7 +98,14 @@ export async function generateReportCardsCore(
   ActionResponse<{ created: number; updated: number; skipped: number }>
 > {
   try {
-    // Fetch grading config
+    const term = await db.term.findFirst({
+      where: { id: input.termId, schoolId },
+      select: { id: true, startDate: true, endDate: true },
+    })
+    if (!term) {
+      return { success: false, error: "Term not found" }
+    }
+
     const gradingConfig = await db.schoolGradingConfig.findUnique({
       where: { schoolId },
     })
@@ -86,7 +113,23 @@ export async function generateReportCardsCore(
       ? (gradingConfig.customBoundaries as unknown as GradeBoundary[])
       : DEFAULT_BOUNDARIES
 
-    // Build student query
+    // ---- Scope --------------------------------------------------------
+    // Classes carry the term, so they are the tightest handle on "what
+    // counts this term". Everything else hangs off this id list.
+    const classes = await db.class.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        ...(input.classId ? { id: input.classId } : {}),
+      },
+      select: { id: true, subjectId: true, credits: true },
+    })
+    if (classes.length === 0) {
+      return { success: true, data: { created: 0, updated: 0, skipped: 0 } }
+    }
+    const classIds = classes.map((c) => c.id)
+    const classById = new Map(classes.map((c) => [c.id, c]))
+
     const studentWhere: Record<string, unknown> = { schoolId }
     if (input.classId) {
       studentWhere.studentClasses = { some: { classId: input.classId } }
@@ -94,118 +137,165 @@ export async function generateReportCardsCore(
       studentWhere.academicGradeId = input.gradeId
     }
 
-    // Fetch all enrolled students
     const students = await db.student.findMany({
       where: studentWhere,
-      select: {
-        id: true,
-        academicGradeId: true,
-        studentClasses: {
-          select: {
-            classId: true,
-            class: {
-              select: {
-                id: true,
-                subjectId: true,
-                termId: true,
-                credits: true,
-                subject: { select: { id: true, name: true } },
-              },
-            },
-          },
-        },
-      },
+      select: { id: true, academicGradeId: true },
     })
-
     if (students.length === 0) {
       return { success: true, data: { created: 0, updated: 0, skipped: 0 } }
     }
+    const studentIds = students.map((s) => s.id)
+    // Only narrow by student when a filter is actually active — an unfiltered
+    // run would otherwise ship every id in the school as an `IN` list.
+    const studentScope =
+      input.classId || input.gradeId ? { studentId: { in: studentIds } } : {}
 
-    // Fetch term info
-    const term = await db.term.findFirst({
-      where: { id: input.termId, schoolId },
-    })
-    if (!term) {
-      return { success: false, error: "Term not found" }
+    // ---- Reads (one query per source, whole cohort) --------------------
+    const [enrollments, examResults, gradebookResults, attendance, academic] =
+      await Promise.all([
+        db.studentClass.findMany({
+          where: { schoolId, classId: { in: classIds }, ...studentScope },
+          select: { studentId: true, classId: true },
+        }),
+        db.examResult.findMany({
+          where: {
+            schoolId,
+            exam: { classId: { in: classIds } },
+            ...studentScope,
+          },
+          select: {
+            studentId: true,
+            examId: true,
+            marksObtained: true,
+            totalMarks: true,
+            exam: { select: { classId: true } },
+          },
+        }),
+        db.result.findMany({
+          where: { schoolId, classId: { in: classIds }, ...studentScope },
+          select: {
+            studentId: true,
+            classId: true,
+            examId: true,
+            score: true,
+            maxScore: true,
+          },
+        }),
+        db.attendance.groupBy({
+          by: ["studentId", "status"],
+          where: {
+            schoolId,
+            deletedAt: null,
+            date: { gte: term.startDate, lte: term.endDate },
+            ...studentScope,
+          },
+          _count: { status: true },
+        }),
+        db.academicGrade.findMany({
+          where: { schoolId },
+          select: { id: true, yearLevelId: true },
+        }),
+      ])
+
+    const yearLevelByGrade = new Map(
+      academic.map((a) => [a.id, a.yearLevelId ?? null])
+    )
+
+    const key = (studentId: string, classId: string) =>
+      `${studentId}:${classId}`
+
+    // Result rows win over ExamResult rows for the same exam — they may carry
+    // richer weighting written by `upsertGradebookResult`. Collect the covered
+    // exam ids per (student, class) so each exam contributes exactly once.
+    const scoresByPair = new Map<
+      string,
+      { score: number; maxScore: number }[]
+    >()
+    const coveredExams = new Map<string, Set<string>>()
+
+    for (const r of gradebookResults) {
+      const k = key(r.studentId, r.classId)
+      const bucket = scoresByPair.get(k)
+      const entry = { score: Number(r.score), maxScore: Number(r.maxScore) }
+      if (bucket) bucket.push(entry)
+      else scoresByPair.set(k, [entry])
+      if (r.examId) {
+        const seen = coveredExams.get(k)
+        if (seen) seen.add(r.examId)
+        else coveredExams.set(k, new Set([r.examId]))
+      }
     }
 
-    let created = 0
-    let updated = 0
-    let skipped = 0
+    for (const er of examResults) {
+      const classId = er.exam?.classId
+      if (!classId) continue
+      const k = key(er.studentId, classId)
+      if (coveredExams.get(k)?.has(er.examId)) continue
+      const entry = {
+        score: er.marksObtained,
+        maxScore: er.totalMarks || 100,
+      }
+      const bucket = scoresByPair.get(k)
+      if (bucket) bucket.push(entry)
+      else scoresByPair.set(k, [entry])
+    }
 
-    // Collect all student GPAs for ranking
-    const studentGPAs: Array<{ studentId: string; gpa: number }> = []
+    const attendanceByStudent = new Map<
+      string,
+      { present: number; absent: number; late: number }
+    >()
+    for (const a of attendance) {
+      const cur = attendanceByStudent.get(a.studentId) ?? {
+        present: 0,
+        absent: 0,
+        late: 0,
+      }
+      const n = a._count.status
+      if (a.status === "PRESENT") cur.present += n
+      else if (a.status === "ABSENT") cur.absent += n
+      else if (a.status === "LATE") cur.late += n
+      attendanceByStudent.set(a.studentId, cur)
+    }
+
+    const classesByStudent = new Map<string, string[]>()
+    for (const e of enrollments) {
+      const list = classesByStudent.get(e.studentId)
+      if (list) list.push(e.classId)
+      else classesByStudent.set(e.studentId, [e.classId])
+    }
+
+    // ---- Aggregate ----------------------------------------------------
+    interface Computed {
+      studentId: string
+      overallGrade: string
+      gpa: number
+      daysPresent: number
+      daysAbsent: number
+      daysLate: number
+      yearLevelId: string | null
+      subjectGrades: SubjectGradeData[]
+    }
+
+    const computed: Computed[] = []
+    let skipped = 0
 
     for (const student of students) {
       const subjectGrades: SubjectGradeData[] = []
 
-      for (const sc of student.studentClasses) {
-        const cls = sc.class
-        if (!cls.subjectId) continue
-        if (cls.termId !== input.termId) continue
+      for (const classId of classesByStudent.get(student.id) ?? []) {
+        const cls = classById.get(classId)
+        if (!cls?.subjectId) continue
 
-        // Fetch exam results for this student, class, and term
-        const examResults = await db.examResult.findMany({
-          where: {
-            schoolId,
-            studentId: student.id,
-            exam: { classId: cls.id },
-          },
-          select: {
-            examId: true,
-            marksObtained: true,
-            totalMarks: true,
-            percentage: true,
-          },
-        })
+        const scores = scoresByPair.get(key(student.id, classId))
+        if (!scores?.length) continue
 
-        // Fetch standalone results (including those that originated from an
-        // auto-marked exam and therefore carry an examId).
-        const standaloneResults = await db.result.findMany({
-          where: {
-            schoolId,
-            studentId: student.id,
-            classId: cls.id,
-          },
-          select: { examId: true, score: true, maxScore: true },
-        })
-
-        // Build a set of examIds already covered by a Result row so that we
-        // avoid counting those exams twice (once via ExamResult, once via
-        // Result). When both rows exist, the Result row wins — it may carry
-        // richer weighting data written by upsertGradebookResult.
-        const resultExamIds = new Set(
-          standaloneResults
-            .map((r) => r.examId)
-            .filter((id): id is string => id !== null && id !== undefined)
-        )
-
-        // Combine scores -- simple average for now.
-        // Filter out any ExamResult whose examId is already represented by a
-        // Result row so each exam contributes exactly once.
-        const allScores = [
-          ...examResults
-            .filter((r) => !resultExamIds.has(r.examId))
-            .map((r) => ({
-              score: r.marksObtained,
-              maxScore: r.totalMarks || 100,
-            })),
-          ...standaloneResults.map((r) => ({
-            score: Number(r.score),
-            maxScore: Number(r.maxScore),
-          })),
-        ]
-
-        if (allScores.length === 0) continue
-
-        const totalScore = allScores.reduce((sum, s) => sum + s.score, 0)
-        const totalMax = allScores.reduce((sum, s) => sum + s.maxScore, 0)
+        const totalScore = scores.reduce((sum, s) => sum + s.score, 0)
+        const totalMax = scores.reduce((sum, s) => sum + s.maxScore, 0)
         const pct = totalMax > 0 ? (totalScore / totalMax) * 100 : 0
         const { grade } = percentageToGrade(pct, boundaries)
 
         subjectGrades.push({
           subjectId: cls.subjectId,
-          name: cls.subject?.name || "",
           score: totalScore,
           maxScore: totalMax,
           percentage: Math.round(pct * 100) / 100,
@@ -219,7 +309,6 @@ export async function generateReportCardsCore(
         continue
       }
 
-      // Calculate overall GPA (weighted by credits)
       const totalCredits = subjectGrades.reduce(
         (sum, sg) => sum + sg.credits,
         0
@@ -237,129 +326,124 @@ export async function generateReportCardsCore(
         subjectGrades.length
       const { grade: overallGrade } = percentageToGrade(overallPct, boundaries)
 
-      studentGPAs.push({ studentId: student.id, gpa: weightedGPA })
+      const att = attendanceByStudent.get(student.id)
 
-      // Fetch attendance summary for this student and term
-      const attendanceSummary = await db.attendance.groupBy({
-        by: ["status"],
-        where: {
-          schoolId,
-          studentId: student.id,
-          date: { gte: term.startDate, lte: term.endDate },
-        },
-        _count: { status: true },
+      computed.push({
+        studentId: student.id,
+        overallGrade,
+        gpa: weightedGPA,
+        daysPresent: att?.present ?? 0,
+        daysAbsent: att?.absent ?? 0,
+        daysLate: att?.late ?? 0,
+        yearLevelId: student.academicGradeId
+          ? (yearLevelByGrade.get(student.academicGradeId) ?? null)
+          : null,
+        subjectGrades,
       })
-
-      const daysPresent =
-        attendanceSummary.find((a) => a.status === "PRESENT")?._count.status ??
-        0
-      const daysAbsent =
-        attendanceSummary.find((a) => a.status === "ABSENT")?._count.status ?? 0
-      const daysLate =
-        attendanceSummary.find((a) => a.status === "LATE")?._count.status ?? 0
-
-      // Upsert ReportCard
-      const yearLevelId = student.academicGradeId
-        ? (
-            await db.academicGrade.findUnique({
-              where: { id: student.academicGradeId },
-              select: { yearLevelId: true },
-            })
-          )?.yearLevelId
-        : undefined
-
-      const existing = await db.reportCard.findUnique({
-        where: {
-          schoolId_studentId_termId: {
-            schoolId,
-            studentId: student.id,
-            termId: input.termId,
-          },
-        },
-      })
-
-      if (existing) {
-        await db.reportCard.update({
-          where: { id: existing.id },
-          data: {
-            overallGrade,
-            overallGPA: Math.round(weightedGPA * 100) / 100,
-            daysPresent,
-            daysAbsent,
-            daysLate,
-            yearLevelId: yearLevelId || undefined,
-          },
-        })
-
-        // Delete old grades and re-create
-        await db.reportCardGrade.deleteMany({
-          where: { reportCardId: existing.id },
-        })
-
-        await db.reportCardGrade.createMany({
-          data: subjectGrades.map((sg) => ({
-            schoolId,
-            reportCardId: existing.id,
-            subjectId: sg.subjectId,
-            grade: sg.grade,
-            score: sg.score,
-            maxScore: sg.maxScore,
-            percentage: sg.percentage,
-            credits: sg.credits,
-          })),
-        })
-
-        updated++
-      } else {
-        const reportCard = await db.reportCard.create({
-          data: {
-            schoolId,
-            studentId: student.id,
-            termId: input.termId,
-            yearLevelId: yearLevelId || undefined,
-            overallGrade,
-            overallGPA: Math.round(weightedGPA * 100) / 100,
-            daysPresent,
-            daysAbsent,
-            daysLate,
-          },
-        })
-
-        await db.reportCardGrade.createMany({
-          data: subjectGrades.map((sg) => ({
-            schoolId,
-            reportCardId: reportCard.id,
-            subjectId: sg.subjectId,
-            grade: sg.grade,
-            score: sg.score,
-            maxScore: sg.maxScore,
-            percentage: sg.percentage,
-            credits: sg.credits,
-          })),
-        })
-
-        created++
-      }
     }
 
-    // Calculate ranks
-    studentGPAs.sort((a, b) => b.gpa - a.gpa)
-    const totalStudents = studentGPAs.length
-    for (let i = 0; i < studentGPAs.length; i++) {
-      const rank = i + 1
-      await db.reportCard.updateMany({
-        where: {
+    if (computed.length === 0) {
+      return { success: true, data: { created: 0, updated: 0, skipped } }
+    }
+
+    // Rank is resolved here, in memory, so it rides along on the same write
+    // that carries the grade — the old code did one `updateMany` per student.
+    const ranked = [...computed].sort((a, b) => b.gpa - a.gpa)
+    const totalStudents = ranked.length
+    const rankByStudent = new Map(ranked.map((c, i) => [c.studentId, i + 1]))
+
+    // ---- Writes -------------------------------------------------------
+    const existing = await db.reportCard.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        studentId: { in: computed.map((c) => c.studentId) },
+      },
+      select: { id: true, studentId: true },
+    })
+    const existingByStudent = new Map(existing.map((e) => [e.studentId, e.id]))
+
+    const cardData = (c: Computed) => ({
+      overallGrade: c.overallGrade,
+      overallGPA: Math.round(c.gpa * 100) / 100,
+      rank: rankByStudent.get(c.studentId) ?? null,
+      totalStudents,
+      daysPresent: c.daysPresent,
+      daysAbsent: c.daysAbsent,
+      daysLate: c.daysLate,
+      yearLevelId: c.yearLevelId ?? undefined,
+    })
+
+    const toCreate = computed.filter((c) => !existingByStudent.has(c.studentId))
+    const toUpdate = computed.filter((c) => existingByStudent.has(c.studentId))
+
+    for (const batch of chunk(toCreate, WRITE_CHUNK)) {
+      await db.reportCard.createMany({
+        data: batch.map((c) => ({
           schoolId,
-          studentId: studentGPAs[i].studentId,
+          studentId: c.studentId,
           termId: input.termId,
-        },
-        data: { rank, totalStudents },
+          ...cardData(c),
+        })),
+        skipDuplicates: true,
       })
     }
 
-    revalidatePath("/grades/reports")
+    for (const batch of chunk(toUpdate, WRITE_CHUNK)) {
+      await db.$transaction(
+        batch.map((c) =>
+          db.reportCard.update({
+            where: { id: existingByStudent.get(c.studentId)! },
+            data: cardData(c),
+          })
+        )
+      )
+    }
 
-    return { success: true, data: { created, updated, skipped } }
+    // Re-read so the newly created rows contribute their ids to the grade
+    // write below.
+    const allCards = await db.reportCard.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        studentId: { in: computed.map((c) => c.studentId) },
+      },
+      select: { id: true, studentId: true },
+    })
+    const cardIdByStudent = new Map(allCards.map((c) => [c.studentId, c.id]))
+
+    for (const batch of chunk(
+      allCards.map((c) => c.id),
+      WRITE_CHUNK
+    )) {
+      await db.reportCardGrade.deleteMany({
+        where: { schoolId, reportCardId: { in: batch } },
+      })
+    }
+
+    const gradeRows = computed.flatMap((c) => {
+      const reportCardId = cardIdByStudent.get(c.studentId)
+      if (!reportCardId) return []
+      return c.subjectGrades.map((sg) => ({
+        schoolId,
+        reportCardId,
+        subjectId: sg.subjectId,
+        grade: sg.grade,
+        score: sg.score,
+        maxScore: sg.maxScore,
+        percentage: sg.percentage,
+        credits: sg.credits,
+      }))
+    })
+
+    for (const batch of chunk(gradeRows, ROW_CHUNK)) {
+      await db.reportCardGrade.createMany({ data: batch, skipDuplicates: true })
+    }
+
+    return {
+      success: true,
+      data: { created: toCreate.length, updated: toUpdate.length, skipped },
+    }
   } catch (error) {
     return {
       success: false,

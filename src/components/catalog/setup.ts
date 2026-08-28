@@ -7,6 +7,10 @@ import {
   getStreamTypeForSubject,
   gradesForLevel,
 } from "@/components/catalog/academic-config"
+import {
+  buildProtectedVideoUrl,
+  isExternallyHostedVideo,
+} from "@/components/lumos/video/media-access"
 
 // Academic structure (levels / grade names / streams) is per-curriculum —
 // see academic-config.ts. The SD config preserves the original Sudanese
@@ -801,7 +805,17 @@ export async function getRankedVideos(
   return videos.map((v) => ({
     id: v.id,
     title: v.title,
-    videoUrl: v.videoUrl,
+    // Two rules, both of which this function got wrong before 2026-08-14:
+    // never emit a storage URL (permanent + unauthenticated), and never emit
+    // a playable URL for a PAID video the viewer has not bought — it computed
+    // `hasPurchased` and then handed out the URL anyway. `null` is the
+    // paywall; the lock UI is only cosmetic.
+    videoUrl:
+      v.visibility === "PAID" && !purchasedIds.has(v.id)
+        ? null
+        : isExternallyHostedVideo(v.videoUrl)
+          ? v.videoUrl
+          : buildProtectedVideoUrl(v.id),
     thumbnailUrl: v.thumbnailUrl,
     durationSeconds: v.durationSeconds,
     provider: v.provider,

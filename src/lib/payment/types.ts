@@ -76,7 +76,12 @@ export interface PaymentCheckoutResult {
   checkoutUrl?: string
   bankDetails?: BankDetails
   cashInstructions?: string
+  /** Set by the wallet rails (bankak/cashi) — what the payer sends to. */
+  wallet?: WalletDetails
   referenceNumber: string
+  /** Amount the payer should send, in major units (manual rails only). */
+  amount?: number
+  currency?: string
 }
 
 // --- Provider Adapter Pattern types ---

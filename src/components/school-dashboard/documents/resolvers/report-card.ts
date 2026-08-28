@@ -3,7 +3,7 @@
 
 import { db } from "@/lib/db"
 
-import { formatDate, type ResolverCtx } from "./util"
+import { formatDate, getResolverSchool, type ResolverCtx } from "./util"
 
 /**
  * REPORT_CARD resolver — a `ReportCard` id → student/term metadata + a
@@ -44,10 +44,7 @@ export async function resolveReportCardData(
   })
   if (!rc) throw new Error("Report card not found")
 
-  const school = await db.school.findUnique({
-    where: { id: ctx.schoolId },
-    select: { name: true, nameEn: true, logoUrl: true },
-  })
+  const school = await getResolverSchool(ctx.schoolId)
 
   const studentName = [rc.student.firstName, rc.student.lastName]
     .filter(Boolean)

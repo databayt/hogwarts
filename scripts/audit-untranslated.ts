@@ -160,7 +160,7 @@ const DIR_MODELS: Record<string, (keyof typeof TRANSLATABLE)[]> = {
   "src/components/school-dashboard/transportation/routes": ["Route"],
   // Document + Section: registered, but no dedicated render surface yet —
   // they get a DIR_MODELS line the day one exists.
-  "src/components/stream": ["StreamCourse", "StreamCategory", "Video"],
+  "src/components/lumos": ["StreamCourse", "StreamCategory", "Video"],
 }
 
 interface FeatureGap {
@@ -249,9 +249,9 @@ const PREWARM_EXEMPT: Record<string, string> = {
     "draft scaffolding: creates with empty/null text; info+schedule steps prewarm",
   "src/components/school-dashboard/listings/classrooms/subjects/actions.ts":
     "non-content: Class.classroomId assignment only",
-  "src/components/stream/settings/video-review-actions.ts":
+  "src/components/lumos/settings/video-review-actions.ts":
     "non-content: approval-field updates only, no title/description writes",
-  "src/components/stream/video/video-owner-actions.ts":
+  "src/components/lumos/video/video-owner-actions.ts":
     "non-content: visibility/approvalStatus/videoUrl only",
   "src/components/saas-dashboard/catalog/video-actions.ts":
     "operator catalog createVideo has schoolId:null — prewarm no-ops without a tenant",

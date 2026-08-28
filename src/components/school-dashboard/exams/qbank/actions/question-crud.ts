@@ -8,13 +8,91 @@ import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
-import { questionBankSchema } from "../validation"
+import { questionBankSchema, type QuestionBankSchema } from "../validation"
 import type {
   ActionResponse,
   CreateQuestionData,
   QuestionFilters,
   QuestionWithAnalytics,
 } from "./types"
+
+// ---------------------------------------------------------------------------
+// Catalog bridge helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * A qbank question may be attached to a catalog LESSON, which is what makes it
+ * show up in that lesson's practice quiz inside Lumos
+ * (`components/lumos/lib/lesson-quiz.ts` reads `catalogLessonId`). Until this
+ * existed, the only lane for a school-authored lesson quiz question was the
+ * platform-review-gated `submitQuestion`, and everything authored here — which
+ * self-approves — could never reach a lesson.
+ *
+ * The lesson is re-derived from the id, never trusted: it must live under the
+ * subject the question was filed against, or the attachment is refused. The
+ * chapter comes back with it so both catalog FKs stay consistent.
+ */
+async function resolveCatalogLesson(
+  lessonId: string,
+  subjectId: string | null | undefined
+): Promise<{ id: string; chapterId: string } | null> {
+  if (!subjectId) return null
+  const lesson = await db.lesson.findFirst({
+    where: { id: lessonId, chapter: { subjectId } },
+    select: { id: true, chapterId: true },
+  })
+  return lesson
+}
+
+/**
+ * The answer key as the catalog stores it.
+ *
+ * FILL_BLANK keeps `{ acceptedAnswers, caseSensitive }` in `options` — the Zod
+ * union carries those as top-level fields, and the Lumos grader reads them
+ * from `options`. Every other type stores its choice array as-is.
+ */
+function catalogOptionsFor(
+  questionType: QuestionType,
+  v: Record<string, unknown>
+): unknown {
+  if (questionType === "FILL_BLANK") {
+    return {
+      acceptedAnswers: (v.acceptedAnswers as string[]) ?? [],
+      caseSensitive: v.caseSensitive === true,
+    }
+  }
+  return v.options ?? undefined
+}
+
+/**
+ * QuestionBank COLUMNS only.
+ *
+ * The validated payload is a discriminated union whose FILL_BLANK arm carries
+ * `acceptedAnswers`/`caseSensitive`, which are not columns — spreading the
+ * whole object into Prisma threw "Unknown argument" and made every FILL_BLANK
+ * save fail. Mapping explicitly also keeps the mirror's `options` in the same
+ * shape the edit form reads back.
+ */
+function questionBankColumns(
+  validated: QuestionBankSchema,
+  v: Record<string, unknown>
+) {
+  return {
+    subjectId: validated.subjectId,
+    questionText: validated.questionText,
+    questionType: validated.questionType,
+    difficulty: validated.difficulty,
+    bloomLevel: validated.bloomLevel,
+    points: validated.points,
+    timeEstimate: (v.timeEstimate as number | undefined) ?? null,
+    options: catalogOptionsFor(validated.questionType, v) as never,
+    sampleAnswer: (v.sampleAnswer as string | undefined) ?? null,
+    gradingRubric: (v.gradingRubric as string | undefined) ?? null,
+    tags: validated.tags ?? [],
+    explanation: validated.explanation ?? null,
+    imageUrl: validated.imageUrl || null,
+  }
+}
 
 /**
  * Create a new question in the question bank
@@ -64,10 +142,30 @@ export async function createQuestion(
     const visibility = (data.visibility as string) || "PRIVATE"
     delete data.visibility
 
+    // Optional catalog lesson attachment — what puts this question into that
+    // lesson's Lumos practice quiz. Pulled out before validation; the union
+    // schema doesn't (and shouldn't) know about catalog FKs.
+    const requestedLessonId =
+      typeof data.catalogLessonId === "string" ? data.catalogLessonId : ""
+    delete data.catalogLessonId
+
     const validated = questionBankSchema.parse(data)
 
     // Extract optional fields from the discriminated union safely
     const v = validated as Record<string, unknown>
+
+    // Refuse an attachment that doesn't belong to the chosen subject rather
+    // than silently filing the question under someone else's lesson.
+    const lesson = requestedLessonId
+      ? await resolveCatalogLesson(requestedLessonId, validated.subjectId)
+      : null
+    if (requestedLessonId && !lesson) {
+      return {
+        success: false,
+        error: "That lesson does not belong to the selected subject",
+        code: "LESSON_SUBJECT_MISMATCH",
+      }
+    }
 
     // Create question with transaction: catalog first, then school mirror
     const question = await db.$transaction(async (tx) => {
@@ -76,12 +174,14 @@ export async function createQuestion(
       const catalogQuestion = await tx.question.create({
         data: {
           catalogSubjectId: validated.subjectId ?? null,
+          catalogChapterId: lesson?.chapterId ?? null,
+          catalogLessonId: lesson?.id ?? null,
           questionText: validated.questionText,
           questionType: validated.questionType,
           difficulty: validated.difficulty,
           bloomLevel: validated.bloomLevel,
           points: validated.points,
-          options: (v.options as any) ?? undefined,
+          options: catalogOptionsFor(validated.questionType, v) as never,
           sampleAnswer: (v.sampleAnswer as string) ?? null,
           explanation: validated.explanation ?? null,
           tags: validated.tags ?? [],
@@ -96,7 +196,9 @@ export async function createQuestion(
       // 2. Create school mirror with catalog link
       const newQuestion = await tx.questionBank.create({
         data: {
-          ...validated,
+          ...questionBankColumns(validated, v),
+          catalogChapterId: lesson?.chapterId ?? null,
+          catalogLessonId: lesson?.id ?? null,
           schoolId,
           createdBy: userId,
           source: "MANUAL",
@@ -207,8 +309,33 @@ export async function updateQuestion(
     // Remove id from data before validation
     delete data.id
 
+    // Optional catalog lesson attachment. An empty string is an explicit
+    // DETACH (the picker's "not attached" option); an absent field leaves the
+    // current attachment alone.
+    const hasLessonField = "catalogLessonId" in data
+    const requestedLessonId =
+      typeof data.catalogLessonId === "string" ? data.catalogLessonId : ""
+    delete data.catalogLessonId
+
     const validated = questionBankSchema.parse(data)
     const uv = validated as Record<string, unknown>
+
+    const lesson = requestedLessonId
+      ? await resolveCatalogLesson(requestedLessonId, validated.subjectId)
+      : null
+    if (requestedLessonId && !lesson) {
+      return {
+        success: false,
+        error: "That lesson does not belong to the selected subject",
+        code: "LESSON_SUBJECT_MISMATCH",
+      }
+    }
+    const catalogLinks = hasLessonField
+      ? {
+          catalogChapterId: lesson?.chapterId ?? null,
+          catalogLessonId: lesson?.id ?? null,
+        }
+      : {}
 
     // Update with schoolId scope and handle standards in transaction
     const question = await db.$transaction(async (tx) => {
@@ -219,7 +346,8 @@ export async function updateQuestion(
           schoolId, // CRITICAL: Multi-tenant scope
         },
         data: {
-          ...validated,
+          ...questionBankColumns(validated, uv),
+          ...catalogLinks,
           updatedAt: new Date(),
         },
       })
@@ -241,10 +369,13 @@ export async function updateQuestion(
               difficulty: validated.difficulty,
               bloomLevel: validated.bloomLevel,
               points: validated.points,
-              options: (uv.options as any) ?? undefined,
+              options: catalogOptionsFor(validated.questionType, uv) as never,
               sampleAnswer: (uv.sampleAnswer as string) ?? null,
               explanation: validated.explanation ?? null,
               tags: validated.tags ?? [],
+              // Keep the catalog row's lesson link in step with the mirror, or
+              // detaching in the qbank would leave the question on the lesson.
+              ...catalogLinks,
             },
           })
         }

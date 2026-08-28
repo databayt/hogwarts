@@ -91,6 +91,14 @@ export const stripeProvider: PaymentProvider = {
       },
     ]
 
+    const metadata = {
+      context: params.context,
+      referenceId: params.referenceId,
+      schoolId: params.schoolId,
+      referenceNumber: params.referenceNumber,
+      ...params.metadata,
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode,
       // Omit `payment_method_types` so Stripe enables every method the
@@ -99,13 +107,13 @@ export const stripeProvider: PaymentProvider = {
       // disables wallet buttons even when the account is wallet-enabled.
       ...(params.customerEmail ? { customer_email: params.customerEmail } : {}),
       line_items: lineItems,
-      metadata: {
-        context: params.context,
-        referenceId: params.referenceId,
-        schoolId: params.schoolId,
-        referenceNumber: params.referenceNumber,
-        ...params.metadata,
-      },
+      metadata,
+      // Stripe does NOT copy session metadata onto the PaymentIntent, so
+      // `payment_intent.payment_failed` / `charge.*` events arrived with no
+      // schoolId/feeAssignmentId and the failure notification never fired.
+      // `payment_intent_data` is only legal in payment mode — subscription
+      // checkouts create no PaymentIntent up front and would 400.
+      ...(mode === "payment" ? { payment_intent_data: { metadata } } : {}),
       success_url: params.successUrl,
       cancel_url: params.cancelUrl,
     })

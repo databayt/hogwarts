@@ -36,10 +36,22 @@ export async function generateMetadata({
     ? `https://${subdomain}.databayt.org`
     : `http://${subdomain}.localhost:3000`
 
+  const result = await getSchoolBySubdomain(subdomain)
+  const logoUrl = result.success ? result.data.logoUrl : null
+
   return {
     alternates: {
       canonical: `${baseUrl}/${lang}`,
     },
+    ...(logoUrl
+      ? {
+          icons: {
+            icon: logoUrl,
+            shortcut: logoUrl,
+            apple: logoUrl,
+          },
+        }
+      : {}),
   }
 }
 

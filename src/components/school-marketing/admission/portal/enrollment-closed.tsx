@@ -45,16 +45,16 @@ export function EnrollmentClosed({
       </p>
       <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Link
-          href={`/${lang}/admissions`}
+          href={`/${lang}/inquiry`}
           className={cn(buttonVariants({ variant: "default" }))}
         >
-          {dict.viewAdmissions || "View Admissions"}
+          {dict.registerInterest || "Register your interest"}
         </Link>
         <Link
-          href={`/${lang}/inquiry`}
+          href={`/${lang}/admissions`}
           className={cn(buttonVariants({ variant: "outline" }))}
         >
-          {dict.contactUs || "Contact Us"}
+          {dict.viewAdmissions || "View Admissions"}
         </Link>
       </div>
     </div>

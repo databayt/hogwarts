@@ -221,6 +221,35 @@
   }
 }
 
+/* The rewards progress curve is the one piece of that composition the mirror
+ * moved but did not turn around. Its BOX mirrors -- `inset-inline-start: -5%`
+ * on a 92%-wide absolute swings it 135px the other way -- while the SVG inside
+ * still sweeps up to the right, as drawn. On /ar the two cancelled out: the
+ * curve climbed straight into the gift box and the endpoint dot finished
+ * BEHIND it, where /en has both running clear of the gift and out to the side.
+ *
+ * Flipping the container about its own centre (`transform-origin: 50%` stays
+ * from the base rule) mirrors the art onto the box the layout already gave it
+ * -- measured at 1309px wide, the curve's ends land at 318/1119 against an
+ * exact mirror of /en's 991/190. It replaces the base `transform: rotate(0)`,
+ * a no-op that is kept only so this reads as the whole declaration.
+ *
+ * Not an RTL_EXEMPT case in scope-zenda.mjs: that is for art whose orientation
+ * carries meaning (the /about hero's letters spell PARENT), and exempting this
+ * would leave a curve rising the English way through a composition whose
+ * blocks and coins have all swapped sides. It is here rather than in the
+ * generated sheet because the generator can only patch a value or drop an
+ * overlay -- it has no way to ADD a declaration -- and hand edits there are
+ * lost on the next regeneration.
+ *
+ * Safe for the GSAP timeline in zenda-home/rewards-scroll.tsx: it writes only
+ * to `#curve` and `#endpoint` INSIDE this element, so the path and the dot
+ * riding it flip together, and the element itself is only a ScrollTrigger
+ * trigger, whose rect a centred flip leaves untouched. */
+.zenda-clone[dir="rtl"] .rewards_circle-progress {
+  transform: rotate(0) scaleX(-1);
+}
+
 .zenda-clone .nav_right {
   display: flex;
   align-items: center;

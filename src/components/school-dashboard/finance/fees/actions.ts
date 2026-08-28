@@ -50,7 +50,7 @@ import {
   toPaymentRows,
   toScholarshipRows,
 } from "./rows"
-import { buildTenantBaseUrl } from "./tenant-url"
+import { resolveTenantBaseUrl } from "./tenant-url"
 import { feeStructureSchema } from "./validation"
 
 // Interpolate {key} placeholders in dictionary strings. Mirrors the
@@ -1339,6 +1339,21 @@ export async function recordPayment(
         ? "Payment of {amount} recorded for student. Fee fully paid."
         : "Payment of {amount} recorded for student. Remaining: {remaining}"
 
+    // A cleared payment has a receipt; a PENDING_VERIFICATION deposit does
+    // not yet (the receipt route only serves SUCCESS/REFUNDED payments), so
+    // linking one before verification would 404 the family. Receipts were
+    // previously view-only in the dashboard and never delivered at all —
+    // pointing the notification at the gated receipt route is what actually
+    // puts one in the payer's hands. The route already authorizes the
+    // student, their guardians and finance admins, so no new exposure.
+    const receiptUrl = requiresVerification
+      ? "/finance/fees"
+      : `/api/payment/${payment.id}/receipt`
+    // Email the receipt too, not just an in-app row a student may never open.
+    const paymentChannels: ("in_app" | "email")[] = requiresVerification
+      ? ["in_app"]
+      : ["in_app", "email"]
+
     const student = await db.student.findFirst({
       where: { id: feeAssignment.studentId, schoolId: ctx.schoolId },
       select: { userId: true },
@@ -1355,13 +1370,14 @@ export async function recordPayment(
         }),
         lang: schoolLang2,
         priority: "normal",
-        channels: ["in_app"],
+        channels: paymentChannels,
         metadata: {
           paymentId: payment.id,
+          receiptNumber: payment.receiptNumber,
           feeAssignmentId,
           amount,
           status: newStatus,
-          url: "/finance/fees",
+          url: receiptUrl,
         },
         actorId: ctx.userId,
       }).catch((err) =>
@@ -1386,13 +1402,14 @@ export async function recordPayment(
           }),
           lang: schoolLang2,
           priority: "normal",
-          channels: ["in_app", "email"],
+          channels: paymentChannels,
           metadata: {
             paymentId: payment.id,
+            receiptNumber: payment.receiptNumber,
             feeAssignmentId,
             amount,
             status: newStatus,
-            url: "/finance/fees",
+            url: receiptUrl,
           },
           actorId: ctx.userId,
         }).catch((err) =>
@@ -2180,9 +2197,10 @@ export async function createFeePaymentCheckout(
     }
 
     // Load school for currency + subdomain. `domain` is the per-school
-    // subdomain (e.g. "kingfahad" for kingfahad.databayt.org) that drives the
-    // tenant-aware redirect — without it Stripe sends the user back to the
-    // SaaS apex, breaking the school dashboard URL contract.
+    // subdomain (e.g. "alqabs" for alqabs.balqalam.com) that drives the
+    // tenant-aware redirect — without it the gateway sends the payer back to
+    // the SaaS apex, breaking the school dashboard URL contract. The root
+    // domain comes from the current request (see tenant-url.ts).
     const school = await db.school.findFirst({
       where: { id: schoolId },
       select: {
@@ -2193,8 +2211,14 @@ export async function createFeePaymentCheckout(
         timezone: true,
       },
     })
-    const currency = school?.currency || "SAR"
-    const baseUrl = buildTenantBaseUrl(school?.domain)
+    // Charge in the currency the assignment was DENOMINATED in (snapshot at
+    // assignment time), not whatever the school's currency is today — the
+    // webhook records `assignment.currency`, and the two must agree.
+    const currency =
+      assignment.currency ??
+      school?.currency ??
+      resolveDefaultCurrency(school?.country, school?.timezone)
+    const baseUrl = await resolveTenantBaseUrl(school?.domain)
 
     // B2: resolve the school's configured + currency-compatible gateway instead
     // of always hardcoding "stripe". Tap is the primary for Gulf/UAE schools.
@@ -2226,6 +2250,23 @@ export async function createFeePaymentCheckout(
       return actionError(ACTION_ERRORS.PAYMENT_GATEWAY_UNAVAILABLE)
     }
 
+    // Where the payer lands afterwards. Families cannot open the admin-only
+    // assignment page (it is gated on fees:view — every parent who was sent
+    // there after paying saw "access denied"), so they return to their own
+    // portal; finance staff return to the assignment they were looking at.
+    // `assignment` + `gateway` let the landing page verify the charge with
+    // the gateway (Tap appends `tap_id`; Stripe substitutes
+    // `{CHECKOUT_SESSION_ID}`), so it shows a truthful state even before the
+    // webhook lands — or if it never does.
+    const returnPath = isFinanceAdmin
+      ? `/${lang}/finance/fees/assignments/${feeAssignmentId}`
+      : `/${lang}/finance/fees/my`
+    const returnQuery = `assignment=${encodeURIComponent(feeAssignmentId)}&gateway=${gateway}`
+    const stripeSessionParam =
+      gateway === "stripe" ? "&session_id={CHECKOUT_SESSION_ID}" : ""
+    const successUrl = `${baseUrl}${returnPath}?payment=success&${returnQuery}${stripeSessionParam}`
+    const cancelUrl = `${baseUrl}${returnPath}?payment=cancelled&${returnQuery}`
+
     const result = await createPaymentCheckout(gateway, {
       amount: remaining,
       currency,
@@ -2233,8 +2274,8 @@ export async function createFeePaymentCheckout(
       schoolId,
       referenceId: feeAssignmentId,
       referenceNumber: `FEE-${feeAssignmentId.slice(-8).toUpperCase()}`,
-      successUrl: `${baseUrl}/${lang}/finance/fees/assignments/${feeAssignmentId}?payment=success`,
-      cancelUrl: `${baseUrl}/${lang}/finance/fees/assignments/${feeAssignmentId}?payment=cancelled`,
+      successUrl,
+      cancelUrl,
       lineItems: [
         {
           name: assignment.feeStructure?.name || "School Fee",
@@ -2507,6 +2548,411 @@ export async function submitManualPaymentProof(
     return { success: true, data: { paymentId: payment.id } }
   } catch (error) {
     console.error("Error submitting manual payment proof:", error)
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
+// ============================================
+// POST-CHECKOUT VERIFICATION (return page)
+// ============================================
+
+const returnedPaymentSchema = z.object({
+  feeAssignmentId: z.string().min(1),
+  gateway: z.enum(["stripe", "tap"]).optional(),
+  /** Stripe Checkout Session id (`cs_…`), substituted into the success URL. */
+  sessionId: z
+    .string()
+    .regex(/^cs_[A-Za-z0-9_]+$/)
+    .optional(),
+  /** Tap charge id (`chg_…`), appended by Tap to the redirect URL. */
+  tapId: z
+    .string()
+    .regex(/^chg_[A-Za-z0-9_]+$/)
+    .optional(),
+})
+
+export type ReturnedPaymentState =
+  | "recorded"
+  | "already_recorded"
+  | "pending"
+  | "failed"
+  | "unknown"
+
+export interface ReturnedPaymentResult {
+  state: ReturnedPaymentState
+  paymentId?: string
+  amount?: number
+  currency?: string | null
+  /** Outstanding balance on the assignment after this check. */
+  remaining: number
+}
+
+/**
+ * Read a just-completed checkout back from the gateway and record it if the
+ * webhook has not already.
+ *
+ * Why the return page must do this and not just wait for the webhook: Stripe
+ * and Tap both redirect the payer immediately, and the webhook can be seconds
+ * behind — or missing (Tap cannot post to localhost; a mis-registered endpoint
+ * posts nowhere). Without this the payer landed on a page still saying
+ * "Remaining: 12,000" with a live Pay button, and paid twice. Everything
+ * here is gateway-authoritative and idempotent: the recorder keys on the
+ * gateway's own charge id, so webhook + return page can never double-record.
+ *
+ * Ownership-gated (student / guardian / finance staff) exactly like
+ * `createFeePaymentCheckout` — a parent calls this from their own portal.
+ */
+export async function verifyReturnedFeePayment(
+  input: unknown
+): Promise<ActionResult<ReturnedPaymentResult>> {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const parsed = returnedPaymentSchema.safeParse(input)
+    if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    const { feeAssignmentId, sessionId, tapId } = parsed.data
+
+    const [isFinanceAdmin, assignment] = await Promise.all([
+      checkCurrentUserPermission(schoolId, "fees", "view"),
+      db.feeAssignment.findFirst({
+        where: { id: feeAssignmentId, schoolId },
+        select: { id: true, studentId: true, currency: true },
+      }),
+    ])
+    if (!assignment) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    if (!isFinanceAdmin) {
+      const isOwner = await userOwnsAssignment({
+        userId: session.user.id,
+        studentId: assignment.studentId,
+        schoolId,
+      })
+      if (!isOwner) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const remainingNow = async (): Promise<number> => {
+      const fresh = await db.feeAssignment.findFirst({
+        where: { id: feeAssignmentId, schoolId },
+        select: {
+          finalAmount: true,
+          payments: { where: { status: "SUCCESS" }, select: { amount: true } },
+        },
+      })
+      if (!fresh) return 0
+      const paid = fresh.payments.reduce((sum, p) => sum + Number(p.amount), 0)
+      return Math.max(0, Number(fresh.finalAmount) - paid)
+    }
+
+    const { recordGatewayFeePayment, mapGatewayMethod } =
+      await import("../lib/gateway-payment")
+
+    // ---- Stripe: read the Checkout Session back --------------------------
+    if (sessionId) {
+      const { stripe } = await import("@/lib/stripe")
+      if (!stripe) {
+        return {
+          success: true,
+          data: { state: "unknown", remaining: await remainingNow() },
+        }
+      }
+      const cs = (await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["payment_intent.latest_charge"],
+      })) as unknown as {
+        id: string
+        status?: string | null
+        payment_status?: string | null
+        amount_total?: number | null
+        currency?: string | null
+        metadata?: Record<string, string | undefined> | null
+        payment_intent?:
+          | string
+          | {
+              id: string
+              latest_charge?:
+                | string
+                | {
+                    payment_method_details?: {
+                      type?: string
+                      card?: { wallet?: { type?: string }; brand?: string }
+                    }
+                  }
+                | null
+            }
+          | null
+      }
+      // The session must be OURS for THIS assignment — a guessed session id
+      // belonging to another tenant/assignment is not a payment for this one.
+      if (
+        cs.metadata?.schoolId !== schoolId ||
+        cs.metadata?.feeAssignmentId !== feeAssignmentId ||
+        cs.metadata?.type !== "fee_payment"
+      ) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+      const pi =
+        cs.payment_intent && typeof cs.payment_intent === "object"
+          ? cs.payment_intent
+          : null
+      const paymentIntentId =
+        typeof cs.payment_intent === "string" ? cs.payment_intent : pi?.id
+      if (
+        cs.payment_status === "paid" &&
+        paymentIntentId &&
+        typeof cs.amount_total === "number"
+      ) {
+        const { fromSmallestUnit } = await import("@/lib/payment/currency")
+        const currency = cs.currency?.toUpperCase() ?? assignment.currency
+        const charge =
+          pi?.latest_charge && typeof pi.latest_charge === "object"
+            ? pi.latest_charge
+            : null
+        const d = charge?.payment_method_details
+        const rail =
+          (d?.card?.wallet?.type ?? d?.card?.brand ?? d?.type)?.toUpperCase() ??
+          null
+        const result = await recordGatewayFeePayment({
+          schoolId,
+          feeAssignmentId,
+          transactionId: paymentIntentId,
+          amount: fromSmallestUnit(cs.amount_total, currency ?? "USD"),
+          currency,
+          paymentMethod: mapGatewayMethod(rail),
+          gatewayMethod: rail,
+          actor: "system:stripe-return",
+        })
+        if (result.outcome === "recorded") {
+          return {
+            success: true,
+            data: {
+              state: "recorded",
+              paymentId: result.paymentId,
+              amount: result.amount,
+              currency: result.currency,
+              remaining: result.remaining,
+            },
+          }
+        }
+        if (result.outcome === "duplicate") {
+          return {
+            success: true,
+            data: {
+              state: "already_recorded",
+              paymentId: result.paymentId,
+              remaining: await remainingNow(),
+            },
+          }
+        }
+        return {
+          success: true,
+          data: { state: "unknown", remaining: await remainingNow() },
+        }
+      }
+      const state: ReturnedPaymentState =
+        cs.status === "expired" ? "failed" : "pending"
+      return { success: true, data: { state, remaining: await remainingNow() } }
+    }
+
+    // ---- Tap: read the charge back ---------------------------------------
+    if (tapId) {
+      const { fetchTapCharge, TAP_CAPTURED_STATUSES, TAP_FAILED_STATUSES } =
+        await import("@/lib/payment/tap-api")
+      const fetched = await fetchTapCharge(tapId)
+      if (!fetched.ok) {
+        return {
+          success: true,
+          data: {
+            state: fetched.reason === "not_found" ? "failed" : "unknown",
+            remaining: await remainingNow(),
+          },
+        }
+      }
+      const charge = fetched.charge
+      if (
+        charge.metadata?.schoolId !== schoolId ||
+        charge.metadata?.feeAssignmentId !== feeAssignmentId
+      ) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+      if (TAP_CAPTURED_STATUSES.has(charge.status)) {
+        const rail = charge.source?.payment_method ?? charge.card?.brand ?? null
+        const result = await recordGatewayFeePayment({
+          schoolId,
+          feeAssignmentId,
+          transactionId: charge.id,
+          amount: typeof charge.amount === "number" ? charge.amount : 0,
+          currency: charge.currency ?? assignment.currency,
+          paymentMethod: mapGatewayMethod(rail),
+          gatewayMethod: rail,
+          actor: "system:tap-return",
+        })
+        if (result.outcome === "recorded") {
+          return {
+            success: true,
+            data: {
+              state: "recorded",
+              paymentId: result.paymentId,
+              amount: result.amount,
+              currency: result.currency,
+              remaining: result.remaining,
+            },
+          }
+        }
+        if (result.outcome === "duplicate") {
+          return {
+            success: true,
+            data: {
+              state: "already_recorded",
+              paymentId: result.paymentId,
+              remaining: await remainingNow(),
+            },
+          }
+        }
+        return {
+          success: true,
+          data: { state: "unknown", remaining: await remainingNow() },
+        }
+      }
+      const state: ReturnedPaymentState = TAP_FAILED_STATUSES.has(charge.status)
+        ? "failed"
+        : "pending"
+      return { success: true, data: { state, remaining: await remainingNow() } }
+    }
+
+    // No gateway reference to verify against — report what the books say.
+    return {
+      success: true,
+      data: { state: "unknown", remaining: await remainingNow() },
+    }
+  } catch (error) {
+    console.error("Error verifying returned payment:", error)
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
+// ============================================
+// BURSAR: reject a submitted proof
+// ============================================
+
+const rejectProofSchema = z.object({
+  paymentId: z.string().min(1),
+  reason: z.string().trim().max(500).optional(),
+})
+
+/**
+ * Reject a PENDING_VERIFICATION payment (a Bankak/Cashi/bank-transfer proof
+ * that does not check out). Counterpart of `markPaymentCleared`: the row
+ * flips to FAILED (never deleted — the attempt stays auditable and the bank
+ * reference stays claimed), the family is told why, and the assignment's
+ * balance is untouched because a pending payment never counted toward it.
+ */
+export async function rejectPaymentProof(
+  input: unknown
+): Promise<ActionResult<string>> {
+  try {
+    const ctx = await requireFeePermission("approve")
+    if (isAuthError(ctx)) return ctx
+
+    const parsed = rejectProofSchema.safeParse(input)
+    if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    const { paymentId, reason } = parsed.data
+
+    const payment = await db.payment.findFirst({
+      where: { id: paymentId, schoolId: ctx.schoolId },
+      select: {
+        id: true,
+        status: true,
+        studentId: true,
+        feeAssignmentId: true,
+        amount: true,
+        remarks: true,
+      },
+    })
+    if (!payment) return actionError(ACTION_ERRORS.NOT_FOUND)
+    if (payment.status === "FAILED") return { success: true, data: payment.id }
+    if (payment.status !== "PENDING_VERIFICATION") {
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+    }
+
+    await db.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: "FAILED",
+        verifiedAt: new Date(),
+        verifiedBy: ctx.userId,
+        remarks: [payment.remarks, reason ? `REJECTED: ${reason}` : "REJECTED"]
+          .filter(Boolean)
+          .join(" | "),
+      },
+    })
+
+    // Tell the family — they need to re-send the right transfer / proof.
+    try {
+      const school = await db.school.findFirst({
+        where: { id: ctx.schoolId },
+        select: { preferredLanguage: true },
+      })
+      const lang = (school?.preferredLanguage ?? "ar") as Locale
+      const dict = await getDictionary(lang)
+      const n = (
+        dict as { finance?: { notifications?: Record<string, string> } }
+      )?.finance?.notifications
+      const title = n?.proofRejectedTitle || "Payment proof not accepted"
+      const body = interp(
+        n?.proofRejectedBody ||
+          "The payment proof you submitted for {amount} could not be verified{reason}. Please check the transfer and submit it again.",
+        {
+          amount: Number(payment.amount).toLocaleString(),
+          reason: reason ? ` (${reason})` : "",
+        }
+      )
+      const [student, guardianLinks] = await Promise.all([
+        db.student.findFirst({
+          where: { id: payment.studentId, schoolId: ctx.schoolId },
+          select: { userId: true },
+        }),
+        db.studentGuardian.findMany({
+          where: { studentId: payment.studentId, schoolId: ctx.schoolId },
+          select: { guardian: { select: { userId: true } } },
+        }),
+      ])
+      const recipients = new Set<string>()
+      if (student?.userId) recipients.add(student.userId)
+      for (const link of guardianLinks) {
+        if (link.guardian?.userId) recipients.add(link.guardian.userId)
+      }
+      await Promise.all(
+        [...recipients].map((userId) =>
+          dispatchNotification({
+            schoolId: ctx.schoolId,
+            userId,
+            type: "fee_due",
+            title,
+            body,
+            lang,
+            priority: "high",
+            channels: ["in_app", "email"],
+            metadata: {
+              paymentId: payment.id,
+              feeAssignmentId: payment.feeAssignmentId,
+              url: "/finance/fees/my",
+            },
+            actorId: ctx.userId,
+          }).catch((err) =>
+            console.error("[rejectPaymentProof] notify failed:", err)
+          )
+        )
+      )
+    } catch (notifErr) {
+      console.error("[rejectPaymentProof] notification block failed:", notifErr)
+    }
+
+    revalidatePath("/finance/fees")
+    revalidatePath(`/finance/fees/payments/${paymentId}`)
+    return { success: true, data: payment.id }
+  } catch (error) {
+    console.error("Error rejecting payment proof:", error)
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }

@@ -136,11 +136,13 @@ describe("uploadReceipt — pre-upload CDN path (R-P0-1)", () => {
     await uploadReceipt(formData)
 
     expect(revalidatePathMock).toHaveBeenCalledWith(
-      "/s/[subdomain]/(school-dashboard)/finance/receipt"
+      "/[lang]/s/[subdomain]/finance/receipt",
+      "page"
     )
     // Must NOT use the old wrong platform route
     expect(revalidatePathMock).not.toHaveBeenCalledWith(
-      expect.stringContaining("(platform)")
+      expect.stringContaining("("),
+      expect.anything()
     )
   })
 
@@ -164,10 +166,12 @@ describe("deleteReceipt — revalidatePath (R-P2-1)", () => {
     await deleteReceipt("receipt-1")
 
     expect(revalidatePathMock).toHaveBeenCalledWith(
-      "/s/[subdomain]/(school-dashboard)/finance/receipt"
+      "/[lang]/s/[subdomain]/finance/receipt",
+      "page"
     )
     expect(revalidatePathMock).not.toHaveBeenCalledWith(
-      expect.stringContaining("(platform)")
+      expect.stringContaining("("),
+      expect.anything()
     )
   })
 })
@@ -184,13 +188,16 @@ describe("retryReceiptExtraction — revalidatePath (R-P2-1)", () => {
     await retryReceiptExtraction("receipt-1")
 
     expect(revalidatePathMock).toHaveBeenCalledWith(
-      "/s/[subdomain]/(school-dashboard)/finance/receipt"
+      "/[lang]/s/[subdomain]/finance/receipt",
+      "page"
     )
     expect(revalidatePathMock).toHaveBeenCalledWith(
-      "/s/[subdomain]/(school-dashboard)/finance/receipt/receipt-1"
+      "/[lang]/s/[subdomain]/finance/receipt/[id]",
+      "page"
     )
     expect(revalidatePathMock).not.toHaveBeenCalledWith(
-      expect.stringContaining("(platform)")
+      expect.stringContaining("("),
+      expect.anything()
     )
   })
 })

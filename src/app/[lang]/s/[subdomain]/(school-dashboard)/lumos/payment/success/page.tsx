@@ -6,8 +6,8 @@ import { Metadata } from "next"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { verifyPaymentAndActivateEnrollment } from "@/components/stream/courses/enrollment/actions"
-import { StreamPaymentSuccessContent } from "@/components/stream/payment/success-content"
+import { verifyPaymentAndActivateEnrollment } from "@/components/lumos/courses/enrollment/actions"
+import { LumosPaymentSuccessContent } from "@/components/lumos/payment/success-content"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -19,14 +19,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dictionary = await getDictionary(lang)
 
   return {
-    title: dictionary.stream?.payment?.success?.title || "Payment Successful",
+    title: dictionary.lumos?.payment?.success?.title || "Payment Successful",
     description:
-      dictionary.stream?.payment?.success?.description ||
+      dictionary.lumos?.payment?.success?.description ||
       "Your enrollment payment was successful",
   }
 }
 
-export default async function StreamPaymentSuccessPage({
+export default async function LumosPaymentSuccessPage({
   params,
   searchParams,
 }: Props) {
@@ -44,8 +44,8 @@ export default async function StreamPaymentSuccessPage({
   }
 
   return (
-    <StreamPaymentSuccessContent
-      dictionary={dictionary.stream}
+    <LumosPaymentSuccessContent
+      dictionary={dictionary.lumos}
       lang={lang}
       schoolId={schoolId}
       sessionId={search?.session_id}

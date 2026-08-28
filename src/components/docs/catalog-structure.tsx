@@ -207,7 +207,7 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
       description: "school adoption + contribution",
     },
     {
-      name: "src/components/stream/data/catalog/",
+      name: "src/components/lumos/data/catalog/",
       type: "directory",
       description: "LMS read queries",
     },

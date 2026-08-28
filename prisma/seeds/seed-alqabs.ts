@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Al-Qabas (القبس) Tenant Seed — Port Sudan
+ * Alqabs (القبس) Tenant Seed — Port Sudan
  *
  * Private Sudanese-curriculum school covering elementary, middle and high.
  * The tenant is its bare subdomain (School.domain — see src/lib/root-domain.ts),
@@ -75,11 +75,11 @@ type SchoolRole =
 // ============================================================================
 
 async function upsertSchool() {
-  console.log("🏫 Al-Qabas school...")
+  console.log("🏫 Alqabs school...")
 
   const common = {
     name: "القبس",
-    nameEn: "Al-Qabas",
+    nameEn: "Alqabs",
     address: "بورتسودان، ولاية البحر الأحمر، السودان",
     city: "بورتسودان",
     state: "البحر الأحمر",
@@ -561,6 +561,38 @@ async function uploadLogo(schoolId: string) {
   console.log(`  ✅ ${url}`)
 }
 
+async function upsertTranslations(schoolId: string) {
+  console.log("\n🌐 Translations...")
+  const pairs = [
+    { ar: "القبس", en: "Alqabs" },
+    { ar: "مدارس القبس", en: "Alqabs Schools" },
+    { ar: "إدارة القبس", en: "Alqabs Administration" },
+    { ar: "زائر القبس", en: "Alqabs Visitor" },
+  ]
+  for (const { ar, en } of pairs) {
+    await db.translation.upsert({
+      where: {
+        schoolId_sourceText_sourceLanguage_targetLanguage: {
+          schoolId,
+          sourceText: ar,
+          sourceLanguage: "ar",
+          targetLanguage: "en",
+        },
+      },
+      update: { translatedText: en },
+      create: {
+        schoolId,
+        sourceText: ar,
+        sourceLanguage: "ar",
+        targetLanguage: "en",
+        translatedText: en,
+        provider: "seed",
+      },
+    })
+  }
+  console.log("  ✅ Alqabs translations configured")
+}
+
 // ============================================================================
 // Admission — gives the applicant account something to do
 // ============================================================================
@@ -614,7 +646,7 @@ async function upsertAdmission(schoolId: string) {
 
 async function main() {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  console.log("🏫 القبس — Al-Qabas Tenant Setup")
+  console.log("🏫 القبس — Alqabs Tenant Setup")
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   const school = await upsertSchool()
@@ -722,6 +754,7 @@ async function main() {
   await upsertAdmission(schoolId)
   await refreshStaleSchoolYear(schoolId)
   await uploadLogo(schoolId)
+  await upsertTranslations(schoolId)
 
   // --- Report ---
   const status = await getProvisioningStatus(schoolId)
@@ -738,7 +771,7 @@ async function main() {
   )
 
   console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  console.log("✅ Al-Qabas tenant ready")
+  console.log("✅ Alqabs tenant ready")
   console.log("")
   console.log("  https://alqabs.balqalam.com/ar")
   console.log("  http://alqabs.localhost:3000/ar   (dev)")

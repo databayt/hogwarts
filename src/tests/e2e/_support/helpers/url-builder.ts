@@ -141,7 +141,7 @@ export class UrlBuilder {
       exams: () => this.school(SCHOOL_DASHBOARD_ROUTES.exams),
       settings: () => this.school(SCHOOL_DASHBOARD_ROUTES.settings),
       admission: () => this.school(SCHOOL_DASHBOARD_ROUTES.admission),
-      stream: () => this.school(SCHOOL_DASHBOARD_ROUTES.stream),
+      lumos: () => this.school(SCHOOL_DASHBOARD_ROUTES.lumos),
       timetable: () => this.school(SCHOOL_DASHBOARD_ROUTES.timetable),
       grades: () => this.school(SCHOOL_DASHBOARD_ROUTES.grades),
       messages: () => this.school(SCHOOL_DASHBOARD_ROUTES.messages),

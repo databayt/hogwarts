@@ -162,3 +162,77 @@ describe("generateExamPaperFromTemplate", () => {
     expect(db.$transaction).not.toHaveBeenCalled()
   })
 })
+
+describe("distribution shortfall", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  const filled = {
+    success: true,
+    data: { filename: "p.docx", base64: "AAA", mime: "application/docx" },
+  }
+
+  it("reports the unfilled slots instead of downloading a short paper silently", async () => {
+    signInAs("ADMIN")
+    stubBlueprintPath()
+    // Selection degrades: it places what the bank has and names what it could not.
+    vi.mocked(autoGenerateExamQuestions).mockResolvedValue({
+      success: true,
+      data: {
+        totalQuestions: 4,
+        distributionMet: false,
+        missingCategories: ["ESSAY-HARD: needed 6, found 0"],
+      },
+    } as never)
+    vi.mocked(generateDocument).mockResolvedValue(filled as never)
+
+    const res = await generateExamPaperFromTemplate(blueprintInput)
+
+    expect(res.success).toBe(true)
+    expect(res.data?.base64).toBe("AAA")
+    expect(res.data?.distributionMet).toBe(false)
+    expect(res.data?.totalQuestions).toBe(4)
+    expect(res.data?.missingCategories).toEqual([
+      "ESSAY-HARD: needed 6, found 0",
+    ])
+    // A short paper is still a real paper — the exam row must survive.
+    expect(db.schoolExam.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it("reports a fully covered blueprint as met", async () => {
+    signInAs("ADMIN")
+    stubBlueprintPath()
+    vi.mocked(autoGenerateExamQuestions).mockResolvedValue({
+      success: true,
+      data: {
+        totalQuestions: 10,
+        distributionMet: true,
+        missingCategories: [],
+      },
+    } as never)
+    vi.mocked(generateDocument).mockResolvedValue(filled as never)
+
+    const res = await generateExamPaperFromTemplate(blueprintInput)
+
+    expect(res.success).toBe(true)
+    expect(res.data?.distributionMet).toBe(true)
+  })
+
+  it("carries no shortfall for an exam that already had its questions", async () => {
+    signInAs("ADMIN")
+    vi.mocked(db.generatedExam.findFirst).mockResolvedValue({
+      id: GENERATED_ID,
+    } as never)
+    vi.mocked(generateDocument).mockResolvedValue(filled as never)
+
+    const res = await generateExamPaperFromTemplate({
+      mode: "existing",
+      documentTemplateId: "tpl-1",
+      generatedExamId: GENERATED_ID,
+    })
+
+    expect(res.success).toBe(true)
+    // No selection ran, so there is nothing to warn about.
+    expect(res.data?.distributionMet).toBeUndefined()
+    expect(autoGenerateExamQuestions).not.toHaveBeenCalled()
+  })
+})

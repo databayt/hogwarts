@@ -460,7 +460,8 @@
         "PENDING": "Pending",
         "OVERDUE": "Overdue",
         "CANCELLED": "Cancelled"
-      }
+      },
+      "awaitingVerification": "Awaiting verification"
     },
     "overview": {
       "feesCollected": "Fees Collected",
@@ -575,7 +576,13 @@
       "academicYear": "Academic Year",
       "totalFee": "Total Fee",
       "assignmentStatus": "Assignment Status",
-      "viewAssignment": "View Assignment"
+      "viewAssignment": "View Assignment",
+      "depositBankBranch": "Branch",
+      "depositorIban": "Sender IBAN",
+      "verifiedAt": "Verified",
+      "proof": "Proof of payment",
+      "proofDescription": "Submitted by the payer. Compare the amount and reference before clearing.",
+      "openProof": "Open proof in new tab"
     },
     "scholarship": {
       "editScholarship": "Edit Scholarship",
@@ -704,6 +711,70 @@
       "assignedStudents": "{count} student assignments",
       "errors": "{count} errors",
       "schoolWidePrefix": "School-wide fallback — "
+    },
+    "gateways": {
+      "title": "Pay Fees",
+      "chooseMethod": "Choose a payment method:",
+      "redirecting": "Redirecting to payment...",
+      "paymentFailed": "Could not start payment. Please try again.",
+      "pay": "Pay"
+    },
+    "paymentActions": {
+      "markAsCleared": "Mark as Cleared",
+      "clearing": "Clearing...",
+      "cleared": "Payment cleared",
+      "clearFailed": "Failed to clear payment",
+      "reject": "Reject",
+      "rejecting": "Rejecting...",
+      "rejected": "Payment proof rejected",
+      "rejectFailed": "Failed to reject payment",
+      "rejectTitle": "Reject payment proof",
+      "rejectDescription": "The payment stays on record as failed and the family is asked to submit the correct transfer again.",
+      "rejectReason": "Reason (optional)",
+      "rejectReasonPlaceholder": "e.g. amount does not match, reference not found",
+      "cancel": "Cancel",
+      "confirmReject": "Reject proof"
+    },
+    "paymentReturn": {
+      "verifying": "Confirming your payment with the gateway…",
+      "recordedTitle": "Payment received",
+      "recordedBody": "{amount} has been recorded. Remaining balance: {remaining}.",
+      "alreadyRecordedBody": "This payment was already recorded. Remaining balance: {remaining}.",
+      "pendingTitle": "Payment is being processed",
+      "pendingBody": "The gateway has not confirmed the charge yet. This page will update automatically — please do not pay again.",
+      "failedTitle": "Payment did not go through",
+      "failedBody": "The charge was not completed. You can try again or choose another method.",
+      "cancelledTitle": "Payment cancelled",
+      "cancelledBody": "No charge was made. You can pay whenever you are ready.",
+      "unknownBody": "We could not confirm the payment automatically. If you were charged, it will appear here shortly.",
+      "downloadReceipt": "Download receipt",
+      "dismiss": "Dismiss"
+    },
+    "manualRail": {
+      "title": "Transfer from your app",
+      "step1": "1. Transfer the amount to the school's account",
+      "step2": "2. Then tell us the transaction reference and attach the receipt",
+      "accountName": "Account name",
+      "accountNumber": "Account number",
+      "merchantCode": "Merchant code",
+      "reference": "Quote this reference",
+      "referenceHint": "Write it in the transfer note so the school can match your payment.",
+      "amount": "Amount to send",
+      "scanQr": "Or scan this code in the app",
+      "copied": "Copied",
+      "bankReference": "Transaction reference from your app",
+      "bankReferenceHint": "The reference shown on your transfer receipt.",
+      "proof": "Receipt screenshot",
+      "proofHint": "A screenshot or PDF of the transfer confirmation.",
+      "submit": "Submit for verification",
+      "submitting": "Submitting...",
+      "submitted": "Receipt received",
+      "submittedHint": "The school's finance office will verify it and your balance will update.",
+      "uploadFailed": "Failed to upload the receipt.",
+      "duplicateReference": "That transaction reference was already submitted. Check the number in your banking app.",
+      "unavailable": "This payment method is unavailable right now.",
+      "genericError": "Could not submit the receipt. Please try again.",
+      "close": "Close"
     }
   },
   "paymentForm": {
@@ -2718,7 +2789,11 @@
     "salaryPaidTitle": "Salary Paid",
     "salaryPaidBody": "Your salary of {amount} has been paid.",
     "proofSubmittedTitle": "Payment proof submitted",
-    "proofSubmittedBody": "A transfer receipt is waiting for verification."
+    "proofSubmittedBody": "A transfer receipt is waiting for verification.",
+    "paymentFailedTitle": "Payment failed",
+    "paymentFailedBody": "Your online payment did not go through ({reason}). Please try again or use another payment method.",
+    "proofRejectedTitle": "Payment proof not accepted",
+    "proofRejectedBody": "The payment proof you submitted for {amount} could not be verified{reason}. Please check the transfer and submit it again."
   },
   "paymentSettings": {
     "title": "Payment methods",

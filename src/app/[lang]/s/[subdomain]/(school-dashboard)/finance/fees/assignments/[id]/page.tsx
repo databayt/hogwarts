@@ -39,10 +39,16 @@ import {
   buildInstallments,
   InstallmentTimeline,
 } from "@/components/school-dashboard/finance/fees/installment-timeline"
+import { PaymentReturnBanner } from "@/components/school-dashboard/finance/fees/payment-return-banner"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+function first(v: string | string[] | undefined): string | undefined {
+  return Array.isArray(v) ? v[0] : v
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -84,8 +90,11 @@ function paymentStatusVariant(
   }
 }
 
-export default async function AssignmentDetailPage({ params }: Props) {
-  const { lang, id } = await params
+export default async function AssignmentDetailPage({
+  params,
+  searchParams,
+}: Props) {
+  const [{ lang, id }, sp] = await Promise.all([params, searchParams])
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance
   const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
@@ -161,8 +170,39 @@ export default async function AssignmentDetailPage({ params }: Props) {
     .reduce((sum, p) => sum + Number(p.amount), 0)
   const remaining = Math.max(finalAmount - totalPaid, 0)
 
+  const fees = d?.fees as
+    | {
+        gateways?: Record<string, unknown>
+        manualRail?: Record<string, unknown>
+        paymentReturn?: Record<string, unknown>
+      }
+    | undefined
+
+  // Gateway redirect landing (finance staff paying on a family's behalf, or
+  // testing a rail): verify with the gateway before anything reads as paid.
+  const payment = first(sp.payment)
+  const gatewayParam = first(sp.gateway)
+  const returnBanner =
+    payment === "success" || payment === "cancelled" ? (
+      <PaymentReturnBanner
+        outcome={payment}
+        feeAssignmentId={id}
+        gateway={
+          gatewayParam === "stripe" || gatewayParam === "tap"
+            ? gatewayParam
+            : undefined
+        }
+        sessionId={first(sp.session_id)}
+        tapId={first(sp.tap_id)}
+        lang={lang}
+        currency={currency}
+        dictionary={fees?.paymentReturn}
+      />
+    ) : null
+
   return (
     <div className="space-y-6">
+      {returnBanner}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">
@@ -259,18 +299,8 @@ export default async function AssignmentDetailPage({ params }: Props) {
         lang={lang}
         remaining={remaining}
         methods={methods}
-        dictionary={
-          (
-            d as unknown as {
-              gateways?: {
-                title?: string
-                chooseMethod?: string
-                paymentFailed?: string
-                redirecting?: string
-              }
-            }
-          )?.gateways
-        }
+        dictionary={fees?.gateways}
+        manualRailDictionary={fees?.manualRail}
       />
 
       {/* Installment Timeline */}

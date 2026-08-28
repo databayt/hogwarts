@@ -9,9 +9,9 @@ import { getPolicyContext } from "@/lib/rbac/context"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getAllCatalogCourses } from "@/components/stream/data/catalog/get-all-courses"
-import { getContinueWatching } from "@/components/stream/data/catalog/get-continue-watching"
-import { StreamHomeContent } from "@/components/stream/home/content"
+import { getAllCatalogCourses } from "@/components/lumos/data/catalog/get-all-courses"
+import { getContinueWatching } from "@/components/lumos/data/catalog/get-continue-watching"
+import { LumosHomeContent } from "@/components/lumos/home/content"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -22,14 +22,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dictionary = await getDictionary(lang)
 
   return {
-    title: dictionary.stream?.title || "Stream - Learning Management",
+    title: dictionary.lumos?.title || "Lumos - Learning Management",
     description:
-      dictionary.stream?.description ||
+      dictionary.lumos?.description ||
       "Elevate your learning experience with our LMS school-dashboard",
   }
 }
 
-export default async function StreamHomePage({ params }: Props) {
+export default async function LumosHomePage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
@@ -62,8 +62,8 @@ export default async function StreamHomePage({ params }: Props) {
   ])
 
   return (
-    <StreamHomeContent
-      dictionary={dictionary.stream}
+    <LumosHomeContent
+      dictionary={dictionary.lumos}
       lang={lang}
       schoolId={schoolId}
       isAuthenticated={!!session?.user}

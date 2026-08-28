@@ -12,6 +12,8 @@ import { db } from "@/lib/db"
 import { detectMergeFields, loadTemplateBufferFromUrl } from "@/lib/docx-fill"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { buildStarterTemplate } from "./starter-template"
+
 const MANAGER_ROLES = ["ADMIN", "DEVELOPER", "TEACHER"]
 
 interface CreateInput {
@@ -169,6 +171,60 @@ export async function deleteDocumentTemplate(
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to delete template",
+    }
+  }
+}
+
+// ============================================================================
+// STARTER TEMPLATE
+// ============================================================================
+
+/**
+ * Hand the school a working `.docx` for `category` — every `{{tag}}` and
+ * `{{#loop}}` already correct — so the first upload is an edit of a file that
+ * fills, not a guess at docxtemplater syntax.
+ *
+ * This is the way INTO the engine: an untagged upload fills as a silent no-op
+ * (`nullGetter` returns "") and a wrongly-braced one prints its markers into the
+ * finished document, and neither failure is visible until a school prints it.
+ *
+ * The file is built in memory per request — nothing is stored, so there is no
+ * tenant data in it and only the session gate applies.
+ */
+export async function getStarterTemplate(
+  category: DocumentTemplateCategory
+): Promise<ActionResponse<{ filename: string; base64: string; mime: string }>> {
+  try {
+    const session = await auth()
+    if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const lang = school?.preferredLanguage === "en" ? "en" : "ar"
+
+    const buffer = buildStarterTemplate(category, lang)
+    if (!buffer) return actionError(ACTION_ERRORS.TEMPLATE_NOT_FOUND)
+
+    return {
+      success: true,
+      data: {
+        filename: `starter-${category.toLowerCase().replace(/_/g, "-")}-${lang}.docx`,
+        base64: buffer.toString("base64"),
+        mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to build starter template",
     }
   }
 }

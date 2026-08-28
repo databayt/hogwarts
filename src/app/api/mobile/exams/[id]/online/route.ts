@@ -172,7 +172,13 @@ export async function GET(
         id: q.question.id,
         text: q.question.questionText,
         type: q.question.questionType,
-        options: q.question.options,
+        // NEVER the raw options: `QuestionBank.options` stores
+        // `[{ text, isCorrect, explanation }]`, so returning it handed a
+        // student sitting a graded, in-progress exam the answer key. The web
+        // lane has stripped this since it shipped (`sanitizeOptions` in
+        // exams/take/actions.ts); the mobile lane never did. Option ORDER is
+        // preserved — answers are matched back by index.
+        options: sanitizeExamOptions(q.question.options),
         marks: Number(q.points),
         order: q.order,
       })),
@@ -184,4 +190,19 @@ export async function GET(
       { status: 500 }
     )
   }
+}
+
+/**
+ * Mirror of `sanitizeOptions` in `exams/take/actions.ts` — the answer key must
+ * not cross the wire on either lane. Kept to the `{ text }` shape the mobile
+ * client already renders, and in the stored order so a selected index still
+ * lines up with grading.
+ */
+function sanitizeExamOptions(raw: unknown): { text: string }[] | null {
+  if (!Array.isArray(raw)) return null
+  return raw.map((o) => {
+    const opt = o && typeof o === "object" ? (o as Record<string, unknown>) : {}
+    const text = opt.text ?? opt.label
+    return { text: typeof text === "string" ? text : String(text ?? "") }
+  })
 }

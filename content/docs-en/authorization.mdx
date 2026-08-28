@@ -10,7 +10,7 @@ description: Pure RBAC permission checks colocated with each feature.
 | Category             | Shape                                                                        | Reference                            |
 | -------------------- | ---------------------------------------------------------------------------- | ------------------------------------ |
 | CRUD authorization   | Permission checks for standard CRUD on one entity (~12 files, 100–200 lines) | `listings/teachers/authorization.ts` |
-| Domain authorization | Ownership-based checks with JSDoc permission matrix (~3 files, 80–150 lines) | `stream/authorization.ts`            |
+| Domain authorization | Ownership-based checks with JSDoc permission matrix (~3 files, 80–150 lines) | `lumos/authorization.ts`             |
 
 ## Rules
 
@@ -135,7 +135,7 @@ export function getAllowedActions(role: UserRole): TeacherAction[] {
 
 ## Domain authorization with ownership
 
-For features with ownership semantics (stream courses), use a JSDoc matrix table and an ownership check:
+For features with ownership semantics (lumos courses), use a JSDoc matrix table and an ownership check:
 
 ```typescript
 /**

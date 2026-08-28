@@ -58,7 +58,7 @@ export async function verifyToken(token: string) {
 
 /**
  * Resolve the AcademicGrade.gradeNumber for a STUDENT-role user. Other roles
- * have no grade. Returned in the mobile auth response so the Android Stream
+ * have no grade. Returned in the mobile auth response so the Android Lumos
  * catalog can auto-filter for the logged-in student.
  */
 async function resolveStudentGrade(

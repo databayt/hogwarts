@@ -39,19 +39,23 @@ documents/
 ├── upload-template-dialog.tsx # client — upload .docx + field vocab reference
 ├── use-exam-template-dialog.tsx # client — couple a layout to exam data, then fill
 ├── exam-paper-flow.ts       # server — listExam/Blueprint/ClassOptions + generateExamPaperFromTemplate
-├── actions.ts               # createDocumentTemplate / list / setDefault / delete
-├── generate.ts              # generateDocument / generateDocumentsBulk (→ base64 .docx/.zip)
+├── actions.ts               # createDocumentTemplate / list / setDefault / delete / getStarterTemplate
+├── generate.ts              # generateDocument(s)Bulk + generateFromDefaultTemplate(Bulk) (→ base64 .docx/.zip)
+├── config.ts                # BULK_MAX_ENTITIES — plain consts, kept out of the "use server" file
+├── starter-template.ts      # per-category pre-tagged .docx layouts (tags checked vs FIELD_VOCAB)
+├── starter-button.tsx       # client — download the starter for a category
 ├── field-vocab.ts           # canonical {{tag}} vocabulary per category
 └── resolvers/
     ├── index.ts             # resolveDocumentData(category, entityId, ctx) dispatcher
     ├── certificate.ts       # ExamCertificate id → flat merge data
     ├── exam-paper.ts        # GeneratedExam id → exam meta + questions[] loop
-    └── util.ts              # ResolverCtx, formatDate, toLabelledOptions
+    ├── report-card.ts       # ReportCard id → student/term header + subjects[] loop
+    └── util.ts              # ResolverCtx, formatDate, toLabelledOptions, getResolverSchool
 ```
 
 Generic fill primitives live at `src/lib/docx-fill/` (`fillDocxTemplate`,
-`detectMergeFields`, `loadTemplateBufferFromUrl`) — pure, reusable, mirrors
-`src/lib/document-extraction/`.
+`detectMergeFields`, `loadTemplateBufferFromUrl`, and `build.ts`'s `buildDocx` for the
+starter templates) — pure, reusable, mirrors `src/lib/document-extraction/`.
 
 ## Data model
 

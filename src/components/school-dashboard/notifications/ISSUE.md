@@ -11,6 +11,39 @@ docs: https://ed.databayt.org/en/docs/messages
 last_audited: 2026-05-25
 ---
 
+## 2026-08-14 — one post-provision dispatcher for every intake channel (LOCAL, not pushed)
+
+- [x] `src/lib/student-provisioning-notify.ts` — the account / `fee_due` /
+      guardian notices, extracted out of `confirmEnrollment` and shared by all
+      five student-intake channels. Before this only `PORTAL` students were ever
+      told anything.
+- [x] It carries a `delivery: "immediate" | "queue"` switch. **This is load-
+      bearing:** `dispatchAdmissionNotification` sends email INLINE (its own
+      comment: "Send email immediately instead of waiting for daily cron"), so a
+      bulk path routed through it would burst Resend. Bulk always queues, and
+      `processPendingEmailNotifications` drains 50 per run.
+- [x] **Placeholder addresses lose the `email` channel at row-creation time.** A
+      student with no address gets a synthesized `…@student.local`; skipping
+      only the inline send is not enough, because the cron skips recipients with
+      NO address and a placeholder is an address.
+- [x] Recipients with no account get `["email"]` only — an `in_app` row keyed to
+      a userId that does not exist is unreadable by anyone.
+- [x] Dispatch is invoked via `after()`, not bare `void`, so it survives a
+      serverless freeze. Tests need a multi-tick flush as a result.
+- [x] `fee-due` cron gained a weekly unplaced-students alert to ADMIN/STAFF.
+      Required a **fourth** school-discovery groupBy: a school whose only problem
+      is gradeless students has no pending fees and appeared in none of the
+      existing three sets.
+
+Open / confirmed dead:
+
+- [ ] **The digest mechanism is declared and unimplemented.**
+      `NotificationPreference.digestEnabled` / `digestFrequency` are written by
+      the preferences form and read back for display, but nothing branches on
+      them — a user who enables "daily digest" still gets immediate individual
+      sends. The `NotificationSummary` model built for it has zero references in
+      `src/`. Do not design against it.
+
 # Notifications — Production Readiness Tracker
 
 **Status:** BUILT

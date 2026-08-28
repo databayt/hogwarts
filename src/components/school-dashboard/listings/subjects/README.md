@@ -26,7 +26,7 @@ and are enforced in the stream read paths.
   `setLessonQuizHidden` (quiz hide via `ContentOverride.hideQuiz`),
   `setInstructorPreference` (preferred source per subject)
 
-> Enforced in `src/components/stream/data/catalog/*` (`get-course`,
+> Enforced in `src/components/lumos/data/catalog/*` (`get-course`,
 > `get-course-sidebar-data`, `get-lesson-with-progress`, `get-lesson-content`).
 > Tracked under the LMS/Stream epic (#323).
 
@@ -97,7 +97,7 @@ to the school-dashboard paths and are overridden by the community surface to pub
   "see all" link), `videosHref`, `videoTileBasePath` (`""` → tiles fall back to `videosHref`)
 
 When adding a new deep link to any of these shared components, give it a prop with
-a school default — don't hardcode a `/subjects//exams//stream/` path. See
+a school default — don't hardcode a `/subjects//exams//lumos/` path. See
 `saas-marketing/community/CLAUDE.md`.
 
 ### Integration Points

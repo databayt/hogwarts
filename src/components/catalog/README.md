@@ -28,7 +28,7 @@ Import directly by path, e.g. `import { setupCatalogForSchool } from "@/componen
   `subject-picker` (with the pinned "requested by your school" section +
   `catalog-ready-reminder`), `queries.ts` (pinned proposal lookup), subject selections,
   `ContentOverride` hide/show, proposals, contributions.
-- `src/components/stream/data/catalog/` — LMS read/query adapter (gating engine in
+- `src/components/lumos/data/catalog/` — LMS read/query adapter (gating engine in
   `get-lesson-with-progress.ts`).
 - `src/components/library/catalog/` — library book picker (`BookSelection`).
 - `src/components/school-dashboard/exams/generate/catalog-tab.tsx` and

@@ -17,10 +17,10 @@ import {
 export const getDictionaryClient = async (
   locale: Locale
 ): Promise<Dictionary> => {
-  const [general, school, stream, operator, features] = await Promise.all([
+  const [general, school, lumos, operator, features] = await Promise.all([
     loadLocale(flatDictionaries.general, locale),
     loadLocale(flatDictionaries.school, locale),
-    loadLocale(flatDictionaries.stream, locale),
+    loadLocale(flatDictionaries.lumos, locale),
     loadLocale(flatDictionaries.operator, locale),
     loadFeatureDictionaries(locale),
   ])
@@ -28,7 +28,7 @@ export const getDictionaryClient = async (
   return {
     ...general,
     ...school,
-    ...stream,
+    ...lumos,
     ...operator,
     ...features,
   } as Dictionary

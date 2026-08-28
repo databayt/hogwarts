@@ -1,5 +1,5 @@
-import { StreamTeachOverviewSkeleton } from "@/components/school-dashboard/loading"
+import { LumosTeachOverviewSkeleton } from "@/components/school-dashboard/loading"
 
 export default function Loading() {
-  return <StreamTeachOverviewSkeleton />
+  return <LumosTeachOverviewSkeleton />
 }

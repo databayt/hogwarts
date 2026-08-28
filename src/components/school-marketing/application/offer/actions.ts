@@ -14,8 +14,16 @@ import {
 } from "@/lib/dispatch-notification"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { toSmallestUnit } from "@/lib/payment/currency"
+import {
+  getSchoolPaymentSettings,
+  resolveWalletDetails,
+} from "@/lib/payment/manual-rail-settings"
 import { createPaymentCheckout } from "@/lib/payment/provider"
-import type { PaymentCheckoutResult, PaymentGateway } from "@/lib/payment/types"
+import {
+  isManualGateway,
+  type PaymentCheckoutResult,
+  type PaymentGateway,
+} from "@/lib/payment/types"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
 import { computeAvailableGateways } from "./gateways"
@@ -325,15 +333,22 @@ export async function getOfferDetails(
     }
 
     // Resolve which gateways the applicant may pay the registration fee with.
-    const admissionSettings = await db.admissionSettings.findUnique({
-      where: { schoolId },
-      select: { enableOnlinePayment: true, paymentMethods: true },
-    })
+    // `SchoolPaymentSettings` is what makes the Sudan wallet rails offerable —
+    // without it a Sudan school shows only cash/bank_transfer, which is how a
+    // Bankak-only school ended up with no usable registration-fee rail.
+    const [admissionSettings, paymentSettings] = await Promise.all([
+      db.admissionSettings.findUnique({
+        where: { schoolId },
+        select: { enableOnlinePayment: true, paymentMethods: true },
+      }),
+      getSchoolPaymentSettings(schoolId),
+    ])
     const availableGateways = computeAvailableGateways(
       school.country,
       school.timezone,
       school.currency ?? "USD",
-      admissionSettings
+      admissionSettings,
+      paymentSettings
     )
 
     // Fetch fee schedule preview
@@ -736,18 +751,27 @@ export async function createRegistrationFeeCheckout(
     // Stripe isn't in SD's resolved gateway list, so it fails here instead of
     // erroring inside Stripe on an unsupported SDG charge. cash/bank_transfer
     // have their own dedicated actions — reject them here.
-    if (gateway === "cash" || gateway === "bank_transfer") {
+    // Every MANUAL rail has its own intent action (cash, bank transfer,
+    // bankak/cashi wallets) because none of them produces a checkout URL.
+    // Letting one through here returned `success: true` with no `checkoutUrl`
+    // — the UI sat there while `registrationFeeMethod` had already been
+    // written, which then blocked the retry as "stale checkout state".
+    if (isManualGateway(gateway)) {
       return { success: false, error: "PAYMENT_METHOD_NOT_AVAILABLE" }
     }
-    const admissionSettings = await db.admissionSettings.findUnique({
-      where: { schoolId },
-      select: { enableOnlinePayment: true, paymentMethods: true },
-    })
+    const [admissionSettings, paymentSettings] = await Promise.all([
+      db.admissionSettings.findUnique({
+        where: { schoolId },
+        select: { enableOnlinePayment: true, paymentMethods: true },
+      }),
+      getSchoolPaymentSettings(schoolId),
+    ])
     const availableGateways = computeAvailableGateways(
       school.country,
       school.timezone,
       currency,
-      admissionSettings
+      admissionSettings,
+      paymentSettings
     )
     if (!availableGateways.includes(gateway)) {
       return { success: false, error: "PAYMENT_METHOD_NOT_AVAILABLE" }
@@ -1109,6 +1133,164 @@ export async function recordRegistrationBankTransferIntent(
     }
   } catch (error) {
     console.error("[recordRegistrationBankTransferIntent]", error)
+    return { success: false, error: "PAYMENT_RECORD_FAILED" }
+  }
+}
+
+// ============================================================================
+// 7. Record Registration Wallet Intent (Bankak / Cashi)
+// ============================================================================
+
+/**
+ * Record the parent's intent to pay the registration fee from a Sudanese
+ * wallet app, and hand back the school's own account to transfer into.
+ *
+ * Third sibling of the cash and bank-transfer intents, and it exists for the
+ * same reason: Bankak (Bank of Khartoum) and Cashi publish no merchant API, so
+ * there is no checkout to redirect to — the school shows an account, the payer
+ * transfers in their own app, and a human confirms. Before this, a Sudan school
+ * offering only wallet rails had NO registration-fee path at all: the generic
+ * checkout action rejects manual rails (it cannot produce a URL), and no intent
+ * action covered the wallets.
+ *
+ * Settlement is `confirmRegistrationPayment` on the dashboard side, exactly as
+ * for cash/bank transfer — the admin confirms once the money is visible in the
+ * school's account.
+ */
+export async function recordRegistrationWalletIntent(
+  applicationId: string,
+  accessToken: string,
+  gateway: Extract<PaymentGateway, "bankak" | "cashi">
+): Promise<ActionResponse<PaymentCheckoutResult>> {
+  try {
+    // Rate limit: mirrors the cash/bank limiters — each attempt writes a fresh
+    // reference number.
+    const rl = await checkUserRateLimit(
+      `reg-wallet:${accessToken}`,
+      RATE_LIMITS.AUTH,
+      "reg-wallet"
+    )
+    if (!rl.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
+    if (gateway !== "bankak" && gateway !== "cashi") {
+      return { success: false, error: "PAYMENT_METHOD_NOT_AVAILABLE" }
+    }
+
+    const result = await validateAccessToken(applicationId, accessToken)
+    if ("error" in result) {
+      return { success: false, error: result.error }
+    }
+
+    const { application } = result
+
+    // Offer must still be live — a withdrawn or expired offer is not payable.
+    if (application.status !== "SELECTED") {
+      return { success: false, error: "OFFER_NOT_AVAILABLE" }
+    }
+    if (isOfferExpired(application.offerExpiryDate)) {
+      return { success: false, error: "OFFER_EXPIRED" }
+    }
+    if (!application.offerAccepted) {
+      return { success: false, error: "OFFER_NOT_ACCEPTED" }
+    }
+    if (application.registrationFeePaid) {
+      return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
+    }
+
+    const schoolId = application.schoolId
+    const referenceNumber = `${gateway === "bankak" ? "RBANKAK" : "RCASHI"}-${nanoid(10).toUpperCase()}`
+
+    const [school, admissionSettings, paymentSettings, lang] =
+      await Promise.all([
+        db.school.findUnique({
+          where: { id: schoolId },
+          select: { currency: true, country: true, timezone: true },
+        }),
+        db.admissionSettings.findUnique({
+          where: { schoolId },
+          select: { enableOnlinePayment: true, paymentMethods: true },
+        }),
+        getSchoolPaymentSettings(schoolId),
+        resolveSchoolLang(schoolId),
+      ])
+
+    // The rail must be one this school actually offers — same server-side
+    // re-resolution the card checkout does, so a crafted request cannot
+    // conjure a wallet the school never published.
+    const availableGateways = computeAvailableGateways(
+      school?.country,
+      school?.timezone,
+      school?.currency ?? "USD",
+      admissionSettings,
+      paymentSettings
+    )
+    if (!availableGateways.includes(gateway)) {
+      return { success: false, error: "PAYMENT_METHOD_NOT_AVAILABLE" }
+    }
+
+    const wallet = resolveWalletDetails(
+      gateway,
+      paymentSettings,
+      referenceNumber
+    )
+    if (!wallet) {
+      return { success: false, error: "PAYMENT_METHOD_NOT_AVAILABLE" }
+    }
+
+    const feeAmount = await calculateRegistrationFee(
+      schoolId,
+      application.campaign.academicYear,
+      application.applyingForClass,
+      application.campaign.applicationFee
+        ? Number(application.campaign.applicationFee)
+        : null
+    )
+
+    await db.application.update({
+      where: { id: applicationId, schoolId },
+      data: {
+        registrationFeeMethod: gateway,
+        registrationFeeReference: referenceNumber,
+        registrationFeeAmount: feeAmount > 0 ? feeAmount : undefined,
+      },
+    })
+
+    // Tell the school there is a transfer to look for — the wallet rails have
+    // no webhook, so this notice is the only signal the money is coming.
+    const applicantName = `${application.firstName} ${application.lastName}`
+    await dispatchNotificationsToAudience({
+      schoolId,
+      type: "system_alert",
+      title: t(NOTIF.registrationFeePaid.title, lang),
+      body: t(NOTIF.registrationFeePaid.body(applicantName, gateway), lang),
+      lang,
+      targetScope: "role",
+      targetRole: "ADMIN",
+      metadata: {
+        applicationId: application.id,
+        applicationNumber: application.applicationNumber,
+        action: "registration_wallet_intent",
+        referenceNumber,
+        gateway,
+      },
+    })
+
+    revalidatePath("/application")
+
+    return {
+      success: true,
+      data: {
+        method: gateway,
+        wallet,
+        referenceNumber,
+        amount: feeAmount > 0 ? feeAmount : undefined,
+        currency: school?.currency ?? undefined,
+      },
+    }
+  } catch (error) {
+    console.error("[recordRegistrationWalletIntent]", error)
     return { success: false, error: "PAYMENT_RECORD_FAILED" }
   }
 }

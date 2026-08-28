@@ -15,7 +15,7 @@ last_audited: 2026-06-14
 
 ## Context
 
-Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~78% complete. See [README](README.md) for routes + file structure and [ISSUE](ISSUE.md) for the live work list. Tracker: [321](https://github.com/databayt/hogwarts/issues/321).
+Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~85% complete. See [README](README.md) for routes + file structure and [ISSUE](ISSUE.md) for the live work list. Tracker: [321](https://github.com/databayt/hogwarts/issues/321).
 
 ## Before You Start
 
@@ -62,6 +62,20 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~78% complete. See [R
   filled and which are unsupported _before_ generating. **The action is gated to
   MANAGER_ROLES** — the surrounding exam-generation actions have no role gate, only
   `getTenantContext()`, so this one adds its own.
+- **A `.docx` loop is `{{#tag}}`, never `{#tag}` (2026-08-14)** — the fill engine runs custom
+  `{{ }}` delimiters, so a single-brace loop is not a loop: it prints literally into the paper,
+  its body is dropped, and `detectMergeFields` STILL reports the inner tags, so the upload
+  dialog's coverage badges look correct while the paper is broken. The dialog taught the wrong
+  form until this date. **Starter templates** (`documents/starter-template.ts`) hand a school a
+  correct `.docx` per category — that, not the tag list, is the way in. The `EXAM_PAPER`
+  resolver offers a flat `{{#questions}}` list AND a `{{#sections}}` grouping by question type;
+  anything added to a resolver must be added to `FIELD_VOCAB` in the same commit or the
+  coverage badge calls it unsupported.
+- **A generated paper can be short and still "succeed" (2026-08-14)** — `generateExamQuestions`
+  degrades: it fills the distribution slots the bank can cover and records the rest, failing
+  only at zero selections. Callers must surface `distributionMet` / `missingCategories`;
+  `generateExamPaperFromTemplate` returns them beside the file, and dropping them ships a
+  teacher a silently short exam.
 - **Gradebook spine is NOT "use server"** — `grades/lib/gradebook.ts` is a plain
   helper module imported by server actions. Marking it `"use server"` would expose
   each export as an HTTP endpoint. Import it; do not add the directive.
@@ -124,7 +138,7 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~78% complete. See [R
 ## Related Blocks
 
 - **grades** (`src/components/school-dashboard/grades/`) — owns `grades/lib/gradebook.ts` (shared write path). Every scoring surface imports from there.
-- **stream** (`src/components/stream/`) — lesson quizzes write to the same `Result` table via the gradebook spine.
+- **stream** (`src/components/lumos/`) — lesson quizzes write to the same `Result` table via the gradebook spine.
 - **notifications** (`src/components/school-dashboard/notifications/`) — `dispatchNotification` / `dispatchNotificationsToAudience` used for results-published and exam-reminders.
 - **timetable** (`src/components/school-dashboard/timetable/`) — conflict detection reads timetable slots for the same class/time window.
 

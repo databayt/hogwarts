@@ -68,19 +68,20 @@ export function getOnboardingRoles(d?: InternalJoinDict) {
       description:
         d?.roles?.admin?.description ?? "I manage school administration",
     },
-    {
-      value: "student" as const,
-      label: d?.roles?.student?.label ?? "Student",
-      description:
-        d?.roles?.student?.description ?? "I am joining as a student",
-    },
   ]
 }
 
 /** @deprecated Use getOnboardingRoles(d) instead */
 export const ONBOARDING_ROLES = getOnboardingRoles()
 
-export type OnboardingRole = "teacher" | "staff" | "admin" | "student"
+/**
+ * Students are deliberately absent. A student joins through the admission
+ * application wizard (`/{lang}/application`), so they are born from a real
+ * `Application` and tracked from an application id onward -- the same pipeline
+ * every other student-creation path funnels into. This flow is for the adults
+ * who join a school. See `content/docs-en/admission.mdx` ("Student intake").
+ */
+export type OnboardingRole = "teacher" | "staff" | "admin"
 
 // =============================================================================
 // OPTIONS (factory functions)

@@ -1,11 +1,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { NextRequest, NextResponse } from "next/server"
+import { after, NextRequest, NextResponse } from "next/server"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { provisionStudent } from "@/lib/student-provisioning"
+import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
 
@@ -117,6 +118,7 @@ export async function POST(request: NextRequest) {
       gender,
       section_id,
       date_of_birth,
+      notify,
     } = body
 
     if (!given_name) {
@@ -147,6 +149,8 @@ export async function POST(request: NextRequest) {
             dateOfBirth: date_of_birth ? new Date(date_of_birth) : null,
           },
           {
+            // Informational only — provisionStudent never dispatches; the
+            // caller does, post-commit, below.
             notify: false,
             credentialDelivery: "temp-password",
             origin: "ADMIN_DIRECT",
@@ -155,6 +159,27 @@ export async function POST(request: NextRequest) {
         ),
       { timeout: 30000 }
     )
+
+    // Opt-in, defaulting OFF. This endpoint has always been silent, and
+    // existing mobile clients did not ask for mail to start going out on their
+    // behalf; flipping that by default would change a live API's side effects
+    // without a version. Clients opt in by posting `notify: true`.
+    if (notify === true) {
+      after(() =>
+        notifyProvisionedStudent({
+          schoolId: auth.schoolId,
+          studentId: result.studentId,
+          userId: result.userId,
+          origin: "ADMIN_DIRECT",
+          studentName: `${given_name} ${family_name || ""}`.trim(),
+          email: email || null,
+          isNewUser: result.isNewUser,
+          delivery: "immediate",
+        }).catch((err) =>
+          console.error("[POST /api/mobile/students] Notification error:", err)
+        )
+      )
+    }
 
     const student = await db.student.findUnique({
       where: { id: result.studentId },

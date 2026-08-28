@@ -4,9 +4,11 @@
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { buildProtectedFileUrl } from "@/components/lumos/video/media-access"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { MaterialsContent } from "@/components/school-dashboard/listings/subjects/catalog-materials"
 
@@ -17,6 +19,7 @@ interface Props {
 export default async function MaterialsPage({ params }: Props) {
   const { lang, subdomain, slug } = await params
   const dictionary = await getDictionary(lang)
+  const { schoolId } = await getTenantContext()
 
   const subject = await db.subject.findUnique({
     where: { slug },
@@ -50,6 +53,19 @@ export default async function MaterialsPage({ params }: Props) {
   const materials = await db.material.findMany({
     where: {
       status: "PUBLISHED",
+      // Approval + visibility, matching the gate in
+      // `lumos/data/catalog/get-lesson-with-progress.ts`. Filtering on
+      // `status` alone listed every OTHER school's SCHOOL/PRIVATE material —
+      // and still-unapproved ones — to any signed-in member of this school.
+      approvalStatus: "APPROVED",
+      AND: [
+        {
+          OR: [
+            { visibility: "PUBLIC" },
+            ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
+          ],
+        },
+      ],
       OR: [
         { catalogSubjectId: subject.id },
         ...(chapterIds.length > 0
@@ -103,7 +119,9 @@ export default async function MaterialsPage({ params }: Props) {
       title: m.title,
       description: m.description,
       type: m.type,
-      fileUrl: m.fileUrl,
+      // Self-hosted files go through the authorizing Lumos route; the raw
+      // storage URL is a permanent public link and never leaves the server.
+      fileUrl: m.fileUrl ? buildProtectedFileUrl("material", m.id) : null,
       externalUrl: m.externalUrl,
       pageCount: m.pageCount,
       mimeType: m.mimeType,

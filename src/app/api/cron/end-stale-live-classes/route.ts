@@ -9,9 +9,12 @@
 // be clobbered) and run the best-effort attendance sync for each.
 //
 // Only LiveKit sessions ever reach `live` (external pasted-link sessions stay
-// `scheduled`), so no provider filter is needed.
+// `scheduled`), so no provider filter is needed on that arm.
+//
+// A second arm closes `scheduled` sessions nobody ever started — the sweep that
+// keeps an online school's materialized day from accumulating forever.
 
-import { NextResponse } from "next/server"
+import { after, NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
@@ -51,9 +54,47 @@ export async function GET(req: Request) {
     })
     if (count > 0) {
       ended++
-      void syncConferenceAttendance(s.schoolId, s.id)
+      after(() => syncConferenceAttendance(s.schoolId, s.id))
     }
   }
 
-  return NextResponse.json({ ok: true, scanned: stale.length, ended })
+  // Second arm: sessions nobody ever started.
+  //
+  // An online school materializes a session per slot per day, so every class
+  // that isn't held leaves a `scheduled` row behind — nothing else transitions
+  // one (external sessions never even reach `live`). Left alone that is ~120
+  // rows per school per day accumulating forever, and each one keeps showing a
+  // "scheduled today" dot and a Join button long after the period ended.
+  //
+  // Deliberately NOT `ended`, and deliberately no attendance sync: whether a
+  // no-show online class should mark its whole roster absent is a product
+  // decision, not something a cleanup cron should make silently. `cancelled`
+  // says what actually happened — the class never ran. See conference/ISSUE.md.
+  const abandoned = await db.conference.findMany({
+    where: {
+      status: "scheduled",
+      deletedAt: null,
+      scheduledEnd: { lt: cutoff },
+    },
+    select: { id: true, schoolId: true },
+    take: 1000,
+  })
+
+  let cancelled = 0
+  for (const s of abandoned) {
+    // Status-guarded, like the arm above: a teacher starting late must win.
+    const { count } = await db.conference.updateMany({
+      where: { id: s.id, schoolId: s.schoolId, status: "scheduled" },
+      data: { status: "cancelled" },
+    })
+    if (count > 0) cancelled++
+  }
+
+  return NextResponse.json({
+    ok: true,
+    scanned: stale.length,
+    ended,
+    abandoned: abandoned.length,
+    cancelled,
+  })
 }

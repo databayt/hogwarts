@@ -16,9 +16,8 @@ const APP_STORE_URL: string | null = null
 const PLAY_STORE_URL: string | null = null
 
 const FALLBACK = {
-  title: "Get the mobile app",
-  description:
-    "The whole platform in every pocket — for admins, teachers, students and parents.",
+  title: "Mobile app",
+  description: "The whole platform in every pocket",
   appStoreLead: "Download on the",
   appStore: "App Store",
   googlePlayLead: "Get it on",

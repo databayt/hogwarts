@@ -3,7 +3,7 @@
 
 import { ReactNode } from "react"
 
-import { StreamSectionNav } from "@/components/stream/nav"
+import { LumosSectionNav } from "@/components/lumos/nav"
 
 interface Props {
   children: ReactNode
@@ -23,7 +23,7 @@ export default async function LumosAppLayout({ children, params }: Props) {
 
   return (
     <div className="space-y-6">
-      <StreamSectionNav lang={lang} />
+      <LumosSectionNav lang={lang} />
       {children}
     </div>
   )

@@ -91,10 +91,10 @@ import { DependencyChain } from "@/components/docs/dependency-chain"
 import { DirectoryStructure } from "@/components/docs/directory-structure"
 import { CardGrid, DocCard } from "@/components/docs/doc-card"
 import { ListingStructure } from "@/components/docs/listing-structure"
+import { LumosStructure } from "@/components/docs/lumos-structure"
 import { Mermaid } from "@/components/docs/mermaid"
 import { PrismaStructure } from "@/components/docs/prisma-structure"
 import { StoryVideo } from "@/components/docs/story-video"
-import { StreamStructure } from "@/components/docs/stream-structure"
 import { Structure } from "@/components/docs/structure"
 import { TimetableStructure } from "@/components/docs/timetable-structure"
 import { TranslationStructure } from "@/components/docs/translation-structure"
@@ -414,7 +414,7 @@ const mdxComponents = {
   Mermaid,
   DirectoryStructure,
   ListingStructure,
-  StreamStructure,
+  LumosStructure,
   Structure,
   TimetableStructure,
   TranslationStructure,

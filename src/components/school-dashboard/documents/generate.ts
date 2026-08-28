@@ -12,6 +12,7 @@ import { db } from "@/lib/db"
 import { fillDocxTemplate, loadTemplateBufferFromUrl } from "@/lib/docx-fill"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { BULK_MAX_ENTITIES } from "./config"
 import { resolveDocumentData } from "./resolvers"
 
 const DOCX_MIME =
@@ -92,6 +93,49 @@ export async function generateDocument(
   }
 }
 
+/** Shared fill loop for both bulk entry points. */
+async function fillBulk(
+  tpl: { name: string; category: DocumentTemplateCategory; fileUrl: string },
+  entityIds: string[],
+  schoolId: string
+): Promise<ActionResponse<GeneratedFile>> {
+  const lang = await resolveLang(schoolId)
+  const buffer = await loadTemplateBufferFromUrl(tpl.fileUrl)
+
+  const zip = new JSZip()
+  let ok = 0
+  for (const entityId of entityIds) {
+    try {
+      const data = await resolveDocumentData(tpl.category, entityId, {
+        schoolId,
+        lang,
+      })
+      const filled = fillDocxTemplate(buffer, data)
+      const name =
+        typeof data.studentName === "string" && data.studentName
+          ? sanitize(data.studentName)
+          : sanitize(entityId)
+      // De-dupe identical names by suffixing the index.
+      zip.file(`${name}-${ok + 1}.docx`, filled)
+      ok++
+    } catch {
+      // Skip an entity that fails to resolve/fill; the rest still generate.
+    }
+  }
+
+  if (ok === 0) return actionError(ACTION_ERRORS.CREATE_FAILED)
+
+  const zipBuffer = await zip.generateAsync({ type: "nodebuffer" })
+  return {
+    success: true,
+    data: {
+      filename: `${sanitize(tpl.name)}-${ok}.zip`,
+      base64: zipBuffer.toString("base64"),
+      mime: ZIP_MIME,
+    },
+  }
+}
+
 /** Fill one template for many entities → a `.zip` of `.docx` files (base64). */
 export async function generateDocumentsBulk(
   templateId: string,
@@ -109,46 +153,58 @@ export async function generateDocumentsBulk(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
-    if (!entityIds.length) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    if (!entityIds.length || entityIds.length > BULK_MAX_ENTITIES) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
 
     const tpl = await loadTemplate(templateId, schoolId)
     if (!tpl) return actionError(ACTION_ERRORS.TEMPLATE_NOT_FOUND)
 
-    const lang = await resolveLang(schoolId)
-    const buffer = await loadTemplateBufferFromUrl(tpl.fileUrl)
-
-    const zip = new JSZip()
-    let ok = 0
-    for (const entityId of entityIds) {
-      try {
-        const data = await resolveDocumentData(tpl.category, entityId, {
-          schoolId,
-          lang,
-        })
-        const filled = fillDocxTemplate(buffer, data)
-        const name =
-          typeof data.studentName === "string" && data.studentName
-            ? sanitize(data.studentName)
-            : sanitize(entityId)
-        // De-dupe identical names by suffixing the index.
-        zip.file(`${name}-${ok + 1}.docx`, filled)
-        ok++
-      } catch {
-        // Skip an entity that fails to resolve/fill; the rest still generate.
-      }
-    }
-
-    if (ok === 0) return actionError(ACTION_ERRORS.CREATE_FAILED)
-
-    const zipBuffer = await zip.generateAsync({ type: "nodebuffer" })
+    return fillBulk(tpl, entityIds, schoolId)
+  } catch (error) {
     return {
-      success: true,
-      data: {
-        filename: `${sanitize(tpl.name)}-${ok}.zip`,
-        base64: zipBuffer.toString("base64"),
-        mime: ZIP_MIME,
-      },
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to generate documents",
     }
+  }
+}
+
+/**
+ * Bulk sibling of `generateFromDefaultTemplate` — fills the school's default
+ * (or most recently updated) active template of `category` for many entities.
+ *
+ * This is what makes "the school's own `.docx`" usable at school scale: without
+ * it the only path was the per-row button, i.e. one click and one download per
+ * student, ~900 times for a term's report cards.
+ */
+export async function generateFromDefaultTemplateBulk(
+  category: DocumentTemplateCategory,
+  entityIds: string[]
+): Promise<ActionResponse<GeneratedFile>> {
+  try {
+    const session = await auth()
+    if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const role = session.user.role
+    if (!role || !MANAGER_ROLES.includes(role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!entityIds.length || entityIds.length > BULK_MAX_ENTITIES) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
+
+    const tpl = await db.documentTemplate.findFirst({
+      where: { schoolId, category, isActive: true },
+      orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
+    })
+    if (!tpl) return actionError(ACTION_ERRORS.TEMPLATE_NOT_FOUND)
+
+    return fillBulk(tpl, entityIds, schoolId)
   } catch (error) {
     return {
       success: false,

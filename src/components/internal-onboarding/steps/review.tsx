@@ -22,7 +22,6 @@ import type {
   ContactStepData,
   PersonalStepData,
   StaffDetailsData,
-  StudentDetailsData,
   TeacherDetailsData,
 } from "../types"
 import { useOnboarding } from "../use-onboarding"
@@ -231,9 +230,6 @@ export function ReviewStep() {
             {state.role === "admin" && (
               <AdminReview data={roleDetails as AdminDetailsData} rv={rv} />
             )}
-            {state.role === "student" && (
-              <StudentReview data={roleDetails as StudentDetailsData} rv={rv} />
-            )}
           </CardContent>
         </Card>
       )}
@@ -349,35 +345,6 @@ function AdminReview({
       <ReviewField
         label={rv?.administrativeArea ?? "Administrative Area"}
         value={data.administrativeArea}
-      />
-    </>
-  )
-}
-
-function StudentReview({
-  data,
-  rv,
-}: {
-  data: StudentDetailsData
-  rv?: ReviewDict
-}) {
-  return (
-    <>
-      <ReviewField
-        label={rv?.gradeLevel ?? "Grade Level"}
-        value={data.gradeLevel}
-      />
-      <ReviewField
-        label={rv?.studentType ?? "Student Type"}
-        value={data.studentType}
-      />
-      <ReviewField
-        label={rv?.previousSchool ?? "Previous School"}
-        value={data.previousSchool}
-      />
-      <ReviewField
-        label={rv?.previousGrade ?? "Previous Grade"}
-        value={data.previousGrade}
       />
     </>
   )

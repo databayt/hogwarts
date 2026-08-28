@@ -43,7 +43,7 @@ export interface ParityReport {
 export const TOP_LEVEL_PAIRS = [
   { ar: "ar.json", en: "en.json", label: "General" },
   { ar: "school-ar.json", en: "school-en.json", label: "School" },
-  { ar: "stream-ar.json", en: "stream-en.json", label: "Stream" },
+  { ar: "lumos-ar.json", en: "lumos-en.json", label: "Lumos" },
   { ar: "operator-ar.json", en: "operator-en.json", label: "Operator" },
 ] as const
 

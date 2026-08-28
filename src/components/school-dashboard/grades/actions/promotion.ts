@@ -10,6 +10,8 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { gradesPath } from "../lib/paths"
+
 // ============================================================================
 // PROMOTION POLICY CRUD
 // ============================================================================
@@ -66,7 +68,7 @@ export async function upsertPromotionPolicy(input: {
       },
     })
 
-    revalidatePath("/grades/promotion")
+    revalidatePath(gradesPath("promotion"), "page")
     return { success: true, data: { id: policy.id } }
   } catch (error) {
     return {
@@ -360,7 +362,7 @@ export async function evaluatePromotionCandidates(input: {
       },
     })
 
-    revalidatePath("/grades/promotion")
+    revalidatePath(gradesPath("promotion"), "page")
     return {
       success: true,
       data: { batchId: batch.id, total: students.length },
@@ -409,7 +411,7 @@ export async function overridePromotionDecision(input: {
       },
     })
 
-    revalidatePath("/grades/promotion")
+    revalidatePath(gradesPath("promotion"), "page")
     return { success: true, data: { id: input.candidateId } }
   } catch (error) {
     return {
@@ -464,7 +466,7 @@ export async function approvePromotionBatch(
       },
     })
 
-    revalidatePath("/grades/promotion")
+    revalidatePath(gradesPath("promotion"), "page")
     return { success: true, data: { id: batchId } }
   } catch (error) {
     return {
@@ -601,7 +603,7 @@ export async function executePromotions(
       },
     })
 
-    revalidatePath("/grades/promotion")
+    revalidatePath(gradesPath("promotion"), "page")
     return { success: true, data: { executed } }
   } catch (error) {
     return {

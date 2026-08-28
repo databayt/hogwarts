@@ -124,7 +124,7 @@ const SCHOOLS: NetworkSchoolSeed[] = [
     company: "القبس",
     country: "SD",
     tier: "B",
-    notes: "Al-Qabas. Warm contact. Missing: phone, role.",
+    notes: "Alqabs. Warm contact. Missing: phone, role.",
   },
   {
     contactName: "كيكس",

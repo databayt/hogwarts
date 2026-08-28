@@ -7,10 +7,10 @@ import { auth } from "@/auth"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { StreamCourseDetailContent } from "@/components/stream/courses/[slug]/content"
-import { checkCatalogEnrollment } from "@/components/stream/data/catalog/check-enrollment"
-import { getCatalogCourse } from "@/components/stream/data/catalog/get-course"
-import { getCourseProgress } from "@/components/stream/data/catalog/get-course-progress"
+import { LumosCourseDetailContent } from "@/components/lumos/courses/[slug]/content"
+import { checkCatalogEnrollment } from "@/components/lumos/data/catalog/check-enrollment"
+import { getCatalogCourse } from "@/components/lumos/data/catalog/get-course"
+import { getCourseProgress } from "@/components/lumos/data/catalog/get-course-progress"
 
 export const dynamic = "force-dynamic"
 
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function StreamCourseDetailPage({ params }: Props) {
+export default async function LumosCourseDetailPage({ params }: Props) {
   const { lang, slug } = await params
   const [dictionary, { schoolId }, session] = await Promise.all([
     getDictionary(lang),
@@ -51,8 +51,8 @@ export default async function StreamCourseDetailPage({ params }: Props) {
   ])
 
   return (
-    <StreamCourseDetailContent
-      dictionary={dictionary.stream}
+    <LumosCourseDetailContent
+      dictionary={dictionary.lumos}
       lang={lang}
       schoolId={schoolId}
       course={course}

@@ -1,10 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Link from "next/link"
-
 import { getTenantContext } from "@/lib/tenant-context"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -81,33 +78,14 @@ export async function TransportationOverviewContent({
     (expiring?.drivers.length ?? 0) + (expiring?.vehicles.length ?? 0)
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold">{t.title}</h2>
-          <p className="text-muted-foreground text-sm">{t.subtitle}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/transportation/vehicles`}>
-              {t.nav.vehicles}
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/transportation/routes`}>
-              {t.nav.routes}
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/transportation/trips`}>{t.nav.trips}</Link>
-          </Button>
-          <Button asChild>
-            <Link href={`/${locale}/transportation/reports`}>
-              {t.nav.reports}
-            </Link>
-          </Button>
-        </div>
-      </header>
+    <div className="flex flex-col gap-6">
+      {/*
+        No heading row and no nav buttons: since this page moved under the
+        `(app)` route group it sits below the shared tab strip, which already
+        names the section (PageHeadingSetter) and links every sibling surface.
+        Repeating them here read as two navs stacked on one screen.
+      */}
+      <p className="text-muted-foreground text-sm">{t.subtitle}</p>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {tiles.map((tile) => (

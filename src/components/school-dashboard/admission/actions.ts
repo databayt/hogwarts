@@ -1701,10 +1701,17 @@ export async function recordPayment(params: {
  * Manual payment methods an admin can confirm here. "stripe"/"tap" (card/
  * online) are confirmed automatically by their payment webhook — never
  * manually, since only the webhook has proof the charge actually settled.
+ *
+ * Bankak and Cashi belong here, NOT with the online rails: neither publishes a
+ * merchant API, so both settle by a human seeing the transfer land in the
+ * school's account. Leaving them out meant a Sudan school could record a
+ * wallet intent it could then never confirm.
  */
 const MANUALLY_CONFIRMABLE_REGISTRATION_METHODS = new Set([
   "cash",
   "bank_transfer",
+  "bankak",
+  "cashi",
 ])
 
 /**

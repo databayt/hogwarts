@@ -27,8 +27,18 @@ export async function generateMetadata({
   const { subdomain, lang } = await params
   const result = await getSchoolBySubdomain(subdomain)
   const name = getSchoolDisplayName(result.data, lang)
+  const logoUrl = result.success ? result.data?.logoUrl : null
   return {
     title: name ? `Join ${name}` : "Join School",
+    ...(logoUrl
+      ? {
+          icons: {
+            icon: logoUrl,
+            shortcut: logoUrl,
+            apple: logoUrl,
+          },
+        }
+      : {}),
   }
 }
 

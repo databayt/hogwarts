@@ -184,7 +184,7 @@ export const SCHOOL_DASHBOARD_ROUTES = {
   exams: "/exams",
   settings: "/dashboard/settings",
   admission: "/admission",
-  stream: "/lumos",
+  lumos: "/lumos",
   timetable: "/timetable",
   grades: "/grades",
   messages: "/messages",

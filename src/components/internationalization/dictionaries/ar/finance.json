@@ -460,7 +460,8 @@
         "PENDING": "قيد الانتظار",
         "OVERDUE": "متأخر",
         "CANCELLED": "ملغي"
-      }
+      },
+      "awaitingVerification": "بانتظار التحقق"
     },
     "overview": {
       "feesCollected": "الرسوم المحصلة",
@@ -575,7 +576,13 @@
       "academicYear": "السنة الدراسية",
       "totalFee": "إجمالي الرسوم",
       "assignmentStatus": "حالة التعيين",
-      "viewAssignment": "عرض التعيين"
+      "viewAssignment": "عرض التعيين",
+      "depositBankBranch": "الفرع",
+      "depositorIban": "آيبان المُحوِّل",
+      "verifiedAt": "تاريخ التحقق",
+      "proof": "إثبات الدفع",
+      "proofDescription": "أرسله الدافع. تحقق من المبلغ والمرجع قبل الاعتماد.",
+      "openProof": "فتح الإثبات في تبويب جديد"
     },
     "scholarship": {
       "editScholarship": "تعديل المنحة",
@@ -704,6 +711,70 @@
       "assignedStudents": "{count} تعيينات طلاب",
       "errors": "{count} أخطاء",
       "schoolWidePrefix": "احتياطي على مستوى المدرسة — "
+    },
+    "gateways": {
+      "title": "ادفع الرسوم",
+      "chooseMethod": "اختر طريقة الدفع المناسبة:",
+      "redirecting": "جارٍ التحويل إلى صفحة الدفع...",
+      "paymentFailed": "تعذر بدء الدفع. حاول مرة أخرى.",
+      "pay": "ادفع"
+    },
+    "paymentActions": {
+      "markAsCleared": "اعتماد الدفعة",
+      "clearing": "جارٍ الاعتماد...",
+      "cleared": "تم اعتماد الدفعة",
+      "clearFailed": "تعذر اعتماد الدفعة",
+      "reject": "رفض",
+      "rejecting": "جارٍ الرفض...",
+      "rejected": "تم رفض إثبات الدفع",
+      "rejectFailed": "تعذر رفض الدفعة",
+      "rejectTitle": "رفض إثبات الدفع",
+      "rejectDescription": "تبقى الدفعة مسجلة كعملية فاشلة، ويُطلب من الأسرة إرسال التحويل الصحيح مرة أخرى.",
+      "rejectReason": "السبب (اختياري)",
+      "rejectReasonPlaceholder": "مثال: المبلغ غير مطابق، أو المرجع غير موجود",
+      "cancel": "إلغاء",
+      "confirmReject": "رفض الإثبات"
+    },
+    "paymentReturn": {
+      "verifying": "جارٍ تأكيد الدفع مع بوابة الدفع…",
+      "recordedTitle": "تم استلام الدفع",
+      "recordedBody": "تم تسجيل {amount}. المتبقي: {remaining}.",
+      "alreadyRecordedBody": "تم تسجيل هذه الدفعة مسبقاً. المتبقي: {remaining}.",
+      "pendingTitle": "الدفع قيد المعالجة",
+      "pendingBody": "لم تؤكد بوابة الدفع العملية بعد. ستُحدَّث هذه الصفحة تلقائياً — يرجى عدم الدفع مرة أخرى.",
+      "failedTitle": "لم تكتمل عملية الدفع",
+      "failedBody": "لم يتم الخصم. يمكنك المحاولة مرة أخرى أو اختيار طريقة أخرى.",
+      "cancelledTitle": "تم إلغاء الدفع",
+      "cancelledBody": "لم يتم خصم أي مبلغ. يمكنك الدفع متى شئت.",
+      "unknownBody": "تعذر تأكيد الدفع تلقائياً. إذا تم الخصم فسيظهر هنا قريباً.",
+      "downloadReceipt": "تنزيل الإيصال",
+      "dismiss": "إغلاق"
+    },
+    "manualRail": {
+      "title": "التحويل من تطبيقك",
+      "step1": "١. حوّل المبلغ إلى حساب المدرسة",
+      "step2": "٢. ثم أخبرنا برقم العملية وأرفق الإيصال",
+      "accountName": "اسم الحساب",
+      "accountNumber": "رقم الحساب",
+      "merchantCode": "رمز التاجر",
+      "reference": "اذكر هذا المرجع",
+      "referenceHint": "اكتبه في ملاحظة التحويل حتى تتمكن المدرسة من مطابقة دفعتك.",
+      "amount": "المبلغ المطلوب تحويله",
+      "scanQr": "أو امسح هذا الرمز في التطبيق",
+      "copied": "تم النسخ",
+      "bankReference": "رقم العملية من تطبيقك",
+      "bankReferenceHint": "الرقم الظاهر في إيصال التحويل.",
+      "proof": "صورة الإيصال",
+      "proofHint": "صورة أو ملف PDF لتأكيد التحويل.",
+      "submit": "إرسال للتحقق",
+      "submitting": "جارٍ الإرسال...",
+      "submitted": "تم استلام الإيصال",
+      "submittedHint": "سيتحقق منه قسم المالية بالمدرسة وسيُحدَّث رصيدك.",
+      "uploadFailed": "فشل رفع الإيصال.",
+      "duplicateReference": "رقم العملية هذا مُستخدم بالفعل. تأكد من الرقم في تطبيق البنك.",
+      "unavailable": "طريقة الدفع هذه غير متاحة حالياً.",
+      "genericError": "تعذر إرسال الإيصال. حاول مرة أخرى.",
+      "close": "إغلاق"
     }
   },
   "paymentForm": {
@@ -2718,7 +2789,11 @@
     "salaryPaidTitle": "تم صرف الراتب",
     "salaryPaidBody": "تم صرف راتبك بقيمة {amount}.",
     "proofSubmittedTitle": "تم إرسال إيصال دفع",
-    "proofSubmittedBody": "يوجد إيصال تحويل بانتظار المراجعة والتأكيد."
+    "proofSubmittedBody": "يوجد إيصال تحويل بانتظار المراجعة والتأكيد.",
+    "paymentFailedTitle": "فشلت عملية الدفع",
+    "paymentFailedBody": "لم تتم عملية الدفع الإلكتروني ({reason}). يرجى المحاولة مرة أخرى أو استخدام وسيلة دفع أخرى.",
+    "proofRejectedTitle": "لم يُقبل إثبات الدفع",
+    "proofRejectedBody": "تعذر التحقق من إثبات الدفع الذي أرسلته بمبلغ {amount}{reason}. يرجى مراجعة التحويل وإرساله مرة أخرى."
   },
   "paymentSettings": {
     "title": "طرق الدفع",

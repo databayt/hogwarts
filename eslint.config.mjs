@@ -28,12 +28,6 @@ export const STUDENT_CREATE_ALLOWLIST = [
   // completeStudentWizard runs provisionStudent. Drafts carry a non-null
   // `wizardStep`, which is what exempts them from the invariant.
   "src/components/school-dashboard/listings/students/wizard/actions.ts",
-  // TODO(intake-unification): unauthenticated self-registration flows. Gated
-  // for auth, but their AdmissionChannel is still undecided, so they remain
-  // outside the pipeline for now. Remove these two entries once they route
-  // through provisionStudent.
-  "src/components/internal-onboarding/actions.ts",
-  "src/components/onboarding/newcomers/actions.ts",
 ]
 
 const eslintConfig = [

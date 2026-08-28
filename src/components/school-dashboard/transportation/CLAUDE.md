@@ -61,6 +61,30 @@ School transportation: fleet inventory (vehicles), drivers with licenses, named 
 - **Hazards** (`RoadHazard`): admin-pinned; the optimizer's **Haversine tier penalizes legs near active hazards** (ordering only — reported distance/ETA stay real); Mapbox tiers rely on live traffic (point-exclusion unsupported). Creating one alerts guardians of routes with stops in range.
 - **Weather is designed-but-deferred** — needs `OPENWEATHER_API_KEY` (user opted into Mapbox-traffic only). No weather code shipped; add behind a `TransportationSettings.enableWeatherAlerts` flag when a key is provisioned.
 
+### 2026-08-16 landing/app split — invariants to preserve
+
+- **`/transportation` is a landing page, not the overview.** The fleet board lives at
+  `/transportation/dashboard`. Anything that used to deep-link "the transportation overview" must point
+  at `/dashboard`; `/transportation` itself is the section's front door (lumos parity).
+- **Ops surfaces live in the `(app)` route group**, whose `layout.tsx` renders `nav.tsx`
+  (`PageHeadingSetter` + `PageNav`). Route groups add **no URL segment and no `revalidatePath` segment**,
+  so `transportationRevalidatePath()` was — and must stay — group-agnostic. Never write `(app)` into a path.
+- **`nav.tsx`'s role arrays mirror each page's own `ALLOWED_ROLES` exactly.** They are duplicated on
+  purpose (the page gate is the security boundary; the nav list is presentation). If you change a page's
+  `ALLOWED_ROLES`, change the matching array in `nav.tsx` in the same edit, or the tab strip offers a tab
+  that redirects — which reads as a broken link, not as a permission denial.
+- **`/me` sits OUTSIDE `(app)`** — a student/guardian surface should not carry the ops tab strip. Same
+  reason lumos keeps `/courses` outside its own `(app)` group.
+- **The landing calls `getOverviewStats()` only for DEVELOPER/ADMIN/STAFF.** That action is
+  permission-gated; calling it for a teacher or an accountant returns a failure and the stats strip just
+  hides itself. Do not "simplify" this by calling it unconditionally.
+- **`content.tsx` (the overview) no longer renders its own heading or nav buttons** — the `(app)` layout
+  owns both. Re-adding them stacks two navs on one screen.
+- **The bus art is hotlinked from Webflow, not `asset()`** (`landing/art.ts`). `asset()` has no fallback
+  and an unpublished `cdn.databayt.org` key returns **403**, so an invented path renders a blank tile.
+  Its tile background is a literal light amber for the same reason lumos's illustrations use literal
+  tiles: the drawing is near-black on white and a themed surface swallows it in dark mode.
+
 ## Danger Zones
 
 - **`Route.geofenceId` cross-block reference** — schema changes to `geo_fences` need a check here. Currently `onDelete: SetNull`.

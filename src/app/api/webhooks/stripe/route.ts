@@ -15,8 +15,17 @@
  * - charge.refunded: Course enrollment refund
  * - charge.dispute.created: Payment dispute
  * - checkout.session.expired: Abandoned checkout cleanup (also clears stuck admission state)
- * - payment_intent.succeeded: Wallet/method enrichment
+ * - payment_intent.succeeded / charge.succeeded: Wallet/method enrichment
  * - payment_intent.payment_failed: Fee payment failure notification
+ *
+ * MONEY:
+ * - Fee payments go through the ONE shared recorder
+ *   (`finance/lib/gateway-payment.ts`): amount = what Stripe actually
+ *   captured (`amount_total`, converted from minor units per currency),
+ *   idempotent on `payment_intent` via `@@unique([schoolId, transactionId])`.
+ * - Registration fees go through `offer/settle.ts` (same helper as Tap).
+ * - Every `amount_total / 100` is a bug for KWD/BHD/OMR/JOD (3 minor digits)
+ *   and JPY-style currencies (0) — always `fromSmallestUnit(amount, currency)`.
  *
  * SECURITY:
  * - Signature verification using STRIPE_WEBHOOK_SECRET
@@ -44,12 +53,12 @@
  * ```
  */
 
-import { randomUUID } from "node:crypto"
 import { headers } from "next/headers"
 import { Prisma } from "@prisma/client"
 
 // WHY NO STRIPE TYPES: Keeps route lean, avoids version conflicts
 import { db } from "@/lib/db"
+import { fromSmallestUnit } from "@/lib/payment/currency"
 import { getTierIdFromStripePrice } from "@/components/saas-marketing/pricing/lib/get-tier-id"
 import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 import { createPurchaseInvoiceForCheckout } from "@/components/school-dashboard/finance/invoice/purchase-invoice"
@@ -105,22 +114,59 @@ async function safeTierId(priceId: string): Promise<string | null> {
 }
 
 /**
- * Generate a collision-safe, human-scannable receipt number.
- * crypto.randomUUID() provides 122 bits of entropy; we take the first 8 hex
- * chars (32 bits) which is more than sufficient for human-facing identifiers
- * while keeping the string short.  Format: RCP-XXXXXXXX (all uppercase).
+ * Amount a Checkout Session captured, in MAJOR units of its currency.
+ * Stripe reports `amount_total` in the currency's minor unit (cents, fils, or
+ * whole yen), so the divisor depends on the currency — never a flat 100.
  */
-function generateReceiptNumber(): string {
-  const hex = randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase()
-  return `RCP-${hex}`
+function sessionAmount(session: {
+  amount_total?: number | null
+  currency?: string | null
+}): { amount: number | null; currency: string | null } {
+  const currency = session.currency?.toUpperCase() ?? null
+  const minor = session.amount_total
+  if (typeof minor !== "number" || !Number.isFinite(minor)) {
+    return { amount: null, currency }
+  }
+  return { amount: fromSmallestUnit(minor, currency ?? "USD"), currency }
 }
 
 /**
- * Generate a collision-safe payment number.  Format: PAY-XXXXXXXX.
+ * Best-effort: the wallet/card rail behind a PaymentIntent (apple_pay,
+ * google_pay, link, visa, mada…). Checkout's `session.completed` payload does
+ * not carry it, and the `charge.succeeded` event may arrive before or after
+ * the Payment row exists — so the fee branch reads it synchronously here and
+ * the event handlers only back-fill. Never throws.
  */
-function generatePaymentNumber(): string {
-  const hex = randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase()
-  return `PAY-${hex}`
+async function resolvePaymentIntentRail(
+  paymentIntentId: string | null | undefined
+): Promise<string | null> {
+  if (!paymentIntentId || !stripe) return null
+  try {
+    const pi = (await stripe.paymentIntents.retrieve(paymentIntentId, {
+      expand: ["latest_charge"],
+    })) as unknown as {
+      latest_charge?:
+        | string
+        | {
+            payment_method_details?: {
+              type?: string
+              card?: { wallet?: { type?: string }; brand?: string }
+            }
+          }
+        | null
+    }
+    const charge =
+      pi.latest_charge && typeof pi.latest_charge === "object"
+        ? pi.latest_charge
+        : null
+    const details = charge?.payment_method_details
+    const rail =
+      details?.card?.wallet?.type ?? details?.card?.brand ?? details?.type
+    return rail ? rail.toString().toUpperCase() : null
+  } catch (err) {
+    console.warn("[Webhook] could not resolve payment-intent rail:", err)
+    return null
+  }
 }
 
 /**
@@ -296,6 +342,8 @@ export async function POST(req: Request) {
           subscription?: string
           payment_status?: string
           payment_intent?: string
+          amount_total?: number | null
+          currency?: string | null
         }
       }
     }
@@ -395,121 +443,37 @@ export async function POST(req: Request) {
       !session.subscription
     ) {
       if (session.payment_status === "paid") {
-        try {
-          // Idempotency: skip if already processed
-          const existing = await db.application.findFirst({
-            where: {
-              id: session.metadata.applicationId,
-              ...(session.metadata.schoolId && {
-                schoolId: session.metadata.schoolId,
-              }),
-            },
-            select: { registrationFeePaid: true },
-          })
-          if (existing?.registrationFeePaid) {
-            return new Response(null, { status: 200 })
-          }
-
-          const amountTotal = (session as unknown as { amount_total?: number })
-            .amount_total
-
-          await db.application.update({
-            where: {
-              id: session.metadata.applicationId,
-              ...(session.metadata.schoolId && {
-                schoolId: session.metadata.schoolId,
-              }),
-            },
-            data: {
-              registrationFeePaid: true,
-              registrationFeeAmount:
-                amountTotal != null ? amountTotal / 100 : null,
-              registrationFeeMethod: "stripe",
-              registrationFeeReference:
-                (session as unknown as { id?: string }).id ?? null,
-              registrationFeeDate: new Date(),
-            },
-          })
-
-          console.log(
-            `[Webhook] Registration fee paid: ${session.metadata.applicationId}`
+        // Metadata schoolId is what our own checkout stamped; refuse to settle
+        // without it rather than guessing the tenant from the application id.
+        const schoolId = session.metadata.schoolId
+        if (!schoolId) {
+          console.error(
+            `[Webhook] registration_fee session without schoolId (application ${session.metadata.applicationId}) — ignoring`
           )
-
-          // Send payment confirmation notification (non-fatal)
-          try {
-            const app = await db.application.findFirst({
-              where: { id: session.metadata.applicationId },
-              select: {
-                userId: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                applicationNumber: true,
-                schoolId: true,
-              },
-            })
-            if (app?.schoolId) {
-              const {
-                dispatchNotification,
-                dispatchNotificationsToAudience,
-                resolveSchoolLang,
-              } = await import("@/lib/dispatch-notification")
-              const lang = await resolveSchoolLang(app.schoolId)
-              const isAr = lang === "ar"
-              // Family: registered applicants in-app + email; GUEST applicants
-              // (no userId — the wizard allows it) by email. Guests used to be
-              // skipped here entirely, unlike every other admission call site.
-              await dispatchNotification({
-                schoolId: app.schoolId,
-                userId: app.userId ?? undefined,
-                directEmail: app.userId ? undefined : (app.email ?? undefined),
-                type: "fee_paid",
-                title: isAr
-                  ? "تم استلام رسوم التسجيل"
-                  : "Registration Fee Received",
-                body: isAr
-                  ? `تم تأكيد دفع رسوم التسجيل للطلب ${app.applicationNumber} بنجاح`
-                  : `Registration fee for application ${app.applicationNumber} confirmed.`,
-                lang,
-                priority: "normal",
-                channels: ["in_app", "email"],
-                metadata: {
-                  applicationId: session.metadata.applicationId,
-                  paymentType: "registration_fee",
-                },
-              })
-              // School: accept / decline / cash-intent all alert ADMIN; the
-              // online payment — the one event that means "money is in" —
-              // did not, so the dashboard never proactively learned of it.
-              await dispatchNotificationsToAudience({
-                schoolId: app.schoolId,
-                targetRoles: ["ADMIN", "ACCOUNTANT"],
-                type: "fee_paid",
-                title: isAr
-                  ? "تم استلام رسوم التسجيل"
-                  : "Registration Fee Received",
-                body: isAr
-                  ? `دفع ولي أمر ${app.firstName} ${app.lastName} رسوم التسجيل إلكترونياً (الطلب ${app.applicationNumber}). يمكن الآن تأكيد التسجيل.`
-                  : `The family of ${app.firstName} ${app.lastName} paid the registration fee online (application ${app.applicationNumber}). Enrollment can now be confirmed.`,
-                lang,
-                priority: "normal",
-                channels: ["in_app"],
-                metadata: {
-                  applicationId: session.metadata.applicationId,
-                  paymentType: "registration_fee",
-                  url: `/admission/enrollment`,
-                },
-              })
+          return new Response(null, { status: 200 })
+        }
+        try {
+          const { settleRegistrationFee } =
+            await import("@/components/school-marketing/application/offer/settle")
+          const { amount } = sessionAmount(
+            session as unknown as {
+              amount_total?: number | null
+              currency?: string | null
             }
-          } catch (notifError) {
-            console.error(
-              "[Webhook] Registration fee notification failed:",
-              notifError
-            )
-          }
+          )
+          const outcome = await settleRegistrationFee({
+            applicationId: session.metadata.applicationId,
+            schoolId,
+            method: "stripe",
+            reference: (session as unknown as { id?: string }).id ?? null,
+            amount,
+          })
+          console.log(
+            `[Webhook] Registration fee (stripe) → ${outcome}: ${session.metadata.applicationId}`
+          )
         } catch (error) {
-          // STRIPE-FEE-CATCH-200 fix: DB failure on registration_fee must not be
-          // silently swallowed — release the dedupe row so Stripe retries.
+          // DB failure on registration_fee must not be silently swallowed —
+          // release the dedupe row so Stripe retries.
           return releaseDedupeAndFail("registration fee", error)
         }
       }
@@ -524,154 +488,53 @@ export async function POST(req: Request) {
       !session.subscription
     ) {
       if (session.payment_status === "paid") {
+        const feeAssignmentId = session.metadata.feeAssignmentId
+        const schoolId = session.metadata.schoolId
+        const paymentIntentId =
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : null
+        if (!schoolId || !paymentIntentId) {
+          console.error(
+            `[Webhook] fee_payment session missing schoolId/payment_intent (assignment ${feeAssignmentId}) — ignoring`
+          )
+          return new Response(null, { status: 200 })
+        }
         try {
-          const feeAssignmentId = session.metadata.feeAssignmentId
-          const schoolId = session.metadata.schoolId
-
-          // Get the assignment with existing payments to calculate remaining.
-          // Include school.currency so the new Payment row carries a snapshot
-          // of the school's currency at charge time (P1.1).
-          const assignment = await db.feeAssignment.findFirst({
-            where: {
-              id: feeAssignmentId,
-              ...(schoolId ? { schoolId } : {}),
-            },
-            include: {
-              payments: {
-                where: { status: "SUCCESS" },
-                select: { amount: true },
-              },
-              student: {
-                select: { userId: true, firstName: true, lastName: true },
-              },
-              school: { select: { currency: true } },
-            },
-          })
-
-          if (assignment) {
-            const totalPaid = assignment.payments.reduce(
-              (sum, p) => sum + Number(p.amount),
-              0
-            )
-            const finalAmount = Number(assignment.finalAmount)
-
-            // Remaining is what Stripe charged
-            const paymentAmount = finalAmount - totalPaid
-
-            if (paymentAmount > 0) {
-              // Create payment record. P1.1: snapshot currency from
-              // assignment (set at create time from School.currency).
-              // P1.3: gatewayMethod left null here — Stripe Checkout doesn't
-              // surface the wallet (Apple Pay/Google Pay) on session.completed;
-              // the underlying PaymentIntent would, but we'd need to attach a
-              // payment_intent.succeeded handler to read it.
-              const paymentCurrency =
-                assignment.currency ?? assignment.school?.currency ?? "USD"
-              const payment = await db.payment.create({
-                data: {
-                  schoolId: assignment.schoolId,
-                  feeAssignmentId,
-                  studentId: assignment.studentId,
-                  paymentNumber: generatePaymentNumber(),
-                  amount: paymentAmount,
-                  currency: paymentCurrency,
-                  paymentMethod: "CREDIT_CARD",
-                  paymentDate: new Date(),
-                  status: "SUCCESS",
-                  receiptNumber: generateReceiptNumber(),
-                  transactionId: (session.payment_intent as string) ?? null,
-                },
-              })
-
-              // Update assignment status
-              const newTotalPaid = totalPaid + paymentAmount
-              const newStatus = newTotalPaid >= finalAmount ? "PAID" : "PARTIAL"
-              await db.feeAssignment.update({
-                where: { id: feeAssignmentId },
-                data: { status: newStatus },
-              })
-
-              console.log(
-                `[Webhook] Fee payment recorded: ${feeAssignmentId}, amount: ${paymentAmount}, status: ${newStatus}`
-              )
-
-              // Post to double-entry ledger (issue #263 P1 — these poster
-              // functions exist in finance/lib/accounting but were never
-              // wired, so every Stripe-paid fee was previously invisible to
-              // the trial balance). Non-fatal: a posting failure surfaces in
-              // logs but the payment itself is already recorded — admin can
-              // re-post manually via the accounting UI.
-              try {
-                const { postFeePayment } =
-                  await import("@/components/school-dashboard/finance/lib/accounting/actions")
-                const postResult = await postFeePayment(
-                  assignment.schoolId,
-                  {
-                    paymentId: payment.id,
-                    studentId: assignment.studentId,
-                    amount: paymentAmount,
-                    paymentMethod: "CREDIT_CARD",
-                    paymentDate: payment.paymentDate,
-                  },
-                  "system:stripe-webhook"
-                )
-                if (!postResult.success) {
-                  console.error(
-                    "[Webhook] postFeePayment failed:",
-                    postResult.errors
-                  )
-                }
-              } catch (postingErr) {
-                console.error(
-                  "[Webhook] Ledger posting threw (continuing):",
-                  postingErr
-                )
-              }
-
-              // Sync ALL linked UserInvoices, allocating this payment
-              // oldest-first via the shared allocator
-              // (finance/lib/invoice-allocation.ts) so every payment path —
-              // recordPayment, markPaymentCleared, Stripe, Tap — is identical.
-              try {
-                const { allocatePaymentToInvoices } =
-                  await import("@/components/school-dashboard/finance/lib/invoice-allocation")
-                await allocatePaymentToInvoices(
-                  assignment.schoolId,
-                  feeAssignmentId,
-                  paymentAmount
-                )
-              } catch (invoiceSyncErr) {
-                console.error("[Webhook] Invoice sync failed:", invoiceSyncErr)
-              }
-
-              // Notify the family — student AND every linked guardian, via
-              // the shared fan-out every payment rail uses (non-fatal). This
-              // used to be a student-only inline notice, so the parent who
-              // had just paid online heard nothing.
-              try {
-                const { notifyFeePaymentReceived } =
-                  await import("@/components/school-dashboard/finance/lib/payment-notify")
-                await notifyFeePaymentReceived({
-                  schoolId: assignment.schoolId,
-                  studentId: assignment.studentId,
-                  paymentId: payment.id,
-                  receiptNumber: payment.receiptNumber,
-                  feeAssignmentId,
-                  amount: paymentAmount,
-                  remaining: Math.max(0, finalAmount - newTotalPaid),
-                  status: newStatus,
-                })
-              } catch (notifError) {
-                console.error(
-                  "[Webhook] Fee payment notification failed:",
-                  notifError
-                )
-              }
+          const { amount, currency } = sessionAmount(
+            session as unknown as {
+              amount_total?: number | null
+              currency?: string | null
             }
+          )
+          if (amount === null) {
+            console.error(
+              `[Webhook] fee_payment session ${(session as unknown as { id?: string }).id ?? "?"} has no amount_total — ignoring`
+            )
+            return new Response(null, { status: 200 })
           }
+          const rail = await resolvePaymentIntentRail(paymentIntentId)
+          const { recordGatewayFeePayment, mapGatewayMethod } =
+            await import("@/components/school-dashboard/finance/lib/gateway-payment")
+          // The recorder is idempotent on (schoolId, payment_intent): the
+          // return page may have recorded this charge already, or Stripe may
+          // be replaying — both come back as `duplicate` and write nothing.
+          const result = await recordGatewayFeePayment({
+            schoolId,
+            feeAssignmentId,
+            transactionId: paymentIntentId,
+            amount,
+            currency,
+            paymentMethod: mapGatewayMethod(rail),
+            gatewayMethod: rail,
+            actor: "system:stripe-webhook",
+          })
+          console.log(
+            `[Webhook] fee_payment ${paymentIntentId} → ${result.outcome}${"paymentId" in result ? ` (${result.paymentId})` : ""}`
+          )
         } catch (error) {
-          // STRIPE-FEE-CATCH-200 fix: DB failure on fee_payment must not be
-          // silently swallowed — release the dedupe row so Stripe retries.
+          // DB failure on fee_payment must not be silently swallowed — release
+          // the dedupe row so Stripe retries.
           return releaseDedupeAndFail("fee payment", error)
         }
       }
@@ -706,13 +569,8 @@ export async function POST(req: Request) {
               userId: session.metadata.userId,
               videoId: session.metadata.videoId,
               schoolId: session.metadata.schoolId ?? null,
-              amount:
-                ((session as unknown as { amount_total?: number })
-                  .amount_total ?? 0) / 100,
-              currency:
-                (
-                  session as unknown as { currency?: string }
-                ).currency?.toUpperCase() ?? "USD",
+              amount: sessionAmount(session).amount ?? 0,
+              currency: sessionAmount(session).currency ?? "USD",
               stripeSessionId:
                 (session as unknown as { id?: string }).id ?? null,
               status: "SUCCESS",
@@ -738,13 +596,8 @@ export async function POST(req: Request) {
             await createPurchaseInvoiceForCheckout({
               schoolId: purchaseSchoolId,
               userId: session.metadata.userId,
-              amount:
-                ((session as unknown as { amount_total?: number })
-                  .amount_total ?? 0) / 100,
-              currency:
-                (
-                  session as unknown as { currency?: string }
-                ).currency?.toUpperCase() ?? "USD",
+              amount: sessionAmount(session).amount ?? 0,
+              currency: sessionAmount(session).currency ?? "USD",
               itemName: video?.title ?? "Video purchase",
               sessionId: (session as unknown as { id?: string }).id ?? "",
               purchaseType: "video_purchase",
@@ -811,13 +664,8 @@ export async function POST(req: Request) {
             await createPurchaseInvoiceForCheckout({
               schoolId: purchaseSchoolId,
               userId: enrollment.userId,
-              amount:
-                ((session as unknown as { amount_total?: number })
-                  .amount_total ?? 0) / 100,
-              currency:
-                (
-                  session as unknown as { currency?: string }
-                ).currency?.toUpperCase() ?? "USD",
+              amount: sessionAmount(session).amount ?? 0,
+              currency: sessionAmount(session).currency ?? "USD",
               itemName: enrollment.subject?.name ?? "Course enrollment",
               sessionId: (session as unknown as { id?: string }).id ?? "",
               purchaseType: "catalog_enrollment",
@@ -882,13 +730,8 @@ export async function POST(req: Request) {
             await createPurchaseInvoiceForCheckout({
               schoolId: enrollment.schoolId,
               userId: enrollment.userId,
-              amount:
-                ((session as unknown as { amount_total?: number })
-                  .amount_total ?? 0) / 100,
-              currency:
-                (
-                  session as unknown as { currency?: string }
-                ).currency?.toUpperCase() ?? "USD",
+              amount: sessionAmount(session).amount ?? 0,
+              currency: sessionAmount(session).currency ?? "USD",
               itemName: enrollment.course?.title ?? "Course enrollment",
               sessionId: (session as unknown as { id?: string }).id ?? "",
               purchaseType: "course_enrollment",
@@ -912,6 +755,15 @@ export async function POST(req: Request) {
       return new Response(null, { status: 200 })
     }
 
+    // A subscription checkout we did not create (no userId stamped) cannot be
+    // attributed — acknowledge instead of throwing, or Stripe retries forever.
+    if (!session.metadata?.userId) {
+      console.error(
+        `[Webhook] subscription checkout without metadata.userId (subscription ${session.subscription}) — ignoring`
+      )
+      return new Response(null, { status: 200 })
+    }
+
     // Retrieve the subscription details from Stripe.
     const subscriptionRes = await stripe.subscriptions.retrieve(
       session.subscription as string
@@ -923,7 +775,7 @@ export async function POST(req: Request) {
     // Update the user stripe info in our database.
     const updatedUser = await db.user.update({
       where: {
-        id: session?.metadata?.userId,
+        id: session.metadata.userId,
       },
       data: {
         stripeSubscriptionId: subscription.id,
@@ -1247,6 +1099,10 @@ export async function POST(req: Request) {
   // retroactively so the receipt + reconciliation report show the right
   // wallet badge. P3.1.
   // ============================================
+  // Under API versions ≥ 2022-11-15 the PaymentIntent no longer embeds
+  // `charges` (only `latest_charge`, an id) — so this branch is dead for most
+  // accounts and `charge.succeeded` below is the reliable back-fill. Kept for
+  // accounts pinned to an older webhook API version.
   if ((event as { type: string })?.type === "payment_intent.succeeded") {
     const pi = (
       event as {
@@ -1280,7 +1136,13 @@ export async function POST(req: Request) {
     if (gatewayMethod) {
       try {
         await db.payment.updateMany({
-          where: { transactionId: pi.id, gatewayMethod: null },
+          where: {
+            transactionId: pi.id,
+            gatewayMethod: null,
+            ...(pi.metadata?.schoolId
+              ? { schoolId: pi.metadata.schoolId }
+              : {}),
+          },
           data: { gatewayMethod },
         })
         console.log(
@@ -1288,6 +1150,57 @@ export async function POST(req: Request) {
         )
       } catch (err) {
         console.error("[Webhook] payment_intent.succeeded enrich failed:", err)
+      }
+    }
+  }
+
+  // ============================================
+  // CHARGE: Succeeded — carries `payment_method_details` directly (the
+  // PaymentIntent event no longer does), so this is where Apple Pay / Google
+  // Pay / mada provenance is back-filled onto a Payment recorded from
+  // checkout.session.completed. Order is not guaranteed between the two
+  // events, which is why the fee branch ALSO resolves the rail synchronously;
+  // this only fills rows that are still null.
+  // ============================================
+  if ((event as { type: string })?.type === "charge.succeeded") {
+    const charge = (
+      event as {
+        data: {
+          object: {
+            id: string
+            payment_intent?: string | null
+            payment_method_details?: {
+              type?: string
+              card?: { wallet?: { type?: string }; brand?: string }
+            }
+            metadata?: { schoolId?: string }
+          }
+        }
+      }
+    ).data.object
+    const details = charge.payment_method_details
+    const rail = (
+      details?.card?.wallet?.type ??
+      details?.card?.brand ??
+      details?.type ??
+      ""
+    )
+      .toString()
+      .toUpperCase()
+    if (rail && charge.payment_intent) {
+      try {
+        await db.payment.updateMany({
+          where: {
+            transactionId: charge.payment_intent,
+            gatewayMethod: null,
+            ...(charge.metadata?.schoolId
+              ? { schoolId: charge.metadata.schoolId }
+              : {}),
+          },
+          data: { gatewayMethod: rail },
+        })
+      } catch (err) {
+        console.error("[Webhook] charge.succeeded enrich failed:", err)
       }
     }
   }
@@ -1455,10 +1368,15 @@ export async function POST(req: Request) {
     ) {
       try {
         if (expiredMeta.type === "registration_fee") {
-          await db.application.update({
+          // Only an UNPAID application is reset. A parent who abandoned session
+          // A and paid through session B must not have B's method/reference
+          // wiped when A expires 24h later — that used to leave
+          // `registrationFeePaid: true` with `registrationFeeMethod: null`.
+          const { count } = await db.application.updateMany({
             where: {
               id: expiredMeta.applicationId,
               schoolId: expiredMeta.schoolId,
+              registrationFeePaid: false,
             },
             data: {
               registrationFeeMethod: null,
@@ -1466,14 +1384,15 @@ export async function POST(req: Request) {
             },
           })
           console.log(
-            `[Webhook] Cleared stuck registration_fee state for application ${expiredMeta.applicationId}`
+            `[Webhook] ${count ? "Cleared" : "Left"} registration_fee state for application ${expiredMeta.applicationId} (expired checkout)`
           )
         } else {
           // legacy application_fee
-          await db.application.update({
+          await db.application.updateMany({
             where: {
               id: expiredMeta.applicationId,
               schoolId: expiredMeta.schoolId,
+              applicationFeePaid: false,
             },
             data: {
               paymentMethod: null,

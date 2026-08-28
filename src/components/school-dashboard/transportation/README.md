@@ -73,32 +73,46 @@ The Transportation block provides school bus and route management:
 Page-level role gates live in each `page.tsx` (`ALLOWED_ROLES` → redirect to `/dashboard` if denied).
 Server actions independently enforce the RBAC matrix via `requireContext()`.
 
-| Route                                        | Page                                                | Allowed roles                    |
-| -------------------------------------------- | --------------------------------------------------- | -------------------------------- |
-| `/{lang}/transportation`                     | Overview (counts + recent + expiring docs)          | DEVELOPER, ADMIN, STAFF          |
-| `/{lang}/transportation/vehicles`            | Fleet list + create/edit dialog                     | DEVELOPER, ADMIN, STAFF          |
-| `/{lang}/transportation/vehicles/[id]`       | Vehicle detail                                      | DEVELOPER, ADMIN, STAFF          |
-| `/{lang}/transportation/routes`              | Routes list + create dialog                         | DEVELOPER, ADMIN, STAFF          |
-| `/{lang}/transportation/routes/[id]`         | Route detail with drag-drop stop editor             | DEVELOPER, ADMIN, STAFF          |
-| `/{lang}/transportation/drivers`             | Drivers list + create/edit dialog                   | DEVELOPER, ADMIN, STAFF          |
-| `/{lang}/transportation/assignments`         | Assignments table + create dialog                   | DEVELOPER, ADMIN, STAFF          |
-| `/{lang}/transportation/trips`               | Trips list + schedule dialog                        | DEVELOPER, ADMIN, STAFF, TEACHER |
-| `/{lang}/transportation/trips/[id]`          | Trip detail + start/finish/cancel + boarding roster | DEVELOPER, ADMIN, STAFF, TEACHER |
-| `/{lang}/transportation/reports`             | Reports dashboard                                   | DEVELOPER, ADMIN, STAFF          |
-| `/{lang}/transportation/settings`            | Settings (writable)                                 | DEVELOPER, ADMIN                 |
-| `/{lang}/transportation/me`                  | Student/guardian "my transportation" view           | STUDENT, GUARDIAN (+DEV/ADMIN)   |
-| `/{lang}/transportation/fees`                | Fee preview                                         | ACCOUNTANT (+DEV/ADMIN)          |
-| `POST /api/transportation/geofence-boarding` | Service-account boarding webhook                    | Bearer token (`SchoolApiToken`)  |
+| Route                                        | Page                                                | Allowed roles                                 |
+| -------------------------------------------- | --------------------------------------------------- | --------------------------------------------- |
+| `/{lang}/transportation`                     | Landing page (hero + live counts + role-aware CTAs) | Any signed-in role (STUDENT/GUARDIAN → `/me`) |
+| `/{lang}/transportation/dashboard`           | Overview (counts + recent + expiring docs)          | DEVELOPER, ADMIN, STAFF                       |
+| `/{lang}/transportation/vehicles`            | Fleet list + create/edit dialog                     | DEVELOPER, ADMIN, STAFF                       |
+| `/{lang}/transportation/vehicles/[id]`       | Vehicle detail                                      | DEVELOPER, ADMIN, STAFF                       |
+| `/{lang}/transportation/routes`              | Routes list + create dialog                         | DEVELOPER, ADMIN, STAFF                       |
+| `/{lang}/transportation/routes/[id]`         | Route detail with drag-drop stop editor             | DEVELOPER, ADMIN, STAFF                       |
+| `/{lang}/transportation/drivers`             | Drivers list + create/edit dialog                   | DEVELOPER, ADMIN, STAFF                       |
+| `/{lang}/transportation/assignments`         | Assignments table + create dialog                   | DEVELOPER, ADMIN, STAFF                       |
+| `/{lang}/transportation/trips`               | Trips list + schedule dialog                        | DEVELOPER, ADMIN, STAFF, TEACHER              |
+| `/{lang}/transportation/trips/[id]`          | Trip detail + start/finish/cancel + boarding roster | DEVELOPER, ADMIN, STAFF, TEACHER              |
+| `/{lang}/transportation/reports`             | Reports dashboard                                   | DEVELOPER, ADMIN, STAFF                       |
+| `/{lang}/transportation/settings`            | Settings (writable)                                 | DEVELOPER, ADMIN                              |
+| `/{lang}/transportation/me`                  | Student/guardian "my transportation" view           | STUDENT, GUARDIAN (+DEV/ADMIN)                |
+| `/{lang}/transportation/fees`                | Fee preview                                         | ACCOUNTANT (+DEV/ADMIN)                       |
+| `POST /api/transportation/geofence-boarding` | Service-account boarding webhook                    | Bearer token (`SchoolApiToken`)               |
 
 > All five entities have `[id]` detail pages with row drill-in — `drivers/[id]` and `assignments/[id]`
 > landed alongside vehicles/routes/trips (P2-9).
+
+> **2026-08-16 — landing/app split.** `/transportation` is now a landing page (lumos parity); the
+> fleet overview it used to hold moved to `/transportation/dashboard`. Every ops surface sits inside
+> the `(app)` route group, whose layout renders `nav.tsx` — one heading + tab strip, tabs filtered by
+> role so a tab is never shown to someone the page would bounce. Route groups are omitted from URLs
+> and from `revalidatePath` targets, so `transportationRevalidatePath()` was unaffected. `/me` stays
+> outside the group (end-user surface, no ops chrome), exactly as lumos keeps `/courses` out of its own.
 
 ### File Structure
 
 ```
 src/components/school-dashboard/transportation/
 ├── CLAUDE.md, README.md, ISSUE.md
-├── content.tsx                           # Overview (server)
+├── content.tsx                           # Overview (server) — rendered at /dashboard
+├── nav.tsx                               # Section heading + role-filtered tab strip ((app) layout)
+├── landing/                              # /transportation landing page (server sections)
+│   ├── content.tsx                       # composition + role → href resolution
+│   ├── art.ts                            # the bus line drawing (shared with school-marketing)
+│   ├── types.ts
+│   └── {hero,stats,features,capabilities,audience,how-it-works,cta}-section.tsx
 ├── authorization.ts                      # 13-action × 8-role RBAC matrix (+ convenience helpers)
 ├── validation.ts                         # Raw Zod server schemas + Settings schema (validation is server-only)
 ├── empty-state.tsx, loading-skeleton.tsx, error-boundary.tsx
@@ -136,16 +150,19 @@ src/components/school-dashboard/transportation/
     └── geofence-action, geofence-webhook-route, overview-reports   # wrapper / HTTP handler / reports
 
 src/app/[lang]/s/[subdomain]/(school-dashboard)/transportation/
-├── page.tsx, loading.tsx, error.tsx     # (single root error.tsx covers all nested segments)
-├── vehicles/{page,loading}.tsx + [id]/{page,loading}.tsx
-├── routes/{page,loading}.tsx + [id]/{page,loading}.tsx
-├── drivers/{page,loading}.tsx
-├── assignments/{page,loading}.tsx
-├── trips/{page,loading}.tsx + [id]/{page,loading}.tsx
-├── reports/{page,loading}.tsx
-├── settings/{page,loading}.tsx
-├── me/{page,loading}.tsx
-└── fees/{page,loading}.tsx
+├── page.tsx, loading.tsx, error.tsx     # landing (single root error.tsx covers all nested segments)
+├── me/{page,loading}.tsx                # outside (app): end-user surface, no ops chrome
+└── (app)/                               # route group — adds the tab strip, adds no URL segment
+    ├── layout.tsx                       # renders <TransportationSectionNav/>
+    ├── dashboard/{page,loading}.tsx     # the former /transportation overview
+    ├── vehicles/{page,loading}.tsx + [id]/{page,loading}.tsx
+    ├── routes/{page,loading}.tsx + [id]/{page,loading}.tsx
+    ├── drivers/{page,loading}.tsx + [id]/{page,loading}.tsx
+    ├── assignments/{page,loading}.tsx + [id]/{page,loading}.tsx
+    ├── trips/{page,loading}.tsx + [id]/{page,loading}.tsx
+    ├── reports/{page,loading}.tsx
+    ├── settings/{page,loading}.tsx
+    └── fees/{page,loading}.tsx
 
 src/app/api/transportation/geofence-boarding/route.ts   # Bearer-token webhook
 src/lib/api-tokens.ts                                    # verifyApiToken (bcrypt, prefix lookup)

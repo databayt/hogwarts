@@ -80,21 +80,21 @@ export const getPlatformCoreDictionary = makeRouteDictionary("platform core", [
 ])
 
 /**
- * Stream pages - school-dashboard core + stream (spread flat)
- * Used for: course/stream management pages
+ * Lumos pages - school-dashboard core + lumos (spread flat)
+ * Used for: course/lesson management pages
  */
 export const getStreamDictionary = cache(async (locale: Locale) => {
   const load = async (loc: Locale) => {
-    const [[general, school, operator], stream] = await Promise.all([
+    const [[general, school, operator], lumos] = await Promise.all([
       loadCore(loc),
-      loadLocale(flatDictionaries.stream, loc),
+      loadLocale(flatDictionaries.lumos, loc),
     ])
-    return { ...general, ...school, ...operator, ...stream }
+    return { ...general, ...school, ...operator, ...lumos }
   }
   try {
     return await load(locale)
   } catch {
-    console.warn(`Failed to load stream dictionary for locale: ${locale}`)
+    console.warn(`Failed to load lumos dictionary for locale: ${locale}`)
     return await load("en")
   }
 })
@@ -169,14 +169,14 @@ export const getWhatsAppDictionary = makeRouteDictionary("whatsapp", [
  */
 export const getDictionary = cache(async (locale: Locale) => {
   const load = async (loc: Locale) => {
-    const [general, school, stream, operator, features] = await Promise.all([
+    const [general, school, lumos, operator, features] = await Promise.all([
       loadLocale(flatDictionaries.general, loc),
       loadLocale(flatDictionaries.school, loc),
-      loadLocale(flatDictionaries.stream, loc),
+      loadLocale(flatDictionaries.lumos, loc),
       loadLocale(flatDictionaries.operator, loc),
       loadFeatureDictionaries(loc),
     ])
-    return { ...general, ...school, ...stream, ...operator, ...features }
+    return { ...general, ...school, ...lumos, ...operator, ...features }
   }
   try {
     return await load(locale)

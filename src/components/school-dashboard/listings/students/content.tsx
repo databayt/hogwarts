@@ -13,6 +13,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type StudentRow } from "@/components/school-dashboard/listings/students/columns"
 import {
   buildStudentOrderBy,
+  buildUnplacedFilter,
   studentsSearchParams,
 } from "@/components/school-dashboard/listings/students/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/students/permissions"
@@ -130,6 +131,7 @@ export default async function StudentsContent({
           }
         : {}),
       ...(sp.status ? buildStatusFilter(sp.status) : {}),
+      ...buildUnplacedFilter(sp.unplaced),
       // Classroom filter — matches on the section's room code/name. Previously
       // the `className` param was parsed but never mapped into the query.
       ...(sp.className

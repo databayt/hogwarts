@@ -205,8 +205,10 @@ export async function createBankAccount({
 
     // Revalidate all related caches
     revalidateTag(CACHE_TAGS.accounts, "max")
-    revalidatePath(`/[lang]/banking`)
-    revalidatePath(`/[lang]/banking/my-banks`)
+    // Was `/[lang]/banking` — no such route; banking lives under the school
+    // dashboard's finance section, and the tenant segments are required.
+    revalidatePath("/[lang]/s/[subdomain]/finance/banking", "page")
+    revalidatePath("/[lang]/s/[subdomain]/finance/banking/my-banks", "page")
 
     return parseStringify(bankAccount)
   } catch (error) {

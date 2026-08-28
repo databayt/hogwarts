@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
       "./public/site/**",
       "./public/story.mp4",
       "./public/courses/**",
-      "./public/stream/**",
+      "./public/lumos/**",
       "./public/animations/**",
       "./public/onboarding/**",
       "./public/library/**",
@@ -160,42 +160,52 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // Stream URL restructure redirects (old → new)
+  // Lumos URL restructure redirects (old → new)
   async redirects() {
     return [
       {
         source: "/:lang/stream/admin",
-        destination: "/:lang/stream/dashboard",
+        destination: "/:lang/lumos/dashboard",
         permanent: true,
       },
       {
         source: "/:lang/stream/admin/courses",
-        destination: "/:lang/stream/courses",
+        destination: "/:lang/lumos/courses",
         permanent: true,
       },
       {
         source: "/:lang/stream/admin/enrollments",
-        destination: "/:lang/stream/settings?tab=enrollments",
+        destination: "/:lang/lumos/settings?tab=enrollments",
         permanent: true,
       },
       {
         source: "/:lang/stream/admin/instructors",
-        destination: "/:lang/stream/settings?tab=instructors",
+        destination: "/:lang/lumos/settings?tab=instructors",
         permanent: true,
       },
       {
         source: "/:lang/stream/teach",
-        destination: "/:lang/stream/dashboard",
+        destination: "/:lang/lumos/dashboard",
         permanent: true,
       },
       {
         source: "/:lang/stream/teach/videos",
-        destination: "/:lang/stream/settings?tab=videos",
+        destination: "/:lang/lumos/settings?tab=videos",
         permanent: true,
       },
       {
         source: "/:lang/stream/not-admin",
-        destination: "/:lang/stream/courses",
+        destination: "/:lang/lumos/courses",
+        permanent: true,
+      },
+      // The section was renamed /stream → /lumos. The rules above retarget the
+      // handful of URLs that ALSO moved within the section; this catches every
+      // other old link (bookmarks, notification rows written before the
+      // rebrand, anything indexed). Must stay last of the stream rules —
+      // Next matches in order and this one matches everything.
+      {
+        source: "/:lang/stream/:path*",
+        destination: "/:lang/lumos/:path*",
         permanent: true,
       },
       // Catalog docs consolidation (retired pages → catalog.mdx anchors)

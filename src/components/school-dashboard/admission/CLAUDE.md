@@ -45,6 +45,19 @@ School-side admission pipeline: campaigns, applications, merit lists, enrollment
 - **Role-aware UI (2026-07-18)**: `getUIConfigForRole` drives `readOnly` on detail actions; campaigns/merit/settings/leads render `AdmissionAccessDenied` for roles outside their `getTabsForRole` set (inline denial, never `redirect()`).
 - **Applying is always free**: the vestigial application-fee plumbing (settings input, campaigns column, submit result fields, `APPLICATION_FEE_UNPAID` warning) was removed 2026-07-18; Prisma columns remain but nothing writes them.
 
+- **Post-commit notification moved out (2026-08-14)**: the ~150 inline lines in
+  `confirmEnrollment` that sent the account notice, the `fee_due` notice and the
+  guardian notice now live in `src/lib/student-provisioning-notify.ts`, shared by
+  all five intake channels. It was **replaced**, not duplicated — leaving both
+  would double-send every PORTAL enrollment, which is pinned by a regression
+  test in `enrollment-notifications.test.ts`. The registration-fee ledger block
+  stays here: it is PORTAL-specific. `NOTIF.enrollment` / `feeDue` /
+  `guardianEnrollment` were deleted from `actions.ts` with it.
+- **`dispatchAdmissionNotification` sends email INLINE** (its own comment: "Send
+  email immediately instead of waiting for daily cron"). That is fine for a
+  single student an admin is watching, and wrong for bulk — the shared
+  dispatcher takes a `delivery: "immediate" | "queue"` for exactly this.
+
 ## Related Blocks
 
 - [School Marketing Admission](../../../school-marketing/admission/CLAUDE.md) -- public-facing application portal (applicant submits here)

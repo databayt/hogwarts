@@ -53,7 +53,7 @@ export default async function OperatorLayout({
 
   // Only DEVELOPER role reaches this point.
   // Subtree consumes core + sales + messages — the scoped loader sheds
-  // stream + 17 unused feature namespaces from the RSC payload.
+  // lumos + 17 unused feature namespaces from the RSC payload.
   const [dictionary, isRTL] = await Promise.all([
     getSaasDashboardDictionary(lang as Locale).then((d) => d as Dictionary),
     Promise.resolve(checkIsRTL(lang as Locale)),

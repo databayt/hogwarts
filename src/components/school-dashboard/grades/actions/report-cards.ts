@@ -10,6 +10,7 @@ import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { gradesPath, parentPath } from "../lib/paths"
 import {
   generateReportCardsCore,
   type GenerateReportCardsInput,
@@ -50,7 +51,11 @@ export async function generateReportCards(
   if (!schoolId) {
     return { success: false, error: "Missing school context" }
   }
-  return generateReportCardsCore(schoolId, input)
+  const res = await generateReportCardsCore(schoolId, input)
+  // The core is also called by the term-end cron and the demo seed, where
+  // there is no request scope to revalidate — so it stays out of the core.
+  if (res.success) revalidatePath(gradesPath("reports"), "page")
+  return res
 }
 
 // ============================================================================
@@ -88,12 +93,12 @@ export async function publishReportCards(input: {
       data: { isPublished: true, publishedAt: new Date() },
     })
 
-    revalidatePath("/grades/reports")
+    revalidatePath(gradesPath("reports"), "page")
     // Parent surface — both legacy /s/[subdomain] internal path and the
     // client-facing /parent/children/[id]/report-cards path. We don't
     // know the specific child IDs here, so we invalidate the listing
     // (which is the common entry point).
-    revalidatePath("/parent")
+    revalidatePath(parentPath(), "page")
 
     // Per-student direct notification — fires for every student userId so
     // the in-app bell and email channel are triggered immediately on publish.
@@ -275,4 +280,46 @@ export async function getReportCard(reportCardId: string) {
       },
     },
   })
+}
+
+// ============================================================================
+// BULK TEMPLATE FILL — ids for the current filter
+// ============================================================================
+
+/**
+ * Every report-card id matching the current term/grade filter, rank order —
+ * the input to the chunked "Generate all (my template)" fill.
+ *
+ * Returns ids only (not the rows) because the caller feeds them straight back
+ * into `generateFromDefaultTemplateBulk` a slice at a time; shipping the full
+ * rows would push the whole cohort through the wire for nothing.
+ */
+export async function getReportCardIdsForTemplate(input: {
+  termId: string
+  gradeId?: string
+}): Promise<ActionResponse<{ ids: string[] }>> {
+  const session = await auth()
+  if (!session?.user) {
+    return { success: false, error: "Not authenticated" }
+  }
+  if (!REPORT_CARD_ROLES.has(session.user.role ?? "")) {
+    return { success: false, error: "Unauthorized" }
+  }
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { success: false, error: "Missing school context" }
+  }
+
+  const where: Record<string, unknown> = { schoolId, termId: input.termId }
+  if (input.gradeId) {
+    where.student = { academicGradeId: input.gradeId }
+  }
+
+  const rows = await db.reportCard.findMany({
+    where,
+    select: { id: true },
+    orderBy: { rank: "asc" },
+  })
+
+  return { success: true, data: { ids: rows.map((r) => r.id) } }
 }

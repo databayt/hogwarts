@@ -5,6 +5,7 @@ import Link from "next/link"
 import { CircleCheck, Clock, CreditCard, TriangleAlert } from "lucide-react"
 
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
+import type { PaymentGateway } from "@/lib/payment/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,7 +20,9 @@ import {
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
 
-import { PayOnlineButton } from "./pay-online-button"
+import type { GatewayPickerDictionary } from "./fee-payment-methods"
+import type { ManualRailDictionary } from "./manual-payment-rail"
+import { PayFeeDialog } from "./pay-fee-dialog"
 import { PaymentDetailActions } from "./payment-detail-actions"
 
 type AssignmentData = {
@@ -29,6 +32,8 @@ type AssignmentData = {
   finalAmount: number
   totalDiscount: number
   paidAmount: number
+  /** Sum of PENDING_VERIFICATION payments — proofs the bursar has not cleared. */
+  pendingAmount?: number
   status: string
   payments: Array<{
     id: string
@@ -69,7 +74,9 @@ type MyFeesDictionary = {
   viewReceipt?: string
   payOnline?: string
   redirecting?: string
+  awaitingVerification?: string
   statusLabels?: Record<string, string>
+  paymentStatusLabels?: Record<string, string>
 }
 
 interface MyFeesProps {
@@ -80,6 +87,13 @@ interface MyFeesProps {
   /** School name forwarded to the receipt PDF so it never shows "School". */
   schoolName?: string
   dictionary?: MyFeesDictionary
+  /**
+   * Rails the school offers, resolved server-side (region + configured keys +
+   * published wallet accounts). Empty → no pay button, same as before.
+   */
+  methods?: PaymentGateway[]
+  gatewayDictionary?: GatewayPickerDictionary
+  manualRailDictionary?: ManualRailDictionary
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -97,6 +111,9 @@ export function MyFees({
   currency = "USD",
   schoolName,
   dictionary,
+  methods = [],
+  gatewayDictionary,
+  manualRailDictionary,
 }: MyFeesProps) {
   const d = dictionary
   const totalFees = assignments.reduce((sum, a) => sum + a.finalAmount, 0)
@@ -277,6 +294,12 @@ export function MyFees({
                         lang,
                         currency
                       )}
+                      {(a.pendingAmount ?? 0) > 0 && (
+                        <p className="text-muted-foreground text-xs">
+                          {d?.awaitingVerification || "Awaiting verification"}:{" "}
+                          {formatCurrency(a.pendingAmount ?? 0, lang, currency)}
+                        </p>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -288,14 +311,17 @@ export function MyFees({
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <PayOnlineButton
+                        <PayFeeDialog
                           feeAssignmentId={a.id}
                           lang={lang}
                           remaining={Math.max(a.finalAmount - a.paidAmount, 0)}
+                          methods={methods}
+                          label={`${a.feeStructureName} · ${a.academicYear}`}
                           dictionary={{
-                            payOnline: d?.payOnline,
-                            redirecting: d?.redirecting,
+                            ...gatewayDictionary,
+                            pay: gatewayDictionary?.pay ?? d?.payOnline,
                           }}
+                          manualRailDictionary={manualRailDictionary}
                         />
                         {/* No "View" link here on purpose: this surface is
                             rendered ONLY for STUDENT / GUARDIAN, and the
@@ -363,30 +389,47 @@ export function MyFees({
                         {formatCurrency(p.amount, lang, currency)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {p.paymentMethod.replace(/_/g, " ")}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-1">
+                          <Badge variant="outline">
+                            {p.paymentMethod.replace(/_/g, " ")}
+                          </Badge>
+                          {p.status !== "SUCCESS" && (
+                            <Badge variant="secondary">
+                              {d?.paymentStatusLabels?.[p.status] ||
+                                (p.status === "PENDING_VERIFICATION"
+                                  ? d?.awaitingVerification ||
+                                    "Awaiting verification"
+                                  : p.status)}
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <PaymentDetailActions
-                            receiptData={{
-                              paymentNumber: p.paymentNumber,
-                              receiptNumber: p.receiptNumber,
-                              amount: formatCurrency(p.amount, lang, currency),
-                              paymentDate: new Date(
-                                p.paymentDate
-                              ).toLocaleDateString(
-                                lang === "ar" ? "ar-SA" : "en-US"
-                              ),
-                              paymentMethod: p.paymentMethod,
-                              status: p.status,
-                              studentName,
-                              feeStructureName: p.feeStructureName,
-                              academicYear: p.academicYear,
-                              schoolName,
-                            }}
-                          />
+                          {p.status === "SUCCESS" && (
+                            <PaymentDetailActions
+                              receiptData={{
+                                paymentNumber: p.paymentNumber,
+                                receiptNumber: p.receiptNumber,
+                                amount: formatCurrency(
+                                  p.amount,
+                                  lang,
+                                  currency
+                                ),
+                                paymentDate: new Date(
+                                  p.paymentDate
+                                ).toLocaleDateString(
+                                  lang === "ar" ? "ar-SA" : "en-US"
+                                ),
+                                paymentMethod: p.paymentMethod,
+                                status: p.status,
+                                studentName,
+                                feeStructureName: p.feeStructureName,
+                                academicYear: p.academicYear,
+                                schoolName,
+                              }}
+                            />
+                          )}
                           {p.status === "SUCCESS" && (
                             <Button variant="ghost" size="sm" asChild>
                               <Link

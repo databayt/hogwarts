@@ -315,6 +315,137 @@ function localArtKey(
 }
 
 // ============================================================================
+// structure.json → per-subject lang + description (official-TOC rebuild, 2026-08)
+// ============================================================================
+
+interface StructureLesson {
+  slug: string
+  title: string
+  titleEn?: string
+  description?: string
+}
+interface StructureChapter {
+  slug: string
+  title: string
+  titleEn?: string
+  description?: string
+  lessons?: StructureLesson[]
+}
+interface StructureFile {
+  lang?: string
+  subjectAr?: string
+  subjectEn?: string
+  description?: string
+  chapters?: StructureChapter[]
+}
+
+/** Load a subject's structure.json (null when missing/unparseable). */
+function loadStructure(grade: string, dirName: string): StructureFile | null {
+  const structurePath = path.join(
+    CURRICULUM_DIR,
+    grade,
+    dirName,
+    "structure.json"
+  )
+  if (!fs.existsSync(structurePath)) return null
+  try {
+    return JSON.parse(fs.readFileSync(structurePath, "utf-8")) as StructureFile
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Content language of a subject. structure.json carries `lang` for every
+ * subject rebuilt from the official TOC; English (SMILE/SPINE) and French
+ * books that were not rebuilt fall back on the directory name. Everything
+ * else is Arabic — never stamp `ar` on an English book, it poisons the
+ * script-truth translation cache scans.
+ */
+function subjectLangFor(
+  dirName: string,
+  structure: StructureFile | null
+): string {
+  const l = structure?.lang
+  if (l === "ar" || l === "en" || l === "fr") return l
+  if (dirName === "english") return "en"
+  if (dirName === "french") return "fr"
+  return "ar"
+}
+
+const STAGE_AR = (g: number) =>
+  g <= 6
+    ? "المرحلة الابتدائية"
+    : g <= 9
+      ? "المرحلة المتوسطة"
+      : "المرحلة الثانوية"
+const STAGE_EN = (g: number) =>
+  g <= 6 ? "primary stage" : g <= 9 ? "intermediate stage" : "secondary stage"
+const ORD_AR = [
+  "",
+  "الأول",
+  "الثاني",
+  "الثالث",
+  "الرابع",
+  "الخامس",
+  "السادس",
+  "السابع",
+  "الثامن",
+  "التاسع",
+  "العاشر",
+  "الحادي عشر",
+  "الثاني عشر",
+]
+function gradeLabelAr(g: number): string {
+  if (g <= 6) return `الصف ${ORD_AR[g]}`
+  if (g <= 9) return `الصف ${ORD_AR[g - 6]} المتوسط`
+  return `الصف ${ORD_AR[g - 9]} الثانوي`
+}
+
+/**
+ * Factual "about" text for a subject: the book's own مقدمة summary when the
+ * TOC pass captured one, followed by the verified unit list. Composed, never
+ * invented — every unit title comes from the printed table of contents.
+ */
+function composeDescription(
+  lang: string,
+  gradeNum: number,
+  nameAr: string,
+  nameEn: string | undefined,
+  structure: StructureFile | null
+): string | null {
+  const chapters = structure?.chapters ?? []
+  if (chapters.length === 0 && !structure?.description) return null
+  const cap = (s: string, n: number) =>
+    s.length > n ? s.slice(0, n - 1) + "…" : s
+  if (lang === "ar") {
+    const titles = chapters.map((c) =>
+      c.title.replace(/^\s*الوحدة\s+\S+\s*[:：-]\s*/, "").trim()
+    )
+    const units = titles.length
+      ? ` يتناول ${chapters.length} وحدات: ${titles.join("، ")}.`
+      : ""
+    const intro = structure?.description
+      ? `${structure.description.trim()} `
+      : ""
+    return cap(
+      `${intro}كتاب ${nameAr} — ${STAGE_AR(gradeNum)}، ${gradeLabelAr(gradeNum)}.${units}`,
+      700
+    )
+  }
+  const titles = chapters.map((c) => (c.titleEn ?? c.title).trim())
+  const units = titles.length
+    ? ` ${chapters.length} units: ${titles.join("; ")}.`
+    : ""
+  const intro = structure?.description ? `${structure.description.trim()} ` : ""
+  const label = nameEn ?? nameAr
+  return cap(
+    `${intro}${label} textbook — Sudan ${STAGE_EN(gradeNum)}, grade ${gradeNum}.${units}`,
+    700
+  )
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 
@@ -619,6 +750,18 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
       updates.name = subjectMeta.ar
     }
 
+    // Content language + factual description from the verified structure.
+    const structure = loadStructure(entry.grade, entry.dirName)
+    updates.lang = subjectLangFor(entry.dirName, structure)
+    const description = composeDescription(
+      updates.lang,
+      entry.gradeNum,
+      subjectMeta?.ar ?? structure?.subjectAr ?? slugToName(entry.dirName),
+      subjectMeta?.en ?? structure?.subjectEn,
+      structure
+    )
+    if (description) updates.description = description
+
     if (Object.keys(updates).length > 0) {
       await prisma.subject.update({
         where: { id: dbSubject.id },
@@ -655,27 +798,9 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
     const subjectConcept = dbSubject.concept ?? entry.concept
     const gradeNum = entry.gradeNum
 
-    // Load structure.json for real Arabic titles
-    const structurePath = path.join(
-      CURRICULUM_DIR,
-      entry.grade,
-      entry.dirName,
-      "structure.json"
-    )
-    let structureData: {
-      chapters?: Array<{
-        slug: string
-        title: string
-        lessons?: Array<{ slug: string; title: string }>
-      }>
-    } | null = null
-    if (fs.existsSync(structurePath)) {
-      try {
-        structureData = JSON.parse(fs.readFileSync(structurePath, "utf-8"))
-      } catch {
-        // ignore parse errors, fall back to slug-based names
-      }
-    }
+    // Load structure.json for real titles (folder name === structure slug)
+    const structureData = loadStructure(entry.grade, entry.dirName)
+    const contentLang = subjectLangFor(entry.dirName, structureData)
     const structChapterMap = new Map(
       (structureData?.chapters ?? []).map((c) => [c.slug, c])
     )
@@ -721,13 +846,19 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
           const structLessonMap = new Map(
             (structChapter?.lessons ?? []).map((l) => [l.slug, l.title])
           )
+          const structLessonDesc = new Map(
+            (structChapter?.lessons ?? [])
+              .filter((l) => !!l.description)
+              .map((l) => [l.slug, l.description as string])
+          )
 
           const chapter = await tx.chapter.create({
             data: {
               subjectId: dbSubject.id,
               name: chapterName,
               slug: ch.slug,
-              lang: "ar",
+              lang: contentLang,
+              description: structChapter?.description ?? null,
               sequenceOrder: ch.sequenceOrder,
               concept: chapterConcept,
               thumbnail: chapterThumbnail,
@@ -761,7 +892,8 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
                   chapterId: chapter.id,
                   name: structLessonMap.get(l.slug) ?? l.name,
                   slug: l.slug,
-                  lang: "ar",
+                  lang: contentLang,
+                  description: structLessonDesc.get(l.slug) ?? null,
                   sequenceOrder: l.sequenceOrder,
                   concept: lessonConcept,
                   thumbnail: lessonThumbnail,

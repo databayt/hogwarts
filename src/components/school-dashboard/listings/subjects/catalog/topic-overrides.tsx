@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { uploadVideo } from "@/components/stream/video/video-actions"
+import { uploadVideo } from "@/components/lumos/video/video-actions"
 
 import { setLessonQuizHidden, toggleContentOverride } from "./actions"
 

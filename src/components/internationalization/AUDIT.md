@@ -6,12 +6,12 @@
 
 ## The two systems
 
-|            | System A — Static dictionary                                                                                                           | System B — Dynamic content                                                                                                                                       |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **For**    | UI chrome: labels, buttons, toasts, placeholders, validation                                                                           | user-stored DB text (announcement bodies, route names, …)                                                                                                        |
-| **How**    | `getDictionary(lang)` (or a `get<X>Dictionary` partial) in the server page → `dictionary` prop → `dictionary.<ns>.<key>`               | `getText(text, contentLang, displayLang, schoolId)` / `getFields(...) — or batched localize(model, rows)` — **server-only**; Google Translate v2 + `Translation` |
-| **Source** | `src/components/internationalization/{en,ar}.json`, `school-*.json`, `stream-*.json`, `operator-*.json`, `dictionaries/{en,ar}/*.json` | record `.lang` ?? `School.preferredLanguage` ?? `"ar"`; display = route locale                                                                                   |
-| **Loader** | `internationalization/dictionaries.ts` (`Dictionary` type is inferred)                                                                 | `@/lib/content-display` → `components/translation/{display,actions,google}.ts`                                                                                   |
+|            | System A — Static dictionary                                                                                                          | System B — Dynamic content                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **For**    | UI chrome: labels, buttons, toasts, placeholders, validation                                                                          | user-stored DB text (announcement bodies, route names, …)                                                                                                        |
+| **How**    | `getDictionary(lang)` (or a `get<X>Dictionary` partial) in the server page → `dictionary` prop → `dictionary.<ns>.<key>`              | `getText(text, contentLang, displayLang, schoolId)` / `getFields(...) — or batched localize(model, rows)` — **server-only**; Google Translate v2 + `Translation` |
+| **Source** | `src/components/internationalization/{en,ar}.json`, `school-*.json`, `lumos-*.json`, `operator-*.json`, `dictionaries/{en,ar}/*.json` | record `.lang` ?? `School.preferredLanguage` ?? `"ar"`; display = route locale                                                                                   |
+| **Loader** | `internationalization/dictionaries.ts` (`Dictionary` type is inferred)                                                                | `@/lib/content-display` → `components/translation/{display,actions,google}.ts`                                                                                   |
 
 A new dictionary namespace must be registered in 3 places: the JSON pair, the spread in `getDictionary`, and `get-dictionary-client.ts` (for client use). Some clusters (exam template/generate wizards) use an alternative **inline bilingual `labels.ts` map + `useLocale()`** instead of dictionary JSON — that is a legitimate, accepted pattern.
 
@@ -74,12 +74,12 @@ Models carry a `lang` field but their render paths do not route user text throug
 | **transportation** (Route/RouteStop names, origin/destination, addresses) | ✅ **FIXED** — `shared/translate-display.ts` wired into routes/detail/assignments/trips/me server components | done                                 |
 | quiz / quick-assessments / question / qbank                               | ⏳ backlog — no usages found                                                                                 | audit quiz/question render paths     |
 | curriculum / curriculum-standards / academic-structure / grading-scheme   | ⏳ backlog — no usages found                                                                                 | audit standard/scheme name rendering |
-| textbook / material / document / chapter / video (standalone detail/list) | ⏳ backlog — partial (catalog/stream covered)                                                                | audit non-catalog render paths       |
+| textbook / material / document / chapter / video (standalone detail/list) | ⏳ backlog — partial (catalog/lumos covered)                                                                 | audit non-catalog render paths       |
 | whatsapp templates                                                        | ⏳ backlog — no usages found                                                                                 | template body display                |
 
 Transportation residual: the assignment **stop-dropdown** names (`listRouteStopsForAssignment` uses a narrow `select` without `lang`/`schoolId`) are not yet translated — minor, would need an action `select` change.
 
-Already covered (correct): `listings`, `admission`, `attendance`, `exams`, `finance`, `notifications`, `parent-portal`, `profile`, `school`, `messaging`, `dashboard`, `library/catalog`, `saas-dashboard/catalog`, `stream/data`, `template/site-header` (18 areas, ~80 call sites).
+Already covered (correct): `listings`, `admission`, `attendance`, `exams`, `finance`, `notifications`, `parent-portal`, `profile`, `school`, `messaging`, `dashboard`, `library/catalog`, `saas-dashboard/catalog`, `lumos/data`, `template/site-header` (18 areas, ~80 call sites).
 
 ## Tier 3 — Residual hardcoded-string long-tail (backlog)
 
@@ -93,7 +93,7 @@ Routes that **are** internationalized (page-level wired) but contain hardcoded s
 |   24 | `school-dashboard/dashboard`  |     |    4 | `saas-dashboard/{domains,tenants,billing}`       |
 |   22 | `school-dashboard/attendance` |     |    4 | `school-dashboard/{parent-portal,communication}` |
 |   22 | `school-dashboard/school`     |     |    3 | `saas-marketing/pricing`, `library/admin`        |
-|   17 | `onboarding/newcomers`        |     |    2 | `stream/shared`, `library/*`, `file/import`      |
+|   17 | `onboarding/newcomers`        |     |    2 | `lumos/shared`, `library/*`, `file/import`       |
 |   16 | `table/_components` (shared)  |     |    … | (43 more dirs, 1–2 each)                         |
 |   10 | `school-marketing/visit`      |     |      |                                                  |
 

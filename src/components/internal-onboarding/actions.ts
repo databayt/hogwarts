@@ -19,7 +19,6 @@ import type {
   DocumentsStepData,
   PersonalStepData,
   StaffDetailsData,
-  StudentDetailsData,
   SubmitOnboardingResult,
   TeacherDetailsData,
 } from "./types"
@@ -106,14 +105,10 @@ export async function checkExistingApplication(
 // =============================================================================
 
 interface SubmitData {
-  role: "teacher" | "staff" | "admin" | "student"
+  role: "teacher" | "staff" | "admin"
   personal: PersonalStepData
   contact: ContactStepData
-  roleDetails:
-    | TeacherDetailsData
-    | StaffDetailsData
-    | AdminDetailsData
-    | StudentDetailsData
+  roleDetails: TeacherDetailsData | StaffDetailsData | AdminDetailsData
   documents?: DocumentsStepData
 }
 
@@ -186,17 +181,6 @@ export async function submitInternalOnboarding(
     }
 
     // Check plan capacity limits
-    if (data.role === "student" && school.maxStudents) {
-      const studentCount = await db.student.count({ where: { schoolId } })
-      if (studentCount >= school.maxStudents) {
-        return {
-          success: false,
-          error:
-            "This school has reached its student capacity limit. Please contact the school administration.",
-        }
-      }
-    }
-
     if (data.role === "teacher" && school.maxTeachers) {
       const teacherCount = await db.teacher.count({ where: { schoolId } })
       if (teacherCount >= school.maxTeachers) {
@@ -365,46 +349,6 @@ export async function submitInternalOnboarding(
           }
           break
         }
-
-        case "student": {
-          const details = data.roleDetails as StudentDetailsData
-          await tx.student.create({
-            data: {
-              userId: user.id,
-              firstName: data.personal.firstName,
-              middleName: data.personal.middleName || undefined,
-              lastName: data.personal.lastName,
-              dateOfBirth: data.personal.dateOfBirth
-                ? new Date(data.personal.dateOfBirth)
-                : new Date("2010-01-01"),
-              gender: data.personal.gender || "Not Specified",
-              nationality: data.personal.nationality || undefined,
-              profilePhotoUrl: data.personal.profilePhotoUrl,
-              email: data.contact.email,
-              mobileNumber: data.contact.phone || undefined,
-              currentAddress: data.contact.address || undefined,
-              city: data.contact.city || undefined,
-              state: data.contact.state || undefined,
-              country: data.contact.country || undefined,
-              emergencyContactName:
-                data.contact.emergencyContactName || undefined,
-              emergencyContactPhone:
-                data.contact.emergencyContactPhone || undefined,
-              emergencyContactRelation:
-                data.contact.emergencyContactRelation || undefined,
-              previousSchoolName: details.previousSchool || undefined,
-              previousGrade: details.previousGrade || undefined,
-              studentType:
-                (details.studentType as
-                  | "REGULAR"
-                  | "TRANSFER"
-                  | "INTERNATIONAL") || "REGULAR",
-              wizardStep: "location",
-              schoolId,
-            },
-          })
-          break
-        }
       }
 
       return user
@@ -494,12 +438,10 @@ export async function submitInternalOnboarding(
 // HELPERS
 // =============================================================================
 
-function mapRole(role: string): "TEACHER" | "STUDENT" | "ADMIN" | "STAFF" {
+function mapRole(role: string): "TEACHER" | "ADMIN" | "STAFF" {
   switch (role) {
     case "teacher":
       return "TEACHER"
-    case "student":
-      return "STUDENT"
     case "admin":
       return "ADMIN"
     case "staff":

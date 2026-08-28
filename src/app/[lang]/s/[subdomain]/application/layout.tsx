@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { type Locale } from "@/components/internationalization/config"
 import {
   getPlatformCoreDictionary,
@@ -8,9 +9,29 @@ import {
 } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { ReportIssue } from "@/components/report-issue"
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 // Application flow uses cookies + dictionary lookup - always dynamic
 export const dynamic = "force-dynamic"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ subdomain: string; lang: string }>
+}): Promise<Metadata> {
+  const { subdomain } = await params
+  const result = await getSchoolBySubdomain(subdomain)
+  if (result.success && result.data?.logoUrl) {
+    return {
+      icons: {
+        icon: result.data.logoUrl,
+        shortcut: result.data.logoUrl,
+        apple: result.data.logoUrl,
+      },
+    }
+  }
+  return {}
+}
 
 interface ApplicationLayoutProps {
   children: React.ReactNode
@@ -24,7 +45,7 @@ export default async function ApplicationLayout({
   const { lang } = await params
   // Route-scoped: the application/admission flow only consumes core
   // general/school keys plus the `messages` namespace (form validation helpers).
-  // The other feature namespaces + stream are never accessed here, so the
+  // The other feature namespaces + lumos are never accessed here, so the
   // narrower getPlatformCoreDictionary (core + messages) payload is safe.
   const dictionary = await getPlatformCoreDictionary(lang as Locale)
 

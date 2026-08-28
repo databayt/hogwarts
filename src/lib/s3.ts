@@ -11,9 +11,24 @@
  */
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+
+// Re-exported so `@/lib/s3` stays the one import for server-side storage work.
+export { extractStorageKey, isOwnStorageUrl } from "@/lib/storage-key"
+
+/**
+ * Lifetime of a minted read URL.
+ *
+ * Long enough that a viewer can pause mid-lesson and come back without the
+ * source dying, short enough that a URL lifted out of devtools stops working
+ * the same afternoon. The player re-fetches its source on error, so an expiry
+ * mid-playback self-heals rather than stranding the viewer.
+ */
+export const SIGNED_READ_TTL_SECONDS = 2 * 60 * 60
 
 let s3Client: S3Client | null = null
 
@@ -73,5 +88,47 @@ export async function deleteObject(key: string): Promise<boolean> {
   } catch (error) {
     console.error("S3 deleteObject failed:", error)
     return false
+  }
+}
+
+/**
+ * Mint a short-lived presigned GET for an object in the upload bucket.
+ *
+ * This is what replaces handing out permanent public URLs: the object stays
+ * unreadable to anonymous callers (see the bucket policy), and every playable
+ * link is minted per viewer, per request, after authorization.
+ *
+ * Returns null when S3 is unconfigured or signing fails — callers must treat
+ * null as "no playable source" rather than falling back to an unsigned URL.
+ */
+export async function getSignedReadUrl(
+  key: string,
+  expiresIn: number = SIGNED_READ_TTL_SECONDS,
+  options: { downloadFilename?: string; contentType?: string } = {}
+): Promise<string | null> {
+  const client = getS3Client()
+  if (!client || !key) return null
+
+  try {
+    const command = new GetObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET!,
+      Key: key,
+      // Force a save-as name for attachment downloads; omitted for video so the
+      // browser streams inline.
+      ...(options.downloadFilename
+        ? {
+            ResponseContentDisposition: `attachment; filename="${options.downloadFilename.replace(/"/g, "")}"`,
+          }
+        : {}),
+      ...(options.contentType
+        ? { ResponseContentType: options.contentType }
+        : {}),
+    })
+
+    // @ts-expect-error - AWS SDK @smithy/types version mismatch between packages
+    return await getSignedUrl(client, command, { expiresIn })
+  } catch (error) {
+    console.error("S3 getSignedReadUrl failed:", error)
+    return null
   }
 }

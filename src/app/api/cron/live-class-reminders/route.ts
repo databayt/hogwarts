@@ -13,15 +13,51 @@ import { NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
+import { materializeOnlineSchools } from "@/components/school-dashboard/conference/actions/materialize-day"
 import { notifyClassStartingSoon } from "@/components/school-dashboard/conference/actions/notifications"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
-export const maxDuration = 60
+// 300, not 60: this run now materializes an online school's whole day before
+// the reminder sweep. The first run of a school day creates ~120 rows and the
+// reminders must still fit afterwards — a timeout here strands the tail of the
+// sweep, which is the exact failure the batching above removed.
+export const maxDuration = 300
+
+/**
+ * Notifications dispatched at once. `dispatch` fans out to a section roster
+ * plus guardians and renders an email per recipient, so this is deliberately
+ * modest — enough to stop the run being a serial queue, small enough not to
+ * stampede the notification hub or the connection pool.
+ */
+const NOTIFY_CONCURRENCY = 10
+
+async function inBatches<T>(
+  items: T[],
+  size: number,
+  fn: (item: T) => Promise<void>
+): Promise<void> {
+  for (let i = 0; i < items.length; i += size) {
+    await Promise.all(items.slice(i, i + size).map(fn))
+  }
+}
 
 export async function GET(req: Request) {
   if (!isAuthorizedCron(req, "live-class-reminders")) {
     return new NextResponse("unauthorized", { status: 401 })
+  }
+
+  // Turn today's online-school intent into actual sessions BEFORE the reminder
+  // sweep below reads them — a slot materialized now is reminded on this very
+  // run if it starts within the window. Best-effort: a materialization failure
+  // must never cost the reminders for sessions that already exist.
+  let materialized = { schools: 0, created: 0, skipped: 0, truncated: 0 }
+  try {
+    materialized = await materializeOnlineSchools()
+  } catch (err) {
+    console.error("[live-class] online-school materialization failed", {
+      err: err instanceof Error ? err.message : String(err),
+    })
   }
 
   const now = Date.now()
@@ -54,18 +90,34 @@ export async function GET(req: Request) {
         ).map((e) => e.sessionId)
   )
 
-  let dispatched = 0
-  for (const s of sessions) {
-    if (reminded.has(s.id)) continue
+  const due = sessions.filter((s) => !reminded.has(s.id))
+
+  // Batched, not serial. The old loop awaited a full fan-out AND an event
+  // insert per session, up to 1000 of them, under a 60s budget — on
+  // timeout the untouched tail was never reminded at all, because by the next
+  // run 15 minutes later the 5–20-minute window had moved past those sessions.
+  // `dispatch` swallows its own errors, so a bad session can't reject here.
+  await inBatches(due, NOTIFY_CONCURRENCY, async (s) => {
     await notifyClassStartingSoon(s.schoolId, s.id)
-    await db.conferenceEvent.create({
-      data: {
+  })
+
+  // Stamp the idempotency rows AFTER dispatching, in one insert. Order matters:
+  // marking first and crashing would suppress the reminder forever, while
+  // dispatching first and crashing costs at worst a duplicate notification.
+  if (due.length > 0) {
+    await db.conferenceEvent.createMany({
+      data: due.map((s) => ({
         schoolId: s.schoolId,
         sessionId: s.id,
         eventType: "reminder_starting_soon",
-      },
+      })),
+      skipDuplicates: true,
     })
-    dispatched++
   }
-  return NextResponse.json({ ok: true, dispatched })
+
+  return NextResponse.json({
+    ok: true,
+    dispatched: due.length,
+    materialized,
+  })
 }

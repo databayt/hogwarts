@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { z } from "zod"
 
@@ -17,7 +18,9 @@ import {
   isInvitationExpired,
   MAX_RESEND_COUNT,
 } from "@/lib/invitation-utils"
+import type { ProvisionStudentResult } from "@/lib/student-provisioning"
 import { provisionStudent } from "@/lib/student-provisioning"
+import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertMembershipPermission, getAuthContext } from "./authorization"
@@ -77,7 +80,8 @@ export async function changeRole(
       return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
-    await db.$transaction(async (tx) => {
+    const provisioned = await db.$transaction(async (tx) => {
+      let result: ProvisionStudentResult | null = null
       // Update user role
       await tx.user.update({
         where: { id: parsed.userId },
@@ -98,7 +102,7 @@ export async function changeRole(
         // content/docs-en/admission.mdx, "four channels, one pipeline").
         // ADMIN_DIRECT because an admin is doing the adding, same as the
         // single-student wizard.
-        await provisionStudent(
+        result = await provisionStudent(
           {
             schoolId,
             userId: parsed.userId,
@@ -165,6 +169,8 @@ export async function changeRole(
           },
         })
       }
+
+      return result
     })
 
     // Notify user of role change (fire-and-forget)
@@ -176,6 +182,29 @@ export async function changeRole(
       body: `Your role has been changed to ${parsed.newRole}.`,
       actorId: authContext.userId,
     }).catch(console.error)
+
+    // Post-commit. A promoted member already has an account and a password, so
+    // no welcome notice and no guardian announcement -- but the fees this
+    // promotion just assigned are real and owed, and nothing used to say so.
+    if (provisioned) {
+      after(() =>
+        notifyProvisionedStudent({
+          schoolId,
+          studentId: provisioned.studentId,
+          userId: provisioned.userId,
+          origin: "ADMIN_DIRECT",
+          studentName: targetUser.username || targetUser.email || "",
+          email: targetUser.email,
+          isNewUser: false,
+          actorId: authContext.userId,
+          delivery: "immediate",
+          sendWelcome: false,
+          sendGuardian: false,
+        }).catch((err) =>
+          console.error("[changeRole] Notification error:", err)
+        )
+      )
+    }
 
     revalidatePath("/school/membership")
     return { success: true, data: { id: parsed.userId } }

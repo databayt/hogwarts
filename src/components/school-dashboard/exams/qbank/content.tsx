@@ -12,7 +12,10 @@ import type {
 import { SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
-import { getSchoolSubjectOptions } from "@/lib/school-subjects"
+import {
+  getSchoolSubjectOptions,
+  subjectOptionLabel,
+} from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -143,14 +146,18 @@ export default async function QuestionBankContent({
     const rawSubjects = enrolledSubjectIds
       ? allSubjects.filter((s) => enrolledSubjectIds.includes(s.id))
       : allSubjects
-    // Table filter uses subject name as value (matches row data)
+    // Table filter uses subject name as value (matches row data), so its
+    // VALUE must stay the bare name — only the label carries the grade.
     subjects = rawSubjects.map((s) => ({
-      label: s.name || s.id,
+      label: subjectOptionLabel(s.name || s.id, s.gradeNumber, lang),
       value: s.name || s.id,
     }))
-    // Form uses subject ID as value (for subjectId field)
+    // Form uses subject ID as value (for subjectId field). The grade belongs
+    // here most of all: picking the subject is what scopes the lesson picker
+    // below it, and 26 of this school's 123 subject names are duplicated
+    // across grades — without the grade it is a coin flip.
     subjectOptions = rawSubjects.map((s) => ({
-      label: s.name || s.id,
+      label: subjectOptionLabel(s.name || s.id, s.gradeNumber, lang),
       value: s.id,
     }))
 

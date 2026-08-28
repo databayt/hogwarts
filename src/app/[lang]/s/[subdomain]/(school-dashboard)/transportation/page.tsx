@@ -7,7 +7,9 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { TransportationOverviewContent } from "@/components/school-dashboard/transportation/content"
+import { getOverviewStats } from "@/components/school-dashboard/transportation/actions/overview"
+import { TransportationLandingContent } from "@/components/school-dashboard/transportation/landing/content"
+import type { LandingStats } from "@/components/school-dashboard/transportation/landing/types"
 
 export async function generateMetadata({
   params,
@@ -26,23 +28,42 @@ interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
-const ALLOWED_ROLES = ["DEVELOPER", "ADMIN", "STAFF"]
+/** Roles `getOverviewStats()` will actually answer for — see authorization.ts. */
+const STATS_ROLES = ["DEVELOPER", "ADMIN", "STAFF"]
 
+/**
+ * The transportation landing page.
+ *
+ * Same split lumos uses: this route is the section's front door, and the fleet
+ * board it used to hold now lives at /transportation/dashboard under the (app)
+ * route group with the rest of the ops surfaces.
+ */
 export default async function Page({ params }: Props) {
-  const [{ lang, subdomain }, session] = await Promise.all([params, auth()])
+  const [{ lang }, session] = await Promise.all([params, auth()])
   const role = session?.user?.role ?? ""
 
-  if (!ALLOWED_ROLES.includes(role)) {
-    redirect(`/${lang}/dashboard`)
+  // Students and guardians never want the section overview — they want their
+  // own route. Lumos does the same thing, sending students straight to courses.
+  if (role === "STUDENT" || role === "GUARDIAN") {
+    redirect(`/${lang}/transportation/me`)
   }
 
   const dictionary = await getDictionary(lang)
 
+  // Only ask for counts the viewer is allowed to read. `getOverviewStats()`
+  // returns a permission failure for anyone else, and the strip hides itself.
+  let stats: LandingStats | null = null
+  if (STATS_ROLES.includes(role)) {
+    const result = await getOverviewStats()
+    if (result.success) stats = result.data
+  }
+
   return (
-    <TransportationOverviewContent
-      locale={lang}
-      subdomain={subdomain}
-      dictionary={dictionary}
+    <TransportationLandingContent
+      dictionary={dictionary.transportation}
+      lang={lang}
+      role={role}
+      stats={stats}
     />
   )
 }

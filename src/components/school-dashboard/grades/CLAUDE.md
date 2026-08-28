@@ -5,10 +5,10 @@ title: Grades
 file_type: claude
 owner: Abdout
 maturity: Built+Polish
-completion: 94
+completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-06-14
+last_audited: 2026-08-14
 ---
 
 # Grades Block
@@ -62,6 +62,24 @@ Grades — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~94% complete. See [
   to auto-**generate** drafts; it does NOT publish. Admin reviews + clicks Publish
   (`publishReportCards`), then `process-report-card-pdfs` renders PDFs.
 
+- **`report-cards-core.ts` is SET-BASED on purpose (2026-08-14)** — it reads the whole
+  cohort in a fixed handful of queries and writes in chunks. The per-student loop it
+  replaced cost ~70,000 round-trips on the demo school and had never once completed, which
+  is why `ReportCardGrade` was empty everywhere. **Do not reintroduce a query inside the
+  per-student loop** — the loop is pure in-memory aggregation over pre-fetched maps. Rank is
+  computed in memory so it rides the same write; there is no second rank pass.
+- **No `revalidatePath` in the core** — the cron and the seed call it outside a request
+  scope. Revalidation lives in the action wrapper, and every grades path goes through
+  `grades/lib/paths.ts` (`gradesPath`/`parentPath`) with the `"page"` type argument. A bare
+  `"/grades/reports"` matches no cache tag; all of them used to be dead.
+- **The seed calls the production core, and derives rather than invents (2026-08-14)** —
+  `prisma/seeds/grades.ts` projects GRADED `AssignmentSubmission` rows into `Result` and
+  then runs `generateReportCardsCore`. It uses the spine's PURE helpers (`toPercentage`,
+  `letterGradeFor`) plus the spine's `assignmentId` match key for idempotency, rather than
+  `upsertGradebookResult` per row — 14k rows × 2 queries is minutes for a seed. If you add a
+  new seeded source, keep both halves (spine scoring, spine match key) or the seeded rows
+  will disagree with teacher-entered ones.
+
 ## Danger Zones
 
 - **Missing `schoolId` in any query** — cross-tenant data leak. All queries in
@@ -77,7 +95,7 @@ Grades — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~94% complete. See [
 ## Related Blocks
 
 - **exams** (`src/components/school-dashboard/exams/`) — primary consumer of `gradebook.ts`; `finalizeExamResults` writes both `ExamResult` and `Result`.
-- **stream** (`src/components/stream/`) — lesson quizzes use `upsertGradebookResult` via `resolveStudentClassForSubject`.
+- **stream** (`src/components/lumos/`) — lesson quizzes use `upsertGradebookResult` via `resolveStudentClassForSubject`.
 - **notifications** (`src/components/school-dashboard/notifications/`) — `publishReportCards` dispatches via `dispatchNotificationsToAudience`; exam results-published dispatches via `dispatchNotification`.
 - **quick assessments** — write to `Result` via the gradebook spine.
 

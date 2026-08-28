@@ -2,10 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useCallback, useState } from "react"
+import React, { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { GraduationCap, Loader2, Shield, Users } from "lucide-react"
+import { GraduationCap, Shield, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,11 +16,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { checkExistingApplication } from "./actions"
 import type { OnboardingRole } from "./config"
 import { ONBOARDING_ROLES } from "./config"
 import { useOnboarding } from "./use-onboarding"
@@ -32,7 +30,6 @@ const ROLE_ICONS = {
   teacher: GraduationCap,
   staff: Users,
   admin: Shield,
-  student: GraduationCap,
 } as const
 
 // =============================================================================
@@ -50,33 +47,13 @@ export function JoinLandingContent({
 }: JoinLandingContentProps) {
   const router = useRouter()
   const { locale } = useLocale()
-  const { setRole, setAutoFillData, schoolId } = useOnboarding()
+  const { setRole } = useOnboarding()
 
   const [selectedRole, setSelectedRole] = useState<OnboardingRole | null>(null)
-  const [studentEmail, setStudentEmail] = useState("")
-  const [checkingEmail, setCheckingEmail] = useState(false)
-  const [emailChecked, setEmailChecked] = useState(false)
-  const [autoFillFound, setAutoFillFound] = useState(false)
 
   const handleRoleSelect = (role: OnboardingRole) => {
     setSelectedRole(role)
-    setEmailChecked(false)
-    setAutoFillFound(false)
-    setStudentEmail("")
   }
-
-  const handleCheckEmail = useCallback(async () => {
-    if (!studentEmail) return
-    setCheckingEmail(true)
-    const result = await checkExistingApplication(schoolId, studentEmail)
-    setCheckingEmail(false)
-    setEmailChecked(true)
-
-    if (result.success && result.found && result.data) {
-      setAutoFillData(result.data)
-      setAutoFillFound(true)
-    }
-  }, [studentEmail, schoolId, setAutoFillData])
 
   const handleContinue = () => {
     if (!selectedRole) return
@@ -145,58 +122,26 @@ export function JoinLandingContent({
         })}
       </div>
 
-      {/* Student Email Check */}
-      {selectedRole === "student" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              Did you already apply through admissions?
-            </CardTitle>
-            <CardDescription>
-              Enter your email to auto-fill your information from your admission
-              application
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Label htmlFor="student-email" className="sr-only">
-                  Email
-                </Label>
-                <Input
-                  id="student-email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={studentEmail}
-                  onChange={(e) => setStudentEmail(e.target.value)}
-                />
-              </div>
-              <Button
-                variant="outline"
-                onClick={handleCheckEmail}
-                disabled={!studentEmail || checkingEmail}
-              >
-                {checkingEmail ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Check"
-                )}
-              </Button>
-            </div>
-            {emailChecked && autoFillFound && (
-              <p className="text-sm text-green-600">
-                Application found! Your information will be pre-filled.
-              </p>
-            )}
-            {emailChecked && !autoFillFound && (
-              <p className="text-muted-foreground text-sm">
-                No admitted application found for this email. You can still
-                proceed manually.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/*
+        Students do not join through this flow -- they apply through the
+        admission wizard so they are born from a real `Application` and are
+        tracked from an application id onward (the same pipeline every other
+        student-creation path funnels into). Point them there rather than
+        letting them register as a role here.
+      */}
+      <Card className="border-dashed">
+        <CardHeader>
+          <CardTitle className="text-base">{"Are you a student?"}</CardTitle>
+          <CardDescription>
+            {"Students join by applying for admission, not through this form."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link href={`/${locale}/application`}>{"Apply for admission"}</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Continue Button */}
       {selectedRole && (

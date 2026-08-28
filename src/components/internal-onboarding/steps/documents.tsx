@@ -54,12 +54,6 @@ export function DocumentsStep() {
           doc?.relevantCertifications ?? "Relevant certifications",
           doc?.idPassportCopy ?? "ID/Passport copy",
         ]
-      case "student":
-        return [
-          doc?.transferCertificate ?? "Transfer certificate",
-          doc?.previousSchoolReport ?? "Previous school report",
-          doc?.idPassportCopy ?? "ID/Passport copy",
-        ]
       default:
         return [doc?.idPassportCopy ?? "ID/Passport copy"]
     }

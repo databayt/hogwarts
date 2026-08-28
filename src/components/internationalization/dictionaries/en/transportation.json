@@ -2,6 +2,98 @@
   "title": "Transportation",
   "subtitle": "Manage school buses, routes, drivers, and student assignments",
   "description": "Fleet management, route planning, driver records, and student-route assignments",
+  "landing": {
+    "hero": {
+      "tagline": "Every ride accounted for.",
+      "description": "Fleet, routes, drivers and daily runs in one place — with live tracking and a boarding record for every student.",
+      "primaryCta": "Open the dashboard",
+      "secondaryCta": "See today's trips"
+    },
+    "features": [
+      {
+        "title": "Fleet and drivers",
+        "description": "Vehicles, capacities, licences and expiry dates — one record per bus and per driver."
+      },
+      {
+        "title": "Routes and stops",
+        "description": "Draw a route, order its stops on a map, and let the optimizer sequence them for you."
+      },
+      {
+        "title": "Live tracking",
+        "description": "Follow a running trip on the map and alert guardians as the bus approaches their stop."
+      },
+      {
+        "title": "Boarding records",
+        "description": "Every student marked boarded, alighted or missed — a full history behind each trip."
+      }
+    ],
+    "capabilities": {
+      "title": "More than a list of buses",
+      "description": "Planning, timing, absences and fees all run off the same routes you already drew.",
+      "items": [
+        {
+          "title": "Routes that sequence themselves",
+          "description": "Stops are ordered for the shortest run, with live traffic folded into the estimate."
+        },
+        {
+          "title": "Arrival timed to the bell",
+          "description": "Pickup times are worked backwards from first period, so nobody waits and nobody is late."
+        },
+        {
+          "title": "Absences drop the stop",
+          "description": "A student marked away overnight is skipped, and the route re-optimizes without them."
+        },
+        {
+          "title": "Fees follow the route",
+          "description": "Each route carries its monthly fee, projected per student for finance to bill."
+        }
+      ]
+    },
+    "audience": {
+      "title": "Built for everyone on the route",
+      "description": "The office plans it, the driver runs it, the family follows it — the same trip, three views.",
+      "items": [
+        {
+          "title": "Transport office",
+          "description": "Plan the fleet, assign students to stops, and watch every run from one board.",
+          "cta": "Open the dashboard"
+        },
+        {
+          "title": "Families",
+          "description": "Guardians see their child's route, follow the bus live, and flag a day off pickup.",
+          "cta": "My transportation"
+        },
+        {
+          "title": "Drivers and staff",
+          "description": "Start the run, work the stop list in order, and mark each student on and off.",
+          "cta": "Today's trips"
+        }
+      ]
+    },
+    "howItWorks": {
+      "title": "How a school gets rolling",
+      "steps": [
+        {
+          "title": "Register the fleet",
+          "description": "Add each bus and van with its capacity, then the drivers who take them out."
+        },
+        {
+          "title": "Draw the routes",
+          "description": "Place the stops, set departure and return times, and assign students to a pickup point."
+        },
+        {
+          "title": "Run the day",
+          "description": "Trips are scheduled overnight. Start one and boarding is recorded stop by stop."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Ready when the first bell is",
+      "description": "Set the fleet up once and every morning after that runs itself.",
+      "primaryCta": "Get started",
+      "secondaryCta": "Transportation settings"
+    }
+  },
   "nav": {
     "overview": "Overview",
     "vehicles": "Vehicles",

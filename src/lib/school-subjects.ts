@@ -89,18 +89,48 @@ export const getSchoolSubjectOptions = cache(async (schoolId: string) => {
   const selections = await db.subjectSelection.findMany({
     where: { schoolId, isActive: true },
     select: {
+      // The grade is NOT decoration. The catalog seeds ONE Subject per grade
+      // and deliberately leaves the grade out of `Subject.name`, so a school
+      // teaching 12 grades holds ~120 selections in which the same name
+      // recurs — 26 of 123 names are duplicated on the demo school alone.
+      // A subject picker that renders names without their grade is a coin
+      // flip. Authoritative source is the school's own selection; the
+      // catalog's `Subject.grades` tag is the fallback.
+      grade: { select: { gradeNumber: true } },
       subject: {
         select: {
           id: true,
           name: true,
           department: true,
+          grades: true,
         },
       },
     },
     distinct: ["catalogSubjectId"],
   })
-  return selections.map((s) => s.subject)
+  return selections.map((s) => ({
+    ...s.subject,
+    gradeNumber: s.grade?.gradeNumber ?? s.subject.grades?.[0] ?? null,
+  }))
 })
+
+/**
+ * Label a subject option so two same-named subjects can be told apart.
+ *
+ * The grade label is DERIVED from the number, never from `AcademicGrade.name`
+ * (Abdout, 2026-08-12): school grade names are prose ("الصف الحادي عشر"),
+ * translate inconsistently, and don't sort visually. Zero-padded so the list
+ * orders the way it reads. Same rule the Lumos upload picker follows.
+ */
+export function subjectOptionLabel(
+  name: string,
+  gradeNumber: number | null | undefined,
+  lang?: string
+): string {
+  if (gradeNumber == null || gradeNumber <= 0) return name
+  const n = String(gradeNumber).padStart(2, "0")
+  return lang === "ar" ? `الصف ${n} · ${name}` : `Grade ${n} · ${name}`
+}
 
 /**
  * Find a single school subject by Subject ID.

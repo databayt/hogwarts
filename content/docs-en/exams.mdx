@@ -72,7 +72,9 @@ The in-app "build a template from primitives" wizard was removed — a paper's *
 
 Schools print on their own mandated stationery, so the paper's **layout** is a `.docx` the school uploads — not something built in-app. `/exams/templates` (staff only: DEVELOPER / ADMIN / TEACHER) manages two categories, **Exam papers** and **Certificates**; report-card layouts live at `/grades/templates`. There is no standalone `/documents` page.
 
-Author the Word file with `{{tag}}` placeholders and `{#loop}…{/loop}` sections, upload it, and the merge fields are detected automatically and shown back to you. The full vocabulary per category is listed in the upload dialog.
+Author the Word file with `{{tag}}` placeholders and `{{#loop}}…{{/loop}}` sections, upload it, and the merge fields are detected automatically and shown back to you. The full vocabulary per category is listed in the upload dialog.
+
+You do not have to start from a blank page: **Starter template** hands you a real `.docx` for that category with every tag already correct — edit the styling, keep the tags. Use it. A template with no tags uploads happily and then fills as a blank copy of itself, and a wrongly-braced one prints its markers into the finished document; neither failure shows up until a school prints.
 
 ### Filling an exam paper
 
@@ -84,6 +86,21 @@ An uploaded exam-paper template is bound to real exam data through **Use templat
 | Build one now    | A blueprint + class + paper title + date + exam type | Creates the `SchoolExam` + `GeneratedExam`, auto-selects questions from the bank per the blueprint, fills |
 
 Before generating, the dialog shows **coverage** — every tag detected in your template, marked as either fillable or unsupported — so a mismatch is visible before you download rather than as a blank in the printed paper. Output is `.docx`; PDF conversion is deferred.
+
+#### Two ways to lay out the body
+
+The resolver always supplies both, so a template uses whichever fits and the unused one costs nothing:
+
+| Loop                            | Shape                                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `{{#questions}}…{{/questions}}` | One flat, continuously numbered list                                                                 |
+| `{{#sections}}…{{/sections}}`   | The same questions grouped by type — "1. Multiple choice", "2. Essay" — each with its own mark total |
+
+Inside a section, questions keep the paper-wide `{{order}}` and also carry `{{numberInSection}}`, so a sectioned paper and a flat one number identically. Each question exposes `{{typeLabel}}`, the conditional `{{#hasOptions}}` / `{{#isMcq}}` blocks, and `{{#answerLines}}` — blank ruled writing space sized by question type (essay 8 lines, short answer 3, fill-in-the-blank 1, none for multiple choice). The starter template demonstrates all of it.
+
+#### When the bank is short
+
+Question selection **degrades rather than fails**: it fills every distribution slot the bank can cover and records the rest. A blueprint asking for six hard essays against a bank holding none still produces a paper — a short one. The dialog stays open after the download and names the unfilled categories, because the alternative is a teacher discovering a 12-mark paper for a 50-mark exam in the exam hall. Generation only fails outright when the bank yields _no_ question at all, and in that case the newly created exam is rolled back rather than left empty on the schedule.
 
 ## Generation
 
@@ -282,21 +299,27 @@ The scoring loop is largely hands-off once questions are in the bank. Objective 
 
 5. Report cards auto-generate at term end  (/api/cron/term-end-report-cards, daily)
    └─ generateReportCardsCore() aggregates each term's results into ReportCard +
-      ReportCardGrade (dedup by examId). Drafts only — does not publish.
+      ReportCardGrade (dedup by examId), plus credit-weighted GPA, rank and
+      attendance days. Set-based: the whole cohort in a fixed handful of queries
+      (~1s for 970 students), so it finishes inside a cron/action budget.
+      Drafts only — does not publish.
 
 6. Admin reviews + publishes
    └─ publishReportCards() → notifies guardians/students; process-report-card-pdfs
       cron renders the PDF out-of-band → S3 → pdfUrl.
 
 7. Official documents  (documents block)
-   └─ Upload a .docx template (EXAM_PAPER / CERTIFICATE / REPORT_CARD) and fill it
-      with real data via "Generate (my template)" (generateFromDefaultTemplate).
+   └─ Upload a .docx template (EXAM_PAPER / CERTIFICATE / REPORT_CARD) — or start from
+      the built-in Starter template — and fill it with real data via "Generate (my
+      template)" (generateFromDefaultTemplate). On /grades/reports, "Generate all"
+      fills the whole filtered term at once (generateFromDefaultTemplateBulk),
+      chunked 50 cards per zip.
 
 8. Reminders  (/api/cron/exam-reminders)
    └─ sweeps upcoming exams, dispatches advance notifications to students + teachers.
 ```
 
-Key invariant: `grades/lib/gradebook.ts` is the single write path for ALL automated scoring surfaces (exams, quick assessments, stream lesson quizzes). It is not `"use server"` — import it from server actions.
+Key invariant: `grades/lib/gradebook.ts` is the single write path for ALL automated scoring surfaces (exams, quick assessments, lumos lesson quizzes). It is not `"use server"` — import it from server actions.
 
 Deferred: a fully **session-less** AI-finalize-at-close cron. The marking stack (`getOrCreateAnswerKey`, `batchAutoGradeWithKey`, `batchAIGrade`) derives `schoolId` from `auth()`, so a timer can't drive it until cron-callable cores are extracted — until then, subjective exams finalize with the one-click "Auto-mark & publish" button.
 

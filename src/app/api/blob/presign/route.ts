@@ -23,7 +23,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { db } from "@/lib/db"
 import { deleteObject } from "@/lib/s3"
 import { getTenantContext } from "@/lib/tenant-context"
-import { checkSchoolVideoQuota } from "@/components/stream/lib/quota"
+import { checkSchoolVideoQuota } from "@/components/lumos/lib/quota"
 
 let s3Client: S3Client | null = null
 
@@ -156,11 +156,14 @@ export async function POST(request: NextRequest) {
       expiresIn: PRESIGNED_URL_EXPIRY,
     })
 
-    // 10. Build the final URL (CloudFront or raw S3)
-    const domain = process.env.CLOUDFRONT_DOMAIN
-    const finalUrl = domain
-      ? `https://${domain}/${key}`
-      : `https://${bucket}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`
+    // 10. Canonical stored URL — always the bucket's own S3 URL.
+    //
+    // This used to prefer `CLOUDFRONT_DOMAIN`, which names a distribution that
+    // fronts a *different* bucket, so every upload recorded a URL that 403s.
+    // It is also no longer a delivery URL at all: reads go through
+    // /api/lumos/video/<id>, which authorizes and then signs `storageKey`.
+    // What we persist is just the durable identity of the object.
+    const finalUrl = `https://${bucket}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`
 
     return NextResponse.json({
       presignedUrl,

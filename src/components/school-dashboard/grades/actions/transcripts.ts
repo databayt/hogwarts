@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import crypto from "crypto"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import type { NextRequest } from "next/server"
@@ -13,164 +12,44 @@ import { db } from "@/lib/db"
 import { checkRateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit"
 import { getTenantContext } from "@/lib/tenant-context"
 
-// ============================================================================
-// HELPERS
-// ============================================================================
+import { gradesPath } from "../lib/paths"
+import { generateTranscriptCore } from "../lib/transcripts-core"
 
-function generateTranscriptNumber(): string {
-  const timestamp = Date.now().toString(36).toUpperCase()
-  const random = crypto.randomBytes(3).toString("hex").toUpperCase()
-  return `TR-${timestamp}${random}`
-}
-
-function generateVerificationCode(): string {
-  return crypto.randomBytes(8).toString("hex").toUpperCase()
-}
-
-interface TranscriptYearData {
-  yearName: string
-  terms: Array<{
-    termName: string
-    subjects: Array<{
-      name: string
-      grade: string
-      score?: number
-      maxScore?: number
-      percentage?: number
-      credits?: number
-    }>
-    termGPA?: number
-  }>
-  yearGPA?: number
-}
+// Issuing an official, externally-verifiable document is a staff action — it
+// mints a public verification code against a named student's record.
+const TRANSCRIPT_ROLES: ReadonlySet<string> = new Set([
+  "ADMIN",
+  "DEVELOPER",
+  "TEACHER",
+])
 
 // ============================================================================
 // GENERATE TRANSCRIPT
 // ============================================================================
 
+/**
+ * Tenant-authed wrapper around `generateTranscriptCore`. The aggregation lives
+ * in the plain core (`grades/lib/transcripts-core.ts`) so the demo seed — and
+ * any future cron or bulk issuer — can call it with an explicit `schoolId`;
+ * here we resolve the tenant from the session and delegate.
+ */
 export async function generateTranscript(input: {
   studentId: string
 }): Promise<ActionResponse<{ id: string; transcriptNumber: string }>> {
-  try {
-    const session = await auth()
-    if (!session?.user) return { success: false, error: "Not authenticated" }
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
-
-    // Fetch student
-    const student = await db.student.findFirst({
-      where: { id: input.studentId, schoolId },
-      select: { id: true, firstName: true, lastName: true },
-    })
-    if (!student) return { success: false, error: "Student not found" }
-
-    const studentName = `${student.firstName} ${student.lastName}`
-
-    // Fetch all report cards for this student, grouped by year
-    const reportCards = await db.reportCard.findMany({
-      where: { schoolId, studentId: input.studentId },
-      include: {
-        term: {
-          include: {
-            schoolYear: { select: { yearName: true } },
-          },
-        },
-        grades: {
-          include: { subject: { select: { name: true } } },
-        },
-      },
-      orderBy: { term: { startDate: "asc" } },
-    })
-
-    if (reportCards.length === 0) {
-      return { success: false, error: "No report cards found for this student" }
-    }
-
-    // Group by year
-    const yearMap = new Map<string, TranscriptYearData>()
-
-    for (const rc of reportCards) {
-      const yearName = rc.term.schoolYear?.yearName || "Unknown"
-
-      if (!yearMap.has(yearName)) {
-        yearMap.set(yearName, { yearName, terms: [], yearGPA: undefined })
-      }
-
-      const yearData = yearMap.get(yearName)!
-      yearData.terms.push({
-        termName: `Term ${rc.term.termNumber}`,
-        subjects: rc.grades.map((g) => ({
-          name: g.subject.name,
-          grade: g.grade,
-          score: g.score ? Number(g.score) : undefined,
-          maxScore: g.maxScore ? Number(g.maxScore) : undefined,
-          percentage: g.percentage ?? undefined,
-          credits: g.credits ? Number(g.credits) : undefined,
-        })),
-        termGPA: rc.overallGPA ? Number(rc.overallGPA) : undefined,
-      })
-    }
-
-    // Calculate year GPAs
-    const transcriptData: TranscriptYearData[] = []
-    for (const yearData of yearMap.values()) {
-      const termGPAs = yearData.terms
-        .map((t) => t.termGPA)
-        .filter((g): g is number => g != null)
-      yearData.yearGPA =
-        termGPAs.length > 0
-          ? termGPAs.reduce((a, b) => a + b, 0) / termGPAs.length
-          : undefined
-      transcriptData.push(yearData)
-    }
-
-    // Calculate cumulative GPA
-    const allGPAs = transcriptData
-      .map((y) => y.yearGPA)
-      .filter((g): g is number => g != null)
-    const cumulativeGPA =
-      allGPAs.length > 0
-        ? Math.round(
-            (allGPAs.reduce((a, b) => a + b, 0) / allGPAs.length) * 100
-          ) / 100
-        : undefined
-
-    // Calculate total credits
-    const totalCredits = reportCards
-      .flatMap((rc) => rc.grades)
-      .reduce((sum, g) => sum + (g.credits ? Number(g.credits) : 0), 0)
-
-    const transcriptNumber = generateTranscriptNumber()
-    const verificationCode = generateVerificationCode()
-
-    const transcript = await db.transcript.create({
-      data: {
-        schoolId,
-        studentId: input.studentId,
-        studentName,
-        transcriptData: JSON.parse(JSON.stringify(transcriptData)),
-        cumulativeGPA,
-        totalCredits: totalCredits > 0 ? totalCredits : undefined,
-        transcriptNumber,
-        verificationCode,
-        generatedBy: session.user.id || "",
-      },
-    })
-
-    revalidatePath("/grades/transcripts")
-    return {
-      success: true,
-      data: { id: transcript.id, transcriptNumber },
-    }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to generate transcript",
-    }
+  const session = await auth()
+  if (!session?.user) return { success: false, error: "Not authenticated" }
+  if (!TRANSCRIPT_ROLES.has(session.user.role ?? "")) {
+    return { success: false, error: "Unauthorized" }
   }
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return { success: false, error: "Missing school context" }
+
+  const res = await generateTranscriptCore(schoolId, {
+    studentId: input.studentId,
+    generatedBy: session.user.id || "",
+  })
+  if (res.success) revalidatePath(gradesPath("transcripts"), "page")
+  return res
 }
 
 // ============================================================================

@@ -193,21 +193,6 @@ export async function submitNewcomerApplication(
           })
           break
 
-        case "student":
-          await tx.student.create({
-            data: {
-              userId: user.id,
-              firstName: data.firstName,
-              lastName: data.lastName,
-              dateOfBirth: data.dateOfBirth
-                ? new Date(data.dateOfBirth)
-                : new Date("2010-01-01"), // Default placeholder, to be updated
-              gender: "Not Specified", // To be updated in profile
-              schoolId,
-            },
-          })
-          break
-
         case "parent":
           await tx.guardian.create({
             data: {
@@ -256,14 +241,10 @@ export async function submitNewcomerApplication(
 /**
  * Map newcomer role to User role
  */
-function mapRoleToUserRole(
-  role: string
-): "TEACHER" | "STUDENT" | "GUARDIAN" | "STAFF" {
+function mapRoleToUserRole(role: string): "TEACHER" | "GUARDIAN" | "STAFF" {
   switch (role) {
     case "teacher":
       return "TEACHER"
-    case "student":
-      return "STUDENT"
     case "parent":
       return "GUARDIAN"
     case "staff":

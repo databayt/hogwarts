@@ -23,7 +23,14 @@ export async function GET(req: Request) {
   const now = new Date()
   const due = await db.conferenceRecording.findMany({
     where: {
-      status: "ready",
+      // `failed` too, not just `ready`. A failed egress still has an expiresAt
+      // and may still have written a partial object; sweeping only `ready`
+      // left those rows accumulating forever with no cleanup path at all.
+      // `pending`/`processing` are deliberately excluded — an egress still in
+      // flight must not have its object deleted out from under it; the
+      // webhook settles those, and one stuck mid-flight is an ops signal
+      // rather than something a retention cron should quietly bury.
+      status: { in: ["ready", "failed"] },
       deletedAt: null,
       expiresAt: { lte: now },
     },

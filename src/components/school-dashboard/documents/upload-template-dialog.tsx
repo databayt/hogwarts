@@ -5,7 +5,7 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import type { DocumentTemplateCategory } from "@prisma/client"
-import { Check, Loader2, Upload } from "lucide-react"
+import { AlertTriangle, Check, Loader2, Upload } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,7 +23,9 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { createDocumentTemplate } from "./actions"
+import { STARTER_CATEGORIES } from "./config"
 import { FIELD_VOCAB } from "./field-vocab"
+import { StarterButton } from "./starter-button"
 
 const DOCX_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -80,6 +82,7 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
 
   const busy = isUploading || saving
   const vocab = FIELD_VOCAB[category] ?? []
+  const hasStarter = STARTER_CATEGORIES.includes(category)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,7 +98,7 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
               <Check className="size-4" />
               {d?.uploaded}
             </div>
-            {detected.length > 0 && (
+            {detected.length > 0 ? (
               <div>
                 <p className="text-muted-foreground mb-1 text-xs">
                   {d?.detected}
@@ -107,6 +110,20 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
                     </Badge>
                   ))}
                 </div>
+              </div>
+            ) : (
+              // A template with no tags is stored happily and then fills as a
+              // blank copy of itself — the failure is invisible until a school
+              // prints it, so say so here and hand over a working file.
+              <div className="border-destructive/40 bg-destructive/5 space-y-2 rounded-lg border p-3">
+                <p className="text-destructive flex items-center gap-2 text-sm font-medium">
+                  <AlertTriangle className="size-4" />
+                  {d?.noTagsTitle}
+                </p>
+                <p className="text-muted-foreground text-xs">{d?.noTagsBody}</p>
+                {hasStarter && (
+                  <StarterButton category={category} variant="outline" />
+                )}
               </div>
             )}
             <Button onClick={() => onOpenChange(false)} className="w-full">
@@ -142,6 +159,15 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
               </div>
             </div>
 
+            {hasStarter && (
+              <div className="bg-muted/40 flex items-center justify-between gap-3 rounded-lg border p-3">
+                <p className="text-muted-foreground text-xs">
+                  {d?.starterHint}
+                </p>
+                <StarterButton category={category} variant="outline" />
+              </div>
+            )}
+
             <div className="rounded-lg border p-3">
               <p className="text-muted-foreground mb-2 text-xs font-medium">
                 <Upload className="me-1 inline size-3" />
@@ -152,15 +178,23 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
                   <Badge
                     key={f.tag}
                     variant="outline"
-                    className="text-[10px]"
+                    // dir=ltr: a tag is code. Under RTL the neutral `#` migrates
+                    // across the braces and `{{#sections}}` READS as
+                    // `{{sections#}}` — a school types what it sees, and that
+                    // tag silently never matches.
+                    dir="ltr"
+                    className="inline-block text-[10px]"
                     title={lang === "ar" ? f.labelAr : f.labelEn}
                   >
-                    {f.loop ? `{#${f.tag}}` : `{{${f.tag}}}`}
+                    {f.loop ? `{{#${f.tag}}}` : `{{${f.tag}}}`}
                   </Badge>
                 ))}
               </div>
               <p className="text-muted-foreground mt-2 text-[11px]">
-                {d?.loopHint}
+                {d?.loopHint}{" "}
+                <code dir="ltr" className="inline-block">
+                  {"{{#questions}} … {{/questions}}"}
+                </code>
               </p>
             </div>
 

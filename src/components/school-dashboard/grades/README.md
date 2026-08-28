@@ -5,10 +5,10 @@ title: Grades
 file_type: readme
 owner: Abdout
 maturity: Built+Polish
-completion: 94
+completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-06-14
+last_audited: 2026-08-14
 ---
 
 ## Grades — Report cards, transcripts, certificates, and student promotion
@@ -42,9 +42,12 @@ Comprehensive grading system covering report card generation, transcript managem
 ```
 src/components/school-dashboard/grades/
 ├── lib/
-│   └── gradebook.ts          # Shared write path (toPercentage, letterGradeFor,
-│                             #   upsertExamResult, upsertGradebookResult,
-│                             #   resolveStudentClassForSubject). NOT "use server".
+│   ├── gradebook.ts          # Shared write path (toPercentage, letterGradeFor,
+│   │                         #   upsertExamResult, upsertGradebookResult,
+│   │                         #   resolveStudentClassForSubject). NOT "use server".
+│   ├── report-cards-core.ts  # Set-based term aggregation → ReportCard +
+│   │                         #   ReportCardGrade + rank. Cron/seed callable.
+│   └── paths.ts              # gradesPath()/parentPath() for revalidatePath("…","page")
 ├── actions/
 │   ├── index.ts              # Re-exports all actions
 │   ├── certificate-pdf.ts    # PDF generation (single + batch)
@@ -83,7 +86,7 @@ src/components/school-dashboard/grades/
 
 ### Status
 
-**Completion:** 94% | **Blockers:** None (report-card PDF render deferred — see ISSUE.md)
+**Completion:** 96% | **Blockers:** None (report-card PDF render deferred — see ISSUE.md)
 
 ### Integration Points
 

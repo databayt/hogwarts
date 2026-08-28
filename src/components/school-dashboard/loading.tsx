@@ -1487,7 +1487,7 @@ export function ExamVersionsSkeleton() {
 // STREAM ENROLLMENTS — header + badge + card with 6-col table
 // =============================================================================
 
-export function StreamEnrollmentsSkeleton() {
+export function LumosEnrollmentsSkeleton() {
   return (
     <div className="space-y-6">
       {/* Header row */}
@@ -1535,7 +1535,7 @@ export function StreamEnrollmentsSkeleton() {
 // STREAM TEACH OVERVIEW — header + button + 4 stats + quick actions card
 // =============================================================================
 
-export function StreamTeachOverviewSkeleton() {
+export function LumosTeachOverviewSkeleton() {
   return (
     <div className="space-y-6">
       {/* Header row */}
@@ -1582,7 +1582,7 @@ export function StreamTeachOverviewSkeleton() {
 // STREAM TEACH VIDEOS — header + badge + card with 7-col table
 // =============================================================================
 
-export function StreamTeachVideosSkeleton() {
+export function LumosTeachVideosSkeleton() {
   return (
     <div className="space-y-6">
       {/* Header row */}

@@ -10,11 +10,17 @@ import {
   CheckCircle2,
   CreditCard,
   Loader2,
+  Smartphone,
+  Wallet,
   XCircle,
 } from "lucide-react"
 
 import { formatCurrency } from "@/lib/payment/currency"
-import type { BankDetails, PaymentGateway } from "@/lib/payment/types"
+import type {
+  BankDetails,
+  PaymentGateway,
+  WalletDetails,
+} from "@/lib/payment/types"
 import { getSchoolDisplayName } from "@/lib/school-name"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -45,6 +51,7 @@ import {
   declineOffer,
   recordRegistrationBankTransferIntent,
   recordRegistrationCashIntent,
+  recordRegistrationWalletIntent,
 } from "./actions"
 
 // Narrow type for the school.admission.offer dictionary slice.
@@ -113,6 +120,16 @@ type OfferDict = Partial<{
   payOnline: string
   payOnlineDesc: string
   noPaymentMethodConfigured: string
+  walletTransferDetails: string
+  merchantCode: string
+  scanQr: string
+  quoteReference: string
+  payWithTap: string
+  payWithTapDesc: string
+  payWithBankak: string
+  payWithBankakDesc: string
+  payWithCashi: string
+  payWithCashiDesc: string
 }>
 
 interface OfferContentProps {
@@ -169,6 +186,7 @@ export default function OfferContent({
     referenceNumber?: string
     cashInstructions?: string
     bankDetails?: BankDetails
+    wallet?: WalletDetails
   } | null>(null)
 
   // Calculate time remaining
@@ -247,6 +265,28 @@ export default function OfferContent({
             method: "bank_transfer",
             referenceNumber: result.data.referenceNumber,
             bankDetails: result.data.bankDetails,
+          })
+          setRegPaid(true)
+        } else {
+          setError(
+            result.error || t?.failedPayment || "Failed to record payment"
+          )
+        }
+      } else if (method === "bankak" || method === "cashi") {
+        // Sudan's wallet rails have no merchant API — like cash and bank
+        // transfer they record an intent and show the school's own account
+        // for the parent to transfer into. Settled by an admin via
+        // `confirmRegistrationPayment`.
+        const result = await recordRegistrationWalletIntent(
+          application.id,
+          accessToken,
+          method
+        )
+        if (result.success && result.data) {
+          setPaymentResult({
+            method,
+            referenceNumber: result.data.referenceNumber,
+            wallet: result.data.wallet,
           })
           setRegPaid(true)
         } else {
@@ -388,6 +428,55 @@ export default function OfferContent({
                 </>
               )}
 
+              {paymentResult.wallet && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <p className="font-medium">
+                      {t?.walletTransferDetails ||
+                        "Transfer to the school's account"}
+                    </p>
+                    <div className="bg-muted space-y-2 rounded-lg p-4 text-sm">
+                      {paymentResult.wallet.accountName && (
+                        <div className="flex justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            {t?.accountName || "Account Name"}
+                          </span>
+                          <span>{paymentResult.wallet.accountName}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          {paymentResult.method === "cashi"
+                            ? t?.merchantCode || "Merchant Code"
+                            : t?.accountNumber || "Account Number"}
+                        </span>
+                        <span className="font-mono">
+                          {paymentResult.wallet.accountNumber}
+                        </span>
+                      </div>
+                      {paymentResult.wallet.instructions && (
+                        <p className="text-muted-foreground pt-2">
+                          {paymentResult.wallet.instructions}
+                        </p>
+                      )}
+                    </div>
+                    {paymentResult.wallet.qrUrl && (
+                      /* eslint-disable-next-line @next/next/no-img-element -- school-uploaded QR on the CDN */
+                      <img
+                        src={paymentResult.wallet.qrUrl}
+                        alt={t?.scanQr || "Scan to pay"}
+                        className="mx-auto h-48 w-48 rounded-md border object-contain"
+                      />
+                    )}
+                    <p className="text-muted-foreground text-sm">
+                      {t?.quoteReference ||
+                        "Quote the reference above in the transfer note so the school can match your payment."}
+                    </p>
+                  </div>
+                </>
+              )}
+
               {paymentResult.method === "bank_transfer" &&
                 paymentResult.bankDetails && (
                   <>
@@ -469,6 +558,29 @@ export default function OfferContent({
       icon: Building2,
       label: t?.bankTransfer || "Bank Transfer",
       desc: t?.bankTransferDesc || "Transfer to the school bank account",
+    },
+    // Tap and the Sudan wallets: previously every one of these fell through to
+    // `defaultGatewayMeta` ("Pay Online"), so a Sudanese parent was offered two
+    // identical unlabelled cards for two different apps.
+    tap: {
+      icon: CreditCard,
+      label: t?.payWithTap || "mada / Card / Apple Pay",
+      desc:
+        t?.payWithTapDesc || "Pay with mada, credit card, KNET, or Apple Pay",
+    },
+    bankak: {
+      icon: Smartphone,
+      label: t?.payWithBankak || "Bankak",
+      desc:
+        t?.payWithBankakDesc ||
+        "Transfer in the Bankak app, then the school confirms it",
+    },
+    cashi: {
+      icon: Wallet,
+      label: t?.payWithCashi || "Cashi",
+      desc:
+        t?.payWithCashiDesc ||
+        "Transfer in the MyCashi app, then the school confirms it",
     },
   }
   const defaultGatewayMeta = {

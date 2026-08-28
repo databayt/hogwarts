@@ -143,14 +143,6 @@ const createAdminDetails = (overrides = {}) => ({
   ...overrides,
 })
 
-const createStudentDetails = (overrides = {}) => ({
-  gradeLevel: "10",
-  previousSchool: "Al-Azhar School",
-  previousGrade: "9",
-  studentType: "REGULAR",
-  ...overrides,
-})
-
 // =============================================================================
 // Shared Setup
 // =============================================================================
@@ -941,102 +933,54 @@ describe("submitInternalOnboarding", () => {
   // Student Role
   // ---------------------------------------------------------------------------
 
-  describe("student role", () => {
-    it("should create user with STUDENT role", async () => {
-      const txMock = createTxMock()
-      txMock.user.create.mockResolvedValue({ id: "user-student-1" })
-      txMock.student.create.mockResolvedValue({ id: "student-1" })
-      setupSuccessfulTransaction(txMock)
+  describe("student role — routed to the admission wizard, not this flow", () => {
+    /**
+     * Students used to be a role here, and the branch wrote a stub `Student`
+     * (placeholder dateOfBirth, gender "Not Specified") straight through
+     * `tx.student.create` — outside `provisionStudent`, so the student had no
+     * Application, no student code, no fees and no seat. A student now applies
+     * via `/{lang}/application` and enters the reviewed PORTAL pipeline like
+     * every other student. See `content/docs-en/admission.mdx`.
+     */
+    it("never creates a Student row, whatever role is submitted", async () => {
+      for (const role of ["teacher", "staff", "admin"] as const) {
+        const txMock = createTxMock()
+        txMock.user.create.mockResolvedValue({ id: `user-${role}` })
+        setupSuccessfulTransaction(txMock)
 
-      const result = await submitInternalOnboarding("school-1", {
-        role: "student",
-        personal: createPersonalData(),
-        contact: createContactData(),
-        roleDetails: createStudentDetails(),
-      })
+        await submitInternalOnboarding("school-1", {
+          role,
+          personal: createPersonalData(),
+          contact: createContactData(),
+          roleDetails:
+            role === "teacher"
+              ? createTeacherDetails()
+              : role === "staff"
+                ? createStaffDetails()
+                : createAdminDetails(),
+        })
 
-      expect(result.success).toBe(true)
-      expect(result.data?.userId).toBe("user-student-1")
-
-      expect(txMock.user.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          role: "STUDENT",
-          schoolId: "school-1",
-        }),
-      })
+        expect(txMock.student.create).not.toHaveBeenCalled()
+      }
     })
 
-    it("should create student record with all personal and contact data", async () => {
+    it("never mints a STUDENT User role", async () => {
       const txMock = createTxMock()
       txMock.user.create.mockResolvedValue({ id: "user-1" })
-      txMock.student.create.mockResolvedValue({ id: "student-1" })
+      txMock.teacher.create.mockResolvedValue({ id: "teacher-1" })
       setupSuccessfulTransaction(txMock)
 
       await submitInternalOnboarding("school-1", {
-        role: "student",
+        role: "teacher",
         personal: createPersonalData(),
         contact: createContactData(),
-        roleDetails: createStudentDetails(),
+        roleDetails: createTeacherDetails(),
       })
 
-      expect(txMock.student.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          userId: "user-1",
-          firstName: "Ahmed",
-          middleName: "Mohamed",
-          lastName: "Hassan",
-          gender: "male",
-          nationality: "Egyptian",
-          email: "ahmed@example.com",
-          mobileNumber: "0501234567",
-          currentAddress: "123 Main St",
-          city: "Riyadh",
-          state: "Riyadh Region",
-          country: "Saudi Arabia",
-          emergencyContactName: "Fatima Hassan",
-          emergencyContactPhone: "0509876543",
-          emergencyContactRelation: "Mother",
-          previousSchoolName: "Al-Azhar School",
-          previousGrade: "9",
-          studentType: "REGULAR",
-          schoolId: "school-1",
-        }),
-      })
-    })
-
-    it("should handle student with minimal optional data", async () => {
-      const txMock = createTxMock()
-      txMock.user.create.mockResolvedValue({ id: "user-1" })
-      txMock.student.create.mockResolvedValue({ id: "student-1" })
-      setupSuccessfulTransaction(txMock)
-
-      await submitInternalOnboarding("school-1", {
-        role: "student",
-        personal: createPersonalData({ middleName: "", nationality: "" }),
-        contact: createContactData({
-          phone: "",
-          address: "",
-          city: "",
-          state: "",
-          country: "",
-          emergencyContactName: "",
-          emergencyContactPhone: "",
-          emergencyContactRelation: "",
-        }),
-        roleDetails: createStudentDetails({
-          previousSchool: "",
-          previousGrade: "",
-        }),
-      })
-
-      expect(txMock.student.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          userId: "user-1",
-          firstName: "Ahmed",
-          lastName: "Hassan",
-          schoolId: "school-1",
-        }),
-      })
+      const created = txMock.user.create.mock.calls[0]?.[0] as
+        | { data?: { role?: string } }
+        | undefined
+      expect(created?.data?.role).not.toBe("STUDENT")
     })
   })
 
@@ -1091,14 +1035,14 @@ describe("submitInternalOnboarding", () => {
     it("should return success with userId and pending_approval status", async () => {
       const txMock = createTxMock()
       txMock.user.create.mockResolvedValue({ id: "user-abc-123" })
-      txMock.student.create.mockResolvedValue({ id: "student-1" })
+      txMock.teacher.create.mockResolvedValue({ id: "teacher-1" })
       setupSuccessfulTransaction(txMock)
 
       const result = await submitInternalOnboarding("school-1", {
-        role: "student",
+        role: "teacher",
         personal: createPersonalData(),
         contact: createContactData(),
-        roleDetails: createStudentDetails(),
+        roleDetails: createTeacherDetails(),
       })
 
       expect(result).toEqual({
@@ -1308,7 +1252,15 @@ describe("submitInternalOnboarding", () => {
   // ---------------------------------------------------------------------------
 
   describe("capacity limits", () => {
-    it("should reject student when student count >= maxStudents", async () => {
+    // The student capacity gate moved out with the student role itself: this
+    // flow can no longer create a student, so `maxStudents` is enforced by the
+    // admission pipeline instead. What matters here is that a full school no
+    // longer blocks the adults who join.
+    it("does not consult the student capacity limit at all", async () => {
+      const txMock = createTxMock()
+      txMock.user.create.mockResolvedValue({ id: "user-1" })
+      txMock.teacher.create.mockResolvedValue({ id: "teacher-1" })
+      setupSuccessfulTransaction(txMock)
       vi.mocked(db.school.findUnique).mockResolvedValue({
         id: "school-1",
         name: "Test School",
@@ -1318,14 +1270,14 @@ describe("submitInternalOnboarding", () => {
       vi.mocked(db.student.count).mockResolvedValue(50)
 
       const result = await submitInternalOnboarding("school-1", {
-        role: "student",
+        role: "teacher",
         personal: createPersonalData(),
         contact: createContactData(),
-        roleDetails: createStudentDetails(),
+        roleDetails: createTeacherDetails(),
       })
 
-      expect(result.success).toBe(false)
-      expect(result.error).toContain("student capacity")
+      expect(result.success).toBe(true)
+      expect(db.student.count).not.toHaveBeenCalled()
     })
 
     it("should reject teacher when teacher count >= maxTeachers", async () => {
@@ -1348,24 +1300,24 @@ describe("submitInternalOnboarding", () => {
       expect(result.error).toContain("teacher capacity")
     })
 
-    it("should allow submission when maxStudents is null (no limit)", async () => {
+    it("should allow submission when the capacity limits are null", async () => {
       const txMock = createTxMock()
       txMock.user.create.mockResolvedValue({ id: "user-no-limit" })
-      txMock.student.create.mockResolvedValue({ id: "student-no-limit" })
+      txMock.teacher.create.mockResolvedValue({ id: "teacher-no-limit" })
       setupSuccessfulTransaction(txMock, {
         maxStudents: null,
         maxTeachers: null,
       })
 
       const result = await submitInternalOnboarding("school-1", {
-        role: "student",
+        role: "teacher",
         personal: createPersonalData(),
         contact: createContactData(),
-        roleDetails: createStudentDetails(),
+        roleDetails: createTeacherDetails(),
       })
 
       expect(result.success).toBe(true)
-      // student.count should NOT have been called since there's no limit
+      // student.count is never called: this flow cannot create a student.
       expect(db.student.count).not.toHaveBeenCalled()
     })
   })

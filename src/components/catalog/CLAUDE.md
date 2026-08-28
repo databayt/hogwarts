@@ -130,7 +130,7 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
   catalog changes there propagate to all schools
 - [School Dashboard](../school-dashboard/CLAUDE.md) — adoption, customization, and the
   subjects listing surfaces
-- [Stream](../stream/CLAUDE.md) — LMS read adapter + video gating engine
+- [Lumos](../lumos/CLAUDE.md) — LMS read adapter + video gating engine
 - [Library](../library/CLAUDE.md) — catalog Book adoption (`BookSelection`)
 - [Notifications](../school-dashboard/notifications/CLAUDE.md) — `dispatchNotification`
   helpers + the enum fan-out rules

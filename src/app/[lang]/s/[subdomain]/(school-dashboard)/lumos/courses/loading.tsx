@@ -1,5 +1,5 @@
-import { StreamCoursesLoadingSkeleton } from "@/components/stream/courses/content"
+import { LumosCoursesLoadingSkeleton } from "@/components/lumos/courses/content"
 
 export default function Loading() {
-  return <StreamCoursesLoadingSkeleton />
+  return <LumosCoursesLoadingSkeleton />
 }

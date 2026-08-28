@@ -5,17 +5,17 @@ title: Exams
 file_type: readme
 owner: Abdout
 maturity: Built+Polish
-completion: 78
+completion: 85
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-06-14
+last_audited: 2026-08-14
 ---
 
 ## Exams -- Examination Management System
 
 ### Overview
 
-The Exams block provides a comprehensive examination platform covering the full lifecycle from question authoring through exam generation, administration, automated marking, and results analytics. Organized into 5 core sub-blocks plus additional modules (paper, wizard, grading, progress, mock). Components are fully built but routes are not yet wired.
+The Exams block provides a comprehensive examination platform covering the full lifecycle from question authoring through exam generation, administration, automated marking, and results analytics. Organized into 5 core sub-blocks plus additional modules (paper, wizard, grading, progress, mock). Routes are wired (the earlier "not yet wired" claim was stale — corrected 2026-08-14).
 
 ### Capabilities by Role
 
@@ -27,19 +27,19 @@ The Exams block provides a comprehensive examination platform covering the full 
 
 ### Routes
 
-| Route                                                               | Page              | Status    |
-| ------------------------------------------------------------------- | ----------------- | --------- |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams`                    | Exam Dashboard    | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/manage`             | Exam Management   | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/manage/[id]`        | Exam Detail       | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/qbank`              | Question Bank     | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/generate`           | Auto-Generate     | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/generate/templates` | Exam Templates    | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/mark`               | Auto-Mark         | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/mark/grade/[id]`    | Grade Exam        | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results`            | Results Dashboard | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results/[examId]`   | Exam Results      | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results/analytics`  | Analytics         | Not wired |
+| Route                                                               | Page              | Status |
+| ------------------------------------------------------------------- | ----------------- | ------ |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams`                    | Exam Dashboard    | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/manage`             | Exam Management   | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/manage/[id]`        | Exam Detail       | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/qbank`              | Question Bank     | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/generate`           | Auto-Generate     | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/generate/templates` | Exam Templates    | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/mark`               | Auto-Mark         | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/mark/grade/[id]`    | Grade Exam        | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results`            | Results Dashboard | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results/[examId]`   | Exam Results      | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results/analytics`  | Analytics         | Wired  |
 
 ### File Structure
 
@@ -73,9 +73,9 @@ src/components/school-dashboard/exams/
 
 ### Status
 
-**Completion:** 78% | **Blockers:** Route pages not created in app directory
+**Completion:** 85% | **Blockers:** None
 
-All 5 sub-blocks have complete component code, server actions, validation schemas, types, and configuration. The automation pipeline (auto-generate → auto-mark → finalize → notify) is wired end-to-end. The main remaining gap is that no `page.tsx` files exist under `src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/` to wire the components to routes.
+All 5 sub-blocks have complete component code, server actions, validation schemas, types, and configuration. The automation pipeline (auto-generate → auto-mark → finalize → notify) is wired end-to-end. **The "no route pages" blocker was stale** — the route tree under `src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/` has existed and been wired since June 2026 (55 routes; see `.claude/blocks.json`). Corrected 2026-08-14.
 
 ### Automation Pipeline (2026-06-14)
 

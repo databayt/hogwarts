@@ -57,19 +57,15 @@ export interface AdminDetailsData {
   administrativeArea: string
 }
 
-// Student-specific
-export interface StudentDetailsData {
-  gradeLevel: string
-  previousSchool?: string
-  previousGrade?: string
-  studentType: string
-}
-
+/**
+ * No student variant: students do not join through this flow. They apply via
+ * the admission wizard (`/{lang}/application`) so they are born from a real
+ * `Application` -- see `content/docs-en/admission.mdx` ("Student intake").
+ */
 export type RoleDetailsData =
   | TeacherDetailsData
   | StaffDetailsData
   | AdminDetailsData
-  | StudentDetailsData
 
 export interface DocumentUpload {
   type: string

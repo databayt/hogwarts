@@ -6,7 +6,6 @@ import * as React from "react"
 import { useFormContext } from "react-hook-form"
 
 import {
-  DateField,
   FormStepContainer,
   FormStepHeader,
   NumberField,
@@ -41,7 +40,6 @@ export function ProfileStep() {
 
       <div className="space-y-4">
         {role === "teacher" && <TeacherFields />}
-        {role === "student" && <StudentFields />}
         {role === "parent" && <ParentFields />}
         {role === "staff" && <StaffFields />}
       </div>
@@ -53,8 +51,6 @@ function getDescriptionForRole(role?: string): string {
   switch (role) {
     case "teacher":
       return "Tell us about your teaching experience"
-    case "student":
-      return "Tell us about your academic background"
     case "parent":
       return "Tell us about your child"
     case "staff":
@@ -90,47 +86,6 @@ function TeacherFields() {
         label="Qualifications"
         placeholder="List your degrees, certifications, and relevant qualifications"
         rows={3}
-      />
-    </>
-  )
-}
-
-function StudentFields() {
-  return (
-    <>
-      <DateField
-        name="dateOfBirth"
-        label="Date of Birth"
-        maxDate={new Date()}
-        required
-      />
-
-      <SelectField
-        name="gradeLevel"
-        label="Grade Level"
-        placeholder="Select your grade"
-        options={[
-          { value: "1", label: "Grade 1" },
-          { value: "2", label: "Grade 2" },
-          { value: "3", label: "Grade 3" },
-          { value: "4", label: "Grade 4" },
-          { value: "5", label: "Grade 5" },
-          { value: "6", label: "Grade 6" },
-          { value: "7", label: "Grade 7" },
-          { value: "8", label: "Grade 8" },
-          { value: "9", label: "Grade 9" },
-          { value: "10", label: "Grade 10" },
-          { value: "11", label: "Grade 11" },
-          { value: "12", label: "Grade 12" },
-        ]}
-        required
-      />
-
-      <TextField
-        name="previousSchool"
-        label="Previous School"
-        placeholder="Name of your previous school"
-        description="Leave blank if this is your first school"
       />
     </>
   )

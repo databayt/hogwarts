@@ -19,7 +19,10 @@
  */
 import { describe, expect, it } from "vitest"
 
-import { buildStudentOrderBy } from "@/components/school-dashboard/listings/students/list-params"
+import {
+  buildStudentOrderBy,
+  buildUnplacedFilter,
+} from "@/components/school-dashboard/listings/students/list-params"
 
 /** Every key any clause orders on, flattened out of nested relation objects. */
 function leafKeys(clauses: Record<string, unknown>[]): string[] {
@@ -93,5 +96,36 @@ describe("buildStudentOrderBy", () => {
     expect(buildStudentOrderBy([{ desc: true }, null, 42])).toEqual([
       { createdAt: "desc" },
     ])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Unplaced filter
+// ---------------------------------------------------------------------------
+
+describe("buildUnplacedFilter", () => {
+  /**
+   * A student with no `academicGradeId` is the quiet failure mode of the whole
+   * intake pipeline: `ensureStudentFeeAssignments` short-circuits on a null
+   * grade, so no fees are assigned, no invoices are raised, and neither the
+   * fee-due nor the fee-overdue cron ever chases them. "No seat" and "no
+   * grade" are therefore NOT interchangeable, and `any` has to cover both.
+   */
+  it("returns an empty filter when the chip is off", () => {
+    expect(buildUnplacedFilter("")).toEqual({})
+  })
+
+  it("filters on a missing homeroom seat", () => {
+    expect(buildUnplacedFilter("seat")).toEqual({ sectionId: null })
+  })
+
+  it("filters on a missing grade — the one that costs the school money", () => {
+    expect(buildUnplacedFilter("grade")).toEqual({ academicGradeId: null })
+  })
+
+  it("covers either gap under `any`", () => {
+    expect(buildUnplacedFilter("any")).toEqual({
+      OR: [{ sectionId: null }, { academicGradeId: null }],
+    })
   })
 })

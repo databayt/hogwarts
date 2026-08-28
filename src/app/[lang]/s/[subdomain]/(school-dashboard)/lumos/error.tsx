@@ -15,7 +15,7 @@ interface Props {
   reset: () => void
 }
 
-export default function StreamError({ error, reset }: Props) {
+export default function LumosError({ error, reset }: Props) {
   const params = useParams()
   const lang = (params?.lang as string) || "en"
   const subdomain = params?.subdomain as string
@@ -23,7 +23,7 @@ export default function StreamError({ error, reset }: Props) {
 
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error("Stream Error:", error)
+    console.error("Lumos Error:", error)
   }, [error])
 
   return (
@@ -61,7 +61,7 @@ export default function StreamError({ error, reset }: Props) {
                 })}
               >
                 <Icons.arrowLeft className="size-4" />
-                {isRTL ? "العودة للرئيسية" : "Back to Stream"}
+                {isRTL ? "العودة للرئيسية" : "Back to Lumos"}
               </Link>
             </div>
           </div>

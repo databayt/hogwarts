@@ -27,7 +27,7 @@ export default async function MarketingLayout({
   const { lang } = await params
   // Marketing subtree consumes general + school (UserRoleForm) + messages
   // (LetsWorkTogether) — getPlatformCoreDictionary covers all three and
-  // sheds stream + the 18 unused feature namespaces from the RSC payload.
+  // sheds lumos + the 18 unused feature namespaces from the RSC payload.
   const dictionary = (await getPlatformCoreDictionary(
     lang as Locale
   )) as Dictionary

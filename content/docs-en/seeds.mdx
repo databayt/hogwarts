@@ -36,9 +36,9 @@ pnpm db:seed:single --list
 | Student Enrollments |  12,950 | All classes                             |
 | Assignments         |     188 | All classes                             |
 | Submissions         |  13,371 | With grade distribution                 |
-| Stream Categories   |       8 | Arabic LMS                              |
-| Stream Courses      |      59 | With chapters                           |
-| Stream Enrollments  |     200 |                                         |
+| Lumos Categories    |       8 | Arabic LMS                              |
+| Lumos Courses       |      59 | With chapters                           |
+| Lumos Enrollments   |     200 |                                         |
 | Books               |      90 | Unique Arabic-titled                    |
 | Borrow Records      |      99 | Active, overdue, returned               |
 | Exams               |    ~200 | Midterm + Final + Quizzes               |
@@ -74,25 +74,25 @@ For the named-account table, bulk-account counts, simulation flows, and access m
 
 ## 17 phases
 
-| Phase | Module                 | What it creates                                                                                                                      |
-| ----: | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-|     0 | Global Catalog         | `seedCatalog()` — US K-12: Subjects (~240), Chapters (~750), Lessons (~3,993) + Sudan base, images (S3/CloudFront)                   |
-|     1 | Core Foundation        | School (`demo.databayt.org`), branding                                                                                               |
-|     2 | User Accounts          | All 3,105 users                                                                                                                      |
-|     3 | Academic Structure     | School Year (2025–2026), Terms, Periods (8 + 2 breaks), Departments (6), Year Levels (14)                                            |
-|     4 | Subjects & Classrooms  | Subjects (19), Classroom Types (8), Classrooms (28)                                                                                  |
-|     5 | People                 | Teachers (100), Students (970), Guardians (~1,940), Staff (26)                                                                       |
-|     6 | Classes & Enrollments  | Classes (187), Student Enrollments (12,950), Teacher Assignments (187)                                                               |
-|     7 | LMS / Stream           | Categories (8), Courses (59), Enrollments (200), Lessons, Library (90 books, 99 borrows)                                             |
-|     8 | Assignments            | Assignments (188), Submissions (13,371)                                                                                              |
-|     9 | Announcements & Events | Temporal spread, MENA calendar Sep 2025 – Jun 2026                                                                                   |
-|    10 | Exams, QBank & Grades  | Exams (~200), Results (~1,500), QBank (~950 Arabic), grading config, report cards                                                    |
-|    11 | Finance                | Chart of accounts (2-year), Fee Structures (8), Assignments (~1,940), Payments (~500), Invoices (10), Expense Receipts (10), Payroll |
-|    12 | Banking                | 3 accounts, 100 transactions (Oct–Dec 2025)                                                                                          |
-|    13 | Operations             | Attendance (~60,000), Excuses + Interventions, Timetable (~1,500), Gamification (~350)                                               |
-|    14 | Communications         | Conversations (~50, 300 messages), Notifications (~500)                                                                              |
-|    15 | Admission              | Campaigns + Applications (~50)                                                                                                       |
-|    16 | Compliance & Wellness  | Audit Logs (~500), Health/Disciplinary/Achievements (~110)                                                                           |
+| Phase | Module                 | What it creates                                                                                                                                                                            |
+| ----: | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|     0 | Global Catalog         | `seedCatalog()` — US K-12: Subjects (~240), Chapters (~750), Lessons (~3,993) + Sudan base, images (S3/CloudFront)                                                                         |
+|     1 | Core Foundation        | School (`demo.databayt.org`), branding                                                                                                                                                     |
+|     2 | User Accounts          | All 3,105 users                                                                                                                                                                            |
+|     3 | Academic Structure     | School Year (2025–2026), Terms, Periods (8 + 2 breaks), Departments (6), Year Levels (14)                                                                                                  |
+|     4 | Subjects & Classrooms  | Subjects (19), Classroom Types (8), Classrooms (28)                                                                                                                                        |
+|     5 | People                 | Teachers (100), Students (970), Guardians (~1,940), Staff (26)                                                                                                                             |
+|     6 | Classes & Enrollments  | Classes (187), Student Enrollments (12,950), Teacher Assignments (187)                                                                                                                     |
+|     7 | LMS / Lumos            | Categories (8), Courses (59), Enrollments (200), Lessons, Library (90 books, 99 borrows)                                                                                                   |
+|     8 | Assignments            | Assignments (188), Submissions (13,371)                                                                                                                                                    |
+|     9 | Announcements & Events | Temporal spread, MENA calendar Sep 2025 – Jun 2026                                                                                                                                         |
+|    10 | Exams, QBank & Grades  | Exams (~200), exam results, QBank (~950 Arabic), grading config, gradebook `Result` rows derived from graded submissions, report cards + per-subject grades via the production aggregation |
+|    11 | Finance                | Chart of accounts (2-year), Fee Structures (8), Assignments (~1,940), Payments (~500), Invoices (10), Expense Receipts (10), Payroll                                                       |
+|    12 | Banking                | 3 accounts, 100 transactions (Oct–Dec 2025)                                                                                                                                                |
+|    13 | Operations             | Attendance (~60,000), Excuses + Interventions, Timetable (~1,500), Gamification (~350)                                                                                                     |
+|    14 | Communications         | Conversations (~50, 300 messages), Notifications (~500)                                                                                                                                    |
+|    15 | Admission              | Campaigns + Applications (~50)                                                                                                                                                             |
+|    16 | Compliance & Wellness  | Audit Logs (~500), Health/Disciplinary/Achievements (~110)                                                                                                                                 |
 
 ## Idempotent upserts
 

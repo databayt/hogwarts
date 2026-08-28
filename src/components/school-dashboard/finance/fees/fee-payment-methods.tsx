@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 
 import { GATEWAY_DISPLAY } from "@/lib/payment/constants"
 import type { PaymentGateway } from "@/lib/payment/types"
@@ -19,61 +20,68 @@ import {
 
 type WalletGateway = Extract<PaymentGateway, "bankak" | "cashi">
 
-interface FeePaymentMethodsProps {
+export interface GatewayPickerDictionary {
+  title?: string
+  chooseMethod?: string
+  redirecting?: string
+  paymentFailed?: string
+  /** Label for the compact "Pay" trigger used by the family portal. */
+  pay?: string
+  /** Per-gateway label/description overrides (else GATEWAY_DISPLAY). */
+  labels?: Partial<
+    Record<PaymentGateway, { label?: string; description?: string }>
+  >
+}
+
+interface GatewayPickerProps {
   feeAssignmentId: string
   lang: Locale
-  remaining: number
   methods: PaymentGateway[]
-  dictionary?: {
-    title?: string
-    chooseMethod?: string
-    redirecting?: string
-    paymentFailed?: string
-  }
+  dictionary?: GatewayPickerDictionary
   /** Copy for the Bankak/Cashi transfer dialog. */
   manualRailDictionary?: ManualRailDictionary
+  /** Called after a wallet proof is submitted (so a parent can refresh). */
+  onWalletSubmitted?: () => void
 }
 
 /**
- * Parent-side gateway picker for fee payments. Replaces the legacy single
- * "Pay Online" button. Renders one card per available gateway (e.g. AE
- * schools see Tap + Stripe — Tap surfaces Apple Pay + mada + KNET via its
- * hosted page). Clicking a card POSTs to {@link createFeePaymentCheckout}
- * with the chosen gateway and redirects to the provider's checkout URL.
+ * Split the school's resolved rails into what a payer can act on here.
  *
- * The `methods` list MUST be resolved server-side via
- * {@link resolveAvailableMethods}(school.country, school.timezone, currency)
- * so a gateway never appears when its API key is missing.
+ * Two kinds of rail, two interactions:
+ *  - redirect rails (Tap/Stripe) hand off to a hosted checkout page;
+ *  - wallet rails (Bankak/Cashi) have no merchant API, so they open a dialog
+ *    showing the school's account and take a transfer reference + receipt.
+ * cash / bank_transfer stay admin-recorded via /payments/new.
  */
-export function FeePaymentMethods({
+export function payableGateways(methods: PaymentGateway[]): PaymentGateway[] {
+  const redirect = methods.filter((m) => m === "tap" || m === "stripe")
+  const wallet = methods.filter((m) => m === "bankak" || m === "cashi")
+  return [...redirect, ...wallet]
+}
+
+/**
+ * The gateway grid itself — one card per rail the school offers. Shared by
+ * the admin assignment page (inside a Card) and the family portal (inside a
+ * per-row dialog), so both surfaces offer exactly the same rails and go
+ * through exactly the same server action.
+ */
+export function GatewayPicker({
   feeAssignmentId,
   lang,
-  remaining,
   methods,
   dictionary,
   manualRailDictionary,
-}: FeePaymentMethodsProps) {
+  onWalletSubmitted,
+}: GatewayPickerProps) {
   const isRTL = lang === "ar"
+  const router = useRouter()
   const [loading, setLoading] = useState<PaymentGateway | null>(null)
   const [, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [walletGateway, setWalletGateway] = useState<WalletGateway | null>(null)
+  const [walletSubmitted, setWalletSubmitted] = useState(false)
 
-  // Two kinds of rail, two interactions:
-  //  - redirect rails (Tap/Stripe) hand off to a hosted checkout page;
-  //  - wallet rails (Bankak/Cashi) have no merchant API, so they open a dialog
-  //    showing the school's account and take a transfer reference + receipt.
-  // Bankak used to sit in the redirect list, which was doubly wrong: it has no
-  // checkout URL, and its provider was permanently unconfigured — so this
-  // filter resolved to [] and a Sudan school's parents saw no way to pay at all.
-  const redirectMethods = methods.filter((m) => m === "tap" || m === "stripe")
-  const walletMethods = methods.filter(
-    (m): m is WalletGateway => m === "bankak" || m === "cashi"
-  )
-  const payableMethods = [...redirectMethods, ...walletMethods]
-
-  // cash / bank_transfer stay admin-recorded via /payments/new, as before.
-  if (remaining <= 0 || payableMethods.length === 0) return null
+  const payable = payableGateways(methods)
 
   function handleClick(gateway: PaymentGateway) {
     setError(null)
@@ -107,42 +115,39 @@ export function FeePaymentMethods({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {dictionary?.title ?? (isRTL ? "ادفع الرسوم" : "Pay Fees")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-muted-foreground text-sm">
-          {dictionary?.chooseMethod ??
-            (isRTL ? "اختر طريقة الدفع المناسبة:" : "Choose a payment method:")}
-        </p>
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        <div className="grid gap-3 sm:grid-cols-2">
-          {payableMethods.map((method) => {
-            const display = GATEWAY_DISPLAY[method]
-            if (!display) return null
-            return (
-              <PaymentMethodCard
-                key={method}
-                iconName={display.icon}
-                label={isRTL ? display.label.ar : display.label.en}
-                description={
-                  isRTL ? display.description.ar : display.description.en
-                }
-                isLoading={loading === method}
-                disabled={loading !== null}
-                onClick={() => handleClick(method)}
-              />
-            )
-          })}
-        </div>
-      </CardContent>
+    <div className="space-y-3">
+      <p className="text-muted-foreground text-sm">
+        {dictionary?.chooseMethod ??
+          (isRTL ? "اختر طريقة الدفع المناسبة:" : "Choose a payment method:")}
+      </p>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {payable.map((method) => {
+          const display = GATEWAY_DISPLAY[method]
+          if (!display) return null
+          const override = dictionary?.labels?.[method]
+          return (
+            <PaymentMethodCard
+              key={method}
+              iconName={display.icon}
+              label={
+                override?.label ?? (isRTL ? display.label.ar : display.label.en)
+              }
+              description={
+                override?.description ??
+                (isRTL ? display.description.ar : display.description.en)
+              }
+              isLoading={loading === method}
+              disabled={loading !== null}
+              onClick={() => handleClick(method)}
+            />
+          )
+        })}
+      </div>
 
       {walletGateway && (
         <ManualPaymentRail
@@ -151,11 +156,67 @@ export function FeePaymentMethods({
           lang={lang}
           open={walletGateway !== null}
           onOpenChange={(open) => {
-            if (!open) setWalletGateway(null)
+            if (open) return
+            setWalletGateway(null)
+            // Only once the payer has read the "submitted" confirmation and
+            // closed the wallet dialog does the host surface get told — a
+            // parent dialog that closes underneath the confirmation would
+            // unmount it mid-read.
+            if (walletSubmitted) {
+              setWalletSubmitted(false)
+              onWalletSubmitted?.()
+            }
+          }}
+          onSubmitted={() => {
+            setWalletSubmitted(true)
+            router.refresh()
           }}
           dictionary={manualRailDictionary}
         />
       )}
+    </div>
+  )
+}
+
+interface FeePaymentMethodsProps extends GatewayPickerProps {
+  remaining: number
+}
+
+/**
+ * Parent-side gateway picker for fee payments, as a titled card. Renders one
+ * card per available gateway (e.g. AE schools see Tap + Stripe — Tap surfaces
+ * Apple Pay + mada + KNET via its hosted page; SD schools see Bankak + Cashi).
+ *
+ * The `methods` list MUST be resolved server-side via
+ * {@link resolveAvailableMethods}(school.country, school.timezone, currency)
+ * + {@link filterConfiguredManualRails} so a gateway never appears when its
+ * API key is missing or the school has not published a wallet account.
+ */
+export function FeePaymentMethods({
+  remaining,
+  methods,
+  dictionary,
+  lang,
+  ...rest
+}: FeePaymentMethodsProps) {
+  const isRTL = lang === "ar"
+  if (remaining <= 0 || payableGateways(methods).length === 0) return null
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          {dictionary?.title ?? (isRTL ? "ادفع الرسوم" : "Pay Fees")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <GatewayPicker
+          methods={methods}
+          dictionary={dictionary}
+          lang={lang}
+          {...rest}
+        />
+      </CardContent>
     </Card>
   )
 }

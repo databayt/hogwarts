@@ -114,6 +114,11 @@ export type GradebookSource = "exam" | "assignment" | "quiz" | "lms"
  * Idempotent upsert into the unified `Result` gradebook. `Result` has no
  * natural unique constraint, so we match on the most specific FK available
  * (examId → assignmentId → subject+title) to avoid duplicate rows on re-runs.
+ *
+ * `onlyIfAbsent` turns the upsert into an insert-if-missing and returns `null`
+ * when a row already exists. Surfaces a student can re-run at will (the Lumos
+ * lesson quiz) use it so only the first attempt reaches report cards —
+ * last-write-wins on an unlimited retake converges on 100% for everyone.
  */
 export async function upsertGradebookResult(params: {
   schoolId: string
@@ -132,6 +137,8 @@ export async function upsertGradebookResult(params: {
   gradedBy?: string | null
   submittedAt?: Date | null
   boundaries?: GradeBoundaries
+  /** Insert only when no matching row exists; returns null when one does. */
+  onlyIfAbsent?: boolean
 }) {
   const percentage = toPercentage(params.score, params.maxScore)
   const grade =
@@ -172,6 +179,7 @@ export async function upsertGradebookResult(params: {
   }
 
   if (existing) {
+    if (params.onlyIfAbsent) return null
     return db.result.update({ where: { id: existing.id }, data: common })
   }
 

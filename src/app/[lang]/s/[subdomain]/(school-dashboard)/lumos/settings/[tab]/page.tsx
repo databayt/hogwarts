@@ -4,7 +4,7 @@
 import { redirect } from "next/navigation"
 
 import type { Locale } from "@/components/internationalization/config"
-import { LUMOS_SURFACES } from "@/components/stream/permissions"
+import { LUMOS_SURFACES } from "@/components/lumos/permissions"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; tab: string }>

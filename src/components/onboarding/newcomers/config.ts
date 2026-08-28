@@ -26,8 +26,15 @@ import {
 /**
  * Newcomers Onboarding Configuration
  *
- * 5-step flow for internal school people to join:
- * 1. Role Selection - Choose role (teacher, staff, parent, student)
+ * 5-step flow for the adults who join a school: teachers, staff and parents.
+ *
+ * Students are deliberately NOT a role here. A student joins through the
+ * admission application wizard (`/{lang}/application`) so they are born from a
+ * real `Application` and tracked from an application id onward -- the same
+ * pipeline every other student-creation path funnels into. See
+ * `content/docs-en/admission.mdx` ("Student intake").
+ *
+ * 1. Role Selection - Choose role (teacher, staff, parent)
  * 2. Basic Info - Name, email, phone
  * 3. Email Verification - 6-digit code verification
  * 4. Profile Setup - Role-specific details
@@ -52,12 +59,6 @@ export const NEWCOMER_ROLES = [
     label: "Parent/Guardian",
     description: "My child attends this school",
     icon: User,
-  },
-  {
-    value: "student",
-    label: "Student",
-    description: "I am a student at this school",
-    icon: GraduationCap,
   },
 ] as const
 

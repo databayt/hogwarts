@@ -22,6 +22,23 @@ export const studentsSearchParams = createSearchParamsCache({
     "archived",
     "all",
   ] as const).withDefault("active"),
+  /**
+   * "Unplaced" = no homeroom seat OR no grade. Both matter, and the second is
+   * the dangerous one: `ensureStudentFeeAssignments` short-circuits to
+   * `{ skipped: 1 }` when `academicGradeId` is null, silently and with no
+   * warning — so a gradeless student is assigned no fees, gets no invoices,
+   * and is never chased by the fee-due/fee-overdue crons. They fall out of the
+   * money flow entirely, and until this filter nothing surfaced them.
+   *
+   * Setting a grade from the student list calls `ensureStudentFeeAssignments`
+   * again (`actions.ts` `updateStudent`), which backfills what was missed.
+   */
+  unplaced: parseAsStringLiteral([
+    "",
+    "seat",
+    "grade",
+    "any",
+  ] as const).withDefault(""),
   sort: getSortingStateParser().withDefault([]),
 })
 
@@ -81,13 +98,14 @@ const SORTABLE_SCALARS = new Set([
  * Shared by the server-rendered first page (`content.tsx`) and the load-more /
  * search action (`actions.ts`) so the two can never disagree about ordering.
  */
-export function buildStudentOrderBy(
-  sort: unknown
-): Record<string, unknown>[] {
+export function buildStudentOrderBy(sort: unknown): Record<string, unknown>[] {
   if (!Array.isArray(sort) || sort.length === 0) {
     return [{ createdAt: "desc" }]
   }
   const clauses = sort.flatMap((s) => {
+    // `sort` is parsed from the URL, so entries can be anything at all —
+    // null, a number, an object with no id. Reject before destructuring.
+    if (typeof s !== "object" || s === null) return []
     const { id, desc } = s as { id?: unknown; desc?: unknown }
     if (typeof id !== "string" || !id) return []
     return studentSortKey(id, desc ? "desc" : "asc")
@@ -95,4 +113,23 @@ export function buildStudentOrderBy(
   // Every id was unrecognised — order by something rather than nothing, or the
   // page number stops meaning anything across requests.
   return clauses.length > 0 ? clauses : [{ createdAt: "desc" }]
+}
+
+/**
+ * Prisma filter for the "unplaced" toolbar chip. Kept next to the parser so the
+ * two cannot drift, mirroring `buildStudentOrderBy`.
+ */
+export function buildUnplacedFilter(
+  unplaced: StudentsSearch["unplaced"]
+): Record<string, unknown> {
+  switch (unplaced) {
+    case "seat":
+      return { sectionId: null }
+    case "grade":
+      return { academicGradeId: null }
+    case "any":
+      return { OR: [{ sectionId: null }, { academicGradeId: null }] }
+    default:
+      return {}
+  }
 }

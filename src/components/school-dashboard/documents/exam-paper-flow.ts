@@ -169,6 +169,27 @@ const schema = z.discriminatedUnion("mode", [
 export type GenerateExamPaperInput = z.input<typeof schema>
 
 /**
+ * The finished `.docx`, plus what the question bank could NOT supply.
+ *
+ * Selection degrades rather than failing: `generateExamQuestions` fills every
+ * distribution slot it can and records the rest, so a blueprint asking for 10
+ * hard essays against a bank holding 2 still yields a paper — just a short one.
+ * Reporting that is the whole point; a teacher who prints an unnoticed 12-mark
+ * paper for a 50-mark exam finds out in the exam hall.
+ */
+export interface GeneratedPaper {
+  filename: string
+  base64: string
+  mime: string
+  /** False when some slot in the blueprint went unfilled. */
+  distributionMet?: boolean
+  /** Human-readable "type/difficulty: needed N, found M" entries. */
+  missingCategories?: string[]
+  /** Questions actually placed on the paper. */
+  totalQuestions?: number
+}
+
+/**
  * The coupling step: bind an uploaded `.docx` layout to the exam data that
  * fills it. Either point at an exam that already exists, or build one now from
  * a blueprint (creates SchoolExam → GeneratedExam → auto-selects questions),
@@ -176,7 +197,7 @@ export type GenerateExamPaperInput = z.input<typeof schema>
  */
 export async function generateExamPaperFromTemplate(
   raw: GenerateExamPaperInput
-): Promise<ActionResponse<{ filename: string; base64: string; mime: string }>> {
+): Promise<ActionResponse<GeneratedPaper>> {
   const ctx = await guard()
   if (!ctx.ok) return ctx.response
   const { schoolId, userId } = ctx
@@ -255,8 +276,20 @@ export async function generateExamPaperFromTemplate(
   }
 
   const doc = await generateDocument(input.documentTemplateId, generatedExamId)
-  if (!doc.success) {
+  if (!doc.success || !doc.data) {
     await db.schoolExam.deleteMany({ where: { id: examId, schoolId } })
+    return doc
   }
-  return doc
+
+  // The paper is real and keeps its exam row; the shortfall rides along so the
+  // caller can say so instead of downloading a short paper in silence.
+  return {
+    success: true,
+    data: {
+      ...doc.data,
+      distributionMet: selected.data?.distributionMet,
+      missingCategories: selected.data?.missingCategories,
+      totalQuestions: selected.data?.totalQuestions,
+    },
+  }
 }

@@ -9,11 +9,11 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
-  StreamCoursesContent,
-  StreamCoursesLoadingSkeleton,
-} from "@/components/stream/courses/content"
-import { getAllCatalogCourses } from "@/components/stream/data/catalog/get-all-courses"
-import { streamCoursesSearchParams } from "@/components/stream/list-params"
+  LumosCoursesContent,
+  LumosCoursesLoadingSkeleton,
+} from "@/components/lumos/courses/content"
+import { getAllCatalogCourses } from "@/components/lumos/data/catalog/get-all-courses"
+import { lumosCoursesSearchParams } from "@/components/lumos/list-params"
 
 export const dynamic = "force-dynamic"
 
@@ -27,14 +27,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dictionary = await getDictionary(lang)
 
   return {
-    title: dictionary.stream?.courses?.title || "All Courses",
+    title: dictionary.lumos?.courses?.title || "All Courses",
     description:
-      dictionary.stream?.courses?.description ||
+      dictionary.lumos?.courses?.description ||
       "Browse our comprehensive course catalog",
   }
 }
 
-export default async function StreamCoursesPage({
+export default async function LumosCoursesPage({
   params,
   searchParams,
 }: Props) {
@@ -44,17 +44,17 @@ export default async function StreamCoursesPage({
     getTenantContext(),
     auth(),
   ])
-  const search = streamCoursesSearchParams.parse(await searchParams)
+  const search = lumosCoursesSearchParams.parse(await searchParams)
 
   const userRole = session?.user?.role || null
   const userId = session?.user?.id || null
 
   return (
-    <Suspense fallback={<StreamCoursesLoadingSkeleton />}>
+    <Suspense fallback={<LumosCoursesLoadingSkeleton />}>
       <CoursesRenderer
         lang={lang}
         schoolId={schoolId}
-        dictionary={dictionary.stream}
+        dictionary={dictionary.lumos}
         search={search}
         userRole={userRole}
         userId={userId}
@@ -88,7 +88,7 @@ async function CoursesRenderer({
 }) {
   if (!schoolId) {
     return (
-      <StreamCoursesContent
+      <LumosCoursesContent
         dictionary={dictionary}
         lang={lang}
         courses={[]}
@@ -114,7 +114,7 @@ async function CoursesRenderer({
   })
 
   return (
-    <StreamCoursesContent
+    <LumosCoursesContent
       dictionary={dictionary}
       lang={lang}
       courses={rows}

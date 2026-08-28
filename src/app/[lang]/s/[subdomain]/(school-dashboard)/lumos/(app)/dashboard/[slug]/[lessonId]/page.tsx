@@ -8,10 +8,10 @@ import { auth } from "@/auth"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { LumosLessonContent } from "@/components/lumos/dashboard/lesson/content"
+import { getLessonContent } from "@/components/lumos/data/catalog/get-lesson-content"
+import { getLessonWithProgress } from "@/components/lumos/data/catalog/get-lesson-with-progress"
 import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
-import { StreamLessonContent } from "@/components/stream/dashboard/lesson/content"
-import { getLessonContent } from "@/components/stream/data/catalog/get-lesson-content"
-import { getLessonWithProgress } from "@/components/stream/data/catalog/get-lesson-with-progress"
 
 interface Props {
   params: Promise<{
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function StreamLessonPage({ params }: Props) {
+export default async function LumosLessonPage({ params }: Props) {
   const { lang, subdomain, slug, lessonId } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
@@ -57,13 +57,20 @@ export default async function StreamLessonPage({ params }: Props) {
   return (
     <>
       <BreadcrumbTitle title={lesson.title} />
-      <StreamLessonContent
-        dictionary={dictionary.stream || {}}
+      <LumosLessonContent
+        dictionary={dictionary.lumos || {}}
         lang={lang}
         schoolId={schoolId}
         subdomain={subdomain}
         lesson={lesson}
         quizQuestions={lessonContent.questions}
+        // Identifies the viewer in the player's forensic watermark. Without
+        // it the watermark renders nothing at all, which is how it silently
+        // did nothing until 2026-08-14.
+        viewer={{
+          id: session.user.id,
+          email: session.user.email ?? null,
+        }}
       />
     </>
   )

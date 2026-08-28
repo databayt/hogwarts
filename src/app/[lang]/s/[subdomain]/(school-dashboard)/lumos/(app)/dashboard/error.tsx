@@ -15,7 +15,7 @@ interface Props {
   reset: () => void
 }
 
-export default function StreamDashboardError({ error, reset }: Props) {
+export default function LumosDashboardError({ error, reset }: Props) {
   const params = useParams()
   const lang = (params?.lang as string) || "en"
   const subdomain = params?.subdomain as string
@@ -23,7 +23,7 @@ export default function StreamDashboardError({ error, reset }: Props) {
 
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error("Stream Dashboard Error:", error)
+    console.error("Lumos Dashboard Error:", error)
   }, [error])
 
   return (

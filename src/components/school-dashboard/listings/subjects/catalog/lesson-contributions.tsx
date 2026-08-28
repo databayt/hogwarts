@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { uploadVideo } from "@/components/stream/video/video-actions"
+import { uploadVideo } from "@/components/lumos/video/video-actions"
 
 import {
   submitAssignment,

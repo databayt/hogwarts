@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useMemo, useState } from "react"
 import type { DocumentTemplate } from "@prisma/client"
-import { Check, Loader2, Wand2, X } from "lucide-react"
+import { AlertTriangle, Check, Loader2, Wand2, X } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -67,6 +67,11 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Set when the paper downloaded but the bank could not fill the blueprint.
+  const [shortfall, setShortfall] = useState<{
+    missing: string[]
+    questions: number
+  } | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -100,6 +105,7 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
   const submit = async () => {
     setBusy(true)
     setError(null)
+    setShortfall(null)
     const res = await generateExamPaperFromTemplate(
       mode === "existing"
         ? {
@@ -118,12 +124,25 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
           }
     )
     setBusy(false)
-    if (res.success && res.data) {
-      downloadBase64(res.data.filename, res.data.base64, res.data.mime)
-      onOpenChange(false)
-    } else {
+    if (!res.success || !res.data) {
       setError(res.error ?? d?.failed ?? "Could not generate the paper.")
+      return
     }
+
+    downloadBase64(res.data.filename, res.data.base64, res.data.mime)
+
+    // Question selection degrades instead of failing — an under-stocked bank
+    // yields a SHORT paper, not an error. Closing the dialog here would hand a
+    // teacher a 12-mark paper for a 50-mark exam with nothing said, so hold it
+    // open and name the slots that went unfilled.
+    if (res.data.distributionMet === false) {
+      setShortfall({
+        missing: res.data.missingCategories ?? [],
+        questions: res.data.totalQuestions ?? 0,
+      })
+      return
+    }
+    onOpenChange(false)
   }
 
   const dateFmt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", {
@@ -296,6 +315,28 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
                   </Badge>
                 ))}
               </div>
+            </div>
+          )}
+
+          {shortfall && (
+            <div className="space-y-1 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+              <p className="flex items-center gap-2 text-sm font-medium text-amber-600">
+                <AlertTriangle className="size-4" />
+                {d?.shortfallTitle}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {(d?.shortfallBody ?? "").replace(
+                  "{count}",
+                  String(shortfall.questions)
+                )}
+              </p>
+              {shortfall.missing.length > 0 && (
+                <ul className="text-muted-foreground list-inside list-disc text-xs">
+                  {shortfall.missing.map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 

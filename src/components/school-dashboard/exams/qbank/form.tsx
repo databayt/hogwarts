@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
 import { useForm, type UseFormReturn } from "react-hook-form"
@@ -42,6 +43,7 @@ import {
   DIFFICULTY_LEVELS,
   QUESTION_TYPES,
 } from "./config"
+import { LessonAttachField } from "./lesson-attach-field"
 import type { QuestionBankDTO } from "./types"
 import { questionBankSchema } from "./validation"
 
@@ -74,6 +76,13 @@ export function QuestionBankForm({
   const [selectedType, setSelectedType] = useState<QuestionType>(
     initialData?.questionType || QuestionType.MULTIPLE_CHOICE
   )
+  // Catalog lesson attachment. Kept OUT of react-hook-form: the resolver is the
+  // question's discriminated union, which deliberately knows nothing about
+  // catalog FKs. Appended to the FormData in onSubmit instead.
+  const [catalogLessonId, setCatalogLessonId] = useState<string>(
+    initialData?.catalogLessonId ?? ""
+  )
+  const params = useParams<{ lang?: string }>()
 
   const form = useForm({
     resolver: zodResolver(questionBankSchema),
@@ -121,6 +130,7 @@ export function QuestionBankForm({
 
   const watchType = form.watch("questionType")
   const watchDifficulty = form.watch("difficulty")
+  const watchSubjectId = form.watch("subjectId")
 
   // Update selected type when form value changes
   useEffect(() => {
@@ -154,6 +164,10 @@ export function QuestionBankForm({
       if (initialData?.id) {
         formData.append("id", initialData.id)
       }
+
+      // Always sent, empty included: on update an empty value is an explicit
+      // detach, while omitting the field would leave the old lesson attached.
+      formData.append("catalogLessonId", catalogLessonId)
 
       const result = initialData?.id
         ? await updateQuestion(formData)
@@ -220,6 +234,25 @@ export function QuestionBankForm({
                 <FormMessage />
               </FormItem>
             )}
+          />
+
+          {/* Catalog lesson attachment — what surfaces this question in the
+              lesson's Lumos practice quiz. */}
+          <LessonAttachField
+            subjectId={watchSubjectId}
+            value={catalogLessonId}
+            onChange={setCatalogLessonId}
+            lang={params?.lang}
+            disabled={isView}
+            labels={{
+              lesson: t?.attachLesson,
+              chapter: t?.attachChapter,
+              none: t?.attachNone,
+              hint: t?.attachHint,
+              pickSubject: t?.attachPickSubject,
+              loading: t?.attachLoading,
+              empty: t?.attachEmpty,
+            }}
           />
 
           {/* Question Type */}

@@ -3,15 +3,15 @@
 
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getSchoolEnrollments } from "@/components/stream/settings/enrollments/actions"
-import { EnrollmentsContent } from "@/components/stream/settings/enrollments/content"
-import { requireSettingsAccess } from "@/components/stream/settings/guard"
+import { getSchoolEnrollments } from "@/components/lumos/settings/enrollments/actions"
+import { EnrollmentsContent } from "@/components/lumos/settings/enrollments/content"
+import { requireSettingsAccess } from "@/components/lumos/settings/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
-export default async function StreamEnrollmentsPage({ params }: Props) {
+export default async function LumosEnrollmentsPage({ params }: Props) {
   const { lang } = await params
   await requireSettingsAccess(lang)
 
@@ -22,7 +22,7 @@ export default async function StreamEnrollmentsPage({ params }: Props) {
 
   return (
     <EnrollmentsContent
-      dictionary={dictionary.stream || {}}
+      dictionary={dictionary.lumos || {}}
       lang={lang}
       enrollments={enrollments}
     />

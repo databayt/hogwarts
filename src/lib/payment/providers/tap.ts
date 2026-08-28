@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { tapWebhookUrl } from "../tap-api"
 import type {
   CheckoutResult,
   CreateCheckoutParams,
@@ -28,9 +29,14 @@ const TAP_API_URL = "https://api.tap.company/v2/charges"
  * Gulf region. Required for the King Fahad Schools (Saudi) pilot since
  * Stripe card flow is sub-optimal there.
  *
- * Activation: set `TAP_SECRET_KEY` (and optionally `TAP_WEBHOOK_SECRET` for
- * webhook signature verification). Until then `isConfigured()` returns false
- * and the provider router skips this gateway.
+ * Activation: set `TAP_SECRET_KEY`. Until then `isConfigured()` returns false
+ * and the provider router skips this gateway. The same secret key also signs
+ * Tap's webhooks (see `../tap-api.ts`) — there is no separate webhook secret.
+ *
+ * Redirect contract: Tap has ONE redirect URL and appends `?tap_id=chg_…` to
+ * it for success AND failure alike, so `successUrl` is where the payer lands
+ * either way and the landing page must read the charge back before it says
+ * "paid" (`verifyReturnedFeePayment`). `cancelUrl` is unused by Tap.
  */
 export const tapProvider: PaymentProvider = {
   id: "tap",
@@ -82,9 +88,9 @@ export const tapProvider: PaymentProvider = {
         id: (params.metadata?.tapSourceId as string | undefined) ?? "src_all",
       },
       redirect: { url: params.successUrl },
-      post: {
-        url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/webhooks/tap`,
-      },
+      // Tap POSTs the final charge to this URL (captured or failed only). It
+      // must be an absolute public origin — Tap rejects localhost/relative.
+      post: { url: tapWebhookUrl() },
       metadata: {
         ...params.metadata,
         context: params.context,

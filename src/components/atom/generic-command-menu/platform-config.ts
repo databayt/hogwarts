@@ -250,8 +250,8 @@ export const platformSearchConfig: SearchConfig = {
       breadcrumb: ["Platform"],
     },
     {
-      id: "stream",
-      title: "Stream",
+      id: "lumos",
+      title: "Lumos",
       type: "navigation",
       href: "/lumos",
       icon: Video,

@@ -5,7 +5,7 @@
 import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import type { ArchiveScope } from "@/lib/archive-scope"
 import { asset } from "@/lib/asset-url"
@@ -65,6 +65,7 @@ function StudentsTableInner({
 
   // Translations with fallbacks
   const t = {
+    unplaced: dictionary?.unplaced || "Unplaced (no grade or class)",
     fullName: dictionary?.fullName || "Name",
     section: dictionary?.section || "Section",
     status: dictionary?.status || "Status",
@@ -235,6 +236,20 @@ function StudentsTableInner({
   const [isSyncing, setIsSyncing] = useState(false)
   const hasUnassigned = data.some((s) => s.status === "unassigned")
 
+  const searchParams = useSearchParams()
+  const isUnplacedFilter = searchParams.get("unplaced") === "any"
+  const toggleUnplaced = useCallback(() => {
+    const next = new URLSearchParams(searchParams.toString())
+    if (isUnplacedFilter) {
+      next.delete("unplaced")
+    } else {
+      next.set("unplaced", "any")
+    }
+    // Not shallow: the filter is applied server-side, so the page has to
+    // re-query rather than just rewrite the URL.
+    router.push(`?${next.toString()}`)
+  }, [searchParams, isUnplacedFilter, router])
+
   const handleSyncGrades = useCallback(async () => {
     setIsSyncing(true)
     try {
@@ -345,21 +360,40 @@ function StudentsTableInner({
         entityName="students"
         translations={toolbarTranslations}
         additionalActions={
-          permissions.showBulkActions && hasUnassigned ? (
+          <>
+            {/*
+              Unplaced = no grade or no homeroom seat. Worth a permanent chip
+              rather than a hidden URL param: a student with no grade is
+              assigned no fees and raises no invoices, so they never appear in
+              any money screen and nothing else surfaces them.
+            */}
             <Button
-              variant="outline"
+              variant={isUnplacedFilter ? "default" : "outline"}
               size="icon"
               className="h-9 w-9 rounded-full"
-              onClick={handleSyncGrades}
-              disabled={isSyncing}
-              aria-label={(dictionary as any)?.syncGrades || "Sync Grades"}
-              title={(dictionary as any)?.syncGrades || "Sync Grades"}
+              onClick={toggleUnplaced}
+              aria-pressed={isUnplacedFilter}
+              aria-label={t.unplaced}
+              title={t.unplaced}
             >
-              <Icons.refresh
-                className={cn("h-4 w-4", isSyncing && "animate-spin")}
-              />
+              <Icons.triangleAlert className="h-4 w-4" />
             </Button>
-          ) : undefined
+            {permissions.showBulkActions && hasUnassigned ? (
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-full"
+                onClick={handleSyncGrades}
+                disabled={isSyncing}
+                aria-label={(dictionary as any)?.syncGrades || "Sync Grades"}
+                title={(dictionary as any)?.syncGrades || "Sync Grades"}
+              >
+                <Icons.refresh
+                  className={cn("h-4 w-4", isSyncing && "animate-spin")}
+                />
+              </Button>
+            ) : null}
+          </>
         }
       />
 

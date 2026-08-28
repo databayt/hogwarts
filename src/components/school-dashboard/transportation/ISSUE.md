@@ -6,6 +6,37 @@
 **Tests:** **331/331 unit tests green across 19 files** — added `optimize.test.ts` (ETA + Haversine tiers), `absence.test.ts` (absentee union), `polyline.test.ts` (decoder); updated `settings`/`trips-state-machine` for new fields.
 **Plans:** advanced upgrade `~/.claude/plans/let-s-boost-the-transportation-happy-papert.md`; base plans below.
 
+## Resolution Log — 2026-08-16 (landing page + nested-page split)
+
+Structural only — no schema, no server-action, no RBAC change.
+
+- **`/transportation` is now a landing page** (`landing/`, 7 server sections): hero with the school-bus
+  line drawing, this school's live fleet counts, a four-card feature grid, a capabilities band, an
+  audience trio (transport office / families / drivers), a three-step setup path, and a closing CTA.
+  Mirrors the lumos home structure; the audience split follows the shape school-transport products
+  converge on (BusRight segments its homepage the same way).
+- **The fleet overview moved to `/transportation/dashboard`**, and every ops surface moved into a new
+  `(app)` route group whose layout renders the new `nav.tsx` — one heading + tab strip across
+  dashboard / vehicles / routes / drivers / assignments / trips / reports / fees / settings. Tabs are
+  filtered to what the signed-in role can actually open, so a tab never redirects.
+- **`/me` deliberately stays outside the group** (end-user surface, no ops chrome), and STUDENT/GUARDIAN
+  hitting `/transportation` are redirected straight to it.
+- **`content.tsx` lost its heading + nav-button row** — the tab strip supersedes both.
+- **i18n**: `transportation.landing.*` added to `dictionaries/{en,ar}/transportation.json` in the same
+  change (44 strings each); every section is dictionary-driven with English fallbacks.
+- **Not touched**: `transportationRevalidatePath()` (route groups are omitted from cache paths, so all
+  existing targets stayed valid) and the sidebar entry (`/transportation` still points at the section
+  front door, exactly as the lumos entry points at `/lumos`).
+
+**Verified:** `tsc --noEmit` clean; 331 transportation unit tests green; browser-verified on
+`demo.localhost:3000` in **en** and **ar/RTL** as ADMIN — landing, tab strip, and `/dashboard` all render
+with real data (5 vehicles / 5 routes / 5 drivers / 145 assignments).
+
+**Pre-existing, NOT from this change:** `src/tests/i18n/hardcoded-ratchet.test.ts` fails on
+`bilingualField` (201 > baseline 111) — every offender is `School.nameEn` plumbing in
+`school-marketing`/`template/site-header`/`translation/registry`. Transportation contributes **0**
+offenders. The baseline was never raised when `nameEn` landed.
+
 ## Resolution Log — 2026-06-18 (advanced door-to-door upgrade)
 
 Five independently-shippable phases (full plan in the plan file). All additive — no drops, no breaking changes.
