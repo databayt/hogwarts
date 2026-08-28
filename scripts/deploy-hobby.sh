@@ -33,10 +33,24 @@ const fs = require("fs");
 const p = ".vercel/output/config.json";
 const c = JSON.parse(fs.readFileSync(p, "utf8"));
 const before = c.routes.length;
-c.routes = c.routes.filter(r => !JSON.stringify(r).includes(".segment") || !!r.handle);
+
+// Drop ONLY the per-page handlers for segment-prefetch requests.
+//
+// The middlewarePath/handle guard is load-bearing, not defensive tidiness. The
+// middleware route matches ".segments/....segment.rsc" as an OPTIONAL group in
+// its own src regex, so a naive substring filter deletes it — which silently
+// removes the proxy, and with it all tenant subdomain routing. Every host then
+// serves the marketing site and looks fine while being wrong. That shipped once.
+c.routes = c.routes.filter(r => {
+  if (r.middlewarePath || r.handle) return true;
+  return !JSON.stringify(r).includes(".segment");
+});
+
+const mw = c.routes.filter(r => r.middlewarePath).length;
+console.log(`    routes ${before} -> ${c.routes.length} (max 2048), middleware routes: ${mw}`);
+if (mw !== 1) { console.error("    ABORT: middleware route missing — tenant routing would break"); process.exit(1); }
+if (c.routes.length > 2048) { console.error("    ABORT: still over the route cap"); process.exit(1); }
 fs.writeFileSync(p, JSON.stringify(c));
-console.log(`    routes ${before} -> ${c.routes.length} (max 2048)`);
-if (c.routes.length > 2048) { console.error("    STILL OVER THE LIMIT — deploy will be rejected"); process.exit(1); }
 '
 
 echo "==> deploying (single archive: the free plan caps files-per-day, not size)"
