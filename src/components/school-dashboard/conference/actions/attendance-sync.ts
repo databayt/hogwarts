@@ -50,7 +50,6 @@ export async function syncConferenceAttendance(
         sectionId: true,
         timetableId: true,
         scheduledStart: true,
-        scheduledEnd: true,
         actualStart: true,
         school: { select: { conferenceAttendanceSync: true } },
       },
@@ -116,15 +115,21 @@ export async function syncConferenceAttendance(
 
     // A student still in the room when it closes may have no `leftAt` at all:
     // the webhook writes it on `participant_left`, the sync runs from
-    // `room_finished`, and the two events have no guaranteed order. So an
-    // unset `leftAt` is read as "stayed until the session ended", NOT as a
+    // `room_finished`, and the two events have no guaranteed order. So an unset
+    // `leftAt` is read as "still in the room when we reconciled", NOT as a
     // zero-length visit — otherwise the floor below would mark the student who
-    // sat through the whole lesson absent, and only the ones who left early
-    // present. `durationSeconds` has the same hazard and is deliberately not
-    // used as the source here.
-    const sessionEnd = session.scheduledEnd ?? new Date()
+    // sat through the whole lesson absent and only the ones who left early
+    // present. `durationSeconds` carries the same hazard and is deliberately
+    // not the source here.
+    //
+    // The open end is the RECONCILIATION CLOCK, not `scheduledEnd`. A class that
+    // runs over is ordinary, and against `scheduledEnd` a student who joined
+    // during the overtime scores a NEGATIVE duration — absent, for attending.
+    // `syncedAt` cannot precede a join, and the 30-minute backstop cron only
+    // ever errs generous.
+    const syncedAt = new Date()
     const attended = (joinedAt: Date, leftAt: Date | null): boolean => {
-      const end = leftAt ?? sessionEnd
+      const end = leftAt ?? syncedAt
       const minutes = (end.getTime() - joinedAt.getTime()) / 60_000
       return minutes >= MIN_PRESENCE_MINUTES
     }

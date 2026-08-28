@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
 import { resolveActiveTerm } from "@/lib/term-resolver"
+import { schoolDayOfWeek } from "@/components/school-dashboard/conference/day-window"
 import {
   attachLiveClasses,
   type LiveClassJoinInfo,
@@ -76,33 +77,53 @@ export async function GET(
       },
     })
 
-    // Resolve today's live classes for these slots. Mobile previously returned
-    // raw slots with no live-class field and had no conference endpoint at all,
-    // so a phone could not discover that a class was online — let alone join it.
+    // Resolve today's live classes. Mobile previously returned raw slots with no
+    // live-class field and had no conference endpoint at all, so a phone could
+    // not discover that a class was online — let alone join it.
     //
-    // `attachLiveClasses` is TODAY-scoped by nature (a session exists for a
-    // specific date), so a slot on another weekday correctly comes back with
-    // `live_class: null`. Best-effort: a failure here must still return the
-    // timetable, which is what the screen is actually for.
+    // ONLY today's slots are passed in, and that restriction is load-bearing.
+    // `attachLiveClasses` resolves most-specific-first, and only its first tier
+    // (an exact `timetableId` match) is day-aware: tier 2 matches any of TODAY's
+    // sessions for the same (section, subject), and tier 3 — the standing
+    // `ConferenceLink` — carries no day at all. Hand it a whole week, as this
+    // route does by default, and Monday's maths row inherits Thursday's session
+    // while a standing link stamps every weekday row of that subject. The web
+    // callers never hit this because they only ever pass one day.
+    //
+    // Best-effort: a failure here must still return the timetable, which is
+    // what the screen is actually for.
     const live = new Map<string, LiveClassJoinInfo>()
     try {
       // resolveActiveTerm returns { term, source } — the term itself may be null
       // for a school with no configured academic year.
-      const { term } = await resolveActiveTerm(auth.schoolId)
+      const [{ term }, school] = await Promise.all([
+        resolveActiveTerm(auth.schoolId),
+        db.school.findUnique({
+          where: { id: auth.schoolId },
+          select: { timezone: true },
+        }),
+      ])
       if (term) {
-        const attached = await attachLiveClasses(
-          auth.schoolId,
-          term.id,
-          new Date(),
-          slots.map((s) => ({
-            timetableId: s.id,
-            sectionId: s.section?.id ?? null,
-            subjectId: s.subject?.id ?? null,
-          }))
-        )
-        for (const row of attached) {
-          if (row.liveClass && row.timetableId) {
-            live.set(row.timetableId, row.liveClass)
+        const now = new Date()
+        // The school's weekday, not the server's — a UTC read puts a Sudanese
+        // school on the wrong day for the hours either side of midnight.
+        const today = schoolDayOfWeek(school?.timezone ?? "UTC", now)
+        const todaySlots = slots.filter((s) => s.dayOfWeek === today)
+        if (todaySlots.length > 0) {
+          const attached = await attachLiveClasses(
+            auth.schoolId,
+            term.id,
+            now,
+            todaySlots.map((s) => ({
+              timetableId: s.id,
+              sectionId: s.section?.id ?? null,
+              subjectId: s.subject?.id ?? null,
+            }))
+          )
+          for (const row of attached) {
+            if (row.liveClass && row.timetableId) {
+              live.set(row.timetableId, row.liveClass)
+            }
           }
         }
       }

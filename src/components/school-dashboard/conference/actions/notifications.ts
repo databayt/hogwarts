@@ -235,6 +235,11 @@ async function dispatch(
         sessionId,
         sectionId: session.sectionId,
         url,
+        // The push worker reads `deep_link`, not `url` (push-fcm.ts) — without
+        // it a push notification arrives and taps nowhere. A RELATIVE route is
+        // what a mobile client wants anyway: it routes in-app rather than
+        // opening a browser at some canonical host.
+        deep_link: url,
       },
       targetUserIds: userIds,
     })
