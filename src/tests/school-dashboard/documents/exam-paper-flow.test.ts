@@ -163,6 +163,46 @@ describe("generateExamPaperFromTemplate", () => {
   })
 })
 
+describe("a blueprint the bank cannot fill at all", () => {
+  beforeEach(() => {
+    signInAs("ADMIN")
+    stubBlueprintPath()
+  })
+
+  /**
+   * A PARTIAL shortfall has always named the unfilled slots. A TOTAL one used
+   * to return a bare "no matching questions", which is the same dead end minus
+   * the only information that gets a teacher out of it — which question types
+   * to go add. The per-slot breakdown exists either way; it was just dropped.
+   */
+  it("passes the per-slot breakdown through to the caller", async () => {
+    vi.mocked(autoGenerateExamQuestions).mockResolvedValue({
+      success: false,
+      error: "QUESTION_BANK_EMPTY",
+      details: "MULTIPLE_CHOICE (EASY): need 5, have 0; ESSAY (HARD): need 2, have 0",
+    } as never)
+
+    const res = await generateExamPaperFromTemplate(blueprintInput)
+
+    expect(res.success).toBe(false)
+    expect(res.error).toBe("QUESTION_BANK_EMPTY")
+    expect(res.details).toContain("MULTIPLE_CHOICE (EASY): need 5, have 0")
+    expect(res.details).toContain("ESSAY (HARD): need 2, have 0")
+  })
+
+  it("still rolls the exam back rather than leaving it on the schedule", async () => {
+    vi.mocked(autoGenerateExamQuestions).mockResolvedValue({
+      success: false,
+      error: "QUESTION_BANK_EMPTY",
+      details: "MULTIPLE_CHOICE (EASY): need 5, have 0",
+    } as never)
+
+    await generateExamPaperFromTemplate(blueprintInput)
+
+    expect(db.schoolExam.deleteMany).toHaveBeenCalled()
+  })
+})
+
 describe("distribution shortfall", () => {
   beforeEach(() => vi.clearAllMocks())
 

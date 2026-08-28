@@ -162,7 +162,16 @@ export async function autoGenerateExamQuestions(
       // The most common way this flow fails: the blueprint asks for question
       // types the bank has none of. A code, not a sentence — this reaches an
       // Arabic-speaking teacher through two different dialogs.
-      return actionError(ACTION_ERRORS.QUESTION_BANK_EMPTY)
+      //
+      // The per-slot shortfall rides along in `details`. A PARTIAL shortfall
+      // has always named the unfilled slots; a TOTAL one used to say only
+      // "no matching questions", which is the same dead end with none of the
+      // information needed to escape it — the slot list says exactly which
+      // question types to add ("MULTIPLE_CHOICE (EASY): need 5, have 0").
+      return actionError(
+        ACTION_ERRORS.QUESTION_BANK_EMPTY,
+        result.metadata.missingCategories.join("; ") || undefined
+      )
     }
 
     const totalMarks = selected.reduce((sum, q) => sum + Number(q.points), 0)

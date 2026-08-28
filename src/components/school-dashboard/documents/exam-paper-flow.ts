@@ -272,7 +272,13 @@ export async function generateExamPaperFromTemplate(
   if (!selected.success) {
     // Deleting the exam cascades to the GeneratedExam (onDelete: Cascade).
     await db.schoolExam.deleteMany({ where: { id: examId, schoolId } })
-    return { success: false, error: selected.error }
+    // `details` carries the unfilled slots — dropping it here is what made a
+    // failed generate a dead end for the caller.
+    return {
+      success: false,
+      error: selected.error,
+      details: selected.details,
+    }
   }
 
   const doc = await generateDocument(input.documentTemplateId, generatedExamId)

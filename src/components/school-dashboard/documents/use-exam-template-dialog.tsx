@@ -68,6 +68,8 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Slots the bank could not fill when NOTHING could be selected.
+  const [unfilled, setUnfilled] = useState<string[]>([])
   // Set when the paper downloaded but the bank could not fill the blueprint.
   const [shortfall, setShortfall] = useState<{
     missing: string[]
@@ -107,6 +109,7 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
     setBusy(true)
     setError(null)
     setShortfall(null)
+    setUnfilled([])
     const res = await generateExamPaperFromTemplate(
       mode === "existing"
         ? {
@@ -135,6 +138,10 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
           d?.failed ?? "Could not generate the paper."
         )
       )
+      // A blueprint the bank cannot fill AT ALL carries the same per-slot
+      // breakdown a partial shortfall does. Without it "no matching questions"
+      // is a dead end; with it the teacher knows which question types to add.
+      if (res.details) setUnfilled(res.details.split("; ").filter(Boolean))
       return
     }
 
@@ -349,7 +356,18 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
             </div>
           )}
 
-          {error && <p className="text-destructive text-sm">{error}</p>}
+          {error && (
+            <div className="space-y-1">
+              <p className="text-destructive text-sm">{error}</p>
+              {unfilled.length > 0 && (
+                <ul className="text-muted-foreground list-inside list-disc text-xs">
+                  {unfilled.map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
