@@ -19,8 +19,15 @@ import {
  * - `{{#questions}}…{{/questions}}` — one flat, continuously numbered list.
  * - `{{#sections}}…{{/sections}}` — the same questions grouped by type, which
  *   is how a real school paper reads ("Section 1: Multiple choice"). Each
- *   section carries its own mark total and its questions keep the paper-wide
+ *   section carries its own mark total, and its questions keep the paper-wide
  *   `order` alongside a within-section number.
+ *
+ * `order` is the position on the PRINTED page, not the exam-wide order the
+ * questions were selected in — those differ whenever selection order disagrees
+ * with the pedagogical section order, which is the normal case. Both layouts
+ * therefore read the questions in the same sequence and number them
+ * identically; the persisted `GeneratedExamQuestion.order` (what the answer key
+ * and the online session are keyed on) is untouched.
  *
  * Both are always present; a template uses whichever it needs and the unused
  * one costs nothing. Loop tags take the configured `{{ }}` delimiters — a
@@ -137,8 +144,9 @@ export async function resolveExamPaperData(
     }
   })
 
-  // Group into sections, preserving each question's paper-wide `order` so a
-  // sectioned layout and a flat one number identically.
+  // Group into sections. This regrouping — not the order questions were
+  // selected in — is the order the paper READS in, so it also decides the
+  // printed numbers below.
   const byType = new Map<string, PaperQuestion[]>()
   for (const q of questions) {
     const bucket = byType.get(q.type)
@@ -154,6 +162,11 @@ export async function resolveExamPaperData(
     ),
   ]
 
+  // Number by position on the page, continuously across sections. Selection
+  // order walks the distribution object's keys, so it routinely disagrees with
+  // SECTION_ORDER — leaving `order` alone printed papers reading
+  // "4. 5. 6. 7. 8." followed by "1. 2. 3.".
+  let printed = 0
   const sections = orderedTypes.map((type, i) => {
     const items = byType.get(type) ?? []
     return {
@@ -162,9 +175,18 @@ export async function resolveExamPaperData(
       title: label(type as QuestionType),
       count: items.length,
       marks: items.reduce((sum, q) => sum + (Number(q.marks) || 0), 0),
-      questions: items.map((q, n) => ({ ...q, numberInSection: n + 1 })),
+      questions: items.map((q, n) => ({
+        ...q,
+        order: ++printed,
+        numberInSection: n + 1,
+      })),
     }
   })
+
+  // The flat list is the sections flattened, so `{{#questions}}` and
+  // `{{#sections}}` present the same questions in the same sequence with the
+  // same numbers — which is what "both layouts number identically" requires.
+  const orderedQuestions = sections.flatMap((s) => s.questions)
 
   return {
     examTitle: gen.exam?.title ?? "",
@@ -179,9 +201,9 @@ export async function resolveExamPaperData(
     schoolName: school?.name ?? "",
     schoolNameEn: school?.nameEn ?? school?.name ?? "",
     schoolLogo: school?.logoUrl ?? "",
-    questionCount: questions.length,
+    questionCount: orderedQuestions.length,
     sectionCount: sections.length,
-    questions,
+    questions: orderedQuestions,
     sections,
   }
 }
