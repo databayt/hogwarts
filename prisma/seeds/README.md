@@ -34,7 +34,7 @@ DB error is swallowed and the process exits 0, so a Neon hiccup never fails the 
 
 - **Fast path** — when the demo is already fully seeded (`≥500 students AND ≥100 classes`,
   see `getDemoSeedStatus` in `index.ts`) it skips the heavy seed and only re-asserts the
-  critical accounts (`admin@databayt.org`, and the protected `dev@databayt.org` DEVELOPER
+  critical accounts (`admin@balqalam.com`, and the protected `dev@balqalam.com` DEVELOPER
   role per `.claude/rules/accounts.md`). A couple of queries, a few seconds.
 - **Slow path** — an empty or partially-seeded demo runs the full `seedMain`, which resumes
   only the missing work (every phase is idempotent).

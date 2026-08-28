@@ -209,7 +209,7 @@ now re-checked and consumed inside the account-creating transaction.
 
 ## 2026-07-17 — optimize pass: P0 RBAC + 2 reported bugs + i18n (local main, NOT committed)
 
-Browser-verified on `demo.localhost:3000/ar/students` (admin@databayt.org).
+Browser-verified on `demo.localhost:3000/ar/students` (admin@balqalam.com).
 
 ### P0 — auth holes closed (unauthenticated PII read/write)
 

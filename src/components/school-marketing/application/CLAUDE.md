@@ -50,4 +50,4 @@ Public multi-step application form for prospective students (5 steps: attachment
 1. Update parent `../ISSUE.md` -- check off completed items, add new issues
 2. Update parent `../README.md` -- if file structure changed
 3. Run `pnpm tsc --noEmit` to verify no regressions
-4. Test: `applicant@databayt.org` (pw: 1234) on `demo.localhost:3000/application`
+4. Test: `applicant@balqalam.com` (pw: 1234) on `demo.localhost:3000/application`

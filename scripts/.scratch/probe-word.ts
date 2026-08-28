@@ -12,7 +12,7 @@ const [route, word] = [process.argv[2], process.argv[3]]
   await p.goto("http://demo.localhost:3000/ar/login", { timeout: 90000 })
   await p.waitForLoadState("load")
   await p.waitForTimeout(1000)
-  await p.locator('input[name="identifier"]').fill("accountant@databayt.org")
+  await p.locator('input[name="identifier"]').fill("accountant@balqalam.com")
   await p.locator('input[name="password"]').fill("1234")
   await p.getByRole("button", { name: /^دخول$/ }).click()
   await p.waitForURL((u) => !/\/login/.test(u.toString()), { timeout: 60000 })

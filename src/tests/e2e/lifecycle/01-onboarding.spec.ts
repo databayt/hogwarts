@@ -108,7 +108,7 @@ test.describe
 
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().startsWith("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -136,7 +136,7 @@ test.describe
     // Login
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().startsWith("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -203,7 +203,7 @@ test.describe
     // Re-login and navigate to branding step
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().startsWith("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -228,7 +228,7 @@ test.describe
     // Re-login and navigate to import step
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().startsWith("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -259,7 +259,7 @@ test.describe
     // Re-login
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().startsWith("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -363,7 +363,7 @@ test.describe
     // Re-login
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().startsWith("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")

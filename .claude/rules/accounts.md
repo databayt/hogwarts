@@ -15,7 +15,11 @@ These accounts have IMMUTABLE roles — NEVER write code that changes them:
 
 | Email              | Role      | Purpose                        |
 | ------------------ | --------- | ------------------------------ |
-| `dev@databayt.org` | DEVELOPER | Platform admin, SaaS dashboard |
+| `dev@balqalam.com` | DEVELOPER | Platform admin, SaaS dashboard |
+
+The legacy `dev@databayt.org` address stays in `PROTECTED_EMAILS` until every
+environment has run `prisma/seeds/migrate-login-domain.ts` — an unmigrated row
+must not lose its DEVELOPER role.
 
 ## Resettable Accounts
 
@@ -23,8 +27,8 @@ These accounts CAN be reset (manually via seed scripts) for fresh testing:
 
 | Email                    | Role | Purpose                    |
 | ------------------------ | ---- | -------------------------- |
-| `user@databayt.org`      | USER | Onboarding wizard testing  |
-| `applicant@databayt.org` | USER | Application wizard testing |
+| `user@balqalam.com`      | USER | Onboarding wizard testing  |
+| `applicant@balqalam.com` | USER | Application wizard testing |
 
 ## Rules
 

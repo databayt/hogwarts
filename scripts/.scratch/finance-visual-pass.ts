@@ -10,10 +10,10 @@ const OUT = `/private/tmp/claude-501/-Users-abdout-hogwarts/c93b394c-c33c-4691-8
 mkdirSync(OUT, { recursive: true })
 
 const CREDS: Record<string, string> = {
-  accountant: "accountant@databayt.org",
-  admin: "admin@databayt.org",
-  teacher: "teacher@databayt.org",
-  student: "student@databayt.org",
+  accountant: "accountant@balqalam.com",
+  admin: "admin@balqalam.com",
+  teacher: "teacher@balqalam.com",
+  student: "student@balqalam.com",
 }
 
 const ALL_ROUTES = [

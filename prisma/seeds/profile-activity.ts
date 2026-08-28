@@ -41,52 +41,52 @@ import { logSuccess, logWarning } from "./utils"
  */
 const BIO_NORMALIZATION: Array<{ email: string; from: string; to: string }> = [
   {
-    email: "dev@databayt.org",
+    email: "dev@balqalam.com",
     from: "Potions Master and Head of Slytherin House.",
     to: HP_CHARACTERS.dev.bio,
   },
   {
-    email: "admin@databayt.org",
+    email: "admin@balqalam.com",
     from: "Headmaster & Chief Warlock\nTransfiguration & Ancient Magic",
     to: HP_CHARACTERS.admin.bio,
   },
   {
-    email: "accountant@databayt.org",
+    email: "accountant@balqalam.com",
     from: "Charms Master and Head of Ravenclaw House.",
     to: HP_CHARACTERS.accountant.bio,
   },
   {
-    email: "teacher@databayt.org",
+    email: "teacher@balqalam.com",
     from: "Deputy Headmistress and Transfiguration professor.",
     to: HP_CHARACTERS.teacher.bio,
   },
   {
-    email: "student@databayt.org",
+    email: "student@balqalam.com",
     from: "The Boy Who Lived.",
     to: HP_CHARACTERS.student.bio,
   },
   {
-    email: "parent@databayt.org",
+    email: "parent@balqalam.com",
     from: "Gryffindor alumni. Marauder.",
     to: HP_CHARACTERS.guardian0.bio,
   },
   {
-    email: "parent1@databayt.org",
+    email: "parent1@balqalam.com",
     from: "Exceptionally gifted witch. Known for her sacrifice.",
     to: HP_CHARACTERS.guardian1.bio,
   },
   {
-    email: "staff@databayt.org",
+    email: "staff@balqalam.com",
     from: "Keeper of Keys and Grounds at Hogwarts.",
     to: HP_CHARACTERS.staff.bio,
   },
   {
-    email: "user@databayt.org",
+    email: "user@balqalam.com",
     from: "Gryffindor student. Future Herbology professor.",
     to: HP_CHARACTERS.user.bio,
   },
   {
-    email: "applicant@databayt.org",
+    email: "applicant@balqalam.com",
     from: "Ravenclaw student. Sees what others cannot.",
     to: HP_CHARACTERS.applicant.bio,
   },
@@ -105,12 +105,12 @@ function mulberry32(seed: number) {
 }
 
 const DEMO_EMAILS = {
-  admin: "admin@databayt.org",
-  teacher: "teacher@databayt.org",
-  student: "student@databayt.org",
-  parent: "parent@databayt.org",
-  staff: "staff@databayt.org",
-  accountant: "accountant@databayt.org",
+  admin: "admin@balqalam.com",
+  teacher: "teacher@balqalam.com",
+  student: "student@balqalam.com",
+  parent: "parent@balqalam.com",
+  staff: "staff@balqalam.com",
+  accountant: "accountant@balqalam.com",
 } as const
 
 /** School days (Sun–Thu; Sudan weekend is Fri+Sat) of the current year, UTC. */

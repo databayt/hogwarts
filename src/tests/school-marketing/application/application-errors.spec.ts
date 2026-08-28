@@ -45,7 +45,7 @@ async function loginAsStudent(
   page: import("@playwright/test").Page
 ): Promise<boolean> {
   const loginPage = new LoginPage(page, "en")
-  await loginPage.login("student@databayt.org", "1234")
+  await loginPage.login("student@balqalam.com", "1234")
   await page.waitForLoadState("domcontentloaded")
   return !checkProtocolError(page)
 }

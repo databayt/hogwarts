@@ -287,7 +287,7 @@ Add rewrite rules or alias routes in Next.js middleware to map `/api/students` �
    - The iOS `TenantContext` should verify its schoolId matches the JWT
 
 5. **Test with demo accounts**:
-   - `admin@databayt.org` / `1234` → School: نموذج (demo)
+   - `admin@balqalam.com` / `1234` → School: نموذج (demo)
    - Backend has: 3,109 users, 58k attendance records, 1,120 timetable slots, 400 exams, 79 conversations
 
 ### Agents & Skills

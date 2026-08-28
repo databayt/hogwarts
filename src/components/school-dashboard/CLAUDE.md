@@ -52,4 +52,4 @@ Admin control center for individual schools (30+ sub-features, 85% complete). Ev
 
 1. Update the sub-feature's `ISSUE.md` and `README.md` if they exist
 2. Run `pnpm tsc --noEmit` to verify no regressions
-3. Test: `admin@databayt.org` (pw: 1234) on `demo.localhost:3000`
+3. Test: `admin@balqalam.com` (pw: 1234) on `demo.localhost:3000`

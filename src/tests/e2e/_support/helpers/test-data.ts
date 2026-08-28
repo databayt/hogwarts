@@ -51,14 +51,14 @@ export type TestUserKey =
 export const TEST_USERS: Record<TestUserKey, TestUser> = {
   // Platform accounts (no schoolId)
   developer: {
-    email: "dev@databayt.org",
+    email: "dev@balqalam.com",
     password: "1234",
     role: "DEVELOPER",
     schoolId: null,
     name: "Developer",
   },
   user: {
-    email: "user@databayt.org",
+    email: "user@balqalam.com",
     password: "1234",
     role: "USER",
     schoolId: null,
@@ -67,42 +67,42 @@ export const TEST_USERS: Record<TestUserKey, TestUser> = {
 
   // Demo school accounts (tied to demo school only)
   admin: {
-    email: "admin@databayt.org",
+    email: "admin@balqalam.com",
     password: "1234",
     role: "ADMIN",
     schoolId: "demo",
     name: "School Admin",
   },
   teacher: {
-    email: "teacher@databayt.org",
+    email: "teacher@balqalam.com",
     password: "1234",
     role: "TEACHER",
     schoolId: "demo",
     name: "Teacher",
   },
   student: {
-    email: "student@databayt.org",
+    email: "student@balqalam.com",
     password: "1234",
     role: "STUDENT",
     schoolId: "demo",
     name: "Student",
   },
   guardian: {
-    email: "parent@databayt.org",
+    email: "parent@balqalam.com",
     password: "1234",
     role: "GUARDIAN",
     schoolId: "demo",
     name: "Parent",
   },
   accountant: {
-    email: "accountant@databayt.org",
+    email: "accountant@balqalam.com",
     password: "1234",
     role: "ACCOUNTANT",
     schoolId: "demo",
     name: "Accountant",
   },
   staff: {
-    email: "staff@databayt.org",
+    email: "staff@balqalam.com",
     password: "1234",
     role: "STAFF",
     schoolId: "demo",

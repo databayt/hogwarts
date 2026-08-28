@@ -45,12 +45,12 @@ export async function seedCatalogVideos(prisma: PrismaClient): Promise<void> {
   }
 
   const devUser = await prisma.user.findFirst({
-    where: { email: "dev@databayt.org" },
+    where: { email: "dev@balqalam.com" },
     select: { id: true },
   })
   if (!devUser) {
     throw new Error(
-      "Dev user (dev@databayt.org) not found. Run auth seed first."
+      "Dev user (dev@balqalam.com) not found. Run auth seed first."
     )
   }
 

@@ -253,7 +253,7 @@ export function PlatformLinkFlow() {
               description: "User enters credentials or uses OAuth",
               url: "https://demo.databayt.org/en/login",
               credentials: {
-                email: "admin@databayt.org",
+                email: "admin@balqalam.com",
                 password: "1234",
                 role: "ADMIN",
               },
@@ -323,7 +323,7 @@ export function PlatformLinkFlow() {
                               description: "Access to all school modules",
                               url: "https://demo.databayt.org/en/dashboard",
                               credentials: {
-                                email: "admin@databayt.org",
+                                email: "admin@balqalam.com",
                                 password: "1234",
                                 role: "ADMIN",
                               },
@@ -342,7 +342,7 @@ export function PlatformLinkFlow() {
                                 "Classes, lessons, attendance, grades",
                               url: "https://demo.databayt.org/en/dashboard",
                               credentials: {
-                                email: "teacher@databayt.org",
+                                email: "teacher@balqalam.com",
                                 password: "1234",
                                 role: "TEACHER",
                               },
@@ -360,7 +360,7 @@ export function PlatformLinkFlow() {
                               description: "My classes, grades, assignments",
                               url: "https://demo.databayt.org/en/dashboard",
                               credentials: {
-                                email: "student@databayt.org",
+                                email: "student@balqalam.com",
                                 password: "1234",
                                 role: "STUDENT",
                               },
@@ -535,7 +535,7 @@ export function LiveDemoFlow() {
               description: "See Platform Link Flow diagram above",
               url: "https://demo.databayt.org/en/dashboard",
               credentials: {
-                email: "admin@databayt.org",
+                email: "admin@balqalam.com",
                 password: "1234",
                 role: "ADMIN",
               },
@@ -632,7 +632,7 @@ export function LoginFlow() {
               title: "Validate Credentials",
               description: "Check email exists and password matches",
               credentials: {
-                email: "dev@databayt.org",
+                email: "dev@balqalam.com",
                 password: "1234",
                 role: "DEVELOPER",
               },
@@ -658,7 +658,7 @@ export function LoginFlow() {
               description: "Platform admin with all schools access",
               url: "https://ed.databayt.org/en/o",
               credentials: {
-                email: "dev@databayt.org",
+                email: "dev@balqalam.com",
                 password: "1234",
                 role: "DEVELOPER",
               },
@@ -676,7 +676,7 @@ export function LoginFlow() {
               description: "Redirect to user's school",
               url: "https://{school}.databayt.org/en/dashboard",
               credentials: {
-                email: "admin@databayt.org",
+                email: "admin@balqalam.com",
                 password: "1234",
                 role: "ADMIN",
               },
@@ -694,7 +694,7 @@ export function LoginFlow() {
               description: "Create or join a school",
               url: "https://ed.databayt.org/en/onboarding",
               credentials: {
-                email: "user@databayt.org",
+                email: "user@balqalam.com",
                 password: "1234",
                 role: "USER",
               },
@@ -795,7 +795,7 @@ export function DeveloperDashboardFlow() {
               description: "Login page knows user came from SaaS site",
               url: "https://ed.databayt.org/en/login?context=saas",
               credentials: {
-                email: "dev@databayt.org",
+                email: "dev@balqalam.com",
                 password: "1234",
                 role: "DEVELOPER",
               },
@@ -978,49 +978,49 @@ export function OnboardingWizardFlow() {
 export function TestCredentialsReference() {
   const credentials = [
     {
-      email: "dev@databayt.org",
+      email: "dev@balqalam.com",
       password: "1234",
       role: "DEVELOPER",
       school: "Platform Admin",
     },
     {
-      email: "admin@databayt.org",
+      email: "admin@balqalam.com",
       password: "1234",
       role: "ADMIN",
       school: "Demo School",
     },
     {
-      email: "teacher@databayt.org",
+      email: "teacher@balqalam.com",
       password: "1234",
       role: "TEACHER",
       school: "Demo School",
     },
     {
-      email: "student@databayt.org",
+      email: "student@balqalam.com",
       password: "1234",
       role: "STUDENT",
       school: "Demo School",
     },
     {
-      email: "parent@databayt.org",
+      email: "parent@balqalam.com",
       password: "1234",
       role: "GUARDIAN",
       school: "Demo School",
     },
     {
-      email: "accountant@databayt.org",
+      email: "accountant@balqalam.com",
       password: "1234",
       role: "ACCOUNTANT",
       school: "Demo School",
     },
     {
-      email: "staff@databayt.org",
+      email: "staff@balqalam.com",
       password: "1234",
       role: "STAFF",
       school: "Demo School",
     },
     {
-      email: "user@databayt.org",
+      email: "user@balqalam.com",
       password: "1234",
       role: "USER",
       school: "None (Onboarding)",

@@ -10,43 +10,43 @@ export type TestEnv = "local" | "production"
  */
 export const TEST_CREDENTIALS = {
   developer: {
-    email: "dev@databayt.org",
+    email: "dev@balqalam.com",
     password: "1234",
     role: "DEVELOPER",
     schoolId: null,
   },
   admin: {
-    email: "admin@databayt.org",
+    email: "admin@balqalam.com",
     password: "1234",
     role: "ADMIN",
     schoolId: "demo",
   },
   accountant: {
-    email: "accountant@databayt.org",
+    email: "accountant@balqalam.com",
     password: "1234",
     role: "ACCOUNTANT",
     schoolId: "demo",
   },
   staff: {
-    email: "staff@databayt.org",
+    email: "staff@balqalam.com",
     password: "1234",
     role: "STAFF",
     schoolId: "demo",
   },
   teacher: {
-    email: "teacher@databayt.org",
+    email: "teacher@balqalam.com",
     password: "1234",
     role: "TEACHER",
     schoolId: "demo",
   },
   student: {
-    email: "student@databayt.org",
+    email: "student@balqalam.com",
     password: "1234",
     role: "STUDENT",
     schoolId: "demo",
   },
   parent: {
-    email: "parent@databayt.org",
+    email: "parent@balqalam.com",
     password: "1234",
     role: "GUARDIAN",
     schoolId: "demo",

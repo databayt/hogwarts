@@ -4,7 +4,7 @@
 /**
  * Reset Test User Script
  *
- * Resets user@databayt.org to fresh state for onboarding testing:
+ * Resets user@balqalam.com to fresh state for onboarding testing:
  * - Role: USER
  * - No schoolId
  * - Clears any associated data
@@ -18,13 +18,15 @@ import { getPasswordHash } from "./utils"
 
 const prisma = new PrismaClient()
 
-const TEST_USER_EMAIL = "user@databayt.org"
+const TEST_USER_EMAIL = "user@balqalam.com"
 
-// Accounts whose roles must never be changed by bulk operations
-const PROTECTED_EMAILS = ["dev@databayt.org"]
+// Accounts whose roles must never be changed by bulk operations.
+// The legacy @databayt.org address stays listed so a DB row that has not yet
+// been migrated to the balqalam domain keeps its DEVELOPER role.
+const PROTECTED_EMAILS = ["dev@balqalam.com", "dev@databayt.org"]
 
 async function resetTestUser() {
-  console.log("🔄 Resetting tests user: user@databayt.org")
+  console.log("🔄 Resetting tests user: user@balqalam.com")
 
   const passwordHash = await getPasswordHash()
 
@@ -95,7 +97,7 @@ async function resetTestUser() {
       })
 
       console.log("✅ Test user reset successfully:")
-      console.log("   Email: user@databayt.org")
+      console.log("   Email: user@balqalam.com")
       console.log("   Role: USER")
       console.log("   School: None")
       console.log("   Password: 1234")
@@ -113,7 +115,7 @@ async function resetTestUser() {
       })
 
       console.log("✅ Test user created:")
-      console.log("   Email: user@databayt.org")
+      console.log("   Email: user@balqalam.com")
       console.log("   Role: USER")
       console.log("   School: None")
       console.log("   Password: 1234")

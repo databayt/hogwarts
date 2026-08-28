@@ -10,14 +10,14 @@ import { expect, test, type Page } from "@playwright/test"
  * 4. Subdomain reservation
  * 5. Successful completion
  *
- * Test user: user@databayt.org (USER role, no school initially)
+ * Test user: user@balqalam.com (USER role, no school initially)
  * Password: 1234
  */
 
 // Test configuration
 const BASE_URL = "http://localhost:3000"
 const TEST_USER = {
-  email: "user@databayt.org",
+  email: "user@balqalam.com",
   password: "1234",
 }
 

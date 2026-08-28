@@ -53,4 +53,4 @@ last_audited: 2026-08-08
 1. Update `ISSUE.md` -- check off completed items, add new issues found
 2. Update `README.md` -- if routes, files, or completion status changed
 3. Run `pnpm tsc --noEmit` to verify no regressions
-4. Test: `user@databayt.org` (pw: 1234) at `localhost:3000/en/onboarding`
+4. Test: `user@balqalam.com` (pw: 1234) at `localhost:3000/en/onboarding`

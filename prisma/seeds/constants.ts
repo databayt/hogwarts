@@ -179,7 +179,7 @@ export const HP_CHARACTERS = {
     position: "حارس المفاتيح والأراضي",
     personalEmail: "rubeus-hagrid@hotmail.com",
   },
-  // user@databayt.org
+  // user@balqalam.com
   user: {
     nameAr: "نيفيل لونغبوتوم",
     nameEn: "Neville Longbottom",
@@ -188,7 +188,7 @@ export const HP_CHARACTERS = {
     // Reuse harry image as placeholder (neville image not available)
     sourceImage: "/public/site/harry.jpg",
   },
-  // applicant@databayt.org
+  // applicant@balqalam.com
   applicant: {
     nameAr: "لونا لوفغود",
     nameEn: "Luna Lovegood",
@@ -204,42 +204,42 @@ export const HP_CHARACTERS = {
 
 export const ADMIN_USERS = [
   {
-    email: "dev@databayt.org",
+    email: "dev@balqalam.com",
     role: "DEVELOPER",
     username: HP_CHARACTERS.dev.nameAr,
     bio: HP_CHARACTERS.dev.bio,
     image: HP_CHARACTERS.dev.sourceImage.replace("/public", ""),
   },
   {
-    email: "admin@databayt.org",
+    email: "admin@balqalam.com",
     role: "ADMIN",
     username: HP_CHARACTERS.admin.nameAr,
     bio: HP_CHARACTERS.admin.bio,
     image: HP_CHARACTERS.admin.sourceImage.replace("/public", ""),
   },
   {
-    email: "accountant@databayt.org",
+    email: "accountant@balqalam.com",
     role: "ACCOUNTANT",
     username: HP_CHARACTERS.accountant.nameAr,
     bio: HP_CHARACTERS.accountant.bio,
     image: HP_CHARACTERS.accountant.sourceImage.replace("/public", ""),
   },
   {
-    email: "staff@databayt.org",
+    email: "staff@balqalam.com",
     role: "STAFF",
     username: HP_CHARACTERS.staff.nameAr,
     bio: HP_CHARACTERS.staff.bio,
     image: HP_CHARACTERS.staff.sourceImage.replace("/public", ""),
   },
   {
-    email: "user@databayt.org",
+    email: "user@balqalam.com",
     role: "USER",
     username: HP_CHARACTERS.user.nameAr,
     bio: HP_CHARACTERS.user.bio,
     image: HP_CHARACTERS.user.sourceImage.replace("/public", ""),
   },
   {
-    email: "applicant@databayt.org",
+    email: "applicant@balqalam.com",
     role: "USER",
     username: HP_CHARACTERS.applicant.nameAr,
     bio: HP_CHARACTERS.applicant.bio,

@@ -43,4 +43,4 @@ Platform operator control center (DEVELOPER role only): tenants, billing, domain
 
 1. Update sub-feature README.md/ISSUE.md if they exist
 2. Run `pnpm tsc --noEmit` to verify no regressions
-3. Test: `dev@databayt.org` (pw: 1234) at `localhost:3000`
+3. Test: `dev@balqalam.com` (pw: 1234) at `localhost:3000`

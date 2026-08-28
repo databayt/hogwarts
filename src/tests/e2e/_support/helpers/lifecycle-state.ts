@@ -120,7 +120,7 @@ export async function loginAsLifecycleUser(page: Page): Promise<boolean> {
   await page.context().clearCookies()
   const loginPage = new LoginPage(page)
   await loginPage.goto()
-  await loginPage.login("user@databayt.org", "1234")
+  await loginPage.login("user@balqalam.com", "1234")
 
   if (page.url().startsWith("chrome-error://")) {
     return false

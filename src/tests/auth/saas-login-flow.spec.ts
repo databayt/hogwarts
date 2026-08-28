@@ -33,7 +33,7 @@ test.describe("SaaS Marketing Login Flow", () => {
     await expect(page).toHaveURL(/\/en\/login/)
 
     // Fill in login form with test user (user without school)
-    await page.fill('input[name="email"]', "user@databayt.org")
+    await page.fill('input[name="email"]', "user@balqalam.com")
     await page.fill('input[name="password"]', "1234")
 
     // Submit form
@@ -65,7 +65,7 @@ test.describe("SaaS Marketing Login Flow", () => {
     await expect(page).toHaveURL(/\/en\/login.*callbackUrl.*onboarding/)
 
     // Fill in login form
-    await page.fill('input[name="email"]', "user@databayt.org")
+    await page.fill('input[name="email"]', "user@balqalam.com")
     await page.fill('input[name="password"]', "1234")
 
     // Submit form
@@ -83,7 +83,7 @@ test.describe("SaaS Marketing Login Flow", () => {
     await page.goto("/en/login?callbackUrl=/en/dashboard")
 
     // Login as DEVELOPER
-    await page.fill('input[name="email"]', "dev@databayt.org")
+    await page.fill('input[name="email"]', "dev@balqalam.com")
     await page.fill('input[name="password"]', "1234")
     await page.click('button[type="submit"]')
 
@@ -103,7 +103,7 @@ test.describe("SaaS Marketing Login Flow", () => {
     await page.goto("/en/login?callbackUrl=/en/dashboard")
 
     // Login as user without school
-    await page.fill('input[name="email"]', "user@databayt.org")
+    await page.fill('input[name="email"]', "user@balqalam.com")
     await page.fill('input[name="password"]', "1234")
     await page.click('button[type="submit"]')
 

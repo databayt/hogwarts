@@ -315,7 +315,7 @@ searches to jump to a name, and one Save submits the whole roster.
   expansion, notified-count excused-exclusion, staff+teacher clock
   lifecycles, period reuse/creation, idempotent check-in.
 - Browser-verified end-to-end on 390×844 mobile in BOTH locales as
-  `teacher@databayt.org`: tap-mark → save → success panel → notifications
+  `teacher@balqalam.com`: tap-mark → save → success panel → notifications
   in DB → clock in/out (0.02h computed) → Arabic reload shows persisted
   marks + completed day. `quick.*` dictionary subtree added en+ar.
 

@@ -115,6 +115,6 @@ parentContactSlaMinutes` in UTC against `Attendance.markedAt`. Don't
 3. Set the encryption key locally:
    `export COMPLIANCE_ENCRYPTION_KEY=$(openssl rand -hex 32)` — add to
    central `.env`, NOT `.env.local` (project rule).
-4. Test as `admin@databayt.org` (pw `1234`) on `demo.localhost:3000/en/compliance`.
-5. Test as `dev@databayt.org` on `localhost:3000/en/compliance` for the
+4. Test as `admin@balqalam.com` (pw `1234`) on `demo.localhost:3000/en/compliance`.
+5. Test as `dev@balqalam.com` on `localhost:3000/en/compliance` for the
    shared-groups view.

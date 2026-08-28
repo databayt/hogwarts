@@ -36,7 +36,7 @@ importExpires|importDownloadLogins` dictionary keys (en + ar); the
 - [ ] `dictionary?: any` prop on `import/content.tsx` — should be the typed
       `Dictionary`.
 - [ ] Verify the role gate against a real onboarding run
-      (`user@databayt.org` → create school → import) before deploy.
+      (`user@balqalam.com` → create school → import) before deploy.
 
 ## 2026-08-14 — intake unification (LOCAL, not pushed)
 

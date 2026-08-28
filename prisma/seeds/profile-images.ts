@@ -27,11 +27,11 @@ const ACCOUNT_MAP: Array<{
   role: "teacher" | "student" | "guardian" | "staffMember"
   hpKey: keyof typeof HP_CHARACTERS
 }> = [
-  { email: "teacher@databayt.org", role: "teacher", hpKey: "teacher" },
-  { email: "student@databayt.org", role: "student", hpKey: "student" },
-  { email: "parent@databayt.org", role: "guardian", hpKey: "guardian0" },
-  { email: "parent1@databayt.org", role: "guardian", hpKey: "guardian1" },
-  { email: "staff@databayt.org", role: "staffMember", hpKey: "staff" },
+  { email: "teacher@balqalam.com", role: "teacher", hpKey: "teacher" },
+  { email: "student@balqalam.com", role: "student", hpKey: "student" },
+  { email: "parent@balqalam.com", role: "guardian", hpKey: "guardian0" },
+  { email: "parent1@balqalam.com", role: "guardian", hpKey: "guardian1" },
+  { email: "staff@balqalam.com", role: "staffMember", hpKey: "staff" },
 ]
 
 // Admin accounts (no role model, just User.image)
@@ -39,10 +39,10 @@ const ADMIN_MAP: Array<{
   email: string
   hpKey: keyof typeof HP_CHARACTERS
 }> = [
-  { email: "dev@databayt.org", hpKey: "dev" },
-  { email: "admin@databayt.org", hpKey: "admin" },
-  { email: "accountant@databayt.org", hpKey: "accountant" },
-  { email: "user@databayt.org", hpKey: "user" },
+  { email: "dev@balqalam.com", hpKey: "dev" },
+  { email: "admin@balqalam.com", hpKey: "admin" },
+  { email: "accountant@balqalam.com", hpKey: "accountant" },
+  { email: "user@balqalam.com", hpKey: "user" },
 ]
 
 function getS3Client() {

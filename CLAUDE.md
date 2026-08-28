@@ -192,7 +192,7 @@ pnpm db:seed:single --list        # List available seeds
 10. **Server-Side Exceptions** - Hooks in server components, missing error.tsx boundaries; run `/diagnose-sse`
 11. **Subdomain Paths** - Client-facing paths use `/${lang}/path` WITHOUT `/s/${subdomain}/`. The `/s/` segment is internal only — middleware maps clean URLs to file-system routes. `redirect()`, `Link href`, `router.push()` must NEVER include `/s/${subdomain}/`. Only `revalidatePath()` and `proxy.ts` should reference `/s/`. Example: use `redirect(\`/${lang}/dashboard\`)` not `redirect(\`/${lang}/s/${subdomain}/dashboard\`)`.
 12. **Hardcoded Strings** - ALL UI text must use dictionary keys. Use `ValidationHelper` for Zod, `ToastHelper` for toasts, error codes for server actions. Never hardcode English strings in JSX, toasts, or error returns. See `.claude/rules/translation.md`.
-13. **Protected Test Accounts** - `dev@databayt.org` role is DEVELOPER and must never be reset. Bulk `updateMany` with `role:` must exclude protected emails. See `.claude/rules/accounts.md`.
+13. **Protected Test Accounts** - `dev@balqalam.com` role is DEVELOPER and must never be reset. Bulk `updateMany` with `role:` must exclude protected emails. See `.claude/rules/accounts.md`.
 
 ---
 
@@ -224,27 +224,27 @@ All test accounts use password: `1234`
 
 | Email                    | Role      | Purpose                                  |
 | ------------------------ | --------- | ---------------------------------------- |
-| `dev@databayt.org`       | DEVELOPER | Platform admin, SaaS dashboard access    |
-| `user@databayt.org`      | USER      | Fresh user, potential SaaS subscriber    |
-| `applicant@databayt.org` | USER      | Fresh user, for application flow testing |
+| `dev@balqalam.com`       | DEVELOPER | Platform admin, SaaS dashboard access    |
+| `user@balqalam.com`      | USER      | Fresh user, potential SaaS subscriber    |
+| `applicant@balqalam.com` | USER      | Fresh user, for application flow testing |
 
 **Demo School Accounts** (tied to demo school only):
 
 | Email                     | Role       | Purpose                |
 | ------------------------- | ---------- | ---------------------- |
-| `admin@databayt.org`      | ADMIN      | School administrator   |
-| `accountant@databayt.org` | ACCOUNTANT | Finance access         |
-| `staff@databayt.org`      | STAFF      | Staff member           |
-| `teacher@databayt.org`    | TEACHER    | Teacher access         |
-| `student@databayt.org`    | STUDENT    | Student access         |
-| `parent@databayt.org`     | GUARDIAN   | Parent/guardian access |
+| `admin@balqalam.com`      | ADMIN      | School administrator   |
+| `accountant@balqalam.com` | ACCOUNTANT | Finance access         |
+| `staff@balqalam.com`      | STAFF      | Staff member           |
+| `teacher@balqalam.com`    | TEACHER    | Teacher access         |
+| `student@balqalam.com`    | STUDENT    | Student access         |
+| `parent@balqalam.com`     | GUARDIAN   | Parent/guardian access |
 
 **Testing Scenarios**:
 
-- **SaaS Dashboard**: Use `dev@databayt.org` (only DEVELOPER role can access)
-- **School Dashboard**: Use `admin@databayt.org` on `demo.localhost:3000`
-- **Onboarding Flow**: Use `user@databayt.org` (no school)
-- **Application Flow**: Use `applicant@databayt.org` on `demo.localhost:3000/apply`
+- **SaaS Dashboard**: Use `dev@balqalam.com` (only DEVELOPER role can access)
+- **School Dashboard**: Use `admin@balqalam.com` on `demo.localhost:3000`
+- **Onboarding Flow**: Use `user@balqalam.com` (no school)
+- **Application Flow**: Use `applicant@balqalam.com` on `demo.localhost:3000/apply`
 - **Reset**: `pnpm db:reset-test-user` or `pnpm db:reset-test-applicant`
 
 ### Prisma Models

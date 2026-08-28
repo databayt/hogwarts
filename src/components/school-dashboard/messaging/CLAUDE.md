@@ -58,4 +58,4 @@ Real-time messaging for a school: 1:1 direct + group chats, with file attachment
 2. Update `README.md` if the file structure, routes, or action/query counts changed
 3. Re-run `pnpm exec vitest run src/components/school-dashboard/messaging` and update the failing count
 4. Run `pnpm tsc --noEmit` to verify no regressions
-5. Test: `admin@databayt.org` (pw: 1234) on `demo.localhost:3000/messages`
+5. Test: `admin@balqalam.com` (pw: 1234) on `demo.localhost:3000/messages`

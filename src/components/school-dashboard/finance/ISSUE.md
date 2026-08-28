@@ -531,7 +531,7 @@ The fee system now enforces a strict four-level cascade:
 
 - Locale-aware currency + date formatting across 16 sites; 24 orphan AR dictionary keys added; error-code pattern + client ERROR_MAP in banking/invoice/receipt/fees/payroll; dictionary-driven notifications; `finance/CLAUDE.md` created.
 
-## Smoke Test Results (2026-04-20, prior cycle — demo.databayt.org as `accountant@databayt.org`)
+## Smoke Test Results (2026-04-20, prior cycle — demo.databayt.org as `accountant@balqalam.com`)
 
 | Module                                                                                | AR  | EN  | Finding                                                                                     |
 | ------------------------------------------------------------------------------------- | --- | --- | ------------------------------------------------------------------------------------------- |

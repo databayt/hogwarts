@@ -4,7 +4,7 @@
 /**
  * Reset Test Applicant Script
  *
- * Resets applicant@databayt.org to fresh state for application flow testing:
+ * Resets applicant@balqalam.com to fresh state for application flow testing:
  * - Role: USER
  * - No schoolId
  * - Clears all application artifacts (Application, ApplicationSession, Student, Enrollment)
@@ -16,12 +16,12 @@ import { PrismaClient } from "@prisma/client"
 
 import { getPasswordHash } from "./utils"
 
-const TEST_APPLICANT_EMAIL = "applicant@databayt.org"
+const TEST_APPLICANT_EMAIL = "applicant@balqalam.com"
 
 export async function resetTestApplicant() {
   const prisma = new PrismaClient()
 
-  console.log("🔄 Resetting tests applicant: applicant@databayt.org")
+  console.log("🔄 Resetting tests applicant: applicant@balqalam.com")
 
   const passwordHash = await getPasswordHash()
 
@@ -92,7 +92,7 @@ export async function resetTestApplicant() {
       })
 
       console.log("✅ Test applicant reset successfully:")
-      console.log("   Email: applicant@databayt.org")
+      console.log("   Email: applicant@balqalam.com")
       console.log("   Role: USER")
       console.log("   School: None")
       console.log("   Password: 1234")
@@ -110,7 +110,7 @@ export async function resetTestApplicant() {
       })
 
       console.log("✅ Test applicant created:")
-      console.log("   Email: applicant@databayt.org")
+      console.log("   Email: applicant@balqalam.com")
       console.log("   Role: USER")
       console.log("   School: None")
       console.log("   Password: 1234")

@@ -24,49 +24,49 @@ export interface TestUser {
 // Test users from seed data
 export const TEST_USERS: Record<string, TestUser> = {
   developer: {
-    email: "dev@databayt.org",
+    email: "dev@balqalam.com",
     password: "1234",
     role: "DEVELOPER",
     hasSchool: false,
   },
   user: {
-    email: "user@databayt.org",
+    email: "user@balqalam.com",
     password: "1234",
     role: "USER",
     hasSchool: false,
   },
   admin: {
-    email: "admin@databayt.org",
+    email: "admin@balqalam.com",
     password: "1234",
     role: "ADMIN",
     hasSchool: true,
   },
   teacher: {
-    email: "teacher@databayt.org",
+    email: "teacher@balqalam.com",
     password: "1234",
     role: "TEACHER",
     hasSchool: true,
   },
   student: {
-    email: "student@databayt.org",
+    email: "student@balqalam.com",
     password: "1234",
     role: "STUDENT",
     hasSchool: true,
   },
   guardian: {
-    email: "parent@databayt.org",
+    email: "parent@balqalam.com",
     password: "1234",
     role: "GUARDIAN",
     hasSchool: true,
   },
   accountant: {
-    email: "accountant@databayt.org",
+    email: "accountant@balqalam.com",
     password: "1234",
     role: "ACCOUNTANT",
     hasSchool: true,
   },
   staff: {
-    email: "staff@databayt.org",
+    email: "staff@balqalam.com",
     password: "1234",
     role: "STAFF",
     hasSchool: true,

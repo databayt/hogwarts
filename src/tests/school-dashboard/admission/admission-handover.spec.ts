@@ -73,7 +73,7 @@ async function loginAsAdminToAdmission(
   await page.waitForTimeout(1_000) // Let React hydrate
 
   // Fill credentials
-  await emailInput.fill("admin@databayt.org")
+  await emailInput.fill("admin@balqalam.com")
   await page.locator('input[name="password"]').fill("1234")
 
   // Submit

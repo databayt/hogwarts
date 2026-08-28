@@ -83,7 +83,7 @@ Keep both `startDate` and `endDate` in FIELD_NAMES since they're still separate 
 ## Verification
 
 1. `pnpm tsc --noEmit` - no type errors
-2. Visit `demo.localhost:3000/en/admission` as `admin@databayt.org` (pw: 1234)
+2. Visit `demo.localhost:3000/en/admission` as `admin@balqalam.com` (pw: 1234)
 3. Click "Create Campaign" - verify inline calendar range picker appears
 4. Select a date range - verify both from/to highlight correctly
 5. Submit - verify startDate and endDate save correctly

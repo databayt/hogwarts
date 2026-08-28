@@ -56,9 +56,9 @@ All test accounts use password: `1234`
 
 | Email                | Role      | schoolId | Use For                        |
 | -------------------- | --------- | -------- | ------------------------------ |
-| `dev@databayt.org`   | DEVELOPER | null     | Platform admin, can access all |
-| `user@databayt.org`  | USER      | null     | Fresh user, no school          |
-| `admin@databayt.org` | ADMIN     | demo     | Demo school administrator      |
+| `dev@balqalam.com`   | DEVELOPER | null     | Platform admin, can access all |
+| `user@balqalam.com`  | USER      | null     | Fresh user, no school          |
+| `admin@balqalam.com` | ADMIN     | demo     | Demo school administrator      |
 
 ## Implementation Details
 

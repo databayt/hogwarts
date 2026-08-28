@@ -8,13 +8,13 @@
  * Phase 1: Core Foundation - User Accounts
  *
  * Accounts created:
- * - dev@databayt.org (DEVELOPER)
- * - admin@databayt.org (ADMIN)
- * - accountant@databayt.org (ACCOUNTANT)
- * - staff@databayt.org (STAFF)
- * - teacher@databayt.org, teacher1-99@databayt.org (TEACHER) - 100 total
- * - student@databayt.org, student1-999@databayt.org (STUDENT) - 1000 total
- * - parent@databayt.org, parent1-1999@databayt.org (GUARDIAN) - 2000 total
+ * - dev@balqalam.com (DEVELOPER)
+ * - admin@balqalam.com (ADMIN)
+ * - accountant@balqalam.com (ACCOUNTANT)
+ * - staff@balqalam.com (STAFF)
+ * - teacher@balqalam.com, teacher1-99@balqalam.com (TEACHER) - 100 total
+ * - student@balqalam.com, student1-999@balqalam.com (STUDENT) - 1000 total
+ * - parent@balqalam.com, parent1-1999@balqalam.com (GUARDIAN) - 2000 total
  *
  * All accounts use password: 1234
  */

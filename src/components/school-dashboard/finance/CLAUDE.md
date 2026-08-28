@@ -119,4 +119,4 @@ label)` from `@/lib/resolve-action-error` (never surfaces a bare `SNAKE_CASE`).
 1. Update the sub-module's `ISSUE.md` with what you shipped / what's still open
 2. Run `NODE_OPTIONS='--max-old-space-size=8192' pnpm tsc --noEmit` -- finance's type graph is heavy
 3. If you touched posting-rules or Prisma schema: write a migration test before merging
-4. Test credentials on `demo.databayt.org`: `accountant@databayt.org` / `1234` (finance scope) or `admin@databayt.org` / `1234` (full)
+4. Test credentials on `demo.databayt.org`: `accountant@balqalam.com` / `1234` (finance scope) or `admin@balqalam.com` / `1234` (full)

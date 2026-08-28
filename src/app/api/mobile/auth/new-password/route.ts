@@ -21,7 +21,7 @@ import { getUserByEmail } from "@/components/auth/user"
  * a direct call to this endpoint without prior verify-otp still works
  * securely. The OTP is consumed (deleted) after use.
  *
- * CRITICAL: dev@databayt.org is protected from password changes
+ * CRITICAL: dev@balqalam.com is protected from password changes
  * via this endpoint to prevent accidental lockout of the developer account.
  *
  * POST /api/mobile/auth/new-password
@@ -36,7 +36,7 @@ const NewPasswordSchema = z.object({
 })
 
 // Protected developer account — cannot be modified via mobile reset
-const PROTECTED_EMAIL = "dev@databayt.org"
+const PROTECTED_EMAIL = "dev@balqalam.com"
 
 export async function POST(request: NextRequest) {
   try {

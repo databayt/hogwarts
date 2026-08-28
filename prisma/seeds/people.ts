@@ -165,8 +165,8 @@ export async function seedTeachers(
     const teacherData = TEACHER_DATA[index % TEACHER_DATA.length]
     const department = deptMap.get(teacherData.department)
 
-    // McGonagall = teacher@databayt.org (detect by email, not index)
-    const isHpTeacher = user.email === "teacher@databayt.org"
+    // McGonagall = teacher@balqalam.com (detect by email, not index)
+    const isHpTeacher = user.email === "teacher@balqalam.com"
     const firstName = isHpTeacher
       ? HP_CHARACTERS.teacher.nameAr.split(" ")[0]
       : teacherData.firstName
@@ -815,7 +815,7 @@ export async function seedStudents(
 
     await processBatch(levelStudents, 10, async (user, batchIndex) => {
       const globalIndex = studentIndex + batchIndex
-      const isHarry = user.email === "student@databayt.org"
+      const isHarry = user.email === "student@balqalam.com"
       const gender = isHarry ? "M" : globalIndex % 2 === 0 ? "M" : "F"
       const name = isHarry
         ? { ar: HP_CHARACTERS.student.nameAr.split(" ")[0], en: "Harry" }
@@ -955,10 +955,10 @@ export async function seedStudents(
     studentIndex += levelStudentCount
   }
 
-  // Move student@databayt.org from initial level to Grade 10
+  // Move student@balqalam.com from initial level to Grade 10
   // Grade 10 = "الصف العاشر" (order 12, Secondary) — 16 subjects for realistic simulation
   const primaryStudentUser = studentUsers.find(
-    (u) => u.email === "student@databayt.org"
+    (u) => u.email === "student@balqalam.com"
   )
   if (primaryStudentUser) {
     const grade10Level = yearLevels.find((yl) => yl.levelName === "الصف العاشر")
@@ -1039,9 +1039,9 @@ export async function seedGuardians(
       const user = guardianUsers[guardianIndex]
       // HP characters — detect by email, not index
       const hpChar =
-        user.email === "parent@databayt.org"
+        user.email === "parent@balqalam.com"
           ? HP_CHARACTERS.guardian0
-          : user.email === "parent1@databayt.org"
+          : user.email === "parent1@balqalam.com"
             ? HP_CHARACTERS.guardian1
             : null
       const name = hpChar

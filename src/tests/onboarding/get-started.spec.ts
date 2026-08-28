@@ -66,7 +66,7 @@ test.describe("Story 5.1: Get Started Flow @onboarding", () => {
     test.setTimeout(60000) // Extend timeout for auth flow
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().includes("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -85,7 +85,7 @@ test.describe("Story 5.1: Get Started Flow @onboarding", () => {
     // First login to access protected onboarding page
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().includes("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -156,7 +156,7 @@ test.describe("Story 5.1: Onboarding Page Content @onboarding", () => {
     // Login first since onboarding is protected
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().includes("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -176,7 +176,7 @@ test.describe("Story 5.1: Onboarding Page Content @onboarding", () => {
     // Login first since onboarding is protected
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().includes("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -193,7 +193,7 @@ test.describe("Story 5.1: Onboarding Page Content @onboarding", () => {
     // Login first since onboarding is protected
     const loginPage = new LoginPage(page, "ar")
     await loginPage.goto()
-    await loginPage.login("user@databayt.org", "1234")
+    await loginPage.login("user@balqalam.com", "1234")
 
     if (page.url().includes("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")

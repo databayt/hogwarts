@@ -9,21 +9,21 @@ The seed creates 8 named test accounts plus ~3,100 bulk accounts in **Demo Acade
 
 | Email                     | Role       | Arabic / English                       | Personal                       | School                   |
 | ------------------------- | ---------- | -------------------------------------- | ------------------------------ | ------------------------ |
-| `dev@databayt.org`        | DEVELOPER  | سيفيروس سنيب / Severus Snape           | severus-snape@hotmail.com      | Platform (no `schoolId`) |
-| `user@databayt.org`       | USER       | نيفيل لونغبوتوم / Neville Longbottom   | —                              | None (onboarding)        |
-| `admin@databayt.org`      | ADMIN      | ألباس دمبلدور / Albus Dumbledore       | albus-dumbledore@hotmail.com   | Demo                     |
-| `teacher@databayt.org`    | TEACHER    | مينيرفا ماكغونغال / Minerva McGonagall | minerva-mcgonagall@hotmail.com | Demo                     |
-| `student@databayt.org`    | STUDENT    | هاري بوتر / Harry Potter               | harry-potter@gmail.com         | Demo                     |
-| `parent@databayt.org`     | GUARDIAN   | جيمس بوتر / James Potter (father)      | james-potter@gmail.com         | Demo                     |
-| `parent1@databayt.org`    | GUARDIAN   | ليلي بوتر / Lily Potter (mother)       | lily-potter@gmail.com          | Demo                     |
-| `accountant@databayt.org` | ACCOUNTANT | فيليوس فليتويك / Filius Flitwick       | filius-flitwick@hotmail.com    | Demo                     |
-| `staff@databayt.org`      | STAFF      | روبياس هاغريد / Rubeus Hagrid          | rubeus-hagrid@hotmail.com      | Demo                     |
+| `dev@balqalam.com`        | DEVELOPER  | سيفيروس سنيب / Severus Snape           | severus-snape@hotmail.com      | Platform (no `schoolId`) |
+| `user@balqalam.com`       | USER       | نيفيل لونغبوتوم / Neville Longbottom   | —                              | None (onboarding)        |
+| `admin@balqalam.com`      | ADMIN      | ألباس دمبلدور / Albus Dumbledore       | albus-dumbledore@hotmail.com   | Demo                     |
+| `teacher@balqalam.com`    | TEACHER    | مينيرفا ماكغونغال / Minerva McGonagall | minerva-mcgonagall@hotmail.com | Demo                     |
+| `student@balqalam.com`    | STUDENT    | هاري بوتر / Harry Potter               | harry-potter@gmail.com         | Demo                     |
+| `parent@balqalam.com`     | GUARDIAN   | جيمس بوتر / James Potter (father)      | james-potter@gmail.com         | Demo                     |
+| `parent1@balqalam.com`    | GUARDIAN   | ليلي بوتر / Lily Potter (mother)       | lily-potter@gmail.com          | Demo                     |
+| `accountant@balqalam.com` | ACCOUNTANT | فيليوس فليتويك / Filius Flitwick       | filius-flitwick@hotmail.com    | Demo                     |
+| `staff@balqalam.com`      | STAFF      | روبياس هاغريد / Rubeus Hagrid          | rubeus-hagrid@hotmail.com      | Demo                     |
 
 ## Platform accounts
 
-`dev@databayt.org` — only DEVELOPER can access the SaaS dashboard at `ed.databayt.org/en/dashboard` (or `localhost:3000/en/dashboard`). Capabilities: view all schools, platform analytics, system config.
+`dev@balqalam.com` — only DEVELOPER can access the SaaS dashboard at `ed.databayt.org/en/dashboard` (or `localhost:3000/en/dashboard`). Capabilities: view all schools, platform analytics, system config.
 
-`user@databayt.org` — fresh user for onboarding tests. Reset with `pnpm db:reset-test-user`.
+`user@balqalam.com` — fresh user for onboarding tests. Reset with `pnpm db:reset-test-user`.
 
 ## Demo school accounts
 
@@ -49,7 +49,7 @@ Every account has two emails:
 
 | Field          | Example                         | Use                          |
 | -------------- | ------------------------------- | ---------------------------- |
-| Login email    | `teacher@databayt.org`          | Authentication               |
+| Login email    | `teacher@balqalam.com`          | Authentication               |
 | Personal email | `firstname-lastname@domain.com` | Profile and membership table |
 
 Bulk accounts use `generatePersonalEmail()` → `firstname-lastname{index}@{gmail|yahoo|hotmail|outlook}.com`.
@@ -71,11 +71,11 @@ Bulk accounts use `generatePersonalEmail()` → `firstname-lastname{index}@{gmai
 
 ### Teachers (100)
 
-`teacher1@` … `teacher99@databayt.org`. Distributed across 6 departments: Languages, Sciences, Mathematics, Social Studies, Islamic Studies, Technology. Each has qualifications, experience, and subject assignments.
+`teacher1@` … `teacher99@balqalam.com`. Distributed across 6 departments: Languages, Sciences, Mathematics, Social Studies, Islamic Studies, Technology. Each has qualifications, experience, and subject assignments.
 
 ### Students (1,000)
 
-`student1@` … `student999@databayt.org`, distributed across K-12.
+`student1@` … `student999@balqalam.com`, distributed across K-12.
 
 | Section      | Levels       | Per level | Total |
 | ------------ | ------------ | --------: | ----: |
@@ -84,11 +84,11 @@ Bulk accounts use `generatePersonalEmail()` → `firstname-lastname{index}@{gmai
 | Middle       | Grades 7-9   |        70 |   210 |
 | High         | Grades 10-12 |        60 |   180 |
 
-Note: `student@databayt.org` (Harry) is reassigned to Grade 10 after distribution (KG1 ends at 49, Grade 10 at 61).
+Note: `student@balqalam.com` (Harry) is reassigned to Grade 10 after distribution (KG1 ends at 49, Grade 10 at 61).
 
 ### Guardians (2,000)
 
-`parent1@` … `parent1999@databayt.org`. Two guardians per student (father + mother), linked by index.
+`parent1@` … `parent1999@balqalam.com`. Two guardians per student (father + mother), linked by index.
 
 ## Simulation flows
 
@@ -104,7 +104,7 @@ Note: `student@databayt.org` (Harry) is reassigned to Grade 10 after distributio
 
 ## Role protection
 
-`dev@databayt.org` has an immutable `DEVELOPER` role. Enforced at multiple layers:
+`dev@balqalam.com` has an immutable `DEVELOPER` role. Enforced at multiple layers:
 
 | Layer            | Mechanism                                         | File                                     |
 | ---------------- | ------------------------------------------------- | ---------------------------------------- |
@@ -114,7 +114,7 @@ Note: `student@databayt.org` (Harry) is reassigned to Grade 10 after distributio
 | PostToolUse hook | Detects unguarded bulk role changes               | `.claude/hooks/check-roles.sh`           |
 
 ```ts
-const PROTECTED_EMAILS = ["dev@databayt.org"]
+const PROTECTED_EMAILS = ["dev@balqalam.com", "dev@databayt.org"]
 
 await prisma.user.updateMany({
   where: {
@@ -125,12 +125,12 @@ await prisma.user.updateMany({
 })
 ```
 
-Resettable: `user@databayt.org` (`pnpm db:reset-test-user`) and `applicant@databayt.org` (`pnpm db:reset-test-applicant`).
+Resettable: `user@balqalam.com` (`pnpm db:reset-test-user`) and `applicant@balqalam.com` (`pnpm db:reset-test-applicant`).
 
 ## Reset
 
 ```bash
-pnpm db:reset-test-user                              # Fresh state for user@databayt.org
+pnpm db:reset-test-user                              # Fresh state for user@balqalam.com
 pnpm db:seed                                         # Full re-seed (idempotent, ~45-120 min)
 pnpm prisma migrate reset && pnpm db:seed            # Nuclear (manual only)
 pnpm db:seed:single <name>                           # Single module — much faster

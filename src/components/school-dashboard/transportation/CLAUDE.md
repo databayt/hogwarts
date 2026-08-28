@@ -124,5 +124,5 @@ School transportation: fleet inventory (vehicles), drivers with licenses, named 
 1. Update `README.md` — if routes or file structure changed
 2. Run `pnpm tsc --noEmit` to verify no regressions
 3. `pnpm vitest run src/components/school-dashboard/transportation` — keeps 300/300 green
-4. Test: `admin@databayt.org` (pw: 1234) on `demo.localhost:3000` → `/en/transportation`
+4. Test: `admin@balqalam.com` (pw: 1234) on `demo.localhost:3000` → `/en/transportation`
 5. **Before applying any DB changes:** create a Neon branch via `mcp__Neon__create_branch`, test on the branch first, then promote

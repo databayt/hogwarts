@@ -32,18 +32,18 @@ All accounts use password `1234`. See [accounts](/docs/accounts) for full detail
 
 | Email                     | Role       | Notes                         |
 | ------------------------- | ---------- | ----------------------------- |
-| `dev@databayt.org`        | DEVELOPER  | Platform admin, no `schoolId` |
-| `user@databayt.org`       | USER       | Fresh user — onboarding tests |
-| `admin@databayt.org`      | ADMIN      | Demo school                   |
-| `teacher@databayt.org`    | TEACHER    | Demo school                   |
-| `student@databayt.org`    | STUDENT    | Demo school                   |
-| `parent@databayt.org`     | GUARDIAN   | Demo school                   |
-| `accountant@databayt.org` | ACCOUNTANT | Demo school                   |
-| `staff@databayt.org`      | STAFF      | Demo school                   |
+| `dev@balqalam.com`        | DEVELOPER  | Platform admin, no `schoolId` |
+| `user@balqalam.com`       | USER       | Fresh user — onboarding tests |
+| `admin@balqalam.com`      | ADMIN      | Demo school                   |
+| `teacher@balqalam.com`    | TEACHER    | Demo school                   |
+| `student@balqalam.com`    | STUDENT    | Demo school                   |
+| `parent@balqalam.com`     | GUARDIAN   | Demo school                   |
+| `accountant@balqalam.com` | ACCOUNTANT | Demo school                   |
+| `staff@balqalam.com`      | STAFF      | Demo school                   |
 
 Bulk: `teacher1@` … `teacher99@` (100), `student1@` … `student999@` (1,000), `parent1@` … `parent1999@` (2,000).
 
-If `user@databayt.org` mutates during a run, reset:
+If `user@balqalam.com` mutates during a run, reset:
 
 ```bash
 pnpm db:reset-test-user   # or: pnpm db:seed:single users
@@ -61,11 +61,11 @@ pnpm db:reset-test-user   # or: pnpm db:seed:single users
 
 | Scenario            | Credential             | Domain                 | Expected                           |
 | ------------------- | ---------------------- | ---------------------- | ---------------------------------- |
-| SaaS dashboard      | `dev@databayt.org`     | `localhost:3000`       | Access `/dashboard`, `/tenants`    |
-| School dashboard    | `admin@databayt.org`   | `demo.localhost:3000`  | Access school platform             |
-| Onboarding          | `user@databayt.org`    | `localhost:3000`       | Get Started → wizard               |
-| RBAC                | `teacher@databayt.org` | `demo.localhost:3000`  | Blocked from `/admin`, `/settings` |
-| Tenant isolation    | `admin@databayt.org`   | `other.localhost:3000` | Access denied (wrong school)       |
+| SaaS dashboard      | `dev@balqalam.com`     | `localhost:3000`       | Access `/dashboard`, `/tenants`    |
+| School dashboard    | `admin@balqalam.com`   | `demo.localhost:3000`  | Access school platform             |
+| Onboarding          | `user@balqalam.com`    | `localhost:3000`       | Get Started → wizard               |
+| RBAC                | `teacher@balqalam.com` | `demo.localhost:3000`  | Blocked from `/admin`, `/settings` |
+| Tenant isolation    | `admin@balqalam.com`   | `other.localhost:3000` | Access denied (wrong school)       |
 | Cross-subdomain SSO | Any logged-in user     | Main → subdomain       | Session persists                   |
 
 ## Example test
@@ -75,7 +75,7 @@ import { expect, test } from "@playwright/test"
 
 test("admin can access school dashboard on subdomain", async ({ page }) => {
   await page.goto("http://demo.localhost:3000/en/login")
-  await page.fill('[name="email"]', "admin@databayt.org")
+  await page.fill('[name="email"]', "admin@balqalam.com")
   await page.fill('[name="password"]', "1234")
   await page.click('[type="submit"]')
   await page.waitForURL(/\/dashboard$/)
@@ -83,7 +83,7 @@ test("admin can access school dashboard on subdomain", async ({ page }) => {
 })
 
 test("teacher cannot access /admin", async ({ page }) => {
-  await loginAs(page, "teacher@databayt.org")
+  await loginAs(page, "teacher@balqalam.com")
   await page.goto("/en/admin")
   await expect(page).not.toHaveURL(/\/admin$/)
 })

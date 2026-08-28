@@ -69,4 +69,4 @@ School-side admission pipeline: campaigns, applications, merit lists, enrollment
 1. Update `ISSUE.md` -- check off completed items, add new issues found
 2. Update `README.md` -- if file structure or routes changed
 3. Run `pnpm tsc --noEmit` to verify no regressions
-4. Test: `admin@databayt.org` (pw: 1234) on `demo.localhost:3000`
+4. Test: `admin@balqalam.com` (pw: 1234) on `demo.localhost:3000`

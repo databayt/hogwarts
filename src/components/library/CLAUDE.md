@@ -40,4 +40,4 @@ School library management system (43 files, 95% complete). Global-first architec
 2. Update `README.md` -- if routes, files, or data flow changed
 3. Run `pnpm tsc --noEmit` to verify no regressions
 4. Run `pnpm vitest run src/components/library/` to verify tests pass (214 tests)
-5. Test: `admin@databayt.org` (pw: 1234) on `demo.localhost:3000/en/library`
+5. Test: `admin@balqalam.com` (pw: 1234) on `demo.localhost:3000/en/library`

@@ -17,7 +17,7 @@ import { HP_CHARACTERS } from "./constants"
 
 const MESSAGING_ACCOUNTS = [
   {
-    email: "admin@databayt.org",
+    email: "admin@balqalam.com",
     role: "ADMIN",
     nameAr: HP_CHARACTERS.admin.nameAr,
     nameEn: HP_CHARACTERS.admin.nameEn,
@@ -27,7 +27,7 @@ const MESSAGING_ACCOUNTS = [
     gender: HP_CHARACTERS.admin.gender === "M" ? "MALE" : "FEMALE",
   },
   {
-    email: "accountant@databayt.org",
+    email: "accountant@balqalam.com",
     role: "ACCOUNTANT",
     nameAr: HP_CHARACTERS.accountant.nameAr,
     nameEn: HP_CHARACTERS.accountant.nameEn,

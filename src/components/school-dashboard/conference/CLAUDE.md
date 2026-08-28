@@ -472,7 +472,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
 ## Demo / Test
 
 Phase 1 ships with no demo seed — schedule a class via the UI from
-`admin@databayt.org` (pw `1234`) on `demo.localhost:3000` once env vars
+`admin@balqalam.com` (pw `1234`) on `demo.localhost:3000` once env vars
 are configured.
 
 Required env vars (set in `.env`):

@@ -265,7 +265,7 @@ describe("getTenantContext - integration", () => {
       mockedAuth.mockResolvedValue({
         user: {
           id: "developer-1",
-          email: "dev@databayt.org",
+          email: "dev@balqalam.com",
           role: "DEVELOPER",
           schoolId: null,
         },
@@ -296,7 +296,7 @@ describe("getTenantContext - integration", () => {
       mockedAuth.mockResolvedValue({
         user: {
           id: "developer-2",
-          email: "dev2@databayt.org",
+          email: "dev2@balqalam.com",
           role: "DEVELOPER",
           schoolId: testSchool.id,
         },
@@ -352,7 +352,7 @@ describe("getTenantContext - integration", () => {
       mockedAuth.mockResolvedValue({
         user: {
           id: "user-1",
-          email: "user@databayt.org",
+          email: "user@balqalam.com",
           role: "USER",
           schoolId: null,
         },
@@ -373,7 +373,7 @@ describe("getTenantContext - integration", () => {
       mockedAuth.mockResolvedValue({
         user: {
           id: "dev-1",
-          email: "dev@databayt.org",
+          email: "dev@balqalam.com",
           role: "DEVELOPER",
           schoolId: null,
         },
@@ -523,7 +523,7 @@ describe("getTenantContext - integration", () => {
       mockedAuth.mockResolvedValue({
         user: {
           id: "dev-1",
-          email: "dev@databayt.org",
+          email: "dev@balqalam.com",
           role: "DEVELOPER",
           schoolId: secondSchool.id,
         },

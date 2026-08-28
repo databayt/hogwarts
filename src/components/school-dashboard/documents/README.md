@@ -86,6 +86,6 @@ this row is the registry + detected merge-field list.
 
 ## Test
 
-`admin@databayt.org` on `demo.localhost:3000` → `/documents` → upload a cert `.docx`
+`admin@balqalam.com` on `demo.localhost:3000` → `/documents` → upload a cert `.docx`
 with `{{studentName}}` / `{{grade}}` / `{{date}}` → detected fields show → paste an
 `ExamCertificate` id → Generate → a filled `.docx` downloads (check Arabic name + RTL).

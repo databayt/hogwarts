@@ -41,22 +41,22 @@ const prisma = new PrismaClient()
 /**
  * Re-assert the accounts that MUST always exist/stay correct on the demo,
  * even when the heavy seed is skipped. Cheap; runs only on the fast path.
- * - admin@databayt.org must exist (school login for QA + docs).
- * - dev@databayt.org must keep its DEVELOPER role (see .claude/rules/accounts.md
+ * - admin@balqalam.com must exist (school login for QA + docs).
+ * - dev@balqalam.com must keep its DEVELOPER role (see .claude/rules/accounts.md
  *   — a bulk updateMany must never strip it; this is a belt-and-suspenders guard).
  */
 async function ensureCriticalAccounts(schoolId: string): Promise<void> {
   const admin = await prisma.user.findFirst({
-    where: { email: "admin@databayt.org", schoolId },
+    where: { email: "admin@balqalam.com", schoolId },
     select: { id: true },
   })
   if (!admin) {
     const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10)
     await prisma.user.upsert({
-      where: { email_schoolId: { email: "admin@databayt.org", schoolId } },
+      where: { email_schoolId: { email: "admin@balqalam.com", schoolId } },
       update: {},
       create: {
-        email: "admin@databayt.org",
+        email: "admin@balqalam.com",
         password: hashedPassword,
         role: "ADMIN",
         emailVerified: new Date(),
@@ -67,7 +67,7 @@ async function ensureCriticalAccounts(schoolId: string): Promise<void> {
   }
 
   const dev = await prisma.user.findFirst({
-    where: { email: "dev@databayt.org" },
+    where: { email: "dev@balqalam.com" },
     select: { id: true, role: true },
   })
   if (dev && dev.role !== "DEVELOPER") {
@@ -75,7 +75,7 @@ async function ensureCriticalAccounts(schoolId: string): Promise<void> {
       where: { id: dev.id },
       data: { role: "DEVELOPER" },
     })
-    console.warn("⚠️ dev@databayt.org DEVELOPER role was corrupted — restored")
+    console.warn("⚠️ dev@balqalam.com DEVELOPER role was corrupted — restored")
   }
 }
 
@@ -123,7 +123,7 @@ async function main() {
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     console.log("✅ Demo environment fully seeded")
     console.log("🌐 URL: https://demo.databayt.org")
-    console.log(`📧 Admin: admin@databayt.org / ${DEMO_PASSWORD}`)
+    console.log(`📧 Admin: admin@balqalam.com / ${DEMO_PASSWORD}`)
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   } catch (error) {
     // Database errors (quota exceeded, connection issues) must NOT fail the

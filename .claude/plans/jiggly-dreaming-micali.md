@@ -18,7 +18,7 @@ const deletedSchools = await prisma.school.deleteMany({
 })
 ```
 
-If `user@databayt.org` ever went through onboarding and created the demo school (or got assigned as `createdByUserId`), running `pnpm db:reset-test-user` **deletes the demo school**. Due to `onDelete: Cascade` on 100+ tables, this wipes ALL data.
+If `user@balqalam.com` ever went through onboarding and created the demo school (or got assigned as `createdByUserId`), running `pnpm db:reset-test-user` **deletes the demo school**. Due to `onDelete: Cascade` on 100+ tables, this wipes ALL data.
 
 ### 2. `.env` points directly to production — no dev/branch separation
 
@@ -26,7 +26,7 @@ Both `DATABASE_URL` and `DIRECT_URL` point to the same Neon production endpoint.
 
 ### 3. `ensure-demo.ts` admin email mismatch
 
-`ensure-demo.ts` creates admin as `admin@demo.databayt.org` but the full seed uses `admin@databayt.org`. After data loss, the recovery script creates the wrong admin — the one nobody uses.
+`ensure-demo.ts` creates admin as `admin@demo.databayt.org` but the full seed uses `admin@balqalam.com`. After data loss, the recovery script creates the wrong admin — the one nobody uses.
 
 ---
 
@@ -52,7 +52,7 @@ const deletedSchools = await prisma.school.deleteMany({
 
 **File:** `prisma/seeds/ensure-demo.ts`
 
-Change `admin@demo.databayt.org` to `admin@databayt.org` (3 occurrences: lines 72, 90, 96) to match the full seed and what everyone actually uses.
+Change `admin@demo.databayt.org` to `admin@balqalam.com` (3 occurrences: lines 72, 90, 96) to match the full seed and what everyone actually uses.
 
 ### Step 3: Add `prisma db push` safety hook
 
@@ -91,7 +91,7 @@ Run `pnpm db:seed:single school` (global seed, no school resolution needed thank
 | File                              | Change                                                                   |
 | --------------------------------- | ------------------------------------------------------------------------ |
 | `prisma/seeds/reset-test-user.ts` | Add `domain: { not: "demo" }` guard                                      |
-| `prisma/seeds/ensure-demo.ts`     | Fix admin email to `admin@databayt.org`                                  |
+| `prisma/seeds/ensure-demo.ts`     | Fix admin email to `admin@balqalam.com`                                  |
 | `.claude/settings.json`           | Add `db push` to grep pattern, add `--force-reset-database` to deny list |
 
 ## Verification

@@ -3,7 +3,7 @@
 ## Test Workflow
 
 1. Reset: `pnpm db:reset-test-user`
-2. Login as `user@databayt.org` (password: `1234`)
+2. Login as `user@balqalam.com` (password: `1234`)
 3. Start onboarding with scenario parameters
 4. Complete all 15 steps through legal → congratulations
 5. Run verification query

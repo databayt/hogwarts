@@ -11,7 +11,7 @@
  *   4. Profile of another user (admin viewing a teacher) renders without an Edit button
  *   5. Unauthenticated request to /profile redirects to login
  *
- * Test data: seeded demo school accounts (admin@databayt.org, teacher@databayt.org).
+ * Test data: seeded demo school accounts (admin@balqalam.com, teacher@balqalam.com).
  * Auth: uses the persistent `tests/.auth/{role}.json` storage state from auth.setup.ts.
  */
 
@@ -147,6 +147,6 @@ test.describe("Profile — self-service from teacher account", () => {
 
 // Sanity guard: keep the test seed credentials in sync with what auth.setup.ts uses.
 test("test credentials sanity check", () => {
-  expect(TEST_USERS.admin.email).toBe("admin@databayt.org")
-  expect(TEST_USERS.teacher.email).toBe("teacher@databayt.org")
+  expect(TEST_USERS.admin.email).toBe("admin@balqalam.com")
+  expect(TEST_USERS.teacher.email).toBe("teacher@balqalam.com")
 })

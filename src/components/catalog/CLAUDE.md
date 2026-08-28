@@ -142,5 +142,5 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
 2. Update `README.md` — if modules, surfaces, or tests changed
 3. Run `NODE_OPTIONS='--max-old-space-size=8192' pnpm tsc --noEmit`
 4. Run `pnpm vitest run src/tests/lib/catalog-setup.test.ts src/tests/lib/catalog-setup.level-config.test.ts src/tests/lib/catalog-setup.curriculum-config.test.ts src/tests/saas-dashboard/catalog/ src/tests/school-dashboard/listings/subjects/catalog/`
-5. Test: `dev@databayt.org` (pw: 1234) at `localhost:3000/en/catalog` (operator) and
-   `admin@databayt.org` on `demo.localhost:3000/en/subjects/catalog` (school picker)
+5. Test: `dev@balqalam.com` (pw: 1234) at `localhost:3000/en/catalog` (operator) and
+   `admin@balqalam.com` on `demo.localhost:3000/en/subjects/catalog` (school picker)

@@ -83,7 +83,7 @@ async function loginAsAdminToAdmission(
 
   if (checkProtocolError(page)) return null
 
-  await loginPage.login("admin@databayt.org", "1234")
+  await loginPage.login("admin@balqalam.com", "1234")
   await page.waitForLoadState("domcontentloaded").catch(() => null)
 
   if (checkProtocolError(page)) return null

@@ -44,7 +44,7 @@ async function goToSchoolPage(
 
 /**
  * Login as a school-bound user and navigate to /application.
- * Uses student@databayt.org (tied to demo school) to ensure session works
+ * Uses student@balqalam.com (tied to demo school) to ensure session works
  * on the school subdomain. Returns false if protocol error or login fails.
  */
 async function loginAsApplicant(page: Page): Promise<boolean> {
@@ -74,14 +74,14 @@ async function loginAsApplicant(page: Page): Promise<boolean> {
   // Retry fill to handle React hydration resets
   for (let attempt = 0; attempt < 3; attempt++) {
     await emailInput.clear()
-    await emailInput.fill("student@databayt.org")
+    await emailInput.fill("student@balqalam.com")
     const ok = await page
       .waitForFunction(
         () => {
           const input = document.querySelector(
             'input[name="email"]'
           ) as HTMLInputElement
-          return input && input.value === "student@databayt.org"
+          return input && input.value === "student@balqalam.com"
         },
         { timeout: 3000 }
       )
@@ -1961,7 +1961,7 @@ test.describe("GROUP 7: RTL Support", () => {
     const emailInput = page.locator('input[name="email"]')
     await emailInput.waitFor({ state: "visible", timeout: TIMEOUTS.medium })
     await page.waitForTimeout(500)
-    await emailInput.fill("student@databayt.org")
+    await emailInput.fill("student@balqalam.com")
     await page.locator('input[name="password"]').fill("1234")
 
     await Promise.all([
@@ -2035,7 +2035,7 @@ test.describe("GROUP 7: RTL Support", () => {
       const emailInput = page.locator('input[name="email"]')
       await emailInput.waitFor({ state: "visible", timeout: TIMEOUTS.medium })
       await page.waitForTimeout(500)
-      await emailInput.fill("student@databayt.org")
+      await emailInput.fill("student@balqalam.com")
       await page.locator('input[name="password"]').fill("1234")
 
       await Promise.all([

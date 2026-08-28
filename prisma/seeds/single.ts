@@ -1016,7 +1016,7 @@ const SEEDS: Record<string, SeedEntry> = {
     },
   },
   "reset-test-applicant": {
-    description: "Reset applicant@databayt.org for application flow testing",
+    description: "Reset applicant@balqalam.com for application flow testing",
     global: true,
     run: async () => {
       const { resetTestApplicant } = await import("./reset-test-applicant")

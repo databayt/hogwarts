@@ -1,6 +1,6 @@
 /**
  * Lifecycle Test - Phase 4: Review & Approve Application as Admin
- * Login as user@databayt.org (kingfahad ADMIN) → Navigate to application → SUBMITTED → UNDER_REVIEW → SHORTLISTED → SELECTED → Enroll
+ * Login as user@balqalam.com (kingfahad ADMIN) → Navigate to application → SUBMITTED → UNDER_REVIEW → SHORTLISTED → SELECTED → Enroll
  */
 import { mkdirSync } from "fs"
 import { chromium } from "@playwright/test"
@@ -48,7 +48,7 @@ async function main() {
 
   try {
     // LOGIN
-    console.log("=== LOGIN as user@databayt.org (kingfahad ADMIN) ===")
+    console.log("=== LOGIN as user@balqalam.com (kingfahad ADMIN) ===")
     await page.goto(`${BASE}/${LOCALE}/login`, {
       waitUntil: "networkidle",
       timeout: 90000,
@@ -60,7 +60,7 @@ async function main() {
     await page
       .locator('input[name="email"], input[type="email"]')
       .first()
-      .fill("user@databayt.org")
+      .fill("user@balqalam.com")
     await page
       .locator('input[name="password"], input[type="password"]')
       .first()

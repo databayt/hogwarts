@@ -698,11 +698,11 @@ async function main() {
 
     // Resolve dev user for video attribution
     const devUser = await prisma.user.findFirst({
-      where: { email: "dev@databayt.org" },
+      where: { email: "dev@balqalam.com" },
       select: { id: true },
     })
     if (!devUser) {
-      console.log("   ⚠️  dev@databayt.org not found. Skipping DB records.")
+      console.log("   ⚠️  dev@balqalam.com not found. Skipping DB records.")
       return
     }
 

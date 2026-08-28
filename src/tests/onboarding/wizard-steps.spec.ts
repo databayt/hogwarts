@@ -43,7 +43,7 @@ async function loginAsAdmin(page: Page) {
     state: "visible",
     timeout: 10000,
   })
-  await page.fill('input[name="email"]', "admin@databayt.org")
+  await page.fill('input[name="email"]', "admin@balqalam.com")
   await page.fill('input[name="password"]', "1234")
   await Promise.all([
     page

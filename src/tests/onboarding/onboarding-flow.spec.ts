@@ -38,7 +38,7 @@ async function clearAuthState(page: import("@playwright/test").Page) {
 }
 
 /**
- * Login as user@databayt.org and navigate to onboarding dashboard.
+ * Login as user@balqalam.com and navigate to onboarding dashboard.
  * Returns the OnboardingFlowPage instance or null if protocol error.
  */
 async function loginAndGoToOnboarding(
@@ -47,7 +47,7 @@ async function loginAndGoToOnboarding(
 ): Promise<OnboardingFlowPage | null> {
   const loginPage = new LoginPage(page, locale)
   await loginPage.goto()
-  await loginPage.login("user@databayt.org", "1234")
+  await loginPage.login("user@balqalam.com", "1234")
 
   if (page.url().startsWith("chrome-error://")) {
     return null
@@ -59,7 +59,7 @@ async function loginAndGoToOnboarding(
 }
 
 /**
- * Login as user@databayt.org, navigate to onboarding, and create a new school.
+ * Login as user@balqalam.com, navigate to onboarding, and create a new school.
  * Returns the OnboardingFlowPage with schoolId, or null if protocol error.
  */
 async function loginAndCreateSchool(
@@ -547,7 +547,7 @@ test.describe("Story 5.3: Onboarding Access Control @onboarding", () => {
   }) => {
     test.setTimeout(90_000)
 
-    // First, login as user@databayt.org and create a school
+    // First, login as user@balqalam.com and create a school
     const result = await loginAndCreateSchool(page)
     if (!result) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -561,7 +561,7 @@ test.describe("Story 5.3: Onboarding Access Control @onboarding", () => {
 
     const loginPage = new LoginPage(page)
     await loginPage.goto()
-    await loginPage.login("admin@databayt.org", "1234")
+    await loginPage.login("admin@balqalam.com", "1234")
 
     if (page.url().startsWith("chrome-error://")) {
       test.skip(true, "Protocol mismatch in dev environment")

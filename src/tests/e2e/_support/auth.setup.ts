@@ -2,31 +2,31 @@ import { expect, test as setup } from "@playwright/test"
 
 const TEST_USERS = {
   admin: {
-    email: "admin@databayt.org",
+    email: "admin@balqalam.com",
     password: "1234",
   },
   teacher: {
-    email: "teacher@databayt.org",
+    email: "teacher@balqalam.com",
     password: "1234",
   },
   student: {
-    email: "student@databayt.org",
+    email: "student@balqalam.com",
     password: "1234",
   },
   developer: {
-    email: "dev@databayt.org",
+    email: "dev@balqalam.com",
     password: "1234",
   },
   guardian: {
-    email: "parent@databayt.org",
+    email: "parent@balqalam.com",
     password: "1234",
   },
   accountant: {
-    email: "accountant@databayt.org",
+    email: "accountant@balqalam.com",
     password: "1234",
   },
   staff: {
-    email: "staff@databayt.org",
+    email: "staff@balqalam.com",
     password: "1234",
   },
 } as const
