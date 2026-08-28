@@ -80,6 +80,13 @@ and [ISSUE](ISSUE.md) for status + the pending additive migration SQL.
   `TemplateError`s to the same code so templates stored before this gate still fail legibly.
   The marker scan strips XML to text first (headers/footers included) — Word splits a
   hand-typed tag across `<w:r>` runs, so a regex over `document.xml` sees nothing.
+- **NEVER put a `{{tag}}` sample inside translatable prose (2026-08-28).** Braces and the
+  `#` / `/` sigils are bidi-NEUTRAL, so inside an Arabic sentence they reorder:
+  `{{/questions}}` renders as `{{questions/}}`, and a school types back what it saw. That is
+  the same silent never-matches failure the surrounding warning exists to prevent, so the
+  warning taught the bug. Every code sample goes in its own `<code dir="ltr">` OUTSIDE the
+  sentence (see `loopHint`, `singleBraceBody`, `noTagsBody`, and the available-fields
+  badges). Browser-verify any new one in `/ar` — this is invisible in English.
 - **Action responses here carry CODES, not sentences (2026-08-28).** Every client caller
   goes through `actionErrorMessage(res.error, dictionary, fallback)`; a bare
   `setError(res.error ?? …)` prints `UNAUTHORIZED` at a teacher. `QUESTION_BANK_EMPTY`
