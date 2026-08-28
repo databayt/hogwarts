@@ -6,8 +6,10 @@ import { useState } from "react"
 import type { DocumentTemplateCategory } from "@prisma/client"
 import { Download, FileText, Loader2 } from "lucide-react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { downloadBase64 } from "./download"
@@ -51,6 +53,7 @@ export function GenerateWithTemplateButton({
 }) {
   const { locale } = useLocale()
   const lang = locale === "ar" ? "ar" : "en"
+  const { dictionary } = useDictionary()
   const { toast } = useToast()
   const [busy, setBusy] = useState(false)
 
@@ -68,7 +71,9 @@ export function GenerateWithTemplateButton({
       description:
         res.error === "TEMPLATE_NOT_FOUND"
           ? L.noTemplate[lang]
-          : L.failed[lang],
+          : // Codes, not sentences — and `TEMPLATE_INVALID` says something far
+            // more useful than the generic fallback.
+            actionErrorMessage(res.error, dictionary, L.failed[lang]),
     })
   }
 

@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -158,7 +159,11 @@ export function ReportCardsTable({
         setBulkError(
           res.error === "TEMPLATE_NOT_FOUND"
             ? (docs?.noTemplate ?? null)
-            : (docs?.generateFailed ?? null)
+            : actionErrorMessage(
+                res.error,
+                dictionary,
+                docs?.generateFailed ?? ""
+              )
         )
         break
       }

@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -107,7 +108,13 @@ export function CertificateList({
           res.error === "TEMPLATE_NOT_FOUND"
             ? (cl?.noTemplateUploaded ??
               "No template uploaded yet. Upload one under Documents first.")
-            : res.error,
+            : // The fill engine answers in ACTION CODES; this used to print the
+              // raw `TEMPLATE_INVALID` at a user.
+              actionErrorMessage(
+                res.error,
+                dictionary,
+                t?.toast?.error ?? "Error"
+              ),
         variant: "destructive",
       })
     }
