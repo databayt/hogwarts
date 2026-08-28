@@ -15,6 +15,7 @@ import {
   Wand2,
 } from "lucide-react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -80,7 +81,13 @@ export function DocumentsManager({
     if (res.success && res.data) {
       downloadBase64(res.data.filename, res.data.base64, res.data.mime)
     } else {
-      setGenError(res.error ?? d?.generateFailed ?? "Could not generate.")
+      setGenError(
+        actionErrorMessage(
+          res.error,
+          dictionary,
+          d?.generateFailed ?? "Could not generate."
+        )
+      )
     }
   }
 

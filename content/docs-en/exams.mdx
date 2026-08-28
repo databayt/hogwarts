@@ -74,7 +74,20 @@ Schools print on their own mandated stationery, so the paper's **layout** is a `
 
 Author the Word file with `{{tag}}` placeholders and `{{#loop}}…{{/loop}}` sections, upload it, and the merge fields are detected automatically and shown back to you. The full vocabulary per category is listed in the upload dialog.
 
-You do not have to start from a blank page: **Starter template** hands you a real `.docx` for that category with every tag already correct — edit the styling, keep the tags. Use it. A template with no tags uploads happily and then fills as a blank copy of itself, and a wrongly-braced one prints its markers into the finished document; neither failure shows up until a school prints.
+You do not have to start from a blank page: **Starter template** hands you a real `.docx` for that category with every tag already correct — edit the styling, keep the tags. Use it.
+
+### What the upload checks
+
+Every one of these failures used to surface only once a school printed the paper, so the upload now inspects the file and tells you which it is:
+
+| What is wrong                                                               | What happens                                                                                                   |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| A section is opened but never closed (or closed but never opened)           | **Refused** — it can never fill. The offending tag is named so you can fix it in Word and upload again         |
+| Single braces: `{#questions}` instead of `{{#questions}}`                   | Saved, with a warning listing each marker. They print into the document as text and their contents are dropped |
+| A tag this category has no data for — usually a typo, e.g. `{{schoolNmae}}` | Saved, with that tag flagged in the detected list. It fills blank                                              |
+| No tags at all                                                              | Saved, with a warning. Filling it returns an unchanged copy of your file                                       |
+
+Only the first is rejected; the rest are stored so you can still use the template if the warning is a false alarm.
 
 ### Filling an exam paper
 

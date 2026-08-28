@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 85
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-08-14
+last_audited: 2026-08-28
 ---
 
 ## Exams -- Examination Management System

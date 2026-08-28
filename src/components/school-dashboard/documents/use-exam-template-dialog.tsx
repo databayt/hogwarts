@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import type { DocumentTemplate } from "@prisma/client"
 import { AlertTriangle, Check, Loader2, Wand2, X } from "lucide-react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -125,7 +126,15 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
     )
     setBusy(false)
     if (!res.success || !res.data) {
-      setError(res.error ?? d?.failed ?? "Could not generate the paper.")
+      // Codes, not sentences, come back from the action — `QUESTION_BANK_EMPTY`
+      // and `TEMPLATE_INVALID` are the two a school actually hits here.
+      setError(
+        actionErrorMessage(
+          res.error,
+          dictionary,
+          d?.failed ?? "Could not generate the paper."
+        )
+      )
       return
     }
 

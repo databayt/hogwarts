@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation"
 import type { DocumentTemplateCategory } from "@prisma/client"
 import { AlertTriangle, Check, Loader2, Upload } from "lucide-react"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,7 +24,7 @@ import { useUpload } from "@/components/file/upload/use-upload"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { createDocumentTemplate } from "./actions"
+import { createDocumentTemplate, type CreatedTemplate } from "./actions"
 import { STARTER_CATEGORIES } from "./config"
 import { FIELD_VOCAB } from "./field-vocab"
 import { StarterButton } from "./starter-button"
@@ -43,7 +45,10 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
   const d = dictionary?.school?.documents?.dialog
   const router = useRouter()
   const [name, setName] = useState("")
-  const [detected, setDetected] = useState<string[] | null>(null)
+  const [stored, setStored] = useState<CreatedTemplate | null>(null)
+  // Set when the file was REFUSED because its tags do not compile. `tags` names
+  // the ones to fix, and is empty for errors that name no single tag.
+  const [rejected, setRejected] = useState<{ tags: string } | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -64,11 +69,23 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
       })
       setSaving(false)
       if (res.success && res.data) {
-        setDetected(res.data.mergeFields)
+        setStored(res.data)
         router.refresh()
-      } else {
-        setError(res.error ?? d?.saveFailed ?? "Could not save the template.")
+        return
       }
+      // A template whose tags do not compile is refused rather than stored, and
+      // gets its own screen — it is the one failure a school MUST act on.
+      if (res.error === ACTION_ERRORS.TEMPLATE_INVALID) {
+        setRejected({ tags: res.details ?? "" })
+        return
+      }
+      setError(
+        actionErrorMessage(
+          res.error,
+          dictionary,
+          d?.saveFailed ?? "Could not save the template."
+        )
+      )
     },
   })
 
@@ -76,7 +93,8 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
     const file = e.target.files?.[0]
     if (!file) return
     setError(null)
-    setDetected(null)
+    setStored(null)
+    setRejected(null)
     void upload(file)
   }
 
@@ -92,24 +110,71 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
           <DialogDescription>{d?.desc}</DialogDescription>
         </DialogHeader>
 
-        {detected ? (
+        {rejected ? (
+          // Refused, not stored: this file cannot fill at all. Naming the
+          // offending tag is the difference between a fixable Word edit and a
+          // school re-uploading the same broken file.
+          <div className="space-y-3">
+            <div className="border-destructive/40 bg-destructive/5 space-y-2 rounded-lg border p-3">
+              <p className="text-destructive flex items-center gap-2 text-sm font-medium">
+                <AlertTriangle className="size-4" />
+                {d?.brokenTitle}
+              </p>
+              <p className="text-muted-foreground text-xs">{d?.brokenBody}</p>
+              {rejected.tags && (
+                <p className="text-muted-foreground text-xs">
+                  {d?.brokenTags}{" "}
+                  <code dir="ltr" className="inline-block font-medium">
+                    {rejected.tags}
+                  </code>
+                </p>
+              )}
+              {hasStarter && (
+                <StarterButton category={category} variant="outline" />
+              )}
+            </div>
+            <Button onClick={() => onOpenChange(false)} className="w-full">
+              {d?.done}
+            </Button>
+          </div>
+        ) : stored ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
               <Check className="size-4" />
               {d?.uploaded}
             </div>
-            {detected.length > 0 ? (
+
+            {stored.mergeFields.length > 0 ? (
               <div>
                 <p className="text-muted-foreground mb-1 text-xs">
                   {d?.detected}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {detected.map((f) => (
-                    <Badge key={f} variant="secondary" className="text-xs">
-                      {f}
-                    </Badge>
-                  ))}
+                  {stored.mergeFields.map((f) => {
+                    // A tag this category has no data for compiles fine and
+                    // fills BLANK — the badge is the only place that shows it.
+                    const unknown = stored.unknownFields.includes(f)
+                    return (
+                      <Badge
+                        key={f}
+                        variant={unknown ? "outline" : "secondary"}
+                        dir="ltr"
+                        className="gap-1 text-xs"
+                        title={unknown ? d?.unknownTag : d?.knownTag}
+                      >
+                        {unknown && (
+                          <AlertTriangle className="size-2.5 text-amber-600" />
+                        )}
+                        {f}
+                      </Badge>
+                    )
+                  })}
                 </div>
+                {stored.unknownFields.length > 0 && (
+                  <p className="mt-2 text-xs text-amber-600">
+                    {d?.unknownBody}
+                  </p>
+                )}
               </div>
             ) : (
               // A template with no tags is stored happily and then fills as a
@@ -126,6 +191,34 @@ export function UploadTemplateDialog({ category, open, onOpenChange }: Props) {
                 )}
               </div>
             )}
+
+            {stored.singleBraceMarkers.length > 0 && (
+              // Compiles, so nothing above complains — but under `{{ }}`
+              // delimiters these are plain text: they PRINT into the paper and
+              // their body is dropped. Silent until a school hands it out.
+              <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+                <p className="flex items-center gap-2 text-sm font-medium text-amber-600">
+                  <AlertTriangle className="size-4" />
+                  {d?.singleBraceTitle}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.singleBraceBody}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {stored.singleBraceMarkers.map((m) => (
+                    <Badge
+                      key={m}
+                      variant="outline"
+                      dir="ltr"
+                      className="text-[10px]"
+                    >
+                      {m}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Button onClick={() => onOpenChange(false)} className="w-full">
               {d?.done}
             </Button>

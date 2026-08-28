@@ -3,7 +3,7 @@ title: Documents (Fill Engine)
 file_type: issue
 owner: Abdout
 maturity: Built (v1)
-last_audited: 2026-08-14
+last_audited: 2026-08-28
 ---
 
 # Documents — Production Readiness
@@ -11,6 +11,21 @@ last_audited: 2026-08-14
 **Status:** BUILT (v1), schema LIVE on prod. tsc 0.
 
 ## Recently Added
+
+- **A broken `.docx` is caught at upload, not in the exam hall (2026-08-28)** — the three ways a school's own template fails were all silent, each confirmed against the real engine before the fix:
+  1. **It does not compile.** An unclosed `{{#questions}}` (deleting the closing line in Word is enough) made `detectMergeFields` throw; `createDocumentTemplate` swallowed that in a `catch` and stored `mergeFields: []`, so the template sat in the list looking healthy while **every** fill failed — and the upload UI reported it as _"No tags found in this file"_, which is the opposite of what is wrong with it. Worse, docxtemplater wraps its diagnoses in a `multi_error` whose own `.message` is the literal string **`"Multi error"`**, and all four `catch` blocks in `generate.ts` returned `error.message` — so the teacher's entire error report was those two words.
+  2. **Single-brace markers.** `{#questions}` compiles fine, prints itself into the paper as text, and drops its body — `detectMergeFields` still reports the _inner_ tags, so every coverage badge looks correct while the printed paper carries **zero questions**. Documented as a hazard since 08-14 and guarded by a test that only asserted detection _cannot_ see it; nothing actually detected it.
+  3. **Misspelled tags.** `{{schoolNmae}}` compiles and fills blank forever. The upload dialog listed every detected tag as a neutral badge with no validity signal.
+
+  **Fix:** new pure `validateDocxTemplate(buffer, knownTags)` in `lib/docx-fill/` returns `{ compiles, structuralErrors, tags, singleBraceMarkers }`, plus `docxTemplateIssues(error)` which unwraps the `multi_error` into `{ id, tag, explanation }`. `createDocumentTemplate` now screens **before** the `create`: a non-compiling file is **refused** (`TEMPLATE_INVALID` + the offending tag names in `details`) instead of stored, and a stored one comes back with `unknownFields` + `singleBraceMarkers` beside `mergeFields`. The upload dialog renders three outcomes — refused / stored-with-warnings / clean — and `generate.ts` maps any render-time `TemplateError` to `TEMPLATE_INVALID` so templates stored _before_ this screening also fail legibly.
+
+  **Marker scan reads TEXT, not XML.** Word splits a hand-typed tag across several `<w:r>` runs on its own, so a regex over `document.xml` misses `{#questions}` entirely; the scan strips markup (headers and footers included) and joins runs first. A bare `{word}` is only flagged when it carries a `#`/`/`/`^` sigil or names a real field for that category, so ordinary prose like `{see overleaf}` is left alone.
+
+  **i18n, same pass:** `EMPTY_BANK_MESSAGE` — the _most common_ runtime failure of this flow — was raw English (`"No matching questions in the bank for this template."`) returned as `res.error` and shown verbatim to Arabic-speaking teachers; it is now `QUESTION_BANK_EMPTY`. The three client callers (`upload-template-dialog`, `use-exam-template-dialog`, `templates-list`, and the wizard's `questions/form.tsx`) piped `res.error` straight into the UI, which with coded responses means printing `UNAUTHORIZED` at a user — all now go through `actionErrorMessage()`. `TEMPLATE_NOT_FOUND` had **no** translation in either language and fell through as a raw code; added, with `TEMPLATE_INVALID` and `QUESTION_BANK_EMPTY`, to `common.errors` in en + ar.
+
+  `ActionResponse` gained the `details?: string` field that `actionError(code, details)` has always emitted but no caller could read.
+
+  Tests: new `docx-validate.test.ts` (19) — every case reproduced against the real engine, including a marker split across runs and a guard that **the starter templates pass their own gate** in all 6 category × language combinations. Block total 35 → 54.
 
 - **Sectioned exam papers + honest shortfall reporting (2026-08-14)** — the `EXAM_PAPER` resolver used to expose one flat `questions` loop, which cannot express how a real paper reads. It now also supplies `{{#sections}}` (questions grouped by type in a fixed pedagogical order — objective first, written last) with a per-section mark total and `count`, plus `startTime` / `endTime` / `instructions` / `questionCount` / `sectionCount`. Every question gained `type` / `typeLabel` / `isMcq` / `hasOptions` and `answerLines` (blank ruled space sized by type: essay 8, short answer 3, fill-blank 1). Questions keep their paper-wide `order` inside a section AND carry `numberInSection`, so both layouts number identically. `FIELD_VOCAB.EXAM_PAPER` grew in lockstep — the Use-template coverage badge intersects detected tags with the vocabulary, so a tag missing from the vocab shows as "unsupported" even though it fills. **Bug fixed on the way through:** `points` is a Prisma `Decimal`, and the resolver passed the object straight into the template; now `Number()`-ed.
 

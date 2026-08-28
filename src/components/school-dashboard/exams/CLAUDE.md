@@ -71,6 +71,15 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~85% complete. See [R
   resolver offers a flat `{{#questions}}` list AND a `{{#sections}}` grouping by question type;
   anything added to a resolver must be added to `FIELD_VOCAB` in the same commit or the
   coverage badge calls it unsupported.
+- **A broken uploaded `.docx` is now refused at upload (2026-08-28)** — the single-brace
+  hazard above was documented but nothing DETECTED it, and two worse siblings shared the
+  silence: a template with an unclosed loop was stored active and reported as "no tags
+  found" while every fill died with the literal words "Multi error", and a misspelled tag
+  filled blank forever. `validateDocxTemplate` screens all three before the row is created;
+  see the `documents` block's CLAUDE.md. Also: `autoGenerateExamQuestions` returned the raw
+  English sentence "No matching questions in the bank for this template." — the most common
+  way this flow fails — straight into the UI for Arabic teachers; it is now
+  `QUESTION_BANK_EMPTY` and every caller resolves codes via `actionErrorMessage()`.
 - **A generated paper can be short and still "succeed" (2026-08-14)** — `generateExamQuestions`
   degrades: it fills the distribution slots the bank can cover and records the rest, failing
   only at zero selections. Callers must surface `distributionMet` / `missingCategories`;

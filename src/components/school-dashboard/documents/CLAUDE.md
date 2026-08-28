@@ -66,6 +66,25 @@ and [ISSUE](ISSUE.md) for status + the pending additive migration SQL.
 - **`getResolverSchool` is `cache()`-wrapped** — a bulk fill reads the school once per request
   instead of once per document.
 
+- **Uploads are SCREENED; a non-compiling `.docx` is refused (2026-08-28).**
+  `validateDocxTemplate(buffer, knownTags)` in `lib/docx-fill/` is the gate, and it runs
+  BEFORE the `documentTemplate.create`. Three distinct outcomes, because the three failure
+  modes are distinct: **cannot compile** → refused with `TEMPLATE_INVALID` + the offending
+  tag names in `details` (storing it would put a permanently-unfillable template in the list
+  looking healthy); **single-brace markers** → stored + warned (it fills mechanically, and a
+  bare `{word}` can be innocent prose); **unknown tags** → stored + per-tag badge (compiles,
+  fills blank). Do not "simplify" these into one path — refusing a single-brace template
+  would block legitimate prose, and storing a non-compiling one is what caused the bug.
+  `docxTemplateIssues(error)` unwraps docxtemplater's `multi_error`; **never** return its
+  `.message`, which is the literal string `"Multi error"`. `generate.ts` maps render-time
+  `TemplateError`s to the same code so templates stored before this gate still fail legibly.
+  The marker scan strips XML to text first (headers/footers included) — Word splits a
+  hand-typed tag across `<w:r>` runs, so a regex over `document.xml` sees nothing.
+- **Action responses here carry CODES, not sentences (2026-08-28).** Every client caller
+  goes through `actionErrorMessage(res.error, dictionary, fallback)`; a bare
+  `setError(res.error ?? …)` prints `UNAUTHORIZED` at a teacher. `QUESTION_BANK_EMPTY`
+  (was a raw English sentence — the most common runtime failure of the exam-paper flow),
+  `TEMPLATE_INVALID` and `TEMPLATE_NOT_FOUND` all live in `common.errors` in en + ar.
 - **Loop tags are `{{#tag}}`, never `{#tag}` (2026-08-14).** The engine runs custom `{{ }}`
   delimiters, so a single-brace loop is not a loop — it prints literally, drops its body, and
   `detectMergeFields` STILL reports the inner tags, so every coverage badge in the UI looks

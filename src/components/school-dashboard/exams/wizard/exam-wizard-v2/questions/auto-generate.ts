@@ -23,9 +23,6 @@ import type {
 } from "../../../generate/types"
 import { generateExamQuestions } from "../../../generate/utils"
 
-const EMPTY_BANK_MESSAGE =
-  "No matching questions in the bank for this template."
-
 export interface CoverageSlot {
   questionType: string
   difficulty: string
@@ -162,8 +159,10 @@ export async function autoGenerateExamQuestions(
 
     const selected = result.selectedQuestions
     if (selected.length === 0) {
-      // Friendly, non-fatal message; the client also has a dictionary fallback.
-      return { success: false, error: EMPTY_BANK_MESSAGE }
+      // The most common way this flow fails: the blueprint asks for question
+      // types the bank has none of. A code, not a sentence — this reaches an
+      // Arabic-speaking teacher through two different dialogs.
+      return actionError(ACTION_ERRORS.QUESTION_BANK_EMPTY)
     }
 
     const totalMarks = selected.reduce((sum, q) => sum + Number(q.points), 0)

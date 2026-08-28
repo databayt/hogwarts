@@ -9,9 +9,14 @@ import type { DocumentTemplate, DocumentTemplateCategory } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { detectMergeFields, loadTemplateBufferFromUrl } from "@/lib/docx-fill"
+import {
+  loadTemplateBufferFromUrl,
+  validateDocxTemplate,
+  type DocxTemplateIssue,
+} from "@/lib/docx-fill"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { FIELD_VOCAB } from "./field-vocab"
 import { buildStarterTemplate } from "./starter-template"
 
 const MANAGER_ROLES = ["ADMIN", "DEVELOPER", "TEACHER"]
@@ -32,9 +37,33 @@ function deriveStorageKey(fileUrl: string): string {
   }
 }
 
+/** What the upload UI needs to say about a template it just stored. */
+export interface CreatedTemplate {
+  id: string
+  /** Tags found in the file. */
+  mergeFields: string[]
+  /** Tags this category has no data for — they fill blank. */
+  unknownFields: string[]
+  /** `{#x}` markers that will print as text instead of looping. */
+  singleBraceMarkers: string[]
+}
+
+/**
+ * The offending tag names, comma-joined, for the `details` of a rejection.
+ *
+ * Only the tag names travel — docxtemplater's own `explanation` is English
+ * prose, and the tag is the actionable half anyway ("go fix `questions` in
+ * Word"). Some ids name no single tag, so this can come back empty; the client
+ * headline stands on its own in that case.
+ */
+function describeIssues(issues: DocxTemplateIssue[]): string | undefined {
+  const tags = Array.from(new Set(issues.map((i) => i.tag).filter(Boolean)))
+  return tags.length ? tags.join(", ") : undefined
+}
+
 export async function createDocumentTemplate(
   input: CreateInput
-): Promise<ActionResponse<{ id: string; mergeFields: string[] }>> {
+): Promise<ActionResponse<CreatedTemplate>> {
   try {
     const session = await auth()
     if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
@@ -51,14 +80,31 @@ export async function createDocumentTemplate(
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    // Best-effort field detection — a template with no detectable tags is still storable.
-    let mergeFields: string[] = []
+    // Inspect the file BEFORE storing it. A template that cannot compile is
+    // refused outright: stored active it would sit in the list looking healthy
+    // and fail on every single fill, and the old code reported that case as
+    // "no tags found" — the opposite of what is wrong with it.
+    let report
     try {
       const buffer = await loadTemplateBufferFromUrl(input.fileUrl)
-      mergeFields = detectMergeFields(buffer)
+      report = validateDocxTemplate(
+        buffer,
+        (FIELD_VOCAB[input.category] ?? []).map((f) => f.tag)
+      )
     } catch {
-      mergeFields = []
+      // Unreadable file (fetch failed, not a zip). Nothing to store.
+      return actionError(ACTION_ERRORS.TEMPLATE_INVALID)
     }
+
+    if (!report.compiles) {
+      return actionError(
+        ACTION_ERRORS.TEMPLATE_INVALID,
+        describeIssues(report.structuralErrors)
+      )
+    }
+
+    const known = new Set((FIELD_VOCAB[input.category] ?? []).map((f) => f.tag))
+    const unknownFields = report.tags.filter((t) => !known.has(t))
 
     const tpl = await db.documentTemplate.create({
       data: {
@@ -68,14 +114,22 @@ export async function createDocumentTemplate(
         description: input.description?.trim() || null,
         storageKey: deriveStorageKey(input.fileUrl),
         fileUrl: input.fileUrl,
-        mergeFields,
+        mergeFields: report.tags,
         createdBy: session.user.id!,
       },
     })
 
     revalidatePath("/exams/templates")
     revalidatePath("/grades/templates")
-    return { success: true, data: { id: tpl.id, mergeFields } }
+    return {
+      success: true,
+      data: {
+        id: tpl.id,
+        mergeFields: report.tags,
+        unknownFields,
+        singleBraceMarkers: report.singleBraceMarkers,
+      },
+    }
   } catch (error) {
     return {
       success: false,

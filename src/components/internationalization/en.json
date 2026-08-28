@@ -422,7 +422,10 @@
       "FILE_TOO_LARGE": "File is too large",
       "INVALID_FILE_TYPE": "Invalid file type",
       "PAYMENT_GATEWAY_UNAVAILABLE": "The payment gateway is unavailable right now. Please try again later.",
-      "PAYMENT_REFERENCE_ALREADY_USED": "This payment reference has already been used."
+      "PAYMENT_REFERENCE_ALREADY_USED": "This payment reference has already been used.",
+      "TEMPLATE_NOT_FOUND": "Template not found",
+      "TEMPLATE_INVALID": "This template's merge tags are broken, so it cannot be filled",
+      "QUESTION_BANK_EMPTY": "The question bank has no questions matching this blueprint"
     },
     "tryAgain": "Try again"
   },

@@ -220,6 +220,11 @@ describe("single-brace loop syntax", () => {
    * engine's `{{ }}` delimiters a `{#tag}` loop is not a loop. It prints
    * literally, its body is dropped — and the field detector still reports the
    * inner tags, so the upload UI's coverage badges look correct.
+   *
+   * `detectMergeFields` still cannot see it, and that is not a bug in it — it
+   * reports merge tags, and these are text. The upload path catches it
+   * separately now via `validateDocxTemplate().singleBraceMarkers`; see
+   * `docx-validate.test.ts`.
    */
   it("is not a loop, and detection does not reveal that", () => {
     const wrong = buildDocx([

@@ -9,7 +9,11 @@ import JSZip from "jszip"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { fillDocxTemplate, loadTemplateBufferFromUrl } from "@/lib/docx-fill"
+import {
+  docxTemplateIssues,
+  fillDocxTemplate,
+  loadTemplateBufferFromUrl,
+} from "@/lib/docx-fill"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { BULK_MAX_ENTITIES } from "./config"
@@ -32,6 +36,29 @@ interface GeneratedFile {
 
 function sanitize(s: string): string {
   return s.replace(/[^\w.\-؀-ۿ]+/g, "_").slice(0, 60) || "document"
+}
+
+/**
+ * Turn a thrown fill error into a coded response.
+ *
+ * Uploads are screened now, but templates stored before that screening — and
+ * any file edited in Word after upload — still reach `doc.render()` broken.
+ * docxtemplater's wrapper error says `"Multi error"`, so returning
+ * `error.message` here showed a teacher those two words and nothing else.
+ */
+function generateFailure(
+  error: unknown,
+  fallback: (typeof ACTION_ERRORS)[keyof typeof ACTION_ERRORS]
+) {
+  const issues = docxTemplateIssues(error)
+  if (issues.length) {
+    const tags = Array.from(new Set(issues.map((i) => i.tag).filter(Boolean)))
+    return actionError(
+      ACTION_ERRORS.TEMPLATE_INVALID,
+      tags.length ? tags.join(", ") : undefined
+    )
+  }
+  return actionError(fallback)
 }
 
 async function loadTemplate(templateId: string, schoolId: string) {
@@ -85,11 +112,7 @@ export async function generateDocument(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to generate document",
-    }
+    return generateFailure(error, ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -104,6 +127,7 @@ async function fillBulk(
 
   const zip = new JSZip()
   let ok = 0
+  let lastError: unknown
   for (const entityId of entityIds) {
     try {
       const data = await resolveDocumentData(tpl.category, entityId, {
@@ -118,12 +142,16 @@ async function fillBulk(
       // De-dupe identical names by suffixing the index.
       zip.file(`${name}-${ok + 1}.docx`, filled)
       ok++
-    } catch {
+    } catch (error) {
       // Skip an entity that fails to resolve/fill; the rest still generate.
+      // Kept only to diagnose the case where NONE of them worked.
+      lastError = error
     }
   }
 
-  if (ok === 0) return actionError(ACTION_ERRORS.CREATE_FAILED)
+  // A broken template fails identically for every entity, so "none succeeded"
+  // is usually one bad `.docx` rather than 900 bad students — say which.
+  if (ok === 0) return generateFailure(lastError, ACTION_ERRORS.CREATE_FAILED)
 
   const zipBuffer = await zip.generateAsync({ type: "nodebuffer" })
   return {
@@ -162,11 +190,7 @@ export async function generateDocumentsBulk(
 
     return fillBulk(tpl, entityIds, schoolId)
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to generate documents",
-    }
+    return generateFailure(error, ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -206,11 +230,7 @@ export async function generateFromDefaultTemplateBulk(
 
     return fillBulk(tpl, entityIds, schoolId)
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to generate documents",
-    }
+    return generateFailure(error, ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -259,10 +279,6 @@ export async function generateFromDefaultTemplate(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to generate document",
-    }
+    return generateFailure(error, ACTION_ERRORS.CREATE_FAILED)
   }
 }

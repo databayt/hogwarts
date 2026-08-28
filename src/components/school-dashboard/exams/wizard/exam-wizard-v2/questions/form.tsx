@@ -12,6 +12,7 @@ import React, {
 } from "react"
 import { FileQuestion, Wand2 } from "lucide-react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -74,8 +75,14 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
       autoGenerateExamQuestions(generatedExamId)
         .then((result) => {
           if (!result.success || !result.data) {
+            // `result.error` is an ACTION_ERRORS code — toasting it raw would
+            // show a teacher `QUESTION_BANK_EMPTY`.
             ErrorToast(
-              result.error ?? t?.autoGenerateError ?? "Auto-generation failed"
+              actionErrorMessage(
+                result.error,
+                dictionary,
+                t?.autoGenerateError ?? "Auto-generation failed"
+              )
             )
             return
           }

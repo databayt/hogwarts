@@ -130,7 +130,11 @@ export const ACTION_ERRORS = {
   // Exam Template / Session
   TEMPLATE_NOT_FOUND: "TEMPLATE_NOT_FOUND",
   TEMPLATE_CREATE_FAILED: "TEMPLATE_CREATE_FAILED",
+  /** An uploaded `.docx` whose merge tags do not compile — it can never fill. */
+  TEMPLATE_INVALID: "TEMPLATE_INVALID",
   SESSION_NOT_FOUND: "SESSION_NOT_FOUND",
+  /** The question bank held nothing matching the blueprint's distribution. */
+  QUESTION_BANK_EMPTY: "QUESTION_BANK_EMPTY",
 
   // Certificate
   CERTIFICATE_NOT_FOUND: "CERTIFICATE_NOT_FOUND",

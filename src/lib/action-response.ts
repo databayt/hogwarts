@@ -15,6 +15,12 @@ export interface ActionResponse<T = any> {
   success: boolean
   data?: T
   error?: string
+  /**
+   * Extra detail behind `error`, as produced by `actionError(code, details)`.
+   * Never user-facing prose on its own — `error` carries the translatable code
+   * and this names the specifics (e.g. which merge tags are broken).
+   */
+  details?: string
   warning?: string
   code?: string
   errors?: Record<string, string>

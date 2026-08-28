@@ -422,7 +422,10 @@
       "FILE_TOO_LARGE": "الملف كبير جداً",
       "INVALID_FILE_TYPE": "نوع الملف غير صالح",
       "PAYMENT_GATEWAY_UNAVAILABLE": "بوابة الدفع غير متاحة حالياً. يرجى المحاولة لاحقاً.",
-      "PAYMENT_REFERENCE_ALREADY_USED": "هذا المرجع للدفع مستخدم من قبل."
+      "PAYMENT_REFERENCE_ALREADY_USED": "هذا المرجع للدفع مستخدم من قبل.",
+      "TEMPLATE_NOT_FOUND": "لم يتم العثور على القالب",
+      "TEMPLATE_INVALID": "وسوم الدمج في هذا القالب معطوبة، لذا لا يمكن تعبئته",
+      "QUESTION_BANK_EMPTY": "لا توجد في بنك الأسئلة أسئلة تطابق هذا النموذج"
     },
     "tryAgain": "إعادة المحاولة"
   },
