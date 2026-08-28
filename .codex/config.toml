@@ -1,0 +1,32 @@
+[shell_environment_policy]
+inherit = "core"
+
+[shell_environment_policy.set]
+CLAUDE_CODE_SUBAGENT_MODEL = "sonnet"
+PROJECT_NAME = "Hogwarts School Automation Platform"
+PROJECT_TYPE = "nextjs-prisma-multiTenant"
+MULTI_TENANT = "true"
+BMAD_ENABLED = "true"
+AUTOMATION_LEVEL = "maximum"
+TDD_ENFORCE = "true"
+ORCHESTRATOR_MODEL = "claude-opus-5"
+DEFAULT_MODEL = "claude-opus-5"
+COVERAGE_TARGET = "95"
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
+
+[mcp_servers.postgres-dev]
+command = "npx"
+args = [
+    "-y",
+    "@bytebase/dbhub",
+]
+env_vars = ["DATABASE_URL"]
+
+[mcp_servers.svg-tools]
+command = "npx"
+args = [
+    "-y",
+    "svgo",
+]

@@ -2,7 +2,7 @@
 
 ## User Decisions
 
-- **Course Type**: StreamCourses (LMS online courses with chapters/lessons)
+- **Course Type**: LumosCourses (LMS online courses with chapters/lessons)
 - **DB Structure**: Two separate records per course (one EN, one AR with same slug)
 - **Grade Levels**: All levels (KG-12) - complete curriculum coverage
 
@@ -25,7 +25,7 @@ interface BilingualCourseData {
   descriptionEn: string
   price: number
   categoryKey: string // Maps to bilingual category
-  level: StreamCourseLevel
+  level: LumosCourseLevel
   imageUrl: string
   chapters: BilingualChapterData[]
 }
@@ -127,7 +127,7 @@ export async function seedStream(...) {
 
 **No changes needed** (already filters by lang):
 
-- `src/components/stream/data/course/get-all-courses.ts`
+- `src/components/lumos/data/course/get-all-courses.ts`
 - Course listing pages
 
 ---

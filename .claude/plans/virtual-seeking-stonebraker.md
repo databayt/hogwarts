@@ -8,10 +8,10 @@ Reference: https://anthropic.skilljar.com/claude-code-in-action
 
 ## Files
 
-| #   | File                                               | Change                                                                                                |
-| --- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| 1   | `prisma/seeds/clickview-catalog.ts`                | `SUBJECT_DESCRIPTIONS` (DONE), wire into upsert                                                       |
-| 2   | `src/components/stream/courses/[slug]/content.tsx` | Add `SUBJECT_COURSE_DATA` map with all 5 sections per subject, replace chapter-listing with real data |
+| #   | File                                              | Change                                                                                                |
+| --- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 1   | `prisma/seeds/clickview-catalog.ts`               | `SUBJECT_DESCRIPTIONS` (DONE), wire into upsert                                                       |
+| 2   | `src/components/lumos/courses/[slug]/content.tsx` | Add `SUBJECT_COURSE_DATA` map with all 5 sections per subject, replace chapter-listing with real data |
 
 ## Data Flow: 5 Sections
 
@@ -72,7 +72,7 @@ const SUBJECT_COURSE_DATA: Record<
 ```tsx
 <p style={{ color: colors.muted }}>
   {course.description ||
-    (dict?.stream?.courseDetail?.thisCourseDescription ??
+    (dict?.lumos?.courseDetail?.thisCourseDescription ??
       "This comprehensive course is designed to take you from beginner to advanced level.")}
 </p>
 ```
@@ -110,7 +110,7 @@ const SUBJECT_COURSE_DATA: Record<
 **After**: Use map value, fallback to generic:
 
 ```tsx
-{courseData?.prerequisites || dict?.stream?....?.learnersDescription || "No specific prerequisites..."}
+{courseData?.prerequisites || dict?.lumos?....?.learnersDescription || "No specific prerequisites..."}
 ```
 
 ### 7. `content.tsx` — Who this course is for (line 373)

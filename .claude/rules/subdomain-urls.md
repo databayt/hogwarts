@@ -3,7 +3,7 @@ paths:
   - "src/app/**/s/[subdomain]/**"
   - "src/components/school-dashboard/**"
   - "src/components/school-marketing/**"
-  - "src/components/stream/**"
+  - "src/components/lumos/**"
   - "src/components/internal-onboarding/**"
   - "src/components/template/platform-sidebar/**"
 ---
