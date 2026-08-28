@@ -80,6 +80,12 @@ and [ISSUE](ISSUE.md) for status + the pending additive migration SQL.
   `TemplateError`s to the same code so templates stored before this gate still fail legibly.
   The marker scan strips XML to text first (headers/footers included) — Word splits a
   hand-typed tag across `<w:r>` runs, so a regex over `document.xml` sees nothing.
+- **`order` in the EXAM_PAPER resolver is PRINT position, not selection order (2026-08-28).**
+  Selection walks the distribution object's keys; `sections` regroups by `SECTION_ORDER`.
+  The resolver renumbers so both layouts read and number identically, and the flat
+  `questions` array IS `sections.flatMap(s => s.questions)` — keep them derived from one
+  another or the two layouts diverge again. The persisted `GeneratedExamQuestion.order`
+  (answer key, online session) is a DIFFERENT number; do not conflate them.
 - **NEVER put a `{{tag}}` sample inside translatable prose (2026-08-28).** Braces and the
   `#` / `/` sigils are bidi-NEUTRAL, so inside an Arabic sentence they reorder:
   `{{/questions}}` renders as `{{questions/}}`, and a school types back what it saw. That is
