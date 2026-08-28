@@ -16,7 +16,19 @@
 
 import { PrismaClient } from "@prisma/client"
 
-const prisma = new PrismaClient()
+// The target database is printed before anything runs. `.env` carries several
+// commented-out DATABASE_URLs, and picking up the local one while believing you
+// are on production is the exact mistake this banner exists to prevent. Point
+// somewhere else with DATABASE_URL_OVERRIDE.
+const DB_URL = process.env.DATABASE_URL_OVERRIDE || process.env.DATABASE_URL
+
+const prisma = new PrismaClient(
+  process.env.DATABASE_URL_OVERRIDE
+    ? { datasources: { db: { url: process.env.DATABASE_URL_OVERRIDE } } }
+    : {}
+)
+
+const DB_HOST = String(DB_URL).replace(/^.*@/, "").replace(/[/?].*$/, "")
 
 const APPLY = process.argv.includes("--apply")
 const REVERT = process.argv.includes("--revert")
@@ -72,8 +84,9 @@ async function userCollisions(): Promise<{ email: string; schoolId: string | nul
 
 async function main() {
   console.log(
-    `\n${APPLY ? "APPLY" : "DRY RUN"} — ${OLD_DOMAIN} → ${NEW_DOMAIN} (role logins only)\n`
+    `\n${APPLY ? "APPLY" : "DRY RUN"} — ${OLD_DOMAIN} → ${NEW_DOMAIN} (role logins only)`
   )
+  console.log(`Database: ${DB_HOST}\n`)
 
   const collisions = await userCollisions()
   if (collisions.length > 0) {
