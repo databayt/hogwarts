@@ -36,6 +36,20 @@ These are the headline metrics the team commits to at "Foundation gate passed" +
 8. **Main thread budget** — sync flush never blocks the main thread > 16 ms (work moves to Web Worker).
 9. **First-byte cache invalidation** — server WebSocket push invalidates client cache within 200 ms of remote write.
 
+### Shipped 2026-08-29 — studying a Lumos lesson offline
+
+The first slice of this plan is live, scoped to lessons rather than the role
+epics above: a lesson downloads (video in resumable Range chunks, documents,
+summary, answer-key-free quiz) into IndexedDB (`src/lib/offline/db.ts`, no
+Dexie yet), the lesson page plays the local copy when offline, and an outbox
+(`src/lib/offline/outbox.ts`) queues playback position, completion, quiz
+answers and assignment text for `POST /api/offline/sync`, which is idempotent
+per item and answers a verdict per item. Rejections park visibly on
+`/offline` with retry/discard — the "pending sync visibility" row above is
+therefore ✓ for lessons and still ✗ for the other actions. The service worker
+(`public/service-worker.js`, v2) now actually installs: v1 precached a path
+that did not exist and never activated.
+
 ## Engineering principles (no compromise)
 
 These are non-negotiable. Each principle drives concrete choices in the architecture.
