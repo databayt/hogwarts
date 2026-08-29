@@ -54,6 +54,8 @@ export interface ScheduleItemProps {
   badgeVariant?: "default" | "secondary" | "destructive" | "outline"
   isActive?: boolean
   className?: string
+  /** Trailing slot — a Join button, an Online marker. */
+  action?: React.ReactNode
 }
 
 export interface AnnouncementCardProps {
@@ -311,6 +313,13 @@ export interface StudentDashboardData {
     room: string
     startTime: string
     endTime: string
+    /** The class is ALSO online today — resolved by `attachLiveClasses`. */
+    liveClass: {
+      sessionId: string | null
+      provider: "livekit" | "external"
+      meetingUrl: string | null
+      status: string | null
+    } | null
   }[]
   upcomingAssignments: {
     id: string

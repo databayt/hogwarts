@@ -65,6 +65,9 @@ import {
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveActiveTerm } from "@/lib/term-resolver"
+import { schoolDayOfWeek } from "@/components/school-dashboard/conference/day-window"
+import { attachLiveClasses } from "@/components/school-dashboard/timetable/live-class-join"
 import { getText } from "@/components/translation/display"
 import type { Lang } from "@/components/translation/types"
 
@@ -607,11 +610,18 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   tomorrow.setDate(tomorrow.getDate() + 1)
   const dayOfWeek = today.getDay()
 
+  // Section-based slots carry `teacherId` on the row itself and have no
+  // `class`; the old `class: { teacherId }` filter was an implicit inner join
+  // that matched none of them, so the count read 0 for every teacher.
   const todaysClasses = await db.timetable.findMany({
     where: {
       schoolId,
       dayOfWeek: dayOfWeek,
-      class: { teacherId: teacher.id },
+      weekOffset: 0,
+      OR: [
+        { teacherId: teacher.id },
+        { class: { is: { teacherId: teacher.id } } },
+      ],
     },
     include: {
       class: {
@@ -620,6 +630,10 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
           _count: { select: { studentClasses: true } },
         },
       },
+      section: {
+        select: { name: true, _count: { select: { students: true } } },
+      },
+      subject: { select: { name: true } },
       classroom: { select: { roomName: true } },
       period: { select: { startTime: true, endTime: true } },
     },
@@ -724,7 +738,10 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   return {
     todaysClasses: todaysClasses.map((entry) => ({
       id: entry.id,
-      name: entry.class?.name || "Unknown Class",
+      name:
+        entry.section && entry.subject
+          ? `${entry.subject.name} · ${entry.section.name}`
+          : entry.class?.name || entry.section?.name || "Unknown Class",
       time: entry.period
         ? `${new Date(entry.period.startTime).toLocaleTimeString([], {
             hour: "2-digit",
@@ -735,7 +752,10 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
           })}`
         : "TBA",
       room: entry.classroom?.roomName || "TBA",
-      students: entry.class?._count?.studentClasses || 0,
+      students:
+        entry.section?._count.students ??
+        entry.class?._count.studentClasses ??
+        0,
     })),
     pendingGrading: pendingGradingCount,
     attendanceDue: attendanceDueCount,
@@ -773,7 +793,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
 
   const student = await db.student.findFirst({
     where: { userId, schoolId },
-    select: { id: true },
+    select: { id: true, sectionId: true },
   })
 
   if (!student) {
@@ -788,29 +808,75 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const dayOfWeek = today.getDay()
 
-  const studentClasses = await db.studentClass.findMany({
-    where: { studentId: student.id, schoolId },
-    select: { classId: true },
-  })
+  // Today's classes — the same read the timetable block does, for the same
+  // reasons. This used to filter on `classId` only, and the production
+  // generator writes section-based slots with NO classId, so the card was
+  // empty for every section-placed student — which is every student. It also
+  // read the weekday from the server clock (UTC on Vercel), not the school's.
+  const [schoolRow, { term: activeTerm }, studentClasses] = await Promise.all([
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { timezone: true },
+    }),
+    resolveActiveTerm(schoolId),
+    db.studentClass.findMany({
+      where: { studentId: student.id, schoolId },
+      select: { classId: true },
+    }),
+  ])
+  const now = new Date()
+  const dayOfWeek = schoolDayOfWeek(schoolRow?.timezone ?? "UTC", now)
   const classIds = studentClasses.map((sc) => sc.classId)
+  const orClauses: Array<Record<string, unknown>> = []
+  if (classIds.length > 0) orClauses.push({ classId: { in: classIds } })
+  if (student.sectionId) orClauses.push({ sectionId: student.sectionId })
 
-  const todaysTimetable = await db.timetable.findMany({
-    where: { schoolId, dayOfWeek, classId: { in: classIds } },
-    include: {
-      class: {
-        select: {
-          name: true,
-          subject: { select: { name: true } },
-          teacher: { select: { firstName: true, lastName: true } },
-        },
-      },
-      classroom: { select: { roomName: true } },
-      period: { select: { startTime: true, endTime: true } },
-    },
-    orderBy: { period: { startTime: "asc" } },
-  })
+  const todaysSlots =
+    orClauses.length === 0
+      ? []
+      : await db.timetable.findMany({
+          where: {
+            schoolId,
+            dayOfWeek,
+            weekOffset: 0,
+            ...(activeTerm ? { termId: activeTerm.id } : {}),
+            OR: orClauses,
+          },
+          include: {
+            class: {
+              select: {
+                name: true,
+                subject: { select: { name: true } },
+                teacher: { select: { firstName: true, lastName: true } },
+              },
+            },
+            section: { select: { name: true } },
+            subject: { select: { name: true } },
+            teacher: { select: { firstName: true, lastName: true } },
+            classroom: { select: { roomName: true } },
+            period: { select: { startTime: true, endTime: true } },
+          },
+          orderBy: { period: { startTime: "asc" } },
+        })
+
+  // A class that is also online today gets its Join target — the same resolver
+  // the timetable today-cards use, so the two surfaces can never disagree.
+  const todaysTimetable = activeTerm
+    ? await attachLiveClasses(
+        schoolId,
+        activeTerm.id,
+        now,
+        todaysSlots.map((slot) => ({
+          ...slot,
+          timetableId: slot.id,
+        }))
+      )
+    : todaysSlots.map((slot) => ({
+        ...slot,
+        timetableId: slot.id,
+        liveClass: null,
+      }))
 
   const upcomingAssignments = await db.schoolAssignment.findMany({
     where: {
@@ -870,19 +936,27 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     totalDays > 0 ? (presentDays / totalDays) * 100 : 0
 
   return {
-    todaysTimetable: todaysTimetable.map((entry) => ({
-      id: entry.id,
-      subject: entry.class?.subject?.name || "Unknown Subject",
-      className: entry.class?.name || "Unknown Class",
-      teacher: entry.class?.teacher
-        ? `${entry.class.teacher.firstName || ""} ${entry.class.teacher.lastName || ""}`.trim() ||
-          "Unknown Teacher"
-        : "Unknown Teacher",
-      room: entry.classroom?.roomName || "TBA",
-      startTime:
-        entry.period?.startTime?.toISOString() || new Date().toISOString(),
-      endTime: entry.period?.endTime?.toISOString() || new Date().toISOString(),
-    })),
+    todaysTimetable: todaysTimetable.map((entry) => {
+      const teacher = entry.teacher ?? entry.class?.teacher ?? null
+      return {
+        id: entry.id,
+        subject:
+          entry.subject?.name ||
+          entry.class?.subject?.name ||
+          "Unknown Subject",
+        className: entry.section?.name || entry.class?.name || "Unknown Class",
+        teacher: teacher
+          ? `${teacher.firstName || ""} ${teacher.lastName || ""}`.trim() ||
+            "Unknown Teacher"
+          : "Unknown Teacher",
+        room: entry.classroom?.roomName || "TBA",
+        startTime:
+          entry.period?.startTime?.toISOString() || new Date().toISOString(),
+        endTime:
+          entry.period?.endTime?.toISOString() || new Date().toISOString(),
+        liveClass: entry.liveClass,
+      }
+    }),
     upcomingAssignments: upcomingAssignments.map((assignment) => ({
       id: assignment.id,
       title: assignment.title,
@@ -2835,7 +2909,7 @@ export async function getUpcomingDataByRole(role: string) {
 async function getStudentUpcomingData(userId: string, schoolId: string) {
   const student = await db.student.findFirst({
     where: { userId, schoolId },
-    select: { id: true },
+    select: { id: true, sectionId: true },
   })
 
   if (!student) return null
@@ -2869,15 +2943,24 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
 
   // Get next class
   const dayOfWeek = today.getDay()
-  const nextClass = await db.timetable.findFirst({
-    where: { schoolId, dayOfWeek, classId: { in: classIds } },
-    include: {
-      class: { select: { subject: { select: { name: true } } } },
-      classroom: { select: { roomName: true } },
-      period: { select: { startTime: true } },
-    },
-    orderBy: { period: { startTime: "asc" } },
-  })
+  // Section arm added — see getStudentDashboardData: generated slots have no
+  // classId, so a classId-only filter finds nothing for a section-placed student.
+  const nextOr: Array<Record<string, unknown>> = []
+  if (classIds.length > 0) nextOr.push({ classId: { in: classIds } })
+  if (student.sectionId) nextOr.push({ sectionId: student.sectionId })
+  const nextClass =
+    nextOr.length === 0
+      ? null
+      : await db.timetable.findFirst({
+          where: { schoolId, dayOfWeek, weekOffset: 0, OR: nextOr },
+          include: {
+            class: { select: { subject: { select: { name: true } } } },
+            subject: { select: { name: true } },
+            classroom: { select: { roomName: true } },
+            period: { select: { startTime: true } },
+          },
+          orderBy: { period: { startTime: "asc" } },
+        })
 
   return {
     assignments: assignments.map((a) => ({
@@ -2893,7 +2976,10 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
     })),
     nextClass: nextClass
       ? {
-          subject: nextClass.class?.subject?.name || "Unknown",
+          subject:
+            nextClass.subject?.name ||
+            nextClass.class?.subject?.name ||
+            "Unknown",
           time: nextClass.period?.startTime
             ? new Date(nextClass.period.startTime).toLocaleTimeString([], {
                 hour: "2-digit",
@@ -2920,12 +3006,16 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
   tomorrow.setDate(tomorrow.getDate() + 1)
   const dayOfWeek = today.getDay()
 
-  // Get today's classes
+  // Get today's classes — on the section axis too (see getTeacherDashboardData).
   const todaysClasses = await db.timetable.findMany({
     where: {
       schoolId,
       dayOfWeek,
-      class: { teacherId: teacher.id },
+      weekOffset: 0,
+      OR: [
+        { teacherId: teacher.id },
+        { class: { is: { teacherId: teacher.id } } },
+      ],
     },
     include: {
       class: {
@@ -2935,6 +3025,10 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
           _count: { select: { studentClasses: true } },
         },
       },
+      section: {
+        select: { name: true, _count: { select: { students: true } } },
+      },
+      subject: { select: { name: true } },
       classroom: { select: { roomName: true } },
       period: { select: { startTime: true } },
     },

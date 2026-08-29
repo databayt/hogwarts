@@ -15,6 +15,7 @@ export function ScheduleItem({
   badgeVariant = "default",
   isActive,
   className,
+  action,
 }: ScheduleItemProps) {
   return (
     <div
@@ -42,6 +43,7 @@ export function ScheduleItem({
         )}
       </div>
       {badge && <Badge variant={badgeVariant}>{badge}</Badge>}
+      {action}
     </div>
   )
 }

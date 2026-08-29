@@ -17,6 +17,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { type Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { StudentDashboardStats } from "@/components/school-dashboard/shared/stats"
 
@@ -36,6 +37,7 @@ import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { ScheduleItem } from "./schedule-item"
 import { SectionHeading } from "./section-heading"
+import { TodayLiveAction } from "./today-live-action"
 import { Upcoming } from "./upcoming"
 import { Weather } from "./weather"
 import { getWeatherData } from "./weather-actions"
@@ -339,6 +341,24 @@ export async function StudentDashboard({
                     badge={index === 0 ? "Now" : undefined}
                     badgeVariant={index === 0 ? "default" : "secondary"}
                     isActive={index === 0}
+                    // Join from the home page too — the room is still where the
+                    // class meets; online is additive, so the marker sits beside it.
+                    action={
+                      <TodayLiveAction
+                        liveClass={entry.liveClass}
+                        startTime={entry.startTime}
+                        endTime={entry.endTime}
+                        lang={locale as Locale}
+                        joinLabel={
+                          dictionary?.liveClasses?.join ??
+                          (locale === "ar" ? "انضمام" : "Join")
+                        }
+                        onlineLabel={
+                          dictionary?.liveClasses?.online ??
+                          (locale === "ar" ? "مباشر" : "Online")
+                        }
+                      />
+                    }
                   />
                 ))
               ) : (
