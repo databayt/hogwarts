@@ -19,6 +19,7 @@ import {
   getLessonReferenceContent,
   type LessonReferenceContent,
 } from "@/components/school-dashboard/conference/queries"
+import { SessionState } from "@/components/school-dashboard/conference/session-state"
 
 interface Props {
   id: string
@@ -72,6 +73,23 @@ export async function LiveClassDetailContent({
   const r = t?.references
 
   const canJoin = session.status === "live" || session.status === "scheduled"
+  const st = t?.states
+  const latestRecording = session.recordings?.[0] ?? null
+  const recordingState: "none" | "processing" | "ready" | "failed" =
+    !latestRecording
+      ? "none"
+      : latestRecording.status === "ready"
+        ? "ready"
+        : latestRecording.status === "failed" ||
+            latestRecording.status === "expired"
+          ? "failed"
+          : "processing"
+  // The recorded lesson lives in lumos once the bridge has published it.
+  const lessonSlug = session.catalogLesson?.chapter?.subject?.slug ?? null
+  const lessonHref =
+    latestRecording?.publishedVideoId && session.catalogLesson && lessonSlug
+      ? `/${locale}/lumos/courses/${lessonSlug}/${session.catalogLesson.id}`
+      : null
   // "Enabled" on a session that can never produce an MP4 is a lie the teacher
   // discovers on an empty recordings page. The bucket gate decides the label.
   const recordingAvailable = isRecordingConfigured()
@@ -144,6 +162,46 @@ export async function LiveClassDetailContent({
         </div>
         <Badge>{t?.status?.[session.status] ?? session.status}</Badge>
       </div>
+
+      {/* The student's one line: where the class is in its life, and the one
+          thing to do about it. Upcoming counts down; live carries the big
+          Enter; ended says whether a recording is coming, ready, or failed. */}
+      <SessionState
+        status={session.status}
+        scheduledStart={session.scheduledStart.toISOString()}
+        recording={recordingState}
+        joinHref={
+          !canJoin
+            ? null
+            : isExternal
+              ? (session.meetingUrl ?? null)
+              : `/${locale}/conference/${session.id}/room`
+        }
+        recordingHref={
+          recordingState === "ready"
+            ? `/${locale}/conference/${session.id}/recordings`
+            : null
+        }
+        lessonHref={lessonHref}
+        locale={locale}
+        labels={{
+          upcoming: st?.upcoming ?? "The class has not started yet",
+          startsAt: st?.startsAt ?? "Starts at {time}",
+          startsIn: st?.startsIn ?? "Starts in {value}",
+          live: st?.live ?? "The class is live now",
+          enter: st?.enter ?? "Enter the live class",
+          ended: st?.ended ?? "The class has ended",
+          cancelled: st?.cancelled ?? "The class was cancelled",
+          processing: st?.processing ?? "Preparing the class recording…",
+          ready: st?.ready ?? "The recording is available to watch",
+          failed: st?.failed ?? "The recording could not be produced",
+          noRecording: st?.noRecording ?? "This class was not recorded",
+          watchRecording: st?.watchRecording ?? "Watch the recording",
+          openLesson: st?.openLesson ?? "Open the recorded lesson",
+          minutes: st?.minutes ?? "{n} min",
+          hours: st?.hours ?? "{n} h",
+        }}
+      />
 
       {session.description && (
         <p className={typography.p}>{session.description}</p>
@@ -241,6 +299,7 @@ export async function LiveClassDetailContent({
 
       <div className="flex gap-2">
         {canJoin &&
+          canEnd &&
           (isExternal ? (
             session.meetingUrl ? (
               <Button asChild>

@@ -24,15 +24,24 @@ import { getTenantContext } from "@/lib/tenant-context"
  * Unlike video, these are *meant* to be downloaded, so the signed URL carries
  * a Content-Disposition filename. The protection here is about who may fetch
  * them, not about stopping a save.
+ *
+ * Two opt-in modes for callers that are not a browser's save dialog:
+ *   `?inline=1` — redirect without the attachment disposition, so a PDF opens
+ *                 in the viewer (and pdf.js can render it in the live room).
+ *   `?ticket=1` — answer JSON `{ url, filename, contentType }` instead of
+ *                 redirecting, for the offline download manager, which needs
+ *                 the signed URL itself to fetch the bytes into IndexedDB.
  */
 
 const KINDS = new Set(["material", "attachment"])
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ kind: string; id: string }> }
 ): Promise<NextResponse> {
   const { kind, id } = await params
+  const inline = req.nextUrl.searchParams.get("inline") === "1"
+  const ticket = req.nextUrl.searchParams.get("ticket") === "1"
 
   if (!KINDS.has(kind)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
@@ -66,16 +75,34 @@ export async function GET(
   const signedUrl = await getSignedReadUrl(
     resolved.key,
     SIGNED_READ_TTL_SECONDS,
-    { downloadFilename: resolved.filename, contentType: resolved.contentType }
+    inline || ticket
+      ? { contentType: resolved.contentType }
+      : {
+          downloadFilename: resolved.filename,
+          contentType: resolved.contentType,
+        }
   )
   if (!signedUrl) {
     return NextResponse.json({ error: "Unavailable" }, { status: 503 })
   }
 
-  return NextResponse.redirect(signedUrl, {
-    status: 302,
-    headers: { "Cache-Control": "private, no-store, max-age=0" },
-  })
+  const noStore = { "Cache-Control": "private, no-store, max-age=0" }
+
+  if (ticket) {
+    return NextResponse.json(
+      {
+        url: signedUrl,
+        expiresAt: new Date(
+          Date.now() + SIGNED_READ_TTL_SECONDS * 1000
+        ).toISOString(),
+        filename: resolved.filename,
+        contentType: resolved.contentType ?? null,
+      },
+      { headers: noStore }
+    )
+  }
+
+  return NextResponse.redirect(signedUrl, { status: 302, headers: noStore })
 }
 
 type ResolvedFile = {

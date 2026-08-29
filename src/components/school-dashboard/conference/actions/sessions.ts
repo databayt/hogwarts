@@ -667,7 +667,13 @@ export async function getLiveClass(id: string) {
         },
         section: { select: { id: true, name: true } },
         subject: { select: { id: true, name: true } },
-        catalogLesson: { select: { id: true, name: true } },
+        catalogLesson: {
+          select: {
+            id: true,
+            name: true,
+            chapter: { select: { subject: { select: { slug: true } } } },
+          },
+        },
         // The physical room the anchored class ALSO meets in. Online is
         // additive — a hybrid school's staff need to see both halves here.
         timetable: {

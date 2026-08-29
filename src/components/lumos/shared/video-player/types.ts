@@ -48,6 +48,8 @@ export interface VideoPlayerLabels {
   notes?: string
   reminders?: string
   volume?: string
+  /** Playback-speed menu button. */
+  speed?: string
   mute?: string
   unmute?: string
   // Reused from `lumos.lesson.chapterShort`/`lessonShort` — NOT duplicated

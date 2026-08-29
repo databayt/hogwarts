@@ -128,6 +128,7 @@ export function LumosLessonContent({
     notes: vp?.notes,
     reminders: vp?.reminders,
     volume: vp?.volume,
+    speed: vp?.speed,
     mute: vp?.mute,
     unmute: vp?.unmute,
     chapterShort: d?.chapterShort,
@@ -264,11 +265,20 @@ export function LumosLessonContent({
   const handleProgress = useCallback(
     (progress: VideoProgress) => {
       if (playingFallback) return
+      // The server owns the completion rule (watched-through, see
+      // lib/progress-core.ts) — reflect its verdict rather than waiting for
+      // the <video> element's unreliable `ended`.
       updateLessonProgress({
         lessonId: lesson.id,
         watchedSeconds: Math.floor(progress.watchedSeconds),
         totalSeconds: Math.floor(progress.duration),
       })
+        .then((r) => {
+          if (r.status === "success" && r.completed) setIsCompleted(true)
+        })
+        .catch(() => {
+          /* a lost heartbeat is recaptured by the next one */
+        })
     },
     [lesson.id, playingFallback]
   )
@@ -1191,6 +1201,8 @@ function LessonQuiz({
     startSubmit(async () => {
       const res = await submitLessonQuiz({
         lessonId,
+        // One id per press: a retried request resolves to the same attempt.
+        attemptId: crypto.randomUUID(),
         answers: questions.map((q) =>
           q.choices === null
             ? { questionId: q.id, answerText: texts[q.id] ?? "" }

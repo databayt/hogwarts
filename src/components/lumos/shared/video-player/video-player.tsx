@@ -597,7 +597,7 @@ export function VideoPlayer({
         onClick={actions.togglePlay}
         onError={handleSourceError}
         aria-label={title}
-        controlsList="nodownload noplaybackrate"
+        controlsList="nodownload"
         // PiP and casting render the bare video element, leaving the
         // watermark overlay behind — a clean capture path on school content.
         disablePictureInPicture={isProtected}
@@ -752,6 +752,54 @@ export function VideoPlayer({
             transition={{ duration: 0.3 }}
             className="absolute end-4 top-4 z-10 flex items-center gap-1"
           >
+            {/* Playback speed — a real control: sets video.playbackRate. The
+                menu state existed for months with nothing rendering it. */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowSpeedMenu((v) => !v)
+                }}
+                className="flex items-center rounded-full px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-[40px] transition-opacity hover:opacity-80"
+                style={topGlassStyle}
+                aria-haspopup="menu"
+                aria-expanded={showSpeedMenu}
+                aria-label={labels?.speed ?? "Playback speed"}
+              >
+                {state.playbackRate}×
+              </button>
+              {showSpeedMenu && (
+                <div
+                  role="menu"
+                  className="absolute end-0 top-full z-20 mt-1 min-w-[5.5rem] overflow-hidden rounded-xl border border-white/10 bg-black/80 py-1 backdrop-blur-[40px]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {PLAYBACK_SPEEDS.map((rate) => (
+                    <button
+                      key={rate}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={state.playbackRate === rate}
+                      onClick={() => {
+                        actions.setPlaybackRate(rate)
+                        setShowSpeedMenu(false)
+                      }}
+                      className={
+                        "flex w-full items-center justify-between px-3 py-1.5 text-start text-xs text-white transition-colors hover:bg-white/10 " +
+                        (state.playbackRate === rate ? "font-semibold" : "")
+                      }
+                    >
+                      <span>{rate}×</span>
+                      {state.playbackRate === rate && (
+                        <span aria-hidden>✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Volume — always-visible horizontal pill */}
             <div
               className="flex items-center gap-2 rounded-full px-3 py-1.5 backdrop-blur-[40px]"

@@ -248,5 +248,22 @@
     "exams": "Exams & quizzes",
     "assignments": "Assignments",
     "links": "Links"
+  },
+  "states": {
+    "upcoming": "The class has not started yet",
+    "startsAt": "Starts at {time}",
+    "startsIn": "Starts in {value}",
+    "live": "The class is live now",
+    "enter": "Enter the live class",
+    "ended": "The class has ended",
+    "cancelled": "The class was cancelled",
+    "processing": "Preparing the class recording…",
+    "ready": "The recording is available to watch",
+    "failed": "The recording could not be produced",
+    "noRecording": "This class was not recorded",
+    "watchRecording": "Watch the recording",
+    "openLesson": "Open the recorded lesson",
+    "minutes": "{n} min",
+    "hours": "{n} h"
   }
 }

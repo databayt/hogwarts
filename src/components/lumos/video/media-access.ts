@@ -69,7 +69,15 @@ export type MediaAccessDenial =
   | "payment-required" // PAID and this user has not bought it
 
 export type MediaAccessResult =
-  | { ok: true; storageKey: string; title: string }
+  | {
+      ok: true
+      storageKey: string
+      title: string
+      /** Set by the owner (or the live-class bridge) — gates the download route only. */
+      allowDownload: boolean
+      fileSize: number | null
+      durationSeconds: number | null
+    }
   | { ok: false; reason: MediaAccessDenial }
 
 /**
@@ -82,7 +90,7 @@ export type MediaAccessResult =
  * 2. Reviewers see their own school's videos at any approval state. The
  *    review queue is *by definition* PENDING, so without this a reviewer
  *    could open `/lumos/review` and be refused the very video they are being
- *    asked to judge. Mirrors `getPendingVideos`' own ADMIN/DEVELOPER +
+ *    asked to judge. Mirrors `getSubmittedVideos`' own ADMIN/DEVELOPER +
  *    schoolId gate.
  * 3. Everyone else needs `approvalStatus = APPROVED`.
  * 4. A school that has hidden the video via ContentOverride does not get it,
@@ -114,6 +122,9 @@ export async function resolveVideoAccess({
       storageKey: true,
       visibility: true,
       approvalStatus: true,
+      allowDownload: true,
+      fileSize: true,
+      durationSeconds: true,
       overrides: schoolId
         ? { where: { schoolId, isHidden: true }, select: { id: true } }
         : false,
@@ -129,7 +140,14 @@ export async function resolveVideoAccess({
     return { ok: false, reason: "not-found" }
   }
 
-  const granted = { ok: true as const, storageKey, title: video.title }
+  const granted = {
+    ok: true as const,
+    storageKey,
+    title: video.title,
+    allowDownload: video.allowDownload === true,
+    fileSize: video.fileSize ?? null,
+    durationSeconds: video.durationSeconds ?? null,
+  }
 
   // 1. Owner — always, regardless of visibility or approval state.
   if (video.userId === userId) return granted

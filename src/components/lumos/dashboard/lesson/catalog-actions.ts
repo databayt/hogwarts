@@ -3,37 +3,31 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { cookies } from "next/headers"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { checkUserRateLimit } from "@/lib/rate-limit"
-import { i18n, type Locale } from "@/components/internationalization/config"
-import { sendCompletionEmail } from "@/components/lumos/shared/email-service"
-import { lumosTenantUrl } from "@/components/lumos/shared/tenant-url"
-
-/** Resolve the user's locale from cookie */
-async function resolveLocale(): Promise<Locale> {
-  const cookieStore = await cookies()
-  const localeCookie = cookieStore.get("NEXT_LOCALE")?.value
-  if (localeCookie && i18n.locales.includes(localeCookie as Locale)) {
-    return localeCookie as Locale
-  }
-  return i18n.defaultLocale
-}
+import {
+  applyLessonProgress,
+  completeLessonCore,
+} from "@/components/lumos/lib/progress-core"
 
 type ApiResponse = {
   status: "success" | "error"
   message: string
+  /** True once the server's watched-through rule has completed the lesson. */
+  completed?: boolean
 }
 
 /**
  * Mark a catalog lesson as complete.
- * Migration: Uses LessonProgress + SubjectCertificate instead of Lumos models.
+ *
+ * The write itself lives in `lib/progress-core.ts` (shared with the offline
+ * sync route); this action owns the session and the permission decision.
  */
 export async function markLessonComplete(
   lessonId: string,
-  slug: string
+  _slug: string
 ): Promise<ApiResponse> {
   const session = await auth()
 
@@ -42,208 +36,28 @@ export async function markLessonComplete(
   }
 
   try {
-    // Verify lesson exists and get subject context
-    const lesson = await db.lesson.findUnique({
-      where: { id: lessonId },
-      select: {
-        id: true,
-        chapter: {
-          select: {
-            subjectId: true,
-            subject: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!lesson) {
-      return { status: "error", message: "Lesson not found" }
-    }
-
-    const subjectId = lesson.chapter.subjectId
-
-    // Check enrollment (or admin/teacher)
     const isAdmin = ["ADMIN", "TEACHER", "DEVELOPER"].includes(
       session.user.role || ""
     )
 
-    // Single enrollment lookup serves both the permission gate and the FK
-    // link (was two identical findFirst round-trips on the same unique row).
-    const enrollment = await db.enrollment.findFirst({
-      where: {
-        userId: session.user.id,
-        catalogSubjectId: subjectId,
-        isActive: true,
-      },
-      select: { id: true, schoolId: true },
+    const outcome = await completeLessonCore({
+      userId: session.user.id,
+      lessonId,
     })
 
-    if (!isAdmin && !enrollment) {
-      return {
-        status: "error",
-        message: "You must be enrolled to track progress",
-      }
+    if (outcome.status === "notFound") {
+      return { status: "error", message: "Lesson not found" }
     }
 
-    // Admin/teacher can view but we can't track progress without a valid
-    // enrollment FK.
-    if (!enrollment) {
-      return { status: "success", message: "Progress noted (no enrollment)" }
+    if (outcome.status === "noEnrollment") {
+      // Admin/teacher can view but we can't track progress without a valid
+      // enrollment FK.
+      return isAdmin
+        ? { status: "success", message: "Progress noted (no enrollment)" }
+        : { status: "error", message: "You must be enrolled to track progress" }
     }
 
-    // The upsert, the subject's lesson list, and the school's hide overrides
-    // are independent — run them together. The completion count below still
-    // depends on all three.
-    const [, allLessons, overrides] = await Promise.all([
-      db.lessonProgress.upsert({
-        where: {
-          userId_catalogLessonId: {
-            userId: session.user.id,
-            catalogLessonId: lessonId,
-          },
-        },
-        update: {
-          isCompleted: true,
-          completedAt: new Date(),
-          updatedAt: new Date(),
-        },
-        create: {
-          userId: session.user.id,
-          catalogLessonId: lessonId,
-          enrollmentId: enrollment.id,
-          isCompleted: true,
-          completedAt: new Date(),
-          lastWatchedAt: new Date(),
-        },
-      }),
-      // All published lessons in the subject (for the all-complete check).
-      db.lesson.findMany({
-        where: {
-          chapter: { subjectId },
-          status: "PUBLISHED",
-        },
-        select: { id: true, chapterId: true },
-      }),
-      // The school's hidden chapters/lessons. Hidden content is invisible to
-      // students (get-course.ts filters it out of the course view), so it
-      // must not count toward completion — otherwise a school hiding a single
-      // lesson makes `completedLessons === allLessons.length` impossible and
-      // the certificate permanently unreachable. hideQuiz-only rows carry
-      // isHidden=false and are correctly ignored here.
-      enrollment.schoolId
-        ? db.contentOverride.findMany({
-            where: {
-              schoolId: enrollment.schoolId,
-              isHidden: true,
-              OR: [
-                { catalogChapterId: { not: null } },
-                { catalogLessonId: { not: null } },
-              ],
-            },
-            select: { catalogChapterId: true, catalogLessonId: true },
-          })
-        : Promise.resolve([]),
-    ])
-
-    const hiddenChapterIds = new Set(
-      overrides.map((o) => o.catalogChapterId).filter(Boolean)
-    )
-    const hiddenLessonIds = new Set(
-      overrides.map((o) => o.catalogLessonId).filter(Boolean)
-    )
-    const visibleLessons = allLessons.filter(
-      (l) => !hiddenLessonIds.has(l.id) && !hiddenChapterIds.has(l.chapterId)
-    )
-
-    const completedLessons = await db.lessonProgress.count({
-      where: {
-        userId: session.user.id,
-        catalogLessonId: { in: visibleLessons.map((l) => l.id) },
-        isCompleted: true,
-      },
-    })
-
-    // If all school-visible lessons completed, issue certificate
-    if (
-      completedLessons === visibleLessons.length &&
-      visibleLessons.length > 0 &&
-      enrollment
-    ) {
-      // Update enrollment to COMPLETED
-      await db.enrollment.update({
-        where: { id: enrollment.id },
-        data: { status: "COMPLETED" },
-      })
-
-      // Check if certificate already exists
-      const existingCert = await db.subjectCertificate.findFirst({
-        where: {
-          userId: session.user.id,
-          catalogSubjectId: subjectId,
-        },
-      })
-
-      if (!existingCert) {
-        const subject = lesson.chapter.subject
-        const schoolId = enrollment.schoolId
-        const certNumber = `CERT-${(schoolId || "PLAT").slice(0, 4).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`
-
-        await db.subjectCertificate.create({
-          data: {
-            userId: session.user.id,
-            catalogSubjectId: subjectId,
-            enrollmentId: enrollment.id,
-            schoolId: schoolId ?? null,
-            subjectTitle: subject.name,
-            certificateNumber: certNumber,
-            completedAt: new Date(),
-          },
-        })
-
-        // Send completion email
-        const user = await db.user.findUnique({
-          where: { id: session.user.id },
-          select: { email: true, username: true },
-        })
-
-        const school = schoolId
-          ? await db.school.findUnique({
-              where: { id: schoolId },
-              select: { name: true },
-            })
-          : null
-
-        if (user?.email) {
-          const locale = await resolveLocale()
-          sendCompletionEmail({
-            to: user.email,
-            studentName: user.username || "Student",
-            courseTitle: subject.name,
-            certificateUrl: await lumosTenantUrl(
-              `/lumos/courses/${subject.slug}/certificate`,
-              locale
-            ),
-            schoolName: school?.name || "Platform",
-            completionDate: new Date().toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }),
-          }).catch((err) =>
-            console.error("Failed to send completion email:", err)
-          )
-        }
-      }
-    }
-
-    revalidatePath("/[lang]/s/[subdomain]/lumos/courses/[slug]", "page")
-    return { status: "success", message: "Progress updated" }
+    return { status: "success", message: "Progress updated", completed: true }
   } catch (error) {
     console.error("Failed to mark catalog lesson complete:", error)
     return { status: "error", message: "Failed to update progress" }
@@ -320,7 +134,9 @@ export async function getLessonProgress(lessonId: string): Promise<{
 }
 
 /**
- * Update video playback progress for resume functionality.
+ * Update video playback progress for resume functionality. Completes the
+ * lesson server-side once the position crosses the watched-through mark —
+ * see `isWatchedThrough` in `lib/progress-core.ts`.
  */
 export async function updateLessonProgress(data: {
   lessonId: string
@@ -347,54 +163,29 @@ export async function updateLessonProgress(data: {
   }
 
   try {
-    // Get enrollment for linking
-    const lesson = await db.lesson.findUnique({
-      where: { id: data.lessonId },
-      select: { chapter: { select: { subjectId: true } } },
+    const outcome = await applyLessonProgress({
+      userId: session.user.id,
+      lessonId: data.lessonId,
+      watchedSeconds: data.watchedSeconds,
+      totalSeconds: data.totalSeconds,
     })
 
-    const enrollment = lesson
-      ? await db.enrollment.findFirst({
-          where: {
-            userId: session.user.id,
-            catalogSubjectId: lesson.chapter.subjectId,
-            isActive: true,
-          },
-          select: { id: true },
-        })
-      : null
-
-    // Skip progress tracking if no enrollment (admin/teacher without enrollment)
-    if (!enrollment) {
-      return { status: "success", message: "Progress noted (no enrollment)" }
+    switch (outcome.status) {
+      case "notFound":
+        return { status: "error", message: "Lesson not found" }
+      case "noEnrollment":
+        // Admin/teacher previewing without an enrollment — nothing to attach
+        // the position to. Not an error the player should surface.
+        return { status: "success", message: "Progress noted (no enrollment)" }
+      case "stale":
+        return { status: "success", message: "Progress already newer" }
+      default:
+        return {
+          status: "success",
+          message: "Progress saved",
+          completed: outcome.completed,
+        }
     }
-
-    await db.lessonProgress.upsert({
-      where: {
-        userId_catalogLessonId: {
-          userId: session.user.id,
-          catalogLessonId: data.lessonId,
-        },
-      },
-      update: {
-        watchedSeconds: data.watchedSeconds,
-        totalSeconds: data.totalSeconds,
-        lastWatchedAt: new Date(),
-        updatedAt: new Date(),
-      },
-      create: {
-        userId: session.user.id,
-        catalogLessonId: data.lessonId,
-        enrollmentId: enrollment.id,
-        watchedSeconds: data.watchedSeconds,
-        totalSeconds: data.totalSeconds,
-        lastWatchedAt: new Date(),
-        watchCount: 1,
-        isCompleted: false,
-      },
-    })
-
-    return { status: "success", message: "Progress saved" }
   } catch (error) {
     console.error("Failed to update catalog lesson progress:", error)
     return { status: "error", message: "Failed to save progress" }
