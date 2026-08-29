@@ -21,6 +21,11 @@
  *             a Slack card with the opening message + wa.me link → a HUMAN
  *             sends and marks SENT. Refused unless that workflow has an ACTIVE
  *             version — flipping stages with no workflow just strands them.
+ *             The same PATCH writes the E.164 this lane verified back onto
+ *             `schoolPhone`: the workflow body and the Slack card read that
+ *             field RAW (`wa.me/{{trigger.properties.after.schoolPhone}}`), so
+ *             a number stored as "055941771" would have produced a card whose
+ *             link dials nothing. Idempotent — the trigger only watches `stage`.
  *
  *   email     Sends touch-1 itself via Resend (databayt.org is the verified
  *             domain) and stamps stage=CONTACTED, outreachStatus=SENT,
@@ -36,224 +41,291 @@
  * Idempotent: only stage COLD/PROSPECT + outreachStatus NOT_STARTED/absent
  * enter the queue, so a re-run cannot double-message anyone.
  */
+import { mkdirSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
+
+import { twentyClient, type TwentyClient } from "../crm/twenty-rest"
 import {
-  loadEnv,
   argv,
-  flag,
-  toE164,
-  isMobile,
-  emailOf,
-  railOf,
-  openingMessage,
   DECK_URL,
-} from './lib';
-loadEnv();
+  emailOf,
+  flag,
+  isMobile,
+  loadEnv,
+  openingMessage,
+  railOf,
+  toE164,
+} from "./lib"
 
-import { writeFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { twentyClient, type TwentyClient } from '../crm/twenty-rest';
+loadEnv()
 
-const APPLY = flag('apply');
-const LANE = argv('lane'); // whatsapp | email | '' (dry shows both)
-const SEGMENT = argv('segment');
-const LIMIT = parseInt(argv('limit', '0'), 10) || 0;
-const REPLY_TO = argv('reply-to');
-const FROM = argv('from', 'فريق بالقلم <noreply@databayt.org>');
-const WORKFLOW_NAME = 'School shortlisted → outreach';
+const APPLY = flag("apply")
+const LANE = argv("lane") // whatsapp | email | '' (dry shows both)
+const SEGMENT = argv("segment")
+const LIMIT = parseInt(argv("limit", "0"), 10) || 0
+const REPLY_TO = argv("reply-to")
+const FROM = argv("from", "فريق بالقلم <noreply@databayt.org>")
+const WORKFLOW_NAME = "School shortlisted → outreach"
 
 interface Company {
-  id: string;
-  name?: string | null;
-  stage?: string | null;
-  tier?: string | null;
-  country?: string | null;
-  schoolPhone?: string | null;
-  principalContact?: string | null;
-  outreachStatus?: string | null;
+  id: string
+  name?: string | null
+  stage?: string | null
+  tier?: string | null
+  country?: string | null
+  schoolPhone?: string | null
+  principalContact?: string | null
+  outreachStatus?: string | null
 }
 
 interface QueueRow {
-  id: string;
-  name: string;
-  tier: string;
-  seg: string;
-  lane: 'whatsapp' | 'email';
-  to: string; // e164 or email
+  id: string
+  name: string
+  tier: string
+  seg: string
+  lane: "whatsapp" | "email"
+  to: string // e164 or email
 }
 
-const globToRe = (g: string) => new RegExp(`^${g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`, 'i');
+const globToRe = (g: string) =>
+  new RegExp(
+    `^${g.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`,
+    "i"
+  )
 
 function buildQueue(rows: Company[]): QueueRow[] {
-  const q: QueueRow[] = [];
+  const q: QueueRow[] = []
   for (const c of rows) {
-    const stage = (c.stage ?? '').toUpperCase();
-    if (stage !== 'COLD' && stage !== 'PROSPECT') continue;
-    const outreach = (c.outreachStatus ?? 'NOT_STARTED').toUpperCase();
-    if (outreach !== 'NOT_STARTED') continue;
-    const e164 = toE164(c.schoolPhone, c.country);
-    const mobile = e164 && isMobile(e164) ? e164 : null;
-    const email = emailOf(c.principalContact);
-    if (!mobile && !email) continue;
-    const rail = railOf(c.country, e164);
-    const tier = (c.tier ?? 'C').toUpperCase();
-    const seg = `${rail}-${tier}`; // v1 key — bands join once student counts exist
+    const stage = (c.stage ?? "").toUpperCase()
+    if (stage !== "COLD" && stage !== "PROSPECT") continue
+    const outreach = (c.outreachStatus ?? "NOT_STARTED").toUpperCase()
+    if (outreach !== "NOT_STARTED") continue
+    const e164 = toE164(c.schoolPhone, c.country)
+    const mobile = e164 && isMobile(e164) ? e164 : null
+    const email = emailOf(c.principalContact)
+    if (!mobile && !email) continue
+    const rail = railOf(c.country, e164)
+    const tier = (c.tier ?? "C").toUpperCase()
+    const seg = `${rail}-${tier}` // v1 key — bands join once student counts exist
     q.push({
       id: c.id,
-      name: c.name ?? '(unnamed)',
+      name: c.name ?? "(unnamed)",
       tier,
       seg,
-      lane: mobile ? 'whatsapp' : 'email',
+      lane: mobile ? "whatsapp" : "email",
       to: mobile ?? email!,
-    });
+    })
   }
   // Tier A first, then B; sd rail leads inside a tier (WhatsApp-first market).
-  const rank = (r: QueueRow) => `${{ A: 0, B: 1 }[r.tier] ?? 2}-${r.seg.startsWith('sd') ? 0 : 1}`;
-  return q.sort((a, b) => rank(a).localeCompare(rank(b)));
+  const rank = (r: QueueRow) =>
+    `${{ A: 0, B: 1 }[r.tier] ?? 2}-${r.seg.startsWith("sd") ? 0 : 1}`
+  return q.sort((a, b) => rank(a).localeCompare(rank(b)))
 }
 
 async function workflowIsActive(t: TwentyClient): Promise<boolean> {
   try {
-    const wfRes = await t.rest<{ data?: { workflows?: Array<{ id: string; name: string }> } }>('GET', 'workflows?limit=50');
-    const wf = (wfRes?.data?.workflows ?? []).find((w) => w.name === WORKFLOW_NAME);
-    if (!wf) return false;
-    const vRes = await t.rest<{ data?: { workflowVersions?: Array<{ status: string }> } }>(
-      'GET',
-      `workflowVersions?limit=20&filter=workflowId[eq]:${wf.id}`
-    );
-    return (vRes?.data?.workflowVersions ?? []).some((v) => v.status === 'ACTIVE');
+    const wfRes = await t.rest<{
+      data?: { workflows?: Array<{ id: string; name: string }> }
+    }>("GET", "workflows?limit=50")
+    const wf = (wfRes?.data?.workflows ?? []).find(
+      (w) => w.name === WORKFLOW_NAME
+    )
+    if (!wf) return false
+    const vRes = await t.rest<{
+      data?: { workflowVersions?: Array<{ status: string }> }
+    }>("GET", `workflowVersions?limit=20&filter=workflowId[eq]:${wf.id}`)
+    return (vRes?.data?.workflowVersions ?? []).some(
+      (v) => v.status === "ACTIVE"
+    )
   } catch {
-    return false;
+    return false
   }
 }
 
 async function sendEmailTouch(to: string, school: string): Promise<string> {
-  const key = (process.env.RESEND_API_KEY ?? '').trim();
-  if (!key) throw new Error('RESEND_API_KEY missing');
+  const key = (process.env.RESEND_API_KEY ?? "").trim()
+  if (!key) throw new Error("RESEND_API_KEY missing")
   const text = [
     openingMessage(school),
-    '',
+    "",
     `العرض التعريفي: ${DECK_URL}`,
-    '',
-    'إن لم ترغبوا بمراسلاتنا مستقبلاً، يكفي الرد بكلمة «إيقاف».',
-  ].join('\n');
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    "",
+    "إن لم ترغبوا بمراسلاتنا مستقبلاً، يكفي الرد بكلمة «إيقاف».",
+  ].join("\n")
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${key}`,
+    },
     body: JSON.stringify({
       from: FROM,
       to,
       reply_to: REPLY_TO,
-      subject: 'منصة «بالقلم» لإدارة المدارس — تجربة مجانية ٣ أشهر لمدرستكم',
+      subject: "منصة «بالقلم» لإدارة المدارس — تجربة مجانية ٣ أشهر لمدرستكم",
       text,
     }),
-  });
-  const json = (await res.json().catch(() => ({}))) as { id?: string; message?: string };
-  if (!res.ok) throw new Error(`Resend ${res.status}: ${json.message ?? ''}`);
-  return json.id ?? '?';
+  })
+  const json = (await res.json().catch(() => ({}))) as {
+    id?: string
+    message?: string
+  }
+  if (!res.ok) throw new Error(`Resend ${res.status}: ${json.message ?? ""}`)
+  return json.id ?? "?"
 }
 
 async function main() {
-  if (APPLY && (process.env.FUNNEL_SEND ?? '').toLowerCase() === 'off')
-    throw new Error('FUNNEL_SEND=off — the kill switch is on; nothing sends.');
+  if (APPLY && (process.env.FUNNEL_SEND ?? "").toLowerCase() === "off")
+    throw new Error("FUNNEL_SEND=off — the kill switch is on; nothing sends.")
   if (APPLY && !LIMIT)
-    throw new Error('--apply needs --limit=<N>. The ramp is 10/day week 1 → 20 → 30; an unbounded send is how a number or a domain gets burned.');
-  if (APPLY && !LANE) throw new Error('--apply needs --lane=whatsapp|email — one lane per deliberate act.');
+    throw new Error(
+      "--apply needs --limit=<N>. The ramp is 10/day week 1 → 20 → 30; an unbounded send is how a number or a domain gets burned."
+    )
+  if (APPLY && !LANE)
+    throw new Error(
+      "--apply needs --lane=whatsapp|email — one lane per deliberate act."
+    )
   if (APPLY && !SEGMENT)
-    throw new Error('--apply needs --segment (e.g. --segment=sd-A or --segment=gulf-*). An unsegmented blast erases the reason this lane exists.');
+    throw new Error(
+      "--apply needs --segment (e.g. --segment=sd-A or --segment=gulf-*). An unsegmented blast erases the reason this lane exists."
+    )
 
-  const t = twentyClient();
-  console.log('Reading companies from Twenty …');
-  const rows = (await t.all('companies')) as unknown as Company[];
-  let queue = buildQueue(rows);
+  const t = twentyClient()
+  console.log("Reading companies from Twenty …")
+  const rows = (await t.all("companies")) as unknown as Company[]
+  let queue = buildQueue(rows)
 
-  const segRe = SEGMENT ? globToRe(SEGMENT) : null;
-  if (segRe) queue = queue.filter((r) => segRe.test(r.seg));
-  const laneQueue = (lane: string) => queue.filter((r) => r.lane === lane);
+  const segRe = SEGMENT ? globToRe(SEGMENT) : null
+  if (segRe) queue = queue.filter((r) => segRe.test(r.seg))
+  const laneQueue = (lane: string) => queue.filter((r) => r.lane === lane)
 
-  console.log(`\n═══ Funnel tick — the roll ═══`);
-  console.log(`  queue (reachable, unmessaged${SEGMENT ? `, segment ${SEGMENT}` : ''}): whatsapp ${laneQueue('whatsapp').length} · email ${laneQueue('email').length}`);
-  const segTally = new Map<string, number>();
-  for (const r of queue) segTally.set(r.seg, (segTally.get(r.seg) ?? 0) + 1);
-  console.log(`  by segment: ${[...segTally.entries()].sort().map(([k, v]) => `${k} ${v}`).join(' · ')}\n`);
+  console.log(`\n═══ Funnel tick — the roll ═══`)
+  console.log(
+    `  queue (reachable, unmessaged${SEGMENT ? `, segment ${SEGMENT}` : ""}): whatsapp ${laneQueue("whatsapp").length} · email ${laneQueue("email").length}`
+  )
+  const segTally = new Map<string, number>()
+  for (const r of queue) segTally.set(r.seg, (segTally.get(r.seg) ?? 0) + 1)
+  console.log(
+    `  by segment: ${[...segTally.entries()]
+      .sort()
+      .map(([k, v]) => `${k} ${v}`)
+      .join(" · ")}\n`
+  )
 
   if (!APPLY) {
-    for (const lane of ['whatsapp', 'email'] as const) {
-      const batch = laneQueue(lane).slice(0, LIMIT || 10);
-      console.log(`  ${lane} — next ${batch.length} (dry):`);
-      for (const r of batch) console.log(`    [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}`);
-      console.log('');
+    for (const lane of ["whatsapp", "email"] as const) {
+      const batch = laneQueue(lane).slice(0, LIMIT || 10)
+      console.log(`  ${lane} — next ${batch.length} (dry):`)
+      for (const r of batch)
+        console.log(`    [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}`)
+      console.log("")
     }
-    console.log('  Dry run. To roll: --lane=<whatsapp|email> --segment=<glob> --limit=<N> --apply');
+    console.log(
+      "  Dry run. To roll: --lane=<whatsapp|email> --segment=<glob> --limit=<N> --apply"
+    )
     if (!(await workflowIsActive(t)))
-      console.log(`  ⚠ workflow "${WORKFLOW_NAME}" has no ACTIVE version — the whatsapp lane will refuse --apply until it is built + activated in the Twenty UI (spec: scripts/crm/workflow-spec.ts).`);
-    return;
+      console.log(
+        `  ⚠ workflow "${WORKFLOW_NAME}" has no ACTIVE version — the whatsapp lane will refuse --apply until it is deployed + activated over the API (sequence + verifier: scripts/crm/workflow-spec.ts).`
+      )
+    return
   }
 
-  const batch = laneQueue(LANE).slice(0, LIMIT);
-  if (!batch.length) throw new Error(`nothing in the ${LANE} lane for segment ${SEGMENT} — nothing sent.`);
+  const batch = laneQueue(LANE).slice(0, LIMIT)
+  if (!batch.length)
+    throw new Error(
+      `nothing in the ${LANE} lane for segment ${SEGMENT} — nothing sent.`
+    )
 
-  if (LANE === 'whatsapp') {
+  if (LANE === "whatsapp") {
     if (!(await workflowIsActive(t)))
       throw new Error(
-        `workflow "${WORKFLOW_NAME}" has no ACTIVE version. Flipping stages now would strand ${batch.length} schools at SHORTLISTED with no Slack card and no message. Build + activate it in the Twenty UI first (spec + verifier: scripts/crm/workflow-spec.ts), then re-run.`
-      );
-    console.log(`  Flipping ${batch.length} → SHORTLISTED (the workflow takes it from there):`);
-    const done: string[] = [];
+        `workflow "${WORKFLOW_NAME}" has no ACTIVE version. Flipping stages now would strand ${batch.length} schools at SHORTLISTED with no Slack card and no message. Deploy + activate it over the API first (sequence + verifier: scripts/crm/workflow-spec.ts), then re-run.`
+      )
+    console.log(
+      `  Flipping ${batch.length} → SHORTLISTED (the workflow takes it from there):`
+    )
+    const done: string[] = []
     for (const r of batch) {
-      await t.rest('PATCH', `companies/${r.id}`, { stage: 'SHORTLISTED' });
-      console.log(`    ✓ [${r.seg}] ${r.name.slice(0, 48)}`);
-      done.push(r.id);
+      // `r.to` IS the verified E.164 mobile in this lane — write it back so the
+      // card's wa.me link is built from a dialable number, not the raw import.
+      await t.rest("PATCH", `companies/${r.id}`, {
+        stage: "SHORTLISTED",
+        schoolPhone: r.to,
+      })
+      console.log(`    ✓ [${r.seg}] ${r.name.slice(0, 48)}`)
+      done.push(r.id)
     }
-    receipt(LANE, batch, done);
-  } else if (LANE === 'email') {
+    receipt(LANE, batch, done)
+  } else if (LANE === "email") {
     if (!REPLY_TO || !emailOf(REPLY_TO))
       throw new Error(
-        '--reply-to=<real mailbox> is required for the email lane. Stop-on-reply is the hardest rule here — a reply must land where a person reads, or the lead is silently lost.'
-      );
-    console.log(`  Sending ${batch.length} touch-1 emails (from ${FROM}, replies → ${REPLY_TO}):`);
-    const done: string[] = [];
+        "--reply-to=<real mailbox> is required for the email lane. Stop-on-reply is the hardest rule here — a reply must land where a person reads, or the lead is silently lost."
+      )
+    console.log(
+      `  Sending ${batch.length} touch-1 emails (from ${FROM}, replies → ${REPLY_TO}):`
+    )
+    const done: string[] = []
     for (const r of batch) {
       try {
-        const id = await sendEmailTouch(r.to, r.name);
-        await t.rest('PATCH', `companies/${r.id}`, {
-          stage: 'CONTACTED',
-          outreachStatus: 'SENT',
+        const id = await sendEmailTouch(r.to, r.name)
+        await t.rest("PATCH", `companies/${r.id}`, {
+          stage: "CONTACTED",
+          outreachStatus: "SENT",
           lastOutreachAt: new Date().toISOString(),
-        });
-        console.log(`    ✓ [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}  (resend ${id})`);
-        done.push(r.id);
+        })
+        console.log(
+          `    ✓ [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}  (resend ${id})`
+        )
+        done.push(r.id)
       } catch (e) {
-        await t.rest('PATCH', `companies/${r.id}`, { outreachStatus: 'FAILED' }).catch(() => {});
-        console.log(`    ✗ [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}  ${e instanceof Error ? e.message : e}`);
+        await t
+          .rest("PATCH", `companies/${r.id}`, { outreachStatus: "FAILED" })
+          .catch(() => {})
+        console.log(
+          `    ✗ [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}  ${e instanceof Error ? e.message : e}`
+        )
       }
-      await new Promise((r2) => setTimeout(r2, 600));
+      await new Promise((r2) => setTimeout(r2, 600))
     }
-    receipt(LANE, batch, done);
+    receipt(LANE, batch, done)
   } else {
-    throw new Error(`unknown --lane=${LANE}`);
+    throw new Error(`unknown --lane=${LANE}`)
   }
-  console.log(`\n  Re-measure: pnpm crm:funnel-gates  (the yield ledger diffs the artifact)\n`);
+  console.log(
+    `\n  Re-measure: pnpm crm:funnel-gates  (the yield ledger diffs the artifact)\n`
+  )
 }
 
 function receipt(lane: string, batch: QueueRow[], done: string[]) {
-  const dir = join(process.cwd(), 'scripts/crm/.data');
-  mkdirSync(dir, { recursive: true });
-  const out = join(dir, `funnel-tick-${new Date().toISOString().slice(0, 10)}-${lane}.json`);
+  const dir = join(process.cwd(), "scripts/crm/.data")
+  mkdirSync(dir, { recursive: true })
+  const out = join(
+    dir,
+    `funnel-tick-${new Date().toISOString().slice(0, 10)}-${lane}.json`
+  )
   writeFileSync(
     out,
     JSON.stringify(
-      { at: new Date().toISOString(), lane, segment: SEGMENT, limit: LIMIT, attempted: batch.length, applied: done.length, ids: done },
+      {
+        at: new Date().toISOString(),
+        lane,
+        segment: SEGMENT,
+        limit: LIMIT,
+        attempted: batch.length,
+        applied: done.length,
+        ids: done,
+      },
       null,
       2
     )
-  );
-  console.log(`  receipt → ${out}`);
+  )
+  console.log(`  receipt → ${out}`)
 }
 
 main().then(
   () => process.exit(0),
   (e) => {
-    console.error(String(e instanceof Error ? e.message : e));
-    process.exit(1);
+    console.error(String(e instanceof Error ? e.message : e))
+    process.exit(1)
   }
-);
+)
