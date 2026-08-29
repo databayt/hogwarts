@@ -179,7 +179,8 @@ describe("a blueprint the bank cannot fill at all", () => {
     vi.mocked(autoGenerateExamQuestions).mockResolvedValue({
       success: false,
       error: "QUESTION_BANK_EMPTY",
-      details: "MULTIPLE_CHOICE (EASY): need 5, have 0; ESSAY (HARD): need 2, have 0",
+      details:
+        "MULTIPLE_CHOICE (EASY): need 5, have 0; ESSAY (HARD): need 2, have 0",
     } as never)
 
     const res = await generateExamPaperFromTemplate(blueprintInput)
