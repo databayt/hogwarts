@@ -4,12 +4,15 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getLiveClass } from "@/components/school-dashboard/conference/actions/sessions"
 import { joinLiveClass } from "@/components/school-dashboard/conference/actions/tokens"
 import { resolveLiveClassError } from "@/components/school-dashboard/conference/error-map"
 import { RoomClient } from "@/components/school-dashboard/conference/room"
+import { resolveRoomLabels } from "@/components/school-dashboard/conference/room/labels"
+import { getSlideOptions } from "@/components/school-dashboard/conference/room/slide-options"
 
 // Page-data OOM safety: auth-gated room, render on demand.
 export const dynamic = "force-dynamic"
@@ -62,15 +65,20 @@ export default async function Page({ params }: Props) {
     )
   }
 
+  const title = "success" in detail && detail.success ? detail.data.title : ""
+  const { schoolId } = await getTenantContext()
+  const slides = schoolId ? await getSlideOptions(schoolId, id) : []
+
   return (
     <RoomClient
       initialTicket={result.data}
       sessionId={id}
+      title={title}
       locale={lang}
+      slides={slides}
       labels={{
-        leaving: t?.room?.leave ?? "Leave",
-        reconnecting: t?.room?.reconnecting ?? "Reconnecting…",
         error: t?.errors?.tokenExpired ?? "Token expired. Please rejoin.",
+        room: resolveRoomLabels(t?.room),
         participants: {
           title: t?.room?.participants ?? "Participants",
           remove: t?.room?.moderation?.remove ?? "Remove",

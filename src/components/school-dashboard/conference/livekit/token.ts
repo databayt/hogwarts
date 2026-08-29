@@ -45,11 +45,15 @@ function grantsForRole(
     canSubscribe: true,
   }
   switch (role) {
+    // `canUpdateOwnMetadata` is what lets a participant raise a hand: the
+    // hand rides on participant attributes, which the SFU replays to late
+    // joiners. Observers cannot raise hands and cannot publish data.
     case "HOST":
       return {
         ...base,
         canPublish: true,
         canPublishData: true,
+        canUpdateOwnMetadata: true,
         roomAdmin: true,
         roomCreate: true,
         roomRecord: true,
@@ -59,12 +63,14 @@ function grantsForRole(
         ...base,
         canPublish: true,
         canPublishData: true,
+        canUpdateOwnMetadata: true,
       }
     case "PARTICIPANT":
       return {
         ...base,
         canPublish: true,
         canPublishData: true,
+        canUpdateOwnMetadata: true,
       }
     case "OBSERVER":
       return {
@@ -97,6 +103,9 @@ export async function issueAccessToken(
       role: input.role,
       lang: input.lang ?? "ar",
     }),
+    // Attributes are readable by every participant (metadata is a string the
+    // client has to parse); the room trusts host-only messages by this.
+    attributes: { role: input.role },
   })
 
   token.addGrant(grantsForRole(input.role, input.roomName))
