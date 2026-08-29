@@ -55,6 +55,34 @@ shipping state.
 6. Flip the school to LiveKit on `/conference/settings` — `School.conferenceProviderDefault`
    defaults to `external`, so a configured SFU does nothing until a school opts in.
 
+**Three traps, all hit for real on 2026-08-29 while provisioning this.**
+
+1. **The signup's auto-created key has an unretrievable secret.** LiveKit shows a
+   secret once, at creation; the existing key's menu offers only *Generate Token*
+   and *Revoke key*. Create a **second, named** key and use that pair.
+2. **The webhook form has a required "Signing API key" picker**, and every key in
+   the project appears in it. Pick the key whose secret you put in
+   `LIVEKIT_API_SECRET`. Choosing another produces a webhook that looks correctly
+   configured and silently fails every HMAC check — a room opens, the session
+   never leaves `scheduled`, and nothing logs an error worth reading.
+3. **Two different Vercel accounts each have a project named `hogwarts`.** The
+   blocked Pro team's is `prj_jI7ezom5AbJfMbeB8F9lquA94OMP`; the live free one is
+   `prj_KEuI2aVzMHIeBkjVcpK7KQvWGIJe`. The names give no warning. **Confirm by
+   project ID.**
+
+**Vercel "Sensitive" env vars are write-only.** Setting `LIVEKIT_API_KEY` /
+`LIVEKIT_API_SECRET` as Sensitive is right, but nothing can read them back
+afterwards — not the dashboard, not `vercel env pull` (which returns an empty
+value). So a typo there is invisible until a deploy fails to open a room. Set them
+by piping a value you have already tested:
+
+```bash
+printf '%s' "$VALUE" | vercel env add LIVEKIT_API_SECRET production --sensitive --force --scope databayt
+```
+
+`vercel env ls` shows the **created** time, not the last-modified time — an
+unchanged timestamp after an override is expected, not a failed write.
+
 **Know what the free tier buys.** 5,000 WebRTC minutes/month, 100 concurrent connections, 1,000
 recording minutes. One 25-student, 45-minute class costs ~1,125 participant-minutes — so this
 verifies the feature and runs a demo or a small pilot, and it does **not** run a school. Real volume
