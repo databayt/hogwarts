@@ -78,6 +78,7 @@ export default async function Page({ params }: Props) {
           conferenceFallbackUrl: settings.data.conferenceFallbackUrl ?? "",
         }}
         livekitReady={settings.data.livekitReady}
+        recordingReady={settings.data.recordingReady}
         windowActive={settings.data.windowActive}
         coverage={coverage}
         terms={terms.map((term) => ({
@@ -91,6 +92,9 @@ export default async function Page({ params }: Props) {
           maxConcurrent: t?.maxConcurrent ?? "Max concurrent rooms",
           maxDuration: t?.maxDuration ?? "Max duration (minutes)",
           recordingDefault: t?.recordingDefault ?? "Record by default",
+          recordingUnavailable:
+            t?.recordingUnavailable ??
+            "Recording is not set up for this school yet — sessions will run without it.",
           attendanceSync: t?.attendanceSync ?? "Auto-mark attendance",
           attendanceSyncHint:
             t?.attendanceSyncHint ??

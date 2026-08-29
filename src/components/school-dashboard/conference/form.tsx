@@ -65,6 +65,7 @@ interface LiveClassFormProps {
   options: LiveClassFormOptions
   /** Whether the in-app (LiveKit) room back-end is provisioned. */
   liveKitAvailable?: boolean
+  recordingAvailable?: boolean
   /** Localized day names, Sunday-first — labels the timetable slot picker. */
   dayNames?: string[]
 }
@@ -75,6 +76,7 @@ export function LiveClassForm({
   dictionary,
   options,
   liveKitAvailable = false,
+  recordingAvailable = false,
   dayNames,
 }: LiveClassFormProps) {
   const { modal, closeModal } = useModal()
@@ -111,7 +113,8 @@ export function LiveClassForm({
       endTime: "10:00",
       visibility: "section",
       description: "",
-      recordingEnabled: true,
+      // Default to the truth: a session cannot be recorded until a bucket exists.
+      recordingEnabled: recordingAvailable,
       maxParticipants: 50,
       catalogLessonId: "",
       resources: [],
@@ -437,6 +440,7 @@ export function LiveClassForm({
             isPending={isPending}
             isEdit={isEdit}
             liveKitAvailable={liveKitAvailable}
+            recordingAvailable={recordingAvailable}
           />
         )
       case 4:

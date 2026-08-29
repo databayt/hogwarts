@@ -8,6 +8,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { isRecordingConfigured } from "@/components/school-dashboard/conference/livekit/client"
 import { ScheduleLiveClassForm } from "@/components/school-dashboard/conference/schedule-form"
 
 interface Props {
@@ -71,6 +72,7 @@ export default async function Page({ params }: Props) {
         sections={sections}
         subjects={subjects}
         teacherId={teacherId}
+        recordingAvailable={isRecordingConfigured()}
       />
     </div>
   )

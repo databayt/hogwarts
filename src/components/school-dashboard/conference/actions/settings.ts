@@ -17,7 +17,10 @@ import {
   schoolDayOfInstant,
   schoolDayToInstant,
 } from "@/components/school-dashboard/conference/day-window"
-import { isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
+import {
+  isLiveKitConfigured,
+  isRecordingConfigured,
+} from "@/components/school-dashboard/conference/livekit/client"
 import {
   isOnlineWindowActive,
   ONLINE_POLICY_SELECT,
@@ -76,6 +79,9 @@ export async function getConferenceSettings() {
       // external, so it can show the same provisioning hint the create wizard
       // shows instead of silently pretending the SFU is live.
       livekitReady: isLiveKitConfigured(),
+      // Same idea for recording: the default is stored as chosen, but an
+      // admin turning it on must see that no bucket exists to honour it.
+      recordingReady: isRecordingConfigured(),
     },
   }
 }

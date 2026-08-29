@@ -49,6 +49,7 @@ interface LiveClassesTableProps {
   formOptions: LiveClassFormOptions
   /** Whether the in-app (LiveKit) room back-end is provisioned. */
   liveKitAvailable?: boolean
+  recordingAvailable?: boolean
   /** Localized day names (Sunday-first) for the timetable slot picker. */
   dayNames?: string[]
 }
@@ -62,6 +63,7 @@ function LiveClassesTableInner({
   permissions = FULL_UI_PERMISSIONS,
   formOptions,
   liveKitAvailable = false,
+  recordingAvailable = false,
   dayNames,
 }: LiveClassesTableProps) {
   const t = dictionary
@@ -300,6 +302,7 @@ function LiveClassesTableInner({
             dictionary={t}
             options={formOptions}
             liveKitAvailable={liveKitAvailable}
+            recordingAvailable={recordingAvailable}
             dayNames={dayNames}
           />
         }

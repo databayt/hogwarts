@@ -20,6 +20,8 @@ interface Props {
   sections: { id: string; name: string }[]
   subjects: { id: string; name: string }[]
   teacherId?: string | null
+  /** Whether Egress has a bucket to write to. Off → no checkbox, a note. */
+  recordingAvailable?: boolean
 }
 
 export function ScheduleLiveClassForm({
@@ -28,6 +30,7 @@ export function ScheduleLiveClassForm({
   sections,
   subjects,
   teacherId,
+  recordingAvailable = false,
 }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -39,7 +42,7 @@ export function ScheduleLiveClassForm({
     subjectId: subjects[0]?.id ?? "",
     scheduledStart: "",
     scheduledEnd: "",
-    recordingEnabled: true,
+    recordingEnabled: recordingAvailable,
     maxParticipants: 50,
   })
 
@@ -193,19 +196,26 @@ export function ScheduleLiveClassForm({
             }
           />
         </div>
-        <div className="flex items-end gap-2">
-          <input
-            id="rec"
-            type="checkbox"
-            checked={form.recordingEnabled}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, recordingEnabled: e.target.checked }))
-            }
-          />
-          <Label htmlFor="rec">
-            {t?.form?.recordingEnabled ?? "Record this class"}
-          </Label>
-        </div>
+        {recordingAvailable ? (
+          <div className="flex items-end gap-2">
+            <input
+              id="rec"
+              type="checkbox"
+              checked={form.recordingEnabled}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, recordingEnabled: e.target.checked }))
+              }
+            />
+            <Label htmlFor="rec">
+              {t?.form?.recordingEnabled ?? "Record this class"}
+            </Label>
+          </div>
+        ) : (
+          <p className="text-muted-foreground self-end text-xs">
+            {t?.form?.recordingUnavailable ??
+              "Recording is not set up for this school yet."}
+          </p>
+        )}
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}

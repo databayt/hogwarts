@@ -11,7 +11,10 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type LiveClassRow } from "@/components/school-dashboard/conference/columns"
 import { liveClassesSearchParams } from "@/components/school-dashboard/conference/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/conference/list-permissions"
-import { isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
+import {
+  isLiveKitConfigured,
+  isRecordingConfigured,
+} from "@/components/school-dashboard/conference/livekit/client"
 import {
   getLiveClassesList,
   getLiveClassFormOptions,
@@ -148,6 +151,9 @@ export default async function LiveClassesContent({
         permissions={permissions}
         formOptions={formOptions}
         liveKitAvailable={isLiveKitConfigured()}
+        // Recording is a separate gate from rooms: with no bucket the wizard
+        // must not offer a checkbox that promises an MP4 nothing will produce.
+        recordingAvailable={isRecordingConfigured()}
         // Sunday-first day names, indexed by Timetable.dayOfWeek — labels the
         // wizard's class picker in the reader's language.
         dayNames={dictionary.timetable?.dayNames}

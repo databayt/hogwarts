@@ -53,6 +53,8 @@ interface Props {
    * wizard disables its in-app option until the infra lands.
    */
   livekitReady: boolean
+  /** Whether Egress has somewhere to write. The switch below is honest about it. */
+  recordingReady: boolean
   /**
    * Whether the stored window is in force TODAY, resolved server-side in the
    * SCHOOL's timezone. Never recompute this in the browser — the reader's zone
@@ -65,6 +67,7 @@ interface Props {
     maxConcurrent: string
     maxDuration: string
     recordingDefault: string
+    recordingUnavailable: string
     attendanceSync: string
     attendanceSyncHint: string
     online: string
@@ -119,6 +122,7 @@ export function ConferenceSettingsForm({
   initial,
   terms,
   livekitReady,
+  recordingReady,
   windowActive,
   coverage,
   labels,
@@ -234,16 +238,24 @@ export function ConferenceSettingsForm({
         />
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <Label htmlFor="recording-default">{labels.recordingDefault}</Label>
-        <Switch
-          id="recording-default"
-          checked={values.conferenceRecordingDefault}
-          onCheckedChange={(checked) => {
-            setStatus("idle")
-            setValues((v) => ({ ...v, conferenceRecordingDefault: checked }))
-          }}
-        />
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="recording-default">{labels.recordingDefault}</Label>
+          <Switch
+            id="recording-default"
+            checked={values.conferenceRecordingDefault}
+            onCheckedChange={(checked) => {
+              setStatus("idle")
+              setValues((v) => ({ ...v, conferenceRecordingDefault: checked }))
+            }}
+          />
+        </div>
+        {/* Stored as chosen, not in force: rooms work without a bucket, recording does not. */}
+        {values.conferenceRecordingDefault && !recordingReady && (
+          <p className="text-muted-foreground text-xs">
+            {labels.recordingUnavailable}
+          </p>
+        )}
       </div>
 
       <div className="flex items-start justify-between gap-4">

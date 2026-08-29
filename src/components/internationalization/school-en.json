@@ -5128,7 +5128,8 @@
         "slotPlaceholder": "Pick a class from the timetable",
         "slotHint": "Delivers this class online — fills the teacher, subject, section and time from the schedule, and records attendance from who joins.",
         "slotNone": "Not tied to a class (one-off session)",
-        "slotLoadError": "Couldn't load the class list. Please try again."
+        "slotLoadError": "Couldn't load the class list. Please try again.",
+        "recordingUnavailableHint": "Recording is not set up for this school yet — the class will run without it."
       },
       "steps": {
         "basics": "Basics",
@@ -5168,8 +5169,7 @@
         "networkTest": "Network test"
       },
       "landing": {
-        "tagline": "Class, wherever everyone is.",
-        "description": "Run every lesson live — join straight from the timetable, record it, and mark attendance from who actually showed up.",
+        "description": "Class, wherever everyone is.",
         "viewSessions": "View sessions",
         "scheduleClass": "Schedule a class",
         "heroAlt": "A student joining her class from home",
@@ -5246,7 +5246,8 @@
           "alt": "People in a video call",
           "cta": "Open settings"
         }
-      }
+      },
+      "online": "Online"
     },
     "stream": {
       "courses": {

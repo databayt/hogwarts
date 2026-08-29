@@ -286,11 +286,13 @@ export function StepMeeting({
   isPending,
   isEdit,
   liveKitAvailable,
+  recordingAvailable,
 }: {
   f: FormDict
   isPending: boolean
   isEdit: boolean
   liveKitAvailable: boolean
+  recordingAvailable: boolean
 }) {
   const form = useFormContext<WizardFormValues>()
   const provider = form.watch("provider")
@@ -363,11 +365,19 @@ export function StepMeeting({
             max={300}
             disabled={isPending}
           />
-          <CheckboxField
-            name="recordingEnabled"
-            checkboxLabel={f.recordingLabel}
-            disabled={isPending}
-          />
+          {recordingAvailable ? (
+            <CheckboxField
+              name="recordingEnabled"
+              checkboxLabel={f.recordingLabel}
+              disabled={isPending}
+            />
+          ) : (
+            // No bucket → no egress. Say so instead of offering a checkbox
+            // whose only effect is a "View recordings" page that stays empty.
+            <p className="text-muted-foreground self-center text-xs">
+              {f.recordingUnavailableHint}
+            </p>
+          )}
         </div>
       )}
     </div>
