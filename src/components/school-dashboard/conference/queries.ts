@@ -700,3 +700,67 @@ export async function getConferenceLandingSessions(
 
   return { live, upcoming }
 }
+
+/**
+ * Live sessions attached to a catalog lesson, for the lesson page.
+ *
+ * `Conference.catalogLessonId` already pulls the lesson's videos and materials
+ * onto the session detail page; nothing pointed the other way, so a student on
+ * the lesson never learned a live session on it was running. Section-scoped by
+ * the caller (`resolveViewerSectionScope`), same as every other list read.
+ *
+ * Live rows first, then today's upcoming ones — never ended sessions, which
+ * are recordings territory. Small `take`: this decorates a page, it is not a
+ * list.
+ */
+export async function getLiveSessionsForLesson(
+  schoolId: string,
+  catalogLessonId: string,
+  opts: { sectionIds?: string[]; now?: Date; take?: number } = {}
+): Promise<
+  Array<{
+    id: string
+    title: string
+    status: "live" | "scheduled"
+    provider: "livekit" | "external"
+    scheduledStart: Date
+    scheduledEnd: Date
+    sectionName: string | null
+  }>
+> {
+  const now = opts.now ?? new Date()
+  const take = opts.take ?? 3
+  const rows = await db.conference.findMany({
+    where: {
+      schoolId,
+      catalogLessonId,
+      deletedAt: null,
+      ...(opts.sectionIds ? { sectionId: { in: opts.sectionIds } } : {}),
+      OR: [
+        { status: "live" },
+        // Today's remaining sessions: scheduled and not yet over.
+        { status: "scheduled", scheduledEnd: { gte: now } },
+      ],
+    },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      provider: true,
+      scheduledStart: true,
+      scheduledEnd: true,
+      section: { select: { name: true } },
+    },
+    orderBy: [{ status: "asc" }, { scheduledStart: "asc" }],
+    take,
+  })
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    status: r.status as "live" | "scheduled",
+    provider: r.provider,
+    scheduledStart: r.scheduledStart,
+    scheduledEnd: r.scheduledEnd,
+    sectionName: r.section?.name ?? null,
+  }))
+}

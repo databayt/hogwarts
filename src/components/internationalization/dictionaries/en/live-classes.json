@@ -35,7 +35,8 @@
     "scheduledStart": "Starts",
     "scheduledEnd": "Ends",
     "recordingEnabled": "Record this class",
-    "maxParticipants": "Max participants"
+    "maxParticipants": "Max participants",
+    "recordingUnavailable": "Recording is not set up for this school yet."
   },
   "labels": {
     "section": "Section",
@@ -48,7 +49,9 @@
     "visibility": "Who can join",
     "visibilitySection": "Section only",
     "visibilitySchool": "Whole school",
-    "lesson": "Lesson"
+    "lesson": "Lesson",
+    "room": "Room",
+    "recordingUnavailable": "Not available"
   },
   "status": {
     "scheduled": "Scheduled",
@@ -227,7 +230,8 @@
       "offline": "In person",
       "empty": "No sections yet.",
       "error": "Could not update the section."
-    }
+    },
+    "recordingUnavailable": "Recording is not set up for this school yet — sessions will run without it."
   },
   "attendanceNote": {
     "auto": "Attendance is marked automatically when this class ends.",

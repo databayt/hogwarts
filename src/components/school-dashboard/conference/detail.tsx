@@ -13,6 +13,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { describeAttendanceSync } from "@/components/school-dashboard/conference/actions/attendance-sync"
 import { getLiveClass } from "@/components/school-dashboard/conference/actions/sessions"
 import { EndClassButton } from "@/components/school-dashboard/conference/end-class-button"
+import { isRecordingConfigured } from "@/components/school-dashboard/conference/livekit/client"
 import {
   getAttendanceSyncEnabled,
   getLessonReferenceContent,
@@ -71,6 +72,9 @@ export async function LiveClassDetailContent({
   const r = t?.references
 
   const canJoin = session.status === "live" || session.status === "scheduled"
+  // "Enabled" on a session that can never produce an MP4 is a lie the teacher
+  // discovers on an empty recordings page. The bucket gate decides the label.
+  const recordingAvailable = isRecordingConfigured()
   const isExternal = session.provider === "external"
 
   /** Roles that can open the manual register (mirrors /attendance/manual). */
@@ -172,6 +176,15 @@ export async function LiveClassDetailContent({
             </dd>
           </div>
         )}
+        {session.timetable?.classroom?.roomName && (
+          <div>
+            <dt className="text-muted-foreground">
+              {t?.labels?.room ?? "Room"}
+            </dt>
+            {/* The class still meets here; this session is its online arm. */}
+            <dd>{session.timetable.classroom.roomName}</dd>
+          </div>
+        )}
         <div>
           <dt className="text-muted-foreground">
             {t?.labels?.visibility ?? "Who can join"}
@@ -187,9 +200,11 @@ export async function LiveClassDetailContent({
             {t?.labels?.recording ?? "Recording"}
           </dt>
           <dd>
-            {session.recordingEnabled
-              ? (t?.labels?.enabled ?? "Enabled")
-              : (t?.labels?.disabled ?? "Disabled")}
+            {!recordingAvailable
+              ? (t?.labels?.recordingUnavailable ?? "Not available")
+              : session.recordingEnabled
+                ? (t?.labels?.enabled ?? "Enabled")
+                : (t?.labels?.disabled ?? "Disabled")}
           </dd>
         </div>
       </dl>

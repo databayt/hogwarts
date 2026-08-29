@@ -35,7 +35,8 @@
     "scheduledStart": "البداية",
     "scheduledEnd": "النهاية",
     "recordingEnabled": "تسجيل هذا الفصل",
-    "maxParticipants": "الحد الأقصى للمشاركين"
+    "maxParticipants": "الحد الأقصى للمشاركين",
+    "recordingUnavailable": "التسجيل غير مهيّأ لهذه المدرسة بعد."
   },
   "labels": {
     "section": "الشعبة",
@@ -48,7 +49,9 @@
     "visibility": "من يمكنه الانضمام",
     "visibilitySection": "الشعبة فقط",
     "visibilitySchool": "المدرسة كاملة",
-    "lesson": "الدرس"
+    "lesson": "الدرس",
+    "room": "القاعة",
+    "recordingUnavailable": "غير متاح"
   },
   "status": {
     "scheduled": "مجدول",
@@ -227,7 +230,8 @@
       "offline": "حضوريًا",
       "empty": "لا توجد شعب بعد.",
       "error": "تعذّر تحديث الشعبة."
-    }
+    },
+    "recordingUnavailable": "التسجيل غير مهيّأ لهذه المدرسة بعد — ستُعقد الجلسات بدونه."
   },
   "attendanceNote": {
     "auto": "يتم رصد الحضور تلقائياً عند انتهاء هذه الحصة.",
