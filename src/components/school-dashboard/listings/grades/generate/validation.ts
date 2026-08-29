@@ -143,17 +143,22 @@ export type AIGenerationSchema = z.infer<typeof aiGenerationSchema>
 
 // ========== Exam Template Schemas ==========
 
-const distributionCellSchema = z.record(
+// Zod 4 made `z.record(enumKey, …)` EXHAUSTIVE — it demands every member of the
+// enum. A distribution names only the buckets a blueprint actually asks for
+// ("5 easy multiple-choice"), so under `z.record` every realistic one was
+// rejected and blueprint create/update threw. `partialRecord` is Zod 4's name
+// for the old behaviour, and still rejects a key that is not in the enum.
+const distributionCellSchema = z.partialRecord(
   z.nativeEnum(DifficultyLevel),
   z.coerce.number().min(0).max(50)
 )
 
-const templateDistributionSchema = z.record(
+const templateDistributionSchema = z.partialRecord(
   z.nativeEnum(QuestionType),
   distributionCellSchema
 )
 
-const bloomDistributionSchema = z.record(
+const bloomDistributionSchema = z.partialRecord(
   z.nativeEnum(BloomLevel),
   z.coerce.number().min(0).max(50)
 )
