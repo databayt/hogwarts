@@ -374,7 +374,8 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 ## Live-class + offline pass — 2026-08-29
 
 Closed (all browser-verified on demo.localhost with a real LiveKit Cloud room,
-teacher + student contexts; see `.next/shots/` screenshots of that session):
+teacher + student contexts, 2026-08-29/30; the screenshots were session-local
+and are not kept — the DOM evidence is summarised in the memory topic file):
 
 - [x] Own control bar / side panel / stage — Arabic labels, RTL layout.
 - [x] Delivery ladder with hysteresis; manual override; "تم تشغيل وضع الصوت
