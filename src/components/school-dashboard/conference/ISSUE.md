@@ -67,6 +67,11 @@
 - [ ] **Per-section delivery mode**, **nullable `classroomId`**, **weekly-grid
       closure signal** — unchanged from the 08-14 list; none blocks a hybrid
       school.
+- [ ] **Seed blemish: the lesson session's ASSIGNMENT is not subject-matched.**
+      `seedShowcase` picks "any PUBLISHED assignment" (the exam pick IS matched
+      on `subjectId`), so a Grade-10 literature session carries a Grade-11
+      chemistry presentation. Prefer `class: { subjectId }` on the assignment
+      pick. Prod is count-guarded, so this only changes on a `SEED_FORCE` run.
 - [ ] **25 demo slots still have no qualified free teacher** after backfill —
       every candidate is at the 25/week cap in that (day, period). Raise the cap
       or add teachers; not a code problem.
