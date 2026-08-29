@@ -83,6 +83,8 @@ export type DownloadFailure =
   | "offline"
   | "unsupported"
   | "manifest"
+  /** Nothing to keep: no self-hosted video, no documents, no quiz. */
+  | "empty"
   | "not-downloadable"
   | "ticket"
   | "network"
@@ -222,6 +224,16 @@ export async function downloadLesson(
   if (!manifestRes.ok)
     throw new DownloadError("manifest", `manifest ${manifestRes.status}`)
   const manifest = (await manifestRes.json()) as LessonManifest
+
+  // A lesson with an external (YouTube) video and nothing else would store a
+  // 0-byte "download" and show as available offline — say so instead.
+  if (
+    manifest.video?.kind !== "self-hosted" &&
+    manifest.documents.length === 0 &&
+    manifest.questions.length === 0
+  ) {
+    throw new DownloadError("empty")
+  }
 
   const existing = await getDownloadedLesson(lessonId)
   const now = new Date().toISOString()

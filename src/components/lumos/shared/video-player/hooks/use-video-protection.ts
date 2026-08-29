@@ -121,7 +121,7 @@ export function useVideoProtection({
     // 5. Native element-level protection
     if (video) {
       // Hide download + playback-rate items in native controls
-      video.setAttribute("controlsList", "nodownload noplaybackrate")
+      video.setAttribute("controlsList", "nodownload")
       // Kill the casting paths — they render the video without our overlay
       video.setAttribute("disableRemotePlayback", "")
       video.setAttribute("disablePictureInPicture", "")

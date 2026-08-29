@@ -115,10 +115,13 @@ export function DownloadButton({
     const reasonKey =
       state.reason === "not-downloadable"
         ? "notPermitted"
-        : state.reason === "storage"
-          ? "storage"
-          : "failed"
-    const canRetry = state.reason !== "not-downloadable"
+        : state.reason === "empty"
+          ? "noVideo"
+          : state.reason === "storage"
+            ? "storage"
+            : "failed"
+    const canRetry =
+      state.reason !== "not-downloadable" && state.reason !== "empty"
     return (
       <div className="flex flex-wrap items-center gap-2">
         <span

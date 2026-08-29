@@ -261,6 +261,31 @@ describe("downloadLesson", () => {
     expect(stores.lessons.get("l1")?.error).toBe("not-downloadable")
   })
 
+  it("refuses a lesson with nothing to keep instead of storing a 0-byte download", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string, init?: RequestInit) =>
+        url.startsWith("/api/offline/lesson/")
+          ? Promise.resolve(
+              new Response(
+                JSON.stringify({
+                  ...MANIFEST,
+                  video: { kind: "external", url: "https://youtu.be/x" },
+                  documents: [],
+                }),
+                { status: 200 }
+              )
+            )
+          : fakeFetch(url, init)
+      )
+    )
+    await expect(downloadLesson("l1")).rejects.toMatchObject({
+      reason: "empty",
+    })
+    // nothing to remember — no row, so the button offers again next visit
+    expect(stores.lessons.has("l1")).toBe(false)
+  })
+
   it("refuses to start with no connection", async () => {
     vi.stubGlobal("navigator", { onLine: false })
     await expect(downloadLesson("l1")).rejects.toMatchObject({
