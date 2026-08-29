@@ -93,12 +93,19 @@ describe("resolveActionUrl (BUG-4)", () => {
   })
 })
 
-// ── dispatchNotification — BUG-4: metadata.url absolutified ──────────────
+// ── dispatchNotification — metadata.url is stored RELATIVE ────────────────
+//
+// BUG-4 originally absolutified `metadata.url` at dispatch time so email
+// buttons rendered. That baked `{subdomain}.databayt.org` into every row — the
+// wrong host for every school on balqalam.com, and one that does not serve
+// this app — and the in-app bell read the same field, so a click navigated the
+// reader OFF the product. The contract now: the row stores what the caller
+// passed (relative stays relative); the email channel absolutifies at render
+// time in email-service.ts, where a canonical host is actually needed.
 
-describe("dispatchNotification — BUG-4 metadata.url absolutification", () => {
+describe("dispatchNotification — metadata.url stored as given (relative)", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Mock school lookup used by absolutifyMetadataUrl.
     mockDb.school.findUnique.mockResolvedValue({
       subdomain: "demo",
       domain: null,
@@ -107,7 +114,7 @@ describe("dispatchNotification — BUG-4 metadata.url absolutification", () => {
     mockDb.notification.create.mockResolvedValue({ id: "n1" } as any)
   })
 
-  it("stores an absolute URL even when caller passes a relative path", async () => {
+  it("stores a relative path unchanged — the bell resolves it on the reader's host", async () => {
     await dispatchNotification({
       schoolId: "school-1",
       userId: "user-1",
@@ -119,8 +126,9 @@ describe("dispatchNotification — BUG-4 metadata.url absolutification", () => {
 
     const createCall = mockDb.notification.create.mock.calls[0][0]
     const storedUrl = (createCall.data.metadata as any).url as string
-    expect(storedUrl).toMatch(/^https?:\/\//)
-    expect(storedUrl).toMatch(/\/finance\/fees$/)
+    expect(storedUrl).toBe("/finance/fees")
+    // No host lookup is needed to store a row any more.
+    expect(mockDb.school.findUnique).not.toHaveBeenCalled()
   })
 
   it("leaves an already-absolute URL untouched", async () => {
