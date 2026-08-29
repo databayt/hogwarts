@@ -32,7 +32,6 @@ last_audited: 2026-08-29
   key that matches no question and selects nothing — a workaround for a form that could not
   save. Any other repo on Zod 4 with an enum-keyed `z.record` has the same latent bug.
 
-
 # Exams -- Production Readiness Tracker
 
 **Status:** IN PROGRESS
