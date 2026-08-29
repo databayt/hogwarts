@@ -16,6 +16,11 @@ vi.mock("@/lib/db", () => ({
   db: {
     student: { findFirst: vi.fn() },
     reportCard: { findMany: vi.fn() },
+    // `generateTranscriptCore` reads the school's `preferredLanguage` to label
+    // terms. Omitting it here did not fail loudly: the core's try/catch turned
+    // the resulting TypeError into `{ success: false }`, so the suite reported
+    // a plain assertion failure and looked like a product bug.
+    school: { findUnique: vi.fn() },
     transcript: {
       create: vi.fn(),
       findUnique: vi.fn(),
@@ -46,6 +51,9 @@ function asAdmin(schoolId: string | null = SCHOOL) {
 beforeEach(() => {
   vi.clearAllMocks()
   asAdmin(SCHOOL)
+  vi.mocked(db.school.findUnique).mockResolvedValue({
+    preferredLanguage: "en",
+  } as never)
 })
 
 describe("generateTranscript", () => {
