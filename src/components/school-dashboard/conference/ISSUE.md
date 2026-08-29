@@ -34,6 +34,28 @@
       teaching time and can have a live session materialized into the break.
       Re-derive from each school's schedule structure.
 
+## Found during the 2026-08-29 production join test
+
+Verified live on `demo.balqalam.com`: teacher + student in one LiveKit room, full
+webhook lifecycle (`room_started` → 2× `participant_joined` → 2× `participant_left`
+→ `room_finished` → `ended`), `leftAt`/`durationSeconds` written. Two gaps:
+
+- [ ] **No End control on the session detail page.** A teacher can Join but cannot
+      end a session they started — `endLiveClass` exists with no affordance on
+      `detail.tsx`. The test session only closed because LiveKit's empty-room
+      timeout fired `room_finished`. A teacher whose class ends early has no way to
+      release the room or trigger the attendance sync.
+- [ ] **`/conference/settings` has no provider control.** `School.conferenceProviderDefault`
+      cannot be changed from the UI, so it stays `external` and every
+      auto-materialized session degrades to an external link even with the SFU
+      live. `online-policy.ts` reads the column; nothing writes it. Manual sessions
+      are unaffected (the schedule form creates LiveKit sessions directly).
+
+Not a defect, but recorded so the next person doesn't chase it: the timetable Join
+button could NOT be exercised on the demo school — its slots are on dow 0/1/2/4 and
+the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
+`teacher@balqalam.com`'s slots carry no section or subject. Demo-data shape, not code.
+
 ## Closed 2026-08-28 — production pass
 
 - [x] Recording no longer gates rooms — `isLiveKitConfigured()` (4 vars) vs
