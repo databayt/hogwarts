@@ -8,7 +8,7 @@ import {
   useLocalParticipant,
   useRoomContext,
 } from "@livekit/components-react"
-import { RoomEvent, type Participant } from "livekit-client"
+import { ConnectionState, RoomEvent, type Participant } from "livekit-client"
 
 import {
   applyMessage,
@@ -54,7 +54,9 @@ export function useClassChannel(opts: {
   const { localParticipant } = useLocalParticipant()
   const [state, setState] = useState<ClassState>(initialClassState)
   const stateRef = useRef(state)
-  stateRef.current = state
+  const sendRef = useRef<(msg: ClassMessage, to?: string[]) => Promise<void>>(
+    async () => {}
+  )
   const { hostIdentity, isHost } = opts
 
   const { send: sendRaw } = useDataChannel(CLASS_TOPIC, (raw) => {
@@ -84,27 +86,28 @@ export function useClassChannel(opts: {
     // Votes are addressed to the host; a stray copy elsewhere must not tally.
     if (msg.t === "poll.vote" && !isHost) return
 
-    setState((s) =>
-      applyMessage(s, msg, {
-        identity: from.identity,
-        name: from.name ?? from.identity,
-        isHost: fromIsHost,
-      })
-    )
+    // Reduce through the ref, not only through setState: the tally broadcast
+    // below must carry the post-vote counts, and React has not re-rendered
+    // (so `stateRef` has not caught up) by the time it is sent.
+    const next = applyMessage(stateRef.current, msg, {
+      identity: from.identity,
+      name: from.name ?? from.identity,
+      isHost: fromIsHost,
+    })
+    stateRef.current = next
+    setState(next)
 
     // Host re-broadcasts the tally after every vote so everyone sees it move.
     if (msg.t === "poll.vote" && isHost) {
-      queueMicrotask(() => {
-        const poll = stateRef.current.poll
-        if (poll && poll.id === msg.id) {
-          void send({
-            t: "poll.tally",
-            id: poll.id,
-            counts: poll.counts,
-            total: poll.total,
-          })
-        }
-      })
+      const poll = next.poll
+      if (poll && poll.id === msg.id) {
+        void sendRef.current({
+          t: "poll.tally",
+          id: poll.id,
+          counts: poll.counts,
+          total: poll.total,
+        })
+      }
     }
   })
 
@@ -114,17 +117,18 @@ export function useClassChannel(opts: {
         reliable: true,
         ...(to && to.length > 0 ? { destinationIdentities: to } : {}),
       })
-      // Our own messages don't echo back — apply locally.
-      setState((s) =>
-        applyMessage(s, msg, {
-          identity: localParticipant.identity,
-          name: localParticipant.name ?? localParticipant.identity,
-          isHost,
-        })
-      )
+      // Our own messages don't echo back — apply locally, through the ref.
+      const next = applyMessage(stateRef.current, msg, {
+        identity: localParticipant.identity,
+        name: localParticipant.name ?? localParticipant.identity,
+        isHost,
+      })
+      stateRef.current = next
+      setState(next)
     },
     [sendRaw, localParticipant, isHost]
   )
+  sendRef.current = send
 
   const answerSync = useCallback(
     async (identity: string) => {
@@ -143,7 +147,10 @@ export function useClassChannel(opts: {
     [sendRaw]
   )
 
-  // Late joiner: ask the host for the state of the room.
+  // Late joiner: ask the host for the state of the room. The hook mounts
+  // before the room is connected, so the first ask would be thrown away —
+  // ask once we are connected (and again after a reconnect, when the host
+  // may have moved on), and whenever the host arrives after us.
   useEffect(() => {
     if (isHost || !hostIdentity) return
     const ask = () => {
@@ -152,13 +159,16 @@ export function useClassChannel(opts: {
         destinationIdentities: [hostIdentity],
       }).catch(() => {})
     }
-    // The host may not be in the room yet; ask again when they arrive.
     const onJoin = (p: Participant) => {
       if (p.identity === hostIdentity) ask()
     }
-    ask()
+    if (room.state === ConnectionState.Connected) ask()
+    room.on(RoomEvent.Connected, ask)
+    room.on(RoomEvent.Reconnected, ask)
     room.on(RoomEvent.ParticipantConnected, onJoin)
     return () => {
+      room.off(RoomEvent.Connected, ask)
+      room.off(RoomEvent.Reconnected, ask)
       room.off(RoomEvent.ParticipantConnected, onJoin)
     }
   }, [isHost, hostIdentity, room, sendRaw])

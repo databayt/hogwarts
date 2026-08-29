@@ -365,6 +365,36 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   available"). The stored preference is untouched — the day a bucket lands,
   recording starts with no re-setup.
 
+## Room architecture (2026-08-29)
+
+`room.tsx` owns the join ticket (refresh, eject on a server "no") and how the
+room ENDS (`onDisconnected(reason)` → removed / ended / elsewhere / lost +
+Rejoin). Everything inside the call is `room/`:
+
+- `room-shell.tsx` composes header (quality dot, title, hand count), `stage.tsx`
+  (whiteboard > slides > screen share > camera grid, cameras in a side strip
+  when something else has focus), `side-panel.tsx` (chat via `useChat`,
+  questions, polls, hands), `control-bar.tsx` (role-aware), and the overlays.
+- `adaptive-delivery.ts` is a PURE ladder (tests pin the hysteresis);
+  `use-adaptive-delivery.ts` applies the tier to every remote CAMERA
+  publication — screen shares are never touched. It needs
+  `adaptiveStream: false` on the room; do not turn it back on.
+- `class-channel.ts` is the PURE protocol (codec + reducer; host-only messages
+  are dropped when they come from a non-host, votes tally only on the host);
+  `use-class-channel.ts` wires it to `useDataChannel("lc")`. Reduce through
+  `stateRef` synchronously — the tally that follows a vote is sent before
+  React re-renders. A late joiner asks the host on `RoomEvent.Connected`
+  (the first ask, at mount, is before the channel exists).
+- Hands are participant ATTRIBUTES (`hand=1`), not messages: the SFU replays
+  them to late joiners. That is why HOST/CO_HOST/PARTICIPANT tokens carry
+  `canUpdateOwnMetadata`, and why `attributes.role` is on every token — the
+  receiver trusts host-only messages by it.
+- `actions/room-events.ts` is idempotent on `lc:<session>:<kind>:<key>`; the
+  shell persists questions (not the questions tab — a host who never opens it
+  still leaves a record) and closed polls.
+- Slides are the browser's PDF viewer in an iframe over
+  `/api/lumos/file/<kind>/<id>?inline=1`; the page rides in the URL fragment.
+
 ## Danger Zones
 
 - **Schedule instants combine in the SCHOOL timezone**: the wizard sends

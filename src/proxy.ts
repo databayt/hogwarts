@@ -90,6 +90,10 @@ const publicRoutes = [
   "/pricing",
   "/community",
   "/wa-preview",
+  // The offline library: served by the service worker when navigation fails,
+  // so it must be reachable (and precacheable) without a session. It holds
+  // no server data — everything it shows lives in the device's IndexedDB.
+  "/offline",
 ]
 const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
 

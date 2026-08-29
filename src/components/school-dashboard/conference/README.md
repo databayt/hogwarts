@@ -138,6 +138,16 @@ reached from a row, not a tab.
 | Lumos lesson → its live session today                  | ✅ `lesson-live-strip.tsx`                   |
 | Student/teacher dashboard home: section-aware + Join   | ✅ (was empty for every section student)     |
 | Recording surfaces honest without a bucket             | ✅ forms · settings · detail                 |
+| Room UI composed from SDK primitives, en+ar, RTL-safe  | ✅ live (`room/*`; prebuilt bar retired)     |
+| Adaptive delivery ladder (720/360/180 → audio+slides)  | ✅ live (`room/adaptive-delivery.ts`)        |
+| Reconnecting overlay · disconnect reasons · Rejoin     | ✅ live                                      |
+| Hands · questions · polls · whiteboard · slides         | ✅ live (data topic `lc` + attributes)       |
+| Closed polls + questions persisted (`ConferenceEvent`)  | ✅ live (`actions/room-events.ts`)           |
+| Presence survives reconnects (accumulated spans)       | ✅ live (webhook + attendance-sync)          |
+| Egress failure honest (`failed` + reason)              | ✅ live (`egress_updated`)                   |
+| Recording → lesson video (lumos) bridge                | ✅ live (`actions/publish-recording.ts`)     |
+| Session states on the detail page (en+ar)              | ✅ live (`session-state.tsx`)                |
+| Lesson download / offline study (lumos)                | ✅ live — see `src/lib/offline/*`            |
 | Capacity dashboard (`/observability/conference`)       | ✅ live (DEVELOPER-only)                     |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any

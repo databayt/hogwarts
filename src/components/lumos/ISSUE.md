@@ -1373,3 +1373,43 @@ _Chronological close log — appended as items ship._
 ## Enhancements (Post-MVP)
 
 _Deferred to next quarter+._
+
+## Offline learning + server-owned progress (2026-08-29)
+
+Closed:
+
+- [x] Completion is a SERVER rule (`lib/progress-core.ts: isWatchedThrough`
+      — the stricter of the last 30s and 90%), shared by the actions and
+      `POST /api/offline/sync`; the `<video>` `ended` event is only an
+      accelerator now.
+- [x] Quiz attempts persist (`LessonQuizAttempt`, device-minted id) — a
+      retried or replayed submission is one attempt, one gradebook write.
+- [x] Playback speed is a real control (the menu state existed for months
+      with nothing rendering it; `controlsList` no longer says
+      `noplaybackrate`).
+- [x] `GET /api/lumos/video/[id]/download` (owner's `allowDownload`),
+      `GET /api/offline/lesson/[id]` (manifest on the page's own resolvers),
+      material route `?inline=1` / `?ticket=1`.
+- [x] Offline-first client: `src/lib/offline/*` (IndexedDB, Range-resumable
+      downloads, outbox with backoff that parks rejections visibly),
+      `src/components/offline/*`, the lesson page plays the local copy when
+      offline and queues progress/quiz; `/offline` is the library.
+- [x] Students can hand in assignments (`listings/assignments/submit-core.ts`)
+      — there was no student write at all before.
+
+Open:
+
+- [ ] **The download button cannot know `allowDownload` up front** — the
+      lesson resolver (`get-lesson-with-progress.ts`) does not expose it, so a
+      lesson whose owner has not allowed downloads shows the button and learns
+      "not permitted" on the first tap (remembered in IndexedDB after that).
+      Add `allowDownload` to `AvailableVideo` when that file is next touched.
+- [ ] **Offline capture is text-only for assignments** — attachments would
+      need blobs in the outbox.
+- [ ] **The service worker registers only in production**, so the offline
+      navigation path (cached lesson page + `/offline` fallback) is verifiable
+      only on a deployed build. The download/outbox/sync paths were verified
+      on dev (they do not depend on the worker).
+- [ ] **No storage budget** — a student can fill the device; `navigator
+      .storage.estimate()` is surfaced nowhere yet.
+

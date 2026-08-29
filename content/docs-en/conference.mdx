@@ -335,6 +335,42 @@ either provider works from every surface above.
 the class, and a non-HOST joining a still-`scheduled` session is refused — an early room link would
 land a student on an error rather than a waiting room.
 
+## In the room
+
+The room is the app's own — every control is labelled from the dictionary and
+the layout follows the page direction. What a class can do in it:
+
+- **Teacher:** microphone, camera, screen share, whiteboard, slides (any PDF
+  attached to the lesson, page-synced to everyone), polls, a questions list
+  with "mark answered", the raised-hands queue, and moderation (remove).
+- **Student:** microphone and camera (both off on entry), raise hand, ask a
+  question, vote, chat. Guardians observe only.
+- **Delivery quality** adapts to the student's connection: a sustained poor
+  patch steps the teacher's video down (720 → 360 → 180) and finally into
+  **audio + slides** — the banner says so — and a sustained good stretch
+  steps it back up. A manual choice in the Quality menu overrides the ladder.
+- **Reconnecting** shows an overlay; a lost connection offers *Rejoin* instead
+  of ejecting. Being removed by the teacher, the class ending, or the room
+  being opened on another device each say exactly that.
+- **Attendance** is recorded from the time spent in the room, across
+  reconnects — nothing to tap.
+- Closed polls and every question are kept on the session as events.
+
+### After the class
+
+When recording is on, the finished recording is published as the lesson's
+video in Lumos (visible to the school, downloadable), and the session page
+moves through *recording is being prepared* → *recording available* — or
+says plainly that the recording failed.
+
+### Studying offline
+
+From a Lumos lesson, **Download for offline** stores the video, its documents,
+summary and quiz on the device (resumable). The lesson plays from the local
+copy when there is no connection; playback position, completion, quiz
+answers and assignment text queue up and sync when the connection returns —
+`/offline` lists the downloads and anything still waiting to sync.
+
 ## Operating it
 
 - **The SFU**: four env vars (`LIVEKIT_HOST`, `LIVEKIT_WS_URL`, `LIVEKIT_API_KEY`,

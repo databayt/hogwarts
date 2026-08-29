@@ -389,3 +389,21 @@ Lumos (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~93% complete a
 2. Update `README.md` — if routes, files, or completion% changed; bump frontmatter `completion` and `last_audited`
 3. Run `NODE_OPTIONS='--max-old-space-size=8192' pnpm tsc --noEmit`
 4. If you touched DB: write a migration test before merging
+
+## Progress, quizzes and offline (2026-08-29)
+
+- Write progress ONLY through `lib/progress-core.ts` (`applyLessonProgress`,
+  `completeLessonCore`). Both the server actions and `POST /api/offline/sync`
+  call it; a replayed sample carries its own `at` and never regresses a newer
+  row (`stale`). Completion never auto-unsets.
+- Grade quizzes ONLY through `lib/quiz-submission.ts`. The attempt id comes
+  from the device (`crypto.randomUUID()` per press) — pass it through; a
+  P2002 on the id is a duplicate, not an error.
+- Plain modules, not `"use server"`: both take a `userId`. Never re-export
+  them from an actions file.
+- The offline manifest (`/api/offline/lesson/[id]`) is built on
+  `getLessonWithProgress` + `getLessonContent` so visibility rules cannot
+  drift; do not hand-roll a second lesson query there.
+- `src/lib/offline/*` is browser-only and dependency-free on purpose; every
+  export guards `indexedDB`. Outbox items must keep their id across retries.
+

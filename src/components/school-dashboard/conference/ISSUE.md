@@ -371,9 +371,60 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
       content components. (Dropped from all 8 call sites; type already
       inferred from JSON imports.)
 
+## Live-class + offline pass — 2026-08-29
+
+Closed (all browser-verified on demo.localhost with a real LiveKit Cloud room,
+teacher + student contexts; see `.next/shots/` screenshots of that session):
+
+- [x] Own control bar / side panel / stage — Arabic labels, RTL layout.
+- [x] Delivery ladder with hysteresis; manual override; "تم تشغيل وضع الصوت
+      والشرائح" banner at the bottom rung.
+- [x] Reconnecting overlay ("جارٍ إعادة الاتصال…"); disconnect reasons →
+      removed / ended / elsewhere / lost-with-Rejoin.
+- [x] Raise hand (participant attribute), questions, polls with a host-only
+      vote path and broadcast tally, whiteboard (host draws), slides (browser
+      PDF viewer, page-synced), late-join snapshot.
+- [x] Host persists closed polls + questions as `ConferenceEvent` rows.
+- [x] Presence accumulates across reconnects; `participant_connection_aborted`
+      closes a span; egress failure lands as `failed` + reason.
+- [x] Recording → lesson video bridge (`publishRecordingAsLessonVideo`, same
+      bucket CopyObject, `allowDownload: true`).
+- [x] Session states on the detail page: not started (countdown) · live now +
+      enter · ended → recording processing / ready (→ lesson) / failed.
+- [x] Students join with mic + camera off.
+
+Deferred, with reasons:
+
+- [ ] **A co-host's poll tallies nowhere when the teacher is absent.** Votes
+      are addressed to `hostIdentity` (the teacher) only, so a room run by a
+      CO_HOST alone shows no counts. Fix: address votes to every participant
+      whose `role` attribute is HOST/CO_HOST.
+- [ ] **Slides on iOS Safari show the first page only.** The presenter is the
+      browser's own PDF viewer in an iframe with `#page=N`; WebKit ignores the
+      fragment. A pdf.js viewer would fix it at the cost of shipping the
+      library to every phone.
+- [ ] **Three video rungs, not the 1080→240 ladder.** Simulcast carries three
+      layers per publication; the ladder is 720 / 360 / 180 / audio-only.
+- [ ] **`adaptiveStream` is off by design** — with it on the SDK ignores
+      `setVideoQuality`/`setEnabled`. Consequence: without the ladder stepping
+      down, a viewer receives the highest layer their tile can show.
+- [ ] **Whiteboard strokes are room-scoped.** Nothing persists them; a host
+      who leaves and returns starts with a blank board. Persist to
+      `ConferenceEvent` on `wb.clear`/end if a school asks for it.
+- [ ] **Egress failure is terminal.** LiveKit does not retain media from a
+      failed egress; `failed` is shown honestly and cannot be retried.
+- [ ] **Observers (guardians) cannot raise hands or ask questions** — no
+      `canPublishData` / `canUpdateOwnMetadata` grant, on purpose.
+- [ ] **Presence rows stay `invited` on local dev.** LiveKit Cloud's webhook
+      points at production; local rooms never receive `participant_joined`.
+      Verified on prod in the 2026-08-29 join test instead.
+
 ## Open — carried forward from the online-school pass (2026-08-14)
 
-- [ ] **In-room UI is still English-only.** `dir="ltr"` now pins the LiveKit
+- [x] **In-room UI is still English-only** — CLOSED 2026-08-29. The room is
+      composed from the SDK primitives (`room/*`), every string comes from
+      `liveClasses.room`, and the forced `dir="ltr"` is gone. Original note:
+      `dir="ltr"` pinned the LiveKit
       subtree so its layout stops being mirrored under RTL, but the strings
       themselves are hardcoded inside `@livekit/components-react` — the package
       exposes NO i18n hook (verified: `ControlBarProps` has `variation` and
