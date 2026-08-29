@@ -24,6 +24,8 @@ import {
 import { toast } from "sonner"
 
 import { asset } from "@/lib/asset-url"
+import { useOfflineVideoUrl, useOnlineStatus } from "@/lib/offline/hooks"
+import { enqueue } from "@/lib/offline/outbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -53,6 +55,7 @@ import {
   type VideoProgress,
 } from "@/components/lumos/shared/video-player"
 import { purchaseVideo } from "@/components/lumos/video/video-purchase-actions"
+import { DownloadButton } from "@/components/offline/download-button"
 
 import {
   markLessonComplete,
@@ -112,6 +115,7 @@ export function LumosLessonContent({
   // the hero's own "C1 L2" badge) rather than duplicated under videoPlayer —
   // everything else is new (lumos.videoPlayer namespace).
   const vp = (dictionary as Record<string, any>)?.videoPlayer
+  const off = (dictionary as Record<string, any>)?.offline
   // Downloadable resources = legacy attachments + catalog lesson materials
   // (worksheets/notes contributed by schools or the platform).
   const resourceCount = lesson.attachments.length + lesson.materials.length
@@ -185,9 +189,16 @@ export function LumosLessonContent({
   // Any fallback playback (no videos, or broken source) must never write
   // lesson watch-progress or auto-complete.
   const playingFallback = isFallbackVideo || sourceFailed
-  const currentVideoUrl = sourceFailed
-    ? FALLBACK_VIDEO_URL
-    : (lessonVideoUrl ?? (isFallbackVideo ? FALLBACK_VIDEO_URL : null))
+  // With no connection, play the copy the student downloaded (if any). Only
+  // consulted offline: online always streams a freshly signed URL so a
+  // revoked or re-uploaded video is never served from a stale local copy.
+  const online = useOnlineStatus()
+  const offlineVideoUrl = useOfflineVideoUrl(lesson.id, !online)
+  const currentVideoUrl =
+    offlineVideoUrl ??
+    (sourceFailed
+      ? FALLBACK_VIDEO_URL
+      : (lessonVideoUrl ?? (isFallbackVideo ? FALLBACK_VIDEO_URL : null)))
 
   // Paid + unpurchased selected video → the server sent no URL. Surface a
   // purchase CTA (the InstructorSwitcher only renders with 2+ videos, so a
@@ -265,6 +276,20 @@ export function LumosLessonContent({
   const handleProgress = useCallback(
     (progress: VideoProgress) => {
       if (playingFallback) return
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        // No connection: keep the newest position on the device; the outbox
+        // replays it (and the completion it implies) when one returns.
+        void enqueue({
+          kind: "progress",
+          coalesceKey: `progress:${lesson.id}`,
+          payload: {
+            lessonId: lesson.id,
+            watchedSeconds: Math.floor(progress.watchedSeconds),
+            totalSeconds: Math.floor(progress.duration),
+          },
+        })
+        return
+      }
       // The server owns the completion rule (watched-through, see
       // lib/progress-core.ts) — reflect its verdict rather than waiting for
       // the <video> element's unreliable `ended`.
@@ -535,6 +560,12 @@ export function LumosLessonContent({
                   )}
                 </button>
               </div>
+              <DownloadButton
+                lessonId={lesson.id}
+                labels={off}
+                locale={lang}
+                tone="dark"
+              />
             </div>
 
             {/* About this Lesson — Apple TV+ info sheet */}
@@ -761,7 +792,7 @@ export function LumosLessonContent({
             // changed `src` attribute (it needs .load()), so keying on the
             // active video id gives the new instructor's source a fresh
             // element. Same reason the fallback swap is part of the key.
-            key={`${activeVideoId ?? "default"}${sourceFailed ? ":fallback" : ""}`}
+            key={`${activeVideoId ?? "default"}${sourceFailed ? ":fallback" : ""}${offlineVideoUrl ? ":offline" : ""}`}
             url={currentVideoUrl}
             title={lesson.title}
             lessonId={lesson.id}
@@ -947,7 +978,12 @@ export function LumosLessonContent({
 
       {/* Quiz — graded; the score is written to the gradebook server-side */}
       {quizQuestions && quizQuestions.length > 0 && (
-        <LessonQuiz questions={quizQuestions} lessonId={lesson.id} d={d} />
+        <LessonQuiz
+          questions={quizQuestions}
+          lessonId={lesson.id}
+          d={d}
+          off={off}
+        />
       )}
 
       {/* Lesson Info */}
@@ -1174,15 +1210,18 @@ function LessonQuiz({
   questions,
   lessonId,
   d,
+  off,
 }: {
   questions: LessonQuizQuestion[]
   lessonId: string
   d?: Record<string, any>
+  off?: Record<string, any>
 }) {
   const [choices, setChoices] = useState<Record<string, number>>({})
   const [texts, setTexts] = useState<Record<string, string>>({})
   const [result, setResult] = useState<LessonQuizResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [queued, setQueued] = useState(false)
   const [isSubmitting, startSubmit] = useTransition()
 
   // Every question the server returned is gradeable — non-answerable types are
@@ -1198,17 +1237,24 @@ function LessonQuiz({
 
   const handleSubmit = () => {
     setError(null)
+    // One id per press: a retried request resolves to the same attempt — and
+    // it is the outbox key when the answers have to wait for a connection.
+    const attemptId = crypto.randomUUID()
+    const answers = questions.map((q) =>
+      q.choices === null
+        ? { questionId: q.id, answerText: texts[q.id] ?? "" }
+        : { questionId: q.id, selectedOptionIndex: choices[q.id] }
+    )
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      void enqueue({
+        kind: "quiz",
+        id: attemptId,
+        payload: { lessonId, answers },
+      }).then(() => setQueued(true))
+      return
+    }
     startSubmit(async () => {
-      const res = await submitLessonQuiz({
-        lessonId,
-        // One id per press: a retried request resolves to the same attempt.
-        attemptId: crypto.randomUUID(),
-        answers: questions.map((q) =>
-          q.choices === null
-            ? { questionId: q.id, answerText: texts[q.id] ?? "" }
-            : { questionId: q.id, selectedOptionIndex: choices[q.id] }
-        ),
-      })
+      const res = await submitLessonQuiz({ lessonId, attemptId, answers })
       if (res.success) {
         setResult(res.data)
       } else {
@@ -1238,6 +1284,12 @@ function LessonQuiz({
         ))}
 
         {error && <p className="text-destructive text-sm">{error}</p>}
+        {queued && (
+          <p className="text-muted-foreground text-sm" role="status">
+            {off?.quizQueued ||
+              "Answers saved on this device — they'll be graded when you're back online."}
+          </p>
+        )}
 
         {submitted ? (
           <div className="bg-muted space-y-1 rounded-lg p-4 text-center">
@@ -1257,7 +1309,9 @@ function LessonQuiz({
         ) : (
           <Button
             onClick={handleSubmit}
-            disabled={!allAnswered || isSubmitting || questions.length === 0}
+            disabled={
+              !allAnswered || isSubmitting || queued || questions.length === 0
+            }
             className="w-full"
           >
             {isSubmitting

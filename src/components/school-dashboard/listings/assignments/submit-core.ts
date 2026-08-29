@@ -125,3 +125,48 @@ export async function submitAssignmentCore(input: {
 
   return { status: "submitted", submissionStatus }
 }
+
+export interface OwnSubmission {
+  status: string
+  submittedAt: Date | null
+  content: string | null
+  score: number | null
+  feedback: string | null
+}
+
+/** What the signed-in student has on file for an assignment, if anything. */
+export async function getOwnSubmission(
+  userId: string,
+  schoolId: string,
+  assignmentId: string
+): Promise<OwnSubmission | null> {
+  const student = await db.student.findFirst({
+    where: { userId, schoolId },
+    select: { id: true },
+  })
+  if (!student) return null
+  const row = await db.assignmentSubmission.findUnique({
+    where: {
+      schoolId_assignmentId_studentId: {
+        schoolId,
+        assignmentId,
+        studentId: student.id,
+      },
+    },
+    select: {
+      status: true,
+      submittedAt: true,
+      content: true,
+      score: true,
+      feedback: true,
+    },
+  })
+  if (!row) return null
+  return {
+    status: row.status,
+    submittedAt: row.submittedAt,
+    content: row.content,
+    score: row.score === null ? null : Number(row.score),
+    feedback: row.feedback,
+  }
+}

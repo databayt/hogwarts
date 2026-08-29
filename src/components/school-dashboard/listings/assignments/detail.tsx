@@ -23,6 +23,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { StudentSubmissionCard } from "./submission-card"
+import type { OwnSubmission } from "./submit-core"
+
 // Type for assignment detail - matches the select result from actions.ts
 interface AssignmentDetailResult {
   id: string
@@ -45,6 +48,8 @@ interface AssignmentDetailContentProps {
   error?: string | null
   dictionary: Dictionary
   lang: Locale
+  /** Present for a signed-in student: unlocks the hand-in card. */
+  viewer?: { role: "STUDENT"; submission: OwnSubmission | null }
 }
 
 export function AssignmentDetailContent({
@@ -52,6 +57,7 @@ export function AssignmentDetailContent({
   error,
   dictionary,
   lang,
+  viewer,
 }: AssignmentDetailContentProps) {
   const router = useRouter()
   const t = dictionary?.school?.assignments?.detail || {}
@@ -179,6 +185,15 @@ export function AssignmentDetailContent({
               </div>
             </CardContent>
           </Card>
+
+          {viewer?.role === "STUDENT" && data && (
+            <StudentSubmissionCard
+              assignmentId={data.id}
+              existing={viewer.submission}
+              labels={t}
+              locale={lang}
+            />
+          )}
 
           {/* Details Grid */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

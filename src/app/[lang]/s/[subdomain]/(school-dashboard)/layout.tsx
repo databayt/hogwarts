@@ -15,6 +15,7 @@ import {
 } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
+import { OfflineSyncBanner } from "@/components/offline/sync-banner"
 import { ReportIssueFooter } from "@/components/report-issue-footer"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
@@ -179,6 +180,12 @@ export default async function PlatformLayout({
                   />
                   <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
                     <PageHeadingDisplay />
+                    <OfflineSyncBanner
+                      labels={
+                        (dictionary as Record<string, any>)?.lumos?.offline
+                      }
+                      locale={lang}
+                    />
                     {children}
                     <ReportIssueFooter />
                   </div>
