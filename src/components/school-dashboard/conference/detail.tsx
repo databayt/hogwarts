@@ -3,6 +3,7 @@
 
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { auth } from "@/auth"
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { typography } from "@/lib/typography"
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { describeAttendanceSync } from "@/components/school-dashboard/conference/actions/attendance-sync"
 import { getLiveClass } from "@/components/school-dashboard/conference/actions/sessions"
+import { EndClassButton } from "@/components/school-dashboard/conference/end-class-button"
 import {
   getAttendanceSyncEnabled,
   getLessonReferenceContent,
@@ -84,6 +86,17 @@ export async function LiveClassDetailContent({
     : "disabled"
   // Only the roles that can actually open the manual register get the link.
   const canMarkAttendance = ATTENDANCE_ROLES.includes(viewerRole ?? "")
+
+  // End is offered only while a class is actually running, to the roles the
+  // PERMISSION_MATRIX lets end one — and, for a TEACHER, only on their OWN
+  // class, mirroring the ownership check inside `endLiveClass`. Rendering a
+  // button the server will refuse is worse than rendering none.
+  const END_ROLES = ["DEVELOPER", "ADMIN", "TEACHER"]
+  const viewerUserId = (await auth())?.user?.id
+  const canEnd =
+    session.status === "live" &&
+    END_ROLES.includes(viewerRole ?? "") &&
+    (viewerRole !== "TEACHER" || session.teacher?.userId === viewerUserId)
 
   // The linked catalog lesson's teachable content (videos, materials,
   // practice questions) — one FK, whole payload.
@@ -232,6 +245,15 @@ export async function LiveClassDetailContent({
               </Link>
             </Button>
           ))}
+        {canEnd && (
+          <EndClassButton
+            sessionId={session.id}
+            label={t?.actions?.end ?? "End class"}
+            confirmLabel={t?.actions?.endConfirm ?? "End for everyone?"}
+            pendingLabel={t?.actions?.ending ?? "Ending…"}
+            errorLabel={t?.actions?.endError ?? "Couldn't end the class"}
+          />
+        )}
         {session.status === "ended" && (
           <Button asChild variant="outline">
             <Link href={`/${locale}/conference/${session.id}/recordings`}>

@@ -38,18 +38,32 @@
 
 Verified live on `demo.balqalam.com`: teacher + student in one LiveKit room, full
 webhook lifecycle (`room_started` → 2× `participant_joined` → 2× `participant_left`
-→ `room_finished` → `ended`), `leftAt`/`durationSeconds` written. Two gaps:
+→ `room_finished` → `ended`), `leftAt`/`durationSeconds` written. One real gap,
+and one I reported wrongly:
 
-- [ ] **No End control on the session detail page.** A teacher can Join but cannot
-      end a session they started — `endLiveClass` exists with no affordance on
-      `detail.tsx`. The test session only closed because LiveKit's empty-room
-      timeout fired `room_finished`. A teacher whose class ends early has no way to
-      release the room or trigger the attendance sync.
-- [ ] **`/conference/settings` has no provider control.** `School.conferenceProviderDefault`
-      cannot be changed from the UI, so it stays `external` and every
-      auto-materialized session degrades to an external link even with the SFU
-      live. `online-policy.ts` reads the column; nothing writes it. Manual sessions
-      are unaffected (the schedule form creates LiveKit sessions directly).
+- [x] **No End control on the session detail page** — FIXED 2026-08-29.
+      `endLiveClass` had existed since the block was built with zero UI callers, so
+      a teacher could start a class and join it but never finish it; the test
+      session only closed when LiveKit's empty-room timeout fired `room_finished`.
+      That is minutes of an empty room, and for a school with attendance sync on,
+      minutes before the register is written. `end-class-button.tsx` now renders on
+      `detail.tsx` while `status === "live"`, gated to DEVELOPER/ADMIN/TEACHER and —
+      for a TEACHER — to their OWN class, mirroring `endLiveClass`'s own ownership
+      check rather than offering a button the server will refuse. `getLiveClass`
+      now selects `teacher.userId` so that check is possible. Two clicks: ending
+      is not undoable and disconnects everyone still in the room.
+
+- [ ] ~~`/conference/settings` has no provider control~~ — **NOT A GAP. I was wrong.**
+      The control exists (`settings-form.tsx`, `conferenceProviderDefault`), is
+      fully wired through `liveClassSettingsSchema` and `updateConferenceSettings`,
+      and even carries the "SFU not provisioned yet" hint. It is gated behind
+      `anyOnline = conferenceOnlineDefault || windowActive`, which is deliberate:
+      the provider only decides how ONLINE classes are delivered, so it is
+      meaningless for a school that is neither online by default nor inside a
+      window. The demo school is neither, which is why it was not on screen. An
+      admin who wants LiveKit turns "Teach online" on and the control appears in
+      the same form, saved in the same submit. Nothing to fix — recorded so the
+      next reader does not re-open it.
 
 Not a defect, but recorded so the next person doesn't chase it: the timetable Join
 button could NOT be exercised on the demo school — its slots are on dow 0/1/2/4 and

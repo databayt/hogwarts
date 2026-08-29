@@ -22,7 +22,10 @@
     "loading": "Loading…",
     "back": "Back",
     "viewRecordings": "View recordings",
-    "openMeeting": "Open meeting link"
+    "openMeeting": "Open meeting link",
+    "endConfirm": "End for everyone?",
+    "ending": "Ending…",
+    "endError": "Couldn't end the class"
   },
   "form": {
     "title": "Title",

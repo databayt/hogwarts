@@ -660,7 +660,11 @@ export async function getLiveClass(id: string) {
     const session = await db.conference.findFirst({
       where: { id, schoolId: ctx.schoolId, deletedAt: null },
       include: {
-        teacher: { select: { id: true, firstName: true, lastName: true } },
+        // `userId` so the detail page can match the viewer against the HOST:
+        // End is gated on it, because a TEACHER may only end their OWN class.
+        teacher: {
+          select: { id: true, userId: true, firstName: true, lastName: true },
+        },
         section: { select: { id: true, name: true } },
         subject: { select: { id: true, name: true } },
         catalogLesson: { select: { id: true, name: true } },
