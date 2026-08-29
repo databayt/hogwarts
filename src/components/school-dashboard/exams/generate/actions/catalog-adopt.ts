@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
+import { validateDistribution } from "../validation"
 
 // ============================================================================
 // Adopt a catalog exam into a school
@@ -293,6 +296,21 @@ export async function adoptExamTemplate(
       }
     }
 
+    // A catalog blueprint is platform data fanned out to every school that
+    // adopts it, and it used to be copied in with `as any` and no check. A
+    // distribution whose buckets are not real QuestionType/DifficultyLevel
+    // values matches no question and selects nothing — the school would adopt
+    // it happily and only find out when a generated paper came back empty,
+    // with no way to fix data it does not own. Refuse it here instead.
+    const check = validateDistribution(catalogTemplate.distribution)
+    if (!check.isValid) {
+      return {
+        success: false,
+        error: ACTION_ERRORS.DISTRIBUTION_INVALID,
+        code: ACTION_ERRORS.DISTRIBUTION_INVALID,
+      }
+    }
+
     const template = await db.$transaction(async (tx) => {
       const newTemplate = await tx.schoolExamTemplate.create({
         data: {
@@ -302,7 +320,8 @@ export async function adoptExamTemplate(
           subjectId,
           duration: catalogTemplate.duration,
           totalMarks: catalogTemplate.totalMarks,
-          distribution: catalogTemplate.distribution as any,
+          // Checked by `validateDistribution` immediately above.
+          distribution: catalogTemplate.distribution as never,
           bloomDistribution: catalogTemplate.bloomDistribution ?? undefined,
           catalogExamTemplateId: catalogTemplate.id,
           createdBy: userId,

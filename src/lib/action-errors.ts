@@ -135,6 +135,8 @@ export const ACTION_ERRORS = {
   SESSION_NOT_FOUND: "SESSION_NOT_FOUND",
   /** The question bank held nothing matching the blueprint's distribution. */
   QUESTION_BANK_EMPTY: "QUESTION_BANK_EMPTY",
+  /** A blueprint's question distribution names buckets that are not real. */
+  DISTRIBUTION_INVALID: "DISTRIBUTION_INVALID",
 
   // Certificate
   CERTIFICATE_NOT_FOUND: "CERTIFICATE_NOT_FOUND",

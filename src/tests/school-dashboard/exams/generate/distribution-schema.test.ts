@@ -17,7 +17,10 @@
  */
 import { describe, expect, it } from "vitest"
 
-import { examTemplateSchema } from "@/components/school-dashboard/exams/generate/validation"
+import {
+  examTemplateSchema,
+  validateDistribution,
+} from "@/components/school-dashboard/exams/generate/validation"
 import { examTemplateSchema as qbankExamTemplateSchema } from "@/components/school-dashboard/exams/qbank/validation"
 import { examTemplateSchema as gradesExamTemplateSchema } from "@/components/school-dashboard/listings/grades/generate/validation"
 
@@ -95,5 +98,82 @@ describe.each(SCHEMAS)("%s examTemplateSchema", (_name, schema) => {
   it("rejects a blueprint that asks for no questions at all", () => {
     // A distribution summing to zero would generate an empty paper.
     expect(schema.safeParse({ ...base, distribution: {} }).success).toBe(false)
+  })
+})
+
+describe("validateDistribution", () => {
+  /**
+   * Exported since the module was written and called from NOWHERE until
+   * `adoptExamTemplate` started using it, so its behaviour had never been
+   * pinned. Adopting a catalog blueprint copies platform data into every school
+   * that takes it; a distribution that names buckets which are not real
+   * QuestionType/DifficultyLevel values selects nothing, and the school cannot
+   * fix data it does not own.
+   */
+  it("accepts the partial distribution a real blueprint carries", () => {
+    expect(
+      validateDistribution({ MULTIPLE_CHOICE: { EASY: 5 }, ESSAY: { HARD: 2 } })
+    ).toEqual({ isValid: true, errors: [] })
+  })
+
+  it("rejects a difficulty bucket that is not a DifficultyLevel", () => {
+    const result = validateDistribution({ MULTIPLE_CHOICE: { ALL: 5 } })
+    expect(result.isValid).toBe(false)
+    expect(result.errors.length).toBeGreaterThan(0)
+  })
+
+  it("rejects a question type that is not a QuestionType", () => {
+    expect(validateDistribution({ NOT_A_TYPE: { EASY: 5 } }).isValid).toBe(
+      false
+    )
+  })
+
+  it("rejects a non-object", () => {
+    expect(validateDistribution(null).isValid).toBe(false)
+    expect(validateDistribution("nope").isValid).toBe(false)
+  })
+})
+
+describe("the shape the form actually sends", () => {
+  /**
+   * `generate/form.tsx` serializes every object field with `JSON.stringify`
+   * into FormData; `createTemplate` runs `Object.fromEntries`, `JSON.parse`s
+   * the distribution back, and hands it to `examTemplateSchema.parse`.
+   *
+   * Pinning the round trip — rather than a hand-built object — is what would
+   * have caught the Zod 4 regression: the schema in isolation still looked
+   * reasonable, and only a genuinely form-shaped partial payload failed.
+   */
+  it("survives form → FormData → JSON.parse → schema", () => {
+    const values: Record<string, unknown> = {
+      name: "Term test blueprint",
+      subjectId: "subj-1",
+      duration: 60,
+      totalMarks: 100,
+      // What the distribution editor produces after a teacher fills two cells.
+      distribution: { MULTIPLE_CHOICE: { EASY: 5 }, TRUE_FALSE: { EASY: 3 } },
+    }
+
+    const formData = new FormData()
+    for (const [k, v] of Object.entries(values)) {
+      if (v !== undefined && v !== null) {
+        formData.append(
+          k,
+          typeof v === "object" ? JSON.stringify(v) : String(v)
+        )
+      }
+    }
+
+    const data = Object.fromEntries(formData) as Record<string, unknown>
+    if (typeof data.distribution === "string") {
+      data.distribution = JSON.parse(data.distribution)
+    }
+
+    const result = examTemplateSchema.safeParse(data)
+    expect(result.success).toBe(true)
+    expect(result.success && result.data.distribution).toEqual({
+      MULTIPLE_CHOICE: { EASY: 5 },
+      TRUE_FALSE: { EASY: 3 },
+    })
   })
 })

@@ -425,7 +425,8 @@
       "PAYMENT_REFERENCE_ALREADY_USED": "This payment reference has already been used.",
       "TEMPLATE_NOT_FOUND": "Template not found",
       "TEMPLATE_INVALID": "This template's merge tags are broken, so it cannot be filled",
-      "QUESTION_BANK_EMPTY": "The question bank has no questions matching this blueprint"
+      "QUESTION_BANK_EMPTY": "The question bank has no questions matching this blueprint",
+      "DISTRIBUTION_INVALID": "This blueprint's question distribution is not valid, so it cannot select questions"
     },
     "tryAgain": "Try again"
   },

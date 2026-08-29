@@ -6,6 +6,7 @@ import React, { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Download, Loader2 } from "lucide-react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -24,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { getClassOptions } from "@/components/school-dashboard/exams/wizard/exam-wizard-v2/exam/actions"
 
@@ -57,6 +59,7 @@ export function AdoptExamDialog({
   onOpenChange,
 }: AdoptExamDialogProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
   const lang = locale === "ar" ? "ar" : "en"
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -93,7 +96,9 @@ export function AdoptExamDialog({
           `/${locale}/exams/paper/${result.data.generatedExamId}/preview`
         )
       } else {
-        setError(result.error || L.failed[lang])
+        // The action answers with an ACTION code for the checks that have one;
+        // older raw sentences in that file pass through unchanged.
+        setError(actionErrorMessage(result.error, dictionary, L.failed[lang]))
       }
     })
   }
