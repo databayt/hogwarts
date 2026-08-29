@@ -25,10 +25,15 @@ const DB_URL = process.env.DATABASE_URL_OVERRIDE || process.env.DATABASE_URL
 const prisma = new PrismaClient(
   process.env.DATABASE_URL_OVERRIDE
     ? { datasources: { db: { url: process.env.DATABASE_URL_OVERRIDE } } }
-    : {}
+    : // `{}` is not assignable to the constructor's options type; `undefined`
+      // is the no-options form and means "use DATABASE_URL", which is what the
+      // ternary was reaching for.
+      undefined
 )
 
-const DB_HOST = String(DB_URL).replace(/^.*@/, "").replace(/[/?].*$/, "")
+const DB_HOST = String(DB_URL)
+  .replace(/^.*@/, "")
+  .replace(/[/?].*$/, "")
 
 const APPLY = process.argv.includes("--apply")
 const REVERT = process.argv.includes("--revert")

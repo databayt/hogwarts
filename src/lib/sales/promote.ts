@@ -64,7 +64,10 @@ async function ensureSentinels(): Promise<void> {
     update: {},
     create: {
       id: SYSTEM_USER_ID,
-      name: "Funnel automation",
+      // `User` has `username`, not `name` — this create has never been valid
+      // and Prisma would reject it at runtime, so the system user could not be
+      // provisioned on a database that did not already have it.
+      username: "Funnel automation",
       // Deliberately unroutable: nothing should ever mail this address, and no
       // one should be able to sign in as it.
       email: "system-funnel@invalid.databayt.org",
