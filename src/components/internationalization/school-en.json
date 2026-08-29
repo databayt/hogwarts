@@ -7738,6 +7738,13 @@
       "uploadReceipt": "Upload Receipt",
       "receiptApproval": "Receipt Approval"
     },
+    "myAssignments": {
+      "title": "My assignments",
+      "description": "Everything your classes have set, and what you handed in.",
+      "empty": "No assignments yet.",
+      "due": "Due",
+      "points": "pts"
+    },
     "myFees": {
       "title": "My Fees",
       "description": "View assigned fees and pick your preferred payment method.",

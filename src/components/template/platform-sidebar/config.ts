@@ -186,6 +186,13 @@ export const platformNav: PlatformNavItem[] = [
     roles: ["STUDENT", "GUARDIAN"],
   },
   {
+    key: "myAssignments",
+    title: "My assignments",
+    href: "/my-assignments",
+    icon: "bookOpen",
+    roles: ["STUDENT"],
+  },
+  {
     key: "parentPortal",
     title: "Parent portal",
     href: "/parent",
