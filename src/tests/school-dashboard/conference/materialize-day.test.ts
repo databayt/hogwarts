@@ -21,6 +21,7 @@ vi.mock("@/lib/db", () => ({
     conferenceLink: { findMany: vi.fn() },
     scheduleException: { findFirst: vi.fn() },
     section: { findMany: vi.fn() },
+    substitutionRecord: { findMany: vi.fn() },
     period: { findMany: vi.fn() },
     term: { findFirst: vi.fn() },
   },
@@ -87,6 +88,7 @@ beforeEach(() => {
   // No holiday by default — the sweep now short-circuits on a declared one.
   vi.mocked(db.scheduleException.findFirst).mockResolvedValue(null as never)
   vi.mocked(db.section.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.substitutionRecord.findMany).mockResolvedValue([] as never)
   vi.mocked(db.period.findMany).mockResolvedValue([] as never)
   vi.mocked(db.term.findFirst).mockResolvedValue({
     yearId: "year-1",
@@ -280,6 +282,34 @@ describe("materializeSchoolDay — delivery modes", () => {
     homeroomTeacher: { userId: "u-1" },
   }
 
+  it("`open` hosts the room with the section's busiest teacher when no homeroom is set", async () => {
+    // The real onboarding path never writes homeroomTeacherId, so without a
+    // fallback every real school's open mode materialized zero rooms.
+    openSchool("open")
+    vi.mocked(db.section.findMany).mockResolvedValue([
+      {
+        ...section,
+        homeroomTeacherId: null,
+        homeroomTeacher: null,
+        timetables: [
+          { teacherId: "t-a", teacher: { userId: "u-a" } },
+          { teacherId: "t-b", teacher: { userId: "u-b" } },
+          { teacherId: "t-b", teacher: { userId: "u-b" } },
+        ],
+      },
+    ] as never)
+    vi.mocked(materializeOpenRoom).mockResolvedValue({
+      created: true,
+      sessionId: "open-1",
+    })
+
+    await materializeSchoolDay(SCHOOL)
+
+    const [passedSection] = vi.mocked(materializeOpenRoom).mock.calls[0]
+    expect(passedSection.homeroomTeacherId).toBe("t-b")
+    expect(passedSection.homeroomTeacherUserId).toBe("u-b")
+  })
+
   it("`timetable` builds slot sessions and no open room", async () => {
     openSchool("timetable")
     vi.mocked(db.section.findMany).mockResolvedValue([section] as never)
@@ -328,5 +358,49 @@ describe("materializeSchoolDay — delivery modes", () => {
     const out = await materializeSchoolDay(SCHOOL)
     expect(materializeOpenRoom).not.toHaveBeenCalled()
     expect(out.reasons.not_online).toBe(1)
+  })
+})
+
+describe("materializeSchoolDay — substitutes", () => {
+  it("a CONFIRMED substitute becomes the HOST of the slot's online arm", async () => {
+    vi.mocked(db.timetable.findMany).mockResolvedValue([slot("tt-1")] as never)
+    vi.mocked(db.substitutionRecord.findMany).mockResolvedValue([
+      {
+        originalSlotId: "tt-1",
+        substituteTeacherId: "t-sub",
+        substituteTeacher: { userId: "u-sub" },
+      },
+    ] as never)
+    vi.mocked(materializeSlotSession).mockResolvedValue({
+      created: true,
+      sessionId: "c-1",
+    })
+
+    const result = await materializeSchoolDay(
+      SCHOOL,
+      new Date("2026-03-03T06:00:00Z")
+    )
+
+    const [passedSlot] = vi.mocked(materializeSlotSession).mock.calls[0]
+    expect(passedSlot.teacherId).toBe("t-sub")
+    expect(passedSlot.teacherUserId).toBe("u-sub")
+    // The lookup is CONFIRMED-only and day-scoped — a pending request is still
+    // the absent teacher's class on paper.
+    const where = vi.mocked(db.substitutionRecord.findMany).mock.calls[0][0]
+      ?.where as Record<string, unknown>
+    expect(where.status).toBe("CONFIRMED")
+    expect(where.slotDate).toBeDefined()
+    expect(result.reasons.substituted).toBe(1)
+  })
+
+  it("leaves the original teacher as HOST when nobody is covering", async () => {
+    vi.mocked(db.timetable.findMany).mockResolvedValue([slot("tt-1")] as never)
+    vi.mocked(materializeSlotSession).mockResolvedValue({
+      created: true,
+      sessionId: "c-1",
+    })
+    await materializeSchoolDay(SCHOOL, new Date("2026-03-03T06:00:00Z"))
+    const [passedSlot] = vi.mocked(materializeSlotSession).mock.calls[0]
+    expect(passedSlot.teacherId).toBe("t-1")
   })
 })

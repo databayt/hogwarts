@@ -76,6 +76,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
+  schoolDayWindow,
 } from "@/components/school-dashboard/conference/day-window"
 import { findSchoolClosure } from "@/components/school-dashboard/conference/school-calendar"
 import { getDisplayLang } from "@/components/translation/locale"
@@ -984,16 +985,52 @@ export async function getTeachersForSelection(input: unknown) {
 
   const rows = await db.teacher.findMany({
     where: { schoolId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      employmentStatus: true,
+      _count: { select: { timetables: true } },
+    },
     orderBy: { lastName: "asc" },
-    select: { id: true, firstName: true, lastName: true },
   })
 
-  return {
-    teachers: rows.map((t) => ({
-      id: t.id,
-      label: [t.firstName, t.lastName].filter(Boolean).join(" "),
-    })),
+  // Localize teacher names to the current display language
+  const lang = await getDisplayLang()
+  const nameMap = await getNames(
+    rows,
+    (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+    lang,
+    schoolId
+  )
+
+  // Sort by active employment status and timetable slots count desc before deduping
+  // so the active/assigned teacher record takes precedence over duplicate rows.
+  const sorted = [...rows].sort((a, b) => {
+    if (a.employmentStatus === "ACTIVE" && b.employmentStatus !== "ACTIVE")
+      return -1
+    if (a.employmentStatus !== "ACTIVE" && b.employmentStatus === "ACTIVE")
+      return 1
+    return (b._count?.timetables ?? 0) - (a._count?.timetables ?? 0)
+  })
+
+  // Deduplicate by localized name so repeated teacher rows in seed data don't repeat in the selector
+  const seen = new Set<string>()
+  const teachers: Array<{ id: string; label: string }> = []
+  for (const t of sorted) {
+    const raw = fullName({ firstName: t.firstName, lastName: t.lastName })
+    const label = nameMap.get(raw) || raw
+    if (!label || seen.has(label)) continue
+    seen.add(label)
+    teachers.push({ id: t.id, label })
   }
+
+  // Sort alphabetically by localized display name
+  teachers.sort((a, b) =>
+    a.label.localeCompare(b.label, lang === "ar" ? "ar" : "en")
+  )
+
+  return { teachers }
 }
 
 /**
@@ -3613,6 +3650,36 @@ export async function getChildTimetable(input: {
  * so the guardian timetable can surface a Join button (guardians join as
  * OBSERVER; external links open the meeting URL directly).
  */
+/**
+ * CONFIRMED substitutes for these slots on the school day containing `date`,
+ * keyed by slot id. `slotDate` is compared as a DAY in the school's zone — the
+ * row comes from a date picker, so its instant may sit anywhere in that day.
+ */
+async function substitutesForSlots(
+  schoolId: string,
+  timeZone: string,
+  date: Date,
+  slotIds: string[]
+): Promise<Map<string, { firstName: string; lastName: string }>> {
+  const out = new Map<string, { firstName: string; lastName: string }>()
+  if (slotIds.length === 0) return out
+  const { start, end } = schoolDayWindow(timeZone, date)
+  const rows = await db.substitutionRecord.findMany({
+    where: {
+      schoolId,
+      originalSlotId: { in: slotIds },
+      status: "CONFIRMED",
+      slotDate: { gte: start, lt: end },
+    },
+    select: {
+      originalSlotId: true,
+      substituteTeacher: { select: { firstName: true, lastName: true } },
+    },
+  })
+  for (const r of rows) out.set(r.originalSlotId, r.substituteTeacher)
+  return out
+}
+
 export async function getChildTodaySchedule(input: {
   childId: string
   date?: Date
@@ -3712,6 +3779,15 @@ export async function getChildTodaySchedule(input: {
     orderBy: { period: { startTime: "asc" } },
   })
 
+  // Who is actually teaching each slot today. The weekly grid shows the
+  // pattern's teacher; the day's cards show the person in the room.
+  const subsBySlot = await substitutesForSlots(
+    schoolId,
+    schoolTz,
+    targetDate,
+    slots.map((s) => s.id)
+  )
+
   const schedule = slots.map((slot) => ({
     periodId: slot.periodId,
     periodName: slot.period.name,
@@ -3720,9 +3796,13 @@ export async function getChildTodaySchedule(input: {
     subject:
       slot.subject?.name || slot.class?.subject?.name || slot.class?.name || "",
     className: slot.class?.name || slot.section?.name || "",
-    teacher: slot.teacher
-      ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
-      : "",
+    teacher: (() => {
+      const sub = subsBySlot.get(slot.id)
+      if (sub) return `${sub.firstName} ${sub.lastName}`
+      return slot.teacher
+        ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
+        : ""
+    })(),
     room: slot.classroom?.roomName || "",
     sectionId: slot.sectionId,
     subjectId: slot.subjectId,
@@ -3840,7 +3920,41 @@ export async function getTodaySchedule(input?: { date?: Date }) {
   }
 
   if (role === "TEACHER") {
-    if (teacher) where.teacherId = teacher.id
+    if (teacher) {
+      // A CONFIRMED substitution moves the slot to the substitute's day: they
+      // see it, the absent teacher does not. Before this the covering teacher
+      // had no card at all, and so no Start button for the online arm.
+      const { start, end } = schoolDayWindow(schoolTz, targetDate)
+      const subs = await db.substitutionRecord.findMany({
+        where: {
+          schoolId,
+          status: "CONFIRMED",
+          slotDate: { gte: start, lt: end },
+          OR: [
+            { substituteTeacherId: teacher.id },
+            { originalTeacherId: teacher.id },
+          ],
+        },
+        select: {
+          originalSlotId: true,
+          substituteTeacherId: true,
+          originalTeacherId: true,
+        },
+      })
+      const covering = subs
+        .filter((r) => r.substituteTeacherId === teacher.id)
+        .map((r) => r.originalSlotId)
+      const away = subs
+        .filter((r) => r.originalTeacherId === teacher.id)
+        .map((r) => r.originalSlotId)
+      where.OR = [
+        {
+          teacherId: teacher.id,
+          ...(away.length ? { id: { notIn: away } } : {}),
+        },
+        ...(covering.length ? [{ id: { in: covering } }] : []),
+      ]
+    }
   } else if (role === "STUDENT") {
     if (student) {
       const enrollments = await db.studentClass.findMany({
@@ -3873,6 +3987,15 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     orderBy: { period: { startTime: "asc" } },
   })
 
+  // Who is actually teaching each slot today. The weekly grid shows the
+  // pattern's teacher; the day's cards show the person in the room.
+  const subsBySlot = await substitutesForSlots(
+    schoolId,
+    schoolTz,
+    targetDate,
+    slots.map((s) => s.id)
+  )
+
   const schedule = slots.map((slot) => ({
     periodId: slot.periodId,
     periodName: slot.period.name,
@@ -3881,9 +4004,13 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     subject:
       slot.subject?.name || slot.class?.subject?.name || slot.class?.name || "",
     className: slot.class?.name || slot.section?.name || "",
-    teacher: slot.teacher
-      ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
-      : "",
+    teacher: (() => {
+      const sub = subsBySlot.get(slot.id)
+      if (sub) return `${sub.firstName} ${sub.lastName}`
+      return slot.teacher
+        ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
+        : ""
+    })(),
     room: slot.classroom?.roomName || "",
     // Anchors for live-class matching (section-based slots carry these).
     sectionId: slot.sectionId,
@@ -7063,6 +7190,7 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
       id: true,
       firstName: true,
       lastName: true,
+      _count: { select: { timetables: true } },
       user: { select: { email: true, image: true } },
       teacherDepartments: {
         where: { isPrimary: true },
@@ -7074,6 +7202,7 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
         select: { subjectId: true },
       },
     },
+    orderBy: { lastName: "asc" },
   })
 
   // Localize names to the app language (stored names may be Arabic; the picker
@@ -7088,6 +7217,10 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
     schoolId
   )
 
+  const sorted = [...teachers].sort(
+    (a, b) => (b._count?.timetables ?? 0) - (a._count?.timetables ?? 0)
+  )
+
   const seen = new Set<string>()
   const out: Array<{
     id: string
@@ -7099,10 +7232,10 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
     department?: string
     subjects: string[]
   }> = []
-  for (const t of teachers) {
+  for (const t of sorted) {
     const raw = fullName({ firstName: t.firstName, lastName: t.lastName })
     const name = nameMap.get(raw) || raw
-    if (seen.has(name)) continue
+    if (!name || seen.has(name)) continue
     seen.add(name)
     out.push({
       id: t.id,
@@ -7115,6 +7248,8 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
       subjects: t.subjectExpertise.map((e) => e.subjectId),
     })
   }
+
+  out.sort((a, b) => a.name.localeCompare(b.name, lang === "ar" ? "ar" : "en"))
 
   return { teachers: out }
 }

@@ -26,7 +26,11 @@ import "server-only"
 import { db } from "@/lib/db"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 
-import { DEFAULT_SCHOOL_TZ, schoolDayOfWeek } from "../day-window"
+import {
+  DEFAULT_SCHOOL_TZ,
+  schoolDayOfWeek,
+  schoolDayWindow,
+} from "../day-window"
 import {
   deliversOpenRoom,
   deliversTimetable,
@@ -188,6 +192,19 @@ async function materializeSlots(
   const todays = slots.slice(0, MAX_SLOTS_PER_SCHOOL)
   if (todays.length === 0) return
 
+  // A confirmed substitute HOSTS the online arm of the class they are covering.
+  // Before this the session was always minted for the ORIGINAL teacher, so the
+  // one day a class most needs its online channel — the teacher is out — the
+  // substitute physically in the room could neither start nor host it.
+  // Keyed by slot on the school-calendar day; CONFIRMED only, because a
+  // pending request is still the absent teacher's class on paper.
+  const substitutes = await resolveSubstitutes(
+    schoolId,
+    timeZone,
+    date,
+    todays.map((s) => s.id)
+  )
+
   const sectionIds = todays
     .map((s) => s.sectionId)
     .filter((id): id is string => Boolean(id))
@@ -221,16 +238,18 @@ async function materializeSlots(
     }
 
     const link = linkFor.get(`${slot.sectionId}:${slot.subjectId}`)
+    const sub = substitutes.get(slot.id)
+    if (sub) bump(result, "substituted")
     try {
       const outcome = await materializeSlotSession(
         {
           id: slot.id,
-          teacherId: slot.teacherId,
+          teacherId: sub?.teacherId ?? slot.teacherId,
           sectionId: slot.sectionId,
           subjectId: slot.subjectId,
           subjectName: slot.subject?.name ?? null,
           sectionName: slot.section?.name ?? null,
-          teacherUserId: slot.teacher?.userId ?? null,
+          teacherUserId: sub ? sub.userId : (slot.teacher?.userId ?? null),
           period: slot.period,
         },
         {
@@ -267,6 +286,72 @@ async function materializeSlots(
   }
 }
 
+/**
+ * CONFIRMED substitutions for these slots on the school day containing `date`,
+ * keyed by slot id. `slotDate` is compared as a day in the school's zone —
+ * the row is written from a date picker, so its instant may sit anywhere in
+ * that day depending on who saved it and from where.
+ */
+export async function resolveSubstitutes(
+  schoolId: string,
+  timeZone: string,
+  date: Date,
+  slotIds: string[]
+): Promise<Map<string, { teacherId: string; userId: string | null }>> {
+  const out = new Map<string, { teacherId: string; userId: string | null }>()
+  if (slotIds.length === 0) return out
+  const { start, end } = schoolDayWindow(timeZone, date)
+  const rows = await db.substitutionRecord.findMany({
+    where: {
+      schoolId,
+      originalSlotId: { in: slotIds },
+      status: "CONFIRMED",
+      slotDate: { gte: start, lt: end },
+    },
+    select: {
+      originalSlotId: true,
+      substituteTeacherId: true,
+      substituteTeacher: { select: { userId: true } },
+    },
+  })
+  for (const r of rows) {
+    out.set(r.originalSlotId, {
+      teacherId: r.substituteTeacherId,
+      userId: r.substituteTeacher?.userId ?? null,
+    })
+  }
+  return out
+}
+
+/** The teacher with the most slots on a section this term — the open room's host of last resort. */
+function fallbackHost(
+  slots:
+    | undefined
+    | Array<{
+        teacherId: string | null
+        teacher: { userId: string | null } | null
+      }>
+): { teacherId: string; userId: string | null } | null {
+  const tally = new Map<string, { n: number; userId: string | null }>()
+  for (const s of slots ?? []) {
+    if (!s.teacherId) continue
+    const cur = tally.get(s.teacherId) ?? {
+      n: 0,
+      userId: s.teacher?.userId ?? null,
+    }
+    cur.n++
+    tally.set(s.teacherId, cur)
+  }
+  let best: { teacherId: string; userId: string | null; n: number } | null =
+    null
+  for (const [teacherId, { n, userId }] of tally) {
+    if (!best || n > best.n || (n === best.n && teacherId < best.teacherId)) {
+      best = { teacherId, userId, n }
+    }
+  }
+  return best ? { teacherId: best.teacherId, userId: best.userId } : null
+}
+
 async function materializeOpenRooms(
   schoolId: string,
   timeZone: string,
@@ -290,6 +375,15 @@ async function materializeOpenRooms(
         conferenceRecordingOptOut: true,
         homeroomTeacherId: true,
         homeroomTeacher: { select: { userId: true } },
+        // Fallback host when no homeroom teacher is set: whoever teaches this
+        // section most this term. `autoProvisionSections` (the real onboarding
+        // path) never writes `homeroomTeacherId` and no UI does either, so
+        // without this every real school's `open` mode materialized zero rooms
+        // and said so only in a cron log. Deterministic — most slots, then id.
+        timetables: {
+          where: { schoolId, termId, teacherId: { not: null } },
+          select: { teacherId: true, teacher: { select: { userId: true } } },
+        },
       },
       orderBy: { name: "asc" },
       take: MAX_OPEN_ROOMS_PER_SCHOOL + 1,
@@ -323,8 +417,20 @@ async function materializeOpenRooms(
         {
           id: section.id,
           name: section.name,
-          homeroomTeacherId: section.homeroomTeacherId,
-          homeroomTeacherUserId: section.homeroomTeacher?.userId ?? null,
+          // Homeroom teacher when set; otherwise whoever teaches the section
+          // most. Both halves of the host must come from the SAME choice.
+          ...(() => {
+            const host = section.homeroomTeacherId
+              ? {
+                  teacherId: section.homeroomTeacherId,
+                  userId: section.homeroomTeacher?.userId ?? null,
+                }
+              : fallbackHost(section.timetables)
+            return {
+              homeroomTeacherId: host?.teacherId ?? null,
+              homeroomTeacherUserId: host?.userId ?? null,
+            }
+          })(),
           conferenceRecordingOptOut: section.conferenceRecordingOptOut,
         },
         {
