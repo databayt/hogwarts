@@ -65,6 +65,7 @@ import { seedUsCurriculum } from "./catalog/us"
 import { seedCatalogVideos } from "./catalog/videos"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
+import { seedConference } from "./conference"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
 import { seedFees } from "./fees"
@@ -916,6 +917,13 @@ const SEEDS: Record<string, SeedEntry> = {
           ? `${result.warnings.length} warnings (subject over-allocation)`
           : undefined
       )
+    },
+  },
+  conference: {
+    description:
+      "Online school: repairs teacherless slots + isBreak, sets the LiveKit policy, seeds history + next day + showcase",
+    run: async (prisma, schoolId) => {
+      await seedConference(prisma, schoolId)
     },
   },
   gamification: {

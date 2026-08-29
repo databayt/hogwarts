@@ -346,6 +346,21 @@ land a student on an error rather than a waiting room.
   free plan (`.github/workflows/conference-crons.yml`). Without it an online school materializes no
   sessions after the day it saved its settings — nothing to join, and no reminders.
 
+## Demo and the hybrid school
+
+`pnpm db:seed:single conference` turns the demo into a working hybrid school: online by default
+over LiveKit, two sections in person, five days of history with real presence and VIRTUAL
+attendance, next-day sessions the cron will find as `exists`, a substitute hosting one of them, a
+lesson session carrying an exam, an assignment and a link, three recurring external links, and a
+declared holiday. It repairs first — break periods, teacher expertise, and a teacher on every
+teacherless slot — because a slot with no teacher has no host and never goes online.
+
+What "hybrid" means in the product: online is **additive**. The session detail shows the physical
+room the class still meets in; the timetable card shows the room with an Online marker beside it;
+a confirmed substitute hosts the online arm of the class they cover; a lumos lesson shows its live
+session; and the role home pages carry Join. Recording stays honest — every switch says so when
+there is no bucket.
+
 ## Providers
 
 | Provider        | Status                         | Missing                                          |

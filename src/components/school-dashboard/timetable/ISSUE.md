@@ -494,3 +494,14 @@ and `applyTemplateToTerm` still replay `classId` — section migration pending.
 > work here). No GitHub comment was posted for this pass.
 
 **Last Review:** 2026-07-16 (demo data correctness — seed now uses the production generator, active-term scoping, UTC period times — plus the i18n long-tail: SimpleGrid dict pass-through, server-action term labels, analytics/generate/conflicts/substitutions wiring, and the Arabic subject-colour hash)
+
+## 2026-08-29 — teacher fill was 14% on the demo, and why
+
+`seedTeacherSubjectExpertise` is count-guarded (`existing > 0 → skip`), so every
+`SubjectSelection` the school gained after its first run — per-grade catalog
+rows; the demo's Math is ten of them — had no qualified teacher, and the
+generator correctly emitted teacherless slots: 121 of 840. The conference seed
+(`prisma/seeds/conference.ts`) now tops expertise up and backfills teachers
+additively (815/840). The right home for that repair is this block's own seed
+path; until then, ALWAYS check `teacherId IS NOT NULL` counts after any
+regeneration, per the CLAUDE.md danger zone.

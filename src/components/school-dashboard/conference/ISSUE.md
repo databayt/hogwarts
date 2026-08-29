@@ -34,6 +34,43 @@
       teaching time and can have a live session materialized into the break.
       Re-derive from each school's schedule structure.
 
+## Hybrid-school pass 2026-08-29 — closed
+
+- [x] **Demo seed** — `prisma/seeds/conference.ts` + `db:seed:single conference` + a phase in `seedMain` after Timetable. Repairs first (isBreak, expertise
+      top-up, teacher backfill 121 → 815/840), then policy, five days of history
+      with presence + VIRTUAL attendance, next-day sessions, substitute host,
+      assembly, lesson + exam/assignment/link, recurring links, a holiday.
+      Verified on a Neon branch: byte-identical on re-run.
+- [x] **Substitute teachers hosted nothing** — now resolved into the HOST
+      (materializer) and the today-cards (both role paths). Weekly grid left as
+      the pattern, deliberately.
+- [x] **`open` mode dead for every real school** — `autoProvisionSections` never
+      sets `homeroomTeacherId`; the room now falls back to the section's busiest
+      teacher.
+- [x] **Role home pages blind to section-based slots** — both queries OR'd the
+      section arm; the student card carries Online + Join.
+- [x] **Physical room invisible on the session** — detail reads it through the
+      timetable anchor.
+- [x] **Lumos → conference back-link** — `lesson-live-strip.tsx` on the lesson page.
+- [x] **Recording promised with no bucket** — every surface gated on
+      `isRecordingConfigured()`.
+
+## Deferred, with reasons (2026-08-29)
+
+- [ ] **Online exams.** `SchoolExam` has no delivery-mode concept and the exam
+      block has zero awareness of conferences; `ProctorMode` is anti-cheat
+      strictness, not location. Modelling "this exam is proctored live" is an
+      exam-block feature. The one-way `ConferenceResource.schoolExamId`
+      reference is seeded and shown.
+- [ ] **No UI writes `Section.homeroomTeacherId`.** The open-room fallback
+      covers the runtime; a section-settings control is the real fix.
+- [ ] **Per-section delivery mode**, **nullable `classroomId`**, **weekly-grid
+      closure signal** — unchanged from the 08-14 list; none blocks a hybrid
+      school.
+- [ ] **25 demo slots still have no qualified free teacher** after backfill —
+      every candidate is at the 25/week cap in that (day, period). Raise the cap
+      or add teachers; not a code problem.
+
 ## Found during the 2026-08-29 production join test
 
 Verified live on `demo.balqalam.com`: teacher + student in one LiveKit room, full

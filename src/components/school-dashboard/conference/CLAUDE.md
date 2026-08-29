@@ -333,6 +333,38 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   that does not exist, which then fails at start/join time and reads to a teacher
   as a broken class rather than an unavailable option.
 
+- **The demo seed repairs before it seeds** (`prisma/seeds/conference.ts`,
+  2026-08-29). A slot without a teacher has no HOST and is invisible to the
+  materializer, and the demo had 719 of them: `seedTeacherSubjectExpertise` is
+  count-guarded, so every `SubjectSelection` added after it — per-grade catalog
+  rows, ten "Math"s — had no qualified teacher and the generator correctly
+  emitted teacherless slots. The seed tops expertise up and backfills teachers
+  (qualified, free at that day/period, under 25/week, never moving an existing
+  assignment), routing `teacher@balqalam.com` onto `student@balqalam.com`'s
+  section so the documented trio works. It mirrors the materializer's identity
+  rules rather than importing it — the materializer is `server-only` — and
+  every write carries `select: { id: true }` (prod lacks `schools.trialEndsAt`;
+  a select-less write returns every column and P2022s).
+
+- **A CONFIRMED substitute hosts the online arm.** `resolveSubstitutes`
+  (materialize-day.ts) swaps the HOST for today's slots; `getTodaySchedule` /
+  `getChildTodaySchedule` swap the displayed teacher and move the card to the
+  substitute's day. CONFIRMED only — a pending request is still the absent
+  teacher's class on paper. The weekly grid is deliberately untouched: it shows
+  the pattern, and a substitution has a date.
+
+- **An open room falls back to the section's busiest teacher.** The real
+  onboarding path (`autoProvisionSections`) never writes `homeroomTeacherId`
+  and no UI does either, so `open` mode materialized zero rooms for every real
+  school and said so only in a cron log. `fallbackHost` picks the teacher with
+  the most slots on the section this term, deterministically.
+
+- **Rooms and recording are honest on every surface.** `isRecordingConfigured()`
+  reaches both create forms (checkbox hidden, a note in its place), the
+  settings switch (a note when on without a bucket) and the detail label ("Not
+  available"). The stored preference is untouched — the day a bucket lands,
+  recording starts with no re-setup.
+
 ## Danger Zones
 
 - **Schedule instants combine in the SCHOOL timezone**: the wizard sends

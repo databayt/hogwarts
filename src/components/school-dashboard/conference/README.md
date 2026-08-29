@@ -131,6 +131,13 @@ reached from a row, not a tab.
 | Parent-portal "Today" strip with Join                  | ✅ live                                      |
 | Mobile: `live_class` on timetable + join endpoint      | ✅ live                                      |
 | Attendance: minimum-presence floor                     | ✅ live (5 min)                              |
+| Demo seed (`db:seed:single conference`)                | ✅ repairs + policy + history + next day     |
+| Substitute hosts the online arm (CONFIRMED)            | ✅ materializer + today-cards                |
+| Open-room host fallback (no homeroom teacher)          | ✅ busiest teacher on the section            |
+| Physical room on the session detail                    | ✅ via the timetable anchor                  |
+| Lumos lesson → its live session today                  | ✅ `lesson-live-strip.tsx`                   |
+| Student/teacher dashboard home: section-aware + Join   | ✅ (was empty for every section student)     |
+| Recording surfaces honest without a bucket             | ✅ forms · settings · detail                 |
 | Capacity dashboard (`/observability/conference`)       | ✅ live (DEVELOPER-only)                     |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any
@@ -170,6 +177,21 @@ that the above builds on — sessions materialized one school day at a time by
 the reminders cron, provider degrading to external until the SFU is
 provisioned. See `ISSUE.md` for what both passes deliberately leave open
 (in-room strings, no-show attendance policy).
+
+Hybrid-school pass 2026-08-29: the block is now DEMO-ABLE and integrated. The
+demo had 121 of 840 slots with a teacher — the expertise seed was count-guarded
+and never caught up with the catalog — so an "online school" could put 14% of
+its classes online. `prisma/seeds/conference.ts` repairs that first (815/840
+now), sets the LiveKit policy, and seeds five days of history with real presence
+
+- VIRTUAL attendance, next-day sessions, a substitute host, an assembly, a
+  lesson with exam/assignment/link references, recurring links and a holiday. On
+  the code side: substitutes host the online arm; open rooms fall back to the
+  section's busiest teacher (the real onboarding path never sets a homeroom
+  teacher, so open mode was dead for every real school); the session detail shows
+  the physical room; a lumos lesson shows its live session; the role home pages
+  finally see section-based classes and carry Join; and every recording control
+  tells the truth when there is no bucket.
 
 Production pass 2026-08-28: the two things that actually stood between this block and a student
 joining a class, neither of them the six RUNBOOK gates.

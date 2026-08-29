@@ -90,3 +90,43 @@ language-duplicate rows (the demo may already carry English departments from an 
   and it only ever targets `domain: "demo"`.
 - To test the full seed, run it against a **Neon branch** (Branch-Before-Touch protocol),
   not the default branch. Set `DATABASE_URL` (and `DIRECT_URL`) to the branch connection.
+
+## Conference — the online-school demo (`pnpm db:seed:single conference`)
+
+The block shipped with no seed, and that hid the real blocker: 719 of the
+demo's 840 slots had no teacher, because the expertise seed is count-guarded
+and never re-ran after the catalog grew (the demo's Math alone is ten per-grade
+`catalog_subjects` rows). No teacher → no HOST → the materializer skips the
+slot. This module **repairs before it seeds**, in order, each step idempotent:
+
+1. `Period.isBreak` for rows seeded before the column existed (a one-time
+   name-based data repair — readers must never do this, see timetable CLAUDE.md).
+2. Expertise top-up: every active `SubjectSelection` gets 3 qualified teachers;
+   `teacher@balqalam.com` gets everything `student@balqalam.com`'s grade takes.
+3. Teacher backfill on teacherless slots — qualified, free at that
+   (day, period), under 25/week, `teacher@`'s slots first and on `student@`'s
+   section. Additive: never moves an existing assignment. Demo: 121 → 815 of 840.
+4. Policy: online by default over LiveKit, timetable mode, attendance sync on,
+   recording off (no bucket); two sections in person, one opted in explicitly.
+5. History (5 school days × 3 focus sections): ended sessions, participants
+   with join/leave/duration, webhook audit events, and the VIRTUAL attendance
+   the sync writes — by the sync's own rules, presence floor included.
+6. Next school day: `scheduled` sessions for every online slot, day-qualified
+   exactly as the cron writes them (it finds `exists`, never double-creates),
+   one hosted by a CONFIRMED substitute, one carrying a catalog lesson + exam
+   - assignment + link. Plus a school-wide assembly, three recurring external
+     links and one declared holiday.
+
+Count-guard: sessions skip when any `Conference` with a `timetableId` exists;
+`SEED_FORCE=1` rebuilds them (and the VIRTUAL attendance). The repairs and the
+policy always run and are no-ops the second time. Runs in ~7 min against Neon
+from a laptop, ~9 s when already seeded.
+
+**Every write carries `select: { id: true }`.** A write with no select returns
+every column and P2022s on a database one column behind the schema — prod
+lacks `schools.trialEndsAt` today and that is exactly how the first run died.
+
+**Prod note:** flipping the demo online arms the live cron: real
+materialization every 15 min and `starting_soon` reminders into every demo
+student's and guardian's bell. Those rows also accrue `emailSent:false` —
+`process-email-notifications` stays off until it has an age gate.

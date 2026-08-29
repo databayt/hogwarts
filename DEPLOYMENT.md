@@ -67,6 +67,15 @@ to emit them, which is why this never surfaced on Pro.
 build on macOS and run on Amazon Linux. Without the rhel engine every query fails at runtime. This
 line is harmless on Pro — leave it.
 
+### `prebuild` does not run on the Hobby lane
+
+`scripts/deploy-hobby.sh` calls `vercel build`, which runs the framework command (`next build`)
+directly — not `pnpm build` — so the npm `prebuild` hook and with it `prisma/seeds/ensure-demo.ts`
+**never run on a Hobby deploy**. Nothing has re-asserted the demo since 2026-08-27. That is why
+`Period.isBreak` stayed false on every demo period after the column landed (`seedPeriods` would
+have set it) until `pnpm db:seed:single conference` repaired it by hand on 2026-08-29. If the demo
+looks stale, run `tsx prisma/seeds/ensure-demo.ts` from the repo root against the prod `.env`.
+
 ## Crons are off
 
 `vercel.json` has `"crons": []`. This is **not** optional: the Hobby plan allows daily-only schedules

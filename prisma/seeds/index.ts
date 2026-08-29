@@ -69,6 +69,7 @@ import { seedCatalogBooks } from "./catalog/books"
 import { seedCatalog } from "./catalog/index"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
+import { seedConference } from "./conference"
 import { SEED_IS_LITE, SEED_IS_MEDIUM } from "./constants"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
@@ -496,6 +497,12 @@ export async function seedMain(externalPrisma?: PrismaClient) {
           : undefined
       )
     })
+
+    // Conference — the hybrid/online school. Needs the timetable above (it
+    // repairs teacherless slots first), sections, students and the term.
+    await measureDuration("Conference (online school)", () =>
+      seedConference(prisma, school.id)
+    )
 
     // Gamification (badges, streaks, competitions)
     await measureDuration("Gamification", () =>
