@@ -19,6 +19,7 @@ import { describe, expect, it } from "vitest"
 
 import { examTemplateSchema } from "@/components/school-dashboard/exams/generate/validation"
 import { examTemplateSchema as qbankExamTemplateSchema } from "@/components/school-dashboard/exams/qbank/validation"
+import { examTemplateSchema as gradesExamTemplateSchema } from "@/components/school-dashboard/listings/grades/generate/validation"
 
 const base = {
   name: "Term test blueprint",
@@ -27,10 +28,16 @@ const base = {
   totalMarks: 34,
 }
 
-/** Every copy of this schema in the repo must behave the same way. */
+/**
+ * All THREE copies of this schema block in the repo. `listings/grades/generate`
+ * is a near-duplicate module that also creates `schoolExamTemplate` rows, so it
+ * is pinned rather than assumed dead — otherwise reverting that copy alone
+ * would break blueprint saving again and fail nothing.
+ */
 const SCHEMAS: Array<[string, typeof examTemplateSchema]> = [
   ["exams/generate", examTemplateSchema],
   ["exams/qbank", qbankExamTemplateSchema],
+  ["listings/grades/generate", gradesExamTemplateSchema],
 ]
 
 describe.each(SCHEMAS)("%s examTemplateSchema", (_name, schema) => {
