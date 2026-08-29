@@ -8,8 +8,30 @@ maturity: Built+Polish
 completion: 78
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-06-14
+last_audited: 2026-08-29
 ---
+
+## P0 — fixed 2026-08-29
+
+- **Saving an exam blueprint had been broken since the Zod 3 → 4 upgrade.** Zod 4 made
+  `z.record(enumKey, value)` EXHAUSTIVE — it demands every member of the key enum. The
+  distribution schema is `z.record(QuestionType, z.record(DifficultyLevel, count))`, and a
+  blueprint names only the buckets it asks for (the editor writes a cell when a teacher types
+  a number, starting from `{}`). So `{ MULTIPLE_CHOICE: { EASY: 5 } }` — the exact shape
+  `generate/form.tsx` submits — failed with "expected number, received NaN" for the 22
+  buckets nobody filled, and `createTemplate` / `updateTemplate` threw on save. **A blueprint
+  is what drives auto-fill from the question bank, so this blocked generating any paper.**
+  Fixed with `z.partialRecord` (Zod 4's name for the old behaviour, and it still rejects a key
+  outside the enum) in all three copies of the schema block — `exams/generate`, `exams/qbank`,
+  `listings/grades/generate` — plus `bloomDistribution`, which had the identical shape.
+  Nothing caught it: the schema compiled, tsc was clean, and no test ever parsed a PARTIAL
+  distribution. New `src/tests/school-dashboard/exams/generate/distribution-schema.test.ts`
+  (12) runs both live copies through the same cases.
+
+  **This is why the local demo blueprint was hand-written in SQL** with a `"ALL"` difficulty
+  key that matches no question and selects nothing — a workaround for a form that could not
+  save. Any other repo on Zod 4 with an enum-keyed `z.record` has the same latent bug.
+
 
 # Exams -- Production Readiness Tracker
 
