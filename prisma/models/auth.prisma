@@ -160,6 +160,7 @@ model User {
   // Catalog Enrollment relations
   catalogEnrollments    Enrollment[]
   catalogLessonProgress LessonProgress[]
+  lessonQuizAttempts    LessonQuizAttempt[]
   catalogCertificates   SubjectCertificate[]
 
   // Membership relations

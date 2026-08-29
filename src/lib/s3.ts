@@ -132,3 +132,38 @@ export async function getSignedReadUrl(
     return null
   }
 }
+
+
+/**
+ * Copy an object within the app bucket (server-side, no download). Used to
+ * publish a live-class recording — written by egress under `schools/…` with
+ * its own retention — as a lumos video under `stream/<schoolId>/video/`,
+ * which has none. Returns false when the client is unconfigured or the copy
+ * fails; the caller decides whether that is fatal.
+ */
+export async function copyObject(
+  sourceKey: string,
+  destinationKey: string,
+  contentType?: string
+): Promise<boolean> {
+  const client = getS3Client()
+  const bucket = process.env.AWS_S3_BUCKET
+  if (!client || !bucket) return false
+  try {
+    const { CopyObjectCommand } = await import("@aws-sdk/client-s3")
+    await client.send(
+      new CopyObjectCommand({
+        Bucket: bucket,
+        CopySource: `${bucket}/${encodeURI(sourceKey)}`,
+        Key: destinationKey,
+        ...(contentType
+          ? { ContentType: contentType, MetadataDirective: "REPLACE" }
+          : {}),
+      })
+    )
+    return true
+  } catch (err) {
+    console.error("[s3] copyObject failed", { sourceKey, destinationKey, err })
+    return false
+  }
+}

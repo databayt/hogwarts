@@ -4,7 +4,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { syncConferenceAttendance } from "@/components/school-dashboard/conference/actions/attendance-sync"
+import {
+  connectedSeconds,
+  syncConferenceAttendance,
+} from "@/components/school-dashboard/conference/actions/attendance-sync"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -31,6 +34,8 @@ const mockDb = db as unknown as {
 }
 
 const START = new Date("2026-06-19T08:00:00.000Z")
+// Period ends 45 minutes after it starts.
+const END = new Date(START.getTime() + 45 * 60_000)
 const ON_TIME = new Date("2026-06-19T08:05:00.000Z") // within the 10-min grace
 const LATE = new Date("2026-06-19T08:20:00.000Z") // past the 10-min grace
 
@@ -41,6 +46,8 @@ function happySession() {
     sectionId: "sec1",
     timetableId: "tt1",
     scheduledStart: START,
+   scheduledEnd: END,
+    scheduledEnd: END,
     actualStart: null,
     school: { conferenceAttendanceSync: true },
   })
@@ -54,8 +61,21 @@ function happySession() {
     { id: "sC", userId: "uC" },
   ])
   mockDb.conferenceParticipant.findMany.mockResolvedValue([
-    { userId: "uA", joinedAt: ON_TIME, leftAt: null },
-    { userId: "uB", joinedAt: LATE, leftAt: null },
+    // Legacy single-span rows: no accumulated duration, no open span.
+    {
+      userId: "uA",
+      joinedAt: ON_TIME,
+      leftAt: null,
+      durationSeconds: null,
+      activeSince: null,
+    },
+    {
+      userId: "uB",
+      joinedAt: LATE,
+      leftAt: null,
+      durationSeconds: null,
+      activeSince: null,
+    },
     // uC never joined → no row
   ])
   mockDb.attendance.findMany.mockResolvedValue([])
@@ -81,6 +101,7 @@ describe("syncConferenceAttendance", () => {
       sectionId: "sec1",
       timetableId: "tt1",
       scheduledStart: START,
+      scheduledEnd: END,
       actualStart: null,
       school: { conferenceAttendanceSync: false },
     })
@@ -96,6 +117,7 @@ describe("syncConferenceAttendance", () => {
       sectionId: "sec1",
       timetableId: "tt1",
       scheduledStart: START,
+      scheduledEnd: END,
       actualStart: null,
       school: { conferenceAttendanceSync: true },
     })
@@ -112,6 +134,7 @@ describe("syncConferenceAttendance", () => {
       sectionId: null,
       timetableId: "tt1",
       scheduledStart: START,
+      scheduledEnd: END,
       actualStart: null,
       school: { conferenceAttendanceSync: true },
     })
@@ -126,6 +149,7 @@ describe("syncConferenceAttendance", () => {
       sectionId: "sec1",
       timetableId: "tt1",
       scheduledStart: START,
+      scheduledEnd: END,
       actualStart: null,
       school: { conferenceAttendanceSync: true },
     })
@@ -172,8 +196,16 @@ describe("syncConferenceAttendance", () => {
         userId: "uA",
         joinedAt: ON_TIME,
         leftAt: new Date(ON_TIME.getTime() + 30_000),
+        durationSeconds: null,
+        activeSince: null,
       },
-      { userId: "uB", joinedAt: LATE, leftAt: null },
+      {
+        userId: "uB",
+        joinedAt: LATE,
+        leftAt: null,
+        durationSeconds: null,
+        activeSince: null,
+      },
     ])
 
     await syncConferenceAttendance("school1", "c1")
@@ -224,6 +256,7 @@ describe("syncConferenceAttendance", () => {
       sectionId: "sec1",
       timetableId: "tt1",
       scheduledStart: START,
+      scheduledEnd: END,
       actualStart: new Date("2026-06-19T08:15:00.000Z"),
       school: { conferenceAttendanceSync: true },
     })
@@ -236,5 +269,116 @@ describe("syncConferenceAttendance", () => {
     expect(byStudent.sA.status).toBe("PRESENT")
     // uB joined at 08:20, within 10 min of the 08:15 actual start → PRESENT.
     expect(byStudent.sB.status).toBe("PRESENT")
+  })
+})
+
+describe("syncConferenceAttendance — presence across reconnects", () => {
+  it("counts every span, not just the last one — a drop and rejoin keeps earlier presence", async () => {
+    happySession()
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([
+      // 4 min closed span + reconnected 3 min before reconciliation → 7 min ≥ floor.
+      {
+        userId: "uA",
+        joinedAt: ON_TIME,
+        leftAt: new Date(ON_TIME.getTime() + 4 * 60_000),
+        durationSeconds: 4 * 60,
+        activeSince: new Date(Date.now() - 3 * 60_000),
+      },
+    ] as never)
+    await syncConferenceAttendance("school1", "c1")
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    const a = rows.find((r) => r.studentId === "sA")!
+    expect(a.status).toBe("PRESENT")
+    // Still connected at reconciliation → no check-out, not "left early".
+    expect(a.checkOutTime).toBeNull()
+    expect(a.notes).toBe("auto: live-class presence")
+  })
+
+  it("records check-out and 'left early' for a student who left before the last 10 minutes", async () => {
+    happySession()
+    const leftAt = new Date(START.getTime() + 20 * 60_000) // 25 min before the end
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([
+      {
+        userId: "uA",
+        joinedAt: ON_TIME,
+        leftAt,
+        durationSeconds: 20 * 60,
+        activeSince: null,
+      },
+    ] as never)
+    await syncConferenceAttendance("school1", "c1")
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    const a = rows.find((r) => r.studentId === "sA")!
+    expect(a.status).toBe("PRESENT")
+    expect(a.checkOutTime).toEqual(leftAt)
+    expect(a.notes).toBe("auto: live-class presence · left early")
+  })
+
+  it("a student who left inside the last 10 minutes is not 'left early'", async () => {
+    happySession()
+    const leftAt = new Date(END.getTime() - 5 * 60_000)
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([
+      {
+        userId: "uA",
+        joinedAt: ON_TIME,
+        leftAt,
+        durationSeconds: 40 * 60,
+        activeSince: null,
+      },
+    ] as never)
+    await syncConferenceAttendance("school1", "c1")
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    const a = rows.find((r) => r.studentId === "sA")!
+    expect(a.checkOutTime).toEqual(leftAt)
+    expect(a.notes).toBe("auto: live-class presence")
+  })
+})
+
+describe("connectedSeconds", () => {
+  const now = new Date("2026-03-03T08:00:00Z")
+  it("legacy single-span rows still compute from joinedAt/leftAt", () => {
+    expect(
+      connectedSeconds(
+        {
+          joinedAt: new Date("2026-03-03T07:00:00Z"),
+          leftAt: new Date("2026-03-03T07:30:00Z"),
+          durationSeconds: null,
+          activeSince: null,
+        },
+        now
+      )
+    ).toBe(30 * 60)
+  })
+  it("accumulated rows add the open span up to now", () => {
+    expect(
+      connectedSeconds(
+        {
+          joinedAt: new Date("2026-03-03T07:00:00Z"),
+          leftAt: null,
+          durationSeconds: 600,
+          activeSince: new Date("2026-03-03T07:50:00Z"),
+        },
+        now
+      )
+    ).toBe(600 + 600)
+  })
+  it("a duplicate leave (no open span) adds nothing", () => {
+    expect(
+      connectedSeconds(
+        {
+          joinedAt: new Date("2026-03-03T07:00:00Z"),
+          leftAt: new Date("2026-03-03T07:10:00Z"),
+          durationSeconds: 600,
+          activeSince: null,
+        },
+        now
+      )
+    ).toBe(600)
   })
 })

@@ -1,0 +1,25 @@
+// A lumos lesson-quiz attempt. Until this existed only the resulting score
+// reached the gradebook (first attempt only) — attempts were never rows, so an
+// offline attempt synced twice would grade twice and there was no history to
+// show the student. The id is CLIENT-SUPPLIED (a cuid minted on the device), so
+// a retried sync is an upsert no-op rather than a second attempt.
+model LessonQuizAttempt {
+  id              String   @id
+  userId          String
+  schoolId        String?
+  catalogLessonId String
+  answers         Json
+  score           Int
+  total           Int
+  percentage      Float
+  source          String   @default("online") // online | offline
+  submittedAt     DateTime
+  syncedAt        DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
+
+  @@index([userId, catalogLessonId, submittedAt])
+  @@index([schoolId, catalogLessonId])
+  @@map("lesson_quiz_attempts")
+}

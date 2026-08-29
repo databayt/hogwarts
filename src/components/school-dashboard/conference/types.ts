@@ -32,5 +32,7 @@ export type RoomJoinTicket = {
   roomName: string
   identity: string
   role: ConferenceParticipantRole
+  /** The teacher's identity — the data-channel address for votes and hand state. */
+  hostIdentity: string | null
   expiresAt: string // ISO
 }

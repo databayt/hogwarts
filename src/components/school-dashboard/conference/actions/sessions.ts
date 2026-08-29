@@ -673,6 +673,20 @@ export async function getLiveClass(id: string) {
         timetable: {
           select: { classroom: { select: { roomName: true } } },
         },
+        // Recording lifecycle for the page's "processing… / ready / failed"
+        // states, and the lesson video it was published into.
+        recordings: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            failureReason: true,
+            publishedVideoId: true,
+            durationSeconds: true,
+          },
+        },
         resources: {
           orderBy: { order: "asc" },
           select: {

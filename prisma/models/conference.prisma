@@ -210,9 +210,16 @@ model ConferenceParticipant {
   status ConferenceParticipantStatus @default(invited)
 
   tokenIssuedAt   DateTime?
+  // Presence across RECONNECTS: `joinedAt` is the FIRST join, `leftAt` the LAST
+  // leave, `durationSeconds` the SUM of every connected span, `activeSince` the
+  // start of the current span (null while disconnected), `reconnectCount` how
+  // many times they came back. The webhook used to overwrite joinedAt on every
+  // join, so a student who dropped and returned lost their earlier presence.
   joinedAt        DateTime?
   leftAt          DateTime?
   durationSeconds Int?
+  activeSince     DateTime?
+  reconnectCount  Int       @default(0)
 
   // Connection-quality telemetry — informs ops, especially Meeting-3 UAE test.
   avgRttMs       Int?
@@ -245,11 +252,16 @@ model ConferenceRecording {
   durationSeconds Int?
   mimeType        String  @default("video/mp4")
 
-  status      ConferenceRecordingStatus @default(pending)
-  startedAt   DateTime?
-  completedAt DateTime?
-  expiresAt   DateTime?
-  deletedAt   DateTime?
+  status           ConferenceRecordingStatus @default(pending)
+  // Why a recording failed (egress_updated/egress_ended carried an error).
+  failureReason    String?
+  // The lumos Video this recording was published into (the "recorded lesson").
+  // Set once — the bridge is idempotent on it.
+  publishedVideoId String?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  expiresAt        DateTime?
+  deletedAt        DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

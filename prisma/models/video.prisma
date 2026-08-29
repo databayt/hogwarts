@@ -42,6 +42,10 @@ model Video {
   isFeatured Boolean  @default(false)
   tags       String[] @default([])
 
+  // Whether the bytes may leave the streaming model (offline download). Off by
+  // default — nothing today distinguishes "may stream" from "may keep a copy".
+  allowDownload Boolean @default(false)
+
   // Relations
   lesson    Lesson            @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -58,6 +62,9 @@ model Video {
   @@index([schoolId])
   // Admin review queue: WHERE schoolId = ? AND approvalStatus = 'PENDING'
   @@index([schoolId, approvalStatus])
+  // Platform approval queue: WHERE approvalStatus = 'PENDING' with NO schoolId —
+  // every index above leads with a column that query never filters on.
+  @@index([approvalStatus, createdAt])
   @@index([viewCount])
   @@map("lesson_videos")
 }

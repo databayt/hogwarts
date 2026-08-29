@@ -19,9 +19,9 @@ model Lesson {
   status          ContentStatus @default(PUBLISHED)
 
   // Source provenance (US inventory)
-  coverId String?
-  videoCount       Int     @default(0)
-  resourceCount    Int     @default(0)
+  coverId       String?
+  videoCount    Int     @default(0)
+  resourceCount Int     @default(0)
 
   // Engagement metrics
   usageCount    Int   @default(0)
@@ -29,12 +29,13 @@ model Lesson {
   ratingCount   Int   @default(0)
 
   // Relations
-  chapter     Chapter           @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  videos      Video[]
-  attachments Attachment[]
-  overrides   ContentOverride[] @relation("LessonOverrides")
-  progress    LessonProgress[]
-  exams       Exam[]            @relation("LessonExams")
+  chapter      Chapter             @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  videos       Video[]
+  attachments  Attachment[]
+  overrides    ContentOverride[]   @relation("LessonOverrides")
+  progress     LessonProgress[]
+  quizAttempts LessonQuizAttempt[]
+  exams        Exam[]              @relation("LessonExams")
 
   // Content relations
   questions   Question[]

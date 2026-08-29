@@ -37,6 +37,42 @@ const LATE_GRACE_MINUTES = 10
  */
 const MIN_PRESENCE_MINUTES = 5
 
+/** Minutes before the scheduled end within which leaving still counts as staying. */
+const EARLY_LEAVE_MINUTES = 10
+
+type Presence = {
+  joinedAt: Date | null
+  leftAt: Date | null
+  durationSeconds: number | null
+  activeSince: Date | null
+}
+
+/**
+ * Seconds actually connected, across reconnects.
+ *
+ * The webhook accumulates closed spans into `durationSeconds` and marks the
+ * open one with `activeSince`; an open span is counted up to `now`, so the
+ * student who stayed to the very end — the one most likely to still be
+ * connected when `room_finished` fires — is never scored as absent.
+ *
+ * LEGACY rows (written before spans existed, including the seeded demo
+ * history) carry only `joinedAt`/`leftAt`: `durationSeconds` may be null and
+ * `activeSince` is never set. Those fall back to the single span, exactly as
+ * before — a null `leftAt` there still means "stayed until reconciliation".
+ */
+export function connectedSeconds(p: Presence, now: Date): number {
+  if (p.durationSeconds != null || p.activeSince) {
+    const closed = p.durationSeconds ?? 0
+    const open = p.activeSince
+      ? Math.max(0, (now.getTime() - p.activeSince.getTime()) / 1000)
+      : 0
+    return Math.floor(closed + open)
+  }
+  if (!p.joinedAt) return 0
+  const end = p.leftAt ?? now
+  return Math.max(0, Math.floor((end.getTime() - p.joinedAt.getTime()) / 1000))
+}
+
 export async function syncConferenceAttendance(
   schoolId: string,
   sessionId: string
@@ -50,6 +86,7 @@ export async function syncConferenceAttendance(
         sectionId: true,
         timetableId: true,
         scheduledStart: true,
+        scheduledEnd: true,
         actualStart: true,
         school: { select: { conferenceAttendanceSync: true } },
       },
@@ -95,15 +132,16 @@ export async function syncConferenceAttendance(
     // ConferenceParticipant is unique on (sessionId, userId), so one row each.
     const participants = await db.conferenceParticipant.findMany({
       where: { sessionId, schoolId, role: "PARTICIPANT" },
-      select: { userId: true, joinedAt: true, leftAt: true },
+      select: {
+        userId: true,
+        joinedAt: true,
+        leftAt: true,
+        durationSeconds: true,
+        activeSince: true,
+      },
     })
-    const presenceByUser = new Map<
-      string,
-      { joinedAt: Date | null; leftAt: Date | null }
-    >()
-    for (const p of participants) {
-      presenceByUser.set(p.userId, { joinedAt: p.joinedAt, leftAt: p.leftAt })
-    }
+    const presenceByUser = new Map<string, Presence>()
+    for (const p of participants) presenceByUser.set(p.userId, p)
 
     const start = session.actualStart ?? session.scheduledStart
     const lateAfter = new Date(start.getTime() + LATE_GRACE_MINUTES * 60_000)
@@ -128,11 +166,13 @@ export async function syncConferenceAttendance(
     // `syncedAt` cannot precede a join, and the 30-minute backstop cron only
     // ever errs generous.
     const syncedAt = new Date()
-    const attended = (joinedAt: Date, leftAt: Date | null): boolean => {
-      const end = leftAt ?? syncedAt
-      const minutes = (end.getTime() - joinedAt.getTime()) / 60_000
-      return minutes >= MIN_PRESENCE_MINUTES
-    }
+    // "Left early": gone before the last EARLY_LEAVE_MINUTES of the period and
+    // not connected when we reconciled. Recorded as a check-out + note, not a
+    // new status — every attendance consumer switches on the status enum, and a
+    // fifth value would have to be taught to each of them.
+    const earlyLeaveBefore = new Date(
+      session.scheduledEnd.getTime() - EARLY_LEAVE_MINUTES * 60_000
+    )
 
     const studentIds = roster.map((s) => s.id)
     // Prefetch existing rows in one query (no per-student findFirst N+1).
@@ -163,12 +203,26 @@ export async function syncConferenceAttendance(
           ? (presenceByUser.get(student.userId) ?? null)
           : null
         const joinedAt = presence?.joinedAt ?? null
+        const connected = presence ? connectedSeconds(presence, syncedAt) : 0
         let status: "PRESENT" | "ABSENT" | "LATE" = "ABSENT"
         let checkInTime: Date | null = null
-        if (joinedAt && attended(joinedAt, presence?.leftAt ?? null)) {
+        let checkOutTime: Date | null = null
+        let leftEarly = false
+        if (joinedAt && connected >= MIN_PRESENCE_MINUTES * 60) {
           checkInTime = joinedAt
           status = joinedAt.getTime() > lateAfter.getTime() ? "LATE" : "PRESENT"
+          // Still connected at reconciliation → they stayed to the end.
+          checkOutTime = presence?.activeSince
+            ? null
+            : (presence?.leftAt ?? null)
+          leftEarly =
+            !presence?.activeSince &&
+            !!presence?.leftAt &&
+            presence.leftAt.getTime() < earlyLeaveBefore.getTime()
         }
+        const notes = leftEarly
+          ? "auto: live-class presence · left early"
+          : "auto: live-class presence"
 
         const existingId = existingByStudent.get(student.id)
         if (existingId) {
@@ -179,7 +233,9 @@ export async function syncConferenceAttendance(
               method: "VIRTUAL",
               markedAt: new Date(),
               deletedAt: null, // revive a soft-deleted row on re-sync
+              notes,
               ...(checkInTime ? { checkInTime } : {}),
+              ...(checkOutTime ? { checkOutTime } : {}),
             },
           })
           updated++
@@ -196,7 +252,8 @@ export async function syncConferenceAttendance(
             sectionId,
             markedBy: null,
             checkInTime,
-            notes: "auto: live-class presence",
+            checkOutTime,
+            notes,
           })
           marked++
         }

@@ -269,6 +269,8 @@ export async function performLiveClassJoin(
       roomName: liveClass.roomName,
       identity: userId,
       role: participantRole,
+      // Where hand-raises and poll votes are addressed over the data channel.
+      hostIdentity: liveClass.teacher?.userId ?? null,
       expiresAt,
     },
   }

@@ -19,6 +19,7 @@ import {
   getLiveKitRecordingConfig,
   isRecordingConfigured,
 } from "./client"
+import { publishRecordingAsLessonVideo } from "../actions/publish-recording"
 import { startCompositeEgress } from "./egress"
 import { parseRoomName } from "./room-naming"
 
@@ -178,34 +179,69 @@ export async function handleWebhookEvent(
     case "participant_joined": {
       const identity = event.participant?.identity
       if (identity) {
-        await db.conferenceParticipant.updateMany({
+        const now = new Date()
+        const existing = await db.conferenceParticipant.findFirst({
           where: { sessionId, userId: identity, schoolId },
-          data: { joinedAt: new Date(), status: "joined" },
+          select: { id: true, joinedAt: true, activeSince: true },
         })
+        if (existing) {
+          // Presence accumulates across reconnects. `joinedAt` is the FIRST
+          // join and is never overwritten; `activeSince` marks the span that is
+          // open right now. A join while a span is already open (a duplicate or
+          // reordered webhook) leaves that span alone rather than restarting it.
+          await db.conferenceParticipant.update({
+            where: { id: existing.id },
+            data: {
+              status: "joined",
+              joinedAt: existing.joinedAt ?? now,
+              activeSince: existing.activeSince ?? now,
+              ...(existing.joinedAt && !existing.activeSince
+                ? { reconnectCount: { increment: 1 } }
+                : {}),
+            },
+            select: { id: true },
+          })
+        }
       }
       break
     }
 
+    // The SFU reports a participant whose connection died without a clean
+    // leave the same way a leave is reported — close their open span.
+    case "participant_connection_aborted":
     case "participant_left": {
       const identity = event.participant?.identity
       if (identity) {
         const existing = await db.conferenceParticipant.findFirst({
           where: { sessionId, userId: identity, schoolId },
-          select: { id: true, joinedAt: true },
+          select: {
+            id: true,
+            joinedAt: true,
+            activeSince: true,
+            durationSeconds: true,
+          },
         })
         if (existing) {
           const leftAt = new Date()
-          const durationSeconds = existing.joinedAt
+          // Close the open span and ADD it to the running total. With no open
+          // span (a duplicate leave) nothing is added — the total never double
+          // counts.
+          const spanStart = existing.activeSince ?? null
+          const spanSeconds = spanStart
             ? Math.max(
                 0,
-                Math.floor(
-                  (leftAt.getTime() - existing.joinedAt.getTime()) / 1000
-                )
+                Math.floor((leftAt.getTime() - spanStart.getTime()) / 1000)
               )
-            : null
+            : 0
           await db.conferenceParticipant.update({
             where: { id: existing.id },
-            data: { leftAt, durationSeconds, status: "left" },
+            data: {
+              leftAt,
+              activeSince: null,
+              durationSeconds: (existing.durationSeconds ?? 0) + spanSeconds,
+              status: "left",
+            },
+            select: { id: true },
           })
         }
       }
@@ -258,6 +294,33 @@ export async function handleWebhookEvent(
       break
     }
 
+    case "egress_updated": {
+      // Intermediate egress states. The one that matters is failure/abort:
+      // without this handler a recording that died mid-class sat at
+      // "processing" forever, because egress_ended never follows a failed
+      // egress with a file. Names per @livekit/protocol EgressStatus.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const info = event.egressInfo as any
+      const egressId = info?.egressId as string | undefined
+      const status = String(info?.status ?? "")
+      if (egressId && /FAILED|ABORTED|LIMIT_REACHED/.test(status)) {
+        await db.conferenceRecording.updateMany({
+          where: {
+            egressId,
+            schoolId,
+            deletedAt: null,
+            status: { in: ["pending", "processing"] },
+          },
+          data: {
+            status: "failed",
+            failureReason: String(info?.error ?? status),
+            completedAt: new Date(),
+          },
+        })
+      }
+      break
+    }
+
     case "egress_ended": {
       const egressId = event.egressInfo?.egressId
       if (egressId) {
@@ -300,7 +363,17 @@ export async function handleWebhookEvent(
             status: { in: ["pending", "processing"] },
           },
           data: {
-            ...(hasFile ? { status: "ready", s3Key: filename, expiresAt } : {}),
+            // An egress that ENDED with no object is a failure, not "still
+            // processing": egress_ended is terminal, nothing follows it. Say
+            // so, so the session page stops promising a recording.
+            ...(hasFile
+              ? { status: "ready", s3Key: filename, expiresAt }
+              : {
+                  status: "failed",
+                  failureReason: String(
+                    info?.error ?? info?.status ?? "no file produced"
+                  ),
+                }),
             completedAt: new Date(),
             fileSizeBytes,
             durationSeconds: duration,
@@ -309,7 +382,13 @@ export async function handleWebhookEvent(
         // Only announce a playable recording when one actually exists AND the
         // row transitioned here (a guarded no-op must not re-notify).
         if (hasFile && count > 0) {
-          after(() => notifyClassRecordingReady(schoolId, sessionId))
+          // Publish it as the lesson's recorded video first (idempotent on
+          // publishedVideoId) so the "recording ready" notification points at
+          // a lesson that already carries it.
+          after(async () => {
+            await publishRecordingAsLessonVideo(schoolId, sessionId, egressId)
+            await notifyClassRecordingReady(schoolId, sessionId)
+          })
         }
       }
       break

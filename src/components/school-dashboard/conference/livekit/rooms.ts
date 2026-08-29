@@ -20,6 +20,10 @@ export async function ensureRoom(opts: {
     await svc.createRoom({
       name: opts.roomName,
       emptyTimeout: opts.emptyTimeoutSec ?? 5 * 60,
+      // Keep the room open after the LAST participant leaves, so a teacher
+      // whose connection blips while alone in the room comes back to the same
+      // room (and the same egress) instead of a finished session.
+      departureTimeout: 120,
       maxParticipants: opts.maxParticipants,
     })
   } catch (err) {

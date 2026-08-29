@@ -55,6 +55,15 @@ const startCompositeEgress = vi.fn(async () => ({
   s3Key: "schools/sch1/live-class/lcs1/1.mp4",
   s3Region: "me-central-1",
 }))
+vi.mock(
+  "@/components/school-dashboard/conference/actions/publish-recording",
+  () => ({
+    publishRecordingAsLessonVideo: vi.fn(async () => ({
+      published: false,
+      reason: "no_lesson",
+    })),
+  })
+)
 vi.mock("@/components/school-dashboard/conference/livekit/egress", () => ({
   startCompositeEgress: (...a: unknown[]) => startCompositeEgress(...a),
 }))
@@ -152,54 +161,99 @@ describe("handleWebhookEvent — room lifecycle", () => {
     )
   })
 
-  it("participant_joined → updateMany joinedAt + status=joined", async () => {
-    const ok = await handleWebhookEvent(
-      evt({
-        event: "participant_joined",
-        participant: { identity: "u-stu-1" },
-      })
-    )
-    expect(ok).toBe(true)
-    expect(db.conferenceParticipant.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          sessionId: SESSION_ID,
-          userId: "u-stu-1",
-          schoolId: SCHOOL_ID,
-        },
-        data: expect.objectContaining({ status: "joined" }),
-      })
-    )
-  })
-
-  it("participant_left → computes duration from joinedAt", async () => {
-    const joinedAt = new Date(Date.now() - 60_000) // joined 60s ago
+  it("participant_joined → first join opens a span; joinedAt is set once", async () => {
     vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
       id: "lcp-1",
-      joinedAt,
+      joinedAt: null,
+      activeSince: null,
     } as never)
     vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
     const ok = await handleWebhookEvent(
+      evt({ event: "participant_joined", participant: { identity: "u-stu-1" } })
+    )
+    expect(ok).toBe(true)
+    const [[call]] = vi.mocked(db.conferenceParticipant.update).mock.calls
+    const data = call?.data as Record<string, unknown>
+    expect(data.status).toBe("joined")
+    expect(data.joinedAt).toBeInstanceOf(Date)
+    expect(data.activeSince).toBeInstanceOf(Date)
+    expect(data.reconnectCount).toBeUndefined()
+  })
+
+  it("participant_joined on a REJOIN keeps the first joinedAt and counts the reconnect", async () => {
+    const first = new Date(Date.now() - 10 * 60_000)
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "lcp-1",
+      joinedAt: first,
+      activeSince: null, // the previous span was closed by participant_left
+    } as never)
+    vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
+    await handleWebhookEvent(
+      evt({ event: "participant_joined", participant: { identity: "u-stu-1" } })
+    )
+    const [[call]] = vi.mocked(db.conferenceParticipant.update).mock.calls
+    const data = call?.data as Record<string, unknown>
+    // The bug this replaces: joinedAt was overwritten with the rejoin time.
+    expect(data.joinedAt).toBe(first)
+    expect(data.reconnectCount).toEqual({ increment: 1 })
+  })
+
+  it("participant_left → closes the open span and ADDS it to the running total", async () => {
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "lcp-1",
+      joinedAt: new Date(Date.now() - 20 * 60_000),
+      activeSince: new Date(Date.now() - 60_000), // this span: ~60s
+      durationSeconds: 300, // earlier spans: 5 min
+    } as never)
+    vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
+    const ok = await handleWebhookEvent(
+      evt({ event: "participant_left", participant: { identity: "u-stu-1" } })
+    )
+    expect(ok).toBe(true)
+    const [[call]] = vi.mocked(db.conferenceParticipant.update).mock.calls
+    const data = call?.data as {
+      durationSeconds?: number
+      activeSince?: unknown
+      status?: string
+    }
+    expect(data.status).toBe("left")
+    expect(data.activeSince).toBeNull()
+    expect(data.durationSeconds).toBeGreaterThanOrEqual(359)
+    expect(data.durationSeconds).toBeLessThanOrEqual(362)
+  })
+
+  it("a duplicate participant_left (no open span) adds nothing", async () => {
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "lcp-1",
+      joinedAt: new Date(Date.now() - 20 * 60_000),
+      activeSince: null,
+      durationSeconds: 300,
+    } as never)
+    vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
+    await handleWebhookEvent(
+      evt({ event: "participant_left", participant: { identity: "u-stu-1" } })
+    )
+    const [[call]] = vi.mocked(db.conferenceParticipant.update).mock.calls
+    expect((call?.data as { durationSeconds?: number }).durationSeconds).toBe(
+      300
+    )
+  })
+
+  it("participant_connection_aborted is treated as a leave", async () => {
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "lcp-1",
+      joinedAt: new Date(Date.now() - 60_000),
+      activeSince: new Date(Date.now() - 60_000),
+      durationSeconds: 0,
+    } as never)
+    vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
+    await handleWebhookEvent(
       evt({
-        event: "participant_left",
+        event: "participant_connection_aborted",
         participant: { identity: "u-stu-1" },
       })
     )
-    expect(ok).toBe(true)
-    expect(db.conferenceParticipant.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          status: "left",
-          leftAt: expect.any(Date),
-          durationSeconds: expect.any(Number),
-        }),
-      })
-    )
-    const [[call]] = vi.mocked(db.conferenceParticipant.update).mock.calls
-    const durationSec = (call?.data as { durationSeconds?: number })
-      .durationSeconds
-    expect(durationSec).toBeGreaterThanOrEqual(59)
-    expect(durationSec).toBeLessThanOrEqual(62)
+    expect(db.conferenceParticipant.update).toHaveBeenCalled()
   })
 })
 
@@ -342,24 +396,64 @@ describe("handleWebhookEvent — egress / recording", () => {
     expect(notifyClassRecordingReady).not.toHaveBeenCalled()
   })
 
-  it("egress_ended with no fileResults → does NOT flip to ready (would sign an empty s3Key)", async () => {
+  it("egress_ended with no fileResults → the recording FAILED (terminal event, no object), no notify", async () => {
     const ok = await handleWebhookEvent(
       evt({
         event: "egress_ended",
-        egressInfo: { egressId: "egr-3" },
+        egressInfo: {
+          egressId: "egr-3",
+          status: "EGRESS_FAILED",
+          error: "upload denied",
+        },
       })
     )
     expect(ok).toBe(true)
     const call = vi.mocked(db.conferenceRecording.updateMany).mock.calls[0]?.[0]
     const data = (call as { data: Record<string, unknown> }).data
-    // No file → status/s3Key/expiresAt are NOT written (left processing);
-    // only metadata is recorded. Prevents a "ready" row with an empty key.
-    expect(data.status).toBeUndefined()
+    // egress_ended is terminal: nothing follows it. A row left at
+    // "processing" here would promise a recording forever.
+    expect(data.status).toBe("failed")
+    expect(data.failureReason).toBe("upload denied")
     expect(data.s3Key).toBeUndefined()
     expect(data.expiresAt).toBeUndefined()
     expect(data.completedAt).toEqual(expect.any(Date))
-    // And no "recording is ready" notification fires.
     expect(notifyClassRecordingReady).not.toHaveBeenCalled()
+  })
+
+  it("egress_updated carrying a failure marks the in-flight row failed", async () => {
+    const ok = await handleWebhookEvent(
+      evt({
+        event: "egress_updated",
+        egressInfo: {
+          egressId: "egr-4",
+          status: "EGRESS_ABORTED",
+          error: "room closed",
+        },
+      })
+    )
+    expect(ok).toBe(true)
+    expect(db.conferenceRecording.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          egressId: "egr-4",
+          status: { in: ["pending", "processing"] },
+        }),
+        data: expect.objectContaining({
+          status: "failed",
+          failureReason: "room closed",
+        }),
+      })
+    )
+  })
+
+  it("egress_updated with a healthy status touches nothing", async () => {
+    await handleWebhookEvent(
+      evt({
+        event: "egress_updated",
+        egressInfo: { egressId: "egr-5", status: "EGRESS_ACTIVE" },
+      })
+    )
+    expect(db.conferenceRecording.updateMany).not.toHaveBeenCalled()
   })
 })
 
