@@ -52,6 +52,12 @@ None
 
 ### P2 -- Medium
 
+- **Stale tracker link.** The `tracker:` frontmatter in this block's three
+  records points at hogwarts#316, which is closed and is the PMF-pilots epic —
+  not this block. No open issue tracks saas-marketing; the block-protocol
+  "comment on the related issue" step has nothing to comment on. Open one and
+  repoint the frontmatter, or drop the field.
+
 - Feature detail body copy (page-data + showcase decks) is English-only; the `student` entry was rewritten in the honest/time-saved voice (2026-08-05) but the other 30 page-data entries still carry OpenEduCat-style copy with unshipped claims (RFID, GPS, hostel) — rewrite them the same way
 - No showcase decks yet for: conference trio (google-meet/zoom/teams, demo has no meetings), whatsapp-integration (demo disconnected), sales, discussion, assignment, mobile-application — capture screens once demo data exists
 - Large static data in client components could move to server components
