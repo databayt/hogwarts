@@ -8,6 +8,7 @@ import { Check, Hand, Send, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import type { RoomTools } from "@/components/school-dashboard/conference/types"
 
 import type { Poll } from "./class-channel"
 import type { RoomLabels } from "./labels"
@@ -22,6 +23,7 @@ interface SidePanelProps {
   channel: ClassChannel
   canAsk: boolean
   isHost: boolean
+  tools: RoomTools
   localIdentity: string
   labels: RoomLabels
   onPollClosed?: (poll: Poll) => void
@@ -29,18 +31,17 @@ interface SidePanelProps {
 }
 
 export function SidePanel(props: SidePanelProps) {
-  const { tab, onTab, onClose, labels, isHost, channel } = props
-  const tabs: Array<{ id: PanelTab; label: string; badge?: number }> = [
-    { id: "chat", label: labels.chat },
-    {
-      id: "questions",
-      label: labels.questions,
-      badge:
-        channel.state.questions.filter((q) => !q.answered).length || undefined,
-    },
-    { id: "poll", label: labels.poll },
-  ]
-  if (isHost)
+  const { tab, onTab, onClose, labels, isHost, channel, tools } = props
+  const tabs: Array<{ id: PanelTab; label: string; badge?: number }> = []
+  if (tools.chat) tabs.push({ id: "chat", label: labels.chat })
+  tabs.push({
+    id: "questions",
+    label: labels.questions,
+    badge:
+      channel.state.questions.filter((q) => !q.answered).length || undefined,
+  })
+  if (tools.polls) tabs.push({ id: "poll", label: labels.poll })
+  if (isHost && tools.hands)
     tabs.push({
       id: "hands",
       label: labels.handsRaised,

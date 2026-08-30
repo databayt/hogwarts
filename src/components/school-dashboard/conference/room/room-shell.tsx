@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useLocalParticipant } from "@livekit/components-react"
-import { Hand } from "lucide-react"
+import { Hand, Video, X } from "lucide-react"
 
 import { VideoWatermark } from "@/components/lumos/shared/video-player/video-watermark"
 import { recordClassEvent } from "@/components/school-dashboard/conference/actions/room-events"
@@ -12,7 +12,10 @@ import {
   ParticipantsPanel,
   type ParticipantsPanelLabels,
 } from "@/components/school-dashboard/conference/participants-panel"
-import type { ConferenceParticipantRole } from "@/components/school-dashboard/conference/types"
+import type {
+  ConferenceParticipantRole,
+  RoomConfig,
+} from "@/components/school-dashboard/conference/types"
 
 import type { Poll } from "./class-channel"
 import { ControlBar } from "./control-bar"
@@ -32,6 +35,7 @@ interface RoomShellProps {
   labels: RoomLabels
   participantsLabels: ParticipantsPanelLabels
   slides: SlideOption[]
+  config: RoomConfig
 }
 
 /** Everything inside the connected room: stage, side panel, bar, overlays. */
@@ -43,12 +47,16 @@ export function RoomShell({
   labels,
   participantsLabels,
   slides,
+  config,
 }: RoomShellProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
   const channel = useClassChannel({ hostIdentity, isHost })
   const adaptive = useAdaptiveDelivery()
   const { localParticipant } = useLocalParticipant()
   const [panel, setPanel] = useState<PanelTab | null>(null)
+  // Recording consent: shown once per join, dismissible; the school can
+  // replace the sentence.
+  const [consentSeen, setConsentSeen] = useState(false)
 
   // The host's client is the room's memory: closed polls and questions
   // become ConferenceEvent rows. Best-effort — a failed write never
@@ -116,6 +124,26 @@ export function RoomShell({
 
       <AudioOnlyBanner on={adaptive.tier === "audio"} labels={labels} />
 
+      {config.recording && !consentSeen && (
+        <div
+          role="status"
+          className="flex items-start gap-2 bg-sky-900/80 px-3 py-2 text-sm text-white"
+        >
+          <Video className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <span className="flex-1">
+            {config.consentNote ?? labels.recordingConsent}
+          </span>
+          <button
+            type="button"
+            className="rounded p-1 hover:bg-white/20"
+            aria-label={labels.dismiss}
+            onClick={() => setConsentSeen(true)}
+          >
+            <X className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
+      )}
+
       <div className="relative flex min-h-0 flex-1">
         <main
           className="relative min-w-0 flex-1 select-none"
@@ -138,6 +166,7 @@ export function RoomShell({
               onClose={() => setPanel(null)}
               channel={channel}
               canAsk={role !== "OBSERVER"}
+              tools={config.tools}
               isHost={isHost}
               localIdentity={localParticipant.identity}
               labels={labels}
@@ -155,6 +184,7 @@ export function RoomShell({
 
       <ControlBar
         role={role}
+        tools={config.tools}
         labels={labels}
         channel={channel}
         adaptive={adaptive}

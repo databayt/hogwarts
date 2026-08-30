@@ -392,24 +392,35 @@ Closed:
       sessions stay and close on their own (the end-stale cron), instead of
       silently leaving zombies or silently cancelling.
 
-Recommended next (not built — each is a column + a control + one code path):
+Built the same day (migration `20260830150000_live_class_configuration_options`,
+applied prod + local):
 
-- [ ] **Recording consent + auto-publish** — a toggle to publish class
-      recordings to the Lumos lesson automatically (today: always, when the
-      session has a lesson) and a consent notice students see on join.
-- [ ] **Guardians may observe** — guardians join as OBSERVER today; a school
-      switch to turn that off.
-- [ ] **Students join muted / camera off** — fixed today; make it a school
-      default the teacher can override per class.
-- [ ] **Room tools** — per-school toggles for chat, hand-raising, polls,
-      whiteboard, screen share by students.
-- [ ] **Reminder lead time** — the 5–20 minute reminder window as a setting.
-- [ ] **Per-grade defaults** — delivery mode by grade (lower grades in
-      person, upper grades hybrid) on top of per-section overrides.
-- [ ] **Protection policy display** — a read-only row stating that videos
-      and materials are view-only and watermarked, so admins can point to it.
-- [ ] **Storage** — show recording storage used vs the plan's quota next to
-      retention days.
+- [x] **Recording consent notice** — `School.conferenceRecordingConsentNote`
+      (null = the app's sentence), shown once per join as a dismissible strip
+      when the session records; **auto-publish** switch
+      (`conferenceAutoPublishRecordings`) gates the recording → lesson bridge.
+- [x] **Guardians may observe** — `conferenceGuardiansObserve`; join-core
+      refuses a GUARDIAN when off.
+- [x] **Students enter muted** — school default
+      (`conferenceStudentsJoinMuted`) + per-session override
+      (`Conference.studentsJoinMuted`, tri-state from the class form: school
+      default / muted / open). The ticket carries the resolved value.
+- [x] **Room tools** — chat, hands, polls, whiteboard, student screen share
+      (`conferenceTool*`); the bar and side panel hide what is off; student
+      screen share is enforced in the TOKEN (`canPublishSources`), not only
+      hidden.
+- [x] **Reminder lead time** — `conferenceReminderLeadMinutes` (1–60); the
+      cron scans the widest lead and applies each school's own.
+- [x] **Per-grade delivery** — `AcademicGrade.conferenceOnline` (tri-state);
+      the engine resolves section ?? grade ?? school in hybrid mode; a grade
+      list sits under the section list in settings.
+- [x] **Protection row + recording storage** — read-only policy statement and
+      the school's video storage used vs plan quota (`getSchoolVideoUsage`).
+
+Known limits: chat/hands/polls/whiteboard are UI-level switches (the data
+channel stays open for the tools that are on); only screen share is enforced
+server-side. The consent strip is informational — there is no per-student
+consent record.
 
 ## Live-class + offline pass — 2026-08-29
 

@@ -54,35 +54,71 @@ describe("live-class-reminders cron — auth", () => {
 })
 
 describe("live-class-reminders cron — detection window", () => {
-  it("queries a 15-min-wide window [now+5min, now+20min] with no blind spot", async () => {
+  it("scans [now+1min, now+60min] — the widest lead a school may set — then applies each school's own lead", async () => {
     await GET(req())
     const call = vi.mocked(db.conference.findMany).mock.calls[0][0] as {
       where: { scheduledStart: { gte: Date; lte: Date }; status: string }
     }
     const gte = call.where.scheduledStart.gte.getTime()
     const lte = call.where.scheduledStart.lte.getTime()
-
-    expect(gte).toBe(NOW + 5 * 60 * 1000)
-    expect(lte).toBe(NOW + 20 * 60 * 1000)
+    expect(gte).toBe(NOW + 1 * 60 * 1000)
+    expect(lte).toBe(NOW + 60 * 60 * 1000)
     expect(call.where.status).toBe("scheduled")
-
-    // Window must be at least as wide as the cron cadence — the schedule was
-    // throttled to */15 (Neon scale-to-zero, 11506df6a), so a narrower window
-    // would leave a start time in the gap between consecutive runs.
+    // Wider than the cron cadence (*/15): no start time can fall in a gap.
     expect(lte - gte).toBeGreaterThanOrEqual(15 * 60 * 1000)
+  })
 
-    // A class starting 18 min out lands inside [5,20] on this run.
-    const eighteenMinOut = NOW + 18 * 60 * 1000
-    expect(gte).toBeLessThanOrEqual(eighteenMinOut)
-    expect(lte).toBeGreaterThanOrEqual(eighteenMinOut)
+  it("reminds only inside the school's own lead time", async () => {
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      // 30 min out, school lead 10 → not yet
+      {
+        id: "lcs-early",
+        schoolId: "school-a",
+        scheduledStart: new Date(NOW + 30 * 60 * 1000),
+        school: { conferenceReminderLeadMinutes: 10 },
+      },
+      // 30 min out, school lead 45 → now
+      {
+        id: "lcs-due",
+        schoolId: "school-b",
+        scheduledStart: new Date(NOW + 30 * 60 * 1000),
+        school: { conferenceReminderLeadMinutes: 45 },
+      },
+      // 8 min out, default lead → now
+      {
+        id: "lcs-soon",
+        schoolId: "school-a",
+        scheduledStart: new Date(NOW + 8 * 60 * 1000),
+        school: null,
+      },
+    ] as never)
+    const res = await GET(req())
+    const body = (await res.json()) as { dispatched: number }
+    expect(body.dispatched).toBe(2)
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith("school-b", "lcs-due")
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith("school-a", "lcs-soon")
+    expect(notifyClassStartingSoon).not.toHaveBeenCalledWith(
+      "school-a",
+      "lcs-early"
+    )
   })
 })
 
 describe("live-class-reminders cron — dispatch + idempotency", () => {
   it("notifies once per fresh session and skips already-reminded ones", async () => {
     vi.mocked(db.conference.findMany).mockResolvedValue([
-      { id: "lcs-fresh", schoolId: "school-1" },
-      { id: "lcs-already", schoolId: "school-1" },
+      {
+        id: "lcs-fresh",
+        schoolId: "school-1",
+        scheduledStart: new Date(NOW + 8 * 60 * 1000),
+        school: null,
+      },
+      {
+        id: "lcs-already",
+        schoolId: "school-1",
+        scheduledStart: new Date(NOW + 8 * 60 * 1000),
+        school: null,
+      },
     ] as never)
     // lcs-already already has a reminder event; lcs-fresh does not.
     vi.mocked(db.conferenceEvent.findMany).mockResolvedValue([

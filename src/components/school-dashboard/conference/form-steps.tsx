@@ -365,6 +365,16 @@ export function StepMeeting({
             max={300}
             disabled={isPending}
           />
+          <SelectField
+            name="studentsJoinMuted"
+            label={f.joinMutedLabel}
+            disabled={isPending}
+            options={[
+              { value: "default", label: f.joinMutedDefault },
+              { value: "muted", label: f.joinMutedMuted },
+              { value: "open", label: f.joinMutedOpen },
+            ]}
+          />
           {recordingAvailable ? (
             <CheckboxField
               name="recordingEnabled"

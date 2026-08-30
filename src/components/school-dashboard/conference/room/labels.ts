@@ -76,6 +76,9 @@ export const DEFAULT_ROOM_LABELS = {
   good: "Good",
   poor: "Poor",
   lost: "Offline",
+  recordingConsent:
+    "This class is being recorded for students who miss it. Your voice and video may appear in the recording.",
+  dismiss: "Dismiss",
 } as const
 
 export type RoomLabelKey = keyof typeof DEFAULT_ROOM_LABELS

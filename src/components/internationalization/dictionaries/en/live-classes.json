@@ -36,7 +36,11 @@
     "scheduledEnd": "Ends",
     "recordingEnabled": "Record this class",
     "maxParticipants": "Max participants",
-    "recordingUnavailable": "Recording is not set up for this school yet."
+    "recordingUnavailable": "Recording is not set up for this school yet.",
+    "joinMutedLabel": "Students enter",
+    "joinMutedDefault": "School default",
+    "joinMutedMuted": "Muted, camera off",
+    "joinMutedOpen": "Mic and camera on"
   },
   "labels": {
     "section": "Section",
@@ -151,7 +155,9 @@
     "excellent": "Excellent",
     "good": "Good",
     "poor": "Poor",
-    "lost": "Offline"
+    "lost": "Offline",
+    "recordingConsent": "This class is being recorded for students who miss it. Your voice and video may appear in the recording.",
+    "dismiss": "Dismiss"
   },
   "errors": {
     "notAuthenticated": "You need to sign in.",
@@ -308,7 +314,39 @@
     "lateGrace": "Late after (minutes)",
     "minPresence": "Counts as present after (minutes)",
     "earlyLeave": "Left early if gone before end by (minutes)",
-    "thresholdsHint": "How presence in the room becomes an attendance mark."
+    "thresholdsHint": "How presence in the room becomes an attendance mark.",
+    "consentNote": "Recording notice shown on join",
+    "consentNoteHint": "Students and guardians see this when they enter a class that is being recorded. Leave empty for the standard sentence.",
+    "consentNotePlaceholder": "This class is recorded for students who miss it. Your voice and video may appear in the recording.",
+    "autoPublish": "Publish recordings to the lesson automatically",
+    "autoPublishHint": "When a recorded class is linked to a Lumos lesson, the recording appears there for the school once it is ready.",
+    "guardiansObserve": "Guardians may watch live classes",
+    "guardiansObserveHint": "As observers only — no microphone, camera or questions.",
+    "joinMuted": "Students enter muted with the camera off",
+    "joinMutedHint": "The teacher can override this per class in the class settings.",
+    "tools": "Room tools",
+    "toolsHint": "What students and teachers can use inside a live class.",
+    "toolChat": "Chat",
+    "toolHands": "Raise hand",
+    "toolPolls": "Polls",
+    "toolWhiteboard": "Whiteboard",
+    "toolStudentShare": "Students may share their screen",
+    "reminderLead": "Remind before class (minutes)",
+    "reminderLeadHint": "The “starting soon” notification goes out this many minutes before a class, on the next reminder run.",
+    "protection": "Content protection",
+    "protectionHint": "School policy, applied everywhere: videos, recordings and materials are viewed in the app and never downloaded; every viewer sees a faint watermark with their identity; picture-in-picture, casting and printing are off.",
+    "storage": "Recording storage",
+    "storageUsed": "{used} of {quota} used",
+    "storageUnlimited": "{used} used · no quota on this plan",
+    "gradePolicy": {
+      "title": "Online teaching by grade",
+      "description": "Between the school default and the per-section setting: section ?? grade ?? school.",
+      "inherit": "School default",
+      "online": "Online",
+      "offline": "In person",
+      "empty": "No grades yet.",
+      "error": "Could not update the grade."
+    }
   },
   "attendanceNote": {
     "auto": "Attendance is marked automatically when this class ends.",

@@ -16,6 +16,16 @@ export interface ConferenceSettingsValues {
   conferenceLateGraceMinutes: number
   conferenceMinPresenceMinutes: number
   conferenceEarlyLeaveMinutes: number
+  conferenceRecordingConsentNote: string
+  conferenceAutoPublishRecordings: boolean
+  conferenceGuardiansObserve: boolean
+  conferenceStudentsJoinMuted: boolean
+  conferenceToolChat: boolean
+  conferenceToolHands: boolean
+  conferenceToolPolls: boolean
+  conferenceToolWhiteboard: boolean
+  conferenceToolStudentShare: boolean
+  conferenceReminderLeadMinutes: number
   conferenceRetentionDays: number
   conferenceMaxConcurrent: number
   conferenceMaxDuration: number
@@ -82,6 +92,24 @@ interface Props {
     minPresence: string
     earlyLeave: string
     thresholdsHint: string
+    consentNote: string
+    consentNoteHint: string
+    consentNotePlaceholder: string
+    autoPublish: string
+    autoPublishHint: string
+    guardiansObserve: string
+    guardiansObserveHint: string
+    joinMuted: string
+    joinMutedHint: string
+    tools: string
+    toolsHint: string
+    toolChat: string
+    toolHands: string
+    toolPolls: string
+    toolWhiteboard: string
+    toolStudentShare: string
+    reminderLead: string
+    reminderLeadHint: string
     retention: string
     maxConcurrent: string
     maxDuration: string
@@ -375,6 +403,113 @@ export function ConferenceSettingsForm({
                 />
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Who joins how */}
+      {!physical && (
+        <div className="space-y-4 border-t pt-6">
+          {(
+            [
+              [
+                "conferenceGuardiansObserve",
+                labels.guardiansObserve,
+                labels.guardiansObserveHint,
+              ],
+              [
+                "conferenceStudentsJoinMuted",
+                labels.joinMuted,
+                labels.joinMutedHint,
+              ],
+              [
+                "conferenceAutoPublishRecordings",
+                labels.autoPublish,
+                labels.autoPublishHint,
+              ],
+            ] as const
+          ).map(([key, label, hint]) => (
+            <div key={key} className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <Label htmlFor={key}>{label}</Label>
+                <p className="text-muted-foreground text-xs">{hint}</p>
+              </div>
+              <Switch
+                id={key}
+                checked={values[key]}
+                onCheckedChange={(checked) => {
+                  setStatus("idle")
+                  setValues((v) => ({ ...v, [key]: checked }))
+                }}
+              />
+            </div>
+          ))}
+
+          <div className="space-y-2">
+            <Label htmlFor="consent-note">{labels.consentNote}</Label>
+            <p className="text-muted-foreground text-xs">
+              {labels.consentNoteHint}
+            </p>
+            <textarea
+              id="consent-note"
+              rows={2}
+              maxLength={500}
+              className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+              placeholder={labels.consentNotePlaceholder}
+              value={values.conferenceRecordingConsentNote}
+              onChange={(e) =>
+                setText("conferenceRecordingConsentNote", e.target.value)
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>{labels.tools}</Label>
+            <p className="text-muted-foreground text-xs">{labels.toolsHint}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(
+                [
+                  ["conferenceToolChat", labels.toolChat],
+                  ["conferenceToolHands", labels.toolHands],
+                  ["conferenceToolPolls", labels.toolPolls],
+                  ["conferenceToolWhiteboard", labels.toolWhiteboard],
+                  ["conferenceToolStudentShare", labels.toolStudentShare],
+                ] as const
+              ).map(([key, label]) => (
+                <label
+                  key={key}
+                  className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm"
+                >
+                  <span>{label}</span>
+                  <Switch
+                    checked={values[key]}
+                    onCheckedChange={(checked) => {
+                      setStatus("idle")
+                      setValues((v) => ({ ...v, [key]: checked }))
+                    }}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reminder-lead">{labels.reminderLead}</Label>
+            <p className="text-muted-foreground text-xs">
+              {labels.reminderLeadHint}
+            </p>
+            <Input
+              id="reminder-lead"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={60}
+              className="max-w-32"
+              value={values.conferenceReminderLeadMinutes}
+              onChange={(e) =>
+                setNum("conferenceReminderLeadMinutes", e.target.value)
+              }
+            />
           </div>
         </div>
       )}

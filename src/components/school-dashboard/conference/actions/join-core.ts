@@ -167,7 +167,21 @@ export async function performLiveClassJoin(
         maxParticipants: true,
         status: true,
         lang: true,
+        recordingEnabled: true,
+        studentsJoinMuted: true,
         teacher: { select: { userId: true } },
+        school: {
+          select: {
+            conferenceGuardiansObserve: true,
+            conferenceStudentsJoinMuted: true,
+            conferenceRecordingConsentNote: true,
+            conferenceToolChat: true,
+            conferenceToolHands: true,
+            conferenceToolPolls: true,
+            conferenceToolWhiteboard: true,
+            conferenceToolStudentShare: true,
+          },
+        },
       },
     }),
     db.user.findUnique({
@@ -197,6 +211,14 @@ export async function performLiveClassJoin(
     liveClass.sectionId,
     liveClass.visibility
   )
+  // School switch: guardians observe only where the school allows it.
+  if (
+    participantRole === "OBSERVER" &&
+    role === "GUARDIAN" &&
+    !liveClass.school.conferenceGuardiansObserve
+  ) {
+    return actionError(ACTION_ERRORS.LIVE_CLASS_PARTICIPANT_DENIED)
+  }
   if (!participantRole) {
     return actionError(ACTION_ERRORS.LIVE_CLASS_PARTICIPANT_DENIED)
   }
@@ -254,6 +276,7 @@ export async function performLiveClassJoin(
       displayName,
       lang: liveClass.lang,
       ttlSec: 300,
+      allowScreenShare: liveClass.school.conferenceToolStudentShare,
     })
     wsUrl = getLiveKitConfig().wsUrl
   } catch {
@@ -271,6 +294,20 @@ export async function performLiveClassJoin(
       role: participantRole,
       // Where hand-raises and poll votes are addressed over the data channel.
       hostIdentity: liveClass.teacher?.userId ?? null,
+      roomConfig: {
+        joinMuted:
+          liveClass.studentsJoinMuted ??
+          liveClass.school.conferenceStudentsJoinMuted,
+        tools: {
+          chat: liveClass.school.conferenceToolChat,
+          hands: liveClass.school.conferenceToolHands,
+          polls: liveClass.school.conferenceToolPolls,
+          whiteboard: liveClass.school.conferenceToolWhiteboard,
+          studentShare: liveClass.school.conferenceToolStudentShare,
+        },
+        consentNote: liveClass.school.conferenceRecordingConsentNote,
+        recording: liveClass.recordingEnabled,
+      },
       expiresAt,
     },
   }

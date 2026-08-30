@@ -23,6 +23,8 @@ export interface IssueTokenInput {
   displayName?: string
   /** Content language so the client UI can render in the right locale. */
   lang?: string
+  /** PARTICIPANT only: may publish a screen share (school room-tools setting). */
+  allowScreenShare?: boolean
   /** Token TTL in seconds. Default 300 (5 min). Refresh before expiry. */
   ttlSec?: number
 }
@@ -37,7 +39,8 @@ export interface IssueTokenInput {
  */
 function grantsForRole(
   role: ConferenceParticipantRole,
-  roomName: string
+  roomName: string,
+  allowScreenShare = true
 ): VideoGrant {
   const base: VideoGrant = {
     room: roomName,
@@ -71,6 +74,11 @@ function grantsForRole(
         canPublish: true,
         canPublishData: true,
         canUpdateOwnMetadata: true,
+        // Server-side, not only a hidden button: a student without the
+        // school's screen-share tool cannot publish a screen track at all.
+        ...(allowScreenShare
+          ? {}
+          : { canPublishSources: ["camera", "microphone"] as const }),
       }
     case "OBSERVER":
       return {
@@ -108,6 +116,8 @@ export async function issueAccessToken(
     attributes: { role: input.role },
   })
 
-  token.addGrant(grantsForRole(input.role, input.roomName))
+  token.addGrant(
+    grantsForRole(input.role, input.roomName, input.allowScreenShare ?? true)
+  )
   return await token.toJwt()
 }

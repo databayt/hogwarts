@@ -372,6 +372,7 @@ async function materializeOpenRooms(
         id: true,
         name: true,
         conferenceOnline: true,
+        grade: { select: { conferenceOnline: true } },
         conferenceRecordingOptOut: true,
         homeroomTeacherId: true,
         homeroomTeacher: { select: { userId: true } },
@@ -407,7 +408,12 @@ async function materializeOpenRooms(
   )
 
   for (const section of todays) {
-    const policy = effectivePolicy(school, section.conferenceOnline, date)
+    const policy = effectivePolicy(
+      school,
+      section.conferenceOnline,
+      date,
+      section.grade?.conferenceOnline ?? null
+    )
     if (!policy.online) {
       bump(result, "not_online")
       continue

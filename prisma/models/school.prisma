@@ -66,6 +66,23 @@ model School {
   conferenceLateGraceMinutes   Int @default(10) @map("liveClassLateGraceMinutes")
   conferenceMinPresenceMinutes Int @default(5)  @map("liveClassMinPresenceMinutes")
   conferenceEarlyLeaveMinutes  Int @default(10) @map("liveClassEarlyLeaveMinutes")
+  // Configuration options (2026-08-30 "recommended next" batch).
+  // The notice students see on joining a recorded class; null = the app's default sentence.
+  conferenceRecordingConsentNote  String?  @map("liveClassRecordingConsentNote")
+  // Publish a finished class recording to the linked Lumos lesson automatically.
+  conferenceAutoPublishRecordings Boolean  @default(true) @map("liveClassAutoPublishRecordings")
+  // Guardians may join as observers.
+  conferenceGuardiansObserve      Boolean  @default(true) @map("liveClassGuardiansObserve")
+  // Students enter with mic + camera off (a session may override).
+  conferenceStudentsJoinMuted     Boolean  @default(true) @map("liveClassStudentsJoinMuted")
+  // Room tools offered in this school's rooms.
+  conferenceToolChat              Boolean  @default(true) @map("liveClassToolChat")
+  conferenceToolHands             Boolean  @default(true) @map("liveClassToolHands")
+  conferenceToolPolls             Boolean  @default(true) @map("liveClassToolPolls")
+  conferenceToolWhiteboard        Boolean  @default(true) @map("liveClassToolWhiteboard")
+  conferenceToolStudentShare      Boolean  @default(false) @map("liveClassToolStudentShare")
+  // How many minutes before a class the "starting soon" reminder goes out.
+  conferenceReminderLeadMinutes   Int      @default(10) @map("liveClassReminderLeadMinutes")
   // "This school teaches online": every timetable slot is delivered as a live
   // class, with the session materialized per school-calendar day rather than
   // pre-created for the whole term. Overridable per section

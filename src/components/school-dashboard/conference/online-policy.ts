@@ -148,7 +148,9 @@ export function isOnlineWindowActive(
 export function effectivePolicy(
   school: SchoolPolicyRow | null,
   sectionOverride: boolean | null | undefined,
-  date: Date = new Date()
+  date: Date = new Date(),
+  /** The section's grade override (hybrid only): section ?? grade ?? school. */
+  gradeOverride: boolean | null | undefined = null
 ): OnlinePolicy {
   if (!school) return OFFLINE_POLICY
 
@@ -163,12 +165,13 @@ export function effectivePolicy(
   const windowActive = mode === "hybrid" && isOnlineWindowActive(school, date)
   const inherited =
     mode === "online" || school.conferenceOnlineDefault || windowActive
-  const online = mode === "online" ? true : (sectionOverride ?? inherited)
+  const override = sectionOverride ?? gradeOverride ?? null
+  const online = mode === "online" ? true : (override ?? inherited)
   if (!online) return OFFLINE_POLICY
   const source: OnlineSource =
     mode === "online"
       ? "school"
-      : sectionOverride === true
+      : override === true
         ? "section"
         : school.conferenceOnlineDefault
           ? "school"
@@ -203,11 +206,19 @@ export async function resolveOnlinePolicy(
     sectionId
       ? db.section.findFirst({
           where: { id: sectionId, schoolId },
-          select: { conferenceOnline: true },
+          select: {
+            conferenceOnline: true,
+            grade: { select: { conferenceOnline: true } },
+          },
         })
       : Promise.resolve(null),
   ])
-  return effectivePolicy(school, section?.conferenceOnline, date)
+  return effectivePolicy(
+    school,
+    section?.conferenceOnline,
+    date,
+    section?.grade?.conferenceOnline ?? null
+  )
 }
 
 /**
@@ -232,18 +243,26 @@ export async function resolveOnlinePolicies(
     }),
     db.section.findMany({
       where: { id: { in: unique }, schoolId },
-      select: { id: true, conferenceOnline: true },
+      select: {
+        id: true,
+        conferenceOnline: true,
+        grade: { select: { conferenceOnline: true } },
+      },
     }),
   ])
 
-  const overrides = new Map(sections.map((s) => [s.id, s.conferenceOnline]))
+  const rows = new Map(sections.map((s) => [s.id, s]))
   for (const id of unique) {
-    // A section id that resolved to no row is not this school's — treat it as
-    // offline rather than letting it inherit the school-wide switch.
+    const row = rows.get(id)
     out.set(
       id,
-      overrides.has(id)
-        ? effectivePolicy(school, overrides.get(id), date)
+      row
+        ? effectivePolicy(
+            school,
+            row.conferenceOnline,
+            date,
+            row.grade?.conferenceOnline ?? null
+          )
         : OFFLINE_POLICY
     )
   }

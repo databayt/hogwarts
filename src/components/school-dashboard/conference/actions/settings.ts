@@ -36,6 +36,16 @@ import { materializeSchoolDay } from "./materialize-day"
 
 const SETTINGS_SELECT = {
   conferenceDeliveryMode: true,
+  conferenceRecordingConsentNote: true,
+  conferenceAutoPublishRecordings: true,
+  conferenceGuardiansObserve: true,
+  conferenceStudentsJoinMuted: true,
+  conferenceToolChat: true,
+  conferenceToolHands: true,
+  conferenceToolPolls: true,
+  conferenceToolWhiteboard: true,
+  conferenceToolStudentShare: true,
+  conferenceReminderLeadMinutes: true,
   conferenceLateGraceMinutes: true,
   conferenceMinPresenceMinutes: true,
   conferenceEarlyLeaveMinutes: true,
@@ -132,6 +142,8 @@ export async function updateConferenceSettings(input: unknown) {
   const data = {
     ...parsed.data,
     conferenceOnlineDefault: onlineDefault,
+    conferenceRecordingConsentNote:
+      parsed.data.conferenceRecordingConsentNote?.trim() || null,
     conferenceFallbackUrl: parsed.data.conferenceFallbackUrl || null,
     conferenceOnlineFrom: physical ? null : from,
     conferenceOnlineUntil: physical ? null : until,
@@ -360,4 +372,33 @@ export async function getConferenceLinkCoverage() {
       truncated,
     },
   }
+}
+
+/**
+ * Grades + their per-grade online override (hybrid mode). Sits between the
+ * school default and the per-section override: section ?? grade ?? school.
+ */
+export async function listGradeOnlinePolicy() {
+  const ctx = await requireContext("manage_settings")
+  if (!ctx.ok) return ctx.response
+  const grades = await db.academicGrade.findMany({
+    where: { schoolId: ctx.schoolId },
+    select: { id: true, name: true, conferenceOnline: true },
+    orderBy: { name: "asc" },
+    take: 100,
+  })
+  return { success: true as const, data: grades }
+}
+
+export async function setGradeOnline(gradeId: string, online: boolean | null) {
+  const ctx = await requireContext("manage_settings")
+  if (!ctx.ok) return ctx.response
+  if (!gradeId) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+  const result = await db.academicGrade.updateMany({
+    where: { id: gradeId, schoolId: ctx.schoolId },
+    data: { conferenceOnline: online },
+  })
+  if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
+  revalidatePath(conferenceRevalidatePath("settings"), "page")
+  return { success: true as const, data: { gradeId, online } }
 }

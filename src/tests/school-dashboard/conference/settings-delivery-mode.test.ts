@@ -130,4 +130,33 @@ describe("updateConferenceSettings — delivery mode as the source of truth", ()
     })
     expect(bad).toMatchObject({ success: false })
   })
+
+  it("stores the configuration options and trims the consent note", async () => {
+    await updateConferenceSettings({
+      ...base,
+      conferenceDeliveryMode: "hybrid",
+      conferenceRecordingConsentNote: "  يُسجَّل هذا الدرس  ",
+      conferenceAutoPublishRecordings: false,
+      conferenceGuardiansObserve: false,
+      conferenceStudentsJoinMuted: false,
+      conferenceToolChat: false,
+      conferenceToolStudentShare: true,
+      conferenceReminderLeadMinutes: 30,
+    })
+    expect(mUpdate.mock.calls[0][0].data).toMatchObject({
+      conferenceRecordingConsentNote: "يُسجَّل هذا الدرس",
+      conferenceAutoPublishRecordings: false,
+      conferenceGuardiansObserve: false,
+      conferenceStudentsJoinMuted: false,
+      conferenceToolChat: false,
+      conferenceToolStudentShare: true,
+      conferenceReminderLeadMinutes: 30,
+    })
+    const bad = await updateConferenceSettings({
+      ...base,
+      conferenceDeliveryMode: "hybrid",
+      conferenceReminderLeadMinutes: 0,
+    })
+    expect(bad).toMatchObject({ success: false })
+  })
 })

@@ -115,6 +115,7 @@ export function LiveClassForm({
       description: "",
       // Default to the truth: a session cannot be recorded until a bucket exists.
       recordingEnabled: recordingAvailable,
+      studentsJoinMuted: "default" as const,
       maxParticipants: 50,
       catalogLessonId: "",
       resources: [],
@@ -239,6 +240,12 @@ export function LiveClassForm({
             visibility: d.visibility === "school" ? "school" : "section",
             description: d.description ?? "",
             recordingEnabled: d.recordingEnabled,
+            studentsJoinMuted:
+              d.studentsJoinMuted === null || d.studentsJoinMuted === undefined
+                ? ("default" as const)
+                : d.studentsJoinMuted
+                  ? ("muted" as const)
+                  : ("open" as const),
             maxParticipants: d.maxParticipants,
             catalogLessonId: d.catalogLessonId ?? "",
             examRefId: examRef?.schoolExamId ?? "",
@@ -314,6 +321,7 @@ export function LiveClassForm({
             endTime: data.endTime,
             visibility: data.visibility,
             recordingEnabled: data.recordingEnabled,
+            studentsJoinMuted: data.studentsJoinMuted,
             maxParticipants: data.maxParticipants,
             catalogLessonId,
             resources: data.resources,

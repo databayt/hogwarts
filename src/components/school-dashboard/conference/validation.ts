@@ -68,6 +68,9 @@ export function createLiveClassScheduleSchema(v: ValidationHelper) {
       scheduledStart: z.string().datetime(),
       scheduledEnd: z.string().datetime(),
       recordingEnabled: z.boolean().default(true),
+      studentsJoinMuted: z.enum(["default", "muted", "open"]).optional(),
+      // Per-session override of the school's join-muted default.
+      studentsJoinMuted: z.enum(["default", "muted", "open"]).optional(),
       visibility: z.enum(["section", "school"]).default("section"),
       catalogLessonId: idSchema.optional(),
       maxParticipants: z
@@ -113,6 +116,7 @@ export const liveClassScheduleSchema = z
     scheduledStart: z.string().datetime(),
     scheduledEnd: z.string().datetime(),
     recordingEnabled: z.boolean().default(true),
+    studentsJoinMuted: z.enum(["default", "muted", "open"]).optional(),
     visibility: z.enum(["section", "school"]).default("section"),
     catalogLessonId: idSchema.optional(),
     maxParticipants: z
@@ -166,6 +170,17 @@ export const liveClassSettingsSchema = z
     conferenceLateGraceMinutes: z.number().int().min(0).max(120).optional(),
     conferenceMinPresenceMinutes: z.number().int().min(0).max(240).optional(),
     conferenceEarlyLeaveMinutes: z.number().int().min(0).max(120).optional(),
+    // Configuration options (2026-08-30).
+    conferenceRecordingConsentNote: z.string().max(500).optional(),
+    conferenceAutoPublishRecordings: z.boolean().optional(),
+    conferenceGuardiansObserve: z.boolean().optional(),
+    conferenceStudentsJoinMuted: z.boolean().optional(),
+    conferenceToolChat: z.boolean().optional(),
+    conferenceToolHands: z.boolean().optional(),
+    conferenceToolPolls: z.boolean().optional(),
+    conferenceToolWhiteboard: z.boolean().optional(),
+    conferenceToolStudentShare: z.boolean().optional(),
+    conferenceReminderLeadMinutes: z.number().int().min(1).max(60).optional(),
     // "This school teaches online" + the back-end to deliver it over. The
     // provider is stored as chosen even when the SFU is unprovisioned; it is
     // degraded to `external` at READ time (see conference/online-policy.ts), so

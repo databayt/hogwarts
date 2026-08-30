@@ -376,6 +376,17 @@ feeds the policy engine must include `conferenceDeliveryMode`
 (`settings-panel.tsx`) mounted from both `/conference/settings` and
 `/school/configuration/live-classes` — add fields there, not in a page.
 
+## Room configuration (2026-08-30)
+
+`RoomJoinTicket.roomConfig` is the ONLY way school/session configuration
+reaches the room client: join-core resolves `joinMuted` (session override ??
+school), the five tools, the consent note and whether the session records.
+Add a room-level setting there, never as a second fetch from the room page.
+Student screen share is enforced in the token grant (`canPublishSources`);
+the other tools are UI switches. Guardians are refused in join-core when
+`conferenceGuardiansObserve` is off. The reminders cron applies
+`conferenceReminderLeadMinutes` per school over a [1, 60]-minute scan.
+
 ## Protection policy (2026-08-30)
 
 Videos, recordings and materials are VIEWED, never downloaded, and every

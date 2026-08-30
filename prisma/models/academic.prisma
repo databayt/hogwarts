@@ -39,6 +39,9 @@ model AcademicGrade {
   levelId     String
   yearLevelId String? // Links to existing YearLevel
   name        String
+  // Per-grade override of the school's online default (hybrid mode). Sits
+  // between the school and the section: section ?? grade ?? school.
+  conferenceOnline Boolean? @map("liveClassOnline")
   slug        String
   lang        String  @default("ar")
   gradeNumber Int

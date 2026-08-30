@@ -27,7 +27,10 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import type { ConferenceParticipantRole } from "@/components/school-dashboard/conference/types"
+import type {
+  ConferenceParticipantRole,
+  RoomTools,
+} from "@/components/school-dashboard/conference/types"
 
 import { DELIVERY_TIERS, type DeliveryTier } from "./adaptive-delivery"
 import type { RoomLabels } from "./labels"
@@ -44,6 +47,7 @@ interface ControlBarProps {
   panel: PanelTab | null
   onPanel: (tab: PanelTab | null) => void
   slides: SlideOption[]
+  tools: RoomTools
 }
 
 const btn =
@@ -62,6 +66,7 @@ export function ControlBar({
   panel,
   onPanel,
   slides,
+  tools,
 }: ControlBarProps) {
   const canPublish = role !== "OBSERVER"
   const isHost = role === "HOST" || role === "CO_HOST"
@@ -76,7 +81,9 @@ export function ControlBar({
     <div className="relative flex items-center justify-center gap-1 border-t border-white/10 bg-neutral-950 px-2 py-2">
       {canPublish && <MicButton labels={labels} />}
       {canPublish && <CameraButton labels={labels} />}
-      {isHost && <ShareButton labels={labels} />}
+      {(isHost || (isStudent && tools.studentShare)) && (
+        <ShareButton labels={labels} />
+      )}
 
       {isStudent && (
         <button
@@ -95,19 +102,24 @@ export function ControlBar({
 
       {isHost && (
         <>
-          <button
-            type="button"
-            className={cn(btn, channel.state.whiteboard && "bg-white/25")}
-            aria-pressed={channel.state.whiteboard}
-            onClick={() =>
-              void channel.send({ t: "wb.show", on: !channel.state.whiteboard })
-            }
-          >
-            <PenLine className="h-5 w-5" aria-hidden />
-            {channel.state.whiteboard
-              ? labels.hideWhiteboard
-              : labels.whiteboard}
-          </button>
+          {tools.whiteboard && (
+            <button
+              type="button"
+              className={cn(btn, channel.state.whiteboard && "bg-white/25")}
+              aria-pressed={channel.state.whiteboard}
+              onClick={() =>
+                void channel.send({
+                  t: "wb.show",
+                  on: !channel.state.whiteboard,
+                })
+              }
+            >
+              <PenLine className="h-5 w-5" aria-hidden />
+              {channel.state.whiteboard
+                ? labels.hideWhiteboard
+                : labels.whiteboard}
+            </button>
+          )}
           <div className="relative">
             <button
               type="button"
@@ -159,15 +171,17 @@ export function ControlBar({
         </>
       )}
 
-      <button
-        type="button"
-        className={cn(btn, panel === "chat" && "bg-white/25")}
-        aria-pressed={panel === "chat"}
-        onClick={() => onPanel(panel === "chat" ? null : "chat")}
-      >
-        <MessageSquare className="h-5 w-5" aria-hidden />
-        {labels.chat}
-      </button>
+      {tools.chat && (
+        <button
+          type="button"
+          className={cn(btn, panel === "chat" && "bg-white/25")}
+          aria-pressed={panel === "chat"}
+          onClick={() => onPanel(panel === "chat" ? null : "chat")}
+        >
+          <MessageSquare className="h-5 w-5" aria-hidden />
+          {labels.chat}
+        </button>
+      )}
       <button
         type="button"
         className={cn(btn, panel === "questions" && "bg-white/25")}
@@ -180,18 +194,20 @@ export function ControlBar({
           <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden />
         )}
       </button>
-      <button
-        type="button"
-        className={cn(btn, panel === "poll" && "bg-white/25")}
-        aria-pressed={panel === "poll"}
-        onClick={() => onPanel(panel === "poll" ? null : "poll")}
-      >
-        <ListChecks className="h-5 w-5" aria-hidden />
-        {labels.poll}
-        {channel.state.poll?.open && (
-          <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
-        )}
-      </button>
+      {tools.polls && (
+        <button
+          type="button"
+          className={cn(btn, panel === "poll" && "bg-white/25")}
+          aria-pressed={panel === "poll"}
+          onClick={() => onPanel(panel === "poll" ? null : "poll")}
+        >
+          <ListChecks className="h-5 w-5" aria-hidden />
+          {labels.poll}
+          {channel.state.poll?.open && (
+            <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
+          )}
+        </button>
+      )}
       {isHost && (
         <button
           type="button"

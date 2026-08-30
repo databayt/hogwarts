@@ -52,6 +52,14 @@ import {
   type LiveClassReferenceData,
 } from "./queries"
 
+/** Form tri-state → stored override: default = inherit the school. */
+function joinMutedFromForm(
+  v: "default" | "muted" | "open" | undefined
+): boolean | null | undefined {
+  if (v === undefined) return undefined
+  return v === "default" ? null : v === "muted"
+}
+
 // ============================================================================
 // Helpers
 // ============================================================================
@@ -247,6 +255,7 @@ export async function getLiveClass(params: { id: string }): Promise<
     scheduledEnd: string
     status: string
     recordingEnabled: boolean
+    studentsJoinMuted: boolean | null
     maxParticipants: number
     catalogLessonId: string | null
     resources: {
@@ -306,6 +315,7 @@ export async function getLiveClass(params: { id: string }): Promise<
         scheduledEnd: liveClass.scheduledEnd.toISOString(),
         status: liveClass.status,
         recordingEnabled: liveClass.recordingEnabled,
+        studentsJoinMuted: liveClass.studentsJoinMuted ?? null,
         maxParticipants: liveClass.maxParticipants,
         catalogLessonId: liveClass.catalogLessonId,
         resources: liveClass.resources.map((r) => ({
@@ -573,6 +583,7 @@ export async function createLiveClass(
       visibility: d.visibility ?? "section",
       catalogLessonId: d.catalogLessonId || null,
       recordingEnabled,
+      studentsJoinMuted: joinMutedFromForm(d.studentsJoinMuted) ?? null,
       maxParticipants: d.maxParticipants ?? 50,
       title: content.title,
       description: content.description,
@@ -882,6 +893,8 @@ export async function updateLiveClass(
     if (d.visibility !== undefined) updateData.visibility = d.visibility
     if (d.recordingEnabled !== undefined)
       updateData.recordingEnabled = d.recordingEnabled
+    if (d.studentsJoinMuted !== undefined)
+      updateData.studentsJoinMuted = joinMutedFromForm(d.studentsJoinMuted)
     if (d.maxParticipants !== undefined)
       updateData.maxParticipants = d.maxParticipants
     if (d.catalogLessonId !== undefined) {

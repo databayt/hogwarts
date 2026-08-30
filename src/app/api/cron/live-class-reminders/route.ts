@@ -16,6 +16,9 @@ import { db } from "@/lib/db"
 import { materializeOnlineSchools } from "@/components/school-dashboard/conference/actions/materialize-day"
 import { notifyClassStartingSoon } from "@/components/school-dashboard/conference/actions/notifications"
 
+/** Upper bound of `School.conferenceReminderLeadMinutes` (mirrors the settings schema). */
+const MAX_REMINDER_LEAD_MINUTES = 60
+
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 // 300, not 60: this run now materializes an online school's whole day before
@@ -60,18 +63,31 @@ export async function GET(req: Request) {
     })
   }
 
+  // Each school sets how far ahead its reminder goes out
+  // (`conferenceReminderLeadMinutes`, default 10). Scan the widest lead the
+  // setting allows and keep the sessions inside THEIR school's lead and at
+  // least a minute out — a reminder for a class that has started is noise.
+  // The event-row dedupe below keeps re-runs idempotent.
   const now = Date.now()
-  const startMin = new Date(now + 5 * 60 * 1000)
-  const startMax = new Date(now + 20 * 60 * 1000)
-
-  const sessions = await db.conference.findMany({
+  const startMin = new Date(now + 1 * 60 * 1000)
+  const startMax = new Date(now + MAX_REMINDER_LEAD_MINUTES * 60 * 1000)
+  const candidates = await db.conference.findMany({
     where: {
       status: "scheduled",
       deletedAt: null,
       scheduledStart: { gte: startMin, lte: startMax },
     },
-    select: { id: true, schoolId: true },
-    take: 1000,
+    select: {
+      id: true,
+      schoolId: true,
+      scheduledStart: true,
+      school: { select: { conferenceReminderLeadMinutes: true } },
+    },
+    take: 2000,
+  })
+  const sessions = candidates.filter((s) => {
+    const lead = s.school?.conferenceReminderLeadMinutes ?? 10
+    return s.scheduledStart.getTime() - now <= lead * 60 * 1000
   })
 
   // Batch-load which of these sessions already have a reminder event — one

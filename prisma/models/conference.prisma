@@ -141,6 +141,8 @@ model Conference {
   // State
   status           ConferenceStatus @default(scheduled)
   recordingEnabled Boolean          @default(true)
+  // Per-session override of School.conferenceStudentsJoinMuted; null inherits.
+  studentsJoinMuted Boolean?
   maxParticipants  Int              @default(50)
 
   // Access control — see ConferenceVisibility. Enforced in token eligibility,

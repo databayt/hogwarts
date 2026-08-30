@@ -127,6 +127,37 @@ describe("effectivePolicy", () => {
     ).toBe(false)
   })
 
+  it("hybrid: a grade override sits between the school default and the section", () => {
+    const h = { ...base(), conferenceDeliveryMode: "hybrid" as const }
+    // grade says online, section undecided → online, attributed to the section layer
+    expect(effectivePolicy(h, null, new Date(), true)).toMatchObject({
+      online: true,
+      source: "section",
+    })
+    // section says no even though the grade says yes → section wins
+    expect(effectivePolicy(h, false, new Date(), true).online).toBe(false)
+    // grade says in person while the school default is online → grade wins
+    expect(
+      effectivePolicy(
+        { ...h, conferenceOnlineDefault: true },
+        null,
+        new Date(),
+        false
+      ).online
+    ).toBe(false)
+  })
+
+  it("a grade override cannot put a physical school online", () => {
+    expect(
+      effectivePolicy(
+        { ...base(), conferenceDeliveryMode: "physical" as const },
+        null,
+        new Date(),
+        true
+      )
+    ).toEqual(OFFLINE_POLICY)
+  })
+
   it("an inconsistent pair (physical + default true) is still physical", () => {
     expect(
       effectivePolicy(

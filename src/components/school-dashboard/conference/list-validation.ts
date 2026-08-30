@@ -177,6 +177,8 @@ export function createLiveClassSchema(dict?: V) {
     description: z.string().max(2000, m.descriptionMax).optional().nullable(),
     // In-app room knobs (ignored for external links).
     recordingEnabled: z.boolean().optional().default(true),
+    // Per-session override of the school's join-muted default.
+    studentsJoinMuted: z.enum(["default", "muted", "open"]).optional(),
     maxParticipants: z.number().int().min(1).max(300).optional().default(50),
     // Catalog lesson this session teaches — surfaces the lesson's videos,
     // materials, and practice questions on the session page.
@@ -267,6 +269,7 @@ export function createUpdateLiveClassSchema(dict?: V) {
       // link-based session have different lifecycles (roomName, SFU state).
       visibility: z.enum(LIVE_CLASS_VISIBILITY_VALUES).optional(),
       recordingEnabled: z.boolean().optional(),
+      studentsJoinMuted: z.enum(["default", "muted", "open"]).optional(),
       maxParticipants: z.number().int().min(1).max(300).optional(),
       catalogLessonId: z.string().optional().nullable(),
       resources: z.array(createResourceItemSchema(m)).max(10).optional(),

@@ -225,11 +225,15 @@ export function RoomClient({
         serverUrl={ticket.wsUrl}
         connect
         options={options}
-        // Teachers come in live; students join muted with the camera off and
-        // switch on when asked — a class of thirty phones should not open on
-        // thirty cameras.
-        audio={isHost}
-        video={isHost}
+        // Teachers come in live. Students follow the school setting (with a
+        // per-session override): muted and camera off by default, because a
+        // class of thirty phones should not open on thirty cameras.
+        audio={
+          isHost || (ticket.role !== "OBSERVER" && !ticket.roomConfig.joinMuted)
+        }
+        video={
+          isHost || (ticket.role !== "OBSERVER" && !ticket.roomConfig.joinMuted)
+        }
         onDisconnected={(reason) => {
           switch (reason) {
             case DisconnectReason.CLIENT_INITIATED:
@@ -262,6 +266,7 @@ export function RoomClient({
             labels={labels.room}
             participantsLabels={labels.participants}
             slides={slides}
+            config={ticket.roomConfig}
           />
         </LayoutContextProvider>
         <RoomAudioRenderer />

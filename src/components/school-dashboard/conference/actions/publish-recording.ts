@@ -32,6 +32,7 @@ export type PublishOutcome =
         | "not_ready"
         | "already_published"
         | "no_lesson"
+        | "disabled"
         | "no_uploader"
         | "copy_failed"
         | "quota"
@@ -67,6 +68,7 @@ export async function publishRecordingAsLessonVideo(
             title: true,
             lang: true,
             catalogLessonId: true,
+            school: { select: { conferenceAutoPublishRecordings: true } },
             scheduledStart: true,
             teacher: { select: { userId: true } },
             subject: { select: { name: true } },
@@ -97,6 +99,10 @@ export async function publishRecordingAsLessonVideo(
     if (fileSize > 0) {
       const quota = await checkSchoolVideoQuota(schoolId, fileSize)
       if (!quota.allowed) return { published: false, reason: "quota" }
+    }
+    if (!session.school?.conferenceAutoPublishRecordings) {
+      // School setting: keep the recording on the session page only.
+      return { published: false, reason: "disabled" }
     }
 
     const lang = session.lang === "en" ? "en" : "ar"

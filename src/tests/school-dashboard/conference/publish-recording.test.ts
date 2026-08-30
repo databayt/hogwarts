@@ -56,6 +56,7 @@ const recording = (over: Record<string, unknown> = {}) => ({
     catalogLessonId: "les-1",
     scheduledStart: new Date("2026-08-31T05:00:00Z"),
     teacher: { userId: "u-teacher" },
+    school: { conferenceAutoPublishRecordings: true },
     subject: { name: "الرياضيات" },
     section: { name: "الصف العاشر - أ" },
   },
@@ -72,6 +73,24 @@ describe("publishRecordingAsLessonVideo", () => {
     } as never)
     mockDb.video.create.mockResolvedValue({ id: "vid-1" })
     mockDb.conferenceRecording.updateMany.mockResolvedValue({ count: 1 })
+  })
+
+  it("respects the school's auto-publish switch", async () => {
+    mockDb.conferenceRecording.findFirst.mockResolvedValueOnce(
+      recording({
+        session: {
+          ...recording().session,
+          school: { conferenceAutoPublishRecordings: false },
+        },
+      })
+    )
+    const r = await publishRecordingAsLessonVideo(
+      "school-1",
+      "sess-1",
+      "egress-1"
+    )
+    expect(r).toEqual({ published: false, reason: "disabled" })
+    expect(mockDb.video.create).not.toHaveBeenCalled()
   })
 
   it("copies the object under the lumos prefix and creates an APPROVED, school-visible, downloadable video", async () => {

@@ -2,14 +2,18 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { redirect } from "next/navigation"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getSchoolVideoUsage } from "@/components/lumos/lib/quota"
 import { listConferenceTerms } from "@/components/school-dashboard/conference/actions/recurring"
 import {
   getConferenceLinkCoverage,
   getConferenceSettings,
+  listGradeOnlinePolicy,
   listSectionRecordingPolicy,
 } from "@/components/school-dashboard/conference/actions/settings"
+import { GradeOnlinePolicy } from "@/components/school-dashboard/conference/grade-online-policy"
 import { SectionOnlinePolicy } from "@/components/school-dashboard/conference/section-online-policy"
 import { SectionRecordingPolicy } from "@/components/school-dashboard/conference/section-recording-policy"
 import { ConferenceSettingsForm } from "@/components/school-dashboard/conference/settings-form"
@@ -27,13 +31,24 @@ export async function ConferenceSettingsPanel({
   lang: Locale
   dictionary: Dictionary
 }) {
-  const [settings, termsResult, sectionsResult, coverageResult] =
-    await Promise.all([
-      getConferenceSettings(),
-      listConferenceTerms(),
-      listSectionRecordingPolicy(),
-      getConferenceLinkCoverage(),
-    ])
+  const { schoolId } = await getTenantContext()
+  const [
+    settings,
+    termsResult,
+    sectionsResult,
+    coverageResult,
+    gradesResult,
+    usage,
+  ] = await Promise.all([
+    getConferenceSettings(),
+    listConferenceTerms(),
+    listSectionRecordingPolicy(),
+    getConferenceLinkCoverage(),
+    listGradeOnlinePolicy(),
+    schoolId ? getSchoolVideoUsage(schoolId) : Promise.resolve(null),
+  ])
+  const grades =
+    "success" in gradesResult && gradesResult.success ? gradesResult.data : []
   if (!("success" in settings) || !settings.success) {
     redirect(`/${lang}/conference/dashboard`)
   }
@@ -54,6 +69,8 @@ export async function ConferenceSettingsPanel({
     ?.sectionPolicy
   const op = (t as { onlinePolicy?: Record<string, string> } | undefined)
     ?.onlinePolicy
+  const gp = (t as { gradePolicy?: Record<string, string> } | undefined)
+    ?.gradePolicy
 
   return (
     <div className="space-y-6">
@@ -72,6 +89,8 @@ export async function ConferenceSettingsPanel({
           // The form edits plain strings; the action turns them back into
           // school-timezone instants (or null, which clears the window).
           conferenceOnlineNote: settings.data.conferenceOnlineNote ?? "",
+          conferenceRecordingConsentNote:
+            settings.data.conferenceRecordingConsentNote ?? "",
           conferenceFallbackUrl: settings.data.conferenceFallbackUrl ?? "",
         }}
         livekitReady={settings.data.livekitReady}
@@ -116,6 +135,41 @@ export async function ConferenceSettingsPanel({
           thresholdsHint:
             t?.thresholdsHint ??
             "How presence in the room becomes an attendance mark.",
+          consentNote: t?.consentNote ?? "Recording notice shown on join",
+          consentNoteHint:
+            t?.consentNoteHint ??
+            "Students and guardians see this when they enter a class that is being recorded. Leave empty for the standard sentence.",
+          consentNotePlaceholder:
+            t?.consentNotePlaceholder ??
+            "This class is recorded for students who miss it. Your voice and video may appear in the recording.",
+          autoPublish:
+            t?.autoPublish ?? "Publish recordings to the lesson automatically",
+          autoPublishHint:
+            t?.autoPublishHint ??
+            "When a recorded class is linked to a Lumos lesson, the recording appears there for the school once it is ready.",
+          guardiansObserve:
+            t?.guardiansObserve ?? "Guardians may watch live classes",
+          guardiansObserveHint:
+            t?.guardiansObserveHint ??
+            "As observers only — no microphone, camera or questions.",
+          joinMuted: t?.joinMuted ?? "Students enter muted with the camera off",
+          joinMutedHint:
+            t?.joinMutedHint ??
+            "The teacher can override this per class in the class settings.",
+          tools: t?.tools ?? "Room tools",
+          toolsHint:
+            t?.toolsHint ??
+            "What students and teachers can use inside a live class.",
+          toolChat: t?.toolChat ?? "Chat",
+          toolHands: t?.toolHands ?? "Raise hand",
+          toolPolls: t?.toolPolls ?? "Polls",
+          toolWhiteboard: t?.toolWhiteboard ?? "Whiteboard",
+          toolStudentShare:
+            t?.toolStudentShare ?? "Students may share their screen",
+          reminderLead: t?.reminderLead ?? "Remind before class (minutes)",
+          reminderLeadHint:
+            t?.reminderLeadHint ??
+            "The “starting soon” notification goes out this many minutes before a class, on the next reminder run.",
           retention: t?.retention ?? "Recording retention (days)",
           maxConcurrent: t?.maxConcurrent ?? "Max concurrent rooms",
           maxDuration: t?.maxDuration ?? "Max duration (minutes)",
@@ -209,6 +263,43 @@ export async function ConferenceSettingsPanel({
           }}
         />
       )}
+      {settings.data.conferenceDeliveryMode === "hybrid" && (
+        <GradeOnlinePolicy
+          grades={grades}
+          labels={{
+            title: gp?.title ?? "Online teaching by grade",
+            description:
+              gp?.description ??
+              "Between the school default and the per-section setting: section ?? grade ?? school.",
+            inherit: gp?.inherit ?? "School default",
+            online: gp?.online ?? "Online",
+            offline: gp?.offline ?? "In person",
+            empty: gp?.empty ?? "No grades yet.",
+            error: gp?.error ?? "Could not update the grade.",
+          }}
+        />
+      )}
+      <div className="max-w-md space-y-3 border-t pt-6">
+        <p className="font-medium">{t?.protection ?? "Content protection"}</p>
+        <p className="text-muted-foreground text-sm">
+          {t?.protectionHint ??
+            "School policy, applied everywhere: videos, recordings and materials are viewed in the app and never downloaded; every viewer sees a faint watermark with their identity; picture-in-picture, casting and printing are off."}
+        </p>
+        {usage && (
+          <p className="text-sm">
+            <span className="font-medium">
+              {t?.storage ?? "Recording storage"}:{" "}
+            </span>
+            {usage.isUnlimited
+              ? (
+                  t?.storageUnlimited ?? "{used} used · no quota on this plan"
+                ).replace("{used}", formatBytes(usage.used))
+              : (t?.storageUsed ?? "{used} of {quota} used")
+                  .replace("{used}", formatBytes(usage.used))
+                  .replace("{quota}", formatBytes(usage.quota ?? BigInt(0)))}
+          </p>
+        )}
+      </div>
       <SectionRecordingPolicy
         sections={sections}
         labels={{
@@ -223,4 +314,15 @@ export async function ConferenceSettingsPanel({
       />
     </div>
   )
+}
+
+function formatBytes(bytes: bigint): string {
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  let v = Number(bytes)
+  let i = 0
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024
+    i++
+  }
+  return `${v.toFixed(i >= 2 ? 1 : 0)} ${units[i]}`
 }
