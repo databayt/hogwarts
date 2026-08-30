@@ -519,7 +519,8 @@
         "notifications": "الإشعارات",
         "classrooms": "الفصول",
         "lessons": "الدروس"
-      }
+      },
+      "of": "من"
     },
     "schoolAdmin": {
       "title": "المدرسة",
@@ -8793,7 +8794,9 @@
         "attendance": "الحضور",
         "assignments": "الواجبات القادمة",
         "averageGrade": "متوسط الدرجة",
-        "announcements": "الإعلانات"
+        "announcements": "الإعلانات",
+        "assignmentsDue": "واجبات مستحقة",
+        "classesToday": "حصص اليوم"
       },
       "quickActions": {
         "title": "إجراءات سريعة",
@@ -8806,7 +8809,9 @@
         "upcomingAssignments": "الواجبات القادمة",
         "recentGrades": "الدرجات الأخيرة",
         "announcements": "إعلانات المدرسة",
-        "todaySchedule": "جدول اليوم"
+        "todaySchedule": "جدول اليوم",
+        "myProgress": "تقدمي",
+        "performance": "الأداء الأكاديمي"
       },
       "labels": {
         "daysPresent": "أيام الحضور",
@@ -8820,7 +8825,33 @@
         "grade": "الدرجة",
         "basedOnRecentExams": "بناءً على الامتحانات الأخيرة",
         "unreadMessages": "رسائل غير مقروءة",
-        "pending": "معلق"
+        "pending": "معلق",
+        "viewAll": "عرض الكل",
+        "overdue": "متأخر",
+        "dueToday": "مستحق اليوم",
+        "tomorrow": "غداً",
+        "days": "أيام",
+        "now": "الآن",
+        "na": "غ/م",
+        "new": "جديد",
+        "enjoyDayOff": "استمتع بيوم إجازتك!",
+        "allCaughtUp": "أنجزت كل شيء!",
+        "gradesAfterAssessments": "ستظهر الدرجات هنا بعد التقييمات",
+        "announcementsHere": "ستظهر الإعلانات الجديدة هنا",
+        "attendanceRing": "الحضور",
+        "gradesRing": "الدرجات",
+        "tasksRing": "المهام",
+        "daysUnit": "أيام",
+        "percentUnit": "٪",
+        "dueUnit": "مستحق",
+        "averageLabel": "المتوسط",
+        "performanceDescription": "الأداء الأكاديمي الحالي"
+      },
+      "errors": {
+        "unableToLoad": "تعذر تحميل لوحة التحكم",
+        "loadError": "حدث خطأ أثناء تحميل بيانات لوحة التحكم. يرجى تحديث الصفحة.",
+        "renderError": "خطأ في عرض لوحة التحكم",
+        "renderErrorMessage": "حدث خطأ أثناء عرض لوحة التحكم."
       }
     },
     "parentDashboard": {

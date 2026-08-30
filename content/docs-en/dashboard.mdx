@@ -5,6 +5,23 @@ description: Role-based dashboards for 8 user types, all sharing a 6-section lay
 
 The dashboard renders one of eight role-specific views — Admin, Developer, Principal, Teacher, Student, Guardian, Accountant, Staff — each composed from the same six unified sections. Routing happens via a switch in `content.tsx`; section components read the role and adapt content.
 
+## Server wrapper + client view
+
+Admin, Student and Teacher follow a two-file split. The `<role>.tsx` file is a
+Server Component that does nothing but fetch — the role's dashboard data, quick
+look and weather in one `Promise.all`, plus the tenant's subdomain — and hand the
+result to a `<role>-client.tsx` view. Every widget the dashboard composes
+(`MetricCard`, `ActivityRings`, `ScheduleItem`, the charts) is already a client
+component, so keeping the view server-side only fragmented it into dozens of
+separate client boundaries.
+
+The client view reads its copy from `useDictionary()` rather than a `dictionary`
+prop, which keeps section components independently composable. The server file
+still needs the dictionary for one thing: the two error fallbacks it can render
+before the client view ever mounts.
+
+Parent, Principal, Accountant and Staff have not been split yet.
+
 ## Section order
 
 Every role renders these six sections in order. Section 2 is title-less.
@@ -50,6 +67,7 @@ src/components/school-dashboard/dashboard/
 ├── content.tsx, client.tsx, actions.ts, config.ts, validation.ts, types.ts
 ├── admin.tsx, student.tsx, teacher.tsx, parent.tsx,
 │   principal.tsx, accountant.tsx, staff.tsx
+├── admin-client.tsx, student-client.tsx, teacher-client.tsx
 ├── upcoming.tsx, weather.tsx, quick-look-section.tsx,
 │   quick-actions.tsx, quick-actions-config.ts,
 │   resource-usage-section.tsx, invoice-history-section.tsx,

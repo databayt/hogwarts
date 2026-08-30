@@ -519,7 +519,8 @@
         "notifications": "Notifications",
         "classrooms": "Classrooms",
         "lessons": "Lessons"
-      }
+      },
+      "of": "of"
     },
     "schoolAdmin": {
       "title": "School",
@@ -8785,7 +8786,9 @@
         "attendance": "Attendance",
         "assignments": "Upcoming Assignments",
         "averageGrade": "Average Grade",
-        "announcements": "Announcements"
+        "announcements": "Announcements",
+        "assignmentsDue": "Assignments Due",
+        "classesToday": "Classes Today"
       },
       "quickActions": {
         "title": "Quick Actions",
@@ -8798,7 +8801,9 @@
         "upcomingAssignments": "Upcoming Assignments",
         "recentGrades": "Recent Grades",
         "announcements": "School Announcements",
-        "todaySchedule": "Today's Schedule"
+        "todaySchedule": "Today's Schedule",
+        "myProgress": "My Progress",
+        "performance": "Academic Performance"
       },
       "labels": {
         "daysPresent": "days present",
@@ -8812,7 +8817,33 @@
         "grade": "Grade",
         "basedOnRecentExams": "Based on recent exams",
         "unreadMessages": "Unread messages",
-        "pending": "Pending"
+        "pending": "Pending",
+        "viewAll": "View all",
+        "overdue": "Overdue",
+        "dueToday": "Due Today",
+        "tomorrow": "Tomorrow",
+        "days": "days",
+        "now": "Now",
+        "na": "N/A",
+        "new": "new",
+        "enjoyDayOff": "Enjoy your day off!",
+        "allCaughtUp": "You're all caught up!",
+        "gradesAfterAssessments": "Grades will appear here after assessments",
+        "announcementsHere": "New announcements will appear here",
+        "attendanceRing": "Attendance",
+        "gradesRing": "Grades",
+        "tasksRing": "Tasks",
+        "daysUnit": "days",
+        "percentUnit": "%",
+        "dueUnit": "due",
+        "averageLabel": "Average",
+        "performanceDescription": "Current academic performance"
+      },
+      "errors": {
+        "unableToLoad": "Unable to Load Dashboard",
+        "loadError": "There was an error loading the dashboard data. Please try refreshing the page.",
+        "renderError": "Dashboard Rendering Error",
+        "renderErrorMessage": "An error occurred while rendering the dashboard."
       }
     },
     "parentDashboard": {

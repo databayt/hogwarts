@@ -1,8 +1,8 @@
 # Dashboard — Production Readiness Tracker
 
 **Status:** :yellow_circle: IN PROGRESS
-**Completion:** 85%
-**Last Updated:** 2026-03-19
+**Completion:** 87%
+**Last Updated:** 2026-08-30
 
 ---
 
@@ -37,8 +37,21 @@
 
 - Accountant and Staff dashboards need full real data integration — **2026-07-19: accountant is ~75% real but weekly-collections / monthly-revenue charts + financial calendar are static (`accountant.tsx:154-283`); staff is ~10% real — `getStaffDashboardData` is self-labeled MOCK (`actions.ts:5332`)**. Also: accountant/principal/staff/admin destructure `dictionary` but never use it — all card titles hardcoded English (principal's `school.principalDashboard` namespace already exists, pure wiring bug; accountant/staff need new namespaces)
 - No data caching strategy -- all data fetched on every page load
+- Parent, principal, accountant and staff still render their whole view from the
+  server file. Admin, student and teacher were split into `<role>.tsx` (fetch) +
+  `<role>-client.tsx` (view) on 2026-08-30; the remaining four should follow
 
 ### P2 -- Medium
+
+- ~~Student dashboard rendered the same four numbers three times (metric row,
+  "Academic Summary" card, progress cards) and charted a fabricated grade trend~~
+  — fixed 2026-08-30: duplicates and the fake trend removed
+- ~~Teacher's "Attendance Taken" progress card could render a negative count
+  (`todaysClasses.length - attendanceDue`, where `attendanceDue` counts every
+  class still owing a register, not just today's)~~ — clamped 2026-08-30
+- ~~Student dashboard hardcoded ~25 English strings (section titles, badges,
+  empty states, activity-ring labels) and formatted dates with the English
+  date-fns locale on `/ar`~~ — fixed 2026-08-30; keys added to `school-{en,ar}.json`
 
 - Charts use some hardcoded sample data in bar-graph component
 - No data export from dashboard views

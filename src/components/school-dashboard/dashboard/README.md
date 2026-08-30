@@ -35,11 +35,13 @@ src/components/school-dashboard/dashboard/
 +-- loading.tsx                  # Skeleton loader
 +-- error-boundary.tsx           # Error fallback UI
 +-- client.tsx                   # Client-side wrapper
-+-- admin-client.tsx             # Admin dashboard client component
-+-- admin.tsx                    # Admin dashboard view
++-- admin.tsx                    # Admin dashboard -- server fetch only
++-- admin-client.tsx             # Admin dashboard view (client)
 +-- principal.tsx                # Principal dashboard view
-+-- teacher.tsx                  # Teacher dashboard view
-+-- student.tsx                  # Student dashboard view
++-- teacher.tsx                  # Teacher dashboard -- server fetch only
++-- student.tsx                  # Student dashboard -- server fetch only
++-- teacher-client.tsx           # Teacher dashboard view (client)
++-- student-client.tsx           # Student dashboard view (client)
 +-- parent.tsx                   # Parent dashboard view
 +-- accountant.tsx               # Accountant dashboard view
 +-- staff.tsx                    # Staff dashboard view

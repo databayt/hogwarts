@@ -5,6 +5,7 @@
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getIcon } from "./config"
 import type { ProgressCardProps } from "./types"
@@ -20,6 +21,7 @@ export function ProgressCard({
   showPercentage = true,
   className,
 }: ProgressCardProps) {
+  const { dictionary } = useDictionary()
   const Icon = icon || getIcon(iconName)
   const percentage = total > 0 ? Math.round((current / total) * 100) : 0
 
@@ -44,7 +46,7 @@ export function ProgressCard({
           {current} {unit}
         </span>
         <span>
-          of {total} {unit}
+          {dictionary?.school?.dashboard?.of || "of"} {total} {unit}
         </span>
       </div>
     </Card>
