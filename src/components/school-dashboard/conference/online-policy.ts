@@ -24,7 +24,11 @@
 // before, in both directions.
 import "server-only"
 
-import type { ConferenceOnlineMode, ConferenceProvider } from "@prisma/client"
+import type {
+  ConferenceOnlineMode,
+  ConferenceProvider,
+  SchoolDeliveryMode,
+} from "@prisma/client"
 
 import { db } from "@/lib/db"
 
@@ -75,6 +79,7 @@ export const OFFLINE_POLICY: OnlinePolicy = {
  * resolver and silently lose the window.
  */
 export const ONLINE_POLICY_SELECT = {
+  conferenceDeliveryMode: true,
   timezone: true,
   conferenceOnlineDefault: true,
   conferenceProviderDefault: true,
@@ -85,6 +90,8 @@ export const ONLINE_POLICY_SELECT = {
 } as const
 
 export type SchoolPolicyRow = {
+  /** physical / online / hybrid — read FIRST; the other fields only matter in hybrid. */
+  conferenceDeliveryMode: SchoolDeliveryMode
   timezone: string | null
   conferenceOnlineDefault: boolean
   conferenceProviderDefault: ConferenceProvider
@@ -145,21 +152,27 @@ export function effectivePolicy(
 ): OnlinePolicy {
   if (!school) return OFFLINE_POLICY
 
-  const windowActive = isOnlineWindowActive(school, date)
-  const inherited = school.conferenceOnlineDefault || windowActive
-  const online = sectionOverride ?? inherited
+  // The delivery mode decides first. `physical` means physical: no section
+  // override and no window can put a class online. `online` means every
+  // section is online, full stop. Only `hybrid` consults the school default,
+  // the per-section overrides and the go-online window — so an inconsistent
+  // pair (mode physical, default true, written by some other tool) is
+  // harmless by construction.
+  const mode = school.conferenceDeliveryMode
+  if (mode === "physical") return OFFLINE_POLICY
+  const windowActive = mode === "hybrid" && isOnlineWindowActive(school, date)
+  const inherited =
+    mode === "online" || school.conferenceOnlineDefault || windowActive
+  const online = mode === "online" ? true : (sectionOverride ?? inherited)
   if (!online) return OFFLINE_POLICY
-
-  // Report the most specific truthful source: an explicit section `true` is a
-  // section decision even during a window; otherwise the standing school-wide
-  // switch outranks the temporary window, because a school that is already
-  // online did not "go online because of the storm".
   const source: OnlineSource =
-    sectionOverride === true
-      ? "section"
-      : school.conferenceOnlineDefault
-        ? "school"
-        : "window"
+    mode === "online"
+      ? "school"
+      : sectionOverride === true
+        ? "section"
+        : school.conferenceOnlineDefault
+          ? "school"
+          : "window"
 
   const wantsLiveKit = school.conferenceProviderDefault === "livekit"
   const canLiveKit = wantsLiveKit && isLiveKitConfigured()

@@ -580,6 +580,13 @@
           "title": "Academic Structure",
           "description": "Years, terms, grading, and schedule"
         },
+        "live-classes": {
+          "title": "Live classes",
+          "description": "In person, online, or hybrid",
+          "physical": "In person",
+          "online": "Online",
+          "hybrid": "Hybrid"
+        },
         "schedule": {
           "title": "Schedule",
           "description": "Academic years and terms"

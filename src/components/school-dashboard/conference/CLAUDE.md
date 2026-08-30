@@ -365,6 +365,17 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   available"). The stored preference is untouched — the day a bucket lands,
   recording starts with no re-setup.
 
+## Delivery mode (2026-08-30)
+
+`School.conferenceDeliveryMode` — physical / online / hybrid — is read FIRST by
+`effectivePolicy`. Never branch on `conferenceOnlineDefault` outside hybrid;
+never write `conferenceOnlineDefault` or the window except through
+`updateConferenceSettings`, which derives them from the mode. Any select that
+feeds the policy engine must include `conferenceDeliveryMode`
+(`ONLINE_POLICY_SELECT` does). The settings UI is ONE server component
+(`settings-panel.tsx`) mounted from both `/conference/settings` and
+`/school/configuration/live-classes` — add fields there, not in a page.
+
 ## Protection policy (2026-08-30)
 
 Videos, recordings and materials are VIEWED, never downloaded, and every

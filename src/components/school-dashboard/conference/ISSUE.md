@@ -371,6 +371,46 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
       content components. (Dropped from all 8 call sites; type already
       inferred from JSON imports.)
 
+## Configuration pass — 2026-08-30
+
+Closed:
+
+- [x] **School delivery mode** — `School.conferenceDeliveryMode` (physical /
+      online / hybrid, migration `20260830120000`, backfilled from each
+      school's real behaviour: demo → hybrid, the rest → physical). The policy
+      engine reads it FIRST: physical ignores section overrides and windows,
+      online is every section, hybrid is the old behaviour. The settings
+      action derives the legacy `conferenceOnlineDefault` and the window from
+      the mode so the row never says two things.
+- [x] **Live classes inside `/school/configuration`** — a `live-classes`
+      section (sidebar description = current mode) mounting the same
+      `ConferenceSettingsPanel` as `/conference/settings`. Two doors, one
+      panel.
+- [x] **Attendance thresholds are settings** — late grace, minimum presence,
+      early-leave minutes (were constants).
+- [x] Switching to physical tells the admin that today's already-scheduled
+      sessions stay and close on their own (the end-stale cron), instead of
+      silently leaving zombies or silently cancelling.
+
+Recommended next (not built — each is a column + a control + one code path):
+
+- [ ] **Recording consent + auto-publish** — a toggle to publish class
+      recordings to the Lumos lesson automatically (today: always, when the
+      session has a lesson) and a consent notice students see on join.
+- [ ] **Guardians may observe** — guardians join as OBSERVER today; a school
+      switch to turn that off.
+- [ ] **Students join muted / camera off** — fixed today; make it a school
+      default the teacher can override per class.
+- [ ] **Room tools** — per-school toggles for chat, hand-raising, polls,
+      whiteboard, screen share by students.
+- [ ] **Reminder lead time** — the 5–20 minute reminder window as a setting.
+- [ ] **Per-grade defaults** — delivery mode by grade (lower grades in
+      person, upper grades hybrid) on top of per-section overrides.
+- [ ] **Protection policy display** — a read-only row stating that videos
+      and materials are view-only and watermarked, so admins can point to it.
+- [ ] **Storage** — show recording storage used vs the plan's quota next to
+      retention days.
+
 ## Live-class + offline pass — 2026-08-29
 
 Closed (all browser-verified on demo.localhost with a real LiveKit Cloud room,

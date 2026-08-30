@@ -35,6 +35,7 @@ const TZ = "Africa/Khartoum"
 const base = () => ({
   timezone: TZ,
   conferenceOnlineDefault: false,
+  conferenceDeliveryMode: "hybrid" as const,
   conferenceProviderDefault: "external" as const,
   conferenceOnlineFrom: null,
   conferenceOnlineUntil: null,
@@ -45,6 +46,7 @@ const base = () => ({
 const online = (provider: "livekit" | "external" = "external") => ({
   ...base(),
   conferenceOnlineDefault: true,
+  conferenceDeliveryMode: "hybrid" as const,
   conferenceProviderDefault: provider,
 })
 
@@ -84,6 +86,54 @@ describe("effectivePolicy", () => {
     expect(effectivePolicy(online(), false).online).toBe(false)
     // …and online inside a school that has not.
     expect(effectivePolicy(base(), true).online).toBe(true)
+  })
+
+  it("physical means physical: a section override AND an active window are both ignored", () => {
+    const w = {
+      ...base(),
+      conferenceDeliveryMode: "physical" as const,
+      conferenceOnlineFrom: new Date("2026-03-01T00:00:00Z"),
+      conferenceOnlineUntil: null,
+    }
+    expect(effectivePolicy(w, true, new Date("2026-03-10T09:00:00Z"))).toEqual(
+      OFFLINE_POLICY
+    )
+    expect(
+      effectivePolicy(
+        { ...online(), conferenceDeliveryMode: "physical" as const },
+        true
+      )
+    ).toEqual(OFFLINE_POLICY)
+  })
+
+  it("online means every section, even one whose override says no", () => {
+    const o = { ...base(), conferenceDeliveryMode: "online" as const }
+    expect(effectivePolicy(o, false)).toMatchObject({
+      online: true,
+      source: "school",
+    })
+    expect(effectivePolicy(o, null)).toMatchObject({ online: true })
+  })
+
+  it("hybrid is the old behaviour: default + overrides + window", () => {
+    const h = { ...base(), conferenceDeliveryMode: "hybrid" as const }
+    expect(effectivePolicy(h, null).online).toBe(false)
+    expect(effectivePolicy(h, true)).toMatchObject({
+      online: true,
+      source: "section",
+    })
+    expect(
+      effectivePolicy({ ...h, conferenceOnlineDefault: true }, false).online
+    ).toBe(false)
+  })
+
+  it("an inconsistent pair (physical + default true) is still physical", () => {
+    expect(
+      effectivePolicy(
+        { ...online(), conferenceDeliveryMode: "physical" as const },
+        null
+      )
+    ).toEqual(OFFLINE_POLICY)
   })
 
   it("degrades a livekit preference to external while the SFU is unprovisioned", () => {

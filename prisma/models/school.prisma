@@ -61,10 +61,18 @@ model School {
   // Opt-in: when a live class ends, auto-mark attendance from participant
   // presence (LiveKit sessions only — external links carry no presence data).
   conferenceAttendanceSync   Boolean              @default(false) @map("liveClassAttendanceSync")
+  // Attendance-from-presence thresholds (minutes). Were constants in
+  // attendance-sync.ts until 2026-08-30; a school sets its own.
+  conferenceLateGraceMinutes   Int @default(10) @map("liveClassLateGraceMinutes")
+  conferenceMinPresenceMinutes Int @default(5)  @map("liveClassMinPresenceMinutes")
+  conferenceEarlyLeaveMinutes  Int @default(10) @map("liveClassEarlyLeaveMinutes")
   // "This school teaches online": every timetable slot is delivered as a live
   // class, with the session materialized per school-calendar day rather than
   // pre-created for the whole term. Overridable per section
   // (Section.conferenceOnline). See conference/online-policy.ts.
+  // The school's delivery mode — physical / online / hybrid. Read FIRST by the
+  // policy engine; `conferenceOnlineDefault` only matters in hybrid mode.
+  conferenceDeliveryMode     SchoolDeliveryMode   @default(physical) @map("liveClassDeliveryMode")
   conferenceOnlineDefault    Boolean              @default(false) @map("liveClassOnlineDefault")
   // Preferred back-end for those sessions. Degrades to `external` at read time
   // whenever isLiveKitConfigured() is false, so a school can select `livekit`

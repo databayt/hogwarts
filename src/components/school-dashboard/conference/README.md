@@ -141,14 +141,17 @@ reached from a row, not a tab.
 | Room UI composed from SDK primitives, en+ar, RTL-safe  | ✅ live (`room/*`; prebuilt bar retired)     |
 | Adaptive delivery ladder (720/360/180 → audio+slides)  | ✅ live (`room/adaptive-delivery.ts`)        |
 | Reconnecting overlay · disconnect reasons · Rejoin     | ✅ live                                      |
-| Hands · questions · polls · whiteboard · slides         | ✅ live (data topic `lc` + attributes)       |
-| Closed polls + questions persisted (`ConferenceEvent`)  | ✅ live (`actions/room-events.ts`)           |
+| Hands · questions · polls · whiteboard · slides        | ✅ live (data topic `lc` + attributes)       |
+| Closed polls + questions persisted (`ConferenceEvent`) | ✅ live (`actions/room-events.ts`)           |
 | Presence survives reconnects (accumulated spans)       | ✅ live (webhook + attendance-sync)          |
 | Egress failure honest (`failed` + reason)              | ✅ live (`egress_updated`)                   |
 | Recording → lesson video (lumos) bridge                | ✅ live (`actions/publish-recording.ts`)     |
 | Session states on the detail page (en+ar)              | ✅ live (`session-state.tsx`)                |
 | Videos + materials view-only (no download, watermark)  | ✅ policy 2026-08-30 — see lumos records     |
-| Offline: student work queued + synced (no content)     | ✅ live — `src/lib/offline/*`                 |
+| School delivery mode: in person / online / hybrid      | ✅ `School.conferenceDeliveryMode` (policy-first)|
+| Settings in the school configuration hub               | ✅ `/school/configuration/live-classes` (same panel) |
+| Attendance thresholds per school (late/present/early)  | ✅ settings → `attendance-sync.ts`           |
+| Offline: student work queued + synced (no content)     | ✅ live — `src/lib/offline/*`                |
 | Capacity dashboard (`/observability/conference`)       | ✅ live (DEVELOPER-only)                     |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any

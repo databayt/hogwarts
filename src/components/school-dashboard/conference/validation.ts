@@ -10,6 +10,12 @@ import {
   LIVE_CLASS_PROVIDER_VALUES,
 } from "./list-validation"
 
+export const SCHOOL_DELIVERY_MODE_VALUES = [
+  "physical",
+  "online",
+  "hybrid",
+] as const
+
 // ============================================================================
 // Enums (mirror Prisma enums)
 // ============================================================================
@@ -156,11 +162,17 @@ export const liveClassSettingsSchema = z
     conferenceRecordingDefault: z.boolean(),
     // Opt-in: auto-mark attendance from live-class presence (LiveKit only).
     conferenceAttendanceSync: z.boolean().optional(),
+    // Attendance-from-presence thresholds, minutes. 0 disables the rule.
+    conferenceLateGraceMinutes: z.number().int().min(0).max(120).optional(),
+    conferenceMinPresenceMinutes: z.number().int().min(0).max(240).optional(),
+    conferenceEarlyLeaveMinutes: z.number().int().min(0).max(120).optional(),
     // "This school teaches online" + the back-end to deliver it over. The
     // provider is stored as chosen even when the SFU is unprovisioned; it is
     // degraded to `external` at READ time (see conference/online-policy.ts), so
     // a school can opt into LiveKit ahead of the infra and be promoted the day
     // it lands.
+    // physical / online / hybrid — the first thing the policy engine reads.
+    conferenceDeliveryMode: z.enum(SCHOOL_DELIVERY_MODE_VALUES).optional(),
     conferenceOnlineDefault: z.boolean().optional(),
     conferenceProviderDefault: z.enum(LIVE_CLASS_PROVIDER_VALUES).optional(),
     // HOW online classes are delivered — see ConferenceOnlineMode.

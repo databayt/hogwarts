@@ -293,7 +293,22 @@
       "empty": "No sections yet.",
       "error": "Could not update the section."
     },
-    "recordingUnavailable": "Recording is not set up for this school yet — sessions will run without it."
+    "recordingUnavailable": "Recording is not set up for this school yet — sessions will run without it.",
+    "deliveryMode": "How the school teaches",
+    "deliveryHint": "Decides whether live classes exist at all. Everything below about online delivery follows from this.",
+    "deliveryPhysical": "In person",
+    "deliveryPhysicalHint": "Every class in the building. No live rooms, no join buttons.",
+    "deliveryOnline": "Online",
+    "deliveryOnlineHint": "Every timetable slot is a live class, for every section.",
+    "deliveryHybrid": "Hybrid",
+    "deliveryHybridHint": "Choose per section, or open a temporary online window.",
+    "sectionsDefault": "Sections online unless they opt out",
+    "sectionsDefaultHint": "The default for sections without their own setting below.",
+    "takesEffectTomorrow": "Applies to new sessions. Today's already-scheduled live classes stay as they are and close on their own.",
+    "lateGrace": "Late after (minutes)",
+    "minPresence": "Counts as present after (minutes)",
+    "earlyLeave": "Left early if gone before end by (minutes)",
+    "thresholdsHint": "How presence in the room becomes an attendance mark."
   },
   "attendanceNote": {
     "auto": "Attendance is marked automatically when this class ends.",

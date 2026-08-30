@@ -35,6 +35,10 @@ import {
 import { materializeSchoolDay } from "./materialize-day"
 
 const SETTINGS_SELECT = {
+  conferenceDeliveryMode: true,
+  conferenceLateGraceMinutes: true,
+  conferenceMinPresenceMinutes: true,
+  conferenceEarlyLeaveMinutes: true,
   conferenceRetentionDays: true,
   conferenceMaxConcurrent: true,
   conferenceMaxDuration: true,
@@ -111,14 +115,28 @@ export async function updateConferenceSettings(input: unknown) {
       ? schoolDayToInstant(tz, parsed.data.conferenceOnlineUntil)
       : null
 
+  // The delivery mode is the source of truth; the legacy school switch and
+  // the window are DERIVED from it here so the stored row never says two
+  // things. `physical` clears the window (through the same timezone path as
+  // any other save); `online` forces the default on; `hybrid` keeps what the
+  // admin chose. Today's already-materialized sessions are untouched — the
+  // end-stale cron settles them, and the form says so.
+  const mode = parsed.data.conferenceDeliveryMode
+  const physical = mode === "physical"
+  const onlineDefault =
+    mode === "online"
+      ? true
+      : physical
+        ? false
+        : (parsed.data.conferenceOnlineDefault ?? undefined)
   const data = {
     ...parsed.data,
+    conferenceOnlineDefault: onlineDefault,
     conferenceFallbackUrl: parsed.data.conferenceFallbackUrl || null,
-    conferenceOnlineFrom: from,
-    conferenceOnlineUntil: until,
-    conferenceOnlineNote: from
-      ? parsed.data.conferenceOnlineNote || null
-      : null,
+    conferenceOnlineFrom: physical ? null : from,
+    conferenceOnlineUntil: physical ? null : until,
+    conferenceOnlineNote:
+      !physical && from ? parsed.data.conferenceOnlineNote || null : null,
   }
 
   try {
@@ -138,12 +156,13 @@ export async function updateConferenceSettings(input: unknown) {
   // costs latency, never correctness.
   const schoolId = ctx.schoolId
   if (
-    data.conferenceOnlineDefault ||
-    isOnlineWindowActive({
-      timezone: tz,
-      conferenceOnlineFrom: from,
-      conferenceOnlineUntil: until,
-    })
+    !physical &&
+    (data.conferenceOnlineDefault ||
+      isOnlineWindowActive({
+        timezone: tz,
+        conferenceOnlineFrom: data.conferenceOnlineFrom,
+        conferenceOnlineUntil: data.conferenceOnlineUntil,
+      }))
   ) {
     after(async () => {
       try {

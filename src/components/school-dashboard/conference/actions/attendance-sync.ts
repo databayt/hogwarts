@@ -88,13 +88,28 @@ export async function syncConferenceAttendance(
         scheduledStart: true,
         scheduledEnd: true,
         actualStart: true,
-        school: { select: { conferenceAttendanceSync: true } },
+        school: {
+          select: {
+            conferenceAttendanceSync: true,
+            conferenceLateGraceMinutes: true,
+            conferenceMinPresenceMinutes: true,
+            conferenceEarlyLeaveMinutes: true,
+          },
+        },
       },
     })
     if (!session) return { marked: 0, updated: 0, skipped: "session_not_found" }
     if (!session.school.conferenceAttendanceSync) {
       return { marked: 0, updated: 0, skipped: "disabled" }
     }
+    // Per-school thresholds; the constants remain the defaults for any row
+    // (or test fixture) that predates the columns.
+    const lateGraceMin =
+      session.school.conferenceLateGraceMinutes ?? LATE_GRACE_MINUTES
+    const minPresenceMin =
+      session.school.conferenceMinPresenceMinutes ?? MIN_PRESENCE_MINUTES
+    const earlyLeaveMin =
+      session.school.conferenceEarlyLeaveMinutes ?? EARLY_LEAVE_MINUTES
     // Hard provider guard, not just "external never ends": an external
     // session carries NO participant telemetry, so syncing one would mark the
     // entire roster ABSENT. If an external row ever reaches `ended` (manual
@@ -144,7 +159,7 @@ export async function syncConferenceAttendance(
     for (const p of participants) presenceByUser.set(p.userId, p)
 
     const start = session.actualStart ?? session.scheduledStart
-    const lateAfter = new Date(start.getTime() + LATE_GRACE_MINUTES * 60_000)
+    const lateAfter = new Date(start.getTime() + lateGraceMin * 60_000)
     // Attendance.date is @db.Date — use UTC midnight of the session day so the
     // unique key is stable regardless of the start time of day.
     const dateObj = new Date(
@@ -171,7 +186,7 @@ export async function syncConferenceAttendance(
     // new status — every attendance consumer switches on the status enum, and a
     // fifth value would have to be taught to each of them.
     const earlyLeaveBefore = new Date(
-      session.scheduledEnd.getTime() - EARLY_LEAVE_MINUTES * 60_000
+      session.scheduledEnd.getTime() - earlyLeaveMin * 60_000
     )
 
     const studentIds = roster.map((s) => s.id)
@@ -208,7 +223,7 @@ export async function syncConferenceAttendance(
         let checkInTime: Date | null = null
         let checkOutTime: Date | null = null
         let leftEarly = false
-        if (joinedAt && connected >= MIN_PRESENCE_MINUTES * 60) {
+        if (joinedAt && connected >= minPresenceMin * 60) {
           checkInTime = joinedAt
           status = joinedAt.getTime() > lateAfter.getTime() ? "LATE" : "PRESENT"
           // Still connected at reconciliation → they stayed to the end.

@@ -41,6 +41,19 @@ enum ConferenceOnlineMode {
   @@map("LiveClassOnlineMode")
 }
 
+/// How the school teaches, at the school level. The single source of truth for
+/// whether the online arm exists at all — see conference/online-policy.ts:
+///   physical → nothing is ever online (section overrides and windows ignored)
+///   online   → every timetable slot is online
+///   hybrid   → the school default + per-section overrides + the go-online window
+enum SchoolDeliveryMode {
+  physical
+  online
+  hybrid
+
+  @@map("LiveClassDeliveryMode")
+}
+
 enum ConferenceStatus {
   scheduled
   live

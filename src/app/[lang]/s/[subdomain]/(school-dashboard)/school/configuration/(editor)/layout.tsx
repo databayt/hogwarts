@@ -60,6 +60,7 @@ export default async function EditorLayout({ children, params }: Props) {
               currency: true,
               paymentSchedule: true,
               enabledModules: true,
+              conferenceDeliveryMode: true,
             },
           })
           .catch(() => null)
@@ -114,6 +115,7 @@ export default async function EditorLayout({ children, params }: Props) {
     "capacity",
     "schedule",
     "academic",
+    "live-classes",
     "branding",
     "hero",
     "name-format",
@@ -264,6 +266,17 @@ export default async function EditorLayout({ children, params }: Props) {
           return (cs?.allModulesEnabled as string) ?? "All modules enabled"
         const modulesLabel = (cs?.modulesEnabled as string) ?? "modules enabled"
         return `${em.length} ${modulesLabel}`
+      }
+      case "live-classes": {
+        const lc = cs?.["live-classes"] as Record<string, string> | undefined
+        const modes: Record<string, string | undefined> = {
+          physical: lc?.physical,
+          online: lc?.online,
+          hybrid: lc?.hybrid,
+        }
+        return (
+          modes[school.conferenceDeliveryMode] ?? school.conferenceDeliveryMode
+        )
       }
       case "name-format":
         return school.nameFormat === "full"
