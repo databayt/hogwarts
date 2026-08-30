@@ -10,7 +10,11 @@ export const siteConfig: SiteConfig = {
   url: "https://ed.databayt.org",
   ogImage: "https://tx.shadcn.com/og.jpg",
   links: {
-    twitter: "https://twitter.com/shadcn",
+    // The "Built by Databayt" byline in the footer points here. It used to
+    // carry the starter template's `twitter.com/shadcn` — someone else's
+    // account, rendered on every marketing page. databayt.org is the same
+    // destination the tenant school-marketing footer already attributes to.
+    site: "https://databayt.org",
     github: "https://github.com/databayt/hogwarts",
   },
 }

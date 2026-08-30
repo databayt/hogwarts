@@ -28,7 +28,7 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
         <p className="text-muted-foreground text-center text-sm leading-loose text-balance md:text-start">
           {footerDict.builtBy}{" "}
           <a
-            href={siteConfig.links.twitter}
+            href={siteConfig.links.site}
             target="_blank"
             rel="noreferrer"
             className="font-medium underline underline-offset-4"
