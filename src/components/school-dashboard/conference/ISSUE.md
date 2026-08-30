@@ -389,7 +389,8 @@ and are not kept — the DOM evidence is summarised in the memory topic file):
 - [x] Presence accumulates across reconnects; `participant_connection_aborted`
       closes a span; egress failure lands as `failed` + reason.
 - [x] Recording → lesson video bridge (`publishRecordingAsLessonVideo`, same
-      bucket CopyObject, `allowDownload: true`).
+      bucket CopyObject). Never downloadable (`allowDownload: false`) — school
+      policy 2026-08-30: recordings are watched in the app.
 - [x] Session states on the detail page: not started (countdown) · live now +
       enter · ended → recording processing / ready (→ lesson) / failed.
 - [x] Students join with mic + camera off.

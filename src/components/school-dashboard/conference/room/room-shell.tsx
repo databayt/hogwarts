@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useLocalParticipant } from "@livekit/components-react"
 import { Hand } from "lucide-react"
 
+import { VideoWatermark } from "@/components/lumos/shared/video-player/video-watermark"
 import { recordClassEvent } from "@/components/school-dashboard/conference/actions/room-events"
 import {
   ParticipantsPanel,
@@ -116,8 +117,18 @@ export function RoomShell({
       <AudioOnlyBanner on={adaptive.tier === "audio"} labels={labels} />
 
       <div className="relative flex min-h-0 flex-1">
-        <main className="min-w-0 flex-1">
+        <main
+          className="relative min-w-0 flex-1 select-none"
+          onContextMenu={(e) => e.preventDefault()}
+        >
           <Stage channel={channel} labels={labels} />
+          {/* Forensic mark over the whole stage: a recording or screenshot
+              of the class carries who was watching. */}
+          <VideoWatermark
+            userId={localParticipant.identity}
+            userEmail={localParticipant.name ?? undefined}
+            rotationInterval={20000}
+          />
         </main>
         {panel && (
           <div className="absolute inset-y-0 end-0 z-10 sm:static sm:z-auto">

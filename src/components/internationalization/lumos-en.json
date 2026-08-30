@@ -710,19 +710,10 @@
       "results": "Courses",
       "noResults": "No matching courses",
       "seeAllResults": "See all results",
+      "terms": ["Math", "Science", "English", "Arabic", "History", "Geography"]
       "gradeLabel": "Grade {n}",
     },
     "offline": {
-      "download": "Download for offline",
-      "downloading": "Downloading…",
-      "downloaded": "Available offline",
-      "resume": "Resume download",
-      "remove": "Remove download",
-      "cancel": "Cancel",
-      "notPermitted": "The owner hasn't allowed this video to be downloaded",
-      "failed": "Download failed",
-      "storage": "Not enough storage on this device",
-      "unsupported": "This browser can't store lessons offline",
       "offlineNow": "You're offline",
       "offlineHint": "Downloaded lessons still play. Anything you do is saved and synced later.",
       "pendingSync": "{count} items waiting to sync",
@@ -730,20 +721,8 @@
       "syncing": "Syncing…",
       "synced": "Everything is synced",
       "attention": "{count} items need attention",
-      "library": "Downloaded lessons",
-      "libraryEmpty": "No lessons downloaded yet. Open a lesson and choose “Download for offline”.",
-      "open": "Open",
-      "back": "Back to the list",
-      "documents": "Documents",
-      "summary": "Summary",
-      "objectives": "Objectives",
-      "quiz": "Quiz",
-      "submitQuiz": "Submit answers",
       "quizQueued": "Answers saved on this device — they'll be graded when you're back online.",
-      "quizGraded": "Score: {score} / {total}",
       "progressQueued": "Progress saved on this device",
-      "savedOn": "Saved {date}",
-      "size": "Size",
       "retry": "Retry",
       "discard": "Discard",
       "parkedItem": "Couldn't sync: {code}",
@@ -751,10 +730,14 @@
       "kindComplete": "Lesson completion",
       "kindQuiz": "Quiz answers",
       "kindAssignment": "Assignment",
-      "speed": "Speed",
-      "noVideo": "This lesson has no downloadable video",
-      "typeAnswer": "Type your answer"
-      "terms": ["Math", "Science", "English", "Arabic", "History", "Geography"]
+      "pendingTitle": "Waiting to sync"
+    },
+    "viewer": {
+      "viewOnly": "View only — downloading is disabled by the school",
+      "loading": "Loading…",
+      "failed": "This file can't be displayed here.",
+      "page": "pages",
+      "notViewable": "This file type can only be viewed on a computer at school."
     }
   }
 }

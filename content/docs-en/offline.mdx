@@ -36,19 +36,18 @@ These are the headline metrics the team commits to at "Foundation gate passed" +
 8. **Main thread budget** — sync flush never blocks the main thread > 16 ms (work moves to Web Worker).
 9. **First-byte cache invalidation** — server WebSocket push invalidates client cache within 200 ms of remote write.
 
-### Shipped 2026-08-29 — studying a Lumos lesson offline
+### Shipped 2026-08-29/30 — the outbox, and a policy
 
-The first slice of this plan is live, scoped to lessons rather than the role
-epics above: a lesson downloads (video in resumable Range chunks, documents,
-summary, answer-key-free quiz) into IndexedDB (`src/lib/offline/db.ts`, no
-Dexie yet), the lesson page plays the local copy when offline, and an outbox
-(`src/lib/offline/outbox.ts`) queues playback position, completion, quiz
-answers and assignment text for `POST /api/offline/sync`, which is idempotent
-per item and answers a verdict per item. Rejections park visibly on
-`/offline` with retry/discard — the "pending sync visibility" row above is
-therefore ✓ for lessons and still ✗ for the other actions. The service worker
-(`public/service-worker.js`, v2) now actually installs: v1 precached a path
-that did not exist and never activated.
+The first slice of this plan is live, scoped to Lumos lessons: an outbox
+(`src/lib/offline/outbox.ts`, IndexedDB) queues playback position, completion,
+quiz answers and assignment text for `POST /api/offline/sync`, which is
+idempotent per item and answers a verdict per item; rejections park visibly on
+`/offline` with retry/discard — so the "pending sync visibility" row above is
+✓ for lessons and still ✗ for the other actions. A download-for-offline slice
+(video + materials on the device) shipped on 08-29 and was **withdrawn on
+08-30 by school policy**: videos and materials are viewed in the app, never
+copied to a device, and IndexedDB v2 drops any media a device had stored. The
+service worker (`public/service-worker.js`, v2) now actually installs.
 
 ## Engineering principles (no compromise)
 

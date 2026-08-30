@@ -365,6 +365,18 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   available"). The stored preference is untouched — the day a bucket lands,
   recording starts with no re-setup.
 
+## Protection policy (2026-08-30)
+
+Videos, recordings and materials are VIEWED, never downloaded, and every
+surface that shows them carries the forensic `VideoWatermark`: the lesson
+player, the recording player (`recording-player.tsx`), the in-app material
+viewer (`lumos/shared/material-viewer`), the room stage and the slides. Do not
+add a download route, a `Content-Disposition: attachment` path, or a
+`<video>` without `controlsList="nodownload"` + `disablePictureInPicture`.
+Screenshots cannot be prevented on the web; the watermark makes them
+attributable, PrintScreen blanks the frame and clears the clipboard, and a
+hidden tab pauses playback.
+
 ## Room architecture (2026-08-29)
 
 `room.tsx` owns the join ticket (refresh, eject on a server "no") and how the

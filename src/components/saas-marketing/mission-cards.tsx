@@ -29,13 +29,18 @@ export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
     openAcademy: "Open Academy",
   }
 
+  // Hrefs carry the locale: a bare "/features" drops [lang] and silently
+  // flips an Arabic visitor to English. "/about" used to sit on the first
+  // card — that route only exists under the school marketing subtree, so on
+  // this site it was a 404; the student feature page is the real destination.
+  const prefix = `/${lang || "en"}`
   const cards = [
     {
       title: dict.studentSuccess,
       icon: asset(
         "https://cdn.databayt.org/anthropic/67ed7bd686b6d20bb1cd568c_Hands-Build.svg"
       ),
-      href: "/about",
+      href: `${prefix}/features/student`,
       bgColor: "bg-[#E3DACC]", // oat - rgb(227, 218, 204)
     },
     {
@@ -43,7 +48,7 @@ export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
       icon: asset(
         "https://cdn.databayt.org/anthropic/67ed7bd72914c76f710d86fc_Hands-Stack.svg"
       ),
-      href: "/features",
+      href: `${prefix}/features`,
       bgColor: "bg-[#BCD1CA]", // cactus - rgb(188, 209, 202)
     },
     {
@@ -51,7 +56,7 @@ export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
       icon: asset(
         "https://cdn.databayt.org/anthropic/67ed7b8d86b6d20bb1cd1292_Objects-Puzzle.svg"
       ),
-      href: "/docs",
+      href: `${prefix}/docs`,
       bgColor: "bg-[#CBCADB]", // heather - rgb(203, 202, 219)
     },
   ]

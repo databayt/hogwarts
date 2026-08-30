@@ -75,12 +75,14 @@ export function SlidesView({
           </span>
         )}
       </div>
-      <iframe
-        key={src}
-        src={src}
-        title={slides.title}
-        className="min-h-0 w-full flex-1 rounded-b-lg bg-white"
-      />
+      <div className="relative min-h-0 w-full flex-1">
+        <iframe
+          key={src}
+          src={src}
+          title={slides.title}
+          className="h-full w-full rounded-b-lg bg-white"
+        />
+      </div>
     </div>
   )
 }

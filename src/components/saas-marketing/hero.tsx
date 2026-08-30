@@ -21,9 +21,9 @@ interface HeroProps {
 const Hero = ({ dictionary, lang }: HeroProps) => {
   const isRTL = lang === "ar"
   const heroDict = dictionary?.marketing?.hero || {
-    title: "Automate\nthe boring,\nelevate the\nwonder.",
+    title: "The complete\nplatform for\nschools and\nteaching.",
     subtitle:
-      "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
+      "Raising the performance of the educational institution through one unified platform that brings every administrative, academic and financial operation under a single roof — giving administrators, teachers and parents full control, a modern experience and the precise insight that supports decision-making.",
     appointment: "Get Started",
     liveDemo: "Live Demo",
   }
@@ -65,13 +65,16 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
         </div>
 
         {/* Content */}
-        <div className="flex flex-col items-start space-y-10 text-start lg:order-1 lg:flex-1">
+        <div className="flex flex-col items-start space-y-8 text-start lg:order-1 lg:flex-1">
           <h1
             className={cn(
               "font-heading font-black tracking-tight",
+              // Arabic needs looser leading than the Latin lockup — the
+              // hamza/madda on a following line collides with the descenders
+              // above it at the default h1 line-height.
               isRTL
-                ? "text-5xl md:text-6xl lg:text-6xl xl:text-7xl"
-                : "text-6xl md:text-7xl lg:text-7xl xl:text-8xl"
+                ? "text-5xl leading-[1.3] md:text-6xl lg:text-6xl xl:text-7xl"
+                : "text-5xl md:text-6xl lg:text-6xl xl:text-7xl"
             )}
           >
             {titleLines.map((line, index) => (
@@ -80,6 +83,12 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
               </span>
             ))}
           </h1>
+
+          {heroDict.subtitle ? (
+            <p className="text-muted-foreground max-w-xl leading-relaxed">
+              {heroDict.subtitle}
+            </p>
+          ) : null}
 
           <div className="flex flex-row gap-3">
             <Link

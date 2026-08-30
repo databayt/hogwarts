@@ -88,7 +88,11 @@ export default function FAQs({ dictionary, lang }: FAQsProps) {
                         ? item.links.map((link, linkIndex) => (
                             <li key={linkIndex} className="muted">
                               <Link
-                                href={link.href}
+                                href={
+                                  link.href.startsWith("/")
+                                    ? `/${lang || "en"}${link.href}`
+                                    : link.href
+                                }
                                 target={
                                   link.href.startsWith("http")
                                     ? "_blank"

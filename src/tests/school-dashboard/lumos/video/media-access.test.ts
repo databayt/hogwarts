@@ -95,9 +95,6 @@ describe("resolveVideoAccess", () => {
       ok: true,
       storageKey: "stream/school-1/video/123_lesson.mp4",
       title: "Photosynthesis",
-      allowDownload: false,
-      fileSize: null,
-      durationSeconds: null,
     })
   })
 

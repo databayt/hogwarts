@@ -1374,7 +1374,11 @@ _Chronological close log — appended as items ship._
 
 _Deferred to next quarter+._
 
-## Offline learning + server-owned progress (2026-08-29)
+## Protection policy + server-owned progress (2026-08-29/30)
+
+Policy (Abdout, 2026-08-30): **no video or material downloads; prevent
+capture as far as the web allows.** The offline-download slice built on
+08-29 was withdrawn the next day; what remains is the outbox.
 
 Closed:
 
@@ -1384,32 +1388,30 @@ Closed:
       accelerator now.
 - [x] Quiz attempts persist (`LessonQuizAttempt`, device-minted id) — a
       retried or replayed submission is one attempt, one gradebook write.
-- [x] Playback speed is a real control (the menu state existed for months
-      with nothing rendering it; `controlsList` no longer says
-      `noplaybackrate`).
-- [x] `GET /api/lumos/video/[id]/download` (owner's `allowDownload`),
-      `GET /api/offline/lesson/[id]` (manifest on the page's own resolvers),
-      material route `?inline=1` / `?ticket=1`.
-- [x] Offline-first client: `src/lib/offline/*` (IndexedDB, Range-resumable
-      downloads, outbox with backoff that parks rejections visibly),
-      `src/components/offline/*`, the lesson page plays the local copy when
-      offline and queues progress/quiz; `/offline` is the library.
-- [x] Students can hand in assignments (`listings/assignments/submit-core.ts`)
-      — there was no student write at all before.
+- [x] Playback speed is a real control.
+- [x] Materials are view-only: `/api/lumos/file/[kind]/[id]` serves an
+      INLINE disposition for PDF/images only (415 otherwise) and the lesson
+      page opens them in `shared/material-viewer` — pdf.js canvases (worker
+      vendored at `public/pdf.worker.min.mjs`), no native toolbar, context
+      menu blocked, forensic watermark. Nothing links to the raw file.
+- [x] Player protection extended: print blocked, PrintScreen blanks the
+      frame + clears the clipboard, hidden tab pauses. The recording player
+      in conference got the same treatment + watermark.
+- [x] Outbox only (`src/lib/offline/*`, IndexedDB v2 drops the v1 media
+      stores on upgrade): playback position, completion, quiz answers and
+      assignment text queue offline and sync with per-item verdicts;
+      `/offline` shows the queue. No content is stored on the device.
+- [x] Students can hand in assignments (`listings/assignments/submit-core.ts`,
+      `/my-assignments`).
 
 Open:
 
-- [ ] **The download button cannot know `allowDownload` up front** — the
-      lesson resolver (`get-lesson-with-progress.ts`) does not expose it, so a
-      lesson whose owner has not allowed downloads shows the button and learns
-      "not permitted" on the first tap (remembered in IndexedDB after that).
-      Add `allowDownload` to `AvailableVideo` when that file is next touched.
-- [ ] **Offline capture is text-only for assignments** — attachments would
-      need blobs in the outbox.
-- [ ] **The service worker registers only in production**, so the offline
-      navigation path (cached lesson page + `/offline` fallback) is verifiable
-      only on a deployed build. The download/outbox/sync paths were verified
-      on dev (they do not depend on the worker).
-- [ ] **No storage budget** — a student can fill the device; `navigator
-      .storage.estimate()` is surfaced nowhere yet.
-
+- [ ] **`Video.allowDownload` column exists (migration 20260829010000) but
+      nothing reads it** — kept, defaulted false, reserved. Do not wire a
+      download behind it without a policy change.
+- [ ] **Non-PDF/image materials answer 415.** Production has only PDFs
+      today (14k rows); a DOCX upload would be unviewable — convert on
+      upload or refuse at upload.
+- [ ] **Firefox's built-in viewer is never used** (pdf.js draws canvases),
+      but a signed S3 URL is still visible in devtools for its 2-hour TTL —
+      that is the honest floor of web protection.

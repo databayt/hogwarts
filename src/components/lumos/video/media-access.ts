@@ -69,15 +69,7 @@ export type MediaAccessDenial =
   | "payment-required" // PAID and this user has not bought it
 
 export type MediaAccessResult =
-  | {
-      ok: true
-      storageKey: string
-      title: string
-      /** Set by the owner (or the live-class bridge) — gates the download route only. */
-      allowDownload: boolean
-      fileSize: number | null
-      durationSeconds: number | null
-    }
+  | { ok: true; storageKey: string; title: string }
   | { ok: false; reason: MediaAccessDenial }
 
 /**
@@ -122,9 +114,6 @@ export async function resolveVideoAccess({
       storageKey: true,
       visibility: true,
       approvalStatus: true,
-      allowDownload: true,
-      fileSize: true,
-      durationSeconds: true,
       overrides: schoolId
         ? { where: { schoolId, isHidden: true }, select: { id: true } }
         : false,
@@ -140,14 +129,7 @@ export async function resolveVideoAccess({
     return { ok: false, reason: "not-found" }
   }
 
-  const granted = {
-    ok: true as const,
-    storageKey,
-    title: video.title,
-    allowDownload: video.allowDownload === true,
-    fileSize: video.fileSize ?? null,
-    durationSeconds: video.durationSeconds ?? null,
-  }
+  const granted = { ok: true as const, storageKey, title: video.title }
 
   // 1. Owner — always, regardless of visibility or approval state.
   if (video.userId === userId) return granted

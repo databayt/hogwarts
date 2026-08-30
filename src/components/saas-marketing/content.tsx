@@ -7,7 +7,6 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 
 // import Automated from "@/components/automated/featured";
 // import Codebase from "@/components/landing/codebase";
-import DownloadApp from "./download-app"
 // import Wizard from "@/components/wizard";
 import { DreamSection } from "./dream-section"
 import FAQs from "./faqs"
@@ -50,7 +49,9 @@ export default function HomeContent(props: Props) {
           not the repo or donations. Components kept in the block. */}
       <FAQs dictionary={dictionary} lang={lang} />
       <LetsWorkTogether dictionary={dictionary} lang={lang} />
-      <DownloadApp dictionary={dictionary} lang={lang} />
+      {/* DownloadApp hidden — the iOS/Android listings aren't live, so its two
+          store buttons render permanently disabled. Component kept in the
+          block; re-add here once APP_STORE_URL / PLAY_STORE_URL are filled in. */}
     </main>
   )
 }

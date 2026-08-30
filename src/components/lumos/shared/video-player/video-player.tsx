@@ -607,6 +607,8 @@ export function VideoPlayer({
 
       {/* Dynamic watermark for video ownership protection */}
       <VideoWatermark userId={userId} userEmail={userEmail} />
+      {/* PrintScreen mitigation: the protection hook stamps this attribute for 1.5s */}
+      <style>{`[data-capture-blank] video { visibility: hidden; }`}</style>
 
       {/* Center overlay (play/pause, loading) */}
       <VideoOverlay

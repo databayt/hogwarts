@@ -29,6 +29,11 @@ export default async function Page({ params }: Props) {
   }
   const dictionary = await getDictionary(lang)
   return (
-    <RecordingsContent sessionId={id} locale={lang} dictionary={dictionary} />
+    <RecordingsContent
+      sessionId={id}
+      locale={lang}
+      dictionary={dictionary}
+      viewer={{ id: session?.user?.id, email: session?.user?.email ?? null }}
+    />
   )
 }

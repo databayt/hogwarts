@@ -390,7 +390,7 @@ Lumos (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~93% complete a
 3. Run `NODE_OPTIONS='--max-old-space-size=8192' pnpm tsc --noEmit`
 4. If you touched DB: write a migration test before merging
 
-## Progress, quizzes and offline (2026-08-29)
+## Progress, quizzes, offline and protection (2026-08-29/30)
 
 - Write progress ONLY through `lib/progress-core.ts` (`applyLessonProgress`,
   `completeLessonCore`). Both the server actions and `POST /api/offline/sync`
@@ -401,9 +401,10 @@ Lumos (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~93% complete a
   P2002 on the id is a duplicate, not an error.
 - Plain modules, not `"use server"`: both take a `userId`. Never re-export
   them from an actions file.
-- The offline manifest (`/api/offline/lesson/[id]`) is built on
-  `getLessonWithProgress` + `getLessonContent` so visibility rules cannot
-  drift; do not hand-roll a second lesson query there.
-- `src/lib/offline/*` is browser-only and dependency-free on purpose; every
-  export guards `indexedDB`. Outbox items must keep their id across retries.
-
+- **No downloads, by school policy (2026-08-30).** Videos play through
+  `/api/lumos/video/[id]` (signed, 2h) inside the protected player; materials
+  open in `shared/material-viewer` via `/api/lumos/file/[kind]/[id]`
+  (inline, PDF/images only). Never render a material as `<a href>`; never
+  add `Content-Disposition: attachment`; never mount a `<video>` without the
+  protection hook or the watermark. `src/lib/offline/*` is the OUTBOX only —
+  it must never store content.

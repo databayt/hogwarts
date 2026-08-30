@@ -134,7 +134,8 @@ export async function publishRecordingAsLessonVideo(
         approvalStatus: "APPROVED",
         approvedBy: uploaderId,
         approvedAt: new Date(),
-        allowDownload: true,
+        // School policy: recordings are watched in the app, never downloaded.
+        allowDownload: false,
         tags: ["live-class"],
       },
       select: { id: true },

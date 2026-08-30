@@ -5,7 +5,7 @@ import { db } from "@/lib/db"
 export interface SlideOption {
   id: string
   title: string
-  /** Same-origin route; redirects to a signed URL without the attachment disposition. */
+  /** Same-origin route; redirects to a signed URL with an inline disposition. */
   url: string
 }
 
@@ -58,7 +58,7 @@ export async function getSlideOptions(
     out.push({
       id: m.id,
       title: m.title,
-      url: `/api/lumos/file/material/${m.id}?inline=1`,
+      url: `/api/lumos/file/material/${m.id}`,
     })
   }
   for (const a of attachments) {
@@ -66,7 +66,7 @@ export async function getSlideOptions(
     out.push({
       id: a.id,
       title: a.name,
-      url: `/api/lumos/file/attachment/${a.id}?inline=1`,
+      url: `/api/lumos/file/attachment/${a.id}`,
     })
   }
   return out

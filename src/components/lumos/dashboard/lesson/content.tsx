@@ -13,7 +13,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Circle,
-  FileDown,
   FileText,
   Loader2,
   Lock,
@@ -24,7 +23,6 @@ import {
 import { toast } from "sonner"
 
 import { asset } from "@/lib/asset-url"
-import { useOfflineVideoUrl, useOnlineStatus } from "@/lib/offline/hooks"
 import { enqueue } from "@/lib/offline/outbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -49,13 +47,13 @@ import type {
   LessonQuizResult,
   LessonQuizVerdict,
 } from "@/components/lumos/lib/lesson-quiz"
+import { MaterialViewerTrigger } from "@/components/lumos/shared/material-viewer/material-viewer"
 import {
   VideoPlayer,
   type VideoPlayerLabels,
   type VideoProgress,
 } from "@/components/lumos/shared/video-player"
 import { purchaseVideo } from "@/components/lumos/video/video-purchase-actions"
-import { DownloadButton } from "@/components/offline/download-button"
 
 import {
   markLessonComplete,
@@ -116,6 +114,7 @@ export function LumosLessonContent({
   // everything else is new (lumos.videoPlayer namespace).
   const vp = (dictionary as Record<string, any>)?.videoPlayer
   const off = (dictionary as Record<string, any>)?.offline
+  const viewerLabels = (dictionary as Record<string, any>)?.viewer
   // Downloadable resources = legacy attachments + catalog lesson materials
   // (worksheets/notes contributed by schools or the platform).
   const resourceCount = lesson.attachments.length + lesson.materials.length
@@ -189,16 +188,9 @@ export function LumosLessonContent({
   // Any fallback playback (no videos, or broken source) must never write
   // lesson watch-progress or auto-complete.
   const playingFallback = isFallbackVideo || sourceFailed
-  // With no connection, play the copy the student downloaded (if any). Only
-  // consulted offline: online always streams a freshly signed URL so a
-  // revoked or re-uploaded video is never served from a stale local copy.
-  const online = useOnlineStatus()
-  const offlineVideoUrl = useOfflineVideoUrl(lesson.id, !online)
-  const currentVideoUrl =
-    offlineVideoUrl ??
-    (sourceFailed
-      ? FALLBACK_VIDEO_URL
-      : (lessonVideoUrl ?? (isFallbackVideo ? FALLBACK_VIDEO_URL : null)))
+  const currentVideoUrl = sourceFailed
+    ? FALLBACK_VIDEO_URL
+    : (lessonVideoUrl ?? (isFallbackVideo ? FALLBACK_VIDEO_URL : null))
 
   // Paid + unpurchased selected video → the server sent no URL. Surface a
   // purchase CTA (the InstructorSwitcher only renders with 2+ videos, so a
@@ -560,12 +552,6 @@ export function LumosLessonContent({
                   )}
                 </button>
               </div>
-              <DownloadButton
-                lessonId={lesson.id}
-                labels={off}
-                locale={lang}
-                tone="dark"
-              />
             </div>
 
             {/* About this Lesson — Apple TV+ info sheet */}
@@ -792,7 +778,7 @@ export function LumosLessonContent({
             // changed `src` attribute (it needs .load()), so keying on the
             // active video id gives the new instructor's source a fresh
             // element. Same reason the fallback swap is part of the key.
-            key={`${activeVideoId ?? "default"}${sourceFailed ? ":fallback" : ""}${offlineVideoUrl ? ":offline" : ""}`}
+            key={`${activeVideoId ?? "default"}${sourceFailed ? ":fallback" : ""}`}
             url={currentVideoUrl}
             title={lesson.title}
             lessonId={lesson.id}
@@ -1050,20 +1036,35 @@ export function LumosLessonContent({
           </h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {lesson.attachments.map((attachment) => (
-              <a
+              <MaterialViewerTrigger
                 key={attachment.id}
-                href={attachment.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:bg-accent flex items-center gap-2 rounded-md border p-2 transition-colors"
-              >
-                <FileDown className="text-muted-foreground size-4 shrink-0" />
-                <span className="text-sm">{attachment.name}</span>
-              </a>
+                url={attachment.url}
+                title={attachment.name}
+                icon={
+                  <FileText className="text-muted-foreground size-4 shrink-0" />
+                }
+                viewer={viewer}
+                labels={viewerLabels}
+              />
             ))}
-            {lesson.materials.map((material) => {
-              const body = (
-                <>
+            {lesson.materials.map((material) =>
+              material.url ? (
+                <MaterialViewerTrigger
+                  key={material.id}
+                  url={material.url}
+                  title={material.title}
+                  description={material.description}
+                  icon={
+                    <FileText className="text-muted-foreground size-4 shrink-0" />
+                  }
+                  viewer={viewer}
+                  labels={viewerLabels}
+                />
+              ) : (
+                <div
+                  key={material.id}
+                  className="flex items-center gap-2 rounded-md border p-2"
+                >
                   <FileText className="text-muted-foreground size-4 shrink-0" />
                   <span className="min-w-0">
                     <span className="block truncate text-sm">
@@ -1075,27 +1076,9 @@ export function LumosLessonContent({
                       </span>
                     )}
                   </span>
-                </>
-              )
-              return material.url ? (
-                <a
-                  key={material.id}
-                  href={material.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:bg-accent flex items-center gap-2 rounded-md border p-2 transition-colors"
-                >
-                  {body}
-                </a>
-              ) : (
-                <div
-                  key={material.id}
-                  className="flex items-center gap-2 rounded-md border p-2"
-                >
-                  {body}
                 </div>
               )
-            })}
+            )}
           </div>
         </div>
       )}

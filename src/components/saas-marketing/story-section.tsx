@@ -33,7 +33,8 @@ export default function StorySection({ dictionary, lang }: StorySectionProps) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dict = (dictionary?.marketing as any)?.storySection || {
-    quote: "When schools automate the mundane, what do educators focus on?",
+    quote:
+      "When every school operation lives in one system, what do educators focus on?",
   }
 
   // Calculate opacity based on visibility for smooth fade effect

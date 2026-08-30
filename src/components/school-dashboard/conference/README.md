@@ -147,7 +147,8 @@ reached from a row, not a tab.
 | Egress failure honest (`failed` + reason)              | ✅ live (`egress_updated`)                   |
 | Recording → lesson video (lumos) bridge                | ✅ live (`actions/publish-recording.ts`)     |
 | Session states on the detail page (en+ar)              | ✅ live (`session-state.tsx`)                |
-| Lesson download / offline study (lumos)                | ✅ live — see `src/lib/offline/*`            |
+| Videos + materials view-only (no download, watermark)  | ✅ policy 2026-08-30 — see lumos records     |
+| Offline: student work queued + synced (no content)     | ✅ live — `src/lib/offline/*`                 |
 | Capacity dashboard (`/observability/conference`)       | ✅ live (DEVELOPER-only)                     |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any

@@ -75,9 +75,45 @@ export function useVideoProtection({
       if (isCtrlOrCmd && e.key === "u") {
         e.preventDefault()
       }
+      // Print → a full-page raster of the frame.
+      if (isCtrlOrCmd && e.key === "p") {
+        e.preventDefault()
+      }
     },
     [enabled]
   )
+
+  // PrintScreen (Windows/Linux keyboards) is delivered to the page on keyUP
+  // only, after the OS has already captured. What we can still do: replace
+  // the clipboard image with nothing and black the player for a moment, so
+  // the common "PrtScn → paste" path yields an empty frame. macOS capture
+  // shortcuts never reach the page; the watermark is what covers those.
+  const handleKeyUp = useCallback(
+    (e: KeyboardEvent) => {
+      if (!enabled) return
+      if (e.key !== "PrintScreen") return
+      void navigator.clipboard?.writeText("").catch(() => {})
+      const container = containerRef.current
+      if (!container) return
+      container.setAttribute("data-capture-blank", "")
+      window.setTimeout(
+        () => container.removeAttribute("data-capture-blank"),
+        1500
+      )
+    },
+    [enabled, containerRef]
+  )
+
+  // A hidden tab keeps decoding into a surface the page cannot watermark
+  // (screen-recording a backgrounded window, the OS thumbnail switcher).
+  // Pause while hidden; the student presses play again.
+  const handleVisibility = useCallback(() => {
+    if (!enabled) return
+    const video = videoRef.current
+    if (document.visibilityState === "hidden" && video && !video.paused) {
+      video.pause()
+    }
+  }, [enabled, videoRef])
 
   // 3. Prevent drag on video element
   const handleDragStart = useCallback(
@@ -115,6 +151,8 @@ export function useVideoProtection({
     // Attach listeners
     container?.addEventListener("contextmenu", handleContextMenu)
     document.addEventListener("keydown", handleKeyDown)
+    document.addEventListener("keyup", handleKeyUp)
+    document.addEventListener("visibilitychange", handleVisibility)
     container?.addEventListener("dragstart", handleDragStart)
     video?.addEventListener("enterpictureinpicture", handleEnterPip)
 
@@ -131,6 +169,8 @@ export function useVideoProtection({
     return () => {
       container?.removeEventListener("contextmenu", handleContextMenu)
       document.removeEventListener("keydown", handleKeyDown)
+      document.removeEventListener("keyup", handleKeyUp)
+      document.removeEventListener("visibilitychange", handleVisibility)
       container?.removeEventListener("dragstart", handleDragStart)
       video?.removeEventListener("enterpictureinpicture", handleEnterPip)
     }
@@ -140,6 +180,8 @@ export function useVideoProtection({
     videoRef,
     handleContextMenu,
     handleKeyDown,
+    handleKeyUp,
+    handleVisibility,
     handleDragStart,
     handleEnterPip,
   ])

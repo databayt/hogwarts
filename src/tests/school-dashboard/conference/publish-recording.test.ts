@@ -88,7 +88,7 @@ describe("publishRecordingAsLessonVideo", () => {
     expect(data.userId).toBe("u-teacher")
     expect(data.approvalStatus).toBe("APPROVED")
     expect(data.visibility).toBe("SCHOOL")
-    expect(data.allowDownload).toBe(true)
+    expect(data.allowDownload).toBe(false)
     expect(data.storageKey).toBe("stream/s1/video/live-rec-1.mp4")
     expect(data.durationSeconds).toBe(2700)
     expect(data.title).toBe("الرياضيات · الصف العاشر - أ — 2026-08-31")

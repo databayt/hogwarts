@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 85
 tracker: https://github.com/databayt/hogwarts/issues/316
 docs: https://ed.databayt.org/en/docs/sales
-last_audited: 2026-05-25
+last_audited: 2026-08-30
 ---
 
 ## SaaS Marketing — Public-Facing Landing and Conversion Pages
@@ -22,7 +22,7 @@ Public-facing marketing components for the Hogwarts SaaS platform. Includes the 
 ```
 src/components/saas-marketing/
 ├── hero.tsx                        # Hero section with CTA
-├── hero-illustration.tsx           # Hero visual
+├── hero-illustration.tsx           # Hero visual — the balqalam quill (/feather.png), dark:invert
 ├── faqs.tsx                        # FAQ accordion
 ├── logo-cloud.tsx                  # Partner logos
 ├── story-section.tsx               # Story/about section
@@ -112,6 +112,28 @@ src/components/saas-marketing/
 ### Status
 
 **Completion:** 75% | **Blockers:** Typography violations in several files, legacy backup-SDG code needs cleanup
+
+### Positioning (2026-08-30)
+
+The homepage sells "المنظومة الشاملة لإدارة المدارس والعملية التعليمية" — the
+complete platform for schools and teaching. It replaced the older "أتمتة الأعمال
+المملة / Automate the boring" line, which framed the product as busywork removal
+rather than as one system. The change lands in `marketing.hero.title`,
+`marketing.hero.subtitle` (now actually rendered by `hero.tsx` — it was dead
+dictionary weight before), `marketing.features.title`/`subtitle`,
+`marketing.storySection.quote` and `metadata.description`, in both languages.
+
+The hero visual is the balqalam quill rather than the CDN Lottie: the homepage
+leads with the system's own mark. `lottie-react` is still used elsewhere in the
+repo — do not drop the dependency.
+
+Two dead controls were removed from the homepage at the same time: the
+`DownloadApp` section (both store buttons are permanently `disabled` until the
+iOS/Android listings exist) and the mission card pointing at `/about`, a route
+that only exists under the school-marketing subtree — on this site it fell
+through to the auth matcher and bounced visitors to `/login`. Mission-card and
+FAQ hrefs now carry `/${lang}`; bare ones silently flipped Arabic visitors to
+English.
 
 ### Integration Points
 

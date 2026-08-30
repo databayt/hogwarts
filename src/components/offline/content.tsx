@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
-import { OfflineLibrary } from "./library"
+import { OutboxView } from "./outbox-view"
 
 interface OfflineContentProps {
   dictionary: Dictionary
@@ -18,9 +18,9 @@ interface OfflineContentProps {
 
 /**
  * `/offline` — what the service worker shows when a navigation cannot reach
- * the network, and the library of everything downloaded to this device.
- * It works online too (it is simply the list of downloads then), which is
- * also how its script chunks get cached for the day they are needed.
+ * the network, and the queue of work done without one. Nothing is stored on
+ * the device except the student's own actions: by school policy videos and
+ * materials are viewed in the app, never downloaded.
  */
 export function OfflineContent({ dictionary, lang }: OfflineContentProps) {
   const off = (dictionary as Record<string, any>)?.lumos?.offline as
@@ -53,7 +53,10 @@ export function OfflineContent({ dictionary, lang }: OfflineContentProps) {
           </div>
         )}
 
-        <OfflineLibrary labels={off} lang={lang} />
+        <section className="space-y-3">
+          <h2>{off?.pendingTitle ?? "Waiting to sync"}</h2>
+          <OutboxView labels={off} lang={lang} />
+        </section>
       </div>
     </div>
   )

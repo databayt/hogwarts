@@ -5,10 +5,13 @@
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { VideoWatermark } from "@/components/lumos/shared/video-player/video-watermark"
 import { getRecordingUrl } from "@/components/school-dashboard/conference/actions/recordings"
 
 interface Props {
   recordingId: string
+  /** Who is watching — stamped into the watermark. */
+  viewer?: { id?: string; email?: string | null }
   labels: {
     play: string
     loading: string
@@ -23,7 +26,7 @@ interface Props {
  * for hours), the video element fires `onError` and we drop back to the Play
  * button, which mints a fresh URL on click.
  */
-export function RecordingPlayer({ recordingId, labels }: Props) {
+export function RecordingPlayer({ recordingId, labels, viewer }: Props) {
   const [url, setUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,14 +53,32 @@ export function RecordingPlayer({ recordingId, labels }: Props) {
   }
 
   return (
-    <video
-      controls
-      src={url}
-      onError={() => {
-        setUrl(null)
-        setError(labels.error)
-      }}
-      className="aspect-video w-full rounded-md bg-black"
-    />
+    // Watched in the app, never saved: no download control, no
+    // picture-in-picture or casting (both leave the watermark behind), no
+    // context menu, and a forensic watermark with the viewer's identity.
+    <div
+      data-video-protected
+      className="relative aspect-video w-full overflow-hidden rounded-md bg-black select-none"
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+    >
+      <video
+        controls
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture
+        disableRemotePlayback
+        playsInline
+        src={url}
+        onError={() => {
+          setUrl(null)
+          setError(labels.error)
+        }}
+        className="h-full w-full"
+      />
+      <VideoWatermark
+        userId={viewer?.id}
+        userEmail={viewer?.email ?? undefined}
+      />
+    </div>
   )
 }

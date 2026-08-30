@@ -104,7 +104,12 @@ export async function deleteObject(key: string): Promise<boolean> {
 export async function getSignedReadUrl(
   key: string,
   expiresIn: number = SIGNED_READ_TTL_SECONDS,
-  options: { downloadFilename?: string; contentType?: string } = {}
+  options: {
+    downloadFilename?: string
+    contentType?: string
+    /** Serve for display, never as a save-as — school materials are viewed, not downloaded. */
+    inline?: boolean
+  } = {}
 ): Promise<string | null> {
   const client = getS3Client()
   if (!client || !key) return null
@@ -115,11 +120,13 @@ export async function getSignedReadUrl(
       Key: key,
       // Force a save-as name for attachment downloads; omitted for video so the
       // browser streams inline.
-      ...(options.downloadFilename
-        ? {
-            ResponseContentDisposition: `attachment; filename="${options.downloadFilename.replace(/"/g, "")}"`,
-          }
-        : {}),
+      ...(options.inline
+        ? { ResponseContentDisposition: "inline" }
+        : options.downloadFilename
+          ? {
+              ResponseContentDisposition: `attachment; filename="${options.downloadFilename.replace(/"/g, "")}"`,
+            }
+          : {}),
       ...(options.contentType
         ? { ResponseContentType: options.contentType }
         : {}),
@@ -132,7 +139,6 @@ export async function getSignedReadUrl(
     return null
   }
 }
-
 
 /**
  * Copy an object within the app bucket (server-side, no download). Used to

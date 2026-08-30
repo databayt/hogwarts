@@ -10,7 +10,7 @@ import { useOnlineStatus, useOutbox } from "@/lib/offline/hooks"
 import { installOutboxTriggers } from "@/lib/offline/outbox"
 import { Button } from "@/components/ui/button"
 
-import type { OfflineLabels } from "./download-button"
+import type { OfflineLabels } from "./outbox-view"
 
 /**
  * Mounted once in the school dashboard layout: installs the outbox's drain

@@ -12,6 +12,7 @@ interface Props {
   sessionId: string
   locale: string
   dictionary: Dictionary
+  viewer?: { id?: string; email?: string | null }
 }
 
 function formatBytes(b: number | bigint | null): string {
@@ -34,6 +35,7 @@ export async function RecordingsContent({
   sessionId,
   locale,
   dictionary,
+  viewer,
 }: Props) {
   const result = await listRecordings(sessionId)
   const recordings = "success" in result && result.success ? result.data : []
@@ -73,7 +75,11 @@ export async function RecordingsContent({
               </p>
               {r.status === "ready" && (
                 <div className="mt-3">
-                  <RecordingPlayer recordingId={r.id} labels={playerLabels} />
+                  <RecordingPlayer
+                    recordingId={r.id}
+                    labels={playerLabels}
+                    viewer={viewer}
+                  />
                 </div>
               )}
             </li>

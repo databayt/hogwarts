@@ -81,7 +81,7 @@
   },
   "metadata": {
     "title": "balqalam - School Management System",
-    "description": "Comprehensive school management platform for educational institutions"
+    "description": "The complete platform for school management and the educational process"
   },
   "chatbot": {
     "title": "Chat Assistant",
@@ -584,17 +584,17 @@
       }
     },
     "hero": {
-      "title": "Automate\nthe boring,\nelevate the\nwonder.",
-      "titleMobile": "Automate\nthe boring,\nelevate the\nwonder.",
-      "subtitle": "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
+      "title": "The complete\nplatform for\nschools and\nteaching.",
+      "titleMobile": "The complete\nplatform for\nschools and\nteaching.",
+      "subtitle": "Raising the performance of the educational institution through one unified platform that brings every administrative, academic and financial operation under a single roof — giving administrators, teachers and parents full control, a modern experience and the precise insight that supports decision-making.",
       "badge": "700+ School automated",
       "appointment": "Get Started",
       "liveDemo": "Live Demo"
     },
     "features": {
       "badge": "Conference: live virtual classrooms",
-      "title": "Automate the boring",
-      "subtitle": "Wave goodbye to busywork. Every module your school needs — in one connected platform.",
+      "title": "One system, every operation",
+      "subtitle": "Every module your school needs — administrative, academic and financial — in one connected platform.",
       "searchPlaceholder": "Search features...",
       "allCategories": "All",
       "noResults": "No features match your search. Try a different keyword.",
@@ -789,7 +789,7 @@
       "openAcademy": "Open Academy"
     },
     "storySection": {
-      "quote": "When schools automate the mundane, what do educators focus on?"
+      "quote": "When every school operation lives in one system, what do educators focus on?"
     },
     "openSource": {
       "title": "Proudly Open Source",

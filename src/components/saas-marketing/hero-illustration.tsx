@@ -1,37 +1,25 @@
-"use client"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
-import Lottie from "lottie-react"
 
+import Image from "next/image"
+
+/**
+ * The balqalam brand mark (the quill — بالقلم) as the hero's visual. It
+ * replaced the Lottie illustration so the homepage leads with the system's
+ * own identity rather than generic artwork. The glyph is solid black, so it
+ * inverts in dark mode exactly as the header lockup does.
+ */
 export function HeroIllustration() {
-  const [animationData, setAnimationData] = useState<object | null>(null)
-
-  useEffect(() => {
-    const cdn = process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"
-    fetch(`https://${cdn}/anthropic/hero.json`)
-      .then((res) => res.json())
-      .then((data) => setAnimationData(data))
-      .catch(console.error)
-  }, [])
-
   return (
     <div className="relative h-[200px] w-[200px] sm:h-[280px] sm:w-[280px] md:h-[320px] md:w-[320px] lg:h-[400px] lg:w-[400px] xl:h-[480px] xl:w-[480px]">
-      {/* In dark mode: invert (black→white, orange→blue) then hue-rotate 180° (blue→orange) */}
-      <div className="h-full w-full dark:[filter:invert(1)_hue-rotate(180deg)]">
-        {animationData && (
-          <Lottie
-            animationData={animationData}
-            loop={true}
-            autoplay={true}
-            style={{
-              width: "100%",
-              height: "100%",
-            }}
-          />
-        )}
-      </div>
+      <Image
+        src="/feather.png"
+        alt="balqalam"
+        fill
+        priority
+        sizes="(min-width: 1280px) 480px, (min-width: 1024px) 400px, (min-width: 768px) 320px, (min-width: 640px) 280px, 200px"
+        className="scale-[0.7] object-contain dark:invert"
+      />
     </div>
   )
 }
