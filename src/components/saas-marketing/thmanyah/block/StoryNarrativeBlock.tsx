@@ -1,9 +1,9 @@
 "use client"
 
 import React, { useRef } from "react"
-import Image from "next/image"
 import { motion, useInView } from "framer-motion"
 
+import { CDN_IMAGES } from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
 import { WordmarkWriting } from "@/components/saas-marketing/thmanyah/atom/WordmarkWriting"
 import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
 
@@ -69,15 +69,24 @@ export function StoryNarrativeBlock() {
             className="answer-media answer-media--a"
             data-framer-name="Arabic Letter"
           >
-            <Image
-              src="/images/ha-compare-1.png"
-              alt="Arabic Letter"
-              fill
-              sizes="(max-width: 1199px) 100vw, 50vw"
-              className="object-cover object-center"
-              priority
-              unoptimized
-            />
+            <picture>
+              <source
+                srcSet={CDN_IMAGES["ha-compare-1"].avif}
+                type="image/avif"
+                sizes="(max-width: 1199px) 100vw, 50vw"
+              />
+              <source
+                srcSet={CDN_IMAGES["ha-compare-1"].webp}
+                type="image/webp"
+                sizes="(max-width: 1199px) 100vw, 50vw"
+              />
+              <img
+                src={CDN_IMAGES["ha-compare-1"].webp}
+                alt="Arabic Letter"
+                fetchPriority="high"
+                className="absolute inset-0 h-full w-full object-cover object-center"
+              />
+            </picture>
           </div>
         </div>
 
@@ -103,14 +112,24 @@ export function StoryNarrativeBlock() {
             className="answer-media answer-media--b"
             data-framer-name="Content represnent us"
           >
-            <Image
-              src="/images/ha-compare-2.png"
-              alt="Content represnent us"
-              fill
-              sizes="(max-width: 1199px) 100vw, 50vw"
-              className="object-cover object-center"
-              unoptimized
-            />
+            <picture>
+              <source
+                srcSet={CDN_IMAGES["ha-compare-2"].avif}
+                type="image/avif"
+                sizes="(max-width: 1199px) 100vw, 50vw"
+              />
+              <source
+                srcSet={CDN_IMAGES["ha-compare-2"].webp}
+                type="image/webp"
+                sizes="(max-width: 1199px) 100vw, 50vw"
+              />
+              <img
+                src={CDN_IMAGES["ha-compare-2"].webp}
+                alt="Content represnent us"
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover object-center"
+              />
+            </picture>
           </div>
 
           {/* Text (.framer-17jeuwe) */}

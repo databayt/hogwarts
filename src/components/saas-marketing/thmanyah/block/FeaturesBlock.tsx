@@ -3,6 +3,10 @@
 import React, { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 
+import {
+  CDN_POSTERS,
+  CDN_VIDEOS,
+} from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
 import { LottiePlayer } from "@/components/saas-marketing/thmanyah/atom/LottiePlayer"
 import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
 import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
@@ -118,8 +122,8 @@ export function FeaturesBlock() {
                 <video
                   ref={videoRef}
                   className="wire-video"
-                  src="/videos/balqalam-wordmarks.mp4"
-                  poster="/images/balqalam-wordmarks-poster.png"
+                  src={CDN_VIDEOS["balqalam-wordmarks-mp4"]}
+                  poster={CDN_POSTERS["balqalam-wordmarks-poster"]}
                   loop
                   muted
                   playsInline

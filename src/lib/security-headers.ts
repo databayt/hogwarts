@@ -111,6 +111,9 @@ export function getCSPHeader(nonce?: string) {
       "https://res.cloudinary.com",
       "https://*.amazonaws.com",
       "https://*.cloudfront.net",
+      // cdn.databayt.org is a CloudFront ALIAS — it does not match the
+      // *.cloudfront.net wildcard above and must be named explicitly.
+      "https://cdn.databayt.org",
     ],
     "font-src": ["'self'", "https://fonts.gstatic.com"],
     "connect-src": [
@@ -123,7 +126,8 @@ export function getCSPHeader(nonce?: string) {
       "https://*.pusher.com",
       process.env.NODE_ENV === "development" ? "ws://localhost:*" : "",
     ],
-    "media-src": ["'self'"],
+    // The marketing homepage's video is served from the CDN.
+    "media-src": ["'self'", "https://cdn.databayt.org"],
     "object-src": ["'none'"],
     "frame-src": [
       "'self'",

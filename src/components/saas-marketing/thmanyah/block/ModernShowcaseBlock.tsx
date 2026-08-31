@@ -1,8 +1,15 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import Image from "next/image"
 
+import {
+  CDN_IMAGES,
+  CDN_POSTERS,
+  CDN_VIDEOS,
+  type CdnImage,
+  type CdnPoster,
+  type CdnVideo,
+} from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
 import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
 
 /**
@@ -41,15 +48,15 @@ type Tile =
   | {
       name: string
       kind: "video"
-      src: string
-      poster: string
+      src: CdnVideo
+      poster: CdnPoster
       w: number
       ar: number
     }
   | {
       name: string
       kind: "image"
-      src: string
+      src: CdnImage
       iw: number
       ih: number
       w: number
@@ -60,15 +67,15 @@ const DESKTOP: Tile[] = [
   {
     name: "01",
     kind: "video",
-    src: "/videos/modern-01.webm",
-    poster: "/images/modern-01-poster.png",
+    src: "modern-01-webm",
+    poster: "modern-01-poster",
     w: 462,
     ar: 0.956947,
   },
   {
     name: " -02",
     kind: "image",
-    src: "/images/modern-02.png",
+    src: "modern-02",
     iw: 3640,
     ih: 3068,
     w: 572,
@@ -77,7 +84,7 @@ const DESKTOP: Tile[] = [
   {
     name: " -03",
     kind: "image",
-    src: "/images/modern-03.png",
+    src: "modern-03",
     iw: 2755,
     ih: 3068,
     w: 433,
@@ -86,7 +93,7 @@ const DESKTOP: Tile[] = [
   {
     name: " -04",
     kind: "image",
-    src: "/images/modern-04.png",
+    src: "modern-04",
     iw: 5757,
     ih: 3068,
     w: 905,
@@ -95,7 +102,7 @@ const DESKTOP: Tile[] = [
   {
     name: " -05",
     kind: "image",
-    src: "/images/modern-05.png",
+    src: "modern-05",
     iw: 2756,
     ih: 3068,
     w: 433,
@@ -104,7 +111,7 @@ const DESKTOP: Tile[] = [
   {
     name: " -06",
     kind: "image",
-    src: "/images/modern-06.png",
+    src: "modern-06",
     iw: 2756,
     ih: 3068,
     w: 433,
@@ -113,7 +120,7 @@ const DESKTOP: Tile[] = [
   {
     name: " -07",
     kind: "image",
-    src: "/images/modern-07.png",
+    src: "modern-07",
     iw: 2010,
     ih: 3068,
     w: 316,
@@ -122,7 +129,7 @@ const DESKTOP: Tile[] = [
   {
     name: " -08",
     kind: "image",
-    src: "/images/modern-08.png",
+    src: "modern-08",
     iw: 3640,
     ih: 3068,
     w: 572,
@@ -131,7 +138,7 @@ const DESKTOP: Tile[] = [
   {
     name: " -09",
     kind: "image",
-    src: "/images/modern-09.png",
+    src: "modern-09",
     iw: 2010,
     ih: 3068,
     w: 316,
@@ -140,7 +147,7 @@ const DESKTOP: Tile[] = [
   {
     name: "-10 1",
     kind: "image",
-    src: "/images/modern-10.png",
+    src: "modern-10",
     iw: 1878,
     ih: 1001,
     w: 904,
@@ -152,15 +159,15 @@ const PHONE: Tile[] = [
   {
     name: "01",
     kind: "video",
-    src: "/videos/modern-01-phone.mp4",
-    poster: "/images/modern-01-poster.png",
+    src: "modern-01-phone-mp4",
+    poster: "modern-01-poster",
     w: 335,
     ar: 0.956947,
   },
   {
     name: " -02",
     kind: "image",
-    src: "/images/modern-02.png",
+    src: "modern-02",
     iw: 3640,
     ih: 3068,
     w: 415,
@@ -169,7 +176,7 @@ const PHONE: Tile[] = [
   {
     name: " -03",
     kind: "image",
-    src: "/images/modern-03.png",
+    src: "modern-03",
     iw: 2755,
     ih: 3068,
     w: 314,
@@ -178,7 +185,7 @@ const PHONE: Tile[] = [
   {
     name: " -04",
     kind: "image",
-    src: "/images/modern-04.png",
+    src: "modern-04",
     iw: 5757,
     ih: 3068,
     w: 656,
@@ -187,7 +194,7 @@ const PHONE: Tile[] = [
   {
     name: " -05",
     kind: "image",
-    src: "/images/modern-05.png",
+    src: "modern-05",
     iw: 2756,
     ih: 3068,
     w: 314,
@@ -196,7 +203,7 @@ const PHONE: Tile[] = [
   {
     name: " -06",
     kind: "image",
-    src: "/images/modern-06.png",
+    src: "modern-06",
     iw: 2756,
     ih: 3068,
     w: 314,
@@ -205,7 +212,7 @@ const PHONE: Tile[] = [
   {
     name: " -07",
     kind: "image",
-    src: "/images/modern-07.png",
+    src: "modern-07",
     iw: 2010,
     ih: 3068,
     w: 229,
@@ -214,7 +221,7 @@ const PHONE: Tile[] = [
   {
     name: " -08",
     kind: "image",
-    src: "/images/modern-08-phone.png",
+    src: "modern-08-phone",
     iw: 2755,
     ih: 3068,
     w: 314.281,
@@ -223,7 +230,7 @@ const PHONE: Tile[] = [
   {
     name: " -09",
     kind: "image",
-    src: "/images/modern-09.png",
+    src: "modern-09",
     iw: 2010,
     ih: 3068,
     w: 229,
@@ -232,7 +239,7 @@ const PHONE: Tile[] = [
   {
     name: "-10 1",
     kind: "image",
-    src: "/images/modern-10-phone.png",
+    src: "modern-10-phone",
     iw: 1188,
     ih: 1001,
     w: 415.375,
@@ -349,8 +356,8 @@ function Ticker({
               {t.kind === "video" ? (
                 <video
                   className="modern-video"
-                  src={t.src}
-                  poster={t.poster}
+                  src={CDN_VIDEOS[t.src]}
+                  poster={CDN_POSTERS[t.poster]}
                   loop
                   muted
                   playsInline
@@ -359,15 +366,31 @@ function Ticker({
                 />
               ) : (
                 <div className="modern-img-wrap">
-                  <Image
-                    src={t.src}
-                    alt=""
-                    fill
-                    sizes={sizes}
-                    draggable={false}
-                    className="modern-img"
-                    unoptimized
-                  />
+                  {/* A plain <picture> rather than next/image: these are already
+                      encoded at 2x their render width and served immutable from
+                      the CDN, so the optimizer has nothing left to do. The wrap
+                      is inset-0 and .modern-img is object-fit:cover, which is
+                      all `fill` was contributing. */}
+                  <picture>
+                    <source
+                      srcSet={CDN_IMAGES[t.src].avif}
+                      type="image/avif"
+                      sizes={sizes}
+                    />
+                    <source
+                      srcSet={CDN_IMAGES[t.src].webp}
+                      type="image/webp"
+                      sizes={sizes}
+                    />
+                    <img
+                      src={CDN_IMAGES[t.src].webp}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      draggable={false}
+                      className="modern-img"
+                    />
+                  </picture>
                 </div>
               )}
             </div>

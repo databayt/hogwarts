@@ -30,6 +30,36 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
   `(saas-marketing)/page.tsx` (deleted). Read this before touching anything on
   the homepage — most of the block's older homepage notes below now describe
   **unwired** components.
+  - _Homepage imagery is served from the CDN, NOT from `public/` (2026-08-31)._
+    **The re-authoring workflow changed — read this before regenerating a
+    tile.** Sources now live in `assets/marketing/home/`, which is NOT served;
+    dropping new art into `public/images/` no longer does anything. The loop is:
+
+        # 1. replace the source
+        cp new-art.png assets/marketing/home/modern-05.png
+        # 2. encode + publish + regenerate the manifest
+        pnpm tsx scripts/upload-marketing-assets.ts --upload
+        # 3. commit src/components/saas-marketing/thmanyah/lib/cdn-assets.ts
+
+    `cdn-assets.ts` is GENERATED — never hand-edit it. Keys carry a content
+    hash, so new art gets a new URL and is served immediately; no CloudFront
+    invalidation is ever needed, and `immutable` stays safe.
+
+    Why: the tiles shipped as raw PNG behind `<Image unoptimized>` — a 3.8MB
+    2756px source to fill a 433px tile — and everything under `public/` is
+    served `max-age=0, must-revalidate`, so nothing cached between visits.
+    Measured on the desktop set: **15.49MB -> 2.57MB (-83%)**, of which the
+    1.58MB of video is deliberately unchanged. `ModernShowcaseBlock` and
+    `StoryNarrativeBlock` render a plain `<picture>` (AVIF -> WebP) rather than
+    `next/image`: the files are pre-encoded at 2x display width, so the
+    optimizer has nothing left to do.
+
+    GOTCHA: the publisher hardcodes bucket `databayt-cdn`. `AWS_S3_BUCKET` in
+    `.env` names `hogwarts-databayt`, the app's own upload bucket — publishing
+    there succeeds and then every CDN URL 403s, because the distribution never
+    sees the object. The script verifies each URL over HTTPS after upload and
+    refuses to write the manifest if any fails.
+
   - _The hero copy is OURS, the rest is still thmanyah's (2026-08-31)._
     `HeroBlock.tsx` sells the platform: eyebrow `منصة بالقلم`, headline
     `نظام واحد يُدير أعمـال المدرسـة والتعليـم معًا` (green mark on the last two

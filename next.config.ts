@@ -75,6 +75,36 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "no-store, must-revalidate" },
         ],
       },
+      // Everything under public/ is served `max-age=0, must-revalidate` by
+      // default (Next will not cache non-hashed files), so repeat visitors
+      // re-fetch every asset. The homepage's imagery now comes from
+      // cdn.databayt.org, which sets its own immutable headers; these two
+      // directories stay local and need the policy set here.
+      {
+        // Fonts are content-stable: the same woff2 files, re-fetched byte
+        // -identical by prebuild. Safe to freeze for a year.
+        source: "/fonts/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        // Lottie is NOT immutable — these filenames get replaced in place, the
+        // way the modern-* tiles were on 2026-08-31. A week with revalidation
+        // in the background, so a swap is picked up rather than pinned for a
+        // year. (Left on Vercel deliberately: it brotlis this JSON from ~250KB
+        // to ~10KB, which is the whole cost already won.)
+        source: "/lottie/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
     ]
   },
   images: {
