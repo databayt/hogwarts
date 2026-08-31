@@ -1,0 +1,3779 @@
+/* Copyright (c) 2025-present databayt
+   Licensed under SSPL-1.0 -- see LICENSE for details */
+
+/* =========================================================================
+   THMANYAH CLONE — font.thmanyah.com's homepage, ported verbatim.
+
+   Source: /Users/abdout/thmanyah/src/app/globals.css (a 1:1 mirror of the
+   live site's computed CSS). Every bespoke rule below — `.page-wrap`,
+   `.hero-*`, `.traits-*`, `.try-*`, `.footer-*`, the framer data-attribute
+   selectors — is byte-identical to that file and to the reference.
+
+   Four deliberate deltas, all forced by living inside hogwarts rather than
+   in a single-purpose app (this file loads globally from the root layout,
+   the way zenda-clone.css and apple-clone.css do, so nothing here may leak):
+
+     1. `@import "tailwindcss"` dropped — hogwarts' globals.css already
+        imports it, and a second import would duplicate the whole framework.
+     2. The `@layer base { :root { … } }` token block dropped. Its
+        `--background` / `--foreground` / `--radius` would have overwritten
+        hogwarts' own theme tokens document-wide, and nothing in the clone
+        read the `--thmanyah-*` names — only `body`'s two colours, now
+        written as the literals they resolved to (#fff / #050505).
+     3. The document-level reset (`html { … }`, `body, input, textarea,
+        select, button { … }`) is re-anchored on `.thmanyah-shell`, the
+        wrapper the homepage renders. Framer's 12px/sans-serif reset is load
+        bearing — an inline Lottie svg in a height:auto box sits on that line
+        box — so it is kept in full, just confined to the clone's subtree.
+        `scroll-behavior` has to stay on the scrolling element (the hero CTA
+        is href="#footer"), hence the `:has()` form.
+     4. `body { overflow-x: visible }` added under the same `:has()` guard.
+        The reference leaves the body scrollable-visible and clips wide
+        content (marquee track, SVGs) on the sections themselves; hogwarts'
+        globals.css sets an unlayered `body { overflow-x: hidden }` that
+        would otherwise change how the marquee and the Modern strip clip.
+
+   Everything after this header is the source file's own commentary.
+   ========================================================================= */
+
+/* =========================================================================
+   THMANYAH FONT FAMILY DEFINITIONS
+   ========================================================================= */
+
+/* --- Thmanyah Sans --- */
+@font-face {
+  font-family: "thmanyah sans";
+  src:
+    url("/fonts/thmanyah-sans-light.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/Lh8puxCFq405qBv7dKpg9NsHZNk.woff2")
+      format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah sans";
+  src:
+    url("/fonts/thmanyah-sans-regular.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/x6EBzvXf1Fi35XhsRoHxePDVo.woff2")
+      format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah sans";
+  src:
+    url("/fonts/thmanyah-sans-medium.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/oE98mOPE28KTzUeptOLRIaqW1I.woff2")
+      format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah sans";
+  src:
+    url("/fonts/thmanyah-sans-bold.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/LZvgFRUsP7pGWYj3tKxMUrKuhSY.woff2")
+      format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah sans";
+  src:
+    url("/fonts/thmanyah-sans-black.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/ulQLGTktcl2Qq4AmD6RuVgELZKg.woff2")
+      format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Thmanyah Serif Display --- */
+@font-face {
+  font-family: "thmanyah serif display";
+  src:
+    url("/fonts/thmanyah-serif-display-light.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/zmxf3YlIwMxBTz61cviQtq5n3zU.woff2")
+      format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif display";
+  src:
+    url("/fonts/thmanyah-serif-display-regular.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/s1q2LvVNWBbqzMxMBxsexY73tE.woff2")
+      format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif display";
+  src:
+    url("/fonts/thmanyah-serif-display-medium.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/ahIxG21c1088n0jA0bPQBjKu6M.woff2")
+      format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif display";
+  src:
+    url("/fonts/thmanyah-serif-display-bold.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/AAY5hsAWwWmVC7qlScZUGjzCgE8.woff2")
+      format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif display";
+  src:
+    url("/fonts/thmanyah-serif-display-black.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/a9r2dKNoQcqFiTkwxTUnXgAfjws.woff2")
+      format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Thmanyah Serif Text --- */
+@font-face {
+  font-family: "thmanyah serif text";
+  src:
+    url("/fonts/thmanyah-serif-text-light.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/pXAhTrUNoEDB4CTUcjXvXy1gFAc.woff2")
+      format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif text";
+  src:
+    url("/fonts/thmanyah-serif-text-regular.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/3WPjrTAizPcMoDaKDtKdNB0Jo50.woff2")
+      format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif text";
+  src:
+    url("/fonts/thmanyah-serif-text-medium.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/bsVNF5mKouPfUJiPWsBKDU324NM.woff2")
+      format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif text";
+  src:
+    url("/fonts/thmanyah-serif-text-bold.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/L62MixAFhJojtLTRD19wOsCnFg.woff2")
+      format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif text";
+  src:
+    url("/fonts/thmanyah-serif-text-black.woff2") format("woff2"),
+    url("https://framerusercontent.com/assets/z8brS6Wjld2pvgVBkmzMQpyPO4.woff2")
+      format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Thmanyah 1.2 families — the reference loads these as separate
+   families ("Thmanyah sans 1.2 Bold" etc.) and uses them in a few spots
+   (e.g. the Trials "No." row numbers). Same files as on the live site. --- */
+@font-face {
+  font-family: "thmanyah sans 1.2";
+  src: url("/fonts/thmanyah-sans-1.2-light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah sans 1.2";
+  src: url("/fonts/thmanyah-sans-1.2-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah sans 1.2";
+  src: url("/fonts/thmanyah-sans-1.2-medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah sans 1.2";
+  src: url("/fonts/thmanyah-sans-1.2-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif display 1.2";
+  src: url("/fonts/thmanyah-serif-display-1.2-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif text 1.2";
+  src: url("/fonts/thmanyah-serif-text-1.2-light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif text 1.2";
+  src: url("/fonts/thmanyah-serif-text-1.2-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif text 1.2";
+  src: url("/fonts/thmanyah-serif-text-1.2-medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif text 1.2";
+  src: url("/fonts/thmanyah-serif-text-1.2-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "thmanyah serif text 1.2";
+  src: url("/fonts/thmanyah-serif-text-1.2-black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Base Body Settings --- */
+/* The reference sets no page font at all — Framer's reset is
+   `body,input,textarea,select,button { font-family: sans-serif; font-size: 12px }`
+   and every text node carries its own family/size. Mirroring that reset
+   matters where nothing sets a font: an inline Lottie svg in a height:auto
+   box sits on a 12px sans-serif line box, which is where the reference's
+   3px gap under the مرن Lottie comes from.
+
+   Re-anchored on `.thmanyah-shell` so the reset stops at the clone's
+   subtree — see delta 3 in this file's header.                            */
+html:has(.thmanyah-shell) {
+  scroll-behavior: smooth;
+  line-height: normal; /* Framer leaves the UA default; Tailwind's preflight sets 1.5 */
+}
+
+body:has(.thmanyah-shell) {
+  /* No `overflow-x: hidden` — the reference leaves body `overflow: visible`
+     and clips wide content (marquee track, SVGs) on the sections themselves.
+     hogwarts' globals.css hides it, so it is restored here.                */
+  overflow-x: visible;
+}
+
+.thmanyah-shell {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: sans-serif;
+  font-size: 12px;
+  line-height: normal;
+  background-color: #fff;
+  color: #050505;
+
+  /* Escape the root .layout-container gutter (src/app/[lang]/layout.tsx puts
+     `layout-container` — padding-inline: var(--container-px) !important — on
+     its wrapper div). The clone is full-bleed from the hero down, so the
+     outer padding has to come off. Same trick as .page-wrapper in
+     zenda-shell.css. */
+  margin-inline: calc(-1 * var(--container-px, 0px));
+}
+
+/* `:where()` keeps the scope at zero specificity, so these stay exactly as
+   weak as the reference's bare `input, textarea, select, button` selector —
+   a plain `.thmanyah-shell textarea` would outrank single-class rules like
+   `.tester-ta { font-size: 124px }` and shrink the tester to 12px.        */
+:where(.thmanyah-shell) input,
+:where(.thmanyah-shell) textarea,
+:where(.thmanyah-shell) select,
+:where(.thmanyah-shell) button {
+  font-family: sans-serif;
+  font-size: 12px;
+}
+
+/* OpenType Stylistic Alternates feature class */
+.stylistic-alternates {
+  font-feature-settings:
+    "ss01" on,
+    "ss02" on,
+    "ss03" on,
+    "ss04" on,
+    "ss05" on,
+    "cv01" on,
+    "cv02" on,
+    "cv03" on,
+    "cv04" on,
+    "cv09" on,
+    "cv11" on,
+    "blwf" on;
+}
+
+.no-stylistic-alternates {
+  font-feature-settings:
+    "ss01" off,
+    "ss02" off,
+    "ss03" off,
+    "ss04" off,
+    "ss05" off,
+    "cv01" off,
+    "cv02" off,
+    "cv03" off,
+    "cv04" off,
+    "cv09" off,
+    "cv11" off,
+    "blwf" off;
+}
+
+/* Custom selection styling */
+.thmanyah-shell ::selection {
+  background-color: #9fe5b1;
+  color: #050505;
+}
+
+/* ── Scrollbars — mirrored 1:1 from font.thmanyah.com ──
+   The reference restyles nothing: the document scrollbar is the native one
+   (html/body compute `scrollbar-width: auto` / `scrollbar-color: auto`), and
+   the only scrollbar CSS Framer emits *hides* the bar on opt-in inner scroll
+   containers. Reproduced verbatim below; the per-component duplicates
+   (`.framer-wBo0j[data-hide-scrollbars=true]…`) are re-emissions of these same
+   declarations, so the generic block is the whole pattern.               */
+[data-framer-component-type="Scroll"]::-webkit-scrollbar {
+  display: none;
+}
+
+[data-framer-component-type="NativeScroll"].scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+[data-hide-scrollbars="true"]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+[data-hide-scrollbars="true"]::-webkit-scrollbar-thumb {
+  background: 0 0;
+}
+
+[data-hide-scrollbars="true"] {
+  scrollbar-width: none;
+}
+
+/* ── Page skeleton — declarations copied 1:1 from font.thmanyah.com ──
+   .framer-4r0p4 (page wrap) · .framer-1yhopfz "الصفـات" · .framer-b9uyjp "Try"
+   · .framer-15lko0y "Trigger" #tyt · .framer-scq2lf "Footer".
+   The wrap's breakpoint `width:Npx` rules are all overridden by its inline
+   `width:auto`, so only the flex column + clip survive.                    */
+.page-wrap {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 0;
+  width: auto;
+  min-height: 100vh;
+  height: min-content;
+  padding: 0;
+  background-color: #fff;
+  overflow: clip;
+}
+.traits-section {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  background-color: #fff;
+  overflow: clip;
+}
+.try-section {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.try-trigger {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0%;
+  flex: 0 0 auto;
+  gap: 0;
+  width: 100%;
+  height: 437px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.footer-section {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  height: 76vh;
+  padding: 36px 60px 0;
+  scroll-margin-top: 80px;
+  overflow: clip;
+}
+@media (min-width: 600px) and (max-width: 1199.98px) {
+  .footer-section {
+    padding: 36px 24px 0;
+  }
+}
+@media (max-width: 599.98px) {
+  .footer-section {
+    height: 64vh;
+    padding: 16px 12px 0;
+  }
+}
+
+/* Lottie mounts — the reference's lottie-web svgs are inline (Framer sets no
+   display on them); Tailwind's preflight would make them display:block and
+   drop the baseline gap the reference's auto-height Lottie boxes include. */
+.lottie-mount > svg {
+  display: inline;
+  vertical-align: baseline;
+}
+
+/* ── Hero — measured 1:1 from font.thmanyah.com (.framer-23p5c9) ──
+   Framer breakpoints: phone <810 · tablet 810–1199 · desktop ≥1200      */
+.hero-section {
+  padding: 16px 20px 36px;
+}
+.hero-title {
+  font-size: 20px;
+  line-height: 1.5em;
+}
+.hero-words {
+  font-size: 48px;
+  max-width: 432px;
+  row-gap: 10px;
+  column-gap: 12px;
+}
+
+/* Text (.framer-1htsxxd) · CTA (.framer-3lvoni) · mark (.framer-whameh) */
+.hero-text {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-start center;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  min-width: 240px;
+  max-width: 1320px;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.hero-cta {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-start center;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  max-width: 1320px;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.hero-mark {
+  position: absolute;
+  inset: 28px -1px 26px 1px;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center space-between;
+  align-items: center;
+  padding: 0;
+  background-color: #9fe5b1;
+  overflow: visible;
+}
+
+@media (max-width: 599.98px) {
+  .hero-section {
+    height: 88vh;
+  }
+  .hero-text {
+    flex: 1 0 0px;
+    gap: 16px;
+    height: 1px;
+  }
+  .hero-mark {
+    inset: 15px 0 12px;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 809.98px) {
+  .hero-section {
+    padding: 36px 40px 40px;
+  }
+  .hero-text {
+    flex: 1 0 0px;
+    max-width: unset;
+    height: 1px;
+  }
+  .hero-mark {
+    top: 25px;
+    bottom: 23px;
+    right: -1px;
+  }
+}
+
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .hero-text {
+    flex: 1 0 0px;
+    max-width: unset;
+    height: 1px;
+  }
+  .hero-mark {
+    inset: 25px 0 22px;
+  }
+}
+
+@media (min-width: 600px) {
+  .hero-title {
+    font-size: 24px;
+  }
+  .hero-words {
+    font-size: 80px;
+    max-width: 840px;
+    column-gap: 17px;
+  }
+}
+
+@media (min-width: 810px) {
+  .hero-section {
+    padding: 80px 40px 40px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hero-section {
+    padding: 132px 60px 60px;
+  }
+  .hero-words {
+    font-size: 92px;
+  }
+}
+
+@media (min-width: 2637px) {
+  .hero-section {
+    padding: 132px 80px 80px;
+  }
+}
+
+/* ── The Answer — declarations copied 1:1 from font.thmanyah.com
+   (.framer-1ogfghp / -1tx7snx / -1rkxe1n / -1ukmi88 / -1mprlpy / -izlaqb /
+    -1n6arzq / -17jeuwe / -avjrr4 / -1yam62l-container).
+   Framer breakpoints: <600 · 600-809 · 810-1199 · >=1200 · >=2637        */
+.answer-section {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 80px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+  background-color: #fff;
+}
+.answer-inner {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.answer-row {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 76px;
+  width: 100%;
+  height: min-content;
+  max-height: 824px;
+  overflow: clip;
+}
+.answer-row--a {
+  place-content: center;
+  padding: 0 60px 0 0;
+}
+.answer-row--b {
+  place-content: center flex-start;
+  padding: 0 0 0 60px;
+}
+.answer-text {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  justify-content: flex-start;
+  flex: 1 0 0px;
+  width: 1px;
+  height: auto;
+  font-size: 20px;
+  line-height: 1.5em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.answer-media {
+  position: relative;
+  flex: 0 0 auto;
+  width: 52%;
+  height: 76vh;
+}
+.answer-eight {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+}
+.answer-lottie {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 100vh;
+}
+
+@media (min-width: 2637px) {
+  .answer-row {
+    max-width: 1440px;
+  }
+}
+
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .answer-row {
+    max-height: unset;
+    flex-direction: column;
+    overflow: visible;
+  }
+  .answer-row--a {
+    padding: 0 0 60px;
+  }
+  .answer-row--b {
+    padding: 60px 0 0;
+  }
+  .answer-text {
+    flex: 0 0 auto;
+    justify-content: center; /* the tablet variant centres the copy in its fixed-height box */
+    width: 90%;
+  }
+  .answer-text--a {
+    order: 1;
+    height: 52vh;
+  }
+  .answer-text--b {
+    order: 0;
+    height: 312px;
+  }
+  .answer-media {
+    width: 100%;
+  }
+  .answer-media--a {
+    order: 0;
+  }
+  .answer-media--b {
+    order: 1;
+  }
+  .answer-lottie {
+    height: 476px;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 809.98px) {
+  .answer-row {
+    max-height: unset;
+    flex-direction: column;
+    overflow: visible;
+  }
+  .answer-row--a {
+    padding: 0 0 60px;
+  }
+  .answer-row--b {
+    padding: 60px 0 0;
+  }
+  .answer-text {
+    flex: 0 0 auto;
+    width: 90%;
+  }
+  .answer-text--a {
+    order: 1;
+  }
+  .answer-text--b {
+    order: 0;
+  }
+  .answer-media {
+    width: 100%;
+  }
+  .answer-media--a {
+    order: 0;
+  }
+  .answer-media--b {
+    order: 1;
+  }
+  .answer-lottie {
+    height: 560px;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .answer-inner {
+    gap: 36px;
+  }
+  .answer-row {
+    max-height: unset;
+    flex-direction: column;
+    gap: 36px;
+    padding: 0;
+    overflow: visible;
+  }
+  .answer-text {
+    flex: 0 0 auto;
+    width: 90%;
+  }
+  .answer-text--a {
+    order: 1;
+    font-size: 18px;
+  }
+  .answer-text--b {
+    order: 0;
+  }
+  .answer-media--a {
+    order: 0;
+    width: 100%;
+    aspect-ratio: 1.07831 / 1;
+    height: auto;
+  }
+  /* Reference ships flex:1 0 0px + height:1px here, which collapses this
+     image to 0px on the live site below 600px. Mirrored as-is.           */
+  .answer-media--b {
+    flex: 1 0 0px;
+    order: 1;
+    width: 100%;
+    height: 1px;
+  }
+  .answer-lottie {
+    aspect-ratio: 1.18902 / 1;
+    height: auto;
+  }
+}
+
+/* ── خط أصيل — declarations copied 1:1 from font.thmanyah.com
+   (.framer-1d3c69d "اصيل" / -qjoslg "Frame" /
+    -33f5si "title" #jamal / -1r8qoch / -8rtppn / -1pukmp2 / -1djmzb3 /
+    -11ecfwm "Images" / -1ekhta6 / -16cdd53 / -19x5wvx / -7ejxn1 "After Title" /
+    -4mvx2z "Before Title" / -1j333s7 "Scroll Spacing" #أصيل).
+   The enclosing `الصفـات` section (.framer-1yhopfz) belongs to HomeTemplate,
+   not to this block. The reference clips overflow on it as well as on the
+   frame; the frame's own clip already contains the wipe, so nothing here
+   depends on the outer section carrying one.
+
+   Framer breakpoints: <600 · 600-809 · 810-1199 · >=1200
+
+   The frame is `position: sticky; top: 0` and the sibling spacer supplies the
+   scroll runway, which is how the before/after wipe is driven: the mask
+   translates -X while the card inside counter-translates +X, so the "before"
+   image stays visually pinned while its window slides off, revealing the
+   "after" image beneath it right-to-left. Travel is 0 → -1600px across the
+   runway at >=600 and 0 → -500px below it (see CalligraphyComparisonBlock).  */
+.aseel-inner {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+.aseel-frame {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  justify-content: center;
+  align-items: center;
+  gap: 36px;
+  width: 100%;
+  padding: 60px 20px;
+  overflow: clip;
+  background-color: #fff;
+}
+.aseel-spacer {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 80vh;
+  pointer-events: none;
+}
+
+/* title (#jamal) */
+.aseel-title {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 12px;
+  width: 100%;
+  max-width: 1320px;
+  color: #000;
+}
+.aseel-title-group {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+.aseel-eyebrow-box {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  white-space: pre;
+}
+.aseel-eyebrow {
+  font-family: "thmanyah serif display", serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 36px;
+  text-align: center;
+  white-space: pre;
+  font-feature-settings: "ss01" on;
+}
+.aseel-headline-box {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.aseel-headline {
+  font-family: "thmanyah serif display", serif;
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 66px;
+  text-align: right;
+}
+.aseel-lede-box {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.aseel-lede {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  font-feature-settings:
+    "blwf" on,
+    "cv09" on,
+    "cv03" on,
+    "cv04" on,
+    "cv11" on;
+}
+
+/* images (.framer-11ecfwm) */
+.aseel-images {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 1440px;
+  height: 364px;
+  border-radius: 32px;
+}
+.aseel-card {
+  position: relative;
+  flex: 1 0 0px;
+  width: 100%;
+  height: 100%;
+  border-radius: 32px;
+  overflow: clip;
+}
+.aseel-mask {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 10px;
+  overflow: clip;
+}
+.aseel-card-before {
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+}
+.aseel-media {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+/* The reference ships a near-square phone crop of each card below 600
+   (788x756 / 788x752) and the wide 1547x756 artwork at >=600, mirroring its
+   own `ssr-variant` swap. Cropping the wide asset instead would show a
+   zoomed middle slice on phones.                                          */
+.aseel-media--phone {
+  display: block;
+}
+.aseel-media--wide {
+  display: none;
+}
+.aseel-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  object-position: center center;
+}
+.aseel-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 8px;
+  border-radius: 36px;
+  overflow: clip;
+}
+.aseel-pill-text {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  white-space: pre;
+}
+.aseel-pill--after {
+  background-color: #000;
+}
+.aseel-pill--after .aseel-pill-text {
+  color: #fff;
+}
+.aseel-pill--before {
+  background-color: #fff;
+}
+.aseel-pill--before .aseel-pill-text {
+  color: #000;
+}
+
+@media (min-width: 600px) {
+  .aseel-frame {
+    height: 100vh;
+    justify-content: flex-start;
+    gap: 48px;
+    padding: 64px 40px 40px;
+  }
+  .aseel-spacer {
+    height: 40vh;
+  }
+  .aseel-headline-box {
+    width: auto;
+    white-space: pre;
+    word-break: normal;
+  }
+  .aseel-images {
+    flex: 1 0 0px;
+    height: auto;
+    border-radius: 70px;
+  }
+  .aseel-media--phone {
+    display: none;
+  }
+  .aseel-media--wide {
+    display: block;
+  }
+  .aseel-card,
+  .aseel-card-before {
+    border-radius: 56px;
+  }
+  .aseel-pill {
+    padding: 6px 16px 8px;
+  }
+  .aseel-pill--after {
+    border-radius: 60px;
+  }
+  .aseel-pill-text {
+    line-height: 21px;
+  }
+}
+
+@media (min-width: 810px) {
+  .aseel-images {
+    max-height: 500px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .aseel-frame {
+    justify-content: center;
+    padding: 80px 60px;
+  }
+  .aseel-spacer {
+    height: 80vh;
+  }
+  .aseel-images {
+    max-height: none;
+  }
+}
+
+/* ── Trials — declarations copied 1:1 from font.thmanyah.com
+   (.framer-1ns1rxg "Trials" / -1jtg0si-container / START component
+    .framer-V35Oc.framer-bkzjjz (-v-1obky9b row · -v-1o8f7ft "START/Mob") /
+    -1inbwi3 "title" / -twcf6g / -vh2812 / -x5g8r5 / -acqcv1 "Numbers" /
+    -1vho5yw "No." / -1x4dkwq cells / -1ixtn38 "Fade W" /
+    -1hqdotc-container + -1e23szr-container "JAMLIA" /
+    -163w8c0 "No." row + -pv2gbt cells).
+   Framer breakpoints: <600 · 600-809 · 810-1199 · >=1200                   */
+.trials-section {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: 100vh;
+  padding: 60px;
+  background-color: #000;
+  overflow: visible;
+  color: #000; /* the reference's body colour — the "No." row labels inherit it */
+  direction: rtl;
+}
+.trials-container {
+  position: relative;
+  flex: 1 0 0px;
+  width: 100%;
+  max-width: 1320px;
+  height: 1px;
+  will-change: transform; /* stacking context — isolates the JAMLIA blend group */
+}
+.trials-component {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: clip;
+}
+.trials-title {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-flow: column;
+  flex: 1 0 0px;
+  justify-content: flex-start;
+  align-content: flex-end;
+  align-items: flex-end;
+  gap: 160px;
+  width: 1px;
+  max-width: 1040px;
+  height: 100%;
+  padding: 80px 0 80px 48px;
+  overflow: clip;
+}
+.trials-head {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  height: 204px;
+  padding: 0;
+  overflow: visible;
+}
+.trials-head-group {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-end center;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.trials-text {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  width: 100%;
+  height: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.trials-eyebrow {
+  font-family: "thmanyah serif display", serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.5em;
+  letter-spacing: 0em;
+  text-align: right;
+  color: #fff;
+  font-feature-settings: "ss01" on;
+}
+.trials-headline {
+  font-family: "thmanyah serif display", serif;
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1.5em;
+  text-align: right;
+  color: #fff;
+  font-feature-settings: "ss01" on;
+}
+.trials-lede {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.5em;
+  text-align: right;
+  color: #fff;
+}
+.trials-numbers {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-start center;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: hidden;
+}
+.trials-no--inline {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
+  place-content: flex-start flex-end;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.trials-cell {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 1 0 0px;
+  place-content: center;
+  align-items: center;
+  gap: 4px;
+  width: 1px;
+  height: min-content;
+  padding: 0;
+  overflow: hidden;
+}
+.trials-cell-body {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+/* preset 8fabov: sans Regular 14 / 1.5em / -0.02em / start */
+.trials-cell-label,
+.trials-row-label,
+.trials-row-desc {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5em;
+  letter-spacing: -0.02em;
+  text-align: start;
+  font-feature-settings: normal;
+}
+.trials-cell-label {
+  color: #fff;
+}
+.trials-cell-number {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2em;
+  letter-spacing: -0.04em;
+  text-align: right;
+  color: #fff;
+  font-feature-settings: "ss01" on;
+}
+/* preset 180keat: sans Regular 16 / 1.5em / blwf cv09 cv03 cv04 cv11 */
+.trials-cell-desc {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5em;
+  letter-spacing: 0em;
+  text-align: right;
+  color: #fff;
+  font-feature-settings:
+    "blwf" on,
+    "cv09" on,
+    "cv03" on,
+    "cv04" on,
+    "cv11" on;
+}
+.trials-fade {
+  position: absolute;
+  z-index: 1;
+  top: calc(50.0697% - min(602px, 100%) / 2);
+  left: 0;
+  flex: 0 0 auto;
+  width: 496px;
+  height: 100%;
+  max-height: 602px;
+  overflow: visible;
+  background: linear-gradient(
+    180deg,
+    rgb(0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) 8%,
+    rgba(0, 0, 0, 0) 92%,
+    rgb(0, 0, 0) 100%
+  );
+}
+.trials-jamlia--row {
+  position: relative;
+  flex: 1 0 0px;
+  width: 1px;
+  height: 100%;
+  max-height: 600px;
+  mix-blend-mode: color;
+}
+.trials-jamlia--mob {
+  display: none;
+  position: relative;
+  flex: 0 0 auto;
+  order: 1;
+  width: 100%;
+  min-width: 100px;
+  height: 316px;
+  max-height: 600px;
+}
+.trials-jamlia-inner {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+}
+/* the separate "No." row (.framer-163w8c0) — hidden at >=1200 */
+.trials-no--row {
+  display: none;
+  position: relative;
+  flex-flow: wrap;
+  flex: 0 0 auto;
+  place-content: flex-start flex-end;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.trials-row-cell {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 1 0 0px;
+  place-content: center;
+  align-items: center;
+  gap: 4px;
+  width: 1px;
+  min-width: 156px;
+  height: min-content;
+  padding: 0;
+  overflow: hidden;
+}
+.trials-row-number {
+  font-family: "thmanyah sans 1.2", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2em;
+  letter-spacing: -0.04em;
+  text-align: right;
+  color: #fff;
+  font-feature-settings: "ss01" on;
+}
+.trials-row-desc {
+  text-align: right;
+  color: #fff;
+}
+
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .trials-section {
+    padding: 40px;
+  }
+  .trials-numbers > * {
+    display: none; /* the tablet variant ships an empty "Numbers" box */
+  }
+  .trials-no--row {
+    display: flex;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 809.98px) {
+  .trials-section {
+    height: min-content;
+    padding: 40px;
+  }
+  .trials-container {
+    flex: 0 0 auto;
+    height: auto;
+  }
+  .trials-component {
+    height: 717px; /* .framer-bkzjjz — no inline height at this range */
+  }
+  .trials-no--row {
+    display: flex;
+  }
+  .trials-row-cell {
+    min-width: 168px;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .trials-section {
+    gap: 36px;
+    height: min-content;
+    padding: 60px 20px;
+  }
+  .trials-container {
+    flex: 0 0 auto;
+    height: auto;
+  }
+  /* START/Mob (.framer-v-1o8f7ft) */
+  .trials-component {
+    flex-direction: column;
+    gap: 36px;
+    height: min-content;
+  }
+  .trials-title {
+    flex: 0 0 auto;
+    order: 0;
+    gap: 60px;
+    width: 100%;
+    height: min-content;
+    padding: 0;
+  }
+  .trials-head {
+    gap: 20px;
+    height: min-content;
+  }
+  .trials-headline {
+    font-size: 40px;
+  }
+  .trials-lede-box {
+    order: 2;
+    height: 60px;
+  }
+  .trials-lede {
+    font-size: 20px;
+  }
+  .trials-numbers {
+    display: none;
+  }
+  .trials-jamlia--mob {
+    display: block;
+  }
+  .trials-jamlia--row {
+    display: none;
+  }
+  .trials-fade {
+    top: unset;
+    bottom: 79px;
+    order: 3;
+    width: 100%;
+    height: 318px;
+  }
+  .trials-no--row {
+    display: flex;
+  }
+  .trials-row-cell {
+    min-width: 200px;
+  }
+  /* the phone variant is the only one that sets the label colour */
+  .trials-row-label {
+    color: #fff;
+  }
+}
+
+/* ── مرن + New design - wireframe — declarations copied 1:1 from
+   font.thmanyah.com (.framer-1nmkaac "مرن" / -ia48yy-container /
+   .framer-heabf.framer-16kzhtp / -1xmf9qe-container "MARN" / -f1nocq /
+   -16y31r2 "New design - wireframe" / -18e3f0s "Section 1" / -99wt5w +
+   -14mux3i columns / -jguvu8 -14aaw2t -d35rkp -1ga6ryr -1mzb0rk -ez42e1
+   -1b9f0r2 tiles). Framer breakpoints: <600 · 600-809 · 810-1199 · >=1200 · >=2637 */
+.marn-section {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: 100vh;
+  padding: 40px 60px 120px;
+  overflow: visible;
+}
+.marn-slot {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 1320px;
+  height: 412px;
+  will-change: transform;
+}
+.marn-component {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: center;
+  align-items: center;
+  gap: 48px;
+  width: 100%;
+  max-width: 100%;
+  height: 100%; /* inline style on the reference component — fills the 412px slot so the taller Lottie centres over it */
+  padding: 0;
+  overflow: visible;
+}
+.marn-lottie {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+}
+.marn-lottie-mount {
+  width: 100%;
+  height: auto;
+}
+.wire-wrap {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.wire-strip {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: flex-start flex-end;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  background-color: #fff;
+  overflow: hidden;
+}
+.wire-section {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 1 0 0px;
+  place-content: flex-start;
+  align-items: flex-start;
+  gap: 0;
+  width: 1px;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.wire-col {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 1 0 0px;
+  place-content: center;
+  align-items: center;
+  gap: 0;
+  width: 1px;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.wire-row {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.wire-tile {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+}
+.wire-tile--1 {
+  aspect-ratio: 2.55319;
+}
+.wire-tile--2 {
+  aspect-ratio: 1.52284;
+}
+.wire-tile--3 {
+  aspect-ratio: 2.58065;
+}
+.wire-tile--video {
+  aspect-ratio: 3.48837;
+}
+.wire-tile--4 {
+  aspect-ratio: 2.57511;
+}
+.wire-tile--5 {
+  aspect-ratio: 1.54639;
+}
+.wire-fill {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+}
+.wire-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  overflow: clip;
+  border-radius: 0;
+}
+
+@media (min-width: 2637px) {
+  .wire-strip {
+    justify-content: center;
+  }
+}
+
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .marn-section {
+    align-content: flex-start;
+    align-items: flex-start;
+    height: 84vh;
+    padding: 40px 40px 80px;
+  }
+  .marn-slot {
+    height: auto;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 809.98px) {
+  .marn-section {
+    align-content: flex-start;
+    align-items: flex-start;
+    height: 76vh;
+    padding: 40px 40px 80px;
+  }
+  .marn-slot {
+    height: auto;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .marn-section {
+    height: min-content;
+    padding: 40px 20px 80px;
+  }
+  .marn-slot {
+    order: 0;
+    height: auto;
+  }
+  .wire-section {
+    flex-direction: column;
+  }
+  .wire-col--a {
+    flex: 0 0 auto;
+    order: 0;
+    width: 100%;
+  }
+  .wire-col--b {
+    flex: 0 0 auto;
+    order: 1;
+    width: 100%;
+  }
+  .wire-tile--1 {
+    aspect-ratio: 2.53247;
+    order: 0;
+  }
+  .wire-row {
+    order: 2;
+  }
+  .wire-tile--2 {
+    aspect-ratio: 1.52344;
+  }
+  .wire-tile--3 {
+    aspect-ratio: 2.56393;
+    order: 1;
+    width: 100%;
+  }
+  .wire-tile--video {
+    aspect-ratio: 3.49697;
+    order: 2;
+    width: 148%;
+  }
+  .wire-tile--4 {
+    aspect-ratio: 1.9697;
+    order: 0;
+    width: 101%;
+  }
+  .wire-tile--5 {
+    order: 1;
+    width: 100%;
+  }
+}
+
+/* ── Try › #8-fonts — declarations copied 1:1 from font.thmanyah.com
+   (.framer-1h7i90q / -bdpu23-container / .framer-Y4Kcd.framer-2aj2yw
+    "Variant 1" / -1pbjgc8 "Text" / -2z7sot cards / -1s6co05 / -u7bu5n /
+    -15s2c6i / -pd2dds / -llv2xk / -mgrz2r / -ihgfcl "Frame 129" / -7erpdx
+    weight frames / -1qfyj5s / -1q77n8x clip / -pzi07d rows / -w9nwfe lines /
+    -sa2qkq · accordion: -1j7m727-container / .framer-wBo0j.framer-1759u33 /
+    -17e873a / -1wemzoi-container / .framer-7iZB1.framer-1879us4 / -svq14x /
+    -ei5rnp / -yvwt1d / -z4scr / -182e1zk / -gybxi / -15w26pd / -18k32l4 /
+    -1wiuzyc / -zvnevz / -18jrt0v / -194bqzz / -r50f4w).
+   Framer breakpoints: <600 · 600-809 · 810-1199 · >=1200                   */
+.fonts-section {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: min-content;
+  padding: 100px 60px;
+  overflow: clip;
+}
+.fonts-desktop {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 1320px;
+  height: auto;
+}
+.fonts-comp {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  place-content: flex-start;
+  align-items: flex-start;
+  gap: 76px;
+  width: 100%;
+  max-width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.fonts-cards {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 1 0 0px;
+  place-content: flex-end center;
+  align-items: flex-end;
+  gap: 16px;
+  width: 1px;
+  max-width: 400px;
+  height: min-content;
+  padding: 0;
+  overflow: hidden;
+}
+.fonts-card {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-end center;
+  align-items: flex-end;
+  gap: 12px;
+  width: 100%;
+  height: min-content;
+  padding: 16px 24px;
+  border-radius: 24px;
+  background-color: rgb(175, 227, 182);
+  overflow: clip;
+  will-change: transform;
+  cursor: pointer;
+  outline: none;
+}
+.fonts-card-head {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-end flex-start;
+  align-items: flex-end;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.fonts-card-row,
+.fonts-acc-titlerow {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.fonts-card-title-box,
+.fonts-card-badge-box,
+.fonts-acc-title-box,
+.fonts-acc-badge-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  white-space: pre;
+}
+.fonts-card-latin-box,
+.fonts-card-desc-box,
+.fonts-weight-label-box,
+.fonts-acc-latin-box,
+.fonts-acc-desc-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.fonts-card-title,
+.fonts-acc-title {
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.5em;
+  text-align: center;
+  color: #000;
+}
+.fonts-card-badge {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5em;
+  color: #000;
+  font-feature-settings: "ss01" on;
+}
+.fonts-card-latin,
+.fonts-acc-latin {
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.5em;
+  text-align: right;
+  color: #000;
+  font-feature-settings: "ss01" on;
+}
+.fonts-card-desc {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5em;
+  letter-spacing: -0.02em;
+  text-align: right;
+  color: #000;
+  font-feature-settings:
+    "blwf" on,
+    "cv09" on,
+    "cv03" on,
+    "cv04" on,
+    "cv11" on;
+}
+.fonts-frames {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 1 0 0px;
+  place-content: flex-end flex-start;
+  align-items: flex-end;
+  gap: 16px;
+  width: 1px;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.fonts-weight {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-end flex-start;
+  align-items: flex-end;
+  gap: 4px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.fonts-weight-label {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 14px;
+  line-height: 1.2em;
+  text-align: right;
+  color: #808080;
+}
+.fonts-clip {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 64px;
+  padding: 0;
+  overflow: clip;
+}
+.fonts-acc-clip {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.fonts-row {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-end flex-start;
+  align-items: flex-end;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.fonts-line {
+  position: relative;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  white-space: pre-line;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  overflow: clip;
+}
+.fonts-specimen {
+  font-size: 20px;
+  line-height: 1.6em;
+  text-align: right;
+  color: #000;
+  font-feature-settings: "ss01" on;
+}
+.fonts-sep {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+  overflow: clip;
+}
+
+/* accordion */
+.fonts-accordion {
+  display: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+}
+.fonts-acc-comp {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: flex-end flex-start;
+  align-items: flex-end;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.fonts-acc-text {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-end center;
+  align-items: flex-end;
+  gap: 24px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: hidden;
+}
+.fonts-acc-item {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+}
+.fonts-acc-row {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: flex-end center;
+  align-items: flex-end;
+  gap: 24px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+  cursor: pointer;
+  outline: none;
+}
+.fonts-acc-head {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.fonts-acc-headrow {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.fonts-acc-titles {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 1 0 0px;
+  place-content: flex-end flex-start;
+  align-items: flex-end;
+  gap: 0;
+  width: 1px;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.fonts-acc-badge {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5em;
+  letter-spacing: -0.02em;
+  color: #000;
+  font-feature-settings: "ss01" on;
+}
+.fonts-acc-chevron {
+  position: relative;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+}
+.fonts-acc-icon {
+  position: absolute;
+  top: calc(50% - 12px);
+  left: calc(50% - 12px);
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+}
+.fonts-acc-desc {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.5em;
+  letter-spacing: -0.02em;
+  text-align: right;
+  color: #000;
+  font-feature-settings:
+    "blwf" on,
+    "cv09" on,
+    "cv03" on,
+    "cv04" on,
+    "cv11" on;
+}
+.fonts-acc-frames {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-end flex-start;
+  align-items: flex-end;
+  gap: 12px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.fonts-acc-sep {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 1px;
+  background-color: #808080;
+  overflow: clip;
+}
+
+@media (max-width: 1199.98px) {
+  .fonts-section {
+    padding: 80px 40px;
+  }
+  .fonts-desktop {
+    display: none;
+  }
+  .fonts-accordion {
+    display: block;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .fonts-section {
+    place-content: flex-start;
+    align-items: flex-start;
+    padding: 60px 20px;
+  }
+  .fonts-acc-title,
+  .fonts-acc-latin {
+    font-size: 24px;
+  }
+}
+
+/* ── Try › tester ("B Display") — declarations copied 1:1 from
+   font.thmanyah.com (.framer-ykech4-container / .framer-gFeSo.framer-ks477e /
+   -1obzdgi-container / .framer-z44sK.framer-97ldf0 "B / SDisplay" / -p1cmr7 /
+   -1gevshe-container / .framer-enuys.framer-177rpfv "R, B" / -t1meku /
+   -1cn4ccv-container + nav.framer-gV1UK / -kgtu2k-container + nav.framer-xd7vQ /
+   -1qcxoxa "Trigger 3" / -8nzqrh / -4zsznr-container / .framer-zOHeE /
+   -d33qx5 / -elkod7 / -1l4ym4v-container + nav.framer-g1KOj / -1oldndu /
+   -11og8uc items / .framer-cIzOh|4EHFl|jTU7Q icons / -1y6q0zy-container +
+   nav.framer-4ZrsX / -aga7m / -hgn597 / -ga55n0 / -mjo151-container /
+   -s33kk1 pill / -1wh6a52 "Backdrop" / -17sicrf "Mask" / swatches;
+   menus: .framer-wnlsfe / .framer-mz5w7y / .framer-ah7Gu.framer-teec9v).
+   Framer breakpoints: <600 · 600-809 · 810-1199 · 1200-1799 · >=1800       */
+.tester {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: center;
+  align-items: center;
+  gap: 60px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  background-color: rgb(250, 250, 250);
+  overflow: clip;
+}
+.tester-vh {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 100vh;
+}
+.tester-panel {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 80px 60px 60px;
+  overflow: clip;
+}
+.tester-bg {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  overflow: clip;
+}
+.tester-body {
+  position: relative;
+  z-index: 1;
+  flex: 1 0 0px;
+  width: 100%;
+  max-width: 1320px;
+  height: 1px;
+}
+.tester-rb {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: flex-start;
+  align-items: flex-start;
+  gap: 44px;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: visible;
+}
+.tester-controls {
+  position: relative;
+  display: flex;
+  flex-flow: wrap;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 36px;
+  width: 100%;
+  max-width: 792px;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.tester-ctl {
+  position: relative;
+  flex: 1 0 0px;
+  width: 1px;
+  height: auto;
+}
+.tester-ctl--font {
+  min-width: 292px;
+}
+.tester-ctl--weight {
+  min-width: 100px;
+}
+.tester-ctl--align {
+  z-index: 10;
+  min-width: 100px;
+}
+.tester-ctl--ss {
+  z-index: 10;
+}
+.tester-select {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: center flex-end;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+  cursor: pointer;
+}
+.tester-label-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.tester-label {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5em;
+  letter-spacing: -0.02em;
+  text-align: start;
+}
+.tester-label--ss01 {
+  font-feature-settings: "ss01" on;
+}
+.tester-trigger {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  height: min-content;
+  padding: 8px 0;
+  overflow: visible;
+}
+.tester-value-box {
+  position: relative;
+  flex: 1 0 0px;
+  width: 1px;
+  height: auto;
+  user-select: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.tester-value {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5em;
+  letter-spacing: -0.02em;
+  text-align: start;
+  font-feature-settings:
+    "blwf" on,
+    "cv09" on,
+    "cv03" on,
+    "cv04" on,
+    "cv11" on;
+}
+.tester-chev-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  mix-blend-mode: difference;
+  filter: invert(1);
+}
+.tester-chev {
+  position: relative;
+  gap: 2px;
+  width: 14px;
+  height: 14px;
+  overflow: visible;
+}
+.tester-chev-frame,
+.tester-chev-icon {
+  position: absolute;
+  top: calc(50% - 7px);
+  left: calc(50% - 7px);
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+}
+.tester-chev-frame {
+  overflow: visible;
+}
+.tester-chev-icon {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+}
+/* portaled menus */
+.tester-menu-layer {
+  position: absolute;
+  z-index: 11;
+  height: auto;
+}
+.tester-menu-backdrop {
+  position: fixed;
+  inset: 0;
+}
+.tester-menu {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: flex-end center;
+  align-items: flex-end;
+  gap: 0;
+  height: min-content;
+  padding: 4px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.05);
+  overflow: clip;
+  will-change: transform;
+}
+.tester-menu-slot {
+  position: relative;
+  z-index: 5;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 48px;
+}
+.tester-menu-item {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  place-content: center;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.tester-menu-item:hover {
+  background-color: rgba(0, 0, 0, 0.05); /* measured on the live menu */
+}
+.tester-menu-text-box {
+  position: relative;
+  flex: 1 0 0px;
+  width: 1px;
+  height: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.tester-menu-text {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2em;
+  text-align: right;
+  color: #000;
+}
+/* alignment toggle */
+.tester-align {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: flex-end flex-start;
+  align-items: flex-end;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: hidden;
+}
+.tester-align-row {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center space-between;
+  align-items: center;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.tester-align-item {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 0;
+  width: min-content;
+  height: 48px;
+  padding: 0;
+  overflow: visible;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tester-align-icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  aspect-ratio: 1;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: auto;
+  mask-size: auto;
+}
+.tester-align-icon--right {
+  -webkit-mask-image: url("data:image/svg+xml,<svg display='block' role='presentation' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M 0 0 L 16.5 0 M 0 5.25 L 16.5 5.25 M 8.25 10.5 L 16.5 10.5' fill='transparent' height='10.5px' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' stroke='black' transform='translate(3.75 6.75)' width='16.5px'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg display='block' role='presentation' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M 0 0 L 16.5 0 M 0 5.25 L 16.5 5.25 M 8.25 10.5 L 16.5 10.5' fill='transparent' height='10.5px' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' stroke='black' transform='translate(3.75 6.75)' width='16.5px'/></svg>");
+}
+.tester-align-icon--center {
+  -webkit-mask-image: url("data:image/svg+xml,<svg display='block' role='presentation' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M 0 0 L 16.5 0 M 0 5.25 L 16.5 5.25 M 0 10.5 L 16.5 10.5' fill='transparent' height='10.5px' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' stroke='black' transform='translate(3.75 6.75)' width='16.5px'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg display='block' role='presentation' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M 0 0 L 16.5 0 M 0 5.25 L 16.5 5.25 M 0 10.5 L 16.5 10.5' fill='transparent' height='10.5px' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' stroke='black' transform='translate(3.75 6.75)' width='16.5px'/></svg>");
+}
+.tester-align-icon--left {
+  -webkit-mask-image: url("data:image/svg+xml,<svg display='block' role='presentation' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M 0 0 L 16.5 0 M 0 5.25 L 16.5 5.25 M 0 10.5 L 8.25 10.5' fill='transparent' height='10.5px' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' stroke='black' transform='translate(3.75 6.75)' width='16.5px'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg display='block' role='presentation' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M 0 0 L 16.5 0 M 0 5.25 L 16.5 5.25 M 0 10.5 L 8.25 10.5' fill='transparent' height='10.5px' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' stroke='black' transform='translate(3.75 6.75)' width='16.5px'/></svg>");
+}
+/* ss01 switch */
+.tester-ss {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: flex-end flex-start;
+  align-items: flex-end;
+  gap: 0;
+  width: 100%;
+  min-width: 100px;
+  height: min-content;
+  padding: 0;
+  overflow: hidden;
+}
+.tester-ss-row {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center space-between;
+  align-items: center;
+  width: 100%;
+  height: 48px;
+  padding: 0;
+  overflow: visible;
+}
+.tester-switch {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 10px;
+  width: 52px;
+  height: min-content;
+  padding: 4px;
+  background-color: rgb(245, 239, 236);
+  border-radius: 42px;
+  overflow: visible;
+  cursor: pointer;
+  outline: none;
+}
+.tester-knob {
+  position: relative;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background-color: rgb(128, 128, 128);
+  overflow: visible;
+}
+/* textarea */
+.tester-ta-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 75%;
+}
+.tester-ta-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.tester-ta,
+.tester-mirror {
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 1px solid rgba(237, 237, 237, 0);
+  font-style: normal;
+  font-size: 124px;
+  line-height: 1.5em;
+  letter-spacing: 0em;
+  direction: rtl;
+  white-space: pre-wrap;
+}
+.tester-ta {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0);
+  border-radius: 0;
+  outline: none;
+  transition: border-color 0.2s ease;
+  resize: none;
+  overflow: auto;
+  cursor: text;
+}
+.tester-mirror {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% - 2px);
+  visibility: hidden;
+  pointer-events: none;
+  overflow: hidden;
+  overflow-wrap: break-word;
+}
+.tester-caret {
+  position: absolute;
+  width: 2px;
+  min-height: 20px;
+  pointer-events: none;
+}
+/* swatch pill */
+.tester-pill {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 12px;
+  width: min-content;
+  height: min-content;
+  padding: 12px;
+  background-color: #fff;
+  border-radius: 100px;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  will-change: transform;
+}
+.tester-backdrop {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 7px;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  aspect-ratio: 1;
+  background-color: rgba(189, 189, 189, 0.1);
+  border-radius: 500px;
+  overflow: visible;
+}
+.tester-mask {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  flex: 0 0 auto;
+  border-radius: 500px;
+  opacity: 0.1;
+  overflow: visible;
+}
+.tester-swatch {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 40px;
+  width: 20px;
+  height: 20px;
+  aspect-ratio: 1;
+  border-radius: 30px;
+  overflow: visible;
+  cursor: pointer;
+  outline: none;
+}
+.tester-swatch--black {
+  background-color: #000;
+}
+.tester-swatch--green {
+  background-color: #00bc6d;
+}
+.tester-swatch--white {
+  background-color: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 1200px) and (max-width: 1799.98px) {
+  .tester-ta,
+  .tester-mirror {
+    font-size: 72px;
+  }
+}
+
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .tester-panel {
+    padding: 124px 40px 44px;
+  }
+  .tester-ta,
+  .tester-mirror {
+    font-size: 68px;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 809.98px) {
+  .tester-panel {
+    padding: 40px;
+  }
+  .tester-ta,
+  .tester-mirror {
+    font-size: 44px;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .tester-panel {
+    padding: 44px 20px 32px;
+  }
+  .tester-ta,
+  .tester-mirror {
+    font-size: 40px;
+  }
+}
+
+/* ── Modern — declarations copied 1:1 from font.thmanyah.com
+   (.framer-1lwlxn7 "Modern" / -e6n6bz sticky column / -tzyt8i "title" /
+    -ua5lez / -9w5vt4 / -1clv408 / -g2f07a / -1tabdt6 / -1rbesf9-container
+    "Web" + -1xqfktg-container "mobile" and the Ticker's inline <section>/<ul>).
+   Framer breakpoints: <600 · 600-1199 · >=1200                              */
+.modern {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.modern-sticky {
+  position: sticky;
+  z-index: 1;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 48px;
+  width: 100%;
+  height: min-content;
+  padding: 100px 0;
+}
+.modern-title {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: min-content;
+  padding: 0 60px;
+  overflow: clip;
+}
+.modern-title-inner {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 1320px;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.modern-heading {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: flex-start;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+}
+.modern-text {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.modern-eyebrow {
+  font-family: "thmanyah serif display", serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.5em;
+  text-align: right;
+  color: #000;
+  font-feature-settings: "ss01" on;
+}
+.modern-headline {
+  font-family: "thmanyah serif display", serif;
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1.2em;
+  text-align: right;
+  color: #000;
+}
+.modern-lede {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5em;
+  text-align: start;
+  color: #000;
+  font-feature-settings:
+    "blwf" on,
+    "cv09" on,
+    "cv03" on,
+    "cv04" on,
+    "cv11" on;
+}
+.modern-ticker {
+  position: relative;
+  z-index: 3;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 483px;
+}
+.modern-clip {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  place-items: center;
+  margin: 0;
+  padding: 0 60px 0 70px;
+  list-style-type: none;
+  overflow: hidden;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.modern-track {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  place-items: flex-start;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  will-change: transform;
+}
+.modern-li {
+  display: list-item;
+  flex: 0 1 auto;
+}
+.modern-tile {
+  position: relative;
+  flex: 0 0 auto;
+  height: auto;
+}
+.modern-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 32px;
+  object-fit: cover;
+  object-position: 50% 50%;
+  overflow: clip;
+  cursor: auto;
+}
+.modern-img-wrap {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.modern-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  object-position: center;
+  overflow: clip;
+  user-select: none;
+  pointer-events: none;
+}
+
+@media (max-width: 1199.98px) {
+  .modern-title {
+    padding: 0 40px;
+  }
+  .modern-clip {
+    padding: 0 40px;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .modern-sticky {
+    gap: 36px;
+    padding: 60px 0;
+  }
+  .modern-title {
+    padding: 0 20px;
+  }
+  .modern-eyebrow {
+    font-family: "thmanyah serif display 1.2", serif;
+    font-size: 20px;
+  }
+  .modern-headline {
+    font-size: 32px;
+  }
+  .modern-lede {
+    font-size: 14px;
+    letter-spacing: -0.02em;
+    font-feature-settings: normal;
+  }
+  .modern-ticker {
+    height: 350px;
+  }
+  .modern-clip {
+    padding: 0 20px;
+  }
+}
+
+/* Single-face aliases mirroring Framer's per-weight families. The FAQ's
+   emphasised words are <strong> (weight 700) inside spans whose family is
+   "thmanyah sans Regular" — a family with only a 400 face — so the live
+   site renders a synthesised bold. These aliases reproduce that. */
+@font-face {
+  font-family: "thmanyah sans Regular";
+  src: url("/fonts/thmanyah-sans-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "thmanyah sans Light";
+  src: url("/fonts/thmanyah-sans-light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── FAQ — declarations copied 1:1 from font.thmanyah.com
+   (.framer-808h3m "FAQ" / -p5nu9f / -10zo1qp -ebbquz -wrzzgg columns /
+    -1c2yysm heading row / -14naifd / -1d1gsm9 + -ax13lp rule / -13xogf … items /
+    -18n30p1 … question boxes / -zjxz1r + -xqdd7h -9eoc5y -u74krk / -13kaz83 …
+    answer boxes). Framer breakpoints: <600 · 600-809 · 810-1199 · 1200-1799 · >=1800 */
+.faq {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 48px;
+  width: 100%;
+  height: min-content;
+  padding: 100px 60px;
+  scroll-margin-top: 40px;
+  overflow: visible;
+}
+.faq-grid {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-flow: wrap;
+  flex: 0 0 auto;
+  place-content: flex-start center;
+  align-items: flex-start;
+  gap: 64px 76px;
+  width: 100%;
+  max-width: 1320px;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.faq-col {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 1 0 0px;
+  place-content: center;
+  align-items: center;
+  gap: 48px;
+  width: 1px;
+  min-width: 156px;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.faq-head {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 348px;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.faq-head-text {
+  position: relative;
+  flex: 1 0 0px;
+  width: 1px;
+  height: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.faq-title {
+  font-family: "thmanyah serif display", serif;
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1.2em;
+  text-align: right;
+  color: #000;
+}
+.faq-ss01 {
+  font-feature-settings: "ss01" on;
+}
+.faq-divider {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  align-self: stretch;
+  gap: 6px;
+  width: min-content;
+  height: auto;
+  padding: 0;
+  overflow: clip;
+}
+.faq-divider-line {
+  position: relative;
+  flex: 0 0 auto;
+  width: 1px;
+  height: 100%;
+  background-color: #808080;
+  overflow: clip;
+}
+.faq-item {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 348px;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.faq-q-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.faq-q {
+  font-family: "thmanyah serif display", serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4em;
+  text-align: right;
+  color: #000;
+  font-feature-settings: "ss01" on;
+}
+.faq-answer {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  will-change: transform;
+}
+.faq-row {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.faq-pre {
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  white-space: pre;
+  will-change: transform;
+}
+.faq-a {
+  font-family: "thmanyah sans Light", sans-serif;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.4em;
+  text-align: justify;
+  color: rgba(0, 0, 0, 0.9);
+}
+.faq-a--right {
+  text-align: right;
+}
+.faq-a--reg,
+.faq-reg {
+  font-family: "thmanyah sans Regular", sans-serif;
+  font-weight: 400;
+}
+.faq-light {
+  font-family: "thmanyah sans Light", sans-serif;
+  font-weight: 300;
+}
+.faq-reg strong {
+  font-weight: 700; /* no 700 face in that family — the browser synthesises it, like live */
+}
+.faq-link {
+  color: rgba(0, 0, 0, 0.7);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (min-width: 1800px) {
+  .faq-head,
+  .faq-item {
+    max-width: unset;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .faq {
+    padding: 100px 40px;
+  }
+  .faq-grid {
+    gap: 64px;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 809.98px) {
+  .faq-grid {
+    flex-direction: column;
+  }
+  .faq-col {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 232px;
+  }
+  .faq-head,
+  .faq-item {
+    max-width: unset;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .faq {
+    padding: 60px 20px;
+  }
+  .faq-grid {
+    flex-direction: column;
+    gap: 56px;
+  }
+  .faq-col {
+    flex: 0 0 auto;
+    gap: 56px;
+    width: 100%;
+  }
+  .faq-head,
+  .faq-item {
+    max-width: unset;
+  }
+  .faq-divider {
+    display: none;
+  }
+}
+
+/* Inter 600 — Framer's default UI face, used by the reference only for the
+   footer form's "↑" submit glyph. Same subset files as the live site. */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/hyOgCu0Xnghbimh0pE8QTvtt2AU.woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+  unicode-range:
+    U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/NeGmSOXrPBfEFIy5YZeHq17LEDA.woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/oYaAX5himiTPYuN8vLWnqBbfD2s.woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+  unicode-range: U+1F00-1FFF;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/lEJLP4R0yuCaMCjSXYHtJw72M.woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+  unicode-range: U+0370-03FF;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/cRJyLNuTJR5jbyKzGi33wU9cqIQ.woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+  unicode-range:
+    U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113,
+    U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/yDtI2UI8XcEg1W2je9XPN3Noo.woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+2000-206F, U+2070, U+2074-207E, U+2080-208E, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/A0Wcc7NgXMjUuFdquHDrIZpzZw0.woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+  unicode-range:
+    U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1,
+    U+01AF-01B0, U+1EA0-1EF9, U+20AB;
+}
+
+/* ── Footer — declarations copied 1:1 from font.thmanyah.com
+   (.framer-scq2lf is .footer-section in the skeleton block above /
+    -jrpp8o card / -5jxo0q / -5c66p5 / -1y03iye-container /
+    button.framer-OBtxy.framer-n8rx3z ("Default" · "Hover" · "Open 2") /
+    -zplkui / -1suacxq / -1a4owa5 / -rj90pg / -1ssg7vc-container + form /
+    -1d07fe5 "Close trigger" / -1j2wem4 / -15ptizc bar / -d3pryj / -1469toe /
+    -18tllba / -1cwmpcw / -u2ctr7 / -sdl8gy).
+   Framer breakpoints: <600 · 600-809 · 810-1199 · >=1200                   */
+.footer-card {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 1 0 0px;
+  place-content: center;
+  align-items: center;
+  gap: 36px;
+  width: 100%;
+  max-width: 1440px;
+  height: 1px;
+  padding: 0;
+  background-color: #9fe5b1;
+  border-radius: 56px;
+  overflow: clip;
+  will-change: transform;
+}
+.footer-cta-text {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.footer-cta-line {
+  font-family: "thmanyah serif display", serif;
+  font-size: 52px;
+  line-height: 1.5em;
+  text-align: center;
+  color: #000;
+}
+.footer-cta-line--light {
+  font-weight: 300;
+}
+.footer-cta-line--black {
+  font-weight: 900;
+}
+.footer-cta-row {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.footer-btn-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  height: 44px;
+}
+.footer-btn {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  place-content: center;
+  align-items: center;
+  gap: 10px;
+  width: min-content;
+  height: 44px;
+  padding: 20px 36px;
+  background-color: #000;
+  border: 0;
+  border-radius: 100px;
+  text-align: center;
+  font: inherit;
+  color: #000;
+  cursor: pointer;
+  overflow: visible;
+  outline: none;
+  appearance: auto;
+}
+.footer-btn[data-open] {
+  cursor: unset;
+  padding: 0;
+}
+.footer-btn-content {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 8px;
+  width: min-content;
+  height: min-content;
+  padding: 0;
+  overflow: visible;
+}
+.footer-btn-icon {
+  display: block;
+  position: relative;
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+.footer-btn-label-box {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  user-select: none;
+  white-space: pre;
+}
+.footer-btn[data-open] .footer-btn-label-box {
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.footer-btn-label {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 0.8em;
+  text-align: start;
+  color: #fff;
+}
+.footer-btn-helper {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  opacity: 0;
+  user-select: none;
+  pointer-events: none;
+  white-space: pre;
+}
+.footer-btn[data-open] .footer-btn-helper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.footer-btn-helper-text {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2em;
+  text-align: start;
+  color: #000;
+}
+.footer-form-wrap {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 49%;
+  transform: translate(-50%, -50%);
+  flex: 0 0 auto;
+  width: 340px;
+  height: auto;
+  pointer-events: none;
+}
+.footer-btn[data-open] .footer-form-wrap {
+  left: 50%;
+  pointer-events: auto;
+}
+.footer-form-inner {
+  position: relative;
+  display: flex;
+  place-content: center;
+  align-items: center;
+  width: 340px;
+  height: 44px;
+  text-align: left;
+  direction: ltr;
+}
+.footer-form {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  width: 100%;
+  height: auto;
+  color: #000;
+}
+.footer-email {
+  appearance: none;
+  width: 100%;
+  height: auto;
+  padding: 10px 46px 10px 16px;
+  border: none;
+  border-radius: 100px;
+  outline: none;
+  background: #fff;
+  color: #000;
+  font-family: "thmanyah sans Regular", sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0em;
+  line-height: 1.5em;
+  text-align: left;
+  overflow: clip;
+  cursor: text;
+}
+.footer-submit-wrap {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  width: 36px;
+  height: 36px;
+}
+.footer-submit {
+  display: inline-block;
+  z-index: 1;
+  appearance: none;
+  width: 36px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 96px;
+  outline: none;
+  background: rgba(0, 0, 0, 0.1);
+  box-shadow: none;
+  color: #000;
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0em;
+  line-height: 1em;
+  text-align: center;
+  white-space: pre;
+  overflow: clip;
+  cursor: pointer;
+}
+.footer-close-trigger {
+  position: absolute;
+  z-index: 0;
+  top: calc(50% - 1500px);
+  left: calc(50.655% - 1500px);
+  flex: 0 0 auto;
+  width: 3000px;
+  height: 3000px;
+  overflow: hidden;
+  cursor: default;
+  pointer-events: none;
+}
+.footer-btn[data-open] .footer-close-trigger {
+  left: calc(50% - 1500px);
+  pointer-events: auto;
+}
+.footer-helper2 {
+  position: absolute;
+  z-index: 1;
+  top: calc(50% - 22px);
+  left: calc(49.7817% - 170px);
+  flex: 0 0 auto;
+  width: 340px;
+  height: 44px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.footer-btn[data-open] .footer-helper2 {
+  position: relative;
+  top: unset;
+  left: unset;
+}
+/* bottom bar */
+.footer-bar {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  flex: 0 0 auto;
+  place-content: center;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 1320px;
+  height: min-content;
+  padding: 16px 24px;
+  border-radius: 3px;
+  overflow: hidden;
+  will-change: transform;
+}
+.footer-bar-row {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.footer-logo-link {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 0 0 auto;
+  place-content: center flex-start;
+  align-items: center;
+  gap: 10px;
+  width: min-content;
+  height: min-content;
+  padding: 0;
+  text-decoration: none;
+  overflow: clip;
+  cursor: pointer;
+}
+.footer-logo {
+  position: relative;
+  flex-shrink: 0;
+  width: 64px;
+  height: 24px;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+.footer-bar-links {
+  position: relative;
+  display: flex;
+  flex-flow: row;
+  flex: 1 0 0px;
+  place-content: center flex-end;
+  align-items: center;
+  gap: 24px;
+  width: 1px;
+  height: min-content;
+  padding: 0;
+  overflow: clip;
+}
+.footer-pre {
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  white-space: pre;
+}
+.footer-license {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5em;
+  letter-spacing: -0.02em;
+  color: #000;
+}
+.footer-license a {
+  color: #808080;
+  cursor: pointer;
+}
+.footer-copy-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  white-space: pre;
+}
+.footer-copy {
+  font-family: "thmanyah sans", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5em;
+  color: #808080;
+  direction: ltr;
+}
+
+@media (min-width: 2637px) {
+  .footer-bar-row {
+    max-width: 1440px;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 809.98px) {
+  .footer-cta-line {
+    font-size: 44px;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .footer-card {
+    padding: 36px 16px 16px;
+    border-radius: 32px;
+  }
+  .footer-cta-line {
+    font-size: 36px;
+  }
+  .footer-btn-wrap {
+    order: 1;
+  }
+  .footer-bar {
+    gap: 24px;
+  }
+  .footer-bar-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .footer-bar-links {
+    flex: 0 0 auto;
+    justify-content: center;
+    width: 100%;
+  }
+  .footer-copy-box {
+    width: 100%;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .footer-copy {
+    text-align: center;
+  }
+}
+
+/* ── ≥2637 caps the reference widens to 1440px (.framer-33f5si "title" #jamal,
+   .framer-tzyt8i "title"; the Answer rows and footer row carry theirs already). */
+@media (min-width: 2637px) {
+  .aseel-title {
+    max-width: 1440px;
+  }
+  .modern-title {
+    max-width: 1440px;
+  }
+}

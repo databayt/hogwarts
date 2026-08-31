@@ -24,6 +24,11 @@ export const publicRoutes = [
   // authenticity without an account — the page only renders the same
   // information that's already printed on the physical document.
   "/verify",
+  // The homepage's own footer and FAQ both link to "الترخيص" — the font
+  // licence — so these have to stay reachable without an account, the way
+  // they are on the page this homepage mirrors.
+  "/licenses",
+  "/licenses-en",
   // NOTE: /onboarding is removed from public routes
   // Auth is now handled client-side in OnboardingContent for better UX
   // This allows the component to redirect with callback URL

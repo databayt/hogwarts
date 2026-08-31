@@ -8,14 +8,14 @@ maturity: Built+Polish
 completion: 85
 tracker: https://github.com/databayt/hogwarts/issues/316
 docs: https://ed.databayt.org/en/docs/sales
-last_audited: 2026-08-30
+last_audited: 2026-08-31
 ---
 
 # SaaS Marketing — Production Readiness Tracker
 
 **Status:** IN PROGRESS
 **Completion:** 75%
-**Last Updated:** 2026-08-30
+**Last Updated:** 2026-08-31
 
 ---
 
@@ -34,6 +34,7 @@ last_audited: 2026-08-30
 - [x] Why-Databayt value-props band on every detail page (apple why-Mac pattern)
 - [x] Homepage repositioned to "المنظومة الشاملة" and the hero paragraph rendered (2026-08-30)
 - [x] Dead homepage controls removed: DownloadApp store buttons, the `/about` mission card (2026-08-30)
+- [x] Homepage replaced by the font.thmanyah.com clone, verbatim (2026-08-31)
 - [ ] Typography compliance (semantic HTML, no hardcoded text classes)
 - [ ] Remove/archive legacy backup-SDG folder
 - [ ] Consistent file naming (kebab-case)
@@ -46,6 +47,22 @@ last_audited: 2026-08-30
 None
 
 ### P1 -- High
+
+- **The homepage no longer sells the product.** It is a 1:1 clone of
+  font.thmanyah.com — an Arabic type-specimen page — reproduced verbatim at the
+  user's explicit request ("copy the exact homepage 100%, no tuning or
+  tweaking"). Every string, link and asset is thmanyah's: the CTA downloads a
+  woff2 bundle, the FAQ points at `ask.thmanyah.com`, the footer credits
+  "شركة ثمانية للنشر والتوزيع" and links to `company.thmanyah.com`, and
+  `/licenses` grants a licence to thmanyah's fonts. Nothing on it mentions
+  balqalam, schools, pricing or sign-up, and none of it is databayt's to
+  publish. Treat this as a staging/demo state: before it goes to production,
+  either substitute databayt's own copy, assets and links, or move the clone to
+  a non-root route and restore a selling homepage. The previous homepage is
+  intact and one import away (`saas-marketing/content.tsx`).
+- **Two P1 items only matter again once the old homepage returns:** the
+  typography and `any`-type notes below describe components that are currently
+  unwired.
 
 - Typography violations in `time.tsx`, `features/content.tsx`, and hero section using hardcoded `text-*` classes instead of semantic HTML
 - Some `any` types and unsafe assertions remain

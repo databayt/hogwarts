@@ -16,6 +16,7 @@ import "./globals.css"
 import "@/styles/zenda-clone.css"
 import "@/styles/zenda-shell.css"
 import "@/styles/apple-clone.css"
+import "@/styles/thmanyah-clone.css"
 
 export const metadata: Metadata = {
   title: "balqalam",

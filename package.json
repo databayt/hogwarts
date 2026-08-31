@@ -180,6 +180,7 @@
     "livekit-client": "^2.19.0",
     "livekit-server-sdk": "^2.15.3",
     "lottie-react": "^2.4.1",
+    "lottie-web": "^5.13.0",
     "lucide-react": "^0.533.0",
     "mammoth": "^1.11.0",
     "mapbox-gl": "^3.17.0",

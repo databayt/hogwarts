@@ -100,17 +100,40 @@ Brand assets are tracked in the [databayt/marketing](https://github.com/databayt
 
 ## Public surfaces
 
-| Surface                              | Purpose                                 | Owner       |
-| ------------------------------------ | --------------------------------------- | ----------- |
-| `hogwarts.databayt.org` landing      | First impression, signup CTA, pilot CTA | Engineering |
-| `hogwarts.databayt.org/pricing`      | Tier comparison (PRO / ENTERPRISE)      | Engineering |
-| `hogwarts.databayt.org/demo`         | Public demo school login                | Engineering |
-| `hogwarts.databayt.org/pilot`        | Free MENA-10 pilot application (TODO)   | Engineering |
-| `hogwarts.databayt.org/case-studies` | Pilot case studies (TODO)               | Engineering |
-| `hogwarts.databayt.org/docs/*`       | Documentation site (this surface)       | Engineering |
-| GitHub README + docs                 | Contributor-facing positioning          | Engineering |
+| Surface                              | Purpose                                                    | Owner       |
+| ------------------------------------ | ---------------------------------------------------------- | ----------- |
+| `hogwarts.databayt.org` landing      | **Currently the thmanyah type-specimen clone — see below** | Engineering |
+| `hogwarts.databayt.org/pricing`      | Tier comparison (PRO / ENTERPRISE)                         | Engineering |
+| `hogwarts.databayt.org/demo`         | Public demo school login                                   | Engineering |
+| `hogwarts.databayt.org/pilot`        | Free MENA-10 pilot application (TODO)                      | Engineering |
+| `hogwarts.databayt.org/case-studies` | Pilot case studies (TODO)                                  | Engineering |
+| `hogwarts.databayt.org/docs/*`       | Documentation site (this surface)                          | Engineering |
+| GitHub README + docs                 | Contributor-facing positioning                             | Engineering |
 
 The marketing pages are themselves a product. If a school admin lands and cannot find pricing in 10 seconds, that is a marketing bug.
+
+### The landing page is currently a clone (2026-08-31)
+
+As of 2026-08-31 the root landing page is a verbatim, pixel-checked
+reproduction of [font.thmanyah.com](https://font.thmanyah.com) — an Arabic
+type-specimen site — reproduced on request, exactly, with no adaptation.
+
+It is worth being blunt about what that means for marketing: the page carries
+none of the positioning above. Its copy, links, imagery and licence text are
+thmanyah's, not databayt's. There is no signup CTA, no pilot CTA, no pricing
+path, no mention of schools — the primary CTA downloads a font bundle, and the
+footer credits another company. Against the standard in the paragraph above, a
+school admin landing here finds nothing at all.
+
+Treat it as a staging or demonstration state rather than the live sales
+surface. The previous landing page — hero, story, mission cards, testimonials,
+logo cloud, FAQs, contact CTA — is intact in
+`src/components/saas-marketing/`, unwired but one import from returning. Before
+this reaches production, either substitute databayt's own copy and assets or
+move the clone off the root route.
+
+The other public surfaces in the table (pricing, docs, features, community) are
+untouched and still carry the positioning.
 
 ## Metrics
 

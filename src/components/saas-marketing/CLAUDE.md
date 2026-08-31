@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 85
 tracker: https://github.com/databayt/hogwarts/issues/316
 docs: https://ed.databayt.org/en/docs/sales
-last_audited: 2026-08-30
+last_audited: 2026-08-31
 ---
 
 # SaaS Marketing Block
@@ -24,6 +24,50 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
 3. Check `features/page-data/` for per-feature content definitions
 
 ## Key Decisions
+
+- **The homepage IS font.thmanyah.com, cloned verbatim (2026-08-31).** `/[lang]`
+  now resolves to `src/app/[lang]/(thmanyah)/page.tsx`, not
+  `(saas-marketing)/page.tsx` (deleted). Read this before touching anything on
+  the homepage — most of the block's older homepage notes below now describe
+  **unwired** components.
+  - _Own route group._ The reference has no site header and ships its own
+    footer, so the clone must not inherit `(saas-marketing)/layout.tsx`. The
+    `licenses` / `licenses-en` pages live in the same group because the
+    homepage's footer and FAQ link to them; both paths had to be added to
+    `publicRoutes` in **both** `src/routes.ts` and `src/proxy.ts` — the proxy
+    keeps its own copy of the list, and an unknown path 307s to `/login`.
+  - _Always RTL, both locales._ The reference has no English variant. `dir` and
+    `lang` are pinned on `.thmanyah-shell`, deliberately **not** via
+    `DirectionProvider` — that provider writes `document.documentElement.dir`
+    in an effect, and on `/en` it would leave the whole session RTL after a
+    soft navigation away. Nothing in the clone reads Radix direction context
+    (its only Radix import is `Slot`), so the context is unnecessary.
+  - _CSS: `src/styles/thmanyah-clone.css`, global import, `.thmanyah-shell`
+    scope._ Per-route CSS chunks are NOT removed on soft navigation, so the
+    source's document-level reset had to be re-anchored rather than relied on
+    to unload. **The reset selectors use `:where(.thmanyah-shell)` and must
+    stay that way** — the wrapper has to contribute zero specificity so the
+    rules stay as weak as the reference's bare `input, textarea, select,
+button`. A plain `.thmanyah-shell textarea` outranks
+    `.tester-ta { font-size: 124px }` and shrinks the type tester to 12px, with
+    no error anywhere. The file's header lists all four deltas from the source.
+  - _`.thmanyah-shell` cancels the `layout-container` gutter_ with
+    `margin-inline: calc(-1 * var(--container-px, 0px))` — `[lang]/layout.tsx`
+    puts `padding-inline: … !important` on its wrapper div and the clone is
+    full-bleed. Same trick as `.page-wrapper` in `zenda-shell.css`.
+  - _Every `<Image>` is `unoptimized`_, matching the source's
+    `images.unoptimized: true`. The optimizer's q75 WebP re-encode visibly
+    dirties the calligraphy strokes.
+  - _Assets sit at the reference's own paths_ (`public/{fonts,images,videos,
+lottie}`, zero collisions with hogwarts') so no CSS or JSX URL changed.
+    `FontDownloadService` fetches `/fonts/<file>` directly — moving them breaks
+    the download CTA silently (it swallows fetch errors per file).
+  - _How to verify a change._ Run the source clone (`~/thmanyah`, `next dev -p
+3100`) as the control and diff against it, not against the live site: the
+    live site's own animation phase and CDN re-encodes put a 2–4% pixel floor
+    under any comparison. Section geometry is the reliable signal — heights and
+    `document.documentElement.scrollHeight` match the live site to the pixel at
+    every width from 375 to 1920, so any geometry drift is a real regression.
 
 - Feature showcase uses a generic `section-renderer.tsx` that renders different section types from data
 - Page data is static TypeScript objects in `features/page-data/` (not database-driven)

@@ -94,6 +94,12 @@ const publicRoutes = [
   // so it must be reachable (and precacheable) without a session. It holds
   // no server data — everything it shows lives in the device's IndexedDB.
   "/offline",
+  // The homepage's own footer and FAQ both link to "الترخيص" — the font
+  // licence — so these have to stay reachable without an account, the way
+  // they are on the page this homepage mirrors. Mirrors publicRoutes in
+  // src/routes.ts.
+  "/licenses",
+  "/licenses-en",
 ]
 const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
 
