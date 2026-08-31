@@ -4,14 +4,12 @@ import React, { useState } from "react"
 import { motion } from "framer-motion"
 
 import {
-  BADGE,
-  FAMILIES,
+  AREAS,
   FRAMER_SPRING,
   reveal,
-  SPECIMEN_AR,
-  SPECIMEN_EN,
-  WEIGHTS,
-  type Family,
+  SURFACES,
+  SURFACES_BADGE,
+  type Surface,
 } from "@/components/saas-marketing/thmanyah/lib/fonts"
 
 /**
@@ -44,31 +42,33 @@ const JUSTIFY: Record<number, string> = {
   2: "flex-end",
 }
 
-/* One weight frame: label + a clip box of specimen rows (one row per
-   family passed in). `gapIndex` mirrors the reference's alternating 8/10px
-   row gaps (frames 1 & 3 use 8, the rest 10). */
-function WeightFrame({
-  weight,
-  families,
+/* One area frame: label + a clip box of rows (one row per surface passed
+   in). The reference stacked the same specimen three times and slid the
+   clip to the active family; here each surface has its OWN line, so the
+   same slide reveals what that surface does in this area. `gap` mirrors the
+   reference's alternating 8/10px row gaps (frames 1 & 3 use 8, the rest 10). */
+function AreaFrame({
+  area,
+  surfaces,
   justify,
   clipClass,
   gap,
 }: {
-  weight: (typeof WEIGHTS)[number]
-  families: Family[]
+  area: (typeof AREAS)[number]
+  surfaces: Surface[]
   justify: string
   clipClass: string
   gap: number
 }) {
   return (
-    <div className="fonts-weight" data-framer-name={weight.label}>
+    <div className="fonts-weight" data-framer-name={area.label}>
       <div className="fonts-weight-label-box">
         <p
           dir="rtl"
           className="fonts-weight-label"
-          style={{ fontWeight: weight.value }}
+          style={{ fontWeight: area.value }}
         >
-          {weight.label}
+          {area.label}
         </p>
       </div>
       <motion.div
@@ -76,7 +76,7 @@ function WeightFrame({
         style={{ justifyContent: justify, gap }}
         {...reveal(clipClass === "fonts-clip" ? 60 : 30, 0)}
       >
-        {families.map((f, i) => (
+        {surfaces.map((f, i) => (
           <motion.div
             key={f.id}
             layout="position"
@@ -92,10 +92,10 @@ function WeightFrame({
                 className="fonts-specimen"
                 style={{
                   fontFamily: `"${f.css}", ${f.id === "sans" ? "sans-serif" : "serif"}`,
-                  fontWeight: weight.value,
+                  fontWeight: area.value,
                 }}
               >
-                {SPECIMEN_AR}
+                {area.lines[f.id].ar}
               </p>
             </div>
             <div className="fonts-line">
@@ -104,10 +104,10 @@ function WeightFrame({
                 className="fonts-specimen"
                 style={{
                   fontFamily: `"${f.css}", ${f.id === "sans" ? "sans-serif" : "serif"}`,
-                  fontWeight: weight.value,
+                  fontWeight: area.value,
                 }}
               >
-                {SPECIMEN_EN}
+                {area.lines[f.id].en}
               </p>
             </div>
           </motion.div>
@@ -130,7 +130,7 @@ export function FontFamiliesBlock() {
         <div className="fonts-comp" data-framer-name="Variant 1">
           {/* Text (.framer-1pbjgc8) — the family cards */}
           <div className="fonts-cards" data-framer-name="Text">
-            {FAMILIES.map((f, i) => {
+            {SURFACES.map((f, i) => {
               const isActive = i === active
               const serif = f.id !== "sans"
               return (
@@ -174,7 +174,7 @@ export function FontFamiliesBlock() {
                       </div>
                       <div className="fonts-card-badge-box">
                         <p dir="rtl" className="fonts-card-badge">
-                          {BADGE}
+                          {SURFACES_BADGE}
                         </p>
                       </div>
                     </div>
@@ -204,12 +204,12 @@ export function FontFamiliesBlock() {
 
           {/* Frame 129 (.framer-ihgfcl) — the five weight frames */}
           <div className="fonts-frames" data-framer-name="Frame 129">
-            {WEIGHTS.map((w, i) => (
-              <React.Fragment key={w.value}>
+            {AREAS.map((a, i) => (
+              <React.Fragment key={a.label}>
                 {i > 0 && <div className="fonts-sep" aria-hidden />}
-                <WeightFrame
-                  weight={w}
-                  families={FAMILIES}
+                <AreaFrame
+                  area={a}
+                  surfaces={SURFACES}
                   justify={JUSTIFY[active]}
                   clipClass="fonts-clip"
                   gap={i === 0 || i === 2 ? 8 : 10}
@@ -224,7 +224,7 @@ export function FontFamiliesBlock() {
       <div className="fonts-accordion">
         <div className="fonts-acc-comp">
           <div className="fonts-acc-text" data-framer-name="Text">
-            {FAMILIES.map((f, i) => {
+            {SURFACES.map((f, i) => {
               const open = i === active
               const serif = f.id !== "sans"
               const fam = `"${f.css}", ${serif ? "serif" : "sans-serif"}`
@@ -276,7 +276,7 @@ export function FontFamiliesBlock() {
                                   className="fonts-acc-badge"
                                   style={{ fontFamily: fam }}
                                 >
-                                  {BADGE}
+                                  {SURFACES_BADGE}
                                 </p>
                               </div>
                             </div>
@@ -316,14 +316,14 @@ export function FontFamiliesBlock() {
                           className="fonts-acc-frames"
                           data-framer-name="Frame 129"
                         >
-                          {WEIGHTS.map((w, j) => (
-                            <React.Fragment key={w.value}>
+                          {AREAS.map((a, j) => (
+                            <React.Fragment key={a.label}>
                               {j > 0 && (
                                 <div className="fonts-sep" aria-hidden />
                               )}
-                              <WeightFrame
-                                weight={w}
-                                families={[f]}
+                              <AreaFrame
+                                area={a}
+                                surfaces={[f]}
                                 justify="flex-start"
                                 clipClass="fonts-acc-clip"
                                 gap={j === 0 || j === 2 ? 8 : 10}

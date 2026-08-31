@@ -3,6 +3,9 @@
 import React from "react"
 import { motion } from "framer-motion"
 
+import { tenantOriginForHost } from "@/lib/root-domain"
+import { DemoLink } from "@/components/saas-marketing/demo-link"
+
 /**
  * 1:1 mirror of the reference hero (.framer-23p5c9) — no site header.
  *
@@ -26,12 +29,33 @@ const H1_STYLE: React.CSSProperties = {
   textAlign: "right",
 }
 
+/* Headline — the optimized form of marketing.hero.title
+   ("المنظومة الشاملة لإدارة المدارس والعملية التعليمية"), width-matched to the
+   reference so the swap is invisible:
+   "نظام واحد يُدير أعمـال المدرسـة والتعليـم معًا" — one system runs the school's
+   operations and teaching, together. المنظومة → نظام واحد · لإدارة المدارس →
+   يُدير أعمـال المدرسـة · والعملية التعليمية → والتعليـم معًا.
+
+   The brief is ZERO visual drift from the reference, so every flex item is
+   width-tuned with tatweel to its reference twin at 92px (the reference
+   itself tunes with tatweel in قـرّرنا/ثمانيــة/عربيًّــــا):
+     نظام 169.8 vs لماذا 165 · واحد 169.3 vs قـرّرنا 170.6
+     يُدير 129.6 vs في 139.9 (no valid tatweel slot — د breaks the join)
+     أعمـال 242.7 vs ثمانيــة 246.5 · المدرسـة 322.1 vs أن نُصمم 324
+     والتعليـم معًا 454.0 vs خطًّـا عربيًّــــا؟ 453.8
+   Line 1 = 762.4 vs 773, line 2 = 793.1 vs 794.8 (max 840): identical
+   2-line wrap ≥810px and identical 3-/4-line phone distribution below
+   (أعمـال deliberately stays at ONE tatweel: a second one made tablet
+   line 2 fit with 1.8px slack at exactly 600px wide — this keeps ~12px,
+   matching the reference's own margins). The wrap container is
+   min(432|840, 100vw − 2×section-padding); a 320px phone (280px) is the
+   binding case — highlight 236.9 vs the reference's 237. */
 const WORDS: Array<{ text: string; ss01?: boolean; name: string }> = [
-  { text: "لماذا", ss01: true, name: "27zag5" },
-  { text: "قـرّرنا", ss01: true, name: "150tskc" },
-  { text: "في", ss01: true, name: "ldw5z9" },
-  { text: "ثمانيــة", ss01: true, name: "pmu4ak" },
-  { text: "أن نُصمم", ss01: false, name: "1ayb9f3" },
+  { text: "نظام", ss01: true, name: "27zag5" },
+  { text: "واحد", ss01: true, name: "150tskc" },
+  { text: "يُدير", ss01: true, name: "ldw5z9" },
+  { text: "أعمـال", ss01: true, name: "pmu4ak" },
+  { text: "المدرسـة", ss01: true, name: "1ayb9f3" },
 ]
 
 /* From the reference's __framer__appearAnimationsContent: every hero block
@@ -48,6 +72,13 @@ const APPEAR_SUB = {
   animate: { opacity: 1, y: 0, transformPerspective: 1200 },
   transition: { duration: 1.2, ease: EASE, type: "tween" as const },
 }
+
+/* SSR/first-paint href for the CTA. An explicit NEXT_PUBLIC_DEMO_URL wins;
+   otherwise the primary root's demo tenant, which DemoLink re-resolves to the
+   visitor's own root after mount. */
+const DEMO_FALLBACK_HREF = `${
+  process.env.NEXT_PUBLIC_DEMO_URL || tenantOriginForHost(null, "demo")
+}/ar`
 
 export function HeroBlock() {
   return (
@@ -83,7 +114,7 @@ export function HeroBlock() {
                   '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
               }}
             >
-              خط ثمانيــة
+              منصة بالقلم
             </h3>
           </motion.div>
 
@@ -117,18 +148,32 @@ export function HeroBlock() {
               />
               <div className="relative flex flex-col">
                 <h1 dir="rtl" style={H1_STYLE}>
-                  خطًّـا عربيًّــــا؟
+                  والتعليـم معًا
                 </h1>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* CTA (.framer-3lvoni) */}
+        {/* CTA (.framer-3lvoni) — points at the demo school rather than the
+            reference's in-page anchor. DemoLink follows the visitor's root
+            domain, so on balqalam.com it resolves to demo.balqalam.com, on
+            ed.databayt.org to demo.databayt.org, and locally to
+            demo.localhost:3000. The page is pinned Arabic, so is the demo.
+
+            Label is "جرّب المنصة الآن" (try it now), not the reference's
+            "احصل على الخط" / our earlier "احصل على المنصة": the button opens a
+            live demo school, and "احصل على" promises a purchase the click does
+            not deliver. Width-matched like the headline — the button is
+            content-sized, and at 16px thmanyah sans it renders 170.1px against
+            the reference's 166.9px (Δ +3.2), where "احصل على المنصة" sat at
+            181.3px (Δ +14.4). Measured alternatives, same conditions:
+            ادخل إلى المنصة 166.8 (Δ −0.1, but "enter" reads as sign-in) ·
+            جرّب المنصة مجانًا 179.6 · استكشف المنصة 173.0 · جرّب المنصة 142.7. */}
         <motion.div {...APPEAR} className="hero-cta">
-          <a
-            href="#footer"
-            data-framer-name="Button"
+          <DemoLink
+            fallbackHref={DEMO_FALLBACK_HREF}
+            lang="ar"
             className="inline-flex h-10 flex-row items-center justify-center gap-[10px] rounded-[20px] bg-black px-4 no-underline"
           >
             <p
@@ -141,7 +186,7 @@ export function HeroBlock() {
                   '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
               }}
             >
-              احصل على الخط
+              جرّب المنصة الآن
             </p>
             <motion.span
               className="block h-5 w-5 shrink-0 will-change-transform"
@@ -161,7 +206,7 @@ export function HeroBlock() {
                 <path d="M205.66,149.66l-72,72a8,8,0,0,1-11.32,0l-72-72a8,8,0,0,1,11.32-11.32L120,196.69V40a8,8,0,0,1,16,0V196.69l58.34-58.35a8,8,0,0,1,11.32,11.32Z" />
               </svg>
             </motion.span>
-          </a>
+          </DemoLink>
         </motion.div>
       </section>
     </>

@@ -5,7 +5,19 @@ import Image from "next/image"
 import { motion, useScroll, useTransform } from "framer-motion"
 
 /**
- * خط أصيل — 1:1 mirror of font.thmanyah.com's "الصفـات" section.
+ * سجلٌّ أصيل — the reference's "الصفـات" section, mechanics untouched.
+ *
+ * The reference wipes from a master calligrapher's manuscript to the same
+ * words set in its typeface — "as if a calligrapher wrote it". Ours keeps
+ * that exact rhetoric one step over: the familiar paper register wipes away
+ * to the same day held in the system, so the headline can still open with
+ * "كما لو أن". Copy width-matched at the reference's own sizes: eyebrow
+ * 100.7px vs 88.1 (24px), headline 398 vs 376.6 (44px/900), and the lede
+ * stays one line in the 1320px box.
+ *
+ * IMAGES ARE STILL THE REFERENCE'S. `/images/calligraphy-manuscript-{1,2}`
+ * are thmanyah's manuscript photographs and must be replaced before this is
+ * customer-facing — see the note at the images below.
  *
  * The frame is sticky and the sibling spacer supplies the scroll runway. As
  * the runway is consumed the mask translates left while the card inside it
@@ -63,34 +75,41 @@ export function CalligraphyComparisonBlock() {
           <div className="aseel-title-group">
             <div className="aseel-eyebrow-box">
               <h2 dir="rtl" className="aseel-eyebrow">
-                خط أصيل
+                سجلٌّ أصيل
               </h2>
             </div>
             <div className="aseel-headline-box">
               <p dir="rtl" className="aseel-headline">
-                كما لو أن خطاطًا كتبــه.
+                كما لو أن الورق لم يتغيّر.
               </p>
             </div>
           </div>
           <div className="aseel-lede-box">
             <p dir="rtl" className="aseel-lede">
-              يجمع بين أصالة اليد ودقّة التقنية، كأنّها امتداد ليد خطاطٍ ماهر.
+              يجمع بين أُلفة الورق ودقّة النظام، فلا يضيع سطرٌ ولا يُعاد كتابته.
             </p>
           </div>
         </div>
 
-        {/* images (.framer-11ecfwm) */}
+        {/* images (.framer-11ecfwm)
+            PLACEHOLDER ASSETS — both photographs are still thmanyah's
+            calligraphy manuscripts, so the wipe currently shows handwriting
+            rather than a school. Replacing them needs two shots at the
+            reference's exact dimensions, or the sticky wipe's travel is off:
+              before  /images/*-1.png      1547x756  + -1-phone.png 788x752
+              after   /images/*-2.png      1547x756  + -2-phone.png 788x756
+            "before" wants a photo of a paper attendance/grades register;
+            "after" wants the matching screen. NOTE the existing product
+            shots in public/features/shots/ are 1280x1000 — a different
+            aspect, so they cannot be dropped in without re-cropping. */}
         <div className="aseel-images" data-framer-name="Images">
           {/* after — revealed as the mask above it wipes away */}
-          <div
-            className="aseel-card"
-            data-framer-name="بخط ثمانيــة للعناويــن"
-          >
+          <div className="aseel-card" data-framer-name="بمنظومة بالقلم">
             {/* the reference swaps to a near-square phone crop below 600 */}
             <div className="aseel-media aseel-media--phone">
               <Image
                 src="/images/calligraphy-manuscript-2-phone.png"
-                alt="بخط ثمانيــة للعناويــن"
+                alt="بمنظومة بالقلم"
                 width={788}
                 height={756}
                 sizes="calc(100vw - 40px)"
@@ -101,7 +120,7 @@ export function CalligraphyComparisonBlock() {
             <div className="aseel-media aseel-media--wide">
               <Image
                 src="/images/calligraphy-manuscript-2.png"
-                alt="بخط ثمانيــة للعناويــن"
+                alt="بمنظومة بالقلم"
                 width={1547}
                 height={756}
                 sizes="min(100vw - 120px, 1440px)"
@@ -114,7 +133,7 @@ export function CalligraphyComparisonBlock() {
               data-framer-name="After Title"
             >
               <p dir="rtl" className="aseel-pill-text">
-                بخط ثمانيــة للعناويــن
+                بمنظومة بالقلم
               </p>
             </div>
           </div>
@@ -124,13 +143,13 @@ export function CalligraphyComparisonBlock() {
             <motion.div
               className="aseel-card-before"
               style={{ x: xCounter }}
-              data-framer-name="بخط زكي الهاشمي"
+              data-framer-name="بالورق والدفاتر"
             >
               {/* the reference swaps to a near-square phone crop below 600 */}
               <div className="aseel-media aseel-media--phone">
                 <Image
                   src="/images/calligraphy-manuscript-1-phone.png"
-                  alt="بخط زكي الهاشمي"
+                  alt="بالورق والدفاتر"
                   width={788}
                   height={752}
                   sizes="calc(100vw - 40px)"
@@ -141,7 +160,7 @@ export function CalligraphyComparisonBlock() {
               <div className="aseel-media aseel-media--wide">
                 <Image
                   src="/images/calligraphy-manuscript-1.png"
-                  alt="بخط زكي الهاشمي"
+                  alt="بالورق والدفاتر"
                   width={1547}
                   height={756}
                   sizes="min(100vw - 120px, 1440px)"
@@ -154,7 +173,7 @@ export function CalligraphyComparisonBlock() {
                 data-framer-name="Before Title"
               >
                 <p dir="rtl" className="aseel-pill-text">
-                  بخط زكي الهاشمي
+                  بالورق والدفاتر
                 </p>
               </div>
             </motion.div>

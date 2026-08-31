@@ -30,6 +30,249 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
   `(saas-marketing)/page.tsx` (deleted). Read this before touching anything on
   the homepage — most of the block's older homepage notes below now describe
   **unwired** components.
+  - _The hero copy is OURS, the rest is still thmanyah's (2026-08-31)._
+    `HeroBlock.tsx` sells the platform: eyebrow `منصة بالقلم`, headline
+    `نظام واحد يُدير أعمـال المدرسـة والتعليـم معًا` (green mark on the last two
+    words `والتعليـم معًا`), CTA `جرّب المنصة الآن` — the optimized form of
+    `marketing.hero.title` ("المنظومة الشاملة لإدارة المدارس والعملية
+    التعليمية"; the dictionary key keeps the long original and is NOT read
+    here — the clone hard-codes like every other block in the group).
+    **Every flex item is width-matched to its reference twin at 92px**
+    (tatweel is the knob, as the reference itself uses in
+    قـرّرنا/ثمانيــة/عربيًّــــا): نظام 169.8 vs لماذا 165 · واحد 169.3 vs قـرّرنا
+    170.6 · يُدير 129.6 vs في 139.9 (no valid tatweel slot — د breaks the
+    join) · أعمـال 242.7 vs ثمانيــة 246.5 · المدرسـة 322.1 vs أن نُصمم 324 ·
+    highlight 454.0 vs 453.8. Line counts measured identical at 11 widths
+    320→1920 (4/3/3/2 per band). **Fitting different copy here is a
+    measurement job, not a guess:** the wrap container is
+    `min(432|840, 100vw − 2×section-padding)`, so a 320px phone (280px)
+    binds, NOT the 840px `max-width`; and when injecting reference text to
+    A/B against, item 5 needs `font-feature-settings: normal` — the real
+    reference renders `أن نُصمم` with ss01 OFF (324px, not 397px) and with the
+    flag wrong the "reference" wraps to 3 lines at desktop and the diff lies.
+  - _The hero CTA opens the demo school, and its label says so (2026-08-31)._
+    The reference's button is an in-page anchor (`href="#footer"`, where the
+    font download lives) reading `احصل على الخط`; the clone inherited that shape
+    as `احصل على المنصة`, which promised a purchase the click never delivered.
+    It is now `@/components/saas-marketing/demo-link`'s **`DemoLink`** — the
+    same component the (unwired) `hero.tsx` uses — so the href follows the
+    visitor's root domain: `demo.balqalam.com` on balqalam.com,
+    `demo.databayt.org` on ed.databayt.org, `demo.localhost:3000` locally, with
+    `NEXT_PUBLIC_DEMO_URL` overriding all three. SSR paints the primary root's
+    demo and the client effect re-resolves after mount, so the first paint on
+    balqalam.com carries the databayt href for a frame — inherent to DemoLink,
+    not new here. `/ar` is appended because the shell is pinned Arabic.
+    The label is `جرّب المنصة الآن`, **width-matched like the headline** (the
+    button is content-sized, so the copy sets its width): at 16px thmanyah sans
+    it renders **170.1px against the reference's 166.9px (Δ +3.2)**, where
+    `احصل على المنصة` sat at 181.3 (Δ +14.4) — the swap _reduces_ drift.
+    Measured alternatives under the same conditions, if the copy is revisited:
+    `ادخل إلى المنصة` 166.8 (Δ −0.1 — the pixel-exact option, but "enter" reads
+    as sign-in and the demo has a login page) · `جرّب المنصة مجانًا` 179.6 ·
+    `استكشف المنصة` 173.0 · `جرّب المنصة` 142.7. Measure by setting
+    `textContent` on the live `.hero-cta a p` node after `document.fonts.ready`
+    and reading the anchor's `getBoundingClientRect().width` — one page load
+    covers every candidate.
+  - _The footer CTA pill signs up instead of collecting an e-mail (2026-08-31)._
+    `DownloadCtaBlock.tsx`'s `ابدأ الآن معنا` pill is now a `next/link` to
+    **`/{lang}/onboarding`**, the wizard that actually provisions a school.
+    It previously carried the reference's whole download mechanic: a click
+    switched the button to an "Open 2" variant (340px, white) where the label
+    slid out and an e-mail form nested *inside* the button faded in, backed by
+    a 3000px "Close trigger", submitting to `joinWaitlist` → `Prospect`
+    (source "waitlist") + SALES_NOTIFY_EMAIL. **A click cannot both navigate
+    and expand**, so that variant, the form, the close trigger and the 340px
+    `.footer-helper2` width helper are all gone, and `joinWaitlist` (still
+    exported from `saas-marketing/actions.ts`) now has **no caller anywhere** —
+    re-wire it before assuming the waitlist still collects addresses.
+    Geometry is unchanged: the pill is still sized by the invisible sans
+    Regular `.footer-btn-helper` copy of the label, so it measures the same
+    **152.6 × 44** (80.6px helper + 2×36 padding) as before, verified on
+    `/ar` and `/en`. Two things the tag swap needed: `.footer-btn` gained
+    `text-decoration: none` (the rule was written for a `<button>`, which has
+    no UA underline), and the framer wrapper is `motion.create(Link)` — a bare
+    `motion.a` would lose client-side navigation.
+    **`lang` is threaded page → `HomeTemplate` → block, and is the ROUTE's
+    locale, not the shell's.** The clone pins `dir`/`lang` to Arabic at both
+    locales because the reference has no English variant, but onboarding is
+    our own product with a real English wizard — and dropping `[lang]` on the
+    way in is exactly what silently flipped Arabic users to English before.
+    `HomeTemplate` now takes a required `lang` prop.
+    KNOWN MISMATCH: the 17px glyph is still the reference's **download tray**
+    (it downloaded a font package). Nothing downloads any more; swap the
+    `<svg>` paths for a directional arrow when the clone's zero-drift brief
+    allows it.
+  - _"The Answer" section copy is ours too (2026-08-31)._
+    `StoryNarrativeBlock.tsx` carries the optimized `marketing.hero.subtitle`
+    across the same four slots the reference uses: Row A's h2 holds two
+    paragraphs split on the source's sentence break (`<br /><br />` between
+    them), Row B's holds body + the bold `<span>` closing line. **Row height
+    is driven by the media, not the text** (`.answer-media` 76vh, row
+    `max-height: 824px`), so the section stays pixel-identical to the
+    reference at 810/1024/1200/1440/1920 (2896/2896/2268/2268/2268px) no
+    matter the copy length; only <810 does the text drive it (375: 1176 vs
+    the reference's 1434; 600: 2500 vs 2680). The current copy is ~451 chars
+    against the reference's 882, so the paragraph blocks run 2–5 lines
+    shorter per width. To fit copy to the reference's exact line counts,
+    Row B is fitted too: its body was expanded ~3× (advance 981 → ~2750,
+    the reference's is 2754) so the block lands on the reference's own line
+    vector 11,7,5,4,8,6,5 — exact at all seven widths, with the bold closer
+    wrapping mid-line the same way.
+    Row A carries TWO paragraphs like the reference (`<br /><br />` between
+    them): Abdout's supplied copy is ¶1, and ¶2 was fitted to the
+    reference's own second-paragraph line vector — 4,3,3,2,4,3,2 across
+    375/600/810/1024/1200/1440/1920, exact at every width, so Row A reads
+    4+3 = 8 lines at 1440 exactly like the original. To fit copy to the
+    reference's exact line counts,
+    the lever is rendered ADVANCE width, not character count (ref @20px:
+    p1 2180.4 · p2 1420.3 · B-body 2754.1 · bold 553.2) — and even equal
+    advance can differ by a line, because break position decides it: at
+    810px the reference wastes a line (65% fill) where tighter-packing
+    prose fits 2. Batch-measure candidates by setting text on ONE live text
+    node per viewport (7 resizes total, not per-candidate) or a search is
+    unusably slow.
+  - _The "8" panel writes بالقلم, rebuilt from the font (2026-08-31)._ The
+    reference fills that full-bleed panel between Row A and Row B with a
+    Lottie that writes ثمانية, and it is **80 baked shape layers with zero
+    text layers** (`public/lottie/lottie-stats-letter.json`, AE comp
+    `Writing_Direction_03`) chunked by stroke rather than by letter — nothing
+    in it can be retargeted to another word. So the panel is rebuilt in
+    `thmanyah/atom/WordmarkWriting.tsx` from the real thmanyah Serif Display
+    Black outlines. The JSON is unreferenced but kept on disk.
+    - **Read the reference by rendering its frames, not its layer names.**
+      Load the JSON into lottie-web on a throwaway page and step it with
+      `goToAndStop(n, true)`; read the live DOM for the values the JSON
+      buries in animated property objects. Doing that is what revealed the
+      mechanism: at frame 0 the whole word — **dots included** — stands as a
+      hairline OUTLINE, which then FILLS right to left. A first pass built
+      from layer names read the hairline diamonds as scattered ornament; they
+      are the word's own unfilled dots. Frames 2 / 40 / 110 are informative.
+    - **The flow follows Arabic's CONNECTED GROUPS, and the dots come last.**
+      بالقلم is two groups — با, then لقلم — and the ink runs through a group
+      like a pipe, one continuous motion with no break between its letters:
+      the ب bowl flows left along the baseline then up the alef; لقلم opens
+      at the TOP of the initial ل and flows down into the baseline, then left
+      through the ق, on through the medial ل (whose stem rises as the front
+      passes) and into the م loop and tail. `split_glyph()` then holds all
+      three dots back — ب's one, ق's two — for a final phase, the way a hand
+      adds them. It detects them by containment (largest contour is the body,
+      contours inside it are counters, anything else detached is a dot), so
+      it survives a change of word; `DOT_STROKES` must keep pace and there is
+      an assert for it.
+    - **Each step is a front clipped to its own glyph, in writing order.** Two approaches
+      were tried and abandoned first, and both failure modes are worth
+      knowing:
+      - _A pen along a hand-drawn centreline_ cannot cover every corner of a
+        glyph at constant width, so it needs a widening phase to catch the
+        leftovers — which reads as patching, not writing.
+      - _One boundary crossing the whole word_ covers everything, but it
+        ignores the letterforms and reads as a bar scanning over them.
+        A front is a half-plane **clipped to its own glyph**, travelling in the
+        direction that letter is actually written — down the alef and the two
+        lams, right-to-left along the ب bowl, the ق and the م. Coverage is
+        guaranteed by the half-plane; order and direction come from the
+        sequence. The edge **bows** (middle leading, sides trailing) the way a
+        nib lays ink; flat is still a scan, only a shorter one. Each letter's
+        dots ride with its glyph, so there is no second pass back across the
+        word. `STROKES` in compose.py — one direction per letter — is the only
+        hand-authored part; extents, timing and the parked reduced-motion
+        positions are all derived.
+    - **A front must start clear of its own BOW, and its extents come from
+      the ink, not the bbox.** Two causes of the same symptom — the letter
+      sits still, then a chunk appears, once per letter:
+      - the bow starts bulging _into_ the glyph if the start is only cleared
+        by the glyph extent, so each front popped a wedge before it moved;
+      - projecting the rotated BBOX CORNERS makes the front cross empty
+        corner space before reaching any ink (a poor bound for a diagonal
+        direction). `ink_points()` samples the outline instead.
+        The bow is capped at 70 units for the same reason — its amplitude is
+        dead travel.
+    - **Each front is paced by AREA, not distance.** At constant speed a
+      front reveals ink in proportion to how wide the letter is where it
+      happens to be; crossing the ق bowl it dumped 4x the mean rate.
+      `area_profile()` rasterises each glyph by even-odd scanline (real
+      coverage — the outline's perpendicular spread counts the gap between
+      the ق's body and its dots as solid, and made a squat bowl look several
+      times bigger than a tall stem), and `area_keyframes()` places 40
+      equal-area stops. Durations follow area too, so the rate is constant
+      between letters as well as within them. Bin the profile over the
+      TRAVEL range, not the glyph's own projection range — they are
+      different intervals and mismatching them misplaces every keyframe.
+    - **Stem direction follows where the pen ARRIVES.** A stem's ends are top
+      and baseline while its neighbours sit on the baseline, so one end is
+      always a jump. ا and the medial ل are entered from the previous
+      letter's baseline, so they fill UPWARD; the initial ل opens a new
+      connected group at its own top and fills down. Filling every stem
+      top-down made the activity leap up to a stem top after each letter
+      finished at the baseline — four visible jumps instead of the one that
+      is unavoidable.
+    - **Measure smoothness by rasterising, not by eye.** Clone the `<svg>`,
+      bake each mask's computed transform onto it as an attribute (the
+      animation lives in the stylesheet and is lost on serialisation), draw
+      to a canvas and count black pixels every 50ms. Two things to check:
+      no run of 3+ samples with zero new pixels (**dead patches: 0**), and
+      the centroid of newly-painted pixels never teleports (**median hop 4px,
+      no hop over 40px**). Current ink rate peaks at 4.9x mean on 4 of ~136
+      samples, all single-sample blips at letter handoffs.
+    - **The green guide and nodes are gone (2026-08-31).** The reference has
+      them; we do not. If they ever come back, they belong UNDER the fill, as
+      the reference stacks them.
+    - **Every contour of a glyph must ride in one `<path>`**, or the counters
+      — the ق loop, the م bowl — fill solid instead of punching through.
+    - **The outline is the UNITED silhouette, and counters stay OUT of the
+      union.** Per-glyph contours leave a vertical seam wherever two letters
+      butt together on the connector (three in بالقلم); unioning the counters
+      makes skia rewind the hole through a keyhole, which strokes as a
+      hairline slit. `shape.py` unions with `skia-pathops` and appends
+      counters separately — بالقلم comes out as **6** subpaths (two
+      silhouettes, two dot groups, two counters).
+    - **The mint ground came from the Lottie, not the section.** `#afe4b6` is
+      its `Pale Green Solid 1` layer; dropping the animation turned the panel
+      white. It now lives on `.answer-lottie`.
+    - **The viewBox does the sizing — matched to the reference by
+      measurement.** In a 1512×805 panel the reference's word spans **814.2px
+      (53.85%), centred 5.9px above centre**; ours renders 814.3px. Its
+      ثمانية is a **tatweel'd lockup** (bbox aspect 2.39 vs 1.87 for the
+      plain font) so no other word can match both its width and its height —
+      matching the width is what makes the letterforms read at the same size.
+      And it uses **`slice`**, which scales by WIDTH on panels wider than its
+      16:9 comp; `meet` on a 16:9 viewBox scales by HEIGHT there and lands
+      ~8% small. Hence `VB_ASPECT = 1.9`. `WORD_SHARE` is 0.5413, not the
+      measured 0.5385, because the bboxes come from control points.
+    - **One accelerate-cruise-decelerate for the whole word**, not one ease
+      per letter — eight per-letter eases read as stop-start (the reference
+      gets away with them only because it has 17 overlapping chunks).
+      `cubic-bezier(.3,.2,.7,.8)`: sampled velocity 0.76 / 1.14 / 0.76, a
+      1.06× spread through the middle. Span is the reference's own trim
+      keyframes, frames 29→208 of a 241-frame 25fps loop.
+    - **Verify motion in the browser, never by eye.** Sample every front's
+      `translateX` each 100ms and normalise by its travel: no front may go
+      backwards (**0 backtracks**) and no later letter may ever be further
+      along than an earlier one (**0 out-of-order**). All start at 0, all
+      finish at 1. Two bugs that were
+      invisible in screenshots and obvious here: `stroke-dasharray: L` is a
+      REPEATING dash L / gap L, so an L even a unit under the path length
+      painted a sliver from frame 0; and `stroke-linecap: round` paints a
+      full-DIAMETER dot at zero dash length. Both are moot on the current
+      boundary design but will bite again if pens return.
+    - `useInView` is deliberately **not** `once`: the write loops, so
+      `.bq-go` drops when the panel leaves the viewport and everything
+      pauses. Under `prefers-reduced-motion` the animation is dropped and the
+      sweep parked at its end, leaving the finished filled word.
+  - _The Modern ticker section's copy is ours (2026-08-31)._
+    `ModernShowcaseBlock.tsx` — mechanics untouched (sticky title, the
+    grab-drag ticker, 100px/s track, fling decay, the 3x tile repeat).
+    Width-matched at the reference's sizes: eyebrow `نظام حديث` 119.6 vs
+    111.4 (24px), headline `يصنع توازنًا مريحًا لمدرستك` **450.6 vs 451.6**
+    (44px/900 — a 1px match, keeping the reference's own construction),
+    lede 471.5 vs 500 and still ONE line in the 1320px box. All three stay
+    masculine so eyebrow/headline/lede agree the way the reference's do
+    (`خط`…`يصنع`…`يجمع`) — which is why it is `نظام`, not `منظومة`.
+    **TILES ARE STILL THMANYAH'S**: the 30 mounted video/poster tiles all
+    show their typeface in use. They are fixed-width by design — the loop
+    renders the set three times and the track speed is tuned to the total
+    width — so replacements must keep each tile's `w`/`ar` or the seamless
+    wrap breaks.
   - _Own route group._ The reference has no site header and ships its own
     footer, so the clone must not inherit `(saas-marketing)/layout.tsx`. The
     `licenses` / `licenses-en` pages live in the same group because the

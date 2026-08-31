@@ -56,8 +56,12 @@ const WEIGHT_MENU: Array<{
   { label: "ثقيــل", value: 900, valueLabel: "ثقيـــل" },
 ]
 
+/* The editable specimen. Sized to the reference's own two lines so the
+   panel opens at the same visual mass — at 72px/700 the reference inks 912
+   and 2149px; these ink 882 and 2134 (−3.3% / −0.7%), so the box still
+   opens 530px tall and wraps the same way. */
 const DEFAULT_TEXT =
-  "خط حي؛ يُجمّـــــل أي شيء يكتبـــــه.\nترتاح له من النظرة الأولى، يجمع بين الوضوح والجاذبية، بلمسة أنيقة تُبرز التفاصيل."
+  "منظومة حيّة؛ تُنظّم يوم المدرسة.\nمن أول حصة إلى آخر تقرير، يبقى كل رقم في مكانه، ويرى كل طرفٍ ما يخصّه وحده."
 
 const PANEL_BG: Record<Bg, string> = {
   black: "rgb(0, 0, 0)",

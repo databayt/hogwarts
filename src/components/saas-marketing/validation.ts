@@ -8,6 +8,7 @@
  */
 
 import { z } from "zod"
+
 import { isReservedSubdomain } from "@/lib/reserved-subdomains"
 
 /**

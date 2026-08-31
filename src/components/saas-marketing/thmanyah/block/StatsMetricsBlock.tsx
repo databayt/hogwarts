@@ -33,23 +33,35 @@ import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
 
 type Stat = { prefix: string; number: string; description: string }
 
+/* The reference's three numbers are craft-effort counts (45 typefaces
+   studied, 1,200 hours, 80 versions) — it sells to designers. Ours are
+   SCOPE counts, because a school buyer can evaluate coverage but not our
+   hours. Every one is understated against a figure verifiable in this repo,
+   so the section can be fact-checked:
+     60+  vs 62 feature modules shown as built/partial (of 101 defined) —
+          SHOWN_FEATURES in saas-marketing/features/constants.tsx
+     300+ vs 330 `model` declarations across prisma/models/*.prisma
+     8    exactly — the UserRole enum (DEVELOPER · ADMIN · TEACHER ·
+          STUDENT · GUARDIAN · ACCOUNTANT · STAFF · USER)
+   Re-check before changing a digit. Deliberately NOT used: any count of
+   schools or students served — `marketing.hero.badge` claims "+700 مدرسة
+   مؤتمتة" with nothing in the repo behind it, and one unverifiable number
+   in a credibility section costs you the other two. */
 const STATS: Stat[] = [
   {
-    prefix: "دراسة أكثر من",
-    number: "45",
-    description: "خطًّا عربيًّا في سعينا لتصميم خط عربي أنيق ومميز.",
+    prefix: "أكثر من",
+    number: "60",
+    description: "وحدة تغطي يوم المدرسة، من القبول إلى التقارير.",
   },
   {
     prefix: "أكثر من",
-    number: "1,200",
-    description: "ساعة من البحث والتجارب للوصول إلى خط أصيل مرن فريد عصري.",
+    number: "300",
+    description: "نموذج بيانات تقوم عليها سجلات المدرسة وتقاريرها.",
   },
   {
-    prefix: "أكثر من",
-    number: "80",
-    description:
-      // verbatim — the reference has two spaces before "تنسجم" and pre-wrap keeps them
-      "نسخة من الخط مع تحسين مستمر للوصول إلى نسخة  تنسجم مع هوية ثمانية.",
+    prefix: "تعمل بـ",
+    number: "8",
+    description: "أدوار، لكل دورٍ لوحته وما يخصّه وحده.",
   },
 ]
 
@@ -93,7 +105,7 @@ export function StatsMetricsBlock() {
                 </div>
                 <div className="trials-text">
                   <p dir="rtl" className="trials-headline">
-                    خــط عـربي غير مسبوق
+                    منظومة عربية غير مسبوقة
                   </p>
                 </div>
               </div>
@@ -104,8 +116,8 @@ export function StatsMetricsBlock() {
                 transition={REVEAL_SPRING}
               >
                 <p dir="rtl" className="trials-lede">
-                  أصبح رسم حرف الحاء أكثر انسيابية، بزوايا حادة تعكس قوة الحرف
-                  وحضوره.
+                  صُمِّمت من اليمين إلى اليسار منذ أول سطر، لا مترجمةً عن قالبٍ
+                  إنجليزي.
                 </p>
               </motion.div>
               {/* JAMLIA inside the title stack — START/Mob variant only

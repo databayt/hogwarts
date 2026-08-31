@@ -725,6 +725,1184 @@ body:has(.thmanyah-shell) {
   flex: 0 0 auto;
   width: 100%;
   height: 100vh;
+  /* #afe4b6 is the Lottie's own "Pale Green Solid 1" layer: the panel's
+     ground was painted by the animation, not by the section, so dropping
+     the Lottie took the colour with it. It sits on this wrapper rather
+     than on the word so the write happens over the ground, not with it. */
+  background: #afe4b6;
+}
+
+/* The word that fills the "8" panel — see
+   thmanyah/atom/WordmarkWriting.tsx. The word is an <svg> whose viewBox
+   frames it at the reference lockup's share of the panel, so it needs no
+   font-size math: "meet" scales it by width on a 16:9 panel and by height on
+   a short or portrait one, which is what the reference Lottie's
+   "xMidYMid slice" worked out to, minus the cropping.
+
+   Every animation below is transform/opacity only and stays paused until
+   .bq-go lands, so nothing runs while the panel is off screen. Timings are
+   percentages of one shared 9.64s cycle rather than per-element delays: an
+   animation-delay applies once, not per iteration, and would desynchronise
+   the whole word after the first loop.
+
+   Generated — do not hand-edit past this point. See scripts/wordmark/. */
+.answer-eight-word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.answer-eight-word .bq {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.bq-r {
+  animation-duration: 9.64s;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-play-state: paused;
+}
+.bq-go .bq-r {
+  animation-play-state: running;
+}
+@keyframes bq-f0 {
+  0%,
+  12.033% {
+    transform: translateX(0);
+  }
+  12.033% {
+    transform: translateX(0px);
+  }
+  12.301% {
+    transform: translateX(84.1px);
+  }
+  12.568% {
+    transform: translateX(95.8px);
+  }
+  12.836% {
+    transform: translateX(103.9px);
+  }
+  13.104% {
+    transform: translateX(110.8px);
+  }
+  13.371% {
+    transform: translateX(117px);
+  }
+  13.639% {
+    transform: translateX(122.7px);
+  }
+  13.907% {
+    transform: translateX(128.4px);
+  }
+  14.174% {
+    transform: translateX(133.5px);
+  }
+  14.442% {
+    transform: translateX(138.7px);
+  }
+  14.71% {
+    transform: translateX(143.8px);
+  }
+  14.977% {
+    transform: translateX(149.3px);
+  }
+  15.245% {
+    transform: translateX(154.6px);
+  }
+  15.512% {
+    transform: translateX(160.3px);
+  }
+  15.78% {
+    transform: translateX(166.1px);
+  }
+  16.048% {
+    transform: translateX(172px);
+  }
+  16.315% {
+    transform: translateX(178.4px);
+  }
+  16.583% {
+    transform: translateX(184.7px);
+  }
+  16.851% {
+    transform: translateX(191.2px);
+  }
+  17.118% {
+    transform: translateX(198.1px);
+  }
+  17.386% {
+    transform: translateX(205.1px);
+  }
+  17.654% {
+    transform: translateX(212.2px);
+  }
+  17.921% {
+    transform: translateX(220.1px);
+  }
+  18.189% {
+    transform: translateX(228.7px);
+  }
+  18.456% {
+    transform: translateX(238.1px);
+  }
+  18.724% {
+    transform: translateX(248.2px);
+  }
+  18.992% {
+    transform: translateX(257.9px);
+  }
+  19.259% {
+    transform: translateX(267.5px);
+  }
+  19.527% {
+    transform: translateX(276.8px);
+  }
+  19.795% {
+    transform: translateX(286.2px);
+  }
+  20.062% {
+    transform: translateX(295.3px);
+  }
+  20.33% {
+    transform: translateX(304.4px);
+  }
+  20.598% {
+    transform: translateX(313.3px);
+  }
+  20.865% {
+    transform: translateX(322.1px);
+  }
+  21.133% {
+    transform: translateX(330.9px);
+  }
+  21.4% {
+    transform: translateX(339.8px);
+  }
+  21.668% {
+    transform: translateX(348.3px);
+  }
+  21.936% {
+    transform: translateX(357.4px);
+  }
+  22.203% {
+    transform: translateX(366.9px);
+  }
+  22.471% {
+    transform: translateX(377.5px);
+  }
+  22.739% {
+    transform: translateX(406.5px);
+  }
+  22.739%,
+  100% {
+    transform: translateX(406.5px);
+  }
+}
+.bq-f0 {
+  animation-name: bq-f0;
+  animation-timing-function: linear;
+}
+@keyframes bq-f1 {
+  0%,
+  22.22% {
+    transform: translateX(0);
+  }
+  22.22% {
+    transform: translateX(0px);
+  }
+  22.395% {
+    transform: translateX(56.2px);
+  }
+  22.57% {
+    transform: translateX(73.1px);
+  }
+  22.745% {
+    transform: translateX(88.1px);
+  }
+  22.92% {
+    transform: translateX(102.2px);
+  }
+  23.095% {
+    transform: translateX(115.5px);
+  }
+  23.27% {
+    transform: translateX(128.5px);
+  }
+  23.445% {
+    transform: translateX(141px);
+  }
+  23.62% {
+    transform: translateX(153.2px);
+  }
+  23.795% {
+    transform: translateX(165.2px);
+  }
+  23.97% {
+    transform: translateX(177px);
+  }
+  24.145% {
+    transform: translateX(188.5px);
+  }
+  24.321% {
+    transform: translateX(200px);
+  }
+  24.496% {
+    transform: translateX(211.4px);
+  }
+  24.671% {
+    transform: translateX(225.9px);
+  }
+  24.846% {
+    transform: translateX(245.9px);
+  }
+  25.021% {
+    transform: translateX(268.6px);
+  }
+  25.196% {
+    transform: translateX(290.9px);
+  }
+  25.371% {
+    transform: translateX(312.8px);
+  }
+  25.546% {
+    transform: translateX(334.7px);
+  }
+  25.721% {
+    transform: translateX(355.9px);
+  }
+  25.896% {
+    transform: translateX(377px);
+  }
+  26.071% {
+    transform: translateX(397.9px);
+  }
+  26.246% {
+    transform: translateX(418.5px);
+  }
+  26.421% {
+    transform: translateX(438.9px);
+  }
+  26.596% {
+    transform: translateX(458.8px);
+  }
+  26.771% {
+    transform: translateX(478.5px);
+  }
+  26.946% {
+    transform: translateX(498.2px);
+  }
+  27.121% {
+    transform: translateX(517.5px);
+  }
+  27.296% {
+    transform: translateX(536.6px);
+  }
+  27.471% {
+    transform: translateX(555.6px);
+  }
+  27.647% {
+    transform: translateX(574.4px);
+  }
+  27.822% {
+    transform: translateX(592.9px);
+  }
+  27.997% {
+    transform: translateX(611.1px);
+  }
+  28.172% {
+    transform: translateX(629.4px);
+  }
+  28.347% {
+    transform: translateX(647.2px);
+  }
+  28.522% {
+    transform: translateX(664.9px);
+  }
+  28.697% {
+    transform: translateX(684.3px);
+  }
+  28.872% {
+    transform: translateX(707.1px);
+  }
+  29.047% {
+    transform: translateX(736.4px);
+  }
+  29.222% {
+    transform: translateX(793.1px);
+  }
+  29.222%,
+  100% {
+    transform: translateX(793.1px);
+  }
+}
+.bq-f1 {
+  animation-name: bq-f1;
+  animation-timing-function: linear;
+}
+@keyframes bq-f2 {
+  0%,
+  28.703% {
+    transform: translateX(0);
+  }
+  28.703% {
+    transform: translateX(0px);
+  }
+  28.856% {
+    transform: translateX(81.7px);
+  }
+  29.008% {
+    transform: translateX(106.7px);
+  }
+  29.161% {
+    transform: translateX(126px);
+  }
+  29.313% {
+    transform: translateX(142.2px);
+  }
+  29.466% {
+    transform: translateX(156.9px);
+  }
+  29.618% {
+    transform: translateX(169.9px);
+  }
+  29.771% {
+    transform: translateX(182.5px);
+  }
+  29.923% {
+    transform: translateX(195px);
+  }
+  30.076% {
+    transform: translateX(207px);
+  }
+  30.228% {
+    transform: translateX(219.7px);
+  }
+  30.381% {
+    transform: translateX(233.2px);
+  }
+  30.533% {
+    transform: translateX(248px);
+  }
+  30.686% {
+    transform: translateX(263.6px);
+  }
+  30.838% {
+    transform: translateX(279.6px);
+  }
+  30.991% {
+    transform: translateX(296.2px);
+  }
+  31.143% {
+    transform: translateX(312.6px);
+  }
+  31.296% {
+    transform: translateX(329.1px);
+  }
+  31.448% {
+    transform: translateX(346.3px);
+  }
+  31.601% {
+    transform: translateX(363.4px);
+  }
+  31.753% {
+    transform: translateX(381px);
+  }
+  31.906% {
+    transform: translateX(399.2px);
+  }
+  32.058% {
+    transform: translateX(418.1px);
+  }
+  32.211% {
+    transform: translateX(438px);
+  }
+  32.363% {
+    transform: translateX(459.4px);
+  }
+  32.516% {
+    transform: translateX(482px);
+  }
+  32.668% {
+    transform: translateX(507px);
+  }
+  32.821% {
+    transform: translateX(534.7px);
+  }
+  32.973% {
+    transform: translateX(567.1px);
+  }
+  33.126% {
+    transform: translateX(603.8px);
+  }
+  33.278% {
+    transform: translateX(624.3px);
+  }
+  33.43% {
+    transform: translateX(640.2px);
+  }
+  33.583% {
+    transform: translateX(654.8px);
+  }
+  33.735% {
+    transform: translateX(669px);
+  }
+  33.888% {
+    transform: translateX(683.4px);
+  }
+  34.04% {
+    transform: translateX(698.1px);
+  }
+  34.193% {
+    transform: translateX(713.7px);
+  }
+  34.345% {
+    transform: translateX(729.6px);
+  }
+  34.498% {
+    transform: translateX(746.7px);
+  }
+  34.65% {
+    transform: translateX(768.3px);
+  }
+  34.803% {
+    transform: translateX(816.1px);
+  }
+  34.803%,
+  100% {
+    transform: translateX(816.1px);
+  }
+}
+.bq-f2 {
+  animation-name: bq-f2;
+  animation-timing-function: linear;
+}
+@keyframes bq-f3 {
+  0%,
+  34.284% {
+    transform: translateX(0);
+  }
+  34.284% {
+    transform: translateX(0px);
+  }
+  34.701% {
+    transform: translateX(94.6px);
+  }
+  35.118% {
+    transform: translateX(114.2px);
+  }
+  35.535% {
+    transform: translateX(126.6px);
+  }
+  35.952% {
+    transform: translateX(137.2px);
+  }
+  36.369% {
+    transform: translateX(147px);
+  }
+  36.786% {
+    transform: translateX(156.2px);
+  }
+  37.203% {
+    transform: translateX(165px);
+  }
+  37.62% {
+    transform: translateX(173.3px);
+  }
+  38.037% {
+    transform: translateX(181.6px);
+  }
+  38.454% {
+    transform: translateX(190.2px);
+  }
+  38.871% {
+    transform: translateX(199.2px);
+  }
+  39.288% {
+    transform: translateX(208.3px);
+  }
+  39.705% {
+    transform: translateX(217.8px);
+  }
+  40.122% {
+    transform: translateX(227.6px);
+  }
+  40.539% {
+    transform: translateX(237.7px);
+  }
+  40.956% {
+    transform: translateX(248.1px);
+  }
+  41.373% {
+    transform: translateX(258.6px);
+  }
+  41.79% {
+    transform: translateX(269.4px);
+  }
+  42.207% {
+    transform: translateX(280.4px);
+  }
+  42.624% {
+    transform: translateX(291.9px);
+  }
+  43.041% {
+    transform: translateX(303.8px);
+  }
+  43.459% {
+    transform: translateX(315.8px);
+  }
+  43.876% {
+    transform: translateX(328px);
+  }
+  44.293% {
+    transform: translateX(340.5px);
+  }
+  44.71% {
+    transform: translateX(353.5px);
+  }
+  45.127% {
+    transform: translateX(367px);
+  }
+  45.544% {
+    transform: translateX(381px);
+  }
+  45.961% {
+    transform: translateX(395.6px);
+  }
+  46.378% {
+    transform: translateX(410px);
+  }
+  46.795% {
+    transform: translateX(424.4px);
+  }
+  47.212% {
+    transform: translateX(438.6px);
+  }
+  47.629% {
+    transform: translateX(452.3px);
+  }
+  48.046% {
+    transform: translateX(465.7px);
+  }
+  48.463% {
+    transform: translateX(478.6px);
+  }
+  48.88% {
+    transform: translateX(492.6px);
+  }
+  49.297% {
+    transform: translateX(513.6px);
+  }
+  49.714% {
+    transform: translateX(535.5px);
+  }
+  50.131% {
+    transform: translateX(556.9px);
+  }
+  50.548% {
+    transform: translateX(578.2px);
+  }
+  50.965% {
+    transform: translateX(615.2px);
+  }
+  50.965%,
+  100% {
+    transform: translateX(615.2px);
+  }
+}
+.bq-f3 {
+  animation-name: bq-f3;
+  animation-timing-function: linear;
+}
+@keyframes bq-f4 {
+  0%,
+  50.446% {
+    transform: translateX(0);
+  }
+  50.446% {
+    transform: translateX(0px);
+  }
+  50.645% {
+    transform: translateX(105.5px);
+  }
+  50.844% {
+    transform: translateX(121.7px);
+  }
+  51.044% {
+    transform: translateX(135.3px);
+  }
+  51.243% {
+    transform: translateX(148.8px);
+  }
+  51.442% {
+    transform: translateX(162.4px);
+  }
+  51.641% {
+    transform: translateX(176.8px);
+  }
+  51.84% {
+    transform: translateX(191.5px);
+  }
+  52.039% {
+    transform: translateX(206.7px);
+  }
+  52.239% {
+    transform: translateX(222.3px);
+  }
+  52.438% {
+    transform: translateX(237.7px);
+  }
+  52.637% {
+    transform: translateX(251.4px);
+  }
+  52.836% {
+    transform: translateX(263.9px);
+  }
+  53.035% {
+    transform: translateX(275px);
+  }
+  53.234% {
+    transform: translateX(285.7px);
+  }
+  53.434% {
+    transform: translateX(295.9px);
+  }
+  53.633% {
+    transform: translateX(302.9px);
+  }
+  53.832% {
+    transform: translateX(309px);
+  }
+  54.031% {
+    transform: translateX(314.6px);
+  }
+  54.23% {
+    transform: translateX(319.8px);
+  }
+  54.429% {
+    transform: translateX(325.2px);
+  }
+  54.629% {
+    transform: translateX(330.8px);
+  }
+  54.828% {
+    transform: translateX(336.4px);
+  }
+  55.027% {
+    transform: translateX(341.6px);
+  }
+  55.226% {
+    transform: translateX(346.8px);
+  }
+  55.425% {
+    transform: translateX(352.1px);
+  }
+  55.624% {
+    transform: translateX(357.4px);
+  }
+  55.824% {
+    transform: translateX(362.7px);
+  }
+  56.023% {
+    transform: translateX(367.8px);
+  }
+  56.222% {
+    transform: translateX(373px);
+  }
+  56.421% {
+    transform: translateX(378.4px);
+  }
+  56.62% {
+    transform: translateX(383.9px);
+  }
+  56.82% {
+    transform: translateX(389.5px);
+  }
+  57.019% {
+    transform: translateX(395.4px);
+  }
+  57.218% {
+    transform: translateX(401.4px);
+  }
+  57.417% {
+    transform: translateX(407.9px);
+  }
+  57.616% {
+    transform: translateX(414.6px);
+  }
+  57.815% {
+    transform: translateX(423px);
+  }
+  58.015% {
+    transform: translateX(432.6px);
+  }
+  58.214% {
+    transform: translateX(445.5px);
+  }
+  58.413% {
+    transform: translateX(479.8px);
+  }
+  58.413%,
+  100% {
+    transform: translateX(479.8px);
+  }
+}
+.bq-f4 {
+  animation-name: bq-f4;
+  animation-timing-function: linear;
+}
+@keyframes bq-f5 {
+  0%,
+  57.894% {
+    transform: translateX(0);
+  }
+  57.894% {
+    transform: translateX(0px);
+  }
+  58.366% {
+    transform: translateX(111.7px);
+  }
+  58.838% {
+    transform: translateX(132.8px);
+  }
+  59.309% {
+    transform: translateX(149.9px);
+  }
+  59.781% {
+    transform: translateX(164.9px);
+  }
+  60.253% {
+    transform: translateX(178px);
+  }
+  60.725% {
+    transform: translateX(188.6px);
+  }
+  61.196% {
+    transform: translateX(198.6px);
+  }
+  61.668% {
+    transform: translateX(208.2px);
+  }
+  62.14% {
+    transform: translateX(217.7px);
+  }
+  62.612% {
+    transform: translateX(227.1px);
+  }
+  63.083% {
+    transform: translateX(236.9px);
+  }
+  63.555% {
+    transform: translateX(248.1px);
+  }
+  64.027% {
+    transform: translateX(260.3px);
+  }
+  64.498% {
+    transform: translateX(273.4px);
+  }
+  64.97% {
+    transform: translateX(287.2px);
+  }
+  65.442% {
+    transform: translateX(300.9px);
+  }
+  65.914% {
+    transform: translateX(313px);
+  }
+  66.385% {
+    transform: translateX(324.2px);
+  }
+  66.857% {
+    transform: translateX(334.6px);
+  }
+  67.329% {
+    transform: translateX(344.1px);
+  }
+  67.801% {
+    transform: translateX(354.2px);
+  }
+  68.272% {
+    transform: translateX(365.2px);
+  }
+  68.744% {
+    transform: translateX(378.4px);
+  }
+  69.216% {
+    transform: translateX(392.4px);
+  }
+  69.688% {
+    transform: translateX(405.9px);
+  }
+  70.159% {
+    transform: translateX(419.3px);
+  }
+  70.631% {
+    transform: translateX(432.2px);
+  }
+  71.103% {
+    transform: translateX(444.8px);
+  }
+  71.574% {
+    transform: translateX(457.4px);
+  }
+  72.046% {
+    transform: translateX(470.2px);
+  }
+  72.518% {
+    transform: translateX(485.1px);
+  }
+  72.99% {
+    transform: translateX(517.8px);
+  }
+  73.461% {
+    transform: translateX(557.5px);
+  }
+  73.933% {
+    transform: translateX(593px);
+  }
+  74.405% {
+    transform: translateX(626.6px);
+  }
+  74.877% {
+    transform: translateX(659.7px);
+  }
+  75.348% {
+    transform: translateX(694.8px);
+  }
+  75.82% {
+    transform: translateX(733.7px);
+  }
+  76.292% {
+    transform: translateX(784px);
+  }
+  76.763% {
+    transform: translateX(891.7px);
+  }
+  76.763%,
+  100% {
+    transform: translateX(891.7px);
+  }
+}
+.bq-f5 {
+  animation-name: bq-f5;
+  animation-timing-function: linear;
+}
+@keyframes bq-f6 {
+  0%,
+  78.008% {
+    transform: translateX(0);
+  }
+  78.008% {
+    transform: translateX(0px);
+  }
+  78.089% {
+    transform: translateX(40.7px);
+  }
+  78.169% {
+    transform: translateX(46.4px);
+  }
+  78.249% {
+    transform: translateX(50.8px);
+  }
+  78.33% {
+    transform: translateX(54.6px);
+  }
+  78.41% {
+    transform: translateX(58.4px);
+  }
+  78.491% {
+    transform: translateX(62.2px);
+  }
+  78.571% {
+    transform: translateX(65.9px);
+  }
+  78.651% {
+    transform: translateX(69.5px);
+  }
+  78.732% {
+    transform: translateX(73.1px);
+  }
+  78.812% {
+    transform: translateX(76.8px);
+  }
+  78.893% {
+    transform: translateX(80.5px);
+  }
+  78.973% {
+    transform: translateX(84.1px);
+  }
+  79.053% {
+    transform: translateX(87.7px);
+  }
+  79.134% {
+    transform: translateX(91.4px);
+  }
+  79.214% {
+    transform: translateX(95.1px);
+  }
+  79.295% {
+    transform: translateX(98.7px);
+  }
+  79.375% {
+    transform: translateX(102.4px);
+  }
+  79.455% {
+    transform: translateX(106px);
+  }
+  79.536% {
+    transform: translateX(109.6px);
+  }
+  79.616% {
+    transform: translateX(113.4px);
+  }
+  79.697% {
+    transform: translateX(117px);
+  }
+  79.777% {
+    transform: translateX(120.7px);
+  }
+  79.857% {
+    transform: translateX(124.3px);
+  }
+  79.938% {
+    transform: translateX(127.9px);
+  }
+  80.018% {
+    transform: translateX(131.7px);
+  }
+  80.099% {
+    transform: translateX(135.3px);
+  }
+  80.179% {
+    transform: translateX(138.9px);
+  }
+  80.259% {
+    transform: translateX(142.5px);
+  }
+  80.34% {
+    transform: translateX(146.2px);
+  }
+  80.42% {
+    transform: translateX(150px);
+  }
+  80.501% {
+    transform: translateX(153.6px);
+  }
+  80.581% {
+    transform: translateX(157.2px);
+  }
+  80.661% {
+    transform: translateX(160.8px);
+  }
+  80.742% {
+    transform: translateX(164.5px);
+  }
+  80.822% {
+    transform: translateX(168.2px);
+  }
+  80.902% {
+    transform: translateX(172px);
+  }
+  80.983% {
+    transform: translateX(175.9px);
+  }
+  81.063% {
+    transform: translateX(180.3px);
+  }
+  81.144% {
+    transform: translateX(186px);
+  }
+  81.224% {
+    transform: translateX(203.8px);
+  }
+  81.224%,
+  100% {
+    transform: translateX(203.8px);
+  }
+}
+.bq-f6 {
+  animation-name: bq-f6;
+  animation-timing-function: linear;
+}
+@keyframes bq-f7 {
+  0%,
+  80.705% {
+    transform: translateX(0);
+  }
+  80.705% {
+    transform: translateX(0px);
+  }
+  80.845% {
+    transform: translateX(53.6px);
+  }
+  80.985% {
+    transform: translateX(64.6px);
+  }
+  81.126% {
+    transform: translateX(73.1px);
+  }
+  81.266% {
+    transform: translateX(80.3px);
+  }
+  81.406% {
+    transform: translateX(86.6px);
+  }
+  81.546% {
+    transform: translateX(92.2px);
+  }
+  81.686% {
+    transform: translateX(97.7px);
+  }
+  81.826% {
+    transform: translateX(103.2px);
+  }
+  81.966% {
+    transform: translateX(108.6px);
+  }
+  82.106% {
+    transform: translateX(114.2px);
+  }
+  82.246% {
+    transform: translateX(119.5px);
+  }
+  82.386% {
+    transform: translateX(125px);
+  }
+  82.526% {
+    transform: translateX(130.4px);
+  }
+  82.666% {
+    transform: translateX(135.9px);
+  }
+  82.806% {
+    transform: translateX(141.5px);
+  }
+  82.946% {
+    transform: translateX(147.6px);
+  }
+  83.086% {
+    transform: translateX(154.3px);
+  }
+  83.226% {
+    transform: translateX(162.6px);
+  }
+  83.366% {
+    transform: translateX(172.3px);
+  }
+  83.506% {
+    transform: translateX(187.6px);
+  }
+  83.646% {
+    transform: translateX(202.8px);
+  }
+  83.786% {
+    transform: translateX(212.6px);
+  }
+  83.926% {
+    transform: translateX(220.9px);
+  }
+  84.066% {
+    transform: translateX(227.6px);
+  }
+  84.206% {
+    transform: translateX(233.7px);
+  }
+  84.346% {
+    transform: translateX(239.2px);
+  }
+  84.487% {
+    transform: translateX(244.8px);
+  }
+  84.627% {
+    transform: translateX(250.2px);
+  }
+  84.767% {
+    transform: translateX(255.6px);
+  }
+  84.907% {
+    transform: translateX(261.1px);
+  }
+  85.047% {
+    transform: translateX(266.5px);
+  }
+  85.187% {
+    transform: translateX(272px);
+  }
+  85.327% {
+    transform: translateX(277.4px);
+  }
+  85.467% {
+    transform: translateX(283px);
+  }
+  85.607% {
+    transform: translateX(288.6px);
+  }
+  85.747% {
+    transform: translateX(294.9px);
+  }
+  85.887% {
+    transform: translateX(302px);
+  }
+  86.027% {
+    transform: translateX(310.6px);
+  }
+  86.167% {
+    transform: translateX(321.6px);
+  }
+  86.307% {
+    transform: translateX(348.4px);
+  }
+  86.307%,
+  100% {
+    transform: translateX(348.4px);
+  }
+}
+.bq-f7 {
+  animation-name: bq-f7;
+  animation-timing-function: linear;
+}
+@keyframes bq-cycle {
+  0%,
+  95.5% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.bq-cycle {
+  animation-name: bq-cycle;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bq-r {
+    animation: none !important;
+  }
+  .bq-f0 {
+    transform: translateX(406.5px);
+  }
+  .bq-f1 {
+    transform: translateX(793.1px);
+  }
+  .bq-f2 {
+    transform: translateX(816.1px);
+  }
+  .bq-f3 {
+    transform: translateX(615.2px);
+  }
+  .bq-f4 {
+    transform: translateX(479.8px);
+  }
+  .bq-f5 {
+    transform: translateX(891.7px);
+  }
+  .bq-f6 {
+    transform: translateX(203.8px);
+  }
+  .bq-f7 {
+    transform: translateX(348.4px);
+  }
 }
 
 @media (min-width: 2637px) {
@@ -3422,6 +4600,9 @@ body:has(.thmanyah-shell) {
   overflow: visible;
   outline: none;
   appearance: auto;
+  /* The pill renders as an <a> to /{lang}/onboarding, not the reference's
+     <button>; without this the UA underlines the label. */
+  text-decoration: none;
 }
 .footer-btn[data-open] {
   cursor: unset;

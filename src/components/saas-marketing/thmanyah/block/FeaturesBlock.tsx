@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 
 import { LottiePlayer } from "@/components/saas-marketing/thmanyah/atom/LottiePlayer"
@@ -23,8 +23,13 @@ import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
  *                                 vertically centred, overflow clipped
  *
  * Every declaration lives in globals.css under `.marn-*` / `.wire-*`; this
- * file only reproduces the reference DOM. The Lottie/video assets are the
- * same files the live page loads (md5-verified).
+ * file only reproduces the reference DOM. The five Lottie assets are still
+ * the files the live page loads (md5-verified); the video tile is NOT — the
+ * reference plays thmanyah's own brand and sub-brand wordmarks there, so it
+ * was replaced with our own six-beat wordmark cycle, set in thmanyah sans:
+ * بالقلم, then القبول · الحضور · الدرجات · الرسوم · افتراضي. Type only, no
+ * mark. Each beat enters from the right, holds centred, exits left through
+ * full black — the reference's own rhythm, six beats instead of four.
  */
 
 const MARN_DESKTOP = "/lottie/lottie-hero-ha-v2.json" // Kashida 2970x1060
@@ -32,6 +37,25 @@ const MARN_PHONE = "/lottie/lottie-hero-ha-alt.json" // Kashida_Mobile 1729x2180
 
 export function FeaturesBlock() {
   const phone = usePhone()
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  /* The wordmark loop is `preload="none"` and never autoplays: it only
+     fetches and runs while it is actually on screen. Same reasoning as
+     LottiePlayer's `playOnView` — this strip sits far down the page, and a
+     decoder looping behind content nobody has scrolled to is pure cost. */
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void el.play().catch(() => {})
+        else el.pause()
+      },
+      { threshold: 0.1 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   return (
     <>
@@ -92,14 +116,14 @@ export function FeaturesBlock() {
             <div className="wire-col wire-col--b">
               <div className="wire-tile wire-tile--video">
                 <video
+                  ref={videoRef}
                   className="wire-video"
-                  src="/videos/wireframe.mp4"
-                  poster="/images/wireframe-video-poster.png"
-                  autoPlay
+                  src="/videos/balqalam-wordmarks.mp4"
+                  poster="/images/balqalam-wordmarks-poster.png"
                   loop
                   muted
                   playsInline
-                  preload="auto"
+                  preload="none"
                 />
               </div>
               <div className="wire-tile wire-tile--4">

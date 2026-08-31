@@ -21,6 +21,19 @@ import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
  * with two different assets (an .mp4, a 2755x3068 8th poster and a
  * 1188x1001 10th). All files are md5-identical to the live assets.
  *
+ * Copy is ours, mechanics are the reference's. Width-matched at its own
+ * sizes: eyebrow `نظام حديث` 119.6px vs `خط حديث` 111.4 (24px), headline
+ * `يصنع توازنًا مريحًا لمدرستك` 450.6 vs 451.6 (44px/900 — a 1px match, the
+ * reference's own construction kept), lede still ONE line in the 1320px box.
+ * All three stay masculine so the eyebrow, headline and lede agree the way
+ * the reference's do (`خط` … `يصنع` … `يجمع`) — hence `نظام`, not `منظومة`.
+ *
+ * THE TICKER TILES ARE STILL THE REFERENCE'S: every video and poster below
+ * shows thmanyah's typeface in use and must be replaced before this is
+ * customer-facing. They are fixed-width by design (the loop renders the set
+ * three times and the track speed is tuned to the total width), so swaps
+ * must keep each tile's `w` / `ar` or the seamless wrap breaks.
+ *
  * Declarations live in globals.css under `.modern-*`.
  */
 
@@ -380,19 +393,19 @@ export function ModernShowcaseBlock() {
             <div className="modern-heading">
               <div className="modern-text">
                 <h2 dir="rtl" className="modern-eyebrow">
-                  خط حديث
+                  نظام حديث
                 </h2>
               </div>
               <div className="modern-text">
                 <p dir="rtl" className="modern-headline">
-                  يصنع توازنًا مريحًا لنصوصك
+                  يصنع توازنًا مريحًا لمدرستك
                 </p>
               </div>
             </div>
             <div className="modern-text">
               <p dir="rtl" className="modern-lede">
-                ترتاح له من النظرة الأولى، يجمع بين الوضوح والجاذبية، بلمسة
-                أنيقة تُبرز التفاصيل.
+                تفهمه من النظرة الأولى، يجمع بين الوضوح والسرعة، بلمسة هادئة
+                تُبرز ما يهمّ.
               </p>
             </div>
           </div>

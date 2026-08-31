@@ -27,7 +27,7 @@ import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
  * the mint CTA card + the bottom bar — exactly as the reference nests them,
  * so every section measures 1:1 against its live counterpart.
  */
-export function HomeTemplate() {
+export function HomeTemplate({ lang }: { lang: string }) {
   return (
     <MotionConfig reducedMotion="user">
       <main className="page-wrap">
@@ -75,7 +75,7 @@ export function HomeTemplate() {
           data-framer-name="Footer"
           {...reveal(60, 0.5)}
         >
-          <DownloadCtaBlock />
+          <DownloadCtaBlock lang={lang} />
           <FooterBlock />
         </motion.section>
       </main>
