@@ -4,7 +4,7 @@
 import "server-only"
 
 import type { ConferenceParticipantRole } from "@prisma/client"
-import { AccessToken, type VideoGrant } from "livekit-server-sdk"
+import { AccessToken, TrackSource, type VideoGrant } from "livekit-server-sdk"
 
 import { getLiveKitConfig } from "./client"
 
@@ -78,7 +78,12 @@ function grantsForRole(
         // school's screen-share tool cannot publish a screen track at all.
         ...(allowScreenShare
           ? {}
-          : { canPublishSources: ["camera", "microphone"] as const }),
+          : {
+              canPublishSources: [
+                TrackSource.CAMERA,
+                TrackSource.MICROPHONE,
+              ],
+            }),
       }
     case "OBSERVER":
       return {

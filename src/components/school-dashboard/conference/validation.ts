@@ -68,7 +68,6 @@ export function createLiveClassScheduleSchema(v: ValidationHelper) {
       scheduledStart: z.string().datetime(),
       scheduledEnd: z.string().datetime(),
       recordingEnabled: z.boolean().default(true),
-      studentsJoinMuted: z.enum(["default", "muted", "open"]).optional(),
       // Per-session override of the school's join-muted default.
       studentsJoinMuted: z.enum(["default", "muted", "open"]).optional(),
       visibility: z.enum(["section", "school"]).default("section"),
