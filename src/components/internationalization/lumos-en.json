@@ -710,8 +710,8 @@
       "results": "Courses",
       "noResults": "No matching courses",
       "seeAllResults": "See all results",
-      "terms": ["Math", "Science", "English", "Arabic", "History", "Geography"]
       "gradeLabel": "Grade {n}",
+      "terms": ["Math", "Science", "English", "Arabic", "History", "Geography"]
     },
     "offline": {
       "offlineNow": "You're offline",
