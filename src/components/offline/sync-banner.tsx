@@ -18,13 +18,7 @@ import type { OfflineLabels } from "./outbox-view"
  * or parked items that need a look. Renders nothing when there is nothing
  * to say.
  */
-export function OfflineSyncBanner({
-  labels,
-  locale = "en",
-}: {
-  labels?: OfflineLabels
-  locale?: string
-}) {
+export function OfflineSyncBanner({ labels }: { labels?: OfflineLabels }) {
   const online = useOnlineStatus()
   const { pending, parked, drain, draining } = useOutbox()
 
@@ -119,7 +113,6 @@ export function OfflineSyncBanner({
           )}
         </>
       )}
-      <span className="sr-only">{locale}</span>
     </div>
   )
 }

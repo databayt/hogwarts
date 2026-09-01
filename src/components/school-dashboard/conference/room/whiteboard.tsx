@@ -134,11 +134,11 @@ export function Whiteboard({
       />
       {canDraw && (
         <div className="absolute start-3 top-3 flex items-center gap-2 rounded-full bg-black/70 px-3 py-1.5">
-          {COLORS.map((c) => (
+          {COLORS.map((c, i) => (
             <button
               key={c}
               type="button"
-              aria-label={c}
+              aria-label={`${labels.penColor} ${i + 1}`}
               aria-pressed={color === c}
               onClick={() => setColor(c)}
               className={
@@ -155,7 +155,7 @@ export function Whiteboard({
             value={width}
             onChange={(e) => setWidth(Number(e.target.value))}
             className="w-20"
-            aria-label={labels.whiteboard}
+            aria-label={labels.penSize}
           />
           <Button
             type="button"

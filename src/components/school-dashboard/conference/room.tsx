@@ -185,7 +185,7 @@ export function RoomClient({
             ? labels.room.openedElsewhere
             : labels.room.connectionLost
     return (
-      <div className="bg-background flex h-screen flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="bg-background flex h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
         <p
           className={
             "text-base font-medium " +
@@ -219,7 +219,7 @@ export function RoomClient({
   }
 
   return (
-    <div data-lk-theme="default" className="bg-background h-screen w-screen">
+    <div data-lk-theme="default" className="bg-background h-dvh w-full">
       <LiveKitRoom
         token={ticket.token}
         serverUrl={ticket.wsUrl}

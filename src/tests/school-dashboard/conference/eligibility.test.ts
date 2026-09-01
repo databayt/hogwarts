@@ -19,6 +19,18 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { joinLiveClass } from "@/components/school-dashboard/conference/actions/tokens"
 
+/** The `school` columns `performLiveClassJoin` selects for `roomConfig`. */
+const SCHOOL_ROOM_CONFIG = {
+  conferenceGuardiansObserve: true,
+  conferenceStudentsJoinMuted: true,
+  conferenceRecordingConsentNote: null,
+  conferenceToolChat: true,
+  conferenceToolHands: true,
+  conferenceToolPolls: true,
+  conferenceToolWhiteboard: true,
+  conferenceToolStudentShare: false,
+}
+
 vi.mock("@/lib/db", () => ({
   db: {
     conference: {
@@ -73,11 +85,16 @@ beforeEach(() => {
   vi.mocked(db.conference.findFirst).mockResolvedValue({
     id: SESSION_ID,
     roomName: ROOM_NAME,
+    recordingEnabled: true,
+    studentsJoinMuted: null,
     sectionId: SECTION_ID,
     maxParticipants: 50,
     status: "live",
     lang: "ar",
     teacher: { userId: TEACHER_USER_ID },
+    // join-core reads the school's room configuration (guardians-may-observe,
+    // join-muted, room tools) off this relation.
+    school: SCHOOL_ROOM_CONFIG,
   } as never)
   vi.mocked(db.conferenceParticipant.upsert).mockResolvedValue({} as never)
   vi.mocked(db.conferenceParticipant.findUnique).mockResolvedValue(
@@ -231,11 +248,16 @@ describe("joinLiveClass eligibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      recordingEnabled: true,
+      studentsJoinMuted: null,
       sectionId: null, // ad-hoc class with no section roster
       maxParticipants: 50,
       status: "live",
       lang: "ar",
       teacher: { userId: TEACHER_USER_ID },
+      // join-core reads the school's room configuration (guardians-may-observe,
+      // join-muted, room tools) off this relation.
+      school: SCHOOL_ROOM_CONFIG,
     } as never)
     mockUser(STUDENT_USER_ID, "STUDENT")
     const result = await joinLiveClass(SESSION_ID)
@@ -264,11 +286,16 @@ describe("joinLiveClass eligibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      recordingEnabled: true,
+      studentsJoinMuted: null,
       sectionId: SECTION_ID,
       maxParticipants: 50,
       status: "cancelled",
       lang: "ar",
       teacher: { userId: TEACHER_USER_ID },
+      // join-core reads the school's room configuration (guardians-may-observe,
+      // join-muted, room tools) off this relation.
+      school: SCHOOL_ROOM_CONFIG,
     } as never)
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(false)
@@ -280,11 +307,16 @@ describe("joinLiveClass eligibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      recordingEnabled: true,
+      studentsJoinMuted: null,
       sectionId: SECTION_ID,
       maxParticipants: 50,
       status: "scheduled",
       lang: "ar",
       teacher: { userId: TEACHER_USER_ID },
+      // join-core reads the school's room configuration (guardians-may-observe,
+      // join-muted, room tools) off this relation.
+      school: SCHOOL_ROOM_CONFIG,
     } as never)
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(true)
@@ -303,11 +335,16 @@ describe("joinLiveClass eligibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      recordingEnabled: true,
+      studentsJoinMuted: null,
       sectionId: SECTION_ID,
       maxParticipants: 50,
       status: "scheduled",
       lang: "ar",
       teacher: { userId: TEACHER_USER_ID },
+      // join-core reads the school's room configuration (guardians-may-observe,
+      // join-muted, room tools) off this relation.
+      school: SCHOOL_ROOM_CONFIG,
     } as never)
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(false)
@@ -340,12 +377,17 @@ describe("joinLiveClass eligibility — school-wide visibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      recordingEnabled: true,
+      studentsJoinMuted: null,
       sectionId,
       visibility: "school",
       maxParticipants: 50,
       status: "live",
       lang: "ar",
       teacher: { userId: TEACHER_USER_ID },
+      // join-core reads the school's room configuration (guardians-may-observe,
+      // join-muted, room tools) off this relation.
+      school: SCHOOL_ROOM_CONFIG,
     } as never)
   }
 

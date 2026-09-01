@@ -51,7 +51,15 @@ interface ControlBarProps {
 }
 
 const btn =
-  "flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3 text-xs text-white transition-colors hover:bg-white/20 disabled:opacity-40"
+  "flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2 text-xs text-white transition-colors hover:bg-white/20 disabled:opacity-40 lg:px-3"
+
+/**
+ * The button's word. Hidden below `lg` — twelve labelled controls need ~520px
+ * and a tablet would wrap them onto a second row, and vertical space is the
+ * scarce thing in a video room. The word is always on `aria-label`, so hiding
+ * it costs a screen reader nothing.
+ */
+const label = "hidden lg:inline"
 
 /**
  * Our own control bar — every label from the dictionary, every control
@@ -78,7 +86,12 @@ export function ControlBar({
     setMenu((cur) => (cur === m ? null : m))
 
   return (
-    <div className="relative flex items-center justify-center gap-1 border-t border-white/10 bg-neutral-950 px-2 py-2">
+    // Wraps on a phone. Twelve controls with their words are ~520px wide; a
+    // 375px screen clipped the last 144px, so Leave and Quality were simply
+    // unreachable. Below `sm` each button collapses to its icon (the word
+    // moves into `aria-label`, so nothing is lost to a screen reader) and the
+    // row wraps to a second line rather than running off the edge.
+    <div className="relative flex flex-wrap items-center justify-center gap-1 border-t border-white/10 bg-neutral-950 px-2 py-2">
       {canPublish && <MicButton labels={labels} />}
       {canPublish && <CameraButton labels={labels} />}
       {(isHost || (isStudent && tools.studentShare)) && (
@@ -93,10 +106,13 @@ export function ControlBar({
             channel.handUp && "bg-amber-400 text-black hover:bg-amber-300"
           )}
           aria-pressed={channel.handUp}
+          aria-label={channel.handUp ? labels.lowerHand : labels.raiseHand}
           onClick={() => void channel.setHand(!channel.handUp)}
         >
           <Hand className="h-5 w-5" aria-hidden />
-          {channel.handUp ? labels.lowerHand : labels.raiseHand}
+          <span className={label}>
+            {channel.handUp ? labels.lowerHand : labels.raiseHand}
+          </span>
         </button>
       )}
 
@@ -107,6 +123,11 @@ export function ControlBar({
               type="button"
               className={cn(btn, channel.state.whiteboard && "bg-white/25")}
               aria-pressed={channel.state.whiteboard}
+              aria-label={
+                channel.state.whiteboard
+                  ? labels.hideWhiteboard
+                  : labels.whiteboard
+              }
               onClick={() =>
                 void channel.send({
                   t: "wb.show",
@@ -115,9 +136,11 @@ export function ControlBar({
               }
             >
               <PenLine className="h-5 w-5" aria-hidden />
-              {channel.state.whiteboard
-                ? labels.hideWhiteboard
-                : labels.whiteboard}
+              <span className={label}>
+                {channel.state.whiteboard
+                  ? labels.hideWhiteboard
+                  : labels.whiteboard}
+              </span>
             </button>
           )}
           <div className="relative">
@@ -126,10 +149,11 @@ export function ControlBar({
               className={cn(btn, channel.state.slides && "bg-white/25")}
               aria-haspopup="menu"
               aria-expanded={menu === "slides"}
+              aria-label={labels.slides}
               onClick={() => toggleMenu("slides")}
             >
               <Presentation className="h-5 w-5" aria-hidden />
-              {labels.slides}
+              <span className={label}>{labels.slides}</span>
             </button>
             {menu === "slides" && (
               <Menu onClose={() => setMenu(null)}>
@@ -176,20 +200,22 @@ export function ControlBar({
           type="button"
           className={cn(btn, panel === "chat" && "bg-white/25")}
           aria-pressed={panel === "chat"}
+          aria-label={labels.chat}
           onClick={() => onPanel(panel === "chat" ? null : "chat")}
         >
           <MessageSquare className="h-5 w-5" aria-hidden />
-          {labels.chat}
+          <span className={label}>{labels.chat}</span>
         </button>
       )}
       <button
         type="button"
         className={cn(btn, panel === "questions" && "bg-white/25")}
         aria-pressed={panel === "questions"}
+        aria-label={labels.questions}
         onClick={() => onPanel(panel === "questions" ? null : "questions")}
       >
         <HelpCircle className="h-5 w-5" aria-hidden />
-        {labels.questions}
+        <span className={label}>{labels.questions}</span>
         {channel.state.questions.some((q) => !q.answered) && (
           <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden />
         )}
@@ -199,10 +225,11 @@ export function ControlBar({
           type="button"
           className={cn(btn, panel === "poll" && "bg-white/25")}
           aria-pressed={panel === "poll"}
+          aria-label={labels.poll}
           onClick={() => onPanel(panel === "poll" ? null : "poll")}
         >
           <ListChecks className="h-5 w-5" aria-hidden />
-          {labels.poll}
+          <span className={label}>{labels.poll}</span>
           {channel.state.poll?.open && (
             <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
           )}
@@ -213,10 +240,11 @@ export function ControlBar({
           type="button"
           className={cn(btn, panel === "hands" && "bg-white/25")}
           aria-pressed={panel === "hands"}
+          aria-label={labels.handsRaised}
           onClick={() => onPanel(panel === "hands" ? null : "hands")}
         >
           <Hand className="h-5 w-5" aria-hidden />
-          {labels.handsRaised}
+          <span className={label}>{labels.handsRaised}</span>
           {channel.hands.length > 0 && (
             <span className="rounded-full bg-amber-400 px-1.5 text-[10px] font-semibold text-black">
               {channel.hands.length}
@@ -231,10 +259,11 @@ export function ControlBar({
           className={cn(btn, adaptive.manual && "bg-white/25")}
           aria-haspopup="menu"
           aria-expanded={menu === "quality"}
+          aria-label={labels.quality}
           onClick={() => toggleMenu("quality")}
         >
           <SignalHigh className="h-5 w-5" aria-hidden />
-          {labels.quality}
+          <span className={label}>{labels.quality}</span>
         </button>
         {menu === "quality" && (
           <Menu onClose={() => setMenu(null)}>
@@ -270,6 +299,7 @@ export function ControlBar({
             className={btn}
             aria-haspopup="menu"
             aria-expanded={menu === "settings"}
+            aria-label={labels.settings}
             onClick={() => toggleMenu("settings")}
           >
             <Settings className="h-5 w-5" aria-hidden />
@@ -284,9 +314,12 @@ export function ControlBar({
         </div>
       )}
 
-      <DisconnectButton className={cn(btn, "ms-2 bg-red-600 hover:bg-red-500")}>
+      <DisconnectButton
+        className={cn(btn, "ms-2 bg-red-600 hover:bg-red-500")}
+        aria-label={labels.leave}
+      >
         <LogOut className="h-5 w-5 rtl:-scale-x-100" aria-hidden />
-        {labels.leave}
+        <span className={label}>{labels.leave}</span>
       </DisconnectButton>
     </div>
   )
@@ -311,6 +344,7 @@ function MicButton({ labels }: { labels: RoomLabels }) {
       type="button"
       className={cn(btn, !enabled && "bg-red-600/80 hover:bg-red-500")}
       aria-pressed={enabled}
+      aria-label={enabled ? labels.mic : labels.micMuted}
       disabled={pending}
       onClick={() => void toggle()}
     >
@@ -319,7 +353,7 @@ function MicButton({ labels }: { labels: RoomLabels }) {
       ) : (
         <MicOff className="h-5 w-5" aria-hidden />
       )}
-      {enabled ? labels.mic : labels.micMuted}
+      <span className={label}>{enabled ? labels.mic : labels.micMuted}</span>
     </button>
   )
 }
@@ -333,6 +367,7 @@ function CameraButton({ labels }: { labels: RoomLabels }) {
       type="button"
       className={cn(btn, !enabled && "bg-red-600/80 hover:bg-red-500")}
       aria-pressed={enabled}
+      aria-label={enabled ? labels.camera : labels.cameraOff}
       disabled={pending}
       onClick={() => void toggle()}
     >
@@ -341,7 +376,9 @@ function CameraButton({ labels }: { labels: RoomLabels }) {
       ) : (
         <VideoOff className="h-5 w-5" aria-hidden />
       )}
-      {enabled ? labels.camera : labels.cameraOff}
+      <span className={label}>
+        {enabled ? labels.camera : labels.cameraOff}
+      </span>
     </button>
   )
 }
@@ -355,11 +392,14 @@ function ShareButton({ labels }: { labels: RoomLabels }) {
       type="button"
       className={cn(btn, enabled && "bg-sky-600 hover:bg-sky-500")}
       aria-pressed={enabled}
+      aria-label={enabled ? labels.stopShare : labels.screenShare}
       disabled={pending}
       onClick={() => void toggle()}
     >
       <MonitorUp className="h-5 w-5" aria-hidden />
-      {enabled ? labels.stopShare : labels.screenShare}
+      <span className={label}>
+        {enabled ? labels.stopShare : labels.screenShare}
+      </span>
     </button>
   )
 }
@@ -406,7 +446,7 @@ function Menu({
       <div
         role="menu"
         className={cn(
-          "absolute bottom-full z-30 mb-2 max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-neutral-900 py-1 shadow-xl",
+          "absolute bottom-full z-30 mb-2 max-h-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-xl border border-white/10 bg-neutral-900 py-1 shadow-xl",
           wide ? "w-64" : "min-w-44"
         )}
         style={{ insetInlineStart: 0 }}

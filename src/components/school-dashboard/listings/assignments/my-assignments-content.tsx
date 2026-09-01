@@ -16,6 +16,18 @@ interface Props {
 }
 
 /**
+ * `AssessmentType` enum values (`FINAL_EXAM`, `LAB_REPORT`, …) as the
+ * dictionary's camelCase keys (`finalExam`, `labReport`). A plain
+ * `.toLowerCase()` left the underscore in place, so these two types never
+ * matched a key and fell back to the raw enum string in both languages.
+ */
+function typeKey(type: string): string {
+  return type
+    .toLowerCase()
+    .replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())
+}
+
+/**
  * The student's assignments, each with its hand-in card. Server component;
  * the card underneath is the client piece that submits (or queues offline).
  */
@@ -55,7 +67,7 @@ export function MyAssignmentsContent({ assignments, dictionary, lang }: Props) {
                     <CardTitle className="flex flex-wrap items-center gap-2 text-lg">
                       <span>{a.title}</span>
                       <Badge variant="outline">
-                        {types[a.type.toLowerCase()] ?? a.type}
+                        {types[typeKey(a.type)] ?? a.type}
                       </Badge>
                       <span className="text-muted-foreground text-sm font-normal">
                         {a.className}

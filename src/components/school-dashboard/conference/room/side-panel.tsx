@@ -78,7 +78,7 @@ export function SidePanel(props: SidePanelProps) {
           variant="ghost"
           className="ms-auto h-7 w-7 text-white hover:bg-white/20 hover:text-white"
           onClick={onClose}
-          aria-label={labels.more}
+          aria-label={labels.close}
         >
           <X className="h-4 w-4" aria-hidden />
         </Button>

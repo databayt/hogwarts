@@ -80,7 +80,7 @@ export function StudentSubmissionCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Send className="h-5 w-5" aria-hidden />
+          <Send className="h-5 w-5 rtl:-scale-x-100" aria-hidden />
           {t("yourSubmission", "Your submission")}
           {state?.submittedAt && (
             <Badge

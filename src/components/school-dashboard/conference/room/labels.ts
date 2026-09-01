@@ -79,6 +79,9 @@ export const DEFAULT_ROOM_LABELS = {
   recordingConsent:
     "This class is being recorded for students who miss it. Your voice and video may appear in the recording.",
   dismiss: "Dismiss",
+  close: "Close",
+  penColor: "Pen colour",
+  penSize: "Pen size",
 } as const
 
 export type RoomLabelKey = keyof typeof DEFAULT_ROOM_LABELS

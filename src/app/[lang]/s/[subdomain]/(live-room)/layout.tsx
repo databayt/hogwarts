@@ -13,5 +13,9 @@ export default function LiveRoomLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <div className="h-screen w-screen overflow-hidden">{children}</div>
+  // `h-dvh`, not `h-screen`: on a phone `100vh` is taller than what you can
+  // see while the address bar is showing, which pushed the room's control bar
+  // off the bottom of the screen. `w-full` rather than `w-screen` for the
+  // matching reason — `100vw` includes the scrollbar and overflows the page.
+  return <div className="h-dvh w-full overflow-hidden">{children}</div>
 }

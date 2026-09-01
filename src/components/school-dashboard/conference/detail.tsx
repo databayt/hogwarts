@@ -488,7 +488,11 @@ export async function LiveClassDetailContent({
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {x.title || x.url}
+                      {/* Falling back to the raw URL: isolate its direction so
+                          trailing neutrals (`/`, `?`, `=`) don't get pulled
+                          into the surrounding RTL run. The title case (the
+                          common one) keeps its natural direction. */}
+                      {x.title || <span dir="ltr">{x.url}</span>}
                     </a>
                   </li>
                 ))}

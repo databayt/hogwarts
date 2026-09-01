@@ -184,7 +184,6 @@ export default async function PlatformLayout({
                       labels={
                         (dictionary as Record<string, any>)?.lumos?.offline
                       }
-                      locale={lang}
                     />
                     {children}
                     <ReportIssueFooter />

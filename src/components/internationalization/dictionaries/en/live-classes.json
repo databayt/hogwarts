@@ -157,7 +157,10 @@
     "poor": "Poor",
     "lost": "Offline",
     "recordingConsent": "This class is being recorded for students who miss it. Your voice and video may appear in the recording.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "close": "Close",
+    "penColor": "Pen colour",
+    "penSize": "Pen size"
   },
   "errors": {
     "notAuthenticated": "You need to sign in.",
