@@ -28,7 +28,6 @@ import {
   ONLINE_POLICY_SELECT,
 } from "@/components/school-dashboard/live/online-policy"
 import {
-  getLiveLandingCounts,
   getLiveLandingSessions,
   resolveViewerSectionScope,
 } from "@/components/school-dashboard/live/queries"
@@ -86,8 +85,6 @@ export default async function Page({ params }: Props) {
   }
   let live: LandingSession[] = []
   let upcoming: LandingSession[] = []
-  let liveNow = 0
-  let todayTotal = 0
   let readiness: LandingReadiness | null = null
 
   if (schoolId) {
@@ -145,18 +142,15 @@ export default async function Page({ params }: Props) {
             : null
         const teacherId = teacher?.id ?? undefined
 
-        const [rows, counts] = await Promise.all([
-          getLiveLandingSessions(schoolId, { now, sectionIds, teacherId }),
-          getLiveLandingCounts(schoolId, {
-            now,
-            sectionIds,
-            teacherId,
-            timeZone,
-          }),
-        ])
-
-        liveNow = counts.liveNow
-        todayTotal = counts.todayTotal
+        // Only the strip's rows are read here. The hero used to also show the
+        // day's live/total counts, and dropping that state from it drops the
+        // second query with it (`getLiveLandingCounts` stays in queries.ts —
+        // see ISSUE.md).
+        const rows = await getLiveLandingSessions(schoolId, {
+          now,
+          sectionIds,
+          teacherId,
+        })
 
         const all = [...rows.live, ...rows.upcoming]
 
@@ -261,8 +255,6 @@ export default async function Page({ params }: Props) {
       readiness={readiness}
       live={live}
       upcoming={upcoming}
-      liveNow={liveNow}
-      todayTotal={todayTotal}
     />
   )
 }

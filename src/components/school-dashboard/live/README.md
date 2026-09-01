@@ -46,7 +46,7 @@ conference/
 ├── nav.tsx                                                    heading + tab strip for the (app) surfaces
 ├── landing/                                                   the /live landing page
 │   ├── content.tsx           composes the sections below
-│   ├── status-hero.tsx       eyebrow + state headline + the one action worth taking
+│   ├── status-hero.tsx       the green (#00bc6d) banner: eyebrow + headline + the way in
 │   ├── now-strip.tsx         live / coming-up — section-scoped, school-TZ times, catalog art
 │   ├── readiness-band.tsx    can this school teach online (ADMIN/DEVELOPER only)
 │   ├── role-guide.tsx        what THIS role can do here — real links, not marketing

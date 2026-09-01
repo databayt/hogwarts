@@ -4172,15 +4172,7 @@
         "saveSettings": "Save Settings"
       },
       "lunchBreak": "Lunch Break",
-      "days": [
-        "Sun",
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat"
-      ],
+      "days": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       "exceptionTypes": {
         "holiday": "Holiday",
         "event": "Event",
@@ -5190,23 +5182,12 @@
       },
       "landing": {
         "hero": {
-          "liveCount": {
-            "one": "{count} class running now",
-            "two": "{count} classes running now",
-            "few": "{count} classes running now",
-            "many": "{count} classes running now",
-            "other": "{count} classes running now"
-          },
-          "nothingLive": "Nothing is live right now",
-          "offline": "Online teaching is off",
+          "title": "Live teaching reaches {mark}",
+          "titleMark": "every student",
+          "subtitle": "Video classes inside the app, built on your school's timetable: the teacher starts from their own period, the student joins from their own schedule, and the recording stays for whoever missed it.",
+          "offline": "Live classes, alongside the classroom — not instead of it",
           "offlineAdmin": "Your school teaches in person. Turn on online teaching and the periods already on the timetable become joinable rooms.",
-          "offlineOther": "Your school teaches in person at the moment. When online teaching is turned on, your classes will appear here.",
-          "todayCount": "{count} today",
-          "nextAt": "next at {time}",
-          "windowActive": "online teaching active today",
-          "modeHybrid": "hybrid teaching",
-          "modeOnline": "teaching online",
-          "todayLabel": "classes today"
+          "offlineOther": "Your school teaches in person at the moment. When online teaching is turned on, your classes will appear here."
         },
         "actions": {
           "join": "Join now",
@@ -6072,15 +6053,7 @@
           "noExamsDate": "No exams scheduled for this date",
           "scheduleNewExam": "Schedule New Exam",
           "roomTBD": "Room TBD",
-          "weekDays": [
-            "Sun",
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat"
-          ]
+          "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
         },
         "analytics": {
           "gradeDistribution": "Grade Distribution",

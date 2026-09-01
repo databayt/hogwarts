@@ -173,6 +173,25 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   standing; and the readiness read is wrapped SEPARATELY so a settings failure
   cannot blank the strip. `getLiveLinkCoverage` RETURNS its failure rather than
   throwing, so check the `success` discriminant — a try/catch alone misses it.
+- **The landing hero states the OFFER, not the status (2026-09-01).**
+  `landing/status-hero.tsx` is the `#00bc6d` banner — the saas-marketing
+  (thmanyah) hero's colour triad carried whole: green ground, black ink,
+  `#9fe5b1` mint mark behind the headline's last phrase. Everything on it is a
+  LITERAL hex and pinned dark: a brand ground does not invert, so a
+  `primary-foreground` token on it would be white in light mode and black in
+  dark — exactly backwards. `LiveMark` needs `isolate` on its wrapper, or the
+  mark's `-z-10` puts it behind the banner's own background and it vanishes.
+
+  The hero used to carry the live-now state — an `<h1>` reading "one class is
+  live right now", the delivery mode under it and a "Join now" pointing at
+  whichever session ranked first. That duplicated the strip immediately below
+  it, and worse: the strip names the subject, the section and the time. The
+  current class belongs to the strip; the hero says what live classes ARE and
+  offers the list. The single state it still branches on is `policy.isOnline`,
+  because that changes what the page IS. Consequence: the hero takes no
+  session props at all, so `getLiveLandingCounts` lost its only caller — the
+  page now runs ONE query for the landing instead of two.
+
 - **Role gating lives in `landing/viewer.ts`, once.** `resolveLandingViewer`
   is the single source for who may schedule, configure, host, join, or watch a
   recording. ACCOUNTANT is the awkward one on purpose: it passes

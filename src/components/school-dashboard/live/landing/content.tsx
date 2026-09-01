@@ -25,8 +25,6 @@ interface Props extends LandingSectionProps {
   readiness: LandingReadiness | null
   live: LandingSession[]
   upcoming: LandingSession[]
-  liveNow: number
-  todayTotal: number
 }
 
 /**
@@ -52,12 +50,7 @@ export function LiveLandingContent({
   readiness,
   live,
   upcoming,
-  liveNow,
-  todayTotal,
 }: Props) {
-  // The one session this viewer would act on: whatever is live, else next up.
-  const focus = live[0] ?? upcoming[0] ?? null
-
   return (
     <>
       <LiveStatusHero
@@ -65,9 +58,6 @@ export function LiveLandingContent({
         lang={lang}
         viewer={viewer}
         policy={policy}
-        liveNow={liveNow}
-        todayTotal={todayTotal}
-        focus={focus}
       />
 
       {policy.isOnline ? (

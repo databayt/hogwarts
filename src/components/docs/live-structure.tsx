@@ -161,12 +161,13 @@ export function LiveStructure({ className }: LiveStructureProps) {
             {
               name: "content.tsx",
               type: "file",
-              description: "composes the sections; gates on role + online state",
+              description:
+                "composes the sections; gates on role + online state",
             },
             {
               name: "status-hero.tsx",
               type: "file",
-              description: "eyebrow + state headline + the one action",
+              description: "the green banner: eyebrow + headline + the way in",
             },
             {
               name: "now-strip.tsx",
@@ -201,7 +202,8 @@ export function LiveStructure({ className }: LiveStructureProps) {
             {
               name: "types.ts",
               type: "file",
-              description: "section props · LandingSession · policy · readiness",
+              description:
+                "section props · LandingSession · policy · readiness",
             },
           ],
         },

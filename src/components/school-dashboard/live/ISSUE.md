@@ -4,6 +4,20 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Landing hero 2026-09-01 — closed
+
+- [x] **The hero is a hero, not a second status board.** Green `#00bc6d` banner
+      (the saas-marketing hero's triad: green ground · black ink · `#9fe5b1`
+      mark), headline + one supporting sentence about what live classes are,
+      and the way in. The live-now count, the delivery-mode line and the
+      "Join now" button are gone from it — the strip below already names the
+      subject, section and time of the class that is running.
+
+- [ ] **`getLiveLandingCounts` has no caller.** The hero was its only reader.
+      The query and `src/tests/school-dashboard/live/landing-counts.test.ts`
+      are still in the tree; delete both, or give the counts a surface that
+      wants them (the dashboard header is the obvious candidate).
+
 ## PRE-deploy — prod DDL ✅ APPLIED 2026-08-28
 
 > This was real, and worse than recorded: production had been running for two
