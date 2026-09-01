@@ -31,6 +31,10 @@ Multi-tenant authentication layer (NextAuth v5): OAuth (Google, Facebook), crede
 - `authjs.role` cookie synced on login for middleware RBAC checks (edge-compatible)
 - Custom Prisma adapter in `prisma-adapter.ts` handles multi-tenant user lookup
 - Login redirect logic: USER without school → stays on SaaS marketing (NOT onboarding)
+- Demo tenant (`demo` subdomain, any root) swaps the login fields for a role picker --
+  `login/demo-{accounts,action,form}.tsx|ts`. It calls `login()` verbatim, so it is a
+  shortcut for typing credentials, not a second auth lane. The host gate is re-checked
+  inside the server action, since actions are publicly callable.
 
 ## Danger Zones
 

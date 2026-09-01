@@ -43,6 +43,9 @@ src/components/auth/
   login/
     action.ts              # Login server action with smart redirect
     form.tsx               # Login form component
+    demo-accounts.ts       # server-only: demo tenant's role -> account roster
+    demo-action.ts         # demo role login; re-derives the tenant, calls login()
+    demo-form.tsx          # demo tenant's role picker (falls back to form.tsx)
   join/
     action.ts              # Registration action
     form.tsx               # Registration form
@@ -101,6 +104,26 @@ src/components/auth/
 ```
 
 **Total**: 55 files (30 core + 19 subdirectory + 6 test files)
+
+### Demo tenant login
+
+On the `demo` subdomain -- any root, so `demo.balqalam.com`, `demo.databayt.org` and
+`demo.localhost:3000` all qualify -- `/{lang}/login` renders a role picker instead of the
+credential fields, with a "sign in with email instead" link back to the normal form.
+Picking a role runs `demoRoleLogin()`, which resolves the role to its seeded account and
+hands off to `login()` unchanged: same session, cookies, audit log and redirect as typing
+the credentials. Six school-scoped roles only (admin, teacher, student, guardian,
+accountant, staff) -- `dev@` / `user@` / `applicant@` have no `schoolId`.
+
+The gate is enforced **inside the server action**, not just in the page: a Server Action is
+a public endpoint, so `demo-action.ts` re-derives the subdomain from the request
+(`x-subdomain`, falling back to `getSubdomainFromHost(host)`) and returns
+`INVALID_CREDENTIALS` for any other host. The page-level check is only what decides which
+component to render.
+
+`demo-accounts.ts` is `import "server-only"` so the roster and shared password never enter
+a client bundle, and it mirrors (rather than imports) `prisma/seeds/constants.ts` because
+`prisma/seeds/` sits outside `src/`.
 
 ### Core Configuration Files (outside block)
 

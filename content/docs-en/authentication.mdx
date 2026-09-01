@@ -18,6 +18,20 @@ For provider-specific detail see [credentials](/docs/credentials), [oauth](/docs
 
 USER role redirects to `/{locale}` (homepage), not `/onboarding`. Onboarding is reachable only via explicit `callbackUrl`.
 
+### Demo tenant
+
+On the `demo` subdomain (any root — `demo.balqalam.com`, `demo.databayt.org`,
+`demo.localhost:3000`) the login page shows a **role picker** instead of the credential
+fields: pick Administrator / Teacher / Student / Parent / Accountant / Staff and press
+Login. A "sign in with email instead" link reveals the normal form.
+
+This is a shortcut, not a second auth lane. `demoRoleLogin()`
+(`src/components/auth/login/demo-action.ts`) resolves the role to its seeded
+`@balqalam.com` account and calls the same `login()` action, so the session, cookies,
+audit log and redirect are identical to typing those credentials. The subdomain is
+re-checked inside the action — Server Actions are publicly callable, so every other host
+gets `INVALID_CREDENTIALS`.
+
 ## Redirect priority
 
 Decision chain in `src/auth.ts` redirect callback and `src/components/auth/login/action.ts`:

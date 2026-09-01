@@ -550,7 +550,18 @@
     "invalidToken": "This reset link is invalid.",
     "tokenExpired": "This reset link has expired. Please request a new one.",
     "missingToken": "Missing reset token.",
-    "invalidPassword": "Password must be at least 6 characters."
+    "invalidPassword": "Password must be at least 6 characters.",
+    "demoRolePrompt": "Choose a role to explore the demo",
+    "demoRolePlaceholder": "Select a role",
+    "useEmailInstead": "Sign in with email instead",
+    "demoRoles": {
+      "admin": "Administrator",
+      "teacher": "Teacher",
+      "student": "Student",
+      "guardian": "Parent",
+      "accountant": "Accountant",
+      "staff": "Staff"
+    }
   },
   "marketing": {
     "phoneMockup": {
@@ -2380,6 +2391,7 @@
       "My assignments": "My assignments",
       "My transportation": "My transportation",
       "Trips": "Trips",
+      "Parent portal": "Parent portal",
       "Compliance": "Compliance",
       "LiveClasses": "Conference"
     },
@@ -2513,6 +2525,16 @@
         "approvals": "Approvals",
         "proposals": "Proposals",
         "analytics": "Analytics"
+      },
+      "approvals": {
+        "columns": {
+          "type": "Type",
+          "title": "Title",
+          "school": "School",
+          "contributedBy": "Contributed By",
+          "submitted": "Submitted",
+          "platform": "Platform"
+        }
       }
     }
   },

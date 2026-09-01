@@ -550,7 +550,18 @@
     "invalidToken": "رابط إعادة التعيين غير صالح.",
     "tokenExpired": "انتهت صلاحية رابط إعادة التعيين. يرجى طلب رابط جديد.",
     "missingToken": "رمز إعادة التعيين مفقود.",
-    "invalidPassword": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل."
+    "invalidPassword": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
+    "demoRolePrompt": "اختر دورًا لتجربة النموذج",
+    "demoRolePlaceholder": "اختر الدور",
+    "useEmailInstead": "الدخول بالبريد الإلكتروني",
+    "demoRoles": {
+      "admin": "مدير المدرسة",
+      "teacher": "معلم",
+      "student": "طالب",
+      "guardian": "ولي أمر",
+      "accountant": "محاسب",
+      "staff": "موظف"
+    }
   },
   "marketing": {
     "phoneMockup": {
@@ -2363,11 +2374,11 @@
       "Events": "الأحداث",
       "Attendance": "الحضور",
       "Reports": "التقارير",
-      "Timetable": "الجدول الدراسي",
+      "Timetable": "الجدول",
       "Library": "المكتبة",
       "Lumos": "لوموس",
-      "Conference": "الاجتماعات",
-      "Profile": "الملف الشخصي",
+      "Conference": "مباشر",
+      "Profile": "الملف",
       "School": "المدرسة",
       "Sales": "المبيعات",
       "Classrooms": "الفصول",
@@ -2377,11 +2388,12 @@
       "Messages": "الرسائل",
       "Transportation": "النقل",
       "Transport fees": "رسوم النقل",
-      "My assignments": "واجباتي",
-      "My transportation": "نقلي",
+      "My assignments": "واجب",
+      "My transportation": "نقل",
       "Trips": "الرحلات",
+      "Parent portal": "بوابة ولي الأمر",
       "Compliance": "الامتثال التنظيمي",
-      "LiveClasses": "الاجتماعات"
+      "LiveClasses": "مباشر"
     },
     "breadcrumb": {
       "dashboard": "لوحة التحكم",
@@ -2513,6 +2525,16 @@
         "approvals": "الموافقات",
         "proposals": "المقترحات",
         "analytics": "التحليلات"
+      },
+      "approvals": {
+        "columns": {
+          "type": "النوع",
+          "title": "العنوان",
+          "school": "المدرسة",
+          "contributedBy": "المُساهِم",
+          "submitted": "تاريخ الإرسال",
+          "platform": "المنصة"
+        }
       }
     }
   },
