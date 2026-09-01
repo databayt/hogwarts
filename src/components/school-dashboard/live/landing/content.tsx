@@ -1,63 +1,102 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 // Server component: pure prop composition with no client hooks or handlers, so
-// nothing here reaches the client bundle.
+// nothing here reaches the client bundle except the one motion wrapper the
+// get-started band brings with it.
 
-import { ConferenceEverythingSection } from "./everything-section"
-import { ConferenceFeaturesSection } from "./features-section"
-import { ConferenceHero } from "./hero"
-import { ConferenceHowToSection } from "./how-to-section"
-import { ConferenceNowSection } from "./now-section"
-import type { LandingSectionProps, LandingSession } from "./types"
-import { ConferenceWelcomeSection } from "./welcome-section"
+import { LiveGetStartedBand } from "./get-started-band"
+import { LiveNowStrip } from "./now-strip"
+import { LiveReadinessBand } from "./readiness-band"
+import { LiveRoleGuide } from "./role-guide"
+import { LiveStatusHero } from "./status-hero"
+import type {
+  LandingPolicy,
+  LandingReadiness,
+  LandingSectionProps,
+  LandingSession,
+  LandingViewer,
+  LiveSettingsDictionary,
+} from "./types"
 
 interface Props extends LandingSectionProps {
+  settings: LiveSettingsDictionary
+  viewer: LandingViewer
+  policy: LandingPolicy
+  readiness: LandingReadiness | null
   live: LandingSession[]
   upcoming: LandingSession[]
-  canSchedule: boolean
-  canConfigure: boolean
+  liveNow: number
+  todayTotal: number
 }
 
 /**
- * The /live landing page, composed the way /lumos is: a hero, the value
- * cards, then the long-form bands. The one departure is the live/coming-up
- * strip directly under the cards — this block is opened every school day, so
- * the landing has to answer "what's on right now" before it sells anything.
+ * The /live landing page.
+ *
+ * One page in two states. When the school teaches online it is a TOOL: what is
+ * live, then what this role can do, and — for an admin — whether the plumbing
+ * behind it is actually ready. When the school does not yet teach online there
+ * is nothing to be a tool about, so for an admin it becomes a SETUP GUIDE, and
+ * for everyone else it stays short and honest rather than advertising a
+ * feature they cannot switch on.
+ *
+ * Every section is gated by role, by that state, or by both. The previous
+ * version gated only two buttons, which is how a student ended up reading
+ * "turn on online teaching, from settings" on every visit.
  */
-export function ConferenceLandingContent({
+export function LiveLandingContent({
   dictionary,
   lang,
+  settings,
+  viewer,
+  policy,
+  readiness,
   live,
   upcoming,
-  canSchedule,
-  canConfigure,
+  liveNow,
+  todayTotal,
 }: Props) {
+  // The one session this viewer would act on: whatever is live, else next up.
+  const focus = live[0] ?? upcoming[0] ?? null
+
   return (
     <>
-      <ConferenceHero
+      <LiveStatusHero
         dictionary={dictionary}
         lang={lang}
-        canSchedule={canSchedule}
+        viewer={viewer}
+        policy={policy}
+        liveNow={liveNow}
+        todayTotal={todayTotal}
+        focus={focus}
       />
 
-      <ConferenceFeaturesSection dictionary={dictionary} lang={lang} />
+      {policy.isOnline ? (
+        <LiveNowStrip
+          dictionary={dictionary}
+          lang={lang}
+          live={live}
+          upcoming={upcoming}
+          viewer={viewer}
+        />
+      ) : null}
 
-      <ConferenceNowSection
-        dictionary={dictionary}
-        lang={lang}
-        live={live}
-        upcoming={upcoming}
-      />
+      {viewer.canConfigure && readiness ? (
+        <LiveReadinessBand
+          dictionary={dictionary}
+          lang={lang}
+          settings={settings}
+          policy={policy}
+          readiness={readiness}
+        />
+      ) : null}
 
-      <ConferenceEverythingSection dictionary={dictionary} lang={lang} />
+      <LiveRoleGuide dictionary={dictionary} lang={lang} viewer={viewer} />
 
-      <ConferenceHowToSection dictionary={dictionary} lang={lang} />
-
-      <ConferenceWelcomeSection
-        dictionary={dictionary}
-        lang={lang}
-        canConfigure={canConfigure}
-      />
+      {/* The pitch and the three setup steps: admins only, and only while
+          there is still something to set up. */}
+      {!policy.isOnline && viewer.canConfigure ? (
+        <LiveGetStartedBand dictionary={dictionary} lang={lang} />
+      ) : null}
     </>
   )
 }
