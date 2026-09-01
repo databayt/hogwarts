@@ -28,8 +28,15 @@ interface NowStripProps extends LandingSectionProps {
  * on a page teachers and students open every school day. It is now the thing
  * you land on.
  *
- * Live and upcoming stay SEPARATE groups: one "Live now" heading over a list
- * that also held scheduled sessions would misdescribe half of them.
+ * The shape follows thmanyah.com's editorial block: one FEATURED item with
+ * large square artwork beside its copy, then the rest as a compact row of
+ * small-artwork rows beneath. That suits this data far better than the even
+ * four-column grid it replaces — a school usually has one class live and
+ * several coming up, and a uniform grid rendered the single live session as
+ * one lonely card in four columns of white space.
+ *
+ * Live and upcoming stay SEPARATE: one heading over a list holding both would
+ * misdescribe half of them.
  *
  * Times arrive pre-formatted in the school's own zone (see the page) — a
  * server-side `toLocaleTimeString` resolves against the runtime's zone, which
@@ -43,12 +50,15 @@ export function LiveNowStrip({
   viewer,
 }: NowStripProps) {
   const n = dictionary?.landing?.now
-  const hasAny = live.length > 0 || upcoming.length > 0
+  const featured = live[0] ?? null
+  // Anything live beyond the first joins the compact row, ahead of what is
+  // merely scheduled — a room you can walk into now outranks one you cannot.
+  const rest = [...live.slice(1), ...upcoming]
 
-  if (!hasAny) {
+  if (!featured && rest.length === 0) {
     return (
       <section className="mb-16">
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-14 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-[36px] border border-dashed py-16 text-center">
           <CalendarClock
             className="text-muted-foreground size-8"
             strokeWidth={1.5}
@@ -65,48 +75,59 @@ export function LiveNowStrip({
 
   return (
     <section className="mb-16 space-y-10">
-      {live.length > 0 && (
-        <SessionGroup
-          heading={n?.liveTitle}
-          sessions={live}
-          dictionary={dictionary}
-          lang={lang}
-          viewer={viewer}
-        />
-      )}
+      {featured ? (
+        <div>
+          <SectionHeading
+            title={n?.liveTitle}
+            lang={lang}
+            viewAll={n?.viewAll}
+          />
+          <FeaturedSession
+            session={featured}
+            dictionary={dictionary}
+            lang={lang}
+            viewer={viewer}
+          />
+        </div>
+      ) : null}
 
-      {upcoming.length > 0 && (
-        <SessionGroup
-          heading={n?.upcomingTitle}
-          sessions={upcoming}
-          dictionary={dictionary}
-          lang={lang}
-          viewer={viewer}
-        />
-      )}
+      {rest.length > 0 ? (
+        <div>
+          <SectionHeading
+            title={featured ? n?.upcomingTitle : n?.liveTitle}
+            lang={lang}
+            viewAll={featured ? undefined : n?.viewAll}
+          />
+          <ul className="grid grid-cols-1 gap-x-10 gap-y-6 lg:grid-cols-2">
+            {rest.slice(0, 4).map((session) => (
+              <CompactSession
+                key={session.id}
+                session={session}
+                dictionary={dictionary}
+                lang={lang}
+                viewer={viewer}
+              />
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   )
 }
 
-function SessionGroup({
-  heading,
-  sessions,
-  dictionary,
+function SectionHeading({
+  title,
   lang,
-  viewer,
+  viewAll,
 }: {
-  heading?: string
-  sessions: LandingSession[]
-  dictionary: LandingSectionProps["dictionary"]
+  title?: string
   lang: string
-  viewer: LandingViewer
+  viewAll?: string
 }) {
-  const n = dictionary?.landing?.now
-
   return (
-    <div>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2 className={typographyVariants.cardTitle}>{heading}</h2>
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <h2 className={typographyVariants.cardTitle}>{title}</h2>
+      {viewAll ? (
         <Link
           className={cn(
             buttonVariants({ variant: "ghost", size: "sm" }),
@@ -114,36 +135,20 @@ function SessionGroup({
           )}
           href={`/${lang}/live/dashboard`}
         >
-          {n?.viewAll}
+          {viewAll}
         </Link>
-      </div>
-
-      <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {sessions.map((session) => (
-          <SessionCard
-            key={session.id}
-            session={session}
-            dictionary={dictionary}
-            lang={lang}
-            viewer={viewer}
-          />
-        ))}
-      </ul>
+      ) : null}
     </div>
   )
 }
 
 /**
- * The lumos card grammar — a thumbnail that scales on hover, a title that
- * takes the accent, meta beneath — carrying the subject's own catalog artwork.
- *
- * `imageUrl` is null whenever the subject has no thumbnail OR CloudFront is
- * unconfigured, which is a normal state in some environments rather than an
- * error, so the coloured ground is a first-class fallback and not a placeholder
- * for a failure. `unoptimized` because these are already CDN-encoded at their
- * render width — the optimizer has nothing left to do.
+ * The one session worth acting on: square artwork beside the copy, at the
+ * banner's 12px-radius scale, with the join action inline rather than as a
+ * caption. Square rather than 16:9 because the catalog thumbnails are already
+ * square-ish and it holds the row height honest next to the text column.
  */
-function SessionCard({
+function FeaturedSession({
   session,
   dictionary,
   lang,
@@ -155,74 +160,150 @@ function SessionCard({
   viewer: LandingViewer
 }) {
   const n = dictionary?.landing?.now
-  const a = dictionary?.landing?.actions
+  const href = joinHref(session, viewer, lang)
 
-  // Live goes straight into the room; scheduled opens the session. A viewer
-  // who may not join (ACCOUNTANT) only ever gets the session page.
-  const href =
-    session.isLive && viewer.canJoin
-      ? `/${lang}/live/${session.id}/room`
-      : `/${lang}/live/${session.id}`
+  return (
+    <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+      <Link
+        href={href}
+        className="group relative block size-[250px] shrink-0 overflow-hidden rounded-xl"
+        tabIndex={-1}
+        aria-hidden="true"
+      >
+        <Art session={session} sizes="250px" />
+      </Link>
 
-  const cta = !viewer.canJoin
-    ? n?.open
-    : session.isLive
-      ? viewer.isHost
-        ? a?.start
-        : viewer.role === "GUARDIAN"
-          ? a?.observe
-          : n?.joinNow
-      : n?.open
+      <div className="min-w-0 flex-1 text-start">
+        <Badge className="mb-3 gap-1 rounded-full">
+          <Radio className="size-3" aria-hidden="true" />
+          {n?.liveTitle}
+        </Badge>
 
-  const meta = [session.subjectName, session.sectionName, session.teacherName]
-    .filter(Boolean)
-    .join(" · ")
+        <h3 className="text-lg leading-snug font-semibold text-balance sm:text-xl">
+          <Link href={href} className="hover:text-primary transition-colors">
+            {session.title}
+          </Link>
+        </h3>
+
+        <p className={cn(typographyVariants.hint, "mt-2")}>{meta(session)}</p>
+
+        <Link
+          className={cn(
+            buttonVariants({ size: "sm" }),
+            "mt-5 gap-2 rounded-full"
+          )}
+          href={href}
+        >
+          {ctaLabel(session, dictionary, viewer)}
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+/** A scheduled session: small square artwork, title, time. */
+function CompactSession({
+  session,
+  dictionary,
+  lang,
+  viewer,
+}: {
+  session: LandingSession
+  dictionary: LandingSectionProps["dictionary"]
+  lang: string
+  viewer: LandingViewer
+}) {
+  const n = dictionary?.landing?.now
+  const href = joinHref(session, viewer, lang)
 
   return (
     <li>
-      <Link href={href} className="group block">
-        <div className="relative aspect-video overflow-hidden rounded-xl">
-          {session.imageUrl ? (
-            <Image
-              src={session.imageUrl}
-              alt=""
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              unoptimized
-            />
-          ) : (
-            <div
-              className="h-full w-full"
-              style={{ backgroundColor: session.color || "#e5e7eb" }}
-            />
-          )}
-
-          <div className="absolute start-3 top-3">
-            {session.isLive ? (
-              <Badge className="gap-1 rounded-full shadow-sm">
-                <Radio className="size-3" aria-hidden="true" />
-                {n?.liveTitle}
-              </Badge>
-            ) : (
-              <Badge
-                variant="secondary"
-                className="rounded-full tabular-nums shadow-sm"
-              >
-                {session.scheduledStart}
-              </Badge>
-            )}
-          </div>
+      <Link href={href} className="group flex items-center gap-4 text-start">
+        <div className="relative size-[120px] shrink-0 overflow-hidden rounded-xl">
+          <Art session={session} sizes="120px" />
         </div>
 
-        <div className="space-y-1.5 pt-3 text-start">
-          <h3 className="group-hover:text-primary line-clamp-2 text-sm leading-tight font-semibold transition-colors">
+        <div className="min-w-0 flex-1">
+          <h3 className="group-hover:text-primary line-clamp-2 leading-snug font-semibold transition-colors">
             {session.title}
           </h3>
-          {meta ? <p className={typographyVariants.hint}>{meta}</p> : null}
-          <p className="text-primary pt-1 text-xs font-medium">{cta}</p>
+          <p className={cn(typographyVariants.hint, "mt-1.5")}>
+            {meta(session)}
+          </p>
+          <p className="mt-1.5 text-xs font-medium tabular-nums">
+            {session.isLive ? (
+              <span className="text-primary inline-flex items-center gap-1">
+                <Radio className="size-3" aria-hidden="true" />
+                {n?.liveTitle}
+              </span>
+            ) : (
+              session.scheduledStart
+            )}
+          </p>
         </div>
       </Link>
     </li>
   )
+}
+
+/**
+ * The subject's own catalog artwork.
+ *
+ * `imageUrl` is null whenever the subject has no thumbnail OR CloudFront is
+ * unconfigured, which is a normal state rather than an error — so the coloured
+ * ground is a first-class fallback, not a placeholder for a failure.
+ * `unoptimized` because these are already CDN-encoded at their render width.
+ */
+function Art({ session, sizes }: { session: LandingSession; sizes: string }) {
+  if (!session.imageUrl) {
+    return (
+      <div
+        className="h-full w-full"
+        style={{ backgroundColor: session.color || "#e5e7eb" }}
+      />
+    )
+  }
+  return (
+    <Image
+      src={session.imageUrl}
+      alt=""
+      fill
+      className="object-cover transition-transform duration-300 group-hover:scale-105"
+      sizes={sizes}
+      unoptimized
+    />
+  )
+}
+
+function meta(session: LandingSession): string {
+  return [session.subjectName, session.sectionName, session.teacherName]
+    .filter(Boolean)
+    .join(" · ")
+}
+
+/**
+ * Live goes straight into the room; scheduled opens the session. A viewer who
+ * may not join at all (ACCOUNTANT) only ever gets the session page.
+ */
+function joinHref(
+  session: LandingSession,
+  viewer: LandingViewer,
+  lang: string
+): string {
+  return session.isLive && viewer.canJoin
+    ? `/${lang}/live/${session.id}/room`
+    : `/${lang}/live/${session.id}`
+}
+
+function ctaLabel(
+  session: LandingSession,
+  dictionary: LandingSectionProps["dictionary"],
+  viewer: LandingViewer
+): string | undefined {
+  const n = dictionary?.landing?.now
+  const a = dictionary?.landing?.actions
+  if (!viewer.canJoin) return n?.open
+  if (!session.isLive) return n?.open
+  if (viewer.isHost) return a?.start
+  return viewer.role === "GUARDIAN" ? a?.observe : n?.joinNow
 }

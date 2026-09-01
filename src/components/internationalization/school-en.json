@@ -5205,7 +5205,8 @@
           "nextAt": "next at {time}",
           "windowActive": "online teaching active today",
           "modeHybrid": "hybrid teaching",
-          "modeOnline": "teaching online"
+          "modeOnline": "teaching online",
+          "todayLabel": "classes today"
         },
         "actions": {
           "join": "Join now",

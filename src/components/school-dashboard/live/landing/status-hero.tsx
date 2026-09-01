@@ -6,7 +6,6 @@ import { Radio } from "lucide-react"
 
 import { typographyVariants } from "@/lib/typography"
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 
 import type {
   LandingPolicy,
@@ -37,6 +36,11 @@ interface HeroProps extends LandingSectionProps {
  * There is no hero image. The imagery on this page is the catalog artwork on
  * the session cards below — real, per-subject, and already paid for — rather
  * than one stock photograph standing in for every class.
+ *
+ * The shell is the wide `rounded-[36px]` banner card thmanyah.com opens with —
+ * its proportions and corner radius, carrying our own content. `bg-primary`
+ * rather than a literal ground so it inverts with the theme; the mint mark
+ * stays legible either way, since it is a light block with dark ink on it.
  */
 export function LiveStatusHero({
   dictionary,
@@ -51,65 +55,92 @@ export function LiveStatusHero({
   const isLive = Boolean(focus?.isLive)
 
   return (
-    <section className="pt-2 pb-10">
-      <p className={cn(typographyVariants.hint, "mb-3")}>{dictionary?.title}</p>
+    <section className="mb-10">
+      <div className="bg-primary text-primary-foreground flex flex-col justify-between gap-8 rounded-[36px] px-8 py-10 sm:px-12 lg:min-h-[259px] lg:flex-row lg:items-center lg:py-12">
+        <div className="min-w-0">
+          <p
+            className={cn(
+              typographyVariants.hint,
+              "text-primary-foreground/70 mb-3"
+            )}
+          >
+            {dictionary?.title}
+          </p>
 
-      <h1 className={cn(typographyVariants.heroTitle, "max-w-[18ch]")}>
-        {!policy.isOnline ? (
-          d?.hero?.offline
-        ) : liveNow > 0 ? (
-          <CountedHeadline
-            lang={lang}
-            count={liveNow}
-            forms={d?.hero?.liveCount}
-          />
-        ) : (
-          d?.hero?.nothingLive
-        )}
-      </h1>
+          <h1 className="max-w-[26ch] text-3xl font-extrabold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+            {!policy.isOnline ? (
+              d?.hero?.offline
+            ) : liveNow > 0 ? (
+              <CountedHeadline
+                lang={lang}
+                count={liveNow}
+                forms={d?.hero?.liveCount}
+              />
+            ) : (
+              d?.hero?.nothingLive
+            )}
+          </h1>
 
-      {policy.isOnline ? (
-        <p className={cn(typographyVariants.pageDescription, "mt-4")}>
-          {[
-            todayTotal > 0
-              ? d?.hero?.todayCount?.replace(
-                  "{count}",
-                  formatCount(lang, todayTotal)
-                )
-              : null,
-            !isLive && focus?.scheduledStart
-              ? d?.hero?.nextAt?.replace("{time}", focus.scheduledStart)
-              : null,
-            deliveryLabel(d, policy),
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      ) : (
-        <p className={cn(typographyVariants.pageDescription, "mt-4")}>
-          {viewer.canConfigure ? d?.hero?.offlineAdmin : d?.hero?.offlineOther}
-        </p>
-      )}
+          {policy.isOnline ? (
+            <p className="text-primary-foreground/75 mt-4 max-w-[46ch] text-lg">
+              {[
+                todayTotal > 0
+                  ? d?.hero?.todayCount?.replace(
+                      "{count}",
+                      formatCount(lang, todayTotal)
+                    )
+                  : null,
+                !isLive && focus?.scheduledStart
+                  ? d?.hero?.nextAt?.replace("{time}", focus.scheduledStart)
+                  : null,
+                deliveryLabel(d, policy),
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          ) : (
+            <p className="text-primary-foreground/75 mt-4 max-w-[52ch] text-lg">
+              {viewer.canConfigure
+                ? d?.hero?.offlineAdmin
+                : d?.hero?.offlineOther}
+            </p>
+          )}
 
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        <PrimaryAction
-          d={d}
-          lang={lang}
-          viewer={viewer}
-          policy={policy}
-          focus={focus}
-        />
+          <div className="mt-7 flex flex-wrap items-center gap-2">
+            <PrimaryAction
+              d={d}
+              lang={lang}
+              viewer={viewer}
+              policy={policy}
+              focus={focus}
+            />
 
-        {viewer.canSchedule && policy.isOnline ? (
-          <Link className={pill("ghost")} href={`/${lang}/live/schedule`}>
-            {d?.actions?.schedule}
-          </Link>
-        ) : null}
+            {viewer.canSchedule && policy.isOnline ? (
+              <Link className={pill("ghost")} href={`/${lang}/live/schedule`}>
+                {d?.actions?.schedule}
+              </Link>
+            ) : null}
 
-        {viewer.canConfigure ? (
-          <Link className={pill("ghost")} href={`/${lang}/live/settings`}>
-            {d?.actions?.settings}
-          </Link>
+            {viewer.canConfigure ? (
+              <Link className={pill("ghost")} href={`/${lang}/live/settings`}>
+                {d?.actions?.settings}
+              </Link>
+            ) : null}
+          </div>
+        </div>
+
+        {/* The far side of the banner. thmanyah fills it with artwork; this is
+            a tool, so it gets the day's figure instead — and stays empty when
+            there is no day to report rather than inventing something. */}
+        {policy.isOnline && todayTotal > 0 ? (
+          <div className="shrink-0 text-start lg:pe-4">
+            <p className="text-6xl leading-none font-extrabold tabular-nums lg:text-7xl">
+              {formatCount(lang, todayTotal)}
+            </p>
+            <p className="text-primary-foreground/70 mt-2 text-sm">
+              {d?.hero?.todayLabel}
+            </p>
+          </div>
         ) : null}
       </div>
     </section>
@@ -250,8 +281,15 @@ function deliveryLabel(
  * action reads as a tool, a wide one reads as a landing page.
  */
 function pill(variant: "default" | "ghost") {
+  // Inverted, because these sit ON the primary ground: the default button's own
+  // colours are primary-on-background, which would be black ink on a black
+  // banner. Swapping the pair keeps the contrast in both themes.
   return cn(
-    buttonVariants({ variant, size: "default" }),
-    "h-10 gap-2 rounded-full px-5"
+    "inline-flex h-10 items-center justify-center gap-2 rounded-full px-5",
+    "text-sm font-medium whitespace-nowrap transition-colors",
+    "focus-visible:ring-primary-foreground/50 outline-none focus-visible:ring-2",
+    variant === "default"
+      ? "bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+      : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
   )
 }

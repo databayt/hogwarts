@@ -5205,7 +5205,8 @@
           "nextAt": "القادمة {time}",
           "windowActive": "التدريس عبر الإنترنت سارٍ اليوم",
           "modeHybrid": "تدريس مختلط",
-          "modeOnline": "تدريس عبر الإنترنت"
+          "modeOnline": "تدريس عبر الإنترنت",
+          "todayLabel": "حصة اليوم"
         },
         "actions": {
           "join": "انضم الآن",
