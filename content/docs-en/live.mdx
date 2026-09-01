@@ -1,10 +1,10 @@
 ---
 title: Conference
-description: Video conferencing — one self-contained block at src/components/school-dashboard/conference, mirrored 1:1 to the /conference route. External pasted-link is live; the LiveKit SFU is four env vars from live (recording is a separate gate); native Meet/Zoom/Teams adapters are wired but dark.
+description: Video conferencing — one self-contained block at src/components/school-dashboard/live, mirrored 1:1 to the /live route. External pasted-link is live; the LiveKit SFU is four env vars from live (recording is a separate gate); native Meet/Zoom/Teams adapters are wired but dark.
 ---
 
-One self-contained block at `src/components/school-dashboard/conference/`, mirrored 1:1 to the
-`/conference` route. It runs three meeting back-ends behind a single UI: the **external
+One self-contained block at `src/components/school-dashboard/live/`, mirrored 1:1 to the
+`/live` route. It runs three meeting back-ends behind a single UI: the **external
 pasted-link** provider is live everywhere; the **LiveKit SFU** (in-app rooms + recording) is fully
 coded and gated only on four `LIVEKIT_*` env vars — see RUNBOOK.md for the LiveKit Cloud quick path; recording is a separate gate and no longer blocks a room; the **native Meet / Zoom / Teams** adapters create
 real meetings via each vendor's API but ship dark until OAuth credentials land.
@@ -122,16 +122,16 @@ entirely.
 
 ## Structure
 
-<ConferenceStructure />
+<LiveStructure />
 
 Routes mirror this block (see [Routes](#routes)). The 6 Prisma models live
-in `prisma/models/conference.prisma`. Tests live under `src/tests/` (URL-mirror reorg), not in a
+in `prisma/models/live.prisma`. Tests live under `src/tests/` (URL-mirror reorg), not in a
 `__tests__/` folder inside the block.
 
 ## Components
 
 Two permission/validation layers coexist on purpose: the **rich sessions layer**
-(`authorization.ts` · `permissions.ts` · `validation.ts`) is the strict runtime gate for the LiveKit
+(`authorization.ts` · `validation.ts`) is the strict runtime gate for the LiveKit
 room flow (join / token / start / end), while the **list layer** (`list-*.ts`) is the CRUD gate for
 the dashboard table and external-link sessions.
 
@@ -141,10 +141,10 @@ the dashboard table and external-link sessions.
 | `actions.ts` + `actions/`                                                         | Server actions: `sessions` (lifecycle), `tokens` (join), `recordings`, `notifications`, `settings`, `moderation` (kick), `recurring` (link carry-forward), `helpers`.       |
 | `list-actions.ts` · `queries.ts`                                                  | List-layer CRUD (`create`/`update`/`delete`/`list`) + read-only query builders.                                                                                             |
 | `authorization.ts`                                                                | `PERMISSION_MATRIX` — 10 action verbs → allowed `UserRole[]`; `assert`/`check` guards.                                                                                      |
-| `permissions.ts` · `list-permissions.ts`                                          | UI gating (tabs + show/hide flags per role) for the rich + list layers.                                                                                                     |
+| `list-permissions.ts`                                                                                      | UI gating (tabs + show/hide flags per role) for the rich + list layers.                                                                                                     |
 | `validation.ts` · `list-validation.ts`                                            | Zod schemas + inferred types (rich sessions / table forms).                                                                                                                 |
 | `columns.tsx` · `table.tsx` · `form.tsx` · `schedule-form.tsx` · `list-params.ts` | DataTable + grid client surface and the two create forms (modal + standalone page).                                                                                         |
-| `landing/` · `nav.tsx`                                                            | The `/conference` landing page (hero · value cards · live/coming-up strip · value band · setup steps · closing band) and the heading + tab strip over the `(app)` surfaces. |
+| `landing/` · `nav.tsx`                                                            | The `/live` landing page (hero · value cards · live/coming-up strip · value band · setup steps · closing band) and the heading + tab strip over the `(app)` surfaces. |
 | `detail.tsx` · `room.tsx` · `participants-panel.tsx`                              | Session detail · in-app LiveKit room · HOST/CO_HOST moderation overlay (kick).                                                                                              |
 | `recordings.tsx` · `recording-player.tsx` · `section-recording-policy.tsx`        | Recordings list · lazy signed-URL player · per-section recording opt-out.                                                                                                   |
 | `settings-form.tsx`                                                               | Admin school-policy form (retention / max-concurrent / max-duration / default recording) + term carry-forward.                                                              |
@@ -156,13 +156,13 @@ the dashboard table and external-link sessions.
 ## Data flow
 
 ```
-landing (/conference)          landing/content.tsx (server) → hero · cards · live/coming-up strip · bands
+landing (/live)          landing/content.tsx (server) → hero · cards · live/coming-up strip · bands
    └─ View sessions
-index (/conference/dashboard)  content.tsx (server) → table.tsx (client) → form.tsx (modal create)
+index (/live/dashboard)  content.tsx (server) → table.tsx (client) → form.tsx (modal create)
    └─ row Join / detail
-detail (/conference/[id])      detail.tsx → Join (live/scheduled) | Recordings (ended)
+detail (/live/[id])      detail.tsx → Join (live/scheduled) | Recordings (ended)
    └─ Join
-room  (/conference/[id]/room)  joinLiveClass → eligibility → 5-min JWT → room.tsx (LiveKit prebuilt)
+room  (/live/[id]/room)  joinLiveClass → eligibility → 5-min JWT → room.tsx (LiveKit prebuilt)
                                               ↑ refreshLiveClassToken every ~60s re-runs eligibility
 recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S3 URL, 4h; re-mints on expiry via onError)
 ```
@@ -191,30 +191,30 @@ recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S
 
 | Route                         | Layout                   | Renders                                              | Roles                                         |
 | ----------------------------- | ------------------------ | ---------------------------------------------------- | --------------------------------------------- |
-| `/conference`                 | school-dashboard         | `landing/content.tsx` — the landing page             | all 7 school roles                            |
-| `/conference/dashboard`       | school-dashboard `(app)` | DataTable index                                      | all 7 school roles                            |
-| `/conference/schedule`        | school-dashboard `(app)` | `schedule-form.tsx`                                  | DEVELOPER · ADMIN · TEACHER                   |
-| `/conference/settings`        | school-dashboard `(app)` | `settings-form.tsx` + `section-recording-policy.tsx` | DEVELOPER · ADMIN                             |
-| `/conference/network-test`    | school-dashboard `(app)` | `network-test.tsx`                                   | DEVELOPER · ADMIN (env-gated)                 |
-| `/conference/[id]`            | school-dashboard         | `detail.tsx`                                         | all 7 school roles                            |
-| `/conference/[id]/recordings` | school-dashboard         | `recordings.tsx`                                     | all except ACCOUNTANT (academic, not finance) |
-| `/conference/[id]/room`       | **(live-room)**          | `room.tsx`                                           | any authenticated session participant         |
-| `/live-classes/*`             | —                        | redirect → `/conference`                             | legacy compatibility shim (pre-rename links)  |
+| `/live`                 | school-dashboard         | `landing/content.tsx` — the landing page             | all 7 school roles                            |
+| `/live/dashboard`       | school-dashboard `(app)` | DataTable index                                      | all 7 school roles                            |
+| `/live/schedule`        | school-dashboard `(app)` | `schedule-form.tsx`                                  | DEVELOPER · ADMIN · TEACHER                   |
+| `/live/settings`        | school-dashboard `(app)` | `settings-form.tsx` + `section-recording-policy.tsx` | DEVELOPER · ADMIN                             |
+| `/live/network-test`    | school-dashboard `(app)` | `network-test.tsx`                                   | DEVELOPER · ADMIN (env-gated)                 |
+| `/live/[id]`            | school-dashboard         | `detail.tsx`                                         | all 7 school roles                            |
+| `/live/[id]/recordings` | school-dashboard         | `recordings.tsx`                                     | all except ACCOUNTANT (academic, not finance) |
+| `/live/[id]/room`       | **(live-room)**          | `room.tsx`                                           | any authenticated session participant         |
+| `/live-classes/*`             | —                        | redirect → `/live`                             | legacy compatibility shim (pre-rename links)  |
 
 `(app)` is a route **group**: it adds no URL segment, only the shared heading and tab strip
-(Sessions · Schedule · Settings · Network test, narrowed by role). `/conference` and
-`/conference/[id]` sit outside it — the landing page owns its own hero, and a session detail is a
+(Sessions · Schedule · Settings · Network test, narrowed by role). `/live` and
+`/live/[id]` sit outside it — the landing page owns its own hero, and a session detail is a
 leaf reached from a row rather than a tab.
 
 The room route lives under a separate **`(live-room)`** group with a bare full-viewport layout (no
 sidebar / dashboard chrome) so the SFU stream owns the screen; it is `force-dynamic` for OOM-safe
 builds. API (external / scheduler-invoked / polled → stay routes, not server actions): `api/webhooks/livekit`
-(HMAC), `api/conference/token` (the in-room ~4-min token refresh — a GET route because a server-action
+(HMAC), `api/live/token` (the in-room ~4-min token refresh — a GET route because a server-action
 poll would ship a full RSC re-render per response), `api/cron/live-class-reminders` (every 15 min,
 5–20-min idempotent window), `api/cron/end-stale-live-classes` (every 30 min — closes sessions stuck
 `live` past their end + runs the attendance sync), `api/cron/expire-live-recordings` (daily).
 
-## Schema — `prisma/models/conference.prisma`
+## Schema — `prisma/models/live.prisma`
 
 `LiveClass*` → `Conference*`; every DB table / column / enum-type name preserved via `@@map`/`@map`
 → **zero-change migration** (byte-identical `migrate diff` vs baseline).
@@ -319,7 +319,7 @@ compete:
 
 | Switch                         | Where                   | Means                                                                       |
 | ------------------------------ | ----------------------- | --------------------------------------------------------------------------- |
-| **Teach online**               | `/conference/settings`  | The standing "we are an online school" setting.                             |
+| **Teach online**               | `/live/settings`  | The standing "we are an online school" setting.                             |
 | **Online teaching by section** | same page, per section  | Overrides the school default in both directions. "School default" inherits. |
 | **Go online temporarily**      | same page, a date range | The emergency switch — see below. Lifts the school default for those days.  |
 
@@ -330,7 +330,7 @@ now want online is one click — set it back to "School default".
 
 ### Going online at short notice
 
-Weather, a closed road, an outbreak, a war. `/conference/settings` →
+Weather, a closed road, an outbreak, a war. `/live/settings` →
 **Go online temporarily**:
 
 - **From** — the first day. Required.
@@ -365,7 +365,7 @@ still on the page, rather than at the next quarter-hour.
 
 ### Set it up
 
-1. **Choose the back-end.** `/conference/settings` (ADMIN / DEVELOPER) →
+1. **Choose the back-end.** `/live/settings` (ADMIN / DEVELOPER) →
    **Teach online**, then **Meeting back-end**:
    - **External link** — Google Meet / Zoom / Teams URLs. Works today, no infra.
    - **In-app room** — LiveKit. Selectable immediately, but it only takes
@@ -449,15 +449,15 @@ Five surfaces reach a live class, and they differ in how tightly they gate on ti
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Timetable **Today** rows (student · teacher · guardian) | in progress, or starting within 10 min (`isRowLiveJoinable`)                                      |
 | Timetable **Current/Next** card                         | the current class, or the next within 10 min (`isLiveJoinable`)                                   |
-| `/conference` landing "now" strip                       | live now + upcoming, section-scoped                                                               |
-| `/conference/dashboard` table                           | any `live` or `scheduled` row the viewer can see                                                  |
+| `/live` landing "now" strip                       | live now + upcoming, section-scoped                                                               |
+| `/live/dashboard` table                           | any `live` or `scheduled` row the viewer can see                                                  |
 | **Parent portal** → child → Timetable                   | a "Today" strip above the weekly table                                                            |
 | Notification                                            | `started` links straight to the room; the rest to the session detail                              |
-| **Mobile**                                              | `live_class` on `/api/mobile/timetable/:userId`, joined via `GET /api/mobile/conference/:id/join` |
+| **Mobile**                                              | `live_class` on `/api/mobile/timetable/:userId`, joined via `GET /api/mobile/live/:id/join` |
 
 The timetable weekly grid deliberately shows only a live dot — awareness, not a Join affordance.
 
-A LiveKit session opens the in-app room at `/conference/[id]/room`; an external session opens its
+A LiveKit session opens the in-app room at `/live/[id]/room`; an external session opens its
 vendor URL directly. The room route redirects external sessions after the enrollment-gated read, so
 either provider works from every surface above.
 
@@ -507,11 +507,11 @@ and syncs when the connection returns; `/offline` shows what is waiting.
 
 - **The SFU**: four env vars (`LIVEKIT_HOST`, `LIVEKIT_WS_URL`, `LIVEKIT_API_KEY`,
   `LIVEKIT_API_SECRET`). Recording is a separate gate (`LIVEKIT_RECORDING_BUCKET` plus S3
-  credentials) and no longer blocks holding a call. `/conference/network-test` reports both.
+  credentials) and no longer blocks holding a call. `/live/network-test` reports both.
 - **A configured SFU does nothing on its own** — `School.conferenceProviderDefault` is `external`
-  until a school opts in on `/conference/settings`.
+  until a school opts in on `/live/settings`.
 - **The materialization sweep runs on GitHub Actions**, not Vercel Cron, while the project is on the
-  free plan (`.github/workflows/conference-crons.yml`). Without it an online school materializes no
+  free plan (`.github/workflows/live-crons.yml`). Without it an online school materializes no
   sessions after the day it saved its settings — nothing to join, and no reminders.
 
 ## Demo and the hybrid school

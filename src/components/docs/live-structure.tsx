@@ -4,23 +4,23 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { File, Folder } from "lucide-react"
 
-interface ConferenceNode {
+interface LiveNode {
   name: string
   type: "file" | "directory"
   description?: string
-  children?: ConferenceNode[]
+  children?: LiveNode[]
 }
 
-interface ConferenceStructureProps {
+interface LiveStructureProps {
   className?: string
 }
 
-export function ConferenceStructure({ className }: ConferenceStructureProps) {
-  const nodes: ConferenceNode[] = [
+export function LiveStructure({ className }: LiveStructureProps) {
+  const nodes: LiveNode[] = [
     {
       name: "src/components/school-dashboard/live/",
       type: "directory",
-      description: "one block, mirrored 1:1 to /conference",
+      description: "one block, mirrored 1:1 to /live",
       children: [
         {
           name: "content.tsx",
@@ -137,11 +137,6 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
           description: "PERMISSION_MATRIX (strict RBAC)",
         },
         {
-          name: "permissions.ts",
-          type: "file",
-          description: "UI gating (rich layer)",
-        },
-        {
           name: "list-permissions.ts",
           type: "file",
           description: "UI gating + CRUD guards (list layer)",
@@ -161,7 +156,7 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
         {
           name: "landing/",
           type: "directory",
-          description: "the /conference landing page (hero + bands)",
+          description: "the /live landing page",
           children: [
             {
               name: "content.tsx",
@@ -394,7 +389,7 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
     isLast = false,
     parentIsLast = [],
   }: {
-    item: ConferenceNode
+    item: LiveNode
     level?: number
     isLast?: boolean
     parentIsLast?: boolean[]

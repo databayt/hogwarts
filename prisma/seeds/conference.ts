@@ -1232,7 +1232,7 @@ async function seedShowcase(
       resources.push({
         schoolId: ctx.schoolId,
         sessionId: session.id,
-        url: "https://ed.databayt.org/docs/conference",
+        url: "https://ed.databayt.org/docs/live",
         title: ctx.lang === "ar" ? "دليل الحصص المباشرة" : "Live classes guide",
         order: 2,
       })

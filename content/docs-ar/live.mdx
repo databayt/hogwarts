@@ -1,10 +1,10 @@
 ---
 title: الاجتماعات
-description: مؤتمرات الفيديو — كتلة واحدة قائمة بذاتها في src/components/school-dashboard/conference، منعكسة 1:1 على المسار /conference. الرابط الخارجي الملصوق فعّال؛ وخادم LiveKit SFU يبعد أربعة متغيرات بيئة عن التشغيل (والتسجيل بوابة منفصلة)؛ ومحوّلات Meet/Zoom/Teams الأصلية موصولة لكنها خاملة.
+description: مؤتمرات الفيديو — كتلة واحدة قائمة بذاتها في src/components/school-dashboard/live، منعكسة 1:1 على المسار /live. الرابط الخارجي الملصوق فعّال؛ وخادم LiveKit SFU يبعد أربعة متغيرات بيئة عن التشغيل (والتسجيل بوابة منفصلة)؛ ومحوّلات Meet/Zoom/Teams الأصلية موصولة لكنها خاملة.
 ---
 
-كتلة واحدة قائمة بذاتها في `src/components/school-dashboard/conference/`، منعكسة بنسبة 1:1 على المسار
-`/conference`. تشغّل ثلاثة خلفيات اجتماع خلف واجهة واحدة: مزوّد **الرابط الخارجي الملصوق** فعّال في كل
+كتلة واحدة قائمة بذاتها في `src/components/school-dashboard/live/`، منعكسة بنسبة 1:1 على المسار
+`/live`. تشغّل ثلاثة خلفيات اجتماع خلف واجهة واحدة: مزوّد **الرابط الخارجي الملصوق** فعّال في كل
 مكان؛ و**خادم LiveKit SFU** (غرف داخل التطبيق) مكتوب بالكامل ولا يفصله عن التشغيل سوى أربعة متغيرات
 `LIVEKIT_*` — راجع RUNBOOK.md لمسار LiveKit Cloud السريع؛ والتسجيل بوابة منفصلة لم تعد تمنع فتح
 الغرفة؛ ومحوّلات **Meet / Zoom / Teams الأصلية** تنشئ اجتماعات حقيقية عبر واجهة كل مزوّد لكنها تبقى
@@ -109,15 +109,15 @@ description: مؤتمرات الفيديو — كتلة واحدة قائمة ب
 
 ## البنية
 
-<ConferenceStructure />
+<LiveStructure />
 
 المسارات تعكس هذه الكتلة (انظر [المسارات](#المسارات)). نماذج Prisma الستة تقع في
-`prisma/models/conference.prisma`. الاختبارات تقع تحت `src/tests/` (إعادة تنظيم
+`prisma/models/live.prisma`. الاختبارات تقع تحت `src/tests/` (إعادة تنظيم
 بمحاكاة المسارات)، لا في مجلّد `__tests__/` داخل الكتلة.
 
 ## المكوّنات
 
-تتعايش طبقتان للصلاحيات والتحقّق عن قصد: **طبقة الجلسات الغنية** (`authorization.ts` · `permissions.ts`
+تتعايش طبقتان للصلاحيات والتحقّق عن قصد: **طبقة الجلسات الغنية** (`authorization.ts`
 · `validation.ts`) هي البوابة الصارمة وقت التشغيل لتدفّق غرفة LiveKit (الانضمام / الرمز / البدء /
 الإنهاء)، بينما **طبقة القائمة** (`list-*.ts`) هي بوابة الـ CRUD لجدول لوحة التحكّم وجلسات الروابط
 الخارجية.
@@ -128,10 +128,10 @@ description: مؤتمرات الفيديو — كتلة واحدة قائمة ب
 | `actions.ts` + `actions/`                                                         | إجراءات خادمية: `sessions` (دورة الحياة)، `tokens` (الانضمام)، `recordings`، `notifications`، `settings`، `moderation` (الطرد)، `recurring`، `helpers`. |
 | `list-actions.ts` · `queries.ts`                                                  | CRUD لطبقة القائمة (`create`/`update`/`delete`/`list`) + بُناة استعلامات للقراءة فقط.                                                                   |
 | `authorization.ts`                                                                | `PERMISSION_MATRIX` — 10 أفعال إجراء → `UserRole[]` المسموح؛ حُرّاس `assert`/`check`.                                                                   |
-| `permissions.ts` · `list-permissions.ts`                                          | التحكّم في الواجهة (التبويبات + الإظهار/الإخفاء حسب الدور) للطبقتين الغنية والقائمة.                                                                    |
+| `list-permissions.ts`                                                                                      | التحكّم في الواجهة (التبويبات + الإظهار/الإخفاء حسب الدور) للطبقتين الغنية والقائمة.                                                                    |
 | `validation.ts` · `list-validation.ts`                                            | مخطّطات Zod والأنواع المستنتجة (جلسات غنية / نماذج الجدول).                                                                                             |
 | `columns.tsx` · `table.tsx` · `form.tsx` · `schedule-form.tsx` · `list-params.ts` | واجهة DataTable والشبكة على العميل ونموذجا الإنشاء (المنبثق + صفحة مستقلّة).                                                                            |
-| `landing/` · `nav.tsx`                                                            | صفحة الوصول لـ `/conference` (الواجهة الرئيسة · بطاقات القيمة · شريط المباشر/القادم · الأقسام الطويلة) والعنوان وشريط التبويبات فوق أسطح `(app)`.       |
+| `landing/` · `nav.tsx`                                                            | صفحة الوصول لـ `/live` (الواجهة الرئيسة · بطاقات القيمة · شريط المباشر/القادم · الأقسام الطويلة) والعنوان وشريط التبويبات فوق أسطح `(app)`.       |
 | `detail.tsx` · `room.tsx` · `participants-panel.tsx`                              | تفاصيل الجلسة · غرفة LiveKit داخل التطبيق · طبقة إشراف المضيف/المضيف المساعد (الطرد).                                                                   |
 | `recordings.tsx` · `recording-player.tsx` · `section-recording-policy.tsx`        | قائمة التسجيلات · مشغّل برابط موقّع كسول · إلغاء التسجيل لكل شعبة.                                                                                      |
 | `settings-form.tsx`                                                               | نموذج سياسة المدرسة للمدير (الاحتفاظ / الحد الأقصى للتزامن / المدة القصوى / التسجيل الافتراضي) + ترحيل الفصول.                                          |
@@ -143,13 +143,13 @@ description: مؤتمرات الفيديو — كتلة واحدة قائمة ب
 ## تدفّق البيانات
 
 ```
-landing (/conference)          landing/content.tsx (server) → hero · cards · live/upcoming strip · bands
+landing (/live)          landing/content.tsx (server) → hero · cards · live/upcoming strip · bands
    └─ عرض الجلسات
-index (/conference/dashboard)  content.tsx (server) → table.tsx (client) → form.tsx (modal create)
+index (/live/dashboard)  content.tsx (server) → table.tsx (client) → form.tsx (modal create)
    └─ row Join / detail
-detail (/conference/[id])      detail.tsx → Join (live/scheduled) | Recordings (ended)
+detail (/live/[id])      detail.tsx → Join (live/scheduled) | Recordings (ended)
    └─ Join
-room  (/conference/[id]/room)  joinLiveClass → eligibility → 5-min JWT → room.tsx (LiveKit prebuilt)
+room  (/live/[id]/room)  joinLiveClass → eligibility → 5-min JWT → room.tsx (LiveKit prebuilt)
                                               ↑ refreshLiveClassToken every ~60s re-runs eligibility
 recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S3 URL, 4h; re-mints on expiry via onError)
 ```
@@ -177,29 +177,29 @@ recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S
 
 | المسار                        | التخطيط                  | يعرض                                                 | الأدوار                                       |
 | ----------------------------- | ------------------------ | ---------------------------------------------------- | --------------------------------------------- |
-| `/conference`                 | school-dashboard         | `landing/content.tsx` — صفحة الوصول                  | كل أدوار المدرسة السبعة                       |
-| `/conference/dashboard`       | school-dashboard `(app)` | فهرس DataTable                                       | كل أدوار المدرسة السبعة                       |
-| `/conference/schedule`        | school-dashboard `(app)` | `schedule-form.tsx`                                  | المطوّر · المدير · المعلّم                    |
-| `/conference/settings`        | school-dashboard `(app)` | `settings-form.tsx` + `section-recording-policy.tsx` | المطوّر · المدير                              |
-| `/conference/network-test`    | school-dashboard `(app)` | `network-test.tsx`                                   | المطوّر · المدير (محكوم بالبيئة)              |
-| `/conference/[id]`            | school-dashboard         | `detail.tsx`                                         | كل أدوار المدرسة السبعة                       |
-| `/conference/[id]/recordings` | school-dashboard         | `recordings.tsx`                                     | الكل عدا المحاسب (أكاديمي لا مالي)            |
-| `/conference/[id]/room`       | **(live-room)**          | `room.tsx`                                           | أي مشارك جلسة مُصادَق                         |
-| `/live-classes/*`             | —                        | إعادة توجيه → `/conference`                          | حشوة توافق قديمة (روابط ما قبل إعادة التسمية) |
+| `/live`                 | school-dashboard         | `landing/content.tsx` — صفحة الوصول                  | كل أدوار المدرسة السبعة                       |
+| `/live/dashboard`       | school-dashboard `(app)` | فهرس DataTable                                       | كل أدوار المدرسة السبعة                       |
+| `/live/schedule`        | school-dashboard `(app)` | `schedule-form.tsx`                                  | المطوّر · المدير · المعلّم                    |
+| `/live/settings`        | school-dashboard `(app)` | `settings-form.tsx` + `section-recording-policy.tsx` | المطوّر · المدير                              |
+| `/live/network-test`    | school-dashboard `(app)` | `network-test.tsx`                                   | المطوّر · المدير (محكوم بالبيئة)              |
+| `/live/[id]`            | school-dashboard         | `detail.tsx`                                         | كل أدوار المدرسة السبعة                       |
+| `/live/[id]/recordings` | school-dashboard         | `recordings.tsx`                                     | الكل عدا المحاسب (أكاديمي لا مالي)            |
+| `/live/[id]/room`       | **(live-room)**          | `room.tsx`                                           | أي مشارك جلسة مُصادَق                         |
+| `/live-classes/*`             | —                        | إعادة توجيه → `/live`                          | حشوة توافق قديمة (روابط ما قبل إعادة التسمية) |
 
 `(app)` مجموعة مسارات: لا تضيف مقطعاً إلى الرابط، بل تضيف العنوان وشريط التبويبات المشترك فقط
-(الجلسات · الجدولة · الإعدادات · فحص الشبكة، بحسب الدور). يقع `/conference` و`/conference/[id]`
+(الجلسات · الجدولة · الإعدادات · فحص الشبكة، بحسب الدور). يقع `/live` و`/live/[id]`
 خارجها عمداً — صفحة الوصول تملك واجهتها الرئيسة، وتفاصيل الجلسة ورقة يُوصل إليها من صفٍّ لا من تبويب.
 
 تقع غرفة المسار تحت مجموعة **`(live-room)`** منفصلة بتخطيط عارٍ بملء الشاشة (بلا شريط جانبي / زخارف
 لوحة التحكّم) كي يمتلك بثّ الـ SFU الشاشة؛ وهي `force-dynamic` لبناءات آمنة من نفاد الذاكرة. واجهات
 API (مُستدعاة خارجياً / عبر المجدول / بالاستطلاع → تبقى مسارات، لا إجراءات خادمية): `api/webhooks/livekit` (HMAC)،
-`api/conference/token` (تجديد رمز الغرفة كل ~4 دقائق — مسار GET لأن استطلاعاً عبر إجراء خادمي يشحن
+`api/live/token` (تجديد رمز الغرفة كل ~4 دقائق — مسار GET لأن استطلاعاً عبر إجراء خادمي يشحن
 إعادة تصيير RSC كاملة مع كل استجابة)، `api/cron/live-class-reminders` (كل 15 دقيقة، بنافذة 5–20 دقيقة
 غير مكرِّرة)، `api/cron/end-stale-live-classes` (كل 30 دقيقة — يُنهي الجلسات العالقة في حالة `live`
 بعد وقتها ويشغّل مزامنة الحضور)، `api/cron/expire-live-recordings` (يومياً).
 
-## المخطّط — `prisma/models/conference.prisma`
+## المخطّط — `prisma/models/live.prisma`
 
 `LiveClass*` → `Conference*`؛ مع الحفاظ على كل اسم جدول / عمود / نوع تعداد عبر `@@map`/`@map` →
 **ترحيل بلا تغيير** (فرق `migrate diff` مطابق تماماً للأساس).
@@ -294,7 +294,7 @@ API (مُستدعاة خارجياً / عبر المجدول / بالاستطل�
 
 | المفتاح                             | الموضع                  | المعنى                                                             |
 | ----------------------------------- | ----------------------- | ------------------------------------------------------------------ |
-| **التدريس عبر الإنترنت**            | `/conference/settings`  | الإعداد الدائم: «نحن مدرسة على الإنترنت».                          |
+| **التدريس عبر الإنترنت**            | `/live/settings`  | الإعداد الدائم: «نحن مدرسة على الإنترنت».                          |
 | **التدريس عبر الإنترنت حسب الشعبة** | الصفحة نفسها، لكل شعبة  | يتجاوز إعداد المدرسة في الاتجاهين. و«إعداد المدرسة» يعني الاتّباع. |
 | **التحوّل إلى الأونلاين مؤقتاً**    | الصفحة نفسها، بمدى زمني | مفتاح الطوارئ — أدناه. يرفع إعداد المدرسة لتلك الأيام.             |
 
@@ -305,7 +305,7 @@ API (مُستدعاة خارجياً / عبر المجدول / بالاستطل�
 
 ### التحوّل إلى الإنترنت في وقت قصير
 
-الطقس، طريق مغلق، وباء، حرب. من `/conference/settings` → **التحوّل إلى
+الطقس، طريق مغلق، وباء، حرب. من `/live/settings` → **التحوّل إلى
 الأونلاين مؤقتاً**:
 
 - **من** — أول يوم. مطلوب.
@@ -337,7 +337,7 @@ API (مُستدعاة خارجياً / عبر المجدول / بالاستطل�
 
 ### الإعداد
 
-1. **اختر المنصة.** من `/conference/settings` (مدير المدرسة أو المطوّر) فعّل
+1. **اختر المنصة.** من `/live/settings` (مدير المدرسة أو المطوّر) فعّل
    **التدريس عبر الإنترنت** ثم اختر **منصة الاجتماع**:
    - **رابط خارجي** — روابط Google Meet أو Zoom أو Teams. يعمل اليوم دون أي بنية تحتية.
    - **غرفة داخل التطبيق** — LiveKit. يمكن اختيارها فورًا، لكنها لا تصبح فاعلة
@@ -412,15 +412,15 @@ API (مُستدعاة خارجياً / عبر المجدول / بالاستطل�
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | صفوف **اليوم** في الجدول (طالب · معلّم · وليّ أمر) | جارية الآن، أو تبدأ خلال ١٠ دقائق (`isRowLiveJoinable`)                                                  |
 | بطاقة **الحالية/التالية** في الجدول                | الحصة الحالية، أو التالية خلال ١٠ دقائق (`isLiveJoinable`)                                               |
-| شريط "الآن" في صفحة `/conference`                  | المباشر الآن والقادم، مقيّد بالشعبة                                                                      |
-| جدول `/conference/dashboard`                       | أي صف `live` أو `scheduled` يراه المستخدم                                                                |
+| شريط "الآن" في صفحة `/live`                  | المباشر الآن والقادم، مقيّد بالشعبة                                                                      |
+| جدول `/live/dashboard`                       | أي صف `live` أو `scheduled` يراه المستخدم                                                                |
 | **بوابة الوالدين** ← الطفل ← الجدول                | شريط "اليوم" أعلى الجدول الأسبوعي                                                                        |
 | الإشعار                                            | `started` يفتح الغرفة مباشرة؛ والبقية تفتح تفاصيل الجلسة                                                 |
-| **الجوال**                                         | حقل `live_class` في `/api/mobile/timetable/:userId`، والانضمام عبر `GET /api/mobile/conference/:id/join` |
+| **الجوال**                                         | حقل `live_class` في `/api/mobile/timetable/:userId`، والانضمام عبر `GET /api/mobile/live/:id/join` |
 
 الشبكة الأسبوعية في الجدول تعرض نقطة مباشرة فقط — إشارة وعي، لا زر انضمام.
 
-جلسة LiveKit تفتح الغرفة داخل التطبيق على `/conference/[id]/room`، والجلسة الخارجية تفتح رابط
+جلسة LiveKit تفتح الغرفة داخل التطبيق على `/live/[id]/room`، والجلسة الخارجية تفتح رابط
 المزوّد مباشرة. مسار الغرفة يحوّل الجلسات الخارجية بعد التحقق من التسجيل في الشعبة، فيعمل كلا
 المزوّدين من كل المداخل أعلاه.
 
@@ -467,11 +467,11 @@ API (مُستدعاة خارجياً / عبر المجدول / بالاستطل�
 
 - **الخادم (SFU)**: أربعة متغيرات بيئة (`LIVEKIT_HOST` و`LIVEKIT_WS_URL` و`LIVEKIT_API_KEY`
   و`LIVEKIT_API_SECRET`). التسجيل بوابة منفصلة (`LIVEKIT_RECORDING_BUCKET` مع بيانات اعتماد S3)
-  ولم يعد يمنع عقد المكالمة. صفحة `/conference/network-test` تُبلّغ عن الاثنين.
+  ولم يعد يمنع عقد المكالمة. صفحة `/live/network-test` تُبلّغ عن الاثنين.
 - **الخادم المهيّأ لا يفعل شيئاً وحده** — تبقى قيمة `School.conferenceProviderDefault` هي `external`
-  حتى تختار المدرسة غير ذلك من `/conference/settings`.
+  حتى تختار المدرسة غير ذلك من `/live/settings`.
 - **مهمة توليد الجلسات تعمل على GitHub Actions** لا على Vercel Cron ما دام المشروع على الخطة
-  المجانية (`.github/workflows/conference-crons.yml`). بدونها لا تولّد المدرسة المتصلة أي جلسة بعد
+  المجانية (`.github/workflows/live-crons.yml`). بدونها لا تولّد المدرسة المتصلة أي جلسة بعد
   اليوم الذي حفظت فيه إعداداتها — فلا شيء للانضمام إليه ولا تذكيرات.
 
 ## العرض التجريبي والمدرسة الهجينة
