@@ -17,8 +17,11 @@ import type {
   LandingPolicy,
   LandingReadiness,
   LandingSession,
-  LandingViewer,
 } from "@/components/school-dashboard/live/landing/types"
+import {
+  canOpenLanding,
+  resolveLandingViewer,
+} from "@/components/school-dashboard/live/landing/viewer"
 import { getLiveKitReadiness } from "@/components/school-dashboard/live/livekit/client"
 import {
   effectivePolicy,
@@ -53,32 +56,6 @@ interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
-const ALLOWED_ROLES = [
-  "DEVELOPER",
-  "ADMIN",
-  "TEACHER",
-  "STUDENT",
-  "GUARDIAN",
-  "STAFF",
-  "ACCOUNTANT",
-]
-
-const SCHEDULE_ROLES = ["DEVELOPER", "ADMIN", "TEACHER"]
-const CONFIGURE_ROLES = ["DEVELOPER", "ADMIN"]
-const HOST_ROLES = ["DEVELOPER", "ADMIN", "TEACHER"]
-// ACCOUNTANT passes `read_school_dashboard` and is school-scoped, so it can
-// LIST every session — but `authorization.ts` excludes it from both joining
-// and `view_recordings`. The page must not offer it a door it cannot use.
-const JOIN_ROLES = ["DEVELOPER", "ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "STAFF"]
-const RECORDING_ROLES = [
-  "DEVELOPER",
-  "ADMIN",
-  "TEACHER",
-  "STUDENT",
-  "GUARDIAN",
-  "STAFF",
-]
-
 /**
  * The /live landing page.
  *
@@ -89,7 +66,7 @@ const RECORDING_ROLES = [
 export default async function Page({ params }: Props) {
   const [{ lang }, session] = await Promise.all([params, auth()])
   const role = session?.user?.role ?? ""
-  if (!ALLOWED_ROLES.includes(role)) {
+  if (!canOpenLanding(role)) {
     redirect(`/${lang}/dashboard`)
   }
 
@@ -98,14 +75,7 @@ export default async function Page({ params }: Props) {
   const settings = dictionary.liveClasses?.settings
   const { schoolId } = await getTenantContext()
 
-  const viewer: LandingViewer = {
-    role,
-    canSchedule: SCHEDULE_ROLES.includes(role),
-    canConfigure: CONFIGURE_ROLES.includes(role),
-    isHost: HOST_ROLES.includes(role),
-    canJoin: JOIN_ROLES.includes(role),
-    canViewRecordings: RECORDING_ROLES.includes(role),
-  }
+  const viewer = resolveLandingViewer(role)
 
   let policy: LandingPolicy = {
     deliveryMode: "physical",

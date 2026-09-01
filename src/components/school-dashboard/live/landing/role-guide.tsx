@@ -21,7 +21,7 @@ interface GuideProps extends LandingSectionProps {
   viewer: LandingViewer
 }
 
-type Card = { key: string; Icon: LucideIcon; href: string }
+export type Card = { key: string; Icon: LucideIcon; href: string }
 
 /**
  * What YOU can do here — replacing four cards that told every role the same
@@ -67,7 +67,7 @@ export function LiveRoleGuide({ dictionary, lang, viewer }: GuideProps) {
   )
 }
 
-function cardsFor(viewer: LandingViewer, lang: string): Card[] {
+export function cardsFor(viewer: LandingViewer, lang: string): Card[] {
   const cards: Card[] = []
 
   cards.push({ key: "sessions", Icon: Table2, href: `/${lang}/live/dashboard` })
