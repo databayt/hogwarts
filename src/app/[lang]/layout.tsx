@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { auth } from "@/auth"
 import { GeistSans } from "geist/font/sans"
+import type { Session } from "next-auth"
 import { SessionProvider } from "next-auth/react"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 
@@ -72,8 +73,18 @@ export default async function LocaleLayout({
   // (production phase or dev), call normally — pages render with a real
   // session. The try-catch still guards SSR contexts where cookies()/
   // headers() aren't available.
-  let session = null
+  //
+  // `undefined`, NOT `null`, is what a prerender must leave behind. To
+  // SessionProvider the two mean opposite things: `null` asserts "I checked,
+  // there is no session", which pins __NEXTAUTH._session and makes useSession
+  // skip its fetch forever — so a signed-in visitor to a prerendered page got
+  // a header stuck on "Login". `undefined` means "I don't know", which is the
+  // truth at build time, and the client resolves it against /api/auth/session
+  // on mount. At runtime the real value (session or null) is passed through
+  // exactly as before, so dynamic pages still cost no extra request.
+  let session: Session | null | undefined = undefined
   if (process.env.NEXT_PHASE !== "phase-production-build") {
+    session = null
     try {
       session = await auth()
     } catch (error) {
