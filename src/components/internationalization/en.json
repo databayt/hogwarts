@@ -2377,7 +2377,7 @@
       "Timetable": "Timetable",
       "Library": "Library",
       "Lumos": "Lumos",
-      "Conference": "Conference",
+      "Live": "Live",
       "Profile": "Profile",
       "School": "School",
       "Sales": "Sales",
@@ -2392,11 +2392,11 @@
       "My transportation": "My transportation",
       "Trips": "Trips",
       "Parent portal": "Parent portal",
-      "Compliance": "Compliance",
-      "LiveClasses": "Conference"
+      "Compliance": "Compliance"
     },
     "breadcrumb": {
       "dashboard": "Dashboard",
+      "live": "Live",
       "admin": "Admin",
       "billing": "Billing",
       "charts": "Charts",

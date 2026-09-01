@@ -2377,7 +2377,7 @@
       "Timetable": "الجدول",
       "Library": "المكتبة",
       "Lumos": "لوموس",
-      "Conference": "مباشر",
+      "Live": "مباشر",
       "Profile": "الملف",
       "School": "المدرسة",
       "Sales": "المبيعات",
@@ -2392,11 +2392,11 @@
       "My transportation": "نقل",
       "Trips": "الرحلات",
       "Parent portal": "بوابة ولي الأمر",
-      "Compliance": "الامتثال التنظيمي",
-      "LiveClasses": "مباشر"
+      "Compliance": "الامتثال التنظيمي"
     },
     "breadcrumb": {
       "dashboard": "لوحة التحكم",
+      "live": "مباشر",
       "admin": "الإدارة",
       "billing": "الفواتير",
       "charts": "الرسوم البيانية",

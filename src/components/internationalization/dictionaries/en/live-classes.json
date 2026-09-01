@@ -1,5 +1,5 @@
 {
-  "title": "Conference",
+  "title": "Live",
   "subtitle": "Schedule, join, and review recorded video conferencing sessions.",
   "nav": {
     "upcoming": "Upcoming",
@@ -234,7 +234,7 @@
     "description": "Live classes scheduled for your section will appear here."
   },
   "settings": {
-    "title": "Conference settings",
+    "title": "Live settings",
     "description": "Per-school recording retention and capacity limits.",
     "retention": "Recording retention (days)",
     "maxConcurrent": "Max concurrent rooms",

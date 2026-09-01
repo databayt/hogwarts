@@ -5031,7 +5031,7 @@
       "failedToCreateDraft": "Failed to create"
     },
     "liveClasses": {
-      "title": "Conference",
+      "title": "Live",
       "description": "Schedule and manage live classes for your school",
       "search": "Search live classes",
       "create": "Create Live Class",
