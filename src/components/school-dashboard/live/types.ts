@@ -19,7 +19,7 @@ export type {
   ConferenceStatus,
 }
 
-export type ConferenceWithRefs = Conference & {
+export type LiveWithRefs = Conference & {
   teacher: { id: string; firstName: string; lastName: string } | null
   section: { id: string; name: string } | null
   subject: { id: string; name: string } | null

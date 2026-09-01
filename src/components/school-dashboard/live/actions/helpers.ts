@@ -144,9 +144,9 @@ export async function concurrentCapError(
  *
  * The returned path keeps its dynamic `[param]` segments, and Next ignores a
  * bracketed path unless the `type` argument is passed — so every call site
- * must be `revalidatePath(conferenceRevalidatePath(...), "page")`.
+ * must be `revalidatePath(liveRevalidatePath(...), "page")`.
  */
-export function conferenceRevalidatePath(subPath = ""): string {
+export function liveRevalidatePath(subPath = ""): string {
   const sub = subPath ? `/${subPath.replace(/^\//, "")}` : ""
   return `/[lang]/s/[subdomain]/live${sub}`
 }
@@ -161,11 +161,11 @@ export function conferenceRevalidatePath(subPath = ""): string {
  * URL segment — so it is `…/live/dashboard` here, NOT `…/(app)/dashboard`,
  * which would match no cache tag at all.
  *
- * Call sites still pass `"page"`: `for (const p of conferenceListRevalidatePaths())
+ * Call sites still pass `"page"`: `for (const p of liveListRevalidatePaths())
  * revalidatePath(p, "page")`.
  */
-export function conferenceListRevalidatePaths(): string[] {
-  return [conferenceRevalidatePath(), conferenceRevalidatePath("dashboard")]
+export function liveListRevalidatePaths(): string[] {
+  return [liveRevalidatePath(), liveRevalidatePath("dashboard")]
 }
 
 /**
@@ -183,7 +183,7 @@ export function conferenceListRevalidatePaths(): string[] {
  * detail page shares one tag. That is the trade Next offers here, and a
  * slightly wider revalidation beats one that never fires.
  */
-export function conferenceSessionRevalidatePaths(): string[] {
+export function liveSessionRevalidatePaths(): string[] {
   return [
     "/[lang]/s/[subdomain]/live/[id]",
     "/[lang]/s/[subdomain]/live/[id]/recordings",

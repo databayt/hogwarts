@@ -28,8 +28,8 @@ import {
 import { liveClassSettingsSchema } from "@/components/school-dashboard/live/validation"
 
 import {
-  conferenceListRevalidatePaths,
-  conferenceRevalidatePath,
+  liveListRevalidatePaths,
+  liveRevalidatePath,
   requireContext,
 } from "./helpers"
 import { materializeSchoolDay } from "./materialize-day"
@@ -63,7 +63,7 @@ const SETTINGS_SELECT = {
   conferenceFallbackUrl: true,
 } as const
 
-export async function getConferenceSettings() {
+export async function getLiveSettings() {
   const ctx = await requireContext("manage_settings")
   if (!ctx.ok) return ctx.response
   const school = await db.school.findUnique({
@@ -100,7 +100,7 @@ export async function getConferenceSettings() {
   }
 }
 
-export async function updateConferenceSettings(input: unknown) {
+export async function updateLiveSettings(input: unknown) {
   const ctx = await requireContext("manage_settings")
   if (!ctx.ok) return ctx.response
 
@@ -188,8 +188,8 @@ export async function updateConferenceSettings(input: unknown) {
     })
   }
 
-  revalidatePath(conferenceRevalidatePath("settings"), "page")
-  for (const path of conferenceListRevalidatePaths()) {
+  revalidatePath(liveRevalidatePath("settings"), "page")
+  for (const path of liveListRevalidatePaths()) {
     revalidatePath(path, "page")
   }
   return { success: true as const, data }
@@ -240,7 +240,7 @@ export async function setSectionOnline(
   })
   if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-  revalidatePath(conferenceRevalidatePath("settings"), "page")
+  revalidatePath(liveRevalidatePath("settings"), "page")
   return { success: true as const, data: { sectionId, online } }
 }
 
@@ -259,7 +259,7 @@ export async function setSectionRecordingOptOut(
   })
   if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-  revalidatePath(conferenceRevalidatePath("settings"), "page")
+  revalidatePath(liveRevalidatePath("settings"), "page")
   return { success: true as const, data: { sectionId, optOut } }
 }
 
@@ -278,7 +278,7 @@ export async function setSectionRecordingOptOut(
  * needs ONE link, so counting slots would make coverage look far worse than it
  * is.
  */
-export async function getConferenceLinkCoverage() {
+export async function getLiveLinkCoverage() {
   const ctx = await requireContext("manage_settings")
   if (!ctx.ok) return ctx.response
 
@@ -399,6 +399,6 @@ export async function setGradeOnline(gradeId: string, online: boolean | null) {
     data: { conferenceOnline: online },
   })
   if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
-  revalidatePath(conferenceRevalidatePath("settings"), "page")
+  revalidatePath(liveRevalidatePath("settings"), "page")
   return { success: true as const, data: { gradeId, online } }
 }

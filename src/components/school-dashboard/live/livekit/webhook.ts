@@ -8,7 +8,7 @@ import { Prisma } from "@prisma/client"
 import { WebhookReceiver, type WebhookEvent } from "livekit-server-sdk"
 
 import { db } from "@/lib/db"
-import { syncConferenceAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
+import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
 import {
   notifyClassRecordingReady,
   notifyClassStarted,
@@ -171,7 +171,7 @@ export async function handleWebhookEvent(
         // Best-effort: auto-mark attendance from participant presence (opt-in
         // per-school, LiveKit-only). An attendance failure must never affect
         // the webhook's at-least-once delivery semantics.
-        after(() => syncConferenceAttendance(schoolId, sessionId))
+        after(() => syncLiveAttendance(schoolId, sessionId))
       }
       break
     }

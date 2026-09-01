@@ -305,7 +305,7 @@ export async function getLiveClassFormOptions(
   }
 }
 
-export type ConferenceSlotOption = {
+export type LiveSlotOption = {
   timetableId: string
   dayOfWeek: number
   periodName: string
@@ -355,11 +355,11 @@ function periodTimeString(date: Date): string {
  */
 export const SLOT_OPTION_CAP = 2000
 
-export async function getConferenceSlotOptions(
+export async function getLiveSlotOptions(
   schoolId: string,
   termId: string,
   teacherId?: string
-): Promise<{ slots: ConferenceSlotOption[]; truncated: boolean }> {
+): Promise<{ slots: LiveSlotOption[]; truncated: boolean }> {
   const slots = await db.timetable.findMany({
     where: {
       schoolId,
@@ -666,7 +666,7 @@ export async function getAttendanceSyncEnabled(
  * at what is next). Both are section-scoped by the caller so a student never
  * sees another section's room.
  */
-export async function getConferenceLandingSessions(
+export async function getLiveLandingSessions(
   schoolId: string,
   opts: { sectionIds?: string[]; now: Date; take?: number } = {
     now: new Date(),

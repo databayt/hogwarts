@@ -13,7 +13,7 @@ import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window
 import { ConferenceLandingContent } from "@/components/school-dashboard/live/landing/content"
 import type { LandingSession } from "@/components/school-dashboard/live/landing/types"
 import {
-  getConferenceLandingSessions,
+  getLiveLandingSessions,
   resolveViewerSectionScope,
 } from "@/components/school-dashboard/live/queries"
 import { localize } from "@/components/translation/localize"
@@ -88,7 +88,7 @@ export default async function Page({ params }: Props) {
         const now = new Date()
         const [{ live: liveRows, upcoming: upcomingRows }, school] =
           await Promise.all([
-            getConferenceLandingSessions(schoolId, {
+            getLiveLandingSessions(schoolId, {
               now,
               sectionIds: scope === "all" ? undefined : scope.sectionIds,
             }),

@@ -6,17 +6,17 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getSchoolVideoUsage } from "@/components/lumos/lib/quota"
-import { listConferenceTerms } from "@/components/school-dashboard/live/actions/recurring"
+import { listLiveTerms } from "@/components/school-dashboard/live/actions/recurring"
 import {
-  getConferenceLinkCoverage,
-  getConferenceSettings,
+  getLiveLinkCoverage,
+  getLiveSettings,
   listGradeOnlinePolicy,
   listSectionRecordingPolicy,
 } from "@/components/school-dashboard/live/actions/settings"
 import { GradeOnlinePolicy } from "@/components/school-dashboard/live/grade-online-policy"
 import { SectionOnlinePolicy } from "@/components/school-dashboard/live/section-online-policy"
 import { SectionRecordingPolicy } from "@/components/school-dashboard/live/section-recording-policy"
-import { ConferenceSettingsForm } from "@/components/school-dashboard/live/settings-form"
+import { LiveSettingsForm } from "@/components/school-dashboard/live/settings-form"
 
 /**
  * The live-class settings panel — one component behind two doors:
@@ -24,7 +24,7 @@ import { ConferenceSettingsForm } from "@/components/school-dashboard/live/setti
  * `/school/configuration/live-classes` (the school configuration hub).
  * Server component: loads the school row, terms, sections and link coverage.
  */
-export async function ConferenceSettingsPanel({
+export async function LiveSettingsPanel({
   lang,
   dictionary,
 }: {
@@ -40,10 +40,10 @@ export async function ConferenceSettingsPanel({
     gradesResult,
     usage,
   ] = await Promise.all([
-    getConferenceSettings(),
-    listConferenceTerms(),
+    getLiveSettings(),
+    listLiveTerms(),
     listSectionRecordingPolicy(),
-    getConferenceLinkCoverage(),
+    getLiveLinkCoverage(),
     listGradeOnlinePolicy(),
     schoolId ? getSchoolVideoUsage(schoolId) : Promise.resolve(null),
   ])
@@ -86,7 +86,7 @@ export async function ConferenceSettingsPanel({
         </p>
       </div>
       <div className="grid items-start gap-8 xl:grid-cols-2">
-        <ConferenceSettingsForm
+        <LiveSettingsForm
           initial={{
             ...settings.data,
             // The form edits plain strings; the action turns them back into

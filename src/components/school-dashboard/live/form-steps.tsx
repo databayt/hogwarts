@@ -34,7 +34,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type { LiveClassFormData } from "./list-validation"
 import type {
-  ConferenceSlotOption,
+  LiveSlotOption,
   LiveClassFormOptions,
   LiveClassReferenceData,
 } from "./queries"
@@ -56,7 +56,7 @@ const DAY_FALLBACK_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
  * would recognize it on the timetable.
  */
 export function slotLabel(
-  slot: ConferenceSlotOption,
+  slot: LiveSlotOption,
   dayNames?: string[]
 ): string {
   const day = dayNames?.[slot.dayOfWeek] ?? DAY_FALLBACK_EN[slot.dayOfWeek]
@@ -101,7 +101,7 @@ export function StepBasics({
   isPending: boolean
   isEdit: boolean
   /** The school's real class slots for the active term (lazy-loaded). */
-  slots: ConferenceSlotOption[]
+  slots: LiveSlotOption[]
   slotsLoading: boolean
   /** The load failed — distinct from "this school has no slots". */
   slotsFailed: boolean

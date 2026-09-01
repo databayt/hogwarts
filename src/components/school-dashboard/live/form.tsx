@@ -33,7 +33,7 @@ import {
 } from "./form-steps"
 import {
   createLiveClass,
-  getConferenceSlots,
+  getLiveSlots,
   getLiveClass,
   getLiveClassReferenceOptions,
   updateLiveClass,
@@ -43,7 +43,7 @@ import {
   type LiveClassFormData,
 } from "./list-validation"
 import {
-  type ConferenceSlotOption,
+  type LiveSlotOption,
   type LiveClassFormOptions,
   type LiveClassReferenceData,
 } from "./queries"
@@ -152,7 +152,7 @@ export function LiveClassForm({
 
   // The school's real class slots. Fetched once when the wizard opens (a term's
   // timetable is far too big to ship as page props), not per step.
-  const [slots, setSlots] = useState<ConferenceSlotOption[]>([])
+  const [slots, setSlots] = useState<LiveSlotOption[]>([])
   const [slotsLoading, setSlotsLoading] = useState(false)
   // A failed load must not look like "this school has no timetable" — that
   // reading is indistinguishable from an empty picker, and it is the wrong
@@ -164,7 +164,7 @@ export function LiveClassForm({
     setSlotsFailed(false)
     ;(async () => {
       try {
-        const res = await getConferenceSlots()
+        const res = await getLiveSlots()
         if (!active) return
         if (res.success && res.data) setSlots(res.data)
         else setSlotsFailed(true)

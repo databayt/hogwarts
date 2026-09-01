@@ -9,7 +9,7 @@
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 
-type ConferenceEventKind =
+type LiveEventKind =
   | "scheduled"
   | "startingSoon"
   | "started"
@@ -19,7 +19,7 @@ type ConferenceEventKind =
 // Minimal lang-aware templates. Kept inline to avoid coupling to the
 // dictionary loader at module init time (so cron + webhook stay cheap).
 const TEMPLATES: Record<
-  ConferenceEventKind,
+  LiveEventKind,
   Record<"ar" | "en", { title: string; body: string }>
 > = {
   scheduled: {
@@ -175,7 +175,7 @@ async function loadSession(
 async function dispatch(
   schoolId: string,
   sessionId: string,
-  kind: ConferenceEventKind,
+  kind: LiveEventKind,
   type:
     | "live_class_scheduled"
     | "live_class_starting_soon"

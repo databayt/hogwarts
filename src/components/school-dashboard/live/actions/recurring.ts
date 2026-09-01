@@ -12,7 +12,7 @@ import { db } from "@/lib/db"
 
 import { requireContext } from "./helpers"
 
-export async function carryForwardConferenceLinks(
+export async function carryForwardLiveLinks(
   fromTermId: string,
   toTermId: string
 ) {
@@ -75,7 +75,7 @@ export async function carryForwardConferenceLinks(
       })
       created = res.count
     } catch (err) {
-      console.error("[carryForwardConferenceLinks]", err)
+      console.error("[carryForwardLiveLinks]", err)
       return actionError(ACTION_ERRORS.CREATE_FAILED)
     }
   }
@@ -90,7 +90,7 @@ export async function carryForwardConferenceLinks(
  * List the school's terms (most recent first) for the carry-forward picker.
  * ADMIN/DEVELOPER only (same `manage_settings` gate as the action above).
  */
-export async function listConferenceTerms() {
+export async function listLiveTerms() {
   const ctx = await requireContext("manage_settings")
   if (!ctx.ok) return ctx.response
   const terms = await db.term.findMany({

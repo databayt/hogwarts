@@ -7,7 +7,7 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { ConferenceSettingsPanel } from "@/components/school-dashboard/live/settings-panel"
+import { LiveSettingsPanel } from "@/components/school-dashboard/live/settings-panel"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -34,5 +34,5 @@ export default async function LiveClassesConfigPage({ params }: Props) {
   const role = session?.user?.role ?? ""
   if (!["DEVELOPER", "ADMIN"].includes(role)) redirect(`/${lang}/dashboard`)
   const dictionary = await getDictionary(lang)
-  return <ConferenceSettingsPanel lang={lang} dictionary={dictionary} />
+  return <LiveSettingsPanel lang={lang} dictionary={dictionary} />
 }

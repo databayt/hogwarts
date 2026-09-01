@@ -27,7 +27,7 @@ conference/
 ├── day-window.ts                                              school-calendar day math (pure: window · weekday · slot instants · day↔instant)
 ├── school-calendar.ts                                         "is the school running today" — ScheduleException holiday gate (write side only)
 ├── actions/                                                   rich sessions-layer server actions
-│   ├── helpers.ts        requireContext · canAccessSession · conferenceRevalidatePath
+│   ├── helpers.ts        requireContext · canAccessSession · liveRevalidatePath
 │   ├── slot-session.ts   day-qualified slot lookup + the cron's direct writer
 │   ├── materialize-day.ts  turns online-school POLICY into one day's sessions (both modes)
 │   ├── open-room.ts      the LOOSE mode — one standing room per section per school day
@@ -40,7 +40,7 @@ conference/
 │   ├── settings.ts       capacity knobs · recording opt-out · attendance sync · the online
 │   │                     window + delivery mode + standing link + link-coverage report
 │   ├── moderation.ts     kickParticipant (DB status="removed" first, then SFU evict)
-│   └── recurring.ts      carry-forward ConferenceLink across terms + listConferenceTerms
+│   └── recurring.ts      carry-forward ConferenceLink across terms + listLiveTerms
 ├── authorization.ts · permissions.ts · validation.ts         rich sessions layer (strict gate)
 ├── list-permissions.ts · list-validation.ts · list-params.ts list layer (CRUD gate)
 ├── nav.tsx                                                    heading + tab strip for the (app) surfaces

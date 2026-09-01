@@ -97,7 +97,7 @@ and one I reported wrongly:
 
 - [ ] ~~`/live/settings` has no provider control~~ — **NOT A GAP. I was wrong.**
       The control exists (`settings-form.tsx`, `conferenceProviderDefault`), is
-      fully wired through `liveClassSettingsSchema` and `updateConferenceSettings`,
+      fully wired through `liveClassSettingsSchema` and `updateLiveSettings`,
       and even carries the "SFU not provisioned yet" hint. It is gated behind
       `anyOnline = conferenceOnlineDefault || windowActive`, which is deliberate:
       the provider only decides how ONLINE classes are delivered, so it is
@@ -166,7 +166,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
       Knock-on effects, both real: - the per-school duration cap is bypassed (`list-actions.ts:513`
       computes a **negative** `durationMin`, which is never `> cap`); - `end-stale-live-classes` treats the row as stranded on its very first
       pass (`scheduledEnd < now − 30m` is already true), so the cron ends a
-      class that is genuinely live and fires `syncConferenceAttendance`
+      class that is genuinely live and fires `syncLiveAttendance`
       against a partial presence set — the roster is marked from whoever
       happened to have joined.
 
@@ -181,7 +181,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 
 ### P1 — 10 fire-and-forget promises on a serverless runtime — FIXED
 
-- [x] `void notifyClass*` / `void syncConferenceAttendance` at
+- [x] `void notifyClass*` / `void syncLiveAttendance` at
       `list-actions.ts:717,926,928,963` · `actions/sessions.ts:165,293` ·
       `livekit/webhook.ts:118,168,307` ·
       `src/app/api/cron/end-stale-live-classes/route.ts:54`. On Vercel the
@@ -197,7 +197,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 
 ### P2 — the slot picker silently truncates at 500 — FIXED
 
-- [x] `queries.ts:373` caps `getConferenceSlotOptions` at `take: 500`, ordered
+- [x] `queries.ts:373` caps `getLiveSlotOptions` at `take: 500`, ordered
       by `dayOfWeek` then period start. A 6-day × 8-period × 15-section school
       is 720 slots (the seeded Albayan term is 840), so the **end of the week
       disappears** and those classes simply cannot be scheduled online — with no
@@ -223,7 +223,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 
 ### P2 — wizard load failure is indistinguishable from "no data" — FIXED
 
-- [x] `form.tsx:154-164` — when `getConferenceSlots()` returns
+- [x] `form.tsx:154-164` — when `getLiveSlots()` returns
       `success: false` the picker just renders empty. A teacher reads that as
       "this school has no timetable". Same class as the tracked
       `content.tsx` / `recordings.tsx` item below, but on the primary create
@@ -319,7 +319,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 
 ## P2 — Phase 4 (Settings + ops)
 
-- [x] **Settings UI** (DONE: /live/settings + updateConferenceSettings, ADMIN/DEV) for `conferenceRetentionDays`,
+- [x] **Settings UI** (DONE: /live/settings + updateLiveSettings, ADMIN/DEV) for `conferenceRetentionDays`,
       `conferenceMaxDuration`, `conferenceRecordingDefault`,
       `conferenceMaxConcurrent`. Should live under
       `/settings/school` and only be writable by ADMIN/DEV.
@@ -384,7 +384,7 @@ Closed:
       the mode so the row never says two things.
 - [x] **Live classes inside `/school/configuration`** — a `live-classes`
       section (sidebar description = current mode) mounting the same
-      `ConferenceSettingsPanel` as `/live/settings`. Two doors, one
+      `LiveSettingsPanel` as `/live/settings`. Two doors, one
       panel.
 - [x] **Attendance thresholds are settings** — late grace, minimum presence,
       early-leave minutes (were constants).
@@ -494,7 +494,7 @@ Deferred, with reasons:
       N hours, or a dashboard count) rather than a silent delete.
 - [ ] **Should a no-show online class mark its roster absent?** The end-stale
       cron now closes abandoned `scheduled` sessions as `cancelled` WITHOUT
-      running `syncConferenceAttendance` — a cleanup cron must not decide that
+      running `syncLiveAttendance` — a cleanup cron must not decide that
       an entire section was absent. Product call, then wire it (or don't).
 - [x] **`getTodaySchedule` derived its weekday from the SERVER clock** — FIXED.
       Both today-card paths (`getTodaySchedule` and `getChildTodaySchedule` in
@@ -575,9 +575,9 @@ opens the way `/lumos` does, and the table moved behind a route group.
       "All" tab; it now returns Sessions · Schedule · Settings · Network test,
       narrowing by role (STUDENT/GUARDIAN see only Sessions, so there is no tab
       they'd be bounced out of). Covered by `src/tests/school-dashboard/live/nav-tabs.test.ts`.
-- [x] **Mutations revalidate both list pages.** `conferenceListRevalidatePaths()`
+- [x] **Mutations revalidate both list pages.** `liveListRevalidatePaths()`
       returns `/live` and `/live/dashboard`; the eight bare
-      `conferenceRevalidatePath()` call sites loop it. The route group
+      `liveRevalidatePath()` call sites loop it. The route group
       contributes no URL segment, so the second path has no `(app)` in it.
 - [x] **The live/coming-up strip is section-scoped** through the same
       `resolveViewerSectionScope` the table uses, batch-translated in one pass
@@ -670,7 +670,7 @@ schedule". Both are now covered, without ever closing the building.
       boundaries (`actions/open-room.ts`), modelled as an ordinary slot-less
       session so nothing downstream learns a new concept. Host is the section's
       homeroom teacher; a section without one skips with `no_teacher`.
-- [x] **`School.conferenceFallbackUrl` + `getConferenceLinkCoverage`.** THE
+- [x] **`School.conferenceFallbackUrl` + `getLiveLinkCoverage`.** THE
       blocker on the whole promise: prod has no SFU, so an emergency school
       degrades to external, and every pair without a `ConferenceLink` was
       skipped as `no_link` into a cron log — a school that flipped online
@@ -759,7 +759,7 @@ failure remains pre-existing school-marketing/template drift.
   route matches no cache tag even with `"page"` — Next registers a page under
   its route PATTERN or its concrete URL, never a mix. Four per-session call
   sites now use the literal `[id]` pattern via
-  `conferenceSessionRevalidatePaths()`.
+  `liveSessionRevalidatePaths()`.
 - Admin surface on `/live/settings` (toggle + provider select + the
   provisioning hint + a per-section override list), full en/ar dictionary
   coverage, and `DEFAULT_SCHOOL_TZ` de-duplicated into `day-window.ts`.
@@ -874,7 +874,7 @@ every offender it lists is a file this change never touched.
   `actions/sessions.ts` ×2, `livekit/webhook.ts` ×3, the end-stale cron ×1).
   A dangling promise is not guaranteed to run once the response is sent. Both
   action files already imported `after` and used it for `prewarm`, so this was
-  drift, not a missing idea. Sharpest case: `syncConferenceAttendance` had NO
+  drift, not a missing idea. Sharpest case: `syncLiveAttendance` had NO
   reliable trigger at all — its primary path (webhook `room_finished`) and its
   backstop cron were both bare `void`, so opt-in attendance could silently
   never be written. "Best-effort" is preserved: `after()` runs off the response
@@ -886,14 +886,14 @@ every offender it lists is a file this change never touched.
 selects (teacher / subject / section) with nothing tying them to a real class.
 The consequence was concrete, not cosmetic — **`liveClassSchema` had no
 `timetableId` and `createLiveClass` never set one, so every dashboard-created
-session was invisible to `syncConferenceAttendance`** (which needs sectionId
+session was invisible to `syncLiveAttendance`** (which needs sectionId
 AND timetableId). Only the teacher's "Start live class" button produced an
 attendance-capable session. A school could hold all its classes online and
 record no attendance for any of them.
 
 - **The wizard now opens on the physical class.** Step 1 leads with a
   timetable-slot picker ("Mathematics · Grade 1-A · Sunday 08:00") sourced from
-  the active term via a new `getConferenceSlots` action — lazily, when the
+  the active term via a new `getLiveSlots` action — lazily, when the
   wizard opens, never as page props (a term's timetable is easily 1000+ rows).
   Break periods (`Period.isBreak`, never the name), unassigned slots and
   sectionless slots are excluded; a TEACHER sees only their own slots.
@@ -969,7 +969,7 @@ false`), `room.tsx` polls it via fetch. Refresh failures now discriminate:
   no-change always OK; `scheduled → cancelled|ended`; `live → ended` external
   only (LiveKit must go through `endLiveClass` for room/egress teardown);
   everything else `LIVE_CLASS_INVALID_STATE`; `actualEnd` stamped on end.
-  **Defense in depth:** `syncConferenceAttendance` now hard-guards
+  **Defense in depth:** `syncLiveAttendance` now hard-guards
   `provider === "livekit"` (its "no-op for external" comment was wrong — an
   external session has NO participant rows, so a sync = all-ABSENT).
 - **Unbounded perPage (HIGH):** `?perPage=999999999` reached Prisma `take`
@@ -997,7 +997,7 @@ false`), `room.tsx` polls it via fetch. Refresh failures now discriminate:
 - **Moderation ordering:** kick writes DB `removed` BEFORE the SFU evict —
   the old order could evict-then-fail and leave the row active (instant
   rejoin, moderation defeated). Failure mode now bounded by token TTL.
-- Smaller: `carryForwardConferenceLinks` → one `createMany({skipDuplicates})`
+- Smaller: `carryForwardLiveLinks` → one `createMany({skipDuplicates})`
   (real failures no longer mislabeled "skipped"); catalog lesson links on the
   detail page scheme-locked at render (`javascript:`/`data:` from weaker
   sibling schemas render as text); legacy `/live-classes/*` redirect is now
@@ -1109,7 +1109,7 @@ tests, 6 new for the attendance sync).
   gate, attaches `liveClass` via `attachLiveClasses`); `guardian-view.tsx` now
   loads it in parallel and renders `<LiveJoinButton>` on the Current/Next card.
 - **Attendance-from-conference (new, opt-in, LiveKit-only):**
-  `actions/attendance-sync.ts syncConferenceAttendance` marks each section
+  `actions/attendance-sync.ts syncLiveAttendance` marks each section
   student PRESENT/LATE from participant presence and ABSENT for roster
   non-joiners when a session ends. Called from the webhook `room_finished`
   (count-guarded) and a new `/api/cron/end-stale-live-classes` (`*/15`) backstop
@@ -1141,7 +1141,7 @@ and already has every key.
 - **Tenant scoping (P1/P3):** added `schoolId` to webhook `egress_ended` +
   participant updates + a cross-tenant pre-check on `egress_started`;
   `kickParticipant` now scopes the update + verifies the participant row;
-  `carryForwardConferenceLinks` validates both terms belong to the school.
+  `carryForwardLiveLinks` validates both terms belong to the school.
 - **State guards (P2):** webhook `room_started`/`room_finished` are now
   status-guarded `updateMany`s (no resurrecting ended/cancelled rows, no
   duplicate notify/egress); `endLiveClass` rejects scheduled/failed.
@@ -1190,7 +1190,7 @@ stricter per-section teacher scoping is wanted.
 - [x] Native provider adapters implemented (`providers/{google-meet,zoom,teams}`
       real OAuth + createMeeting) + wired into the create flow behind
       `isConfigured()` (ships dark until OAuth creds land).
-- [x] `stopEgress` wired into `endLiveClass`; `carryForwardConferenceLinks`
+- [x] `stopEgress` wired into `endLiveClass`; `carryForwardLiveLinks`
       exposed as an admin button on `/live/settings`.
 - [x] ~40 new tests (moderation panel, start button, protocol classifier,
       stop-egress, native providers via mocked fetch, webhook route,

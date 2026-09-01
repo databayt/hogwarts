@@ -58,7 +58,7 @@ export interface AttendanceRecord {
  * join URL (echoed for external, API-generated for natives); `getRecording` and
  * `getAttendance` pull real post-call signal where the provider exposes it.
  */
-export interface ConferenceProviderAdapter {
+export interface LiveProviderAdapter {
   readonly id: ProviderId
   /** Credentials/config present for this provider (mirrors isLiveKitConfigured). */
   isConfigured(): boolean

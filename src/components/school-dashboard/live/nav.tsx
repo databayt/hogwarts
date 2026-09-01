@@ -18,7 +18,7 @@ import { getTabsForRole } from "./list-permissions"
  * `conference/layout.tsx`, so `/live` itself keeps its own hero without
  * dashboard chrome stacked on top of it — the same split lumos uses.
  */
-export async function ConferenceSectionNav({ lang }: { lang: string }) {
+export async function LiveSectionNav({ lang }: { lang: string }) {
   const [dictionary, session] = await Promise.all([
     getDictionary(lang as Locale),
     auth(),

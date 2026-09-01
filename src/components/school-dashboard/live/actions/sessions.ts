@@ -29,9 +29,9 @@ import { DEFAULT_SCHOOL_TZ } from "../day-window"
 import {
   canAccessSession,
   concurrentCapError,
-  conferenceListRevalidatePaths,
-  conferenceRevalidatePath,
-  conferenceSessionRevalidatePaths,
+  liveListRevalidatePaths,
+  liveRevalidatePath,
+  liveSessionRevalidatePaths,
   requireContext,
 } from "./helpers"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
@@ -169,7 +169,7 @@ async function createLiveClassWithCtx(
     after(() => notifyClassScheduled(ctx.schoolId, session.id))
 
     after(() => prewarm("Conference", session, { schoolId: ctx.schoolId }))
-    for (const path of conferenceListRevalidatePaths()) {
+    for (const path of liveListRevalidatePaths()) {
       revalidatePath(path, "page")
     }
     return { success: true as const, data: session }
@@ -300,10 +300,10 @@ export async function cancelLiveClass(input: CancelInput) {
       notifyClassCancelled(ctx.schoolId, session.id, parsed.data.reason)
     )
 
-    for (const path of conferenceListRevalidatePaths()) {
+    for (const path of liveListRevalidatePaths()) {
       revalidatePath(path, "page")
     }
-    for (const path of conferenceSessionRevalidatePaths()) {
+    for (const path of liveSessionRevalidatePaths()) {
       revalidatePath(path, "page")
     }
     return { success: true as const, data: { id: session.id } }
@@ -366,10 +366,10 @@ export async function startLiveClass(input: IdOnly) {
       data: { status: "live", actualStart: new Date() },
     })
 
-    for (const path of conferenceListRevalidatePaths()) {
+    for (const path of liveListRevalidatePaths()) {
       revalidatePath(path, "page")
     }
-    for (const path of conferenceSessionRevalidatePaths()) {
+    for (const path of liveSessionRevalidatePaths()) {
       revalidatePath(path, "page")
     }
     return { success: true as const, data: { id: session.id } }
@@ -441,10 +441,10 @@ export async function endLiveClass(input: IdOnly) {
       data: { status: "ended", actualEnd: new Date() },
     })
 
-    for (const path of conferenceListRevalidatePaths()) {
+    for (const path of liveListRevalidatePaths()) {
       revalidatePath(path, "page")
     }
-    for (const path of conferenceSessionRevalidatePaths()) {
+    for (const path of liveSessionRevalidatePaths()) {
       revalidatePath(path, "page")
     }
     return { success: true as const, data: { id: session.id } }

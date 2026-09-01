@@ -120,7 +120,7 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
   `markPeriodAttendance` + `getCurrentPeriod`.
 - [Conference](../conference/CLAUDE.md) — `AttendanceMethod.VIRTUAL` (added
   2026-06-20) is written by conference `actions/attendance-sync.ts`
-  (`syncConferenceAttendance`) when a live class ends: section students present
+  (`syncLiveAttendance`) when a live class ends: section students present
   in the room → PRESENT/LATE, roster non-joiners → ABSENT. System context
   (`markedBy: null`), section unique key, same revive-on-update upsert as
   `markPeriodAttendance`. Opt-in (`School.conferenceAttendanceSync`) + LiveKit-only.

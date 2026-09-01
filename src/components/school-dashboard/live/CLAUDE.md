@@ -50,13 +50,13 @@ AWS S3 `me-central-1` with PDPL-configurable retention.
   read (`buildLiveClassWhere` OR, `listForStudent`/`listForGuardian`,
   content.tsx SSR). School-wide sessions notify ALL school users via the hub.
 - **A session is the online delivery of a REAL class**: the wizard's first
-  field is the timetable-slot picker (`getConferenceSlots` → the active term's
+  field is the timetable-slot picker (`getLiveSlots` → the active term's
   slots, break periods and unassigned/sectionless rows excluded; TEACHERs see
   only their own). When `timetableId` is submitted the SLOT IS AUTHORITATIVE —
   the server re-derives teacher/subject/section from the slot row and ignores
   the client's copies, mirroring `createLiveClassFromTimetable` so the two
   entry points can't disagree. That anchor is what makes a session
-  attendance-capable (`syncConferenceAttendance` needs sectionId + timetableId)
+  attendance-capable (`syncLiveAttendance` needs sectionId + timetableId)
   and what lights the slot up on the weekly grid (`getLiveClassIndicators` keys
   on `timetableId`). Sessions with no slot stay possible — assemblies, town
   halls, one-off tutorials. The anchor is IMMUTABLE on edit (like `provider`):
@@ -151,7 +151,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   dispatched via `after()` from `next/server` in actions, the webhook, and the
   end-stale cron — never a bare `void`. A dangling promise is not guaranteed to
   execute once the response is sent (the platform may freeze the function), and
-  `syncConferenceAttendance` had NO other trigger: the webhook `room_finished`
+  `syncLiveAttendance` had NO other trigger: the webhook `room_finished`
   path and its backstop cron were both `void`, so opt-in attendance could
   silently never be written. Failures must never roll back the underlying state
   transition — `after()` preserves that (its callback runs off the response path
@@ -178,7 +178,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   is the CRUD gate for the dashboard table + external-link sessions. They diverge
   deliberately (list `WRITE_ROLES` is broader). Don't collapse them.
 - **Provider abstraction**: link providers live in `providers/` behind a single
-  `ConferenceProviderAdapter`. `external` is the floor; natives create real
+  `LiveProviderAdapter`. `external` is the floor; natives create real
   meetings via vendor APIs but persist as `provider="external"` +
   `meetingProvider="<id>"` → **no enum migration**. LiveKit's SFU lifecycle is
   intentionally OUTSIDE this layer (room-based, not link-based).
@@ -269,7 +269,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   external session IS its link. Before the fallback, every (section, subject)
   without a `ConferenceLink` was skipped with `no_link` into a cron log, so a
   school that flipped online overnight materialized NOTHING and had no way to
-  find out. `getConferenceLinkCoverage` now names the uncovered pairs on
+  find out. `getLiveLinkCoverage` now names the uncovered pairs on
   `/live/settings`. It is ONE SHARED ROOM across every pair that falls
   back to it — say so in any copy you write; per-section links stay the private
   option.
@@ -370,7 +370,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
 `School.conferenceDeliveryMode` — physical / online / hybrid — is read FIRST by
 `effectivePolicy`. Never branch on `conferenceOnlineDefault` outside hybrid;
 never write `conferenceOnlineDefault` or the window except through
-`updateConferenceSettings`, which derives them from the mode. Any select that
+`updateLiveSettings`, which derives them from the mode. Any select that
 feeds the policy engine must include `conferenceDeliveryMode`
 (`ONLINE_POLICY_SELECT` does). The settings UI is ONE server component
 (`settings-panel.tsx`) mounted from both `/live/settings` and
@@ -513,7 +513,7 @@ Rejoin). Everything inside the call is `room/`:
   BLENDED path — a real cuid inside an otherwise-bracketed route — matches no
   cache tag at all, even with `"page"`: Next registers a page under its route
   PATTERN or its concrete URL, never a mix. Use
-  `conferenceSessionRevalidatePaths()` (helpers.ts); it is coarser by
+  `liveSessionRevalidatePaths()` (helpers.ts); it is coarser by
   construction (all sessions share one tag) and that is the trade Next offers.
 - **Schedule ordering + the duration cap are enforced on UPDATE too**, against
   the EFFECTIVE boundaries (the supplied half merged with the stored one) —
@@ -530,18 +530,18 @@ Rejoin). Everything inside the call is `room/`:
   (room + concurrent cap); a LiveKit `live → ended` must go through
   `endLiveClass` (stops egress, tears down the room). Everything else is
   `LIVE_CLASS_INVALID_STATE` — never let a CRUD surface resurrect rows.
-- **Attendance sync is provider-guarded**: `syncConferenceAttendance` skips
+- **Attendance sync is provider-guarded**: `syncLiveAttendance` skips
   `provider !== "livekit"` — an external session has NO participant rows, so
   syncing one marks the entire roster ABSENT. Keep the guard even though
   external sessions "shouldn't" reach `ended` via the cron.
-- **`revalidatePath` needs `"page"`**: `conferenceRevalidatePath()` returns a
+- **`revalidatePath` needs `"page"`**: `liveRevalidatePath()` returns a
   bracketed dynamic path, which Next silently ignores without the second
-  argument. Every call site is `revalidatePath(conferenceRevalidatePath(…), "page")`.
+  argument. Every call site is `revalidatePath(liveRevalidatePath(…), "page")`.
 - **The session list lives on TWO pages, so mutations revalidate both.**
   `/live` is the landing page (hero + the live/coming-up strip) and
-  `/live/dashboard` is the table. `conferenceListRevalidatePaths()`
+  `/live/dashboard` is the table. `liveListRevalidatePaths()`
   (helpers.ts) returns both; every mutating action loops it rather than calling
-  `conferenceRevalidatePath()` bare, which would leave one of the two stale.
+  `liveRevalidatePath()` bare, which would leave one of the two stale.
   The dashboard sits inside the `(app)` route GROUP, and a route group
   contributes no URL segment — so the path is `…/live/dashboard`, NOT
   `…/live/(app)/dashboard`, which matches no cache tag at all.
@@ -615,7 +615,7 @@ Rejoin). Everything inside the call is `room/`:
   external meeting carries no presence and silence read as "handled" right up
   until the register was empty. This is the common case for an emergency
   school. `actions/attendance-sync.ts`
-  `syncConferenceAttendance` writes `Attendance` (method `VIRTUAL`) from
+  `syncLiveAttendance` writes `Attendance` (method `VIRTUAL`) from
   participant presence on `room_finished` + the `end-stale-live-classes` cron.
   **Opt-in** per-school (`School.conferenceAttendanceSync`), **LiveKit-only**
   (external links carry no presence), requires `sectionId` + `timetableId`,

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { syncConferenceAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
+import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
 import { GET } from "@/app/api/cron/end-stale-live-classes/route"
 
 vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))
@@ -17,7 +17,7 @@ vi.mock("@/lib/db", () => ({
 vi.mock(
   "@/components/school-dashboard/live/actions/attendance-sync",
   () => ({
-    syncConferenceAttendance: vi.fn(async () => ({ marked: 0, updated: 0 })),
+    syncLiveAttendance: vi.fn(async () => ({ marked: 0, updated: 0 })),
   })
 )
 
@@ -81,9 +81,9 @@ describe("end-stale-live-classes cron — close + sync", () => {
         data: expect.objectContaining({ status: "ended" }),
       })
     )
-    expect(syncConferenceAttendance).toHaveBeenCalledTimes(2)
-    expect(syncConferenceAttendance).toHaveBeenCalledWith("school-1", "lcs-1")
-    expect(syncConferenceAttendance).toHaveBeenCalledWith("school-2", "lcs-2")
+    expect(syncLiveAttendance).toHaveBeenCalledTimes(2)
+    expect(syncLiveAttendance).toHaveBeenCalledWith("school-1", "lcs-1")
+    expect(syncLiveAttendance).toHaveBeenCalledWith("school-2", "lcs-2")
   })
 
   it("does not sync a session another worker already closed (count 0)", async () => {
@@ -96,6 +96,6 @@ describe("end-stale-live-classes cron — close + sync", () => {
     const body = (await res.json()) as { ended: number }
 
     expect(body.ended).toBe(0)
-    expect(syncConferenceAttendance).not.toHaveBeenCalled()
+    expect(syncLiveAttendance).not.toHaveBeenCalled()
   })
 })

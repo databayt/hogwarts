@@ -6,12 +6,12 @@
 // universal zero-infra default; it is fully functional today.
 
 import type {
-  ConferenceProviderAdapter,
+  LiveProviderAdapter,
   CreateMeetingInput,
   MeetingResult,
 } from "./types"
 
-export const externalAdapter: ConferenceProviderAdapter = {
+export const externalAdapter: LiveProviderAdapter = {
   id: "external",
   isConfigured: () => true,
 

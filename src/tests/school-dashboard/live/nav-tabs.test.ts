@@ -11,10 +11,10 @@ import { describe, expect, it } from "vitest"
 
 import {
   getTabsForRole,
-  type ConferenceNavDictionary,
+  type LiveNavDictionary,
 } from "@/components/school-dashboard/live/list-permissions"
 
-const dict: ConferenceNavDictionary = {
+const dict: LiveNavDictionary = {
   tabs: {
     sessions: "Sessions",
     schedule: "Schedule",

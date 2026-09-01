@@ -86,7 +86,7 @@ export const LIVE_CLASS_STATUS_VALUES = [
   "failed",
 ] as const
 
-export type ConferenceStatusValue = (typeof LIVE_CLASS_STATUS_VALUES)[number]
+export type LiveStatusValue = (typeof LIVE_CLASS_STATUS_VALUES)[number]
 
 // Meeting back-end for a session. `livekit` = built-in in-app room (no URL —
 // the room is provisioned on start and joined via /live/[id]/room);
@@ -100,14 +100,14 @@ export const LIVE_CLASS_ONLINE_MODE_VALUES = [
   "both",
 ] as const
 export type LiveClassOnlineMode = (typeof LIVE_CLASS_ONLINE_MODE_VALUES)[number]
-export type ConferenceProviderValue =
+export type LiveProviderValue =
   (typeof LIVE_CLASS_PROVIDER_VALUES)[number]
 
 // Who inside the school can see & join. `section` = the session's section
 // roster + their guardians (host-only when no section); `school` = every
 // member of the school. Never cross-school — the tenant boundary is absolute.
 export const LIVE_CLASS_VISIBILITY_VALUES = ["section", "school"] as const
-export type ConferenceVisibilityValue =
+export type LiveVisibilityValue =
   (typeof LIVE_CLASS_VISIBILITY_VALUES)[number]
 
 // ---------------------------------------------------------------------------

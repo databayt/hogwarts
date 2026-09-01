@@ -16,7 +16,7 @@
 // Nothing downstream needs to learn a new concept.
 //
 // Two consequences of being slot-less, both intentional:
-//   - no `timetableId` ⇒ `syncConferenceAttendance` skips it. An open room is
+//   - no `timetableId` ⇒ `syncLiveAttendance` skips it. An open room is
 //     not a period, so it cannot write period attendance. Teachers mark
 //     attendance for the period as they always would.
 //   - no `subjectId` ⇒ `ConferenceLink` (keyed on subject) cannot supply a

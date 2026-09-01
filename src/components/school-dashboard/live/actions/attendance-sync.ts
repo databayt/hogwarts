@@ -73,7 +73,7 @@ export function connectedSeconds(p: Presence, now: Date): number {
   return Math.max(0, Math.floor((end.getTime() - p.joinedAt.getTime()) / 1000))
 }
 
-export async function syncConferenceAttendance(
+export async function syncLiveAttendance(
   schoolId: string,
   sessionId: string
 ): Promise<{ marked: number; updated: number; skipped?: string }> {
@@ -281,7 +281,7 @@ export async function syncConferenceAttendance(
 
     return { marked, updated }
   } catch (err) {
-    console.error("[conference] syncConferenceAttendance failed", {
+    console.error("[conference] syncLiveAttendance failed", {
       schoolId,
       sessionId,
       err: err instanceof Error ? err.message : err,
@@ -292,7 +292,7 @@ export async function syncConferenceAttendance(
 
 /**
  * Why a session will — or will not — have its attendance written from
- * presence. The exact conditions `syncConferenceAttendance` checks above,
+ * presence. The exact conditions `syncLiveAttendance` checks above,
  * factored out so the session detail page can TELL the teacher instead of
  * leaving them to discover it after the class.
  *

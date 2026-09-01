@@ -11,14 +11,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { requireContext } from "@/components/school-dashboard/live/actions/helpers"
-import { updateConferenceSettings } from "@/components/school-dashboard/live/actions/settings"
+import { updateLiveSettings } from "@/components/school-dashboard/live/actions/settings"
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("next/server", () => ({ after: (fn: () => unknown) => void fn() }))
 vi.mock("@/components/school-dashboard/live/actions/helpers", () => ({
   requireContext: vi.fn(),
-  conferenceRevalidatePath: (s: string) => `/x/${s}`,
-  conferenceListRevalidatePaths: () => [],
+  liveRevalidatePath: (s: string) => `/x/${s}`,
+  liveListRevalidatePaths: () => [],
 }))
 vi.mock(
   "@/components/school-dashboard/live/actions/materialize-day",
@@ -66,9 +66,9 @@ beforeEach(() => {
   mUpdate.mockResolvedValue({})
 })
 
-describe("updateConferenceSettings — delivery mode as the source of truth", () => {
+describe("updateLiveSettings — delivery mode as the source of truth", () => {
   it("physical clears the window and forces the school switch off, whatever the form sent", async () => {
-    const r = await updateConferenceSettings({
+    const r = await updateLiveSettings({
       ...base,
       conferenceDeliveryMode: "physical",
       conferenceOnlineDefault: true,
@@ -85,7 +85,7 @@ describe("updateConferenceSettings — delivery mode as the source of truth", ()
   })
 
   it("online forces the school switch on", async () => {
-    await updateConferenceSettings({
+    await updateLiveSettings({
       ...base,
       conferenceDeliveryMode: "online",
       conferenceOnlineDefault: false,
@@ -97,7 +97,7 @@ describe("updateConferenceSettings — delivery mode as the source of truth", ()
   })
 
   it("hybrid keeps the admin's default and the window, converted through the school timezone", async () => {
-    await updateConferenceSettings({
+    await updateLiveSettings({
       ...base,
       conferenceDeliveryMode: "hybrid",
       conferenceOnlineDefault: false,
@@ -111,7 +111,7 @@ describe("updateConferenceSettings — delivery mode as the source of truth", ()
   })
 
   it("stores the attendance thresholds and rejects an absurd one", async () => {
-    await updateConferenceSettings({
+    await updateLiveSettings({
       ...base,
       conferenceDeliveryMode: "hybrid",
       conferenceLateGraceMinutes: 15,
@@ -123,7 +123,7 @@ describe("updateConferenceSettings — delivery mode as the source of truth", ()
       conferenceMinPresenceMinutes: 8,
       conferenceEarlyLeaveMinutes: 5,
     })
-    const bad = await updateConferenceSettings({
+    const bad = await updateLiveSettings({
       ...base,
       conferenceDeliveryMode: "hybrid",
       conferenceLateGraceMinutes: 999,
@@ -132,7 +132,7 @@ describe("updateConferenceSettings — delivery mode as the source of truth", ()
   })
 
   it("stores the configuration options and trims the consent note", async () => {
-    await updateConferenceSettings({
+    await updateLiveSettings({
       ...base,
       conferenceDeliveryMode: "hybrid",
       conferenceRecordingConsentNote: "  يُسجَّل هذا الدرس  ",
@@ -152,7 +152,7 @@ describe("updateConferenceSettings — delivery mode as the source of truth", ()
       conferenceToolStudentShare: true,
       conferenceReminderLeadMinutes: 30,
     })
-    const bad = await updateConferenceSettings({
+    const bad = await updateLiveSettings({
       ...base,
       conferenceDeliveryMode: "hybrid",
       conferenceReminderLeadMinutes: 0,

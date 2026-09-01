@@ -27,7 +27,7 @@ export const liveClassStatusEnum = z.enum([
   "cancelled",
   "failed",
 ])
-export type ConferenceStatusInput = z.infer<typeof liveClassStatusEnum>
+export type LiveStatusInput = z.infer<typeof liveClassStatusEnum>
 
 export const conferenceParticipantRoleEnum = z.enum([
   "HOST",
@@ -35,7 +35,7 @@ export const conferenceParticipantRoleEnum = z.enum([
   "PARTICIPANT",
   "OBSERVER",
 ])
-export type ConferenceParticipantRoleInput = z.infer<
+export type LiveParticipantRoleInput = z.infer<
   typeof conferenceParticipantRoleEnum
 >
 

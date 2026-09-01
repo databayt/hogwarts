@@ -587,7 +587,7 @@ larger edit than the fixes were.
       no-op.** Fixed 2026-08-13 across all 13 lumos call sites — see the close
       log. Still open OUTSIDE this block: `finance/receipt/actions.ts` (5),
       `finance/banking/actions/bank.actions.ts` (2), `school/bulk/actions.ts`.
-      **Cross-block, worth someone's attention:** `conferenceRevalidatePath()`
+      **Cross-block, worth someone's attention:** `liveRevalidatePath()`
       passes `"page"` correctly, but when called WITH a session id it produces
       the blended form (`/[lang]/s/[subdomain]/live/<uuid>`) that matches
       no cache tag — so the per-session half of those calls is still a no-op.

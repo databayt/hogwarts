@@ -6,21 +6,21 @@
 import { externalAdapter } from "./external"
 import { googleMeetAdapter } from "./google-meet"
 import { teamsAdapter } from "./teams"
-import type { ConferenceProviderAdapter, ProviderId } from "./types"
+import type { LiveProviderAdapter, ProviderId } from "./types"
 import { zoomAdapter } from "./zoom"
 
-const ADAPTERS: Record<ProviderId, ConferenceProviderAdapter> = {
+const ADAPTERS: Record<ProviderId, LiveProviderAdapter> = {
   external: externalAdapter,
   google_meet: googleMeetAdapter,
   zoom: zoomAdapter,
   teams: teamsAdapter,
 }
 
-export function getProviderAdapter(id: ProviderId): ConferenceProviderAdapter {
+export function getProviderAdapter(id: ProviderId): LiveProviderAdapter {
   return ADAPTERS[id]
 }
 
-export function listProviderAdapters(): ConferenceProviderAdapter[] {
+export function listProviderAdapters(): LiveProviderAdapter[] {
   return Object.values(ADAPTERS)
 }
 

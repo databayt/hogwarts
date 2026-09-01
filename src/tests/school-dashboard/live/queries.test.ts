@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import {
-  getConferenceSlotOptions,
+  getLiveSlotOptions,
   getLiveClassFormOptions,
   getLiveClassReferenceData,
   SLOT_OPTION_CAP,
@@ -33,13 +33,13 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe("getConferenceSlotOptions", () => {
+describe("getLiveSlotOptions", () => {
   beforeEach(() => {
     vi.mocked(db.timetable.findMany).mockResolvedValue([] as never)
   })
 
   it("offers only real teachable slots — no breaks, no unassigned, no sectionless", async () => {
-    await getConferenceSlotOptions(SCHOOL, "term-1")
+    await getLiveSlotOptions(SCHOOL, "term-1")
     const args = vi.mocked(db.timetable.findMany).mock.calls[0][0] as {
       where: Record<string, unknown>
     }
@@ -55,7 +55,7 @@ describe("getConferenceSlotOptions", () => {
   })
 
   it("scopes to one teacher's own slots when a teacherId is given", async () => {
-    await getConferenceSlotOptions(SCHOOL, "term-1", "t-1")
+    await getLiveSlotOptions(SCHOOL, "term-1", "t-1")
     const args = vi.mocked(db.timetable.findMany).mock.calls[0][0] as {
       where: { teacherId: unknown }
     }
@@ -85,7 +85,7 @@ describe("getConferenceSlotOptions", () => {
 
     const {
       slots: [slot],
-    } = await getConferenceSlotOptions(SCHOOL, "term-1")
+    } = await getLiveSlotOptions(SCHOOL, "term-1")
     expect(slot).toMatchObject({
       timetableId: "tt-1",
       startTime: "08:05",
@@ -115,7 +115,7 @@ describe("getConferenceSlotOptions", () => {
         },
       },
     ] as never)
-    expect(await getConferenceSlotOptions(SCHOOL, "term-1")).toEqual({
+    expect(await getLiveSlotOptions(SCHOOL, "term-1")).toEqual({
       slots: [],
       truncated: false,
     })
@@ -146,7 +146,7 @@ describe("getConferenceSlotOptions", () => {
     vi.mocked(db.timetable.findMany).mockResolvedValue(
       Array.from({ length: 840 }, (_, i) => row(i)) as never
     )
-    const ok = await getConferenceSlotOptions(SCHOOL, "term-1")
+    const ok = await getLiveSlotOptions(SCHOOL, "term-1")
     expect(ok.slots).toHaveLength(840)
     expect(ok.truncated).toBe(false)
 
@@ -154,7 +154,7 @@ describe("getConferenceSlotOptions", () => {
     vi.mocked(db.timetable.findMany).mockResolvedValue(
       Array.from({ length: SLOT_OPTION_CAP + 1 }, (_, i) => row(i)) as never
     )
-    const over = await getConferenceSlotOptions(SCHOOL, "term-1")
+    const over = await getLiveSlotOptions(SCHOOL, "term-1")
     expect(over.slots).toHaveLength(SLOT_OPTION_CAP)
     expect(over.truncated).toBe(true)
   })

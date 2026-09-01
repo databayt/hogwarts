@@ -12,7 +12,7 @@ import { getCachedToken } from "./token-cache"
 import {
   ProviderNotConfiguredError,
   ProviderNotImplementedError,
-  type ConferenceProviderAdapter,
+  type LiveProviderAdapter,
   type CreateMeetingInput,
   type MeetingResult,
 } from "./types"
@@ -51,7 +51,7 @@ async function getAccessToken(): Promise<string> {
   })
 }
 
-export const zoomAdapter: ConferenceProviderAdapter = {
+export const zoomAdapter: LiveProviderAdapter = {
   id: "zoom",
   isConfigured: configured,
 

@@ -22,10 +22,10 @@ export {
 } from "./actions/recordings"
 
 export {
-  getConferenceSettings,
-  updateConferenceSettings,
+  getLiveSettings,
+  updateLiveSettings,
 } from "./actions/settings"
 
 export { kickParticipant } from "./actions/moderation"
 
-export { carryForwardConferenceLinks } from "./actions/recurring"
+export { carryForwardLiveLinks } from "./actions/recurring"

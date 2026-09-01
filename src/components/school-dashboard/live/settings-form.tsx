@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { carryForwardConferenceLinks } from "@/components/school-dashboard/live/actions/recurring"
-import { updateConferenceSettings } from "@/components/school-dashboard/live/actions/settings"
+import { carryForwardLiveLinks } from "@/components/school-dashboard/live/actions/recurring"
+import { updateLiveSettings } from "@/components/school-dashboard/live/actions/settings"
 
-export interface ConferenceSettingsValues {
+export interface LiveSettingsValues {
   conferenceDeliveryMode: "physical" | "online" | "hybrid"
   conferenceLateGraceMinutes: number
   conferenceMinPresenceMinutes: number
@@ -41,8 +41,8 @@ export interface ConferenceSettingsValues {
   conferenceFallbackUrl: string
 }
 
-/** Link coverage for the active term — see `getConferenceLinkCoverage`. */
-export interface ConferenceLinkCoverage {
+/** Link coverage for the active term — see `getLiveLinkCoverage`. */
+export interface LiveLinkCoverage {
   total: number
   covered: number
   gapCount: number
@@ -51,7 +51,7 @@ export interface ConferenceLinkCoverage {
   truncated: boolean
 }
 
-export interface ConferenceTerm {
+export interface LiveTerm {
   id: string
   termNumber: number
   startDate: string | Date
@@ -59,8 +59,8 @@ export interface ConferenceTerm {
 }
 
 interface Props {
-  initial: ConferenceSettingsValues
-  terms: ConferenceTerm[]
+  initial: LiveSettingsValues
+  terms: LiveTerm[]
   /**
    * Whether the SFU is actually provisioned. The school's provider preference
    * is stored either way; this only drives the hint, mirroring how the create
@@ -75,7 +75,7 @@ interface Props {
    * is not the school's, and a window is day-granular.
    */
   windowActive: boolean
-  coverage: ConferenceLinkCoverage | null
+  coverage: LiveLinkCoverage | null
   labels: {
     deliveryMode: string
     deliveryHint: string
@@ -165,7 +165,7 @@ interface Props {
   }
 }
 
-export function ConferenceSettingsForm({
+export function LiveSettingsForm({
   initial,
   terms,
   livekitReady,
@@ -174,7 +174,7 @@ export function ConferenceSettingsForm({
   coverage,
   labels,
 }: Props) {
-  const [values, setValues] = useState<ConferenceSettingsValues>(initial)
+  const [values, setValues] = useState<LiveSettingsValues>(initial)
   const [pending, startTransition] = useTransition()
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle")
 
@@ -185,7 +185,7 @@ export function ConferenceSettingsForm({
   const [cfMessage, setCfMessage] = useState<string | null>(null)
   const [cfError, setCfError] = useState(false)
 
-  const termOption = (t: ConferenceTerm) =>
+  const termOption = (t: LiveTerm) =>
     `${labels.carryForward.termPrefix} ${t.termNumber} · ${new Date(
       t.startDate
     ).getUTCFullYear()}`
@@ -195,7 +195,7 @@ export function ConferenceSettingsForm({
     setCfMessage(null)
     setCfError(false)
     startCarryForward(async () => {
-      const res = await carryForwardConferenceLinks(cfFrom, cfTo)
+      const res = await carryForwardLiveLinks(cfFrom, cfTo)
       if ("success" in res && res.success) {
         setCfMessage(
           labels.carryForward.success.replace(
@@ -210,12 +210,12 @@ export function ConferenceSettingsForm({
     })
   }
 
-  function setNum(key: keyof ConferenceSettingsValues, raw: string) {
+  function setNum(key: keyof LiveSettingsValues, raw: string) {
     setStatus("idle")
     setValues((v) => ({ ...v, [key]: Number(raw) }))
   }
 
-  function setText(key: keyof ConferenceSettingsValues, raw: string) {
+  function setText(key: keyof LiveSettingsValues, raw: string) {
     setStatus("idle")
     setValues((v) => ({ ...v, [key]: raw }))
   }
@@ -247,7 +247,7 @@ export function ConferenceSettingsForm({
       // (`timezone`, `livekitReady`, `windowActive`). That is safe only because
       // `liveClassSettingsSchema` is a plain z.object, which STRIPS unknown
       // keys — adding `.strict()` to it would start rejecting every save.
-      const res = await updateConferenceSettings(values)
+      const res = await updateLiveSettings(values)
       setStatus("success" in res && res.success ? "saved" : "error")
     })
   }

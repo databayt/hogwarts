@@ -22,8 +22,8 @@ import { prewarm } from "@/components/translation/prewarm"
 import { detectLang, withLang } from "@/components/translation/util"
 
 import {
-  conferenceListRevalidatePaths,
-  conferenceRevalidatePath,
+  liveListRevalidatePaths,
+  liveRevalidatePath,
 } from "./actions/helpers"
 import {
   notifyClassCancelled,
@@ -43,12 +43,12 @@ import { isLiveKitConfigured } from "./livekit/client"
 import { roomNameFor } from "./livekit/room-naming"
 import { getProviderAdapter, type ProviderId } from "./providers"
 import {
-  getConferenceSlotOptions,
+  getLiveSlotOptions,
   getLiveClassDetail,
   getLiveClassesList,
   getLiveClassReferenceData,
   resolveViewerSectionScope,
-  type ConferenceSlotOption,
+  type LiveSlotOption,
   type LiveClassReferenceData,
 } from "./queries"
 
@@ -377,8 +377,8 @@ export async function getLiveClassReferenceOptions(params: {
  * term's timetable is easily 1000+ rows and would bloat every /live
  * load). TEACHERs see only their own slots; staff see the whole schedule.
  */
-export async function getConferenceSlots(): Promise<
-  ActionResponse<ConferenceSlotOption[]>
+export async function getLiveSlots(): Promise<
+  ActionResponse<LiveSlotOption[]>
 > {
   try {
     const session = await auth()
@@ -407,7 +407,7 @@ export async function getConferenceSlots(): Promise<
       ownTeacherId = teacher.id
     }
 
-    const { slots, truncated } = await getConferenceSlotOptions(
+    const { slots, truncated } = await getLiveSlotOptions(
       schoolId,
       term.id,
       ownTeacherId
@@ -415,7 +415,7 @@ export async function getConferenceSlots(): Promise<
     if (truncated) {
       // Never truncate silently — a wizard that quietly omits half the week
       // looks like a school with half a timetable.
-      console.warn("[getConferenceSlots] slot options truncated", {
+      console.warn("[getLiveSlots] slot options truncated", {
         schoolId,
         termId: term.id,
         returned: slots.length,
@@ -423,7 +423,7 @@ export async function getConferenceSlots(): Promise<
     }
     return { success: true, data: slots }
   } catch (error) {
-    console.error("[getConferenceSlots]", error)
+    console.error("[getLiveSlots]", error)
     return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
@@ -761,7 +761,7 @@ export async function createLiveClass(
     // never fail the create.
     after(() => notifyClassScheduled(schoolId, created.id))
 
-    for (const path of conferenceListRevalidatePaths()) {
+    for (const path of liveListRevalidatePaths()) {
       revalidatePath(path, "page")
     }
     revalidatePath("/[lang]/s/[subdomain]/timetable", "page")
@@ -1004,7 +1004,7 @@ export async function updateLiveClass(
       after(() => notifyClassScheduled(schoolId, d.id))
     }
 
-    for (const path of conferenceListRevalidatePaths()) {
+    for (const path of liveListRevalidatePaths()) {
       revalidatePath(path, "page")
     }
     return { success: true, data: null }
@@ -1040,7 +1040,7 @@ export async function deleteLiveClass(params: {
     // {id, schoolId} without a deletedAt filter, so it still works post-delete.
     after(() => notifyClassCancelled(schoolId, params.id))
 
-    for (const path of conferenceListRevalidatePaths()) {
+    for (const path of liveListRevalidatePaths()) {
       revalidatePath(path, "page")
     }
     return { success: true, data: null }

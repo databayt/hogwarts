@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import {
   connectedSeconds,
-  syncConferenceAttendance,
+  syncLiveAttendance,
 } from "@/components/school-dashboard/live/actions/attendance-sync"
 
 vi.mock("@/lib/db", () => ({
@@ -81,7 +81,7 @@ function happySession() {
   mockDb.attendance.findMany.mockResolvedValue([])
 }
 
-describe("syncConferenceAttendance", () => {
+describe("syncLiveAttendance", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // $transaction runs the callback with a tx exposing the attendance writers.
@@ -105,7 +105,7 @@ describe("syncConferenceAttendance", () => {
       actualStart: null,
       school: { conferenceAttendanceSync: false },
     })
-    const res = await syncConferenceAttendance("school1", "c1")
+    const res = await syncLiveAttendance("school1", "c1")
     expect(res.skipped).toBe("disabled")
     expect(mockDb.student.findMany).not.toHaveBeenCalled()
   })
@@ -121,7 +121,7 @@ describe("syncConferenceAttendance", () => {
       actualStart: null,
       school: { conferenceAttendanceSync: true },
     })
-    const res = await syncConferenceAttendance("school1", "c1")
+    const res = await syncLiveAttendance("school1", "c1")
     expect(res.skipped).toBe("external_provider")
     expect(mockDb.student.findMany).not.toHaveBeenCalled()
     expect(mockDb.attendance.createMany).not.toHaveBeenCalled()
@@ -138,7 +138,7 @@ describe("syncConferenceAttendance", () => {
       actualStart: null,
       school: { conferenceAttendanceSync: true },
     })
-    const res = await syncConferenceAttendance("school1", "c1")
+    const res = await syncLiveAttendance("school1", "c1")
     expect(res.skipped).toBe("no_section_or_timetable")
   })
 
@@ -158,13 +158,13 @@ describe("syncConferenceAttendance", () => {
       period: { name: "P1" },
     })
     mockDb.student.findMany.mockResolvedValue([])
-    const res = await syncConferenceAttendance("school1", "c1")
+    const res = await syncLiveAttendance("school1", "c1")
     expect(res.skipped).toBe("empty_roster")
   })
 
   it("derives PRESENT / LATE / ABSENT from participant presence", async () => {
     happySession()
-    const res = await syncConferenceAttendance("school1", "c1")
+    const res = await syncLiveAttendance("school1", "c1")
 
     expect(res).toEqual({ marked: 3, updated: 0 })
     expect(mockDb.attendance.createMany).toHaveBeenCalledTimes(1)
@@ -208,7 +208,7 @@ describe("syncConferenceAttendance", () => {
       },
     ])
 
-    await syncConferenceAttendance("school1", "c1")
+    await syncLiveAttendance("school1", "c1")
     const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
       Record<string, unknown>
     >
@@ -227,7 +227,7 @@ describe("syncConferenceAttendance", () => {
       { id: "att-A", studentId: "sA" },
     ])
 
-    const res = await syncConferenceAttendance("school1", "c1")
+    const res = await syncLiveAttendance("school1", "c1")
 
     expect(res).toEqual({ marked: 2, updated: 1 })
     expect(mockDb.attendance.update).toHaveBeenCalledWith(
@@ -260,7 +260,7 @@ describe("syncConferenceAttendance", () => {
       actualStart: new Date("2026-06-19T08:15:00.000Z"),
       school: { conferenceAttendanceSync: true },
     })
-    await syncConferenceAttendance("school1", "c1")
+    await syncLiveAttendance("school1", "c1")
     const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
       Record<string, unknown>
     >
@@ -272,7 +272,7 @@ describe("syncConferenceAttendance", () => {
   })
 })
 
-describe("syncConferenceAttendance — presence across reconnects", () => {
+describe("syncLiveAttendance — presence across reconnects", () => {
   it("counts every span, not just the last one — a drop and rejoin keeps earlier presence", async () => {
     happySession()
     mockDb.conferenceParticipant.findMany.mockResolvedValue([
@@ -285,7 +285,7 @@ describe("syncConferenceAttendance — presence across reconnects", () => {
         activeSince: new Date(Date.now() - 3 * 60_000),
       },
     ] as never)
-    await syncConferenceAttendance("school1", "c1")
+    await syncLiveAttendance("school1", "c1")
     const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
       Record<string, unknown>
     >
@@ -308,7 +308,7 @@ describe("syncConferenceAttendance — presence across reconnects", () => {
         activeSince: null,
       },
     ] as never)
-    await syncConferenceAttendance("school1", "c1")
+    await syncLiveAttendance("school1", "c1")
     const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
       Record<string, unknown>
     >
@@ -330,7 +330,7 @@ describe("syncConferenceAttendance — presence across reconnects", () => {
         activeSince: null,
       },
     ] as never)
-    await syncConferenceAttendance("school1", "c1")
+    await syncLiveAttendance("school1", "c1")
     const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
       Record<string, unknown>
     >

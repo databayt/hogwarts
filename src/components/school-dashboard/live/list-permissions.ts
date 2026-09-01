@@ -15,7 +15,7 @@ import type { PageNavItem } from "@/components/atom/page-nav"
 const WRITE_ROLES: readonly Role[] = ["STAFF", "TEACHER"] as const
 
 /** Shape of the slice of the conference dictionary the tab labels read. */
-export interface ConferenceNavDictionary {
+export interface LiveNavDictionary {
   tabs?: {
     sessions?: string
     schedule?: string
@@ -37,7 +37,7 @@ export interface ConferenceNavDictionary {
 export function getTabsForRole(
   role: Role | null | undefined,
   lang: string,
-  d?: ConferenceNavDictionary
+  d?: LiveNavDictionary
 ): PageNavItem[] {
   if (!role) return []
 

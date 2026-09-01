@@ -3,7 +3,7 @@
 
 import { ReactNode } from "react"
 
-import { ConferenceSectionNav } from "@/components/school-dashboard/live/nav"
+import { LiveSectionNav } from "@/components/school-dashboard/live/nav"
 
 interface Props {
   children: ReactNode
@@ -24,7 +24,7 @@ export default async function ConferenceAppLayout({ children, params }: Props) {
 
   return (
     <div className="space-y-6">
-      <ConferenceSectionNav lang={lang} />
+      <LiveSectionNav lang={lang} />
       {children}
     </div>
   )

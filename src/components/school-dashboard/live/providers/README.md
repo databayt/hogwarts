@@ -22,7 +22,7 @@ whether each provider's env is present, so the UI can show/hide a provider witho
 ## The interface (`types.ts`)
 
 ```ts
-interface ConferenceProviderAdapter {
+interface LiveProviderAdapter {
   id: ProviderId
   isConfigured(): boolean
   createMeeting(input): Promise<MeetingResult> // join URL (echoed / API-generated)

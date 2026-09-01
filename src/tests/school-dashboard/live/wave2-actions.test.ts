@@ -10,8 +10,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { kickParticipant } from "@/components/school-dashboard/live/actions/moderation"
-import { carryForwardConferenceLinks } from "@/components/school-dashboard/live/actions/recurring"
-import { updateConferenceSettings } from "@/components/school-dashboard/live/actions/settings"
+import { carryForwardLiveLinks } from "@/components/school-dashboard/live/actions/recurring"
+import { updateLiveSettings } from "@/components/school-dashboard/live/actions/settings"
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
@@ -47,7 +47,7 @@ beforeEach(() => {
   isLiveKitConfigured.mockReturnValue(true)
 })
 
-describe("updateConferenceSettings", () => {
+describe("updateLiveSettings", () => {
   const valid = {
     conferenceRetentionDays: 60,
     conferenceMaxConcurrent: 30,
@@ -58,7 +58,7 @@ describe("updateConferenceSettings", () => {
   it("ADMIN with valid input → updates the school row", async () => {
     asRole("ADMIN")
     vi.mocked(db.school.update).mockResolvedValue({} as never)
-    const res = await updateConferenceSettings(valid)
+    const res = await updateLiveSettings(valid)
     expect("success" in res && res.success).toBe(true)
     expect(db.school.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -76,7 +76,7 @@ describe("updateConferenceSettings", () => {
     // start is meaningless and must not linger.
     asRole("ADMIN")
     vi.mocked(db.school.update).mockResolvedValue({} as never)
-    await updateConferenceSettings({
+    await updateLiveSettings({
       ...valid,
       conferenceOnlineFrom: "",
       conferenceOnlineUntil: "2026-03-20",
@@ -97,7 +97,7 @@ describe("updateConferenceSettings", () => {
     // window by a day.
     asRole("ADMIN")
     vi.mocked(db.school.update).mockResolvedValue({} as never)
-    await updateConferenceSettings({
+    await updateLiveSettings({
       ...valid,
       conferenceOnlineFrom: "2026-03-10",
     })
@@ -119,7 +119,7 @@ describe("updateConferenceSettings", () => {
 
   it("invalid input (out of range) → VALIDATION_ERROR, no write", async () => {
     asRole("ADMIN")
-    const res = await updateConferenceSettings({
+    const res = await updateLiveSettings({
       ...valid,
       conferenceMaxDuration: 9999,
     })
@@ -129,7 +129,7 @@ describe("updateConferenceSettings", () => {
 
   it("STUDENT → unauthorized, no write", async () => {
     asRole("STUDENT")
-    const res = await updateConferenceSettings(valid)
+    const res = await updateLiveSettings(valid)
     expect("success" in res && res.success).toBe(false)
     expect(db.school.update).not.toHaveBeenCalled()
   })
@@ -181,7 +181,7 @@ describe("kickParticipant", () => {
   })
 })
 
-describe("carryForwardConferenceLinks", () => {
+describe("carryForwardLiveLinks", () => {
   it("clones links to the next term, skipping ones that already exist", async () => {
     asRole("ADMIN")
     // Both terms must resolve to this school before the clone proceeds.
@@ -208,7 +208,7 @@ describe("carryForwardConferenceLinks", () => {
       count: 1,
     } as never)
 
-    const res = await carryForwardConferenceLinks("term-1", "term-2")
+    const res = await carryForwardLiveLinks("term-1", "term-2")
     expect("success" in res && res.success).toBe(true)
     if ("success" in res && res.success) {
       expect(res.data.created).toBe(1) // only su2/se2 (su1/se1 already exists)
@@ -225,7 +225,7 @@ describe("carryForwardConferenceLinks", () => {
 
   it("same from/to term → VALIDATION_ERROR", async () => {
     asRole("ADMIN")
-    const res = await carryForwardConferenceLinks("term-1", "term-1")
+    const res = await carryForwardLiveLinks("term-1", "term-1")
     expect("success" in res && res.success).toBe(false)
     expect(db.conferenceLink.findMany).not.toHaveBeenCalled()
   })
