@@ -127,10 +127,23 @@ export default async function Page({ params }: Props) {
         const now = new Date()
         const timeZone = school?.timezone || DEFAULT_SCHOOL_TZ
         const sectionIds = scope === "all" ? undefined : scope.sectionIds
+
         // A teacher is staff, so the scope above hands them the whole school.
         // Right for the strip; the hero wants their OWN next class.
-        const teacherId =
-          role === "TEACHER" ? (session?.user?.id ?? undefined) : undefined
+        //
+        // `Conference.teacherId` references Teacher.id, NOT the User — a
+        // teacher is a separate person row, the same way a student is — so the
+        // session's user id has to be mapped through, exactly as the schedule
+        // form does it. Filtering on the raw user id would match no rows at
+        // all and show a teacher an empty page while their class was live.
+        const teacher =
+          role === "TEACHER" && session?.user?.id
+            ? await db.teacher.findFirst({
+                where: { schoolId, userId: session.user.id },
+                select: { id: true },
+              })
+            : null
+        const teacherId = teacher?.id ?? undefined
 
         const [rows, counts] = await Promise.all([
           getLiveLandingSessions(schoolId, { now, sectionIds, teacherId }),

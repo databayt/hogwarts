@@ -87,9 +87,7 @@ export function cardsFor(viewer: LandingViewer, lang: string): Card[] {
       key: "timetable",
       Icon: viewer.role === "GUARDIAN" ? ClipboardCheck : Video,
       href:
-        viewer.role === "GUARDIAN"
-          ? `/${lang}/parent`
-          : `/${lang}/timetable`,
+        viewer.role === "GUARDIAN" ? `/${lang}/parent` : `/${lang}/timetable`,
     })
   }
 
@@ -104,7 +102,11 @@ export function cardsFor(viewer: LandingViewer, lang: string): Card[] {
   }
 
   if (viewer.canConfigure) {
-    cards.push({ key: "settings", Icon: Settings, href: `/${lang}/live/settings` })
+    cards.push({
+      key: "settings",
+      Icon: Settings,
+      href: `/${lang}/live/settings`,
+    })
     cards.push({
       key: "network",
       Icon: Activity,

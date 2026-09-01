@@ -10,8 +10,8 @@ import { buttonVariants } from "@/components/ui/button"
 
 import type {
   LandingPolicy,
-  LandingSession,
   LandingSectionProps,
+  LandingSession,
   LandingViewer,
 } from "./types"
 
@@ -54,7 +54,7 @@ export function LiveStatusHero({
     <section className="pt-2 pb-10">
       <p className={cn(typographyVariants.hint, "mb-3")}>{dictionary?.title}</p>
 
-      <h1 className="max-w-[18ch] text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+      <h1 className={cn(typographyVariants.heroTitle, "max-w-[18ch]")}>
         {!policy.isOnline ? (
           d?.hero?.offline
         ) : liveNow > 0 ? (
@@ -101,10 +101,7 @@ export function LiveStatusHero({
         />
 
         {viewer.canSchedule && policy.isOnline ? (
-          <Link
-            className={pill("ghost")}
-            href={`/${lang}/live/schedule`}
-          >
+          <Link className={pill("ghost")} href={`/${lang}/live/schedule`}>
             {d?.actions?.schedule}
           </Link>
         ) : null}
@@ -162,9 +159,7 @@ function PrimaryAction({
       : d?.actions?.openNext
     return (
       <Link className={pill("default")} href={href}>
-        {focus.isLive ? (
-          <Radio className="size-4" aria-hidden="true" />
-        ) : null}
+        {focus.isLive ? <Radio className="size-4" aria-hidden="true" /> : null}
         {label}
       </Link>
     )

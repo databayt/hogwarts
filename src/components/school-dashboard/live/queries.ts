@@ -679,9 +679,15 @@ export async function getAttendanceSyncEnabled(
  * The landing page's shared `where`.
  *
  * A teacher is staff, so `resolveViewerSectionScope` hands them the whole
- * school — right for the strip ("what is running here"), wrong for the hero,
- * which answers "when is YOUR next class". `teacherId` narrows to their own,
- * and is the only extra axis: students and guardians are already answered by
+ * school. On the landing page that is the wrong question: a teacher opening
+ * /live is asking "what am *I* teaching", not "what is running in the
+ * building". So `teacherId` narrows BOTH the strip and the counts, and the
+ * school-wide view stays one click away on /live/dashboard.
+ *
+ * `Conference.teacherId` references Teacher.id, not User.id — callers must map
+ * the session's user through `db.teacher`, the way the schedule form does.
+ *
+ * It is the only extra axis: students and guardians are already answered by
  * section scope.
  */
 function landingScope(

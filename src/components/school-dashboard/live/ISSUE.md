@@ -1306,3 +1306,10 @@ Page height roughly halved. tsc 0 · 601 block tests green (+21).
   surfaced on its first render, not a code bug.
 - **The onboarding tour modal covers the hero** on every page in the platform.
   Out of scope here — it is `WelcomeDialog` in the school-dashboard layout.
+- **STAFF can be deep-linked into a room it cannot enter.** `resolveViewerSectionScope`
+  gives STAFF the whole school, so the strip shows it every live session and
+  links into the room — but `resolveParticipantRole` only admits STAFF to
+  `visibility: "school"` sessions. The room page's error path returns them to
+  the session detail, so it degrades rather than breaks. Narrowing the strip's
+  CTA for STAFF would need a per-row visibility check the landing does not
+  currently select.

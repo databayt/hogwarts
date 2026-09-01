@@ -33,9 +33,10 @@ describe("getLiveLandingCounts", () => {
       .mockResolvedValueOnce(3 as never)
       .mockResolvedValueOnce(12 as never)
 
-    await expect(
-      getLiveLandingCounts(SCHOOL, { now: NOW })
-    ).resolves.toEqual({ liveNow: 3, todayTotal: 12 })
+    await expect(getLiveLandingCounts(SCHOOL, { now: NOW })).resolves.toEqual({
+      liveNow: 3,
+      todayTotal: 12,
+    })
   })
 
   it("always scopes to the school and excludes soft-deleted rows", async () => {
@@ -70,7 +71,10 @@ describe("getLiveLandingCounts", () => {
   it("bounds the day in the SCHOOL's timezone, not the runtime's", async () => {
     // 22:30 UTC is already the 2nd in Khartoum, so the window must open on the
     // 2nd — a UTC-bounded query would still be counting the 1st.
-    await getLiveLandingCounts(SCHOOL, { now: NOW, timeZone: "Africa/Khartoum" })
+    await getLiveLandingCounts(SCHOOL, {
+      now: NOW,
+      timeZone: "Africa/Khartoum",
+    })
     const range = callArgs(1).where.scheduledStart as { gte: Date; lt: Date }
     expect(range.gte.toISOString()).toBe("2026-09-01T22:00:00.000Z")
     expect(range.lt.toISOString()).toBe("2026-09-02T22:00:00.000Z")

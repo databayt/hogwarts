@@ -219,9 +219,7 @@ function SessionCard({
           <h3 className="group-hover:text-primary line-clamp-2 text-sm leading-tight font-semibold transition-colors">
             {session.title}
           </h3>
-          {meta ? (
-            <p className={typographyVariants.hint}>{meta}</p>
-          ) : null}
+          {meta ? <p className={typographyVariants.hint}>{meta}</p> : null}
           <p className="text-primary pt-1 text-xs font-medium">{cta}</p>
         </div>
       </Link>

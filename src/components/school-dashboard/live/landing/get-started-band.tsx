@@ -44,7 +44,7 @@ export function LiveGetStartedBand({ dictionary, lang }: LandingSectionProps) {
       <section className="mb-16">
         <div className="bg-muted/40 rounded-xl border p-8 sm:p-10">
           <div className="max-w-[52ch]">
-            <h2 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
+            <h2 className={cn(typographyVariants.sectionTitle, "text-balance")}>
               {s?.title}
             </h2>
             <p className={cn(typographyVariants.pageDescription, "mt-3")}>

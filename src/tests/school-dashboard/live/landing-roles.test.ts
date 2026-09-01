@@ -42,7 +42,13 @@ describe("resolveLandingViewer", () => {
   it("gives configure rights to ADMIN and DEVELOPER only", () => {
     expect(resolveLandingViewer("ADMIN").canConfigure).toBe(true)
     expect(resolveLandingViewer("DEVELOPER").canConfigure).toBe(true)
-    for (const role of ["TEACHER", "STUDENT", "GUARDIAN", "STAFF", "ACCOUNTANT"]) {
+    for (const role of [
+      "TEACHER",
+      "STUDENT",
+      "GUARDIAN",
+      "STAFF",
+      "ACCOUNTANT",
+    ]) {
       expect(resolveLandingViewer(role).canConfigure).toBe(false)
     }
   })
@@ -79,7 +85,13 @@ describe("cardsFor", () => {
   })
 
   it("never offers settings or the network test to anyone else", () => {
-    for (const role of ["TEACHER", "STUDENT", "GUARDIAN", "STAFF", "ACCOUNTANT"]) {
+    for (const role of [
+      "TEACHER",
+      "STUDENT",
+      "GUARDIAN",
+      "STAFF",
+      "ACCOUNTANT",
+    ]) {
       expect(keys(role)).not.toContain("settings")
       expect(keys(role)).not.toContain("network")
     }
@@ -111,7 +123,9 @@ describe("cardsFor", () => {
       "STAFF",
       "ACCOUNTANT",
     ]) {
-      expect(cardsFor(resolveLandingViewer(role), "en").length).toBeLessThanOrEqual(4)
+      expect(
+        cardsFor(resolveLandingViewer(role), "en").length
+      ).toBeLessThanOrEqual(4)
     }
   })
 

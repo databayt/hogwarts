@@ -47,6 +47,12 @@ export const typography = {
  */
 export const typographyVariants = {
   // Page headers
+  /**
+   * A display-scale page title, a step above `pageTitle`, for a heading that
+   * IS the page's headline rather than its label — the /live status hero.
+   */
+  heroTitle:
+    "scroll-m-20 text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl",
   pageTitle:
     "scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl text-balance",
   pageDescription: "text-xl text-muted-foreground",

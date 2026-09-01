@@ -118,7 +118,7 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
 
 - [Timetable](../timetable/CLAUDE.md) — period/section structure consumed by
   `markPeriodAttendance` + `getCurrentPeriod`.
-- [Conference](../conference/CLAUDE.md) — `AttendanceMethod.VIRTUAL` (added
+- [Live](../live/CLAUDE.md) — `AttendanceMethod.VIRTUAL` (added
   2026-06-20) is written by conference `actions/attendance-sync.ts`
   (`syncLiveAttendance`) when a live class ends: section students present
   in the room → PRESENT/LATE, roster non-joiners → ABSENT. System context
