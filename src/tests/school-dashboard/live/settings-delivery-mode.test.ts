@@ -20,12 +20,9 @@ vi.mock("@/components/school-dashboard/live/actions/helpers", () => ({
   liveRevalidatePath: (s: string) => `/x/${s}`,
   liveListRevalidatePaths: () => [],
 }))
-vi.mock(
-  "@/components/school-dashboard/live/actions/materialize-day",
-  () => ({
-    materializeSchoolDay: vi.fn().mockResolvedValue({ materialized: 0 }),
-  })
-)
+vi.mock("@/components/school-dashboard/live/actions/materialize-day", () => ({
+  materializeSchoolDay: vi.fn().mockResolvedValue({ materialized: 0 }),
+}))
 vi.mock("@/components/school-dashboard/live/livekit/client", () => ({
   isLiveKitConfigured: () => true,
   isRecordingConfigured: () => true,

@@ -36,15 +36,10 @@ vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 
-vi.mock(
-  "@/components/school-dashboard/live/livekit/recording-urls",
-  () => ({
-    getRecordingPlaybackUrl: vi.fn(
-      async () => "https://signed.example/play.mp4"
-    ),
-    deleteRecordingObject: vi.fn(async () => true),
-  })
-)
+vi.mock("@/components/school-dashboard/live/livekit/recording-urls", () => ({
+  getRecordingPlaybackUrl: vi.fn(async () => "https://signed.example/play.mp4"),
+  deleteRecordingObject: vi.fn(async () => true),
+}))
 
 const SCHOOL_ID = "school-aldar"
 

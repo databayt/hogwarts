@@ -39,14 +39,11 @@ vi.mock("@/lib/db", () => ({
 const notifyClassStarted = vi.fn(async () => ({ created: 0 }))
 const notifyClassRecordingReady = vi.fn(async () => ({ created: 0 }))
 
-vi.mock(
-  "@/components/school-dashboard/live/actions/notifications",
-  () => ({
-    notifyClassStarted: (...a: unknown[]) => notifyClassStarted(...a),
-    notifyClassRecordingReady: (...a: unknown[]) =>
-      notifyClassRecordingReady(...a),
-  })
-)
+vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
+  notifyClassStarted: (...a: unknown[]) => notifyClassStarted(...a),
+  notifyClassRecordingReady: (...a: unknown[]) =>
+    notifyClassRecordingReady(...a),
+}))
 
 // Mock the egress lib so room_started auto-recording doesn't hit a real SFU.
 const startCompositeEgress = vi.fn(async () => ({
@@ -55,15 +52,12 @@ const startCompositeEgress = vi.fn(async () => ({
   s3Key: "schools/sch1/live-class/lcs1/1.mp4",
   s3Region: "me-central-1",
 }))
-vi.mock(
-  "@/components/school-dashboard/live/actions/publish-recording",
-  () => ({
-    publishRecordingAsLessonVideo: vi.fn(async () => ({
-      published: false,
-      reason: "no_lesson",
-    })),
-  })
-)
+vi.mock("@/components/school-dashboard/live/actions/publish-recording", () => ({
+  publishRecordingAsLessonVideo: vi.fn(async () => ({
+    published: false,
+    reason: "no_lesson",
+  })),
+}))
 vi.mock("@/components/school-dashboard/live/livekit/egress", () => ({
   startCompositeEgress: (...a: unknown[]) => startCompositeEgress(...a),
 }))

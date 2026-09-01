@@ -67,22 +67,16 @@ test.describe("Conference RBAC @conference @rbac", () => {
     await assertNoSSE(page)
   })
 
-  test("LC-RBAC-03: TEACHER can access /live/schedule", async ({
-    page,
-  }) => {
+  test("LC-RBAC-03: TEACHER can access /live/schedule", async ({ page }) => {
     await loginAs(page, "teacher")
     if (skipIfProtocolError(page)) return
-    await page.goto(
-      buildSchoolUrl(SUBDOMAIN, "/live/schedule", "en", env)
-    )
+    await page.goto(buildSchoolUrl(SUBDOMAIN, "/live/schedule", "en", env))
     await page.waitForLoadState("domcontentloaded")
     expect(page.url()).toMatch(/\/live/)
     await assertNoSSE(page)
   })
 
-  test("LC-RBAC-04: STUDENT can access /live (read-only)", async ({
-    page,
-  }) => {
+  test("LC-RBAC-04: STUDENT can access /live (read-only)", async ({ page }) => {
     await loginAs(page, "student")
     if (skipIfProtocolError(page)) return
     await page.goto(buildSchoolUrl(SUBDOMAIN, "/live", "en", env))
@@ -91,14 +85,10 @@ test.describe("Conference RBAC @conference @rbac", () => {
     await assertNoSSE(page)
   })
 
-  test("LC-RBAC-05: STUDENT blocked from /live/schedule", async ({
-    page,
-  }) => {
+  test("LC-RBAC-05: STUDENT blocked from /live/schedule", async ({ page }) => {
     await loginAs(page, "student")
     if (skipIfProtocolError(page)) return
-    await page.goto(
-      buildSchoolUrl(SUBDOMAIN, "/live/schedule", "en", env)
-    )
+    await page.goto(buildSchoolUrl(SUBDOMAIN, "/live/schedule", "en", env))
     await page.waitForLoadState("domcontentloaded")
     const url = page.url()
     // Student should be redirected to /dashboard (the page's ALLOWED_ROLES gate).
@@ -123,9 +113,7 @@ test.describe("Conference RBAC @conference @rbac", () => {
   }) => {
     await loginAs(page, "guardian")
     if (skipIfProtocolError(page)) return
-    await page.goto(
-      buildSchoolUrl(SUBDOMAIN, "/live/network-test", "en", env)
-    )
+    await page.goto(buildSchoolUrl(SUBDOMAIN, "/live/network-test", "en", env))
     await page.waitForLoadState("domcontentloaded")
     const url = page.url()
     expect(
@@ -133,9 +121,7 @@ test.describe("Conference RBAC @conference @rbac", () => {
     ).toBeTruthy()
   })
 
-  test("LC-RBAC-08: STAFF can access /live (read-only)", async ({
-    page,
-  }) => {
+  test("LC-RBAC-08: STAFF can access /live (read-only)", async ({ page }) => {
     await loginAs(page, "staff")
     if (skipIfProtocolError(page)) return
     await page.goto(buildSchoolUrl(SUBDOMAIN, "/live", "en", env))
@@ -153,14 +139,10 @@ test.describe("Conference RBAC @conference @rbac", () => {
     await assertNoSSE(page)
   })
 
-  test("LC-RBAC-10: ADMIN can access /live/network-test", async ({
-    page,
-  }) => {
+  test("LC-RBAC-10: ADMIN can access /live/network-test", async ({ page }) => {
     await loginAs(page, "admin")
     if (skipIfProtocolError(page)) return
-    await page.goto(
-      buildSchoolUrl(SUBDOMAIN, "/live/network-test", "en", env)
-    )
+    await page.goto(buildSchoolUrl(SUBDOMAIN, "/live/network-test", "en", env))
     await page.waitForLoadState("domcontentloaded")
     expect(page.url()).toMatch(/\/live/)
     await assertNoSSE(page)
@@ -171,9 +153,7 @@ test.describe("Conference RBAC @conference @rbac", () => {
   }) => {
     await loginAs(page, "teacher")
     if (skipIfProtocolError(page)) return
-    await page.goto(
-      buildSchoolUrl(SUBDOMAIN, "/live/network-test", "en", env)
-    )
+    await page.goto(buildSchoolUrl(SUBDOMAIN, "/live/network-test", "en", env))
     await page.waitForLoadState("domcontentloaded")
     const url = page.url()
     expect(

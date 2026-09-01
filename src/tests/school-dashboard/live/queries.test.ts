@@ -9,9 +9,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import {
-  getLiveSlotOptions,
   getLiveClassFormOptions,
   getLiveClassReferenceData,
+  getLiveSlotOptions,
   SLOT_OPTION_CAP,
 } from "@/components/school-dashboard/live/queries"
 

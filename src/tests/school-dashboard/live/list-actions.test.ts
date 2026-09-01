@@ -36,13 +36,10 @@ vi.mock("@/lib/db", () => ({
 }))
 // create/update/delete fire best-effort `void` notifications — stub them so the
 // real fan-out doesn't touch the db mock (it would log a caught error).
-vi.mock(
-  "@/components/school-dashboard/live/actions/notifications",
-  () => ({
-    notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
-    notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
-  })
-)
+vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
+  notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
+  notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
+}))
 
 const SCHOOL = "school-1"
 

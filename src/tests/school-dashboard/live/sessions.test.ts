@@ -67,27 +67,21 @@ vi.mock("@/components/school-dashboard/live/livekit/egress", () => ({
 vi.mock("@/components/school-dashboard/live/livekit/client", () => ({
   isLiveKitConfigured: vi.fn(() => false),
 }))
-vi.mock(
-  "@/components/school-dashboard/live/livekit/room-naming",
-  async () => {
-    const actual = await vi.importActual<
-      typeof import("@/components/school-dashboard/live/livekit/room-naming")
-    >("@/components/school-dashboard/live/livekit/room-naming")
-    return actual
-  }
-)
+vi.mock("@/components/school-dashboard/live/livekit/room-naming", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/components/school-dashboard/live/livekit/room-naming")
+  >("@/components/school-dashboard/live/livekit/room-naming")
+  return actual
+})
 
 // Notification helpers fire as best-effort `void` — stub to keep tests fast.
-vi.mock(
-  "@/components/school-dashboard/live/actions/notifications",
-  () => ({
-    notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
-    notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
-    notifyClassStartingSoon: vi.fn(async () => ({ created: 0 })),
-    notifyClassStarted: vi.fn(async () => ({ created: 0 })),
-    notifyClassRecordingReady: vi.fn(async () => ({ created: 0 })),
-  })
-)
+vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
+  notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
+  notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
+  notifyClassStartingSoon: vi.fn(async () => ({ created: 0 })),
+  notifyClassStarted: vi.fn(async () => ({ created: 0 })),
+  notifyClassRecordingReady: vi.fn(async () => ({ created: 0 })),
+}))
 
 const SCHOOL_ID = "school-aldar"
 const TEACHER_USER_ID = "u-teacher-1"

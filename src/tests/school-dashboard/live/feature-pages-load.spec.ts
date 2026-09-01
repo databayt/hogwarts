@@ -68,9 +68,7 @@ test.describe("Conference — feature pages smoke @conference @smoke", () => {
 
   test("LC-SMK-overview-renders-empty-state-or-list", async ({ page }) => {
     test.setTimeout(60_000)
-    await page.goto(
-      buildSchoolUrl(SUBDOMAIN, "/live/dashboard", "en", env)
-    )
+    await page.goto(buildSchoolUrl(SUBDOMAIN, "/live/dashboard", "en", env))
     await page.waitForLoadState("domcontentloaded")
 
     if (page.url().includes("chrome-error://")) {
@@ -98,9 +96,7 @@ test.describe("Conference — feature pages smoke @conference @smoke", () => {
 
   test("LC-SMK-ar-overview-renders-rtl", async ({ page }) => {
     test.setTimeout(60_000)
-    await page.goto(
-      buildSchoolUrl(SUBDOMAIN, "/live/dashboard", "ar", env)
-    )
+    await page.goto(buildSchoolUrl(SUBDOMAIN, "/live/dashboard", "ar", env))
     await page.waitForLoadState("domcontentloaded")
 
     if (page.url().includes("chrome-error://")) {

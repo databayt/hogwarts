@@ -33,19 +33,15 @@ vi.mock("@/components/school-dashboard/live/online-policy", async () => {
   >("@/components/school-dashboard/live/online-policy")
   return { ...actual, resolveOnlinePolicies: vi.fn() }
 })
-vi.mock(
-  "@/components/school-dashboard/live/actions/open-room",
-  async () => {
-    const actual = await vi.importActual<
-      typeof import("@/components/school-dashboard/live/actions/open-room")
-    >("@/components/school-dashboard/live/actions/open-room")
-    return { ...actual, materializeOpenRoom: vi.fn() }
-  }
-)
-vi.mock(
-  "@/components/school-dashboard/live/actions/slot-session",
-  () => ({ materializeSlotSession: vi.fn() })
-)
+vi.mock("@/components/school-dashboard/live/actions/open-room", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/components/school-dashboard/live/actions/open-room")
+  >("@/components/school-dashboard/live/actions/open-room")
+  return { ...actual, materializeOpenRoom: vi.fn() }
+})
+vi.mock("@/components/school-dashboard/live/actions/slot-session", () => ({
+  materializeSlotSession: vi.fn(),
+}))
 
 const SCHOOL = "school-1"
 const ONLINE = {

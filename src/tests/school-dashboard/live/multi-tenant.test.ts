@@ -44,13 +44,10 @@ vi.mock("@/components/school-dashboard/live/livekit/rooms", () => ({
   ensureRoom: vi.fn(async () => undefined),
   endRoom: vi.fn(async () => undefined),
 }))
-vi.mock(
-  "@/components/school-dashboard/live/actions/notifications",
-  () => ({
-    notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
-    notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
-  })
-)
+vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
+  notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
+  notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
+}))
 
 const SCHOOL_A = "school-A"
 const SCHOOL_B = "school-B"
