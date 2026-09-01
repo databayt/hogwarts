@@ -21,6 +21,8 @@ import {
   isExternallyHostedVideo,
 } from "@/components/lumos/video/media-access"
 
+import { DEFAULT_SCHOOL_TZ, schoolDayWindow } from "./day-window"
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -57,6 +59,23 @@ const liveClassListInclude = {
   },
   section: {
     select: { id: true, name: true },
+  },
+} as const
+
+/**
+ * The landing strip's own include: the list's shape plus the two catalog image
+ * fields its session cards render.
+ *
+ * `Subject` IS the catalog subject — it carries `concept`, `thumbnail` and
+ * `color` — and `Conference.subjectId` points straight at it, so a card gets
+ * its subject's artwork with no extra join. Kept separate from
+ * `liveClassListInclude` so the table, which renders no imagery, keeps paying
+ * for two columns instead of four.
+ */
+const landingSessionInclude = {
+  ...liveClassListInclude,
+  subject: {
+    select: { id: true, name: true, thumbnail: true, color: true },
   },
 } as const
 
@@ -657,6 +676,67 @@ export async function getAttendanceSyncEnabled(
 }
 
 /**
+ * The landing page's shared `where`.
+ *
+ * A teacher is staff, so `resolveViewerSectionScope` hands them the whole
+ * school — right for the strip ("what is running here"), wrong for the hero,
+ * which answers "when is YOUR next class". `teacherId` narrows to their own,
+ * and is the only extra axis: students and guardians are already answered by
+ * section scope.
+ */
+function landingScope(
+  schoolId: string,
+  opts: { sectionIds?: string[]; teacherId?: string }
+): Prisma.ConferenceWhereInput {
+  return {
+    schoolId,
+    deletedAt: null,
+    ...(opts.sectionIds ? { sectionId: { in: opts.sectionIds } } : {}),
+    ...(opts.teacherId ? { teacherId: opts.teacherId } : {}),
+  }
+}
+
+/**
+ * Two numbers for the landing hero: how many sessions are live right now, and
+ * how many the whole school day holds.
+ *
+ * The day bounds come from `schoolDayWindow` in the SCHOOL's timezone, not the
+ * runtime's — on Vercel the runtime is UTC, which would roll "today" over at
+ * the wrong hour for every school that is not on it.
+ *
+ * Counts, not rows: the hero needs a number, and the strip below it is already
+ * fetching the rows it shows.
+ */
+export async function getLiveLandingCounts(
+  schoolId: string,
+  opts: {
+    sectionIds?: string[]
+    teacherId?: string
+    now: Date
+    timeZone?: string
+  }
+): Promise<{ liveNow: number; todayTotal: number }> {
+  const scope = landingScope(schoolId, opts)
+  const { start, end } = schoolDayWindow(
+    opts.timeZone || DEFAULT_SCHOOL_TZ,
+    opts.now
+  )
+
+  const [liveNow, todayTotal] = await Promise.all([
+    db.conference.count({ where: { ...scope, status: "live" } }),
+    db.conference.count({
+      where: {
+        ...scope,
+        status: { in: ["scheduled", "live", "ended"] },
+        scheduledStart: { gte: start, lt: end },
+      },
+    }),
+  ])
+
+  return { liveNow, todayTotal }
+}
+
+/**
  * The handful of sessions the landing page puts in front of the reader:
  * everything currently live, then the next few still to start.
  *
@@ -668,23 +748,24 @@ export async function getAttendanceSyncEnabled(
  */
 export async function getLiveLandingSessions(
   schoolId: string,
-  opts: { sectionIds?: string[]; now: Date; take?: number } = {
+  opts: {
+    sectionIds?: string[]
+    teacherId?: string
+    now: Date
+    take?: number
+  } = {
     now: new Date(),
   }
 ) {
   const take = opts.take ?? 4
-  const scope: Prisma.ConferenceWhereInput = {
-    schoolId,
-    deletedAt: null,
-    ...(opts.sectionIds ? { sectionId: { in: opts.sectionIds } } : {}),
-  }
+  const scope = landingScope(schoolId, opts)
 
   const [live, upcoming] = await Promise.all([
     db.conference.findMany({
       where: { ...scope, status: "live" },
       orderBy: { scheduledStart: "desc" },
       take,
-      include: liveClassListInclude,
+      include: landingSessionInclude,
     }),
     db.conference.findMany({
       where: {
@@ -694,7 +775,7 @@ export async function getLiveLandingSessions(
       },
       orderBy: { scheduledStart: "asc" },
       take,
-      include: liveClassListInclude,
+      include: landingSessionInclude,
     }),
   ])
 
