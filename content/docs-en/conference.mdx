@@ -9,6 +9,117 @@ pasted-link** provider is live everywhere; the **LiveKit SFU** (in-app rooms + r
 coded and gated only on four `LIVEKIT_*` env vars — see RUNBOOK.md for the LiveKit Cloud quick path; recording is a separate gate and no longer blocks a room; the **native Meet / Zoom / Teams** adapters create
 real meetings via each vendor's API but ship dark until OAuth credentials land.
 
+## How it works
+
+One picture of the whole thing: what the school decides once, what the app
+does on its own every school day, and what a student actually sees.
+
+<Mermaid
+  chart={`flowchart TD
+    subgraph SET["🏫 Set once, by the school"]
+        A["Open Configuration then Live classes"] --> B{"How does this school teach?"}
+        B -->|"In person"| P["Classes meet in the building.<br/>No live rooms, no Join buttons anywhere."]
+        B -->|"Online"| O["Every class on the timetable<br/>is also a live class."]
+        B -->|"Hybrid"| H["Choose per grade or per section —<br/>or go online for a few days only."]
+    end
+    subgraph DAY["🔁 Then, on its own, every school day"]
+        M["The app creates one live class<br/>for each class on the timetable"] --> R["A reminder goes out<br/>a few minutes before it starts"]
+        R --> J["The student taps Join —<br/>from the timetable, the reminder,<br/>or the Live classes page"]
+        J --> RM["Teacher and class meet:<br/>video, whiteboard, slides,<br/>questions, polls, raised hands"]
+        RM --> E["The class ends"]
+    end
+    O --> M
+    H --> M
+    E --> AT["✅ Attendance is written from how long<br/>each student was actually in the room"]
+    E --> RC{"Was the class recorded?"}
+    RC -->|"Yes"| VD["📼 The recording becomes the lesson's video —<br/>watched in the app, never downloaded"]
+    RC -->|"No"| ND["Nothing else to do"]`}
+/>
+
+Three things are worth reading twice:
+
+- **Going online never closes the building.** Online is something you _add_ to a
+  class, not something that replaces it. A school can be open and online on the
+  same day.
+- **Nobody schedules classes one at a time.** The school says how it teaches;
+  the timetable it already keeps becomes the live classes, every morning, on
+  its own.
+- **Attendance and recordings look after themselves.** Nobody ticks a register,
+  and nobody uploads a video.
+
+## Usage guide
+
+### If you run the school
+
+1. **Say how the school teaches.** _School → Configuration → Live classes_ (the
+   same panel is the **Settings** tab inside Live classes). Pick **In person**,
+   **Online**, or **Hybrid**. In person means no live rooms at all, whatever any
+   section says — everything below only matters for the other two.
+2. **Choose the meeting back-end.** **In-app room** keeps the class inside the
+   app — recording, attendance, whiteboard, the lot. **External link** uses
+   Google Meet / Zoom / Teams URLs and works with no infrastructure. You can
+   pick the in-app room before it is provisioned; classes quietly run on
+   external links until it lands, then switch over on their own.
+3. **If you are on external links, give classes somewhere to go.** Set a
+   **standing meeting link** as the floor — every class without a link of its
+   own lands there — and add a link per class over time. **Meeting-link
+   coverage** on the same page tells you how far you have got.
+4. **Decide what a class is allowed to be.** Recording on or off, how long
+   recordings are kept, the notice students see when a class is recorded, and
+   whether recordings are published to the lesson automatically. Then: may
+   guardians watch, do students enter muted, and which room tools are on —
+   chat, raising hands, polls, the whiteboard, letting students share a screen.
+5. **Set the timing.** How many minutes before a class the reminder goes out,
+   and — if you want attendance marked automatically — when a student counts as
+   late, as present, and as having left early.
+6. **Tune the exceptions.** In hybrid, **by grade** and **by section** override
+   the school default in both directions. "School default" means inherit.
+7. **When something closes the school**, use **Go online temporarily** with a
+   start date and, if you know it, an end date. Today's classes are created
+   while you are still on the page. Clearing the start date ends it — there is
+   no separate cancel button to forget.
+
+### If you teach
+
+1. **You do not create your classes.** They appear for every slot on your
+   timetable, each morning.
+2. **Start from where you already are** — the Join button on your timetable's
+   Today card, or the Live classes dashboard. Starting the class is what opens
+   the room for everyone else.
+3. **In the room** you have your microphone and camera, screen share, a
+   whiteboard, any PDF attached to the lesson as slides with the page synced to
+   everyone, polls, a questions list you can mark answered, the raised-hands
+   queue, and the ability to remove someone.
+4. **You can change one class** without changing the school: the class form has
+   its own **Students enter** setting — school default, muted, or mic and
+   camera on.
+5. **End the class** when you are done. Attendance is written from the time each
+   student spent in the room, across drop-outs and reconnects. If the class was
+   recorded, the session page shows the recording being prepared, then ready.
+
+### If you are a student
+
+1. **Join appears where your day already is** — the Today rows of your
+   timetable, the Current/Next card, the Live classes page, and the reminder
+   notification. It shows up when the class is running, or about to.
+2. **You enter muted with your camera off** unless the teacher opened the class
+   differently. Turn them on when you are asked to.
+3. **Raise your hand, ask a question, answer a poll, or use the chat** —
+   whichever of those your school has switched on.
+4. **A weak connection is handled for you.** The picture steps down before it
+   breaks, and finally to audio with the slides. If you drop out, you are
+   offered _Rejoin_ rather than being thrown out.
+5. **If you missed it and the class was recorded**, it shows up as the lesson's
+   video. It plays in the app; it cannot be downloaded, and it carries a faint
+   watermark with your name.
+
+### If you are a parent
+
+Open the **Parent portal → your child → Timetable**. Today's classes carry the
+same Join, and you enter as an observer — you can watch and listen, but not
+speak, use the camera, or ask questions. Your school can switch this off
+entirely.
+
 ## Structure
 
 <ConferenceStructure />
