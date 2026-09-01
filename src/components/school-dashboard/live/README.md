@@ -41,15 +41,18 @@ conference/
 │   │                     window + delivery mode + standing link + link-coverage report
 │   ├── moderation.ts     kickParticipant (DB status="removed" first, then SFU evict)
 │   └── recurring.ts      carry-forward ConferenceLink across terms + listLiveTerms
-├── authorization.ts · permissions.ts · validation.ts         rich sessions layer (strict gate)
+├── authorization.ts · validation.ts                          rich sessions layer (strict gate)
 ├── list-permissions.ts · list-validation.ts · list-params.ts list layer (CRUD gate)
 ├── nav.tsx                                                    heading + tab strip for the (app) surfaces
 ├── landing/                                                   the /live landing page
 │   ├── content.tsx           composes the sections below
-│   ├── hero.tsx              copy + the room collage (student photo, tiles, control bar)
-│   ├── features-section.tsx  the four value cards
-│   ├── now-section.tsx       live / coming-up strip — section-scoped, school-TZ times
-│   ├── everything-section.tsx · how-to-section.tsx · welcome-section.tsx
+│   ├── status-hero.tsx       eyebrow + state headline + the one action worth taking
+│   ├── now-strip.tsx         live / coming-up — section-scoped, school-TZ times, catalog art
+│   ├── readiness-band.tsx    can this school teach online (ADMIN/DEVELOPER only)
+│   ├── role-guide.tsx        what THIS role can do here — real links, not marketing
+│   ├── get-started-band.tsx  the pitch + 3 setup steps, only while not yet online
+│   ├── reveal.tsx            the page's one motion wrapper
+│   └── viewer.ts             role → what the page offers
 │   └── types.ts              shared section props + LandingSession
 ├── table.tsx · columns.tsx · form.tsx · schedule-form.tsx    DataTable + the two create forms
 ├── detail.tsx · room.tsx · participants-panel.tsx            session detail · in-app room · kick UI

@@ -1217,3 +1217,92 @@ stricter per-section teacher scoping is wanted.
       string, blocked playback)
 - [x] notifyClassStarted + notifyClassRecordingReady wired into
       webhook handler
+
+---
+
+## 2026-09-01 — the block becomes `live`, and the landing page becomes a tool
+
+Two passes in one, both closed.
+
+### The rename: `conference` → `live` (`/live`, "Live" / "مباشر")
+
+The block answered to three names at once — sidebar `مباشر`, page heading
+`الاجتماعات` ("Meetings", a conference event rather than a school lesson), and
+a breadcrumb reading an untranslated `"Conference"`. The breadcrumb was not a
+missing translation but a missing KEY: the sidebar config's English `title`
+doubles as a dictionary key, and the two consumers look it up differently —
+`sidebar[item.title]`, which existed, versus
+`breadcrumb[item.title.toLowerCase()]`, which did not.
+
+- [x] Block source (92 files) + tests (37) moved; 94 importers rewritten
+- [x] The 9 route files moved, `public/conference` with them
+- [x] `/conference/*` and `/live-classes/*` both redirect to `/live/*`, one hop
+      each, neither chained
+- [x] `routes.ts` role matrix, the 4 `revalidatePath` sites, every URL literal
+- [x] Our ~28 `Conference*` identifiers became `Live*`, word-boundary matched
+- [x] Docs moved to `/docs/live`; `LiveStructure` node tree matches the new files
+- [x] Dead `permissions.ts` deleted — its `getTabsForRole` was shadowed by
+      `list-permissions.ts`, and its only importer in the repo was its own test
+
+**Deliberately NOT renamed**, and each for a reason that would cost data:
+
+- The Prisma models, enums and `School`/`Section` `conference*` columns are
+  DB-mapped; renaming them is a migration.
+- `localize("Conference", …)` / `prewarm("Conference", …)` is the translation
+  cache's identity key — renaming it orphans every cached row.
+- `/api/conference/token` and `/api/mobile/conference/[id]/join` — a shipped
+  mobile client calls them.
+- `key: "liveClasses"` in `platform-sidebar/config.ts` is matched against the
+  `School.enabledModules` JSON column. **Renaming it silently hides the sidebar
+  entry for every school that has configured its modules.**
+
+"Conference" is now the data-model name and "Live" the product name — the same
+split the stream→lumos rename kept.
+
+⚠ **The `/conference` redirect stub is permanent, not transitional.**
+`actions/notifications.ts` stored `/conference/{id}` into
+`Notification.metadata.url`, kept relative and absolutified only at render, so
+every notification already in production points there forever. Its header says
+so. Do not delete it in a cleanup.
+
+### The landing page
+
+It was a brochure for a feature the school already owns — four marketing cards,
+a value band, a setup guide and a Google-artwork closing band, with the day's
+live classes third on a 2,651px page. And it was not role-aware: all seven roles
+saw the same thing, so a **student was told to "turn on online teaching, from
+settings"** — a page they cannot open — on every visit, above a strip of their
+own classes.
+
+- [x] One page, two states: a TOOL when the school teaches online, a SETUP
+      GUIDE (admins only) when it does not. The old marketing copy survives —
+      it was good, just shown to the wrong people forever.
+- [x] `status-hero.tsx` — the headline states what is happening; the block name
+      moved to the eyebrow, which also settles a collision (`مباشر` is already
+      this block's word for a running session). Arabic inflects a counted noun
+      five ways, so the count picks its form via `Intl.PluralRules` rather than
+      gluing a number onto a plural.
+- [x] `readiness-band.tsx` — **new**. Delivery mode · meeting back-end · link
+      coverage · recording · in-app rooms, each linking to where it is fixed.
+      Every signal already existed but lived across three surfaces.
+- [x] Session cards carry their subject's catalog thumbnail (`Subject` IS the
+      catalog subject; `Conference.subjectId` reaches it with no extra join),
+      falling back to the subject's colour.
+- [x] Joining is one click again — live sessions link into the room, not the
+      detail page.
+- [x] `landing/viewer.ts` — the five role lists live once and are tested.
+- [x] 3.0 MB of `public/` deleted: Google's own Meet artwork (flagged here since
+      August), a stock hero photo, and three orphaned room tiles.
+
+Page height roughly halved. tsc 0 · 601 block tests green (+21).
+
+### Found while here, NOT fixed
+
+- **`degraded` is now visible but still happens**: the demo school asks for
+  in-app rooms and is silently served external links because the SFU is
+  unprovisioned. The band says so; the provisioning is `RUNBOOK.md`'s six gates.
+- **Link coverage on the demo is 3/180 with no standing link** — 177
+  section+subject pairs would materialize *nothing*. Real data problem the band
+  surfaced on its first render, not a code bug.
+- **The onboarding tour modal covers the hero** on every page in the platform.
+  Out of scope here — it is `WelcomeDialog` in the school-dashboard layout.

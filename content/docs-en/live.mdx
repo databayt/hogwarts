@@ -144,7 +144,7 @@ the dashboard table and external-link sessions.
 | `list-permissions.ts`                                                                                      | UI gating (tabs + show/hide flags per role) for the rich + list layers.                                                                                                     |
 | `validation.ts` · `list-validation.ts`                                            | Zod schemas + inferred types (rich sessions / table forms).                                                                                                                 |
 | `columns.tsx` · `table.tsx` · `form.tsx` · `schedule-form.tsx` · `list-params.ts` | DataTable + grid client surface and the two create forms (modal + standalone page).                                                                                         |
-| `landing/` · `nav.tsx`                                                            | The `/live` landing page (hero · value cards · live/coming-up strip · value band · setup steps · closing band) and the heading + tab strip over the `(app)` surfaces. |
+| `landing/` · `nav.tsx`                                                            | The `/live` landing page (status hero · live/coming-up strip · readiness band · role guide · setup band) and the heading + tab strip over the `(app)` surfaces.       |
 | `detail.tsx` · `room.tsx` · `participants-panel.tsx`                              | Session detail · in-app LiveKit room · HOST/CO_HOST moderation overlay (kick).                                                                                              |
 | `recordings.tsx` · `recording-player.tsx` · `section-recording-policy.tsx`        | Recordings list · lazy signed-URL player · per-section recording opt-out.                                                                                                   |
 | `settings-form.tsx`                                                               | Admin school-policy form (retention / max-concurrent / max-duration / default recording) + term carry-forward.                                                              |
@@ -156,7 +156,7 @@ the dashboard table and external-link sessions.
 ## Data flow
 
 ```
-landing (/live)          landing/content.tsx (server) → hero · cards · live/coming-up strip · bands
+landing (/live)          landing/content.tsx (server) → status hero · live strip · readiness · role guide
    └─ View sessions
 index (/live/dashboard)  content.tsx (server) → table.tsx (client) → form.tsx (modal create)
    └─ row Join / detail

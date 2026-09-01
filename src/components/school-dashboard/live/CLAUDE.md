@@ -156,23 +156,41 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   silently never be written. Failures must never roll back the underlying state
   transition — `after()` preserves that (its callback runs off the response path
   and its rejection is logged, not propagated). See `actions/notifications.ts`.
-- **`/live` is a landing page, not the list.** The block opens the way
-  lumos does: a hero, value cards, a live/coming-up strip, then the long-form
-  bands (`landing/`). The sessions table moved to `/live/dashboard`,
-  behind the `(app)` route group that supplies the heading + tab strip
-  (`nav.tsx` → `list-permissions.getTabsForRole`, the tab strip actually on
-  screen — `permissions.ts` has a second, dormant one). Students are
-  deliberately NOT redirected past the landing the way lumos redirects them:
-  the strip is section-scoped, so the landing answers "can I join my class"
-  for them too. Two consequences: the strip's start times are formatted in the
-  SCHOOL's timezone on the server (a bare `toLocaleTimeString` there would use
-  the runtime's — UTC on Vercel), and its read is wrapped in try/catch so a
-  query failure leaves the landing standing instead of taking the block down.
+- **`/live` is one page in two states, not a brochure.** When the school
+  teaches online the page is a TOOL: the live / coming-up strip first, then
+  what this role can do, plus a readiness band for admins. When it does not,
+  an admin gets the pitch and the three setup steps (`get-started-band.tsx`)
+  and everyone else gets one honest line — because the old page showed a
+  student "turn on online teaching, from settings" on every visit, above their
+  own live classes. The sessions table lives at `/live/dashboard`, behind the
+  `(app)` route group that supplies the heading + tab strip (`nav.tsx` →
+  `list-permissions.getTabsForRole`). Students are deliberately NOT redirected
+  past the landing the way lumos redirects them: the strip is section-scoped,
+  so the page answers "can I join my class" for them too. Consequences worth
+  keeping: start times are formatted in the SCHOOL's timezone on the server (a
+  bare `toLocaleTimeString` there uses the runtime's — UTC on Vercel); the
+  strip read is wrapped in try/catch so a query failure leaves the page
+  standing; and the readiness read is wrapped SEPARATELY so a settings failure
+  cannot blank the strip. `getLiveLinkCoverage` RETURNS its failure rather than
+  throwing, so check the `success` discriminant — a try/catch alone misses it.
+- **Role gating lives in `landing/viewer.ts`, once.** `resolveLandingViewer`
+  is the single source for who may schedule, configure, host, join, or watch a
+  recording. ACCOUNTANT is the awkward one on purpose: it passes
+  `read_school_dashboard` and sees every session, but `authorization.ts` grants
+  it neither a join role nor `view_recordings`, so the page must not offer it
+  either. Covered by `src/tests/school-dashboard/live/landing-roles.test.ts`.
+- **The page's imagery is catalog data, not decoration.** `Subject` IS the
+  catalog subject (`concept` · `thumbnail` · `color`) and `Conference.subjectId`
+  points straight at it, so session cards carry their subject's real artwork
+  through `getCatalogImageUrl` with the subject's colour as the ground. That
+  helper returns null when CloudFront is unconfigured, which is a NORMAL state
+  — the colour fallback is a first-class path, not an error placeholder. The
+  previous stock photo and the vendored Google Meet artwork are gone.
 - **Bare room layout**: full-screen LiveKit UI lives under
   `src/app/[lang]/s/[subdomain]/(live-room)/` (NOT under
   `(school-dashboard)`) so it can use a minimal layout without sidebar.
 - **Two permission/validation layers, on purpose**: the _rich sessions layer_
-  (`authorization.ts` · `permissions.ts` · `validation.ts`) is the strict
+  (`authorization.ts` · `validation.ts`) is the strict
   runtime gate for the LiveKit room flow (join / token / start / end); the
   _list layer_ (`list-permissions.ts` · `list-validation.ts` · `list-actions.ts`)
   is the CRUD gate for the dashboard table + external-link sessions. They diverge
@@ -185,7 +203,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
 - **Per-section recording opt-out**: `setSectionRecordingOptOut` (`actions/settings.ts`)
   overrides the school-wide `conferenceRecordingDefault` per section.
 - **Docs structure is component-driven**: the `## Structure` section of
-  `content/docs-{en,ar}/live.mdx` renders `<ConferenceStructure />` from
+  `content/docs-{en,ar}/live.mdx` renders `<LiveStructure />` from
   `src/components/docs/live-structure.tsx` (registered in `src/mdx-components.tsx`).
   When you add/rename block files, update that component's node tree — NOT a code
   fence in the mdx.

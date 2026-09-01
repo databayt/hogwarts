@@ -5192,6 +5192,9 @@
         "hero": {
           "liveCount": {
             "one": "{count} class running now",
+            "two": "{count} classes running now",
+            "few": "{count} classes running now",
+            "many": "{count} classes running now",
             "other": "{count} classes running now"
           },
           "nothingLive": "Nothing is live right now",
