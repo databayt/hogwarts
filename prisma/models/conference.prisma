@@ -1,8 +1,8 @@
 // Conference — video conferencing (LiveKit SFU + external pasted-link providers)
 //
 // See:
-//   src/components/school-dashboard/conference/livekit/*  — server SDK wrappers (rooms, tokens, egress, webhook)
-//   src/components/school-dashboard/conference/           — block UI + server actions
+//   src/components/school-dashboard/live/livekit/*  — server SDK wrappers (rooms, tokens, egress, webhook)
+//   src/components/school-dashboard/live/           — block UI + server actions
 //   src/app/api/webhooks/livekit/                         — webhook ingestion
 //
 // All models are schoolId-scoped. Room name embeds schoolId so the SFU

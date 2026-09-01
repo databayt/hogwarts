@@ -6,7 +6,7 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { LiveClassDetailContent } from "@/components/school-dashboard/conference/detail"
+import { LiveClassDetailContent } from "@/components/school-dashboard/live/detail"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>

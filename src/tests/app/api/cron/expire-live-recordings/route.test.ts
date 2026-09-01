@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { deleteRecordingObject } from "@/components/school-dashboard/conference/livekit/recording-urls"
+import { deleteRecordingObject } from "@/components/school-dashboard/live/livekit/recording-urls"
 import { GET } from "@/app/api/cron/expire-live-recordings/route"
 
 vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))
@@ -14,7 +14,7 @@ vi.mock("@/lib/db", () => ({
   db: { conferenceRecording: { findMany: vi.fn(), update: vi.fn() } },
 }))
 vi.mock(
-  "@/components/school-dashboard/conference/livekit/recording-urls",
+  "@/components/school-dashboard/live/livekit/recording-urls",
   () => ({ deleteRecordingObject: vi.fn(async () => true) })
 )
 

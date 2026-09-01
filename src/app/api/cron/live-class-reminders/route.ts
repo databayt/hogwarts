@@ -13,8 +13,8 @@ import { NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { materializeOnlineSchools } from "@/components/school-dashboard/conference/actions/materialize-day"
-import { notifyClassStartingSoon } from "@/components/school-dashboard/conference/actions/notifications"
+import { materializeOnlineSchools } from "@/components/school-dashboard/live/actions/materialize-day"
+import { notifyClassStartingSoon } from "@/components/school-dashboard/live/actions/notifications"
 
 /** Upper bound of `School.conferenceReminderLeadMinutes` (mirrors the settings schema). */
 const MAX_REMINDER_LEAD_MINUTES = 60

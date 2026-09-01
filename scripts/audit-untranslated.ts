@@ -155,7 +155,7 @@ const DIR_MODELS: Record<string, (keyof typeof TRANSLATABLE)[]> = {
   // school-dashboard/library is an orphaned client prototype (own local Book
   // interface, imported nowhere) — the real Book surfaces live in library/.
   "src/components/library": ["Book", "Textbook"],
-  "src/components/school-dashboard/conference": ["Conference"],
+  "src/components/school-dashboard/live": ["Conference"],
   "src/components/school-dashboard/notifications": ["Notification"],
   "src/components/school-dashboard/transportation/routes": ["Route"],
   // Document + Section: registered, but no dedicated render surface yet —
@@ -237,9 +237,9 @@ const PREWARM_EXEMPT: Record<string, string> = {
     "provisioning engine (onboarding, no request scope; backfill warms)",
   "src/components/catalog/setup.ts":
     "provisioning engine (onboarding, no request scope; backfill warms)",
-  "src/components/school-dashboard/conference/actions/join-core.ts":
+  "src/components/school-dashboard/live/actions/join-core.ts":
     "non-content: token/roomSid bookkeeping only (was tokens.ts before the join-core split)",
-  "src/components/school-dashboard/conference/livekit/webhook.ts":
+  "src/components/school-dashboard/live/livekit/webhook.ts":
     "non-content: status/timestamp transitions only",
   "src/app/api/mobile/events/[id]/register/route.ts":
     "non-content: currentAttendees counter only",

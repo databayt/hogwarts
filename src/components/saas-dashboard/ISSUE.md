@@ -96,7 +96,7 @@ re-bucketing `.audit-findings.json` by file path. Schema indexes
 
 > 2026-06-13: `observability/conference/queries.ts` TURN-fallback rate scoped to
 > joined participants + `0n` BigInt fallback (metric-correctness only). Owned by
-> the conference block — see `school-dashboard/conference/ISSUE.md` (hardening
+> the conference block — see `school-dashboard/live/ISSUE.md` (hardening
 > pass) and hogwarts#3. No dashboard-level change.
 
 ### P0 -- Critical

@@ -3,7 +3,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
-import { performLiveClassJoin } from "@/components/school-dashboard/conference/actions/join-core"
+import { performLiveClassJoin } from "@/components/school-dashboard/live/actions/join-core"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

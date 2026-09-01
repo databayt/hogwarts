@@ -3,7 +3,7 @@
 
 import { ReactNode } from "react"
 
-import { ConferenceSectionNav } from "@/components/school-dashboard/conference/nav"
+import { ConferenceSectionNav } from "@/components/school-dashboard/live/nav"
 
 interface Props {
   children: ReactNode

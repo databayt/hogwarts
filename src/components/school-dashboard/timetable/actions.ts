@@ -77,8 +77,8 @@ import {
   DEFAULT_SCHOOL_TZ,
   schoolDayOfWeek,
   schoolDayWindow,
-} from "@/components/school-dashboard/conference/day-window"
-import { findSchoolClosure } from "@/components/school-dashboard/conference/school-calendar"
+} from "@/components/school-dashboard/live/day-window"
+import { findSchoolClosure } from "@/components/school-dashboard/live/school-calendar"
 import { getDisplayLang } from "@/components/translation/locale"
 import { getLabels, getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
@@ -2257,6 +2257,16 @@ export async function getTimetableByStudentGrade(input: {
     getLiveClassIndicators(schoolId),
   ])
 
+  // A student is enrolled in one Class row per subject *per section*, so
+  // counting those rows reported 36 "subjects" for a grid holding nine. Count
+  // the distinct subjects the student is actually timetabled for, and keep the
+  // enrollment count only as a fallback for a term with no slots yet.
+  const distinctSubjects = new Set(
+    slots
+      .map((slot) => slot.subject?.name ?? slot.class?.subject?.name)
+      .filter((name): name is string => !!name)
+  )
+
   return {
     studentInfo: {
       id: student.id,
@@ -2265,7 +2275,7 @@ export async function getTimetableByStudentGrade(input: {
       gradeLang,
     },
     schoolName: school?.name || "",
-    subjectCount,
+    subjectCount: distinctSubjects.size || subjectCount,
     workingDays: config.workingDays,
     periods: periods.map((p, idx) => ({
       id: p.id,

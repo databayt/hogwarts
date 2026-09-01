@@ -13,7 +13,7 @@ const { push, createLiveClassFromTimetable, ErrorToast } = vi.hoisted(() => ({
 }))
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }))
-vi.mock("@/components/school-dashboard/conference/actions/sessions", () => ({
+vi.mock("@/components/school-dashboard/live/actions/sessions", () => ({
   createLiveClassFromTimetable,
 }))
 vi.mock("@/components/atom/toast", () => ({ ErrorToast }))

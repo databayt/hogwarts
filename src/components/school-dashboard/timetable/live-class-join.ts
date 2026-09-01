@@ -9,7 +9,7 @@ import { db } from "@/lib/db"
 import {
   DEFAULT_SCHOOL_TZ,
   schoolDayWindow,
-} from "@/components/school-dashboard/conference/day-window"
+} from "@/components/school-dashboard/live/day-window"
 
 /**
  * Live-class Join info attached to a today-schedule entry. `sessionId` is

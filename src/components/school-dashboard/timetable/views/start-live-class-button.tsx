@@ -9,7 +9,7 @@ import { Video } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ErrorToast } from "@/components/atom/toast"
 import { type Locale } from "@/components/internationalization/config"
-import { createLiveClassFromTimetable } from "@/components/school-dashboard/conference/actions/sessions"
+import { createLiveClassFromTimetable } from "@/components/school-dashboard/live/actions/sessions"
 
 /**
  * "Start live class" button on the teacher's Current/Next timetable card.

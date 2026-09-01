@@ -31,7 +31,7 @@ last_audited: 2026-06-11
 - [x] Added 7 `liveClasses.networkTest.{qualityExcellent,qualityGood,qualityPoor,qualityLost,qualityUnknown,pathUnknown,pathNotConnected}`
       keys en+ar (the diagnostic page rendered these values as hardcoded English).
       Routine additive feature-namespace change, parity-kept; no system change.
-      Owned by the conference block — see `school-dashboard/conference/ISSUE.md`
+      Owned by the conference block — see `school-dashboard/live/ISSUE.md`
       (2026-06-13 hardening pass) and hogwarts#3.
 
 ## Done (2026-06-12 — ratchet defense)

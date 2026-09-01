@@ -9,7 +9,7 @@ import { NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { deleteRecordingObject } from "@/components/school-dashboard/conference/livekit/recording-urls"
+import { deleteRecordingObject } from "@/components/school-dashboard/live/livekit/recording-urls"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

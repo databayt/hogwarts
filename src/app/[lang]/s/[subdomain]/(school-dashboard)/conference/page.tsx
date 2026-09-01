@@ -9,13 +9,13 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/conference/day-window"
-import { ConferenceLandingContent } from "@/components/school-dashboard/conference/landing/content"
-import type { LandingSession } from "@/components/school-dashboard/conference/landing/types"
+import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
+import { ConferenceLandingContent } from "@/components/school-dashboard/live/landing/content"
+import type { LandingSession } from "@/components/school-dashboard/live/landing/types"
 import {
   getConferenceLandingSessions,
   resolveViewerSectionScope,
-} from "@/components/school-dashboard/conference/queries"
+} from "@/components/school-dashboard/live/queries"
 import { localize } from "@/components/translation/localize"
 import { getLabels, getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"

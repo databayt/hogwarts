@@ -7,10 +7,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   handleWebhookEvent,
   verifyWebhook,
-} from "@/components/school-dashboard/conference/livekit/webhook"
+} from "@/components/school-dashboard/live/livekit/webhook"
 import { POST } from "@/app/api/webhooks/livekit/route"
 
-vi.mock("@/components/school-dashboard/conference/livekit/webhook", () => ({
+vi.mock("@/components/school-dashboard/live/livekit/webhook", () => ({
   verifyWebhook: vi.fn(),
   handleWebhookEvent: vi.fn(),
 }))

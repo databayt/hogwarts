@@ -18,7 +18,7 @@ import { after, NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { syncConferenceAttendance } from "@/components/school-dashboard/conference/actions/attendance-sync"
+import { syncConferenceAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

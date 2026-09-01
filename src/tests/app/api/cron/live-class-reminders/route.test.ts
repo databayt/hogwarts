@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { notifyClassStartingSoon } from "@/components/school-dashboard/conference/actions/notifications"
+import { notifyClassStartingSoon } from "@/components/school-dashboard/live/actions/notifications"
 import { GET } from "@/app/api/cron/live-class-reminders/route"
 
 vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))
@@ -20,7 +20,7 @@ vi.mock("@/lib/db", () => ({
   },
 }))
 vi.mock(
-  "@/components/school-dashboard/conference/actions/notifications",
+  "@/components/school-dashboard/live/actions/notifications",
   () => ({ notifyClassStartingSoon: vi.fn(async () => ({ created: 0 })) })
 )
 

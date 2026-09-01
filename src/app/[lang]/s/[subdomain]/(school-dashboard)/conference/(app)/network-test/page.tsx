@@ -10,9 +10,9 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   getLiveKitConfig,
   getLiveKitReadiness,
-} from "@/components/school-dashboard/conference/livekit/client"
-import { issueAccessToken } from "@/components/school-dashboard/conference/livekit/token"
-import { NetworkTestClient } from "@/components/school-dashboard/conference/network-test"
+} from "@/components/school-dashboard/live/livekit/client"
+import { issueAccessToken } from "@/components/school-dashboard/live/livekit/token"
+import { NetworkTestClient } from "@/components/school-dashboard/live/network-test"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

@@ -12,7 +12,7 @@ import { LumosLessonContent } from "@/components/lumos/dashboard/lesson/content"
 import { getLessonContent } from "@/components/lumos/data/catalog/get-lesson-content"
 import { getLessonWithProgress } from "@/components/lumos/data/catalog/get-lesson-with-progress"
 import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
-import { LessonLiveStrip } from "@/components/school-dashboard/conference/lesson-live-strip"
+import { LessonLiveStrip } from "@/components/school-dashboard/live/lesson-live-strip"
 
 interface Props {
   params: Promise<{

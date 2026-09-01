@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
-import { performLiveClassJoin } from "@/components/school-dashboard/conference/actions/join-core"
+import { performLiveClassJoin } from "@/components/school-dashboard/live/actions/join-core"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
 

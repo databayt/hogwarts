@@ -59,8 +59,8 @@ import type { PrismaClient } from "@prisma/client"
 import {
   schoolDayOfWeek,
   slotInstantsOn,
-} from "@/components/school-dashboard/conference/day-window"
-import { roomNameFor } from "@/components/school-dashboard/conference/livekit/room-naming"
+} from "@/components/school-dashboard/live/day-window"
+import { roomNameFor } from "@/components/school-dashboard/live/livekit/room-naming"
 
 import { logSuccess, logWarning } from "./utils"
 

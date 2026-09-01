@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
 import { resolveActiveTerm } from "@/lib/term-resolver"
-import { schoolDayOfWeek } from "@/components/school-dashboard/conference/day-window"
+import { schoolDayOfWeek } from "@/components/school-dashboard/live/day-window"
 import {
   attachLiveClasses,
   type LiveClassJoinInfo,

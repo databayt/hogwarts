@@ -18,7 +18,7 @@ interface ConferenceStructureProps {
 export function ConferenceStructure({ className }: ConferenceStructureProps) {
   const nodes: ConferenceNode[] = [
     {
-      name: "src/components/school-dashboard/conference/",
+      name: "src/components/school-dashboard/live/",
       type: "directory",
       description: "one block, mirrored 1:1 to /conference",
       children: [

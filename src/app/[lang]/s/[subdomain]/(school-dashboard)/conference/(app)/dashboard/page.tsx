@@ -8,7 +8,7 @@ import { SearchParams } from "nuqs/server"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import LiveClassesContent from "@/components/school-dashboard/conference/content"
+import LiveClassesContent from "@/components/school-dashboard/live/content"
 
 export async function generateMetadata({
   params,

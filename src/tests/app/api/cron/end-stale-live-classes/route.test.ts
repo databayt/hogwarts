@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { syncConferenceAttendance } from "@/components/school-dashboard/conference/actions/attendance-sync"
+import { syncConferenceAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
 import { GET } from "@/app/api/cron/end-stale-live-classes/route"
 
 vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))
@@ -15,7 +15,7 @@ vi.mock("@/lib/db", () => ({
   },
 }))
 vi.mock(
-  "@/components/school-dashboard/conference/actions/attendance-sync",
+  "@/components/school-dashboard/live/actions/attendance-sync",
   () => ({
     syncConferenceAttendance: vi.fn(async () => ({ marked: 0, updated: 0 })),
   })
