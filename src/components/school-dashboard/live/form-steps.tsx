@@ -34,9 +34,9 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type { LiveClassFormData } from "./list-validation"
 import type {
-  LiveSlotOption,
   LiveClassFormOptions,
   LiveClassReferenceData,
+  LiveSlotOption,
 } from "./queries"
 
 // Schema fields + UI-only picker fields (composed into `resources` on submit;
@@ -55,10 +55,7 @@ const DAY_FALLBACK_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
  * "Mathematics · Grade 1-A · Sun 08:00" — the physical class, as a teacher
  * would recognize it on the timetable.
  */
-export function slotLabel(
-  slot: LiveSlotOption,
-  dayNames?: string[]
-): string {
+export function slotLabel(slot: LiveSlotOption, dayNames?: string[]): string {
   const day = dayNames?.[slot.dayOfWeek] ?? DAY_FALLBACK_EN[slot.dayOfWeek]
   const head = [slot.subjectName, slot.sectionName].filter(Boolean).join(" · ")
   return `${head} · ${day} ${slot.startTime}`

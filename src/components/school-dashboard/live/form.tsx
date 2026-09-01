@@ -33,9 +33,9 @@ import {
 } from "./form-steps"
 import {
   createLiveClass,
-  getLiveSlots,
   getLiveClass,
   getLiveClassReferenceOptions,
+  getLiveSlots,
   updateLiveClass,
 } from "./list-actions"
 import {
@@ -43,9 +43,9 @@ import {
   type LiveClassFormData,
 } from "./list-validation"
 import {
-  type LiveSlotOption,
   type LiveClassFormOptions,
   type LiveClassReferenceData,
+  type LiveSlotOption,
 } from "./queries"
 
 const HTTP_URL = /^https?:\/\/.+/

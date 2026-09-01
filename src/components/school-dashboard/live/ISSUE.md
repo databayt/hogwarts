@@ -1302,7 +1302,7 @@ Page height roughly halved. tsc 0 · 601 block tests green (+21).
   in-app rooms and is silently served external links because the SFU is
   unprovisioned. The band says so; the provisioning is `RUNBOOK.md`'s six gates.
 - **Link coverage on the demo is 3/180 with no standing link** — 177
-  section+subject pairs would materialize *nothing*. Real data problem the band
+  section+subject pairs would materialize _nothing_. Real data problem the band
   surfaced on its first render, not a code bug.
 - **The onboarding tour modal covers the hero** on every page in the platform.
   Out of scope here — it is `WelcomeDialog` in the school-dashboard layout.

@@ -72,17 +72,17 @@ The Prisma models are in `prisma/models/live.prisma`.
 
 ## Routes
 
-| Path                          | Layout                   | Roles                                              |
-| ----------------------------- | ------------------------ | -------------------------------------------------- |
-| `/live`                 | school-dashboard         | all 7 school roles — **landing page**              |
-| `/live/dashboard`       | school-dashboard `(app)` | all 7 school roles — **the sessions table**        |
-| `/live/schedule`        | school-dashboard `(app)` | DEVELOPER · ADMIN · TEACHER                        |
-| `/live/settings`        | school-dashboard `(app)` | DEVELOPER · ADMIN                                  |
-| `/live/network-test`    | school-dashboard `(app)` | DEVELOPER · ADMIN (env-gated)                      |
-| `/live/[id]`            | school-dashboard         | all 7 school roles                                 |
-| `/live/[id]/recordings` | school-dashboard         | all except ACCOUNTANT                              |
-| `/live/[id]/room`       | **(live-room)**          | session participants (bare full-screen layout)     |
-| `/live-classes/*`             | —                        | legacy redirect → `/live` (pre-rename links) |
+| Path                    | Layout                   | Roles                                          |
+| ----------------------- | ------------------------ | ---------------------------------------------- |
+| `/live`                 | school-dashboard         | all 7 school roles — **landing page**          |
+| `/live/dashboard`       | school-dashboard `(app)` | all 7 school roles — **the sessions table**    |
+| `/live/schedule`        | school-dashboard `(app)` | DEVELOPER · ADMIN · TEACHER                    |
+| `/live/settings`        | school-dashboard `(app)` | DEVELOPER · ADMIN                              |
+| `/live/network-test`    | school-dashboard `(app)` | DEVELOPER · ADMIN (env-gated)                  |
+| `/live/[id]`            | school-dashboard         | all 7 school roles                             |
+| `/live/[id]/recordings` | school-dashboard         | all except ACCOUNTANT                          |
+| `/live/[id]/room`       | **(live-room)**          | session participants (bare full-screen layout) |
+| `/live-classes/*`       | —                        | legacy redirect → `/live` (pre-rename links)   |
 
 `(app)` is a route GROUP: it contributes no URL segment, it only supplies the
 heading + tab strip (`nav.tsx`). `/live` and `/live/[id]` sit
@@ -98,7 +98,7 @@ reached from a row, not a tab.
 | `/api/cron/live-class-reminders`   | GET    | Materializes today's online-school slots, then dispatches 5–20-min start reminders (every 15 min, idempotent) |
 | `/api/cron/end-stale-live-classes` | GET    | Close sessions stuck `live` past end + attendance sync; cancel never-started `scheduled` rows (every 30 min)  |
 | `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500)                                                                   |
-| `/api/mobile/live/[id]/join` | GET    | Mobile join ticket — same `join-core` eligibility as the web, JWT actor instead of a session cookie           |
+| `/api/mobile/live/[id]/join`       | GET    | Mobile join ticket — same `join-core` eligibility as the web, JWT actor instead of a session cookie           |
 
 ## Status
 
@@ -159,7 +159,7 @@ reached from a row, not a tab.
 | Reminder lead time per school                          | ✅ settings → reminders cron                         |
 | Per-grade online override (section ?? grade ?? school) | ✅ `AcademicGrade.conferenceOnline`                  |
 | Offline: student work queued + synced (no content)     | ✅ live — `src/lib/offline/*`                        |
-| Capacity dashboard (`/observability/live`)       | ✅ live (DEVELOPER-only)                             |
+| Capacity dashboard (`/observability/live`)             | ✅ live (DEVELOPER-only)                             |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any
 time, for any length, and either way round**, without ever closing the

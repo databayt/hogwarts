@@ -21,10 +21,7 @@ import {
 import { prewarm } from "@/components/translation/prewarm"
 import { detectLang, withLang } from "@/components/translation/util"
 
-import {
-  liveListRevalidatePaths,
-  liveRevalidatePath,
-} from "./actions/helpers"
+import { liveListRevalidatePaths, liveRevalidatePath } from "./actions/helpers"
 import {
   notifyClassCancelled,
   notifyClassScheduled,
@@ -43,13 +40,13 @@ import { isLiveKitConfigured } from "./livekit/client"
 import { roomNameFor } from "./livekit/room-naming"
 import { getProviderAdapter, type ProviderId } from "./providers"
 import {
-  getLiveSlotOptions,
   getLiveClassDetail,
   getLiveClassesList,
   getLiveClassReferenceData,
+  getLiveSlotOptions,
   resolveViewerSectionScope,
-  type LiveSlotOption,
   type LiveClassReferenceData,
+  type LiveSlotOption,
 } from "./queries"
 
 /** Form tri-state → stored override: default = inherit the school. */

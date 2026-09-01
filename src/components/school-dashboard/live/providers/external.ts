@@ -6,8 +6,8 @@
 // universal zero-infra default; it is fully functional today.
 
 import type {
-  LiveProviderAdapter,
   CreateMeetingInput,
+  LiveProviderAdapter,
   MeetingResult,
 } from "./types"
 

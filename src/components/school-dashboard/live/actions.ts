@@ -21,10 +21,7 @@ export {
   listRecordings,
 } from "./actions/recordings"
 
-export {
-  getLiveSettings,
-  updateLiveSettings,
-} from "./actions/settings"
+export { getLiveSettings, updateLiveSettings } from "./actions/settings"
 
 export { kickParticipant } from "./actions/moderation"
 

@@ -12,8 +12,8 @@ import { getCachedToken } from "./token-cache"
 import {
   ProviderNotConfiguredError,
   ProviderNotImplementedError,
-  type LiveProviderAdapter,
   type CreateMeetingInput,
+  type LiveProviderAdapter,
   type MeetingResult,
 } from "./types"
 

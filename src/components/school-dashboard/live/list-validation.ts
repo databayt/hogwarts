@@ -100,15 +100,13 @@ export const LIVE_CLASS_ONLINE_MODE_VALUES = [
   "both",
 ] as const
 export type LiveClassOnlineMode = (typeof LIVE_CLASS_ONLINE_MODE_VALUES)[number]
-export type LiveProviderValue =
-  (typeof LIVE_CLASS_PROVIDER_VALUES)[number]
+export type LiveProviderValue = (typeof LIVE_CLASS_PROVIDER_VALUES)[number]
 
 // Who inside the school can see & join. `section` = the session's section
 // roster + their guardians (host-only when no section); `school` = every
 // member of the school. Never cross-school — the tenant boundary is absolute.
 export const LIVE_CLASS_VISIBILITY_VALUES = ["section", "school"] as const
-export type LiveVisibilityValue =
-  (typeof LIVE_CLASS_VISIBILITY_VALUES)[number]
+export type LiveVisibilityValue = (typeof LIVE_CLASS_VISIBILITY_VALUES)[number]
 
 // ---------------------------------------------------------------------------
 // Schema factory
