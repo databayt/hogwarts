@@ -20,7 +20,7 @@ import { ConferenceSettingsForm } from "@/components/school-dashboard/live/setti
 
 /**
  * The live-class settings panel — one component behind two doors:
- * `/conference/settings` (the block's own tab) and
+ * `/live/settings` (the block's own tab) and
  * `/school/configuration/live-classes` (the school configuration hub).
  * Server component: loads the school row, terms, sections and link coverage.
  */
@@ -50,7 +50,7 @@ export async function ConferenceSettingsPanel({
   const grades =
     "success" in gradesResult && gradesResult.success ? gradesResult.data : []
   if (!("success" in settings) || !settings.success) {
-    redirect(`/${lang}/conference/dashboard`)
+    redirect(`/${lang}/live/dashboard`)
   }
   const terms =
     "success" in termsResult && termsResult.success ? termsResult.data : []
@@ -74,7 +74,7 @@ export async function ConferenceSettingsPanel({
 
   return (
     // `data-full-width` opts this panel out of the configuration hub's narrow
-    // 400px column (see the editor layout). Harmless on /conference/settings.
+    // 400px column (see the editor layout). Harmless on /live/settings.
     <div data-full-width className="w-full space-y-6">
       <div className="space-y-1">
         <h2 className="text-lg font-semibold">

@@ -46,6 +46,32 @@ last_audited: 2026-07-16
 
 ## Known Issues
 
+### Recently Fixed (2026-09-01 -- students could not open the timetable at all)
+
+- [x] **`/timetable` returned `/unauthorized` for every STUDENT.** `src/routes.ts`
+      listed only ADMIN/TEACHER/DEVELOPER, so `proxy.ts` bounced students at the
+      edge before the page ran — while this block already had a finished student
+      lane and the sidebar, `dashboard/config.ts` and `student-client.tsx` all
+      linked to it. The matrix's alternative, `/my-timetable`, has no page.
+      Fixed with exact entries for `/timetable` + `/timetable/full`, wildcard
+      left admin-only (the four admin subpages have no guard of their own).
+- [x] **The student's first tab was a day list, not the schedule.** `StudentView`
+      now always renders the week grid (`SimpleGrid`, read-only, scoped to the
+      student's own section). The Today/Full tabs are hidden for STUDENT only —
+      TEACHER and GUARDIAN keep them. Current/Next card retained: it carries the
+      live-class Join, which the grid does not.
+- [x] **"36 subjects" above a nine-subject grid.** `getTimetableByStudentGrade`
+      counted enrolled `Class` rows (one per subject per section); it now counts
+      distinct subjects across the student's slots.
+
+### Open follow-ups
+
+- [ ] `/my-timetable` is dead in the `roleRoutes` matrix — no page, nothing links
+      there. Remove the entry or build the route.
+- [ ] ACCOUNTANT has the same contradiction this fix closed for STUDENT:
+      `permissions-config.ts` grants it `view_all` + `view_analytics`, but
+      `src/routes.ts` blocks `/timetable`. Decide which is right.
+
 ### Recently Fixed (2026-07-17 -- teacher fill, the Sudanese school day, isBreak, Arabic naming, skeleton)
 
 Driven by "optimize any pending work + the skeleton", and before that a prod
@@ -501,7 +527,7 @@ and `applyTemplateToTerm` still replay `classId` — section migration pending.
 `SubjectSelection` the school gained after its first run — per-grade catalog
 rows; the demo's Math is ten of them — had no qualified teacher, and the
 generator correctly emitted teacherless slots: 121 of 840. The conference seed
-(`prisma/seeds/conference.ts`) now tops expertise up and backfills teachers
+(`prisma/seeds/live.ts`) now tops expertise up and backfills teachers
 additively (815/840). The right home for that repair is this block's own seed
 path; until then, ALWAYS check `teacherId IS NOT NULL` counts after any
 regeneration, per the CLAUDE.md danger zone.

@@ -114,6 +114,9 @@ function generateNotificationEmailHtml(
       live_class_started: "الفصل المباشر يبث الآن",
       live_class_cancelled: "تم إلغاء الفصل المباشر",
       live_class_recording_ready: "تسجيل الفصل جاهز",
+      content_review: "محتوى بانتظار المراجعة",
+      content_approved: "تمت الموافقة على المحتوى",
+      content_rejected: "المحتوى يحتاج تعديلاً",
     },
     en: {
       message: "New Message",
@@ -146,6 +149,9 @@ function generateNotificationEmailHtml(
       live_class_started: "Live Class Live",
       live_class_cancelled: "Live Class Cancelled",
       live_class_recording_ready: "Recording Ready",
+      content_review: "Pending Platform Review",
+      content_approved: "Content Approved",
+      content_rejected: "Content Needs Changes",
     },
   }
   const typeLabel =

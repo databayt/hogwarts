@@ -31,5 +31,7 @@ export async function resolveSchoolDisplayName(
   if (displayLang === "en" && school.nameEn) return school.nameEn
 
   const name = await getText(school.name, contentLang, displayLang, school.id)
-  return name.replace(/\bAl-Qabas\b/gi, "Alqabs").replace(/\bAl Qabas\b/gi, "Alqabs")
+  return name
+    .replace(/\bAl-Qabas\b/gi, "Alqabs")
+    .replace(/\bAl Qabas\b/gi, "Alqabs")
 }

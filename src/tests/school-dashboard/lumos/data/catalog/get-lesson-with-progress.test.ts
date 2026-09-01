@@ -24,7 +24,8 @@ vi.mock("@/components/catalog/image-url", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    lesson: { findFirst: vi.fn(), findMany: vi.fn() },
+    lesson: { findFirst: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
+    contentOverride: { findFirst: vi.fn(), findMany: vi.fn() },
     enrollment: { findFirst: vi.fn() },
     subject: { findUnique: vi.fn() },
     lessonProgress: { findUnique: vi.fn(), findMany: vi.fn() },
@@ -52,9 +53,11 @@ const mVideos = db.video.findMany as ReturnType<typeof vi.fn>
 const mPurchases = db.videoPurchase.findMany as ReturnType<typeof vi.fn>
 const mPolicy = db.schoolInstructorPolicy.findUnique as ReturnType<typeof vi.fn>
 const mBlocks = db.instructorBlock.findMany as ReturnType<typeof vi.fn>
+const mOverride = db.contentOverride.findFirst as ReturnType<typeof vi.fn>
 
 const LESSON = {
   id: "lesson-1",
+  chapterId: "ch-1",
   name: "Algebra Basics",
   description: "desc",
   thumbnail: null,
@@ -107,6 +110,7 @@ beforeEach(() => {
   })
   mockTenant.mockResolvedValue({ schoolId: "school-1", subdomain: "demo" })
   mLesson.mockResolvedValue(LESSON)
+  mOverride.mockResolvedValue(null) // nothing hidden by default
   mEnroll.mockResolvedValue({ id: "enr-1" }) // enrolled by default
   mSubject.mockResolvedValue({ price: 0 })
   mProgress.mockResolvedValue(null)
@@ -160,6 +164,39 @@ describe("getLessonWithProgress — access", () => {
     const result = await getLessonWithProgress("lesson-1")
     expect(result).not.toBeNull()
     expect(mEnroll).not.toHaveBeenCalled()
+  })
+
+  // A school hide must BLOCK, not merely delist. Before 2026-08-29 the course
+  // tree and sidebar dropped a hidden lesson while this fetcher still served
+  // it, so a bookmark, browser history or a Continue Watching card gave a
+  // student full access — video and gradebook-writing quiz included — to
+  // content the school believed it had removed.
+  it("returns null for a lesson the school has hidden", async () => {
+    mOverride.mockResolvedValueOnce({ id: "ov-1" })
+    expect(await getLessonWithProgress("lesson-1")).toBeNull()
+  })
+
+  it("checks the hide against BOTH the lesson and its parent chapter", async () => {
+    await getLessonWithProgress("lesson-1")
+    expect(mOverride).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          schoolId: "school-1",
+          isHidden: true,
+          // The video query's own `NOT: { overrides: ... }` cannot cover this:
+          // `Video.overrides` is the "VideoOverrides" relation keyed on
+          // `lessonVideoId`, so it never matches a lesson- or chapter-level row.
+          OR: [{ catalogLessonId: "lesson-1" }, { catalogChapterId: "ch-1" }],
+        },
+      })
+    )
+  })
+
+  it("does not consult overrides for an individual (no-school) user", async () => {
+    mockTenant.mockResolvedValueOnce({ schoolId: null, subdomain: null })
+    const result = await getLessonWithProgress("lesson-1")
+    expect(result).not.toBeNull()
+    expect(mOverride).not.toHaveBeenCalled()
   })
 })
 

@@ -73,7 +73,9 @@ export async function translate(
   // Translate via Google
   let translated = await translateRaw(text, sourceLang, targetLang)
   if (targetLang === "en") {
-    translated = translated.replace(/\bAl-Qabas\b/gi, "Alqabs").replace(/\bAl Qabas\b/gi, "Alqabs")
+    translated = translated
+      .replace(/\bAl-Qabas\b/gi, "Alqabs")
+      .replace(/\bAl Qabas\b/gi, "Alqabs")
   }
 
   // Cache the result

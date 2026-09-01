@@ -27,7 +27,7 @@ export interface ConferenceNavDictionary {
 /**
  * The tab strip over the conference app surfaces.
  *
- * The landing page (`/conference`) is deliberately NOT a tab: it is reached
+ * The landing page (`/live`) is deliberately NOT a tab: it is reached
  * from the sidebar and owns its own hero, exactly as `/lumos` does. What's
  * left is one flat row over the surfaces that manage sessions.
  *
@@ -48,13 +48,13 @@ export function getTabsForRole(
   return [
     {
       name: t?.sessions ?? "Sessions",
-      href: `/${lang}/conference/dashboard`,
+      href: `/${lang}/live/dashboard`,
     },
     ...(canSchedule
       ? [
           {
             name: t?.schedule ?? "Schedule",
-            href: `/${lang}/conference/schedule`,
+            href: `/${lang}/live/schedule`,
           },
         ]
       : []),
@@ -62,11 +62,11 @@ export function getTabsForRole(
       ? [
           {
             name: t?.settings ?? "Settings",
-            href: `/${lang}/conference/settings`,
+            href: `/${lang}/live/settings`,
           },
           {
             name: t?.networkTest ?? "Network test",
-            href: `/${lang}/conference/network-test`,
+            href: `/${lang}/live/network-test`,
           },
         ]
       : []),

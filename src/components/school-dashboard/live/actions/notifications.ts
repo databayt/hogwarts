@@ -119,7 +119,7 @@ async function loadSession(
   const lang = pickLang(session.school.preferredLanguage)
   const teacherFullName =
     `${session.teacher.firstName} ${session.teacher.lastName}`.trim()
-  const routePath = `/conference/${session.id}`
+  const routePath = `/live/${session.id}`
 
   const userIds = new Set<string>()
   if (session.teacher.userId) userIds.add(session.teacher.userId)
@@ -225,7 +225,7 @@ async function dispatch(
       priority:
         kind === "started" || kind === "startingSoon" ? "high" : "normal",
       // Push is requested now that mobile can actually act on a live class
-      // (/api/mobile/conference/:id/join). Delivery still depends on the user
+      // (/api/mobile/live/:id/join). Delivery still depends on the user
       // having a registered device and on the push worker running; the hub
       // filters per-user channel preferences either way, so a school with no
       // mobile users simply never sends one.

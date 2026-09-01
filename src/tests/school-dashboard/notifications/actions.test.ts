@@ -468,3 +468,77 @@ describe("Notification Actions", () => {
     })
   })
 })
+
+// ============================================================================
+// Operator (DEVELOPER) branch — a bell that renders but cannot mark read is
+// worse than no bell: the badge flickers back on every optimistic rollback.
+// ============================================================================
+
+describe("Notification mutations — operator (no tenant context)", () => {
+  const DEV = "dev-1"
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getTenantContext).mockResolvedValue({ schoolId: null } as any)
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: DEV, schoolId: null, role: "DEVELOPER" },
+    } as any)
+  })
+
+  it("marks a DEVELOPER's notification read, scoped by userId alone", async () => {
+    vi.mocked(db.notification.findFirst).mockResolvedValue({
+      id: "n-1",
+      userId: DEV,
+      read: false,
+    } as any)
+    vi.mocked(db.notification.updateMany).mockResolvedValue({ count: 1 } as any)
+
+    const result = await markNotificationAsRead({ notificationId: "n-1" })
+
+    expect(result.success).toBe(true)
+    // userId IS the recipient, so it is a sufficient ownership scope; there is
+    // no schoolId to filter on for a platform operator.
+    const where = vi.mocked(db.notification.updateMany).mock.calls[0][0]
+      .where as any
+    expect(where).toEqual({ id: "n-1", userId: DEV })
+    expect(where).not.toHaveProperty("schoolId")
+  })
+
+  it("marks all read for a DEVELOPER", async () => {
+    vi.mocked(db.notification.updateMany).mockResolvedValue({ count: 4 } as any)
+
+    const result = await markAllNotificationsAsRead({ userId: DEV })
+
+    expect(result.success).toBe(true)
+    const where = vi.mocked(db.notification.updateMany).mock.calls[0][0]
+      .where as any
+    expect(where).not.toHaveProperty("schoolId")
+    expect(where.userId).toBe(DEV)
+  })
+
+  it("deletes a DEVELOPER's notification", async () => {
+    vi.mocked(db.notification.findFirst).mockResolvedValue({
+      id: "n-1",
+      userId: DEV,
+    } as any)
+    vi.mocked(db.notification.deleteMany).mockResolvedValue({ count: 1 } as any)
+
+    const result = await deleteNotification({ notificationId: "n-1" })
+
+    expect(result.success).toBe(true)
+    const where = vi.mocked(db.notification.deleteMany).mock.calls[0][0]
+      .where as any
+    expect(where).toEqual({ id: "n-1", userId: DEV })
+  })
+
+  it("still refuses a tenantless NON-developer", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u-9", schoolId: null, role: "ADMIN" },
+    } as any)
+
+    const result = await markNotificationAsRead({ notificationId: "n-1" })
+
+    expect(result.success).toBe(false)
+    expect(db.notification.updateMany).not.toHaveBeenCalled()
+  })
+})

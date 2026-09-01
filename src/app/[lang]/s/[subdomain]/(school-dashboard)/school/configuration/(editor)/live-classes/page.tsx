@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /**
  * The live-classes tab of the school configuration hub. Same panel as
- * `/conference/settings` (the block's own tab) — one source of settings,
+ * `/live/settings` (the block's own tab) — one source of settings,
  * two doors.
  */
 export default async function LiveClassesConfigPage({ params }: Props) {

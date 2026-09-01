@@ -198,25 +198,39 @@ export async function upsertGradebookResult(params: {
 }
 
 /**
- * Best-effort resolution of a class the student belongs to for a given subject,
- * used by quiz/LMS surfaces that aren't already class-scoped. Returns null when
- * the student can't be tied to a class (caller should skip the gradebook write).
+ * Resolve the class a student belongs to FOR A GIVEN SUBJECT, used by quiz/LMS
+ * surfaces that aren't already class-scoped. Returns null when the student
+ * can't be tied to a class for that subject — the caller must then skip the
+ * gradebook write.
+ *
+ * **The match is subject-strict, and that is load-bearing.** Until 2026-08-29
+ * this fell back to `studentClass.findFirst({ schoolId, studentId })` — ANY
+ * class the student was in, with no `orderBy` — whenever no subject-matched
+ * class existed. That looked like a graceful degradation and was in fact silent
+ * data corruption, because `report-cards-core.ts` buckets `Result` rows by
+ * `(studentId, classId)` and labels each bucket with `cls.subjectId`: it never
+ * reads `Result.subjectId`. So a Grade-7 Mathematics lesson quiz taken at a
+ * school with no timetabled Maths class for that student was added to whichever
+ * class `findFirst` happened to return — their Arabic grade, say — and the
+ * absent `orderBy` made the victim subject non-deterministic between calls.
+ * Lumos courses map to catalog subjects (~120 selections for a 12-grade school)
+ * while `Class` rows exist only for subjects actually timetabled WITH THAT
+ * STUDENT, so the mismatch was the common case, not the edge.
+ *
+ * Recording nothing is the correct failure: the lumos quiz already surfaces
+ * `recorded: false` to the student, and a missing score is recoverable in a way
+ * that a score silently folded into an unrelated subject is not.
  */
 export async function resolveStudentClassForSubject(
   schoolId: string,
   studentId: string,
   subjectId?: string | null
 ): Promise<string | null> {
-  if (subjectId) {
-    const bySubject = await db.class.findFirst({
-      where: { schoolId, subjectId, studentClasses: { some: { studentId } } },
-      select: { id: true },
-    })
-    if (bySubject) return bySubject.id
-  }
-  const anyClass = await db.studentClass.findFirst({
-    where: { schoolId, studentId },
-    select: { classId: true },
+  if (!subjectId) return null
+
+  const bySubject = await db.class.findFirst({
+    where: { schoolId, subjectId, studentClasses: { some: { studentId } } },
+    select: { id: true },
   })
-  return anyClass?.classId ?? null
+  return bySubject?.id ?? null
 }

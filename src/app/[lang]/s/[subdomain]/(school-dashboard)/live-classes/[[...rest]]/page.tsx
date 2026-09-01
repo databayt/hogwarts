@@ -1,8 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 //
-// Permanent redirect: the live-classes feature was renamed to `conference`.
-// Preserves any sub-path (`/live-classes/{id}/room` → `/conference/{id}/room`)
+// Permanent redirect: the live-classes feature is now `live`.
+// Preserves any sub-path (`/live-classes/{id}/room` → `/live/{id}/room`)
 // and query string so existing bookmarks keep working.
 
 import { permanentRedirect } from "next/navigation"
@@ -24,5 +24,5 @@ export default async function LiveClassesRedirect({
     else if (value !== undefined) qs.append(key, value)
   }
   const query = qs.size > 0 ? `?${qs.toString()}` : ""
-  permanentRedirect(`/${lang}/conference${sub}${query}`)
+  permanentRedirect(`/${lang}/live${sub}${query}`)
 }

@@ -6,15 +6,22 @@ import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 /**
  * Fetches a catalog lesson by ID for admin viewing/editing.
  * Includes videos, attachments, and school-specific content.
+ *
+ * The tenant is resolved HERE, never accepted from the caller. This module is
+ * `"use server"`, so every export is a browser-reachable POST endpoint: a
+ * `schoolId` parameter is attacker-controlled, and this accessor returns
+ * UNSIGNED video URLs, unapproved and PRIVATE rows, and the uploader's email —
+ * so an ADMIN at school A could have read school B's by passing its id. Same
+ * hole, same fix as `get-all-courses.ts` (2026-07-17) and
+ * `get-course-sidebar-data.ts` (2026-08-14); these two were missed by both
+ * sweeps because they had no production callers.
  */
-export async function adminGetLesson(
-  lessonId: string,
-  schoolId: string | null
-) {
+export async function adminGetLesson(lessonId: string) {
   // Admin-only accessor: returns UNSIGNED video URLs plus unapproved/PAID
   // videos, so it must never be reachable by students/teachers or anonymous
   // callers. notFound() (404) avoids leaking whether the lesson exists.
@@ -23,6 +30,8 @@ export async function adminGetLesson(
   if (role !== "ADMIN" && role !== "DEVELOPER") {
     notFound()
   }
+
+  const { schoolId } = await getTenantContext()
 
   const lesson = await db.lesson.findFirst({
     where: {

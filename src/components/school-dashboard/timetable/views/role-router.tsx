@@ -201,12 +201,13 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
     case "student":
     default:
       // Student view is also the most-restricted fallback.
+      // StudentView renders the week grid unconditionally — a student has a
+      // single schedule, so there is no Today/Full split to select.
       view = (
         <StudentView
           {...commonProps}
           classId={viewData.filterData.classId}
           classIds={viewData.filterData.classIds}
-          defaultTab={defaultTab}
         />
       )
   }

@@ -101,7 +101,7 @@ export async function attachLiveClasses<
     // mode. It is deliberately slot-less AND subject-less (see conference
     // `actions/open-room.ts`), so the (section, subject) key above cannot see
     // it — without this query a school on `mode: "open"` has no path from any
-    // timetable card to its own room, and /conference is its only surface.
+    // timetable card to its own room, and /live is its only surface.
     db.conference.findMany({
       where: {
         schoolId,

@@ -6,6 +6,10 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  countVisibleLessonsBySubject,
+  hiddenLessonExclusion,
+} from "@/components/lumos/lib/content-hidden"
 
 export interface ChildProgress {
   student: {
@@ -85,27 +89,24 @@ export async function getChildrenProgress(): Promise<ChildProgress[]> {
     },
     include: {
       subject: { select: { id: true, name: true, slug: true } },
-      progress: { select: { isCompleted: true } },
+      // Numerator excludes lessons the school has hidden, so it agrees with the
+      // denominator below — otherwise a child could read past 100%.
+      progress: {
+        where: hiddenLessonExclusion(schoolId),
+        select: { isCompleted: true },
+      },
     },
   })
 
-  // ONE query for the published-lesson counts across every subject in play
-  // (was a per-enrollment count) — group in memory.
+  // ONE query for the VISIBLE-lesson counts across every subject in play (was a
+  // per-enrollment count, and counted lessons this school has hidden — so a
+  // guardian saw a permanently capped percentage that disagreed with the one
+  // the student saw on the course page).
   const subjectIds = [...new Set(enrollments.map((e) => e.subject.id))]
-  const lessonCountBySubject = new Map<string, number>()
-  if (subjectIds.length > 0) {
-    const lessons = await db.lesson.findMany({
-      where: {
-        chapter: { subjectId: { in: subjectIds } },
-        status: "PUBLISHED",
-      },
-      select: { chapter: { select: { subjectId: true } } },
-    })
-    for (const l of lessons) {
-      const sid = l.chapter.subjectId
-      lessonCountBySubject.set(sid, (lessonCountBySubject.get(sid) ?? 0) + 1)
-    }
-  }
+  const lessonCountBySubject = await countVisibleLessonsBySubject(
+    schoolId,
+    subjectIds
+  )
 
   // Group enrollments by child and shape the result.
   const byUser = new Map<string, ChildProgress["enrollments"]>()

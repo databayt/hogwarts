@@ -51,7 +51,7 @@ export function ConferenceNowSection({
         </h2>
         <Link
           className={buttonVariants({ variant: "ghost", size: "sm" })}
-          href={`/${lang}/conference/dashboard`}
+          href={`/${lang}/live/dashboard`}
         >
           {n?.viewAll}
         </Link>
@@ -83,7 +83,7 @@ export function ConferenceNowSection({
       ) : (
         <div className="flex flex-col items-center gap-4 py-8 text-center">
           <Image
-            src="/conference/agenda-empty-state.svg"
+            src="/live/agenda-empty-state.svg"
             alt={n?.emptyAlt ?? ""}
             width={315}
             height={167}
@@ -154,7 +154,7 @@ function SessionGroup({
                 variant: session.isLive ? "default" : "outline",
                 className: "mt-auto",
               })}
-              href={`/${lang}/conference/${session.id}`}
+              href={`/${lang}/live/${session.id}`}
             >
               {session.isLive ? n?.joinNow : n?.open}
             </Link>

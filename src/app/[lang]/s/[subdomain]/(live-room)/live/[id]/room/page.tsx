@@ -44,7 +44,7 @@ export default async function Page({ params }: Props) {
     ) {
       redirect(detail.data.meetingUrl)
     }
-    redirect(`/${lang}/conference/${id}`)
+    redirect(`/${lang}/live/${id}`)
   }
 
   const result = await joinLiveClass(id)
@@ -58,7 +58,7 @@ export default async function Page({ params }: Props) {
         <p className="text-destructive text-base font-medium">
           {resolveLiveClassError(dictionary, code)}
         </p>
-        <a className="text-sm underline" href={`/${lang}/conference/${id}`}>
+        <a className="text-sm underline" href={`/${lang}/live/${id}`}>
           {t?.actions?.back ?? "Back"}
         </a>
       </div>

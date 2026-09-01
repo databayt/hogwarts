@@ -148,17 +148,17 @@ export async function concurrentCapError(
  */
 export function conferenceRevalidatePath(subPath = ""): string {
   const sub = subPath ? `/${subPath.replace(/^\//, "")}` : ""
-  return `/[lang]/s/[subdomain]/conference${sub}`
+  return `/[lang]/s/[subdomain]/live${sub}`
 }
 
 /**
  * Every page that renders the school's session list, for the mutations that
  * change it.
  *
- * There are two since the block grew a landing page: `/conference` (hero +
- * the live/coming-up strip) and `/conference/dashboard` (the table). The
+ * There are two since the block grew a landing page: `/live` (hero +
+ * the live/coming-up strip) and `/live/dashboard` (the table). The
  * table lives inside an `(app)` route group, and a route group contributes no
- * URL segment — so it is `…/conference/dashboard` here, NOT `…/(app)/dashboard`,
+ * URL segment — so it is `…/live/dashboard` here, NOT `…/(app)/dashboard`,
  * which would match no cache tag at all.
  *
  * Call sites still pass `"page"`: `for (const p of conferenceListRevalidatePaths())
@@ -175,7 +175,7 @@ export function conferenceListRevalidatePaths(): string[] {
  * otherwise-bracketed route — matches no cache tag at all, even with `"page"`.
  * Next registers a page under either its route PATTERN or its concrete URL,
  * never a mix of the two (`next/dist/server/lib/implicit-tags.js`), so
- * `.../conference/<cuid>` invalidated nothing. Passing the literal `[id]`
+ * `.../live/<cuid>` invalidated nothing. Passing the literal `[id]`
  * segment invalidates the pattern, which is what these dynamic pages are
  * registered under.
  *
@@ -185,7 +185,7 @@ export function conferenceListRevalidatePaths(): string[] {
  */
 export function conferenceSessionRevalidatePaths(): string[] {
   return [
-    "/[lang]/s/[subdomain]/conference/[id]",
-    "/[lang]/s/[subdomain]/conference/[id]/recordings",
+    "/[lang]/s/[subdomain]/live/[id]",
+    "/[lang]/s/[subdomain]/live/[id]/recordings",
   ]
 }

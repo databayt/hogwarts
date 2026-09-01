@@ -6,6 +6,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sidebar,
@@ -23,7 +24,17 @@ import { Icons } from "@/components/template/platform-sidebar/icons"
 
 import { platformNav } from "./config"
 
-export default function SaasSidebar() {
+interface SaasSidebarProps {
+  /**
+   * Pending items in the catalog approval queue. Rendered as a badge on the
+   * Catalog item so an operator sees waiting school submissions from anywhere
+   * in the dashboard — the per-tab counts inside /catalog only appear once you
+   * are already there, which is too late to be a signal.
+   */
+  pendingApprovals?: number
+}
+
+export default function SaasSidebar({ pendingApprovals }: SaasSidebarProps) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
   const { dictionary } = useDictionary()
@@ -71,6 +82,16 @@ export default function SaasSidebar() {
                           })()}
                         </span>
                         {translatedTitle}
+                        {item.href === "/catalog" &&
+                          typeof pendingApprovals === "number" &&
+                          pendingApprovals > 0 && (
+                            <Badge
+                              variant="secondary"
+                              className="ms-auto h-5 min-w-5 justify-center px-1 text-[10px] font-semibold"
+                            >
+                              {pendingApprovals > 99 ? "99+" : pendingApprovals}
+                            </Badge>
+                          )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

@@ -71,6 +71,9 @@ export const notificationTypeSchema = z.enum([
   "live_class_started",
   "live_class_cancelled",
   "live_class_recording_ready",
+  "content_review",
+  "content_approved",
+  "content_rejected",
 ])
 
 export const notificationPrioritySchema = z.enum([

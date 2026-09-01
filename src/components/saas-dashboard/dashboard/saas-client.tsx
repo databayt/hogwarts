@@ -22,6 +22,7 @@ import { SaasUpcoming } from "./saas-upcoming"
 interface SaasDashboardClientProps {
   locale: Locale
   dictionary: Dictionary
+  pendingApprovals?: number
   totals: {
     totalSchools: number
     activeSchools: number
@@ -50,6 +51,7 @@ interface SaasDashboardClientProps {
 export function SaasDashboardClient({
   locale,
   totals,
+  pendingApprovals,
   weatherData,
   recentSales,
   upcoming,
@@ -76,7 +78,11 @@ export function SaasDashboardClient({
       {/* Section 2: Quick Look */}
       <section>
         <SectionHeading title="Quick Look" />
-        <SaasQuickLook locale={locale} totals={totals} />
+        <SaasQuickLook
+          locale={locale}
+          totals={totals}
+          pendingApprovals={pendingApprovals}
+        />
       </section>
 
       {/* Section 3: Quick Actions */}

@@ -129,10 +129,15 @@ export const getNotificationDictionary = makeRouteDictionary("notification", [
 /** Sales pages - school-dashboard core + sales (leads, CRM, B2B) */
 export const getSalesDictionary = makeRouteDictionary("sales", ["sales"])
 
-/** SaaS operator dashboard - core + sales + messages */
+/**
+ * SaaS operator dashboard - core + sales + messages + notifications.
+ * `notifications` is deliberate, not drift: the operator bell in
+ * saas-header reads dictionary.notifications, and a second fetch inside a
+ * client header would cost more than the one code-split chunk.
+ */
 export const getSaasDashboardDictionary = makeRouteDictionary(
   "saas dashboard",
-  ["sales", "messages"]
+  ["sales", "messages", "notifications"]
 )
 
 /** Attendance pages - school-dashboard core + messages + attendance */

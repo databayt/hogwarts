@@ -99,7 +99,9 @@ export function AcademicContent({
   }
 
   return (
-    <Card>
+    // `data-wide` opts this tabbed UI out of the configuration hub's narrow
+    // 400px column (see the editor layout).
+    <Card data-wide>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />

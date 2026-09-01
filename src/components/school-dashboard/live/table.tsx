@@ -111,14 +111,14 @@ function LiveClassesTableInner({
   // Clean client paths — the middleware maps them to /s/[subdomain] internally.
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/${lang}/conference/${id}`)
+      router.push(`/${lang}/live/${id}`)
     },
     [router, lang]
   )
 
   const handleJoinRoom = useCallback(
     (id: string) => {
-      router.push(`/${lang}/conference/${id}/room`)
+      router.push(`/${lang}/live/${id}/room`)
     },
     [router, lang]
   )

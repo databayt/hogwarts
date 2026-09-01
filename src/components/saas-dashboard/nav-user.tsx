@@ -3,7 +3,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import {
-  IconBell,
   IconChevronsDown,
   IconCircleCheck,
   IconCreditCard,
@@ -93,10 +92,6 @@ export function NavUser({
               <DropdownMenuItem>
                 <IconCreditCard className="me-2 h-4 w-4" />
                 Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconBell className="me-2 h-4 w-4" />
-                Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

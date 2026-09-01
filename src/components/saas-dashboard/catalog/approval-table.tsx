@@ -177,10 +177,24 @@ function ApprovalActions({ item }: { item: PendingItem }) {
   )
 }
 
-const approvalColumns: ColumnDef<PendingItem>[] = [
+export interface ApprovalColumnLabels {
+  type: string
+  title: string
+  school: string
+  contributedBy: string
+  submitted: string
+  /** Shown as the "school" of a DEVELOPER's own upload, which has none. */
+  platform: string
+}
+
+// Factory, not a const: the headers come from the dictionary. Follows the
+// house `get*Options(d)` pattern for dictionary-driven config.
+const getApprovalColumns = (
+  L: ApprovalColumnLabels
+): ColumnDef<PendingItem>[] => [
   {
     accessorKey: "contentType",
-    header: "Type",
+    header: L.type,
     cell: ({ row }) => {
       const type = row.original.contentType
       return (
@@ -192,27 +206,52 @@ const approvalColumns: ColumnDef<PendingItem>[] = [
   },
   {
     accessorKey: "title",
-    header: "Title",
+    header: L.title,
     cell: ({ row }) => {
-      const { title } = row.original
-      return <span className="font-medium">{title}</span>
+      const { title, videoMeta } = row.original
+      return (
+        <div className="min-w-0">
+          <span className="font-medium">{title}</span>
+          {/* Which lesson this attaches to — the operator is deciding whether
+              content belongs on it, and cannot judge that from a title alone. */}
+          {videoMeta?.lessonPath && (
+            <p className="text-muted-foreground truncate text-xs">
+              {videoMeta.lessonPath}
+            </p>
+          )}
+        </div>
+      )
+    },
+  },
+  {
+    id: "school",
+    header: L.school,
+    cell: ({ row }) => {
+      const name = row.original.videoMeta?.schoolName
+      return (
+        <span className="text-sm">
+          {name ?? <span className="text-muted-foreground">&mdash;</span>}
+        </span>
+      )
     },
   },
   {
     accessorKey: "contributedBy",
-    header: "Contributed By",
+    header: L.contributedBy,
     cell: ({ row }) => {
-      const userId = row.original.contributedBy
+      // Videos carry a resolved owner name; the other four content types only
+      // have a raw contributedBy id.
+      const { contributedBy, videoMeta } = row.original
       return (
         <span className="text-muted-foreground text-sm">
-          {userId || "System"}
+          {videoMeta?.ownerName || contributedBy || "System"}
         </span>
       )
     },
   },
   {
     accessorKey: "createdAt",
-    header: "Submitted",
+    header: L.submitted,
     cell: ({ row }) => {
       const date = row.original.createdAt
       return (
@@ -230,10 +269,11 @@ const approvalColumns: ColumnDef<PendingItem>[] = [
 
 interface Props {
   data: PendingItem[]
+  labels: ApprovalColumnLabels
 }
 
-export function ApprovalTable({ data }: Props) {
-  const columns = useMemo(() => approvalColumns, [])
+export function ApprovalTable({ data, labels }: Props) {
+  const columns = useMemo(() => getApprovalColumns(labels), [labels])
 
   const { table } = useDataTable<PendingItem>({
     data,

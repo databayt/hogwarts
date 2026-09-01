@@ -34,6 +34,11 @@ vi.mock("@/lib/db", () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    // Reached by the platform-review fan-out on every writer that resets
+    // approvalStatus to PENDING.
+    user: { findMany: vi.fn() },
+    school: { findUnique: vi.fn() },
+    notification: { createMany: vi.fn() },
   },
 }))
 
@@ -43,16 +48,25 @@ const mockFindFirst = db.video.findFirst as ReturnType<typeof vi.fn>
 const mockFindMany = db.video.findMany as ReturnType<typeof vi.fn>
 const mockUpdate = db.video.update as ReturnType<typeof vi.fn>
 const mockDelete = db.video.delete as ReturnType<typeof vi.fn>
+const mockUserFindMany = db.user.findMany as ReturnType<typeof vi.fn>
+const mockSchoolFind = db.school.findUnique as ReturnType<typeof vi.fn>
+const mockNotifyMany = db.notification.createMany as ReturnType<typeof vi.fn>
+
+// after() is mocked fire-and-forget in the next/server stub, so post-response
+// work needs a real tick before it can be asserted on.
+const flushAfter = () => new Promise((r) => setTimeout(r, 0))
 
 const ownedVideo = {
   id: "v-1",
   userId: "owner-1",
+  schoolId: "school-1",
+  title: "Algebra intro",
   videoUrl: "https://example.com/v.mp4",
   storageKey: "videos/v-1.mp4",
   visibility: "SCHOOL",
   approvalStatus: "APPROVED",
   catalogLessonId: "lesson-1",
-  lesson: { chapter: { subject: { slug: "math" } } },
+  lesson: { name: "Fractions", chapter: { subject: { slug: "math" } } },
 }
 
 beforeEach(() => {
@@ -63,6 +77,9 @@ beforeEach(() => {
   mockUpdate.mockResolvedValue(ownedVideo)
   mockDelete.mockResolvedValue(ownedVideo)
   mockFindMany.mockResolvedValue([])
+  mockUserFindMany.mockResolvedValue([{ id: "dev-1" }])
+  mockSchoolFind.mockResolvedValue({ name: "نموذج" })
+  mockNotifyMany.mockResolvedValue({ count: 1 })
 })
 
 describe("updateVideoVisibility — auth/ownership", () => {
@@ -169,6 +186,34 @@ describe("updateVideoVisibility — PUBLIC widening resubmits for platform revie
         approvedAt: null,
       },
     })
+  })
+
+  it("notifies the platform when a widening re-enters the queue", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "owner-1", role: "TEACHER" },
+    })
+    await updateVideoVisibility("v-1", "PUBLIC")
+    await flushAfter()
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { role: "DEVELOPER" } })
+    )
+    const row = mockNotifyMany.mock.calls[0][0].data[0]
+    expect(row).toMatchObject({
+      schoolId: "school-1",
+      userId: "dev-1",
+      type: "content_review",
+    })
+    expect(row.metadata.url).toBe("/catalog/approvals")
+  })
+
+  it("does NOT notify the platform on a narrowing change", async () => {
+    // A resubmit that never happened must not page the operator.
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "owner-1", role: "TEACHER" },
+    })
+    await updateVideoVisibility("v-1", "PRIVATE")
+    await flushAfter()
+    expect(mockNotifyMany).not.toHaveBeenCalled()
   })
 
   it("narrowing an APPROVED video (SCHOOL → PRIVATE) does NOT reset approval", async () => {
@@ -369,6 +414,29 @@ describe("replaceVideoFile", () => {
         data: expect.objectContaining({ durationSeconds: null }),
       })
     )
+  })
+
+  it("notifies the platform — new bytes are content it has not seen", async () => {
+    await replaceVideoFile("v-1", "https://new.url/v.mp4", "YOUTUBE")
+    await flushAfter()
+    const row = mockNotifyMany.mock.calls[0][0].data[0]
+    expect(row).toMatchObject({
+      schoolId: "school-1",
+      userId: "dev-1",
+      type: "content_review",
+    })
+  })
+
+  it("notifies unconditionally, matching the unconditional PENDING reset", async () => {
+    // Even an already-PENDING video: the queue is showing the operator a row
+    // whose source just changed underneath them.
+    mockFindUnique.mockResolvedValueOnce({
+      ...ownedVideo,
+      approvalStatus: "PENDING",
+    })
+    await replaceVideoFile("v-1", "https://new.url/v.mp4", "YOUTUBE")
+    await flushAfter()
+    expect(mockNotifyMany).toHaveBeenCalled()
   })
 })
 

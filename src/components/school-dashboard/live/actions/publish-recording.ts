@@ -171,7 +171,7 @@ export async function publishRecordingAsLessonVideo(
       "/[lang]/s/[subdomain]/lumos/courses/[slug]/[lessonId]",
       "page"
     )
-    revalidatePath("/[lang]/s/[subdomain]/conference/[id]", "page")
+    revalidatePath("/[lang]/s/[subdomain]/live/[id]", "page")
 
     return { published: true, videoId: video.id }
   } catch (err) {

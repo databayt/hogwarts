@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 import Stripe from "stripe"
 
 import { db } from "@/lib/db"
+import { toSmallestUnit } from "@/lib/payment/currency"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -198,7 +199,12 @@ export async function enrollInSubject(catalogSubjectId: string) {
             price_data: {
               currency: subject.currency || "usd",
               product_data: { name: subject.name },
-              unit_amount: Math.round(Number(subject.price) * 100),
+              // Smallest unit, not `* 100` — JOD/KWD/BHD/OMR are 3-decimal
+              // and were being charged at a tenth of the listed price.
+              unit_amount: toSmallestUnit(
+                Number(subject.price),
+                subject.currency || "USD"
+              ),
             },
             quantity: 1,
           },

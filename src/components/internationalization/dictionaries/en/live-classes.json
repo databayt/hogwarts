@@ -291,7 +291,9 @@
       "description": "Sections opted out are never recorded, regardless of the school default.",
       "optOut": "Opt out of recording",
       "empty": "No sections yet.",
-      "error": "Could not update the section."
+      "error": "Could not update the section.",
+      "pick": "Section",
+      "overrides": "{count} section(s) opted out"
     },
     "onlinePolicy": {
       "title": "Online teaching by section",
@@ -300,7 +302,9 @@
       "online": "Online",
       "offline": "In person",
       "empty": "No sections yet.",
-      "error": "Could not update the section."
+      "error": "Could not update the section.",
+      "pick": "Section",
+      "overrides": "{count} section(s) differ from the school default"
     },
     "recordingUnavailable": "Recording is not set up for this school yet — sessions will run without it.",
     "deliveryMode": "How the school teaches",
@@ -348,7 +352,9 @@
       "online": "Online",
       "offline": "In person",
       "empty": "No grades yet.",
-      "error": "Could not update the grade."
+      "error": "Could not update the grade.",
+      "pick": "Grade",
+      "overrides": "{count} grade(s) differ from the school default"
     }
   },
   "attendanceNote": {

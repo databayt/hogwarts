@@ -13,9 +13,9 @@ interface Props {
 /**
  * Chrome for the managed conference surfaces — sessions, schedule, settings,
  * network test. A route group, so it adds the heading + tab strip without
- * adding a URL segment: these stay at `/conference/<name>`.
+ * adding a URL segment: these stay at `/live/<name>`.
  *
- * The landing page (`/conference`) and a single session (`/conference/[id]`)
+ * The landing page (`/live`) and a single session (`/live/[id]`)
  * sit outside this group on purpose — the landing owns its own hero, and the
  * session detail page is a leaf reached from a row, not a tab.
  */

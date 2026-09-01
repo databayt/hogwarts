@@ -35,7 +35,8 @@ async function post(
   const { createHmac } = await import("node:crypto")
   const ts = String(Date.now())
   let sig = createHmac("sha256", SECRET).update(`${ts}:${body}`).digest("hex")
-  if (opts.sign === false) sig = sig.slice(0, -1) + (sig.endsWith("0") ? "1" : "0")
+  if (opts.sign === false)
+    sig = sig.slice(0, -1) + (sig.endsWith("0") ? "1" : "0")
   const res = await POST(
     new Request("https://ed.databayt.org/api/webhooks/twenty", {
       method: "POST",
@@ -69,7 +70,11 @@ describe("POST /api/webhooks/twenty", () => {
   it("stores a verified delivery and says which event it was", async () => {
     const { status, json } = await post(stageMoved)
     expect(status).toBe(200)
-    expect(json).toEqual({ received: true, id: "evt-1", event: "opportunity.updated" })
+    expect(json).toEqual({
+      received: true,
+      id: "evt-1",
+      event: "opportunity.updated",
+    })
 
     const arg = anyDb.twentyInboundEvent.upsert.mock.calls[0][0]
     expect(arg.create.objectName).toBe("opportunity")
@@ -126,7 +131,9 @@ describe("POST /api/webhooks/twenty", () => {
   })
 
   it("reports a store failure as 500 rather than dropping the event silently", async () => {
-    anyDb.twentyInboundEvent.upsert.mockRejectedValue(new Error("connection lost"))
+    anyDb.twentyInboundEvent.upsert.mockRejectedValue(
+      new Error("connection lost")
+    )
     const { status, json } = await post(stageMoved)
     expect(status).toBe(500)
     expect(json.error).toBe("store_failed")

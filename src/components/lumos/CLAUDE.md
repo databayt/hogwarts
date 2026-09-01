@@ -116,13 +116,30 @@ Lumos (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~93% complete a
   paywalled (paid + unpurchased) video keeps its locked/purchase UX and must
   never be replaced by the clip. The `sourceFailed` swap is part of the
   VideoPlayer `key` (a `<video>` needs a remount, not just a new `src`).
-- **PUBLIC/PAID approval belongs to the platform lane.** The school Review tab
-  (`reviewVideo`) approves only SCHOOL/PRIVATE-surface videos and refuses
-  APPROVE for PUBLIC/PAID (reject stays allowed) — those flow through
-  /catalog/approvals (DEVELOPER, `approveContent` with override). Owner-side
-  mirror: `updateVideoVisibility` widening an APPROVED video to PUBLIC resets
-  `approvalStatus` to PENDING (DEVELOPER exempt; narrowing always free). Both
-  lanes notify the contributor (`db.notification.create`, failure-tolerant).
+- **ONE pipeline: the school uploads, the PLATFORM decides (Abdout, 2026-08-28).**
+  Every video regardless of visibility is approved by a DEVELOPER at
+  /catalog/approvals (`approveContent`, which may override visibility/price).
+  The school lane no longer decides anything — `reviewVideo` is **deleted** and
+  `/lumos/review` is a read-only status feed (`getSubmittedVideos`, all
+  statuses, so rejection feedback is visible there). Don't reintroduce a
+  school-side approve: a second decision point is exactly the drift this
+  removed. Owner-side mirror survives: `updateVideoVisibility` widening an
+  APPROVED video to PUBLIC resets `approvalStatus` to PENDING (DEVELOPER
+  exempt; narrowing always free), as does `replaceVideoFile` unconditionally.
+- **Every writer that sets `approvalStatus: PENDING` must fan out to the
+  platform.** There are THREE — `uploadVideo`, `updateVideoVisibility`
+  (widening branch only) and `replaceVideoFile` — and all three call
+  `notifyDevelopersOfPendingVideo` from `@/lib/platform-notification` inside
+  `after()`. Miss one and that resubmit silently drops out of the trace with no
+  visible symptom. The decision leg calls `notifySchoolOfVideoDecision`, which
+  reaches the uploader AND the school's ADMINs (the school has no other surface
+  showing the outcome).
+  **How a platform notification is even possible:** `Notification.schoolId` is a
+  REQUIRED FK and a DEVELOPER has no school, so the row is stamped with the
+  **requesting school's** id and the DEVELOPER's `userId`. That also makes the
+  row carry which school is asking. `dispatchNotification` cannot be used here —
+  its `resolveTargetUsers` filters by `schoolId`, so a DEVELOPER is unreachable
+  through it.
 - **Direct upload = presign → S3 PUT → storage fields.** The propose dialog's
   Upload tab POSTs `/api/blob/presign` (5GB cap, video MIME allowlist, quota
   pre-check → 413), PUTs via XHR for progress, then `uploadVideo` persists
@@ -283,13 +300,13 @@ Lumos (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~93% complete a
   queries them — don't delete those models until that path migrates to
   `Enrollment`. (The dead `enrollInCourseAction`/`checkEnrollmentStatus` were
   removed 2026-06-14.)
-- **The Review surface is a route now, and fetches its own queue.** It used to
-  be a tab fed by a `reviewContent` prop that `settings/page.tsx` built from
-  `getPendingVideos()` — a merge regression dropped that prop once and the tab
-  silently rendered empty. `settings/review/page.tsx` calls `getPendingVideos()`
-  directly so the wiring can't come undone; keep it that way. `reviewVideo`
-  still writes via tenant-scoped `updateMany` (schoolId on the write) — don't
-  revert it to `findFirst+update`.
+- **The Review surface is a route now, and fetches its own feed.** It used to
+  be a tab fed by a `reviewContent` prop built from `getPendingVideos()` — a
+  merge regression dropped that prop once and the tab silently rendered empty.
+  `lumos/(app)/review/page.tsx` calls `getSubmittedVideos()` directly so the
+  wiring can't come undone; keep it that way. The content component is a Server
+  Component since the approve/reject controls went — every `useState` it had
+  existed for the mutation UI. Don't re-add `"use client"` without a reason.
 - **`/lumos/settings` is redirect-only; the surfaces are top-level.** The old
   "Overview" tab rendered the same `LumosAdminDashboardContent` as
   `/lumos/dashboard`, so the two collapsed. Real surfaces are

@@ -6,6 +6,10 @@ import { cache } from "react"
 
 import { db } from "@/lib/db"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import {
+  countVisibleLessonsBySubject,
+  hiddenLessonExclusion,
+} from "@/components/lumos/lib/content-hidden"
 
 /**
  * Fetches catalog-based dashboard data for a user.
@@ -62,6 +66,10 @@ export const getCatalogDashboardData = cache(
                   subjectId: { in: enrolledSubjectIds },
                 },
               },
+              // Numerator and denominator must agree: a lesson the school has
+              // since hidden is out of the visible-lesson count below, so
+              // leaving its completion in here would push a student past 100%.
+              ...hiddenLessonExclusion(schoolId),
             },
             select: {
               catalogLessonId: true,
@@ -90,13 +98,27 @@ export const getCatalogDashboardData = cache(
       }
     }
 
+    // `Subject.totalLessons` is the platform-wide denormalized count and by
+    // construction cannot reflect this school's hides — dividing by it capped a
+    // student who finished everything their school shows at 90%, so the
+    // "Completed" badge (gated on === 100) never appeared. One batched query,
+    // not one per enrolled course.
+    const visibleLessonCounts = await countVisibleLessonsBySubject(
+      schoolId,
+      enrolledSubjectIds
+    )
+
     const enrolledCourses = enrollments.map((enrollment) => {
       const subject = enrollment.subject
       const completedLessons =
         progressBySubject.get(enrollment.catalogSubjectId) || 0
-      const totalLessons = subject.totalLessons || 1
-      const progressPercent = Math.round(
-        (completedLessons / totalLessons) * 100
+      const totalLessons =
+        visibleLessonCounts.get(enrollment.catalogSubjectId) ||
+        subject.totalLessons ||
+        1
+      const progressPercent = Math.min(
+        100,
+        Math.round((completedLessons / totalLessons) * 100)
       )
 
       return {

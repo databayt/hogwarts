@@ -195,7 +195,17 @@ export function NotificationListScrollable({
   onMarkAllRead,
   maxHeight = 450,
   loading = false,
-}: NotificationListProps & { maxHeight?: number }) {
+  viewAllHref,
+}: NotificationListProps & {
+  maxHeight?: number
+  /**
+   * Destination for the footer link. Defaults to the tenant notification
+   * center. Pass `null` where no such route exists — the SaaS dashboard runs
+   * on the MAIN host, which has no `/notifications` page, so the default would
+   * render a 404 link.
+   */
+  viewAllHref?: string | null
+}) {
   const [isPending, startTransition] = useTransition()
   const unreadCount = (notifications ?? []).filter((n) => !n.read).length
 
@@ -263,8 +273,9 @@ export function NotificationListScrollable({
         )}
       </ScrollArea>
 
-      {/* Footer */}
-      {(notifications?.length ?? 0) > 0 && (
+      {/* Footer — omitted entirely when the surface has no notification
+          center to link to (viewAllHref === null). */}
+      {(notifications?.length ?? 0) > 0 && viewAllHref !== null && (
         <div className="border-t px-4 py-2.5">
           <Button
             variant="ghost"
@@ -272,7 +283,9 @@ export function NotificationListScrollable({
             className="text-muted-foreground hover:text-foreground w-full text-xs"
             asChild
           >
-            <Link href={`/${locale}/notifications`}>{dictionary.viewAll}</Link>
+            <Link href={viewAllHref ?? `/${locale}/notifications`}>
+              {dictionary.viewAll}
+            </Link>
           </Button>
         </div>
       )}

@@ -1,8 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { headers } from "next/headers"
-
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -98,15 +96,6 @@ export default async function EditorLayout({ children, params }: Props) {
           .catch(() => null)
       : null,
   ])
-
-  // Academic section uses a wide tabbed UI; other editors use the narrow 400px column.
-  const reqHeaders = await headers()
-  const requestPath =
-    reqHeaders.get("x-pathname") ||
-    reqHeaders.get("x-invoke-path") ||
-    reqHeaders.get("next-url") ||
-    ""
-  const isWideSection = requestPath.includes("/configuration/academic")
 
   const SECTION_KEYS = [
     "title",
@@ -318,21 +307,15 @@ export default async function EditorLayout({ children, params }: Props) {
         <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-[auto_1fr]">
           <ConfigSidebar lang={lang} sectionLinks={sectionLinks} />
           <div className="lg:overflow-y-auto">
-            <div className="flex min-h-full flex-col items-center justify-start py-8">
-              <div
-                className={
-                  isWideSection ? "w-full max-w-5xl" : "w-full max-w-[400px]"
-                }
-              >
-                {children}
-              </div>
-              <div
-                className={
-                  isWideSection
-                    ? "text-muted-foreground w-full max-w-5xl pt-8 pb-4 text-start text-sm"
-                    : "text-muted-foreground w-full max-w-[400px] pt-8 pb-4 text-start text-sm"
-                }
-              >
+            {/* Editors are a narrow 400px column by default. A page opts out
+                by marking its own root — `data-wide` for the tabbed academic
+                UI, `data-full-width` for the live-class settings panel — and
+                `:has()` widens the column and the footer together. Reading the
+                route from a request header does not work here: nothing in the
+                app sets `x-pathname`. */}
+            <div className="flex min-h-full flex-col items-center justify-start py-8 [--config-col:400px] has-[[data-full-width]]:[--config-col:100%] has-[[data-wide]]:[--config-col:64rem]">
+              <div className="w-full max-w-[var(--config-col)]">{children}</div>
+              <div className="text-muted-foreground w-full max-w-[var(--config-col)] pt-8 pb-4 text-start text-sm">
                 <ReportIssue />
               </div>
             </div>

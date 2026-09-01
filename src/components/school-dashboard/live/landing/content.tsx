@@ -19,7 +19,7 @@ interface Props extends LandingSectionProps {
 }
 
 /**
- * The /conference landing page, composed the way /lumos is: a hero, the value
+ * The /live landing page, composed the way /lumos is: a hero, the value
  * cards, then the long-form bands. The one departure is the live/coming-up
  * strip directly under the cards — this block is opened every school day, so
  * the landing has to answer "what's on right now" before it sells anything.

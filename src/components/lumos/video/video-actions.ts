@@ -7,6 +7,7 @@ import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { notifyDevelopersOfPendingVideo } from "@/lib/platform-notification"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getObjectSize } from "@/lib/s3"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -16,6 +17,7 @@ import {
 } from "@/components/lumos/lib/quota"
 import { isValidVideoUrl } from "@/components/lumos/shared/url-validators"
 import { prewarm } from "@/components/translation/prewarm"
+import { detectScript } from "@/components/translation/util"
 
 type ApiResponse = {
   status: "success" | "error"
@@ -126,7 +128,9 @@ export async function uploadVideo(
         id: data.catalogLessonId,
         chapter: { subject: { status: "PUBLISHED" } },
       },
-      select: { id: true },
+      // `name` feeds the review notifications — catalog Lesson uses `name`,
+      // not `title`.
+      select: { id: true, name: true },
     })
 
     if (!lesson) {
@@ -208,9 +212,24 @@ export async function uploadVideo(
       )
     )
 
-    // Tell the school's reviewers a submission landed (off the response path;
-    // the uploader themself is excluded). Failure must never fail the upload.
     const uploaderId = session.user.id
+
+    // The platform decides EVERY video now, so the operator queue is the one
+    // that must hear about this. Off the response path; failure never fails
+    // the upload.
+    after(() =>
+      notifyDevelopersOfPendingVideo({
+        schoolId,
+        actorId: uploaderId,
+        videoId: created.id,
+        title,
+        lessonName: lesson.name,
+      })
+    )
+
+    // The school's other ADMINs get an FYI, not a work item — they can no
+    // longer approve or reject (see /lumos/review, now a read-only status
+    // feed). Copy says "submitted", not "waiting for you".
     after(async () => {
       try {
         const admins = await db.user.findMany({
@@ -218,15 +237,23 @@ export async function uploadVideo(
           select: { id: true },
         })
         if (admins.length === 0) return
+        const notificationTitle = "New video submitted"
+        const body = `"${title}" was submitted to the platform for review.`
         await db.notification.createMany({
           data: admins.map((admin) => ({
             schoolId,
             userId: admin.id,
             actorId: uploaderId,
-            type: "system_alert" as const,
+            type: "content_review" as const,
             priority: "normal" as const,
-            title: "New video pending review",
-            body: `"${title}" was submitted and is waiting in the review queue.`,
+            title: notificationTitle,
+            body,
+            // This block wrote no `lang` for months, so every English row
+            // landed labelled "ar" and became permanently untranslatable.
+            // Detect on the authored title only — the body interpolates a
+            // video title that may be in any script, and detectScript returns
+            // "ar" on a single Arabic character.
+            lang: detectScript(notificationTitle),
             metadata: {
               entityType: "video",
               entityId: created.id,
@@ -235,7 +262,10 @@ export async function uploadVideo(
           })),
         })
       } catch (notifyError) {
-        console.error("Failed to notify reviewers of new video:", notifyError)
+        console.error(
+          "Failed to notify school admins of new video:",
+          notifyError
+        )
       }
     })
 

@@ -33,6 +33,10 @@ export interface PendingItem {
     isFeatured: boolean
     ownerName: string | null
     ownerRole: string | null
+    // The platform now decides EVERY school's videos, so "who is asking" is
+    // not optional context — a raw contributedBy id told the operator nothing.
+    schoolName: string | null
+    lessonPath: string | null
   }
 }
 
@@ -41,7 +45,17 @@ interface Props {
   lang: Locale
 }
 
-export async function ApprovalContent({ lang }: Props) {
+export async function ApprovalContent({ dictionary, lang }: Props) {
+  const c = dictionary?.saas?.catalog?.approvals?.columns
+  const labels = {
+    type: c?.type || "Type",
+    title: c?.title || "Title",
+    school: c?.school || "School",
+    contributedBy: c?.contributedBy || "Contributed By",
+    submitted: c?.submitted || "Submitted",
+    platform: c?.platform || "Platform",
+  }
+
   const [
     pendingQuestions,
     pendingMaterials,
@@ -105,6 +119,20 @@ export async function ApprovalContent({ lang }: Props) {
         price: true,
         currency: true,
         isFeatured: true,
+        schoolId: true,
+        school: { select: { name: true } },
+        // Catalog Lesson uses `name`, not `title`.
+        lesson: {
+          select: {
+            name: true,
+            chapter: {
+              select: {
+                name: true,
+                subject: { select: { name: true } },
+              },
+            },
+          },
+        },
         user: {
           select: {
             username: true,
@@ -166,6 +194,11 @@ export async function ApprovalContent({ lang }: Props) {
         isFeatured: v.isFeatured,
         ownerName: v.user?.username ?? v.user?.email ?? null,
         ownerRole: v.user?.role ?? null,
+        // A DEVELOPER's own upload has no school — say so rather than blank.
+        schoolName: v.school?.name ?? (v.schoolId ? null : labels.platform),
+        lessonPath: v.lesson
+          ? `${v.lesson.chapter.subject.name} → ${v.lesson.chapter.name} → ${v.lesson.name}`
+          : null,
       },
     })),
   ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
@@ -238,7 +271,7 @@ export async function ApprovalContent({ lang }: Props) {
         </Card>
       </div>
 
-      <ApprovalTable data={items} />
+      <ApprovalTable data={items} labels={labels} />
     </PageContainer>
   )
 }

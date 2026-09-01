@@ -20,8 +20,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import {
   PLATFORM_SCHOOL_ID,
-  SYSTEM_USER_ID,
   promoteToLead,
+  SYSTEM_USER_ID,
 } from "@/lib/sales/promote"
 
 vi.mock("@/lib/db", () => {
@@ -104,7 +104,10 @@ describe("promoteToLead", () => {
       expect.objectContaining({
         where: { id: PLATFORM_SCHOOL_ID },
         // isActive:false keeps the sentinel out of the north-star tenant count.
-        create: expect.objectContaining({ isActive: false, domain: PLATFORM_SCHOOL_ID }),
+        create: expect.objectContaining({
+          isActive: false,
+          domain: PLATFORM_SCHOOL_ID,
+        }),
       })
     )
     expect(anyDb.user.upsert).toHaveBeenCalledWith(
@@ -113,7 +116,10 @@ describe("promoteToLead", () => {
   })
 
   it("is idempotent — a second call returns the same lead, creating nothing", async () => {
-    anyDb.prospect.findUnique.mockResolvedValue({ ...prospect, promotedLeadId: "lead-1" })
+    anyDb.prospect.findUnique.mockResolvedValue({
+      ...prospect,
+      promotedLeadId: "lead-1",
+    })
 
     const res = await promoteToLead("p1")
 
@@ -123,7 +129,11 @@ describe("promoteToLead", () => {
   })
 
   it("refuses a prospect nobody can reach", async () => {
-    anyDb.prospect.findUnique.mockResolvedValue({ ...prospect, email: null, phone: null })
+    anyDb.prospect.findUnique.mockResolvedValue({
+      ...prospect,
+      email: null,
+      phone: null,
+    })
     const res = await promoteToLead("p1")
     expect(res).toEqual({ ok: false, reason: "no_contact_channel" })
     expect(tx().lead.create).not.toHaveBeenCalled()

@@ -126,7 +126,7 @@ export function ConfigTitleForm({
               className="rounded-e-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             <span className="bg-muted text-muted-foreground rounded-e-lg border-s px-3 py-2 font-mono text-sm whitespace-nowrap">
-              .databayt.org
+              .balqalam.com
             </span>
           </div>
           <SubdomainChangeDialog
@@ -221,7 +221,7 @@ function SubdomainChangeDialog({
                 disabled={isPending}
               />
               <span className="bg-muted text-muted-foreground rounded-e-lg border-s px-3 py-2 font-mono text-sm whitespace-nowrap">
-                .databayt.org
+                .balqalam.com
               </span>
             </div>
           </div>

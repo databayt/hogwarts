@@ -652,19 +652,18 @@
       "searchPlaceholder": "Search videos..."
     },
     "videoReview": {
-      "emptyState": "No videos pending review.",
-      "pendingSuffix": "pending review",
+      "emptyState": "No videos submitted yet.",
+      "submittedSuffix": "submitted",
+      "awaitingPlatform": "The platform team reviews every submission. Videos go live on their lesson once approved.",
+      "allReviewed": "Everything here has been reviewed.",
+      "whatToFix": "What to fix",
       "by": "by",
       "previewVideo": "Preview video",
-      "approve": "Approve",
-      "reject": "Reject",
-      "confirmReject": "Confirm Reject",
-      "cancel": "Cancel",
-      "reasonPlaceholder": "Reason (optional)",
-      "platformHint": "Public and paid videos are approved by the platform catalog team. You can still reject.",
-      "toastApproved": "Video approved",
-      "toastRejected": "Video rejected",
-      "failedReview": "Failed to review video"
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
     },
     "videoSettings": {
       "status": "Status",

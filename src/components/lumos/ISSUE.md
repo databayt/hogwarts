@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-08-15
+last_audited: 2026-08-28
 ---
 
 # Lumos (LMS) — Production Readiness Tracker
@@ -589,7 +589,7 @@ larger edit than the fixes were.
       `finance/banking/actions/bank.actions.ts` (2), `school/bulk/actions.ts`.
       **Cross-block, worth someone's attention:** `conferenceRevalidatePath()`
       passes `"page"` correctly, but when called WITH a session id it produces
-      the blended form (`/[lang]/s/[subdomain]/conference/<uuid>`) that matches
+      the blended form (`/[lang]/s/[subdomain]/live/<uuid>`) that matches
       no cache tag — so the per-session half of those calls is still a no-op.
       Not fixed here; not this block. `video/video-actions.ts:234,237,238` — the admin course page,
       `/lumos/review`, and `/[lang]/catalog/approvals` are all revalidated with
@@ -1317,6 +1317,85 @@ _Chronological close log — appended as items ship._
      images, fake ratings) and the category grid that linked to non-existent
      departments; the Explore dropdown is now popular-search chips (from
      `lumos.search.terms`, en+ar) + a browse-all link, all keyed.
+
+- **2026-08-28 — The school's request now reaches the SaaS dashboard.**
+  Traced the video-request flow end to end and found it dead-ended at
+  `Video.approvalStatus = PENDING`: nothing notified the platform, and nothing
+  could. `Notification.schoolId` is a required FK while the only DEVELOPER has
+  `schoolId = NULL` — `approval-actions.ts` even documented the surrender
+  ("platform-level videos are silently skipped"). The bell was dead at **four**
+  layers (no writer targeted a DEVELOPER; `poll-actions.ts` returned null
+  without a tenant; `markNotificationAsRead`/`markAll`/`delete` bailed the same
+  way — silently, since the bell rolls back optimistically; and
+  `use-notifications.ts` returned before its initial fetch), and no bell was
+  mounted on the SaaS dashboard at all
+  (`saas-header/content.tsx`: "TODO: Restore when operator notification system
+  is implemented").
+  1. **One pipeline (Abdout's call).** Every video — any visibility — is
+     approved by the platform. `reviewVideo` deleted; `/lumos/review` is now a
+     read-only status feed over ALL statuses (`getSubmittedVideos`), so the
+     school still reads rejection feedback there. The content component dropped
+     `"use client"` — all its state was mutation UI.
+  2. **`src/lib/platform-notification.ts`** — one helper both directions.
+     Platform rows are stamped with the REQUESTING school's id + the
+     DEVELOPER's `userId` (satisfies the FK, and the row names the school).
+     Fired from all THREE writers that set PENDING: `uploadVideo`,
+     `updateVideoVisibility` (widening branch only) and `replaceVideoFile`.
+     The decision leg notifies the uploader AND the school's ADMINs.
+  3. **Three `NotificationType` values** — `content_review` /
+     `content_approved` / `content_rejected`, replacing the `system_alert` /
+     `document_shared` abuse, with the mandatory 5-site fan-out.
+     **PROD DDL OWED.**
+  4. **The operator can act.** DEVELOPER branches through `poll-actions.ts`
+     (grouping `localize` per school, since an operator's rows span tenants),
+     `queries.ts` (new `getOperator*` functions — deliberately not an optional
+     `schoolId` on the tenant-scoped ones), `actions.ts` and
+     `use-notifications.ts`; the bell is mounted in the SaaS header
+     (`notifications` added to `getSaasDashboardDictionary`).
+  5. **The queue says who is asking** — `/catalog/approvals` gained a School
+     column, the lesson path, and the contributor's resolved name (it showed a
+     raw user id). Sidebar Catalog badge + a real "Pending Approvals" tile via
+     the new shared `catalog/pending-counts.ts` (React `cache()`-deduped).
+  6. **Bug found while wiring:** `detectScript` returns "ar" on a single Arabic
+     character, so interpolating a school or video name into an English body
+     mislabels the row's `lang` and makes it permanently untranslatable.
+     Detection now runs on the AUTHORED title only. The pre-existing
+     admin-notify block in `uploadVideo` wrote no `lang` at all — fixed.
+
+  Verified end to end on the demo school: upload (external YouTube URL) →
+  `content_review` row for `dev@balqalam.com` stamped `schoolId = demo` →
+  operator bell badge → click marks read (persisted) and lands on
+  `/catalog/approvals` showing school "نموذج" → approve → `content_approved`
+  reaches the school → `/lumos/review` shows "Approved" with no action buttons.
+  Narrowing PUBLIC→SCHOOL notified nobody; widening back reset to PENDING and
+  re-notified. tsc clean (2 pre-existing failures in another session's files);
+  the touched suites pass.
+  **Follow-on pass (same day), closing two of the three debts above:**
+  - The bell popover's "View all notifications" pointed at `/notifications`,
+    which exists only on the TENANT host — a 404 for every operator. The list
+    and bell now take an optional `viewAllHref`; the SaaS header passes `null`
+    and the footer is omitted. The tenant bell is unchanged.
+  - The `/catalog/approvals` column headers (including the new School column)
+    were hardcoded English. `approvalColumns` became
+    `getApprovalColumns(labels)` — the house dictionary-factory pattern — fed
+    from new `saas.catalog.approvals.columns.*` keys in `{en,ar}.json`
+    (parity verified). The "Platform" fallback for a DEVELOPER's own school-less
+    upload is a dictionary key too.
+
+  Also verified in this pass what the first one had only unit-tested: the
+  **reject path** (Arabic reason → `content_rejected`, priority `high`, reason
+  rendered under "ما ينبغي تعديله" on the school's feed) and the **full `/ar`
+  RTL walk** (upload wizard, operator queue headers, status feed — `dir="rtl"`
+  throughout). The reject test also proved that broadening `getSubmittedVideos`
+  past PENDING was load-bearing, not cosmetic: a PENDING-only filter would hide
+  the very row carrying the platform's feedback.
+
+  **Known debt remaining:** `replaceVideoFile` still has no UI caller (its
+  fan-out is unit-tested only); `getSubmittedVideos` returns raw catalog names
+  (no translation), so the school's feed shows the Arabic source lesson path
+  while the upload picker shows translated names; the approvals stat cards and
+  the content-type badge (`getContentTypeLabel`) remain hardcoded English —
+  pre-existing, and part of the saas-dashboard block's known i18n backlog.
 
 - **2026-07-11 — Upload → catalog → ownership loop closed (production pass).**
   Six fixes shipped in one pass; tsc 0, lumos suite 272/272 green:

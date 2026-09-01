@@ -2,17 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { headers } from "next/headers"
 import { createGroq } from "@ai-sdk/groq"
 import { CoreMessage, generateText } from "ai"
-import { headers } from "next/headers"
 
 import { db } from "@/lib/db"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
-
-import { captureFromChat } from "./capture"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { captureFromChat } from "./capture"
 import {
   buildSaasMarketingPrompt,
   buildSchoolSitePrompt,
@@ -230,7 +229,11 @@ export async function sendMessage(
       "unknown"
     const ua = (h.get("user-agent") ?? "").slice(0, 50)
     const rlKey = `${ip}:${ua}`
-    const burst = await checkUserRateLimit(rlKey, RATE_LIMITS.CHATBOT, "chatbot")
+    const burst = await checkUserRateLimit(
+      rlKey,
+      RATE_LIMITS.CHATBOT,
+      "chatbot"
+    )
     const sustained = await checkUserRateLimit(
       rlKey,
       RATE_LIMITS.CHATBOT_HOURLY,

@@ -141,11 +141,23 @@ export function useNotifications(
   const schoolId = session?.user?.schoolId
   const role = session?.user?.role
 
+  // A DEVELOPER has no schoolId, which is what kept the SaaS dashboard's bell
+  // from ever fetching. Their notifications are addressed by userId (and carry
+  // the requesting school's id), so the tenant is not needed to read them.
+  const isOperator = !schoolId && role === "DEVELOPER"
+  const canReadBell = Boolean(userId) && (Boolean(schoolId) || isOperator)
+
   const connect = useCallback(async () => {
     if (!userId) {
       console.warn("No session available for WebSocket connection")
       return
     }
+
+    // Operator bell is poll-only. The socket lane is keyed on a school, and
+    // connect() resolves even when no socket server exists — trusting that
+    // resolution is exactly what disabled the polling fallback and froze the
+    // production bell for three weeks (see CLAUDE.md danger zone).
+    if (isOperator) return
 
     try {
       await socketService.connect(schoolId || "", userId, role ?? "")
@@ -162,7 +174,7 @@ export function useNotifications(
       console.error("Failed to connect WebSocket:", error)
       setIsConnected(false)
     }
-  }, [userId, schoolId, role, options.autoSubscribe])
+  }, [userId, schoolId, role, isOperator, options.autoSubscribe])
 
   const disconnect = useCallback(() => {
     if (userId) {
@@ -260,7 +272,7 @@ export function useNotifications(
   // Initial fetch — runs regardless of transport. A live socket only pushes
   // NEW events, so without this the bell stays empty until something happens.
   useEffect(() => {
-    if (!userId || !schoolId) return
+    if (!canReadBell) return
 
     let active = true
     fetchBellDataShared(options.locale).then((data) => {
@@ -273,11 +285,11 @@ export function useNotifications(
     return () => {
       active = false
     }
-  }, [userId, schoolId, options.locale])
+  }, [canReadBell, options.locale])
 
   // Polling fallback when Socket.IO is unavailable
   useEffect(() => {
-    if (isConnected || !userId || !schoolId) return
+    if (isConnected || !canReadBell) return
 
     const interval = options.pollInterval ?? DEFAULT_POLL_INTERVAL
 
@@ -339,8 +351,7 @@ export function useNotifications(
     }
   }, [
     isConnected,
-    userId,
-    schoolId,
+    canReadBell,
     options.pollInterval,
     options.showToast,
     options.locale,

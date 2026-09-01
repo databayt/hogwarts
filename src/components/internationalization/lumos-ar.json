@@ -652,19 +652,18 @@
       "searchPlaceholder": "ابحث في الفيديوهات..."
     },
     "videoReview": {
-      "emptyState": "لا توجد مقاطع فيديو بانتظار المراجعة.",
-      "pendingSuffix": "بانتظار المراجعة",
+      "emptyState": "لم يتم إرسال أي فيديو بعد.",
+      "submittedSuffix": "مُرسَل",
+      "awaitingPlatform": "يراجع فريق المنصة كل ما يُرسَل. تُنشر مقاطع الفيديو على درسها بعد الموافقة عليها.",
+      "allReviewed": "تمت مراجعة كل ما هنا.",
+      "whatToFix": "ما ينبغي تعديله",
       "by": "بواسطة",
       "previewVideo": "معاينة الفيديو",
-      "approve": "اعتماد",
-      "reject": "رفض",
-      "confirmReject": "تأكيد الرفض",
-      "cancel": "إلغاء",
-      "reasonPlaceholder": "السبب (اختياري)",
-      "platformHint": "تُعتمد مقاطع الفيديو العامة والمدفوعة من فريق كتالوج المنصة. لا يزال بإمكانك الرفض.",
-      "toastApproved": "تم اعتماد الفيديو",
-      "toastRejected": "تم رفض الفيديو",
-      "failedReview": "تعذّرت مراجعة الفيديو"
+      "status": {
+        "pending": "قيد المراجعة",
+        "approved": "تمت الموافقة",
+        "rejected": "مرفوض"
+      }
     },
     "videoSettings": {
       "status": "الحالة",

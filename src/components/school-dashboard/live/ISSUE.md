@@ -36,7 +36,7 @@
 
 ## Hybrid-school pass 2026-08-29 — closed
 
-- [x] **Demo seed** — `prisma/seeds/conference.ts` + `db:seed:single conference` + a phase in `seedMain` after Timetable. Repairs first (isBreak, expertise
+- [x] **Demo seed** — `prisma/seeds/live.ts` + `db:seed:single conference` + a phase in `seedMain` after Timetable. Repairs first (isBreak, expertise
       top-up, teacher backfill 121 → 815/840), then policy, five days of history
       with presence + VIRTUAL attendance, next-day sessions, substitute host,
       assembly, lesson + exam/assignment/link, recurring links, a holiday.
@@ -95,7 +95,7 @@ and one I reported wrongly:
       now selects `teacher.userId` so that check is possible. Two clicks: ending
       is not undoable and disconnects everyone still in the room.
 
-- [ ] ~~`/conference/settings` has no provider control~~ — **NOT A GAP. I was wrong.**
+- [ ] ~~`/live/settings` has no provider control~~ — **NOT A GAP. I was wrong.**
       The control exists (`settings-form.tsx`, `conferenceProviderDefault`), is
       fully wired through `liveClassSettingsSchema` and `updateConferenceSettings`,
       and even carries the "SFU not provisioned yet" hint. It is gated behind
@@ -117,7 +117,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 - [x] Recording no longer gates rooms — `isLiveKitConfigured()` (4 vars) vs
       `isRecordingConfigured()` (bucket). Was the single code defect standing
       between the block and a working room.
-- [x] Cron bridge: `.github/workflows/conference-crons.yml`. Every Vercel cron
+- [x] Cron bridge: `.github/workflows/live-crons.yml`. Every Vercel cron
       has been off since 2026-08-27 and `live-class-reminders` is the only
       caller of `materializeOnlineSchools()`, so an online school materialized
       nothing after the day it saved its settings.
@@ -128,7 +128,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 - [x] Parent portal shows a "Today" strip with Join — guardians previously had
       no discoverable path to a child's live class at all.
 - [x] Mobile can join: `live_class` on `/api/mobile/timetable/[userId]` +
-      `GET /api/mobile/conference/[id]/join` (shares `join-core`, JWT actor).
+      `GET /api/mobile/live/[id]/join` (shares `join-core`, JWT actor).
       Conference notifications now request the `push` channel too.
 - [x] `started` notifications deep-link to `/room`; notification URLs are stored
       relative (they were `{subdomain}.databayt.org` — a host that serves a
@@ -176,7 +176,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
       `actions/sessions.ts:107`). The update path recomputes **both** instants
       (`list-actions.ts:865-883`) and applies them with no duration check and no
       end-after-start check. Create a 60-minute in-app room, edit it to 23
-      hours. The cap on `/conference/settings` is effectively advisory once a
+      hours. The cap on `/live/settings` is effectively advisory once a
       row exists.
 
 ### P1 — 10 fire-and-forget promises on a serverless runtime — FIXED
@@ -288,10 +288,10 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
       `LIVEKIT_S3_ACCESS_KEY`, `LIVEKIT_S3_SECRET` (separate from
       app-side `AWS_*` creds).
 - [ ] **Meeting-3 network test** from inside Aldar school WiFi.
-      `/conference/network-test` is the surface — run as
+      `/live/network-test` is the surface — run as
       `admin@kingfahad.databayt.org`. **Block on TURN/443 failure.**
-- [x] **Docs**: `content/docs-en/conference.mdx` + Arabic mirror
-      (`content/docs-ar/conference.mdx`) both written and rendering
+- [x] **Docs**: `content/docs-en/live.mdx` + Arabic mirror
+      (`content/docs-ar/live.mdx`) both written and rendering
       (Structure-first, post-rename, providers marked wired/dark).
 
 ## P1 — Phase 2 (Scheduling + reminders)
@@ -301,7 +301,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
       (`timetable/views/teacher-view.tsx`) calls the new
       `createLiveClassFromTimetable({ timetableId })` action (derives
       teacher/section/subject + period window, reuses or creates+starts the
-      session) then routes to `/conference/${id}/room`. Shown only when there
+      session) then routes to `/live/${id}/room`. Shown only when there
       is no session/link to join yet.
 - [x] **Auto-start egress** (DONE: webhook room_started → startCompositeEgress when recordingEnabled) on `room_started` if
       `Conference.recordingEnabled`. Currently the webhook
@@ -313,21 +313,21 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 - [x] **Per-section / per-grade recording opt-out** — DONE.
       `Section.conferenceRecordingOptOut` + `setSectionRecordingOptOut`
       (`actions/settings.ts`) + `section-recording-policy.tsx` UI on
-      `/conference/settings`. Applied at create in BOTH paths
+      `/live/settings`. Applied at create in BOTH paths
       (`actions/sessions.ts` and `list-actions.ts` — the latter gap was closed
       in the 2026-06-13 hardening pass).
 
 ## P2 — Phase 4 (Settings + ops)
 
-- [x] **Settings UI** (DONE: /conference/settings + updateConferenceSettings, ADMIN/DEV) for `conferenceRetentionDays`,
+- [x] **Settings UI** (DONE: /live/settings + updateConferenceSettings, ADMIN/DEV) for `conferenceRetentionDays`,
       `conferenceMaxDuration`, `conferenceRecordingDefault`,
       `conferenceMaxConcurrent`. Should live under
       `/settings/school` and only be writable by ADMIN/DEV.
 - [x] **Capacity dashboard** in SaaS dashboard — DONE.
-      `/observability/conference` (DEVELOPER-only via the saas-dashboard
+      `/observability/live` (DEVELOPER-only via the saas-dashboard
       layout) shows live rooms + live-by-school, scheduled-today, recordings
       ready + storage, and the TURN/TCP-fallback rate
-      (`saas-dashboard/observability/conference/{queries,content}.tsx`). The
+      (`saas-dashboard/observability/live/{queries,content}.tsx`). The
       fallback rate is now scoped to actually-joined participants (2026-06-13).
       Egress queue depth is SFU-internal → remains "requires SFU".
 - [x] **Kick participant** — DONE. `ParticipantsPanel` (HOST/CO_HOST-only
@@ -355,7 +355,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 - [x] **Eligibility resolution test** — HOST vs CO_HOST vs PARTICIPANT
       vs OBSERVER resolution per role + section/guardian membership.
       (`__tests__/eligibility.test.ts`, 17 tests)
-- [x] **Playwright RBAC + smoke specs** — `tests/e2e/conference/`
+- [x] **Playwright RBAC + smoke specs** — `tests/e2e/live/`
       with `feature-pages-load.spec.ts` (5 tests) and `rbac.spec.ts`
       (11 tests) covering ADMIN/TEACHER/STUDENT/GUARDIAN/STAFF/ACCOUNTANT
       allowed-vs-blocked routes + ar RTL rendering. 103 test rows
@@ -384,7 +384,7 @@ Closed:
       the mode so the row never says two things.
 - [x] **Live classes inside `/school/configuration`** — a `live-classes`
       section (sidebar description = current mode) mounting the same
-      `ConferenceSettingsPanel` as `/conference/settings`. Two doors, one
+      `ConferenceSettingsPanel` as `/live/settings`. Two doors, one
       panel.
 - [x] **Attendance thresholds are settings** — late grace, minimum presence,
       early-leave minutes (were constants).
@@ -556,17 +556,17 @@ Deferred, with reasons:
 
 ### Landing page + nested surfaces (2026-08-16)
 
-`/conference` was the sessions table with a one-tab "All" strip over it. It now
+`/live` was the sessions table with a one-tab "All" strip over it. It now
 opens the way `/lumos` does, and the table moved behind a route group.
 
-- [x] **`/conference` is a landing page** (`landing/`): hero (copy + a room
+- [x] **`/live` is a landing page** (`landing/`): hero (copy + a room
       collage — a student in a real class as the speaker tile, two smaller
       tiles and the control bar around it), four value cards, a live/coming-up
       strip, a full-bleed value band, three setup steps, and a closing band.
       All copy is dictionary-driven under `school.liveClasses.landing` in BOTH
       `school-en.json` and `school-ar.json` — no `d?.key || "English"` lookups
       with no key behind them.
-- [x] **The table moved to `/conference/dashboard`**, inside a new `(app)`
+- [x] **The table moved to `/live/dashboard`**, inside a new `(app)`
       route group whose layout supplies the heading + tab strip (`nav.tsx`).
       `schedule` / `settings` / `network-test` moved into the same group, so
       their URLs are unchanged and they gained the strip for free (each also
@@ -576,7 +576,7 @@ opens the way `/lumos` does, and the table moved behind a route group.
       narrowing by role (STUDENT/GUARDIAN see only Sessions, so there is no tab
       they'd be bounced out of). Covered by `src/tests/school-dashboard/live/nav-tabs.test.ts`.
 - [x] **Mutations revalidate both list pages.** `conferenceListRevalidatePaths()`
-      returns `/conference` and `/conference/dashboard`; the eight bare
+      returns `/live` and `/live/dashboard`; the eight bare
       `conferenceRevalidatePath()` call sites loop it. The route group
       contributes no URL segment, so the second path has no `(app)` in it.
 - [x] **The live/coming-up strip is section-scoped** through the same
@@ -584,12 +584,12 @@ opens the way `/lumos` does, and the table moved behind a route group.
       (localize + getNames + getLabels), and its start times are formatted in
       the SCHOOL's timezone server-side. The whole read is try/caught — a query
       failure leaves the landing standing rather than taking the block down.
-- [x] Assets under `public/conference/`: the student hero photo, two Figma
+- [x] Assets under `public/live/`: the student hero photo, two Figma
       participant/screen-share tiles, and Google's Meet `warm_welcome` +
       `agenda_empty_state` illustrations, **served locally rather than
       hotlinked off gstatic**. Note these last two are Google's own Meet
       artwork — replace them if that matters for a customer-facing release.
-- [x] Verified in the browser at `/en/conference` and `/ar/conference` (RTL
+- [x] Verified in the browser at `/en/live` and `/ar/live` (RTL
       mirrors correctly, all copy Arabic) plus every `(app)` surface. tsc 0 ·
       361 conference tests green.
 
@@ -629,7 +629,7 @@ school; both invisible to the unit tests.
 - [x] **Open rooms were unreachable from the timetable.** `attachLiveClasses`
       keys on (section, subject) and an open room has neither a slot nor a
       subject, so a `mode: "open"` school got no badge and no Join on ANY card
-      — `/conference` was its only surface, which defeats the point of the
+      — `/live` was its only surface, which defeats the point of the
       loose mode. A section-level lookup now resolves it, ranked LAST (a
       per-slot session and the subject's own link are both more specific). It
       resolves for EVERY period of the section's day, which is correct: the
@@ -760,7 +760,7 @@ failure remains pre-existing school-marketing/template drift.
   its route PATTERN or its concrete URL, never a mix. Four per-session call
   sites now use the literal `[id]` pattern via
   `conferenceSessionRevalidatePaths()`.
-- Admin surface on `/conference/settings` (toggle + provider select + the
+- Admin surface on `/live/settings` (toggle + provider select + the
   provisioning hint + a per-section override list), full en/ar dictionary
   coverage, and `DEFAULT_SCHOOL_TZ` de-duplicated into `day-window.ts`.
 
@@ -772,14 +772,14 @@ so a commit must be staged from an explicit list, not `git add -A`. These 43
 files — and only these — are this pass:
 
 ```
-content/docs-ar/conference.mdx
-content/docs-en/conference.mdx
+content/docs-ar/live.mdx
+content/docs-en/live.mdx
 prisma/models/classrooms.prisma
 prisma/models/school.prisma
-src/app/[lang]/s/[subdomain]/(school-dashboard)/conference/settings/page.tsx
+src/app/[lang]/s/[subdomain]/(school-dashboard)/live/settings/page.tsx
 src/app/api/cron/end-stale-live-classes/route.ts
 src/app/api/cron/live-class-reminders/route.ts
-src/components/docs/conference-structure.tsx
+src/components/docs/live-structure.tsx
 src/components/internationalization/dictionaries/ar/live-classes.json
 src/components/internationalization/dictionaries/en/live-classes.json
 src/components/internationalization/school-ar.json
@@ -1023,7 +1023,7 @@ timetable 149, attendance 507, dictionary parity green.
   cap); external keeps the adapter flow. In-app option defaults on and is
   disabled with a provisioning hint until `isLiveKitConfigured()`.
 - **Provider-aware Join everywhere:** table row menu (external → vendor URL
-  new tab, livekit → `/conference/[id]/room`), new **View** item → detail
+  new tab, livekit → `/live/[id]/room`), new **View** item → detail
   page (previously unreachable from the table), detail page Join fixed (was
   sending external sessions into the SFU room), and the room route now
   redirects external sessions to their vendor URL (enrollment-gated).
@@ -1068,19 +1068,19 @@ timetable 149, attendance 507, dictionary parity green.
   retention).
 
 **DB (pending — Neon project at its 512 MB size cap):** additive DDL staged
-at `scratchpad/conference_visibility_resources_ddl.sql` (enum
+at `scratchpad/live_visibility_resources_ddl.sql` (enum
 `LiveClassVisibility`, `visibility` + `catalogLessonId` columns + FK,
 `live_class_resources` table + FKs/indexes). Apply with
-`cat scratchpad/conference_visibility_resources_ddl.sql | pnpm prisma db execute --stdin --url "$DATABASE_URL"`
+`cat scratchpad/live_visibility_resources_ddl.sql | pnpm prisma db execute --stdin --url "$DATABASE_URL"`
 once space frees (options: approve a one-time >90d delivery-log prune, or
-the planned account#1 toggle-back). Until applied, `/conference` reads that
+the planned account#1 toggle-back). Until applied, `/live` reads that
 select the new columns will fail — deploy after DDL.
 
 - [x] **Apply staged visibility/resources DDL** — **verified applied in prod
       2026-08-12** (information_schema check: `visibility` +
       `catalogLessonId` columns, `live_class_resources` table, FKs/indexes
       all present; `LiveClassVisibility` enum = section,school). The staged
-      copy at `scratchpad/conference_visibility_resources_ddl.sql` is now
+      copy at `scratchpad/live_visibility_resources_ddl.sql` is now
       historical. The June-20 attendance-sync DDL is likewise confirmed LIVE.
 
 ### Integration optimization pass (2026-06-20)
@@ -1114,7 +1114,7 @@ tests, 6 new for the attendance sync).
   non-joiners when a session ends. Called from the webhook `room_finished`
   (count-guarded) and a new `/api/cron/end-stale-live-classes` (`*/15`) backstop
   that also closes sessions stuck `live` past `scheduledEnd`+30m. Gated per-school
-  by `School.conferenceAttendanceSync` (new toggle on `/conference/settings`).
+  by `School.conferenceAttendanceSync` (new toggle on `/live/settings`).
   New `AttendanceMethod.VIRTUAL`. **DB additive deploy-pending** (enum value +
   `School.liveClassAttendanceSync` column) — Neon branch-first, then promote.
   Idempotent + soft-delete-revive on the section unique key.
@@ -1169,13 +1169,13 @@ stricter per-section teacher scoping is wanted.
 
 ### Docs pass (2026-06-13)
 
-- [x] Rewrote `content/docs-{en,ar}/conference.mdx` to match the real code
+- [x] Rewrote `content/docs-{en,ar}/live.mdx` to match the real code
       (Structure-first; added `participants-panel`, `section-recording-policy`,
       `network-protocol`, `token-cache`; providers relabeled wired/dark; two-layer
       permission model + data-flow documented).
 - [x] Structure section now renders `<ConferenceStructure />` (registered the
       component in `src/mdx-components.tsx`; refreshed its node tree in
-      `src/components/docs/conference-structure.tsx`).
+      `src/components/docs/live-structure.tsx`).
 - [x] Deleted the stale pre-rename docs `content/docs-{en,ar}/live-classes.mdx`
       and de-registered them from both `meta.json` + regenerated `.source`.
 - [x] Rewrote `README.md` (was still titled "Live Classes" with a nested layout
@@ -1191,7 +1191,7 @@ stricter per-section teacher scoping is wanted.
       real OAuth + createMeeting) + wired into the create flow behind
       `isConfigured()` (ships dark until OAuth creds land).
 - [x] `stopEgress` wired into `endLiveClass`; `carryForwardConferenceLinks`
-      exposed as an admin button on `/conference/settings`.
+      exposed as an admin button on `/live/settings`.
 - [x] ~40 new tests (moderation panel, start button, protocol classifier,
       stop-egress, native providers via mocked fetch, webhook route,
       expire-recordings cron, egress + recording-urls units). Whole-project tsc 0.

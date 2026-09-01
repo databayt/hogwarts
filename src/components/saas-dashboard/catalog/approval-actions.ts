@@ -3,10 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { z } from "zod"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { notifySchoolOfVideoDecision } from "@/lib/platform-notification"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 // ============================================================================
@@ -264,30 +266,20 @@ export async function approveContent(
           },
           select: { userId: true, schoolId: true, title: true },
         })
-        // Fire-and-forget notify the proposer. Notification requires a schoolId, so
-        // platform-level videos (no school) are silently skipped.
-        if (updated.userId && updated.schoolId) {
-          await db.notification
-            .create({
-              data: {
-                schoolId: updated.schoolId,
-                userId: updated.userId,
-                actorId: userId ?? null,
-                type: "document_shared",
-                priority: "normal",
-                title: "Video approved",
-                body: `Your video "${updated.title}" has been approved and is now live.`,
-                metadata: {
-                  entityType: "video",
-                  entityId: id,
-                  url: "/lumos/videos",
-                },
-              },
-            })
-            .catch(() => {
-              // Notification failure must not fail the approval.
-            })
-        }
+        // Tell the school its video is ready — the uploader AND the school's
+        // ADMINs, since under the single-pipeline model the school has no
+        // other place to see this decision. Off the response path; a
+        // notification failure must never fail the approval.
+        after(() =>
+          notifySchoolOfVideoDecision({
+            schoolId: updated.schoolId,
+            uploaderId: updated.userId,
+            actorId: userId ?? null,
+            videoId: id,
+            title: updated.title,
+            decision: "APPROVED",
+          })
+        )
         break
       }
       default:
@@ -368,29 +360,19 @@ export async function rejectContent(
           },
           select: { userId: true, schoolId: true, title: true },
         })
-        if (updated.userId && updated.schoolId) {
-          await db.notification
-            .create({
-              data: {
-                schoolId: updated.schoolId,
-                userId: updated.userId,
-                actorId: userId ?? null,
-                type: "system_alert",
-                priority: "high",
-                title: "Video needs changes",
-                body: `Your video "${updated.title}" was not approved. Reason: ${rejectionReason}`,
-                metadata: {
-                  entityType: "video",
-                  entityId: id,
-                  url: "/lumos/videos",
-                  rejectionReason,
-                },
-              },
-            })
-            .catch(() => {
-              // Notification failure must not fail the rejection.
-            })
-        }
+        // Same fan-out as the approve branch: the uploader plus the school's
+        // ADMINs, carrying the reason so the feedback is actionable.
+        after(() =>
+          notifySchoolOfVideoDecision({
+            schoolId: updated.schoolId,
+            uploaderId: updated.userId,
+            actorId: userId ?? null,
+            videoId: id,
+            title: updated.title,
+            decision: "REJECTED",
+            rejectionReason,
+          })
+        )
         break
       }
       default:

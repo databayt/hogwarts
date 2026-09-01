@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { hiddenLessonExclusion } from "@/components/lumos/lib/content-hidden"
 
 export interface ContinueWatchingItem {
   lessonId: string
@@ -46,6 +47,10 @@ export const getContinueWatching = cache(async function getContinueWatching(
       isCompleted: false,
       watchedSeconds: { gt: 0 },
       totalSeconds: { gt: 0 },
+      // `schoolId` used to gate only the early return above, so this row kept
+      // surfacing lessons the school had hidden — and the card linked straight
+      // into them.
+      ...hiddenLessonExclusion(schoolId),
     },
     orderBy: { updatedAt: "desc" },
     take: limit,

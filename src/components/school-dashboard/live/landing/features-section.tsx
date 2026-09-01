@@ -1,21 +1,33 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { CalendarClock, ShieldCheck, UserCheck, Video } from "lucide-react"
-
+import { asset } from "@/lib/asset-url"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import type { LandingSectionProps } from "./types"
 
-/**
- * The four things this block actually does, one card each. Icons are lucide
- * (bundled) rather than hotlinked SVGs — nothing here depends on the CDN
- * being reachable.
- */
 const FEATURES = [
-  { key: "timetable", Icon: CalendarClock },
-  { key: "recording", Icon: Video },
-  { key: "attendance", Icon: UserCheck },
-  { key: "access", Icon: ShieldCheck },
+  {
+    key: "timetable",
+    iconUrl: asset(
+      "https://cdn.databayt.org/anthropic/stream-progress-tracking.svg"
+    ),
+  },
+  {
+    key: "recording",
+    iconUrl: asset(
+      "https://cdn.databayt.org/anthropic/stream-interactive-learning.svg"
+    ),
+  },
+  {
+    key: "attendance",
+    iconUrl: asset(
+      "https://cdn.databayt.org/anthropic/stream-curated-courses.svg"
+    ),
+  },
+  {
+    key: "access",
+    iconUrl: asset("https://cdn.databayt.org/anthropic/stream-community.svg"),
+  },
 ] as const
 
 export function ConferenceFeaturesSection({ dictionary }: LandingSectionProps) {
@@ -23,14 +35,21 @@ export function ConferenceFeaturesSection({ dictionary }: LandingSectionProps) {
 
   return (
     <section className="mb-24 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      {FEATURES.map(({ key, Icon }) => (
+      {FEATURES.map(({ key, iconUrl }) => (
         <Card
           key={key}
           className="hover:border-foreground border shadow-none transition-colors"
         >
           <CardHeader>
-            <div className="text-foreground mb-4 flex h-12 w-12 items-end">
-              <Icon className="size-9" strokeWidth={1.5} aria-hidden="true" />
+            <div className="text-foreground mb-4 h-12 w-12 text-start">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={iconUrl}
+                alt=""
+                width={48}
+                height={48}
+                className="h-12 w-12"
+              />
             </div>
             <CardTitle className="text-start">{f?.[key]?.title}</CardTitle>
           </CardHeader>

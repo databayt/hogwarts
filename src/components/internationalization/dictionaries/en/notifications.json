@@ -121,7 +121,10 @@
     "live_class_starting_soon": "Live class starting soon",
     "live_class_started": "Live class is now live",
     "live_class_cancelled": "Live class cancelled",
-    "live_class_recording_ready": "Recording ready"
+    "live_class_recording_ready": "Recording ready",
+    "content_review": "Pending platform review",
+    "content_approved": "Content approved",
+    "content_rejected": "Content needs changes"
   },
   "priorities": {
     "low": "Low priority",

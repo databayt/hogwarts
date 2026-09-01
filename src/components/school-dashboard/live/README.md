@@ -1,6 +1,6 @@
 # Conference
 
-Video conferencing for schools — one self-contained block mirrored 1:1 to the `/conference` route.
+Video conferencing for schools — one self-contained block mirrored 1:1 to the `/live` route.
 Three meeting back-ends behind a single UI:
 
 - **External pasted-link** — live everywhere, zero infra (the default every school gets).
@@ -10,10 +10,10 @@ Three meeting back-ends behind a single UI:
 - **Native Meet / Zoom / Teams** — `createMeeting` wired through each vendor API, but **dark** until
   OAuth credentials land (gated by each adapter's `isConfigured()`).
 
-> Full reference: [content/docs-en/conference.mdx](../../../../content/docs-en/conference.mdx) ·
-> Arabic: [content/docs-ar/conference.mdx](../../../../content/docs-ar/conference.mdx). Those docs'
+> Full reference: [content/docs-en/live.mdx](../../../../content/docs-en/live.mdx) ·
+> Arabic: [content/docs-ar/live.mdx](../../../../content/docs-ar/live.mdx). Those docs'
 > **Structure** section renders `<ConferenceStructure />` from
-> `src/components/docs/conference-structure.tsx` — when you add/rename files below, update that
+> `src/components/docs/live-structure.tsx` — when you add/rename files below, update that
 > component's node tree (not a code fence). The legacy `/docs/live-classes` pages were deleted.
 
 ## File Structure (flat block)
@@ -44,7 +44,7 @@ conference/
 ├── authorization.ts · permissions.ts · validation.ts         rich sessions layer (strict gate)
 ├── list-permissions.ts · list-validation.ts · list-params.ts list layer (CRUD gate)
 ├── nav.tsx                                                    heading + tab strip for the (app) surfaces
-├── landing/                                                   the /conference landing page
+├── landing/                                                   the /live landing page
 │   ├── content.tsx           composes the sections below
 │   ├── hero.tsx              copy + the room collage (student photo, tiles, control bar)
 │   ├── features-section.tsx  the four value cards
@@ -65,24 +65,24 @@ conference/
 ```
 
 Tests live under `src/tests/` (URL-mirror reorg), **not** in a `__tests__/` folder here.
-The Prisma models are in `prisma/models/conference.prisma`.
+The Prisma models are in `prisma/models/live.prisma`.
 
 ## Routes
 
 | Path                          | Layout                   | Roles                                              |
 | ----------------------------- | ------------------------ | -------------------------------------------------- |
-| `/conference`                 | school-dashboard         | all 7 school roles — **landing page**              |
-| `/conference/dashboard`       | school-dashboard `(app)` | all 7 school roles — **the sessions table**        |
-| `/conference/schedule`        | school-dashboard `(app)` | DEVELOPER · ADMIN · TEACHER                        |
-| `/conference/settings`        | school-dashboard `(app)` | DEVELOPER · ADMIN                                  |
-| `/conference/network-test`    | school-dashboard `(app)` | DEVELOPER · ADMIN (env-gated)                      |
-| `/conference/[id]`            | school-dashboard         | all 7 school roles                                 |
-| `/conference/[id]/recordings` | school-dashboard         | all except ACCOUNTANT                              |
-| `/conference/[id]/room`       | **(live-room)**          | session participants (bare full-screen layout)     |
-| `/live-classes/*`             | —                        | legacy redirect → `/conference` (pre-rename links) |
+| `/live`                 | school-dashboard         | all 7 school roles — **landing page**              |
+| `/live/dashboard`       | school-dashboard `(app)` | all 7 school roles — **the sessions table**        |
+| `/live/schedule`        | school-dashboard `(app)` | DEVELOPER · ADMIN · TEACHER                        |
+| `/live/settings`        | school-dashboard `(app)` | DEVELOPER · ADMIN                                  |
+| `/live/network-test`    | school-dashboard `(app)` | DEVELOPER · ADMIN (env-gated)                      |
+| `/live/[id]`            | school-dashboard         | all 7 school roles                                 |
+| `/live/[id]/recordings` | school-dashboard         | all except ACCOUNTANT                              |
+| `/live/[id]/room`       | **(live-room)**          | session participants (bare full-screen layout)     |
+| `/live-classes/*`             | —                        | legacy redirect → `/live` (pre-rename links) |
 
 `(app)` is a route GROUP: it contributes no URL segment, it only supplies the
-heading + tab strip (`nav.tsx`). `/conference` and `/conference/[id]` sit
+heading + tab strip (`nav.tsx`). `/live` and `/live/[id]` sit
 outside it — the landing page owns its own hero, and a session detail is a leaf
 reached from a row, not a tab.
 
@@ -95,7 +95,7 @@ reached from a row, not a tab.
 | `/api/cron/live-class-reminders`   | GET    | Materializes today's online-school slots, then dispatches 5–20-min start reminders (every 15 min, idempotent) |
 | `/api/cron/end-stale-live-classes` | GET    | Close sessions stuck `live` past end + attendance sync; cancel never-started `scheduled` rows (every 30 min)  |
 | `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500)                                                                   |
-| `/api/mobile/conference/[id]/join` | GET    | Mobile join ticket — same `join-core` eligibility as the web, JWT actor instead of a session cookie           |
+| `/api/mobile/live/[id]/join` | GET    | Mobile join ticket — same `join-core` eligibility as the web, JWT actor instead of a session cookie           |
 
 ## Status
 
@@ -156,7 +156,7 @@ reached from a row, not a tab.
 | Reminder lead time per school                          | ✅ settings → reminders cron                         |
 | Per-grade online override (section ?? grade ?? school) | ✅ `AcademicGrade.conferenceOnline`                  |
 | Offline: student work queued + synced (no content)     | ✅ live — `src/lib/offline/*`                        |
-| Capacity dashboard (`/observability/conference`)       | ✅ live (DEVELOPER-only)                             |
+| Capacity dashboard (`/observability/live`)       | ✅ live (DEVELOPER-only)                             |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any
 time, for any length, and either way round**, without ever closing the
@@ -199,7 +199,7 @@ provisioned. See `ISSUE.md` for what both passes deliberately leave open
 Hybrid-school pass 2026-08-29: the block is now DEMO-ABLE and integrated. The
 demo had 121 of 840 slots with a teacher — the expertise seed was count-guarded
 and never caught up with the catalog — so an "online school" could put 14% of
-its classes online. `prisma/seeds/conference.ts` repairs that first (815/840
+its classes online. `prisma/seeds/live.ts` repairs that first (815/840
 now), sets the LiveKit policy, and seeds five days of history with real presence
 
 - VIRTUAL attendance, next-day sessions, a substitute host, an assembly, a
@@ -224,7 +224,7 @@ written up as `prisma/migrations/20260828000000_conference_online_school/`.
 **Every Vercel cron is off** (`"crons": []`, free-plan bridge — see `DEPLOYMENT.md`), and
 `live-class-reminders` is the only caller of `materializeOnlineSchools()`. An online school therefore
 materialized nothing after the day it saved its settings. Restored via
-`.github/workflows/conference-crons.yml`.
+`.github/workflows/live-crons.yml`.
 
 Also: recording no longer gates rooms; `createLiveClass` gained the server-side provider check the
 wizard only had client-side; notifications for a _started_ class link straight to the room; and

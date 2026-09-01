@@ -99,7 +99,7 @@ describe("LiveJoinButton", () => {
     )
     expect(screen.getByRole("link", { name: /join/i })).toHaveAttribute(
       "href",
-      "/en/conference/lcs-1/room"
+      "/en/live/lcs-1/room"
     )
   })
 

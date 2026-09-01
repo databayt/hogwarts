@@ -80,17 +80,37 @@ describe("getLessonContent — per-school quiz hide", () => {
     expect(mockQuestions).not.toHaveBeenCalled()
   })
 
-  it("checks the hideQuiz override scoped to (schoolId, lesson)", async () => {
+  it("checks every hide axis, scoped to (schoolId, lesson), in ONE query", async () => {
     await getLessonContent("lesson-1")
+    expect(mockOverride).toHaveBeenCalledOnce()
     expect(mockOverride).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           schoolId: "school-1",
-          catalogLessonId: "lesson-1",
-          hideQuiz: true,
+          OR: [
+            // the quiz alone is switched off …
+            { catalogLessonId: "lesson-1", hideQuiz: true },
+            // … or the whole lesson is hidden …
+            { catalogLessonId: "lesson-1", isHidden: true },
+            // … or its chapter is.
+            {
+              isHidden: true,
+              chapter: { lessons: { some: { id: "lesson-1" } } },
+            },
+          ],
         },
       })
     )
+  })
+
+  it("returns NO questions when the school hid the LESSON, not just the quiz", async () => {
+    // The gate that matters for `submitLessonQuiz`: a student can POST a hidden
+    // lesson's id directly, and before 2026-08-29 the quiz still graded and
+    // wrote a score into the gradebook for content the school had removed.
+    mockOverride.mockResolvedValueOnce({ id: "ov-hidden-lesson" })
+    const result = await getLessonContent("lesson-1")
+    expect(result.questions).toEqual([])
+    expect(mockQuestions).not.toHaveBeenCalled()
   })
 
   it("skips the override check for individual (no-school) users", async () => {

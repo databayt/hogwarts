@@ -39,7 +39,10 @@ vi.mock("@/lib/db", () => ({
     },
     notification: {
       create: vi.fn(),
+      createMany: vi.fn(),
     },
+    // Reached by the decision fan-out (uploader + the school's admins).
+    user: { findMany: vi.fn() },
     bookSelection: {
       findFirst: vi.fn(),
       create: vi.fn(),
@@ -80,9 +83,15 @@ function mockUnauthenticated() {
 // Tests
 // ============================================================================
 
+// after() is fire-and-forget in the next/server test stub, so post-response
+// notification work needs a real tick before it can be asserted on.
+const flushAfter = () => new Promise((r) => setTimeout(r, 0))
+
 describe("Approval Actions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(db.user.findMany).mockResolvedValue([{ id: "admin-1" }] as any)
+    vi.mocked(db.notification.createMany).mockResolvedValue({ count: 1 } as any)
   })
 
   // ==========================================================================
@@ -467,6 +476,70 @@ describe("Approval Actions", () => {
         success: false,
         error: "Record not found",
       })
+    })
+  })
+
+  // ==========================================================================
+  // Video decisions — the return leg of the single pipeline
+  // ==========================================================================
+
+  describe("Video decisions notify the school", () => {
+    const approvedVideo = {
+      userId: "teacher-1",
+      schoolId: "school-1",
+      title: "Algebra intro",
+    }
+
+    it("tells the uploader AND the school's admins a video is ready", async () => {
+      // Under the single-pipeline model the school has no other surface where
+      // this decision appears — /lumos/review is read-only.
+      mockDeveloperSession()
+      vi.mocked(db.video.update).mockResolvedValue(approvedVideo as any)
+
+      await approveContent("Video", "v-1")
+      await flushAfter()
+
+      expect(db.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            schoolId: "school-1",
+            role: "ADMIN",
+            id: { not: "teacher-1" },
+          },
+        })
+      )
+      const rows = vi.mocked(db.notification.createMany).mock.calls[0][0]
+        .data as any[]
+      expect(rows.map((r) => r.userId).sort()).toEqual(["admin-1", "teacher-1"])
+      expect(rows[0].type).toBe("content_approved")
+      expect(rows[0].metadata.url).toBe("/lumos/videos")
+    })
+
+    it("carries the rejection reason back to the school", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.video.update).mockResolvedValue(approvedVideo as any)
+
+      await rejectContent("Video", "v-1", "Audio too low")
+      await flushAfter()
+
+      const rows = vi.mocked(db.notification.createMany).mock.calls[0][0]
+        .data as any[]
+      expect(rows[0].type).toBe("content_rejected")
+      expect(rows[0].priority).toBe("high")
+      expect(rows[0].body).toContain("Audio too low")
+    })
+
+    it("skips the fan-out for a platform-scope video with no school", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.video.update).mockResolvedValue({
+        ...approvedVideo,
+        schoolId: null,
+      } as any)
+
+      await approveContent("Video", "v-1")
+      await flushAfter()
+
+      expect(db.notification.createMany).not.toHaveBeenCalled()
     })
   })
 

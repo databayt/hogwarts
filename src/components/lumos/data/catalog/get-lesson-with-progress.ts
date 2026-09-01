@@ -11,6 +11,7 @@ import { db } from "@/lib/db"
 import { isOwnStorageUrl } from "@/lib/storage-key"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { isLessonHidden } from "@/components/lumos/lib/content-hidden"
 import {
   applyInstructorPolicy,
   getInstructorPolicy,
@@ -174,6 +175,17 @@ export const getLessonWithProgress = cache(async function getLessonWithProgress(
     })
 
     if (!lesson) {
+      return null
+    }
+
+    // A school hide must BLOCK, not merely delist. The course tree and the
+    // sidebar already drop this lesson; without this check the lesson page
+    // still served it — and its video and gradebook-writing quiz with it — to
+    // anyone holding the id (a bookmark, history, or a Continue Watching row).
+    // Note the video query's `NOT: { overrides: ... }` below does NOT cover
+    // this: `Video.overrides` is the "VideoOverrides" relation keyed on
+    // `lessonVideoId`, so it never matches a lesson- or chapter-level hide.
+    if (await isLessonHidden(schoolId, lesson.id, lesson.chapterId)) {
       return null
     }
 

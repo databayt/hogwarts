@@ -108,7 +108,7 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
     **`/{lang}/onboarding`**, the wizard that actually provisions a school.
     It previously carried the reference's whole download mechanic: a click
     switched the button to an "Open 2" variant (340px, white) where the label
-    slid out and an e-mail form nested *inside* the button faded in, backed by
+    slid out and an e-mail form nested _inside_ the button faded in, backed by
     a 3000px "Close trigger", submitting to `joinWaitlist` → `Prospect`
     (source "waitlist") + SALES_NOTIFY_EMAIL. **A click cannot both navigate
     and expand**, so that variant, the form, the close trigger and the 340px

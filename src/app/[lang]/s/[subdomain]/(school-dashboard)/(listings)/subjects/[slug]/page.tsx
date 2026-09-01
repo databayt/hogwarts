@@ -192,6 +192,20 @@ export default async function SubjectDetailPage({ params }: Props) {
     db.material.findMany({
       where: {
         status: "PUBLISHED",
+        // Approval + visibility, matching the gate in the sibling
+        // `materials/page.tsx` and `lumos/data/catalog/get-lesson-with-progress.ts`.
+        // Filtering on `status` alone listed every OTHER school's SCHOOL/PRIVATE
+        // rows to any signed-in member of this school. The visibility OR must ride
+        // inside `AND` — a second bare `OR:` key silently overwrites the first.
+        approvalStatus: "APPROVED",
+        AND: [
+          {
+            OR: [
+              { visibility: "PUBLIC" },
+              ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
+            ],
+          },
+        ],
         OR: [
           { catalogSubjectId: subject.id },
           ...(chapterIds.length > 0
@@ -220,6 +234,17 @@ export default async function SubjectDetailPage({ params }: Props) {
       where: {
         subjectId: subject.id,
         status: "PUBLISHED",
+        // Same cross-school gate as materials above: without it every other
+        // school's SCHOOL/PRIVATE exam listed here with its title and metadata.
+        approvalStatus: "APPROVED",
+        AND: [
+          {
+            OR: [
+              { visibility: "PUBLIC" },
+              ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
+            ],
+          },
+        ],
       },
       orderBy: { usageCount: "desc" },
       select: {
@@ -239,7 +264,16 @@ export default async function SubjectDetailPage({ params }: Props) {
         by: ["questionType", "difficulty"],
         where: {
           approvalStatus: "APPROVED",
-          visibility: { in: ["PUBLIC", "SCHOOL"] },
+          // `visibility: { in: ["PUBLIC", "SCHOOL"] }` with no school scope
+          // counted every OTHER school's SCHOOL-only questions into this card.
+          AND: [
+            {
+              OR: [
+                { visibility: "PUBLIC" },
+                ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
+              ],
+            },
+          ],
           OR: [
             { catalogSubjectId: subject.id },
             ...(chapterIds.length > 0
@@ -276,6 +310,16 @@ export default async function SubjectDetailPage({ params }: Props) {
     db.assignment.findMany({
       where: {
         status: "PUBLISHED",
+        // Same cross-school gate as materials above.
+        approvalStatus: "APPROVED",
+        AND: [
+          {
+            OR: [
+              { visibility: "PUBLIC" },
+              ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
+            ],
+          },
+        ],
         OR: [
           { catalogSubjectId: subject.id },
           ...(chapterIds.length > 0

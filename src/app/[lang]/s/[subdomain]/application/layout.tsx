@@ -2,6 +2,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Metadata } from "next"
+
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { type Locale } from "@/components/internationalization/config"
 import {
   getPlatformCoreDictionary,
@@ -9,7 +11,6 @@ import {
 } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { ReportIssue } from "@/components/report-issue"
-import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 // Application flow uses cookies + dictionary lookup - always dynamic
 export const dynamic = "force-dynamic"

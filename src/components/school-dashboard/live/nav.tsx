@@ -15,7 +15,7 @@ import { getTabsForRole } from "./list-permissions"
  * Section heading + tab strip for the conference app surfaces.
  *
  * Rendered from the `(app)` route-group layout rather than from
- * `conference/layout.tsx`, so `/conference` itself keeps its own hero without
+ * `conference/layout.tsx`, so `/live` itself keeps its own hero without
  * dashboard chrome stacked on top of it — the same split lumos uses.
  */
 export async function ConferenceSectionNav({ lang }: { lang: string }) {

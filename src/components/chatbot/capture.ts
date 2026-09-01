@@ -22,16 +22,19 @@
  */
 import { db } from "@/lib/db"
 import { sendEmail } from "@/lib/email"
+import { extractIdentifiers } from "@/lib/funnel/identifiers"
 
 // Same target as the saas-marketing form notifier. The fallback only counts if
 // someone actually reads that box — set SALES_NOTIFY_EMAIL to a monitored
 // mailbox in prod. Trimmed: Vercel-pulled env values carry stray newlines.
 const SALES_INBOX = (process.env.SALES_NOTIFY_EMAIL ?? "hi@databayt.org").trim()
 
-import { extractIdentifiers } from "@/lib/funnel/identifiers"
-
 // Re-exported so the unit tests and any existing consumers keep one import path.
-export { extractIdentifiers, normalizeDigits, toE164 } from "@/lib/funnel/identifiers"
+export {
+  extractIdentifiers,
+  normalizeDigits,
+  toE164,
+} from "@/lib/funnel/identifiers"
 
 /**
  * Upsert the Prospect for identifiers a visitor typed into the chat.

@@ -20,6 +20,22 @@ Platform operator control center (DEVELOPER role only): tenants, billing, domain
 - **Optimization backlog:** open findings tracked in `OPTIMIZATION_BACKLOG.md` +
   `.audit-findings.json` (181-finding audit; ~150 remain, mostly i18n + lower-priority
   correctness/deadcode).
+- **The operator notification system exists now (2026-08-28).** The bell in
+  `template/saas-header/content.tsx` is real — it replaced a dead `Mail` button
+  and a "TODO: Restore when operator notification system is implemented"
+  comment. It reuses the school-dashboard `NotificationBellIcon` unchanged;
+  what made that possible is that a platform notification row is stamped with
+  the **requesting school's** `schoolId` (a required FK a DEVELOPER cannot
+  satisfy from their own session) and the DEVELOPER's `userId`. Writers go
+  through `@/lib/platform-notification`. The read/mutate path has explicit
+  DEVELOPER branches in `school-dashboard/notifications/{poll-actions,queries,
+actions}.ts` and `use-notifications.ts` — the operator bell is **poll-only**
+  and never opens a socket. `getSaasDashboardDictionary` loads the
+  `notifications` namespace for it; that inclusion is deliberate, not drift.
+- **Pending counts come from `catalog/pending-counts.ts`, not inline queries.**
+  `getCatalogPendingCounts()` is React `cache()`-wrapped so the `(catalog)`
+  layout's tab badges and the outer layout's sidebar badge share one set of six
+  queries per request. Don't re-inline them.
 - DEVELOPER role only -- auth guard at layout level, no other roles have access
 - Operates across tenants: queries intentionally lack `schoolId` filter (unique in this codebase)
 - Impersonation feature lets DEVELOPER act as school admin -- `impersonation-banner.tsx` shows active state

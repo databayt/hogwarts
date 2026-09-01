@@ -6,7 +6,7 @@
 >
 > **Readiness gate in code:** `getLiveKitReadiness()` in
 > [`livekit/client.ts`](./livekit/client.ts) reports exactly which env vars are still missing; the
-> admin **Network test** page (`/conference/network-test`, DEV/ADMIN) renders that list.
+> admin **Network test** page (`/live/network-test`, DEV/ADMIN) renders that list.
 
 ---
 
@@ -51,15 +51,15 @@ shipping state.
 
 3. Register the webhook URL in the project's settings: `https://ed.databayt.org/api/webhooks/livekit`.
 4. Redeploy (`./scripts/deploy-hobby.sh` while on the free account — **not** `git push`).
-5. Open `/conference/network-test` as an ADMIN and confirm nothing is listed as missing.
-6. Flip the school to LiveKit on `/conference/settings` — `School.conferenceProviderDefault`
+5. Open `/live/network-test` as an ADMIN and confirm nothing is listed as missing.
+6. Flip the school to LiveKit on `/live/settings` — `School.conferenceProviderDefault`
    defaults to `external`, so a configured SFU does nothing until a school opts in.
 
 **Three traps, all hit for real on 2026-08-29 while provisioning this.**
 
 1. **The signup's auto-created key has an unretrievable secret.** LiveKit shows a
-   secret once, at creation; the existing key's menu offers only *Generate Token*
-   and *Revoke key*. Create a **second, named** key and use that pair.
+   secret once, at creation; the existing key's menu offers only _Generate Token_
+   and _Revoke key_. Create a **second, named** key and use that pair.
 2. **The webhook form has a required "Signing API key" picker**, and every key in
    the project appears in it. Pick the key whose secret you put in
    `LIVEKIT_API_SECRET`. Choosing another produces a webhook that looks correctly
@@ -178,13 +178,13 @@ Set in Vercel project env (Production + Preview) and the central `.env` for dev.
 `.env.local`/`.env.*` files (project rule). The app-side `AWS_*` creds (playback signing) are
 separate and already configured.
 
-**Check:** `/conference/network-test` (as `admin@…`) no longer lists any missing var.
+**Check:** `/live/network-test` (as `admin@…`) no longer lists any missing var.
 
 ## Gate 6 — Meeting-3 in-school network test (BLOCKING)
 
 The pre-signature gate. **Must be run from inside an Aldar school's WiFi**, not an office/VPN.
 
-1. Open `/conference/network-test` as `admin@kingfahad.databayt.org` on the school network.
+1. Open `/live/network-test` as `admin@kingfahad.databayt.org` on the school network.
 2. Run the test. It establishes a calibration LiveKit connection and records setup time, connection
    quality, and **TCP-fallback usage** into `ConferenceParticipant.{avgRttMs, hadTcpFallback,
 lastIceState}`.

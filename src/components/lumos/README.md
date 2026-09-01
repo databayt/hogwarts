@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-08-15
+last_audited: 2026-08-28
 ---
 
 ## Lumos — Learning Management System (LMS)
@@ -21,7 +21,7 @@ The lumos block uses a catalog-based architecture where courses map to subjects 
 
 ### Capabilities by Role
 
-- **DEVELOPER / ADMIN**: Full access -- manage settings, enrollments, instructor preferences, video review queue
+- **DEVELOPER / ADMIN**: Full access -- manage settings, enrollments, instructor preferences; watch submission status (approval itself is the platform's, at /catalog/approvals)
 - **TEACHER**: Upload videos, propose content for lessons, manage own videos
 - **STUDENT**: Browse courses, enroll, watch lessons, track progress, earn certificates
 - **GUARDIAN**: View child's enrollment progress and certificates
@@ -40,7 +40,7 @@ The lumos block uses a catalog-based architecture where courses map to subjects 
 | `/{lang}/s/{subdomain}/lumos/dashboard/[slug]/[lessonId]`  | Lesson player                                                                          | Ready  |
 | `/{lang}/s/{subdomain}/lumos/enrollments`                  | Enrollments (ADMIN)                                                                    | Ready  |
 | `/{lang}/s/{subdomain}/lumos/instructors`                  | Instructor roster — allow/disable, default, lock (ADMIN)                               | Ready  |
-| `/{lang}/s/{subdomain}/lumos/review`                       | Video review queue (ADMIN)                                                             | Ready  |
+| `/{lang}/s/{subdomain}/lumos/review`                       | Submission status feed — read-only (ADMIN)                                             | Ready  |
 | `/{lang}/s/{subdomain}/lumos/videos`                       | Video library (ADMIN + TEACHER)                                                        | Ready  |
 | `/{lang}/s/{subdomain}/lumos/settings`, `…/settings/[tab]` | Legacy → redirect to the routes above                                                  | Ready  |
 | `/{lang}/s/{subdomain}/lumos/teach/videos`                 | Redirects to `/lumos/videos`                                                           | Ready  |
@@ -138,8 +138,8 @@ src/components/lumos/
 │   ├── overview.tsx                # Admin dashboard overview
 │   ├── queries.ts                  # getInstructorRoster — instructors + coverage + policy
 │   ├── instructor-settings.tsx     # Instructor roster: allow/disable, default, lock
-│   ├── video-review-actions.ts     # Approve/reject pending videos
-│   ├── video-review-content.tsx    # Video review queue UI
+│   ├── video-review-actions.ts     # getSubmittedVideos — school status feed
+│   ├── video-review-content.tsx  # Submission status list (read-only, RSC)
 │   └── enrollments/
 │       ├── actions.ts              # School enrollment queries
 │       └── content.tsx             # Enrollments management UI
@@ -258,6 +258,25 @@ handler, not an action — the bell rule). Subject-scoped with no wider fallback
 a course with no paid videos yet has no comparable, so the chip simply does not
 render. 9 tests cover the guards, the currency normalization, the where clause,
 the 2dp rounding, and the empty case.
+
+### 2026-08-28 — one pipeline, and the platform finally hears about it
+
+A school's video request used to stop at `Video.approvalStatus = PENDING`:
+nothing told the SaaS owner a school was waiting, and nothing could — the bell
+was dead for a DEVELOPER at four independent layers (no writer targeted them;
+`fetchNotificationBellData` returned null without a `schoolId`; the mark-read
+actions bailed the same way; and the client hook returned before fetching),
+with no bell mounted on the SaaS dashboard at all.
+
+Now: **school uploads → the platform approves → the video goes live on its
+lesson → the school is notified.** The platform is the sole approver for every
+visibility, so `/lumos/review` became a read-only status feed and `reviewVideo`
+was deleted. Notifications reuse the `Notification` model, stamped with the
+**requesting school's** id and the DEVELOPER's `userId` — which satisfies the
+required FK and makes each row name the school that is asking. Three new
+`NotificationType` values (`content_review`, `content_approved`,
+`content_rejected`) replace the previous `system_alert` / `document_shared`
+abuse. **Prod DDL owed** — see the migration's header.
 
 ### Data Architecture
 

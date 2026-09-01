@@ -293,7 +293,13 @@ export const roleRoutes: Record<string, Role[]> = {
   "/subjects/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/classrooms": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/classrooms/*": ["ADMIN", "TEACHER", "DEVELOPER"],
-  "/timetable": ["ADMIN", "TEACHER", "DEVELOPER"],
+  // The timetable block renders a read-only "Today"/"Full" lane for non-admins
+  // (see permissions-config: STUDENT view_class, GUARDIAN view_child), so the
+  // two view routes are exact entries. Exact match wins over the wildcard, which
+  // stays admin-only — /generate, /settings, /conflicts and /analytics have no
+  // page-level guard of their own.
+  "/timetable": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
+  "/timetable/full": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
   "/timetable/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/exams": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
   "/exams/*": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
@@ -397,7 +403,7 @@ export const roleRoutes: Record<string, Role[]> = {
   // ============================================================================
   // Live classes (LiveKit video conferencing — all school roles)
   // ============================================================================
-  "/conference": [
+  "/live": [
     "ADMIN",
     "TEACHER",
     "STUDENT",
@@ -406,7 +412,7 @@ export const roleRoutes: Record<string, Role[]> = {
     "ACCOUNTANT",
     "DEVELOPER",
   ],
-  "/conference/*": [
+  "/live/*": [
     "ADMIN",
     "TEACHER",
     "STUDENT",

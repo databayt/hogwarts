@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useRef } from "react"
-import { motion, useInView } from "framer-motion"
+import React, { useEffect, useRef, useState } from "react"
+import { motion, useInView, useReducedMotion } from "framer-motion"
 
 import { LottiePlayer } from "@/components/saas-marketing/thmanyah/atom/LottiePlayer"
 import { REVEAL_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
@@ -65,6 +65,38 @@ const STATS: Stat[] = [
   },
 ]
 
+/* The lede cycles, the way the reference's does. On font.thmanyah.com the
+   whole START component is a Framer variant set — `ح / W`, `و / ً`, `ه / W` —
+   and each variant ships its OWN lede describing that letterform's trial. The
+   swap is enter-only: the outgoing paragraph is unmounted outright (its node
+   stops existing) and the incoming one plays opacity 0 -> 1 with translateY
+   60 -> 0 under the same appear spring the rest of the page uses. Measured on
+   the live site: no exit animation, no overshoot, ~1.4s to settle, variants
+   held 2.3s / 2.8s / 4.2s — uneven because each hold is one Lottie letter's
+   draw. Ours holds a uniform CYCLE_MS: the single jamlia loop has no
+   per-letter segments to sync to, so a varying hold would be arbitrary.
+
+   Three claims, each checkable in this repo and none of them repeating a stat
+   cell below (the roles line lives there):
+     RTL-native   -- every surface authored right-to-left; `dir` is pinned on
+                     the shell, not inherited (see the route's page.tsx)
+     responsive   -- one component tree across the breakpoints, not a
+                     stripped phone build; see the row/column variants this
+                     very section carries
+     offline      -- downloads + an outbox that drains through
+                     /api/offline/sync
+   Keep each under ~68 characters: `.trials-lede-box` is a fixed 60px below
+   810px, which is exactly two lines at 20px/1.5em, and `.trials-title` is
+   `overflow: clip` -- a third line vanishes with no warning. */
+const LEDES: string[] = [
+  "صُمِّمت من اليمين إلى اليسار منذ أول سطر.",
+  "من شاشة الهاتف إلى شاشة المكتب، الواجهة نفسها كاملة.",
+  "تعمل دون اتصال، وتُزامن ما أُنجز حين تعود الشبكة.",
+]
+
+/** How long each lede is held before the next one takes its place. */
+const CYCLE_MS = 4000
+
 const JAMLIA_SRC = "/lottie/lottie-hero-ha.json"
 
 const HIDDEN = { opacity: 0.001, y: 60, transformPerspective: 1200 }
@@ -79,6 +111,27 @@ export function StatsMetricsBlock() {
   const containerRef = useRef<HTMLDivElement>(null)
   const inView = useInView(containerRef, { once: true, amount: 0.5 })
   const shown = inView ? SHOWN : HIDDEN
+
+  /* A SECOND, non-`once` observer drives the lede cycle, so the interval only
+     runs while the section is actually on screen — the appear observer above
+     latches on first reveal and can never turn anything back off. */
+  const onScreen = useInView(containerRef, { amount: 0.3 })
+  const [lede, setLede] = useState(0)
+  useEffect(() => {
+    if (!onScreen || LEDES.length < 2) return
+    const id = window.setInterval(
+      () => setLede((i) => (i + 1) % LEDES.length),
+      CYCLE_MS
+    )
+    return () => window.clearInterval(id)
+  }, [onScreen])
+
+  /* translateY is the vestibular trigger, not the crossfade — so a reduced-
+     motion reader still gets all three ledes, they just fade rather than
+     travel. */
+  const reduced = useReducedMotion()
+  const ledeHidden = reduced ? { opacity: 0.001 } : HIDDEN
+  const ledeShown = reduced ? { opacity: 1 } : SHOWN
 
   return (
     <section className="trials-section" data-framer-name="Trials">
@@ -115,10 +168,21 @@ export function StatsMetricsBlock() {
                 animate={phone ? shown : SHOWN}
                 transition={REVEAL_SPRING}
               >
-                <p dir="rtl" className="trials-lede">
-                  صُمِّمت من اليمين إلى اليسار منذ أول سطر، لا مترجمةً عن قالبٍ
-                  إنجليزي.
-                </p>
+                {/* Keyed, so React unmounts the outgoing paragraph and mounts
+                    a fresh one — which is what replays `initial` -> `animate`.
+                    An AnimatePresence would add an exit the reference has
+                    not got, and `mode="wait"` would leave the box empty
+                    between ledes. */}
+                <motion.p
+                  key={lede}
+                  dir="rtl"
+                  className="trials-lede"
+                  initial={ledeHidden}
+                  animate={ledeShown}
+                  transition={REVEAL_SPRING}
+                >
+                  {LEDES[lede]}
+                </motion.p>
               </motion.div>
               {/* JAMLIA inside the title stack — START/Mob variant only
                   (.framer-1e23szr-container) */}

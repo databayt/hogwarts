@@ -31,7 +31,7 @@ export function ConferenceWelcomeSection({
       <div className="flex flex-col items-center gap-10 md:flex-row md:gap-16">
         <div className="flex-1">
           <Image
-            src="/conference/warm-welcome.png"
+            src="/live/warm-welcome.png"
             alt={w?.alt ?? ""}
             width={826}
             height={545}
@@ -49,7 +49,7 @@ export function ConferenceWelcomeSection({
           {canConfigure ? (
             <Link
               className={buttonVariants({ variant: "outline" })}
-              href={`/${lang}/conference/settings`}
+              href={`/${lang}/live/settings`}
             >
               {w?.cta}
             </Link>

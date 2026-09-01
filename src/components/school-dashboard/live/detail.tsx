@@ -175,11 +175,11 @@ export async function LiveClassDetailContent({
             ? null
             : isExternal
               ? (session.meetingUrl ?? null)
-              : `/${locale}/conference/${session.id}/room`
+              : `/${locale}/live/${session.id}/room`
         }
         recordingHref={
           recordingState === "ready"
-            ? `/${locale}/conference/${session.id}/recordings`
+            ? `/${locale}/live/${session.id}/recordings`
             : null
         }
         lessonHref={lessonHref}
@@ -314,7 +314,7 @@ export async function LiveClassDetailContent({
             ) : null
           ) : (
             <Button asChild>
-              <Link href={`/${locale}/conference/${session.id}/room`}>
+              <Link href={`/${locale}/live/${session.id}/room`}>
                 {t?.actions?.join ?? "Join"}
               </Link>
             </Button>
@@ -330,7 +330,7 @@ export async function LiveClassDetailContent({
         )}
         {session.status === "ended" && (
           <Button asChild variant="outline">
-            <Link href={`/${locale}/conference/${session.id}/recordings`}>
+            <Link href={`/${locale}/live/${session.id}/recordings`}>
               {t?.actions?.viewRecordings ?? "View recordings"}
             </Link>
           </Button>

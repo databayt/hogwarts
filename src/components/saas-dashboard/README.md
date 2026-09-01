@@ -63,7 +63,7 @@ src/components/saas-dashboard/
 
 **Completion:** 84% | **Blockers:** None | **Last optimization pass:** 2026-06-14
 
-Core SaaS features are production-ready: tenants, billing, domains, observability, analytics, and dashboard. Catalog management is functional with subjects, books, materials, questions, assignments, and approvals. Kanban and product areas are demo-level (now hidden from operator nav). File storage integration for receipt uploads is pending.
+Core SaaS features are production-ready: tenants, billing, domains, observability, analytics, and dashboard. Catalog management is functional with subjects, books, materials, questions, assignments, and approvals — and as of 2026-08-28 the operator is actually _told_ when a school is waiting: a notification bell in the header, a pending badge on the Catalog sidebar item, and a School column on `/catalog/approvals` so a request names the tenant that sent it. Every lumos video now flows through this queue (the school-side approve was removed). Kanban and product areas are demo-level (now hidden from operator nav). File storage integration for receipt uploads is pending.
 
 > **2026-06-14:** A full audit (181 findings) fixed all 6 P0s + ~24 P1/P2 — notably the
 > systemic `planType` case bug that zeroed MRR, and the operator dashboard's fabricated

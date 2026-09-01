@@ -152,8 +152,39 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   GitHub Actions bridge: a teacher pressing Start is what brings a class online
   for a school that never turned the online-school policy on.
 
+- **The student view is the grid, and the edge decides who reaches it**
+  (2026-09-01): `src/routes.ts` gated `/timetable` to ADMIN/TEACHER/DEVELOPER
+  while this block had a complete student lane (`STUDENT: ["view_class"]` in
+  `permissions-config.ts`, a `defaultTab="today"` branch, Today/Full tabs) and
+  every student surface linked to it — so a student got `/unauthorized` from
+  `proxy.ts` before any of it ran. The matrix pointed them at `/my-timetable`,
+  which has no page. Fixed with EXACT entries for `/timetable` and
+  `/timetable/full`; the `/timetable/*` wildcard stays admin-only because
+  `generate`/`settings`/`conflicts`/`analytics` have **no page-level guard** —
+  the edge matrix is their only gate, so widening the wildcard opens all four.
+  `isRouteAllowedForRole` checks exact before wildcard, which is what makes the
+  split hold. At the same time `StudentView` stopped switching on `defaultTab`
+  and now always renders `SimpleGrid`: a student has ONE schedule, so Today and
+  Full were the same data twice. The Current/Next card stays — `SimpleGrid`
+  carries live *indicators* but no Join, so dropping the card would remove a
+  student's only path into a live class. TEACHER and GUARDIAN keep the tab
+  split (their views genuinely differ per tab), so the layout hides the two
+  non-admin tabs on `role === "STUDENT"` only. `PageNav` paints its bottom
+  border even when every item is hidden, so the layout skips the strip
+  entirely rather than passing an all-hidden list.
+
+- **Count distinct SUBJECTS, not enrolled Class rows** (2026-09-01): a student
+  holds one `Class` row per subject *per section*, so `enrolledClasses.length`
+  reported "36 subjects" above a grid holding nine. `getTimetableByStudentGrade`
+  now counts distinct subject names across the student's own slots, falling back
+  to the enrollment count only when a term has no slots yet.
+
 - **The weekly grid is still awareness-only.** `simple-grid.tsx` renders a live
-  dot and no Join, deliberately — Join lives on the Today cards. Left as is.
+  dot and no Join, deliberately — Join lives on the cards. Left as is. Since
+  2026-09-01 the student has no day list, so their only Join is the
+  Current/Next card above the grid; teacher and guardian keep the full Today
+  list. If the grid ever becomes a student's sole surface, Join has to move
+  into it first.
 
 - **The Online marker is gated on `liveClass.sessionId`, not on `liveClass`**
   (2026-08-14): `attachLiveClasses` returns a `liveClass` for a session today
@@ -280,7 +311,7 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
 - [Attendance](../attendance/CLAUDE.md) — consumes slots for teacher
   scoping, period-mode, and current-period auto-selection;
   `markPeriodAttendance` resolves sectionId from `timetableId`
-- [Conference](../conference/CLAUDE.md) — `Conference.timetableId` starts a
+- [Conference](../live/CLAUDE.md) — `Conference.timetableId` starts a
   live class from a slot; `attachLiveClasses` (`live-class-join.ts`) resolves the
   Join target for the teacher/student/guardian today-cards, which also carry
   the `<OnlineBadge>` and `<ClosureNotice>` from `views/live-join-button.tsx`.

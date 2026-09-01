@@ -5,10 +5,10 @@
 import { revalidatePath } from "next/cache"
 
 import { db } from "@/lib/db"
+import { isReservedSubdomain } from "@/lib/reserved-subdomains"
 
 import type { SubdomainFormData } from "./types"
 import { subdomainValidation } from "./validation"
-import { isReservedSubdomain } from "@/lib/reserved-subdomains"
 
 // TEMPORARILY: Local ActionResponse to bypass auth-security import chain
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

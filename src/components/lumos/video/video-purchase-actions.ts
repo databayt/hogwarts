@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 import Stripe from "stripe"
 
 import { db } from "@/lib/db"
+import { toSmallestUnit } from "@/lib/payment/currency"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -158,7 +159,13 @@ export async function purchaseVideo(
           price_data: {
             currency: video.currency.toLowerCase(),
             product_data: { name: video.title },
-            unit_amount: Math.round(Number(video.price) * 100),
+            // NEVER `* 100`. Stripe wants the smallest unit, and four of the
+            // platform's configured markets (JO/KW/BH/OM → JOD/KWD/BHD/OMR)
+            // are 3-decimal: a 5.500 KWD video billed as 550 fils charged the
+            // buyer a TENTH of the listed price, and every downstream number
+            // (VideoPurchase.amount, the PUR- invoice, the finance revenue
+            // dashboard) recorded that same wrong amount, so nothing flagged it.
+            unit_amount: toSmallestUnit(Number(video.price), video.currency),
           },
           quantity: 1,
         },
@@ -171,6 +178,19 @@ export async function purchaseVideo(
         videoId: video.id,
         type: "video_purchase",
         ...(schoolId ? { schoolId } : {}),
+      },
+      // Refund and dispute webhooks only ever see the CHARGE, never the
+      // checkout session — so the same metadata has to ride on the payment
+      // intent or a revoke handler has nothing to resolve the purchase by.
+      // `catalog-actions.ts` stamps this for enrollments for exactly this
+      // reason; the video lane was missing it.
+      payment_intent_data: {
+        metadata: {
+          userId: session.user.id,
+          videoId: video.id,
+          type: "video_purchase",
+          ...(schoolId ? { schoolId } : {}),
+        },
       },
     })
 

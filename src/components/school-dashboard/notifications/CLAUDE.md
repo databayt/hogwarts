@@ -15,7 +15,7 @@ last_audited: 2026-05-25
 
 ## Context
 
-Real-time multi-channel notification system. 24 types × 4 priorities × 5 channels (in_app + email live, push/sms/whatsapp reserved). Used by every other block via `dispatchNotification` / `dispatchNotificationsToAudience` from `@/lib/dispatch-notification`.
+Real-time multi-channel notification system. **33** types × 4 priorities × 5 channels (in_app + email live, push/sms/whatsapp reserved). Used by every other block via `dispatchNotification` / `dispatchNotificationsToAudience` from `@/lib/dispatch-notification`. (The "24 types" figure repeated through these docs was stale long before the 2026-08-28 additions — count the Prisma enum, don't trust prose.)
 
 ## Before You Start
 
@@ -29,7 +29,25 @@ Real-time multi-channel notification system. 24 types × 4 priorities × 5 chann
 - **`db.$transaction` for preferences**: `updateNotificationPreferences` upserts inside a transaction so partial failures don't leave the user with a half-updated preference set. Test mocks must include a callable `$transaction`.
 - **`getText` for cross-language reads**: notifications are stored in one language (`lang` field). The notification center and bell-icon translate on-demand to the viewer's locale via `getText`. Translations are cached in `Translation`.
 - **`lang` is detected, never assumed**: `dispatchNotification` / `dispatchNotificationsToAudience` store `params.lang ?? detectScript(title + body)`. A mislabeled `lang` permanently breaks localization for the row (translator no-ops when contentLang === displayLang) — this is exactly how the legacy English seed rows became untranslatable. Don't reintroduce a hardcoded `"ar"` default.
-- **Single source for notification types**: `NOTIFICATION_TYPE_CONFIG`, `NOTIFICATION_EXPIRATION`, validation enum, dictionary key sets — all must list the same 24 types. `config.test.ts` and `rbac-matrix.test.ts` enforce this.
+- **Single source for notification types**: `NOTIFICATION_TYPE_CONFIG`, `NOTIFICATION_EXPIRATION`, validation enum, dictionary key sets — all must list the same set (33 as of 2026-08-28). **Only `config.test.ts` actually enforces it** — it holds a hardcoded array and asserts exact-length parity. `rbac-matrix.test.ts` derives the set via `Object.values(NotificationType)` and passes untouched despite this file previously claiming otherwise; `validation.test.ts`'s list is already stale and only asserts a subset.
+
+- **Platform (DEVELOPER) notifications, added 2026-08-28.** A DEVELOPER has no
+  `schoolId`, and `Notification.schoolId` is a required FK — so a platform row
+  is stamped with the **requesting school's** id and the DEVELOPER's `userId`.
+  `dispatchNotification` cannot serve them (`resolveTargetUsers` filters by
+  `schoolId`); use `@/lib/platform-notification` instead. The read/mutate path
+  has explicit DEVELOPER branches: `poll-actions.ts` (which groups `localize`
+  per school, because an operator's rows span tenants while `localize` takes
+  one `schoolId`), `queries.ts` (`getOperator*` — deliberately separate
+  functions, not an optional `schoolId` on the tenant-scoped ones), `actions.ts`
+  (scope the write by `userId` alone; skip the school `revalidateTag`) and
+  `use-notifications.ts` (`canReadBell`; operators are **poll-only** and never
+  open a socket). Change one and you must change all four — three of four
+  leaves a bell that renders and does nothing.
+- **`detectScript` returns "ar" on a SINGLE Arabic character.** So detecting a
+  row's `lang` from a body that interpolates tenant data (a school name, a
+  video title) mislabels English copy as Arabic and makes it permanently
+  untranslatable. Detect on the AUTHORED string only.
 
 ## Danger Zones
 
@@ -38,7 +56,7 @@ Real-time multi-channel notification system. 24 types × 4 priorities × 5 chann
 - **Keep the initial fetch in `useNotifications`** even after socket-server #262 deploys — sockets only push NEW events; without the fetch a connected bell starts empty.
 - **Poll merges are forward-only on read-state** (`poll-merge.ts`): server `read: true` wins, server `read: false` never downgrades a local optimistic read. Don't "fix" it to full sync — it would fight optimistic updates and flicker.
 
-- Adding a new `NotificationType` to Prisma without updating: `NOTIFICATION_TYPE_CONFIG`, `NOTIFICATION_EXPIRATION`, `ROLE_SEND_TYPES` (if role-restricted), `dictionaries/{en,ar}/notifications.json` `types` map, `email-service.ts > typeLabels`. Tests fail loudly on the first three; the dictionary and email-service drift silently — review them by hand.
+- Adding a new `NotificationType` to Prisma without updating: `NOTIFICATION_TYPE_CONFIG`, `NOTIFICATION_EXPIRATION`, `ROLE_SEND_TYPES` (if role-restricted), `dictionaries/{en,ar}/notifications.json` `types` map, `email-service.ts > typeLabels`. The first two are `Record<NotificationType, ...>` so **tsc** fails loudly; `config.test.ts` fails too. The validation enum, the dictionary and email-service drift SILENTLY — review those three by hand.
 - Adding a new `NotificationChannel` to Prisma without updating: `CHANNEL_CONFIG`, `DEFAULT_NOTIFICATION_PREFERENCES` (every role), `preferences-form.tsx` channel grid, `dictionaries/{en,ar}/notifications.json > channels`.
 - Cross-tenant leak: every server action calls `getTenantContext()` and includes `schoolId` in every where clause. Don't accept `schoolId` from client input — always read from the tenant context.
 - WebSocket optimistic updates: `useNotifications` updates UI before the server action returns and rolls back on failure. Don't add a third update path that bypasses the rollback.

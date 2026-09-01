@@ -147,12 +147,18 @@ function hasAnswerKey(row: LessonQuizRow): boolean {
 /**
  * Load a lesson's practice quiz.
  *
- * Gates, in order: the school's per-lesson `hideQuiz` override, then approved +
- * published questions that are either PUBLIC or contributed by this school,
- * then — in JS, because the answer key lives in a JSON column — anything with
- * no usable key. Ordering carries an `id` tiebreaker: bulk-seeded questions
- * share a `createdAt` to the millisecond, and without it the render and the
- * grade could take two different 10.
+ * Gates, in order: the school's hide overrides — `hideQuiz` (quiz only) AND
+ * `isHidden` on the lesson or its chapter (the whole lesson is gone) — then
+ * approved + published questions that are either PUBLIC or contributed by this
+ * school, then — in JS, because the answer key lives in a JSON column —
+ * anything with no usable key. Ordering carries an `id` tiebreaker: bulk-seeded
+ * questions share a `createdAt` to the millisecond, and without it the render
+ * and the grade could take two different 10.
+ *
+ * The `isHidden` gate has to live HERE, not only on the lesson page: this
+ * function is the grade side too, and `submitLessonQuiz` is a POST endpoint a
+ * student can call for a hidden lesson's id directly. Without it a school could
+ * remove a lesson and still have its quiz writing scores into the gradebook.
  *
  * The over-fetch exists so dropping key-less rows still fills a quiz. Both
  * callers run THIS function, so whatever it returns is what gets rendered AND
@@ -163,11 +169,25 @@ export async function fetchLessonQuizQuestions(
   schoolId: string | null
 ): Promise<LessonQuizRow[]> {
   if (schoolId) {
-    const quizHidden = await db.contentOverride.findFirst({
-      where: { schoolId, catalogLessonId, hideQuiz: true },
+    // ONE query, all three ways a school can switch this quiz off: `hideQuiz`
+    // on the lesson, `isHidden` on the lesson, or `isHidden` on its chapter.
+    // The chapter arm walks the relation rather than pre-fetching the lesson's
+    // `chapterId`, so this stays a single round trip.
+    const blocked = await db.contentOverride.findFirst({
+      where: {
+        schoolId,
+        OR: [
+          { catalogLessonId, hideQuiz: true },
+          { catalogLessonId, isHidden: true },
+          {
+            isHidden: true,
+            chapter: { lessons: { some: { id: catalogLessonId } } },
+          },
+        ],
+      },
       select: { id: true },
     })
-    if (quizHidden) return []
+    if (blocked) return []
   }
 
   const candidates = await db.question.findMany({

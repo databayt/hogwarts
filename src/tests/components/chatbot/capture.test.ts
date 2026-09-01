@@ -3,14 +3,14 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { db } from "@/lib/db"
+import { sendEmail } from "@/lib/email"
 import {
   captureFromChat,
   extractIdentifiers,
   normalizeDigits,
   toE164,
 } from "@/components/chatbot/capture"
-import { db } from "@/lib/db"
-import { sendEmail } from "@/lib/email"
 
 vi.mock("@/lib/db", () => ({
   db: { prospect: { findUnique: vi.fn(), upsert: vi.fn() } },
@@ -44,9 +44,9 @@ describe("toE164", () => {
 
 describe("extractIdentifiers", () => {
   it("finds an email and lowercases it", () => {
-    expect(extractIdentifiers("راسلوني على Principal@School.SD شكراً").email).toBe(
-      "principal@school.sd"
-    )
+    expect(
+      extractIdentifiers("راسلوني على Principal@School.SD شكراً").email
+    ).toBe("principal@school.sd")
   })
   it("finds a phone written in Arabic-Indic digits", () => {
     const found = extractIdentifiers("رقمي ٠٩١٢٣٠٣٨٦٥ اتصلوا بي")

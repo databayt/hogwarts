@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { adminGetCatalogCourse } from "@/components/lumos/data/catalog/admin-get-course"
 
 // ---------------------------------------------------------------------------
@@ -12,6 +13,7 @@ import { adminGetCatalogCourse } from "@/components/lumos/data/catalog/admin-get
 // ---------------------------------------------------------------------------
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
+vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/components/catalog/image-url", () => ({
   getCatalogImageUrl: (v: string | null) => v,
 }))
@@ -77,8 +79,13 @@ const SUBJECT = {
   ],
 }
 
+const mTenant = getTenantContext as ReturnType<typeof vi.fn>
+
 beforeEach(() => {
   vi.clearAllMocks()
+  // The tenant is resolved INSIDE the accessor now — it is a "use server"
+  // export, so a caller-supplied schoolId was attacker-controlled.
+  mTenant.mockResolvedValue({ schoolId: "school-1", subdomain: "demo" })
   mSubject.mockResolvedValue(SUBJECT)
   mOverrides.mockResolvedValue([])
 })
@@ -86,7 +93,7 @@ beforeEach(() => {
 describe("adminGetCatalogCourse — auth gate", () => {
   it("rejects anonymous callers without touching the DB", async () => {
     mockAuth.mockResolvedValueOnce(null)
-    await expect(adminGetCatalogCourse("subj-1", "school-1")).rejects.toThrow(
+    await expect(adminGetCatalogCourse("subj-1")).rejects.toThrow(
       "NEXT_NOT_FOUND"
     )
     expect(mSubject).not.toHaveBeenCalled()
@@ -94,7 +101,7 @@ describe("adminGetCatalogCourse — auth gate", () => {
 
   it("rejects STUDENT", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "s-1", role: "STUDENT" } })
-    await expect(adminGetCatalogCourse("subj-1", "school-1")).rejects.toThrow(
+    await expect(adminGetCatalogCourse("subj-1")).rejects.toThrow(
       "NEXT_NOT_FOUND"
     )
     expect(mSubject).not.toHaveBeenCalled()
@@ -102,7 +109,7 @@ describe("adminGetCatalogCourse — auth gate", () => {
 
   it("rejects TEACHER", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "t-1", role: "TEACHER" } })
-    await expect(adminGetCatalogCourse("subj-1", "school-1")).rejects.toThrow(
+    await expect(adminGetCatalogCourse("subj-1")).rejects.toThrow(
       "NEXT_NOT_FOUND"
     )
     expect(mSubject).not.toHaveBeenCalled()
@@ -110,7 +117,7 @@ describe("adminGetCatalogCourse — auth gate", () => {
 
   it("allows ADMIN and returns the subject shape", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "a-1", role: "ADMIN" } })
-    const result = await adminGetCatalogCourse("subj-1", "school-1")
+    const result = await adminGetCatalogCourse("subj-1")
     expect(result.id).toBe("subj-1")
     expect(result.chapters).toHaveLength(1)
     expect(result.chapters[0].lessons).toHaveLength(2)
@@ -118,7 +125,7 @@ describe("adminGetCatalogCourse — auth gate", () => {
 
   it("allows DEVELOPER", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "d-1", role: "DEVELOPER" } })
-    const result = await adminGetCatalogCourse("subj-1", null)
+    const result = await adminGetCatalogCourse("subj-1")
     expect(result.id).toBe("subj-1")
   })
 })
@@ -130,7 +137,7 @@ describe("adminGetCatalogCourse — behavior", () => {
 
   it("notFound() when the subject is missing", async () => {
     mSubject.mockResolvedValueOnce(null)
-    await expect(adminGetCatalogCourse("missing", "school-1")).rejects.toThrow(
+    await expect(adminGetCatalogCourse("missing")).rejects.toThrow(
       "NEXT_NOT_FOUND"
     )
   })
@@ -139,14 +146,15 @@ describe("adminGetCatalogCourse — behavior", () => {
     mOverrides.mockResolvedValueOnce([
       { catalogChapterId: null, catalogLessonId: "l-2" },
     ])
-    const result = await adminGetCatalogCourse("subj-1", "school-1")
+    const result = await adminGetCatalogCourse("subj-1")
     const lessons = result.chapters[0].lessons
     expect(lessons.find((l) => l.id === "l-1")?._isHidden).toBe(false)
     expect(lessons.find((l) => l.id === "l-2")?._isHidden).toBe(true)
   })
 
-  it("skips the override lookup entirely when schoolId is null", async () => {
-    await adminGetCatalogCourse("subj-1", null)
+  it("skips the override lookup entirely for a school-less tenant", async () => {
+    mTenant.mockResolvedValueOnce({ schoolId: null, subdomain: null })
+    await adminGetCatalogCourse("subj-1")
     expect(mOverrides).not.toHaveBeenCalled()
   })
 })

@@ -28,6 +28,10 @@ export default async function TimetableLayout({ children, params }: Props) {
   const session = await auth()
   const role = (session?.user?.role as TimetableRole) || null
   const isAdmin = canModifyTimetable(role)
+  // A student sees one thing: the week grid for their own section, rendered by
+  // StudentView on this route. The Today/Full split is left in place for
+  // TEACHER and GUARDIAN, whose views still switch on it.
+  const isStudent = role === "STUDENT"
 
   const timetablePages: PageNavItem[] = [
     // Admin tabs
@@ -61,19 +65,23 @@ export default async function TimetableLayout({ children, params }: Props) {
     {
       name: d?.studentView?.today || "Today",
       href: `/${lang}/timetable`,
-      hidden: isAdmin,
+      hidden: isAdmin || isStudent,
     },
     {
       name: d?.studentView?.weekView || "Full",
       href: `/${lang}/timetable/full`,
-      hidden: isAdmin,
+      hidden: isAdmin || isStudent,
     },
   ]
+
+  // PageNav still paints its bottom border with every item hidden, so a role
+  // with no tabs gets a stray rule under the heading. Skip the strip instead.
+  const hasTabs = timetablePages.some((page) => !page.hidden)
 
   return (
     <div className="space-y-6">
       <PageHeadingSetter title={d?.title || "Timetable"} />
-      <PageNav pages={timetablePages} />
+      {hasTabs && <PageNav pages={timetablePages} />}
       {children}
     </div>
   )

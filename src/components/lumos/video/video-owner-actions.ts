@@ -3,10 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { invalidateCache } from "@/lib/cloudfront"
 import { db } from "@/lib/db"
+import { notifyDevelopersOfPendingVideo } from "@/lib/platform-notification"
 import { deleteObject } from "@/lib/s3"
 
 type ActionResponse<T = void> =
@@ -34,8 +36,12 @@ async function assertOwnership(videoId: string) {
       visibility: true,
       approvalStatus: true,
       catalogLessonId: true,
+      // title + lesson.name feed the platform-review notification fired by
+      // both writers below that reset approvalStatus to PENDING.
+      title: true,
       lesson: {
         select: {
+          name: true,
           chapter: {
             select: {
               subject: { select: { slug: true } },
@@ -89,9 +95,9 @@ export async function updateVideoVisibility(
     }
   }
 
-  // Going global is a scope widening the school lane can't grant — the school
-  // review only covered SCHOOL/PRIVATE surface. DEVELOPER owners skip this
-  // (they ARE the platform lane).
+  // Widening to public re-opens the platform's decision: what was approved is
+  // not what is now being published. DEVELOPER owners skip it (they ARE the
+  // platform lane). Narrowing is always free.
   const needsPlatformReview =
     visibility === "PUBLIC" &&
     video.visibility !== "PUBLIC" &&
@@ -108,6 +114,21 @@ export async function updateVideoVisibility(
           : {}),
       },
     })
+
+    // Only the widening branch re-enters the queue — a narrowing change must
+    // never page the operator.
+    if (needsPlatformReview) {
+      after(() =>
+        notifyDevelopersOfPendingVideo({
+          schoolId: video.schoolId,
+          actorId: result.userId,
+          videoId,
+          title: video.title,
+          lessonName: video.lesson?.name,
+        })
+      )
+      revalidatePath("/[lang]/catalog/approvals", "page")
+    }
 
     revalidatePath("/[lang]/s/[subdomain]/lumos", "page")
     return {
@@ -314,6 +335,19 @@ export async function replaceVideoFile(
       }
     }
 
+    // Unconditional, matching the unconditional PENDING reset above: new bytes
+    // are new content and the platform has not seen them.
+    after(() =>
+      notifyDevelopersOfPendingVideo({
+        schoolId: video.schoolId,
+        actorId: result.userId,
+        videoId,
+        title: video.title,
+        lessonName: video.lesson?.name,
+      })
+    )
+
+    revalidatePath("/[lang]/catalog/approvals", "page")
     revalidatePath("/[lang]/s/[subdomain]/lumos", "page")
     return {
       status: "success",

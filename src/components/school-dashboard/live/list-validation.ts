@@ -89,7 +89,7 @@ export const LIVE_CLASS_STATUS_VALUES = [
 export type ConferenceStatusValue = (typeof LIVE_CLASS_STATUS_VALUES)[number]
 
 // Meeting back-end for a session. `livekit` = built-in in-app room (no URL —
-// the room is provisioned on start and joined via /conference/[id]/room);
+// the room is provisioned on start and joined via /live/[id]/room);
 // `external` = pasted/auto-created vendor link (Meet / Zoom / Teams).
 export const LIVE_CLASS_PROVIDER_VALUES = ["livekit", "external"] as const
 

@@ -25,6 +25,12 @@ interface NotificationBellIconProps {
   dictionary: Dictionary["notifications"]
   className?: string
   showConnectionStatus?: boolean
+  /**
+   * Footer link destination. Pass `null` on a surface with no notification
+   * center — the SaaS dashboard is on the main host, which has no
+   * `/notifications` route.
+   */
+  viewAllHref?: string | null
 }
 
 export function NotificationBellIcon({
@@ -32,6 +38,7 @@ export function NotificationBellIcon({
   dictionary,
   className,
   showConnectionStatus = false,
+  viewAllHref,
 }: NotificationBellIconProps) {
   const [isOpen, setIsOpen] = useState(false)
   const {
@@ -145,6 +152,7 @@ export function NotificationBellIcon({
             onDelete={handleNotificationDelete}
             onMarkAllRead={unreadCount > 0 ? handleMarkAllAsRead : undefined}
             maxHeight={450}
+            viewAllHref={viewAllHref}
           />
         </PopoverContent>
       </Popover>

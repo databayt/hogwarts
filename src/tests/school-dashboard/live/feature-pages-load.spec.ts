@@ -22,11 +22,11 @@ const SUBDOMAIN = "demo"
 const ROUTES = [
   // The landing page, then every surface behind the (app) tab strip. The
   // route group adds no URL segment, so these are the client-facing paths.
-  "/conference",
-  "/conference/dashboard",
-  "/conference/schedule",
-  "/conference/settings",
-  "/conference/network-test",
+  "/live",
+  "/live/dashboard",
+  "/live/schedule",
+  "/live/settings",
+  "/live/network-test",
 ] as const
 
 async function clearAuthState(page: import("@playwright/test").Page) {
@@ -59,9 +59,9 @@ test.describe("Conference — feature pages smoke @conference @smoke", () => {
         return
       }
 
-      // Page reached its target route (or got redirected within /conference/*).
-      // For ADMIN, no /conference route should send them to /dashboard.
-      expect(page.url()).toMatch(/\/conference/)
+      // Page reached its target route (or got redirected within /live/*).
+      // For ADMIN, no /live route should send them to /dashboard.
+      expect(page.url()).toMatch(/\/live/)
       await assertNoSSE(page)
     })
   }
@@ -69,7 +69,7 @@ test.describe("Conference — feature pages smoke @conference @smoke", () => {
   test("LC-SMK-overview-renders-empty-state-or-list", async ({ page }) => {
     test.setTimeout(60_000)
     await page.goto(
-      buildSchoolUrl(SUBDOMAIN, "/conference/dashboard", "en", env)
+      buildSchoolUrl(SUBDOMAIN, "/live/dashboard", "en", env)
     )
     await page.waitForLoadState("domcontentloaded")
 
@@ -99,7 +99,7 @@ test.describe("Conference — feature pages smoke @conference @smoke", () => {
   test("LC-SMK-ar-overview-renders-rtl", async ({ page }) => {
     test.setTimeout(60_000)
     await page.goto(
-      buildSchoolUrl(SUBDOMAIN, "/conference/dashboard", "ar", env)
+      buildSchoolUrl(SUBDOMAIN, "/live/dashboard", "ar", env)
     )
     await page.waitForLoadState("domcontentloaded")
 

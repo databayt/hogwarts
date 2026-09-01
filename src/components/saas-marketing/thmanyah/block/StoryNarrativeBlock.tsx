@@ -3,8 +3,8 @@
 import React, { useRef } from "react"
 import { motion, useInView } from "framer-motion"
 
-import { CDN_IMAGES } from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
 import { WordmarkWriting } from "@/components/saas-marketing/thmanyah/atom/WordmarkWriting"
+import { CDN_IMAGES } from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
 import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
 
 /**

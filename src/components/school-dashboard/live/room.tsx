@@ -172,7 +172,7 @@ export function RoomClient({
     }
   }, [ticket.expiresAt, sessionId, labels.error, error])
 
-  const detailHref = `/${locale}/conference/${sessionId}`
+  const detailHref = `/${locale}/live/${sessionId}`
 
   if (error || ended) {
     const message = error

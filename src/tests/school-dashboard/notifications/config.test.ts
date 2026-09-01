@@ -50,6 +50,9 @@ const ALL_NOTIFICATION_TYPES = [
   "live_class_started",
   "live_class_cancelled",
   "live_class_recording_ready",
+  "content_review",
+  "content_approved",
+  "content_rejected",
 ] as const
 
 // All 4 NotificationPriority enum values

@@ -39,7 +39,7 @@ const ALLOWED_ROLES = [
 ]
 
 /**
- * The sessions table — what `/conference` itself used to be, before the
+ * The sessions table — what `/live` itself used to be, before the
  * landing page took that URL. The heading and tab strip come from the
  * `(app)` layout, so this page renders only its own content.
  */

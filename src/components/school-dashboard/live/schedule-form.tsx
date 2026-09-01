@@ -72,7 +72,7 @@ export function ScheduleLiveClassForm({
             maxParticipants: form.maxParticipants,
           })
           if ("success" in result && result.success) {
-            router.push(`/${locale}/conference/${result.data.id}`)
+            router.push(`/${locale}/live/${result.data.id}`)
           } else {
             setError(
               resolveLiveClassError(

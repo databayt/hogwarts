@@ -3,7 +3,7 @@
 ## Context
 
 Video conferencing for schools — one self-contained block at
-`src/components/school-dashboard/live/`, mirrored 1:1 to `/conference`.
+`src/components/school-dashboard/live/`, mirrored 1:1 to `/live`.
 Three meeting back-ends behind one UI: **external pasted-link** (live
 everywhere, zero infra), **LiveKit SFU** (in-app rooms + recording — fully
 coded, dormant until infra), and **native Meet / Zoom / Teams** (`createMeeting`
@@ -22,7 +22,7 @@ AWS S3 `me-central-1` with PDPL-configurable retention.
 
 1. Read `README.md` here for file inventory + routes
 2. Read `ISSUE.md` for the open backlog
-3. The Prisma models live in `prisma/models/conference.prisma` (renamed from
+3. The Prisma models live in `prisma/models/live.prisma` (renamed from
    `live-class.prisma`; `Conference*` model names, DB tables preserved via `@@map`):
    - `Conference` — scheduled or ad-hoc session (`provider`, `meetingUrl?`, `meetingProvider?`,
      `visibility` section|school, `catalogLessonId?` → catalog Lesson)
@@ -156,9 +156,9 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   silently never be written. Failures must never roll back the underlying state
   transition — `after()` preserves that (its callback runs off the response path
   and its rejection is logged, not propagated). See `actions/notifications.ts`.
-- **`/conference` is a landing page, not the list.** The block opens the way
+- **`/live` is a landing page, not the list.** The block opens the way
   lumos does: a hero, value cards, a live/coming-up strip, then the long-form
-  bands (`landing/`). The sessions table moved to `/conference/dashboard`,
+  bands (`landing/`). The sessions table moved to `/live/dashboard`,
   behind the `(app)` route group that supplies the heading + tab strip
   (`nav.tsx` → `list-permissions.getTabsForRole`, the tab strip actually on
   screen — `permissions.ts` has a second, dormant one). Students are
@@ -185,8 +185,8 @@ createLiveClass` branches on `provider` — `livekit` mirrors
 - **Per-section recording opt-out**: `setSectionRecordingOptOut` (`actions/settings.ts`)
   overrides the school-wide `conferenceRecordingDefault` per section.
 - **Docs structure is component-driven**: the `## Structure` section of
-  `content/docs-{en,ar}/conference.mdx` renders `<ConferenceStructure />` from
-  `src/components/docs/conference-structure.tsx` (registered in `src/mdx-components.tsx`).
+  `content/docs-{en,ar}/live.mdx` renders `<ConferenceStructure />` from
+  `src/components/docs/live-structure.tsx` (registered in `src/mdx-components.tsx`).
   When you add/rename block files, update that component's node tree — NOT a code
   fence in the mdx.
 
@@ -270,7 +270,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   without a `ConferenceLink` was skipped with `no_link` into a cron log, so a
   school that flipped online overnight materialized NOTHING and had no way to
   find out. `getConferenceLinkCoverage` now names the uncovered pairs on
-  `/conference/settings`. It is ONE SHARED ROOM across every pair that falls
+  `/live/settings`. It is ONE SHARED ROOM across every pair that falls
   back to it — say so in any copy you write; per-section links stay the private
   option.
 
@@ -290,7 +290,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   `vercel.json` is `"crons": []` (free-plan bridge, `DEPLOYMENT.md`), and
   `live-class-reminders` is the ONLY caller of `materializeOnlineSchools()` — so
   with it off an online school materializes nothing after the day an admin saved
-  its settings. `.github/workflows/conference-crons.yml` restores the three
+  its settings. `.github/workflows/live-crons.yml` restores the three
   conference jobs and nothing else. Delete it when the Vercel cron array comes
   back, or they fire twice. `process-email-notifications` is deliberately NOT in
   the bridge: it drains ~19,996 unsent emails with no age gate.
@@ -333,7 +333,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   that does not exist, which then fails at start/join time and reads to a teacher
   as a broken class rather than an unavailable option.
 
-- **The demo seed repairs before it seeds** (`prisma/seeds/conference.ts`,
+- **The demo seed repairs before it seeds** (`prisma/seeds/live.ts`,
   2026-08-29). A slot without a teacher has no HOST and is invisible to the
   materializer, and the demo had 719 of them: `seedTeacherSubjectExpertise` is
   count-guarded, so every `SubjectSelection` added after it — per-grade catalog
@@ -373,7 +373,7 @@ never write `conferenceOnlineDefault` or the window except through
 `updateConferenceSettings`, which derives them from the mode. Any select that
 feeds the policy engine must include `conferenceDeliveryMode`
 (`ONLINE_POLICY_SELECT` does). The settings UI is ONE server component
-(`settings-panel.tsx`) mounted from both `/conference/settings` and
+(`settings-panel.tsx`) mounted from both `/live/settings` and
 `/school/configuration/live-classes` — add fields there, not in a page.
 
 ## Room configuration (2026-08-30)
@@ -538,13 +538,13 @@ Rejoin). Everything inside the call is `room/`:
   bracketed dynamic path, which Next silently ignores without the second
   argument. Every call site is `revalidatePath(conferenceRevalidatePath(…), "page")`.
 - **The session list lives on TWO pages, so mutations revalidate both.**
-  `/conference` is the landing page (hero + the live/coming-up strip) and
-  `/conference/dashboard` is the table. `conferenceListRevalidatePaths()`
+  `/live` is the landing page (hero + the live/coming-up strip) and
+  `/live/dashboard` is the table. `conferenceListRevalidatePaths()`
   (helpers.ts) returns both; every mutating action loops it rather than calling
   `conferenceRevalidatePath()` bare, which would leave one of the two stale.
   The dashboard sits inside the `(app)` route GROUP, and a route group
-  contributes no URL segment — so the path is `…/conference/dashboard`, NOT
-  `…/conference/(app)/dashboard`, which matches no cache tag at all.
+  contributes no URL segment — so the path is `…/live/dashboard`, NOT
+  `…/live/(app)/dashboard`, which matches no cache tag at all.
 - **Recording deletes only settle**: `deleteRecording` filters
   `status in [ready, failed, expired]`, and the webhook's `egress_ended`
   write is guarded (`deletedAt: null` + in-flight status, notify on count>0)
@@ -644,7 +644,7 @@ Required env vars (set in `.env`):
 ## After You Finish
 
 1. Update `ISSUE.md` and `README.md` here
-2. Update the docs if user-facing: `content/docs-{en,ar}/conference.mdx`
+2. Update the docs if user-facing: `content/docs-{en,ar}/live.mdx`
    (Structure section is `<ConferenceStructure />` — edit the component)
 3. Run `pnpm tsc --noEmit` to verify no regressions
 4. Run the conference specs under `src/tests/` (tests were moved out of an

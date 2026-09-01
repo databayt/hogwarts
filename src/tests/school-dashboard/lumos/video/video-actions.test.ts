@@ -48,6 +48,9 @@ vi.mock("@/lib/db", () => ({
     user: {
       findMany: vi.fn(),
     },
+    school: {
+      findUnique: vi.fn(),
+    },
     notification: {
       createMany: vi.fn(),
     },
@@ -60,6 +63,7 @@ const mockLessonFind = db.lesson.findFirst as ReturnType<typeof vi.fn>
 const mockVideoCreate = db.video.create as ReturnType<typeof vi.fn>
 const mockUserFindMany = db.user.findMany as ReturnType<typeof vi.fn>
 const mockNotifyMany = db.notification.createMany as ReturnType<typeof vi.fn>
+const mockSchoolFind = db.school.findUnique as ReturnType<typeof vi.fn>
 
 const baseInput = {
   catalogLessonId: "lesson-1",
@@ -79,6 +83,7 @@ beforeEach(async () => {
   mockVideoCreate.mockResolvedValue({ id: "video-1" })
   mockUserFindMany.mockResolvedValue([{ id: "admin-1" }, { id: "admin-2" }])
   mockNotifyMany.mockResolvedValue({ count: 2 })
+  mockSchoolFind.mockResolvedValue({ name: "نموذج" })
   vi.mocked(checkSchoolVideoQuota).mockResolvedValue({
     allowed: true,
   } as any)
@@ -293,41 +298,73 @@ describe("uploadVideo — multi-tenant write", () => {
   })
 })
 
-describe("uploadVideo — reviewer notification on new PENDING", () => {
+describe("uploadVideo — notifications on new PENDING", () => {
   beforeEach(() =>
     mockAuth.mockResolvedValue({ user: { id: "t-1", role: "TEACHER" } })
   )
 
-  it("notifies the school's admins, excluding the uploader", async () => {
+  // The next/server test mock runs after() callbacks fire-and-forget
+  // (`void task()`), so post-response work needs a real tick to land before
+  // it can be asserted on.
+  const flushAfter = () => new Promise((r) => setTimeout(r, 0))
+
+  // Flatten every notification row written across all createMany calls (the
+  // platform fan-out and the school FYI are two separate after() blocks).
+  const allRows = () =>
+    mockNotifyMany.mock.calls.flatMap((call) => call[0].data)
+
+  it("reaches the PLATFORM — the queue that now decides every video", async () => {
     await uploadVideo(baseInput)
+    await flushAfter()
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { role: "DEVELOPER" } })
+    )
+    const devRow = allRows().find(
+      (r: { metadata?: { url?: string } }) =>
+        r.metadata?.url === "/catalog/approvals"
+    )
+    expect(devRow).toBeDefined()
+    // Stamped with the REQUESTING school, which is the only way a row for a
+    // schoolId-less DEVELOPER can satisfy the required FK.
+    expect(devRow.schoolId).toBe("school-1")
+    expect(devRow.type).toBe("content_review")
+    expect(devRow.actorId).toBe("t-1")
+  })
+
+  it("also FYIs the school's admins, excluding the uploader", async () => {
+    await uploadVideo(baseInput)
+    await flushAfter()
     expect(mockUserFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { schoolId: "school-1", role: "ADMIN", id: { not: "t-1" } },
       })
     )
-    expect(mockNotifyMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.arrayContaining([
-          expect.objectContaining({
-            schoolId: "school-1",
-            userId: "admin-1",
-            actorId: "t-1",
-            type: "system_alert",
-          }),
-        ]),
-      })
+    const adminRow = allRows().find(
+      (r: { userId: string }) => r.userId === "admin-1"
     )
+    expect(adminRow).toMatchObject({
+      schoolId: "school-1",
+      actorId: "t-1",
+      type: "content_review",
+    })
+    // Every row must carry an explicit lang — the column default is "ar" and
+    // these strings are English.
+    for (const row of allRows()) expect(row.lang).toBe("en")
   })
 
-  it("skips notification when the school has no other admins", async () => {
-    mockUserFindMany.mockResolvedValueOnce([])
+  it("still notifies the platform when the school has no other admins", async () => {
+    // A one-admin school that uploads its own video used to notify nobody at
+    // all; the platform lane must not inherit that hole.
+    mockUserFindMany.mockResolvedValue([])
     await uploadVideo(baseInput)
+    await flushAfter()
     expect(mockNotifyMany).not.toHaveBeenCalled()
   })
 
   it("a notification failure does not fail the upload", async () => {
     mockNotifyMany.mockRejectedValueOnce(new Error("notifications down"))
     const result = await uploadVideo(baseInput)
+    await flushAfter()
     expect(result.status).toBe("success")
   })
 })

@@ -55,14 +55,14 @@ describe("conference tab strip (list-permissions.getTabsForRole)", () => {
     )
   })
 
-  it("points Sessions at /conference/dashboard, never at the landing page", () => {
+  it("points Sessions at /live/dashboard, never at the landing page", () => {
     const [sessions] = getTabsForRole("ADMIN", "ar", dict)
-    expect(sessions.href).toBe("/ar/conference/dashboard")
+    expect(sessions.href).toBe("/ar/live/dashboard")
   })
 
   it("builds every href under the requested locale", () => {
     for (const tab of getTabsForRole("ADMIN", "ar", dict)) {
-      expect(tab.href.startsWith("/ar/conference/")).toBe(true)
+      expect(tab.href.startsWith("/ar/live/")).toBe(true)
     }
   })
 

@@ -53,7 +53,7 @@ describe("StartLiveClassButton", () => {
       })
     )
     await waitFor(() =>
-      expect(push).toHaveBeenCalledWith("/en/conference/lcs-9/room")
+      expect(push).toHaveBeenCalledWith("/en/live/lcs-9/room")
     )
     expect(ErrorToast).not.toHaveBeenCalled()
   })

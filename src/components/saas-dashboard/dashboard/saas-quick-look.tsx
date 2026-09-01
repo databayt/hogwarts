@@ -15,6 +15,8 @@ import { AnthropicIcons } from "@/components/icons"
 // ============================================================================
 
 interface SaasQuickLookProps {
+  /** Items waiting in the catalog approval queue. */
+  pendingApprovals?: number
   locale: string
   totals: {
     totalSchools: number
@@ -35,8 +37,8 @@ const quickLookConfig = {
   },
   notifications: {
     icon: AnthropicIcons.Lightning,
-    label: "Notifications",
-    href: "/observability",
+    label: "Pending Approvals",
+    href: "/catalog/approvals",
     color: "text-[#6A9BCC]",
     bgColor: "bg-[#6A9BCC]/15",
   },
@@ -60,7 +62,11 @@ const quickLookConfig = {
 // COMPONENT
 // ============================================================================
 
-export function SaasQuickLook({ locale, totals }: SaasQuickLookProps) {
+export function SaasQuickLook({
+  locale,
+  totals,
+  pendingApprovals,
+}: SaasQuickLookProps) {
   const items = [
     {
       ...quickLookConfig.messages,
@@ -69,7 +75,7 @@ export function SaasQuickLook({ locale, totals }: SaasQuickLookProps) {
     },
     {
       ...quickLookConfig.notifications,
-      count: 0,
+      count: pendingApprovals ?? 0,
       badge: null,
     },
     {

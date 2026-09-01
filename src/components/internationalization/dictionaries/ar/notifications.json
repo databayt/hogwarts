@@ -121,7 +121,10 @@
     "live_class_starting_soon": "فصل مباشر يبدأ قريباً",
     "live_class_started": "الفصل المباشر يبث الآن",
     "live_class_cancelled": "تم إلغاء الفصل المباشر",
-    "live_class_recording_ready": "تسجيل الفصل جاهز"
+    "live_class_recording_ready": "تسجيل الفصل جاهز",
+    "content_review": "بانتظار مراجعة المنصة",
+    "content_approved": "تمت الموافقة على المحتوى",
+    "content_rejected": "المحتوى يحتاج تعديلاً"
   },
   "priorities": {
     "low": "أولوية منخفضة",

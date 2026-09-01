@@ -79,10 +79,7 @@ function grantsForRole(
         ...(allowScreenShare
           ? {}
           : {
-              canPublishSources: [
-                TrackSource.CAMERA,
-                TrackSource.MICROPHONE,
-              ],
+              canPublishSources: [TrackSource.CAMERA, TrackSource.MICROPHONE],
             }),
       }
     case "OBSERVER":

@@ -11,6 +11,7 @@ import {
   Bell,
   BookOpen,
   Calendar,
+  CircleCheck,
   DollarSign,
   FileText,
   ListChecks,
@@ -150,6 +151,19 @@ export const NOTIFICATION_TYPE_CONFIG: Record<
   live_class_recording_ready: {
     icon: Video,
     requiresAction: false,
+  },
+  // Platform content-review lane (school submits -> DEVELOPER decides).
+  content_review: {
+    icon: ListChecks,
+    requiresAction: true,
+  },
+  content_approved: {
+    icon: CircleCheck,
+    requiresAction: false,
+  },
+  content_rejected: {
+    icon: TriangleAlert,
+    requiresAction: true,
   },
 }
 
@@ -296,6 +310,9 @@ export const NOTIFICATION_EXPIRATION: Record<NotificationType, number | null> =
     live_class_started: 1,
     live_class_cancelled: 14,
     live_class_recording_ready: 90,
+    content_review: 90,
+    content_approved: 90,
+    content_rejected: 90,
   }
 
 // Pagination and limits

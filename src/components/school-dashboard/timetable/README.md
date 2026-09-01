@@ -23,8 +23,8 @@ The Timetable block provides school-wide weekly schedule building, conflict dete
 
 - **Admin**: Build/edit weekly schedules, configure working days and lunch breaks, detect and resolve conflicts (teacher/room/class double-booking), manage term-based schedules, print A4 timetables, switch between class/teacher/room views
 - **Teacher**: View personal teaching schedule, see assigned classes and periods, print weekly timetable
-- **Student**: View class timetable, see subject and period details
-- **Guardian**: View child's class schedule via parent portal
+- **Student**: One view — the week grid for their own section (same `SimpleGrid` the admin builds in, read-only), with the current/next-class card above it. No Today/Full tab split: a student has a single schedule, so the tabs only ever showed the same data twice. Reaching `/timetable` at all requires the route to list STUDENT in `src/routes.ts` — it did not until 2026-09-01, and the edge gate sent every student to `/unauthorized`
+- **Guardian**: View child's class schedule via parent portal (keeps the Today/Full tabs)
 - **All roles**: The "Full Week" grid shows a lightweight live-class indicator (pulsing dot for `live`, outline dot for `scheduled`) on any slot with a Conference session today — see `live-class-join.ts` → `getLiveClassIndicators`. Join stays on the Today cards; the grid indicator is awareness-only.
 
 ### Routes
@@ -36,7 +36,7 @@ route segments are:
 | Route                                                          | Page                                          | Status |
 | -------------------------------------------------------------- | --------------------------------------------- | ------ |
 | `/{lang}/s/{subdomain}/(school-dashboard)/timetable`           | Schedule Builder (role-routed)                | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/full`      | Full-week view                                | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/full`      | Full-week view (teacher/guardian only)        | Ready  |
 | `/{lang}/s/{subdomain}/(school-dashboard)/timetable/conflicts` | Conflict Resolution                           | Ready  |
 | `/{lang}/s/{subdomain}/(school-dashboard)/timetable/settings`  | Schedule Config (days, lunch, periods, terms) | Ready  |
 | `/{lang}/s/{subdomain}/(school-dashboard)/timetable/generate`  | Auto-Generate                                 | Ready  |
@@ -44,6 +44,15 @@ route segments are:
 
 (`layout.tsx` provides the sub-nav; each route has `loading.tsx`, and the root
 has `error.tsx`.)
+
+Role access is gated at the EDGE, in `src/routes.ts` — not by these pages, which
+carry no guard of their own. `/timetable` and `/timetable/full` list
+ADMIN/TEACHER/STUDENT/GUARDIAN/DEVELOPER as exact entries; the `/timetable/*`
+wildcard stays ADMIN/TEACHER/DEVELOPER so `generate`, `settings`, `conflicts` and
+`analytics` remain closed. `isRouteAllowedForRole` matches exact before wildcard,
+which is the only reason that split works — widening the wildcard would silently
+open all four admin pages. `/my-timetable` also appears in the matrix and has no
+page behind it; nothing routes there.
 
 ### File Structure
 

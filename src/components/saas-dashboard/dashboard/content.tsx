@@ -4,6 +4,7 @@
 import { db } from "@/lib/db"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { getCatalogPendingCounts } from "@/components/saas-dashboard/catalog/pending-counts"
 import { getWeatherData } from "@/components/school-dashboard/dashboard/weather-actions"
 
 import type { RecentSale } from "./recent-sales"
@@ -63,11 +64,17 @@ export async function DashboardContent({
     amount: formatUsd(inv.amountPaid),
   }))
 
+  // Waiting school submissions — the "Notifications" tile was hardcoded to 0
+  // and pointed at /observability, which had nothing to do with it.
+  const { totalApprovalsPending: pendingApprovals } =
+    await getCatalogPendingCounts()
+
   return (
     <SaasDashboardClient
       locale={lang}
       dictionary={dictionary}
       totals={{ totalSchools, activeSchools, totalUsers, totalStudents }}
+      pendingApprovals={pendingApprovals}
       weatherData={weatherData}
       recentSales={recentSales}
       upcoming={{

@@ -4,7 +4,7 @@
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { requireSettingsAccess } from "@/components/lumos/settings/guard"
-import { getPendingVideos } from "@/components/lumos/settings/video-review-actions"
+import { getSubmittedVideos } from "@/components/lumos/settings/video-review-actions"
 import { VideoReviewContent } from "@/components/lumos/settings/video-review-content"
 
 interface Props {
@@ -13,20 +13,19 @@ interface Props {
 
 export default async function LumosReviewPage({ params }: Props) {
   const { lang } = await params
-  const { role } = await requireSettingsAccess(lang)
+  await requireSettingsAccess(lang)
 
-  // getPendingVideos self-guards role + school; the queue is the whole point
+  // getSubmittedVideos self-guards role + school; the feed is the whole point
   // of this route, so it is fetched here rather than passed down as a prop
   // (the old prop wiring silently emptied this surface once).
-  const [dictionary, pendingVideos] = await Promise.all([
+  const [dictionary, submittedVideos] = await Promise.all([
     getDictionary(lang),
-    getPendingVideos(),
+    getSubmittedVideos(),
   ])
 
   return (
     <VideoReviewContent
-      videos={pendingVideos}
-      userRole={role}
+      videos={submittedVideos}
       lang={lang}
       dictionary={dictionary.lumos || {}}
     />

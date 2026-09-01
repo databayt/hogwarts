@@ -3,11 +3,11 @@
 import React, { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 
+import { LottiePlayer } from "@/components/saas-marketing/thmanyah/atom/LottiePlayer"
 import {
   CDN_POSTERS,
   CDN_VIDEOS,
 } from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
-import { LottiePlayer } from "@/components/saas-marketing/thmanyah/atom/LottiePlayer"
 import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
 import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
 

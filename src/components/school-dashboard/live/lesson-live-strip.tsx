@@ -84,7 +84,7 @@ export async function LessonLiveStrip({
               })}
               // The detail page owns the provider-aware Join (in-app room vs
               // vendor link) — one place, not a second copy here.
-              href={`/${lang}/conference/${s.id}`}
+              href={`/${lang}/live/${s.id}`}
             >
               {isLive ? labels.join : labels.open}
             </Link>

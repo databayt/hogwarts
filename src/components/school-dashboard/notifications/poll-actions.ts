@@ -9,7 +9,12 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { localize } from "@/components/translation/localize"
 import type { Lang } from "@/components/translation/types"
 
-import { getRecentNotifications, getUnreadNotificationCount } from "./queries"
+import {
+  getOperatorRecentNotifications,
+  getOperatorUnreadCount,
+  getRecentNotifications,
+  getUnreadNotificationCount,
+} from "./queries"
 import type { NotificationDTO } from "./types"
 
 export interface NotificationBellData {
@@ -56,21 +61,50 @@ export async function fetchNotificationBellData(
       auth(),
       getTenantContext(),
     ])
-    if (!session?.user?.id || !schoolId) return null
+    const userId = session?.user?.id
+    if (!userId) return null
 
-    const [unreadCount, recent] = await Promise.all([
-      getUnreadNotificationCount(schoolId, session.user.id),
-      getRecentNotifications(schoolId, session.user.id, 5),
-    ])
+    // A DEVELOPER on the SaaS dashboard has no tenant context at all — that is
+    // what made this endpoint 401 for the only role that can act on a platform
+    // notification. Their rows are addressed by userId and carry the
+    // REQUESTING school's id, so userId alone is the right scope. Every other
+    // tenantless caller still gets null (→ 401), unchanged.
+    const isOperator = session?.user?.role === "DEVELOPER" && !schoolId
+    if (!schoolId && !isOperator) return null
+
+    const [unreadCount, recent] = schoolId
+      ? await Promise.all([
+          getUnreadNotificationCount(schoolId, userId),
+          getRecentNotifications(schoolId, userId, 5),
+        ])
+      : await Promise.all([
+          getOperatorUnreadCount(userId),
+          getOperatorRecentNotifications(userId, 5),
+        ])
 
     const displayLocale = locale ?? (await getDisplayLocale())
 
-    // Translate title+body — ONE batched localize() pass for the whole list
-    // (this is the polled bell endpoint; per-row getText would be N×2 lookups)
-    const localizedRecent = await localize("Notification", recent, {
-      schoolId,
-      lang: displayLocale,
-    })
+    // Translate title+body — ONE batched localize() pass per school (this is
+    // the polled bell endpoint; per-row getText would be N×2 lookups).
+    // An operator's five rows can span several schools while localize() takes
+    // exactly one schoolId, so group first and re-merge in the original order.
+    const bySchool = new Map<string, typeof recent>()
+    for (const row of recent) {
+      const group = bySchool.get(row.schoolId)
+      if (group) group.push(row)
+      else bySchool.set(row.schoolId, [row])
+    }
+    const localizedGroups = await Promise.all(
+      Array.from(bySchool.entries()).map(([sid, rows]) =>
+        localize("Notification", rows, { schoolId: sid, lang: displayLocale })
+      )
+    )
+    const localizedById = new Map(
+      localizedGroups.flat().map((row) => [row.id, row])
+    )
+    const localizedRecent = recent.map(
+      (row) => localizedById.get(row.id) ?? row
+    )
     const translatedRecent = localizedRecent.map((n) => {
       return {
         id: n.id,

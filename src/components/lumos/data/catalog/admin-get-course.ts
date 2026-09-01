@@ -6,17 +6,22 @@ import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
 /**
  * Fetches a catalog subject by ID for admin viewing/editing.
- * Catalog subjects are global (no schoolId), but returns school-specific
- * content overrides when schoolId is provided.
+ * Catalog subjects are global (no schoolId), but returns the CALLER'S OWN
+ * school-specific content overrides.
+ *
+ * The tenant is resolved HERE, never accepted from the caller: this module is
+ * `"use server"`, so the export is a browser-reachable POST endpoint and a
+ * `schoolId` parameter is attacker-controlled. It returns which chapters and
+ * lessons a school has chosen to hide, so trusting a passed-in id let an ADMIN
+ * at school A read school B's curriculum decisions. Same hole, same fix as
+ * `get-all-courses.ts` and `get-course-sidebar-data.ts`.
  */
-export async function adminGetCatalogCourse(
-  subjectId: string,
-  schoolId: string | null
-) {
+export async function adminGetCatalogCourse(subjectId: string) {
   // Admin-only accessor (exposes unpublished chapters/lessons + hidden-content
   // override flags), so it must never be reachable by students/teachers or
   // anonymous callers. notFound() (404) avoids leaking whether the subject exists.
@@ -25,6 +30,8 @@ export async function adminGetCatalogCourse(
   if (role !== "ADMIN" && role !== "DEVELOPER") {
     notFound()
   }
+
+  const { schoolId } = await getTenantContext()
 
   // Subject tree + school overrides are independent (overrides key only on
   // schoolId) — fetch both in one round-trip, then guard notFound.

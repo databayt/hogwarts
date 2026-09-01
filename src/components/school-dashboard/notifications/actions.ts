@@ -159,9 +159,16 @@ export async function markNotificationAsRead(
     }
 
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
+    // A DEVELOPER on the SaaS dashboard has no tenant context, so this guard
+    // used to make every operator bell interaction fail — silently, because
+    // the bell updates optimistically and rolls back. Their rows are addressed
+    // by userId (and carry the requesting school's id), so ownership scoping
+    // by userId alone is both sufficient and correct for them.
+    const isOperator = authContext.role === "DEVELOPER" && !schoolId
+    if (!schoolId && !isOperator) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
+    const tenantScope = schoolId ? { schoolId } : {}
 
     const parsed = markNotificationReadSchema.parse(input)
 
@@ -169,7 +176,8 @@ export async function markNotificationAsRead(
     const existing = await db.notification.findFirst({
       where: {
         id: parsed.notificationId,
-        schoolId,
+        ...tenantScope,
+        userId: authContext.userId,
       },
       select: { id: true, userId: true, read: true },
     })
@@ -197,7 +205,7 @@ export async function markNotificationAsRead(
     await db.notification.updateMany({
       where: {
         id: parsed.notificationId,
-        schoolId,
+        ...tenantScope,
         userId: authContext.userId,
       },
       data: {
@@ -207,7 +215,7 @@ export async function markNotificationAsRead(
     })
 
     revalidatePath(NOTIFICATIONS_PATH, "page")
-    revalidateTag(`notifications-${schoolId}`, "max")
+    if (schoolId) revalidateTag(`notifications-${schoolId}`, "max")
     revalidateTag(`notifications-${authContext.userId}`, "max")
 
     return { success: true, data: undefined }
@@ -237,9 +245,16 @@ export async function markAllNotificationsAsRead(
     }
 
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
+    // A DEVELOPER on the SaaS dashboard has no tenant context, so this guard
+    // used to make every operator bell interaction fail — silently, because
+    // the bell updates optimistically and rolls back. Their rows are addressed
+    // by userId (and carry the requesting school's id), so ownership scoping
+    // by userId alone is both sufficient and correct for them.
+    const isOperator = authContext.role === "DEVELOPER" && !schoolId
+    if (!schoolId && !isOperator) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
+    const tenantScope = schoolId ? { schoolId } : {}
 
     const parsed = markAllNotificationsReadSchema.parse(input)
 
@@ -250,7 +265,7 @@ export async function markAllNotificationsAsRead(
 
     // Build where clause
     const where = {
-      schoolId,
+      ...tenantScope,
       userId: parsed.userId,
       read: false,
       ...(parsed.type && { type: parsed.type }),
@@ -266,7 +281,7 @@ export async function markAllNotificationsAsRead(
     })
 
     revalidatePath(NOTIFICATIONS_PATH, "page")
-    revalidateTag(`notifications-${schoolId}`, "max")
+    if (schoolId) revalidateTag(`notifications-${schoolId}`, "max")
     revalidateTag(`notifications-${authContext.userId}`, "max")
 
     return { success: true, data: { count: result.count } }
@@ -296,9 +311,16 @@ export async function deleteNotification(
     }
 
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
+    // A DEVELOPER on the SaaS dashboard has no tenant context, so this guard
+    // used to make every operator bell interaction fail — silently, because
+    // the bell updates optimistically and rolls back. Their rows are addressed
+    // by userId (and carry the requesting school's id), so ownership scoping
+    // by userId alone is both sufficient and correct for them.
+    const isOperator = authContext.role === "DEVELOPER" && !schoolId
+    if (!schoolId && !isOperator) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
+    const tenantScope = schoolId ? { schoolId } : {}
 
     const parsed = deleteNotificationSchema.parse(input)
 
@@ -306,7 +328,8 @@ export async function deleteNotification(
     const existing = await db.notification.findFirst({
       where: {
         id: parsed.notificationId,
-        schoolId,
+        ...tenantScope,
+        userId: authContext.userId,
       },
       select: { id: true, userId: true },
     })
@@ -329,13 +352,13 @@ export async function deleteNotification(
     await db.notification.deleteMany({
       where: {
         id: parsed.notificationId,
-        schoolId,
+        ...tenantScope,
         userId: authContext.userId,
       },
     })
 
     revalidatePath(NOTIFICATIONS_PATH, "page")
-    revalidateTag(`notifications-${schoolId}`, "max")
+    if (schoolId) revalidateTag(`notifications-${schoolId}`, "max")
     revalidateTag(`notifications-${authContext.userId}`, "max")
 
     return { success: true, data: undefined }

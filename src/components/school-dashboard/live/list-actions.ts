@@ -374,7 +374,7 @@ export async function getLiveClassReferenceOptions(params: {
 /**
  * The school's real class slots for the active term — the wizard's "Class"
  * picker. Fetched on demand when the wizard opens (never as page props: a
- * term's timetable is easily 1000+ rows and would bloat every /conference
+ * term's timetable is easily 1000+ rows and would bloat every /live
  * load). TEACHERs see only their own slots; staff see the whole schedule.
  */
 export async function getConferenceSlots(): Promise<

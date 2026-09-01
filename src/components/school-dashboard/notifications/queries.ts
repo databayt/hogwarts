@@ -356,6 +356,45 @@ export async function getUnreadNotificationCount(
 }
 
 /**
+ * Unread count for a PLATFORM operator (DEVELOPER), who has no schoolId of
+ * their own. Deliberately a separate function rather than making `schoolId`
+ * optional on the tenant-scoped one above: an optional tenant key on a
+ * tenant-scoped query is exactly how scope gets silently dropped later.
+ *
+ * Rows reaching a DEVELOPER carry the REQUESTING school's id, so `userId`
+ * alone is the correct — and only — scope here. Served by
+ * `@@index([userId, type, read])`.
+ */
+export async function getOperatorUnreadCount(userId: string) {
+  return db.notification.count({
+    where: {
+      userId,
+      read: false,
+    },
+  })
+}
+
+/**
+ * Recent notifications for a PLATFORM operator. See
+ * `getOperatorUnreadCount` for why this is a separate function.
+ */
+export async function getOperatorRecentNotifications(
+  userId: string,
+  limit = 10
+) {
+  return db.notification.findMany({
+    where: {
+      userId,
+    },
+    orderBy: {
+      createdAt: Prisma.SortOrder.desc,
+    },
+    take: limit,
+    select: notificationListSelect,
+  })
+}
+
+/**
  * Get notification statistics for a user
  * @param schoolId - School ID
  * @param userId - User ID

@@ -15,6 +15,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getTenantContext } from "@/lib/tenant-context"
 import { fetchNotificationBellData } from "@/components/school-dashboard/notifications/poll-actions"
 import {
+  getOperatorRecentNotifications,
+  getOperatorUnreadCount,
   getRecentNotifications,
   getUnreadNotificationCount,
 } from "@/components/school-dashboard/notifications/queries"
@@ -34,6 +36,8 @@ vi.mock("@/components/translation/localize", () => ({
 vi.mock("@/components/school-dashboard/notifications/queries", () => ({
   getUnreadNotificationCount: vi.fn(),
   getRecentNotifications: vi.fn(),
+  getOperatorUnreadCount: vi.fn(),
+  getOperatorRecentNotifications: vi.fn(),
 }))
 vi.mock("next/headers", () => ({
   headers: () => ({ get: () => "" }),
@@ -151,5 +155,76 @@ describe("fetchNotificationBellData", () => {
     const data = await fetchNotificationBellData("en")
     expect(data).toBeNull()
     consoleSpy.mockRestore()
+  })
+})
+
+// ============================================================================
+// Operator (DEVELOPER) branch — the SaaS dashboard bell
+// ============================================================================
+
+describe("fetchNotificationBellData — operator branch", () => {
+  const DEV = "dev-1"
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    // A DEVELOPER has no schoolId and no tenant context on the SaaS dashboard.
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: DEV, role: "DEVELOPER" },
+    } as any)
+    vi.mocked(getTenantContext).mockResolvedValue({ schoolId: null } as any)
+    vi.mocked(getOperatorUnreadCount).mockResolvedValue(3 as any)
+    vi.mocked(getOperatorRecentNotifications).mockResolvedValue([] as any)
+  })
+
+  it("serves a DEVELOPER with no tenant context", async () => {
+    // This guard used to return null, which the route turned into a 401 — for
+    // the only role that can act on a platform notification.
+    const data = await fetchNotificationBellData("en")
+    expect(data).not.toBeNull()
+    expect(data!.unreadCount).toBe(3)
+    expect(getOperatorUnreadCount).toHaveBeenCalledWith(DEV)
+    expect(getUnreadNotificationCount).not.toHaveBeenCalled()
+  })
+
+  it("still refuses a tenantless NON-developer", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u-9", role: "ADMIN" },
+    } as any)
+    expect(await fetchNotificationBellData("en")).toBeNull()
+  })
+
+  it("localizes per school when the operator's rows span several", async () => {
+    // localize() takes exactly ONE schoolId, but an operator's rows carry the
+    // id of whichever school submitted — group, then re-merge in order.
+    vi.mocked(getOperatorRecentNotifications).mockResolvedValue([
+      { ...baseNotification, id: "a", schoolId: "school-1", title: "A" },
+      { ...baseNotification, id: "b", schoolId: "school-2", title: "B" },
+      { ...baseNotification, id: "c", schoolId: "school-1", title: "C" },
+    ] as any)
+
+    const data = await fetchNotificationBellData("en")
+
+    expect(vi.mocked(localize).mock.calls).toHaveLength(2)
+    const schoolIds = vi
+      .mocked(localize)
+      .mock.calls.map((c: any) => c[2].schoolId)
+      .sort()
+    expect(schoolIds).toEqual(["school-1", "school-2"])
+    // Original order preserved across the regrouping.
+    expect(data!.recent.map((n) => n.id)).toEqual(["a", "b", "c"])
+    expect(data!.recent.map((n) => n.title)).toEqual(["t(A)", "t(B)", "t(C)"])
+  })
+
+  it("uses the tenant path when a DEVELOPER is impersonating a school", async () => {
+    vi.mocked(getTenantContext).mockResolvedValue({
+      schoolId: "school-7",
+    } as any)
+    vi.mocked(getUnreadNotificationCount).mockResolvedValue(1 as any)
+    vi.mocked(getRecentNotifications).mockResolvedValue([] as any)
+
+    await fetchNotificationBellData("en")
+
+    expect(getUnreadNotificationCount).toHaveBeenCalledWith("school-7", DEV)
+    expect(getOperatorUnreadCount).not.toHaveBeenCalled()
   })
 })

@@ -41,7 +41,7 @@ export function StartLiveClassButton({
         timetableId: timetableId!,
       })
       if ("success" in res && res.success) {
-        router.push(`/${lang}/conference/${res.data.id}/room`)
+        router.push(`/${lang}/live/${res.data.id}/room`)
       } else {
         ErrorToast(errorLabel)
       }

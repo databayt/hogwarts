@@ -3,7 +3,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo } from "react"
-import { Mail } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -14,7 +13,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { SpotlightSearch } from "@/components/atom/generic-command-menu/spotlight-search"
 import { UserButton } from "@/components/auth/user-button"
@@ -22,6 +20,7 @@ import { LanguageSwitcher } from "@/components/internationalization/language-swi
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { useBreadcrumbs } from "@/components/saas-dashboard/hooks/use-breadcrumbs"
+import { NotificationBellIcon } from "@/components/school-dashboard/notifications/bell-icon"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 import { MobileNav } from "@/components/template/mobile-nav"
 import { platformNav } from "@/components/template/saas-sidebar/config"
@@ -97,13 +96,20 @@ export default function SaasHeader() {
           <SpotlightSearch surface="saas-dashboard" />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
-          {/* TODO: Restore when operator notification system is implemented */}
-          <Button variant="link" size="icon" className="size-7">
-            <Mail className="h-4 w-4" />
-            <span className="sr-only">
-              {dictionary?.operator?.common?.messages || "Messages"}
-            </span>
-          </Button>
+          {/* The operator bell. Rows reach a DEVELOPER stamped with the
+              REQUESTING school's id (Notification.schoolId is a required FK
+              and a DEVELOPER has no school of their own), so the same bell
+              component works here unchanged — its deep links are relative and
+              resolve against whatever host the reader is on. */}
+          {dictionary?.notifications && (
+            <NotificationBellIcon
+              locale={locale === "ar" ? "ar" : "en"}
+              dictionary={dictionary.notifications}
+              // No /notifications route exists on the main host — the default
+              // footer link would 404 for an operator.
+              viewAllHref={null}
+            />
+          )}
           <UserButton variant="saas" />
         </div>
       </header>
