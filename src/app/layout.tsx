@@ -28,10 +28,28 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const headersList = await headers()
-  const cookieStore = await cookies()
-  const detected =
-    headersList.get("x-locale") || cookieStore.get("NEXT_LOCALE")?.value || ""
+  // Skip the dynamic request APIs during `next build` page-data collection.
+  // headers()/cookies() are dynamic APIs, and reading them HERE — in the root
+  // layout, above every route in the app — opted the whole tree out of static
+  // generation. That is why `/en` came back `private, no-cache, no-store` with
+  // `x-vercel-cache: MISS` and a ~930ms TTFB: the marketing homepage was
+  // re-rendered on the server for every visitor. `[lang]/layout.tsx` already
+  // guards its own auth()/headers() calls this way and exports
+  // generateStaticParams; this layout was the one holding the door open.
+  //
+  // Skipping is safe because the value is only ever a first guess. The
+  // corrective inline script below re-derives lang/dir from the URL pathname
+  // and writes them onto <html> synchronously in <head>, before the body is
+  // parsed and before anything paints — so the prerendered attributes are
+  // already replaced by the time they could matter. The only route without a
+  // locale in its path is `/`, and that one just redirect()s to the default.
+  let detected = ""
+  if (process.env.NEXT_PHASE !== "phase-production-build") {
+    const headersList = await headers()
+    const cookieStore = await cookies()
+    detected =
+      headersList.get("x-locale") || cookieStore.get("NEXT_LOCALE")?.value || ""
+  }
   const locale: Locale = (i18n.locales as readonly string[]).includes(detected)
     ? (detected as Locale)
     : i18n.defaultLocale

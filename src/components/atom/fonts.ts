@@ -10,15 +10,23 @@ import localFont from "next/font/local"
 
 import { cn } from "@/lib/utils"
 
+// Both are only rendered by `fonts-preview.tsx`, but next/font emits a
+// preload for every face declared at module scope — and the root layout
+// imports fontRubik from THIS module, so every page in the app was preloading
+// them. Geist is doubly wasted: `[lang]/layout.tsx` already ships the same
+// typeface via `geist/font/sans`. Declared without preload, so they are
+// fetched only if the preview actually renders.
 export const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
+  preload: false,
 })
 
 export const fontMono = FontMono({
   subsets: ["latin"],
   variable: "--font-mono",
   weight: ["400"],
+  preload: false,
 })
 
 export const fontRubik = Rubik({
@@ -58,6 +66,15 @@ export const fontThmanyahText = localFont({
   ],
   variable: "--font-thmanyah-text",
   display: "swap",
+  // Five Arabic weights are ~390KB, and this family is applied CONDITIONALLY:
+  // only under :root[dir="rtl"]. next/font preloads every declared face just
+  // because the module is imported by the root layout, so /en was downloading
+  // all five at high priority and never drawing a glyph with them — and the
+  // thmanyah homepage doesn't use them in either locale, since its shell
+  // pins its own faces from /fonts/. Without the preload links the browser
+  // fetches these only when a rendered element actually asks for the family,
+  // which is exactly the conditional behaviour the CSS already describes.
+  preload: false,
 })
 
 export const fontVariables = cn(

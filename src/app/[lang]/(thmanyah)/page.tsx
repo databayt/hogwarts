@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { Suspense } from "react"
+import { preload } from "react-dom"
 
 import { Chatbot } from "@/components/chatbot"
 import { type Locale } from "@/components/internationalization/config"
@@ -44,6 +45,35 @@ export default async function Home({
   params: Promise<{ lang: string }>
 }) {
   const { lang } = await params
+
+  // The two faces the first viewport actually draws with, and nothing else.
+  // `thmanyah-clone.css` declares fifteen @font-face rules (3 families x 5
+  // weights) and the browser discovers all of them only after fetching and
+  // parsing that stylesheet — so the hero's own text was starting its font
+  // download a full stylesheet-round-trip late, rendered in a fallback, then
+  // reflowed when the real face landed. That swap is the "disturbance".
+  //
+  // Preloading hoists these two into the document's initial response, so they
+  // download in parallel with the CSS instead of after it, and are already in
+  // memory when first paint happens. The other thirteen are below the fold and
+  // are deliberately left to be discovered normally.
+  //
+  // `crossOrigin: "anonymous"` is required even though these are same-origin:
+  // fonts are always fetched in CORS mode, and a preload without it does not
+  // match the later font request — you get the file twice instead of once.
+  //
+  //   sans 400  -> the hero's "منصة بالقلم" title
+  //   display 900 -> the "نظام" h1, which is this page's LCP element
+  preload("/fonts/thmanyah-sans-regular.woff2", {
+    as: "font",
+    type: "font/woff2",
+    crossOrigin: "anonymous",
+  })
+  preload("/fonts/thmanyah-serif-display-black.woff2", {
+    as: "font",
+    type: "font/woff2",
+    crossOrigin: "anonymous",
+  })
 
   return (
     <>

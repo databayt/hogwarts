@@ -2,7 +2,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Metadata } from "next"
-import { Rubik } from "next/font/google"
 import { headers } from "next/headers"
 import { auth } from "@/auth"
 import { GeistSans } from "geist/font/sans"
@@ -25,13 +24,11 @@ import { UserThemeProvider } from "@/components/theme/theme-provider"
 
 import "leaflet/dist/leaflet.css"
 
-// Configure fonts - Rubik supports both Arabic and Latin scripts
-const rubik = Rubik({
-  subsets: ["arabic", "latin"],
-  variable: "--font-rubik",
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-  display: "swap",
-})
+// Rubik is NOT declared here. It was — with the same subsets, weights and
+// `--font-rubik` variable that `fontRubik` in @/components/atom/fonts already
+// declares — which made next/font emit the family twice and this layout
+// re-apply a variable the root layout has already set on <html>. One
+// declaration, applied once, at the root.
 
 export async function generateMetadata({
   params,
@@ -111,7 +108,7 @@ export default async function LocaleLayout({
   return (
     <DirectionProvider direction={config.dir} lang={lang}>
       <div
-        className={`${fontClass} ${GeistSans.variable} ${rubik.variable} ${fontThmanyahText.variable} layout-container antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}
+        className={`${fontClass} ${GeistSans.variable} ${fontThmanyahText.variable} layout-container antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}
       >
         <SessionProvider session={session}>
           <NuqsAdapter>
