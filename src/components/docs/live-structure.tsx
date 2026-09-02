@@ -175,6 +175,11 @@ export function LiveStructure({ className }: LiveStructureProps) {
               description: "live / coming-up, with catalog subject art",
             },
             {
+              name: "session-row.tsx",
+              type: "file",
+              description: "the shared article row, drawn by both blocks",
+            },
+            {
               name: "past-shelf.tsx",
               type: "file",
               description: "classes already taught, beside their subject tiles",

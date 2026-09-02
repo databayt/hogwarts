@@ -8,15 +8,18 @@ import { History } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+import { LandingSessionRow } from "./session-row"
 import type {
   LandingSectionProps,
   LandingSession,
   LandingSubjectTile,
+  LandingViewer,
 } from "./types"
 
 interface PastShelfProps extends LandingSectionProps {
   sessions: LandingSession[]
   subjects: LandingSubjectTile[]
+  viewer: LandingViewer
 }
 
 /**
@@ -32,17 +35,19 @@ interface PastShelfProps extends LandingSectionProps {
  *   body       : 24-col row · 16px gutter · row-gap 24px
  *                halves at sm, 14/10 at md, back to halves at lg
  *   list col   : column · gap 32px
- *   list row   : 16px gutter · radius 8px · block padding 8px · hover tint
- *   art        : basis 104px, 144px from md · square · radius 12px
- *   title      : 16px, 20px/32px from lg · 2 lines · margin-bottom 8px
- *   dek        : 14px · 1 line, 2 from lg · margin-bottom 8px
- *   meta       : row · wrap · column-gap 4px · row-gap 8px · 14px
  *   tile col   : 2 up, 3 up from lg · 16px gutter · square · radius 12px
  *
- * The same two departures the strip makes: COLOUR is ours, because this renders
- * inside a themed dashboard rather than the reference's light-only page, and
- * there are no author avatars because a session has a teacher's name and no
- * portrait.
+ * The ROWS themselves are `LandingSessionRow`, the same component the strip
+ * above draws — the reference uses one article row throughout, and this file
+ * used to carry a second near-copy of it whose padding and art column had
+ * already drifted (8px against the reference's 12px, `py-2` where the
+ * reference pads 4px all round below md). One row, two callers: a change to
+ * the article geometry can no longer land on half the page.
+ *
+ * The same two departures the strip makes apply here: COLOUR is ours, because
+ * this renders inside a themed dashboard rather than the reference's
+ * light-only page, and there are no author avatars because a session has a
+ * teacher's name and no portrait.
  *
  * The tile column is the one real reinterpretation. The reference fills it with
  * the SHOWS its episodes came from; a school's equivalent is the subject, so
@@ -55,6 +60,7 @@ export function LivePastShelf({
   lang,
   sessions,
   subjects,
+  viewer,
 }: PastShelfProps) {
   const p = dictionary?.landing?.past
 
@@ -79,7 +85,13 @@ export function LivePastShelf({
         <ul className="flex flex-col gap-y-8">
           {sessions.map((session) => (
             <li key={session.id}>
-              <PastRow session={session} dictionary={dictionary} lang={lang} />
+              <LandingSessionRow
+                session={session}
+                dictionary={dictionary}
+                lang={lang}
+                viewer={viewer}
+                size="small"
+              />
             </li>
           ))}
         </ul>
@@ -105,69 +117,6 @@ export function LivePastShelf({
         </ul>
       </div>
     </section>
-  )
-}
-
-/**
- * One past class as the reference's shelf row.
- *
- * Smaller art than the strip's lead row above (144px against 250px) and a
- * title that only reaches 20px at lg — the reference sizes its shelf rows down
- * exactly this way, so the shelf reads as the quieter half of the page.
- *
- * The row lands on the session page rather than the room: the room is closed,
- * and the session page is where a recording shows up if the school has one.
- */
-function PastRow({
-  session,
-  dictionary,
-  lang,
-}: {
-  session: LandingSession
-  dictionary: LandingSectionProps["dictionary"]
-  lang: string
-}) {
-  const p = dictionary?.landing?.past
-
-  return (
-    <Link
-      href={`/${lang}/live/${session.id}`}
-      className="group hover:bg-muted/50 -mx-2 flex items-start gap-y-4 rounded-[8px] py-2 transition-colors"
-    >
-      <div className="shrink-0 basis-[104px] px-2 md:basis-[144px]">
-        <div className="relative aspect-square w-full overflow-hidden rounded-[12px]">
-          <Art
-            imageUrl={session.imageUrl}
-            color={session.color}
-            alt=""
-            sizes="(min-width: 768px) 144px, 104px"
-          />
-        </div>
-      </div>
-
-      <div className="min-w-0 flex-1 px-2 text-start">
-        <h3 className="mb-2 line-clamp-2 text-base font-semibold lg:text-xl lg:leading-8">
-          {session.title}
-        </h3>
-
-        <p className="mb-2 line-clamp-1 text-sm lg:line-clamp-2">
-          {[session.subjectName, session.sectionName]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-
-        <div className="text-muted-foreground flex flex-wrap items-center gap-x-1 gap-y-2 text-sm">
-          <span>{session.scheduledStart}</span>
-          {session.teacherName ? (
-            <>
-              <span aria-hidden="true">·</span>
-              <span className="font-bold">{session.teacherName}</span>
-            </>
-          ) : null}
-          <span className="sr-only">{p?.ended}</span>
-        </div>
-      </div>
-    </Link>
   )
 }
 

@@ -258,6 +258,15 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   `read_school_dashboard` and sees every session, but `authorization.ts` grants
   it neither a join role nor `view_recordings`, so the page must not offer it
   either. Covered by `src/tests/school-dashboard/live/landing-roles.test.ts`.
+- **One article row, two blocks (2026-09-02).** `landing/session-row.tsx` is
+  the reference's article row, and both the strip and the past shelf draw it.
+  The shelf briefly carried its own near-copy, and within a day the two had
+  already drifted — 8px of art-column padding against the reference's 12px,
+  `py-2` where the reference pads 4px all round below md — which showed up as
+  two different mobile layouts on one page. Add geometry to the shared row,
+  never to a caller; the `size` prop ("lead" | "small") is the only axis the
+  reference itself varies.
+
 - **The second shelf is PAST CLASSES, not recordings (2026-09-02).**
   `landing/past-shelf.tsx` mirrors thmanyah.com's shelf block — the section
   that follows the editorial rows the strip already carries: an icon + 24px

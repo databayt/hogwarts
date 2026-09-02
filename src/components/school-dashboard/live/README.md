@@ -50,6 +50,8 @@ conference/
 │   │                     ways in, beside a transparent line mark
 │   ├── now-strip.tsx         live / coming-up — thmanyah.com's editorial row (mirrored
 │   │                     geometry), section-scoped, school-TZ times, catalog art
+│   ├── session-row.tsx       the reference's article row — ONE component, drawn by
+│   │                     the strip and the shelf alike
 │   ├── past-shelf.tsx        classes already taught — thmanyah.com's shelf block
 │   │                     (mirrored geometry): a list column beside subject tiles
 │   ├── readiness-band.tsx    can this school teach online (ADMIN/DEVELOPER only)

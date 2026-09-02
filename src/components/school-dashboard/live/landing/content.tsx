@@ -85,6 +85,7 @@ export function LiveLandingContent({
           lang={lang}
           sessions={past}
           subjects={pastSubjects}
+          viewer={viewer}
         />
       ) : null}
 
