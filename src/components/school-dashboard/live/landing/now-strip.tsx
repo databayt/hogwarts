@@ -22,20 +22,24 @@ interface NowStripProps extends LandingSectionProps {
 /**
  * What is actually happening — the first content on the page.
  *
- * The layout is thmanyah.com's editorial block, mirrored from a capture of the
- * section directly under its own banner (`.clone/thmanyah-editorial`), at its
- * measured values rather than by eye:
+ * The layout is thmanyah.com's editorial block, built from its own markup and
+ * computed styles rather than by eye:
  *
- *   card row   : flex · gap 16px · align center (start below md) · radius 8px
- *                · block padding 8px · inline margin −8px · hover tint
- *   lead art   : column basis 274px, inline padding 12px → 250×250 · radius 12px
- *   small art  : column basis 144px, inline padding 12px → 120×120 · radius 12px
- *   copy col   : flex 1 · inline padding 8px
- *   title      : 20px / 32px · 600 · margin-bottom 8px
- *   dek        : 14px / 20px · margin-bottom 8px · 2 lines on the small card
- *   meta row   : flex · height 24px · column-gap 4px · row-gap 12px · 14/20
- *   two-up     : halves at 50%, inline padding 37.5px — i.e. a 75px gutter
- *                with the content flush to the lead card's own edges
+ *   block      : ONE row · row-gap 32px · children padded 8px (37.5px from md)
+ *                with the row pulled out by the same, so content sits flush
+ *   widths     : lead takes the full 24 columns; the rest take 24 until LG and
+ *                12 above it — the two-up starts at lg, NOT at md
+ *   card row   : margin-inline −8px · row-gap 16px · NO column gap · radius 8px
+ *                · padding 4px, and from md padding-block 8px with the start
+ *                side flush and 3px (lead) / 2px (small) on the end
+ *                · lead is middle-aligned from md, small rows always top
+ *   art column : basis 104px → an 80px square, and from md 274px (lead) /
+ *                144px (small) → 250 and 120 · padding 12px · radius 12px
+ *   copy col   : flex 1 · padding 8px — with the art's 12px, that IS the gap
+ *   title      : 16px, 20/32 from lg · 600 · margin-bottom 8px · 2 lines
+ *   dek        : 14px · margin-bottom 8px · 1 line, 2 from lg
+ *   byline     : flex wrap · column-gap 4px · row-gap 12px (lead) / 8px
+ *                · name bold · the rest secondary, 12px until sm
  *
  * Two deliberate departures. COLOUR is ours: the reference is a light-only
  * page with a brand orange for its bylines, while this renders inside a themed
@@ -91,52 +95,53 @@ export function LiveNowStrip({
   }
 
   return (
-    // The reference closes the block with a hairline before the next one.
-    <section className="mb-16 space-y-10 border-b pb-16">
-      {featured ? (
-        <div>
-          <SessionRow
-            session={featured}
-            dictionary={dictionary}
-            lang={lang}
-            viewer={viewer}
-            size="lead"
-          />
-        </div>
-      ) : null}
-
-      {rest.length > 0 ? (
-        <div>
-          {/* The reference pads each half by 37.5px inside a row pulled out by
-              the same amount; an explicit 75px gutter is the same geometry
-              without the negative margin. */}
-          <ul className="grid grid-cols-1 gap-y-6 md:grid-cols-2 md:gap-x-[75px]">
-            {rest.slice(0, 4).map((session) => (
-              <li key={session.id}>
-                <SessionRow
-                  session={session}
-                  dictionary={dictionary}
-                  lang={lang}
-                  viewer={viewer}
-                  size="small"
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+    // The reference's whole block is ONE row: children padded 8px (37.5px from
+    // md), the row pulled out by the same amount so the content sits flush,
+    // and a 32px row-gap between items. The lead article takes all 24 columns;
+    // the rest take 24 until LG and 12 above it — the two-up starts at lg, not
+    // at md. The block closes on a hairline before the next one.
+    <section className="mb-16 border-b pb-8">
+      <ul className="-mx-2 flex flex-wrap gap-y-8 md:-mx-[37.5px]">
+        {[featured, ...rest.slice(0, 4)]
+          .filter((session): session is LandingSession => Boolean(session))
+          .map((session, index) => (
+            <li
+              key={session.id}
+              className={cn(
+                "w-full px-2 md:px-[37.5px]",
+                index === 0 ? null : "lg:w-1/2"
+              )}
+            >
+              <SessionRow
+                session={session}
+                dictionary={dictionary}
+                lang={lang}
+                viewer={viewer}
+                size={index === 0 ? "lead" : "small"}
+              />
+            </li>
+          ))}
+      </ul>
     </section>
   )
 }
 
 /**
- * One session as the reference's article row — artwork beside copy, the whole
- * row a single link with a tinted hover.
+ * One session as the reference's article row.
  *
- * `lead` and `small` differ ONLY in the art column (274/250 vs 144/120) and in
- * how far the dek is allowed to run, exactly as the two sizes do there. The
- * reference has no button inside a card and neither does this: the row itself
- * is the action, and for a live class it lands in the room.
+ * Every value here is off its markup, not estimated: the row carries
+ * `margin-inline: -8px` with a 16px row-gap and NO column gap — the space
+ * between art and copy is the two columns' own padding (12px + 8px) — 4px of
+ * padding all round below md, and from md `padding-block: 8px` with the start
+ * side flush and 3px (lead) / 2px (small) on the end. The lead row is
+ * middle-aligned and drops to top below md; the small rows are top-aligned at
+ * every width.
+ *
+ * The art column is 104px basis on mobile — an 80px square once its 12px
+ * padding is off — and 274px (lead) / 144px (small) from md, giving 250 and
+ * 120. The copy column is padded 8px and flexes.
+ *
+ * The whole row is one link with a tinted hover, as theirs is.
  */
 function SessionRow({
   session,
@@ -158,18 +163,23 @@ function SessionRow({
   return (
     <Link
       href={href}
-      className="group hover:bg-muted/50 -mx-2 flex flex-wrap items-start gap-4 rounded-[8px] py-2 transition-colors md:items-center"
+      className={cn(
+        "group hover:bg-muted/50 -mx-2 flex flex-wrap gap-y-4 rounded-[8px] p-1 transition-colors md:py-2 md:ps-0",
+        isLead
+          ? "items-start md:items-center md:pe-[3px]"
+          : "items-start md:pe-[2px]"
+      )}
     >
       <div
         className={cn(
-          "shrink-0 px-3",
+          "shrink-0 basis-[104px] px-3",
           isLead ? "md:basis-[274px]" : "md:basis-[144px]"
         )}
       >
         <div
           className={cn(
-            "relative size-20 overflow-hidden rounded-[12px]",
-            isLead ? "md:size-[250px]" : "md:size-[120px]"
+            "relative aspect-square w-full overflow-hidden rounded-[12px]",
+            isLead ? "md:max-w-[250px]" : "md:max-w-[120px]"
           )}
         >
           <Art
@@ -180,34 +190,37 @@ function SessionRow({
       </div>
 
       <div className="min-w-0 flex-1 px-2 text-start">
-        <h3 className="mb-2 line-clamp-2 text-[20px] leading-[32px] font-semibold">
+        <h3 className="mt-0 mb-2 line-clamp-2 text-base font-semibold lg:text-xl lg:leading-8">
           {session.title}
         </h3>
 
-        <p
-          className={cn(
-            "mb-2 text-[14px] leading-[20px]",
-            isLead ? "line-clamp-1" : "line-clamp-2"
-          )}
-        >
-          {meta(session)}
+        <p className="mb-2 line-clamp-1 text-sm lg:line-clamp-2">
+          {dek(session)}
         </p>
 
-        <div className="text-muted-foreground flex min-h-6 flex-wrap items-center gap-x-1 gap-y-3 text-[14px] leading-[20px]">
-          {session.isLive ? (
-            <span className="text-primary inline-flex items-center gap-1 font-bold">
-              <Radio className="size-3.5" aria-hidden="true" />
-              {n?.liveTitle}
-            </span>
-          ) : (
-            <span className="tabular-nums">{session.scheduledStart}</span>
+        {/* Their byline row: the person in bold, then the placing and the date
+            in the secondary colour, the date a size smaller until sm. Ours
+            names the teacher, then where the class sits and when — or that it
+            is running, which is this page's version of a dateline. */}
+        <div
+          className={cn(
+            "flex flex-wrap items-center gap-x-1",
+            isLead ? "gap-y-3" : "gap-y-2"
           )}
+        >
           {session.teacherName ? (
-            <>
-              <span aria-hidden="true">·</span>
-              <span className="font-bold">{session.teacherName}</span>
-            </>
+            <span className="text-sm font-bold">{session.teacherName}</span>
           ) : null}
+          <span className="text-muted-foreground text-xs sm:text-sm">
+            {session.isLive ? (
+              <span className="text-primary inline-flex items-center gap-1 font-bold">
+                <Radio className="size-3.5" aria-hidden="true" />
+                {n?.liveTitle}
+              </span>
+            ) : (
+              <span className="tabular-nums">{session.scheduledStart}</span>
+            )}
+          </span>
         </div>
       </div>
     </Link>
@@ -244,7 +257,7 @@ function Art({ session, sizes }: { session: LandingSession; sizes: string }) {
 }
 
 /** The dek line: what the class IS, without repeating the title's words. */
-function meta(session: LandingSession): string {
+function dek(session: LandingSession): string {
   return [session.subjectName, session.sectionName].filter(Boolean).join(" · ")
 }
 
