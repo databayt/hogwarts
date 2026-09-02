@@ -192,6 +192,12 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   session props at all, so `getLiveLandingCounts` lost its only caller — the
   page now runs ONE query for the landing instead of two.
 
+  Trimmed further the same day: the eyebrow and, for an online school, the
+  supporting paragraph are gone — the block name was already in the page
+  heading and the sidebar, and a paragraph explaining the product sat above the
+  classes of people who came to join one. An OFFLINE school keeps its sentence,
+  because it still has to be told why the page is empty and what turns it on.
+
 - **Role gating lives in `landing/viewer.ts`, once.** `resolveLandingViewer`
   is the single source for who may schedule, configure, host, join, or watch a
   recording. ACCOUNTANT is the awkward one on purpose: it passes

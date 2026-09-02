@@ -5182,9 +5182,8 @@
       },
       "landing": {
         "hero": {
-          "title": "Live teaching reaches {mark}",
-          "titleMark": "every student",
-          "subtitle": "Video classes inside the app, built on your school's timetable: the teacher starts from their own period, the student joins from their own schedule, and the recording stays for whoever missed it.",
+          "title": "Learn live from {mark}",
+          "titleMark": "anywhere",
           "offline": "Live classes, alongside the classroom — not instead of it",
           "offlineAdmin": "Your school teaches in person. Turn on online teaching and the periods already on the timetable become joinable rooms.",
           "offlineOther": "Your school teaches in person at the moment. When online teaching is turned on, your classes will appear here."

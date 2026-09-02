@@ -3,7 +3,6 @@
 // Server component: prop composition only, so none of it reaches the client.
 import Link from "next/link"
 
-import { typographyVariants } from "@/lib/typography"
 import { cn } from "@/lib/utils"
 
 import type { LandingPolicy, LandingSectionProps, LandingViewer } from "./types"
@@ -14,8 +13,13 @@ interface HeroProps extends LandingSectionProps {
 }
 
 /**
- * The page's opening: eyebrow, a headline that says what live classes ARE for
- * this school, one supporting sentence, and the ways in.
+ * The page's opening: a headline that says what live classes ARE for this
+ * school, and the ways in.
+ *
+ * No eyebrow and, when the school is online, no supporting sentence — the
+ * banner is one line of type over its buttons. The block name was already in
+ * the page heading and the sidebar, and the paragraph under it explained the
+ * product to people who are here to join a class.
  *
  * It is deliberately NOT a status board. An earlier version put the live-now
  * state in the `<h1>` ("one class is live right now" · "hybrid teaching" ·
@@ -51,10 +55,6 @@ export function LiveStatusHero({
     <section className="mb-10">
       <div className="flex flex-col justify-between gap-8 rounded-[36px] bg-[#00bc6d] px-8 py-10 text-[#050505] sm:px-12 lg:min-h-[259px] lg:flex-row lg:items-center lg:py-12">
         <div className="min-w-0">
-          <p className={cn(typographyVariants.hint, "mb-3 text-[#050505]/70")}>
-            {dictionary?.title}
-          </p>
-
           <h1 className="max-w-[26ch] text-3xl font-extrabold tracking-tight text-balance sm:text-4xl lg:text-5xl">
             {policy.isOnline ? (
               <MarkedHeadline
@@ -66,13 +66,17 @@ export function LiveStatusHero({
             )}
           </h1>
 
-          <p className="mt-4 max-w-[52ch] text-lg text-[#050505]/75">
-            {policy.isOnline
-              ? d?.hero?.subtitle
-              : viewer.canConfigure
+          {/* Only the offline school gets a sentence: it has to be told why
+              there is nothing here and what turns it on. An online school's
+              banner is the headline alone — a paragraph restating the product
+              to people already using it is noise above their own classes. */}
+          {policy.isOnline ? null : (
+            <p className="mt-4 max-w-[52ch] text-lg text-[#050505]/75">
+              {viewer.canConfigure
                 ? d?.hero?.offlineAdmin
                 : d?.hero?.offlineOther}
-          </p>
+            </p>
+          )}
 
           <div className="mt-7 flex flex-wrap items-center gap-2">
             <PrimaryAction d={d} lang={lang} viewer={viewer} policy={policy} />
