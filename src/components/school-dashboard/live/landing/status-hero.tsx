@@ -53,7 +53,7 @@ export function LiveStatusHero({
 
   return (
     <section className="mb-10">
-      <div className="flex flex-col justify-between gap-8 rounded-[36px] bg-[#00bc6d] px-8 py-10 text-[#050505] sm:px-12 lg:min-h-[259px] lg:flex-row lg:items-center lg:py-12">
+      <div className="flex flex-col justify-between gap-8 rounded-[36px] bg-[#00bc6d] px-8 py-8 text-[#050505] sm:px-12 lg:min-h-[180px] lg:flex-row lg:items-center lg:py-9">
         <div className="min-w-0">
           <h1 className="max-w-[26ch] text-3xl font-extrabold tracking-tight text-balance sm:text-4xl lg:text-5xl">
             {policy.isOnline ? (
@@ -84,6 +84,18 @@ export function LiveStatusHero({
             {viewer.canSchedule && policy.isOnline ? (
               <Link className={pill("ghost")} href={`/${lang}/live/schedule`}>
                 {d?.actions?.schedule}
+              </Link>
+            ) : null}
+
+            {/* Same destination as the role guide's recordings card — the
+                ended-sessions filter, not a route of its own. ACCOUNTANT is
+                excluded by `canViewRecordings`, as it is everywhere else. */}
+            {viewer.canViewRecordings && policy.isOnline ? (
+              <Link
+                className={pill("ghost")}
+                href={`/${lang}/live/dashboard?status=ended`}
+              >
+                {d?.actions?.recordings}
               </Link>
             ) : null}
 
