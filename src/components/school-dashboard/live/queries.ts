@@ -789,6 +789,41 @@ export async function getLiveLandingSessions(
 }
 
 /**
+ * Classes that have already happened, for the landing page's second shelf.
+ *
+ * Deliberately NOT recordings. Every recording surface in this block is gated
+ * on `isRecordingConfigured()`, and a school that has never provisioned the
+ * bucket has none at all — the shelf would be permanently invisible. An ended
+ * session, by contrast, exists the moment the room closes, carries the same
+ * subject artwork as a live one, and is the row a reader actually wants: it
+ * links to the session page, which is where a recording appears IF there is
+ * one.
+ *
+ * Over-fetched relative to what the list column renders, because the tile
+ * column beside it is one-per-SUBJECT and dedupes out of the same rows — one
+ * round trip instead of a second grouped query.
+ */
+export async function getLiveLandingPast(
+  schoolId: string,
+  opts: {
+    sectionIds?: string[]
+    teacherId?: string
+    take?: number
+  } = {}
+) {
+  const scope = landingScope(schoolId, opts)
+
+  return db.conference.findMany({
+    where: { ...scope, status: "ended" },
+    // `id` breaks the tie: a seeded school schedules a whole grade into the
+    // same minute, and without it the page reorders between renders.
+    orderBy: [{ scheduledStart: "desc" }, { id: "desc" }],
+    take: opts.take ?? 24,
+    include: landingSessionInclude,
+  })
+}
+
+/**
  * Live sessions attached to a catalog lesson, for the lesson page.
  *
  * `Conference.catalogLessonId` already pulls the lesson's videos and materials

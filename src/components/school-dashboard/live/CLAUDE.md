@@ -174,13 +174,24 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   cannot blank the strip. `getLiveLinkCoverage` RETURNS its failure rather than
   throwing, so check the `success` discriminant — a try/catch alone misses it.
 - **The landing hero states the OFFER, not the status (2026-09-01).**
-  `landing/status-hero.tsx` is the `#00bc6d` banner — the saas-marketing
-  (thmanyah) hero's colour triad carried whole: green ground, black ink,
-  `#9fe5b1` mint mark behind the headline's last phrase. Everything on it is a
-  LITERAL hex and pinned dark: a brand ground does not invert, so a
-  `primary-foreground` token on it would be white in light mode and black in
-  dark — exactly backwards. `LiveMark` needs `isolate` on its wrapper, or the
-  mark's `-z-10` puts it behind the banner's own background and it vanishes.
+  `landing/status-hero.tsx` is the banner. As of 2026-09-02 its ground is
+  thmanyah.com's own: `#000d04` near-black with an angular field driven into
+  the inline-END side — `#045238` deep plane, the بالقلم `#00bc6d` wedge over
+  it, cut back by two straight corners and one large circle. The colours are
+  SAMPLED from `.clone/thmanyah-banner`, not guessed; only the bright wedge is
+  ours rather than the reference's `#00dd76`. What is deliberately NOT carried
+  is the reference's picture: its banner is a promotional creative —
+  photographed athletes, club kit, third-party wordmarks — so the rebuild takes
+  the composition and leaves the photograph. There is no hero image on this
+  page at all; its imagery is the catalog artwork on the cards below.
+
+  Everything on the banner is a LITERAL hex and pinned LIGHT: a brand ground
+  does not invert, so a `primary-foreground` token on it would be white in
+  light mode and black in dark — exactly backwards. The decorative field is
+  positioned logically (`end-0`) but drawn PHYSICALLY inside its wrapper —
+  `clip-path` has no logical form, so the wrapper flips whole (`ltr:-scale-x-100`)
+  rather than each polygon being mirrored by hand. It is hidden below `md`,
+  where the card stacks and a 40% field would sit under the headline.
 
   The hero used to carry the live-now state — an `<h1>` reading "one class is
   live right now", the delivery mode under it and a "Join now" pointing at
@@ -219,6 +230,28 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   `read_school_dashboard` and sees every session, but `authorization.ts` grants
   it neither a join role nor `view_recordings`, so the page must not offer it
   either. Covered by `src/tests/school-dashboard/live/landing-roles.test.ts`.
+- **The second shelf is PAST CLASSES, not recordings (2026-09-02).**
+  `landing/past-shelf.tsx` mirrors thmanyah.com's shelf block — the section
+  that follows the editorial rows the strip already carries: an icon + 24px
+  heading with a "more" link opposite, then a list column beside a grid of
+  square tiles. Recordings were the obvious mapping and are the wrong one:
+  every recording surface in this block is gated on `isRecordingConfigured()`,
+  so a school that has never provisioned the bucket has none at all and the
+  shelf would be permanently invisible. An ENDED session exists the moment the
+  room closes, carries the same subject artwork, and links to the session page
+  — which is where a recording appears if there is one.
+
+  The tile column is the one real reinterpretation. The reference fills it with
+  the SHOWS its episodes came from; a school's equivalent is the subject, so
+  `getLiveLandingPast` over-fetches (24 rows for 2 printed) and the tiles dedupe
+  out of the same rows — one round trip, not a second grouped query. First
+  occurrence wins, so a tile lands on that subject's most recent class.
+
+  Gated on the ROWS, never on `policy.isOnline`: a school that has gone back to
+  the classroom still has classes it taught online, and that history is the only
+  one the page carries. Past rows print a DATE where a live one prints a time —
+  `09:40` on a row from last week reads as today.
+
 - **The strip under the banner has no heading (2026-09-02).** The reference's
   block there is article rows and nothing else, so `liveTitle` / `upcomingTitle`
   as `<h2>`s and the "view all" link are gone. What they carried moved into the

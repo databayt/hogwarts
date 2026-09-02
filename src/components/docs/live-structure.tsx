@@ -167,12 +167,18 @@ export function LiveStructure({ className }: LiveStructureProps) {
             {
               name: "status-hero.tsx",
               type: "file",
-              description: "the green banner: eyebrow + headline + the way in",
+              description:
+                "the dark banner: an angular green field + the headline",
             },
             {
               name: "now-strip.tsx",
               type: "file",
               description: "live / coming-up, with catalog subject art",
+            },
+            {
+              name: "past-shelf.tsx",
+              type: "file",
+              description: "classes already taught, beside their subject tiles",
             },
             {
               name: "readiness-band.tsx",

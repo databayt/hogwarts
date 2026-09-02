@@ -131,7 +131,7 @@ description: مؤتمرات الفيديو — كتلة واحدة قائمة ب
 | `list-permissions.ts`                                                             | التحكّم في الواجهة (التبويبات + الإظهار/الإخفاء حسب الدور) للطبقتين الغنية والقائمة.                                                                    |
 | `validation.ts` · `list-validation.ts`                                            | مخطّطات Zod والأنواع المستنتجة (جلسات غنية / نماذج الجدول).                                                                                             |
 | `columns.tsx` · `table.tsx` · `form.tsx` · `schedule-form.tsx` · `list-params.ts` | واجهة DataTable والشبكة على العميل ونموذجا الإنشاء (المنبثق + صفحة مستقلّة).                                                                            |
-| `landing/` · `nav.tsx`                                                            | صفحة `/live` (واجهة الحالة · شريط المباشر/القادم · شريط الجاهزية · دليل الدور · شريط البدء) والعنوان وشريط التبويبات فوق أسطح `(app)`.                  |
+| `landing/` · `nav.tsx`                                                            | صفحة `/live` (لافتة الواجهة · شريط المباشر/القادم · رفّ الحصص السابقة · شريط الجاهزية · دليل الدور · شريط البدء) والعنوان وشريط التبويبات فوق أسطح `(app)`.                  |
 | `detail.tsx` · `room.tsx` · `participants-panel.tsx`                              | تفاصيل الجلسة · غرفة LiveKit داخل التطبيق · طبقة إشراف المضيف/المضيف المساعد (الطرد).                                                                   |
 | `recordings.tsx` · `recording-player.tsx` · `section-recording-policy.tsx`        | قائمة التسجيلات · مشغّل برابط موقّع كسول · إلغاء التسجيل لكل شعبة.                                                                                      |
 | `settings-form.tsx`                                                               | نموذج سياسة المدرسة للمدير (الاحتفاظ / الحد الأقصى للتزامن / المدة القصوى / التسجيل الافتراضي) + ترحيل الفصول.                                          |
@@ -143,7 +143,7 @@ description: مؤتمرات الفيديو — كتلة واحدة قائمة ب
 ## تدفّق البيانات
 
 ```
-landing (/live)          landing/content.tsx (server) → لافتة الواجهة · live/upcoming strip · bands
+landing (/live)          landing/content.tsx (server) → لافتة الواجهة · live/upcoming strip · past shelf · bands
    └─ عرض الجلسات
 index (/live/dashboard)  content.tsx (server) → table.tsx (client) → form.tsx (modal create)
    └─ row Join / detail

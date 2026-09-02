@@ -4,6 +4,32 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Landing: past-classes shelf + the banner ground 2026-09-02 — closed
+
+- [x] **A second shelf, in the reference's shelf geometry.**
+      `landing/past-shelf.tsx` — icon + 24px heading, a "more" link opposite,
+      then a list column (two ended classes) beside a grid of six subject
+      tiles. Backed by `getLiveLandingPast`, section-scoped through the same
+      `resolveViewerSectionScope` the strip uses, and folded into the page's
+      ONE batched `localize` / `getNames` / `getLabels` pass rather than a
+      second one.
+- [x] **The banner takes the reference's ground.** `#000d04` with an angular
+      green field on the inline-end side, white ink, white pill. The headline
+      is now `تجربة تفاعلية تجعل التعليم أقرب وأكثر تأثيراً`, with the opening
+      phrase carrying the weight.
+
+- [ ] **Two tiles can render the same picture.** The tile grid dedupes by
+      SUBJECT id, which is correct, but several demo catalog subjects share one
+      `thumbnailKey` — so the grid shows what looks like a duplicate. Deduping
+      by artwork instead would drop a real subject from the shelf, so the fix
+      is upstream (distinct catalog art), not in the component.
+
+- [ ] **The demo's `upcoming` slice has been empty for days.** Every
+      `scheduled` row on the demo school sits on 2026-08-30, so the strip's
+      two-up small rows have still never rendered in a browser. Re-run
+      `pnpm db:seed:single conference` before trusting any change to that half
+      of `now-strip.tsx`.
+
 ## Landing hero 2026-09-01 — closed
 
 - [x] **The hero is a hero, not a second status board.** Green `#00bc6d` banner

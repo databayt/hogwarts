@@ -74,3 +74,21 @@ export interface LandingReadiness {
   /** Null when the coverage read failed or the school has no active term. */
   coverage: { total: number; covered: number; gapCount: number } | null
 }
+
+/**
+ * One square in the past shelf's tile column — a SUBJECT, not a session.
+ *
+ * The reference's shelf pairs a list of items with a grid of the channels
+ * those items came from; the school's equivalent of a channel is the subject,
+ * and its catalog artwork is the only square image this block has.
+ */
+export interface LandingSubjectTile {
+  /** Catalog subject id — the dedupe key, and the React key. */
+  id: string
+  /** Localized subject name; the tile's only text, on the image's alt. */
+  name: string
+  imageUrl: string | null
+  color: string | null
+  /** The subject's most recent ended session, which is where the tile lands. */
+  sessionId: string
+}

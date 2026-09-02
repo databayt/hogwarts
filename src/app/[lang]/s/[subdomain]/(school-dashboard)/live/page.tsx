@@ -17,6 +17,7 @@ import type {
   LandingPolicy,
   LandingReadiness,
   LandingSession,
+  LandingSubjectTile,
 } from "@/components/school-dashboard/live/landing/types"
 import {
   canOpenLanding,
@@ -28,6 +29,7 @@ import {
   ONLINE_POLICY_SELECT,
 } from "@/components/school-dashboard/live/online-policy"
 import {
+  getLiveLandingPast,
   getLiveLandingSessions,
   resolveViewerSectionScope,
 } from "@/components/school-dashboard/live/queries"
@@ -50,6 +52,11 @@ export async function generateMetadata({
     description: d?.description,
   }
 }
+
+/** Rows printed in the past shelf's list column, and squares beside it. Both
+ *  are the reference's own counts: two rows against two rows of three tiles. */
+const PAST_LIST_ROWS = 2
+const PAST_TILES = 6
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -85,6 +92,8 @@ export default async function Page({ params }: Props) {
   }
   let live: LandingSession[] = []
   let upcoming: LandingSession[] = []
+  let past: LandingSession[] = []
+  let pastSubjects: LandingSubjectTile[] = []
   let readiness: LandingReadiness | null = null
 
   if (schoolId) {
@@ -146,13 +155,15 @@ export default async function Page({ params }: Props) {
         // day's live/total counts, and dropping that state from it drops the
         // second query with it (`getLiveLandingCounts` stays in queries.ts —
         // see ISSUE.md).
-        const rows = await getLiveLandingSessions(schoolId, {
-          now,
-          sectionIds,
-          teacherId,
-        })
+        // Both landing reads in one round trip. The past shelf over-fetches
+        // (24 rows for 2 printed) because its tile column is one-per-SUBJECT
+        // and dedupes out of the same rows.
+        const [rows, pastRows] = await Promise.all([
+          getLiveLandingSessions(schoolId, { now, sectionIds, teacherId }),
+          getLiveLandingPast(schoolId, { sectionIds, teacherId }),
+        ])
 
-        const all = [...rows.live, ...rows.upcoming]
+        const all = [...rows.live, ...rows.upcoming, ...pastRows]
 
         // ONE batched translation pass over both slices — titles via localize,
         // names via getNames, labels via getLabels. Never per row.
@@ -178,8 +189,15 @@ export default async function Page({ params }: Props) {
           displayLang === "ar" ? "ar" : "en-US",
           { hour: "2-digit", minute: "2-digit", timeZone }
         )
+        // A class that is over wants the DAY it happened, not the minute it
+        // started — "09:40" on a row from last Tuesday reads as today.
+        const dateFormat = new Intl.DateTimeFormat(
+          displayLang === "ar" ? "ar" : "en-US",
+          { day: "numeric", month: "long", timeZone }
+        )
 
         const liveIds = new Set(rows.live.map((r) => r.id))
+        const pastIds = new Set(pastRows.map((r) => r.id))
         const toSession = (
           r: (typeof localizedRows)[number]
         ): LandingSession => {
@@ -197,7 +215,9 @@ export default async function Page({ params }: Props) {
               ? (labels.get(r.section.name) ?? r.section.name)
               : null,
             scheduledStart: r.scheduledStart
-              ? timeFormat.format(new Date(r.scheduledStart))
+              ? (pastIds.has(r.id) ? dateFormat : timeFormat).format(
+                  new Date(r.scheduledStart)
+                )
               : "",
             isLive: liveIds.has(r.id),
             // `Subject` IS the catalog subject, so its artwork is one FK away.
@@ -211,8 +231,30 @@ export default async function Page({ params }: Props) {
 
         live = localizedRows.filter((r) => liveIds.has(r.id)).map(toSession)
         upcoming = localizedRows
-          .filter((r) => !liveIds.has(r.id))
+          .filter((r) => !liveIds.has(r.id) && !pastIds.has(r.id))
           .map(toSession)
+
+        // Newest first, straight out of the query's order.
+        past = localizedRows
+          .filter((r) => pastIds.has(r.id))
+          .slice(0, PAST_LIST_ROWS)
+          .map(toSession)
+
+        // One tile per SUBJECT: first occurrence wins, which is that subject's
+        // most recent class and therefore where the tile lands.
+        const tiles = new Map<string, LandingSubjectTile>()
+        for (const r of localizedRows) {
+          const subject = r.subject
+          if (!pastIds.has(r.id) || !subject || tiles.has(subject.id)) continue
+          tiles.set(subject.id, {
+            id: subject.id,
+            name: labels.get(subject.name) ?? subject.name,
+            imageUrl: getCatalogImageUrl(subject.thumbnail, "sm"),
+            color: subject.color ?? null,
+            sessionId: r.id,
+          })
+        }
+        pastSubjects = [...tiles.values()].slice(0, PAST_TILES)
       }
     } catch (error) {
       console.error("[LiveLanding] Could not load sessions:", error)
@@ -255,6 +297,8 @@ export default async function Page({ params }: Props) {
       readiness={readiness}
       live={live}
       upcoming={upcoming}
+      past={past}
+      pastSubjects={pastSubjects}
     />
   )
 }

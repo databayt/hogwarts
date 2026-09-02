@@ -46,9 +46,12 @@ conference/
 ├── nav.tsx                                                    heading + tab strip for the (app) surfaces
 ├── landing/                                                   the /live landing page
 │   ├── content.tsx           composes the sections below
-│   ├── status-hero.tsx       the green (#00bc6d) banner: eyebrow + headline + the way in
+│   ├── status-hero.tsx       the dark (#000d04) banner: an angular green field, the
+│   │                     headline and the two ways in
 │   ├── now-strip.tsx         live / coming-up — thmanyah.com's editorial row (mirrored
 │   │                     geometry), section-scoped, school-TZ times, catalog art
+│   ├── past-shelf.tsx        classes already taught — thmanyah.com's shelf block
+│   │                     (mirrored geometry): a list column beside subject tiles
 │   ├── readiness-band.tsx    can this school teach online (ADMIN/DEVELOPER only)
 │   ├── role-guide.tsx        what THIS role can do here — real links, not marketing
 │   ├── get-started-band.tsx  the pitch + 3 setup steps, only while not yet online

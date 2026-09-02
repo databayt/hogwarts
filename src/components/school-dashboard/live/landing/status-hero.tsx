@@ -29,22 +29,27 @@ interface HeroProps extends LandingSectionProps {
  * The one state it still branches on is whether the school teaches online at
  * all, because that changes what the page IS, not merely what is on today.
  *
- * There is no hero image. The imagery on this page is the catalog artwork on
- * the session cards below — real, per-subject, and already paid for — rather
- * than one stock photograph standing in for every class.
+ * There is no hero PHOTOGRAPH. The reference's banner is a promotional
+ * creative — photographed athletes, club kit, third-party logos — and none of
+ * that is ours to carry, so what this rebuilds is the banner's visual
+ * language, not its picture: the near-black ground, the angular bright-green
+ * field driven into the inline-end side, the white two-line headline with one
+ * phrase in extrabold, and the white pill under it. The rest of the page's
+ * imagery is catalog artwork on the session cards below — real, per-subject,
+ * and already paid for.
  *
- * The shell is the wide `rounded-[36px]` banner card thmanyah.com opens with —
- * its proportions and corner radius, carrying our own content. It also takes
- * that hero's colour triad whole: the بالقلم green `#00bc6d` as the ground,
- * black ink on it, and the mint `#9fe5b1` mark behind the phrase the headline
- * lands on. Literal hexes on purpose — this is the brand ground, not a themed
- * surface, so it does NOT invert and every piece of ink on it is pinned dark
- * rather than tokenised. Nothing here may use `primary-foreground`: on a green
- * ground that token is white in light mode and black in dark, which is exactly
- * backwards.
+ * The colours are sampled from the reference banner rather than guessed:
+ * `#000d04` ground, `#045238` for the deeper plane. The bright wedge is OURS
+ * — the بالقلم `#00bc6d` rather than the reference's `#00dd76`, because that
+ * is the one part of the composition the brand actually owns.
  *
- * The card's geometry is that banner's, measured: 1170px of container at a
- * 36px radius, 259px tall, 32px of air under it.
+ * Literal hexes on purpose. This is a brand ground, not a themed surface: it
+ * does NOT invert, and every piece of ink on it is pinned light rather than
+ * tokenised. Nothing here may use `primary-foreground` — on this ground that
+ * token is white in light mode and black in dark, which is exactly backwards.
+ *
+ * The card's geometry is the reference banner's, measured: 1170px of
+ * container at a 36px radius, 259px tall, 32px of air under it.
  */
 export function LiveStatusHero({
   dictionary,
@@ -56,8 +61,10 @@ export function LiveStatusHero({
 
   return (
     <section className="mb-8">
-      <div className="flex flex-col justify-between gap-8 rounded-[36px] bg-[#00bc6d] px-8 py-10 text-[#050505] sm:px-12 lg:min-h-[259px] lg:flex-row lg:items-center lg:py-12">
-        <div className="min-w-0">
+      <div className="relative isolate flex flex-col justify-between gap-8 overflow-hidden rounded-[36px] bg-[#000d04] px-8 py-10 text-white sm:px-12 lg:min-h-[259px] lg:flex-row lg:items-center lg:py-12">
+        <BannerField />
+
+        <div className="relative min-w-0">
           {/* Two lines of ~7 words inside a ~420px measure, at the
               reference's ~38px — its own headline is 4 words over 3, with the
               emphasis carried by WEIGHT inside an otherwise medium line rather
@@ -78,7 +85,7 @@ export function LiveStatusHero({
               banner is the headline alone — a paragraph restating the product
               to people already using it is noise above their own classes. */}
           {policy.isOnline ? null : (
-            <p className="mt-4 max-w-[52ch] text-lg text-[#050505]/75">
+            <p className="mt-4 max-w-[52ch] text-lg text-white/75">
               {viewer.canConfigure
                 ? d?.hero?.offlineAdmin
                 : d?.hero?.offlineOther}
@@ -97,6 +104,56 @@ export function LiveStatusHero({
         </div>
       </div>
     </section>
+  )
+}
+
+/**
+ * The banner's angular green field.
+ *
+ * The reference drives a bright wedge into one side of a near-black card and
+ * cuts it back with straight diagonals and one large curve; the photograph
+ * sits on top of that field. This is the field WITHOUT the photograph — the
+ * composition is the part that belongs to the layout, and it is the part a
+ * school's banner can carry honestly.
+ *
+ * Positioned on the inline-END side, so it lands where the reference puts it
+ * on an Arabic page (physical left) and mirrors to the right on /en. Inside
+ * the wrapper every coordinate is PHYSICAL on purpose: `clip-path` has no
+ * logical form, so mixing logical offsets with physical polygons would send
+ * half the composition the wrong way. The whole wrapper flips instead.
+ *
+ * Hidden below md, where the card stacks and a 46% field would sit under the
+ * headline rather than beside it.
+ */
+function BannerField() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-y-0 end-0 -z-10 hidden w-[40%] max-w-[470px] overflow-hidden md:block ltr:-scale-x-100"
+      aria-hidden="true"
+    >
+      {/* The deeper plane, then the brand wedge over it — the field's outer
+          edge slopes toward the type rather than ending square. */}
+      <div
+        className="absolute inset-0 bg-[#045238]"
+        style={{ clipPath: "polygon(0 0, 100% 0, 70% 100%, 0 100%)" }}
+      />
+      <div
+        className="absolute inset-0 bg-[#00bc6d]"
+        style={{ clipPath: "polygon(0 0, 88% 0, 55% 100%, 0 100%)" }}
+      />
+
+      {/* Three cuts back to the ground: a corner at each end of the field and
+          one curve through it. */}
+      <div
+        className="absolute inset-0 bg-[#000d04]"
+        style={{ clipPath: "polygon(0 0, 36% 0, 0 50%)" }}
+      />
+      <div
+        className="absolute inset-0 bg-[#000d04]"
+        style={{ clipPath: "polygon(0 100%, 32% 100%, 0 62%)" }}
+      />
+      <div className="absolute -top-[62%] left-[26%] aspect-square w-[58%] rounded-full bg-[#000d04]" />
+    </div>
   )
 }
 
@@ -232,18 +289,18 @@ function MarkedHeadline({
  * The homepage's small pill button, rather than a full-width one — a compact
  * action reads as a tool, a wide one reads as a landing page.
  *
- * The reference hero's CTA: a black pill with white ink on the green ground,
+ * The reference hero's CTA: a white pill with dark ink on the dark ground,
  * pinned like everything else on this banner so it reads the same in both
- * themes. A token pair would flip to white-on-green in dark mode and lose the
- * contrast the ground was chosen for.
+ * themes. A token pair would invert in dark mode and lose the contrast the
+ * ground was chosen for.
  */
 function pill(variant: "default" | "ghost") {
   return cn(
     "inline-flex h-10 items-center justify-center gap-2 rounded-full px-5",
     "text-sm font-medium whitespace-nowrap transition-colors",
-    "outline-none focus-visible:ring-2 focus-visible:ring-[#050505]/40",
+    "outline-none focus-visible:ring-2 focus-visible:ring-white/50",
     variant === "default"
-      ? "bg-white text-[#050505] hover:bg-white/90"
-      : "text-[#050505]/75 hover:bg-[#050505]/10 hover:text-[#050505]"
+      ? "bg-white text-[#000d04] hover:bg-white/90"
+      : "text-white/75 hover:bg-white/10 hover:text-white"
   )
 }

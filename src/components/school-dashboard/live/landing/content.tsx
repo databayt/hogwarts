@@ -6,6 +6,7 @@
 
 import { LiveGetStartedBand } from "./get-started-band"
 import { LiveNowStrip } from "./now-strip"
+import { LivePastShelf } from "./past-shelf"
 import { LiveReadinessBand } from "./readiness-band"
 import { LiveRoleGuide } from "./role-guide"
 import { LiveStatusHero } from "./status-hero"
@@ -14,6 +15,7 @@ import type {
   LandingReadiness,
   LandingSectionProps,
   LandingSession,
+  LandingSubjectTile,
   LandingViewer,
   LiveSettingsDictionary,
 } from "./types"
@@ -25,6 +27,8 @@ interface Props extends LandingSectionProps {
   readiness: LandingReadiness | null
   live: LandingSession[]
   upcoming: LandingSession[]
+  past: LandingSession[]
+  pastSubjects: LandingSubjectTile[]
 }
 
 /**
@@ -50,6 +54,8 @@ export function LiveLandingContent({
   readiness,
   live,
   upcoming,
+  past,
+  pastSubjects,
 }: Props) {
   return (
     <>
@@ -67,6 +73,18 @@ export function LiveLandingContent({
           live={live}
           upcoming={upcoming}
           viewer={viewer}
+        />
+      ) : null}
+
+      {/* Gated on the ROWS, not on `policy.isOnline`: a school that has since
+          gone back to the classroom still has classes it taught online, and
+          hiding them would lose the only history the page carries. */}
+      {past.length > 0 ? (
+        <LivePastShelf
+          dictionary={dictionary}
+          lang={lang}
+          sessions={past}
+          subjects={pastSubjects}
         />
       ) : null}
 
