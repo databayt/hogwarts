@@ -185,6 +185,15 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   the composition and leaves the photograph. There is no hero image on this
   page at all; its imagery is the catalog artwork on the cards below.
 
+  The headline is set in **thmanyah sans**, already vendored in `public/fonts/`
+  and declared by `src/styles/thmanyah-clone.css`, which the ROOT layout
+  imports — so it is available on this page without it loading anything of its
+  own. The family ships five weights (300 · 400 · 500 · 700 · 900) and the
+  headline uses two: 300 for the sentence, 700 for the phrase carrying it. Do
+  not reach for a weight the family does not have (the mark was `font-extrabold`
+  = 800): the browser synthesises the missing one and loses the face's own
+  drawing, which is the whole reason to set it.
+
   Everything on the banner is a LITERAL hex and pinned LIGHT: a brand ground
   does not invert, so a `primary-foreground` token on it would be white in
   light mode and black in dark — exactly backwards. The decorative field is

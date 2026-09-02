@@ -67,9 +67,21 @@ export function LiveStatusHero({
         <div className="relative min-w-0">
           {/* Two lines of ~7 words inside a ~420px measure, at the
               reference's ~38px — its own headline is 4 words over 3, with the
-              emphasis carried by WEIGHT inside an otherwise medium line rather
-              than by a highlight. */}
-          <h1 className="max-w-[16ch] text-3xl leading-[1.35] font-medium text-balance sm:text-4xl lg:max-w-[420px] lg:text-[38px]">
+              emphasis carried by WEIGHT inside an otherwise light line rather
+              than by a highlight.
+
+              The face is thmanyah sans, already vendored in `public/fonts/`
+              and declared by `src/styles/thmanyah-clone.css`, which the ROOT
+              layout imports — so it is available here without this page
+              loading anything of its own. It ships five weights (300 · 400 ·
+              500 · 700 · 900) and this line uses two of them: 300 for the
+              sentence, 700 for the phrase that carries it. A weight the family
+              does not have would be synthesised by the browser and lose the
+              face's own drawing, which is the whole reason to use it. */}
+          <h1
+            className="max-w-[16ch] text-3xl leading-[1.35] font-light text-balance sm:text-4xl lg:max-w-[420px] lg:text-[38px]"
+            style={{ fontFamily: '"thmanyah sans", sans-serif' }}
+          >
             {policy.isOnline ? (
               <MarkedHeadline
                 template={d?.hero?.title}
@@ -279,7 +291,7 @@ function MarkedHeadline({
   return (
     <>
       {before}
-      <strong className="font-extrabold">{mark}</strong>
+      <strong className="font-bold">{mark}</strong>
       {after}
     </>
   )
