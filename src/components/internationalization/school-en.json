@@ -5214,11 +5214,9 @@
             "progress": "{done} of {total} min"
           }
         },
-        "past": {
-          "title": "Past classes",
-          "more": "More",
-          "ended": "Ended",
-          "subjects": "Subjects taught live"
+        "catchUp": {
+          "title": "Catch up",
+          "recording": "Recording"
         },
         "readiness": {
           "title": "Ready to teach online",

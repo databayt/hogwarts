@@ -13,9 +13,10 @@ import type {
   LandingSession,
   LandingViewer,
 } from "./types"
+import { rowContext } from "./viewer"
 
 /**
- * One session as the reference's article row, at three weights.
+ * One session as the reference's article row, at two weights.
  *
  * Every value here is off its markup, not estimated: the row carries
  * `margin-inline: -8px` with a 16px row-gap and NO column gap — the space
@@ -26,11 +27,11 @@ import type {
  * every width.
  *
  * The art column is 104px basis on mobile — an 80px square once its 12px
- * padding is off — and 144px from md, giving 120. One size for every weight;
+ * padding is off — and 144px from md, giving 120. One size for both weights;
  * the reference's 274px lead column is deliberately not taken (see below). The
  * copy column is padded 8px and flexes.
  *
- * The three sizes:
+ * The two sizes:
  *
  *   lead   — the strip's featured card: the class that is running, or the next
  *            one to start. Every row it has, and the 20px title at lg.
@@ -38,8 +39,10 @@ import type {
  *            badge, then one meta line. It exists so the lead reads as the
  *            lead — the hierarchy is bought by simplifying its neighbours,
  *            not by decorating it.
- *   small  — the article row at its ordinary weight, which is what the past
- *            shelf draws. The lead's rows, at the smaller title.
+ *
+ * There used to be a third, `small`, which the past shelf drew. That shelf is
+ * now the catch-up shelf and draws a card of its own, so the row is back to
+ * the two weights the strip actually uses.
  *
  * The whole row is one link with a tinted hover, as theirs is.
  */
@@ -54,7 +57,7 @@ export function LandingSessionRow({
   dictionary: LandingSectionProps["dictionary"]
   lang: string
   viewer: LandingViewer
-  size: "lead" | "brief" | "small"
+  size: "lead" | "brief"
 }) {
   const href = joinHref(session, viewer, lang)
   const isLead = size === "lead"
@@ -107,7 +110,7 @@ export function LandingSessionRow({
           <h3
             className={cn(
               "line-clamp-2 text-base font-semibold",
-              !isBrief && "lg:text-xl lg:leading-8"
+              isLead && "lg:text-xl lg:leading-8"
             )}
           >
             {session.subjectName ?? session.title}
@@ -147,9 +150,7 @@ export function LandingSessionRow({
               </p>
             ) : null}
 
-            <div
-              className={cn("flex flex-col", isLead ? "gap-y-1.5" : "gap-y-1")}
-            >
+            <div className="flex flex-col gap-y-1.5">
               {viewer.showsTeacher && session.teacherName ? (
                 <span className="flex items-center gap-2 text-sm">
                   <Portrait
@@ -230,22 +231,6 @@ function BriefMeta({
       ))}
     </div>
   )
-}
-
-/**
- * Where the class sits, in the words this reader needs.
- *
- * `Section.name` is "Grade 7-A" — the grade INCLUDING the class letter — so
- * printing both is printing the grade twice. A reader who spans sections gets
- * the section; a student, whose rows are all one section, gets the grade.
- */
-function rowContext(
-  session: LandingSession,
-  viewer: LandingViewer
-): string | null {
-  return viewer.showsSection
-    ? (session.sectionName ?? session.gradeName)
-    : (session.gradeName ?? session.sectionName)
 }
 
 /**
@@ -389,7 +374,7 @@ function Art({ session, sizes }: { session: LandingSession; sizes: string }) {
       src={session.imageUrl}
       alt=""
       fill
-      className="object-cover transition-transform duration-300 group-hover:scale-105"
+      className="object-cover"
       sizes={sizes}
       unoptimized
     />

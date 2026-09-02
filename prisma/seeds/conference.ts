@@ -36,8 +36,11 @@
  *   5. A school-wide assembly, three recurring external links, and one declared
  *      holiday ten days out — each a feature the UI can show.
  *
- * Deliberately NOT here: recordings (there is no bucket to point at, and a
- * `ready` row with no object is a broken player).
+ * Recordings are seeded ONLY when the demo already holds a playable object.
+ * The original note here said they were deliberately absent, because a `ready`
+ * row with no object behind it is a broken player — that reasoning stands, and
+ * `seedRecordings` obeys it by pointing every row it writes at the storage key
+ * of a real `Video` row and writing nothing at all when there is none.
  *
  * OPERATIONAL NOTE for the prod demo: flipping `conferenceOnlineDefault` arms
  * the live cron. From its next tick the demo materializes for real and fans
@@ -176,6 +179,7 @@ export async function seedConference(
     // to reach the skip path too — it was added after the demo was first
     // seeded, and a count guard that returns before it would leave every
     // existing school without it forever.
+    await seedClockShowcase(prisma, { schoolId, lang, termId: term.id })
     const anchored = await attachCatalogLessons(prisma, schoolId)
     logSuccess(
       "Conference sessions",
@@ -272,6 +276,8 @@ export async function seedConference(
     teachingDays,
   })
 
+  await seedClockShowcase(prisma, { schoolId, lang, termId: term.id })
+  await seedRecordings(prisma, schoolId)
   const anchored = await attachCatalogLessons(prisma, schoolId)
 
   const total = history + next
@@ -281,6 +287,100 @@ export async function seedConference(
     `${history} ended · ${next} scheduled · ${anchored} lesson-anchored`
   )
   return total
+}
+
+/**
+ * A handful of `ready` recordings, so /live's recordings pair has something to
+ * rank.
+ *
+ * The rule this seed used to state — never write a `ready` row, because a
+ * `ready` row with no S3 object is a player that spins forever — is kept
+ * rather than dropped. It is obeyed by POINTING at an object that demonstrably
+ * exists: the storage key of a `Video` the demo already holds. When the school
+ * has no own-storage video, this writes nothing and the landing page's
+ * recordings section correctly disappears.
+ *
+ * Four rows, and WHICH four is the point: two on classes the documented demo
+ * student missed, two on classes they sat through. The landing page ranks a
+ * missed recording above an attended one, and a fixture where every recording
+ * is missed would let that ranking break without any demo noticing.
+ *
+ * `egressId` is `@unique` and derived from the session id, so a re-run upserts
+ * rather than duplicating. A SEED_FORCE run drops these with their sessions.
+ */
+async function seedRecordings(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<number> {
+  const source = await prisma.video.findFirst({
+    where: { schoolId, storageKey: { not: null } },
+    select: { storageKey: true, durationSeconds: true },
+    orderBy: { id: "asc" },
+  })
+  if (!source?.storageKey) return 0
+
+  const bucket = process.env.LIVEKIT_RECORDING_BUCKET?.replace(/"/g, "")
+  const region = process.env.LIVEKIT_RECORDING_REGION?.replace(/"/g, "")
+  if (!bucket) return 0
+
+  const student = await prisma.student.findFirst({
+    where: { schoolId, user: { email: { in: TEST_STUDENT_EMAILS } } },
+    select: { sectionId: true, userId: true },
+  })
+  if (!student?.sectionId || !student.userId) return 0
+
+  const ended = await prisma.conference.findMany({
+    where: {
+      schoolId,
+      deletedAt: null,
+      status: "ended",
+      sectionId: student.sectionId,
+    },
+    orderBy: [{ scheduledStart: "desc" }, { id: "desc" }],
+    take: 24,
+    select: {
+      id: true,
+      scheduledStart: true,
+      scheduledEnd: true,
+      participants: {
+        where: { userId: student.userId, joinedAt: { not: null } },
+        select: { id: true },
+        take: 1,
+      },
+    },
+  })
+
+  const missed = ended.filter((r) => r.participants.length === 0).slice(0, 2)
+  const attended = ended.filter((r) => r.participants.length > 0).slice(0, 2)
+  const targets = [...missed, ...attended]
+  if (targets.length === 0) return 0
+
+  for (const session of targets) {
+    await prisma.conferenceRecording.upsert({
+      where: { egressId: `demo-${session.id}` },
+      create: {
+        schoolId,
+        sessionId: session.id,
+        egressId: `demo-${session.id}`,
+        s3Bucket: bucket,
+        s3Key: source.storageKey,
+        s3Region: region || "us-east-1",
+        durationSeconds: source.durationSeconds ?? 30,
+        status: "ready",
+        startedAt: session.scheduledStart,
+        completedAt: session.scheduledEnd,
+      },
+      update: { status: "ready", s3Bucket: bucket, s3Key: source.storageKey },
+      ...ID,
+    })
+  }
+
+  logSuccess(
+    "Conference recordings",
+    targets.length,
+    `${missed.length} missed · ${attended.length} attended · one shared sample object`
+  )
+  return targets.length
 }
 
 // ---------------------------------------------------------------------------
@@ -623,7 +723,7 @@ async function applyPolicy(
 // Rosters + day math
 // ---------------------------------------------------------------------------
 
-type RosterStudent = { id: string; userId: string | null }
+type RosterStudent = { id: string; userId: string | null; isDemo: boolean }
 
 async function loadRosters(
   prisma: PrismaClient,
@@ -632,16 +732,51 @@ async function loadRosters(
 ): Promise<Map<string, RosterStudent[]>> {
   const students = await prisma.student.findMany({
     where: { schoolId, sectionId: { in: sectionIds } },
-    select: { id: true, userId: true, sectionId: true },
+    select: {
+      id: true,
+      userId: true,
+      sectionId: true,
+      // Only to recognise the documented demo account — see `presenceBands`.
+      user: { select: { email: true } },
+    },
     orderBy: { id: "asc" },
   })
   const map = new Map<string, RosterStudent[]>()
   for (const s of students) {
     if (!s.sectionId) continue
     if (!map.has(s.sectionId)) map.set(s.sectionId, [])
-    map.get(s.sectionId)!.push({ id: s.id, userId: s.userId })
+    map.get(s.sectionId)!.push({
+      id: s.id,
+      userId: s.userId,
+      isDemo: TEST_STUDENT_EMAILS.includes(s.user?.email ?? ""),
+    })
   }
   return map
+}
+
+/**
+ * How a student's presence rolls, as three cumulative thresholds against one
+ * `rng()` draw: joined on time · joined late · connected and dropped. Whatever
+ * is left over is an absence, and an absence writes NO participant row at all,
+ * which is exactly what /live's catch-up shelf reads as "missed".
+ *
+ * A real school misses about four percent of a class, and that is what every
+ * student here gets — except the documented demo account. Five school days at
+ * four percent leaves `student@balqalam.com` with ONE missed class in their
+ * whole history, and a catch-up shelf holding a single card demonstrates
+ * nothing: the shelf scrolls, and a demo has to show that. So the demo student
+ * misses about two classes in five. It costs the attendance demo a more
+ * truant-looking student, which is a fair trade for the only account anyone
+ * ever signs in as.
+ */
+function presenceBands(student: RosterStudent): {
+  onTime: number
+  late: number
+  dropped: number
+} {
+  return student.isDemo
+    ? { onTime: 0.5, late: 0.56, dropped: 0.6 }
+    : { onTime: 0.82, late: 0.92, dropped: 0.96 }
 }
 
 /** Walk the calendar in the school's zone: previous/next teaching days. */
@@ -816,21 +951,22 @@ async function seedHistory(
       let evSeq = 2
       for (const student of roster) {
         const r = rng()
+        const band = presenceBands(student)
         let joinedAt: Date | null = null
         let leftAt: Date | null = null
-        if (r < 0.82) {
+        if (r < band.onTime) {
           joinedAt = new Date(
             actualStart.getTime() + Math.floor(rng() * 4) * 60_000
           )
           leftAt = new Date(
             actualEnd.getTime() - Math.floor(rng() * 3) * 60_000
           )
-        } else if (r < 0.92) {
+        } else if (r < band.late) {
           joinedAt = new Date(
             actualStart.getTime() + (11 + Math.floor(rng() * 10)) * 60_000
           )
           leftAt = actualEnd
-        } else if (r < 0.96) {
+        } else if (r < band.dropped) {
           // Connected and dropped — the presence floor exists for this.
           joinedAt = new Date(actualStart.getTime() + 60_000)
           leftAt = new Date(joinedAt.getTime() + 90_000)
@@ -1401,4 +1537,132 @@ async function attachCatalogLessons(
     count += 1
   }
   return count
+}
+
+/** Marks the rows the clock showcase owns, so a re-run can replace its own. */
+const CLOCK_SHOWCASE = "seed:clock-showcase"
+
+/**
+ * Three sessions whose windows straddle the clock, so the landing card's phase
+ * row can actually be SEEN.
+ *
+ * The rest of this seed writes `ended` history and next-day `scheduled` rows
+ * and nothing in between, which means three of the card's five phases —
+ * "starting soon", "started" and "about to finish" — had never rendered in a
+ * browser. These three rows cover exactly those.
+ *
+ * They are RELATIVE to the moment they are written and therefore go stale
+ * within the hour; that is inherent to demonstrating "now", not a defect. The
+ * phase deletes its own previous rows first and rewrites them, so re-running
+ * the seed refreshes the clock rather than piling up more.
+ *
+ * Slot-less on purpose. Anchoring them to timetable slots at shifted times
+ * would put rows in the materializer's identity space that do not match the
+ * slot they claim, and the sweep would then be entitled to create a duplicate
+ * beside each one.
+ */
+async function seedClockShowcase(
+  prisma: PrismaClient,
+  ctx: { schoolId: string; lang: string; termId: string }
+): Promise<number> {
+  await prisma.conference.deleteMany({
+    where: { schoolId: ctx.schoolId, description: CLOCK_SHOWCASE },
+  })
+
+  // Loads its own slots rather than taking them: the count guard returns
+  // before the main flow reads the timetable, and this phase has to run on
+  // that skip path too or a re-run never refreshes the clock.
+  const usable = await prisma.timetable.findMany({
+    where: {
+      schoolId: ctx.schoolId,
+      termId: ctx.termId,
+      weekOffset: 0,
+      sectionId: { not: null },
+      subjectId: { not: null },
+      teacherId: { not: null },
+      period: { isBreak: false },
+    },
+    // `dayOfWeek` and `periodId` are unused here but keep the rows assignable
+    // to `SlotRow`, which `sessionTitle` takes.
+    select: {
+      id: true,
+      dayOfWeek: true,
+      periodId: true,
+      sectionId: true,
+      subjectId: true,
+      teacherId: true,
+      subject: { select: { name: true } },
+      section: { select: { name: true } },
+      teacher: { select: { userId: true } },
+    },
+    take: 40,
+  })
+  if (usable.length < 3) return 0
+
+  // Distinct sections where possible, so the three cards do not all read as
+  // the same class.
+  const picked: (typeof usable)[number][] = []
+  const seen = new Set<string>()
+  for (const slot of usable) {
+    if (seen.has(slot.sectionId!)) continue
+    seen.add(slot.sectionId!)
+    picked.push(slot)
+    if (picked.length === 3) break
+  }
+  while (picked.length < 3) picked.push(usable[picked.length])
+
+  const now = Date.now()
+  const at = (minutes: number) => new Date(now + minutes * 60_000)
+
+  const shapes = [
+    // Running, comfortably mid-lesson: "started", with a minute count.
+    { slot: picked[0], start: at(-20), end: at(25), live: true },
+    // Running, nearly over: "about to finish".
+    { slot: picked[1], start: at(-40), end: at(8), live: true },
+    // Not yet begun, inside the fifteen-minute window: "starting soon".
+    { slot: picked[2], start: at(10), end: at(55), live: false },
+  ]
+
+  for (const shape of shapes) {
+    const sessionId = await createSession(prisma, {
+      schoolId: ctx.schoolId,
+      teacherId: shape.slot.teacherId!,
+      sectionId: shape.slot.sectionId!,
+      subjectId: shape.slot.subjectId,
+      provider: "livekit",
+      roomName: `pending-clock-${shape.start.getTime()}-${shape.slot.id}`,
+      scheduledStart: shape.start,
+      scheduledEnd: shape.end,
+      actualStart: shape.live ? shape.start : null,
+      status: shape.live ? "live" : "scheduled",
+      recordingEnabled: false,
+      maxParticipants: 50,
+      visibility: "section",
+      title: sessionTitle(shape.slot),
+      description: CLOCK_SHOWCASE,
+      lang: ctx.lang,
+    })
+
+    const hostUserId = shape.slot.teacher?.userId ?? null
+    if (hostUserId) {
+      await prisma.conferenceParticipant.upsert({
+        where: { sessionId_userId: { sessionId, userId: hostUserId } },
+        create: {
+          schoolId: ctx.schoolId,
+          sessionId,
+          userId: hostUserId,
+          role: "HOST",
+        },
+        update: { role: "HOST" },
+        ...ID,
+      })
+    }
+  }
+
+  logSuccess(
+    "Conference clock showcase",
+    shapes.length,
+    "started · ending · soon"
+  )
+  return shapes.length
 }

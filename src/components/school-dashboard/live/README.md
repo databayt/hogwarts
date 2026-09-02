@@ -51,11 +51,12 @@ conference/
 │   ├── now-strip.tsx         live / coming-up — thmanyah.com's editorial row (mirrored
 │   │                     geometry), section-scoped, school-TZ times, catalog art.
 │   │                     ONE lead card, then two brief ones
-│   ├── session-row.tsx       the reference's article row — ONE component, drawn by
-│   │                     the strip and the shelf alike, at three weights
-│   │                     (lead · brief · small) and adapting to the role
-│   ├── past-shelf.tsx        classes already taught — thmanyah.com's shelf block
-│   │                     (mirrored geometry): a list column beside subject tiles
+│   ├── session-row.tsx       the reference's article row — the strip's two weights
+│   │                     (lead · brief), adapting to the role
+│   ├── catch-up-shelf.tsx    the classes this reader MISSED — presence-filtered,
+│   │                     one horizontally scrolling row of cards
+│   ├── recordings-grid.tsx   two recordings, ranked missed-first for THIS reader
+│   ├── session-card.tsx      the card both shelves draw — art above, copy below
 │   ├── readiness-band.tsx    can this school teach online (ADMIN/DEVELOPER only)
 │   ├── role-guide.tsx        what THIS role can do here — real links, not marketing
 │   ├── get-started-band.tsx  the pitch + 3 setup steps, only while not yet online

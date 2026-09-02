@@ -111,6 +111,16 @@ const landingSessionInclude = {
       grade: { select: { id: true, name: true } },
     },
   },
+  // Is there anything to catch up WITH. Only `ready` counts: a row still
+  // `pending` or `processing` has no S3 object behind it, and `expired` has
+  // had it deleted by the retention cron — offering any of the three sends a
+  // student who missed a class to a player that cannot play. `take: 1` because
+  // the card asks a yes/no question, not for the list.
+  recordings: {
+    where: { status: "ready" as const, deletedAt: null },
+    select: { id: true },
+    take: 1,
+  },
 } as const
 
 // ============================================================================
@@ -823,38 +833,168 @@ export async function getLiveLandingSessions(
 }
 
 /**
- * Classes that have already happened, for the landing page's second shelf.
+ * Classes that already happened AND that this reader was not in — the catch-up
+ * shelf.
  *
- * Deliberately NOT recordings. Every recording surface in this block is gated
- * on `isRecordingConfigured()`, and a school that has never provisioned the
- * bucket has none at all — the shelf would be permanently invisible. An ended
- * session, by contrast, exists the moment the room closes, carries the same
- * subject artwork as a live one, and is the row a reader actually wants: it
- * links to the session page, which is where a recording appears IF there is
- * one.
+ * "Missed" is answered from presence, not from attendance: a
+ * `ConferenceParticipant` row carries `joinedAt` only once someone actually
+ * reached the room, and rows are created lazily at join time rather than
+ * fanned out to a roster in advance. So "no row with a `joinedAt`" IS the
+ * signal, and it needs no opt-in — unlike `Attendance`, which is written only
+ * by schools that turned `conferenceAttendanceSync` on, and only for LiveKit
+ * sessions.
  *
- * Over-fetched relative to what the list column renders, because the tile
- * column beside it is one-per-SUBJECT and dedupes out of the same rows — one
- * round trip instead of a second grouped query.
+ * `attendeeUserIds` is WHOSE presence counts, which is not always the reader's:
+ * a guardian catches up on the classes their CHILDREN missed, not the ones
+ * they personally did not sit in. Empty or omitted means no attendance filter
+ * at all, and the shelf degrades to "recently ended" — which is what it
+ * amounts to for an admin anyway, since a school administrator joins none of
+ * these rooms and has therefore missed every one of them.
+ *
+ * Deliberately NOT a recordings list. Every recording surface in this block is
+ * gated on `isRecordingConfigured()`, and a school that has never provisioned
+ * the bucket has none at all — the shelf would be permanently invisible. An
+ * ended session exists the moment the room closes, carries the same subject
+ * artwork as a live one, and links to the session page, which is where the
+ * lesson's materials live whether or not a recording was ever made.
  */
-export async function getLiveLandingPast(
+export async function getLiveLandingCatchUp(
   schoolId: string,
   opts: {
     sectionIds?: string[]
     teacherId?: string
+    attendeeUserIds?: string[]
     take?: number
   } = {}
 ) {
   const scope = landingScope(schoolId, opts)
+  const attended = opts.attendeeUserIds?.length
+    ? {
+        NOT: {
+          participants: {
+            some: {
+              userId: { in: opts.attendeeUserIds },
+              joinedAt: { not: null },
+            },
+          },
+        },
+      }
+    : {}
 
   return db.conference.findMany({
-    where: { ...scope, status: "ended" },
+    where: { ...scope, ...attended, status: "ended" },
     // `id` breaks the tie: a seeded school schedules a whole grade into the
     // same minute, and without it the page reorders between renders.
     orderBy: [{ scheduledStart: "desc" }, { id: "desc" }],
-    take: opts.take ?? 24,
+    take: opts.take ?? 12,
     include: landingSessionInclude,
   })
+}
+
+/**
+ * The handful of recordings worth putting in front of THIS reader.
+ *
+ * Relevance is two rules, and both are per-reader rather than per-school. A
+ * recording of a class the reader MISSED outranks one of a class they sat
+ * through — the recording of a lesson you were in is a revision aid, the
+ * recording of one you missed is the lesson — and recency breaks the tie.
+ * Two students in the same section are therefore shown different pairs.
+ *
+ * The miss is resolved from the same presence rows the catch-up shelf reads,
+ * but it cannot be a `where` here the way it is there: a reader who missed
+ * nothing would then be offered no recordings at all, when what they want is
+ * simply the most recent ones. So the filter comes back as a per-row PROBE —
+ * a `take: 1` include of the attendee's own joined participant row — and the
+ * ranking happens in memory over a small candidate set.
+ *
+ * `status: "ready"` only, on the recording: `pending` and `processing` have no
+ * S3 object yet and `expired` has had it deleted by the retention cron, so any
+ * of the three would hand a reader a player that cannot play.
+ */
+export async function getLiveLandingRecordings(
+  schoolId: string,
+  opts: {
+    sectionIds?: string[]
+    teacherId?: string
+    attendeeUserIds?: string[]
+    take?: number
+    candidates?: number
+  } = {}
+) {
+  const scope = landingScope(schoolId, opts)
+  const attendees = opts.attendeeUserIds ?? []
+
+  const rows = await db.conference.findMany({
+    where: {
+      ...scope,
+      status: "ended",
+      recordings: { some: { status: "ready", deletedAt: null } },
+    },
+    orderBy: [{ scheduledStart: "desc" }, { id: "desc" }],
+    // Over-fetch, then rank: the ordering the reader gets is not the ordering
+    // the database can express, so the candidate set has to be big enough that
+    // a missed class further back can still overtake a recent attended one.
+    take: opts.candidates ?? 20,
+    include: {
+      ...landingSessionInclude,
+      participants: attendees.length
+        ? {
+            where: { userId: { in: attendees }, joinedAt: { not: null } },
+            select: { id: true },
+            take: 1,
+          }
+        : { where: { id: "" }, select: { id: true }, take: 1 },
+    },
+  })
+
+  // Missed first, then newest — `rows` already arrives newest-first, and a
+  // stable sort on one boolean key preserves that inside each group.
+  return rows
+    .sort(
+      (a, b) =>
+        Number(a.participants.length > 0) - Number(b.participants.length > 0)
+    )
+    .slice(0, opts.take ?? 2)
+}
+
+/**
+ * Whose presence decides that a class was missed.
+ *
+ * The reader themselves, except for a GUARDIAN: a parent opening /live is
+ * asking what their children have to catch up on, and their own attendance
+ * says nothing about that. A guardian with no ward rows falls back to their
+ * own id rather than to an empty list — an empty list disables the filter
+ * entirely, which would quietly turn "what my child missed" into "everything
+ * that ended".
+ *
+ * Staff get their own id too, and that is not a mistake: an admin who never
+ * joins a room has genuinely missed every class, so the filter removes nothing
+ * and the shelf reads as "recently taught" for them.
+ */
+export async function resolveCatchUpAttendees(
+  schoolId: string,
+  userId: string | undefined | null,
+  role: string | null | undefined
+): Promise<string[]> {
+  if (!userId || !role) return []
+  if (role !== "GUARDIAN") return [userId]
+
+  const guardians = await db.guardian.findMany({
+    where: { schoolId, userId },
+    select: {
+      studentGuardians: {
+        select: { student: { select: { userId: true } } },
+      },
+    },
+  })
+  const wards = [
+    ...new Set(
+      guardians
+        .flatMap((g) => g.studentGuardians.map((sg) => sg.student?.userId))
+        .filter((x): x is string => Boolean(x))
+    ),
+  ]
+  return wards.length > 0 ? wards : [userId]
 }
 
 /**

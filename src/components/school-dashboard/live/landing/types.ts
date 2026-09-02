@@ -61,6 +61,12 @@ export interface LandingSession {
   imageUrl: string | null
   /** Catalog colour, the fallback ground when there is no thumbnail. */
   color: string | null
+  /**
+   * Is there a `ready` recording behind this session — the difference, on a
+   * catch-up card, between watching the class and only reading about it.
+   * Always false on a live or upcoming row, which has nothing to record yet.
+   */
+  hasRecording: boolean
 }
 
 /** What this viewer is allowed to do, resolved once on the server. */
@@ -122,22 +128,4 @@ export interface LandingReadiness {
   hasFallback: boolean
   /** Null when the coverage read failed or the school has no active term. */
   coverage: { total: number; covered: number; gapCount: number } | null
-}
-
-/**
- * One square in the past shelf's tile column — a SUBJECT, not a session.
- *
- * The reference's shelf pairs a list of items with a grid of the channels
- * those items came from; the school's equivalent of a channel is the subject,
- * and its catalog artwork is the only square image this block has.
- */
-export interface LandingSubjectTile {
-  /** Catalog subject id — the dedupe key, and the React key. */
-  id: string
-  /** Localized subject name; the tile's only text, on the image's alt. */
-  name: string
-  imageUrl: string | null
-  color: string | null
-  /** The subject's most recent ended session, which is where the tile lands. */
-  sessionId: string
 }

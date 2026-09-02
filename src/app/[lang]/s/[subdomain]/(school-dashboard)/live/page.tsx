@@ -17,7 +17,6 @@ import type {
   LandingPolicy,
   LandingReadiness,
   LandingSession,
-  LandingSubjectTile,
 } from "@/components/school-dashboard/live/landing/types"
 import {
   canOpenLanding,
@@ -29,8 +28,10 @@ import {
   ONLINE_POLICY_SELECT,
 } from "@/components/school-dashboard/live/online-policy"
 import {
-  getLiveLandingPast,
+  getLiveLandingCatchUp,
+  getLiveLandingRecordings,
   getLiveLandingSessions,
+  resolveCatchUpAttendees,
   resolveViewerSectionScope,
 } from "@/components/school-dashboard/live/queries"
 import { localize } from "@/components/translation/localize"
@@ -52,11 +53,6 @@ export async function generateMetadata({
     description: d?.description,
   }
 }
-
-/** Rows printed in the past shelf's list column, and squares beside it. Both
- *  are the reference's own counts: two rows against two rows of three tiles. */
-const PAST_LIST_ROWS = 2
-const PAST_TILES = 6
 
 /** A class this close to starting says so rather than printing a bare time. */
 const SOON_MINUTES = 15
@@ -143,8 +139,8 @@ export default async function Page({ params }: Props) {
   }
   let live: LandingSession[] = []
   let upcoming: LandingSession[] = []
-  let past: LandingSession[] = []
-  let pastSubjects: LandingSubjectTile[] = []
+  let catchUp: LandingSession[] = []
+  let recordings: LandingSession[] = []
   let readiness: LandingReadiness | null = null
 
   if (schoolId) {
@@ -173,12 +169,14 @@ export default async function Page({ params }: Props) {
       }
 
       // Same section scoping the sessions table uses: a student or guardian
-      // must never see another section's room, landing page or not.
-      const scope = await resolveViewerSectionScope(
-        schoolId,
-        session?.user?.id,
-        role
-      )
+      // must never see another section's room, landing page or not. Whose
+      // presence decides that a class was MISSED is a separate question —
+      // a guardian catches up on their children's classes, not their own — and
+      // the two reads are independent, so they go together.
+      const [scope, attendeeUserIds] = await Promise.all([
+        resolveViewerSectionScope(schoolId, session?.user?.id, role),
+        resolveCatchUpAttendees(schoolId, session?.user?.id, role),
+      ])
 
       if (scope !== "none") {
         const now = new Date()
@@ -215,15 +213,36 @@ export default async function Page({ params }: Props) {
         // day's live/total counts, and dropping that state from it drops the
         // second query with it (`getLiveLandingCounts` stays in queries.ts —
         // see ISSUE.md).
-        // Both landing reads in one round trip. The past shelf over-fetches
-        // (24 rows for 2 printed) because its tile column is one-per-SUBJECT
-        // and dedupes out of the same rows.
-        const [rows, pastRows] = await Promise.all([
+        // Every landing read in one round trip. The recordings pair is a
+        // separate query rather than a filter over the catch-up rows: it ranks
+        // a MISSED recording above an attended one but must still offer the
+        // recent ones to a reader who missed nothing, so its candidate set is
+        // not a subset of the shelf's.
+        const [rows, catchUpRows, recordingRows] = await Promise.all([
           getLiveLandingSessions(schoolId, { now, sectionIds, teacherId }),
-          getLiveLandingPast(schoolId, { sectionIds, teacherId }),
+          getLiveLandingCatchUp(schoolId, {
+            sectionIds,
+            teacherId,
+            attendeeUserIds,
+          }),
+          getLiveLandingRecordings(schoolId, {
+            sectionIds,
+            teacherId,
+            attendeeUserIds,
+          }),
         ])
 
-        const all = [...rows.live, ...rows.upcoming, ...pastRows]
+        // De-duplicated for the translation pass only: a session can be both a
+        // catch-up card and one of the two recordings, and `localize` would
+        // otherwise resolve the same row twice.
+        const all = [
+          ...rows.live,
+          ...rows.upcoming,
+          ...catchUpRows,
+          ...recordingRows.filter(
+            (r) => !catchUpRows.some((c) => c.id === r.id)
+          ),
+        ]
 
         // ONE batched translation pass over both slices — titles via localize,
         // names via getNames, labels via getLabels. Never per row.
@@ -263,7 +282,7 @@ export default async function Page({ params }: Props) {
         )
 
         const liveIds = new Set(rows.live.map((r) => r.id))
-        const pastIds = new Set(pastRows.map((r) => r.id))
+        const pastIds = new Set(catchUpRows.map((r) => r.id))
         const toSession = (
           r: (typeof localizedRows)[number]
         ): LandingSession => {
@@ -308,6 +327,9 @@ export default async function Page({ params }: Props) {
             // fallback rather than an error placeholder.
             imageUrl: getCatalogImageUrl(r.subject?.thumbnail, "sm"),
             color: r.subject?.color ?? null,
+            // `landingSessionInclude` takes at most ONE `ready` recording — the
+            // card asks whether there is something to watch, not for the list.
+            hasRecording: r.recordings.length > 0,
           }
         }
 
@@ -316,27 +338,21 @@ export default async function Page({ params }: Props) {
           .filter((r) => !liveIds.has(r.id) && !pastIds.has(r.id))
           .map(toSession)
 
-        // Newest first, straight out of the query's order.
-        past = localizedRows
-          .filter((r) => pastIds.has(r.id))
-          .slice(0, PAST_LIST_ROWS)
+        // Newest first, straight out of the query's order — the shelf scrolls,
+        // so every row the query returned is rendered rather than sliced.
+        const catchUpIds = new Set(catchUpRows.map((r) => r.id))
+        catchUp = localizedRows
+          .filter((r) => catchUpIds.has(r.id))
           .map(toSession)
 
-        // One tile per SUBJECT: first occurrence wins, which is that subject's
-        // most recent class and therefore where the tile lands.
-        const tiles = new Map<string, LandingSubjectTile>()
-        for (const r of localizedRows) {
-          const subject = r.subject
-          if (!pastIds.has(r.id) || !subject || tiles.has(subject.id)) continue
-          tiles.set(subject.id, {
-            id: subject.id,
-            name: labels.get(subject.name) ?? subject.name,
-            imageUrl: getCatalogImageUrl(subject.thumbnail, "sm"),
-            color: subject.color ?? null,
-            sessionId: r.id,
-          })
-        }
-        pastSubjects = [...tiles.values()].slice(0, PAST_TILES)
+        // The recordings keep the QUERY's order, not the localized array's —
+        // that order is the ranking (missed first, then recent) and a filter
+        // over `localizedRows` would silently replace it with recency alone.
+        const byId = new Map(localizedRows.map((r) => [r.id, r]))
+        recordings = recordingRows
+          .map((r) => byId.get(r.id))
+          .filter((r): r is (typeof localizedRows)[number] => Boolean(r))
+          .map(toSession)
       }
     } catch (error) {
       console.error("[LiveLanding] Could not load sessions:", error)
@@ -379,8 +395,8 @@ export default async function Page({ params }: Props) {
       readiness={readiness}
       live={live}
       upcoming={upcoming}
-      past={past}
-      pastSubjects={pastSubjects}
+      catchUp={catchUp}
+      recordings={recordings}
     />
   )
 }

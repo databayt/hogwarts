@@ -331,9 +331,8 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   ellipses at once. Up on the title row it costs no vertical space and leaves
   the meta line two items, which is what fits a 254px copy column.
 
-  The past shelf deliberately stays on `small`. It sits under its own heading,
-  is not competing with the lead, and its rows are the only place the block
-  prints the chapter and lesson of a class you missed.
+  The row now has only these two weights. A third, `small`, existed for the
+  shelf below; that shelf draws a card of its own now, so it went with it.
 
 - **A card says what the ROLE does not already know (2026-09-02).**
   `showsTeacher` / `showsSection` on `LandingViewer`, resolved once in
@@ -354,27 +353,108 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   second argument and the page re-resolves the viewer inside the try block.
   Covered by `landing-roles.test.ts`.
 
-- **The second shelf is PAST CLASSES, not recordings (2026-09-02).**
-  `landing/past-shelf.tsx` mirrors thmanyah.com's shelf block — the section
-  that follows the editorial rows the strip already carries: an icon + 24px
-  heading with a "more" link opposite, then a list column beside a grid of
-  square tiles. Recordings were the obvious mapping and are the wrong one:
-  every recording surface in this block is gated on `isRecordingConfigured()`,
-  so a school that has never provisioned the bucket has none at all and the
-  shelf would be permanently invisible. An ENDED session exists the moment the
-  room closes, carries the same subject artwork, and links to the session page
-  — which is where a recording appears if there is one.
+- **The second shelf is CATCH UP — the classes you MISSED (2026-09-02).**
+  `landing/catch-up-shelf.tsx`. It began as a "past classes" shelf in
+  thmanyah.com's shelf geometry: two ended sessions in a list column beside a
+  grid of six subject tiles. Two things were wrong with that, and both are why
+  this section exists in its current form.
 
-  The tile column is the one real reinterpretation. The reference fills it with
-  the SHOWS its episodes came from; a school's equivalent is the subject, so
-  `getLiveLandingPast` over-fetches (24 rows for 2 printed) and the tiles dedupe
-  out of the same rows — one round trip, not a second grouped query. First
-  occurrence wins, so a tile lands on that subject's most recent class.
+  It consulted nothing about the reader. A student who had sat through every
+  class that week saw exactly what a student who had missed it saw. So the rows
+  are now filtered by PRESENCE: `getLiveLandingCatchUp` drops any session the
+  reader actually joined. Presence, not `Attendance` — a `ConferenceParticipant`
+  row carries `joinedAt` only once someone reached the room, and rows are
+  created lazily at join time rather than fanned out to a roster, so "no row
+  with a `joinedAt`" IS the signal. `Attendance` would have been the wrong
+  source twice over: it is written only by schools that turned
+  `conferenceAttendanceSync` on, and only for LiveKit sessions.
+
+  Whose presence counts is `resolveCatchUpAttendees`, and it is not always the
+  reader's: a GUARDIAN catches up on what their CHILDREN missed, so the filter
+  runs on the wards' user ids and falls back to the guardian's own only when
+  there are no ward rows — an empty list would disable the filter entirely and
+  turn "what my child missed" into "everything that ended". A reader who joins
+  nothing, which is every administrator, matches nothing and gets the shelf
+  degraded to "recently taught". That is honest rather than clever, and it is
+  why the heading is not a promise (see below).
+
+  And the tiles answered the wrong question. They showed the SUBJECTS that had
+  taught live — a thing an admin might wonder and a student never does — so
+  they are gone, and with them `LandingSubjectTile`, the 24-row over-fetch that
+  fed the dedupe, and the second column.
+
+  What replaced them is ONE horizontally scrolling row of up to twelve cards,
+  on the house scroller (`no-scrollbar` + negative margin + matching padding),
+  the same markup lumos uses for its course shelves. A shelf you scroll is the
+  right shape for a backlog: it holds twelve without pushing the page down, and
+  its form says there is more to the side. `overflow-x-auto` follows the
+  document's `dir`, so RTL needs no transform — do not add one.
+
+  The card offers the RECORDING when there is one: `landingSessionInclude`
+  takes at most one `ready` recording (never `pending` / `processing` /
+  `expired` — those have no S3 object behind them), and the card links to
+  `/live/[id]/recordings` instead of the session page, gated on
+  `viewer.canViewRecordings` so ACCOUNTANT is never offered a link the
+  permission layer would refuse.
+
+  Recordings are still not what the shelf IS. Every recording surface here is
+  gated on `isRecordingConfigured()`, and a school with no bucket has none at
+  all — a recordings-only shelf would be permanently invisible. An ended
+  session exists the moment the room closes and links to the lesson's materials
+  either way.
 
   Gated on the ROWS, never on `policy.isOnline`: a school that has gone back to
-  the classroom still has classes it taught online, and that history is the only
-  one the page carries. Past rows print a DATE where a live one prints a time —
-  `09:40` on a row from last week reads as today.
+  the classroom still has classes it taught online. An empty shelf is also a
+  real answer — a student who missed nothing is shown no heading saying so.
+
+- **The catch-up shelf's heading is an ICON (2026-09-02).** No title, no "more"
+  link. Every card under it carries a past date, so a printed "Catch up" was
+  labelling what the reader could already see, and the "more" link pointed at
+  the sessions table that the banner above already offers twice. The words
+  survive as an `sr-only` `<h2>` — a section of links with no accessible name
+  is a real regression for a screen reader, and the dictionary key stays for
+  it. Consequence worth knowing: `landing.catchUp.title` is now invisible to a
+  sighted reader, so nobody will notice if its translation rots.
+
+- **Under the shelf: TWO recordings, ranked for the reader (2026-09-02).**
+  `landing/recordings-grid.tsx` + `getLiveLandingRecordings`. The shelf above
+  says what you missed; this says what you can actually WATCH about it. Two
+  wide cards, not a second scroller — a dozen things to watch is another
+  backlog, and a backlog is what the reader arrived with.
+
+  Relevance is two rules and both are PER-READER: a recording of a class this
+  reader missed outranks one of a class they sat through (the recording of a
+  lesson you attended is a revision aid; of one you missed, it IS the lesson),
+  and recency breaks the tie. Two students in the same section see different
+  pairs.
+
+  The miss cannot be a `where` here the way it is on the shelf. A reader who
+  missed nothing would then be offered NO recordings, when what they want is
+  simply the most recent — so the presence check comes back as a per-row PROBE
+  (`participants` include, `take: 1`) and the ranking happens in memory over an
+  over-fetched candidate set. The page must also preserve the QUERY's order
+  when it maps the localized rows back: filtering `localizedRows` instead would
+  silently replace the ranking with recency alone.
+
+  `status: "ready"` only, and `viewer.canViewRecordings` gates the card's link
+  — ACCOUNTANT sees every session but `authorization.ts` grants it no
+  `view_recordings`.
+
+- **The demo seeds recordings now, and only because it can do it honestly
+  (2026-09-02).** The seed's standing rule was to write NO `ConferenceRecording`
+  rows, because a `ready` row with no S3 object behind it is a player that
+  spins forever. That reasoning is intact; `seedRecordings` satisfies it by
+  pointing every row at the `storageKey` of a `Video` the demo already holds,
+  and writing nothing at all when the school has none. Four rows, and which
+  four is the point: two on classes the demo student MISSED and two on classes
+  they attended, with the attended pair deliberately more RECENT — a fixture
+  where every recording is missed would let the ranking above break silently.
+
+- **`landing/session-card.tsx` is the card, drawn by both shelves
+  (2026-09-02).** The strip's `session-row.tsx` sets a class beside its
+  picture; this sets it under one. Two callers — the catch-up shelf and the
+  recordings grid — for the same reason the article row has one implementation:
+  the shelf and the strip had drifted within a day of being written twice.
 
 - **The strip under the banner has no heading (2026-09-02).** The reference's
   block there is article rows and nothing else, so `liveTitle` / `upcomingTitle`

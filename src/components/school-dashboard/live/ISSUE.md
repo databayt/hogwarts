@@ -4,6 +4,69 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Landing: two ranked recordings under the shelf 2026-09-02 — closed
+
+- [x] **A two-card grid below the catch-up shelf.** `getLiveLandingRecordings`
+      ranks a recording of a MISSED class above one of an attended class, then
+      by recency, per reader. Icon heading like the shelf, `sr-only` title
+      reusing `actions.recordings`, capped at a 4xl measure so two cards do not
+      become the largest thing on the page.
+- [x] **The demo can show it.** `seedRecordings` writes four `ready` rows —
+      two missed, two attended and deliberately MORE RECENT — pointing at the
+      `storageKey` of a real `Video`, so the player is not a spinner. It writes
+      nothing when the school has no own-storage video, which keeps the seed's
+      original rule intact.
+- [x] **The ranking is verified, not assumed.** The two attended recordings are
+      dated 1 September and the two missed ones 31 August, and the grid renders
+      the 31 August pair — so relevance genuinely overrides recency.
+
+- [ ] **All four demo recordings point at the same 30-second clip.** It is the
+      only object the demo bucket actually holds. Playback works; the content
+      is not the class. Fix upstream by uploading per-subject sample media, not
+      by inventing keys.
+- [ ] **A card can carry the same artwork as its neighbour.** Several demo
+      catalog subjects share one `thumbnailKey` — the same upstream fact the
+      old tile grid tripped over.
+
+## Landing: catch up replaces the past shelf 2026-09-02 — closed
+
+- [x] **The second shelf is now the classes you MISSED.** `getLiveLandingCatchUp`
+      excludes any ended session the reader joined, read off
+      `ConferenceParticipant.joinedAt` — presence, which every LiveKit session
+      writes, rather than `Attendance`, which only an opted-in school does.
+      `resolveCatchUpAttendees` decides whose presence counts: a guardian's
+      wards, everyone else themselves.
+- [x] **One horizontally scrolling row, up to twelve cards.** House scroller
+      (`no-scrollbar`, negative margin, matching padding), `w-56 sm:w-64` cards
+      with `aspect-video` catalog art. The page body does not scroll sideways
+      at 390px — checked.
+- [x] **The card offers the recording when there is one.** At most one `ready`
+      recording is joined per row; the card then links to `/live/[id]/recordings`
+      and shows a play badge, gated on `canViewRecordings` so ACCOUNTANT never
+      gets a link the permission layer refuses.
+- [x] **The heading is an icon.** No title text, no "more" link — the cards all
+      carry a past date and the banner already offers the sessions table twice.
+      The title survives as an `sr-only` heading so the section still has an
+      accessible name.
+- [x] **The subject-tile column is gone**, and with it `LandingSubjectTile`, the
+      24-row over-fetch and the duplicate-artwork item that was open against it.
+- [x] **The demo student now has a backlog worth scrolling.** At the seed's
+      ordinary ~4% absence, five school days left `student@balqalam.com` with
+      ONE missed class. `presenceBands` gives the documented demo account ~40%,
+      which is 9 missed of 32 — re-seeded with `SEED_FORCE=1 pnpm db:seed:single
+conference`. It makes that one student look truant in the attendance
+      demo; that is the trade.
+- [x] **The presence filter is verified against real rows**, not just assumed:
+      a throwaway probe marked one ended session attended and confirmed it left
+      the shelf, before the seed change. The demo turned out to carry 2,297
+      participant rows already, so the filter was never a no-op.
+
+- [ ] **An admin's shelf is not really "catch up".** A school administrator
+      joins no rooms, so nothing is filtered and the section is "recently
+      taught" wearing a catch-up heading. Acceptable — the heading is now an
+      icon, so nothing on screen over-promises — but if the shelf ever regains
+      a title, an admin needs a different one.
+
 ## Landing: the strip's card hierarchy 2026-09-02 — closed
 
 - [x] **One lead card, two brief ones.** Three cards of equal weight made the
@@ -56,11 +119,10 @@
       is now `تجربة تفاعلية تجعل التعليم أقرب وأكثر تأثيراً`, with the opening
       phrase carrying the weight.
 
-- [ ] **Two tiles can render the same picture.** The tile grid dedupes by
-      SUBJECT id, which is correct, but several demo catalog subjects share one
-      `thumbnailKey` — so the grid shows what looks like a duplicate. Deduping
-      by artwork instead would drop a real subject from the shelf, so the fix
-      is upstream (distinct catalog art), not in the component.
+- [x] **Two tiles can render the same picture — moot.** The tile grid is gone
+      with the past shelf (see the catch-up section above). The underlying fact
+      still holds and still wants fixing upstream: several demo catalog subjects
+      share one `thumbnailKey`, so two catch-up cards can carry the same art.
 
 - [x] **The demo's `upcoming` slice was empty, so the two-up had never
       rendered.** Every `scheduled` row sat on 2026-08-30. Rebuilt with

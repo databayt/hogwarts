@@ -4,10 +4,11 @@
 // nothing here reaches the client bundle except the one motion wrapper the
 // get-started band brings with it.
 
+import { LiveCatchUpShelf } from "./catch-up-shelf"
 import { LiveGetStartedBand } from "./get-started-band"
 import { LiveNowStrip } from "./now-strip"
-import { LivePastShelf } from "./past-shelf"
 import { LiveReadinessBand } from "./readiness-band"
+import { LiveRecordingsGrid } from "./recordings-grid"
 import { LiveRoleGuide } from "./role-guide"
 import { LiveStatusHero } from "./status-hero"
 import type {
@@ -15,7 +16,6 @@ import type {
   LandingReadiness,
   LandingSectionProps,
   LandingSession,
-  LandingSubjectTile,
   LandingViewer,
   LiveSettingsDictionary,
 } from "./types"
@@ -27,8 +27,8 @@ interface Props extends LandingSectionProps {
   readiness: LandingReadiness | null
   live: LandingSession[]
   upcoming: LandingSession[]
-  past: LandingSession[]
-  pastSubjects: LandingSubjectTile[]
+  catchUp: LandingSession[]
+  recordings: LandingSession[]
 }
 
 /**
@@ -54,8 +54,8 @@ export function LiveLandingContent({
   readiness,
   live,
   upcoming,
-  past,
-  pastSubjects,
+  catchUp,
+  recordings,
 }: Props) {
   return (
     <>
@@ -78,13 +78,25 @@ export function LiveLandingContent({
 
       {/* Gated on the ROWS, not on `policy.isOnline`: a school that has since
           gone back to the classroom still has classes it taught online, and
-          hiding them would lose the only history the page carries. */}
-      {past.length > 0 ? (
-        <LivePastShelf
+          hiding them would lose the only history the page carries. An empty
+          shelf here is also a real answer — a student who missed nothing has
+          nothing to catch up on, and should not be shown a heading saying so. */}
+      {catchUp.length > 0 ? (
+        <LiveCatchUpShelf
           dictionary={dictionary}
           lang={lang}
-          sessions={past}
-          subjects={pastSubjects}
+          sessions={catchUp}
+          viewer={viewer}
+        />
+      ) : null}
+
+      {/* Under the shelf, and gated on the ROWS for the same reason: a school
+          with no recording bucket has no recordings at all, and most do not. */}
+      {recordings.length > 0 ? (
+        <LiveRecordingsGrid
+          dictionary={dictionary}
+          lang={lang}
+          sessions={recordings}
           viewer={viewer}
         />
       ) : null}

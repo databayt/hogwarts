@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { LandingViewer } from "./types"
+import type { LandingSession, LandingViewer } from "./types"
 
 /**
  * Who may open /live at all. Everyone else is redirected to the dashboard.
@@ -87,4 +87,24 @@ export function resolveLandingViewer(
     showsTeacher: !opts.teachesEveryRow,
     showsSection: !OWN_SECTION_ROLES.includes(role),
   }
+}
+
+/**
+ * Where a class sits, in the words this reader needs — the badge beside a
+ * card's heading.
+ *
+ * `Section.name` is "Grade 7-A", the grade INCLUDING the class letter, so
+ * printing both is printing the grade twice. A reader who spans sections gets
+ * the section; a student, whose rows are all one section, gets the grade.
+ *
+ * Lives here rather than in a card so the strip's row and the catch-up shelf's
+ * card cannot disagree about it.
+ */
+export function rowContext(
+  session: Pick<LandingSession, "sectionName" | "gradeName">,
+  viewer: Pick<LandingViewer, "showsSection">
+): string | null {
+  return viewer.showsSection
+    ? (session.sectionName ?? session.gradeName)
+    : (session.gradeName ?? session.sectionName)
 }
