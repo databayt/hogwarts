@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   /* config options here */
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
 
+  // Docs pages are shiki/mermaid-heavy MDX; under 9 parallel workers a single
+  // page can exceed Next's 60s default and abort the whole export. 5 minutes.
+  staticPageGenerationTimeout: 300,
+
   // Optimize package imports for tree-shaking
   experimental: {
     // Allow file uploads up to 10MB via server actions (default is 1MB)

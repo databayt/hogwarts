@@ -34,20 +34,42 @@ const p = ".vercel/output/config.json";
 const c = JSON.parse(fs.readFileSync(p, "utf8"));
 const before = c.routes.length;
 
-// Drop ONLY the per-page handlers for segment-prefetch requests.
+// A route matching ".segment" has one of two shapes:
+//
+//   pure     — a segment-prefetch rewrite and nothing else. Always droppable.
+//   combined — Next 16 emits ONE route per page whose src alternates over all
+//              three RSC suffixes: (\.rsc|\.prefetch\.rsc|\.segments/...).
+//              DELETING it takes that page plain .rsc handling with it: the
+//              document still renders, but every soft navigation to the page
+//              404s its RSC payload and falls back to a full document load.
+//              That shipped on 2026-09-01 (observed on /en/pricing).
+//
+// So rewrite the combined ones to drop only the ".segments" alternative, and
+// delete the rest. All 556 combined routes do NOT fit (1711 + 556 = 2267), so
+// the rewrite is spent where soft navigation is user-visible — the non-tenant
+// marketing/docs/public pages — while tenant "/s/" dashboard routes keep the
+// old delete behaviour.
 //
 // The middlewarePath/handle guard is load-bearing, not defensive tidiness. The
 // middleware route matches ".segments/....segment.rsc" as an OPTIONAL group in
 // its own src regex, so a naive substring filter deletes it — which silently
 // removes the proxy, and with it all tenant subdomain routing. Every host then
 // serves the marketing site and looks fine while being wrong. That shipped once.
+const SEG_ALT = "|\\.segments/.+\\.segment\\.rsc";
+let rewritten = 0;
 c.routes = c.routes.filter(r => {
   if (r.middlewarePath || r.handle) return true;
-  return !JSON.stringify(r).includes(".segment");
+  if (!JSON.stringify(r).includes(".segment")) return true;
+  if (typeof r.src === "string" && r.src.includes(SEG_ALT) && !r.src.includes("/s/")) {
+    r.src = r.src.replace(SEG_ALT, "");
+    rewritten++;
+    return true;
+  }
+  return false;
 });
 
 const mw = c.routes.filter(r => r.middlewarePath).length;
-console.log(`    routes ${before} -> ${c.routes.length} (max 2048), middleware routes: ${mw}`);
+console.log(`    routes ${before} -> ${c.routes.length} (max 2048), rsc-preserved: ${rewritten}, middleware routes: ${mw}`);
 if (mw !== 1) { console.error("    ABORT: middleware route missing — tenant routing would break"); process.exit(1); }
 if (c.routes.length > 2048) { console.error("    ABORT: still over the route cap"); process.exit(1); }
 fs.writeFileSync(p, JSON.stringify(c));
