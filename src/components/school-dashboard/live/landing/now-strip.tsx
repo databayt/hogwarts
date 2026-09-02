@@ -76,7 +76,13 @@ export function LiveNowStrip({
   // merely scheduled — a room you can walk into now outranks one you cannot.
   const rest = [...live.slice(1), ...upcoming]
 
-  if (!featured && rest.length === 0) {
+  // Three rows: a lead and the two-up under it. Counted off the WHOLE block
+  // rather than off `rest`, because a school with nothing live has no
+  // `featured` — the first scheduled class becomes the lead instead, and a cap
+  // applied to `rest` alone would then leave a single lonely half.
+  const rows = (featured ? [featured, ...rest] : rest).slice(0, 3)
+
+  if (rows.length === 0) {
     return (
       <section className="mb-16">
         <div className="flex flex-col items-center gap-3 rounded-[36px] border border-dashed py-16 text-center">
@@ -100,27 +106,30 @@ export function LiveNowStrip({
     // and a 32px row-gap between items. The lead article takes all 24 columns;
     // the rest take 24 until LG and 12 above it — the two-up starts at lg, not
     // at md. The block closes on a hairline before the next one.
+    //
+    // TWO under the lead, never four. The reference's block is a lead plus a
+    // single two-up row, and a second row of halves reads as a list rather
+    // than as the shape being mirrored. The rest of what is coming stays one
+    // click away, on the sessions table.
     <section className="mb-16 border-b pb-8">
       <ul className="-mx-2 flex flex-wrap gap-y-8 md:-mx-[37.5px]">
-        {[featured, ...rest.slice(0, 4)]
-          .filter((session): session is LandingSession => Boolean(session))
-          .map((session, index) => (
-            <li
-              key={session.id}
-              className={cn(
-                "w-full px-2 md:px-[37.5px]",
-                index === 0 ? null : "lg:w-1/2"
-              )}
-            >
-              <SessionRow
-                session={session}
-                dictionary={dictionary}
-                lang={lang}
-                viewer={viewer}
-                size={index === 0 ? "lead" : "small"}
-              />
-            </li>
-          ))}
+        {rows.map((session, index) => (
+          <li
+            key={session.id}
+            className={cn(
+              "w-full px-2 md:px-[37.5px]",
+              index === 0 ? null : "lg:w-1/2"
+            )}
+          >
+            <SessionRow
+              session={session}
+              dictionary={dictionary}
+              lang={lang}
+              viewer={viewer}
+              size={index === 0 ? "lead" : "small"}
+            />
+          </li>
+        ))}
       </ul>
     </section>
   )

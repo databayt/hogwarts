@@ -24,11 +24,26 @@
       by artwork instead would drop a real subject from the shelf, so the fix
       is upstream (distinct catalog art), not in the component.
 
-- [ ] **The demo's `upcoming` slice has been empty for days.** Every
-      `scheduled` row on the demo school sits on 2026-08-30, so the strip's
-      two-up small rows have still never rendered in a browser. Re-run
-      `pnpm db:seed:single conference` before trusting any change to that half
-      of `now-strip.tsx`.
+- [x] **The demo's `upcoming` slice was empty, so the two-up had never
+      rendered.** Every `scheduled` row sat on 2026-08-30. Rebuilt with
+      `SEED_FORCE=1 pnpm db:seed:single conference`, which writes five school
+      days of history and the NEXT school day relative to `new Date()` — the
+      plain re-run short-circuits on its count guard, so the force flag is the
+      one that moves the dates. The two-up is now verified in a browser in
+      both languages.
+
+- [x] **A null `featured` cost the block a card.** The cap was applied to
+      `rest` alone, so a school with nothing live — the first upcoming becomes
+      the lead — rendered a single lonely half instead of a two-up. Counted
+      off the whole block now.
+
+- [ ] **The demo no longer has a `live` session.** The seed writes `ended`
+      history and `scheduled` next-day rows and nothing in between, so the one
+      live row the demo used to carry was a leftover from a run whose window
+      happened to be current, not a seeded state. Consequence: the strip's
+      live treatment — the `مباشر الآن` byline, and the lead row linking
+      straight into the room — cannot be seen locally. Give the seed a session
+      whose window spans "now", or flip one by hand before testing that path.
 
 ## Landing hero 2026-09-01 — closed
 
