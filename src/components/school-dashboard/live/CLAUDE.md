@@ -174,16 +174,21 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   cannot blank the strip. `getLiveLinkCoverage` RETURNS its failure rather than
   throwing, so check the `success` discriminant — a try/catch alone misses it.
 - **The landing hero states the OFFER, not the status (2026-09-01).**
-  `landing/status-hero.tsx` is the banner. As of 2026-09-02 its ground is
-  thmanyah.com's own: `#000d04` near-black with an angular field driven into
-  the inline-END side — `#045238` deep plane, the بالقلم `#00bc6d` wedge over
-  it, cut back by two straight corners and one large circle. The colours are
-  SAMPLED from `.clone/thmanyah-banner`, not guessed; only the bright wedge is
-  ours rather than the reference's `#00dd76`. What is deliberately NOT carried
-  is the reference's picture: its banner is a promotional creative —
-  photographed athletes, club kit, third-party wordmarks — so the rebuild takes
-  the composition and leaves the photograph. There is no hero image on this
-  page at all; its imagery is the catalog artwork on the cards below.
+  `landing/status-hero.tsx` is the banner. Its ground is the saas-marketing
+  green `#00bc6d`, and the inline-END side is filled by a PHOTOGRAPH whose
+  inner edge is cut on a diagonal, with `#045238` showing behind it — the
+  reference's arrangement, sampled from `.clone/thmanyah-banner`. What is
+  deliberately NOT carried is the reference's picture: that banner is a
+  promotional creative down to the photographed athletes, the club kit and the
+  third-party logos. Ours is `modern-06` from `CDN_IMAGES` — a بالقلم
+  marketing shot of students mid-lesson, already published for the homepage, so
+  it is a cached request rather than a new asset.
+
+  The picture panel is NOT mirrored by a transform, unlike the abstract field
+  it replaced: flipping the wrapper flips the PHOTOGRAPH, and a mirrored
+  photograph of real people is a different picture. The diagonal is written
+  twice instead — an `ltr:` variant carrying the reflected polygon — and the
+  image is never transformed.
 
   The headline is set in **thmanyah sans**, already vendored in `public/fonts/`
   and declared by `src/styles/thmanyah-clone.css`, which the ROOT layout
@@ -194,13 +199,19 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   = 800): the browser synthesises the missing one and loses the face's own
   drawing, which is the whole reason to set it.
 
-  Everything on the banner is a LITERAL hex and pinned LIGHT: a brand ground
+  Everything on the banner is a LITERAL hex and pinned DARK: a brand ground
   does not invert, so a `primary-foreground` token on it would be white in
-  light mode and black in dark — exactly backwards. The decorative field is
-  positioned logically (`end-0`) but drawn PHYSICALLY inside its wrapper —
-  `clip-path` has no logical form, so the wrapper flips whole (`ltr:-scale-x-100`)
-  rather than each polygon being mirrored by hand. It is hidden below `md`,
-  where the card stacks and a 40% field would sit under the headline.
+  light mode and black in dark — exactly backwards. Dark rather than light
+  because white on `#00bc6d` measures about 2.5:1, which is why the marketing
+  hero pairs this green with black. The panel is hidden below `md`, where the
+  card stacks and a 44% panel would sit under the headline.
+
+  The Arabic headline's two rows are width-matched with TATWEEL (U+0640, two
+  per word in the first row) — the same knob the marketing homepage's hero
+  uses, and the only way to stretch an Arabic line without distorting the face.
+  Measured, not eyeballed: 335.2px against 333.5px. It is Arabic-only, so the
+  English string carries none, and re-measure in the browser if the size, the
+  measure or the weights change, because the fit is specific to all three.
 
   The hero used to carry the live-now state — an `<h1>` reading "one class is
   live right now", the delivery mode under it and a "Join now" pointing at

@@ -46,8 +46,8 @@ conference/
 ├── nav.tsx                                                    heading + tab strip for the (app) surfaces
 ├── landing/                                                   the /live landing page
 │   ├── content.tsx           composes the sections below
-│   ├── status-hero.tsx       the dark (#000d04) banner: an angular green field, the
-│   │                     headline and the two ways in
+│   ├── status-hero.tsx       the green (#00bc6d) banner: the headline and the two
+│   │                     ways in, beside a diagonally-cut photograph
 │   ├── now-strip.tsx         live / coming-up — thmanyah.com's editorial row (mirrored
 │   │                     geometry), section-scoped, school-TZ times, catalog art
 │   ├── past-shelf.tsx        classes already taught — thmanyah.com's shelf block

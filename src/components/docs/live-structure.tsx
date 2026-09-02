@@ -168,7 +168,7 @@ export function LiveStructure({ className }: LiveStructureProps) {
               name: "status-hero.tsx",
               type: "file",
               description:
-                "the dark banner: an angular green field + the headline",
+                "the green banner: the headline beside a cut photograph",
             },
             {
               name: "now-strip.tsx",
