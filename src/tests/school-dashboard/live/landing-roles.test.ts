@@ -76,6 +76,50 @@ describe("resolveLandingViewer", () => {
       expect(v.isHost).toBe(false)
     }
   })
+
+  it("names the section to everyone but a student", () => {
+    // A student's rows are all their own section, so the section would read
+    // the same on every card. Everyone else spans several and needs it.
+    expect(resolveLandingViewer("STUDENT").showsSection).toBe(false)
+    for (const role of [
+      "DEVELOPER",
+      "ADMIN",
+      "TEACHER",
+      "GUARDIAN",
+      "STAFF",
+      "ACCOUNTANT",
+    ]) {
+      expect(resolveLandingViewer(role).showsSection).toBe(true)
+    }
+  })
+
+  it("names the teacher until the strip is narrowed to the reader's own classes", () => {
+    for (const role of [
+      "DEVELOPER",
+      "ADMIN",
+      "TEACHER",
+      "STUDENT",
+      "GUARDIAN",
+      "STAFF",
+      "ACCOUNTANT",
+    ]) {
+      expect(resolveLandingViewer(role).showsTeacher).toBe(true)
+    }
+    expect(
+      resolveLandingViewer("TEACHER", { teachesEveryRow: true }).showsTeacher
+    ).toBe(false)
+  })
+
+  it("keeps the teacher's name on a TEACHER whose rows were never narrowed", () => {
+    // `Conference.teacherId` references Teacher.id, so the page maps the user
+    // through `db.teacher` — and a TEACHER account with no `Teacher` row falls
+    // back to the whole school's sessions. Dropping the name there would hide
+    // whose class each card is. The role alone must not decide this.
+    expect(resolveLandingViewer("TEACHER").showsTeacher).toBe(true)
+    expect(
+      resolveLandingViewer("TEACHER", { teachesEveryRow: false }).showsTeacher
+    ).toBe(true)
+  })
 })
 
 describe("cardsFor", () => {

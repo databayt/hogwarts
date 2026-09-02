@@ -307,8 +307,52 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   already drifted — 8px of art-column padding against the reference's 12px,
   `py-2` where the reference pads 4px all round below md — which showed up as
   two different mobile layouts on one page. Add geometry to the shared row,
-  never to a caller; the `size` prop ("lead" | "small") is the only axis the
-  reference itself varies.
+  never to a caller. The `size` prop is now THREE weights — "lead" | "brief" |
+  "small" — and the third one is ours rather than the reference's: see the
+  entry below.
+
+- **The strip is ONE lead card and two brief ones (2026-09-02).** The lead is
+  whatever is live, or the next class to start, and keeps every row. The two
+  under it are `size="brief"`: TWO text rows, the subject with its badge and
+  then one meta line. Chapter, lesson and the portrait come off, and a running
+  brief row says "started" without the minute count.
+
+  The hierarchy is bought by SIMPLIFYING the neighbours, never by decorating
+  the lead. That is a deliberate constraint, not an accident of this pass:
+  three cards of equal weight made the class running right now exactly as easy
+  to miss as the one starting in two hours, and the fix for that is contrast,
+  which you get either by inflating one card or by quietening two. Inflating
+  was tried the same day and is recorded above — the lead's 274/250 art turned
+  the picture into the row. Do not reach for it again.
+
+  The badge stays on the TITLE row for every weight, brief included. It was
+  moved down into the meta line first, and on a phone an admin's line then
+  carried a name, a section and a clock, and truncated the first two into
+  ellipses at once. Up on the title row it costs no vertical space and leaves
+  the meta line two items, which is what fits a 254px copy column.
+
+  The past shelf deliberately stays on `small`. It sits under its own heading,
+  is not competing with the lead, and its rows are the only place the block
+  prints the chapter and lesson of a class you missed.
+
+- **A card says what the ROLE does not already know (2026-09-02).**
+  `showsTeacher` / `showsSection` on `LandingViewer`, resolved once in
+  `landing/viewer.ts`:
+  - a TEACHER's strip is already narrowed to the classes they teach, so their
+    cards name the SECTION and drop the teacher's name — their own name is the
+    one word on the card that could tell them nothing;
+  - a STUDENT's rows are all their own section, so theirs badge the GRADE and
+    name the teacher;
+  - ADMIN · DEVELOPER · STAFF · ACCOUNTANT · GUARDIAN read across sections and
+    get both.
+
+  `showsTeacher` is keyed on `teachesEveryRow`, which the PAGE passes after it
+  has resolved a `Teacher` row — NOT on the role. `Conference.teacherId`
+  references `Teacher.id`, so a TEACHER account with no teacher row falls
+  through to the whole-school scope, and a card that dropped the name there
+  would be hiding whose class it is. That is why `resolveLandingViewer` takes a
+  second argument and the page re-resolves the viewer inside the try block.
+  Covered by `landing-roles.test.ts`.
 
 - **The second shelf is PAST CLASSES, not recordings (2026-09-02).**
   `landing/past-shelf.tsx` mirrors thmanyah.com's shelf block — the section

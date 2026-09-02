@@ -87,7 +87,10 @@ function resolvePhase(
 
   if (ctx.isLive) {
     const total = Math.max(1, Math.round(minutes(row.scheduledEnd, startedAt)))
-    const done = Math.min(total, Math.max(0, Math.round(minutes(ctx.now, startedAt))))
+    const done = Math.min(
+      total,
+      Math.max(0, Math.round(minutes(ctx.now, startedAt)))
+    )
     const left = minutes(row.scheduledEnd, ctx.now)
     return {
       phase: left <= ENDING_MINUTES ? "ending" : "started",
@@ -125,7 +128,11 @@ export default async function Page({ params }: Props) {
   const settings = dictionary.liveClasses?.settings
   const { schoolId } = await getTenantContext()
 
-  const viewer = resolveLandingViewer(role)
+  // Re-resolved below once the strip's scope is known: whether a teacher's rows
+  // were actually narrowed to their own classes decides whether a card bothers
+  // naming the teacher. Resolved here first so every branch — including the
+  // ones that never reach a query — has a viewer.
+  let viewer = resolveLandingViewer(role)
 
   let policy: LandingPolicy = {
     deliveryMode: "physical",
@@ -195,6 +202,15 @@ export default async function Page({ params }: Props) {
             : null
         const teacherId = teacher?.id ?? undefined
 
+        // Every row below is now one this teacher teaches, so their cards stop
+        // repeating their own name and name the SECTION instead. Keyed on the
+        // resolved id rather than on the role: a TEACHER account with no
+        // `Teacher` row falls through to the whole-school scope, and a card
+        // that dropped the name there would be hiding whose class it is.
+        viewer = resolveLandingViewer(role, {
+          teachesEveryRow: Boolean(teacherId),
+        })
+
         // Only the strip's rows are read here. The hero used to also show the
         // day's live/total counts, and dropping that state from it drops the
         // second query with it (`getLiveLandingCounts` stays in queries.ts —
@@ -223,6 +239,7 @@ export default async function Page({ params }: Props) {
             all.flatMap((r) => [
               r.subject?.name,
               r.section?.name,
+              r.section?.grade?.name,
               r.catalogLesson?.chapter?.name,
               r.catalogLesson?.name,
             ]),
@@ -263,6 +280,9 @@ export default async function Page({ params }: Props) {
               : null,
             sectionName: r.section?.name
               ? (labels.get(r.section.name) ?? r.section.name)
+              : null,
+            gradeName: r.section?.grade?.name
+              ? (labels.get(r.section.grade.name) ?? r.section.grade.name)
               : null,
             chapterName: r.catalogLesson?.chapter?.name
               ? (labels.get(r.catalogLesson.chapter.name) ??

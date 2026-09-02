@@ -41,6 +41,8 @@ export interface LandingSession {
   teacherPhotoUrl: string | null
   subjectName: string | null
   sectionName: string | null
+  /** The academic grade — "الصف الأول" — badged beside the heading. */
+  gradeName: string | null
   /** The catalog chapter and lesson this class is teaching, when a teacher has
    *  anchored it to one. Null on any session materialized from the timetable,
    *  which knows its subject but not today's lesson. */
@@ -76,6 +78,27 @@ export interface LandingViewer {
    */
   canJoin: boolean
   canViewRecordings: boolean
+  /**
+   * Does a session card name the TEACHER.
+   *
+   * False for a teacher reading their own rows — the landing page narrows a
+   * teacher's strip to the classes they teach, so their own name on every card
+   * is the one word that carries no information. It stays TRUE for a teacher
+   * whose narrowing did not apply (no `Teacher` row, so they are seeing the
+   * whole school), which is why it is resolved from the query that ran rather
+   * than from the role alone.
+   */
+  showsTeacher: boolean
+  /**
+   * Does a session card name the SECTION.
+   *
+   * False for a student, whose every row is their own section. True for
+   * everyone else: an admin and an accountant read across the school, a
+   * guardian across their children's sections, and a teacher across the
+   * classes they teach — for all of them the section is what tells two
+   * otherwise identical cards apart.
+   */
+  showsSection: boolean
 }
 
 /** How the school delivers teaching right now, for the hero and the band. */

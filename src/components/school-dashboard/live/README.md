@@ -49,16 +49,18 @@ conference/
 │   ├── status-hero.tsx       the green (#00bc6d) banner: the headline and the two
 │   │                     ways in, beside a transparent line mark
 │   ├── now-strip.tsx         live / coming-up — thmanyah.com's editorial row (mirrored
-│   │                     geometry), section-scoped, school-TZ times, catalog art
+│   │                     geometry), section-scoped, school-TZ times, catalog art.
+│   │                     ONE lead card, then two brief ones
 │   ├── session-row.tsx       the reference's article row — ONE component, drawn by
-│   │                     the strip and the shelf alike
+│   │                     the strip and the shelf alike, at three weights
+│   │                     (lead · brief · small) and adapting to the role
 │   ├── past-shelf.tsx        classes already taught — thmanyah.com's shelf block
 │   │                     (mirrored geometry): a list column beside subject tiles
 │   ├── readiness-band.tsx    can this school teach online (ADMIN/DEVELOPER only)
 │   ├── role-guide.tsx        what THIS role can do here — real links, not marketing
 │   ├── get-started-band.tsx  the pitch + 3 setup steps, only while not yet online
 │   ├── reveal.tsx            the page's one motion wrapper
-│   └── viewer.ts             role → what the page offers
+│   └── viewer.ts             role → what the page offers, and what a card names
 │   └── types.ts              shared section props + LandingSession
 ├── table.tsx · columns.tsx · form.tsx · schedule-form.tsx    DataTable + the two create forms
 ├── detail.tsx · room.tsx · participants-panel.tsx            session detail · in-app room · kick UI

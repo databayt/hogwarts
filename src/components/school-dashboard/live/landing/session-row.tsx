@@ -1,10 +1,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { Fragment, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Radio } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 
 import type {
   LandingSectionProps,
@@ -13,7 +15,7 @@ import type {
 } from "./types"
 
 /**
- * One session as the reference's article row.
+ * One session as the reference's article row, at three weights.
  *
  * Every value here is off its markup, not estimated: the row carries
  * `margin-inline: -8px` with a 16px row-gap and NO column gap — the space
@@ -24,8 +26,20 @@ import type {
  * every width.
  *
  * The art column is 104px basis on mobile — an 80px square once its 12px
- * padding is off — and 274px (lead) / 144px (small) from md, giving 250 and
- * 120. The copy column is padded 8px and flexes.
+ * padding is off — and 144px from md, giving 120. One size for every weight;
+ * the reference's 274px lead column is deliberately not taken (see below). The
+ * copy column is padded 8px and flexes.
+ *
+ * The three sizes:
+ *
+ *   lead   — the strip's featured card: the class that is running, or the next
+ *            one to start. Every row it has, and the 20px title at lg.
+ *   brief  — the strip's two under it. TWO text rows: the subject with its
+ *            badge, then one meta line. It exists so the lead reads as the
+ *            lead — the hierarchy is bought by simplifying its neighbours,
+ *            not by decorating it.
+ *   small  — the article row at its ordinary weight, which is what the past
+ *            shelf draws. The lead's rows, at the smaller title.
  *
  * The whole row is one link with a tinted hover, as theirs is.
  */
@@ -40,11 +54,12 @@ export function LandingSessionRow({
   dictionary: LandingSectionProps["dictionary"]
   lang: string
   viewer: LandingViewer
-  size: "lead" | "small"
+  size: "lead" | "brief" | "small"
 }) {
-  const n = dictionary?.landing?.now
   const href = joinHref(session, viewer, lang)
   const isLead = size === "lead"
+  const isBrief = size === "brief"
+  const context = rowContext(session, viewer)
 
   return (
     <Link
@@ -56,6 +71,12 @@ export function LandingSessionRow({
           : "items-start md:pe-[2px]"
       )}
     >
+      {/* ONE art size for every row, lead included. The reference gives its
+          lead a 274px column, and taking that literally inverts the card: a
+          250px square stands taller than the stacked text beside it, so the
+          picture becomes the row. The lead is distinguished by what it SAYS
+          — five rows against two — and by spanning the full width while its
+          neighbours are halves. */}
       <div className="shrink-0 basis-[104px] px-3 md:basis-[144px]">
         <div className="relative aspect-square w-full overflow-hidden rounded-[12px] md:max-w-[120px]">
           <Art session={session} sizes="120px" />
@@ -63,7 +84,7 @@ export function LandingSessionRow({
       </div>
 
       <div className="min-w-0 flex-1 px-2 text-start">
-        {/* Five rows, in the order the card is read: WHAT subject, then where
+        {/* The rows, in the order the card is read: WHAT subject, then where
             in it (chapter, then lesson), then who is teaching, then where the
             class is in its own clock.
 
@@ -77,36 +98,154 @@ export function LandingSessionRow({
             being taught today. Rows that have nothing to say are DROPPED, not
             rendered empty — a card should never show a blank line where a
             teacher simply has not anchored a lesson. */}
-        <h3 className="mt-0 mb-2 line-clamp-2 text-base font-semibold lg:text-xl lg:leading-8">
-          {session.subjectName ?? session.title}
-        </h3>
+        <div
+          className={cn(
+            "mt-0 flex flex-wrap items-baseline gap-x-2 gap-y-1",
+            isBrief ? "mb-1.5" : "mb-2"
+          )}
+        >
+          <h3
+            className={cn(
+              "line-clamp-2 text-base font-semibold",
+              !isBrief && "lg:text-xl lg:leading-8"
+            )}
+          >
+            {session.subjectName ?? session.title}
+          </h3>
+          {/* Where this class sits — the section for a reader who spans
+              several, the grade for a student whose every row is their own
+              section. `items-baseline` so the badge sits on the heading's
+              baseline rather than centring against a two-line heading.
 
-        {session.chapterName ? (
-          <p className="mb-1 line-clamp-1 text-sm">{session.chapterName}</p>
-        ) : null}
-
-        {session.lessonName ? (
-          <p className="text-muted-foreground mb-2 line-clamp-1 text-sm">
-            {session.lessonName}
-          </p>
-        ) : null}
-
-        <div className={cn("flex flex-col", isLead ? "gap-y-1.5" : "gap-y-1")}>
-          {session.teacherName ? (
-            <span className="flex items-center gap-2 text-sm">
-              <Portrait
-                name={session.teacherName}
-                photoUrl={session.teacherPhotoUrl}
-              />
-              <span className="font-bold">{session.teacherName}</span>
-            </span>
+              It stays on the TITLE row at every size, brief included. Moving it
+              down into the meta line was tried and is worse: an admin's line
+              then carries a name, a section and a clock, and on a phone the
+              first two truncate into ellipses at once. Up here it costs the
+              heading no vertical space and leaves the meta line two items. */}
+          {context ? (
+            <Badge variant="secondary" className="shrink-0 font-normal">
+              {context}
+            </Badge>
           ) : null}
-
-          <Status session={session} dictionary={dictionary} />
         </div>
+
+        {isBrief ? (
+          <BriefMeta
+            session={session}
+            dictionary={dictionary}
+            viewer={viewer}
+          />
+        ) : (
+          <>
+            {session.chapterName ? (
+              <p className="mb-1 line-clamp-1 text-sm">{session.chapterName}</p>
+            ) : null}
+
+            {session.lessonName ? (
+              <p className="text-muted-foreground mb-2 line-clamp-1 text-sm">
+                {session.lessonName}
+              </p>
+            ) : null}
+
+            <div
+              className={cn("flex flex-col", isLead ? "gap-y-1.5" : "gap-y-1")}
+            >
+              {viewer.showsTeacher && session.teacherName ? (
+                <span className="flex items-center gap-2 text-sm">
+                  <Portrait
+                    name={session.teacherName}
+                    photoUrl={session.teacherPhotoUrl}
+                  />
+                  <span className="font-bold">{session.teacherName}</span>
+                </span>
+              ) : null}
+
+              <Status session={session} dictionary={dictionary} />
+            </div>
+          </>
+        )}
       </div>
     </Link>
   )
+}
+
+/**
+ * The brief row's second and last line — who is teaching, and where the class
+ * is in its own clock. WHERE it is taught is already on the title row, in the
+ * badge, and repeating it here is what made this line truncate: an admin's row
+ * carried a name, a section and a time, and on a phone the first two turned
+ * into ellipses at once.
+ *
+ * Built as a LIST and then interleaved with separators, so a row with no
+ * teacher never prints a dangling "·". A teacher's brief card is the clock
+ * alone — their own name is the one thing on it that could tell them nothing,
+ * since the page has already narrowed the strip to the classes they teach.
+ *
+ * NO portrait. The lead card sets the teacher beside a 24px round photo, the
+ * way the reference does; on a two-row card that disc is 30px of a line that
+ * still has a name and a time to fit, and it is the only thing on it carrying
+ * no information.
+ *
+ * The clock is `shrink-0` and the name truncates, because a long teacher name
+ * must never be what pushes the start time off the card.
+ */
+function BriefMeta({
+  session,
+  dictionary,
+  viewer,
+}: {
+  session: LandingSession
+  dictionary: LandingSectionProps["dictionary"]
+  viewer: LandingViewer
+}) {
+  const items: Array<{ key: string; node: ReactNode }> = []
+
+  if (viewer.showsTeacher && session.teacherName) {
+    items.push({
+      key: "who",
+      node: (
+        <span className="text-foreground truncate font-bold">
+          {session.teacherName}
+        </span>
+      ),
+    })
+  }
+
+  items.push({
+    key: "when",
+    node: <Status session={session} dictionary={dictionary} compact />,
+  })
+
+  return (
+    <div className="text-muted-foreground flex min-w-0 items-center gap-x-1.5 text-xs sm:text-sm">
+      {items.map(({ key, node }, index) => (
+        <Fragment key={key}>
+          {index > 0 ? (
+            <span aria-hidden="true" className="shrink-0 opacity-60">
+              ·
+            </span>
+          ) : null}
+          {node}
+        </Fragment>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Where the class sits, in the words this reader needs.
+ *
+ * `Section.name` is "Grade 7-A" — the grade INCLUDING the class letter — so
+ * printing both is printing the grade twice. A reader who spans sections gets
+ * the section; a student, whose rows are all one section, gets the grade.
+ */
+function rowContext(
+  session: LandingSession,
+  viewer: LandingViewer
+): string | null {
+  return viewer.showsSection
+    ? (session.sectionName ?? session.gradeName)
+    : (session.gradeName ?? session.sectionName)
 }
 
 /**
@@ -120,19 +259,45 @@ export function LandingSessionRow({
  *
  * The phase is resolved on the server (see `resolvePhase` on the page), so
  * this component only chooses words for it.
+ *
+ * `compact` is the brief row's version: the same words, minus the minute
+ * count. "34 من 45 دقيقة" is the featured card's detail — on a two-row card it
+ * is the third thing on a line that already has to fit a name and a clock, and
+ * it is the one of the three a reader can do without.
  */
 function Status({
   session,
   dictionary,
+  compact = false,
 }: {
   session: LandingSession
   dictionary: LandingSectionProps["dictionary"]
+  compact?: boolean
 }) {
   const phase = dictionary?.landing?.now?.phase
   const running = session.phase === "started" || session.phase === "ending"
 
+  // The number at the end of the row: how far a running class has got, or
+  // when a class that has not started begins. A compact running row prints
+  // neither — "بدأت" has already said the only thing it has room for.
+  const number =
+    running && session.progress && !compact
+      ? (phase?.progress ?? "{done}/{total}")
+          .replace("{done}", String(session.progress.done))
+          .replace("{total}", String(session.progress.total))
+      : running && compact
+        ? null
+        : session.scheduledStart || null
+
   return (
-    <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-xs sm:text-sm">
+    <span
+      className={cn(
+        "flex items-center gap-x-2",
+        compact
+          ? "shrink-0"
+          : "text-muted-foreground flex-wrap text-xs sm:text-sm"
+      )}
+    >
       {running ? (
         <span className="text-primary inline-flex items-center gap-1 font-bold">
           <Radio className="size-3.5" aria-hidden="true" />
@@ -144,15 +309,7 @@ function Status({
         <span className="font-bold">{phase?.soon}</span>
       ) : null}
 
-      {running && session.progress ? (
-        <span className="tabular-nums">
-          {(phase?.progress ?? "{done}/{total}")
-            .replace("{done}", String(session.progress.done))
-            .replace("{total}", String(session.progress.total))}
-        </span>
-      ) : session.scheduledStart ? (
-        <span className="tabular-nums">{session.scheduledStart}</span>
-      ) : null}
+      {number ? <span className="tabular-nums">{number}</span> : null}
     </span>
   )
 }

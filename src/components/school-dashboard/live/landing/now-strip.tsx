@@ -125,7 +125,7 @@ export function LiveNowStrip({
               dictionary={dictionary}
               lang={lang}
               viewer={viewer}
-              size={index === 0 ? "lead" : "small"}
+              size={index === 0 ? "lead" : "brief"}
             />
           </li>
         ))}

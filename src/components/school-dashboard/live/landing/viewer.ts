@@ -53,13 +53,30 @@ export function canOpenLanding(role: string): boolean {
 }
 
 /**
+ * A student's rows are all their own section, so the section is the one label
+ * that would read the same on every card they are shown.
+ */
+const OWN_SECTION_ROLES = ["STUDENT"]
+
+/**
  * Everything the page needs to know about the reader, resolved once.
  *
  * Kept here rather than inline in the route file so it can be tested, and so
  * the five role lists live in one place instead of being restated per surface
  * — the hygiene item `ISSUE.md` raises about this block's route files.
+ *
+ * `teachesEveryRow` says the strip was actually narrowed to this reader's own
+ * classes — the teacher filter on the page. It is passed in rather than read
+ * off the role because that narrowing can FAIL to apply: a TEACHER account
+ * with no `Teacher` row falls through to the whole-school scope, and a card
+ * that then dropped the teacher's name would be hiding whose class it is.
+ * Default false, so the page must have proved the narrowing before a card
+ * leaves anything out.
  */
-export function resolveLandingViewer(role: string): LandingViewer {
+export function resolveLandingViewer(
+  role: string,
+  opts: { teachesEveryRow?: boolean } = {}
+): LandingViewer {
   return {
     role,
     canSchedule: SCHEDULE_ROLES.includes(role),
@@ -67,5 +84,7 @@ export function resolveLandingViewer(role: string): LandingViewer {
     isHost: HOST_ROLES.includes(role),
     canJoin: JOIN_ROLES.includes(role),
     canViewRecordings: RECORDING_ROLES.includes(role),
+    showsTeacher: !opts.teachesEveryRow,
+    showsSection: !OWN_SECTION_ROLES.includes(role),
   }
 }

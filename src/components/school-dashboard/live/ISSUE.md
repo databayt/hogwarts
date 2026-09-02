@@ -4,6 +4,44 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Landing: the strip's card hierarchy 2026-09-02 — closed
+
+- [x] **One lead card, two brief ones.** Three cards of equal weight made the
+      class running right now as easy to miss as the one starting in two hours.
+      `size="brief"` is two text rows — the subject with its badge, then the
+      teacher and the clock on one line — and the lead keeps every row. The
+      contrast is bought by quietening the neighbours; inflating the lead was
+      tried the same day and inverted the card (see CLAUDE.md).
+- [x] **The card adapts to the role.** `showsTeacher` / `showsSection` on
+      `LandingViewer`. A teacher's cards name the section and drop their own
+      name; a student's badge the grade and name the teacher; every
+      cross-section reader gets both. `showsTeacher` keys on the page having
+      actually resolved a `Teacher` row, never on the role — a TEACHER with no
+      teacher row still sees the whole school, and there the name must stay.
+      Four new cases in `landing-roles.test.ts`.
+- [x] **`started` and `ending` are verified after all.** The two open items
+      below say those phases had never been seen; the demo was re-seeded since,
+      and both were checked in a browser today (ar + en, admin/teacher/student)
+      — including the live chip on a brief row. `soon` and the room link from a
+      live lead row are still unverified.
+
+- [ ] **A guardian's strip and shelf are both empty on the demo.** Logged in as
+      the demo parent, `/live` renders the empty state and no past shelf, while
+      the same school's admin sees three live/upcoming rows. Either the demo
+      guardian's wards sit in sections with no online classes, or
+      `resolveViewerSectionScope`'s guardian arm returns a section set that
+      never matches. Worth an hour with the seed before assuming the query is
+      wrong.
+
+- [ ] **`landingScope` drops school-wide sessions; `buildLiveClassWhere` keeps
+      them.** The table's where-clause is
+      `OR: [{ sectionId: { in: … } }, { visibility: "school" }]`, so an
+      assembly reaches a scoped viewer. The landing page's scope is a bare
+      `sectionId: { in: … }`, so the same assembly is invisible on `/live` and
+      visible on `/live/dashboard`. Pre-existing, untouched by this pass, and a
+      one-line fix — but it changes what students see, so it wants a decision
+      rather than a drive-by.
+
 ## Landing: past-classes shelf + the banner ground 2026-09-02 — closed
 
 - [x] **A second shelf, in the reference's shelf geometry.**

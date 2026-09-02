@@ -101,6 +101,16 @@ const landingSessionInclude = {
       chapter: { select: { id: true, name: true } },
     },
   },
+  // The badge beside the card's heading. `Section.name` is "Grade 7-A" — the
+  // section INCLUDING its letter — so the grade has to come off the grade row
+  // itself rather than be parsed back out of it.
+  section: {
+    select: {
+      id: true,
+      name: true,
+      grade: { select: { id: true, name: true } },
+    },
+  },
 } as const
 
 // ============================================================================
