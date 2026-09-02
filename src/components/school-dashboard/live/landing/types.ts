@@ -24,6 +24,8 @@ export interface LandingSession {
   id: string
   title: string
   teacherName: string
+  /** The teacher's own portrait for the byline; null falls back to initials. */
+  teacherPhotoUrl: string | null
   subjectName: string | null
   sectionName: string | null
   /** Pre-formatted by the page, in the SCHOOL's timezone — not the reader's. */

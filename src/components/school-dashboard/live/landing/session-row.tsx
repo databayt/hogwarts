@@ -56,22 +56,9 @@ export function LandingSessionRow({
           : "items-start md:pe-[2px]"
       )}
     >
-      <div
-        className={cn(
-          "shrink-0 basis-[104px] px-3",
-          isLead ? "md:basis-[274px]" : "md:basis-[144px]"
-        )}
-      >
-        <div
-          className={cn(
-            "relative aspect-square w-full overflow-hidden rounded-[12px]",
-            isLead ? "md:max-w-[250px]" : "md:max-w-[120px]"
-          )}
-        >
-          <Art
-            session={session}
-            sizes={isLead ? "(min-width: 768px) 250px, 80px" : "120px"}
-          />
+      <div className="shrink-0 basis-[104px] px-3 md:basis-[144px]">
+        <div className="relative aspect-square w-full overflow-hidden rounded-[12px] md:max-w-[120px]">
+          <Art session={session} sizes="120px" />
         </div>
       </div>
 
@@ -84,19 +71,23 @@ export function LandingSessionRow({
           {dek(session)}
         </p>
 
-        {/* Their byline row: the person in bold, then the placing and the date
-            in the secondary colour, the date a size smaller until sm. Ours
-            names the teacher, then where the class sits and when — or that it
-            is running, which is this page's version of a dateline. */}
-        <div
-          className={cn(
-            "flex flex-wrap items-center gap-x-1",
-            isLead ? "gap-y-3" : "gap-y-2"
-          )}
-        >
+        {/* Their byline is TWO stacked rows, not one: the author beside a 24px
+            round portrait, then the placing and the date in the secondary
+            colour a size smaller until sm. Ours names the teacher, then when
+            the class runs — or that it is running now, which is this page's
+            version of a dateline. Stacking them is also what makes the copy
+            column the taller of the two, as it is in the reference. */}
+        <div className={cn("flex flex-col", isLead ? "gap-y-1.5" : "gap-y-1")}>
           {session.teacherName ? (
-            <span className="text-sm font-bold">{session.teacherName}</span>
+            <span className="flex items-center gap-2 text-sm">
+              <Portrait
+                name={session.teacherName}
+                photoUrl={session.teacherPhotoUrl}
+              />
+              <span className="font-bold">{session.teacherName}</span>
+            </span>
           ) : null}
+
           <span className="text-muted-foreground text-xs sm:text-sm">
             {session.isLive ? (
               <span className="text-primary inline-flex items-center gap-1 font-bold">
@@ -111,6 +102,59 @@ export function LandingSessionRow({
       </div>
     </Link>
   )
+}
+
+/**
+ * The byline's 24px round portrait.
+ *
+ * `Teacher.profilePhotoUrl` is the source, and it is USUALLY NULL — one demo
+ * teacher in a hundred has one, and a school that never uploads staff photos
+ * has none at all. So initials are the ordinary path, not an error state: two
+ * letters on a muted disc, at the same diameter, so the byline's baseline does
+ * not shift when a photo does exist.
+ *
+ * Deliberately NOT the shadcn `Avatar`, which is Radix and so a client
+ * component — this row is pure server composition, and a decorative 24px disc
+ * is not worth putting the block's first hydration boundary on the page for.
+ */
+function Portrait({
+  name,
+  photoUrl,
+}: {
+  name: string
+  photoUrl: string | null
+}) {
+  if (photoUrl) {
+    return (
+      <Image
+        src={photoUrl}
+        alt=""
+        width={24}
+        height={24}
+        className="size-6 shrink-0 rounded-full object-cover"
+        unoptimized
+      />
+    )
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold"
+    >
+      {initials(name)}
+    </span>
+  )
+}
+
+/** First letters of the first two words — the usual two-letter monogram. */
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => [...word][0] ?? "")
+    .join("")
 }
 
 /**

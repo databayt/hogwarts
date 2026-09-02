@@ -208,6 +208,7 @@ export default async function Page({ params }: Props) {
             teacherName: rawTeacher
               ? (teacherNames.get(rawTeacher) ?? rawTeacher)
               : "",
+            teacherPhotoUrl: r.teacher?.profilePhotoUrl ?? null,
             subjectName: r.subject?.name
               ? (labels.get(r.subject.name) ?? r.subject.name)
               : null,

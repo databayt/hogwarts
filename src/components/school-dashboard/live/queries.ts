@@ -77,6 +77,17 @@ const landingSessionInclude = {
   subject: {
     select: { id: true, name: true, thumbnail: true, color: true },
   },
+  // The byline's avatar. Overridden here rather than in the list include for
+  // the same reason `subject` is: the sessions TABLE renders no imagery and
+  // should not pay for the column.
+  teacher: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      profilePhotoUrl: true,
+    },
+  },
 } as const
 
 // ============================================================================

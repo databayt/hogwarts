@@ -258,6 +258,28 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   `read_school_dashboard` and sees every session, but `authorization.ts` grants
   it neither a join role nor `view_recordings`, so the page must not offer it
   either. Covered by `src/tests/school-dashboard/live/landing-roles.test.ts`.
+- **The row's byline is TWO stacked rows, with a portrait (2026-09-02).** The
+  reference sets the author beside a 24px round photo, then drops the placing
+  and the date onto their own line beneath. Ours names the teacher, then when
+  the class runs — or that it is running now. Stacking them is load-bearing,
+  not decoration: it is what makes the copy column the TALLER of the two, which
+  is the proportion the reference's card actually has.
+
+  Because of that, the art is now ONE size for every row — 104px basis, 144px
+  from md, 120px of picture — and the lead's old 274/250 is gone. A 250px
+  square is taller than four stacked text blocks, which inverted the
+  proportion. The lead stays distinguished by spanning the full width while
+  the others are halves, exactly as the reference distinguishes its own.
+
+  `Teacher.profilePhotoUrl` feeds the portrait and is USUALLY NULL — one demo
+  teacher in a hundred has one — so the two-letter monogram is the ordinary
+  path, not an error state. `landingSessionInclude` overrides the teacher
+  select to pull that column, for the same reason it overrides `subject`: the
+  sessions TABLE renders no imagery and should not pay for it. The portrait is
+  hand-rolled rather than the shadcn `Avatar`, which is Radix and therefore a
+  client component — this row is pure server composition and a decorative disc
+  is not worth the block's first hydration boundary.
+
 - **One article row, two blocks (2026-09-02).** `landing/session-row.tsx` is
   the reference's article row, and both the strip and the past shelf draw it.
   The shelf briefly carried its own near-copy, and within a day the two had
