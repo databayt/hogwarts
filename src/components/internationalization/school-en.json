@@ -4172,7 +4172,15 @@
         "saveSettings": "Save Settings"
       },
       "lunchBreak": "Lunch Break",
-      "days": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      "days": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ],
       "exceptionTypes": {
         "holiday": "Holiday",
         "event": "Event",
@@ -5182,7 +5190,7 @@
       },
       "landing": {
         "hero": {
-          "title": "Learn live from {mark}",
+          "title": "Learn live with your school from {mark}",
           "titleMark": "anywhere",
           "offline": "Live classes, alongside the classroom — not instead of it",
           "offlineAdmin": "Your school teaches in person. Turn on online teaching and the periods already on the timetable become joinable rooms.",
@@ -6053,7 +6061,15 @@
           "noExamsDate": "No exams scheduled for this date",
           "scheduleNewExam": "Schedule New Exam",
           "roomTBD": "Room TBD",
-          "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+          "weekDays": [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+          ]
         },
         "analytics": {
           "gradeDistribution": "Grade Distribution",

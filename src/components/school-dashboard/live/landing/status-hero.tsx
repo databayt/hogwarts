@@ -42,6 +42,9 @@ interface HeroProps extends LandingSectionProps {
  * rather than tokenised. Nothing here may use `primary-foreground`: on a green
  * ground that token is white in light mode and black in dark, which is exactly
  * backwards.
+ *
+ * The card's geometry is that banner's, measured: 1170px of container at a
+ * 36px radius, 259px tall, 32px of air under it.
  */
 export function LiveStatusHero({
   dictionary,
@@ -52,10 +55,14 @@ export function LiveStatusHero({
   const d = dictionary?.landing
 
   return (
-    <section className="mb-10">
-      <div className="flex flex-col justify-between gap-8 rounded-[36px] bg-[#00bc6d] px-8 py-8 text-[#050505] sm:px-12 lg:min-h-[180px] lg:flex-row lg:items-center lg:py-9">
+    <section className="mb-8">
+      <div className="flex flex-col justify-between gap-8 rounded-[36px] bg-[#00bc6d] px-8 py-10 text-[#050505] sm:px-12 lg:min-h-[259px] lg:flex-row lg:items-center lg:py-12">
         <div className="min-w-0">
-          <h1 className="max-w-[26ch] text-3xl font-extrabold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+          {/* Two lines of ~7 words inside a ~420px measure, at the
+              reference's ~38px — its own headline is 4 words over 3, with the
+              emphasis carried by WEIGHT inside an otherwise medium line rather
+              than by a highlight. */}
+          <h1 className="max-w-[16ch] text-3xl leading-[1.35] font-medium text-balance sm:text-4xl lg:max-w-[420px] lg:text-[38px]">
             {policy.isOnline ? (
               <MarkedHeadline
                 template={d?.hero?.title}
@@ -193,7 +200,7 @@ function SecondaryAction({
 }
 
 /**
- * The headline, with its last phrase on the mint mark.
+ * The headline, with its last phrase carrying the weight.
  *
  * The phrase travels as its own dictionary key rather than as markup inside
  * the sentence: an Arabic translator moving it would otherwise have to carry
@@ -215,32 +222,9 @@ function MarkedHeadline({
   return (
     <>
       {before}
-      <LiveMark>{mark}</LiveMark>
+      <strong className="font-extrabold">{mark}</strong>
       {after}
     </>
-  )
-}
-
-/**
- * The homepage's mint highlight mark, behind the phrase the headline lands on.
- *
- * Mint on green under dark ink is the reference hero's own pairing, not an
- * invention: `#9fe5b1` is the بالقلم brand mint and it is drawn to sit on the
- * `#00bc6d` ground. Literal hexes for the same reason the banner uses them —
- * neither colour inverts, so neither may be tokenised.
- *
- * `isolate` is load-bearing: without a stacking context of its own, the mark's
- * `-z-10` sends it BEHIND the banner's own green ground and it disappears.
- */
-function LiveMark({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="relative isolate inline-block">
-      <span
-        aria-hidden="true"
-        className="absolute inset-x-[-0.1em] inset-y-[0.06em] -z-10 bg-[#9fe5b1]"
-      />
-      <span className="relative text-[#050505]">{children}</span>
-    </span>
   )
 }
 
@@ -259,7 +243,7 @@ function pill(variant: "default" | "ghost") {
     "text-sm font-medium whitespace-nowrap transition-colors",
     "outline-none focus-visible:ring-2 focus-visible:ring-[#050505]/40",
     variant === "default"
-      ? "bg-[#050505] text-white hover:bg-[#050505]/85"
+      ? "bg-white text-[#050505] hover:bg-white/90"
       : "text-[#050505]/75 hover:bg-[#050505]/10 hover:text-[#050505]"
   )
 }

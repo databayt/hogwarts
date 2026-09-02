@@ -192,6 +192,13 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   session props at all, so `getLiveLandingCounts` lost its only caller — the
   page now runs ONE query for the landing instead of two.
 
+  The type and geometry now follow thmanyah.com's own banner (measured from
+  `.clone/thmanyah-home`, node 42): a 1170px card at a 36px radius, 259px tall,
+  32px of air under it, a two-line headline of about seven words in a ~420px
+  measure at 38px medium with ONE phrase in extrabold, over a white pill with
+  dark ink. The emphasis is carried by WEIGHT, not by the mint highlight the
+  font.thmanyah.com hero uses — that mark is gone from this banner.
+
   Two buttons, never more, one word each. Primary is always the sessions
   list; the single alternative is picked by role — schedule (whoever may
   create a class) > recordings (whoever may not, and is likely here for a
@@ -212,6 +219,12 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   `read_school_dashboard` and sees every session, but `authorization.ts` grants
   it neither a join role nor `view_recordings`, so the page must not offer it
   either. Covered by `src/tests/school-dashboard/live/landing-roles.test.ts`.
+- **The strip under the banner has no heading (2026-09-02).** The reference's
+  block there is article rows and nothing else, so `liveTitle` / `upcomingTitle`
+  as `<h2>`s and the "view all" link are gone. What they carried moved into the
+  row: a live class says so where the reference prints its byline, a scheduled
+  one prints its time. The full list stays one click away from the banner.
+
 - **The page's imagery is catalog data, not decoration.** `Subject` IS the
   catalog subject (`concept` · `thumbnail` · `color`) and `Conference.subjectId`
   points straight at it, so session cards carry their subject's real artwork

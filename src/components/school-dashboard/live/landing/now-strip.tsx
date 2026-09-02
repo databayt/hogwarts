@@ -6,7 +6,6 @@ import { CalendarClock, Radio } from "lucide-react"
 
 import { typographyVariants } from "@/lib/typography"
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 
 import type {
   LandingSectionProps,
@@ -50,8 +49,11 @@ interface NowStripProps extends LandingSectionProps {
  * grid rendered that single live session as one lonely card in four columns of
  * white space.
  *
- * Live and upcoming stay SEPARATE: one heading over a list holding both would
- * misdescribe half of them.
+ * There is NO section heading and no "view all" — the reference's block under
+ * its banner is article rows and nothing else, and the distinction those two
+ * headings used to carry now lives inside each row: a live class says so where
+ * the reference prints its byline, a scheduled one prints its time. The whole
+ * list is still one click away, from the banner above.
  *
  * Times arrive pre-formatted in the school's own zone (see the page) — a
  * server-side `toLocaleTimeString` resolves against the runtime's zone, which
@@ -93,11 +95,6 @@ export function LiveNowStrip({
     <section className="mb-16 space-y-10 border-b pb-16">
       {featured ? (
         <div>
-          <SectionHeading
-            title={n?.liveTitle}
-            lang={lang}
-            viewAll={n?.viewAll}
-          />
           <SessionRow
             session={featured}
             dictionary={dictionary}
@@ -110,11 +107,6 @@ export function LiveNowStrip({
 
       {rest.length > 0 ? (
         <div>
-          <SectionHeading
-            title={featured ? n?.upcomingTitle : n?.liveTitle}
-            lang={lang}
-            viewAll={featured ? undefined : n?.viewAll}
-          />
           {/* The reference pads each half by 37.5px inside a row pulled out by
               the same amount; an explicit 75px gutter is the same geometry
               without the negative margin. */}
@@ -134,33 +126,6 @@ export function LiveNowStrip({
         </div>
       ) : null}
     </section>
-  )
-}
-
-function SectionHeading({
-  title,
-  lang,
-  viewAll,
-}: {
-  title?: string
-  lang: string
-  viewAll?: string
-}) {
-  return (
-    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <h2 className={typographyVariants.cardTitle}>{title}</h2>
-      {viewAll ? (
-        <Link
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "rounded-full"
-          )}
-          href={`/${lang}/live/dashboard`}
-        >
-          {viewAll}
-        </Link>
-      ) : null}
-    </div>
   )
 }
 
