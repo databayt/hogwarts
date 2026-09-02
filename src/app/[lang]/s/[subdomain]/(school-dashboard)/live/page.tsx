@@ -58,6 +58,50 @@ export async function generateMetadata({
 const PAST_LIST_ROWS = 2
 const PAST_TILES = 6
 
+/** A class this close to starting says so rather than printing a bare time. */
+const SOON_MINUTES = 15
+/** A running class this close to its end says THAT instead. */
+const ENDING_MINUTES = 10
+
+/**
+ * Where a class sits in its own clock, for the card's last row.
+ *
+ * Resolved on the SERVER against the render's `now`, like every other time on
+ * this page — a client tick would be more truthful by the minute but would put
+ * the block's first hydration boundary on a label. The consequence is honest
+ * and worth knowing: a card left open does not re-label itself, so the phase
+ * is as fresh as the page.
+ *
+ * `progress` is only meaningful while a class is running, and is clamped: a
+ * session that overran its booked end would otherwise report more minutes done
+ * than it has.
+ */
+function resolvePhase(
+  row: { scheduledStart: Date; scheduledEnd: Date; actualStart: Date | null },
+  ctx: { now: Date; isLive: boolean; isPast: boolean }
+): Pick<LandingSession, "phase" | "progress"> {
+  if (ctx.isPast) return { phase: "past", progress: null }
+
+  const startedAt = row.actualStart ?? row.scheduledStart
+  const minutes = (a: Date, b: Date) => (a.getTime() - b.getTime()) / 60_000
+
+  if (ctx.isLive) {
+    const total = Math.max(1, Math.round(minutes(row.scheduledEnd, startedAt)))
+    const done = Math.min(total, Math.max(0, Math.round(minutes(ctx.now, startedAt))))
+    const left = minutes(row.scheduledEnd, ctx.now)
+    return {
+      phase: left <= ENDING_MINUTES ? "ending" : "started",
+      progress: { done, total },
+    }
+  }
+
+  const until = minutes(row.scheduledStart, ctx.now)
+  return {
+    phase: until <= SOON_MINUTES ? "soon" : "scheduled",
+    progress: null,
+  }
+}
+
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
@@ -176,7 +220,12 @@ export default async function Page({ params }: Props) {
             schoolId
           ),
           getLabels(
-            all.flatMap((r) => [r.subject?.name, r.section?.name]),
+            all.flatMap((r) => [
+              r.subject?.name,
+              r.section?.name,
+              r.catalogLesson?.chapter?.name,
+              r.catalogLesson?.name,
+            ]),
             displayLang,
             schoolId
           ),
@@ -215,6 +264,18 @@ export default async function Page({ params }: Props) {
             sectionName: r.section?.name
               ? (labels.get(r.section.name) ?? r.section.name)
               : null,
+            chapterName: r.catalogLesson?.chapter?.name
+              ? (labels.get(r.catalogLesson.chapter.name) ??
+                r.catalogLesson.chapter.name)
+              : null,
+            lessonName: r.catalogLesson?.name
+              ? (labels.get(r.catalogLesson.name) ?? r.catalogLesson.name)
+              : null,
+            ...resolvePhase(r, {
+              now,
+              isLive: liveIds.has(r.id),
+              isPast: pastIds.has(r.id),
+            }),
             scheduledStart: r.scheduledStart
               ? (pastIds.has(r.id) ? dateFormat : timeFormat).format(
                   new Date(r.scheduledStart)

@@ -172,7 +172,18 @@ export async function seedConference(
     where: { schoolId, timetableId: { not: null } },
   })
   if (existing > 0 && process.env.SEED_FORCE !== "1") {
-    logSuccess("Conference sessions", existing, "already seeded — skipped")
+    // The lesson anchoring is a REPAIR on rows that already exist, so it has
+    // to reach the skip path too — it was added after the demo was first
+    // seeded, and a count guard that returns before it would leave every
+    // existing school without it forever.
+    const anchored = await attachCatalogLessons(prisma, schoolId)
+    logSuccess(
+      "Conference sessions",
+      existing,
+      anchored > 0
+        ? `already seeded · ${anchored} newly lesson-anchored`
+        : "already seeded — skipped"
+    )
     return existing
   }
   if (existing > 0) {
@@ -261,11 +272,13 @@ export async function seedConference(
     teachingDays,
   })
 
+  const anchored = await attachCatalogLessons(prisma, schoolId)
+
   const total = history + next
   logSuccess(
     "Conference sessions",
     total,
-    `${history} ended · ${next} scheduled`
+    `${history} ended · ${next} scheduled · ${anchored} lesson-anchored`
   )
   return total
 }
@@ -1321,4 +1334,71 @@ async function seedShowcase(
       logSuccess("Conference holiday", 1, noon.toISOString().slice(0, 10))
     }
   }
+}
+
+/**
+ * Give every materialized session the lesson it is teaching.
+ *
+ * The landing card reads a chapter and a lesson off `Conference.catalogLesson`,
+ * and NOTHING in the product fills that in for a slot: a materialized session
+ * knows its subject but not which lesson of it today's period covers, because
+ * this system does not schedule curriculum against dates. Only a teacher
+ * anchoring one through the wizard sets it, so the demo used to have exactly
+ * one anchored session out of eighty-seven and the card's middle two rows were
+ * invisible on every screen.
+ *
+ * A demo school where teachers HAVE anchored their lessons is an ordinary
+ * school, not a fiction — this is a supported workflow, seeded rather than
+ * invented. Sessions walk their subject's lessons in curriculum order, keyed
+ * off the session's own start, so a school shows several different chapters
+ * rather than the same one on every card.
+ *
+ * Only fills sessions that have none: a teacher's own choice is never
+ * overwritten, which is also what keeps a re-run idempotent.
+ */
+async function attachCatalogLessons(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<number> {
+  const sessions = await prisma.conference.findMany({
+    where: { schoolId, catalogLessonId: null, subjectId: { not: null } },
+    select: { id: true, subjectId: true, scheduledStart: true },
+    orderBy: { scheduledStart: "asc" },
+  })
+  if (sessions.length === 0) return 0
+
+  const subjectIds = [...new Set(sessions.map((s) => s.subjectId!))]
+  const lessons = await prisma.lesson.findMany({
+    where: { chapter: { subjectId: { in: subjectIds } }, status: "PUBLISHED" },
+    select: { id: true, chapter: { select: { subjectId: true } } },
+    orderBy: [{ chapter: { sequenceOrder: "asc" } }, { sequenceOrder: "asc" }],
+  })
+  if (lessons.length === 0) return 0
+
+  const bySubject = new Map<string, string[]>()
+  for (const lesson of lessons) {
+    const key = lesson.chapter.subjectId
+    const list = bySubject.get(key) ?? []
+    list.push(lesson.id)
+    bySubject.set(key, list)
+  }
+
+  // Walked per subject rather than per session, so consecutive classes in the
+  // same subject move THROUGH the curriculum instead of all landing on
+  // chapter one.
+  const cursor = new Map<string, number>()
+  let count = 0
+  for (const session of sessions) {
+    const list = bySubject.get(session.subjectId!)
+    if (!list?.length) continue
+    const at = cursor.get(session.subjectId!) ?? 0
+    cursor.set(session.subjectId!, at + 1)
+    await prisma.conference.update({
+      where: { id: session.id },
+      data: { catalogLessonId: list[at % list.length] },
+      ...ID,
+    })
+    count += 1
+  }
+  return count
 }

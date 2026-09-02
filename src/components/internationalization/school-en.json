@@ -5206,7 +5206,13 @@
           "emptyDescription": "Once a class is scheduled it shows up here, ready to join.",
           "viewAll": "View all",
           "joinNow": "Join now",
-          "open": "Open"
+          "open": "Open",
+          "phase": {
+            "soon": "Starting soon",
+            "started": "Started",
+            "ending": "About to finish",
+            "progress": "{done} of {total} min"
+          }
         },
         "past": {
           "title": "Past classes",

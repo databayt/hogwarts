@@ -19,6 +19,19 @@ export interface LandingSectionProps {
   lang: string
 }
 
+/**
+ * The five states the card's last row can report.
+ *
+ * `scheduled` is the quiet one — a class far enough out that the time alone
+ * says everything — and `past` is the shelf's, where the row prints a date.
+ */
+export type LandingSessionPhase =
+  | "soon"
+  | "started"
+  | "ending"
+  | "scheduled"
+  | "past"
+
 /** One row in the live / coming-up strip, already localized by the page. */
 export interface LandingSession {
   id: string
@@ -28,9 +41,20 @@ export interface LandingSession {
   teacherPhotoUrl: string | null
   subjectName: string | null
   sectionName: string | null
+  /** The catalog chapter and lesson this class is teaching, when a teacher has
+   *  anchored it to one. Null on any session materialized from the timetable,
+   *  which knows its subject but not today's lesson. */
+  chapterName: string | null
+  lessonName: string | null
   /** Pre-formatted by the page, in the SCHOOL's timezone — not the reader's. */
   scheduledStart: string
   isLive: boolean
+  /** Where the class sits in its own clock, resolved on the SERVER against the
+   *  render's `now`. It is therefore as fresh as the page is — a card that has
+   *  been sitting open does not re-label itself. */
+  phase: LandingSessionPhase
+  /** Minutes elapsed against minutes booked, for the running card's count. */
+  progress: { done: number; total: number } | null
   /** Catalog thumbnail URL for the session's subject, when it has one. */
   imageUrl: string | null
   /** Catalog colour, the fallback ground when there is no thumbnail. */

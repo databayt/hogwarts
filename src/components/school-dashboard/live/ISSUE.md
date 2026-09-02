@@ -37,6 +37,11 @@
       the lead — rendered a single lonely half instead of a two-up. Counted
       off the whole block now.
 
+- [ ] **Three of the card's five phases are unverifiable on the demo.**
+      `soon`, `started` and `ending` need a session whose window straddles the
+      clock, and the seed writes only `ended` history and next-day `scheduled`
+      rows. Only `scheduled` and `past` have been seen in a browser.
+
 - [ ] **The demo no longer has a `live` session.** The seed writes `ended`
       history and `scheduled` next-day rows and nothing in between, so the one
       live row the demo used to carry was a leftover from a run whose window

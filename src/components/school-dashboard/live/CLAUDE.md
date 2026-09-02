@@ -258,6 +258,27 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   `read_school_dashboard` and sees every session, but `authorization.ts` grants
   it neither a join role nor `view_recordings`, so the page must not offer it
   either. Covered by `src/tests/school-dashboard/live/landing-roles.test.ts`.
+- **The card is FIVE rows (2026-09-02).** Subject · chapter · lesson ·
+  teacher · where the class is in its own clock. The heading is the SUBJECT
+  alone: it used to be `session.title`, which a materialized session builds as
+  "subject · section", so the section repeated on the line below it and the
+  heading ran to two lines on a phone for no information.
+
+  Chapter and lesson come from `Conference.catalogLesson`, and NOTHING in the
+  product fills that in on its own — a materialized slot knows its subject but
+  not which lesson of it today's period covers, because this system does not
+  schedule curriculum against dates. Only a teacher anchoring one through the
+  wizard sets it. Rows with nothing to say are DROPPED, never rendered empty.
+  The demo had one anchored session in eighty-seven, which is why the seed now
+  anchors them (`attachCatalogLessons`) — and why that repair runs on the count
+  guard's SKIP path too, or an already-seeded school would never receive it.
+
+  The last row's phase (`resolvePhase`, on the page) is resolved on the SERVER
+  against the render's `now`: soon · started · ending · scheduled · past, with
+  a clamped minute count while a class runs. A client tick would be truer by
+  the minute but would put the block's first hydration boundary on a label.
+  The honest consequence: a card left open does not re-label itself.
+
 - **The row's byline is TWO stacked rows, with a portrait (2026-09-02).** The
   reference sets the author beside a 24px round photo, then drops the placing
   and the date onto their own line beneath. Ours names the teacher, then when

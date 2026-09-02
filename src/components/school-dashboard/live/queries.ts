@@ -88,6 +88,19 @@ const landingSessionInclude = {
       profilePhotoUrl: true,
     },
   },
+  // The card's second and third rows. Only a session a teacher has ANCHORED to
+  // a catalog lesson has these — a slot materialized from the timetable knows
+  // its subject but not which lesson of it is being taught today, because
+  // nothing in this product schedules curriculum against dates. So both rows
+  // are legitimately absent most of the time and the card omits them rather
+  // than printing empties.
+  catalogLesson: {
+    select: {
+      id: true,
+      name: true,
+      chapter: { select: { id: true, name: true } },
+    },
+  },
 } as const
 
 // ============================================================================

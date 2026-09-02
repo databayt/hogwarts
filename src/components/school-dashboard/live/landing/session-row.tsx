@@ -63,20 +63,34 @@ export function LandingSessionRow({
       </div>
 
       <div className="min-w-0 flex-1 px-2 text-start">
+        {/* Five rows, in the order the card is read: WHAT subject, then where
+            in it (chapter, then lesson), then who is teaching, then where the
+            class is in its own clock.
+
+            The title is the SUBJECT alone. It used to be `session.title`,
+            which a materialized session builds as "subject · section" — the
+            section then repeated on the row beneath it, and the heading grew
+            to two lines on a phone for no information.
+
+            Chapter and lesson are absent on any session materialized from the
+            timetable: a slot knows its subject, not which lesson of it is
+            being taught today. Rows that have nothing to say are DROPPED, not
+            rendered empty — a card should never show a blank line where a
+            teacher simply has not anchored a lesson. */}
         <h3 className="mt-0 mb-2 line-clamp-2 text-base font-semibold lg:text-xl lg:leading-8">
-          {session.title}
+          {session.subjectName ?? session.title}
         </h3>
 
-        <p className="mb-2 line-clamp-1 text-sm lg:line-clamp-2">
-          {dek(session)}
-        </p>
+        {session.chapterName ? (
+          <p className="mb-1 line-clamp-1 text-sm">{session.chapterName}</p>
+        ) : null}
 
-        {/* Their byline is TWO stacked rows, not one: the author beside a 24px
-            round portrait, then the placing and the date in the secondary
-            colour a size smaller until sm. Ours names the teacher, then when
-            the class runs — or that it is running now, which is this page's
-            version of a dateline. Stacking them is also what makes the copy
-            column the taller of the two, as it is in the reference. */}
+        {session.lessonName ? (
+          <p className="text-muted-foreground mb-2 line-clamp-1 text-sm">
+            {session.lessonName}
+          </p>
+        ) : null}
+
         <div className={cn("flex flex-col", isLead ? "gap-y-1.5" : "gap-y-1")}>
           {session.teacherName ? (
             <span className="flex items-center gap-2 text-sm">
@@ -88,19 +102,58 @@ export function LandingSessionRow({
             </span>
           ) : null}
 
-          <span className="text-muted-foreground text-xs sm:text-sm">
-            {session.isLive ? (
-              <span className="text-primary inline-flex items-center gap-1 font-bold">
-                <Radio className="size-3.5" aria-hidden="true" />
-                {n?.liveTitle}
-              </span>
-            ) : (
-              <span className="tabular-nums">{session.scheduledStart}</span>
-            )}
-          </span>
+          <Status session={session} dictionary={dictionary} />
         </div>
       </div>
     </Link>
+  )
+}
+
+/**
+ * The card's last row: where the class is in its own clock.
+ *
+ * A running class says so and counts its minutes; one about to end says THAT
+ * instead, because "started" stops being the useful fact once there are eight
+ * minutes left. A class close enough to starting says "soon" beside its time;
+ * anything further out, and anything already over, prints the timestamp alone
+ * — which for a past class is a date, formatted that way by the page.
+ *
+ * The phase is resolved on the server (see `resolvePhase` on the page), so
+ * this component only chooses words for it.
+ */
+function Status({
+  session,
+  dictionary,
+}: {
+  session: LandingSession
+  dictionary: LandingSectionProps["dictionary"]
+}) {
+  const phase = dictionary?.landing?.now?.phase
+  const running = session.phase === "started" || session.phase === "ending"
+
+  return (
+    <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-xs sm:text-sm">
+      {running ? (
+        <span className="text-primary inline-flex items-center gap-1 font-bold">
+          <Radio className="size-3.5" aria-hidden="true" />
+          {session.phase === "ending" ? phase?.ending : phase?.started}
+        </span>
+      ) : null}
+
+      {session.phase === "soon" ? (
+        <span className="font-bold">{phase?.soon}</span>
+      ) : null}
+
+      {running && session.progress ? (
+        <span className="tabular-nums">
+          {(phase?.progress ?? "{done}/{total}")
+            .replace("{done}", String(session.progress.done))
+            .replace("{total}", String(session.progress.total))}
+        </span>
+      ) : session.scheduledStart ? (
+        <span className="tabular-nums">{session.scheduledStart}</span>
+      ) : null}
+    </span>
   )
 }
 
@@ -184,11 +237,6 @@ function Art({ session, sizes }: { session: LandingSession; sizes: string }) {
       unoptimized
     />
   )
-}
-
-/** The dek line: what the class IS, without repeating the title's words. */
-function dek(session: LandingSession): string {
-  return [session.subjectName, session.sectionName].filter(Boolean).join(" · ")
 }
 
 /**
