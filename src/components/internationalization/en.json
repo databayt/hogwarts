@@ -552,7 +552,6 @@
     "missingToken": "Missing reset token.",
     "invalidPassword": "Password must be at least 6 characters.",
     "demoRolePrompt": "Choose a role to explore the demo",
-    "demoRolePlaceholder": "Select a role",
     "useEmailInstead": "Sign in with email instead",
     "demoRoles": {
       "admin": "Administrator",
@@ -560,7 +559,9 @@
       "student": "Student",
       "guardian": "Parent",
       "accountant": "Accountant",
-      "staff": "Staff"
+      "staff": "Staff",
+      "user": "User",
+      "applicant": "Applicant"
     }
   },
   "marketing": {

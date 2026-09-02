@@ -21,9 +21,10 @@ USER role redirects to `/{locale}` (homepage), not `/onboarding`. Onboarding is 
 ### Demo tenant
 
 On the `demo` subdomain (any root — `demo.balqalam.com`, `demo.databayt.org`,
-`demo.localhost:3000`) the login page shows a **role picker** instead of the credential
-fields: pick Administrator / Teacher / Student / Parent / Accountant / Staff and press
-Login. A "sign in with email instead" link reveals the normal form.
+`demo.localhost:3000`) the login page shows a **role dropdown** instead of the
+credential fields: Administrator (preselected), Teacher, Student, Parent, Accountant,
+Staff, plus the two platform accounts User and Applicant. Press Login. A "sign in with
+email instead" link reveals the normal form.
 
 This is a shortcut, not a second auth lane. `demoRoleLogin()`
 (`src/components/auth/login/demo-action.ts`) resolves the role to its seeded

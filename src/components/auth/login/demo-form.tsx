@@ -48,7 +48,12 @@ export const DemoLoginForm = ({
   const callbackUrl = searchParams.get("callbackUrl")
 
   const [mode, setMode] = useState<"role" | "manual">("role")
-  const [role, setRole] = useState("")
+  // Admin is the role most visitors want to see, so it's preselected — Login
+  // works on first click. Named explicitly rather than taken from roles[0] so
+  // reordering DEMO_ROLE_KEYS can't silently change the default.
+  const [role, setRole] = useState(
+    roles.some((r) => r.key === "admin") ? "admin" : (roles[0]?.key ?? "")
+  )
   const [error, setError] = useState<string | undefined>("")
   const [isPending, startTransition] = useTransition()
 
@@ -104,7 +109,7 @@ export const DemoLoginForm = ({
     >
       <Card className="bg-background border-none shadow-none">
         <CardHeader className="text-center">
-          <p className="text-muted-foreground">
+          <p id="demo-role-prompt" className="text-muted-foreground">
             {dictionary?.auth?.demoRolePrompt ||
               "Choose a role to explore the demo"}
           </p>
@@ -113,16 +118,20 @@ export const DemoLoginForm = ({
           <div className="grid gap-6">
             <div className="grid gap-4">
               <Select value={role} onValueChange={setRole} disabled={isPending}>
-                <SelectTrigger className="h-11 w-full" id="demo-role">
-                  <SelectValue
-                    placeholder={
-                      dictionary?.auth?.demoRolePlaceholder || "Select a role"
-                    }
-                  />
+                <SelectTrigger
+                  id="demo-role"
+                  aria-labelledby="demo-role-prompt"
+                  className="hover:border-foreground/50 h-12 w-full rounded-lg px-4 transition-colors"
+                >
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg p-1.5">
                   {roles.map((option) => (
-                    <SelectItem key={option.key} value={option.key}>
+                    <SelectItem
+                      key={option.key}
+                      value={option.key}
+                      className="data-[state=checked]:bg-accent h-10 rounded-md ps-3"
+                    >
                       {option.label}
                     </SelectItem>
                   ))}

@@ -108,12 +108,22 @@ src/components/auth/
 ### Demo tenant login
 
 On the `demo` subdomain -- any root, so `demo.balqalam.com`, `demo.databayt.org` and
-`demo.localhost:3000` all qualify -- `/{lang}/login` renders a role picker instead of the
-credential fields, with a "sign in with email instead" link back to the normal form.
-Picking a role runs `demoRoleLogin()`, which resolves the role to its seeded account and
-hands off to `login()` unchanged: same session, cookies, audit log and redirect as typing
-the credentials. Six school-scoped roles only (admin, teacher, student, guardian,
-accountant, staff) -- `dev@` / `user@` / `applicant@` have no `schoolId`.
+`demo.localhost:3000` all qualify -- `/{lang}/login` renders a role `Select`
+instead of the credential fields, with a "sign in with email instead" link back to the
+normal form. `admin` is preselected by name (not by array position), so Login works on the
+first click, and the chosen item carries `bg-accent` -- the same light-gray selected
+treatment as the onboarding discount step (`src/components/onboarding/discount/content.tsx`).
+The Select is styled at the call site only; `src/components/ui/select.tsx` is shared by
+roughly every form in the app and is deliberately left alone. Picking a role runs `demoRoleLogin()`,
+which resolves it to the seeded account and hands off to `login()` unchanged: same
+session, cookies, audit log and redirect as typing the credentials.
+
+Eight accounts: the six school-scoped roles (admin, teacher, student, guardian,
+accountant, staff) plus the two platform accounts the demo exercises, `user@` and
+`applicant@` (both `USER`, `schoolId = null` -- `getUserByEmail()` falls through to its
+platform branch, so they resolve from a tenant login and land on school marketing, where
+`/apply` is one click away). `dev@` is deliberately absent: DEVELOPER belongs on the SaaS
+host.
 
 The gate is enforced **inside the server action**, not just in the page: a Server Action is
 a public endpoint, so `demo-action.ts` re-derives the subdomain from the request

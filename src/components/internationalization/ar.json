@@ -552,7 +552,6 @@
     "missingToken": "رمز إعادة التعيين مفقود.",
     "invalidPassword": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
     "demoRolePrompt": "اختر دورًا لتجربة النموذج",
-    "demoRolePlaceholder": "اختر الدور",
     "useEmailInstead": "الدخول بالبريد الإلكتروني",
     "demoRoles": {
       "admin": "مدير المدرسة",
@@ -560,7 +559,9 @@
       "student": "طالب",
       "guardian": "ولي أمر",
       "accountant": "محاسب",
-      "staff": "موظف"
+      "staff": "موظف",
+      "user": "مستخدم",
+      "applicant": "متقدّم"
     }
   },
   "marketing": {
