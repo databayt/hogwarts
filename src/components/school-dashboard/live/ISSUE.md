@@ -13,6 +13,12 @@
       "Join now" button are gone from it — the strip below already names the
       subject, section and time of the class that is running.
 
+- [ ] **Six landing strings have no reader.** The card rows carry no button any
+      more (the row itself is the link, as in the reference), so
+      `landing.now.joinNow` / `now.open` and `landing.actions.join` /
+      `start` / `observe` / `openNext` are unused. Harmless, but they will read
+      as live copy to the next person translating this file.
+
 - [ ] **`getLiveLandingCounts` has no caller.** The hero was its only reader.
       The query and `src/tests/school-dashboard/live/landing-counts.test.ts`
       are still in the tree; delete both, or give the counts a surface that

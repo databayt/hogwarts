@@ -47,7 +47,8 @@ conference/
 ├── landing/                                                   the /live landing page
 │   ├── content.tsx           composes the sections below
 │   ├── status-hero.tsx       the green (#00bc6d) banner: eyebrow + headline + the way in
-│   ├── now-strip.tsx         live / coming-up — section-scoped, school-TZ times, catalog art
+│   ├── now-strip.tsx         live / coming-up — thmanyah.com's editorial row (mirrored
+│   │                     geometry), section-scoped, school-TZ times, catalog art
 │   ├── readiness-band.tsx    can this school teach online (ADMIN/DEVELOPER only)
 │   ├── role-guide.tsx        what THIS role can do here — real links, not marketing
 │   ├── get-started-band.tsx  the pitch + 3 setup steps, only while not yet online
