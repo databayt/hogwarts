@@ -5201,11 +5201,11 @@
           "start": "ابدأ الحصة",
           "observe": "حضور كمتابع",
           "openNext": "افتح الحصة القادمة",
-          "viewSessions": "عرض الجلسات",
-          "schedule": "جدولة حصة",
+          "viewSessions": "الجلسات",
+          "schedule": "جدولة",
           "recordings": "التسجيلات",
           "settings": "الإعدادات",
-          "turnOn": "فعّل التدريس عبر الإنترنت"
+          "turnOn": "التفعيل"
         },
         "now": {
           "liveTitle": "مباشر الآن",

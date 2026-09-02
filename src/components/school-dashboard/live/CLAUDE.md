@@ -192,6 +192,14 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   session props at all, so `getLiveLandingCounts` lost its only caller — the
   page now runs ONE query for the landing instead of two.
 
+  Two buttons, never more, one word each. Primary is always the sessions
+  list; the single alternative is picked by role — schedule (whoever may
+  create a class) > recordings (whoever may not, and is likely here for a
+  lesson they missed) > settings (an admin who can do neither). An offline
+  school gets ONE button, the one that turns it on. Four pills was a menu, and
+  the page already carries two — the `(app)` tab strip and the role guide,
+  which describes every route this role can open.
+
   Trimmed further the same day: the eyebrow and, for an online school, the
   supporting paragraph are gone — the block name was already in the page
   heading and the sidebar, and a paragraph explaining the product sat above the

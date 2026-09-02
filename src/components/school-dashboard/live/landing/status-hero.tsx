@@ -80,30 +80,12 @@ export function LiveStatusHero({
 
           <div className="mt-7 flex flex-wrap items-center gap-2">
             <PrimaryAction d={d} lang={lang} viewer={viewer} policy={policy} />
-
-            {viewer.canSchedule && policy.isOnline ? (
-              <Link className={pill("ghost")} href={`/${lang}/live/schedule`}>
-                {d?.actions?.schedule}
-              </Link>
-            ) : null}
-
-            {/* Same destination as the role guide's recordings card — the
-                ended-sessions filter, not a route of its own. ACCOUNTANT is
-                excluded by `canViewRecordings`, as it is everywhere else. */}
-            {viewer.canViewRecordings && policy.isOnline ? (
-              <Link
-                className={pill("ghost")}
-                href={`/${lang}/live/dashboard?status=ended`}
-              >
-                {d?.actions?.recordings}
-              </Link>
-            ) : null}
-
-            {viewer.canConfigure ? (
-              <Link className={pill("ghost")} href={`/${lang}/live/settings`}>
-                {d?.actions?.settings}
-              </Link>
-            ) : null}
+            <SecondaryAction
+              d={d}
+              lang={lang}
+              viewer={viewer}
+              policy={policy}
+            />
           </div>
         </div>
       </div>
@@ -112,15 +94,19 @@ export function LiveStatusHero({
 }
 
 /**
- * The way in — the whole list, not one particular class.
+ * Two buttons, never more, and every label a single word.
  *
- * Joining the class that is running now is the strip's job (its cards carry a
- * Join straight into the room); a hero button labelled "Join now" alongside it
- * was the same action twice, and it pointed at whichever session the server
- * happened to rank first.
+ * The banner offered four — sessions, schedule, recordings, settings — which
+ * is a menu, and the page already has two of those (the tab strip above the
+ * `(app)` surfaces, and the role guide below, which lists every route this
+ * role can open, with a description each). A hero earns one obvious action and
+ * at most one alternative; the rest of the map lives where a map belongs.
  *
- * ACCOUNTANT may list sessions but may neither join one nor watch a recording,
- * so the list is the correct destination for it too.
+ * Primary is the list of classes, for every role. Joining the one that is
+ * running is the strip's job — its cards go straight into the room — so a hero
+ * "Join" would be the same action twice, pointing at whichever session the
+ * server happened to rank first. ACCOUNTANT may list sessions but may neither
+ * join one nor watch a recording, so the list is right for it too.
  */
 function PrimaryAction({
   d,
@@ -146,6 +132,64 @@ function PrimaryAction({
       {d?.actions?.viewSessions}
     </Link>
   )
+}
+
+/**
+ * The one alternative, chosen by role rather than stacked.
+ *
+ * Whoever can create a class is here to create one; whoever cannot is most
+ * likely here for a lesson they missed; an admin who can do neither is here
+ * for the policy. First match wins, and a role that matches nothing gets a
+ * single button — which is a perfectly good hero.
+ *
+ * Settings and the network test stay one click away in the tab strip and the
+ * role guide, so nothing is lost by not repeating them here.
+ */
+function SecondaryAction({
+  d,
+  lang,
+  viewer,
+  policy,
+}: {
+  d: NonNullable<LandingSectionProps["dictionary"]>["landing"]
+  lang: string
+  viewer: LandingViewer
+  policy: LandingPolicy
+}) {
+  // An offline school's one action is turning it on. Anything beside that
+  // button is a distraction from the only thing that changes the page.
+  if (!policy.isOnline) return null
+
+  if (viewer.canSchedule) {
+    return (
+      <Link className={pill("ghost")} href={`/${lang}/live/schedule`}>
+        {d?.actions?.schedule}
+      </Link>
+    )
+  }
+
+  // Same destination as the role guide's recordings card — the ended-sessions
+  // filter, not a route of its own.
+  if (viewer.canViewRecordings) {
+    return (
+      <Link
+        className={pill("ghost")}
+        href={`/${lang}/live/dashboard?status=ended`}
+      >
+        {d?.actions?.recordings}
+      </Link>
+    )
+  }
+
+  if (viewer.canConfigure) {
+    return (
+      <Link className={pill("ghost")} href={`/${lang}/live/settings`}>
+        {d?.actions?.settings}
+      </Link>
+    )
+  }
+
+  return null
 }
 
 /**
