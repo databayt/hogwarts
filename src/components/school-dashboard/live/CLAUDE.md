@@ -175,20 +175,26 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   throwing, so check the `success` discriminant — a try/catch alone misses it.
 - **The landing hero states the OFFER, not the status (2026-09-01).**
   `landing/status-hero.tsx` is the banner. Its ground is the saas-marketing
-  green `#00bc6d`, and the inline-END side is filled by a PHOTOGRAPH whose
-  inner edge is cut on a diagonal, with `#045238` showing behind it — the
-  reference's arrangement, sampled from `.clone/thmanyah-banner`. What is
-  deliberately NOT carried is the reference's picture: that banner is a
-  promotional creative down to the photographed athletes, the club kit and the
-  third-party logos. Ours is `modern-06` from `CDN_IMAGES` — a بالقلم
-  marketing shot of students mid-lesson, already published for the homepage, so
-  it is a cached request rather than a new asset.
+  green `#00bc6d`, and the inline-END side carries a TRANSPARENT line
+  illustration sitting directly on that green inside the shell's own rounded
+  box. Earlier passes tried the reference's arrangement literally — an angular
+  field, then a photograph cut on a diagonal — and both broke the ground into
+  panels. A mark with no rectangle of its own leaves it whole.
 
-  The picture panel is NOT mirrored by a transform, unlike the abstract field
-  it replaced: flipping the wrapper flips the PHOTOGRAPH, and a mirrored
-  photograph of real people is a different picture. The diagonal is written
-  twice instead — an `ltr:` variant carrying the reflected polygon — and the
-  image is never transformed.
+  The file is `public/anthropic/marginalia-media-alpha.svg`, DERIVED, not the
+  asset the CDN serves at `anthropic/marginalia-media.svg` (also vendored, and
+  byte-identical to the remote). Three edits, all reproducible from the source:
+  drop the `#F0EEE6` rect that covers its whole 181x102 canvas, which on this
+  ground renders as a cream box rather than artwork; tighten the viewBox to the
+  artwork's own 64x64 group, because the source floats a small square in a
+  mostly empty canvas and would otherwise scale to nothing; and recolour the
+  single solid shape from the source's olive `#788C5D` to `#9FE5B1`, the mint
+  the marketing hero highlights its headline with. Olive on this green is a
+  muddy near-match. Regenerate the derived file from the source, never by hand.
+
+  The mark is positioned with logical offsets and NEVER mirrored by a
+  transform — the same rule the photograph needed, kept because a transform
+  here would flip the artwork too.
 
   The headline is set in **thmanyah sans**, already vendored in `public/fonts/`
   and declared by `src/styles/thmanyah-clone.css`, which the ROOT layout
@@ -206,12 +212,14 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   hero pairs this green with black. The panel is hidden below `md`, where the
   card stacks and a 44% panel would sit under the headline.
 
-  The Arabic headline's two rows are width-matched with TATWEEL (U+0640, two
-  per word in the first row) — the same knob the marketing homepage's hero
-  uses, and the only way to stretch an Arabic line without distorting the face.
-  Measured, not eyeballed: 335.2px against 333.5px. It is Arabic-only, so the
-  English string carries none, and re-measure in the browser if the size, the
-  measure or the weights change, because the fit is specific to all three.
+  The Arabic headline's two rows are width-matched with TATWEEL (U+0640) — the
+  same knob the marketing homepage's hero uses, and the only way to stretch an
+  Arabic line without distorting the face. Two elongate `تجربة`; four carry the
+  join into the final `ل` of `تجعل`. Measured, not eyeballed: 330.9px against
+  333.5px, and worth measuring rather than counting, because a tatweel is worth
+  ~7px inside the bold run and ~16px inside the light one. Arabic-only, so the
+  English string carries none. Re-measure in the browser if the size, the
+  measure or the weights change — the fit is specific to all three.
 
   The hero used to carry the live-now state — an `<h1>` reading "one class is
   live right now", the delivery mode under it and a "Join now" pointing at

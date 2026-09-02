@@ -47,7 +47,7 @@ conference/
 ├── landing/                                                   the /live landing page
 │   ├── content.tsx           composes the sections below
 │   ├── status-hero.tsx       the green (#00bc6d) banner: the headline and the two
-│   │                     ways in, beside a diagonally-cut photograph
+│   │                     ways in, beside a transparent line mark
 │   ├── now-strip.tsx         live / coming-up — thmanyah.com's editorial row (mirrored
 │   │                     geometry), section-scoped, school-TZ times, catalog art
 │   ├── past-shelf.tsx        classes already taught — thmanyah.com's shelf block

@@ -4,7 +4,6 @@
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
-import { CDN_IMAGES } from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
 
 import type { LandingPolicy, LandingSectionProps, LandingViewer } from "./types"
 
@@ -64,7 +63,7 @@ export function LiveStatusHero({
   return (
     <section className="mb-8">
       <div className="relative isolate flex flex-col justify-between gap-8 overflow-hidden rounded-[36px] bg-[#00bc6d] px-8 py-10 text-[#050505] sm:px-12 lg:min-h-[259px] lg:flex-row lg:items-center lg:py-12">
-        <BannerPicture />
+        <BannerArt />
 
         <div className="relative min-w-0">
           {/* Two lines of ~7 words inside a ~420px measure, at the
@@ -120,64 +119,48 @@ export function LiveStatusHero({
     </section>
   )
 }
+
 /**
- * The banner's picture panel.
+ * The banner's mark.
  *
- * The reference fills one side of its card with a photograph whose inner edge
- * is cut on a diagonal, so the picture drives into the ground instead of
- * sitting in a rectangle, with a deeper plane showing through behind it. That
- * arrangement is what this reproduces; the photograph itself is ours.
+ * A transparent line illustration sitting directly ON the green, inside the
+ * shell's own rounded box — not a photograph in a card. The earlier version
+ * put a marketing photo here; this is the marginalia set's media glyphs, which
+ * carry no rectangle of their own and so leave the ground unbroken.
  *
- * `modern-06` is a بالقلم marketing shot of students working through a lesson
- * together — already published to cdn.databayt.org for the homepage, so it is
- * a cached request rather than a new asset, and it is the one picture in that
- * set that shows a class actually happening.
+ * It reads `marginalia-media-alpha.svg`, a DERIVED file, not the asset the CDN
+ * serves at `anthropic/marginalia-media.svg`. That original is opaque: a
+ * `#F0EEE6` rect covers its whole 181x102 canvas, which on this ground renders
+ * as a cream box rather than artwork. The derived copy drops that rect and
+ * tightens the viewBox to the artwork's own 64x64 group — the source floats a
+ * small square in a mostly empty canvas, so framing it is what lets it scale
+ * up here instead of sitting tiny in the middle of nothing. Both files are in
+ * `public/anthropic/`; regenerate the derived one from the source, never by
+ * hand.
  *
- * The panel sits on the inline-END side, where the reference puts it on an
- * Arabic page. It is NOT mirrored by a transform, unlike the abstract field it
- * replaces: flipping the wrapper would flip the PHOTOGRAPH, and a mirrored
- * photograph of real people is a different picture. So the diagonal is written
- * twice instead — the `ltr:` variant carries the mirrored polygon — and the
- * image is never transformed at all.
+ * The line work is black, which is the banner's ink anyway. The one SOLID
+ * shape in the set is recoloured from the source's olive `#788C5D` to
+ * `#9FE5B1` — the mint the saas-marketing hero highlights its headline with,
+ * and the third colour in that hero's triad. Olive on `#00bc6d` reads as a
+ * muddy near-match; the mint is the deliberate lift the ground was built for.
  *
- * Hidden below md, where the card stacks and a 44% panel would sit under the
+ * Positioned with logical offsets so it mirrors on /en without a transform,
+ * and hidden below md, where the card stacks and it would sit under the
  * headline rather than beside it.
  */
-function BannerPicture() {
-  // The inner edge, cut once per direction. In RTL the panel is on the
-  // physical left, so the slope runs down its right edge; in LTR both are
-  // reflected about the panel's centre.
-  const cut =
-    "[clip-path:polygon(0_0,100%_0,78%_100%,0_100%)] ltr:[clip-path:polygon(0_0,100%_0,100%_100%,22%_100%)]"
-
+function BannerArt() {
   return (
-    <div
-      className="pointer-events-none absolute inset-y-0 end-0 -z-10 hidden w-[44%] max-w-[520px] md:block"
+    <img
+      src="/anthropic/marginalia-media-alpha.svg"
+      alt=""
+      decoding="async"
+      draggable={false}
       aria-hidden="true"
-    >
-      {/* The deeper plane, offset so it shows past the picture's diagonal the
-          way the reference's field does behind its own. */}
-      <div
-        className={cn(
-          "absolute inset-0 bg-[#045238]",
-          "[clip-path:polygon(0_0,100%_0,92%_100%,0_100%)] ltr:[clip-path:polygon(0_0,100%_0,100%_100%,8%_100%)]"
-        )}
-      />
-
-      <picture>
-        <source srcSet={CDN_IMAGES["modern-06"].avif} type="image/avif" />
-        <source srcSet={CDN_IMAGES["modern-06"].webp} type="image/webp" />
-        <img
-          src={CDN_IMAGES["modern-06"].webp}
-          alt=""
-          decoding="async"
-          draggable={false}
-          className={cn("absolute inset-0 h-full w-full object-cover", cut)}
-        />
-      </picture>
-    </div>
+      className="pointer-events-none absolute end-12 hidden size-[150px] object-contain md:block lg:size-[168px]"
+    />
   )
 }
+
 /**
  * Two buttons, never more, and every label a single word.
  *
