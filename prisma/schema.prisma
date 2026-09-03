@@ -19,7 +19,12 @@ datasource db {
 
 generator client {
   provider      = "prisma-client-js"
-  // rhel target is required because we build on macOS and deploy to Vercel's
-  // Amazon Linux lambdas; without it every query fails at runtime.
-  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  // We build on macOS and deploy prebuilt to Vercel, so the Linux engines must
+  // be generated here: `rhel-openssl-3.0.x` for x86-64 lambdas and
+  // `linux-arm64-openssl-3.0.x` for arm64 ones. `vercel build` on Apple
+  // Silicon tags every function `architecture: arm64`, and without the arm64
+  // engine every query in those functions throws
+  // PrismaClientInitializationError at runtime — the live-class crons 500'd
+  // on every run from 2026-08-31 to 2026-09-03 for exactly this reason.
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
 }
