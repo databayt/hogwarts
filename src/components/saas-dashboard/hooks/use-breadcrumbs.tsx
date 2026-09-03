@@ -34,7 +34,9 @@ function getRouteMapping(dictionary?: any): Record<string, BreadcrumbItem[]> {
 export function useBreadcrumbs(dictionary?: any) {
   const pathname = usePathname()
   const [dynamicTitle, setDynamicTitle] = useState<string | null>(null)
-  const providedTitle = useBreadcrumbTitle()
+  const provided = useBreadcrumbTitle()
+  const providedTitle = provided.title
+  const segmentTitles = provided.segments
 
   useEffect(() => {
     setDynamicTitle(null)
@@ -118,19 +120,35 @@ export function useBreadcrumbs(dictionary?: any) {
 
     const items = finalSegments.map((segment, index) => {
       const path = `/${finalSegments.slice(0, index + 1).join("/")}`
-      const isIdSegment =
-        index === finalSegments.length - 1 &&
-        /^(?:[a-z0-9]{10,}|[\w-]{6,})$/i.test(segment)
-      const title = isIdSegment
-        ? (resolvedTitle ?? "\u00A0")
-        : segment.charAt(0).toUpperCase() + segment.slice(1)
+      const isLast = index === finalSegments.length - 1
+      // A record id (cuid / uuid) is the only thing worth blanking while its
+      // name is still being fetched. The old test also caught any word of 6+
+      // letters, which blanked "courses", "timetable", "attendance" and every
+      // other ordinary section whose page provides no title.
+      const isRecordId =
+        isLast &&
+        /^(?:[a-z0-9]{20,}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(
+          segment
+        )
+      // usePathname() keeps segments percent-encoded; the page keys its
+      // overrides by the decoded slug it got from params.
+      let decoded = segment
+      try {
+        decoded = decodeURIComponent(segment)
+      } catch {}
+      const title =
+        segmentTitles[decoded] ??
+        (isLast ? resolvedTitle : null) ??
+        (isRecordId
+          ? "\u00A0"
+          : segment.charAt(0).toUpperCase() + segment.slice(1))
       return {
         title,
         link: path,
       }
     })
     return items
-  }, [pathname, resolvedTitle, dictionary])
+  }, [pathname, resolvedTitle, segmentTitles, dictionary])
 
   return breadcrumbs
 }

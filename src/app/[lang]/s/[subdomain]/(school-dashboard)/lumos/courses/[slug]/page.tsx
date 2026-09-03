@@ -11,6 +11,7 @@ import { LumosCourseDetailContent } from "@/components/lumos/courses/[slug]/cont
 import { checkCatalogEnrollment } from "@/components/lumos/data/catalog/check-enrollment"
 import { getCatalogCourse } from "@/components/lumos/data/catalog/get-course"
 import { getCourseProgress } from "@/components/lumos/data/catalog/get-course-progress"
+import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
 
 export const dynamic = "force-dynamic"
 
@@ -51,14 +52,19 @@ export default async function LumosCourseDetailPage({ params }: Props) {
   ])
 
   return (
-    <LumosCourseDetailContent
-      dictionary={dictionary.lumos}
-      lang={lang}
-      schoolId={schoolId}
-      course={course}
-      isEnrolled={isEnrolled}
-      userRole={session?.user?.role || null}
-      courseProgress={courseProgress}
-    />
+    <>
+      {/* The URL carries the catalog slug (`sd-g10-literature`); the crumb
+          carries the subject's own, already-localized name. */}
+      <BreadcrumbTitle title={course.title} />
+      <LumosCourseDetailContent
+        dictionary={dictionary.lumos}
+        lang={lang}
+        schoolId={schoolId}
+        course={course}
+        isEnrolled={isEnrolled}
+        userRole={session?.user?.role || null}
+        courseProgress={courseProgress}
+      />
+    </>
   )
 }

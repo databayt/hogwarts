@@ -11,6 +11,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { LumosLessonContent } from "@/components/lumos/dashboard/lesson/content"
 import { getLessonContent } from "@/components/lumos/data/catalog/get-lesson-content"
 import { getLessonWithProgress } from "@/components/lumos/data/catalog/get-lesson-with-progress"
+import { getSubjectDisplayName } from "@/components/lumos/data/catalog/subject-title"
 import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
 import { LessonLiveStrip } from "@/components/school-dashboard/live/lesson-live-strip"
 
@@ -55,9 +56,22 @@ export default async function LumosLessonPage({ params }: Props) {
     notFound()
   }
 
+  // The `[slug]` crumb between "Courses" and this lesson is a catalog slug
+  // (`sd-g10-literature`) — show the subject's own name in the viewer's
+  // language instead.
+  const subjectTitle = await getSubjectDisplayName(
+    lesson.chapter.course.id,
+    lesson.chapter.course.title,
+    schoolId,
+    lang
+  )
+
   return (
     <>
-      <BreadcrumbTitle title={lesson.title} />
+      <BreadcrumbTitle
+        title={lesson.title}
+        segments={{ [slug]: subjectTitle }}
+      />
       {/* "This lesson is being taught live now" — the catalog → conference
           back-link. Renders nothing when no session references this lesson
           today, so the page pays one indexed query and no layout shift. */}
