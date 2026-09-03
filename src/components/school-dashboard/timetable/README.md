@@ -8,7 +8,7 @@ maturity: Production-Ready
 completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/timetable
-last_audited: 2026-07-16
+last_audited: 2026-09-02
 ---
 
 ## Timetable -- Weekly Schedule Management

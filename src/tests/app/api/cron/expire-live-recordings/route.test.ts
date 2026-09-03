@@ -13,10 +13,9 @@ vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))
 vi.mock("@/lib/db", () => ({
   db: { conferenceRecording: { findMany: vi.fn(), update: vi.fn() } },
 }))
-vi.mock(
-  "@/components/school-dashboard/live/livekit/recording-urls",
-  () => ({ deleteRecordingObject: vi.fn(async () => true) })
-)
+vi.mock("@/components/school-dashboard/live/livekit/recording-urls", () => ({
+  deleteRecordingObject: vi.fn(async () => true),
+}))
 
 const req = () =>
   new Request("http://localhost/api/cron/expire-live-recordings")

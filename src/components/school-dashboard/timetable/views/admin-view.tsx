@@ -311,6 +311,10 @@ export default function AdminView({
     [termId, loadTimetable]
   )
 
+  // AdminView deliberately renders NO join overlay: its cells are already a
+  // full-cell click target that opens the slot editor, and two overlapping
+  // full-cell targets cannot be told apart by a pointer. The blinking cell still
+  // reports state; an admin who wants to enter a room goes through /live.
   return (
     <div className="space-y-12">
       {/* Toolbar: Classroom + Teacher selectors */}
@@ -400,7 +404,10 @@ export default function AdminView({
       {viewMode === "classroom" && (
         <>
           {isLoadingData || isLoading ? (
-            <TimetableGridSkeleton />
+            <TimetableGridSkeleton
+              workingDays={workingDays}
+              periods={periods}
+            />
           ) : selectedClassroom ? (
             <SimpleGrid
               slots={slots}
@@ -451,7 +458,10 @@ export default function AdminView({
           )}
 
           {isLoadingData || isLoading ? (
-            <TimetableGridSkeleton />
+            <TimetableGridSkeleton
+              workingDays={workingDays}
+              periods={periods}
+            />
           ) : selectedId ? (
             <SimpleGrid
               slots={slots}

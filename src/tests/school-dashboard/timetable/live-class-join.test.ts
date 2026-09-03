@@ -1,10 +1,29 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { attachLiveClasses } from "@/components/school-dashboard/timetable/live-class-join"
+import {
+  attachLiveClasses,
+  resolveTodayJoinTargets,
+} from "@/components/school-dashboard/timetable/live-class-join"
+
+// The policy engine has its own suite; stub it here so these tests stay about
+// the resolver. Defaults to "this section is online", which is what every
+// pre-existing case in this file assumed before tier 3 was gated.
+const onlineBySection = new Map<string, boolean>()
+vi.mock("@/components/school-dashboard/live/online-policy", () => ({
+  resolveOnlinePolicies: vi.fn(
+    async (_schoolId: string, sectionIds: string[]) =>
+      new Map(
+        sectionIds.map((id) => [
+          id,
+          { online: onlineBySection.get(id) ?? true } as never,
+        ])
+      )
+  ),
+}))
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -20,6 +39,7 @@ const DATE = new Date("2026-06-01T12:00:00Z")
 
 beforeEach(() => {
   vi.clearAllMocks()
+  onlineBySection.clear()
   // The day window is resolved in the SCHOOL's timezone, so every path now
   // reads School.timezone first.
   vi.mocked(db.school.findUnique).mockResolvedValue({
@@ -340,5 +360,164 @@ describe("attachLiveClasses — the section's open room", () => {
     expect(out[0].liveClass?.sessionId).toBe("lcs-slot") // slot wins
     expect(out[1].liveClass?.meetingUrl).toBe("https://meet.example.com/maths") // subject link wins
     expect(out[2].liveClass?.sessionId).toBe("open-1") // open room is the floor
+  })
+})
+
+describe("attachLiveClasses — the standing link obeys the online policy", () => {
+  // Tier 3 is the only tier with no materialized row behind it, so it is the
+  // only one that can outlive the decision that created it. A school that
+  // switches back to `physical` keeps its ConferenceLink rows; without the gate
+  // every slot of that subject offers a live room forever.
+  const link = [
+    {
+      sectionId: "sec-1",
+      subjectId: "sub-1",
+      provider: "external",
+      meetingUrl: "https://meet.example.com/recurring",
+    },
+  ]
+  const entry = [
+    { sectionId: "sec-1", subjectId: "sub-1", timetableId: "tt-1" },
+  ]
+
+  it("resolves the link when the section is online", async () => {
+    vi.mocked(db.conferenceLink.findMany).mockResolvedValue(link as never)
+    const [out] = await attachLiveClasses(SCHOOL, TERM, DATE, entry)
+    expect(out.liveClass?.meetingUrl).toBe("https://meet.example.com/recurring")
+  })
+
+  it("suppresses the link when the section is NOT online", async () => {
+    onlineBySection.set("sec-1", false)
+    vi.mocked(db.conferenceLink.findMany).mockResolvedValue(link as never)
+    const [out] = await attachLiveClasses(SCHOOL, TERM, DATE, entry)
+    expect(out.liveClass).toBeNull()
+  })
+
+  it("gates per section, not per school", async () => {
+    // Hybrid: one section opted out, its neighbour did not.
+    onlineBySection.set("sec-off", false)
+    vi.mocked(db.conferenceLink.findMany).mockResolvedValue([
+      ...link,
+      {
+        sectionId: "sec-off",
+        subjectId: "sub-1",
+        provider: "external",
+        meetingUrl: "https://meet.example.com/other",
+      },
+    ] as never)
+    const [on, off] = await attachLiveClasses(SCHOOL, TERM, DATE, [
+      { sectionId: "sec-1", subjectId: "sub-1", timetableId: "tt-1" },
+      { sectionId: "sec-off", subjectId: "sub-1", timetableId: "tt-2" },
+    ])
+    expect(on.liveClass?.meetingUrl).toBe("https://meet.example.com/recurring")
+    expect(off.liveClass).toBeNull()
+  })
+
+  it("still resolves a MATERIALIZED session on an offline section", async () => {
+    // Online is additive and a session is a real row someone may be sitting in.
+    // Only the speculative tier is suppressed.
+    onlineBySection.set("sec-1", false)
+    vi.mocked(db.conference.findMany).mockResolvedValue([
+      {
+        id: "lcs-1",
+        provider: "external",
+        meetingUrl: "https://meet.example.com/live",
+        status: "live",
+        sectionId: "sec-1",
+        subjectId: "sub-1",
+        timetableId: "tt-1",
+      },
+    ] as never)
+    const [out] = await attachLiveClasses(SCHOOL, TERM, DATE, entry)
+    expect(out.liveClass?.sessionId).toBe("lcs-1")
+  })
+})
+
+describe("resolveTodayJoinTargets — day filtering", () => {
+  // The map exists so the weekly grid can offer Join without a day check of its
+  // own. That only holds if the helper filters to the SCHOOL's today before
+  // calling attachLiveClasses: tiers 2 and 3 of the resolver are not day-aware,
+  // so a whole week in would let a standing link stamp every weekday row.
+  const WED = new Date("2026-06-03T09:00:00Z") // Wednesday = 3
+
+  function slot(id: string, dayOfWeek: number) {
+    return { id, dayOfWeek, sectionId: "sec-1", subjectId: "sub-1" }
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(WED)
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("passes ONLY the school-local today's slots to the resolver", async () => {
+    // A standing link resolves for whatever it is handed — so what comes back
+    // is exactly the set the helper chose to ask about.
+    vi.mocked(db.conferenceLink.findMany).mockResolvedValue([
+      {
+        sectionId: "sec-1",
+        subjectId: "sub-1",
+        provider: "external",
+        meetingUrl: "https://meet.example/room",
+      },
+    ] as never)
+
+    const map = await resolveTodayJoinTargets(SCHOOL, TERM, [
+      slot("mon", 1),
+      slot("wed", 3),
+      slot("thu", 4),
+    ])
+
+    expect(Object.keys(map)).toEqual(["wed"])
+    expect(map.wed.meetingUrl).toBe("https://meet.example/room")
+  })
+
+  it("returns an empty map when the school's today has no slots", async () => {
+    vi.mocked(db.conferenceLink.findMany).mockResolvedValue([
+      {
+        sectionId: "sec-1",
+        subjectId: "sub-1",
+        provider: "external",
+        meetingUrl: "https://meet.example/room",
+      },
+    ] as never)
+
+    const map = await resolveTodayJoinTargets(SCHOOL, TERM, [
+      slot("mon", 1),
+      slot("thu", 4),
+    ])
+
+    expect(map).toEqual({})
+    // Nothing to ask about — the resolver is not called at all.
+    expect(db.conferenceLink.findMany).not.toHaveBeenCalled()
+  })
+
+  it("resolves the day in the SCHOOL's timezone, not the server's", async () => {
+    // 2026-06-03T21:30Z is still Wednesday in UTC but already Thursday in Dubai
+    // (UTC+4). The school's calendar is the one that counts.
+    vi.setSystemTime(new Date("2026-06-03T21:30:00Z"))
+    vi.mocked(db.conferenceLink.findMany).mockResolvedValue([
+      {
+        sectionId: "sec-1",
+        subjectId: "sub-1",
+        provider: "external",
+        meetingUrl: "https://meet.example/room",
+      },
+    ] as never)
+
+    const map = await resolveTodayJoinTargets(SCHOOL, TERM, [
+      slot("wed", 3),
+      slot("thu", 4),
+    ])
+
+    expect(Object.keys(map)).toEqual(["thu"])
+  })
+
+  it("short-circuits on an empty slot list without touching the db", async () => {
+    const map = await resolveTodayJoinTargets(SCHOOL, TERM, [])
+    expect(map).toEqual({})
+    expect(db.school.findUnique).not.toHaveBeenCalled()
   })
 })

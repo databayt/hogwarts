@@ -8,8 +8,10 @@
 import { db } from "@/lib/db"
 import {
   DEFAULT_SCHOOL_TZ,
+  schoolDayOfWeek,
   schoolDayWindow,
 } from "@/components/school-dashboard/live/day-window"
+import { resolveOnlinePolicies } from "@/components/school-dashboard/live/online-policy"
 
 /**
  * Live-class Join info attached to a today-schedule entry. `sessionId` is
@@ -73,6 +75,10 @@ export async function attachLiveClasses<
     school?.timezone || DEFAULT_SCHOOL_TZ,
     date
   )
+
+  // Is each of these sections actually online right now? Only tier 3 needs the
+  // answer — see the suppression note where it is applied.
+  const policies = await resolveOnlinePolicies(schoolId, sectionIds, date)
 
   const [sessions, openRooms, defaults] = await Promise.all([
     db.conference.findMany({
@@ -183,7 +189,23 @@ export async function attachLiveClasses<
         },
       }
     }
-    const def = defaultMap.get(k)
+    // Tier 3 is the one tier NOT backed by a materialized row, so it is the one
+    // that can outlive the decision that created it: a school that switches back
+    // to `physical` keeps its `ConferenceLink` rows, and without this check every
+    // slot of that subject would offer a live room forever. The policy engine is
+    // the single source of truth for "is this section online", and it is
+    // consulted HERE — inside the shared resolver — rather than in one caller, so
+    // the weekly grid, the Today cards and the mobile route can never disagree
+    // about whether a class is online.
+    //
+    // Tiers 1, 2 and 4 are deliberately NOT gated: those are real Conference rows
+    // that the materializer only creates per policy, and online is ADDITIVE — a
+    // session that already exists stays joinable even if the school flips to
+    // physical mid-day. Suppressing a live room someone is sitting in would be
+    // the worse failure.
+    const def = policies.get(e.sectionId)?.online
+      ? defaultMap.get(k)
+      : undefined
     if (def) {
       return {
         ...e,
@@ -264,4 +286,71 @@ export async function getLiveClassIndicators(
       session.status === "live" ? "live" : "scheduled"
   }
   return indicators
+}
+
+/**
+ * Join targets for the WEEKLY grid, keyed by `Timetable.id`.
+ *
+ * The grid used to receive `getLiveClassIndicators` only — a dot per slot, with
+ * no way in — so Join lived exclusively on the Today cards. That was a sound
+ * split until the student view became a bare grid with no day list, at which
+ * point a student could see that their third period was online and had no route
+ * to it. This is the other half: the same resolver the Today rows use, reduced
+ * to a map the grid can look a slot up in.
+ *
+ * TWO invariants, both load-bearing:
+ *
+ *   1. Only TODAY's slots are passed to `attachLiveClasses`. Its tier 1 (exact
+ *      `timetableId`) is day-aware; tiers 2 and 3 are not — tier 2 matches any
+ *      of today's sessions for the same (section, subject) and tier 3 is a
+ *      standing link with no day at all. Hand it a whole week and Monday's maths
+ *      inherits Thursday's session while a standing link stamps every weekday
+ *      row of that subject.
+ *   2. The day is the SCHOOL's, via `schoolDayOfWeek` — never the server's
+ *      `getDay()`, which puts a Sudanese school on the wrong day for the hours
+ *      either side of midnight.
+ *
+ * Because the map only ever holds today's slot ids, a caller needs no day check
+ * of its own: a Thursday cell simply misses the map. That also means a day-mode
+ * grid showing the NEXT working day (when today is a weekend) is correctly
+ * join-free rather than offering a button for a class that is days away.
+ */
+export async function resolveTodayJoinTargets(
+  schoolId: string,
+  termId: string,
+  slots: Array<{
+    id: string
+    dayOfWeek: number
+    sectionId?: string | null
+    subjectId?: string | null
+  }>
+): Promise<Record<string, LiveClassJoinInfo>> {
+  if (slots.length === 0) return {}
+
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { timezone: true },
+  })
+  const now = new Date()
+  const today = schoolDayOfWeek(school?.timezone || DEFAULT_SCHOOL_TZ, now)
+
+  const todaySlots = slots.filter((s) => s.dayOfWeek === today)
+  if (todaySlots.length === 0) return {}
+
+  const attached = await attachLiveClasses(
+    schoolId,
+    termId,
+    now,
+    todaySlots.map((s) => ({
+      timetableId: s.id,
+      sectionId: s.sectionId ?? null,
+      subjectId: s.subjectId ?? null,
+    }))
+  )
+
+  const map: Record<string, LiveClassJoinInfo> = {}
+  for (const row of attached) {
+    if (row.liveClass && row.timetableId) map[row.timetableId] = row.liveClass
+  }
+  return map
 }

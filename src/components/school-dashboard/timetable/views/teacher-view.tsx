@@ -41,9 +41,11 @@ import {
   isRowLiveJoinable,
   LiveJoinButton,
   OnlineBadge,
+  type LiveClassJoinInfo,
   type SchoolClosureInfo,
 } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
+import { SlotDetailDialog } from "./slot-detail-dialog"
 import { StartLiveClassButton } from "./start-live-class-button"
 
 interface Props {
@@ -117,6 +119,12 @@ export default function TeacherView({
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
   >({})
+  const [liveJoin, setLiveJoin] = useState<Record<string, LiveClassJoinInfo>>(
+    {}
+  )
+  // Which cell the reader opened. The grid is read-only here, so a click means
+  // "tell me about this", not "let me change it".
+  const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
 
   // Today's schedule
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
@@ -153,6 +161,7 @@ export default function TeacherView({
       setTeacherInfo(weeklyResult.teacherInfo)
       setWorkload(weeklyResult.workload)
       setLiveIndicators(weeklyResult.liveIndicators ?? {})
+      setLiveJoin(weeklyResult.liveJoin ?? {})
       setTodaySchedule(todayResult.schedule)
       setClosure(todayResult.closure ?? null)
       setCurrentDay(todayResult.dayOfWeek)
@@ -555,7 +564,7 @@ export default function TeacherView({
         )
       ) : // Full Week View
       isLoadingData || isLoading ? (
-        <TimetableGridSkeleton />
+        <TimetableGridSkeleton workingDays={workingDays} periods={periods} />
       ) : (
         <Card>
           <CardContent className="pt-4">
@@ -567,6 +576,37 @@ export default function TeacherView({
               viewMode="teacher"
               editable={false}
               liveIndicators={liveIndicators}
+              onSlotInspect={(slot) => setInspectedSlotId(slot.id)}
+              // Corner icon to walk into a running class; the Start button
+              // keeps its label and stays below the text, because "bring this
+              renderSlotAction={(slot, period) => {
+                if (!isRowLiveJoinable(period.startTime, period.endTime))
+                  return null
+                if (liveJoin[slot.id]) return null
+                // Nothing materialized inside the window — the teacher is the
+                // one who can bring it online, which matters more since
+                // materialization moved to a GitHub Actions bridge.
+                return (
+                  <StartLiveClassButton
+                    timetableId={slot.id}
+                    lang={lang}
+                    label={
+                      dictionary?.liveClasses?.start ??
+                      (isRTL ? "بدء البث المباشر" : "Start live class")
+                    }
+                    startingLabel={
+                      dictionary?.liveClasses?.starting ??
+                      (isRTL ? "جارٍ البدء…" : "Starting…")
+                    }
+                    errorLabel={
+                      dictionary?.liveClasses?.startError ??
+                      (isRTL
+                        ? "تعذّر بدء البث المباشر"
+                        : "Couldn't start the live class")
+                    }
+                  />
+                )
+              }}
               dictionary={{
                 period: d?.period,
                 break: d?.break,
@@ -579,6 +619,14 @@ export default function TeacherView({
           </CardContent>
         </Card>
       )}
+      <SlotDetailDialog
+        slotId={inspectedSlotId}
+        open={!!inspectedSlotId}
+        onOpenChange={(next) => !next && setInspectedSlotId(null)}
+        dictionary={dictionary}
+        lang={lang}
+        liveClass={inspectedSlotId ? (liveJoin[inspectedSlotId] ?? null) : null}
+      />
     </div>
   )
 }

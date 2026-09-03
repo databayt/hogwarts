@@ -1,19 +1,23 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { type CSSProperties } from "react"
+
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface TimetableGridSkeletonProps {
-  /** Working days. Sudan runs Sun–Thu. */
-  days?: number
-  /** Teaching periods only — breaks are not teaching rows. sd-private has 7. */
-  periods?: number
   /**
-   * Render a break row after this teaching period (1-based); null for none.
-   * A Sudanese day has ONE فسحة, after period 3.
+   * The SAME arrays `SimpleGrid` is about to receive. Both are known before the
+   * slots are fetched — they come from `getActiveTerm`/`getPersonalizedTimetable`
+   * via RoleRouter's `commonProps`, not from the grid read — so the placeholder
+   * can be exact rather than a guess. Pass `visibleDays`, not `workingDays`,
+   * where the caller narrows them: a phone in day mode renders ONE column, and a
+   * five-column skeleton in front of it is the reflow this component exists to
+   * prevent.
    */
-  breakAfterPeriod?: number | null
+  workingDays?: number[]
+  periods?: Array<{ isBreak: boolean }>
   className?: string
 }
 
@@ -30,13 +34,37 @@ interface TimetableGridSkeletonProps {
  *
  * Defaults describe the Sudanese school day so the common case needs no props.
  * Static by contract — no hooks, no state, no fetching.
+ *
+ * The band heights below are MEASURED off the live grid, not derived from
+ * padding: a real cell's height is driven by its text (a subject that wraps to
+ * two lines on a phone), which a placeholder cannot reproduce. Matching the
+ * classes alone left the skeleton ~9px short per row and 68px short overall, so
+ * the page still stepped when data landed. Re-measure if the cell typography
+ * changes — header 41/65, teaching row 65/85, break row 68/84 (mobile/sm+).
  */
 export function TimetableGridSkeleton({
-  days = 5,
-  periods = 7,
-  breakAfterPeriod = 3,
+  workingDays,
+  periods: periodRows,
   className,
 }: TimetableGridSkeletonProps) {
+  // Fall back to the Sudanese school day when a caller has nothing better —
+  // 5 days, 7 teaching periods, one فسحة after the third.
+  const days = workingDays?.length ?? 5
+  const teaching = periodRows?.filter((p) => !p.isBreak)
+  const periods = teaching?.length ?? 7
+  // Where the break lands: the count of teaching periods that precede the first
+  // non-teaching one, in the order given. `SimpleGrid` derives this from the
+  // same data rather than a constant, and so must this.
+  const breakAfterPeriod = periodRows
+    ? (() => {
+        let seen = 0
+        for (const p of periodRows) {
+          if (p.isBreak) return seen
+          seen++
+        }
+        return null
+      })()
+    : 3
   // Tailwind can only see literal class names, so map rather than interpolate —
   // same switch SimpleGrid uses (days + 1 for the leading period column).
   const totalCols = days + 1
@@ -68,13 +96,13 @@ export function TimetableGridSkeleton({
 
   const BreakRow = () => (
     <div className={cn("grid", gridColsClass)}>
-      <div className="flex flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800">
+      <div className="flex min-h-[68px] flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 sm:min-h-[84px] sm:px-8 dark:border-neutral-700 dark:bg-neutral-800">
         <Skeleton className="h-4 w-12" />
         <Skeleton className="mt-1 h-3 w-10" />
       </div>
       <div
         className={cn(
-          "flex items-center justify-center bg-neutral-50 px-2 py-3 sm:px-8 sm:py-5 dark:bg-neutral-800/50",
+          "flex min-h-[68px] items-center justify-center bg-neutral-50 px-2 sm:min-h-[84px] sm:px-8 dark:bg-neutral-800/50",
           breakColSpan
         )}
       >
@@ -86,7 +114,7 @@ export function TimetableGridSkeleton({
   return (
     <div
       className={cn(
-        "overflow-x-auto rounded-xl border border-neutral-200 shadow-lg dark:border-neutral-700",
+        "overflow-x-auto rounded-xl border border-neutral-200 shadow-lg dark:border-neutral-700 print:rounded-none print:shadow-none",
         className
       )}
       // The grid it stands in for is a table of scheduled classes; announce the
@@ -94,7 +122,12 @@ export function TimetableGridSkeleton({
       role="status"
       aria-busy="true"
     >
-      <div className="min-w-full bg-white dark:bg-neutral-900">
+      {/* Same per-column floor SimpleGrid applies, so a week on a phone
+          scrolls at the same width instead of compressing and then jumping. */}
+      <div
+        className="w-full min-w-[var(--tt-grid-min-w)] bg-white dark:bg-neutral-900 print:min-w-0"
+        style={{ "--tt-grid-min-w": `${(days + 1) * 128}px` } as CSSProperties}
+      >
         {/* Header — clock cell + one column per working day */}
         <div
           className={cn(
@@ -102,14 +135,14 @@ export function TimetableGridSkeleton({
             gridColsClass
           )}
         >
-          <div className="flex items-center justify-center border-e border-neutral-200 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700">
+          <div className="flex min-h-[41px] items-center justify-center border-e border-neutral-200 px-2 sm:min-h-[65px] sm:px-8 dark:border-neutral-700">
             <Skeleton className="h-4 w-4 rounded-full" />
           </div>
           {Array.from({ length: days }).map((_, i) => (
             <div
               key={i}
               className={cn(
-                "px-4 py-2 sm:px-8 sm:py-5",
+                "flex min-h-[41px] items-center justify-center px-4 sm:min-h-[65px] sm:px-8",
                 i < days - 1
                   ? "border-e border-neutral-200 dark:border-neutral-700"
                   : ""
@@ -126,7 +159,7 @@ export function TimetableGridSkeleton({
             <div key={row}>
               {breakAfterPeriod === row && <BreakRow />}
               <div className={cn("grid", gridColsClass)}>
-                <div className="flex flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800">
+                <div className="flex min-h-[65px] flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 sm:min-h-[85px] sm:px-8 dark:border-neutral-700 dark:bg-neutral-800">
                   <Skeleton className="h-4 w-14" />
                   <Skeleton className="mt-1 h-3 w-10" />
                 </div>
@@ -134,7 +167,7 @@ export function TimetableGridSkeleton({
                   <div
                     key={col}
                     className={cn(
-                      "flex min-h-[72px] flex-col items-center justify-center gap-1.5 px-2 py-3 sm:px-8 sm:py-5",
+                      "flex min-h-[65px] flex-col items-center justify-center gap-1.5 px-2 sm:min-h-[85px] sm:px-4",
                       col < days - 1
                         ? "border-e border-neutral-200 dark:border-neutral-700"
                         : ""

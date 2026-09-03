@@ -33,9 +33,11 @@ import {
   isRowLiveJoinable,
   LiveJoinButton,
   OnlineBadge,
+  type LiveClassJoinInfo,
   type SchoolClosureInfo,
 } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
+import { SlotDetailDialog } from "./slot-detail-dialog"
 
 interface Props {
   dictionary: Dictionary["school"]
@@ -108,6 +110,12 @@ export default function GuardianView({
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
   >({})
+  const [liveJoin, setLiveJoin] = useState<Record<string, LiveClassJoinInfo>>(
+    {}
+  )
+  // Which cell the reader opened. The grid is read-only here, so a click means
+  // "tell me about this", not "let me change it".
+  const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
 
   // View state
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
@@ -169,6 +177,8 @@ export default function GuardianView({
       // The early-return branch (no classes/section) omits `liveIndicators` —
       // narrow with `in` rather than casting.
       setLiveIndicators("liveIndicators" in result ? result.liveIndicators : {})
+      // Same early-return branch omits `liveJoin`; narrow the same way.
+      setLiveJoin("liveJoin" in result ? result.liveJoin : {})
       setTodaySchedule(today.schedule)
       setClosure(today.closure ?? null)
     } catch (err) {
@@ -237,7 +247,7 @@ export default function GuardianView({
     return (
       <div className="space-y-4">
         <Skeleton className="h-24 w-full rounded-lg" />
-        <TimetableGridSkeleton />
+        <TimetableGridSkeleton workingDays={workingDays} periods={periods} />
       </div>
     )
   }
@@ -510,7 +520,7 @@ export default function GuardianView({
         )
       ) : // Full Week View
       isLoadingData || isLoading ? (
-        <TimetableGridSkeleton />
+        <TimetableGridSkeleton workingDays={workingDays} periods={periods} />
       ) : (
         <Card>
           <CardContent className="pt-4">
@@ -522,6 +532,8 @@ export default function GuardianView({
               viewMode="class"
               editable={false}
               liveIndicators={liveIndicators}
+              onSlotInspect={(slot) => setInspectedSlotId(slot.id)}
+              // A guardian joins their child's class on the same terms the
               dictionary={{
                 period: d?.period,
                 break: d?.break,
@@ -534,6 +546,14 @@ export default function GuardianView({
           </CardContent>
         </Card>
       )}
+      <SlotDetailDialog
+        slotId={inspectedSlotId}
+        open={!!inspectedSlotId}
+        onOpenChange={(next) => !next && setInspectedSlotId(null)}
+        dictionary={dictionary}
+        lang={lang}
+        liveClass={inspectedSlotId ? (liveJoin[inspectedSlotId] ?? null) : null}
+      />
     </div>
   )
 }

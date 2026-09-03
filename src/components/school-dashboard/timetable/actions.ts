@@ -101,7 +101,11 @@ import {
   type SubjectAllocation,
   type TeacherAvailability,
 } from "./generate/algorithm"
-import { attachLiveClasses, getLiveClassIndicators } from "./live-class-join"
+import {
+  attachLiveClasses,
+  getLiveClassIndicators,
+  resolveTodayJoinTargets,
+} from "./live-class-join"
 import {
   getPermissionContext,
   logTimetableAction,
@@ -2093,6 +2097,11 @@ async function getTimetableByClassIds(input: {
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
     liveIndicators,
+    // Dots say "something is on today"; this says where to go. Keyed by slot id
+    // and holding TODAY's slots only, so a cell in another day's column simply
+    // misses the map and renders no Join. Runs after the slot fetch rather than
+    // beside it because it needs the slots.
+    liveJoin: await resolveTodayJoinTargets(schoolId, input.termId, slots),
   }
 }
 
@@ -2301,6 +2310,11 @@ export async function getTimetableByStudentGrade(input: {
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
     liveIndicators,
+    // Dots say "something is on today"; this says where to go. Keyed by slot id
+    // and holding TODAY's slots only, so a cell in another day's column simply
+    // misses the map and renders no Join. Runs after the slot fetch rather than
+    // beside it because it needs the slots.
+    liveJoin: await resolveTodayJoinTargets(schoolId, input.termId, slots),
   }
 }
 
@@ -2513,7 +2527,15 @@ export async function getTimetableByTeacher(input: {
   teacherId: string
   weekOffset?: 0 | 1
 }) {
-  await requireReadAccess()
+  // `teacherId` is caller-supplied and every export in a "use server" file is a
+  // public POST endpoint, so `requireReadAccess()` — which only asks "may this
+  // role see A timetable?" — let a STUDENT or GUARDIAN post any teacher's id and
+  // read that teacher's whole week. `view_all` is the permission that actually
+  // means "may look at someone else's schedule": the matrix grants it to
+  // DEVELOPER / ADMIN / TEACHER / ACCOUNTANT / STAFF (all of whom render
+  // AdminView's teacher picker, or their own grid) and withholds it from
+  // STUDENT / GUARDIAN, whose views never call this.
+  await requirePermission("view_all")
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -2635,6 +2657,11 @@ export async function getTimetableByTeacher(input: {
     },
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
     liveIndicators,
+    // Dots say "something is on today"; this says where to go. Keyed by slot id
+    // and holding TODAY's slots only, so a cell in another day's column simply
+    // misses the map and renders no Join. Runs after the slot fetch rather than
+    // beside it because it needs the slots.
+    liveJoin: await resolveTodayJoinTargets(schoolId, input.termId, slots),
   }
 }
 
@@ -2646,7 +2673,13 @@ export async function getTimetableByRoom(input: {
   roomId: string
   weekOffset?: 0 | 1
 }) {
-  await requireReadAccess()
+  // `roomId` is caller-supplied, and this now returns Join targets as well as
+  // slots — so an ungated read would hand a STUDENT working meeting links for
+  // other sections' classes, not merely "who is in A01 all week". Same gate and
+  // same reasoning as `getTimetableByTeacher`: `view_all` is the permission that
+  // means "may look at a cohort that is not yours", held by every role that
+  // renders AdminView's room picker and withheld from STUDENT / GUARDIAN.
+  await requirePermission("view_all")
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -2764,6 +2797,11 @@ export async function getTimetableByRoom(input: {
     },
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
     liveIndicators,
+    // Dots say "something is on today"; this says where to go. Keyed by slot id
+    // and holding TODAY's slots only, so a cell in another day's column simply
+    // misses the map and renders no Join. Runs after the slot fetch rather than
+    // beside it because it needs the slots.
+    liveJoin: await resolveTodayJoinTargets(schoolId, input.termId, slots),
   }
 }
 
@@ -7262,4 +7300,148 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
   out.sort((a, b) => a.name.localeCompare(b.name, lang === "ar" ? "ar" : "en"))
 
   return { teachers: out }
+}
+
+/**
+ * Everything worth knowing about ONE slot, for the person asking.
+ *
+ * Backs the read-only grids' cell dialog. The slot facts are the same for
+ * everyone who can see the cell; the `personal` block is not — a student gets
+ * their OWN attendance for that period, a guardian their child's, a teacher the
+ * roster split and whether they have taken it yet. That is the whole point of
+ * the dialog, and it is also the thing that has to be scoped carefully: the
+ * identity comes from the session, never from the caller, and every query is
+ * bounded by `schoolId`.
+ */
+export async function getSlotDetail(input: { timetableId: string }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  const session = await auth()
+  const userId = session?.user?.id
+  if (!userId) throw new Error("NOT_AUTHENTICATED")
+  const role = session?.user?.role as string | undefined
+
+  const slot = await db.timetable.findFirst({
+    where: { id: input.timetableId, schoolId },
+    select: {
+      id: true,
+      dayOfWeek: true,
+      sectionId: true,
+      subjectId: true,
+      subject: { select: { name: true } },
+      class: { select: { name: true, subject: { select: { name: true } } } },
+      section: {
+        select: { name: true, grade: { select: { name: true } } },
+      },
+      classroom: { select: { roomName: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
+    },
+  })
+  if (!slot) throw new Error("SLOT_NOT_FOUND")
+
+  // Attendance is stored per school-calendar DAY, so a slot only has any on the
+  // day it actually runs — asking on a Tuesday about a Thursday cell correctly
+  // returns nothing rather than last week's marks.
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { timezone: true },
+  })
+  const now = new Date()
+  const isToday =
+    schoolDayOfWeek(school?.timezone || DEFAULT_SCHOOL_TZ, now) ===
+    slot.dayOfWeek
+  const { start: dayStart, end: dayEnd } = schoolDayWindow(
+    school?.timezone || DEFAULT_SCHOOL_TZ,
+    now
+  )
+
+  type Personal =
+    | { kind: "student"; status: string | null }
+    | {
+        kind: "teacher"
+        taken: boolean
+        present: number
+        absent: number
+        total: number
+      }
+    | null
+
+  let personal: Personal = null
+
+  if (isToday && (role === "STUDENT" || role === "GUARDIAN")) {
+    // The student whose attendance this is: the caller themselves, or — for a
+    // guardian — the child they are already viewing. Resolved from the session
+    // both times; a guardian with no link to this section gets nothing.
+    const student =
+      role === "STUDENT"
+        ? await db.student.findFirst({
+            where: { userId, schoolId },
+            select: { id: true },
+          })
+        : await db.student.findFirst({
+            where: {
+              schoolId,
+              sectionId: slot.sectionId ?? undefined,
+              studentGuardians: { some: { guardian: { userId }, schoolId } },
+            },
+            select: { id: true },
+          })
+    if (student) {
+      const row = await db.attendance.findFirst({
+        where: {
+          schoolId,
+          studentId: student.id,
+          timetableId: slot.id,
+          date: { gte: dayStart, lt: dayEnd },
+          deletedAt: null,
+        },
+        select: { status: true },
+      })
+      personal = { kind: "student", status: row?.status ?? null }
+    }
+  } else if (isToday && role === "TEACHER") {
+    const rows = await db.attendance.findMany({
+      where: {
+        schoolId,
+        timetableId: slot.id,
+        date: { gte: dayStart, lt: dayEnd },
+        deletedAt: null,
+      },
+      select: { status: true },
+    })
+    const total = slot.sectionId
+      ? await db.student.count({
+          where: { schoolId, sectionId: slot.sectionId },
+        })
+      : 0
+    personal = {
+      kind: "teacher",
+      taken: rows.length > 0,
+      present: rows.filter((r) => r.status !== "ABSENT").length,
+      absent: rows.filter((r) => r.status === "ABSENT").length,
+      total,
+    }
+  }
+
+  return {
+    id: slot.id,
+    dayOfWeek: slot.dayOfWeek,
+    subject: slot.subject?.name ?? slot.class?.subject?.name ?? null,
+    teacher: slot.teacher
+      ? `${slot.teacher.firstName} ${slot.teacher.lastName}`.trim()
+      : null,
+    section: slot.section?.name ?? null,
+    grade: slot.section?.grade?.name ?? null,
+    room: slot.classroom?.roomName ?? null,
+    periodName: slot.period?.name ?? null,
+    startTime: slot.period?.startTime ?? null,
+    endTime: slot.period?.endTime ?? null,
+    personal,
+  }
 }

@@ -19,10 +19,9 @@ vi.mock("@/lib/db", () => ({
     },
   },
 }))
-vi.mock(
-  "@/components/school-dashboard/live/actions/notifications",
-  () => ({ notifyClassStartingSoon: vi.fn(async () => ({ created: 0 })) })
-)
+vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
+  notifyClassStartingSoon: vi.fn(async () => ({ created: 0 })),
+}))
 
 const NOW = new Date("2026-06-01T09:00:00Z").getTime()
 const req = () => new Request("http://localhost/api/cron/live-class-reminders")

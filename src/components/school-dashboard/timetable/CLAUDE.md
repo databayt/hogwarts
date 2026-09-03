@@ -166,25 +166,243 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   split hold. At the same time `StudentView` stopped switching on `defaultTab`
   and now always renders `SimpleGrid`: a student has ONE schedule, so Today and
   Full were the same data twice. The Current/Next card stays — `SimpleGrid`
-  carries live *indicators* but no Join, so dropping the card would remove a
+  carries live _indicators_ but no Join, so dropping the card would remove a
   student's only path into a live class. TEACHER and GUARDIAN keep the tab
   split (their views genuinely differ per tab), so the layout hides the two
   non-admin tabs on `role === "STUDENT"` only. `PageNav` paints its bottom
   border even when every item is hidden, so the layout skips the strip
-  entirely rather than passing an all-hidden list.
+  entirely rather than passing an all-hidden list. The header card (name +
+  grade, term badge, subject/period counts, Download) was dropped too, so the
+  student page is the heading and the grid — **this removed the student's PDF
+  export and Print entries**, which lived only in that card's dropdown
+  (`useTimetableExport` is no longer imported here; teacher and guardian keep
+  theirs). Browser Ctrl+P still works — `print.css` and the grid's `print:`
+  classes are untouched. `termInfo`/`lunchAfterPeriod` still arrive via
+  `commonProps` and are deliberately left undestructured. The grid is now
+  rendered BARE — no `Card` wrapper — under an AdminView-shaped toolbar
+  (`space-y-12` above the grid), so the two surfaces are visually identical.
+  The week/day control itself is the PRICING PAGE's billing toggle, reused
+  verbatim — `saas-marketing/pricing/billing-toggle.tsx`: a two-column
+  `ToggleGroup` with a `bg-muted` thumb absolutely positioned at `start-0
+w-1/2` and slid by `translate-x-full rtl:-translate-x-full`. Copy its
+  classes exactly rather than approximating; two details are load-bearing.
+  `onValueChange` must early-return on a falsy value or clicking the active
+  half clears the selection. The two halves are RENDERED FROM AN ORDER ARRAY,
+  not hard-coded: the viewport picks `["day","week"]` under 768px and
+  `["week","day"]` above it, and the leading entry IS the default
+  (`picked ?? ORDER[0]`). Order and default are therefore one fact and cannot
+  drift; the thumb slides on `viewRange === ORDER[1]` rather than on a literal
+  mode, so it keeps following the active half when the halves swap. The week
+  label is its own `studentView.week` ("أسبوع") — a segmented control wants one
+  word per half, and `studentView.weekView` ("عرض الأسبوع") stays as it is
+  because `layout.tsx` renders it as the teacher/guardian tab. The halves are
+  `min-w-[64px] px-3`, NOT pricing's `min-w-[148px] px-6`: 298px of chrome above
+  a one-column phone grid was the whole width of the content. 130px total.
+
+- **The grid scrolls on a phone instead of compressing** (2026-09-02,
+  `views/simple-grid.tsx`): the scroller (`overflow-x-auto`) was always there,
+  but its inner wrapper was `min-w-full` — so nothing ever exceeded the
+  container and a five-day week divided a 390px phone into ~65px columns.
+  The inner now carries a per-column FLOOR, `min-w-[var(--tt-grid-min-w)]`
+  with the variable set inline to `totalCols * 128px`. A floor rather than a
+  fixed width is the whole trick: it costs nothing where there is room (a
+  laptop's natural column is ~170px, a 2-column day view floors at 256px), so
+  one rule covers every viewport and both modes with no breakpoint. It rides a
+  CSS VARIABLE consumed by a class, not an inline `minWidth`, precisely so
+  `print:min-w-0` can beat it — an inline style could not be overridden, and
+  768px of forced width would clip on A4. Verified: mobile week scrolls
+  (768px in a 437px box, page itself does NOT overflow), mobile day and every
+  desktop width are byte-identical to before. This is the SHARED grid, so
+  admin/teacher/guardian get the same relief on a phone.
+
+  The period column then PINS while the days scroll under it —
+  `sticky start-0 z-10 print:static` on all THREE first-column cells (header
+  clock, break row, period row); miss one and the column tears apart mid-scroll.
+  Three details are load-bearing. `start-0`, never `left-0`: in RTL the period
+  column sits on the RIGHT and a physical property pins it to the wrong edge.
+  `z-10`, because the day cells are `relative` and come LATER in the DOM, so
+  they paint over an unlayered sticky sibling. And each pinned cell needs its
+  OWN opaque background — the header cell previously inherited its row's
+  `bg-neutral-50` and had none of its own, which is invisible until the moment
+  it pins and the scrolled columns run underneath it. Like the floor, it needs
+  no breakpoint: sticky is inert without a scroll to stick through.
+
+- **The dashboard page heading is display-face on phones only** (2026-09-02,
+  `atom/page-heading.tsx`): `max-md:[font-family:'thmanyah_sans',sans-serif]`
+  puts the title in the same face the /live and /lumos heroes use, while `md`
+  and up keeps `--font-heading` (which `:root[dir="rtl"]` resolves to the serif
+  `fontThmanyahText`). This is a SHARED atom — the change lands on every
+  school-dashboard AND saas-dashboard title, which was the intent. Two notes:
+  the @font-face is declared in `styles/thmanyah-clone.css`, imported by the
+  ROOT layout, so the family is already loaded everywhere and this costs no new
+  font request; and /live and /lumos each hardcode the family inline
+  (`live/landing/status-hero.tsx`, `lumos/courses/content.tsx`) with no shared
+  constant, so a third copy now exists — worth extracting if a fourth appears. And in Tailwind v4 `translate-x-*` compiles to
+  the CSS `translate` property, NOT `transform` — so `getComputedStyle(el)
+.transform` reads "none" on a thumb that is in fact translated, and
+  `transition-transform` still animates it (v4 expands that to
+  `transform, translate, scale, rotate`). Don't "fix" a slide that is
+  already working. The toolbar switches week/day, which narrows the SAME grid to one
+  column rather than swapping in another component — `SimpleGrid` already
+  handles a 1-length `workingDays` (`grid-cols-2`, `col-span-1` break row). Day
+  mode falls forward to the next working day when today is not one, so a
+  student opening it on a Friday sees Sunday rather than an empty grid.
+
+- **Identity comes from the SESSION; a caller-supplied id is a question, not an
+  answer** (2026-09-02): the web reads were already right — `StudentView` calls
+  `getTimetableByStudentGrade`, which resolves `Student` from `session.user.id`
+  and ORs `sectionId` with `StudentClass` classIds, and `getPersonalizedTimetable`
+  resolves `Teacher.id` (NOT `User.id`) the same way. Two server-side callers
+  were not:
+  1. **`GET /api/mobile/timetable/:userId` trusted its path param.** It resolved
+     the target from `userId` scoped only to `auth.schoolId` and never asked
+     whether the CALLER was allowed to see them — so any authenticated pupil
+     could walk the id space and read every classmate's week and every teacher's
+     schedule. Now routed through `canAccessStudent` (the same helper the other
+     eight student-scoped mobile routes use: self, linked guardian, or staff),
+     with teachers gated on self-or-staff. Locked by
+     `src/tests/app/api/mobile/timetable/user-route.test.ts`.
+  2. **`getTimetableByTeacher` gated on `requireReadAccess()`**, which only asks
+     "may this role see A timetable?" — so a STUDENT could POST any `teacherId`
+     to that server action and get the answer. Now `requirePermission("view_all")`,
+     which the matrix grants exactly to the roles that legitimately browse
+     someone else's grid (DEVELOPER / ADMIN / TEACHER / ACCOUNTANT / STAFF) and
+     withholds from STUDENT / GUARDIAN. `getTimetableByRoom` has the same shape
+     and is deliberately NOT changed — a room is not a person — but it is filed.
+     The mobile route also read ONLY `sectionId`, so every student whose data
+     predates the section-first migration got an EMPTY week. That is the block's
+     own "reads OR both axes" rule, broken on the one surface that did not have a
+     test.
+
+- **The student's default view follows the viewport** (2026-09-02): a five-day
+  grid is unreadable on a phone, so under 768px the toolbar opens on `day`.
+  It is DERIVED (`picked ?? (isNarrow ? "day" : "week")`), never seeded into
+  state from `matchMedia` — reading a media query during render hydrates
+  mismatched, since the server has no viewport. The consequence worth keeping:
+  the default keeps tracking rotation until the student picks a side, and their
+  pick then wins at every width. Not persisted anywhere.
+
+- **Two traps in that toolbar, both silent** (2026-09-01):
+  1. **`sv` is `studentViewUi`, which has NO `today`/`weekView`** — those live
+     under `studentView` (what `layout.tsx`'s tabs read). Writing
+     `sv?.weekView ?? "Full week"` type-checks, renders, and shows **English on
+     /ar** forever. Two sibling dictionary blocks with near-identical names;
+     read the JSON before reaching through `sv`.
+  2. **`highlightToday` ERASES the subject colour rather than tinting it.**
+     `simple-grid.tsx` appends `day === today && "bg-primary/5"` in the same
+     `cn()` as `getSubjectTailwind(...)`, and tailwind-merge collapses two
+     `bg-*` utilities to the last one. Today's column is therefore grey in
+     every week grid in the app, admin's included. Day mode passes
+     `highlightToday={viewRange === "week"}` so its single column keeps its
+     colours; the week-mode case is left as pre-existing behaviour.
 
 - **Count distinct SUBJECTS, not enrolled Class rows** (2026-09-01): a student
-  holds one `Class` row per subject *per section*, so `enrolledClasses.length`
+  holds one `Class` row per subject _per section_, so `enrolledClasses.length`
   reported "36 subjects" above a grid holding nine. `getTimetableByStudentGrade`
   now counts distinct subject names across the student's own slots, falling back
   to the enrollment count only when a term has no slots yet.
 
-- **The weekly grid is still awareness-only.** `simple-grid.tsx` renders a live
-  dot and no Join, deliberately — Join lives on the cards. Left as is. Since
-  2026-09-01 the student has no day list, so their only Join is the
-  Current/Next card above the grid; teacher and guardian keep the full Today
-  list. If the grid ever becomes a student's sole surface, Join has to move
-  into it first.
+- **RETIRED 2026-09-02 — "the weekly grid is awareness-only".** That rule held
+  while Join lived on the Today cards; removing the student's day list killed
+  its premise, and the note above it already said Join would have to move into
+  the grid if that happened. It has. The grid now takes an optional
+  `renderSlotAction(slot, period)` render prop and all four role views pass one.
+  Why a render prop and not `liveJoin` + `lang` + labels + `canStart` props:
+  what belongs in a cell is a ROLE question — a student joins, a teacher may
+  instead need to START the class — and role logic already lives in the role
+  views. `simple-grid.tsx` stays ignorant of Conference entirely.
+
+  The plumbing is `resolveTodayJoinTargets` in `live-class-join.ts` (a plain
+  server module, so exporting from it is NOT an HTTP endpoint the way an
+  `actions.ts` export is), called by all four weekly reads. It returns
+  `timetableId -> LiveClassJoinInfo` for TODAY's slots only, which is why no
+  caller needs a day check and why day mode's next-working-day fallback is
+  correctly join-free. Both invariants are locked by tests: today-only filtering
+  (tiers 2/3 are not day-aware) and `schoolDayOfWeek` over the server's
+  `getDay()`.
+
+  **State is a MARK on ONE cell, never a background** (2026-09-03): cells always
+  keep their subject colour, and only the cell worth acting on is marked at all —
+  `LiveMark` (`views/live-mark.tsx`, an inline ring-and-dot drawn with
+  `currentColor`) in the corner, coloured `--live` green running, `--upcoming`
+  amber next, `--missed` red gone.
+
+  Three shapes were tried before this one and each failed the same way, which is
+  the reason to leave it alone: colouring every online cell's BACKGROUND, then
+  blinking them, then marking every online cell with a quiet icon. Every version
+  that touched more than one cell turned today's column into a row of identical
+  signals and buried the single one that needed acting on. One cell, one mark.
+
+  This replaced two earlier attempts, and the reasons they failed are the reasons
+  to keep this shape. Colouring every online cell's BACKGROUND made the column a
+  wall of blinking colour that read as decoration and buried the one actionable
+  cell. And a background lamp could never win cleanly anyway:
+  `getSubjectTailwind` emits `hover:bg-*` and `dark:hover:bg-*` alongside its
+  base colour, and tailwind-merge does not collapse a hover variant against a
+  base `bg-*`, so the lamp handed the cell back to its subject colour the moment
+  the pointer touched it. A foreground mark has none of these problems. Colour
+  maps (`LIVE_STATUS_TEXT`) stay static strings — a computed `text-${status}`
+  compiles to nothing under JIT.
+
+  **Clicking a cell opens a DIALOG, in both directions** (2026-09-03): an admin
+  clicks to CHANGE the slot (`slot-editor-dialog.tsx`), everyone else clicks to
+  UNDERSTAND it (`views/slot-detail-dialog.tsx`), and the two deliberately share
+  chrome — same `max-w-lg` body, same dot-separated read-only context row —
+  because divergent chrome for the same gesture reads as two products.
+  `SimpleGrid` takes `onSlotInspect` for the read-only grids, mutually exclusive
+  with `onSlotClick` by construction.
+
+  The detail dialog follows the ONBOARDING SUCCESS MODAL, not the slot editor:
+  `md:max-w-sm`, `px-8 py-12 text-center`, and a vertical stack — illustration,
+  muted caption, prominent value, one action. The illustration is the CDN
+  hourglass, an `<img>` rather than an inlined glyph because it is artwork with
+  baked-in colours; `asset()` returns an absolute URL untouched, which is the
+  documented call-site pattern for a grouped CDN namespace, and it stays out of
+  `next/image` deliberately (cdn.databayt.org already sets immutable headers, and
+  an 11KB vector has nothing to optimise). It carries NO traffic-light colour —
+  the artwork cannot take one, and the state is already on the cell the dialog
+  was opened from.
+
+  The dialog is where the per-person answer lives, which is its whole reason to
+  exist over a tooltip: `getSlotDetail` resolves the viewer from the SESSION and
+  returns their own attendance for that period — a guardian gets their child's,
+  a teacher the roster split and whether they have taken it. It also absorbed the
+  Join button; the full-cell link overlay it replaced could not coexist with a
+  clickable cell. Two traps met while building it: the day name must come from
+  `d?.dayNames` (config's `DAYS_OF_WEEK` is English labels for the admin editor
+  and printed "Thursday" on /ar), and attendance is only asked for when the slot
+  falls on the school's TODAY, so a Thursday cell opened on Tuesday reports
+  nothing rather than last week's marks.
+
+  Two consequences to keep in mind. **A cell can show Join with no dot** — the
+  dot is gated on `sessionId` (the 08-14 "a standing link is not a session"
+  decision) while `LiveJoinButton` also renders tier-3 standing links, which
+  have `sessionId: null`. That asymmetry is inherited from the Today rows this
+  replaces; do not "fix" it by tightening the grid, or grid-join becomes weaker
+  than the rows it replaced. And **the admin cell is itself a click target**
+  (it opens the slot editor), so the grid wraps the action in a
+  `stopPropagation` span — verified both ways: Join does not open the editor,
+  the cell still does.
+
+- **The standing link obeys the online policy; a materialized session does not**
+  (2026-09-03): tier 3 of `attachLiveClasses` is the only tier with no
+  Conference row behind it, so it is the only one that can outlive the decision
+  that created it — a school that switches back to `physical` keeps its
+  `ConferenceLink` rows, and every slot of that subject would offer a room
+  forever. It is now gated on `resolveOnlinePolicies` (physical → never;
+  online → always; hybrid → school default, per-section and per-grade overrides,
+  and the go-online window). Gated INSIDE the shared resolver, not in one
+  caller, so the weekly grid, the Today cards and the mobile route can never
+  disagree — `online-policy.ts` exists precisely because five readers must agree.
+  Tiers 1, 2 and 4 are deliberately NOT gated: those are real rows the
+  materializer only creates per policy, and online is ADDITIVE — suppressing a
+  room someone is sitting in because the school flipped mid-day is the worse
+  failure. Do NOT branch tier 3 on `deliversTimetable`/`deliversOpenRoom`; those
+  govern materialization SHAPE, not whether a link is usable.
+
+  This is also the answer to "can it be per subject?" — the policy is
+  per-section, and subject granularity is already expressed by which
+  (section, subject) pairs have links or sessions. No new configuration.
 
 - **The Online marker is gated on `liveClass.sessionId`, not on `liveClass`**
   (2026-08-14): `attachLiveClasses` returns a `liveClass` for a session today
@@ -241,8 +459,22 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
 - **The grid skeleton must mirror `SimpleGrid`** (2026-07-17): use
   `views/grid-skeleton.tsx` (`TimetableGridSkeleton`), never a bare
   `<Skeleton className="h-96 …" />`. A blob gives no hint of the grid's shape,
-  so the page reflows when data lands. Its defaults describe the Sudanese day
-  (5 days, 7 periods, break after 3) — update them if the structure changes.
+  so the page reflows when data lands.
+
+  It now takes the SAME `workingDays` / `periods` arrays the grid is about to
+  receive, instead of the hardcoded 5/7/3 defaults (2026-09-03). Those arrive
+  from RoleRouter's `commonProps`, NOT from the slot read, so the placeholder
+  can be exact rather than a guess — and it has to be: a phone in day mode
+  renders ONE column, and the old fixed five-column skeleton was a 3× width
+  error in front of it. Pass `visibleDays` where the caller narrows them; the
+  numeric fallback survives only for callers with nothing better.
+
+  Its band heights are MEASURED off the live grid, not derived from padding. A
+  real cell's height is driven by its text — a subject wrapping to two lines on
+  a phone — which a placeholder cannot reproduce, so matching the classes alone
+  still left it 68px short. Header 41/65, teaching row 65/85, break row 68/84
+  (mobile/sm+), which brings the settle to ±8px at both breakpoints. Re-measure
+  if the cell typography changes.
 
 - **Reads that only `include: { class: ... }` are blind to real slots**
   (2026-07-16): section-based slots carry subject/section directly and have

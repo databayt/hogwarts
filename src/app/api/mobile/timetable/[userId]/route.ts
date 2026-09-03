@@ -12,13 +12,19 @@ import {
 } from "@/components/school-dashboard/timetable/live-class-join"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { canAccessStudent } from "../../lib/student-access"
 
 /**
  * GET /api/mobile/timetable/:userId — timetable for a user
  *
- * For students: returns timetable for their section.
+ * For students: returns timetable for their section AND enrolled classes.
  * For teachers: returns their teaching schedule.
  * Query param: day (0-6, optional — defaults to all days)
+ *
+ * `:userId` is NOT trusted. It names whose timetable is wanted; the caller
+ * still has to be allowed to see it — themselves, a linked guardian, or school
+ * staff. Without that check any authenticated pupil could walk the id space and
+ * read every classmate's and teacher's week.
  */
 export async function GET(
   request: NextRequest,
@@ -45,11 +51,41 @@ export async function GET(
       }),
     ])
 
-    let where: Record<string, unknown> = { schoolId: auth.schoolId }
+    const where: Record<string, unknown> = { schoolId: auth.schoolId }
 
-    if (student?.sectionId) {
-      where.sectionId = student.sectionId
+    if (student) {
+      // Same gate the other eight student-scoped mobile routes use: the student
+      // themselves, a guardian linked through StudentGuardian, or staff.
+      if (!(await canAccessStudent(auth, student.id))) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+
+      // A slot reaches a student down EITHER axis: the section they are placed
+      // in, or a legacy per-subject Class they are enrolled in. Reading only
+      // `sectionId` returned an EMPTY week for every student whose data predates
+      // the section-first migration — the exact failure the block's "reads OR
+      // both axes" rule exists to prevent, which the web read already honours.
+      const enrollments = await db.studentClass.findMany({
+        where: { studentId: student.id, schoolId: auth.schoolId },
+        select: { classId: true },
+      })
+      const classIds = enrollments.map((e) => e.classId)
+
+      const axes: Array<Record<string, unknown>> = []
+      if (student.sectionId) axes.push({ sectionId: student.sectionId })
+      if (classIds.length > 0) axes.push({ classId: { in: classIds } })
+      if (axes.length === 0) return NextResponse.json({ data: [] })
+      where.OR = axes
     } else if (teacher) {
+      // A teacher's week is their own to see; staff roles carry `view_all`.
+      const isSelf = userId === auth.userId
+      const isStaff =
+        auth.role === "DEVELOPER" ||
+        auth.role === "ADMIN" ||
+        auth.role === "STAFF"
+      if (!isSelf && !isStaff) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
       where.teacherId = teacher.id
     } else {
       return NextResponse.json({ data: [] })

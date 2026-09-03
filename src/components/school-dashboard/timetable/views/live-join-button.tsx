@@ -26,10 +26,17 @@ export function LiveJoinButton({
   liveClass,
   lang,
   label,
+  hideIcon,
 }: {
   liveClass: LiveClassJoinInfo | null | undefined
   lang: Locale
   label: string
+  /**
+   * Drop the camera glyph. The Today cards sit in a dense list where the icon
+   * is what makes the button findable; the detail dialog already has an
+   * illustration and one action, so there the word carries it alone.
+   */
+  hideIcon?: boolean
 }) {
   if (!liveClass) return null
 
@@ -43,7 +50,7 @@ export function LiveJoinButton({
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Video className="h-4 w-4" />
+          {!hideIcon && <Video className="h-4 w-4" />}
           {label}
         </a>
       </Button>
@@ -54,7 +61,7 @@ export function LiveJoinButton({
   return (
     <Button asChild size="sm" className="gap-2">
       <Link href={`/${lang}/live/${liveClass.sessionId}/room`}>
-        <Video className="h-4 w-4" />
+        {!hideIcon && <Video className="h-4 w-4" />}
         {label}
       </Link>
     </Button>
@@ -173,5 +180,92 @@ export function ClosureNotice({
       <span className="font-medium">{label}</span>
       {closure.title ? ` — ${closure.title}` : null}
     </div>
+  )
+}
+
+/** Traffic-light state of an online class, relative to its period today. */
+export type LiveSlotStatus = "live" | "upcoming" | "missed"
+
+/**
+ * Which lamp is lit for this slot.
+ *
+ * Keeps the block's local-vs-UTC convention (browser-local `now`, UTC-extracted
+ * wall-clock period bounds) — the same one `isRowLiveJoinable` and the role
+ * views use. Match it; don't fix one side in isolation.
+ *
+ * Callers must only ask this of TODAY's slots. It reads clock time alone, so a
+ * Monday period would otherwise report "missed" all week — the join/indicator
+ * maps are already today-only, which is what keeps that honest.
+ */
+export function liveSlotStatus(
+  startTime: Date | string,
+  endTime: Date | string
+): LiveSlotStatus {
+  const now = new Date()
+  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const start = new Date(startTime)
+  const end = new Date(endTime)
+  const startMin = start.getUTCHours() * 60 + start.getUTCMinutes()
+  const endMin = end.getUTCHours() * 60 + end.getUTCMinutes()
+  if (nowMin >= endMin) return "missed"
+  if (nowMin >= startMin) return "live"
+  return "upcoming"
+}
+
+/**
+ * Mark colour for each state. Static strings, so Tailwind's JIT can see them —
+ * a computed `text-${status}` compiles to nothing, silently.
+ */
+export const LIVE_STATUS_TEXT: Record<LiveSlotStatus, string> = {
+  live: "text-live",
+  upcoming: "text-upcoming",
+  missed: "text-missed",
+}
+
+/**
+ * Full-cell "enter the room" target.
+ *
+ * There is nothing to see: the cell's own blinking background IS the indicator,
+ * so adding a glyph on top would say the same thing twice. The anchor stretches
+ * over the cell (`absolute inset-0`) and carries only an `aria-label`, which is
+ * the entire reason it still exists — a coloured rectangle is unreachable by
+ * keyboard and silent to a screen reader.
+ *
+ * Only rendered on read-only grids. In AdminView the cell is already a click
+ * target that opens the slot editor, and two overlapping full-cell targets
+ * cannot be disambiguated by a pointer.
+ */
+export function RoomLinkOverlay({
+  liveClass,
+  lang,
+  label,
+}: {
+  liveClass: LiveClassJoinInfo
+  lang: Locale
+  label: string
+}) {
+  const cls =
+    "absolute inset-0 z-[2] rounded-[inherit] focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none"
+
+  if (liveClass.provider === "external" || !liveClass.sessionId) {
+    if (!liveClass.meetingUrl) return null
+    return (
+      <a
+        href={liveClass.meetingUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cls}
+        aria-label={label}
+        title={label}
+      />
+    )
+  }
+  return (
+    <Link
+      href={`/${lang}/live/${liveClass.sessionId}/room`}
+      className={cls}
+      aria-label={label}
+      title={label}
+    />
   )
 }

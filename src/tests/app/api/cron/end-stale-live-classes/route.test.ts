@@ -14,12 +14,9 @@ vi.mock("@/lib/db", () => ({
     conference: { findMany: vi.fn(), updateMany: vi.fn() },
   },
 }))
-vi.mock(
-  "@/components/school-dashboard/live/actions/attendance-sync",
-  () => ({
-    syncLiveAttendance: vi.fn(async () => ({ marked: 0, updated: 0 })),
-  })
-)
+vi.mock("@/components/school-dashboard/live/actions/attendance-sync", () => ({
+  syncLiveAttendance: vi.fn(async () => ({ marked: 0, updated: 0 })),
+}))
 
 const NOW = new Date("2026-06-20T12:00:00Z").getTime()
 const req = () =>

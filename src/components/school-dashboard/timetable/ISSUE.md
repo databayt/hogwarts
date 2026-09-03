@@ -8,7 +8,7 @@ maturity: Production-Ready
 completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-07-16
+last_audited: 2026-09-02
 ---
 
 # Timetable -- Production Readiness Tracker
@@ -59,15 +59,109 @@ last_audited: 2026-07-16
       now always renders the week grid (`SimpleGrid`, read-only, scoped to the
       student's own section). The Today/Full tabs are hidden for STUDENT only —
       TEACHER and GUARDIAN keep them. Current/Next card retained: it carries the
-      live-class Join, which the grid does not.
+      live-class Join, which the grid does not. The header card (name/grade,
+      term badge, subject + period counts, Download) was removed on request —
+      the student page is now the heading and the grid alone.
+- [x] **The grid was outlined; admin's is not.** Dropped the `Card`
+      wrapper so the student grid renders bare, and added an
+      AdminView-shaped toolbar (`space-y-12` above the grid) that switches the
+      same grid between week and a single-day column. The control is the
+      pricing page's billing toggle reused verbatim (sliding-thumb
+      `ToggleGroup`), at its exact `min-w-[148px]` sizing — which still fits a
+      320px phone, since the page contributes only ~15px of padding.
 - [x] **"36 subjects" above a nine-subject grid.** `getTimetableByStudentGrade`
       counted enrolled `Class` rows (one per subject per section); it now counts
       distinct subjects across the student's slots.
 
+### Recently Fixed (2026-09-02 -- mobile day default + identity-aware reads)
+
+- [x] **Mobile students opened on an unreadable five-day grid.** Under 768px the
+      student toolbar now defaults to day mode (derived from `matchMedia`, so an
+      explicit pick still wins and nothing is persisted).
+- [x] **`GET /api/mobile/timetable/:userId` trusted its path param** — scoped to
+      the caller's school but never to the caller, so any authenticated pupil
+      could read any classmate's or teacher's timetable. Now gated by
+      `canAccessStudent` (students) and self-or-staff (teachers), with a route
+      test covering both denials.
+- [x] **`getTimetableByTeacher` was readable by STUDENT/GUARDIAN** with an
+      arbitrary `teacherId`, since `requireReadAccess()` only checks that the
+      role may view some timetable. Now `requirePermission("view_all")`.
+- [x] **The mobile route read only `sectionId`**, returning an empty week for
+      every pre-migration student. Now ORs section with `StudentClass` classIds,
+      matching the web read and the block's "reads OR both axes" rule.
+
+### Recently Fixed (2026-09-02 -- Join reaches the grid)
+
+- [x] **A student could see that a class was online and had no way into it.**
+      Removing the day-card list left them with only the Current/Next card, so
+      the per-row join fix of 2026-08-28 was inert for the role most likely to
+      need it. All four grids now render a per-cell action via a new
+      `renderSlotAction` render prop on `SimpleGrid`; teacher cells fall through
+      to `StartLiveClassButton` when the window is open and nothing is
+      materialized yet. Backed by `resolveTodayJoinTargets`, locked by four new
+      tests covering today-only filtering and school-timezone day resolution.
+
+### Recently Fixed (2026-09-03 -- the cell IS the affordance)
+
+- [x] **The student's Current/Next card is gone.** It survived the 09-02 pass
+      only because it held their sole Join; the grid now holds one. The
+      `getTodaySchedule` fetch stays for its `closure` (a declared holiday still
+      has to be announced).
+- [x] **State is a mark on ONE cell, not a background.** Cells keep their
+      subject colour; only the cell worth acting on is marked, with `LiveMark`
+      coloured green running / amber next / red gone. Three earlier shapes
+      (coloured backgrounds, blinking backgrounds, a mark on every online cell)
+      all failed the same way — more than one signal in a column buries the one
+      that matters.
+- [x] **Clicking a cell opens a dialog** — `views/slot-detail-dialog.tsx`,
+      following the ONBOARDING SUCCESS MODAL's shape: narrow, centred, vertical
+      (CDN hourglass illustration, muted caption, prominent subject, one CTA). `getSlotDetail`
+      resolves the viewer from the session and returns their OWN attendance for
+      that period (guardian: their child's; teacher: the roster split and whether
+      it is taken). The Join button moved into it; the full-cell link overlay it
+      replaced could not coexist with a clickable cell.
+- [x] **Online delivery is now honoured per school configuration.** Tier 3 (the
+      standing `ConferenceLink`) is gated on `resolveOnlinePolicies`, so a
+      school on `physical` no longer offers rooms from stale link rows, and a
+      hybrid school's per-section overrides decide. Four tests cover
+      physical / hybrid-per-section / online / materialized-session-survives.
+
 ### Open follow-ups
+
+- [ ] **The grid's dots remain day-scoped** while the grid shows five days, so
+      an empty Sunday column reads as "not online" when it means "not
+      materialized yet". Join now has the same shape. Worth a legend or a
+      week-ahead indicator once schools actually run online weeks.
+
+- [x] **`getTimetableByRoom` had the same open shape** as the teacher action —
+      closed 2026-09-02 with `requirePermission("view_all")`. Attaching Join
+      targets to that read forced the decision: ungated it would have handed a
+      STUDENT working meeting links for other sections' classes, not merely
+      "who is in A01 all week".
+- [ ] **The mobile timetable route is term-agnostic** — no `termId` in the slot
+      query, so it returns slots from every term the school has ever had. The
+      new classIds arm inherits that looseness rather than adding to it (both
+      axes are equally unscoped). Scope both to `resolveActiveTerm`, carefully:
+      a school whose slots carry a different termId would go empty.
 
 - [ ] `/my-timetable` is dead in the `roleRoutes` matrix — no page, nothing links
       there. Remove the entry or build the route.
+- [ ] **Student PDF export / Print are gone**, not by design but as a
+      consequence: both lived only in the removed header card's dropdown. If
+      students should still export their timetable, the action needs a new
+      home. `getTimetableByStudentGrade` still returns `studentInfo`,
+      `schoolName` and `subjectCount` — now unread by this view.
+- [ ] **`highlightToday` erases subject colours instead of tinting them.**
+      `simple-grid.tsx` puts `bg-primary/5` in the same `cn()` as
+      `getSubjectTailwind(...)`, and tailwind-merge keeps only the last `bg-*`
+      — so today's column renders grey in EVERY week grid, admin's included.
+      Worked around for the student's day mode only (highlight off when a
+      single column shows). The real fix is a ring/border or an overlay
+      element rather than a competing background.
+- [ ] **`sv` (`studentViewUi`) lacks keys that sibling code reads off it.**
+      `currentClass`, `nextUp`, `noClasses` resolve; `today`/`weekView` live in
+      `studentView` instead, so reaching for them through `sv` silently renders
+      English on /ar. Audit the two blocks and merge or document the split.
 - [ ] ACCOUNTANT has the same contradiction this fix closed for STUDENT:
       `permissions-config.ts` grants it `view_all` + `view_analytics`, but
       `src/routes.ts` blocks `/timetable`. Decide which is right.

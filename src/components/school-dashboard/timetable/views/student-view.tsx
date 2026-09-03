@@ -3,50 +3,23 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
-import {
-  BookOpen,
-  ChevronRight,
-  Clock,
-  Download,
-  FileText,
-  GraduationCap,
-  Loader2,
-  Printer,
-  TriangleAlert,
-} from "lucide-react"
+import { TriangleAlert } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getTimetableByStudentGrade, getTodaySchedule } from "../actions"
-import { useTimetableExport } from "../export"
 import { TimetableGridSkeleton } from "./grid-skeleton"
 import {
   ClosureNotice,
-  isLiveJoinable,
-  LiveJoinButton,
-  OnlineBadge,
+  type LiveClassJoinInfo,
   type SchoolClosureInfo,
 } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
+import { SlotDetailDialog } from "./slot-detail-dialog"
 
 interface Props {
   dictionary: Dictionary["school"]
@@ -73,47 +46,69 @@ interface Props {
   classIds?: string[] // All enrolled class IDs
 }
 
+// `termInfo` and `lunchAfterPeriod` still arrive via RoleRouter's `commonProps`
+// spread; the student surface stopped rendering a term badge and a lunch label
+// when the header card went, so they are deliberately not destructured here.
 export default function StudentView({
   dictionary,
   lang,
   termId,
-  termInfo,
   workingDays,
   periods,
-  lunchAfterPeriod,
   isLoading,
 }: Props) {
   const d = dictionary?.timetable as Record<string, any> | undefined
   const sv = (d as Record<string, any>)?.studentViewUi
-  // "Online" marker beside the physical room — set once here, used on both the
-  // Current/Next card and the day list.
-  const ONLINE_LABEL = (d as Record<string, any>)?.online ?? "Online"
   const CLOSED_LABEL =
     (d as Record<string, any>)?.closedToday ?? "School is closed today"
   const isRTL = lang === "ar"
 
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [schoolName, setSchoolName] = useState<string>("")
 
-  // PDF export hook
-  const { exportToPDF, isExporting } = useTimetableExport()
+  // Week / day view mode — the student's analogue of the admin toolbar's
+  // classroom/teacher switch: it changes what the SAME grid shows, never which
+  // component renders.
+  //
+  // The viewport decides the ORDER, and the order decides everything else: the
+  // leading half is what the toggle opens on. A phone leads with the single day
+  // (a five-day grid does not fit); a laptop leads with the week. Keeping order
+  // and default as one fact means they cannot drift apart, and the thumb simply
+  // follows "is the active half the trailing one".
+  //
+  // `isNarrow` starts false so the server and the first client render agree —
+  // matchMedia is only readable after mount, and seeding state from it would
+  // hydrate mismatched. `picked` stays null until the student chooses, so the
+  // default keeps tracking a rotation; once chosen, their pick wins at any width.
+  const [picked, setPicked] = useState<"week" | "day" | null>(null)
+  const [isNarrow, setIsNarrow] = useState(false)
+  const ORDER: ReadonlyArray<"week" | "day"> = isNarrow
+    ? ["day", "week"]
+    : ["week", "day"]
+  const viewRange: "week" | "day" = picked ?? ORDER[0]
 
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)")
+    const sync = () => setIsNarrow(mq.matches)
+    sync()
+    mq.addEventListener("change", sync)
+    return () => mq.removeEventListener("change", sync)
+  }, [])
   // Weekly data
   const [slots, setSlots] = useState<any[]>([])
-  const [studentInfo, setStudentInfo] = useState<{
-    id: string
-    name: string
-    gradeName: string
-    gradeNameAr?: string | null
-  } | null>(null)
-  const [subjectCount, setSubjectCount] = useState(0)
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
   >({})
+  const [liveJoin, setLiveJoin] = useState<Record<string, LiveClassJoinInfo>>(
+    {}
+  )
+  // Which cell the reader opened. The grid is read-only here, so a click means
+  // "tell me about this", not "let me change it".
+  const [inspectedSlotId, setInspectedSlotId] = useState<string | null>(null)
 
-  // Today's schedule
-  const [todaySchedule, setTodaySchedule] = useState<any[]>([])
+  // Today's schedule is fetched for its CLOSURE only — the day list and the
+  // current/next card it used to feed are both gone, but a declared holiday
+  // still has to be announced above the grid.
   const [closure, setClosure] = useState<SchoolClosureInfo>(null)
   const [currentDay, setCurrentDay] = useState<number>(new Date().getDay())
 
@@ -133,11 +128,8 @@ export default function StudentView({
       ])
 
       setSlots(weeklyResult.slots)
-      setStudentInfo(weeklyResult.studentInfo)
-      setSubjectCount(weeklyResult.subjectCount)
-      setSchoolName(weeklyResult.schoolName || "")
       setLiveIndicators(weeklyResult.liveIndicators ?? {})
-      setTodaySchedule(todayResult.schedule)
+      setLiveJoin(weeklyResult.liveJoin ?? {})
       setClosure(todayResult.closure ?? null)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
@@ -151,78 +143,33 @@ export default function StudentView({
     }
   }
 
-  // Handle print
-  const handlePrint = () => {
-    window.print()
+  // NOTE these live under `studentView`, NOT the `studentViewUi` that `sv`
+  // points at — that block has no week/day labels, so reading them off `sv`
+  // silently rendered the English fallback on /ar.
+  //
+  // `week` is its own key rather than the `weekView` ("عرض الأسبوع") that
+  // layout.tsx's teacher/guardian tab uses: a segmented control wants one word
+  // per half, and renaming the shared key would have relabelled a tab for two
+  // roles nobody asked about.
+  const RANGE_LABEL: Record<"week" | "day", string> = {
+    week: d?.studentView?.week ?? "Week",
+    day: d?.studentView?.today ?? "Today",
   }
 
-  // Handle PDF download
-  const handleDownloadPDF = async () => {
-    if (!studentInfo || slots.length === 0) return
-
-    const gradeName = isRTL
-      ? studentInfo.gradeNameAr || studentInfo.gradeName
-      : studentInfo.gradeName
-
-    await exportToPDF(
-      {
-        title: d?.studentView?.classSchedule || "Class Schedule",
-        subtitle: `${studentInfo.name} - ${gradeName}`,
-        termLabel: termInfo.label,
-        schoolName: schoolName || "School",
-        slots,
-        periods,
-        workingDays,
-        lunchAfterPeriod,
-        isRTL,
-      },
-      `timetable-${studentInfo.name.replace(/\s+/g, "-")}.pdf`
-    )
-  }
-
-  const formatTime = (date: Date | string) => {
-    const d = new Date(date)
-    return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`
-  }
-
-  // Get current/next class
-  const getCurrentClass = () => {
-    const now = new Date()
-    const currentHour = now.getHours()
-    const currentMinute = now.getMinutes()
-
-    for (const item of todaySchedule) {
-      if (item.isBreak) continue
-      if (!item.subject && !item.className) continue
-
-      const startTime = new Date(item.startTime)
-      const endTime = new Date(item.endTime)
-      const startHour = startTime.getUTCHours()
-      const startMinute = startTime.getUTCMinutes()
-      const endHour = endTime.getUTCHours()
-      const endMinute = endTime.getUTCMinutes()
-
-      const currentTotalMinutes = currentHour * 60 + currentMinute
-      const startTotalMinutes = startHour * 60 + startMinute
-      const endTotalMinutes = endHour * 60 + endMinute
-
-      if (
-        currentTotalMinutes >= startTotalMinutes &&
-        currentTotalMinutes < endTotalMinutes
-      ) {
-        return { type: "current", item }
-      }
-      if (currentTotalMinutes < startTotalMinutes) {
-        return { type: "next", item }
-      }
+  // Day mode narrows the SAME grid to one column. Today is normally that
+  // column, but a student opening this on a Friday would otherwise get a grid
+  // with no days at all — so fall forward to the next working day, which the
+  // column header names for itself.
+  const visibleDays = (() => {
+    if (viewRange === "week" || workingDays.length === 0) return workingDays
+    const today = new Date().getDay()
+    if (workingDays.includes(today)) return [today]
+    for (let offset = 1; offset <= 7; offset++) {
+      const candidate = (today + offset) % 7
+      if (workingDays.includes(candidate)) return [candidate]
     }
-    return null
-  }
-
-  const currentClassInfo = getCurrentClass()
-
-  // Count subjects
-  const uniqueSubjects = new Set(slots.map((s) => s.subject).filter(Boolean))
+    return workingDays
+  })()
 
   if (error) {
     return (
@@ -235,189 +182,102 @@ export default function StudentView({
 
   return (
     <div className="space-y-4 print:space-y-2">
-      {/* Header Card */}
-      <Card className="print:border-0 print:shadow-none">
-        <CardHeader className="print:pb-2">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 print:hidden" />
-                {sv?.title ?? d?.title ?? "My Class Schedule"}
-              </CardTitle>
-              <CardDescription>
-                {studentInfo ? (
-                  <>
-                    <span className="font-medium">{studentInfo.name}</span>
-                    <span className="mx-2">•</span>
-                    <span>
-                      {isRTL
-                        ? studentInfo.gradeNameAr || studentInfo.gradeName
-                        : studentInfo.gradeName}
-                    </span>
-                  </>
-                ) : (
-                  (sv?.loading ?? "Loading...")
-                )}
-              </CardDescription>
-            </div>
-
-            <div className="flex items-center gap-2 print:hidden">
-              <Badge variant="outline">{termInfo.label}</Badge>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={isExporting}>
-                    {isExporting ? (
-                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="me-2 h-4 w-4" />
-                    )}
-                    {d?.studentView?.download || "Download"}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={handleDownloadPDF}
-                    disabled={isExporting || slots.length === 0}
-                  >
-                    <FileText className="me-2 h-4 w-4" />
-                    {d?.studentView?.downloadPDF || "Download PDF"}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handlePrint}>
-                    <Printer className="me-2 h-4 w-4" />
-                    {d?.studentView?.print || "Print"}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="print:pt-0">
-          <div className="flex flex-wrap gap-4 print:hidden">
-            <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
-              <BookOpen className="text-muted-foreground h-4 w-4" />
-              <span className="text-sm">
-                <strong>{subjectCount || uniqueSubjects.size}</strong>{" "}
-                {d?.studentView?.subjects || "subjects"}
-              </span>
-            </div>
-            <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
-              <Clock className="text-muted-foreground h-4 w-4" />
-              <span className="text-sm">
-                <strong>{slots.length}</strong>{" "}
-                {d?.studentView?.periodsPerWeek || "periods/week"}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Declared holiday / cancelled day — informs, never blanks. */}
       {!isLoadingData && (
         <ClosureNotice closure={closure} label={CLOSED_LABEL} />
       )}
 
-      {/* Current/Next Class Card - Hide when printing */}
-      {currentClassInfo && !isLoadingData && (
-        <Card
-          className={cn(
-            "border-2 print:hidden",
-            currentClassInfo.type === "current"
-              ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-              : "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
-          )}
-        >
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-4">
-              <div
-                className={cn(
-                  "rounded-full p-3",
-                  currentClassInfo.type === "current"
-                    ? "bg-green-500"
-                    : "bg-blue-500"
-                )}
-              >
-                <ChevronRight className="h-6 w-6 text-white rtl:rotate-180" />
-              </div>
-              <div className="flex-1">
-                <p className="text-muted-foreground text-sm">
-                  {currentClassInfo.type === "current"
-                    ? (sv?.currentClass ?? "Current Class")
-                    : (sv?.nextUp ?? "Next Up")}
-                </p>
-                <p className="text-lg font-semibold">
-                  {currentClassInfo.item.subject ||
-                    currentClassInfo.item.className}
-                </p>
-                <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-                  <span>
-                    {currentClassInfo.item.teacher &&
-                      `${currentClassInfo.item.teacher} · `}
-                    {currentClassInfo.item.sectionName
-                      ? `${currentClassInfo.item.sectionName} · ${currentClassInfo.item.room || ""}`
-                      : currentClassInfo.item.room || ""}
-                  </span>
-                  <OnlineBadge
-                    liveClass={currentClassInfo.item.liveClass}
-                    label={ONLINE_LABEL}
-                  />
-                </p>
-              </div>
-              <div className="text-end">
-                <p className="text-2xl font-bold">
-                  {formatTime(currentClassInfo.item.startTime)}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  - {formatTime(currentClassInfo.item.endTime)}
-                </p>
-              </div>
-              {isLiveJoinable(
-                currentClassInfo.type as "current" | "next",
-                currentClassInfo.item.startTime
-              ) && (
-                <LiveJoinButton
-                  liveClass={currentClassInfo.item.liveClass}
-                  lang={lang}
-                  label={
-                    dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")
-                  }
-                />
+      {/* Toolbar + grid. The grid is BARE — no Card wrapper — under
+          `space-y-12`, matching AdminView's toolbar-over-grid layout. The
+          week/day control follows the pricing page's billing toggle
+          (`saas-marketing/pricing/billing-toggle.tsx`) exactly: a two-column
+          ToggleGroup with a `bg-muted` thumb sliding under the active half. */}
+      <div className="space-y-12">
+        <div className="flex items-center gap-5 print:hidden">
+          <ToggleGroup
+            type="single"
+            size="sm"
+            value={viewRange}
+            onValueChange={(val) => {
+              if (!val) return // ignore clearing — clicking the active half
+              setPicked(val as "week" | "day")
+            }}
+            aria-label={RANGE_LABEL.week}
+            className="bg-background relative grid h-9 grid-cols-2 overflow-hidden rounded-md border p-0"
+          >
+            <span
+              aria-hidden
+              className={cn(
+                "bg-muted pointer-events-none absolute inset-y-0 start-0 w-1/2 rounded-md transition-transform duration-200 ease-out",
+                // Slide only when the ACTIVE half is the trailing one, whichever
+                // mode that happens to be at this width.
+                viewRange === ORDER[1]
+                  ? "translate-x-full rtl:-translate-x-full"
+                  : "translate-x-0"
               )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* The week grid — the same SimpleGrid the admin view renders, scoped to
-          this student's own section and enrolled classes. A student has one
-          schedule, so it is the whole view rather than a tab beside a day list. */}
-      {isLoadingData || isLoading ? (
-        <TimetableGridSkeleton className="print:hidden" />
-      ) : (
-        <Card className="print:border-0 print:shadow-none">
-          <CardContent className="pt-4 print:p-0">
-            <SimpleGrid
-              slots={slots}
-              workingDays={workingDays}
-              periods={periods}
-              isRTL={isRTL}
-              viewMode="class"
-              editable={false}
-              highlightToday
-              liveIndicators={liveIndicators}
-              dictionary={{
-                period: d?.period,
-                break: d?.break,
-                days: d?.dayNames,
-                conflict: d?.conflict,
-                liveNow: d?.liveNow,
-                scheduledToday: dictionary?.liveClasses?.status?.scheduled,
-              }}
             />
-          </CardContent>
-        </Card>
-      )}
+            {ORDER.map((mode) => (
+              <ToggleGroupItem
+                key={mode}
+                value={mode}
+                className={cn(
+                  "z-10 h-9 w-full min-w-[64px] justify-center rounded-md px-3",
+                  viewRange === mode
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background"
+                )}
+                aria-label={RANGE_LABEL[mode]}
+              >
+                {RANGE_LABEL[mode]}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+
+        {isLoadingData || isLoading ? (
+          <TimetableGridSkeleton
+            workingDays={visibleDays}
+            periods={periods}
+            className="print:hidden"
+          />
+        ) : (
+          <SimpleGrid
+            slots={slots}
+            workingDays={visibleDays}
+            periods={periods}
+            isRTL={isRTL}
+            viewMode="class"
+            editable={false}
+            // Only meaningful when there are other days to contrast against.
+            // In day mode the single column IS today, and the highlight is a
+            // `bg-primary/5` that tailwind-merge collapses ONTO the subject
+            // colour rather than over it — so leaving it on would render the
+            // whole day grey instead of admin's coloured cells.
+            highlightToday={viewRange === "week"}
+            liveIndicators={liveIndicators}
+            onSlotInspect={(slot) => setInspectedSlotId(slot.id)}
+            // Join is the corner icon now: it replaces the live dot rather
+            // than sitting beside it, because in a 128px cell a dot next to a
+            // link says the same thing twice. Still time-gated — a target only
+            dictionary={{
+              period: d?.period,
+              break: d?.break,
+              days: d?.dayNames,
+              conflict: d?.conflict,
+              liveNow: d?.liveNow,
+              scheduledToday: dictionary?.liveClasses?.status?.scheduled,
+            }}
+          />
+        )}
+      </div>
+      <SlotDetailDialog
+        slotId={inspectedSlotId}
+        open={!!inspectedSlotId}
+        onOpenChange={(next) => !next && setInspectedSlotId(null)}
+        dictionary={dictionary}
+        lang={lang}
+        liveClass={inspectedSlotId ? (liveJoin[inspectedSlotId] ?? null) : null}
+      />
     </div>
   )
 }
