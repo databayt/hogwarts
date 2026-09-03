@@ -13,14 +13,16 @@
       with a Back link on it. Lumos never hit this because it passes
       `className="absolute inset-0"` into an `aspect-video` box; the room
       passed no `className` at all. Fixed at the CALLER
-      (`sm:min-h-[calc(100dvh-7rem)]`), not in the shared frame — its two
+      (`sm:min-h-[80dvh]`), not in the shared frame — its two
       callers size themselves differently on purpose.
 - [x] **The hero deliberately stops short of the viewport.** The reference's
       poster block is 646px of an 844px frame, so the shelf under it shows and
-      the page reads as a page. `7rem` leaves ~112px of shelf at 1440x900,
-      which is the marketing hero's `min-h-[calc(100vh-3.5rem)]` trick applied
-      to a black card. The PHONE layout is untouched — it was already a 4:5
-      poster with the stack flowing after it.
+      the page reads as a page. Four fifths of the viewport, and a FRACTION
+      rather than a subtracted constant: `calc(100dvh - 7rem)`, which this was
+      first, gives up the same 112px on every display, so the shelf peeks by a
+      smaller share as the screen grows and a bigger one as it shrinks. The
+      PHONE layout is untouched — it was already a 4:5 poster with the stack
+      flowing after it.
 - [x] **A shelf under the card**, `room/class-shelf.tsx` — the reference's
       "Season 2". It holds the SECTION's other sessions
       (`findRoomShelfSessions`): four that already happened, then eight still

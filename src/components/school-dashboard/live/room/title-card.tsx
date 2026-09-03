@@ -263,13 +263,18 @@ export function RoomTitleCard({
 
   return (
     <TitleCard
-      // NOT the viewport. The reference's poster block is 646px of an 844px
-      // frame — it deliberately stops short so the shelf under it shows, which
-      // is what tells you the page continues. This card was locked to the
-      // screen and read as the whole page. Same trick the marketing hero uses
-      // (`min-h-[calc(100vh-3.5rem)]`), with the phone left alone: there the
+      // FOUR FIFTHS of the viewport, not all of it. The reference's poster
+      // block is 646px of an 844px frame — it deliberately stops short so the
+      // shelf under it shows, which is what tells you the page continues.
+      // This card was locked to the screen and read as the whole page.
+      //
+      // A FRACTION rather than a subtracted constant, which is what this was
+      // first: `calc(100dvh - 7rem)` gives up the same 112px on every display,
+      // so the shelf peeks by a smaller and smaller share as the screen grows
+      // and by a bigger one as it shrinks. 80% keeps the proportion the
+      // reference has at every height. The phone is left alone — there the
       // frame is already a 4:5 poster with the stack flowing after it.
-      className="sm:min-h-[calc(100dvh-7rem)]"
+      className="sm:min-h-[80dvh]"
       topEnd={
         <>
           {canAdd && (

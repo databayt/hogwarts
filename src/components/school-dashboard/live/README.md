@@ -44,7 +44,7 @@ conference/
 ├── authorization.ts · validation.ts                          rich sessions layer (strict gate)
 ├── list-permissions.ts · list-validation.ts · list-params.ts list layer (CRUD gate)
 ├── room/                                                      the pre-join page and the call itself
-│   ├── title-card.tsx     the pre-join card, on the shared lumos frame (`sm:min-h-[calc(100dvh-7rem)]`,
+│   ├── title-card.tsx     the pre-join card, on the shared lumos frame (`sm:min-h-[80dvh]`,
 │   │                      so the shelf under it shows and the page reads as a page)
 │   ├── class-shelf.tsx    the row under it — the section's other classes, the reference's "Season 2"
 │   └── calendar-file.ts   the header's `+ ADD`: the class as an `.ics`, built in the browser
@@ -116,71 +116,71 @@ reached from a row, not a tab.
 
 ## Status
 
-| Capability                                             | Status                                                  |
-| ------------------------------------------------------ | ------------------------------------------------------- |
-| Prisma models (`Conference*` + link + resources)       | ✅ schema; visibility/resources DDL staged              |
-| External pasted-link provider                          | ✅ live                                                 |
-| LiveKit-first dashboard create (5-step wizard)         | ✅ coded (in-app option gated on env)                   |
-| Timetable-anchored create (online school)              | ✅ live (slot → teacher/subject/section+id)             |
-| **School-wide "teach online" + per-section override**  | ✅ coded (policy on School/Section)                     |
-| **Temporary "go online" window (war / weather)**       | ✅ coded (dated, open-ended, auto-reverts)              |
-| **Delivery mode: timetable-bound · loose · both**      | ✅ coded (`ConferenceOnlineMode`)                       |
-| **Standing fallback link + link-coverage panel**       | ✅ coded (makes an overnight flip joinable)             |
-| **Holiday gate — sweep suppresses, timetable informs** | ✅ coded (one `ScheduleException` predicate)            |
-| **"Online" marker on the timetable today cards**       | ✅ coded (3 role views; open rooms exempt)              |
-| **Per-day session materialization from timetable**     | ✅ coded (in the `*/15` reminders cron)                 |
-| Grade-scoped subject + catalog-lesson pickers          | ✅ live                                                 |
-| Private/public control (`visibility`)                  | ✅ coded (section default / school-wide)                |
-| Lesson + exam/quiz/assignment/link references          | ✅ coded (`catalogLessonId` + resources)                |
-| Provider-aware Join (table/detail/room redirect)       | ✅ coded                                                |
-| List CRUD + detail + schedule + settings UI            | ✅ live                                                 |
-| Per-section recording opt-out                          | ✅ live                                                 |
-| In-room HOST moderation (kick)                         | ✅ live                                                 |
-| Timetable Start / Join (teacher+student+guardian)      | ✅ live (`Conference.timetableId`)                      |
-| Timetable weekly-grid live indicators (all roles)      | ✅ coded                                                |
-| Notifications → hub (in-app + email)                   | ✅ live (+ school-wide fan-out)                         |
-| Attendance-from-presence (opt-in)                      | ✅ live (DB applied); VIRTUAL visible in UI             |
-| Native Meet/Zoom/Teams `createMeeting`                 | 🟡 wired, dark until OAuth creds                        |
-| LiveKit SFU rooms                                      | ✅ coded; 4 env vars from live (RUNBOOK)                |
-| Egress recording                                       | 🟡 separate gate — needs a bucket + creds               |
-| Cron bridge (materialization + reminders)              | ✅ GitHub Actions (Vercel crons are off)                |
-| Join on every Today row (student/teacher/guardian)     | ✅ live                                                 |
-| Parent-portal "Today" strip with Join                  | ✅ live                                                 |
-| Mobile: `live_class` on timetable + join endpoint      | ✅ live                                                 |
-| Attendance: minimum-presence floor                     | ✅ live (5 min)                                         |
-| Demo seed (`db:seed:single conference`)                | ✅ repairs + policy + history + next day                |
-| Substitute hosts the online arm (CONFIRMED)            | ✅ materializer + today-cards                           |
-| Open-room host fallback (no homeroom teacher)          | ✅ busiest teacher on the section                       |
-| Physical room on the session detail                    | ✅ via the timetable anchor                             |
-| Lumos lesson → its live session today                  | ✅ `lesson-live-strip.tsx`                              |
-| Student/teacher dashboard home: section-aware + Join   | ✅ (was empty for every section student)                |
-| Recording surfaces honest without a bucket             | ✅ forms · settings · detail                            |
-| Room UI composed from SDK primitives, en+ar, RTL-safe  | ✅ live (`room/*`; prebuilt bar retired)                |
-| Room chrome floats over the stage (lumos player glass) | ✅ `lumos/shared/video-player/glass.ts`, shared         |
-| Pre-join title card (artwork, badge, byline, Join)     | ✅ `room/title-card.tsx` on the shared lumos frame      |
+| Capability                                             | Status                                                    |
+| ------------------------------------------------------ | --------------------------------------------------------- |
+| Prisma models (`Conference*` + link + resources)       | ✅ schema; visibility/resources DDL staged                |
+| External pasted-link provider                          | ✅ live                                                   |
+| LiveKit-first dashboard create (5-step wizard)         | ✅ coded (in-app option gated on env)                     |
+| Timetable-anchored create (online school)              | ✅ live (slot → teacher/subject/section+id)               |
+| **School-wide "teach online" + per-section override**  | ✅ coded (policy on School/Section)                       |
+| **Temporary "go online" window (war / weather)**       | ✅ coded (dated, open-ended, auto-reverts)                |
+| **Delivery mode: timetable-bound · loose · both**      | ✅ coded (`ConferenceOnlineMode`)                         |
+| **Standing fallback link + link-coverage panel**       | ✅ coded (makes an overnight flip joinable)               |
+| **Holiday gate — sweep suppresses, timetable informs** | ✅ coded (one `ScheduleException` predicate)              |
+| **"Online" marker on the timetable today cards**       | ✅ coded (3 role views; open rooms exempt)                |
+| **Per-day session materialization from timetable**     | ✅ coded (in the `*/15` reminders cron)                   |
+| Grade-scoped subject + catalog-lesson pickers          | ✅ live                                                   |
+| Private/public control (`visibility`)                  | ✅ coded (section default / school-wide)                  |
+| Lesson + exam/quiz/assignment/link references          | ✅ coded (`catalogLessonId` + resources)                  |
+| Provider-aware Join (table/detail/room redirect)       | ✅ coded                                                  |
+| List CRUD + detail + schedule + settings UI            | ✅ live                                                   |
+| Per-section recording opt-out                          | ✅ live                                                   |
+| In-room HOST moderation (kick)                         | ✅ live                                                   |
+| Timetable Start / Join (teacher+student+guardian)      | ✅ live (`Conference.timetableId`)                        |
+| Timetable weekly-grid live indicators (all roles)      | ✅ coded                                                  |
+| Notifications → hub (in-app + email)                   | ✅ live (+ school-wide fan-out)                           |
+| Attendance-from-presence (opt-in)                      | ✅ live (DB applied); VIRTUAL visible in UI               |
+| Native Meet/Zoom/Teams `createMeeting`                 | 🟡 wired, dark until OAuth creds                          |
+| LiveKit SFU rooms                                      | ✅ coded; 4 env vars from live (RUNBOOK)                  |
+| Egress recording                                       | 🟡 separate gate — needs a bucket + creds                 |
+| Cron bridge (materialization + reminders)              | ✅ GitHub Actions (Vercel crons are off)                  |
+| Join on every Today row (student/teacher/guardian)     | ✅ live                                                   |
+| Parent-portal "Today" strip with Join                  | ✅ live                                                   |
+| Mobile: `live_class` on timetable + join endpoint      | ✅ live                                                   |
+| Attendance: minimum-presence floor                     | ✅ live (5 min)                                           |
+| Demo seed (`db:seed:single conference`)                | ✅ repairs + policy + history + next day                  |
+| Substitute hosts the online arm (CONFIRMED)            | ✅ materializer + today-cards                             |
+| Open-room host fallback (no homeroom teacher)          | ✅ busiest teacher on the section                         |
+| Physical room on the session detail                    | ✅ via the timetable anchor                               |
+| Lumos lesson → its live session today                  | ✅ `lesson-live-strip.tsx`                                |
+| Student/teacher dashboard home: section-aware + Join   | ✅ (was empty for every section student)                  |
+| Recording surfaces honest without a bucket             | ✅ forms · settings · detail                              |
+| Room UI composed from SDK primitives, en+ar, RTL-safe  | ✅ live (`room/*`; prebuilt bar retired)                  |
+| Room chrome floats over the stage (lumos player glass) | ✅ `lumos/shared/video-player/glass.ts`, shared           |
+| Pre-join title card (artwork, badge, byline, Join)     | ✅ `room/title-card.tsx` on the shared lumos frame        |
 | Pre-join header — Back · `+ ADD` (.ics) · share        | ✅ `room/calendar-file.ts`; `navigator.share` → clipboard |
-| Pre-join shelf — the section's other classes           | ✅ `room/class-shelf.tsx` + `findRoomShelfSessions`      |
-| Joining is what mints the ticket (never page load)     | ✅ a HOST no longer starts a class by opening a tab     |
-| Card mark row (4K · Free · CC · AD)                    | ⚠️ the hero's marks verbatim — 3 not yet true of a room |
-| Join pill shows progress once the class is running     | ✅ ticking, `useClassProgress`                          |
-| Adaptive delivery ladder (720/360/180 → audio+slides)  | ✅ live (`room/adaptive-delivery.ts`)                   |
-| Reconnecting overlay · disconnect reasons · Rejoin     | ✅ live                                                 |
-| Hands · questions · polls · whiteboard · slides        | ✅ live (data topic `lc` + attributes)                  |
-| Closed polls + questions persisted (`ConferenceEvent`) | ✅ live (`actions/room-events.ts`)                      |
-| Presence survives reconnects (accumulated spans)       | ✅ live (webhook + attendance-sync)                     |
-| Egress failure honest (`failed` + reason)              | ✅ live (`egress_updated`)                              |
-| Recording → lesson video (lumos) bridge                | ✅ live (`actions/publish-recording.ts`)                |
-| Session states on the detail page (en+ar)              | ✅ live (`session-state.tsx`)                           |
-| Videos + materials view-only (no download, watermark)  | ✅ policy 2026-08-30 — see lumos records                |
-| School delivery mode: in person / online / hybrid      | ✅ `School.conferenceDeliveryMode` (policy-first)       |
-| Settings in the school configuration hub               | ✅ `/school/configuration/live-classes` (same panel)    |
-| Attendance thresholds per school (late/present/early)  | ✅ settings → `attendance-sync.ts`                      |
-| Consent notice · auto-publish · guardians · join-muted | ✅ settings + ticket `roomConfig`                       |
-| Room tools per school (share enforced in the token)    | ✅ settings → bar/panel + `canPublishSources`           |
-| Reminder lead time per school                          | ✅ settings → reminders cron                            |
-| Per-grade online override (section ?? grade ?? school) | ✅ `AcademicGrade.conferenceOnline`                     |
-| Offline: student work queued + synced (no content)     | ✅ live — `src/lib/offline/*`                           |
-| Capacity dashboard (`/observability/live`)             | ✅ live (DEVELOPER-only)                                |
+| Pre-join shelf — the section's other classes           | ✅ `room/class-shelf.tsx` + `findRoomShelfSessions`       |
+| Joining is what mints the ticket (never page load)     | ✅ a HOST no longer starts a class by opening a tab       |
+| Card mark row (4K · Free · CC · AD)                    | ⚠️ the hero's marks verbatim — 3 not yet true of a room   |
+| Join pill shows progress once the class is running     | ✅ ticking, `useClassProgress`                            |
+| Adaptive delivery ladder (720/360/180 → audio+slides)  | ✅ live (`room/adaptive-delivery.ts`)                     |
+| Reconnecting overlay · disconnect reasons · Rejoin     | ✅ live                                                   |
+| Hands · questions · polls · whiteboard · slides        | ✅ live (data topic `lc` + attributes)                    |
+| Closed polls + questions persisted (`ConferenceEvent`) | ✅ live (`actions/room-events.ts`)                        |
+| Presence survives reconnects (accumulated spans)       | ✅ live (webhook + attendance-sync)                       |
+| Egress failure honest (`failed` + reason)              | ✅ live (`egress_updated`)                                |
+| Recording → lesson video (lumos) bridge                | ✅ live (`actions/publish-recording.ts`)                  |
+| Session states on the detail page (en+ar)              | ✅ live (`session-state.tsx`)                             |
+| Videos + materials view-only (no download, watermark)  | ✅ policy 2026-08-30 — see lumos records                  |
+| School delivery mode: in person / online / hybrid      | ✅ `School.conferenceDeliveryMode` (policy-first)         |
+| Settings in the school configuration hub               | ✅ `/school/configuration/live-classes` (same panel)      |
+| Attendance thresholds per school (late/present/early)  | ✅ settings → `attendance-sync.ts`                        |
+| Consent notice · auto-publish · guardians · join-muted | ✅ settings + ticket `roomConfig`                         |
+| Room tools per school (share enforced in the token)    | ✅ settings → bar/panel + `canPublishSources`             |
+| Reminder lead time per school                          | ✅ settings → reminders cron                              |
+| Per-grade online override (section ?? grade ?? school) | ✅ `AcademicGrade.conferenceOnline`                       |
+| Offline: student work queued + synced (no content)     | ✅ live — `src/lib/offline/*`                             |
+| Capacity dashboard (`/observability/live`)             | ✅ live (DEVELOPER-only)                                  |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any
 time, for any length, and either way round**, without ever closing the
