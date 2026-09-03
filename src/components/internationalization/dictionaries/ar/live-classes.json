@@ -180,9 +180,17 @@
       "linkCopied": "تم نسخ الرابط"
     },
     "shelf": {
-      "seeAll": "كل الحصص",
+      "seeAll": "عرض الكل",
       "schoolWide": "حصص أخرى",
-      "recording": "التسجيل"
+      "recording": "التسجيل",
+      "bonus": "محتوى إضافي",
+      "exam": "امتحان",
+      "assignment": "واجب",
+      "link": "رابط",
+      "related": "ذات صلة",
+      "people": "المعلّم والطلاب",
+      "teacherRole": "المعلّم",
+      "studentRole": "طالب"
     }
   },
   "errors": {

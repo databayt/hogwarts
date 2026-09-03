@@ -180,9 +180,17 @@
       "linkCopied": "Link copied"
     },
     "shelf": {
-      "seeAll": "All classes",
+      "seeAll": "See All",
       "schoolWide": "More classes",
-      "recording": "Recording"
+      "recording": "Recording",
+      "bonus": "Bonus Content",
+      "exam": "Exam",
+      "assignment": "Assignment",
+      "link": "Link",
+      "related": "Related",
+      "people": "Teacher & students",
+      "teacherRole": "Teacher",
+      "studentRole": "Student"
     }
   },
   "errors": {

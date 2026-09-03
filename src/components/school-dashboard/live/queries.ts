@@ -1164,3 +1164,83 @@ export async function findRoomShelfSessions(
 
   return [...past.reverse(), ...upcoming]
 }
+
+/**
+ * The catalog lessons of the class's subject — the reference's "Related".
+ *
+ * Its own related row offers other things to WATCH, so this offers the same:
+ * the self-study lessons behind the subject being taught, which is where a
+ * student goes when the class has ended and they are still lost. Deliberately
+ * NOT other sections' sessions of the same subject — those are exactly the
+ * rows `findRoomShelfSessions` refuses to name, for the reason recorded there.
+ *
+ * `Subject` IS the catalog subject and `Conference.subjectId` reaches it with
+ * no extra join, so this needs nothing the card did not already fetch.
+ *
+ * The school's own hides apply: `ContentOverride.isHidden` is the row the
+ * lumos catalog filters on, and offering a lesson the school has switched off
+ * would send a reader to a page their own LMS does not serve.
+ */
+export async function findRoomRelatedLessons(
+  schoolId: string,
+  opts: { subjectId: string | null; excludeLessonId?: string | null }
+) {
+  if (!opts.subjectId) return []
+  return db.lesson.findMany({
+    where: {
+      chapter: { subjectId: opts.subjectId },
+      status: "PUBLISHED",
+      ...(opts.excludeLessonId ? { id: { not: opts.excludeLessonId } } : {}),
+      NOT: { overrides: { some: { schoolId, isHidden: true } } },
+    },
+    orderBy: [{ sequenceOrder: "asc" }, { id: "asc" }],
+    take: 12,
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      thumbnail: true,
+      color: true,
+      durationMinutes: true,
+      chapter: {
+        select: { name: true, subject: { select: { slug: true } } },
+      },
+    },
+  })
+}
+
+/**
+ * Who is in the class — the reference's "Cast & Crew".
+ *
+ * The host first, then the section's roster, which is the honest reading of
+ * that row for something thirty people attend together.
+ *
+ * The roster is returned ONLY for a section-scoped session, and that is a
+ * privacy boundary rather than a tidiness one. `canAccessSession` admits a
+ * STUDENT or GUARDIAN to a `visibility: "school"` session on school membership
+ * alone, so a school-wide assembly can be opened by anyone in the school —
+ * naming one section's children to all of them is not something the assembly
+ * gave permission for. For a section-scoped session every viewer is either
+ * staff or a member of that same section, which is the group already listed to
+ * each other on the roster, the attendance sheet and the in-room panel.
+ */
+export async function findRoomClassPeople(
+  schoolId: string,
+  opts: {
+    sectionId: string | null
+    visibility: ConferenceVisibility
+  }
+) {
+  if (!opts.sectionId || opts.visibility === "school") return []
+  return db.student.findMany({
+    where: { schoolId, sectionId: opts.sectionId },
+    orderBy: [{ firstName: "asc" }, { id: "asc" }],
+    take: 24,
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      profilePhotoUrl: true,
+    },
+  })
+}

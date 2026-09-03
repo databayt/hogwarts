@@ -275,6 +275,15 @@ export function RoomTitleCard({
       // reference has at every height. The phone is left alone — there the
       // frame is already a 4:5 poster with the stack flowing after it.
       className="sm:min-h-[80dvh]"
+      // The PHONE's four fifths. Above `sm` the card owns its own height and
+      // the artwork fills it; on a phone the artwork is 4:5 of the card's
+      // WIDTH, so its height has nothing to do with the screen — an iPhone SE
+      // got the same 469px of picture a 14 Pro Max does, and the block ran to
+      // 94% of that screen with the shelf entirely below the fold. The clamp
+      // only bites where it has to: `10rem` is what the rows under the poster
+      // measure, so the block lands at 80dvh on a short phone and the 4:5
+      // ratio survives untouched on a tall one.
+      posterClassName="max-h-[calc(80dvh-10rem)] sm:max-h-none"
       topEnd={
         <>
           {canAdd && (

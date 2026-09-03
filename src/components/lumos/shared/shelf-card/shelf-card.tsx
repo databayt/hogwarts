@@ -16,10 +16,12 @@ import { cn } from "@/lib/utils"
  * reason, and the landing strip and catch-up shelf drifted within a day of
  * being written separately. So the tile moved here and both pages draw it.
  *
- * Purely presentational, like the card above it. The meta line is a SLOT
- * because the two callers describe genuinely different things — a lesson has a
- * chapter number and a runtime, a class has a clock time and a status — and
- * neither belongs in here.
+ * TWO label placements, because the reference itself has both. Over the
+ * artwork is the lumos lesson row: a name on a picture, with the numbers in a
+ * glass bar at its foot. Below the artwork is the reference's own episode and
+ * bonus rows — an eyebrow, a name, and a couple of lines of prose that would
+ * be unreadable set over a photograph. Which one a caller wants is a fact
+ * about its content, not about this component.
  */
 export function ShelfCard({
   href,
@@ -29,33 +31,54 @@ export function ShelfCard({
   meta,
   overlay,
   className,
+  aspectClassName = "aspect-[3/2]",
+  titleBelow = false,
+  eyebrow,
+  blurb,
+  art,
 }: {
   href: string
-  /** Set OVER the artwork, as the reference sets an episode's name. */
+  /** Set OVER the artwork by default, under it when `titleBelow`. */
   title: string
   thumbnailUrl?: string | null
   /** The ground when there is no artwork — the subject's own colour. A normal
    *  state, not a fallback: CloudFront is optional. */
   color?: string | null
-  /** The glass bar's contents. */
+  /** The glass bar's contents. Only drawn with the title over the artwork —
+   *  under it there is real room for the numbers, in `blurb`. */
   meta?: React.ReactNode
   /** Anything pinned to the tile's top corner — a status mark. */
   overlay?: React.ReactNode
   className?: string
+  aspectClassName?: string
+  /** The reference's episode and bonus rows. */
+  titleBelow?: boolean
+  /** The reference's `EPISODE 1` — above the name, only when `titleBelow`. */
+  eyebrow?: React.ReactNode
+  /** The two or three lines under the name, only when `titleBelow`. */
+  blurb?: React.ReactNode
+  /** Drawn centred on the colour when there is no artwork at all. A class's
+   *  attached exam or worksheet has none and never will. */
+  art?: React.ReactNode
 }) {
   return (
     <Link
       href={href}
       className={cn(
-        "group relative w-60 shrink-0 overflow-hidden rounded-lg",
+        "group relative w-60 shrink-0 text-start",
+        !titleBelow && "overflow-hidden rounded-lg",
         className
       )}
     >
       <div
-        className="relative aspect-[3/2]"
+        className={cn(
+          "relative overflow-hidden",
+          titleBelow ? "rounded-lg" : "",
+          aspectClassName
+        )}
         style={{ backgroundColor: color || "#1a1a1a" }}
       >
-        {thumbnailUrl && (
+        {thumbnailUrl ? (
           <Image
             src={thumbnailUrl}
             alt={title}
@@ -64,18 +87,26 @@ export function ShelfCard({
             sizes="240px"
             unoptimized
           />
+        ) : (
+          art && (
+            <span className="absolute inset-0 flex items-center justify-center text-white/70">
+              {art}
+            </span>
+          )
         )}
 
-        {/* The name, centred on the picture rather than set under it — the
-            reference does the same, and it is what lets a tile be artwork
-            with a label rather than a card with a caption. */}
-        <p className="absolute inset-0 line-clamp-2 flex items-center px-3 text-start text-sm font-bold text-white drop-shadow-md">
-          {title}
-        </p>
+        {!titleBelow && (
+          /* The name, centred on the picture rather than set under it — what
+             lets a tile be artwork with a label rather than a card with a
+             caption. */
+          <p className="absolute inset-0 line-clamp-2 flex items-center px-3 text-sm font-bold text-white drop-shadow-md">
+            {title}
+          </p>
+        )}
 
         {overlay}
 
-        {meta && (
+        {meta && !titleBelow && (
           /* Apple's liquid glass: a blurred, masked strip that lets the
              artwork through while keeping 12px type legible over any of it. */
           <div
@@ -101,6 +132,24 @@ export function ShelfCard({
           </div>
         )}
       </div>
+
+      {titleBelow && (
+        <div className="pt-2">
+          {eyebrow && (
+            <p className="text-[11px] font-medium tracking-wide text-white/50 uppercase">
+              {eyebrow}
+            </p>
+          )}
+          <p className="line-clamp-2 text-[15px] leading-tight font-semibold text-white">
+            {title}
+          </p>
+          {blurb && (
+            <p className="mt-1 line-clamp-3 text-[13px] leading-[17px] text-white/60">
+              {blurb}
+            </p>
+          )}
+        </div>
+      )}
     </Link>
   )
 }

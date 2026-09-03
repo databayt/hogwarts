@@ -16,18 +16,27 @@ import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window
 import { resolveLiveClassError } from "@/components/school-dashboard/live/error-map"
 import {
   findRoomCardSession,
+  findRoomClassPeople,
+  findRoomRelatedLessons,
   findRoomShelfSessions,
 } from "@/components/school-dashboard/live/queries"
 import { RoomClient } from "@/components/school-dashboard/live/room"
-import {
-  RoomClassShelf,
-  type RoomShelfItem,
-} from "@/components/school-dashboard/live/room/class-shelf"
 import { JOIN_ERROR_CODES } from "@/components/school-dashboard/live/room/join-errors"
 import { resolveRoomLabels } from "@/components/school-dashboard/live/room/labels"
+import {
+  RoomBonusShelf,
+  RoomClassShelf,
+  RoomPageSections,
+  RoomPeopleShelf,
+  RoomRelatedShelf,
+  type RoomBonusItem,
+  type RoomPerson,
+  type RoomRelatedItem,
+  type RoomShelfItem,
+} from "@/components/school-dashboard/live/room/shelves"
 import { getSlideOptions } from "@/components/school-dashboard/live/room/slide-options"
 import type { RoomTitleCardData } from "@/components/school-dashboard/live/room/title-card"
-import { getLabels, getName } from "@/components/translation/person"
+import { getLabels, getName, getNames } from "@/components/translation/person"
 
 // Page-data OOM safety: auth-gated room, render on demand.
 export const dynamic = "force-dynamic"
@@ -89,30 +98,45 @@ export default async function Page({ params }: Props) {
 
   const { schoolId } = await getTenantContext()
   const now = new Date()
-  const [slides, row, school, shelfRows] = await Promise.all([
-    schoolId ? getSlideOptions(schoolId, id) : Promise.resolve([]),
-    schoolId ? findRoomCardSession(schoolId, id) : Promise.resolve(null),
-    schoolId
-      ? db.school.findUnique({
-          where: { id: schoolId },
-          select: { timezone: true },
-        })
-      : Promise.resolve(null),
-    // The shelf under the card. In the SAME wave as the card's own row: its
-    // only input is `sectionId`, which `getLiveClass` has already returned
-    // above, so making it wait on `findRoomCardSession` would buy nothing and
-    // cost a round trip on a page that is `force-dynamic`.
-    schoolId
-      ? findRoomShelfSessions(schoolId, {
-          sessionId: id,
-          sectionId: detail.data.sectionId,
-          // The shelf is scoped by whatever ADMITTED the reader, not by the
-          // row's section — see `findRoomShelfSessions`.
-          visibility: detail.data.visibility,
-          now,
-        })
-      : Promise.resolve([]),
-  ])
+  const [slides, row, school, shelfRows, relatedRows, rosterRows] =
+    await Promise.all([
+      schoolId ? getSlideOptions(schoolId, id) : Promise.resolve([]),
+      schoolId ? findRoomCardSession(schoolId, id) : Promise.resolve(null),
+      schoolId
+        ? db.school.findUnique({
+            where: { id: schoolId },
+            select: { timezone: true },
+          })
+        : Promise.resolve(null),
+      // The shelf under the card. In the SAME wave as the card's own row: its
+      // only input is `sectionId`, which `getLiveClass` has already returned
+      // above, so making it wait on `findRoomCardSession` would buy nothing and
+      // cost a round trip on a page that is `force-dynamic`.
+      schoolId
+        ? findRoomShelfSessions(schoolId, {
+            sessionId: id,
+            sectionId: detail.data.sectionId,
+            // The shelf is scoped by whatever ADMITTED the reader, not by the
+            // row's section — see `findRoomShelfSessions`.
+            visibility: detail.data.visibility,
+            now,
+          })
+        : Promise.resolve([]),
+      // The two rows under it, in the same wave for the same reason: both read
+      // only from `detail.data`, which is already resolved.
+      schoolId
+        ? findRoomRelatedLessons(schoolId, {
+            subjectId: detail.data.subjectId,
+            excludeLessonId: detail.data.catalogLessonId,
+          })
+        : Promise.resolve([]),
+      schoolId
+        ? findRoomClassPeople(schoolId, {
+            sectionId: detail.data.sectionId,
+            visibility: detail.data.visibility,
+          })
+        : Promise.resolve([]),
+    ])
 
   // Times are formatted HERE, in the school's own zone. A client-side format
   // uses the reader's device zone and a bare server-side one uses the
@@ -151,6 +175,10 @@ export default async function Page({ params }: Props) {
       s.subject?.name ?? s.title,
       s.catalogLesson?.name,
     ]),
+    ...relatedRows.flatMap((l) => [l.name, l.chapter?.name]),
+    ...(detail.data.resources ?? []).map(
+      (r) => r.schoolExam?.title ?? r.schoolAssignment?.title ?? r.title
+    ),
   ]
   const labels = schoolId
     ? await getLabels(labelSources, lang, schoolId)
@@ -299,6 +327,92 @@ export default async function Page({ params }: Props) {
     }),
   ]
 
+  // What the class comes with. `ConferenceResource` carries exactly ONE of
+  // exam / assignment / url per row (the ContentOverride pattern), which is
+  // what the branch reads off — never three optional fields.
+  const dateFormat = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone,
+  })
+  const bonusItems: RoomBonusItem[] = (detail.data.resources ?? []).map((r) => {
+    if (r.schoolExam) {
+      return {
+        id: r.id,
+        href: `/${lang}/exams/${r.schoolExam.id}`,
+        kind: "exam",
+        title: label(r.schoolExam.title) ?? r.schoolExam.title,
+        detail: r.schoolExam.examDate
+          ? dateFormat.format(r.schoolExam.examDate)
+          : null,
+      } satisfies RoomBonusItem
+    }
+    if (r.schoolAssignment) {
+      return {
+        id: r.id,
+        href: `/${lang}/assignments/${r.schoolAssignment.id}`,
+        kind: "assignment",
+        title: label(r.schoolAssignment.title) ?? r.schoolAssignment.title,
+        detail: r.schoolAssignment.dueDate
+          ? dateFormat.format(r.schoolAssignment.dueDate)
+          : null,
+      } satisfies RoomBonusItem
+    }
+    return {
+      id: r.id,
+      // A pasted link leaves the app, so it is the one tile here that is not
+      // an in-app route.
+      href: r.url ?? `/${lang}/live/${id}`,
+      kind: "link",
+      title: label(r.title) ?? r.title ?? t?.room?.shelf?.link ?? "Link",
+      detail: null,
+    } satisfies RoomBonusItem
+  })
+
+  // Where to go next: the subject's own catalog lessons, in lumos.
+  const relatedItems: RoomRelatedItem[] = relatedRows.map((l) => ({
+    id: l.id,
+    href: `/${lang}/lumos/courses/${l.chapter?.subject?.slug ?? ""}/${l.id}`,
+    title: label(l.name) ?? l.name,
+    chapter: label(l.chapter?.name),
+    durationLabel: l.durationMinutes
+      ? `${l.durationMinutes} ${c?.minutes ?? "min"}`
+      : null,
+    thumbnailUrl: getCatalogImageUrl(l.thumbnail, "md"),
+    color: l.color ?? null,
+  }))
+  const relatedHref = row?.subject
+    ? `/${lang}/lumos/courses/${relatedRows[0]?.chapter?.subject?.slug ?? ""}`
+    : null
+
+  // Who is in it. Roster names go through `getNames` — ONE batched call for
+  // up to 24 people, and it transliterates when the translation API is down
+  // rather than printing the wrong script.
+  const rosterNames = schoolId
+    ? await getNames(rosterRows, (r) => r, lang, schoolId)
+    : new Map<string, string>()
+  const people: RoomPerson[] = [
+    ...(teacher && row?.teacher
+      ? [
+          {
+            id: row.teacher.id,
+            name: teacher,
+            role: t?.room?.shelf?.teacherRole ?? "Teacher",
+            photoUrl: row.teacher.profilePhotoUrl ?? null,
+          } satisfies RoomPerson,
+        ]
+      : []),
+    ...rosterRows.map((r) => {
+      const raw = `${r.firstName} ${r.lastName}`.trim()
+      return {
+        id: r.id,
+        name: rosterNames.get(raw) ?? raw,
+        role: t?.room?.shelf?.studentRole ?? "Student",
+        photoUrl: r.profilePhotoUrl ?? null,
+      } satisfies RoomPerson
+    }),
+  ]
+
   const joinErrors: Record<string, string> = {
     "": resolveLiveClassError(dictionary, undefined),
   }
@@ -314,20 +428,45 @@ export default async function Page({ params }: Props) {
       slides={slides}
       card={card}
       shelf={
-        <RoomClassShelf
-          items={shelfItems}
-          seeAllHref={`/${lang}/live`}
-          labels={{
-            // The section IS the series — "Grade 10-A" where the reference
-            // says "Season 2". A school-wide assembly has no section, so it
-            // falls back to naming what the row actually holds.
-            heading:
-              card.section ?? t?.room?.shelf?.schoolWide ?? "More classes",
-            seeAll: t?.room?.shelf?.seeAll ?? "All classes",
-            live: t?.status?.live ?? "Live",
-            recorded: t?.room?.shelf?.recording ?? "Recording",
-          }}
-        />
+        <RoomPageSections>
+          <RoomClassShelf
+            items={shelfItems}
+            seeAllHref={`/${lang}/live`}
+            labels={{
+              // The section IS the series — "Grade 10-A" where the reference
+              // says "Season 2". A school-wide assembly has no section, so it
+              // falls back to naming what the row actually holds.
+              heading:
+                card.section ?? t?.room?.shelf?.schoolWide ?? "More classes",
+              live: t?.status?.live ?? "Live",
+              recorded: t?.room?.shelf?.recording ?? "Recording",
+            }}
+          />
+          <RoomBonusShelf
+            items={bonusItems}
+            color={card.color}
+            labels={{
+              heading: t?.room?.shelf?.bonus ?? "Bonus Content",
+              exam: t?.room?.shelf?.exam ?? "Exam",
+              assignment: t?.room?.shelf?.assignment ?? "Assignment",
+              link: t?.room?.shelf?.link ?? "Link",
+            }}
+          />
+          <RoomRelatedShelf
+            items={relatedItems}
+            seeAllHref={relatedHref}
+            labels={{
+              heading: t?.room?.shelf?.related ?? "Related",
+              seeAll: t?.room?.shelf?.seeAll ?? "See All",
+            }}
+          />
+          <RoomPeopleShelf
+            people={people}
+            labels={{
+              heading: t?.room?.shelf?.people ?? "Teacher & students",
+            }}
+          />
+        </RoomPageSections>
       }
       labels={{
         error: t?.errors?.tokenExpired ?? "Token expired. Please rejoin.",

@@ -38,6 +38,15 @@ last_audited: 2026-09-02
       room does.
 - [x] Verified by rendering: 54 tiles on a `sd-g1-arabic` lesson, every meta
       bar 16px tall, no page errors.
+- [x] **A `titleBelow` mode joined it** — an eyebrow, the name and a couple of
+      lines of prose set UNDER the artwork, which is what the reference does
+      for its episode and bonus rows and what the live room's four shelves
+      use. This page keeps the name over the picture; which placement a caller
+      wants is a fact about its content, not about the tile.
+- [x] **`TitleCard` gained `posterClassName`** — the phone poster's height
+      comes from the card's WIDTH (`aspect-[4/5]`), so a caller that has to fit
+      the viewport clamps it. This page passes nothing: it sits in a 16:9 box
+      in a scrolling page and has no viewport to fit.
 
 ## 2026-09-02 — the catalog page becomes a browse view
 

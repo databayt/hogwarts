@@ -46,7 +46,7 @@ conference/
 ├── room/                                                      the pre-join page and the call itself
 │   ├── title-card.tsx     the pre-join card, on the shared lumos frame (`sm:min-h-[80dvh]`,
 │   │                      so the shelf under it shows and the page reads as a page)
-│   ├── class-shelf.tsx    the row under it — the section's other classes, the reference's "Season 2"
+│   ├── shelves.tsx       everything under it — the section's classes, bonus content, related, cast & crew
 │   └── calendar-file.ts   the header's `+ ADD`: the class as an `.ics`, built in the browser
 ├── nav.tsx                                                    heading + tab strip for the (app) surfaces
 ├── landing/                                                   the /live landing page
@@ -159,7 +159,8 @@ reached from a row, not a tab.
 | Room chrome floats over the stage (lumos player glass) | ✅ `lumos/shared/video-player/glass.ts`, shared           |
 | Pre-join title card (artwork, badge, byline, Join)     | ✅ `room/title-card.tsx` on the shared lumos frame        |
 | Pre-join header — Back · `+ ADD` (.ics) · share        | ✅ `room/calendar-file.ts`; `navigator.share` → clipboard |
-| Pre-join shelf — the section's other classes           | ✅ `room/class-shelf.tsx` + `findRoomShelfSessions`       |
+| Pre-join shelf — the section's other classes           | ✅ `room/shelves.tsx` + `findRoomShelfSessions`          |
+| Pre-join — bonus content · related · cast & crew       | ✅ resources · `findRoomRelatedLessons` · `findRoomClassPeople` |
 | Joining is what mints the ticket (never page load)     | ✅ a HOST no longer starts a class by opening a tab       |
 | Card mark row (4K · Free · CC · AD)                    | ⚠️ the hero's marks verbatim — 3 not yet true of a room   |
 | Join pill shows progress once the class is running     | ✅ ticking, `useClassProgress`                            |

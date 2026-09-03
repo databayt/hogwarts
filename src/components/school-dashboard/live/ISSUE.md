@@ -4,6 +4,52 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Room: the page grows the reference's other four rows 2026-09-03 — closed
+
+- [x] **The phone hero was 94% of an iPhone SE.** The poster is `aspect-[4/5]`,
+      so its height comes from the card's WIDTH — an SE got the same 469px of
+      picture a 14 Pro Max does, and the block ran to the foot of the screen
+      with the shelf entirely below the fold. Only 390x844 had been checked,
+      which is the one phone size where it happens to fit. Clamped with
+      `posterClassName="max-h-[calc(80dvh-10rem)]"` — `10rem` is what the rows
+      under the poster measure — so the block lands at 80dvh on a short phone
+      and the reference's 4:5 survives untouched on a tall one.
+      SE 94%→80%, Android-with-chrome 90%→80%.
+- [x] **`posterClassName` is a new slot on the shared frame**, owned by the
+      caller for the same reason `className` is: lumos sits in a 16:9 box in a
+      scrolling page and has no viewport to fit.
+- [x] **Bonus Content** — the class's own references. `ConferenceResource`
+      carries exactly ONE of exam / assignment / url per row, which is what the
+      tile's `kind` reads off. Costs nothing: `getLiveClass` already returned
+      them, and the count was being printed in the mark row with nowhere to go.
+- [x] **Related** — the subject's catalog lessons, in lumos. NOT other
+      sections' sessions of the same subject: those are exactly the rows the
+      shelf query refuses to name. School `ContentOverride.isHidden` applies,
+      or the row would offer a lesson the school's own LMS does not serve.
+- [x] **Cast & Crew** — the host, then the section's roster, as circular
+      portraits. The roster is returned ONLY for a section-scoped session, and
+      that is a privacy boundary: a school-wide assembly can be opened by
+      anyone in the school, and naming one section's children to all of them is
+      not something the assembly gave permission for.
+- [x] **The tiles set their labels BELOW the artwork**, which is what the full
+      reference does for its episode and bonus rows — an eyebrow, a name, then
+      prose that would be unreadable over a photograph. `ShelfCard` grew a
+      `titleBelow` mode; lumos keeps the name over the picture, which is what
+      its row has always been.
+- [x] **Two heading styles, both the reference's**: the season heading is
+      entirely blue because the whole thing is a control; the other three are
+      plain headings with a blue `See All` at the far end.
+
+- [ ] **Related deviates from the reference on purpose.** Its related row is
+      artwork ALONE, which works because every tile is a branded show poster. A
+      catalog lesson's art is a generic illustration shared across a subject,
+      so the names stay.
+- [ ] **Catalog `Lesson` reads trip the dev tenant guard.** `Lesson` is in
+      `TENANT_SCOPED_MODELS` in `lib/db.ts` but the model has no `schoolId`
+      column — it is platform-global. Pre-existing: this block's own
+      `getLiveClassReferenceData` has always done the same. Console noise in
+      dev only.
+
 ## Room: the pre-join page stops being one screen 2026-09-03 — closed
 
 - [x] **The card was invisible on a desktop.** `TitleCard`'s wide layout puts

@@ -41,6 +41,14 @@ interface TitleCardProps {
   color?: string | null
   /** Alt text for the artwork. */
   alt: string
+  /** The POSTER's own sizing on a phone, where its height comes from the
+   *  card's width (`aspect-[4/5]`) rather than from the screen. That is the
+   *  right default — it is the reference's ratio — but it means a short phone
+   *  gets the same 469px of artwork a tall one does, and the block runs off
+   *  the bottom. A caller that has to fit the viewport clamps it here. Owned
+   *  by the caller for the same reason `className` is: the two callers sit in
+   *  genuinely different boxes. */
+  posterClassName?: string
   /** Sizes hint for the artwork, per the caller's layout. */
   sizes?: string
   /** The reference's `‹ Back`, over the artwork on the inline-start side. */
@@ -72,6 +80,7 @@ export function TitleCard({
   thumbnailUrl,
   color,
   alt,
+  posterClassName,
   sizes = "(max-width: 768px) 100vw, 800px",
   topStart,
   topEnd,
@@ -98,7 +107,12 @@ export function TitleCard({
       className={cn("relative flex w-full flex-col sm:block", className)}
       style={{ backgroundColor: color || "#1a1a1a" }}
     >
-      <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden sm:absolute sm:inset-0 sm:aspect-auto sm:h-full">
+      <div
+        className={cn(
+          "relative aspect-[4/5] w-full shrink-0 overflow-hidden sm:absolute sm:inset-0 sm:aspect-auto sm:h-full",
+          posterClassName
+        )}
+      >
         {thumbnailUrl ? (
           <Image
             src={thumbnailUrl}
