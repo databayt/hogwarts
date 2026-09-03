@@ -4,6 +4,30 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Room: theme-aware, and the hero a touch taller 2026-09-03 — closed
+
+- [x] **The page below the hero follows the theme.** The four shelves were
+      pinned `bg-black` / `text-white`, which is the reference's DARK frame
+      (node 602-257); its LIGHT frame (574-31) puts the same shelves on the
+      page's own white ground with dark headings and grey blurbs. The hero card
+      itself stays dark in BOTH — it sits over artwork, and the reference keeps
+      it dark in both frames. So the `(live-room)` layout and `RoomPageSections`
+      became `bg-background`, every heading/title/blurb/role took
+      `text-foreground` / `text-muted-foreground`, the avatar fallback took
+      `bg-muted`, and the bonus tile's ring took `ring-border`.
+- [x] **The accent blue brightens a step in dark** (`#007AFF` →
+      `dark:#0A84FF`), which is Apple's own system blue and what the reference's
+      "Season 2" / "See All" links do.
+- [x] **Only the labels UNDER artwork take tokens.** A title set OVER a
+      thumbnail (the lumos "More from Course" row, the glass meta bar, the
+      Live/Recording pills) keeps its hard white — it always sits on a picture.
+- [x] **The hero is 85dvh, up a step from 80.** Desktop min-height and the
+      phone poster clamp both moved; a tall phone's 4:5 poster is naturally
+      under the clamp and unchanged, which is the reference ratio.
+- [x] Verified in both themes at 375x667 and 390x844, and desktop at 1440x900
+      (hero 720→765) and 1280x720: tokens flip (`oklch(1 0 0)` ↔
+      `oklch(0.145 0 0)`), no page errors.
+
 ## Room: the page grows the reference's other four rows 2026-09-03 — closed
 
 - [x] **The phone hero was 94% of an iPhone SE.** The poster is `aspect-[4/5]`,

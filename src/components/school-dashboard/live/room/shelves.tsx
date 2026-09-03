@@ -15,6 +15,10 @@ import {
 
 import { ShelfCard, shelfScroller } from "@/components/lumos/shared/shelf-card"
 
+/** The reference's blue links — Apple's system blue, a step brighter in dark. */
+const ACCENT_LINK =
+  "inline-flex items-center text-[#007AFF] transition-opacity hover:opacity-80 dark:text-[#0A84FF]"
+
 /**
  * Everything under the room's title card.
  *
@@ -59,11 +63,11 @@ function ShelfHeading({
     return (
       <Link
         href={href}
-        // Literal hex rather than a token, for the reason the card above it
-        // pins its own colours: this surface is black in both themes, and a
-        // theme-aware accent would resolve to the light-mode blue on a page
-        // that is never light. Same iOS accent the reference heading uses.
-        className="inline-flex items-center gap-0.5 text-[17px] font-semibold text-[#0A84FF] transition-opacity hover:opacity-80"
+        // Apple's system blue, which brightens a step in dark mode
+        // (#007AFF → #0A84FF) — the reference heading is blue in both frames.
+        // Literal hex because it is a fixed accent, not a brand token; the
+        // `dark:` variant is what keeps it legible on either ground.
+        className={ACCENT_LINK + " gap-0.5 text-[17px] font-semibold"}
       >
         {title}
         <ChevronRight className="size-5 rtl:-scale-x-100" aria-hidden />
@@ -72,11 +76,11 @@ function ShelfHeading({
   }
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <h2 className="text-[17px] font-semibold text-white">{title}</h2>
+      <h2 className="text-foreground text-[17px] font-semibold">{title}</h2>
       {href && seeAll && (
         <Link
           href={href}
-          className="shrink-0 text-[15px] font-medium text-[#0A84FF] transition-opacity hover:opacity-80"
+          className={ACCENT_LINK + " shrink-0 text-[15px] font-medium"}
         >
           {seeAll}
         </Link>
@@ -98,9 +102,10 @@ function Shelf({
   )
 }
 
-/** Everything under the card, on one black ground. */
+/** Everything under the card, on the page's own ground — light in light mode,
+ *  dark in dark. Only the hero card above is pinned dark. */
 export function RoomPageSections({ children }: { children: React.ReactNode }) {
-  return <div className="bg-black pb-10">{children}</div>
+  return <div className="bg-background pb-10">{children}</div>
 }
 
 // ---------------------------------------------------------------------------
@@ -243,7 +248,7 @@ export function RoomBonusShelf({
             key={item.id}
             href={item.href}
             titleBelow
-            aspectClassName="aspect-video ring-1 ring-white/10 ring-inset"
+            aspectClassName="ring-border aspect-video ring-1 ring-inset"
             color={color}
             art={<Icon className="size-10" aria-hidden />}
             eyebrow={labels[item.kind]}
@@ -345,7 +350,7 @@ export function RoomPeopleShelf({
     <Shelf title={labels.heading}>
       {people.map((person) => (
         <div key={person.id} className="w-24 shrink-0 text-center">
-          <div className="relative mx-auto size-20 overflow-hidden rounded-full bg-white/10">
+          <div className="bg-muted relative mx-auto size-20 overflow-hidden rounded-full">
             {person.photoUrl ? (
               <Image
                 src={person.photoUrl}
@@ -356,7 +361,7 @@ export function RoomPeopleShelf({
                 unoptimized
               />
             ) : (
-              <span className="flex h-full items-center justify-center text-lg font-semibold text-white/70">
+              <span className="text-muted-foreground flex h-full items-center justify-center text-lg font-semibold">
                 {/* The first letter of the name AS WRITTEN — never a Latin
                     transliteration, which is what an initials helper keyed on
                     ASCII would produce for an Arabic roster. */}
@@ -364,10 +369,10 @@ export function RoomPeopleShelf({
               </span>
             )}
           </div>
-          <p className="mt-2 line-clamp-2 text-[13px] leading-tight font-medium text-white">
+          <p className="text-foreground mt-2 line-clamp-2 text-[13px] leading-tight font-medium">
             {person.name}
           </p>
-          <p className="mt-0.5 line-clamp-1 text-[12px] text-white/50">
+          <p className="text-muted-foreground mt-0.5 line-clamp-1 text-[12px]">
             {person.role}
           </p>
         </div>

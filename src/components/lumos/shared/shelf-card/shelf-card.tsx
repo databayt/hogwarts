@@ -134,17 +134,21 @@ export function ShelfCard({
       </div>
 
       {titleBelow && (
+        // Labels UNDER the artwork read on the page's own ground, not over a
+        // picture — so they take the theme's tokens, dark in light mode and
+        // light in dark. The over-artwork title above keeps its hard white,
+        // because there it always sits on a photograph.
         <div className="pt-2">
           {eyebrow && (
-            <p className="text-[11px] font-medium tracking-wide text-white/50 uppercase">
+            <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
               {eyebrow}
             </p>
           )}
-          <p className="line-clamp-2 text-[15px] leading-tight font-semibold text-white">
+          <p className="text-foreground line-clamp-2 text-[15px] leading-tight font-semibold">
             {title}
           </p>
           {blurb && (
-            <p className="mt-1 line-clamp-3 text-[13px] leading-[17px] text-white/60">
+            <p className="text-muted-foreground mt-1 line-clamp-3 text-[13px] leading-[17px]">
               {blurb}
             </p>
           )}
