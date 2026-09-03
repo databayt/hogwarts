@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-08-28
+last_audited: 2026-09-02
 ---
 
 # Lumos (LMS) — Production Readiness Tracker
@@ -19,6 +19,99 @@ last_audited: 2026-08-28
 **QA guide:** [hogwarts#377](https://github.com/databayt/hogwarts/issues/377) — full flow, sub-flows & test cases (mermaid charts + walkable checklists + release gate)
 
 ---
+
+## 2026-09-03 — the lesson's shelf tile becomes shared
+
+- [x] **"More from Course" moved to `shared/shelf-card/`** and the lesson page
+      now draws it, the way it already draws `shared/title-card`. The live
+      room needed the same row under its own card, and this block's records
+      are explicit about what a card written twice does — the landing strip
+      and the catch-up shelf drifted within a day of each other.
+- [x] **Its meta bar is pinned to one line** (`min-w-0`,
+      `whitespace-nowrap`, `truncate` on the part the caller can afford to
+      lose). The bar is 16px of 12px type inside a mask that fades out above
+      it, so a second line rendered outside the glass and over bare artwork —
+      which a catalog lesson name is long enough to cause.
+- [x] **Two class strings joined the shared title card** —
+      `titleCardTopGlyph` and `titleCardTopPill` — for the reference's `‹ Back`
+      / `+ ADD` / share row. The lesson hero does not use them yet; the live
+      room does.
+- [x] Verified by rendering: 54 tiles on a `sd-g1-arabic` lesson, every meta
+      bar 16px tall, no page errors.
+
+## 2026-09-02 — the catalog page becomes a browse view
+
+`/lumos/courses` opened on a flat, paginated grid of whichever grade the URL
+defaulted to. It now opens on three stacked sections, all scoped to ONE grade,
+and falls back to that same grid only when a search term narrows the page.
+
+- **Continue learning** — ONE card, in the `/live` landing's featured-article
+  shape (`live/landing/session-row.tsx` at its `lead` weight): the section name
+  as a kicker INSIDE the card rather than a heading above it (a heading over a
+  list of one is a label for nothing), then subject, grade badge, chapter,
+  lesson, the instructor with a 24px portrait, and minutes done. It is the one
+  thing on the page NOT scoped to the browsed grade, because it is the
+  learner's own thread and carries its grade on its badge.
+  **The card is never absent.** With nothing in progress it becomes "Start
+  here": the opening lesson of the first course of the browsed grade, same five
+  rows, linking into that lesson rather than a course landing page
+  (`get-start-here.ts`). It WALKS the grade's courses rather than taking the
+  first — a course whose chapters are all unpublished or all hidden by this
+  school would otherwise leave the card missing for that whole grade, which is
+  the hole the fallback exists to close. A first-time learner used to get a
+  page that opened straight onto a shelf.
+  **The byline resolves through `applyInstructorPolicy`**, the same module the
+  lesson page and the mobile routes use — `getContinueWatching` now runs one
+  extra video query and applies the school's policy per lesson, so the card and
+  the player can never disagree about who is teaching. A lesson with no
+  reachable video gets no instructor and the row drops.
+- **Recommended for you** — a scrolling shelf leading the grade, capped at
+  `RECOMMENDED_COUNT`.
+- **More courses** — the REST OF THAT SAME GRADE as a grid, paged in the
+  browser by "See more" (the shelves read already holds every course, so paging
+  over the network would re-fetch rows the page has).
+
+The two together are exactly the grade's courses and nothing else. An earlier
+pass spread the grid across neighbouring grades, ordered by distance from the
+learner's own — that was wrong: a reader on grade 10 should not have grades 9
+and 11 mixed into the page.
+
+**Which grade.** The active badge, defaulting to the viewer's own grade
+(students have one) and otherwise to the lowest grade the school offers. A
+badge click stays in the browse view rather than dropping to a flat grid; the
+active badge expands from its numeral to the grade's ordinal name
+(`courses.gradeOrdinals`, derived from the NUMBER — never from
+`AcademicGrade.name`, which is prose, translates inconsistently and does not
+sort).
+
+Three shelves were considered and DELIBERATELY NOT BUILT, because the data
+cannot support them: `Subject.averageRating` is 0 on every catalog row and
+`usageCount` is identical across them, so "top rated" and "most popular" would
+be arbitrary orderings wearing meaningful labels; `createdAt` ties across
+bulk-seeded rows, which rules out "recently added" the same way. Grade is the
+one axis this catalog actually varies on. Re-check before adding any of them.
+
+Consequences worth knowing:
+
+- **`list-params.ts` no longer defaults `level` to `"1"`.** It defaulted to
+  grade 1, which meant "the viewer's own grade" was unreachable — a bare
+  `/lumos/courses` was always a grade-1 grid. Empty now, and an empty value
+  means "the grade this viewer belongs to".
+- **The `/lumos` student redirect lands bare**, not on `?level=<their grade>`;
+  the page resolves that grade itself.
+- **The grade badges show for every role, students included.** They were hidden
+  from students because the old redirect pinned them to one grade.
+- **`get-course-shelves.ts` reads the whole catalog in ONE query** (capped at
+  400 rows) and buckets by grade in memory, so switching grades costs no query.
+  `getAllCatalogCourses` still owns the search lane and is skipped entirely
+  while browsing.
+- **`CourseCard` gained `showGrade`.** The catalog holds one Subject row per
+  subject PER GRADE and the grade is not in the name, so any list spanning
+  grades reads "Arabic, Arabic, Arabic" without it. Used on the SEARCH results
+  grid, which spans grades; off on the browse sections, which do not.
+- **Known gap (pre-existing):** `getContinueWatching` returns subject, chapter
+  and lesson names UNTRANSLATED — it never called `localize`. The new card is
+  the first surface where that is prominent.
 
 ## MVP Checklist
 

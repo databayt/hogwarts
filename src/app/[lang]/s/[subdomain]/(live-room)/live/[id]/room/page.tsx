@@ -106,6 +106,9 @@ export default async function Page({ params }: Props) {
       ? findRoomShelfSessions(schoolId, {
           sessionId: id,
           sectionId: detail.data.sectionId,
+          // The shelf is scoped by whatever ADMITTED the reader, not by the
+          // row's section — see `findRoomShelfSessions`.
+          visibility: detail.data.visibility,
           now,
         })
       : Promise.resolve([]),

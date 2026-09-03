@@ -51,6 +51,15 @@
       shelf's first tile — which is where a thing you can watch belongs, and
       keeps `canViewRecordings` resolved once for the whole row rather than
       per tile.
+- [x] **The shelf is scoped by what ADMITTED the reader, not by the row's
+      section.** `canAccessSession` lets a STUDENT or GUARDIAN into a
+      `visibility: "school"` session on school membership alone, whatever
+      section that row names — so a shelf keyed on `sectionId` would have
+      listed a stranger section's section-visible classes, by subject, time
+      and lesson, to someone let in school-wide. `getLiveClass` answers
+      NOT_FOUND rather than UNAUTHORIZED precisely so those are not revealed
+      to EXIST. Caught in review before it shipped; pinned by
+      `tests/…/room/shelf-sessions.test.ts`.
 
 - [ ] **`+ ADD` downloads a file; it does not add anything.** An `.ics` is the
       honest limit of what a browser can do without a calendar integration.

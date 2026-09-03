@@ -11,7 +11,7 @@
  * Multi-tenant: every where clause includes `schoolId` and `deletedAt: null`.
  */
 
-import { Prisma } from "@prisma/client"
+import { Prisma, type ConferenceVisibility } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { isOwnStorageUrl } from "@/lib/storage-key"
@@ -1109,29 +1109,40 @@ export async function findRoomCardSession(schoolId: string, id: string) {
  * records as the uncommon case, so a shelf built on it would be empty on most
  * classes and the page would be one screen again.
  *
- * A school-wide session (an assembly) has no section, so it falls back to the
- * school's other school-wide sessions rather than pulling in one arbitrary
- * section's timetable.
- *
  * Ordered as a season reads: the few that already happened, then the ones
  * still to come. Two queries rather than one window because the interesting
  * slice is around NOW, and a single `orderBy` over the whole table would
  * either start at the beginning of the year or need an offset nobody can
  * compute.
  *
- * NOT a permission gate — same as `findRoomCardSession`. The caller has proved
- * the viewer may see THIS session; every row here belongs to the same section
- * (or is school-wide), which is the scope that admitted them.
+ * NOT a permission gate — but it MUST NOT widen the one that already ran, and
+ * the branch here is what keeps it honest. `canAccessSession` admits a
+ * STUDENT or GUARDIAN to a `visibility: "school"` session on school membership
+ * ALONE, whatever section the row happens to name — so keying the shelf on
+ * `sectionId` would list a stranger section's `section`-visible classes, with
+ * their subject, time and lesson, to a reader who was only ever let in
+ * school-wide. `getLiveClass` returns NOT_FOUND rather than UNAUTHORIZED
+ * precisely so other sections' sessions are not revealed to EXIST; a shelf
+ * that names them undoes that.
+ *
+ * So the series is whatever admitted the reader: a school-wide session gets
+ * the school's other school-wide sessions, and only a section-scoped one gets
+ * the section's timetable.
  */
 export async function findRoomShelfSessions(
   schoolId: string,
-  opts: { sessionId: string; sectionId: string | null; now: Date }
+  opts: {
+    sessionId: string
+    sectionId: string | null
+    visibility: ConferenceVisibility
+    now: Date
+  }
 ) {
   const base: Prisma.ConferenceWhereInput = {
     schoolId,
     deletedAt: null,
     id: { not: opts.sessionId },
-    ...(opts.sectionId
+    ...(opts.sectionId && opts.visibility !== "school"
       ? { sectionId: opts.sectionId }
       : { visibility: "school" }),
   }
