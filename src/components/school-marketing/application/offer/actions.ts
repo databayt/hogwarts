@@ -306,7 +306,14 @@ export async function getOfferDetails(
       offerState = "expired"
     } else if (application.status !== "SELECTED") {
       return { success: false, error: "OFFER_NOT_AVAILABLE" }
-    } else if (isOfferExpired(application.offerExpiryDate)) {
+    } else if (
+      !application.offerAccepted &&
+      isOfferExpired(application.offerExpiryDate)
+    ) {
+      // The deadline binds ACCEPTANCE. A family that accepted in time keeps a
+      // live offer page (to pay, or to see what they paid) however long the
+      // school takes to confirm — the cron applies the same exemption when
+      // it flips lapsed offers to EXPIRED.
       offerState = "expired"
     } else {
       offerState = "active"
@@ -485,7 +492,10 @@ export async function acceptOffer(
     }
 
     // Check expiry
-    if (isOfferExpired(application.offerExpiryDate)) {
+    if (
+      !application.offerAccepted &&
+      isOfferExpired(application.offerExpiryDate)
+    ) {
       return { success: false, error: "OFFER_EXPIRED" }
     }
 
@@ -693,7 +703,10 @@ export async function createRegistrationFeeCheckout(
     if (application.status !== "SELECTED") {
       return { success: false, error: "OFFER_NOT_AVAILABLE" }
     }
-    if (isOfferExpired(application.offerExpiryDate)) {
+    if (
+      !application.offerAccepted &&
+      isOfferExpired(application.offerExpiryDate)
+    ) {
       return { success: false, error: "OFFER_EXPIRED" }
     }
 
@@ -886,7 +899,10 @@ export async function recordRegistrationCashIntent(
     if (application.status !== "SELECTED") {
       return { success: false, error: "OFFER_NOT_AVAILABLE" }
     }
-    if (isOfferExpired(application.offerExpiryDate)) {
+    if (
+      !application.offerAccepted &&
+      isOfferExpired(application.offerExpiryDate)
+    ) {
       return { success: false, error: "OFFER_EXPIRED" }
     }
 
@@ -1023,7 +1039,10 @@ export async function recordRegistrationBankTransferIntent(
     if (application.status !== "SELECTED") {
       return { success: false, error: "OFFER_NOT_AVAILABLE" }
     }
-    if (isOfferExpired(application.offerExpiryDate)) {
+    if (
+      !application.offerAccepted &&
+      isOfferExpired(application.offerExpiryDate)
+    ) {
       return { success: false, error: "OFFER_EXPIRED" }
     }
 
@@ -1189,7 +1208,10 @@ export async function recordRegistrationWalletIntent(
     if (application.status !== "SELECTED") {
       return { success: false, error: "OFFER_NOT_AVAILABLE" }
     }
-    if (isOfferExpired(application.offerExpiryDate)) {
+    if (
+      !application.offerAccepted &&
+      isOfferExpired(application.offerExpiryDate)
+    ) {
       return { success: false, error: "OFFER_EXPIRED" }
     }
     if (!application.offerAccepted) {

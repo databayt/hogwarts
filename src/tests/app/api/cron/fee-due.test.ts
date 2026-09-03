@@ -583,11 +583,14 @@ describe("fee-due cron — auto-expire lapsed offers", () => {
     expect(body.schoolsProcessed).toBe(1)
     expect(body.offersExpired).toBe(3)
     // The flip only ever targets SELECTED rows already past their expiry —
-    // never future-dated offers.
+    // never future-dated offers, and never an offer the family has already
+    // ACCEPTED: the deadline binds acceptance, and an accepted (often paid)
+    // offer waiting on the admin's Confirm Enrollment click must not lapse.
     expect(mockDb.application.updateMany).toHaveBeenCalledWith({
       where: {
         schoolId: "school-lapsed",
         status: "SELECTED",
+        offerAccepted: false,
         offerExpiryDate: { lt: expect.any(Date) },
       },
       data: { status: "EXPIRED" },

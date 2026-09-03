@@ -1117,7 +1117,13 @@ export async function confirmEnrollment(params: {
       return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
     }
 
+    // The offer deadline binds the FAMILY's acceptance, not the office's
+    // confirmation: an offer accepted in time (usually with the registration
+    // fee already paid) stays confirmable however long the admin takes to
+    // click. Only an offer nobody accepted lapses — the same rule the daily
+    // fee-due cron applies when it flips SELECTED → EXPIRED.
     if (
+      !application.offerAccepted &&
       application.offerExpiryDate &&
       new Date(application.offerExpiryDate) < new Date()
     ) {

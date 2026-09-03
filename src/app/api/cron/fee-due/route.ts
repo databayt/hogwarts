@@ -340,10 +340,14 @@ async function processSchool(
 
   // ── B: Offer expiry reminders ─────────────────────────────────────────────
   // Applications with status SELECTED and offerExpiryDate within 3 days.
+  // The deadline binds the family's ACCEPTANCE: once they have accepted the
+  // offer there is nothing left for them to do before it, so a reminder
+  // would only nag a committed family (often one that has already paid).
   const expiringOffers = await db.application.findMany({
     where: {
       schoolId,
       status: "SELECTED",
+      offerAccepted: false,
       offerExpiryDate: { gte: now, lte: offerWindowEnd },
     },
     select: {
@@ -443,10 +447,19 @@ async function processSchool(
   // The offer actions' own status !== "SELECTED" guards already reject
   // mutations post-flip; their date-based OFFER_EXPIRED check remains the
   // safety net for the up-to-24h lag between lapse and this run.
+  //
+  // ONLY unaccepted offers lapse. An accepted offer is the family's side of
+  // the bargain done — frequently with the registration fee already paid —
+  // and what remains is the admin clicking Confirm Enrollment. Flipping those
+  // to EXPIRED (as this did before) made `confirmEnrollment` refuse them,
+  // dropped them off the Enrollment tab, and showed a paying family an
+  // "offer expired" page. `confirmEnrollment` and the offer actions apply the
+  // same `offerAccepted` exemption.
   const expired = await db.application.updateMany({
     where: {
       schoolId,
       status: "SELECTED",
+      offerAccepted: false,
       offerExpiryDate: { lt: now },
     },
     data: { status: "EXPIRED" },
@@ -567,6 +580,7 @@ export async function GET(request: NextRequest) {
       by: ["schoolId"],
       where: {
         status: "SELECTED",
+        offerAccepted: false,
         offerExpiryDate: { gte: now, lte: offerWindowEnd },
       },
     })
@@ -576,7 +590,11 @@ export async function GET(request: NextRequest) {
     // so neither set above would visit them.
     const lapsedOfferSchoolRows = await db.application.groupBy({
       by: ["schoolId"],
-      where: { status: "SELECTED", offerExpiryDate: { lt: now } },
+      where: {
+        status: "SELECTED",
+        offerAccepted: false,
+        offerExpiryDate: { lt: now },
+      },
     })
 
     // And schools with unplaced students (part D). This set is NOT implied by

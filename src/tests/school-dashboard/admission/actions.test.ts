@@ -1054,6 +1054,54 @@ describe("Admission Actions", () => {
       expect(result.error).toBe("ADMISSION_NOT_FOUND")
     })
 
+    it("refuses a lapsed offer nobody accepted", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        ...mockApplication,
+        offerAccepted: false,
+        offerExpiryDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      } as any)
+
+      const result = await confirmEnrollment({ id: "a-1" })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("OFFER_EXPIRED")
+      expect(db.$transaction).not.toHaveBeenCalled()
+    })
+
+    it("still confirms an offer the family accepted before it lapsed", async () => {
+      // The deadline binds the family's acceptance, not the office's
+      // confirmation click: an accepted (typically paid) offer must stay
+      // enrollable however long the admin takes — the daily cron applies
+      // the same exemption when it flips SELECTED → EXPIRED.
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        ...mockApplication,
+        offerAccepted: true,
+        offerAcceptedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        offerExpiryDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      } as any)
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+      vi.mocked(db.student.findUnique).mockResolvedValue(null)
+      vi.mocked(db.student.create).mockResolvedValue({
+        id: "student-new",
+        schoolId: SCHOOL_ID,
+      } as any)
+      vi.mocked(db.yearLevel.findFirst).mockResolvedValue(null)
+      vi.mocked(db.user.findUnique).mockResolvedValue({
+        role: "USER",
+      } as any)
+      vi.mocked(db.user.update).mockResolvedValue({} as any)
+      vi.mocked(db.feeStructure.findMany).mockResolvedValue([])
+
+      const result = await confirmEnrollment({ id: "a-1" })
+
+      expect(result.success).toBe(true)
+      expect(db.application.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: "ADMITTED" }),
+        })
+      )
+    })
+
     it("reuses existing student record instead of creating a new one", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue(
         mockApplication as any
