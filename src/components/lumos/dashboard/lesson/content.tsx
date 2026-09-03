@@ -24,6 +24,7 @@ import { toast } from "sonner"
 
 import { asset } from "@/lib/asset-url"
 import { enqueue } from "@/lib/offline/outbox"
+import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -48,6 +49,18 @@ import type {
   LessonQuizVerdict,
 } from "@/components/lumos/lib/lesson-quiz"
 import { MaterialViewerTrigger } from "@/components/lumos/shared/material-viewer/material-viewer"
+import { ShelfCard, shelfScroller } from "@/components/lumos/shared/shelf-card"
+import {
+  TitleCard,
+  titleCardBadge,
+  titleCardBylineName,
+  titleCardChip,
+  titleCardChipSolid,
+  TitleCardFeather,
+  titleCardMoreChip,
+  titleCardPill,
+  titleCardRoundButton,
+} from "@/components/lumos/shared/title-card"
 import {
   VideoPlayer,
   type VideoPlayerLabels,
@@ -349,132 +362,106 @@ export function LumosLessonContent({
     <div className="space-y-6 pt-2 pb-6">
       {/* Hero / Video Player */}
       <div
-        className="relative aspect-video w-full overflow-hidden"
+        className={cn(
+          "relative w-full overflow-hidden",
+          // The hero's phone layout stacks a title, a full-width button and a
+          // mark row under the artwork; 16:9 on a 390px screen is 219px tall
+          // and cannot hold them. The PLAYER keeps 16:9 at every width — a
+          // taller box would letterbox the video.
+          showHero ? "aspect-[4/5] sm:aspect-video" : "aspect-video"
+        )}
         style={{ backgroundColor: lesson.color || "#1a1a1a" }}
       >
         {showHero ? (
           <>
-            {/* Thumbnail background */}
-            {lesson.thumbnailUrl ? (
-              <Image
-                src={lesson.thumbnailUrl}
-                alt={lesson.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 800px"
-                unoptimized
-              />
-            ) : null}
-
-            {/* Gradient overlay — Apple TV style */}
-            <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 pt-32">
-              {/* Grade badge */}
-              {lesson.chapter.course.grades.length > 0 && (
-                <div className="mb-2 flex gap-1.5">
-                  {lesson.chapter.course.grades.map((grade) => (
-                    <span
-                      key={grade}
-                      className="rounded-md border border-white/30 bg-black/60 px-2.5 text-xs font-medium text-white backdrop-blur-sm"
-                    >
-                      {d?.grade || "Grade"} {gradeWord(grade, lang)}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Title */}
-              <h1 className="text-2xl font-bold tracking-tight text-white sm:text-4xl">
-                {lesson.title}
-              </h1>
-
-              {/* Creator */}
-              <div className="mt-1.5 flex items-center gap-2">
-                <Image
-                  src="/feather.png"
-                  alt={d?.brandName || "balqalam"}
-                  width={16}
-                  height={16}
-                  className="rounded-sm brightness-0 invert"
-                />
-                <span className="text-sm font-medium text-white">
-                  {d?.brandName || "balqalam"}
-                </span>
-              </div>
-
-              {/* Chapter & Lesson position + MORE */}
-              <div className="mt-1 flex items-center gap-2 text-sm text-white">
-                <span>
-                  {d?.chapterShort || "C"}
-                  {lesson.chapter.position} {d?.lessonShort || "L"}
-                  {lesson.position} &middot; {lesson.chapter.course.title}{" "}
-                  &middot; {lesson.chapter.title}
-                </span>
-                <button
-                  onClick={() => setShowDescDialog(true)}
-                  className="shrink-0 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium text-white/80 backdrop-blur-sm transition-colors hover:bg-white/25"
-                >
-                  {d?.more || "MORE"}
-                </button>
-              </div>
-
-              {/* Row 4: Info badges */}
-              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-white">
-                {lesson.year && <span>{lesson.year}</span>}
-                {lesson.year &&
-                  formatDuration(lesson.duration, lesson.videoDuration) && (
-                    <span>&middot;</span>
-                  )}
-                {formatDuration(lesson.duration, lesson.videoDuration) && (
+            <TitleCard
+              className="absolute inset-0"
+              thumbnailUrl={lesson.thumbnailUrl}
+              color={lesson.color}
+              alt={lesson.title}
+              title={lesson.title}
+              badges={
+                lesson.chapter.course.grades.length > 0
+                  ? lesson.chapter.course.grades.map((grade) => (
+                      <span key={grade} className={titleCardBadge}>
+                        {d?.grade || "Grade"} {gradeWord(grade, lang)}
+                      </span>
+                    ))
+                  : undefined
+              }
+              byline={
+                <>
+                  <TitleCardFeather alt={d?.brandName || "balqalam"} />
+                  <span className={titleCardBylineName}>
+                    {d?.brandName || "balqalam"}
+                  </span>
+                </>
+              }
+              meta={
+                <>
                   <span>
-                    {formatDuration(lesson.duration, lesson.videoDuration)}
+                    {d?.chapterShort || "C"}
+                    {lesson.chapter.position} {d?.lessonShort || "L"}
+                    {lesson.position} &middot; {lesson.chapter.course.title}{" "}
+                    &middot; {lesson.chapter.title}
                   </span>
-                )}
-                <span className="rounded bg-white px-1.5 text-xs font-medium text-black">
-                  4K
-                </span>
-                {lesson.isFree && (
-                  <span className="rounded border border-white px-1.5 text-xs text-white">
-                    {d?.free || "Free"}
-                  </span>
-                )}
-                <span className="rounded border border-white px-1.5 text-xs text-white">
-                  CC
-                </span>
-                <span className="rounded border border-white px-1.5 text-xs text-white">
-                  AD
-                </span>
-                {lesson.availableVideos.length > 1 && (
-                  <>
-                    <span>&middot;</span>
+                  <button
+                    onClick={() => setShowDescDialog(true)}
+                    className={titleCardMoreChip}
+                  >
+                    {d?.more || "MORE"}
+                  </button>
+                </>
+              }
+              chips={
+                <>
+                  {lesson.year && <span>{lesson.year}</span>}
+                  {lesson.year &&
+                    formatDuration(lesson.duration, lesson.videoDuration) && (
+                      <span>&middot;</span>
+                    )}
+                  {formatDuration(lesson.duration, lesson.videoDuration) && (
                     <span>
-                      {lesson.availableVideos.length}{" "}
-                      {d?.instructors || "instructors"}
+                      {formatDuration(lesson.duration, lesson.videoDuration)}
                     </span>
-                  </>
-                )}
-                {resourceCount > 0 && (
-                  <>
-                    <span>&middot;</span>
-                    <span>
-                      {resourceCount}{" "}
-                      {resourceCount > 1
-                        ? d?.resourceMany || "resources"
-                        : d?.resourceOne || "resource"}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Row 5: Play pill + Wishlist */}
-              <div className="mt-4 flex items-center gap-3">
-                {/* Locked (paid + unpurchased) with no playable source →
-                    purchase pill. Without this, a lone paid video is a dead
-                    end: the switcher needs 2+ videos and Play stays disabled. */}
-                {lockedVideo && !currentVideoUrl ? (
+                  )}
+                  <span className={titleCardChipSolid}>4K</span>
+                  {lesson.isFree && (
+                    <span className={titleCardChip}>{d?.free || "Free"}</span>
+                  )}
+                  <span className={titleCardChip}>CC</span>
+                  <span className={titleCardChip}>AD</span>
+                  {lesson.availableVideos.length > 1 && (
+                    <>
+                      <span>&middot;</span>
+                      <span>
+                        {lesson.availableVideos.length}{" "}
+                        {d?.instructors || "instructors"}
+                      </span>
+                    </>
+                  )}
+                  {resourceCount > 0 && (
+                    <>
+                      <span>&middot;</span>
+                      <span>
+                        {resourceCount}{" "}
+                        {resourceCount > 1
+                          ? d?.resourceMany || "resources"
+                          : d?.resourceOne || "resource"}
+                      </span>
+                    </>
+                  )}
+                </>
+              }
+              action={
+                /* Locked (paid + unpurchased) with no playable source →
+                   purchase pill. Without this, a lone paid video is a dead
+                   end: the switcher needs 2+ videos and Play stays disabled. */
+                lockedVideo && !currentVideoUrl ? (
                   <button
                     onClick={() => handleUnlock(lockedVideo.id)}
                     disabled={isPurchasePending}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-6 font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+                    className={titleCardPill}
                   >
                     {isPurchasePending ? (
                       <Loader2 className="size-4 animate-spin" />
@@ -501,7 +488,7 @@ export function LumosLessonContent({
                       }
                     }}
                     disabled={!currentVideoUrl}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-5 font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+                    className={cn(titleCardPill, "px-5")}
                   >
                     <Play className="size-4 shrink-0 fill-current" />
                     <div className="h-1 w-12 overflow-hidden rounded-full bg-black/20">
@@ -528,14 +515,14 @@ export function LumosLessonContent({
                       }
                     }}
                     disabled={!currentVideoUrl}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-6 font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+                    className={titleCardPill}
                   >
                     <Play className="size-4 fill-current" />
                     {d?.play || "Play"}
                   </button>
-                )}
-
-                {/* Wishlist toggle */}
+                )
+              }
+              secondary={
                 <button
                   onClick={() => {
                     setIsInWishlist((prev) => {
@@ -543,7 +530,7 @@ export function LumosLessonContent({
                       return !prev
                     })
                   }}
-                  className="inline-flex size-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+                  className={titleCardRoundButton}
                 >
                   {isInWishlist ? (
                     <Check className="size-5" />
@@ -551,8 +538,8 @@ export function LumosLessonContent({
                     <Plus className="size-5" />
                   )}
                 </button>
-              </div>
-            </div>
+              }
+            />
 
             {/* About this Lesson — Apple TV+ info sheet */}
             <Dialog open={showDescDialog} onOpenChange={setShowDescDialog}>
@@ -816,70 +803,39 @@ export function LumosLessonContent({
           <h2 className="text-lg font-semibold">
             {d?.moreFrom || "More from"} {lesson.chapter.course.title}
           </h2>
-          <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+          <div className={shelfScroller}>
             {lesson.siblingLessons.map((sibling) => (
-              <Link
+              <ShelfCard
                 key={sibling.id}
                 href={`${baseUrl}/${sibling.id}`}
-                className="group relative w-60 shrink-0 overflow-hidden rounded-lg"
-              >
-                <div
-                  className="relative aspect-[3/2]"
-                  style={{ backgroundColor: sibling.color || "#1a1a1a" }}
-                >
-                  {sibling.thumbnailUrl && (
-                    <Image
-                      src={sibling.thumbnailUrl}
-                      alt={sibling.title}
-                      fill
-                      className="object-cover"
-                      sizes="240px"
-                      unoptimized
-                    />
-                  )}
-                  {/* Title — centered on image */}
-                  <p className="absolute inset-0 line-clamp-2 flex items-center px-3 text-sm font-bold text-white drop-shadow-md">
-                    {sibling.title}
-                  </p>
-                  {/* Metadata — Apple liquid glass bar */}
-                  <div
-                    className="absolute inset-x-0 bottom-0 z-10 px-2.5 pt-4 pb-1"
-                    style={{
-                      background:
-                        "linear-gradient(to top, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 40%, transparent 100%)",
-                      backdropFilter: "blur(8px) saturate(110%)",
-                      WebkitBackdropFilter: "blur(8px) saturate(110%)",
-                      maskImage:
-                        "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
-                      WebkitMaskImage:
-                        "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
-                    }}
-                  >
-                    <div className="flex items-center gap-1 text-xs text-white/80">
-                      <Play className="size-3 fill-current" />
-                      {sibling.watchedMinutes != null &&
-                      sibling.watchedMinutes > 0 ? (
+                title={sibling.title}
+                thumbnailUrl={sibling.thumbnailUrl}
+                color={sibling.color}
+                meta={
+                  <>
+                    <Play className="size-3 fill-current" />
+                    {sibling.watchedMinutes != null &&
+                    sibling.watchedMinutes > 0 ? (
+                      <span>
+                        {sibling.watchedMinutes}{" "}
+                        {d?.minWatched || "min watched"}
+                      </span>
+                    ) : (
+                      <>
                         <span>
-                          {sibling.watchedMinutes}{" "}
-                          {d?.minWatched || "min watched"}
+                          {d?.chapterShort || "C"}
+                          {sibling.chapterPosition}, {d?.lessonShort || "L"}
+                          {sibling.lessonPosition}
                         </span>
-                      ) : (
-                        <>
-                          <span>
-                            {d?.chapterShort || "C"}
-                            {sibling.chapterPosition}, {d?.lessonShort || "L"}
-                            {sibling.lessonPosition}
-                          </span>
-                          <span>&middot;</span>
-                          <span>
-                            {sibling.duration ?? "?"} {d?.min || "min"}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Link>
+                        <span>&middot;</span>
+                        <span>
+                          {sibling.duration ?? "?"} {d?.min || "min"}
+                        </span>
+                      </>
+                    )}
+                  </>
+                }
+              />
             ))}
           </div>
         </div>

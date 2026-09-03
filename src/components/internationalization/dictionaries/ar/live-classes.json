@@ -160,7 +160,30 @@
     "dismiss": "إغلاق",
     "close": "إغلاق",
     "penColor": "لون القلم",
-    "penSize": "حجم القلم"
+    "penSize": "حجم القلم",
+    "card": {
+      "joining": "جارٍ الانضمام…",
+      "more": "المزيد",
+      "recorded": "يُسجَّل",
+      "minutes": "دقيقة",
+      "resourceOne": "مورد",
+      "resourceMany": "موارد",
+      "brandName": "بالقلم",
+      "free": "مجاني",
+      "remaining": "{n} د متبقية",
+      "remainingHours": "{h} س {m} د متبقية",
+      "back": "رجوع",
+      "taughtBy": "يُدرّسها {name}.",
+      "add": "إضافة",
+      "addToCalendar": "أضِف إلى التقويم",
+      "share": "مشاركة",
+      "linkCopied": "تم نسخ الرابط"
+    },
+    "shelf": {
+      "seeAll": "كل الحصص",
+      "schoolWide": "حصص أخرى",
+      "recording": "التسجيل"
+    }
   },
   "errors": {
     "notAuthenticated": "يجب تسجيل الدخول.",

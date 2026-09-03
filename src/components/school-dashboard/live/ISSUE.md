@@ -4,6 +4,61 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Room: the pre-join page stops being one screen 2026-09-03 — closed
+
+- [x] **The card was invisible on a desktop.** `TitleCard`'s wide layout puts
+      BOTH children in `position: absolute`, so the root measured 0px tall and
+      the whole stack — title, meta, marks, Join — rendered at `y = -296`, off
+      the top of the page. Every viewport at or above `sm` showed a black page
+      with a Back link on it. Lumos never hit this because it passes
+      `className="absolute inset-0"` into an `aspect-video` box; the room
+      passed no `className` at all. Fixed at the CALLER
+      (`sm:min-h-[calc(100dvh-7rem)]`), not in the shared frame — its two
+      callers size themselves differently on purpose.
+- [x] **The hero deliberately stops short of the viewport.** The reference's
+      poster block is 646px of an 844px frame, so the shelf under it shows and
+      the page reads as a page. `7rem` leaves ~112px of shelf at 1440x900,
+      which is the marketing hero's `min-h-[calc(100vh-3.5rem)]` trick applied
+      to a black card. The PHONE layout is untouched — it was already a 4:5
+      poster with the stack flowing after it.
+- [x] **A shelf under the card**, `room/class-shelf.tsx` — the reference's
+      "Season 2". It holds the SECTION's other sessions
+      (`findRoomShelfSessions`): four that already happened, then eight still
+      to come, in one wave with the card's own row since `getLiveClass` has
+      already returned `sectionId`. A school-wide assembly has no section and
+      falls back to the school's other school-wide sessions.
+- [x] **Not the anchored lesson's siblings.** That was the obvious "season",
+      and it is empty on every session materialized from the timetable — which
+      this block's own records call the normal case — so the page would have
+      gone back to one screen for most classes.
+- [x] **The tile is shared, not written a third time.** The lumos lesson page's
+      "More from Course" card moved to `lumos/shared/shelf-card/` and both
+      pages draw it, the way `TitleCard` already works. Its meta bar is now
+      pinned to ONE line (`min-w-0`, `whitespace-nowrap`): a catalog lesson
+      name is a sentence, and the second line rendered outside the glass mask,
+      over bare artwork.
+- [x] **Rows carry a weekday when they are not on the reader's day** — the
+      shelf spans both sides of now, and a bare `12:25 PM` three tiles before
+      `07:15 AM` read as a row that had lost its order. Resolved in the
+      SCHOOL's zone, like the clock times beside them.
+- [x] **The header is the reference's**: Back on the start side, `+ ADD` and
+      share on the end. `+ ADD` writes an `.ics` in the browser
+      (`room/calendar-file.ts`, keyed on the session id so re-adding UPDATES
+      the reader's entry); share uses `navigator.share` where there is one and
+      the clipboard everywhere else. New shared class strings
+      `titleCardTopGlyph` / `titleCardTopPill`.
+- [x] **The recording glyph left the header** to make room, and became the
+      shelf's first tile — which is where a thing you can watch belongs, and
+      keeps `canViewRecordings` resolved once for the whole row rather than
+      per tile.
+
+- [ ] **`+ ADD` downloads a file; it does not add anything.** An `.ics` is the
+      honest limit of what a browser can do without a calendar integration.
+      A school that connects Google/Microsoft would want a real event write.
+- [ ] **The `4K` / `CC` / `AD` marks are still the lesson hero's**, and none of
+      the three is true of a live room. Untouched here — same open item the
+      card carried before.
+
 ## Landing: two ranked recordings under the shelf 2026-09-02 — closed
 
 - [x] **A two-card grid below the catch-up shelf.** `getLiveLandingRecordings`

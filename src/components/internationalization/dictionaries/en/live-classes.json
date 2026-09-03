@@ -160,7 +160,30 @@
     "dismiss": "Dismiss",
     "close": "Close",
     "penColor": "Pen colour",
-    "penSize": "Pen size"
+    "penSize": "Pen size",
+    "card": {
+      "joining": "Joining…",
+      "more": "MORE",
+      "recorded": "Recorded",
+      "minutes": "min",
+      "resourceOne": "resource",
+      "resourceMany": "resources",
+      "brandName": "balqalam",
+      "free": "Free",
+      "remaining": "{n}m left",
+      "remainingHours": "{h}h {m}m left",
+      "back": "Back",
+      "taughtBy": "Taught by {name}.",
+      "add": "ADD",
+      "addToCalendar": "Add to calendar",
+      "share": "Share",
+      "linkCopied": "Link copied"
+    },
+    "shelf": {
+      "seeAll": "All classes",
+      "schoolWide": "More classes",
+      "recording": "Recording"
+    }
   },
   "errors": {
     "notAuthenticated": "You need to sign in.",

@@ -937,6 +937,10 @@ export async function getLiveLandingRecordings(
     take: opts.candidates ?? 20,
     include: {
       ...landingSessionInclude,
+      // The probe. With no attendee to check — a reader the page could not
+      // resolve a user id for — `id: ""` matches nothing on purpose, so every
+      // row comes back with an empty array and the ranking below degrades to
+      // plain recency. It is a deliberate no-op, not a stray filter.
       participants: attendees.length
         ? {
             where: { userId: { in: attendees }, joinedAt: { not: null } },
@@ -947,14 +951,26 @@ export async function getLiveLandingRecordings(
     },
   })
 
-  // Missed first, then newest — `rows` already arrives newest-first, and a
-  // stable sort on one boolean key preserves that inside each group.
-  return rows
-    .sort(
-      (a, b) =>
-        Number(a.participants.length > 0) - Number(b.participants.length > 0)
-    )
-    .slice(0, opts.take ?? 2)
+  return rankRecordings(rows).slice(0, opts.take ?? 2)
+}
+
+/**
+ * The ranking itself, kept pure so it can be pinned by a test.
+ *
+ * Missed first, then newest. The input arrives newest-first from the database
+ * and `Array.prototype.sort` is stable, so ordering on the one boolean key
+ * preserves recency INSIDE each group without a second comparator. Extracted
+ * from the query because this is the behaviour the section exists for: a
+ * refactor that quietly reduced it to "the two most recent" would look right
+ * on any demo where the missed classes happen to also be the recent ones.
+ */
+export function rankRecordings<T extends { participants: unknown[] }>(
+  rows: T[]
+): T[] {
+  return [...rows].sort(
+    (a, b) =>
+      Number(a.participants.length > 0) - Number(b.participants.length > 0)
+  )
 }
 
 /**
@@ -1059,4 +1075,81 @@ export async function getLiveSessionsForLesson(
     scheduledEnd: r.scheduledEnd,
     sectionName: r.section?.name ?? null,
   }))
+}
+
+/**
+ * The one session behind the room's title card.
+ *
+ * Deliberately `landingSessionInclude` rather than a third select: the card in
+ * front of the room and the cards on the landing page show the same facts
+ * about the same row — subject artwork, the grade off the section, the
+ * teacher, the anchored chapter and lesson — and a select written twice is a
+ * select that disagrees with itself by next month.
+ *
+ * NOT a permission gate. The caller has already proved this viewer may see
+ * this session (the room page runs `getLiveClass`, which is enrollment-gated);
+ * this is the read that follows, scoped by the tenant it was authorized in.
+ */
+export async function findRoomCardSession(schoolId: string, id: string) {
+  return db.conference.findFirst({
+    where: { id, schoolId, deletedAt: null },
+    include: landingSessionInclude,
+  })
+}
+
+/**
+ * The rest of the class's own series — the shelf that runs under the room's
+ * title card, the reference app's "Season 2".
+ *
+ * "Its series" is the SECTION's other sessions: a class is one meeting of a
+ * group that meets many times, and the group is the only axis that is
+ * populated for every session in the product. The obvious alternative —
+ * sibling lessons of the anchored catalog lesson — exists only when a teacher
+ * anchored one through the wizard, which `landingSessionInclude` already
+ * records as the uncommon case, so a shelf built on it would be empty on most
+ * classes and the page would be one screen again.
+ *
+ * A school-wide session (an assembly) has no section, so it falls back to the
+ * school's other school-wide sessions rather than pulling in one arbitrary
+ * section's timetable.
+ *
+ * Ordered as a season reads: the few that already happened, then the ones
+ * still to come. Two queries rather than one window because the interesting
+ * slice is around NOW, and a single `orderBy` over the whole table would
+ * either start at the beginning of the year or need an offset nobody can
+ * compute.
+ *
+ * NOT a permission gate — same as `findRoomCardSession`. The caller has proved
+ * the viewer may see THIS session; every row here belongs to the same section
+ * (or is school-wide), which is the scope that admitted them.
+ */
+export async function findRoomShelfSessions(
+  schoolId: string,
+  opts: { sessionId: string; sectionId: string | null; now: Date }
+) {
+  const base: Prisma.ConferenceWhereInput = {
+    schoolId,
+    deletedAt: null,
+    id: { not: opts.sessionId },
+    ...(opts.sectionId
+      ? { sectionId: opts.sectionId }
+      : { visibility: "school" }),
+  }
+
+  const [past, upcoming] = await Promise.all([
+    db.conference.findMany({
+      where: { ...base, scheduledStart: { lt: opts.now } },
+      orderBy: { scheduledStart: "desc" },
+      take: 4,
+      include: landingSessionInclude,
+    }),
+    db.conference.findMany({
+      where: { ...base, scheduledStart: { gte: opts.now } },
+      orderBy: { scheduledStart: "asc" },
+      take: 8,
+      include: landingSessionInclude,
+    }),
+  ])
+
+  return [...past.reverse(), ...upcoming]
 }

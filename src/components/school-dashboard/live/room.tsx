@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   LayoutContextProvider,
@@ -24,19 +24,39 @@ import type {
   RoomJoinTicket,
 } from "@/components/school-dashboard/live/types"
 
+import { joinLiveClass } from "./actions/tokens"
 import type { RoomLabels } from "./room/labels"
 import { RoomShell } from "./room/room-shell"
 import type { SlideOption } from "./room/slide-options"
+import {
+  RoomTitleCard,
+  type RoomTitleCardData,
+  type RoomTitleCardLabels,
+} from "./room/title-card"
 
 interface Props {
-  initialTicket: RoomJoinTicket
   sessionId: string
   title: string
   locale: string
+  /** Everything the pre-join card prints, resolved on the server. */
+  card: RoomTitleCardData
+  /** The shelf under the card — the section's other classes, rendered on the
+   *  SERVER and handed over as markup. A node rather than data because the
+   *  row needs the translation cache and the school's timezone, and this
+   *  component has neither; passing it through keeps the shelf out of the
+   *  client bundle entirely. Rendered only before the join, so it disappears
+   *  the moment the room takes the screen. */
+  shelf?: React.ReactNode
   labels: {
     error: string
+    /** Code → translated sentence, for every refusal Join can produce.
+     *  A MAP rather than a resolver function: this crosses the server/client
+     *  boundary, and a function is not serializable. Keyed by the codes in
+     *  `JOIN_ERROR_CODES`, with `""` holding the fallback. */
+    joinErrors: Record<string, string>
     room: RoomLabels
     participants: ParticipantsPanelLabels
+    card: RoomTitleCardLabels
   }
   slides: SlideOption[]
 }
@@ -110,23 +130,55 @@ type Ended =
  * inside the call lives in `room/room-shell.tsx`.
  */
 export function RoomClient({
-  initialTicket,
   sessionId,
   title,
   locale,
+  card,
+  shelf,
   labels,
   slides,
 }: Props) {
   const router = useRouter()
-  const [ticket, setTicket] = useState(initialTicket)
+  // No ticket until the viewer asks for one. Minting it is not a read: as
+  // HOST it opens the SFU room, flips the session to `live`, stamps
+  // `actualStart` and writes the participant row that presence is later read
+  // from. Doing that on page load meant a teacher who opened the tab to look
+  // at the class had already started it and marked themselves present.
+  const [ticket, setTicket] = useState<RoomJoinTicket | null>(null)
+  const [joining, setJoining] = useState(false)
+  const [joinError, setJoinError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [ended, setEnded] = useState<Ended | null>(null)
-  const options = useMemo(() => roomOptionsFor(ticket.role), [ticket.role])
-  const isHost = ticket.role === "HOST" || ticket.role === "CO_HOST"
+  const options = useMemo(
+    () => roomOptionsFor(ticket?.role ?? "PARTICIPANT"),
+    [ticket?.role]
+  )
+  const isHost = ticket?.role === "HOST" || ticket?.role === "CO_HOST"
+
+  const join = useCallback(async () => {
+    setJoining(true)
+    setJoinError(null)
+    try {
+      const result = await joinLiveClass(sessionId)
+      if ("success" in result && result.success) {
+        setTicket(result.data)
+        return
+      }
+      const code = "error" in result ? result.error : undefined
+      setJoinError(
+        (code ? labels.joinErrors[code] : undefined) ?? labels.joinErrors[""]
+      )
+    } catch {
+      setJoinError(labels.joinErrors[""])
+    } finally {
+      setJoining(false)
+    }
+  }, [sessionId, labels])
 
   // Refresh the token ~60s before expiry; retry transient failures in place.
+  // Dormant until there is a ticket to refresh — nothing expires on the card.
   useEffect(() => {
-    if (error) return
+    if (error || !ticket) return
     let cancelled = false
     let timer: ReturnType<typeof setTimeout>
     let retries = 0
@@ -170,7 +222,7 @@ export function RoomClient({
       cancelled = true
       clearTimeout(timer)
     }
-  }, [ticket.expiresAt, sessionId, labels.error, error])
+  }, [ticket?.expiresAt, sessionId, labels.error, error])
 
   const detailHref = `/${locale}/live/${sessionId}`
 
@@ -215,6 +267,25 @@ export function RoomClient({
           </button>
         </div>
       </div>
+    )
+  }
+
+  // Before the ticket: the class's title card, and the page that carries on
+  // under it. After it: the room, which takes the whole screen.
+  if (!ticket) {
+    return (
+      <>
+        <RoomTitleCard
+          data={card}
+          labels={labels.card}
+          sessionId={sessionId}
+          detailHref={detailHref}
+          pending={joining}
+          error={joinError}
+          onJoin={() => void join()}
+        />
+        {shelf}
+      </>
     )
   }
 
