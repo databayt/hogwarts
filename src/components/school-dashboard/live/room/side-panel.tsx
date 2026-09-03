@@ -6,8 +6,10 @@ import { useEffect, useRef, useState } from "react"
 import { useChat, useParticipants } from "@livekit/components-react"
 import { Check, Hand, Send, X } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { glassPill } from "@/components/lumos/shared/video-player/glass"
 import type { RoomTools } from "@/components/school-dashboard/live/types"
 
 import type { Poll } from "./class-channel"
@@ -49,7 +51,9 @@ export function SidePanel(props: SidePanelProps) {
     })
 
   return (
-    <aside className="flex h-full w-80 max-w-full flex-col border-s border-white/10 bg-neutral-950 text-white">
+    // Glass rather than a solid slab, so the class stays faintly visible
+    // behind the panel on a phone, where it covers the whole stage.
+    <aside className="flex h-full w-80 max-w-full flex-col border-s border-white/10 bg-black/80 text-white backdrop-blur-[40px]">
       <div className="flex items-center gap-1 border-b border-white/10 px-2 py-1.5">
         {tabs.map((t) => (
           <button
@@ -57,12 +61,13 @@ export function SidePanel(props: SidePanelProps) {
             type="button"
             onClick={() => onTab(t.id)}
             aria-pressed={tab === t.id}
-            className={
-              "relative rounded-md px-2.5 py-1 text-sm " +
-              (tab === t.id
+            className={cn(
+              glassPill,
+              "relative px-2.5 py-1 text-sm",
+              tab === t.id
                 ? "bg-white/15 font-medium"
-                : "text-white/70 hover:bg-white/10")
-            }
+                : "text-white/70 hover:bg-white/10"
+            )}
           >
             {t.label}
             {t.badge ? (

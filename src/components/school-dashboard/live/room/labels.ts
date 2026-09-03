@@ -82,6 +82,15 @@ export const DEFAULT_ROOM_LABELS = {
   close: "Close",
   penColor: "Pen colour",
   penSize: "Pen size",
+  live: "Live",
+  discussion: "Discussion",
+  fullscreen: "Full screen",
+  exitFullscreen: "Exit full screen",
+  fitScreen: "Fit to screen",
+  fillScreen: "Fill the screen",
+  classProgress: "Class progress",
+  elapsed: "Elapsed",
+  remaining: "Remaining",
 } as const
 
 export type RoomLabelKey = keyof typeof DEFAULT_ROOM_LABELS

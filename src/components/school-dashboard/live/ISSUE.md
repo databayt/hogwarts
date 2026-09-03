@@ -4,6 +4,46 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Room: the in-call chrome takes the player's phone layout 2026-09-03 — closed
+
+- [x] **Apple's shape, the class's semantics** (Figma 605-7, Abdout's pick over
+      "bottom card only" and "literal glyphs"). Top-start pill `✕ · people ·
+fit`, top-end pill the connection, one bottom glass card: read-only class
+      progress + `elapsed / −left` clock + a row of five with the MICROPHONE in
+      the centre (discussion · camera · mic · hand|share · ⋯).
+- [x] **One panel button** replaces chat / questions / poll / hands — they are
+      four tabs of one `SidePanel` — and carries the count. The row fits a
+      390px phone in ONE line; the two clusters it replaces wrapped to two.
+- [x] **Auto-hide** after 3s (`CONTROLS_HIDE_DELAY`, shared with the lesson
+      player), a stage tap toggles, any open menu / the panel / keyboard focus
+      pins it. The stage overlays edge to edge — the `barHeight` reserve is
+      gone, so nothing reflows when the chrome comes and goes.
+- [x] **Menus** close on a document listener scoped to `[data-menu-root]`: a
+      `fixed inset-0` catcher inside a `backdrop-filter` glass is sized to the
+      glass, not the screen.
+- [x] tsc 0 · eslint 0 on the touched files (two `set-state-in-effect` errors
+      fixed by DERIVING the pinned visibility instead of setting it).
+- [x] **Hover-reveal gated to MOUSE pointers.** A thumb jitters before it taps:
+      a touch `pointermove` revealed the chrome and the tap then had nothing
+      to do but hide it — a flash, then nothing, on every phone. Caught in
+      review; verified by scripted events in the live room: fade after 3s ✓,
+      touch move keeps it hidden ✓, tap reveals ✓, second tap hides ✓, mouse
+      move reveals ✓, `⋯` opens and pins ✓, a stage press closes it ✓.
+- [x] vitest: `dictionary-loader-sync` + live `error-map` — 21/21.
+- [ ] **Frame 605-80 not reconciled** — Figma's Starter plan caps MCP reads at
+      20 per MONTH and they ran out after 605-7. Paste it, then map its state
+      (landscape? controls hidden?).
+- [x] STUDENT view verified at 390x844 /ar in the live room — a11y tree:
+      ✕ · fullscreen / connection / progressbar · clock · discussion · camera ·
+      mic · hand · ⋯; pinned layers at opacity 1; the card 366×122 at y=711
+      (the frame's is 358×~100 at y≈708). Auto-hide confirmed: idle captures
+      show the bare stage, focus brings it back.
+- [ ] Verify the HOST row (share in slot 4, the people glyph + its list) in a
+      two-party call.
+- [ ] Restart `next dev` before judging the labels: a warm server serves the
+      dictionary JSON it booted with, so the 9 new `room.*` keys read as
+      English defaults until then (they are in both files).
+
 ## Room: theme-aware, and the hero a touch taller 2026-09-03 — closed
 
 - [x] **The page below the hero follows the theme.** The four shelves were

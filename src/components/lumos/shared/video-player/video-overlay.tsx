@@ -7,20 +7,11 @@ import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
+import { glassButton, glassSurface } from "./glass"
 import type { VideoPlayerLabels } from "./types"
 
-const glassStyle = {
-  background: "rgba(20, 20, 20, 0.4)",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
-}
-
-const glassClasses = cn(
-  "cursor-pointer rounded-full",
-  "backdrop-blur-[40px]",
-  "transition-all duration-150",
-  "hover:bg-[rgba(40,40,40,0.6)] active:opacity-60",
-  "focus:outline-none"
-)
+const glassStyle = glassSurface
+const glassClasses = glassButton
 
 function PlayIcon({ className }: { className?: string }) {
   return (

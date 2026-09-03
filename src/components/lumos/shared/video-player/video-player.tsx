@@ -12,6 +12,7 @@ import {
   PLAYBACK_SPEEDS,
   UP_NEXT_TRIGGER_BEFORE_END,
 } from "./constants"
+import { glassSurface } from "./glass"
 import {
   useAutoHide,
   useMediaSession,
@@ -176,10 +177,7 @@ function ExitFullscreenIcon({ className }: { className?: string }) {
   )
 }
 
-const topGlassStyle = {
-  background: "rgba(20, 20, 20, 0.4)",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
-}
+const topGlassStyle = glassSurface
 
 /**
  * A source served through our own authorizing route rather than a public URL.

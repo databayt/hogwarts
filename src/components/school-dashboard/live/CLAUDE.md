@@ -700,6 +700,298 @@ Screenshots cannot be prevented on the web; the watermark makes them
 attributable, PrintScreen blanks the frame and clears the clipboard, and a
 hidden tab pauses playback.
 
+## The room opens on a title card (2026-09-03)
+
+`room/title-card.tsx` + `lumos/shared/title-card/`. A class is now a CARD
+first — subject artwork edge to edge, a grade badge, the subject as the
+heading, the teacher under it, section · chapter · lesson, the time, and one
+white **Join** pill — and only becomes a call when that pill is pressed.
+
+**The ticket is minted on Join, never on page load.** This is the load-bearing
+part, not the picture. `joinLiveClass` as HOST is not a read: it opens the SFU
+room, flips the session to `live`, stamps `actualStart` and writes the
+`ConferenceParticipant` row that presence — and therefore the catch-up shelf's
+"did you miss this" filter — is later read from. The page used to call it
+server-side, so a teacher who opened the tab to glance at a class had already
+started it and marked themselves present. Putting a card in front of that
+without moving the call would make the card a lie.
+
+What stays on the server is the ELIGIBILITY gate: the page still runs
+`getLiveClass`, which is enrollment-gated, and renders the plain refusal when
+it says no. Offering someone a Join button that can only ever refuse is worse
+than refusing up front. A refusal from the JOIN itself (a student on a
+`scheduled` class, the concurrent cap) renders UNDER the pill with the card
+still standing — the reader needs to know why while still looking at the class.
+
+Consequences worth keeping:
+
+- The token-refresh heartbeat is gated on `ticket != null`. Nothing expires
+  while you sit on the card, because nothing has been issued.
+- `JOIN_ERROR_CODES` lives in `room/join-errors.ts`, a PLAIN module. It was in
+  `room.tsx` first, which is `"use client"` — a Server Component importing a
+  value from a client module gets a client-reference proxy, and the page threw
+  "JOIN_ERROR_CODES is not iterable" at request time with nothing said at build
+  time. The page turns those codes into a `Record<string, string>` because a
+  resolver FUNCTION cannot cross the boundary either.
+- The card's data comes from `findRoomCardSession`, which reuses
+  `landingSessionInclude` rather than adding a third select — same facts about
+  the same row as the landing cards, so they cannot drift apart.
+- Content follows the landing card's recorded rules: heading is the SUBJECT
+  alone (`Conference.title` is "subject · section" and would repeat the section
+  below it), the grade comes off `Section.grade` and never out of
+  `Section.name`, and a row with nothing to say is dropped rather than rendered
+  empty. Chapter and lesson are absent on most sessions by design.
+- Times are formatted on the SERVER in the school's zone; catalog and roster
+  names go through `getLabels` / `getName` in one batched call each.
+- The play glyph is NOT mirrored under RTL — the reference's own Arabic hero
+  points it the same way, because play reads as forward in TIME.
+
+**The mark row is the lesson hero's, verbatim and on purpose (2026-09-03).**
+`4K` filled, then `Free` · `CC` · `AD` outlined, after the time and duration —
+the same four boxes the lesson prints about its video. Three of them are not
+yet true of a live room: the host publishes 720p, there are no captions and no
+audio description. They are here as the SHAPE, landed first at Abdout's
+direction, with the class's own marks to follow. When you replace them, the
+honest sources are `School.conferenceTool*` for the interaction tools and
+`Conference.recordingEnabled` for recording; the school select in the room page
+is where those would join the card's data.
+
+**The Join pill has two forms, like the hero's Play pill.** A class that has
+not started gets the plain one; a class already running gets the resume pill —
+`px-5`, a progress track, the remaining figure, and NO word, exactly as the
+hero drops "Play" once it has progress to show.
+
+`formatRemaining` mirrors the hero's helper minute for minute: `1h 5m left`
+at an hour or more, `30m left` below it, and `0m left` at zero. The zero case
+is the point. It printed "ending now" for a day, which is a different KIND of
+label from the figure beside every other value, so the chip changed shape in
+the last minute of a class — the reference never does that, and a number
+running down to zero is what makes the chip readable as a countdown. Ours is
+translatable, unlike the reference's, which hardcodes its English and prints
+"10m left" on an Arabic hero. `useClassProgress`
+ticks it every 30s. The landing cards deliberately resolve their phase on the
+SERVER and accept going stale, because a clock would cost that block its first
+hydration boundary; this card is already a client component (it has a Join
+button), so the tick is free here and a bar frozen at render time would be
+worse than none. Elapsed and remaining are durations between two absolute
+instants, so a skewed device clock shifts both equally and changes nothing —
+which is why `startsAtMs` / `endsAtMs` cross as NUMBERS while the printed start
+time stays a server-formatted wall-clock label in the school's zone. `now` is
+seeded in an effect, never during render, or the markup would not match what
+the server sent.
+
+**The button row is the hero's row, not a variation of it.** The pill sits
+DIRECTLY in the frame's `mt-4 flex items-center gap-3`, with the round glass
+button beside it — a flex column wrapped around the pill (which is where the
+join refusal lived first) changes how the pill sizes and the row stops matching.
+That is why `TitleCard` grew a `note` slot: anything under the buttons gets its
+own line beneath the row rather than restructuring it.
+
+The round button is the hero's watchlist toggle's slot. A class has no
+watchlist, so it carries the nearest real second action instead: a link to a
+recording of THIS class, shown only when `landingSessionInclude`'s probe finds
+a `ready` one (never `pending` / `processing` / `expired` — those have no S3
+object) AND the viewer passes `view_recordings`, which ACCOUNTANT does not
+despite reading every session. No recording, no button.
+
+**The phone values come off the Figma frame with a pixel ruler, not by eye
+(2026-09-03).** `Hogwarts` → node `574:30`. Measured, and worth keeping:
+
+| what             | value                              |
+| ---------------- | ---------------------------------- |
+| side padding     | 16px                               |
+| button           | 42px tall, 8px radius, `#F2F2F7`   |
+| button gaps      | 16px above and below               |
+| marks            | 13px box, 11px type, 6px apart     |
+| marks + meta ink | `#8D8D93` / `#8E8E93` (systemGray) |
+
+Three of those had been eyeballed wrong. The button was a PILL — the reference
+is a rounded rectangle, and at 42px tall that is not a subtle difference. The
+marks and the meta line were WHITE — the reference sets both in systemGray and
+spends white on the title, the description and the buttons; a row of white
+boxes under white copy flattens the block into one grey mass. And the filled
+mark (`4K`) is a GREY fill with black type, not a white one.
+
+The literal hexes are deliberate. This surface is pinned dark, so a
+theme-aware token would invert the button in light mode — exactly backwards
+over artwork. Same reasoning the marketing banner's record gives.
+
+The meta line also absorbed the time and the duration. The reference puts
+genre, date and runtime in ONE dot-separated sentence above the button and
+leaves the mark row holding only boxes; ours had the clock sitting in with the
+marks. And the mark row is start-aligned while the title above it is centred —
+that mix is the reference's, not an oversight.
+
+**The card is a SECTION of a scrolling page, not a screen (2026-09-03).**
+The frame's first block is 646px tall on a 390px frame and the page carries on
+past it into more blocks. So the poster is `aspect-[4/5]` — 390x487.5, the
+frame exactly — the stack flows after it, and the `(live-room)` layout is
+`min-h-dvh` rather than `h-dvh overflow-hidden`. The in-call view sets its own
+`h-dvh`, which is what still pins the ROOM to the viewport. More sections are
+expected below the card; the ground under it is deliberate, not a gap.
+
+Locking the card to the viewport is what put the title 269px below where the
+frame puts it, and it is the single biggest thing that was wrong.
+
+**The stack is TWO text rows, a button, a paragraph, then marks.** The frame's
+order, and the reason the grade badge and the quill byline came off the room's
+card: it has a title and ONE dot-separated info line above its button, not
+four rows. Section, start time and duration go in that line — three items, as
+the frame has three, because six wrapped it onto two lines. `Section.name` is
+already "Grade 10 - A", so the grade would repeat it. The teacher, the chapter
+and the lesson moved into the paragraph, which is where the frame puts its
+narrator too.
+
+**The identity is a fixed 80px BAND, bottom-anchored** (`-mt-[108px]` on
+`h-20`, `justify-end`). The frame runs its title and info line from y=380 to
+459 under a poster ending at 487.5. A constant pull-up on the block's TOP was
+right only for the rows it happened to have that day and moved 90px the moment
+the badge and byline came off; anchoring the band's FOOT is height-independent.
+Taller content overflows upward into the fade, where there is room for it.
+
+Measured after: poster 488, info bottom 460, button 476, paragraph 534 —
+every one within a pixel of the frame.
+
+**On a phone the card is the reference app's PHONE page (2026-09-03).** Not
+the wide card scaled down — a different arrangement, in the same DOM, switched
+at `sm`. Title, byline and meta CENTRE over the artwork; below them a solid
+black shelf carries a full-width button with the mark row under it, and the
+order of those two flips back above `sm`. The wide layout is untouched.
+
+It also grew the reference's top bar: `‹ Back` on the inline-start side and
+the secondary action on the end. Two consequences worth knowing. Back is a
+`Link` to the class page, never `router.back()` — a student who arrived from a
+notification has no history to go back to, and the room had no way out but the
+browser button. And the recordings link MOVED there from beside the pill, at
+every width, which is what leaves the button free to run the phone's full
+width; the wide layout changed with it.
+
+The chevron carries `rtl:-scale-x-100` while the play triangle does not. That
+is not an inconsistency: a chevron points through the READING order and must
+mirror, a play glyph points through TIME and must not.
+
+**The frame is shared, not copied.** `lumos/shared/title-card/` holds the
+Apple-TV frame (artwork · bottom-anchored fade · badge / title / byline / meta
+/ chips / pill) plus the class strings for each part; the lumos lesson hero and
+this card both draw it. The hero was inline in
+`lumos/dashboard/lesson/content.tsx` and was lifted out verbatim — verified by
+pixel-diffing the lesson page before and after. Add geometry to the shared
+frame, never to a caller; this block's own records already show what happens
+otherwise (the landing strip and the past shelf drifted within a day).
+
+## The room's chrome is the lumos player's glass (2026-09-03)
+
+`lumos/shared/video-player/glass.ts` is the single source for the dark
+translucent surface (`rgba(20,20,20,0.4)` + `backdrop-blur-[40px]`), the pill,
+the menu and the bottom scrim. The player and the room import it; the two
+copies that used to live in `video-overlay.tsx` and `video-player.tsx` are
+gone.
+
+The room is now one full-bleed black stage with everything floating on it —
+title and quality on a start-side pill, moderation and the attendance note on
+the end side, status as centred notices, and the controls over a bottom
+gradient. The header and bar used to be flex rows that ate ~110px of a phone's
+height before a single face was drawn.
+
+Two things to preserve:
+
+- **The control bar is TWO clusters, and the coarseness is deliberate.** What
+  you do with yourself and the stage, then what you do with the class. A
+  cluster cannot split, so four finer pills wrap to a THIRD row at 390px.
+- **The stage's bottom reserve is MEASURED, not a constant.** A `ResizeObserver`
+  on the controls feeds `paddingBottom`. The bar is one row on a laptop, two on
+  a phone, and two on a laptop the moment the side panel narrows the stage — so
+  any hard-coded reserve is wrong on some real screen, and being wrong means
+  LiveKit draws its bottom row of faces underneath the controls.
+
+The `(live-room)` layout now cancels the root `layout-container` gutter
+(`margin-inline: calc(-1 * var(--container-px))`, the same escape the thmanyah
+clone uses). That 32px of page ground was easy to miss on a black room; under
+the card's artwork it read as a white frame around the picture.
+
+Do NOT restyle LiveKit's own tiles with these tokens — the glass is for our
+chrome, the tiles are the SDK's.
+
+## The in-call chrome is the player's phone layout (2026-09-03)
+
+The room after Join wears the lesson player's PHONE chrome — the iOS video
+player frame in the Hogwarts Figma (node 605-7): a glass pill at the top
+start, one at the top end, and one glass card along the bottom holding the
+scrubber, the clock and a row of five. Nothing else sits on the picture.
+
+**The shape is Apple's; the semantics are the class's.** The frame's five are
+AirPlay · −15 · pause · +15 · captions, and none of those means anything
+live, so the row keeps the SHAPE — five bare glyphs, the middle one larger —
+and takes the class's own actions:
+
+    discussion · camera · MICROPHONE · hand (host: share) · more
+
+Abdout chose this over "Apple bottom card only" (today's pills kept) and
+"literal Apple glyphs" (class controls under one `⋯`), and chose the mic for
+the centre over hand and camera — 2026-09-03.
+
+- **Mic is the centre**: the control a class reaches for most, the way pause
+  is in a film. Red when muted, as before.
+- **One panel button.** Chat, questions, poll and raised hands are four TABS
+  of one `SidePanel`, so one glyph opens it and carries the count (unanswered
+  questions, plus hands for the host; an open poll with nothing pending is a
+  dot). That collapse is what lets the row fit a 390px phone in ONE line —
+  the two clusters it replaces wrapped to two and cost the stage ~110px.
+- **`⋯` holds the rest**: whiteboard and slides (host), screen share for a
+  student the school lets share, the device selects, and the attendance note
+  that used to be a `lg:`-only pill.
+- **Top start (the reading edge — the RIGHT under RTL)**: `✕` leaves (the
+  frame's close; `room.disconnect()` on the room context, NOT the SDK's
+  `DisconnectButton`, which ships its own styles) · people (host-only — the
+  `ParticipantsPanel`'s new `variant="glyph"`, its list floating UNDER the
+  pill rather than stretching it) · fit. **Top end**: the connection — the
+  signal glyph tinted by the last sample (`QUALITY_TONE`), the delivery
+  tiers under it. That slot is volume in the frame; a phone has a rocker.
+- **The scrubber is the class clock.** `room/class-progress.tsx`: the same
+  5px track and 18×14 thumb as `VideoProgressBar` (its `PROGRESS_BAR`
+  constants imported, not restated), read-only — `role="progressbar"`, not a
+  slider, because a class has no timeline to drag — driven by
+  `startsAtMs/endsAtMs` threaded from the card through `RoomClient` into
+  `RoomShell`'s `clock`. Elapsed on the START side, `−left` on the END,
+  Latin figures kept `dir="ltr"`, a red `مباشر` between them. It ticks once
+  a second in its OWN state: the LiveKit tree above must not re-render with
+  the second hand. An open room (no clock) renders no row at all.
+- **The title pill is gone** from the in-call chrome — the frame shows none,
+  and the reader just chose the class. The hands count moved onto the panel
+  badge. If a school misses the name, it is one line above the scrubber, the
+  way the lesson player prints `infoTitle`.
+- **Auto-hide, the player's way** — `room/use-auto-hide.ts`: fades 3s after
+  the last touch (`CONTROLS_HIDE_DELAY`, shared), a tap on the stage toggles,
+  a MOUSE `pointermove` re-arms (a touch move is ignored — a thumb jitters
+  before it taps, and the tap would only hide what the jitter revealed), and
+  any open menu / the side panel / keyboard focus PINS it. The pin is DERIVED (`visible: pinned || visible`), never set in an
+  effect — `react-hooks/set-state-in-effect` is an ERROR in this repo, and
+  the first cut tripped it twice.
+- **Overlay, not reserve.** The stage runs edge to edge under the chrome; the
+  `barHeight` ResizeObserver reserve is gone. On a phone the teacher's 16:9
+  picture sits in a letterbox and the card lands on the black band under it;
+  a grid's bottom row can be under the card for the seconds it shows, which
+  is the frame's own trade. Nothing reflows when the chrome comes and goes.
+- **Menus close via a document `pointerdown` listener scoped to
+  `[data-menu-root]`**, not a `fixed inset-0` catcher. The glass has a
+  `backdrop-filter`, which makes it the containing block of any `fixed`
+  descendant — so a catcher "the size of the screen" was the size of the
+  pill, and clicks beside it closed nothing.
+- **Fit and fullscreen are one glyph.** Where `document.fullscreenEnabled`
+  the room itself goes fullscreen; where it cannot (iPhone Safari reserves
+  fullscreen for `<video>`) the same glyph toggles every tile's
+  `.lk-participant-media-video` between cover and contain — the frame's
+  aspect toggle, meaning the same thing on every device it can.
+- Labels went into `DEFAULT_ROOM_LABELS` AND both `live-classes.json` (the
+  dictionary sync test): `live · discussion · fullscreen · exitFullscreen ·
+fitScreen · fillScreen · classProgress · elapsed · remaining`.
+- `glassPanel` (the rounded-2xl card) joined `glass.ts` beside the pill and
+  the menu, for the lesson player to adopt when its bar takes the frame.
+
+**Still open**: the second frame (605-80) was not fetched — Figma's Starter
+plan caps MCP reads at 20 per MONTH, and they ran out on the first frame.
+Its state is to be reconciled once Abdout pastes it.
+
 ## Room architecture (2026-08-29)
 
 `room.tsx` owns the join ticket (refresh, eject on a server "no") and how the

@@ -64,8 +64,14 @@ export function LiveRecordingsGrid({
           wide with 320px of artwork each, which made this section the largest
           thing on a page whose subject is the class running right now. At a
           4xl measure they are ~440px: still a clear step up from the shelf's
-          256px cards above, without out-shouting the live one. */}
-      <ul className="grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2">
+          256px cards above, without out-shouting the live one.
+
+          Two across at EVERY width, with no `sm:` step. The pair is the whole
+          statement of the section — one card stacked over another reads as a
+          list that happens to have stopped at two, and the shelf above it is
+          already the page's list. A phone gets two narrow cards instead, which
+          the card is built for: its artwork is a ratio, not a fixed size. */}
+      <ul className="grid max-w-4xl grid-cols-2 gap-4">
         {sessions.map((session) => (
           <li key={session.id}>
             <LandingSessionCard

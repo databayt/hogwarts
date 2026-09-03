@@ -338,6 +338,7 @@ export function RoomClient({
             participantsLabels={labels.participants}
             slides={slides}
             config={ticket.roomConfig}
+            clock={{ startsAtMs: card.startsAtMs, endsAtMs: card.endsAtMs }}
           />
         </LayoutContextProvider>
         <RoomAudioRenderer />

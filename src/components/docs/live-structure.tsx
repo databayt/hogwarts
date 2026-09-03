@@ -259,7 +259,11 @@ export function LiveStructure({ className }: LiveStructureProps) {
           type: "file",
           description: "single-session detail",
         },
-        { name: "room.tsx", type: "file", description: "in-app LiveKit room" },
+        {
+          name: "room.tsx",
+          type: "file",
+          description: "pre-join title card, then the in-app LiveKit room",
+        },
         {
           name: "participants-panel.tsx",
           type: "file",
