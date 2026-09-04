@@ -67,7 +67,11 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
   dir), and the description says "يتناول N وحدات", so `structure.json` chapters must be
   the book's units. A replaced subject whose qbank moved to `_old/` keeps its old
   questions at subject scope, chapter-less (sd-content skips without deleting; the
-  chapter rebuild SetNulls) — re-author before relying on them. Uploading is
+  chapter rebuild SetNulls) — re-author before relying on them. **Seed order is
+  `sd` then `sd-content`, always, and `sd-content` must be re-run after ANY later
+  `sd` run**: every `sd` pass deletes and recreates the SD chapters/lessons, which
+  SetNulls the chapter/lesson scope of every ingested question and empties the
+  lumos lesson practice quiz until `sd-content` restores it. Uploading is
   deploy-gated: replaced slugs keep their CDN keys, so an upload changes what
   production serves immediately. Full ledger: `curriculum/sd/TEXTBOOK_AUDIT.md`.
 - **PUBLISHED is the visibility floor**: every school-facing catalog read filters
