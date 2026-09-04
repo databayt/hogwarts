@@ -992,6 +992,30 @@ fitScreen · fillScreen · classProgress · elapsed · remaining`.
 plan caps MCP reads at 20 per MONTH, and they ran out on the first frame.
 Its state is to be reconciled once Abdout pastes it.
 
+## Checked against the frame in the browser (2026-09-04)
+
+Both frames were finally captured (`~/.claude/playwright-output/figma-{574-31,605-7}.png`)
+and the room was opened at 390px as its host beside 605-7. Three things
+differed and are now rules:
+
+- **The card opens on the scrubber; a timed class prints no title line.**
+  The frame's card holds scrubber · times · the row of five and nothing
+  above them. The `infoTitle` line survives ONLY on an open room (no clock),
+  where the card would otherwise name the class to no one.
+- **Only the centre control carries a disc.** The muted MIC keeps its red
+  disc; the camera is a bare glyph that tints its slash red when off. Two red
+  discs in one row read as two alarms.
+- **A lone camera is the frame's picture, not a grid.** With exactly one
+  camera the stage runs edge to edge: no tile radius, no grid gap, no name
+  badge, no per-tile focus toggle (`stage.tsx`, `data-lone-camera`). Two or
+  more keep LiveKit's grid chrome. **The overrides need Tailwind's `!`
+  (`[&_.lk-participant-tile]:rounded-none!`)**: `@livekit/components-styles`
+  is UNLAYERED, and unlayered CSS beats a `@layer utilities` rule at any
+  specificity — the first cut set the classes and changed nothing.
+- The pills and the card sit 24px in from the sides and 24px above the home
+  indicator, the frame's own insets; the card wears `bg-white/[0.06]` over
+  the glass so it still reads as a card on a black stage.
+
 ## Room architecture (2026-08-29)
 
 `room.tsx` owns the join ticket (refresh, eject on a server "no") and how the

@@ -12,6 +12,8 @@ import {
 } from "@livekit/components-react"
 import { Track } from "livekit-client"
 
+import { cn } from "@/lib/utils"
+
 import type { RoomLabels } from "./labels"
 import { SlidesView } from "./slides"
 import type { ClassChannel } from "./use-class-channel"
@@ -68,10 +70,26 @@ export function Stage({ channel, labels }: StageProps) {
   ) : null
 
   if (!focus) {
+    // One camera is the frame's picture, not a grid: it runs edge to edge
+    // with no tile radius, gap, name badge or per-tile focus toggle (the
+    // reader knows who they are, and the top pill already holds
+    // fit/fullscreen). Two or more keep the grid's own chrome.
+    const lone = cameras.length === 1
     return (
-      <GridLayout tracks={cameras} className="h-full w-full">
-        <ParticipantTile />
-      </GridLayout>
+      <div
+        className={cn(
+          "h-full w-full",
+          lone &&
+            // `!` because LiveKit's stylesheet is unlayered and outranks a
+            // Tailwind utility layer at any specificity.
+            "[&_.lk-focus-toggle-button]:hidden! [&_.lk-grid-layout]:gap-0! [&_.lk-grid-layout]:p-0! [&_.lk-participant-metadata]:hidden! [&_.lk-participant-tile]:rounded-none!"
+        )}
+        data-lone-camera={lone ? "" : undefined}
+      >
+        <GridLayout tracks={cameras} className="h-full w-full">
+          <ParticipantTile />
+        </GridLayout>
+      </div>
     )
   }
 

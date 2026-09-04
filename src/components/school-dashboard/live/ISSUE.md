@@ -72,7 +72,7 @@ was actually wrong, ranked by what it cost a school:
       detail were plain text; the seed never wrote `conferenceDeliveryMode`
       (a fresh online-school seed was dead on read) and its assignment pick
       was not subject-matched.
-- [x] **Design** — both Figma frames captured through the browser
+- [x] **Design** — the room was opened at 390px as its host beside 605-7 and brought to it: the card opens on the scrubber (title only on an open room), the camera is a bare glyph (one red disc, the mic), a lone camera runs edge to edge with no tile chrome, and the pills/card take the frame's 24px insets. Both Figma frames captured through the browser
       (`~/.claude/playwright-output/figma-{574-31,605-7}.png`): 574-31 is the
       show page the pre-join card mirrors, 605-7 the phone player the in-call
       chrome mirrors. The recorded spec in CLAUDE.md matches both; the eight

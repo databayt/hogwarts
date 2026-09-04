@@ -108,7 +108,7 @@ describe("RoomShell fallback title line (lr-01)", () => {
     expect(screen.getByText("Mathematics")).toBeInTheDocument()
   })
 
-  it("still prints the title when the room DOES have a clock", () => {
+  it("prints NO title when the room has a clock — the frame's card opens on the scrubber", () => {
     const now = Date.now()
     render(
       <RoomShell
@@ -116,6 +116,6 @@ describe("RoomShell fallback title line (lr-01)", () => {
         clock={{ startsAtMs: now - 60_000, endsAtMs: now + 60_000 }}
       />
     )
-    expect(screen.getByText("Mathematics")).toBeInTheDocument()
+    expect(screen.queryByText("Mathematics")).not.toBeInTheDocument()
   })
 })

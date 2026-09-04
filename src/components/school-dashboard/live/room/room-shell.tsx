@@ -237,7 +237,8 @@ export function RoomShell({
           <div
             className={cn(
               layer,
-              "top-0 flex items-start justify-between p-3",
+              // The frame sets its pills 24px in from the sides.
+              "top-0 flex items-start justify-between px-6 pt-4",
               hidden && cn(gone, "-translate-y-2")
             )}
             onClick={swallow}
@@ -332,7 +333,9 @@ export function RoomShell({
           <div
             className={cn(
               layer,
-              "bottom-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+              // The frame's card sits 24px in from the sides and 24px above
+              // the home indicator; the safe-area inset wins where larger.
+              "bottom-0 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]",
               hidden && cn(gone, "translate-y-2")
             )}
             onClick={swallow}
@@ -343,17 +346,19 @@ export function RoomShell({
             <div
               className={cn(
                 glassPanel,
-                "mx-auto flex w-full max-w-lg flex-col gap-2.5 p-3.5"
+                // A whisper of white over the glass so the card still reads
+                // as a card on a black stage (a camera off, a dark room).
+                "mx-auto flex w-full max-w-lg flex-col gap-2.5 bg-white/[0.06] p-3.5"
               )}
               style={glassSurface}
             >
               {/* The player's `infoTitle` line, one above the scrubber
-                  (video-player.tsx). The title pill left the in-call chrome
-                  entirely (see CLAUDE.md "in-call chrome is the player's
-                  phone layout") — on an OPEN room `ClassProgress` renders
-                  nothing at all, so without this line the bottom card names
-                  the class to no one. */}
-              {title && (
+                  (video-player.tsx). The frame's card opens on the scrubber
+                  and carries no title, so a timed class prints none — the
+                  reader just chose it. An OPEN room has no clock at all
+                  (`ClassProgress` renders nothing for one), and without this
+                  line its card would name the class to no one. */}
+              {title && clock.startsAtMs == null && (
                 <p className="truncate text-sm font-medium text-white">
                   {title}
                 </p>

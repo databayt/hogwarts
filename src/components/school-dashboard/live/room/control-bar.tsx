@@ -350,7 +350,9 @@ function CameraButton({ labels }: { labels: RoomLabels }) {
   return (
     <button
       type="button"
-      className={cn(glyph, !enabled && "bg-red-600/80 hover:bg-red-500")}
+      // A bare glyph, like every control on the frame but the centre one:
+      // the muted MIC keeps its red disc, the camera only tints its slash.
+      className={cn(glyph, !enabled && "text-red-400")}
       aria-pressed={enabled}
       aria-label={enabled ? labels.camera : labels.cameraOff}
       disabled={pending}
