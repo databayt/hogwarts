@@ -4,6 +4,110 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Production-readiness pass 2026-09-03/04 — closed (code), deploy owed
+
+Traced with a ten-lens adversarial audit (57 findings, every one re-read in
+code; 18 triple-verified before the session limit cut the verifiers). What
+was actually wrong, ranked by what it cost a school:
+
+- [x] **P0 — every live cron 500'd in production from 2026-08-31 19:38Z to
+      09-03** (43 consecutive failed `conference-crons.yml` runs; `fee-due`
+      too). Not code: the prebuilt macOS deploy lacked the `linux-arm64`
+      Prisma engine, and Vercel tags every function `arm64`. Fixed in
+      `binaryTargets`; `deploy-hobby.sh` now refuses a bundle without the
+      engine; the workflow now comments on #402 (1/hour) when a tick fails and
+      no longer lets a slow `*/15` run cancel the queued `*/30` one. **Nothing
+      new was materialized for 5.5 days** (last session row 08-30T22:03Z);
+      prod holds zero stranded rows, so the first healthy run cleans nothing.
+      **Owed: a deploy.**
+- [x] **P0 — on the real join path no class ever notified its roster or
+      started recording.** `notifyClassStarted` and the auto-egress lived only
+      behind the webhook's status-guarded `room_started` write, which the app's
+      own `scheduled → live` write (Join as HOST, Start) had always beaten.
+      `actions/went-live.ts` is now the single writer; whoever wins performs
+      the side effects. This is why #402's "never produced a recording file"
+      was true.
+- [x] **P0 — a hybrid school online only through a GRADE override was never
+      swept** — the cron's candidate filter lacked the arm the 08-30 feature
+      added to `effectivePolicy`. Flipping a section or grade online now also
+      materializes today inline.
+- [x] **P1 — any student could forge host-only room messages** by setting
+      their own `attributes.role` (PARTICIPANT holds `canUpdateOwnMetadata`
+      for hand-raise). Host-ness now comes from ROOM metadata the server
+      publishes on HOST/CO_HOST join (`addRoomHost`), never from a sender's
+      self-reported attribute; late-joining co-hosts are trusted on
+      `RoomMetadataChanged`.
+- [x] **P1 — a HOST could start an EXTERNAL session as a LiveKit room** (the
+      mobile join route reaches join-core directly): a real SFU room under an
+      `ext-…` name no webhook can parse, row stranded `live`. join-core and
+      `startLiveClass` refuse a non-LiveKit provider.
+- [x] **P1 — a CONFIRMED substitute saw the Start button and was refused by
+      it** (`createLiveClassFromTimetable` never resolved the substitution).
+- [x] **P1 — VIRTUAL attendance landed on the UTC day, not the school's day**;
+      a hybrid school's MANUAL PRESENT could be overwritten to ABSENT by the
+      online sync (now never downgraded; soft-deleted rows revive correctly);
+      VIRTUAL rows carried no class name in the student/guardian views.
+- [x] **P1 — "starts in 10 minutes" was hardcoded** regardless of the
+      school's lead time (now the real minutes, five Arabic count forms);
+      email links absolutified to `<subdomain>.databayt.org` for every school
+      (now the live root via `tenantOriginForRoot`); the audience and the
+      list scope ignored `StudentClass` enrolments; the hub ignored
+      per-type expiry.
+- [x] **P1 — the recording → lesson bridge copied across ONE hardcoded bucket**
+      (RUNBOOK's own Aldar setup breaks it); it also copied before checking
+      auto-publish and quota, orphaning objects; the URL used the unguarded
+      CloudFront helper; the learner lesson page never rendered
+      `LessonLiveStrip` (only the staff page did).
+- [x] **P1 — the in-call chrome dropped the class name** on rooms without a
+      clock; the participants list pinned the chrome forever; the pending
+      badge was silent to screen readers; the Join pill lost its name once it
+      showed progress; side-panel targets were under 44px; the mark row was
+      the lesson hero's placeholder (now `HD` · `REC` · the school's tools).
+- [x] **P2 — timetable regeneration orphaned live sessions** (three
+      bulk-delete paths now cancel future `scheduled` rows on the old slots
+      first); the token-refresh and mobile join routes had no rate limit; a
+      CO_HOST could not persist polls/questions; the lesson picker skipped the
+      PUBLISHED/hide/subject filter the room applies (`verifyLessonAnchor`,
+      wired into both list-layer writes); exam/assignment references on the
+      detail were plain text; the seed never wrote `conferenceDeliveryMode`
+      (a fresh online-school seed was dead on read) and its assignment pick
+      was not subject-matched.
+- [x] **Design** — both Figma frames captured through the browser
+      (`~/.claude/playwright-output/figma-{574-31,605-7}.png`): 574-31 is the
+      show page the pre-join card mirrors, 605-7 the phone player the in-call
+      chrome mirrors. The recorded spec in CLAUDE.md matches both; the eight
+      deviations found were the `lr-*` items above.
+
+Owed / decisions surfaced (not changed):
+
+- [ ] **Deploy** (`./scripts/deploy-hobby.sh`) — until then the crons still
+      500 and nothing materializes.
+- [ ] **Vercel Hobby `maxDuration = 300`** on two cron routes is honoured only
+      with Fluid Compute on; check Settings → Functions on the free project.
+- [ ] **Live-minute metering vs the LiveKit tier** (fl-01) — in progress as
+      `actions/usage.ts` + the observability page + `/live/settings`.
+- [ ] **Guardian summary and the ADEK compliance export hard-filter
+      `periodId: null`**, so VIRTUAL rows never count (attn-02) — a scope
+      decision for the attendance block, recorded here so it stops reading as
+      an oversight.
+- [ ] **A HOST-started class nobody joins marks the roster ABSENT** on
+      `room_finished` (attn-04) — the recorded no-show rule covers the cron's
+      cancel path only; decide whether an empty room should sync.
+- [ ] **Any TEACHER of the school is CO_HOST on ANY session**, including
+      section-private ones (join-core) — policy, not a bug; decide.
+- [ ] **A MANUAL PRESENT can still become VIRTUAL LATE** (the guard forbids
+      only the drop to ABSENT) — tighten to "never lower a manual status" if
+      the school wants it.
+- [ ] **`RoomTitleCardLabels.recorded` / `.free`** are now unread — cleanup.
+- [ ] **form-steps.tsx** still labels exams/assignments by bare title though
+      the query now returns `status`; long-past exams are not excluded.
+- [ ] **The SECTION → SCHOOL widening of a published recording** was never
+      recorded as a decision (the code comment claimed it was) — decide.
+- [ ] **Prod schema drift** (read-only diff, 09-04): live-relevant =
+      `live_class_sessions.roomName SET NOT NULL` (safe: 0 NULL rows) and
+      cosmetic FK-name differences; unrelated drift exists elsewhere and must
+      not be applied blind.
+
 ## Room: the in-call chrome takes the player's phone layout 2026-09-03 — closed
 
 - [x] **Apple's shape, the class's semantics** (Figma 605-7, Abdout's pick over
@@ -176,7 +280,7 @@ fit`, top-end pill the connection, one bottom glass card: read-only class
 - [ ] **`+ ADD` downloads a file; it does not add anything.** An `.ics` is the
       honest limit of what a browser can do without a calendar integration.
       A school that connects Google/Microsoft would want a real event write.
-- [ ] **The `4K` / `CC` / `AD` marks are still the lesson hero's**, and none of
+- [x] **The `4K` / `CC` / `AD` marks are still the lesson hero's** — CLOSED 2026-09-04: the row now prints `HD` · `REC` · the room tools the school turned on (`buildMarks` in `room/title-card.tsx`). Original note:, and none of
       the three is true of a live room. Untouched here — same open item the
       card carried before.
 
@@ -378,7 +482,7 @@ conference`. It makes that one student look truant in the attendance
 
 ## Hybrid-school pass 2026-08-29 — closed
 
-- [x] **Demo seed** — `prisma/seeds/live.ts` + `db:seed:single conference` + a phase in `seedMain` after Timetable. Repairs first (isBreak, expertise
+- [x] **Demo seed** — `prisma/seeds/conference.ts` + `db:seed:single conference` + a phase in `seedMain` after Timetable. Repairs first (isBreak, expertise
       top-up, teacher backfill 121 → 815/840), then policy, five days of history
       with presence + VIRTUAL attendance, next-day sessions, substitute host,
       assembly, lesson + exam/assignment/link, recurring links, a holiday.
@@ -666,10 +770,10 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
       `conferenceMaxConcurrent`. Should live under
       `/settings/school` and only be writable by ADMIN/DEV.
 - [x] **Capacity dashboard** in SaaS dashboard — DONE.
-      `/observability/live` (DEVELOPER-only via the saas-dashboard
+      `/observability/conference` (DEVELOPER-only via the saas-dashboard
       layout) shows live rooms + live-by-school, scheduled-today, recordings
       ready + storage, and the TURN/TCP-fallback rate
-      (`saas-dashboard/observability/live/{queries,content}.tsx`). The
+      (`saas-dashboard/observability/conference/{queries,content}.tsx`). The
       fallback rate is now scoped to actually-joined participants (2026-06-13).
       Egress queue depth is SFU-internal → remains "requires SFU".
 - [x] **Kick participant** — DONE. `ParticipantsPanel` (HOST/CO_HOST-only
@@ -878,7 +982,7 @@ Deferred, with reasons:
       the emergency floor — it is the difference between joinable and nothing —
       and the settings copy says so, but a per-section fallback is the obvious
       next step, and an open room has no other source at all.
-- [ ] **`SubstitutionRecord` is not resolved into the materialized host.** A
+- [x] **`SubstitutionRecord` is not resolved into the materialized host.** CLOSED: the materializer arm on 2026-08-29, the interactive Start arm (`createLiveClassFromTimetable`) and `getSlotDetail` on 2026-09-04. Original note: A
       slot whose teacher is absent with a confirmed substitute still
       materializes with the ORIGINAL teacher as HOST, so the substitute cannot
       start the class. Left alone deliberately for now, on the `rotationWeek`

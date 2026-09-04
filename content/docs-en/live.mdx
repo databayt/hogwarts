@@ -541,6 +541,26 @@ and syncs when the connection returns; `/offline` shows what is waiting.
 - **The materialization sweep runs on GitHub Actions**, not Vercel Cron, while the project is on the
   free plan (`.github/workflows/conference-crons.yml`). Without it an online school materializes no
   sessions after the day it saved its settings — nothing to join, and no reminders.
+- **Going live has one writer.** Three things can flip a class from scheduled to live — the
+  teacher's Start, a host pressing Join on the title card, and the SFU's own `room_started`
+  webhook — and whichever lands first now performs the side effects: the "class is live"
+  notification to the roster and the auto-start of the recording. Until 2026-09-04 only the
+  webhook carried them, behind a guard the app's own write had usually already beaten, so on the
+  real join path no class ever notified anyone or recorded. `actions/went-live.ts` is that writer.
+- **An external session cannot be started as a room.** It is its meeting link; Start and Join
+  refuse it instead of opening a LiveKit room under a name no webhook can map back.
+- **Every online source is swept.** The cron's candidate filter names the school default, the
+  per-section override, the per-grade override and the go-online window. Flipping a section or a
+  grade online also materializes today at once, the way the school-wide save does.
+- **Check the cron bridge, it does not check itself.** From 2026-08-31 to 09-03 every scheduled run
+  failed — the prebuilt deploy lacked the linux-arm64 Prisma engine, so the three live crons and
+  `fee-due` returned 500 while every page stayed green. `binaryTargets` now carries both Linux
+  engines and `deploy-hobby.sh` refuses a bundle without the engine its functions need. One line
+  tells you the bridge's health:
+
+  ```bash
+  gh run list --repo databayt/hogwarts --workflow=conference-crons.yml --limit 20
+  ```
 
 ## Demo and the hybrid school
 

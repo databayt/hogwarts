@@ -634,7 +634,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   that does not exist, which then fails at start/join time and reads to a teacher
   as a broken class rather than an unavailable option.
 
-- **The demo seed repairs before it seeds** (`prisma/seeds/live.ts`,
+- **The demo seed repairs before it seeds** (`prisma/seeds/conference.ts`,
   2026-08-29). A slot without a teacher has no HOST and is invisible to the
   materializer, and the demo had 719 of them: `seedTeacherSubjectExpertise` is
   count-guarded, so every `SubjectSelection` added after it — per-grade catalog
@@ -1181,6 +1181,86 @@ Rejoin). Everything inside the call is `room/`:
 - **Webhook writes are status-guarded `updateMany`** scoped by `{ id, schoolId, status }`
   — never a bare `update({ where: { id } })`. A late/retried event must be a no-op,
   not a state resurrection.
+
+- **`scheduled → live` has ONE writer: `actions/went-live.ts`.** Three callers
+  race that transition — the LiveKit `room_started` webhook, a HOST pressing
+  Join on the title card (join-core's auto-start) and the teacher's Start
+  action — and until 2026-09-04 only the webhook carried the side effects
+  (the "class is live" notification and the auto-start of the recording
+  egress) behind ITS status-guarded write. The app creates the SFU room
+  first (`ensureRoom`) and then flips the row, so the webhook's guarded
+  update matched nothing and silently skipped both: on the real join path no
+  class ever notified its roster or started recording, which is why
+  production had never produced a recording file. `transitionToLive()` does
+  the guarded, tenant-scoped `updateMany` and ONLY the caller whose write
+  counted performs the side effects; a losing webhook still records the room
+  SID. Never write `status: "live"` anywhere else, and never put a side
+  effect behind one caller's guard.
+- **join-core and startLiveClass refuse a non-LiveKit session.** An external
+  session IS its meeting URL. The web room page redirects before calling
+  join, but the mobile route reaches `performLiveClassJoin` directly, and
+  without the guard a HOST opened a real SFU room under the `ext-…` name
+  (which `parseRoomName` can never map back) and stranded the row `live`
+  until the end-stale cron.
+- **`materializeOnlineSchools`'s candidate filter must name EVERY source
+  `effectivePolicy` resolves** — school default, section override, GRADE
+  override and the window. The grade arm shipped 2026-08-30 without being
+  added, so a hybrid school online through a grade alone was never a
+  candidate and never swept, and nothing noticed because a materialized day
+  only proves the arms that happened to be on. Adding a fifth source means
+  adding a fifth arm here AND a case in
+  `src/tests/school-dashboard/live/materialize-online-schools.test.ts`.
+  Flipping a section or grade ONLINE also materializes today inline
+  (`materializeTodayAfterResponse` in `actions/settings.ts`), the way the
+  school-wide save does.
+- **Host-ness in the room comes from ROOM metadata, never from a sender's
+  `attributes.role`.** Students hold `canUpdateOwnMetadata` so hand-raise can
+  ride on participant attributes, which means any student can set
+  `attributes.role = "HOST"` from devtools. `join-core` publishes the real
+  HOST/CO_HOST identities into the room's metadata (`addRoomHost`, server API
+  only) and `use-class-channel.ts` derives `fromIsHost` from that set plus the
+  ticket's `hostIdentity`, re-read on `RoomMetadataChanged`. Never gate a
+  data-channel message on the sender's own attributes again.
+- **VIRTUAL attendance is keyed on the SCHOOL's calendar day, and never
+  lowers a manual mark to ABSENT.** `attendance-sync.ts` derives
+  `Attendance.date` from `School.timezone` (the same `"YYYY-MM-DD"` the manual
+  register stores, so the two paths share one row); a hybrid school's student
+  marked PRESENT/LATE/EXCUSED in the room who did not join online keeps that
+  mark, and a soft-deleted manual row is revived rather than blocking itself.
+  Presence may still fill or upgrade. Synced rows carry the slot's legacy
+  `classId` so the student/guardian views can name the class.
+- **The reader scope carries BOTH axes.** `resolveViewerSectionScope` returns
+  `sectionIds` AND the viewer's legacy `StudentClass` `classIds`; a
+  slot-anchored session reaches a not-yet-sectioned student through its
+  slot's `classId` in `buildLiveClassWhere` and the detail check, exactly as
+  `loadSession` resolves the notification audience. Adding a read path that
+  only checks `sectionId` re-hides those students.
+- **Notification lead time is the session's real minutes-to-start**, passed
+  from the cron into `notifyClassStartingSoon(schoolId, sessionId, lead)`;
+  the Arabic body uses the five count forms. `resolveActionUrl` with no
+  request host resolves the tenant on `LIVE_ROOT_DOMAIN` (balqalam.com), not
+  `databayt.org`, and both hub dispatchers honour `NOTIFICATION_EXPIRATION`
+  per type.
+- **The recording → lesson bridge copies ACROSS buckets and gates BEFORE the
+  copy.** `copyObject(sourceBucket, …)` takes `ConferenceRecording.s3Bucket`
+  as the source (RUNBOOK's Aldar setup names a different recording bucket);
+  auto-publish and the quota are checked before any S3 call, so a refusal
+  orphans nothing. The card's `REC` mark and the ticket's consent flag are
+  ANDed with `isRecordingConfigured()`.
+- **Timetable regeneration cancels the live rows it would orphan.** All three
+  bulk-delete paths in `timetable/actions.ts` (template apply, generated
+  apply, import overwrite) cancel future `scheduled` sessions anchored to the
+  old slot ids BEFORE the `deleteMany` SetNulls their anchor; a `live` row is
+  left alone.
+- **A prebuilt deploy needs the linux-arm64 Prisma engine.** `vercel build` on
+  Apple Silicon tags every function `architecture: arm64`; with only the
+  `rhel` (x86-64) engine generated, every function that lands on arm64
+  throws `PrismaClientInitializationError` at its first query — the three
+  live crons and `fee-due` 500'd on every run from 2026-08-31 to 09-03 while
+  tsc, vitest and the build stayed green. `binaryTargets` now carries both
+  Linux engines and `deploy-hobby.sh` refuses a bundle whose architecture has
+  no engine. Check the bridge with
+  `gh run list --workflow=conference-crons.yml --limit 20`.
 
 ## Related Blocks
 

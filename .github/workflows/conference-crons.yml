@@ -20,6 +20,10 @@
 #
 # Delete this file when the Vercel Pro account is restored and vercel.json's
 # cron array goes back.
+#
+# Alerting: a failed step comments on databayt/hogwarts#402, rate-limited to
+# one comment per hour (marker-string search over the issue's recent comments)
+# so a broken night posts one comment, not 96. See the `alert` step.
 name: Conference crons
 
 on:
@@ -37,21 +41,30 @@ on:
         required: false
         default: "all"
 
-# A slow run must never overlap the next tick: the writers are idempotent, but
-# two concurrent sweeps double the DB load on a compute that scales to zero.
+# Two schedules must not cancel each other's PENDING run: GitHub holds at most
+# one running + one queued run per concurrency group, and a third arrival
+# CANCELS the queued one — not a failure(), so a cancelled tick used to vanish
+# silently (no alert, no re-run) whenever a slow */15 run was still going when
+# */30 fired. Keying the group by the triggering schedule lets the three jobs
+# overlap freely (the writers are idempotent and touch mostly different rows)
+# while still serializing back-to-back ticks of the SAME schedule, which is the
+# case that actually doubles DB load on a compute that scales to zero.
 concurrency:
-  group: conference-crons
+  group: conference-crons-${{ github.event.schedule || 'dispatch' }}
   cancel-in-progress: false
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     if: github.repository == 'databayt/hogwarts'
+    permissions:
+      issues: write
     env:
       BASE_URL: https://ed.databayt.org
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - name: Guard — the secret must exist
+        id: guard
         run: |
           if [ -z "$CRON_SECRET" ]; then
             echo "::error::CRON_SECRET repo secret is unset. isAuthorizedCron fails closed in production, so every ping would 401. Set it to the same value as the Vercel project env."
@@ -61,32 +74,85 @@ jobs:
       # GitHub gives no per-schedule step condition, only the cron expression
       # that triggered the run, so each job tests for its own expression. A
       # manual dispatch runs whichever job the `job` input names.
+      #
+      # `--retry 2 --retry-delay 20` covers a cold Neon compute: curl (run with
+      # `-f`) treats a transient HTTP status (408/429/500/502/503/504) as
+      # retryable, so a compute still waking up on the first hit gets two more
+      # tries 20s apart before the step — and the alert below — counts it as a
+      # failure. `--max-time` still bounds each individual attempt, so
+      # `live-class-reminders` (300s, matching its route's maxDuration) can cost
+      # up to ~3×300s wall-clock before failing; acceptable since every writer
+      # here is idempotent and the next tick repeats the same work.
       - name: live-class-reminders
+        id: reminders
         if: |
           github.event.schedule == '*/15 * * * *' ||
           (github.event_name == 'workflow_dispatch' &&
            (inputs.job == 'all' || inputs.job == 'reminders'))
         run: |
-          curl -fsS --max-time 300 \
+          curl -fsS --max-time 300 --retry 2 --retry-delay 20 \
             -H "Authorization: Bearer $CRON_SECRET" \
             "$BASE_URL/api/cron/live-class-reminders"
 
       - name: end-stale-live-classes
+        id: stale
         if: |
           github.event.schedule == '*/30 * * * *' ||
           (github.event_name == 'workflow_dispatch' &&
            (inputs.job == 'all' || inputs.job == 'stale'))
         run: |
-          curl -fsS --max-time 120 \
+          curl -fsS --max-time 120 --retry 2 --retry-delay 20 \
             -H "Authorization: Bearer $CRON_SECRET" \
             "$BASE_URL/api/cron/end-stale-live-classes"
 
       - name: expire-live-recordings
+        id: recordings
         if: |
           github.event.schedule == '30 2 * * *' ||
           (github.event_name == 'workflow_dispatch' &&
            (inputs.job == 'all' || inputs.job == 'recordings'))
         run: |
-          curl -fsS --max-time 120 \
+          curl -fsS --max-time 120 --retry 2 --retry-delay 20 \
             -H "Authorization: Bearer $CRON_SECRET" \
             "$BASE_URL/api/cron/expire-live-recordings"
+
+      # Fires when any prior step in this job failed. Posts at most one
+      # comment per hour on #402 — searches the issue's comments from the
+      # last hour for the marker string before posting, so a whole broken
+      # night produces one comment instead of one per failed tick (up to 96).
+      - name: Alert on failure (rate-limited to 1/hour)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GUARD_OUTCOME: ${{ steps.guard.outcome }}
+          REMINDERS_OUTCOME: ${{ steps.reminders.outcome }}
+          STALE_OUTCOME: ${{ steps.stale.outcome }}
+          RECORDINGS_OUTCOME: ${{ steps.recordings.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # Every `if [ cond ]` below is deliberate, not `[ cond ] && x=y` — the
+          # default runner shell is `bash -e`, and a short-circuited `&&` whose
+          # test is false exits nonzero, which aborts the whole step under `-e`
+          # the first time a check doesn't match.
+          FAILED=""
+          if [ "$GUARD_OUTCOME" = "failure" ]; then FAILED="${FAILED}CRON_SECRET missing, "; fi
+          if [ "$REMINDERS_OUTCOME" = "failure" ]; then FAILED="${FAILED}live-class-reminders, "; fi
+          if [ "$STALE_OUTCOME" = "failure" ]; then FAILED="${FAILED}end-stale-live-classes, "; fi
+          if [ "$RECORDINGS_OUTCOME" = "failure" ]; then FAILED="${FAILED}expire-live-recordings, "; fi
+          FAILED="${FAILED%, }"
+          if [ -z "$FAILED" ]; then FAILED="(unknown step)"; fi
+
+          MARKER="<!-- conference-crons-alert -->"
+          SINCE=$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
+          RECENT=$(gh api "repos/${{ github.repository }}/issues/402/comments?since=${SINCE}&per_page=100" \
+            --jq "[.[] | select(.body | contains(\"${MARKER}\"))] | length")
+
+          if [ "$RECENT" -gt 0 ]; then
+            echo "Already alerted on #402 within the last hour (${RECENT} comment(s)) — skipping."
+            exit 0
+          fi
+
+          BODY=$(printf '%s\nConference cron bridge failed: **%s**\n\nRun: %s\n' \
+            "$MARKER" "$FAILED" "$RUN_URL")
+
+          gh issue comment 402 --repo "${{ github.repository }}" --body "$BODY"

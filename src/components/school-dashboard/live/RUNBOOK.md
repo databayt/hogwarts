@@ -89,11 +89,76 @@ verifies the feature and runs a demo or a small pilot, and it does **not** run a
 means the paid tier or a self-hosted `livekit-server` on any VM. The code is identical either way;
 only the values in those four vars change.
 
-To add recording later: set `LIVEKIT_RECORDING_BUCKET` plus `LIVEKIT_S3_ACCESS_KEY` /
+**Status as of 2026-09-04: recording is configured in production.** `LIVEKIT_RECORDING_BUCKET`,
+`LIVEKIT_RECORDING_REGION`, `LIVEKIT_S3_ACCESS_KEY` and `LIVEKIT_S3_SECRET` are all set on Vercel for
+`balqalam.com` / `ed.databayt.org` — `isRecordingConfigured()` returns `true`, and the steps below
+remain the reference for standing up the NEXT LiveKit Cloud project (a new school, a new pilot), not
+a thing still owed on this one.
+
+To add recording to a fresh project: set `LIVEKIT_RECORDING_BUCKET` plus `LIVEKIT_S3_ACCESS_KEY` /
 `LIVEKIT_S3_SECRET`. A managed SFU has **no instance IAM role**, so the empty-credential fallback
 documented in Gate 3 does not apply to it — without those two vars, egress starts and then fails to
 upload, leaving a `ConferenceRecording` row `pending` with nothing to sweep it. `isRecordingConfigured()`
 gates the auto-egress branch on the bucket; supply the credentials with it.
+
+---
+
+## Verifying the crons
+
+Rooms and recording being configured doesn't mean the bridge that materializes sessions and closes
+stale ones is actually running. `.github/workflows/conference-crons.yml` (see its header comment for
+why this exists instead of Vercel Cron) is the thing to check, not the SFU.
+
+**Check recent runs:**
+
+```bash
+gh run list --repo databayt/hogwarts --workflow=conference-crons.yml --limit 20
+```
+
+Every row `completed / failure` for more than a couple of ticks in a row is the bridge being down, not
+a blip — see the arm64 symptom below before assuming it's a code bug. A failing run now also comments
+on [#402](https://github.com/databayt/hogwarts/issues/402) with the failed step name and the run URL,
+rate-limited to one comment per hour (it searches the issue's last hour of comments for the marker
+`<!-- conference-crons-alert -->` before posting) — so #402 is the fast way to see whether the bridge
+is currently unhealthy without running the command above.
+
+**Trigger a tick by hand** (useful right after a fix lands, instead of waiting up to 15 minutes):
+
+```bash
+gh workflow run conference-crons.yml --repo databayt/hogwarts -f job=stale
+# job: all | reminders | stale | recordings
+```
+
+**Confirm the functions boot at all**, independent of the secret — every `/api/cron/*` route 401s
+without one (`isAuthorizedCron`) and 500s only past that check, so an unauthenticated hit that comes
+back `401` proves the function itself is reachable and the crash is inside the handler, not in the
+platform routing it:
+
+```bash
+for r in live-class-reminders end-stale-live-classes expire-live-recordings; do
+  curl -s -o /dev/null -w "%{http_code} $r\n" "https://ed.databayt.org/api/cron/$r"
+done
+# expect: 401 401 401 — anything else (000, 404, 500) means the deploy itself is broken
+```
+
+Run the same loop with `-H "Authorization: Bearer $CRON_SECRET"` to see the real status (`200` once
+healthy); do this from a shell that never echoes the secret.
+
+**The arm64 symptom** (CLAUDE.md § Danger Zones, 2026-08-31 → 09-03): `vercel build` on Apple Silicon
+tags every function `architecture: arm64`. With only the `rhel` (x86-64) Prisma engine generated,
+every function that lands on arm64 throws `PrismaClientInitializationError` at its very first query —
+these three crons (and `fee-due`) 500 on **every** run while `tsc`, `vitest` and the build all stay
+green, because none of those exercise a deployed Lambda's actual architecture. `binaryTargets` now
+carries both Linux engines and `deploy-hobby.sh` refuses a bundle whose architecture has no matching
+engine — if the crons are 500ing again, check that guard fired on the last deploy before chasing
+anything else.
+
+**After a bridge outage ends:** the `end-stale-live-classes` cron's second arm cancels every
+`scheduled` session whose `scheduledEnd` has passed (30-minute grace, 1000-row cap per run) — expect a
+burst of `cancelled` rows on the first green run following a long outage, and expect ZERO new sessions
+to have materialized for the whole time the bridge was down (`live-class-reminders` is the only caller
+of `materializeOnlineSchools()` — see Key Decisions). A quiet outage with no visible symptom is not a
+safe outage; it means no school happened to be online while it lasted, not that nothing broke.
 
 ---
 
