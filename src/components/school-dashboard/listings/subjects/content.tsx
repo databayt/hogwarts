@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
@@ -9,6 +11,12 @@ import { type Locale } from "@/components/internationalization/config"
 import { getLabels } from "@/components/translation/person"
 
 import { SubjectsGrid, type SubjectItem } from "./catalog-subjects-grid"
+import {
+  getStudentIdByUserId,
+  getSubjectIdsForStudent,
+  getSubjectIdsForTeacher,
+  getTeacherIdByUserId,
+} from "./queries"
 
 const SELECTION_SELECT = {
   catalogSubjectId: true,
@@ -38,10 +46,19 @@ const SELECTION_SELECT = {
 interface Props {
   lang: Locale
   level?: string
+  studentId?: string
+  teacherId?: string
 }
 
-export default async function SubjectsContent({ lang, level }: Props) {
-  const { schoolId } = await getTenantContext()
+export default async function SubjectsContent({
+  lang,
+  level,
+  studentId: propStudentId,
+  teacherId: propTeacherId,
+}: Props) {
+  const { schoolId, role } = await getTenantContext()
+  const session = await auth()
+  const userId = session?.user?.id
   let subjects: SubjectItem[] = []
 
   if (schoolId) {
@@ -76,6 +93,49 @@ export default async function SubjectsContent({ lang, level }: Props) {
         }
       }
 
+      // Determine effective student / teacher filter. A student or a teacher
+      // always resolves to their own record — the props are how an admin looks
+      // at somebody else, and must not let a student widen their own view.
+      const isStudent = role === "STUDENT"
+      const isTeacher = role === "TEACHER"
+      let effectiveStudentId = isStudent || isTeacher ? null : propStudentId
+      let effectiveTeacherId = isStudent || isTeacher ? null : propTeacherId
+      let filterSubjectIds: Set<string> | null = null
+
+      if (isStudent) {
+        effectiveStudentId = userId
+          ? await getStudentIdByUserId(schoolId, userId)
+          : null
+        // A student whose account has no Student record sees nothing rather
+        // than the school's whole catalog.
+        if (!effectiveStudentId) filterSubjectIds = new Set<string>()
+      } else if (isTeacher) {
+        effectiveTeacherId = userId
+          ? await getTeacherIdByUserId(schoolId, userId)
+          : null
+      }
+
+      if (filterSubjectIds === null) {
+        if (effectiveStudentId) {
+          filterSubjectIds = await getSubjectIdsForStudent(
+            schoolId,
+            effectiveStudentId
+          )
+        } else if (effectiveTeacherId) {
+          filterSubjectIds = await getSubjectIdsForTeacher(
+            schoolId,
+            effectiveTeacherId
+          )
+        }
+      }
+
+      // Filter selections if student/teacher scope is active
+      if (filterSubjectIds !== null) {
+        selections = selections.filter((s) =>
+          filterSubjectIds!.has(s.catalogSubjectId)
+        )
+      }
+
       const customNames = new Map(
         selections
           .filter((s) => s.customName)
@@ -91,6 +151,29 @@ export default async function SubjectsContent({ lang, level }: Props) {
           seen.add(s.id)
           return true
         })
+
+      // If scoped to student/teacher, also fetch any subjects that were assigned
+      // directly to classes/timetables/expertise without an active SubjectSelection row
+      if (filterSubjectIds !== null && filterSubjectIds.size > 0) {
+        const missingIds = Array.from(filterSubjectIds).filter(
+          (id) => !seen.has(id)
+        )
+        if (missingIds.length > 0) {
+          const extraSubjects = await db.subject.findMany({
+            where: {
+              id: { in: missingIds },
+              status: "PUBLISHED",
+            },
+            select: SELECTION_SELECT.subject.select,
+          })
+          for (const s of extraSubjects) {
+            if (s && !seen.has(s.id)) {
+              seen.add(s.id)
+              catalogRows.push(s)
+            }
+          }
+        }
+      }
 
       // Each catalog subject becomes its own card (individual grade).
       // One batched, deduped resolution for names/departments (no N+1).

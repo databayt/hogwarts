@@ -41,6 +41,8 @@ export const getSubjectsSchema = z.object({
   name: z.string().optional().default(""),
   department: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),
+  studentId: z.string().optional(),
+  teacherId: z.string().optional(),
   // Display language: the ROUTE [lang] (passed by the client table) is the source
   // of truth; the NEXT_LOCALE cookie is only a fallback for non-routed callers.
   lang: z.enum(["ar", "en"]).optional(),

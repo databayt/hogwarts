@@ -40,6 +40,32 @@
 
 ## Resolved
 
+- **2026-09-04 (b) — A student now sees only their own grade's subjects.**
+  The first pass treated the student's grade as a fallback, so class
+  enrollments decided the list. Demo class rows for grade 10 point at grade
+  4/5/8/9/11/12 catalog subjects (legacy rows, created before class seeding was
+  curriculum-gated), and the student is enrolled in all of them — so the page
+  showed 36 subjects spanning every level. `getSubjectIdsForStudent` now makes
+  the grade the gate: the grade's active `SubjectSelection` rows always count,
+  and a class/timetable attachment is kept only when `Subject.grades` includes
+  the student's `AcademicGrade.gradeNumber` (a subject that declares no grades
+  stays in). `SubjectsContent` and `getSubjects` also stop honouring
+  `?studentId` / `?teacherId` for `STUDENT` and `TEACHER` — they always resolve
+  to the caller's own record — and a `STUDENT` with no `Student` row now sees
+  nothing instead of the whole catalog. Demo student drops 36 → 17, all grade
+  10; `/subjects/elementary` is empty for them.
+  **NOT FIXED:** the stale `Class.subjectId` rows themselves. The seed's
+  `upsert` update branch omits `subjectId` and non-curriculum pairs are
+  skipped, so a re-seed will not repair them — they need explicit cleanup.
+
+- **2026-09-04 (a) — Student & Teacher Subject Scoping and Sidebar Access.**
+  Enabled the `subjects` navigation entry for `STUDENT` in `platform-sidebar/config.ts`
+  and command menu. Filtered the browse view (`SubjectsContent`), table query (`getSubjects`),
+  and `getSubjectList` by student ID (resolving `StudentClass`, section timetable slots,
+  and grade fallbacks) and teacher ID (resolving primary `Class`, co-teaching `ClassTeacher`,
+  `Timetable` slots, and `TeacherSubjectExpertise`). Cleaned up browse layout tab navigation
+  strip so single-view roles (students) do not render stray tab rules or admin-only catalog tabs.
+
 - **2026-07-16 — Hid the "Customize Content" panel + i18n gaps on the subject
   detail page.** `subjects/[slug]/page.tsx` no longer renders
   `SchoolCatalogCustomization` (the admin hide/show + contribute collapsible);

@@ -17,6 +17,12 @@ import {
   getAuthContext,
 } from "@/components/school-dashboard/listings/subjects/authorization"
 import {
+  getStudentIdByUserId,
+  getSubjectIdsForStudent,
+  getSubjectIdsForTeacher,
+  getTeacherIdByUserId,
+} from "@/components/school-dashboard/listings/subjects/queries"
+import {
   getSubjectsSchema,
   subjectCreateSchema,
   subjectUpdateSchema,
@@ -389,6 +395,48 @@ export async function getSubjects(
 
     // Get all school subjects from catalog via bridge table
     let subjects = await getSchoolSubjects(schoolId)
+
+    // Scoped filtering for student or teacher. A student or a teacher always
+    // resolves to their own record — the params are how an admin looks at
+    // somebody else, and must not let a student widen their own view.
+    const isStudent = authContext.role === "STUDENT"
+    const isTeacher = authContext.role === "TEACHER"
+    let effectiveStudentId =
+      isStudent || isTeacher ? null : (sp.studentId ?? null)
+    let effectiveTeacherId =
+      isStudent || isTeacher ? null : (sp.teacherId ?? null)
+    let scopedToNothing = false
+
+    if (isStudent) {
+      effectiveStudentId = await getStudentIdByUserId(
+        schoolId,
+        authContext.userId
+      )
+      // A student whose account has no Student record sees nothing rather than
+      // the school's whole catalog.
+      scopedToNothing = !effectiveStudentId
+    } else if (isTeacher) {
+      effectiveTeacherId = await getTeacherIdByUserId(
+        schoolId,
+        authContext.userId
+      )
+    }
+
+    if (scopedToNothing) {
+      subjects = []
+    } else if (effectiveStudentId) {
+      const studentSubjIds = await getSubjectIdsForStudent(
+        schoolId,
+        effectiveStudentId
+      )
+      subjects = subjects.filter((s) => studentSubjIds.has(s.id))
+    } else if (effectiveTeacherId) {
+      const teacherSubjIds = await getSubjectIdsForTeacher(
+        schoolId,
+        effectiveTeacherId
+      )
+      subjects = subjects.filter((s) => teacherSubjIds.has(s.id))
+    }
 
     // Filter by name — bilingual + cache-only (search()'s reverse translation
     // lookup), so a user typing what they SEE on /en also matches subjects

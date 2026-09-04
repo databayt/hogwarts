@@ -7,8 +7,8 @@ The Subjects block manages the school's academic subject catalog. Admins can cre
 ### Capabilities by Role
 
 - **Admin**: CRUD subjects, assign to departments, manage catalog, configure prerequisites; **customize the platform catalog per school** via the `catalog/` controls — hide chapters / lessons / a specific instructor's video, hide a lesson's practice quiz, set the preferred instructor source, and contribute the school's own lesson videos
-- **Teacher**: View assigned subjects, contribute materials and assignments
-- **Student**: Browse subject catalog, view subject details and materials
+- **Teacher**: View assigned subjects (filtered by teacher classes, co-teaching, timetable, and expertise), contribute materials and assignments
+- **Student**: View their own grade's subjects only. The academic grade is the gate: the grade's active `SubjectSelection` rows always show, and a class enrollment or section timetable slot is added only when the catalog places that subject in the student's grade. A student is always scoped to their own record — `?studentId` is ignored for the `STUDENT` role
 - **Guardian**: View subject information for child's classes
 
 ### School Catalog Customization (`catalog/`)

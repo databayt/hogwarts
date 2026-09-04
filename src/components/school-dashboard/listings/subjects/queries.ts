@@ -22,6 +22,8 @@ import { getSchoolSubjects } from "@/lib/school-subjects"
 export type SubjectListFilters = {
   search?: string
   department?: string
+  studentId?: string
+  teacherId?: string
 }
 
 export type PaginationParams = {
@@ -44,6 +46,190 @@ export type SubjectQueryParams = SubjectListFilters &
 // ============================================================================
 
 /**
+ * Resolve student's internal ID from user session ID.
+ */
+export async function getStudentIdByUserId(
+  schoolId: string,
+  userId: string
+): Promise<string | null> {
+  const student = await db.student.findFirst({
+    where: { schoolId, userId },
+    select: { id: true },
+  })
+  return student?.id ?? null
+}
+
+/**
+ * Resolve teacher's internal ID from user session ID.
+ */
+export async function getTeacherIdByUserId(
+  schoolId: string,
+  userId: string
+): Promise<string | null> {
+  const teacher = await db.teacher.findFirst({
+    where: { schoolId, userId },
+    select: { id: true },
+  })
+  return teacher?.id ?? null
+}
+
+/**
+ * Resolve all catalog subject IDs a student should see in a school.
+ *
+ * The student's academic grade is the gate, not a fallback. A class row can
+ * point at another grade's catalog subject — legacy rows predate the
+ * curriculum-gated class seeding — and a student must never be shown those.
+ *
+ * 1. The grade's active SubjectSelection rows, the curriculum the school chose
+ *    for that grade, are always included.
+ * 2. Subjects the student is attached to (class enrollments, section timetable)
+ *    are added only when the catalog places them in the student's grade.
+ * 3. With no grade on the student record, the attachments stand on their own.
+ */
+export async function getSubjectIdsForStudent(
+  schoolId: string,
+  studentId: string
+): Promise<Set<string>> {
+  const [studentClasses, student] = await Promise.all([
+    db.studentClass.findMany({
+      where: { schoolId, studentId },
+      select: { class: { select: { subjectId: true } } },
+    }),
+    db.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: {
+        sectionId: true,
+        academicGradeId: true,
+        academicGrade: { select: { gradeNumber: true } },
+      },
+    }),
+  ])
+
+  // Subjects this student is directly attached to.
+  const attached = new Set<string>()
+
+  for (const sc of studentClasses) {
+    if (sc.class?.subjectId) {
+      attached.add(sc.class.subjectId)
+    }
+  }
+
+  if (student?.sectionId) {
+    const timetableSlots = await db.timetable.findMany({
+      where: {
+        schoolId,
+        sectionId: student.sectionId,
+        subjectId: { not: null },
+      },
+      select: { subjectId: true },
+      distinct: ["subjectId"],
+    })
+    for (const slot of timetableSlots) {
+      if (slot.subjectId) {
+        attached.add(slot.subjectId)
+      }
+    }
+  }
+
+  // Without a grade there is nothing to gate against.
+  if (!student?.academicGradeId) return attached
+
+  // Nothing attached yet — fall back to every class registered for the grade.
+  if (attached.size === 0) {
+    const gradeClasses = await db.class.findMany({
+      where: { schoolId, gradeId: student.academicGradeId },
+      select: { subjectId: true },
+      distinct: ["subjectId"],
+    })
+    for (const c of gradeClasses) {
+      if (c.subjectId) attached.add(c.subjectId)
+    }
+  }
+
+  const gradeSelections = await db.subjectSelection.findMany({
+    where: { schoolId, gradeId: student.academicGradeId, isActive: true },
+    select: { catalogSubjectId: true },
+  })
+  const subjectIds = new Set(gradeSelections.map((s) => s.catalogSubjectId))
+
+  // Keep an attachment only when the catalog agrees it belongs to this grade.
+  // A subject that declares no grades at all stays in — there is nothing to
+  // check it against.
+  const unvetted = Array.from(attached).filter((id) => !subjectIds.has(id))
+  const gradeNumber = student.academicGrade?.gradeNumber
+
+  if (unvetted.length > 0) {
+    if (gradeNumber == null) {
+      for (const id of unvetted) subjectIds.add(id)
+    } else {
+      const rows = await db.subject.findMany({
+        where: { id: { in: unvetted } },
+        select: { id: true, grades: true },
+      })
+      for (const row of rows) {
+        if (row.grades.length === 0 || row.grades.includes(gradeNumber)) {
+          subjectIds.add(row.id)
+        }
+      }
+    }
+  }
+
+  return subjectIds
+}
+
+/**
+ * Resolve all catalog subject IDs associated with a teacher in a school.
+ * Considers:
+ * 1. Primary classes taught (Class.teacherId)
+ * 2. Co-teaching classes (ClassTeacher.teacherId)
+ * 3. Timetable slots assigned (Timetable.teacherId)
+ * 4. Teacher subject expertise (TeacherSubjectExpertise.teacherId)
+ */
+export async function getSubjectIdsForTeacher(
+  schoolId: string,
+  teacherId: string
+): Promise<Set<string>> {
+  const subjectIds = new Set<string>()
+
+  const [teacherClasses, coTaughtClasses, timetableSlots, expertise] =
+    await Promise.all([
+      db.class.findMany({
+        where: { schoolId, teacherId },
+        select: { subjectId: true },
+        distinct: ["subjectId"],
+      }),
+      db.classTeacher.findMany({
+        where: { schoolId, teacherId },
+        select: { class: { select: { subjectId: true } } },
+      }),
+      db.timetable.findMany({
+        where: { schoolId, teacherId, subjectId: { not: null } },
+        select: { subjectId: true },
+        distinct: ["subjectId"],
+      }),
+      db.teacherSubjectExpertise.findMany({
+        where: { schoolId, teacherId },
+        select: { subjectId: true },
+      }),
+    ])
+
+  for (const c of teacherClasses) {
+    if (c.subjectId) subjectIds.add(c.subjectId)
+  }
+  for (const ct of coTaughtClasses) {
+    if (ct.class?.subjectId) subjectIds.add(ct.class.subjectId)
+  }
+  for (const t of timetableSlots) {
+    if (t.subjectId) subjectIds.add(t.subjectId)
+  }
+  for (const e of expertise) {
+    if (e.subjectId) subjectIds.add(e.subjectId)
+  }
+
+  return subjectIds
+}
+
+/**
  * Get subjects list with filtering, sorting, pagination.
  * Uses SubjectSelection → Subject.
  */
@@ -55,6 +241,20 @@ export async function getSubjectList(
 
   // Apply filters
   let filtered = allSubjects
+
+  if (params.studentId) {
+    const studentSubjIds = await getSubjectIdsForStudent(
+      schoolId,
+      params.studentId
+    )
+    filtered = filtered.filter((s) => studentSubjIds.has(s.id))
+  } else if (params.teacherId) {
+    const teacherSubjIds = await getSubjectIdsForTeacher(
+      schoolId,
+      params.teacherId
+    )
+    filtered = filtered.filter((s) => teacherSubjIds.has(s.id))
+  }
 
   if (params.search) {
     const searchLower = params.search.toLowerCase()
