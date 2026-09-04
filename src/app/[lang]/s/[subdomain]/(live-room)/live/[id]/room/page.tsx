@@ -14,6 +14,7 @@ import { getLiveClass } from "@/components/school-dashboard/live/actions/session
 import { checkLiveClassPermission } from "@/components/school-dashboard/live/authorization"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
 import { resolveLiveClassError } from "@/components/school-dashboard/live/error-map"
+import { isRecordingConfigured } from "@/components/school-dashboard/live/livekit/client"
 import {
   findRoomCardSession,
   findRoomClassPeople,
@@ -105,7 +106,17 @@ export default async function Page({ params }: Props) {
       schoolId
         ? db.school.findUnique({
             where: { id: schoolId },
-            select: { timezone: true },
+            select: {
+              timezone: true,
+              // The card's honest tool marks (lr-07) — the same four
+              // switches `join-core.ts` reads into `RoomConfig.tools`.
+              // `conferenceToolStudentShare` is deliberately not selected:
+              // it is a token grant, not a mark the card shows.
+              conferenceToolChat: true,
+              conferenceToolHands: true,
+              conferenceToolPolls: true,
+              conferenceToolWhiteboard: true,
+            },
           })
         : Promise.resolve(null),
       // The shelf under the card. In the SAME wave as the card's own row: its
@@ -210,7 +221,18 @@ export default async function Page({ params }: Props) {
     durationLabel:
       minutes && minutes > 0 ? `${minutes} ${c?.minutes ?? "min"}` : null,
     isLive: row?.status === "live",
-    isRecording: Boolean(row?.recordingEnabled),
+    // A session can opt into recording before the bucket exists; the card
+    // must not promise REC (nor the room a consent notice) until it can be true.
+    isRecording: Boolean(row?.recordingEnabled) && isRecordingConfigured(),
+    // Defaults mirror the Prisma column defaults (school.prisma) for the
+    // rare unresolved-school path, rather than silently marking every tool
+    // off.
+    tools: {
+      chat: school?.conferenceToolChat ?? true,
+      hands: school?.conferenceToolHands ?? true,
+      polls: school?.conferenceToolPolls ?? true,
+      whiteboard: school?.conferenceToolWhiteboard ?? true,
+    },
     // Instants, not labels: the pill's progress bar has to keep moving, and
     // only the client has a clock that is still ticking after the render.
     startsAtMs: row?.scheduledStart?.getTime() ?? null,
@@ -423,7 +445,10 @@ export default async function Page({ params }: Props) {
   return (
     <RoomClient
       sessionId={id}
-      title={detail.data.title}
+      // The already-localized subject, not `Conference.title` — that is
+      // stored as "subject · section" and would print raw + untranslated on
+      // the in-call chrome's fallback line (`room-shell.tsx`'s `title`).
+      title={card.subject}
       locale={lang}
       slides={slides}
       card={card}
@@ -482,6 +507,15 @@ export default async function Page({ params }: Props) {
           resourceOne: c?.resourceOne ?? "resource",
           resourceMany: c?.resourceMany ?? "resources",
           free: c?.free ?? "Free",
+          // The honest mark row (lr-07): sourced from `room/labels.ts`'s
+          // top-level keys, the SAME strings the in-call panel/tabs use for
+          // the identical tools — not a second copy under `room.card`.
+          hd: t?.room?.hd ?? "HD",
+          rec: t?.room?.rec ?? "REC",
+          chat: t?.room?.chat ?? "Chat",
+          poll: t?.room?.poll ?? "Poll",
+          whiteboard: t?.room?.whiteboard ?? "Whiteboard",
+          hands: t?.room?.hands ?? "Hands",
           remaining: c?.remaining ?? "{n}m left",
           remainingHours: c?.remainingHours ?? "{h}h {m}m left",
           back: c?.back ?? "Back",

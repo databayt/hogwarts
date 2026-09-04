@@ -34,6 +34,9 @@ export type LiveClassListFilters = {
   // plus any school-wide (`visibility: school`) session — are returned
   // (STUDENT/GUARDIAN). Omit for staff (whole-school) views.
   sectionIds?: string[]
+  // Legacy class enrolments of the same viewer — a slot-anchored session whose
+  // timetable slot carries one of these classIds is visible too.
+  classIds?: string[]
 }
 
 export type PaginationParams = {
@@ -150,8 +153,13 @@ export function buildLiveClassWhere(
   if (filters.sectionIds) {
     // Scoped viewers see their own sections' sessions AND every school-wide
     // session. Never plain `sectionId in` alone — that would hide assemblies.
+    // A legacy class enrolment reaches a slot-anchored session through the
+    // slot's classId (see ViewerSectionScope.classIds).
     where.OR = [
       { sectionId: { in: filters.sectionIds } },
+      ...(filters.classIds && filters.classIds.length > 0
+        ? [{ timetable: { classId: { in: filters.classIds } } }]
+        : []),
       { visibility: "school" },
     ]
   }
@@ -166,7 +174,19 @@ export function buildLiveClassWhere(
  * (or their wards) are enrolled in; everyone else sees nothing. Mirrors
  * `canAccessSession` in actions/helpers.ts.
  */
-export type ViewerSectionScope = "all" | "none" | { sectionIds: string[] }
+export type ViewerSectionScope =
+  | "all"
+  | "none"
+  | {
+      sectionIds: string[]
+      /**
+       * Legacy class enrolments (`StudentClass`) for a student not yet placed
+       * in a section. A session reaches such a student through its timetable
+       * slot's `classId` — the block-wide "OR both axes" rule the notification
+       * audience and the timetable reads already follow.
+       */
+      classIds?: string[]
+    }
 
 const LIST_STAFF_ROLES = [
   "DEVELOPER",
@@ -186,7 +206,10 @@ export async function resolveViewerSectionScope(
   if (role === "STUDENT") {
     const students = await db.student.findMany({
       where: { schoolId, userId },
-      select: { sectionId: true },
+      select: {
+        sectionId: true,
+        studentClasses: { select: { classId: true } },
+      },
     })
     // Membership (a student row) is what matters — a student not yet placed
     // in a section returns an EMPTY scope, not "none", so school-wide
@@ -195,26 +218,44 @@ export async function resolveViewerSectionScope(
     const ids = students
       .map((s) => s.sectionId)
       .filter((x): x is string => Boolean(x))
-    return { sectionIds: ids }
+    const classIds = [
+      ...new Set(
+        students.flatMap((s) => s.studentClasses.map((c) => c.classId))
+      ),
+    ]
+    return { sectionIds: ids, classIds }
   }
   if (role === "GUARDIAN") {
     const guardians = await db.guardian.findMany({
       where: { schoolId, userId },
       select: {
         studentGuardians: {
-          select: { student: { select: { sectionId: true } } },
+          select: {
+            student: {
+              select: {
+                sectionId: true,
+                studentClasses: { select: { classId: true } },
+              },
+            },
+          },
         },
       },
     })
     if (guardians.length === 0) return "none"
+    const wards = guardians.flatMap((g) =>
+      g.studentGuardians.map((sg) => sg.student)
+    )
     const ids = [
       ...new Set(
-        guardians
-          .flatMap((g) => g.studentGuardians.map((sg) => sg.student?.sectionId))
-          .filter((x): x is string => Boolean(x))
+        wards.map((st) => st?.sectionId).filter((x): x is string => Boolean(x))
       ),
     ]
-    return { sectionIds: ids }
+    const classIds = [
+      ...new Set(
+        wards.flatMap((st) => st?.studentClasses.map((c) => c.classId) ?? [])
+      ),
+    ]
+    return { sectionIds: ids, classIds }
   }
   return "none"
 }
@@ -595,8 +636,32 @@ export async function getLessonReferenceContent(
 
 export type LiveClassReferenceData = {
   lessons: { id: string; name: string }[]
-  exams: { id: string; title: string; examType: string; examDate: string }[]
-  assignments: { id: string; title: string; dueDate: string }[]
+  exams: {
+    id: string
+    title: string
+    examType: string
+    examDate: string
+    status: string
+  }[]
+  assignments: { id: string; title: string; dueDate: string; status: string }[]
+}
+
+/**
+ * The PUBLISHED + not-hidden-by-this-school filter shared by every lesson
+ * picker/verifier in this block: the room's Related shelf
+ * (`findRoomRelatedLessons`), the wizard's reference picker
+ * (`getLiveClassReferenceData`), and the write-side anchor guard
+ * (`verifyLessonAnchor`). A school that switched a lesson off must never see
+ * it re-offered — or accepted — as a live-class anchor.
+ */
+function lessonVisibilityFilter(schoolId: string): {
+  status: "PUBLISHED"
+  NOT: { overrides: { some: { schoolId: string; isHidden: true } } }
+} {
+  return {
+    status: "PUBLISHED",
+    NOT: { overrides: { some: { schoolId, isHidden: true } } },
+  }
 }
 
 /**
@@ -609,7 +674,9 @@ export type LiveClassReferenceData = {
  * @param gradeNumber - When set, narrows lessons to chapters taught at this
  *   grade. `Chapter.grades` defaults to `[]` (not yet grade-tagged), so an
  *   `isEmpty` branch keeps untagged chapters visible instead of silently
- *   hiding most of the catalog.
+ *   hiding most of the catalog. The same narrowing applies to exams/
+ *   assignments via `Class.gradeId` (nullable — an untagged class stays
+ *   visible rather than silently disappearing from the picker).
  */
 export async function getLiveClassReferenceData(
   schoolId: string,
@@ -630,7 +697,10 @@ export async function getLiveClassReferenceData(
               }
             : {}),
         },
-        status: "PUBLISHED",
+        // Same hide semantics as findRoomRelatedLessons — a school that
+        // switched a lesson off should never see it re-offered as a
+        // live-class anchor.
+        ...lessonVisibilityFilter(schoolId),
       },
       select: { id: true, name: true },
       orderBy: [
@@ -640,14 +710,37 @@ export async function getLiveClassReferenceData(
       take: 200,
     }),
     db.schoolExam.findMany({
-      where: { schoolId, subjectId },
-      select: { id: true, title: true, examType: true, examDate: true },
+      where: {
+        schoolId,
+        subjectId,
+        // Cancelled exams are dead rows — never offerable as a live-class
+        // anchor.
+        status: { not: "CANCELLED" },
+        ...(gradeNumber
+          ? { class: { OR: [{ grade: { gradeNumber } }, { gradeId: null }] } }
+          : {}),
+      },
+      select: {
+        id: true,
+        title: true,
+        examType: true,
+        examDate: true,
+        status: true,
+      },
       orderBy: { examDate: "desc" },
       take: 50,
     }),
     db.schoolAssignment.findMany({
-      where: { schoolId, class: { subjectId } },
-      select: { id: true, title: true, dueDate: true },
+      where: {
+        schoolId,
+        class: {
+          subjectId,
+          ...(gradeNumber
+            ? { OR: [{ grade: { gradeNumber } }, { gradeId: null }] }
+            : {}),
+        },
+      },
+      select: { id: true, title: true, dueDate: true, status: true },
       orderBy: { dueDate: "desc" },
       take: 50,
     }),
@@ -660,11 +753,13 @@ export async function getLiveClassReferenceData(
       title: e.title,
       examType: e.examType,
       examDate: e.examDate.toISOString(),
+      status: e.status,
     })),
     assignments: assignments.map((a) => ({
       id: a.id,
       title: a.title,
       dueDate: a.dueDate.toISOString(),
+      status: a.status,
     })),
   }
 }
@@ -684,6 +779,9 @@ export async function getLiveClassDetail(schoolId: string, id: string) {
     include: {
       ...liveClassListInclude,
       catalogLesson: { select: { id: true, name: true } },
+      // The slot's legacy classId — how a session reaches a student enrolled
+      // through StudentClass rather than a section (see ViewerSectionScope).
+      timetable: { select: { classId: true } },
       resources: {
         orderBy: { order: "asc" },
         select: {
@@ -1028,7 +1126,13 @@ export async function resolveCatchUpAttendees(
 export async function getLiveSessionsForLesson(
   schoolId: string,
   catalogLessonId: string,
-  opts: { sectionIds?: string[]; now?: Date; take?: number } = {}
+  opts: {
+    sectionIds?: string[]
+    /** Legacy class enrolments — see ViewerSectionScope.classIds. */
+    classIds?: string[]
+    now?: Date
+    take?: number
+  } = {}
 ): Promise<
   Array<{
     id: string
@@ -1047,7 +1151,22 @@ export async function getLiveSessionsForLesson(
       schoolId,
       catalogLessonId,
       deletedAt: null,
-      ...(opts.sectionIds ? { sectionId: { in: opts.sectionIds } } : {}),
+      // Scoped viewers reach a session by section OR by their legacy class
+      // enrolment on the session's slot (both axes, like the list read).
+      ...(opts.sectionIds
+        ? {
+            AND: [
+              {
+                OR: [
+                  { sectionId: { in: opts.sectionIds } },
+                  ...(opts.classIds && opts.classIds.length > 0
+                    ? [{ timetable: { classId: { in: opts.classIds } } }]
+                    : []),
+                ],
+              },
+            ],
+          }
+        : {}),
       OR: [
         { status: "live" },
         // Today's remaining sessions: scheduled and not yet over.
@@ -1189,9 +1308,8 @@ export async function findRoomRelatedLessons(
   return db.lesson.findMany({
     where: {
       chapter: { subjectId: opts.subjectId },
-      status: "PUBLISHED",
       ...(opts.excludeLessonId ? { id: { not: opts.excludeLessonId } } : {}),
-      NOT: { overrides: { some: { schoolId, isHidden: true } } },
+      ...lessonVisibilityFilter(schoolId),
     },
     orderBy: [{ sequenceOrder: "asc" }, { id: "asc" }],
     take: 12,
@@ -1207,6 +1325,37 @@ export async function findRoomRelatedLessons(
       },
     },
   })
+}
+
+/**
+ * Write-side guard for a session's `catalogLessonId` anchor. Hardens the
+ * existence-only check `list-actions.ts` used to run (`lessonExists` —
+ * `db.lesson.count({ where: { id } })`, no status/hide/subject check at all)
+ * into the same PUBLISHED + not-hidden-by-this-school rule the picker
+ * (`getLiveClassReferenceData`) and the room's Related shelf
+ * (`findRoomRelatedLessons`) already enforce on read. Without this a teacher
+ * could anchor a session to a lesson their own school had switched off, or
+ * to one still in DRAFT.
+ *
+ * `subjectId` is nullable: a slot-less session (an assembly, a one-off
+ * tutorial) has no subject and may anchor any visible lesson, but a
+ * subject-anchored session must not accept a lesson from a different
+ * subject's chapters — the same axis `getLiveClassReferenceData` scopes the
+ * picker options to.
+ */
+export async function verifyLessonAnchor(
+  schoolId: string,
+  lessonId: string,
+  subjectId: string | null
+): Promise<boolean> {
+  const count = await db.lesson.count({
+    where: {
+      id: lessonId,
+      ...lessonVisibilityFilter(schoolId),
+      ...(subjectId ? { chapter: { subjectId } } : {}),
+    },
+  })
+  return count === 1
 }
 
 /**

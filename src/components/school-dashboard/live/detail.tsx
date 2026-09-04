@@ -445,7 +445,12 @@ export async function LiveClassDetailContent({
               <ul className="space-y-1 text-sm">
                 {examResources.map((x) => (
                   <li key={x.id} className="flex items-center gap-2">
-                    <span>{x.schoolExam!.title}</span>
+                    <Link
+                      className="underline underline-offset-2"
+                      href={`/${locale}/exams/${x.schoolExam!.id}`}
+                    >
+                      {x.schoolExam!.title}
+                    </Link>
                     <Badge variant="secondary">{x.schoolExam!.examType}</Badge>
                     <span className="text-muted-foreground text-xs">
                       {formatDay(x.schoolExam!.examDate, locale)}
@@ -464,7 +469,12 @@ export async function LiveClassDetailContent({
               <ul className="space-y-1 text-sm">
                 {assignmentResources.map((x) => (
                   <li key={x.id} className="flex items-center gap-2">
-                    <span>{x.schoolAssignment!.title}</span>
+                    <Link
+                      className="underline underline-offset-2"
+                      href={`/${locale}/assignments/${x.schoolAssignment!.id}`}
+                    >
+                      {x.schoolAssignment!.title}
+                    </Link>
                     <span className="text-muted-foreground text-xs">
                       {formatDay(x.schoolAssignment!.dueDate, locale)}
                     </span>

@@ -113,8 +113,20 @@ export async function GET(req: Request) {
   // timeout the untouched tail was never reminded at all, because by the next
   // run 15 minutes later the 5–20-minute window had moved past those sessions.
   // `dispatch` swallows its own errors, so a bad session can't reject here.
+  //
+  // Each session gets its OWN minutes-to-start, not the school's configured
+  // lead: two sessions in the same run can be at different points inside
+  // that lead window (e.g. lead=45 catches one 40 minutes out and one 8
+  // minutes out on the same sweep), and the notification body says the
+  // actual count. Rounded to the nearest minute, floored at 1 — a session
+  // inside its window is by construction still >=60s out (startMin is
+  // `now + 1min`), but round() alone could still floor a ~30s remainder to 0.
   await inBatches(due, NOTIFY_CONCURRENCY, async (s) => {
-    await notifyClassStartingSoon(s.schoolId, s.id)
+    const leadMinutes = Math.max(
+      1,
+      Math.round((s.scheduledStart.getTime() - now) / 60_000)
+    )
+    await notifyClassStartingSoon(s.schoolId, s.id, leadMinutes)
   })
 
   // Stamp the idempotency rows AFTER dispatching, in one insert. Order matters:

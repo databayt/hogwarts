@@ -9,6 +9,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import {
   cancelLiveClass,
   createLiveClass,
+  createLiveClassFromTimetable,
   endLiveClass,
   getLiveClass,
   listLiveClasses,
@@ -48,6 +49,12 @@ vi.mock("@/lib/db", () => ({
     },
     section: {
       findFirst: vi.fn(),
+    },
+    timetable: {
+      findFirst: vi.fn(),
+    },
+    substitutionRecord: {
+      findMany: vi.fn(),
     },
   },
 }))
@@ -616,5 +623,147 @@ describe("getLiveClass (tenant-leak guard)", () => {
         result.error
       )
     expect(db.conference.findFirst).not.toHaveBeenCalled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// createLiveClassFromTimetable — a CONFIRMED substitute must be able to
+// Start the online arm of the class they are covering (tt-02). Without
+// resolveSubstitutes, `teacherId` came straight off the slot's static
+// teacherId (the absent original teacher), and `createLiveClassAsTeacher`'s
+// ownership check (`input.teacherId === teacher.id`) always rejected the
+// substitute outright.
+// ---------------------------------------------------------------------------
+
+const TIMETABLE_ID = "tt-1"
+const ORIGINAL_TEACHER_ID = "t-orig"
+const ORIGINAL_TEACHER_USER_ID = "u-teacher-orig"
+const SUBSTITUTE_TEACHER_ID = "t-sub"
+const SUBSTITUTE_USER_ID = "u-teacher-sub"
+
+describe("createLiveClassFromTimetable", () => {
+  const slot = {
+    id: TIMETABLE_ID,
+    teacherId: ORIGINAL_TEACHER_ID,
+    sectionId: "sec-1",
+    subjectId: "sub-1",
+    subject: { name: "Algebra" },
+    section: { name: "Grade 5 A" },
+    period: {
+      startTime: new Date("2026-06-01T09:00:00Z"),
+      endTime: new Date("2026-06-01T09:45:00Z"),
+    },
+  }
+
+  beforeEach(() => {
+    vi.mocked(db.timetable.findFirst).mockResolvedValue(slot as never)
+    vi.mocked(db.substitutionRecord.findMany).mockResolvedValue([] as never)
+    // 1st conference.findFirst call = findSlotSessionForDay (no session yet
+    // today); 2nd = startLiveClass's own lookup right after create.
+    vi.mocked(db.conference.findFirst).mockResolvedValueOnce(null as never)
+  })
+
+  it("a CONFIRMED substitute starts the covering class → session is created and HOSTED under the SUBSTITUTE's teacherId, not the absent original", async () => {
+    mockTeacher(SUBSTITUTE_USER_ID)
+    vi.mocked(db.teacher.findFirst).mockResolvedValue({
+      id: SUBSTITUTE_TEACHER_ID,
+      userId: SUBSTITUTE_USER_ID,
+    } as never)
+    vi.mocked(db.substitutionRecord.findMany).mockResolvedValue([
+      {
+        originalSlotId: TIMETABLE_ID,
+        substituteTeacherId: SUBSTITUTE_TEACHER_ID,
+        substituteTeacher: { userId: SUBSTITUTE_USER_ID },
+      },
+    ] as never)
+    vi.mocked(db.conference.findFirst).mockResolvedValueOnce({
+      id: SESSION_ID,
+      status: "scheduled",
+      provider: "livekit",
+      recordingEnabled: false,
+      roomName: `sch-${SCHOOL_ID}-lc-${SESSION_ID}`,
+      maxParticipants: 50,
+      teacher: { userId: SUBSTITUTE_USER_ID },
+    } as never)
+
+    const result = await createLiveClassFromTimetable({
+      timetableId: TIMETABLE_ID,
+    })
+
+    expect("success" in result && result.success).toBe(true)
+    // The substitute's own ownership check passed — createLiveClassAsTeacher
+    // would have rejected UNAUTHORIZED had teacherId stayed the original's.
+    expect(db.conference.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ teacherId: SUBSTITUTE_TEACHER_ID }),
+      })
+    )
+    // HOST participant is invited by the substitute's own userId, resolved
+    // from the Teacher row the create looked up by SUBSTITUTE_TEACHER_ID.
+    expect(db.conferenceParticipant.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          userId: SUBSTITUTE_USER_ID,
+          role: "HOST",
+        }),
+      })
+    )
+  })
+
+  it("no CONFIRMED substitution on record → falls back to the slot's own teacher", async () => {
+    mockTeacher(ORIGINAL_TEACHER_USER_ID)
+    vi.mocked(db.teacher.findFirst).mockResolvedValue({
+      id: ORIGINAL_TEACHER_ID,
+      userId: ORIGINAL_TEACHER_USER_ID,
+    } as never)
+    vi.mocked(db.conference.findFirst).mockResolvedValueOnce({
+      id: SESSION_ID,
+      status: "scheduled",
+      provider: "livekit",
+      recordingEnabled: false,
+      roomName: `sch-${SCHOOL_ID}-lc-${SESSION_ID}`,
+      maxParticipants: 50,
+      teacher: { userId: ORIGINAL_TEACHER_USER_ID },
+    } as never)
+
+    const result = await createLiveClassFromTimetable({
+      timetableId: TIMETABLE_ID,
+    })
+
+    expect("success" in result && result.success).toBe(true)
+    expect(db.conference.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ teacherId: ORIGINAL_TEACHER_ID }),
+      })
+    )
+  })
+
+  it("resolveSubstitutes is scoped to this slot on the school day, not the whole school", async () => {
+    mockTeacher(ORIGINAL_TEACHER_USER_ID)
+    vi.mocked(db.teacher.findFirst).mockResolvedValue({
+      id: ORIGINAL_TEACHER_ID,
+      userId: ORIGINAL_TEACHER_USER_ID,
+    } as never)
+    vi.mocked(db.conference.findFirst).mockResolvedValueOnce({
+      id: SESSION_ID,
+      status: "scheduled",
+      provider: "livekit",
+      recordingEnabled: false,
+      roomName: `sch-${SCHOOL_ID}-lc-${SESSION_ID}`,
+      maxParticipants: 50,
+      teacher: { userId: ORIGINAL_TEACHER_USER_ID },
+    } as never)
+
+    await createLiveClassFromTimetable({ timetableId: TIMETABLE_ID })
+
+    expect(db.substitutionRecord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          schoolId: SCHOOL_ID,
+          originalSlotId: { in: [TIMETABLE_ID] },
+          status: "CONFIRMED",
+        }),
+      })
+    )
   })
 })

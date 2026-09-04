@@ -73,6 +73,7 @@ export default async function LiveClassesContent({
             perPage: sp.perPage,
             sort: sp.sort,
             sectionIds: scope === "all" ? undefined : scope.sectionIds,
+            classIds: scope === "all" ? undefined : scope.classIds,
           }),
           getLiveClassFormOptions(schoolId),
         ])

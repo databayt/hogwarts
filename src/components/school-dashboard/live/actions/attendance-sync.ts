@@ -23,6 +23,8 @@ import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
+import { DEFAULT_SCHOOL_TZ, schoolDayOfInstant } from "../day-window"
+
 // Minutes after the scheduled start beyond which a join counts as LATE.
 const LATE_GRACE_MINUTES = 10
 
@@ -90,6 +92,7 @@ export async function syncLiveAttendance(
         actualStart: true,
         school: {
           select: {
+            timezone: true,
             conferenceAttendanceSync: true,
             conferenceLateGraceMinutes: true,
             conferenceMinPresenceMinutes: true,
@@ -127,11 +130,19 @@ export async function syncLiveAttendance(
 
     const slot = await db.timetable.findFirst({
       where: { id: timetableId, schoolId },
-      select: { periodId: true, period: { select: { name: true } } },
+      select: {
+        periodId: true,
+        period: { select: { name: true } },
+        classId: true,
+      },
     })
     if (!slot?.periodId) return { marked: 0, updated: 0, skipped: "no_period" }
     const periodId = slot.periodId
     const periodName = slot.period?.name ?? null
+    // Legacy subject-class reference, when the slot has one — lets a
+    // student's own attendance view (records.ts) resolve a class name for a
+    // VIRTUAL row the same way it does for a manually-marked one.
+    const classId = slot.classId ?? null
 
     // Roster = every student placed in the section (id + userId for the
     // presence map). This is the authority for who should have attended.
@@ -160,11 +171,20 @@ export async function syncLiveAttendance(
 
     const start = session.actualStart ?? session.scheduledStart
     const lateAfter = new Date(start.getTime() + lateGraceMin * 60_000)
-    // Attendance.date is @db.Date — use UTC midnight of the session day so the
-    // unique key is stable regardless of the start time of day.
-    const dateObj = new Date(
-      Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate())
-    )
+    // Attendance.date is @db.Date — the stored value must be the SCHOOL-LOCAL
+    // calendar day of the session, not the UTC calendar day of the start
+    // instant. Those two disagree for any session that starts between local
+    // midnight and the UTC offset boundary (e.g. a session starting at
+    // 01:00 Africa/Khartoum time is still 23:00 UTC the PREVIOUS day).
+    // `schoolDayOfInstant` derives the same "YYYY-MM-DD" the manual register
+    // would show for this instant, and `new Date(dayString)` builds the
+    // @db.Date value the exact way `markPeriodAttendance`/`markAttendance` do
+    // from a bare "YYYY-MM-DD" string (attendance/actions/periods.ts,
+    // core.ts) — so a live-synced row and a manually-marked row for the same
+    // school-local day always compare equal.
+    const schoolTz = session.school.timezone ?? DEFAULT_SCHOOL_TZ
+    const schoolDay = schoolDayOfInstant(schoolTz, start)
+    const dateObj = new Date(schoolDay)
 
     // A student still in the room when it closes may have no `leftAt` at all:
     // the webhook writes it on `participant_left`, the sync runs from
@@ -191,6 +211,12 @@ export async function syncLiveAttendance(
 
     const studentIds = roster.map((s) => s.id)
     // Prefetch existing rows in one query (no per-student findFirst N+1).
+    // Deliberately NOT filtered on deletedAt — per this block's revive-on-
+    // update convention (attendance/CLAUDE.md Danger Zones), a soft-deleted
+    // row still occupies the unique key and must be found here so it can be
+    // revived, not collided with by createMany. method/status/deletedAt are
+    // read for the hybrid-safety rule below — never for display, so the
+    // extra columns cost nothing at the call site.
     const existingRows = await db.attendance.findMany({
       where: {
         schoolId,
@@ -199,10 +225,24 @@ export async function syncLiveAttendance(
         periodId,
         studentId: { in: studentIds },
       },
-      select: { id: true, studentId: true },
+      select: {
+        id: true,
+        studentId: true,
+        method: true,
+        status: true,
+        deletedAt: true,
+      },
     })
     const existingByStudent = new Map(
-      existingRows.map((r) => [r.studentId, r.id])
+      existingRows.map((r) => [
+        r.studentId,
+        {
+          id: r.id,
+          method: r.method,
+          status: r.status,
+          deletedAt: r.deletedAt,
+        },
+      ])
     )
 
     let marked = 0
@@ -239,10 +279,31 @@ export async function syncLiveAttendance(
           ? "auto: live-class presence · left early"
           : "auto: live-class presence"
 
-        const existingId = existingByStudent.get(student.id)
-        if (existingId) {
+        const existing = existingByStudent.get(student.id)
+        if (existing) {
+          // Hybrid-school safety (attn-05): a MANUAL row already marking the
+          // student PRESENT/LATE/EXCUSED — i.e. they were seen in the
+          // physical room — must never be downgraded to ABSENT just because
+          // they didn't also join the online room. Presence can only FILL or
+          // UPGRADE such a row (write check-in/out + method VIRTUAL when the
+          // presence itself says PRESENT/LATE); when presence says ABSENT the
+          // manual mark is left untouched entirely. A VIRTUAL row (or one
+          // already ABSENT/SICK/HOLIDAY) has no such protection and is
+          // written normally, same as before. A SOFT-DELETED manual row is
+          // excluded from the protection: an admin-removed mark was never
+          // "seen in the room" and must not block the row from being
+          // revived (see the `deletedAt: null` write below).
+          const isManualPresentLike =
+            existing.deletedAt == null &&
+            existing.method !== "VIRTUAL" &&
+            (existing.status === "PRESENT" ||
+              existing.status === "LATE" ||
+              existing.status === "EXCUSED")
+          if (isManualPresentLike && status === "ABSENT") {
+            continue
+          }
           await tx.attendance.update({
-            where: { id: existingId },
+            where: { id: existing.id },
             data: {
               status,
               method: "VIRTUAL",
@@ -258,6 +319,7 @@ export async function syncLiveAttendance(
           toCreate.push({
             schoolId,
             studentId: student.id,
+            classId,
             date: dateObj,
             status,
             method: "VIRTUAL",
@@ -275,7 +337,14 @@ export async function syncLiveAttendance(
       }
 
       if (toCreate.length > 0) {
-        await tx.attendance.createMany({ data: toCreate })
+        // skipDuplicates: a genuine unique-constraint collision on one
+        // student (e.g. a manual period-scoped row created between the
+        // prefetch and this write) must not abort the whole batch and leave
+        // every other student in the roster unmarked.
+        await tx.attendance.createMany({
+          data: toCreate,
+          skipDuplicates: true,
+        })
       }
     })
 

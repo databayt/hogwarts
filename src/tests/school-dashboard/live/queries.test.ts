@@ -13,6 +13,7 @@ import {
   getLiveClassReferenceData,
   getLiveSlotOptions,
   SLOT_OPTION_CAP,
+  verifyLessonAnchor,
 } from "@/components/school-dashboard/live/queries"
 
 vi.mock("@/lib/db", () => ({
@@ -21,7 +22,7 @@ vi.mock("@/lib/db", () => ({
     teacher: { findMany: vi.fn() },
     subjectSelection: { findMany: vi.fn() },
     section: { findMany: vi.fn() },
-    lesson: { findMany: vi.fn() },
+    lesson: { findMany: vi.fn(), count: vi.fn() },
     schoolExam: { findMany: vi.fn() },
     schoolAssignment: { findMany: vi.fn() },
   },
@@ -226,5 +227,104 @@ describe("getLiveClassReferenceData — catalog scoped to the grade", () => {
       where: { chapter: Record<string, unknown> }
     }
     expect(args.where.chapter).toEqual({ subjectId: "sub-1" })
+  })
+
+  it("excludes lessons the school hid via ContentOverride, same as the room's Related shelf", async () => {
+    await getLiveClassReferenceData(SCHOOL, "sub-1")
+    const args = vi.mocked(db.lesson.findMany).mock.calls[0][0] as {
+      where: { NOT?: Record<string, unknown> }
+    }
+    expect(args.where.NOT).toEqual({
+      overrides: { some: { schoolId: SCHOOL, isHidden: true } },
+    })
+  })
+
+  it("scopes exams to the subject, excludes cancelled ones, and returns status for the label", async () => {
+    await getLiveClassReferenceData(SCHOOL, "sub-1")
+    const args = vi.mocked(db.schoolExam.findMany).mock.calls[0][0] as {
+      where: Record<string, unknown>
+      select: Record<string, unknown>
+    }
+    expect(args.where).toMatchObject({
+      schoolId: SCHOOL,
+      subjectId: "sub-1",
+      status: { not: "CANCELLED" },
+    })
+    expect(args.select).toMatchObject({ status: true })
+  })
+
+  it("narrows exams by grade through Class.gradeId, keeping ungraded classes visible", async () => {
+    await getLiveClassReferenceData(SCHOOL, "sub-1", 7)
+    const args = vi.mocked(db.schoolExam.findMany).mock.calls[0][0] as {
+      where: { class?: Record<string, unknown> }
+    }
+    expect(args.where.class).toEqual({
+      OR: [{ grade: { gradeNumber: 7 } }, { gradeId: null }],
+    })
+  })
+
+  it("applies no grade filter to exams when the section's grade is unknown", async () => {
+    await getLiveClassReferenceData(SCHOOL, "sub-1")
+    const args = vi.mocked(db.schoolExam.findMany).mock.calls[0][0] as {
+      where: { class?: unknown }
+    }
+    expect(args.where.class).toBeUndefined()
+  })
+
+  it("narrows assignments by grade through Class.gradeId, keeping ungraded classes visible", async () => {
+    await getLiveClassReferenceData(SCHOOL, "sub-1", 7)
+    const args = vi.mocked(db.schoolAssignment.findMany).mock.calls[0][0] as {
+      where: { class: Record<string, unknown> }
+    }
+    expect(args.where.class).toEqual({
+      subjectId: "sub-1",
+      OR: [{ grade: { gradeNumber: 7 } }, { gradeId: null }],
+    })
+  })
+
+  it("returns status alongside the assignment label data", async () => {
+    await getLiveClassReferenceData(SCHOOL, "sub-1")
+    const args = vi.mocked(db.schoolAssignment.findMany).mock.calls[0][0] as {
+      select: Record<string, unknown>
+    }
+    expect(args.select).toMatchObject({ status: true })
+  })
+})
+
+describe("verifyLessonAnchor — write-side guard for a session's catalogLessonId", () => {
+  it("passes the same PUBLISHED + not-hidden filter the picker and the room's Related shelf use", async () => {
+    vi.mocked(db.lesson.count).mockResolvedValue(1)
+
+    const ok = await verifyLessonAnchor(SCHOOL, "lesson-1", "sub-1")
+
+    expect(ok).toBe(true)
+    const args = vi.mocked(db.lesson.count).mock.calls[0][0] as {
+      where: Record<string, unknown>
+    }
+    expect(args.where).toEqual({
+      id: "lesson-1",
+      status: "PUBLISHED",
+      NOT: { overrides: { some: { schoolId: SCHOOL, isHidden: true } } },
+      chapter: { subjectId: "sub-1" },
+    })
+  })
+
+  it("omits the chapter/subject filter for a slot-less session (null subjectId)", async () => {
+    vi.mocked(db.lesson.count).mockResolvedValue(1)
+
+    await verifyLessonAnchor(SCHOOL, "lesson-1", null)
+
+    const args = vi.mocked(db.lesson.count).mock.calls[0][0] as {
+      where: Record<string, unknown>
+    }
+    expect(args.where).not.toHaveProperty("chapter")
+  })
+
+  it("rejects a lesson that does not match — hidden, unpublished, wrong subject, or nonexistent", async () => {
+    vi.mocked(db.lesson.count).mockResolvedValue(0)
+
+    const ok = await verifyLessonAnchor(SCHOOL, "lesson-hidden", "sub-1")
+
+    expect(ok).toBe(false)
   })
 })

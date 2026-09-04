@@ -13,6 +13,7 @@ import { getLessonContent } from "@/components/lumos/data/catalog/get-lesson-con
 import { getLessonWithProgress } from "@/components/lumos/data/catalog/get-lesson-with-progress"
 import { getSubjectDisplayName } from "@/components/lumos/data/catalog/subject-title"
 import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
+import { LessonLiveStrip } from "@/components/school-dashboard/live/lesson-live-strip"
 
 interface Props {
   params: Promise<{
@@ -70,6 +71,25 @@ export default async function LumosLessonPage({ params }: Props) {
       <BreadcrumbTitle
         title={lesson.title}
         segments={{ [slug]: subjectTitle }}
+      />
+      {/* "This lesson is being taught live now" — the catalog → conference
+          back-link. Renders nothing when no session references this lesson
+          today, so the page pays one indexed query and no layout shift. */}
+      <LessonLiveStrip
+        schoolId={schoolId}
+        catalogLessonId={lessonId}
+        lang={lang}
+        labels={{
+          liveNow:
+            dictionary.school?.liveClasses?.landing?.now?.liveTitle ??
+            "Live now",
+          upcoming:
+            dictionary.school?.liveClasses?.landing?.now?.upcomingTitle ??
+            "Upcoming",
+          join:
+            dictionary.school?.liveClasses?.landing?.now?.joinNow ?? "Join now",
+          open: dictionary.school?.liveClasses?.landing?.now?.open ?? "Open",
+        }}
       />
       <LumosLessonContent
         dictionary={dictionary.lumos || {}}

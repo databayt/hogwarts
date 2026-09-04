@@ -1,17 +1,20 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
+  applyGeneratedTimetable,
   applyTemplateToTerm,
   cancelSubstitution,
   deletePeriod,
   deleteScheduleException,
   detectTimetableConflicts,
+  getSlotDetail,
   getWeeklyTimetable,
+  importTimetableSlots,
   moveTimetableSlot,
   respondToSubstitution,
   setActiveTerm,
@@ -58,8 +61,8 @@ vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
 }))
 
-vi.mock("@/lib/db", () => ({
-  db: {
+vi.mock("@/lib/db", () => {
+  const db = {
     timetable: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
@@ -117,7 +120,11 @@ vi.mock("@/lib/db", () => ({
     },
     substitutionRecord: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    conference: {
       updateMany: vi.fn(),
     },
     timetableTemplate: {
@@ -136,9 +143,11 @@ vi.mock("@/lib/db", () => ({
     },
     teacher: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     classroom: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     section: {
       findFirst: vi.fn(),
@@ -150,6 +159,7 @@ vi.mock("@/lib/db", () => ({
     },
     teacherSubjectExpertise: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     student: {
       findFirst: vi.fn(),
@@ -166,15 +176,20 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn().mockResolvedValue([]),
     },
     $queryRaw: vi.fn().mockResolvedValue([]),
-    // Array form runs the ops (already invoked when building the array) and
-    // resolves them together; callback form is unused by the timetable actions.
-    $transaction: vi
-      .fn()
-      .mockImplementation((arg: unknown) =>
-        Array.isArray(arg) ? Promise.all(arg) : Promise.resolve(arg)
-      ),
-  },
-}))
+    $transaction: vi.fn(),
+  }
+  // Array form runs the ops (already invoked when building the array) and
+  // resolves them together; callback form (importTimetableSlots' overwrite
+  // path) runs the callback against this same mocked `db` as its `tx`.
+  db.$transaction.mockImplementation((arg: unknown) =>
+    Array.isArray(arg)
+      ? Promise.all(arg)
+      : typeof arg === "function"
+        ? (arg as (tx: typeof db) => unknown)(db)
+        : Promise.resolve(arg)
+  )
+  return { db }
+})
 
 // Mock permissions — let all permission guards pass by default
 vi.mock("@/components/school-dashboard/timetable/permissions", () => ({
@@ -1371,6 +1386,300 @@ describe("Timetable Actions", () => {
           targetTermId: CTERM1,
         })
       ).rejects.toThrow("TEMPLATE_NOT_FOUND")
+    })
+
+    // -----------------------------------------------------------------------
+    // clearExisting: `Conference.timetableId` is `onDelete: SetNull`, so a
+    // bulk `timetable.deleteMany` silently orphans any live-anchored session
+    // on the old slots. Cancel outstanding scheduled ones FIRST so the next
+    // materialization sweep doesn't mint a duplicate under the new slot ids.
+    // -----------------------------------------------------------------------
+    describe("clearExisting cancels outstanding live sessions on the old slots", () => {
+      beforeEach(() => {
+        vi.mocked(db.timetableTemplate.findFirst).mockResolvedValue({
+          slotPatterns: [],
+          workingDays: [0, 1, 2, 3, 4],
+        } as any)
+        vi.mocked(db.timetable.createMany).mockResolvedValue({ count: 0 })
+        vi.mocked(db.templateApplication.create).mockResolvedValue({} as any)
+        vi.mocked(db.timetable.deleteMany).mockResolvedValue({ count: 2 })
+        vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 1 })
+      })
+
+      it("cancels scheduled+future Conference rows anchored to the OLD slot ids before deleting them", async () => {
+        vi.mocked(db.timetable.findMany).mockResolvedValue([
+          { id: CSLOT1 },
+          { id: CSLOT2 },
+        ] as any)
+
+        await applyTemplateToTerm({
+          templateId: CTPL1,
+          targetTermId: CTERM1,
+          clearExisting: true,
+        })
+
+        expect(db.timetable.findMany).toHaveBeenCalledWith({
+          where: { schoolId: SCHOOL_ID, termId: CTERM1 },
+          select: { id: true },
+        })
+        expect(db.conference.updateMany).toHaveBeenCalledWith({
+          where: {
+            schoolId: SCHOOL_ID,
+            timetableId: { in: [CSLOT1, CSLOT2] },
+            status: "scheduled",
+            scheduledStart: { gt: expect.any(Date) },
+          },
+          data: { status: "cancelled" },
+        })
+        // Queued before the delete — once the slot row is gone the
+        // Conference row's timetableId is silently SetNull.
+        const cancelOrder = vi.mocked(db.conference.updateMany).mock
+          .invocationCallOrder[0]
+        const deleteOrder = vi.mocked(db.timetable.deleteMany).mock
+          .invocationCallOrder[0]
+        expect(cancelOrder).toBeLessThan(deleteOrder)
+      })
+
+      it("skips the cancel call when the term has no existing slots", async () => {
+        vi.mocked(db.timetable.findMany).mockResolvedValue([] as any)
+
+        await applyTemplateToTerm({
+          templateId: CTPL1,
+          targetTermId: CTERM1,
+          clearExisting: true,
+        })
+
+        expect(db.conference.updateMany).not.toHaveBeenCalled()
+        expect(db.timetable.deleteMany).toHaveBeenCalled()
+      })
+
+      it("does not touch Conference at all when clearExisting is not set", async () => {
+        await applyTemplateToTerm({
+          templateId: CTPL1,
+          targetTermId: CTERM1,
+        })
+
+        expect(db.timetable.findMany).not.toHaveBeenCalled()
+        expect(db.conference.updateMany).not.toHaveBeenCalled()
+        expect(db.timetable.deleteMany).not.toHaveBeenCalled()
+      })
+    })
+  })
+
+  // =========================================================================
+  // applyGeneratedTimetable
+  // =========================================================================
+
+  describe("applyGeneratedTimetable", () => {
+    beforeEach(() => {
+      vi.mocked(db.timetable.deleteMany).mockResolvedValue({ count: 2 })
+      vi.mocked(db.timetable.createMany).mockResolvedValue({ count: 0 })
+      vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 1 })
+    })
+
+    it("clearExisting cancels scheduled+future Conference rows anchored to the OLD slot ids before deleting them", async () => {
+      vi.mocked(db.timetable.findMany).mockResolvedValue([
+        { id: CSLOT1 },
+      ] as any)
+
+      const res = await applyGeneratedTimetable({
+        termId: CTERM1,
+        slots: [],
+        clearExisting: true,
+      })
+
+      expect(res.success).toBe(true)
+      expect(db.timetable.findMany).toHaveBeenCalledWith({
+        where: { schoolId: SCHOOL_ID, termId: CTERM1 },
+        select: { id: true },
+      })
+      expect(db.conference.updateMany).toHaveBeenCalledWith({
+        where: {
+          schoolId: SCHOOL_ID,
+          timetableId: { in: [CSLOT1] },
+          status: "scheduled",
+          scheduledStart: { gt: expect.any(Date) },
+        },
+        data: { status: "cancelled" },
+      })
+    })
+
+    it("skips the cancel call when the term has no existing slots", async () => {
+      vi.mocked(db.timetable.findMany).mockResolvedValue([] as any)
+
+      const res = await applyGeneratedTimetable({
+        termId: CTERM1,
+        slots: [],
+        clearExisting: true,
+      })
+
+      expect(res.success).toBe(true)
+      expect(db.conference.updateMany).not.toHaveBeenCalled()
+    })
+
+    it("does not touch Conference at all when clearExisting is not set", async () => {
+      const res = await applyGeneratedTimetable({
+        termId: CTERM1,
+        slots: [],
+      })
+
+      expect(res.success).toBe(true)
+      expect(db.timetable.findMany).not.toHaveBeenCalled()
+      expect(db.conference.updateMany).not.toHaveBeenCalled()
+    })
+  })
+
+  // =========================================================================
+  // importTimetableSlots — a third `timetable.deleteMany` regeneration path
+  // (overwrite mode), same orphan hazard as applyTemplateToTerm /
+  // applyGeneratedTimetable (tt-03)
+  // =========================================================================
+
+  describe("importTimetableSlots — overwrite cancels outstanding live sessions on the old slots", () => {
+    beforeEach(() => {
+      vi.mocked(db.term.findFirst).mockResolvedValue({
+        yearId: "year-1",
+      } as any)
+      vi.mocked(db.class.findMany).mockResolvedValue([] as any)
+      vi.mocked(db.teacher.findMany).mockResolvedValue([] as any)
+      vi.mocked(db.classroom.findMany).mockResolvedValue([] as any)
+      vi.mocked(db.period.findMany).mockResolvedValue([] as any)
+      vi.mocked(db.teacherSubjectExpertise.findMany).mockResolvedValue(
+        [] as any
+      )
+      vi.mocked(db.timetable.deleteMany).mockResolvedValue({ count: 2 })
+      vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 1 })
+    })
+
+    it("cancels scheduled+future Conference rows anchored to the OLD slot ids before deleting them", async () => {
+      vi.mocked(db.timetable.findMany).mockResolvedValue([
+        { id: CSLOT1 },
+        { id: CSLOT2 },
+      ] as any)
+
+      const res = await importTimetableSlots({
+        termId: CTERM1,
+        slots: [],
+        options: { overwrite: true, validateOnly: false },
+      })
+
+      expect(res.success).toBe(true)
+      expect(db.timetable.findMany).toHaveBeenCalledWith({
+        where: { schoolId: SCHOOL_ID, termId: CTERM1 },
+        select: { id: true },
+      })
+      expect(db.conference.updateMany).toHaveBeenCalledWith({
+        where: {
+          schoolId: SCHOOL_ID,
+          timetableId: { in: [CSLOT1, CSLOT2] },
+          status: "scheduled",
+          scheduledStart: { gt: expect.any(Date) },
+        },
+        data: { status: "cancelled" },
+      })
+      const cancelOrder = vi.mocked(db.conference.updateMany).mock
+        .invocationCallOrder[0]
+      const deleteOrder = vi.mocked(db.timetable.deleteMany).mock
+        .invocationCallOrder[0]
+      expect(cancelOrder).toBeLessThan(deleteOrder)
+    })
+
+    it("non-overwrite import never touches Conference or deletes slots", async () => {
+      const res = await importTimetableSlots({
+        termId: CTERM1,
+        slots: [],
+        options: { overwrite: false, validateOnly: false },
+      })
+
+      expect(res.success).toBe(true)
+      expect(db.timetable.findMany).not.toHaveBeenCalled()
+      expect(db.conference.updateMany).not.toHaveBeenCalled()
+      expect(db.timetable.deleteMany).not.toHaveBeenCalled()
+    })
+  })
+
+  // =========================================================================
+  // getSlotDetail — a CONFIRMED substitute's name replaces the absent
+  // teacher's, mirroring getTodaySchedule/getPersonalizedTimetable (tt-05)
+  // =========================================================================
+
+  describe("getSlotDetail", () => {
+    // A fixed Wednesday, UTC, so `schoolDayOfWeek("UTC", now)` is
+    // deterministic and matches `slot.dayOfWeek: 3` for the "today" gate.
+    const TODAY = new Date("2026-06-03T10:00:00Z")
+
+    const baseSlot = {
+      id: CSLOT1,
+      dayOfWeek: 3,
+      sectionId: CSECTION1,
+      subjectId: CSUBJECT1,
+      subject: { name: "Math" },
+      class: null,
+      section: { name: "Grade 1 A", grade: { name: "Grade 1" } },
+      classroom: { roomName: "A01" },
+      teacher: { id: CTEACHER1, firstName: "Alan", lastName: "Turing" },
+      period: {
+        id: CPERIOD1,
+        name: "Period 1",
+        startTime: new Date(Date.UTC(1970, 0, 1, 8, 0)),
+        endTime: new Date(Date.UTC(1970, 0, 1, 8, 45)),
+      },
+    }
+
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(TODAY)
+      vi.mocked(db.timetable.findFirst).mockResolvedValue(baseSlot as any)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        timezone: "UTC",
+      } as any)
+      vi.mocked(db.substitutionRecord.findMany).mockResolvedValue([] as any)
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it("returns the slot's own teacher when no substitution covers today", async () => {
+      const res = await getSlotDetail({ timetableId: CSLOT1 })
+
+      expect(res.teacher).toBe("Alan Turing")
+    })
+
+    it("swaps in the CONFIRMED substitute's name for today's slot", async () => {
+      vi.mocked(db.substitutionRecord.findMany).mockResolvedValue([
+        {
+          originalSlotId: CSLOT1,
+          substituteTeacher: { firstName: "Ada", lastName: "Lovelace" },
+        },
+      ] as any)
+
+      const res = await getSlotDetail({ timetableId: CSLOT1 })
+
+      expect(res.teacher).toBe("Ada Lovelace")
+      expect(db.substitutionRecord.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            schoolId: SCHOOL_ID,
+            originalSlotId: { in: [CSLOT1] },
+            status: "CONFIRMED",
+          }),
+        })
+      )
+    })
+
+    it("a substitution dated for a DIFFERENT day never overrides a cell inspected on another day", async () => {
+      // A substitution exists in principle, but the slot isn't today's —
+      // getSlotDetail must not even ask the substitution question.
+      vi.mocked(db.timetable.findFirst).mockResolvedValue({
+        ...baseSlot,
+        dayOfWeek: 5, // Friday — not TODAY's Wednesday
+      } as any)
+
+      const res = await getSlotDetail({ timetableId: CSLOT1 })
+
+      expect(res.teacher).toBe("Alan Turing")
+      expect(db.substitutionRecord.findMany).not.toHaveBeenCalled()
     })
   })
 })

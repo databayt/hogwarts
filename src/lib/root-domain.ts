@@ -33,6 +33,25 @@ export type RootDomain = (typeof ROOT_DOMAINS)[number]
 export const PRIMARY_ROOT_DOMAIN: RootDomain = "databayt.org"
 
 /**
+ * Root treated as "home" by code that has NO request to resolve a root from
+ * — background jobs, crons, email rendering — as opposed to
+ * `PRIMARY_ROOT_DOMAIN`, which is the fallback for an *unresolvable request
+ * host* and drives cookie/redirect scoping (changing it changes auth).
+ * balqalam.com is the org's actual live tenant root (its apex IS the
+ * platform; databayt.org's platform lives on a `ed.` subdomain because the
+ * bare apex is a separate marketing site) — see project CLAUDE.md / MEMORY.
+ *
+ * TODO(school-canonical-root): every school today is reachable on either
+ * root by the same bare `School.domain` label, so this happens to route
+ * correctly for schools actually provisioned there too — but that's a
+ * coincidence of the current DNS setup, not a guarantee. The real fix is a
+ * per-school canonical root-domain column (schema change) read instead of
+ * this constant; until then this is the best available default for a
+ * request-less context.
+ */
+export const LIVE_ROOT_DOMAIN: RootDomain = "balqalam.com"
+
+/**
  * Marketing/platform host per root — requests on these hosts are NOT tenants.
  * databayt.org's apex is the company site (a separate Vercel project), so the
  * platform lives on the `ed.` subdomain there; balqalam.com's apex IS the
@@ -144,6 +163,22 @@ export function tenantOriginForHost(
     return `http://${subdomain}.localhost:3000`
   }
   const root = getRootDomain(host) ?? PRIMARY_ROOT_DOMAIN
+  return `https://${subdomain}.${root}`
+}
+
+/**
+ * Absolute origin for a tenant subdomain on an EXPLICIT root — the
+ * request-less sibling of `tenantOriginForHost`, for background contexts
+ * (crons, email rendering) that have no request `host` to resolve a root
+ * from and must pick one on their own. Defaults to `LIVE_ROOT_DOMAIN`.
+ */
+export function tenantOriginForRoot(
+  subdomain: string,
+  root: RootDomain = LIVE_ROOT_DOMAIN
+): string {
+  if (process.env.NODE_ENV === "development") {
+    return `http://${subdomain}.localhost:3000`
+  }
   return `https://${subdomain}.${root}`
 }
 

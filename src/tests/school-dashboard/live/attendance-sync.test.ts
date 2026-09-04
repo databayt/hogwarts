@@ -47,13 +47,13 @@ function happySession() {
     timetableId: "tt1",
     scheduledStart: START,
     scheduledEnd: END,
-    scheduledEnd: END,
     actualStart: null,
     school: { conferenceAttendanceSync: true },
   })
   mockDb.timetable.findFirst.mockResolvedValue({
     periodId: "p1",
     period: { name: "Period 1" },
+    classId: null,
   })
   mockDb.student.findMany.mockResolvedValue([
     { id: "sA", userId: "uA" },
@@ -337,6 +337,306 @@ describe("syncLiveAttendance — presence across reconnects", () => {
     const a = rows.find((r) => r.studentId === "sA")!
     expect(a.checkOutTime).toEqual(leftAt)
     expect(a.notes).toBe("auto: live-class presence")
+  })
+})
+
+describe("syncLiveAttendance — Attendance.date is the SCHOOL-LOCAL day (attn-01)", () => {
+  it("derives the day from Africa/Khartoum (default) local time, not the UTC day of the start instant", async () => {
+    happySession()
+    // 23:30 UTC on the 18th is 01:30 the NEXT day in Africa/Khartoum (UTC+2)
+    // — exactly the boundary the old `Date.UTC(start)` derivation got wrong.
+    const localBoundaryStart = new Date("2026-06-18T23:30:00.000Z")
+    mockDb.conference.findFirst.mockResolvedValue({
+      id: "c1",
+      provider: "livekit",
+      sectionId: "sec1",
+      timetableId: "tt1",
+      scheduledStart: localBoundaryStart,
+      scheduledEnd: new Date(localBoundaryStart.getTime() + 45 * 60_000),
+      actualStart: null,
+      // No explicit timezone -> falls back to DEFAULT_SCHOOL_TZ.
+      school: { conferenceAttendanceSync: true },
+    })
+
+    await syncLiveAttendance("school1", "c1")
+
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    // Khartoum-local calendar day (the 19th), NOT the UTC day (the 18th).
+    expect(rows[0].date).toEqual(new Date("2026-06-19"))
+    expect(mockDb.attendance.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ date: new Date("2026-06-19") }),
+      })
+    )
+  })
+
+  it("uses School.timezone when set, deriving the PREVIOUS local day across a negative UTC offset", async () => {
+    happySession()
+    // 00:30 UTC is 20:30 the PREVIOUS day in America/New_York (UTC-4, EDT in June).
+    const start = new Date("2026-06-19T00:30:00.000Z")
+    mockDb.conference.findFirst.mockResolvedValue({
+      id: "c1",
+      provider: "livekit",
+      sectionId: "sec1",
+      timetableId: "tt1",
+      scheduledStart: start,
+      scheduledEnd: new Date(start.getTime() + 45 * 60_000),
+      actualStart: null,
+      school: {
+        conferenceAttendanceSync: true,
+        timezone: "America/New_York",
+      },
+    })
+
+    await syncLiveAttendance("school1", "c1")
+
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    expect(rows[0].date).toEqual(new Date("2026-06-18"))
+  })
+
+  it("a session starting well inside the school day still lands on the same UTC day (sanity check)", async () => {
+    happySession()
+    await syncLiveAttendance("school1", "c1")
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    // START is 08:00 UTC = 10:00 Africa/Khartoum — same calendar day either way.
+    expect(rows[0].date).toEqual(new Date("2026-06-19"))
+  })
+})
+
+describe("syncLiveAttendance — carries the slot's classId (attn-03)", () => {
+  it("sets classId on a created row from the timetable slot's legacy class link", async () => {
+    happySession()
+    mockDb.timetable.findFirst.mockResolvedValue({
+      periodId: "p1",
+      period: { name: "Period 1" },
+      classId: "cls1",
+    })
+
+    await syncLiveAttendance("school1", "c1")
+
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    for (const r of rows) expect(r.classId).toBe("cls1")
+  })
+
+  it("writes classId: null when the slot has no legacy class link", async () => {
+    happySession() // default timetable mock has classId: null
+    await syncLiveAttendance("school1", "c1")
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    for (const r of rows) expect(r.classId).toBeNull()
+  })
+})
+
+describe("syncLiveAttendance — hybrid-school safety (attn-05)", () => {
+  it("never downgrades a MANUAL PRESENT row to ABSENT for a student who didn't join online", async () => {
+    happySession()
+    // Nobody joined the live room this sync — everyone reads ABSENT by presence.
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([])
+    mockDb.attendance.findMany.mockResolvedValue([
+      { id: "att-A", studentId: "sA", method: "MANUAL", status: "PRESENT" },
+    ])
+
+    const res = await syncLiveAttendance("school1", "c1")
+
+    // sA's manual row must never be touched.
+    expect(mockDb.attendance.update).not.toHaveBeenCalled()
+    // sB and sC (no existing row) still get created ABSENT.
+    expect(res.marked).toBe(2)
+    expect(res.updated).toBe(0)
+  })
+
+  it("leaves a manual EXCUSED row untouched when presence says ABSENT", async () => {
+    happySession()
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([])
+    mockDb.attendance.findMany.mockResolvedValue([
+      { id: "att-A", studentId: "sA", method: "MANUAL", status: "EXCUSED" },
+    ])
+
+    await syncLiveAttendance("school1", "c1")
+
+    expect(mockDb.attendance.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "att-A" } })
+    )
+  })
+
+  it("a SOFT-DELETED manual PRESENT row does NOT block revival — an admin-removed mark was never 'seen in the room'", async () => {
+    happySession()
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([]) // nobody joined online
+    mockDb.attendance.findMany.mockResolvedValue([
+      {
+        id: "att-A",
+        studentId: "sA",
+        method: "MANUAL",
+        status: "PRESENT",
+        deletedAt: new Date("2026-06-01"),
+      },
+    ])
+
+    await syncLiveAttendance("school1", "c1")
+
+    // Unlike the live (non-deleted) MANUAL PRESENT case, this row IS revived
+    // and overwritten with the live-presence result (ABSENT here).
+    expect(mockDb.attendance.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "att-A" },
+        data: expect.objectContaining({
+          status: "ABSENT",
+          method: "VIRTUAL",
+          deletedAt: null,
+        }),
+      })
+    )
+  })
+
+  it("upgrades a MANUAL row to VIRTUAL PRESENT when online presence says PRESENT", async () => {
+    happySession()
+    // sA (uA) joins on time per happySession()'s participant fixture.
+    mockDb.attendance.findMany.mockResolvedValue([
+      { id: "att-A", studentId: "sA", method: "MANUAL", status: "ABSENT" },
+    ])
+
+    await syncLiveAttendance("school1", "c1")
+
+    expect(mockDb.attendance.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "att-A" },
+        data: expect.objectContaining({
+          status: "PRESENT",
+          method: "VIRTUAL",
+        }),
+      })
+    )
+  })
+
+  it("still allows a VIRTUAL row to be downgraded to ABSENT on re-sync (no manual protection)", async () => {
+    happySession()
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([]) // sA no longer present
+    mockDb.attendance.findMany.mockResolvedValue([
+      { id: "att-A", studentId: "sA", method: "VIRTUAL", status: "PRESENT" },
+    ])
+
+    await syncLiveAttendance("school1", "c1")
+
+    expect(mockDb.attendance.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "att-A" },
+        data: expect.objectContaining({
+          status: "ABSENT",
+          method: "VIRTUAL",
+        }),
+      })
+    )
+  })
+})
+
+describe("syncLiveAttendance — per-school thresholds (live-07)", () => {
+  it("uses School.conferenceLateGraceMinutes instead of the 10-minute default", async () => {
+    happySession()
+    mockDb.conference.findFirst.mockResolvedValue({
+      id: "c1",
+      provider: "livekit",
+      sectionId: "sec1",
+      timetableId: "tt1",
+      scheduledStart: START,
+      scheduledEnd: END,
+      actualStart: null,
+      school: { conferenceAttendanceSync: true, conferenceLateGraceMinutes: 2 },
+    })
+
+    // ON_TIME (uA) is START + 5 min — PRESENT under the 10-min default,
+    // LATE under a school-configured 2-minute grace.
+    await syncLiveAttendance("school1", "c1")
+
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    const a = rows.find((r) => r.studentId === "sA")!
+    expect(a.status).toBe("LATE")
+  })
+
+  it("uses School.conferenceMinPresenceMinutes instead of the 5-minute default", async () => {
+    happySession()
+    mockDb.conference.findFirst.mockResolvedValue({
+      id: "c1",
+      provider: "livekit",
+      sectionId: "sec1",
+      timetableId: "tt1",
+      scheduledStart: START,
+      scheduledEnd: END,
+      actualStart: null,
+      school: {
+        conferenceAttendanceSync: true,
+        conferenceMinPresenceMinutes: 8,
+      },
+    })
+    // uA connects and drops after 6 minutes — over the 5-min default floor,
+    // under an 8-minute school-configured floor.
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([
+      {
+        userId: "uA",
+        joinedAt: ON_TIME,
+        leftAt: new Date(ON_TIME.getTime() + 6 * 60_000),
+        durationSeconds: null,
+        activeSince: null,
+      },
+    ])
+
+    await syncLiveAttendance("school1", "c1")
+
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    const a = rows.find((r) => r.studentId === "sA")!
+    expect(a.status).toBe("ABSENT")
+  })
+
+  it("uses School.conferenceEarlyLeaveMinutes instead of the 10-minute default", async () => {
+    happySession()
+    mockDb.conference.findFirst.mockResolvedValue({
+      id: "c1",
+      provider: "livekit",
+      sectionId: "sec1",
+      timetableId: "tt1",
+      scheduledStart: START,
+      scheduledEnd: END,
+      actualStart: null,
+      school: {
+        conferenceAttendanceSync: true,
+        conferenceEarlyLeaveMinutes: 2,
+      },
+    })
+    // "Early" means leaving BEFORE (scheduledEnd - earlyLeaveMinutes) — a
+    // SMALLER window is STRICTER (catches more departures as early). Leaving
+    // 5 minutes before the end is within the 10-min default grace (NOT
+    // early there — see the sibling "not early" test above), but outside a
+    // school-configured 2-minute grace.
+    const leftAt = new Date(END.getTime() - 5 * 60_000)
+    mockDb.conferenceParticipant.findMany.mockResolvedValue([
+      {
+        userId: "uA",
+        joinedAt: ON_TIME,
+        leftAt,
+        durationSeconds: 30 * 60,
+        activeSince: null,
+      },
+    ])
+
+    await syncLiveAttendance("school1", "c1")
+
+    const rows = mockDb.attendance.createMany.mock.calls[0][0].data as Array<
+      Record<string, unknown>
+    >
+    const a = rows.find((r) => r.studentId === "sA")!
+    expect(a.notes).toBe("auto: live-class presence · left early")
   })
 })
 

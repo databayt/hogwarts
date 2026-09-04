@@ -34,6 +34,7 @@ import {
   liveSessionRevalidatePaths,
   requireContext,
 } from "./helpers"
+import { resolveSubstitutes } from "./materialize-day"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
 import { findSlotSessionForDay } from "./slot-session"
 import { transitionToLive } from "./went-live"
@@ -244,9 +245,18 @@ export async function createLiveClassFromTimetable(input: {
     const now = new Date()
     const end = new Date(now.getTime() + durationMin * 60_000)
 
+    // A CONFIRMED substitute hosts the online arm of the class they are
+    // covering — mirrors the materializer's `resolveSubstitutes` so the
+    // substitute (not the absent original teacher) passes the ownership
+    // check below when they hit Start from their own Current/Next card.
+    const substitutes = await resolveSubstitutes(ctx.schoolId, timeZone, now, [
+      slot.id,
+    ])
+    const sub = substitutes.get(slot.id)
+
     const createRes = await createLiveClass({
       title: slot.subject?.name || slot.section?.name || "Live Class",
-      teacherId: slot.teacherId,
+      teacherId: sub?.teacherId ?? slot.teacherId,
       sectionId: slot.sectionId ?? undefined,
       subjectId: slot.subjectId ?? undefined,
       timetableId: slot.id,

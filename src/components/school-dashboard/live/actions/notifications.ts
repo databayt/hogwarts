@@ -6,6 +6,8 @@
 // NOT a "use server" action — invoked internally from sessions.ts and the
 // webhook handler. Best-effort: failures are logged but never thrown.
 
+import type { Prisma } from "@prisma/client"
+
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 
@@ -18,8 +20,12 @@ type LiveEventKind =
 
 // Minimal lang-aware templates. Kept inline to avoid coupling to the
 // dictionary loader at module init time (so cron + webhook stay cheap).
+//
+// `startingSoon` is handled separately below (STARTING_SOON_TITLE /
+// STARTING_SOON_BODY) because its body varies with the actual lead time —
+// every other kind has a fixed body.
 const TEMPLATES: Record<
-  LiveEventKind,
+  Exclude<LiveEventKind, "startingSoon">,
   Record<"ar" | "en", { title: string; body: string }>
 > = {
   scheduled: {
@@ -30,16 +36,6 @@ const TEMPLATES: Record<
     en: {
       title: "Live class scheduled",
       body: "{title} with {teacher} on {when}",
-    },
-  },
-  startingSoon: {
-    ar: {
-      title: "فصل مباشر يبدأ قريباً",
-      body: "{title} يبدأ خلال 10 دقائق",
-    },
-    en: {
-      title: "Live class starting soon",
-      body: "{title} starts in 10 minutes",
     },
   },
   started: {
@@ -57,6 +53,51 @@ const TEMPLATES: Record<
       body: "Recording for {title} is now available",
     },
   },
+}
+
+const STARTING_SOON_TITLE: Record<"ar" | "en", string> = {
+  ar: "فصل مباشر يبدأ قريباً",
+  en: "Live class starting soon",
+}
+
+/**
+ * `startingSoon` fires with a school-configured lead (1–60 min,
+ * `School.conferenceReminderLeadMinutes`), so the body must say the actual
+ * minute count rather than a hardcoded "10 minutes" — and Arabic minute
+ * counts are NOT one word with a number bolted on: "دقيقة" (1), "دقيقتين"
+ * (2, dual — no digit), "{n} دقائق" (3–10, few) and "{n} دقيقة" (11+, many
+ * and other) are four different constructions. Keyed by
+ * `Intl.PluralRules("ar"|"en").select(lead)`. `zero` is included for
+ * completeness (Arabic has the category) even though the cron's min-1
+ * rounding never produces it.
+ */
+const STARTING_SOON_BODY: Record<
+  "ar" | "en",
+  Record<Intl.LDMLPluralRule, string>
+> = {
+  ar: {
+    zero: "{title} يبدأ خلال {lead} دقيقة",
+    one: "{title} يبدأ خلال دقيقة",
+    two: "{title} يبدأ خلال دقيقتين",
+    few: "{title} يبدأ خلال {lead} دقائق",
+    many: "{title} يبدأ خلال {lead} دقيقة",
+    other: "{title} يبدأ خلال {lead} دقيقة",
+  },
+  en: {
+    zero: "{title} starts in {lead} minutes",
+    one: "{title} starts in {lead} minute",
+    two: "{title} starts in {lead} minutes",
+    few: "{title} starts in {lead} minutes",
+    many: "{title} starts in {lead} minutes",
+    other: "{title} starts in {lead} minutes",
+  },
+}
+
+const arLeadPluralRules = new Intl.PluralRules("ar")
+const enLeadPluralRules = new Intl.PluralRules("en")
+
+function leadPluralCategory(lang: "ar" | "en", n: number): Intl.LDMLPluralRule {
+  return (lang === "ar" ? arLeadPluralRules : enLeadPluralRules).select(n)
 }
 
 function pickLang(lang: string | null | undefined): "ar" | "en" {
@@ -112,6 +153,12 @@ async function loadSession(
         select: { firstName: true, lastName: true, userId: true },
       },
       school: { select: { preferredLanguage: true } },
+      // A section-based Timetable slot keeps its legacy `classId` alongside
+      // `sectionId` (list-actions.ts updateLiveClass: "keep classId intact"),
+      // so a student not yet migrated onto `Student.sectionId` is still
+      // reachable through `StudentClass` enrollment in that class — see the
+      // OR below.
+      timetable: { select: { classId: true } },
     },
   })
   if (!session) return null
@@ -134,21 +181,41 @@ async function loadSession(
     })
     for (const u of users) userIds.add(u.id)
   } else if (session.sectionId) {
-    // Resolve student User ids in the section
+    // Section audience, OR'd across both enrollment axes — the same shape
+    // getWeeklyTimetable's STUDENT branch uses (timetable/actions.ts): a
+    // student's own `sectionId` covers the modern path, and `StudentClass`
+    // membership in the slot's legacy class covers a student the section
+    // migration hasn't reached yet. Without the second arm, that student is
+    // invisible here even though they're enrolled in the class this session
+    // actually is.
+    const legacyClassId = session.timetable?.classId ?? null
+    const sectionOrClauses: Prisma.StudentWhereInput[] = [
+      { sectionId: session.sectionId },
+    ]
+    if (legacyClassId) {
+      sectionOrClauses.push({
+        studentClasses: { some: { schoolId, classId: legacyClassId } },
+      })
+    }
+    // `id` (Student.id) is kept alongside `userId` because the guardian
+    // lookup below joins on StudentGuardian.studentId, which references
+    // Student.id — NOT User.id.
     const students = await db.student.findMany({
-      where: { schoolId, sectionId: session.sectionId, userId: { not: null } },
-      select: { userId: true },
+      where: { schoolId, userId: { not: null }, OR: sectionOrClauses },
+      select: { id: true, userId: true },
     })
     for (const s of students) {
       if (s.userId) userIds.add(s.userId)
     }
-    // Resolve guardian User ids of those students
-    const studentIds = students
-      .map((s) => s.userId)
-      .filter((id): id is string => Boolean(id))
+    // Guardians follow the SAME widened student set (by Student.id), not a
+    // fresh section-only re-query — the previous code computed this array
+    // from userId and then queried by section again without using it,
+    // silently dropping the OR'd-in legacy-enrolled students from the
+    // guardian audience even after they'd been added as students.
+    const studentIds = students.map((s) => s.id)
     if (studentIds.length > 0) {
       const sg = await db.studentGuardian.findMany({
-        where: { schoolId, student: { sectionId: session.sectionId } },
+        where: { schoolId, studentId: { in: studentIds } },
         select: { guardian: { select: { userId: true } } },
       })
       for (const g of sg) {
@@ -182,21 +249,37 @@ async function dispatch(
     | "live_class_started"
     | "live_class_cancelled"
     | "live_class_recording_ready",
-  extraVars: Record<string, string> = {}
+  extraVars: Record<string, string> = {},
+  // Only meaningful for `startingSoon` — the actual minutes-to-start the
+  // cron computed, used to pick both the {lead} substitution and the
+  // Arabic/English plural form of the body.
+  leadMinutes?: number
 ): Promise<{ created: number }> {
   try {
     const resolved = await loadSession(schoolId, sessionId)
     if (!resolved || resolved.userIds.length === 0) return { created: 0 }
     const { session, lang, userIds } = resolved
-    const template = TEMPLATES[kind][lang]
     const vars: Record<string, string> = {
       title: session.title,
       teacher: session.teacherFullName,
       when: formatWhen(session.scheduledStart, lang),
       ...extraVars,
     }
-    const title = render(template.title, vars)
-    const body = render(template.body, vars)
+    let title: string
+    let body: string
+    if (kind === "startingSoon") {
+      const lead = leadMinutes ?? 10
+      const category = leadPluralCategory(lang, lead)
+      title = render(STARTING_SOON_TITLE[lang], vars)
+      body = render(STARTING_SOON_BODY[lang][category], {
+        ...vars,
+        lead: String(lead),
+      })
+    } else {
+      const template = TEMPLATES[kind][lang]
+      title = render(template.title, vars)
+      body = render(template.body, vars)
+    }
     // "The class is live" is the one notification whose whole point is to get
     // the reader INTO the room, so it links straight there and skips the detail
     // page's second Join click.
@@ -258,8 +341,21 @@ async function dispatch(
 export const notifyClassScheduled = (schoolId: string, sessionId: string) =>
   dispatch(schoolId, sessionId, "scheduled", "live_class_scheduled")
 
-export const notifyClassStartingSoon = (schoolId: string, sessionId: string) =>
-  dispatch(schoolId, sessionId, "startingSoon", "live_class_starting_soon")
+export const notifyClassStartingSoon = (
+  schoolId: string,
+  sessionId: string,
+  /** Minutes until start, rounded by the caller (min 1). Defaults to the
+   * school-setting default (10) for any caller that doesn't have one handy. */
+  leadMinutes = 10
+) =>
+  dispatch(
+    schoolId,
+    sessionId,
+    "startingSoon",
+    "live_class_starting_soon",
+    {},
+    leadMinutes
+  )
 
 export const notifyClassStarted = (schoolId: string, sessionId: string) =>
   dispatch(schoolId, sessionId, "started", "live_class_started")

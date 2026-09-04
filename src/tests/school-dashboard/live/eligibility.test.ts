@@ -18,7 +18,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { joinLiveClass } from "@/components/school-dashboard/live/actions/tokens"
-import { ensureRoom } from "@/components/school-dashboard/live/livekit/rooms"
+import {
+  addRoomHost,
+  ensureRoom,
+} from "@/components/school-dashboard/live/livekit/rooms"
 
 /** The `school` columns `performLiveClassJoin` selects for `roomConfig`. */
 const SCHOOL_ROOM_CONFIG = {
@@ -61,6 +64,7 @@ vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
 }))
 vi.mock("@/components/school-dashboard/live/livekit/rooms", () => ({
   ensureRoom: vi.fn(async () => undefined),
+  addRoomHost: vi.fn(async () => undefined),
 }))
 
 const SCHOOL_ID = "school-aldar"
@@ -158,6 +162,10 @@ describe("joinLiveClass eligibility", () => {
     if (!("success" in result) || !result.success) return
     expect(result.data.role).toBe("HOST")
     expect(decodeMeta(result.data.token).role).toBe("HOST")
+    // The server-authoritative host set (ROOM metadata) is published on
+    // every HOST join — the client-side trust signal use-class-channel.ts
+    // reads, since a PARTICIPANT's self-reported attributes.role cannot be.
+    expect(addRoomHost).toHaveBeenCalledWith(ROOM_NAME, TEACHER_USER_ID)
   })
 
   it("teacher in same school but different session → CO_HOST", async () => {
@@ -174,6 +182,7 @@ describe("joinLiveClass eligibility", () => {
     expect("success" in result && result.success).toBe(true)
     if (!("success" in result) || !result.success) return
     expect(result.data.role).toBe("CO_HOST")
+    expect(addRoomHost).toHaveBeenCalledWith(ROOM_NAME, "u-admin")
   })
 
   it("a kicked participant cannot rejoin → PARTICIPANT_DENIED", async () => {
@@ -214,6 +223,9 @@ describe("joinLiveClass eligibility", () => {
         }),
       })
     )
+    // A PARTICIPANT is never added to the room's authoritative host set —
+    // trust must come only from a real HOST/CO_HOST join.
+    expect(addRoomHost).not.toHaveBeenCalled()
   })
 
   it("student NOT in section → PARTICIPANT_DENIED", async () => {
@@ -234,6 +246,7 @@ describe("joinLiveClass eligibility", () => {
     expect("success" in result && result.success).toBe(true)
     if (!("success" in result) || !result.success) return
     expect(result.data.role).toBe("OBSERVER")
+    expect(addRoomHost).not.toHaveBeenCalled()
   })
 
   it("guardian whose children are not in section → PARTICIPANT_DENIED", async () => {
@@ -394,6 +407,15 @@ describe("joinLiveClass eligibility", () => {
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(false)
     if ("error" in result) expect(result.error).toBe("LIVE_CLASS_NOT_FOUND")
+  })
+
+  it("a room-metadata publish failure does not block the HOST's join (best-effort)", async () => {
+    mockUser(TEACHER_USER_ID, "TEACHER")
+    vi.mocked(addRoomHost).mockRejectedValueOnce(new Error("sfu unreachable"))
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(true)
+    if (!("success" in result) || !result.success) return
+    expect(result.data.role).toBe("HOST")
   })
 
   it("returned ticket carries the same roomName as the session", async () => {

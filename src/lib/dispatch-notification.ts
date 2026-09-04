@@ -10,13 +10,37 @@ import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { renderTemplate } from "@/lib/notifications/render-template"
+import { tenantOriginForHost, tenantOriginForRoot } from "@/lib/root-domain"
+import { NOTIFICATION_EXPIRATION } from "@/components/school-dashboard/notifications/config"
 import { prewarm } from "@/components/translation/prewarm"
 import { detectScript } from "@/components/translation/util"
 
-// Default expiration: 30 days
+// Fallback expiration for any NotificationType NOTIFICATION_EXPIRATION
+// doesn't cover (in days).
 const NOTIFICATION_EXPIRATION_DAYS = 30
 
-// Default expiration: 30 days (already declared below — kept here for reference)
+/**
+ * Per-type expiry (`NOTIFICATION_EXPIRATION` in notifications/config.ts),
+ * falling back to the flat 30-day default only when the type isn't in the
+ * map. `null` means "never expires" (config.ts's type allows it, mirroring
+ * the single-notification `createNotification` action's own calculation —
+ * see notifications/actions.ts).
+ *
+ * Both dispatch paths below used to hardcode 30 days for every type: a
+ * `live_class_starting_soon` row (should expire in 1 day, per config.ts) sat
+ * un-expired for a month, and a `live_class_recording_ready` row (should
+ * live 90 days, matching the recording retention window) expired 60 days
+ * early.
+ */
+function resolveExpiresAt(type: NotificationType): Date | null {
+  const days = NOTIFICATION_EXPIRATION[type]
+  const effectiveDays = days === undefined ? NOTIFICATION_EXPIRATION_DAYS : days
+  if (effectiveDays === null) return null
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + effectiveDays)
+  return expiresAt
+}
+
 // Base URL used when resolving absolute URLs for email action buttons.
 // Override with NEXT_PUBLIC_BASE_URL in .env if your root domain differs.
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://ed.databayt.org"
@@ -28,7 +52,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://ed.databayt.org"
  * rendered blank action buttons in emails because the email template only renders
  * an <a> for http(s) URLs. This helper converts them to absolute URLs using:
  *   1. school.domain (custom domain), if set
- *   2. "${subdomain}.databayt.org" (standard subdomain routing)
+ *   2. "${subdomain}.${root}" (standard subdomain routing — the root is the
+ *      request's own when `opts.host` is given, else LIVE_ROOT_DOMAIN;
+ *      see root-domain.ts and the branch below)
  *   3. BASE_URL (root host, for system-level notifications without a school subdomain)
  *
  * @param path - A relative path like "/finance/fees" or an already-absolute URL.
@@ -36,28 +62,57 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://ed.databayt.org"
  * @param customDomain - The school's custom domain override, if any.
  * @returns An absolute https URL.
  */
+const LOCALE_PREFIX = /^\/(en|ar)(?=\/|$)/
+
+/**
+ * Prefix a stored (locale-less) path with the reader's locale, so an email
+ * link lands in the language the notification was written in instead of
+ * whatever the proxy re-derives from a cookie or Accept-Language header.
+ */
+function withLocale(path: string, locale?: string | null): string {
+  if (!locale || LOCALE_PREFIX.test(path)) return path
+  return `/${locale}${path.startsWith("/") ? path : `/${path}`}`
+}
+
 export function resolveActionUrl(
   path: string,
   schoolSubdomain?: string | null,
-  customDomain?: string | null
+  customDomain?: string | null,
+  opts?: { locale?: string | null; host?: string | null }
 ): string {
   // Already absolute — return as-is.
   if (/^https?:\/\//i.test(path)) return path
 
+  const localized = withLocale(path, opts?.locale)
+
   if (customDomain && customDomain.trim()) {
-    return `https://${customDomain.trim()}${path}`
+    return `https://${customDomain.trim()}${localized}`
   }
 
   if (schoolSubdomain && schoolSubdomain.trim()) {
-    const isProd = process.env.NODE_ENV === "production"
-    const host = isProd
-      ? `${schoolSubdomain.trim()}.databayt.org`
-      : `${schoolSubdomain.trim()}.localhost:3000`
-    const protocol = isProd ? "https" : "http"
-    return `${protocol}://${host}${path}`
+    // Root-domain aware: a school served from balqalam.com must not be
+    // mailed a databayt.org link (the previous hand-assembled host).
+    //
+    // Inside a request, `opts.host` keeps the link on the root the request
+    // actually arrived on (`tenantOriginForHost`'s own fallback there is
+    // `PRIMARY_ROOT_DOMAIN`, which only matters for a host that fails to
+    // resolve to either known root — a preview/custom domain — and that
+    // fallback exists for cookie/redirect scoping elsewhere, not for this).
+    //
+    // Outside one (crons, webhooks: no `host` to read), fall back to
+    // `tenantOriginForRoot`'s own default, `LIVE_ROOT_DOMAIN` (balqalam.com
+    // — the org's actual live tenant root; see root-domain.ts), NOT
+    // `tenantOriginForHost(null, …)`, which would resolve to
+    // `PRIMARY_ROOT_DOMAIN` (databayt.org) and reproduce this exact bug for
+    // every request-less send.
+    return `${
+      opts?.host
+        ? tenantOriginForHost(opts.host, schoolSubdomain.trim())
+        : tenantOriginForRoot(schoolSubdomain.trim())
+    }${localized}`
   }
 
-  return `${BASE_URL}${path}`
+  return `${BASE_URL}${localized}`
 }
 
 /**
@@ -72,7 +127,8 @@ const _schoolSubdomainCache = new Map<
 
 async function resolveActionUrlForSchool(
   schoolId: string,
-  path: string
+  path: string,
+  locale?: string | null
 ): Promise<string> {
   if (/^https?:\/\//i.test(path)) return path
 
@@ -91,7 +147,18 @@ async function resolveActionUrlForSchool(
     _schoolSubdomainCache.set(schoolId, info)
   }
 
-  return resolveActionUrl(path, info.subdomain, info.domain)
+  // Inside a request, keep the link on the root domain the request came
+  // from; `headers()` throws outside one (crons, webhooks), which is fine —
+  // `resolveActionUrl` falls back to the LIVE root (balqalam.com) for a
+  // null host, not the primary one (see its own comment above).
+  let host: string | null = null
+  try {
+    const { headers } = await import("next/headers")
+    host = (await headers()).get("host")
+  } catch {
+    host = null
+  }
+  return resolveActionUrl(path, info.subdomain, info.domain, { locale, host })
 }
 
 /**
@@ -100,12 +167,13 @@ async function resolveActionUrlForSchool(
  */
 async function absolutifyMetadataUrl(
   metadata: Record<string, unknown> | undefined,
-  schoolId: string
+  schoolId: string,
+  locale?: string | null
 ): Promise<Record<string, unknown> | undefined> {
   if (!metadata) return metadata
   const rawUrl = metadata.url
   if (typeof rawUrl !== "string") return metadata
-  const absolute = await resolveActionUrlForSchool(schoolId, rawUrl)
+  const absolute = await resolveActionUrlForSchool(schoolId, rawUrl, locale)
   return { ...metadata, url: absolute }
 }
 
@@ -152,7 +220,11 @@ export async function dispatchNotification(params: {
     // email template only emits <a> for http(s)).
     const emailMetadata =
       !params.userId && params.directEmail
-        ? await absolutifyMetadataUrl(params.metadata, params.schoolId)
+        ? await absolutifyMetadataUrl(
+            params.metadata,
+            params.schoolId,
+            params.lang
+          )
         : params.metadata
     const resolvedMetadata = params.metadata
 
@@ -204,8 +276,7 @@ export async function dispatchNotification(params: {
     }
     if (enabledChannels.length === 0) return null
 
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + NOTIFICATION_EXPIRATION_DAYS)
+    const expiresAt = resolveExpiresAt(params.type)
 
     const notification = await db.notification.create({
       data: {
@@ -335,8 +406,7 @@ export async function dispatchNotificationsToAudience(params: {
 
     if (userIds.length === 0) return { created: 0 }
 
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + NOTIFICATION_EXPIRATION_DAYS)
+    const expiresAt = resolveExpiresAt(params.type)
 
     // Same self-labeling rule as the single-dispatch path: never store a
     // language the text visibly isn't.
@@ -376,7 +446,7 @@ export async function dispatchNotificationsToAudience(params: {
       actorId: string | null
       channels: NotificationChannel[]
       metadata: Prisma.InputJsonValue | undefined
-      expiresAt: Date
+      expiresAt: Date | null
     }> = []
 
     for (const userId of userIds) {
@@ -473,9 +543,16 @@ async function resolveTargetUsers(
 }
 
 /**
- * Check if a notification should be sent based on user preferences
+ * Check if a notification should be sent based on user preferences.
+ *
+ * Exported for the callers that send email INLINE after `dispatchNotification`
+ * (admission's status notices, the post-provision welcome): the row they get
+ * back was written with only the channels the user left enabled, but their
+ * inline send used to consult the caller's list — a user who had turned email
+ * off for the type still got the mail. They now ask this the way the cron
+ * drain does.
  */
-async function shouldSendNotification(
+export async function shouldSendNotification(
   userId: string,
   type: NotificationType,
   channel: NotificationChannel

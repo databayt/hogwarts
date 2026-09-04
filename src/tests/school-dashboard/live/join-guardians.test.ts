@@ -17,6 +17,9 @@ vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/components/school-dashboard/live/livekit/client", () => ({
   getLiveKitConfig: () => ({ wsUrl: "wss://sfu.test" }),
+  // The ticket's `recording` flag is ANDed with the bucket being configured;
+  // this spec is about the room config, so recording is simply "possible".
+  isRecordingConfigured: () => true,
 }))
 vi.mock("@/components/school-dashboard/live/livekit/rooms", () => ({
   ensureRoom: vi.fn().mockResolvedValue(undefined),

@@ -115,6 +115,15 @@ export interface LiveKitReadiness {
   recordingMissing: string[]
   /** Optional S3 creds missing — egress uses the SFU host IAM role if absent. */
   recordingCredsMissing: string[]
+  /**
+   * True when `LIVEKIT_RECORDING_BUCKET` is set and differs from
+   * `AWS_S3_BUCKET` — the recording→lesson bridge (`publishRecordingAsLessonVideo`)
+   * copies cross-bucket in that case, which works (S3 CopyObject supports it)
+   * but is worth surfacing: RUNBOOK.md's own self-host example sets the two
+   * to different names. Purely advisory — never flips `configured` or
+   * `recordingConfigured`.
+   */
+  recordingBucketMismatch: boolean
 }
 
 /**
@@ -131,12 +140,20 @@ export function getLiveKitReadiness(): LiveKitReadiness {
   const recordingCredsMissing = RECORDING_CREDS_ENV.filter(
     (k) => !process.env[k]
   )
+  const recordingBucket = process.env.LIVEKIT_RECORDING_BUCKET
+  const appBucket = process.env.AWS_S3_BUCKET
+  const recordingBucketMismatch = !!(
+    recordingBucket &&
+    appBucket &&
+    recordingBucket !== appBucket
+  )
   return {
     configured: missing.length === 0,
     missing,
     recordingConfigured: recordingMissing.length === 0,
     recordingMissing,
     recordingCredsMissing,
+    recordingBucketMismatch,
   }
 }
 

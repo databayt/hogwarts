@@ -5,7 +5,10 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
 import { resolveActiveTerm } from "@/lib/term-resolver"
-import { schoolDayOfWeek } from "@/components/school-dashboard/live/day-window"
+import {
+  DEFAULT_SCHOOL_TZ,
+  schoolDayOfWeek,
+} from "@/components/school-dashboard/live/day-window"
 import {
   attachLiveClasses,
   type LiveClassJoinInfo,
@@ -143,7 +146,10 @@ export async function GET(
         const now = new Date()
         // The school's weekday, not the server's — a UTC read puts a Sudanese
         // school on the wrong day for the hours either side of midnight.
-        const today = schoolDayOfWeek(school?.timezone ?? "UTC", now)
+        const today = schoolDayOfWeek(
+          school?.timezone ?? DEFAULT_SCHOOL_TZ,
+          now
+        )
         const todaySlots = slots.filter((s) => s.dayOfWeek === today)
         if (todaySlots.length > 0) {
           const attached = await attachLiveClasses(

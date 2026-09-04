@@ -5,6 +5,11 @@ import { NextRequest } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { resolveActiveTerm } from "@/lib/term-resolver"
+import {
+  DEFAULT_SCHOOL_TZ,
+  schoolDayOfWeek,
+} from "@/components/school-dashboard/live/day-window"
 import { authenticate } from "@/app/api/mobile/lib/authenticate"
 import { canAccessStudent } from "@/app/api/mobile/lib/student-access"
 import { GET } from "@/app/api/mobile/timetable/[userId]/route"
@@ -29,6 +34,13 @@ vi.mock("@/app/api/mobile/lib/student-access", () => ({
 // term resolver so the route's try-block short-circuits without a DB shape.
 vi.mock("@/lib/term-resolver", () => ({
   resolveActiveTerm: vi.fn(async () => ({ term: null, source: "none" })),
+}))
+// Real DEFAULT_SCHOOL_TZ value, schoolDayOfWeek stubbed so the tz-fallback
+// test can assert on the exact argument it's called with without needing a
+// real school row shape.
+vi.mock("@/components/school-dashboard/live/day-window", () => ({
+  DEFAULT_SCHOOL_TZ: "Africa/Khartoum",
+  schoolDayOfWeek: vi.fn(() => 0),
 }))
 
 const SCHOOL = "school-1"
@@ -190,5 +202,50 @@ describe("GET /api/mobile/timetable/[userId] — both slot axes", () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ data: [] })
     expect(db.timetable.findMany).not.toHaveBeenCalled()
+  })
+})
+
+describe("GET /api/mobile/timetable/[userId] — school timezone fallback", () => {
+  beforeEach(() => {
+    asStudent()
+    vi.mocked(canAccessStudent).mockResolvedValue(true)
+    vi.mocked(db.student.findFirst).mockResolvedValue({
+      id: "stu-self",
+      sectionId: "sec-1",
+    } as never)
+    // A truthy term is required to enter the live-class branch at all; an
+    // empty `slots` list (the default mock) then short-circuits before
+    // `attachLiveClasses`, so only `schoolDayOfWeek`'s tz argument is on test.
+    vi.mocked(resolveActiveTerm).mockResolvedValueOnce({
+      term: { id: "term-1" },
+      source: "explicit",
+    } as never)
+  })
+
+  it("falls back to DEFAULT_SCHOOL_TZ, never the literal UTC, when School.timezone is null", async () => {
+    vi.mocked(db.school.findUnique).mockResolvedValue({
+      timezone: null,
+    } as never)
+
+    await GET(req(), { params })
+
+    expect(schoolDayOfWeek).toHaveBeenCalledWith(
+      DEFAULT_SCHOOL_TZ,
+      expect.any(Date)
+    )
+    expect(schoolDayOfWeek).not.toHaveBeenCalledWith("UTC", expect.any(Date))
+  })
+
+  it("uses the school's own timezone when one is set", async () => {
+    vi.mocked(db.school.findUnique).mockResolvedValue({
+      timezone: "Asia/Riyadh",
+    } as never)
+
+    await GET(req(), { params })
+
+    expect(schoolDayOfWeek).toHaveBeenCalledWith(
+      "Asia/Riyadh",
+      expect.any(Date)
+    )
   })
 })

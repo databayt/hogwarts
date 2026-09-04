@@ -3,6 +3,11 @@
 
 import "server-only"
 
+import {
+  parseRoomHostsMetadata,
+  type RoomHostsMetadata,
+} from "@/components/school-dashboard/live/types"
+
 import { getRoomServiceClient } from "./client"
 
 /**
@@ -51,4 +56,41 @@ export async function removeParticipant(
 export async function listParticipants(roomName: string) {
   const svc = getRoomServiceClient()
   return svc.listParticipants(roomName)
+}
+
+/**
+ * Publish `identity` into the room's authoritative HOST set — ROOM metadata,
+ * `{ hosts: string[] }` — idempotent set-union so a repeated call (every
+ * ~4-min token refresh re-calls this for the same HOST/CO_HOST) is a no-op.
+ *
+ * This is the trust source `use-class-channel.ts` reads to decide whose
+ * data-channel messages are host-authoritative. It must NOT be
+ * `participant.attributes.role`: PARTICIPANT tokens hold
+ * `canUpdateOwnMetadata` too (so a student can raise a hand), and that grant
+ * lets a participant's own client rewrite ANY attribute key, `role`
+ * included — the SFU only checks that the caller holds the grant, not which
+ * key it touches. This function is the ONLY writer of room metadata, and it
+ * runs `server-only` (called from `join-core.ts`, itself `server-only`)
+ * through `RoomServiceClient`, authenticated with the LiveKit API
+ * key/secret — a credential that never reaches the browser. No participant
+ * token, regardless of its own grants (even a HOST's `roomAdmin: true`),
+ * can call this; only server code holding the API secret can.
+ *
+ * Read-modify-write, not a compare-and-swap: two HOST/CO_HOST joins racing
+ * within the same instant could each read the pre-update list and one write
+ * could clobber the other's. Acceptable here — the next metadata write (the
+ * next refresh, or any other participant joining) converges the set, and
+ * losing a few seconds of trust for one co-host is not a security hole
+ * (their messages are simply ignored, never accepted from someone else).
+ */
+export async function addRoomHost(
+  roomName: string,
+  identity: string
+): Promise<void> {
+  const svc = getRoomServiceClient()
+  const [room] = await svc.listRooms([roomName])
+  const hosts = parseRoomHostsMetadata(room?.metadata)
+  if (hosts.includes(identity)) return
+  const next: RoomHostsMetadata = { hosts: [...hosts, identity] }
+  await svc.updateRoomMetadata(roomName, JSON.stringify(next))
 }

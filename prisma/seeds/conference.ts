@@ -683,6 +683,13 @@ async function applyPolicy(
   await prisma.school.update({
     where: { id: schoolId },
     data: {
+      // Read FIRST by effectivePolicy() — physical short-circuits to
+      // OFFLINE_POLICY before conferenceOnlineDefault or any section
+      // override is even consulted. Without this, a fresh seed writes every
+      // online-looking setting below and stays silently stuck "physical"
+      // (the column's own @default), matching what the 2026-08-30 backfill
+      // migration set for the real demo school.
+      conferenceDeliveryMode: "hybrid",
       conferenceOnlineDefault: true,
       conferenceProviderDefault: "livekit",
       conferenceOnlineMode: "timetable",
@@ -1351,7 +1358,11 @@ async function seedShowcase(
           select: { id: true },
         }),
         prisma.schoolAssignment.findFirst({
-          where: { schoolId: ctx.schoolId, status: "PUBLISHED" },
+          where: {
+            schoolId: ctx.schoolId,
+            status: "PUBLISHED",
+            class: { subjectId: focusSlot.subjectId },
+          },
           orderBy: { createdAt: "desc" },
           select: { id: true },
         }),

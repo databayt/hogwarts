@@ -45,6 +45,7 @@ import {
   getLiveClassReferenceData,
   getLiveSlotOptions,
   resolveViewerSectionScope,
+  verifyLessonAnchor,
   type LiveClassReferenceData,
   type LiveSlotOption,
 } from "./queries"
@@ -150,12 +151,6 @@ async function writeResources(
   ])
 }
 
-/** A catalog lesson id must exist before we point a session at it. */
-async function lessonExists(catalogLessonId: string): Promise<boolean> {
-  const n = await db.lesson.count({ where: { id: catalogLessonId } })
-  return n > 0
-}
-
 // ============================================================================
 // Read actions
 // ============================================================================
@@ -200,6 +195,7 @@ export async function getLiveClasses(params: {
       page: q.page,
       perPage: q.perPage,
       sectionIds: scope === "all" ? undefined : scope.sectionIds,
+      classIds: scope === "all" ? undefined : scope.classIds,
     })
 
     return {
@@ -284,13 +280,15 @@ export async function getLiveClass(params: { id: string }): Promise<
       session.user.id,
       role
     )
-    if (
-      scope === "none" ||
-      (scope !== "all" &&
-        liveClass.visibility !== "school" &&
-        (!liveClass.sectionId ||
-          !scope.sectionIds.includes(liveClass.sectionId)))
-    ) {
+    const slotClassId = liveClass.timetable?.classId ?? null
+    const inScope =
+      scope === "all" ||
+      (scope !== "none" &&
+        (liveClass.visibility === "school" ||
+          (!!liveClass.sectionId &&
+            scope.sectionIds.includes(liveClass.sectionId)) ||
+          (!!slotClassId && (scope.classIds ?? []).includes(slotClassId))))
+    if (!inScope) {
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
@@ -548,7 +546,14 @@ export async function createLiveClass(
     const resources = d.resources ?? []
     const verifiedRefs = await verifyResourceRefs(schoolId, resources)
     if (!verifiedRefs.ok) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
-    if (d.catalogLessonId && !(await lessonExists(d.catalogLessonId))) {
+    // The lesson anchor must be one THIS school can see — published, not
+    // hidden by a ContentOverride, and of the session's subject — the same
+    // filter the room's related-lessons shelf applies, so the picker and the
+    // write path cannot disagree.
+    if (
+      d.catalogLessonId &&
+      !(await verifyLessonAnchor(schoolId, d.catalogLessonId, subjectId))
+    ) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
@@ -895,7 +900,16 @@ export async function updateLiveClass(
     if (d.maxParticipants !== undefined)
       updateData.maxParticipants = d.maxParticipants
     if (d.catalogLessonId !== undefined) {
-      if (d.catalogLessonId && !(await lessonExists(d.catalogLessonId))) {
+      const effectiveSubjectId =
+        d.subjectId !== undefined ? d.subjectId || null : existing.subjectId
+      if (
+        d.catalogLessonId &&
+        !(await verifyLessonAnchor(
+          schoolId,
+          d.catalogLessonId,
+          effectiveSubjectId
+        ))
+      ) {
         return actionError(ACTION_ERRORS.VALIDATION_ERROR)
       }
       updateData.catalogLessonId = d.catalogLessonId || null

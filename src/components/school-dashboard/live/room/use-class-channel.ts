@@ -10,6 +10,8 @@ import {
 } from "@livekit/components-react"
 import { ConnectionState, RoomEvent, type Participant } from "livekit-client"
 
+import { parseRoomHostsMetadata } from "@/components/school-dashboard/live/types"
+
 import {
   applyMessage,
   CLASS_TOPIC,
@@ -59,20 +61,47 @@ export function useClassChannel(opts: {
   )
   const { hostIdentity, isHost } = opts
 
+  // ---- host trust: ROOM metadata (`{ hosts: string[] }`), published
+  // server-side (`livekit/rooms.ts addRoomHost`, called from
+  // `actions/join-core.ts`) whenever a HOST or CO_HOST joins. This is
+  // deliberately NOT `participant.attributes.role`: PARTICIPANT tokens carry
+  // `canUpdateOwnMetadata` too (so a student can raise a hand over the same
+  // grant), which lets a student's own client call
+  // `localParticipant.setAttributes({ role: "HOST" })` and forge every
+  // host-only message below. Room metadata is written only by
+  // `addRoomHost`, a `server-only` call through LiveKit's RoomServiceClient
+  // (authenticated with the API key/secret) — a credential no browser-held
+  // token can present, so no participant grant lets a client self-edit it.
+  const [roomHosts, setRoomHosts] = useState<string[]>(() =>
+    parseRoomHostsMetadata(room.metadata)
+  )
+  useEffect(() => {
+    const sync = () => setRoomHosts(parseRoomHostsMetadata(room.metadata))
+    // `RoomMetadataChanged` only fires for a CHANGE after the first
+    // snapshot — the metadata the join response itself carried needs an
+    // explicit re-read on (re)connect.
+    if (room.state === ConnectionState.Connected) sync()
+    room.on(RoomEvent.Connected, sync)
+    room.on(RoomEvent.Reconnected, sync)
+    room.on(RoomEvent.RoomMetadataChanged, sync)
+    return () => {
+      room.off(RoomEvent.Connected, sync)
+      room.off(RoomEvent.Reconnected, sync)
+      room.off(RoomEvent.RoomMetadataChanged, sync)
+    }
+  }, [room])
+
   const { send: sendRaw } = useDataChannel(CLASS_TOPIC, (raw) => {
     const msg = decodeMessage(raw.payload)
     if (!msg) return
     const from = raw.from
-    const fromRole = from?.attributes?.role
+    if (!from) return
     // Co-hosts run the same tools as the teacher; every receiver must treat
     // their messages as host messages or their controls would silently do
-    // nothing for anyone else.
+    // nothing for anyone else. Trust ONLY the ticket's `hostIdentity` and
+    // the server-published room-metadata host set — see the comment above.
     const fromIsHost =
-      !!from &&
-      (from.identity === hostIdentity ||
-        fromRole === "HOST" ||
-        fromRole === "CO_HOST")
-    if (!from) return
+      from.identity === hostIdentity || roomHosts.includes(from.identity)
 
     if (msg.t === "sync.request") {
       if (isHost) void answerSync(from.identity)

@@ -20,8 +20,14 @@ import type {
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getLiveKitConfig } from "@/components/school-dashboard/live/livekit/client"
-import { ensureRoom } from "@/components/school-dashboard/live/livekit/rooms"
+import {
+  getLiveKitConfig,
+  isRecordingConfigured,
+} from "@/components/school-dashboard/live/livekit/client"
+import {
+  addRoomHost,
+  ensureRoom,
+} from "@/components/school-dashboard/live/livekit/rooms"
 import { issueAccessToken } from "@/components/school-dashboard/live/livekit/token"
 import type { RoomJoinTicket } from "@/components/school-dashboard/live/types"
 
@@ -262,6 +268,28 @@ export async function performLiveClassJoin(
     })
   }
 
+  // Publish this identity into the room's authoritative HOST set (ROOM
+  // metadata — see `addRoomHost`) BEFORE minting a token. It is the trust
+  // source the client uses to decide whose data-channel messages are
+  // host-authoritative; a participant's own `attributes.role` cannot be
+  // used for that (PARTICIPANT holds `canUpdateOwnMetadata` too, for
+  // hand-raising, and could rewrite it). Idempotent and best-effort: a
+  // publish failure must not block a legitimate host from joining — it only
+  // means their host-only messages go untrusted until the next refresh
+  // (~4 min) retries this.
+  if (participantRole === "HOST" || participantRole === "CO_HOST") {
+    try {
+      await addRoomHost(liveClass.roomName, userId)
+    } catch (err) {
+      console.error("[live-class] room host metadata publish failed", {
+        schoolId,
+        sessionId,
+        userId,
+        err: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }
+
   // Upsert participant row + token timestamp.
   await db.conferenceParticipant.upsert({
     where: { sessionId_userId: { sessionId, userId } },
@@ -322,7 +350,9 @@ export async function performLiveClassJoin(
           studentShare: liveClass.school.conferenceToolStudentShare,
         },
         consentNote: liveClass.school.conferenceRecordingConsentNote,
-        recording: liveClass.recordingEnabled,
+        // Only true when a recording can actually happen — the consent strip
+        // must not show for a session that opted in before the bucket existed.
+        recording: liveClass.recordingEnabled && isRecordingConfigured(),
       },
       expiresAt,
     },

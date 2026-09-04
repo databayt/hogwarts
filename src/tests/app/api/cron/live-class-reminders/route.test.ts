@@ -94,11 +94,22 @@ describe("live-class-reminders cron — detection window", () => {
     const res = await GET(req())
     const body = (await res.json()) as { dispatched: number }
     expect(body.dispatched).toBe(2)
-    expect(notifyClassStartingSoon).toHaveBeenCalledWith("school-b", "lcs-due")
-    expect(notifyClassStartingSoon).toHaveBeenCalledWith("school-a", "lcs-soon")
+    // Third arg is the session's OWN minutes-to-start (rounded, min 1), not
+    // the school's configured lead — lcs-due is 30 min out, lcs-soon 8.
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith(
+      "school-b",
+      "lcs-due",
+      30
+    )
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith(
+      "school-a",
+      "lcs-soon",
+      8
+    )
     expect(notifyClassStartingSoon).not.toHaveBeenCalledWith(
       "school-a",
-      "lcs-early"
+      "lcs-early",
+      expect.anything()
     )
   })
 })
@@ -130,9 +141,11 @@ describe("live-class-reminders cron — dispatch + idempotency", () => {
     expect(body.ok).toBe(true)
     expect(body.dispatched).toBe(1)
     expect(notifyClassStartingSoon).toHaveBeenCalledTimes(1)
+    // lcs-fresh is 8 min out at NOW.
     expect(notifyClassStartingSoon).toHaveBeenCalledWith(
       "school-1",
-      "lcs-fresh"
+      "lcs-fresh",
+      8
     )
     // One insert for the whole batch — the route stopped issuing a create per
     // session when the sweep was batched under the 60s budget.

@@ -9,6 +9,22 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 /**
+ * A live-class-synced row (`AttendanceMethod.VIRTUAL`, written by
+ * `syncLiveAttendance`) carries no `classId` unless the timetable slot it
+ * synced from had a legacy subject-class link — `class` then resolves to
+ * `null`. Fall back to the period name (+ section, when both are known) so
+ * the student/guardian record view still names the period instead of
+ * showing a blank class for a live-synced row.
+ */
+function fallbackClassLabel(
+  periodName: string | null,
+  sectionName: string | null | undefined
+): string | null {
+  if (!periodName) return null
+  return sectionName ? `${periodName} - ${sectionName}` : periodName
+}
+
+/**
  * Get attendance records for the currently logged-in student
  */
 export async function getStudentOwnAttendance(): Promise<
@@ -75,6 +91,13 @@ export async function getStudentOwnAttendance(): Promise<
         status: true,
         classId: true,
         notes: true,
+        // A live-class-synced row (method VIRTUAL) never carries a classId —
+        // `class` resolves to null for it. periodName + the section name are
+        // the fallback so the student's own view still names the period
+        // rather than showing a blank class for every attendance row synced
+        // from a live session.
+        periodName: true,
+        section: { select: { name: true } },
         class: {
           select: {
             name: true,
@@ -103,7 +126,7 @@ export async function getStudentOwnAttendance(): Promise<
           classId: r.classId,
           className: r.class
             ? `${r.class.subject?.name ?? ""} - ${r.class.name}`
-            : null,
+            : fallbackClassLabel(r.periodName, r.section?.name),
           notes: r.notes,
         })),
         stats: { totalDays, present, absent, late, excused, attendanceRate },
@@ -194,6 +217,10 @@ export async function getGuardianChildrenAttendance(): Promise<
                     status: true,
                     classId: true,
                     notes: true,
+                    // See `fallbackClassLabel` — a VIRTUAL row's `class` can
+                    // resolve to null; periodName + section name cover it.
+                    periodName: true,
+                    section: { select: { name: true } },
                     class: {
                       select: {
                         id: true,
@@ -232,7 +259,10 @@ export async function getGuardianChildrenAttendance(): Promise<
         date: a.date,
         status: a.status,
         classId: a.classId,
-        className: a.class?.subject?.name ?? "",
+        className:
+          a.class?.subject?.name ??
+          fallbackClassLabel(a.periodName, a.section?.name) ??
+          "",
         notes: a.notes,
       })),
     }))

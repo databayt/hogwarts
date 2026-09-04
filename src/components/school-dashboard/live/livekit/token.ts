@@ -114,7 +114,16 @@ export async function issueAccessToken(
       lang: input.lang ?? "ar",
     }),
     // Attributes are readable by every participant (metadata is a string the
-    // client has to parse); the room trusts host-only messages by this.
+    // client has to parse) and are informational only — the room UI does NOT
+    // trust host-only messages by this. `canUpdateOwnMetadata` (granted to
+    // every role below, including PARTICIPANT, so a student can raise a
+    // hand) lets the OWNER of a participant rewrite any of their own
+    // attribute keys, `role` included — so a self-reported `role` here can
+    // never be the host-trust signal. That signal is ROOM metadata,
+    // published server-side by `livekit/rooms.ts addRoomHost` through
+    // `RoomServiceClient` (the LiveKit API key/secret — never issued to a
+    // browser), not through any participant's video grant; see
+    // `room/use-class-channel.ts`.
     attributes: { role: input.role },
   })
 

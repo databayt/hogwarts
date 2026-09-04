@@ -538,7 +538,12 @@ export async function processPendingEmailNotifications(
       metadata && typeof metadata.url === "string"
         ? {
             ...metadata,
-            url: resolveActionUrl(metadata.url, notification.school?.domain),
+            url: resolveActionUrl(
+              metadata.url,
+              notification.school?.domain,
+              null,
+              { locale: notification.lang }
+            ),
           }
         : metadata
 

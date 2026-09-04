@@ -141,26 +141,31 @@ export async function getSignedReadUrl(
 }
 
 /**
- * Copy an object within the app bucket (server-side, no download). Used to
- * publish a live-class recording — written by egress under `schools/…` with
- * its own retention — as a lumos video under `stream/<schoolId>/video/`,
- * which has none. Returns false when the client is unconfigured or the copy
+ * Copy an object between buckets (server-side, no download). Used to publish
+ * a live-class recording — written by egress under `schools/…` in
+ * `LIVEKIT_RECORDING_BUCKET`, with its own retention — as a lumos video under
+ * `stream/<schoolId>/video/` in the app's own `AWS_S3_BUCKET`, which has
+ * none. The two buckets are DIFFERENT env vars and are not guaranteed to
+ * match (a self-hosted SFU commonly writes to its own recordings bucket);
+ * the destination is always the app bucket, so only the source is a
+ * parameter. Returns false when the client is unconfigured or the copy
  * fails; the caller decides whether that is fatal.
  */
 export async function copyObject(
+  sourceBucket: string,
   sourceKey: string,
   destinationKey: string,
   contentType?: string
 ): Promise<boolean> {
   const client = getS3Client()
-  const bucket = process.env.AWS_S3_BUCKET
-  if (!client || !bucket) return false
+  const destinationBucket = process.env.AWS_S3_BUCKET
+  if (!client || !destinationBucket || !sourceBucket) return false
   try {
     const { CopyObjectCommand } = await import("@aws-sdk/client-s3")
     await client.send(
       new CopyObjectCommand({
-        Bucket: bucket,
-        CopySource: `${bucket}/${encodeURI(sourceKey)}`,
+        Bucket: destinationBucket,
+        CopySource: `${sourceBucket}/${encodeURI(sourceKey)}`,
         Key: destinationKey,
         ...(contentType
           ? { ContentType: contentType, MetadataDirective: "REPLACE" }
@@ -169,7 +174,12 @@ export async function copyObject(
     )
     return true
   } catch (err) {
-    console.error("[s3] copyObject failed", { sourceKey, destinationKey, err })
+    console.error("[s3] copyObject failed", {
+      sourceBucket,
+      sourceKey,
+      destinationKey,
+      err,
+    })
     return false
   }
 }

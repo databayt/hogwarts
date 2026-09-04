@@ -4639,6 +4639,31 @@ export async function applyTemplateToTerm(rawInput: {
   // N create round-trips with a single insert).
   const ops: Prisma.PrismaPromise<Prisma.BatchPayload>[] = []
   if (input.clearExisting) {
+    // `Conference.timetableId` is `onDelete: SetNull` — the deleteMany below
+    // silently orphans any live-anchored session on these slots. Cancel the
+    // still-scheduled ones FIRST (before their timetableId is nulled) so the
+    // next materialization sweep doesn't mint a duplicate under the new slot
+    // ids and no dead Join button survives the regeneration. A `live` session
+    // is left alone — it cannot be force-cancelled out from under a class in
+    // progress, and a session already `ended`/`cancelled` needs no cleanup.
+    const oldSlots = await db.timetable.findMany({
+      where: { schoolId, termId: input.targetTermId },
+      select: { id: true },
+    })
+    const oldSlotIds = oldSlots.map((s) => s.id)
+    if (oldSlotIds.length > 0) {
+      ops.push(
+        db.conference.updateMany({
+          where: {
+            schoolId,
+            timetableId: { in: oldSlotIds },
+            status: "scheduled",
+            scheduledStart: { gt: new Date() },
+          },
+          data: { status: "cancelled" },
+        })
+      )
+    }
     ops.push(
       db.timetable.deleteMany({
         where: { schoolId, termId: input.targetTermId },
@@ -5064,6 +5089,27 @@ export async function applyGeneratedTimetable(rawInput: {
   try {
     // Clear existing slots if requested
     if (input.clearExisting) {
+      // Same orphan hazard as `applyTemplateToTerm`: `Conference.timetableId`
+      // is `onDelete: SetNull`, so cancel outstanding scheduled sessions on
+      // these slots BEFORE the delete nulls their anchor — otherwise the next
+      // materialization sweep re-creates the same class under the new slot
+      // id, duplicating it. A `live` session is left alone.
+      const oldSlots = await db.timetable.findMany({
+        where: { schoolId, termId: input.termId },
+        select: { id: true },
+      })
+      const oldSlotIds = oldSlots.map((s) => s.id)
+      if (oldSlotIds.length > 0) {
+        await db.conference.updateMany({
+          where: {
+            schoolId,
+            timetableId: { in: oldSlotIds },
+            status: "scheduled",
+            scheduledStart: { gt: new Date() },
+          },
+          data: { status: "cancelled" },
+        })
+      }
       await db.timetable.deleteMany({
         where: { schoolId, termId: input.termId },
       })
@@ -5292,6 +5338,27 @@ export async function importTimetableSlots(rawInput: {
     await db.$transaction(async (tx) => {
       // Clear existing if overwrite mode
       if (input.options.overwrite) {
+        // Same `Conference.timetableId` `onDelete: SetNull` orphan hazard as
+        // applyTemplateToTerm/applyGeneratedTimetable: cancel outstanding
+        // scheduled sessions on these slots BEFORE the delete nulls their
+        // anchor, so the next materialization sweep doesn't mint a duplicate
+        // under the new slot ids. A `live` session is left alone.
+        const oldSlots = await tx.timetable.findMany({
+          where: { schoolId, termId: input.termId },
+          select: { id: true },
+        })
+        const oldSlotIds = oldSlots.map((s) => s.id)
+        if (oldSlotIds.length > 0) {
+          await tx.conference.updateMany({
+            where: {
+              schoolId,
+              timetableId: { in: oldSlotIds },
+              status: "scheduled",
+              scheduledStart: { gt: new Date() },
+            },
+            data: { status: "cancelled" },
+          })
+        }
         await tx.timetable.deleteMany({
           where: { schoolId, termId: input.termId },
         })
@@ -7353,13 +7420,25 @@ export async function getSlotDetail(input: { timetableId: string }) {
     select: { timezone: true },
   })
   const now = new Date()
-  const isToday =
-    schoolDayOfWeek(school?.timezone || DEFAULT_SCHOOL_TZ, now) ===
-    slot.dayOfWeek
-  const { start: dayStart, end: dayEnd } = schoolDayWindow(
-    school?.timezone || DEFAULT_SCHOOL_TZ,
-    now
-  )
+  const schoolTz = school?.timezone || DEFAULT_SCHOOL_TZ
+  const isToday = schoolDayOfWeek(schoolTz, now) === slot.dayOfWeek
+  const { start: dayStart, end: dayEnd } = schoolDayWindow(schoolTz, now)
+
+  // Who is actually teaching TODAY, same as getTodaySchedule /
+  // getPersonalizedTimetable: a CONFIRMED substitute stands in for the slot's
+  // static teacherId on the school-calendar day they're covering. Gated on
+  // `isToday` — a substitution is dated, so a cell inspected for a day other
+  // than the school's today must keep showing the pattern's own teacher.
+  let teacherName = slot.teacher
+    ? `${slot.teacher.firstName} ${slot.teacher.lastName}`.trim()
+    : null
+  if (isToday) {
+    const subsBySlot = await substitutesForSlots(schoolId, schoolTz, now, [
+      slot.id,
+    ])
+    const sub = subsBySlot.get(slot.id)
+    if (sub) teacherName = `${sub.firstName} ${sub.lastName}`.trim()
+  }
 
   type Personal =
     | { kind: "student"; status: string | null }
@@ -7433,9 +7512,7 @@ export async function getSlotDetail(input: { timetableId: string }) {
     id: slot.id,
     dayOfWeek: slot.dayOfWeek,
     subject: slot.subject?.name ?? slot.class?.subject?.name ?? null,
-    teacher: slot.teacher
-      ? `${slot.teacher.firstName} ${slot.teacher.lastName}`.trim()
-      : null,
+    teacher: teacherName,
     section: slot.section?.name ?? null,
     grade: slot.section?.grade?.name ?? null,
     room: slot.classroom?.roomName ?? null,

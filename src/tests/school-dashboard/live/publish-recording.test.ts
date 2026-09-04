@@ -9,7 +9,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { copyObject, getObjectSize } from "@/lib/s3"
+import { copyObject, deleteObject, getObjectSize } from "@/lib/s3"
 import {
   checkSchoolVideoQuota,
   incrementSchoolVideoUsage,
@@ -22,9 +22,14 @@ vi.mock("@/lib/db", () => ({
     video: { create: vi.fn(), delete: vi.fn() },
   },
 }))
-vi.mock("@/lib/s3", () => ({ copyObject: vi.fn(), getObjectSize: vi.fn() }))
+vi.mock("@/lib/s3", () => ({
+  copyObject: vi.fn(),
+  getObjectSize: vi.fn(),
+  deleteObject: vi.fn(),
+}))
 vi.mock("@/lib/cloudfront-url", () => ({
-  getCloudFrontUrl: (k: string) => `https://cdn.test/${k}`,
+  toCloudFrontUrl: (url: string) =>
+    url.replace(/^https:\/\/[^/]+/, "https://cdn.test"),
 }))
 vi.mock("@/components/lumos/lib/quota", () => ({
   checkSchoolVideoQuota: vi.fn(),
@@ -46,7 +51,13 @@ const mockDb = db as unknown as {
 const recording = (over: Record<string, unknown> = {}) => ({
   id: "rec-1",
   status: "ready",
+  // Deliberately a DIFFERENT bucket than AWS_S3_BUCKET ("app-bucket" in
+  // spirit, "s1"-prefixed destination keys below) — this is the cross-bucket
+  // case (ll-01): egress writes under LIVEKIT_RECORDING_BUCKET, the copy's
+  // destination is always the app bucket.
+  s3Bucket: "aldar-recordings-me-central-1",
   s3Key: "schools/s1/live-class/c1/1.mp4",
+  fileSizeBytes: BigInt(150_000_000),
   durationSeconds: 2700,
   publishedVideoId: null,
   session: {
@@ -68,6 +79,7 @@ describe("publishRecordingAsLessonVideo", () => {
     vi.clearAllMocks()
     vi.mocked(copyObject).mockResolvedValue(true)
     vi.mocked(getObjectSize).mockResolvedValue(150_000_000)
+    vi.mocked(deleteObject).mockResolvedValue(true)
     vi.mocked(checkSchoolVideoQuota).mockResolvedValue({
       allowed: true,
     } as never)
@@ -75,7 +87,7 @@ describe("publishRecordingAsLessonVideo", () => {
     mockDb.conferenceRecording.updateMany.mockResolvedValue({ count: 1 })
   })
 
-  it("respects the school's auto-publish switch", async () => {
+  it("respects the school's auto-publish switch — and, crucially, never touches S3 to get there (ll-03/fl-02 ordering)", async () => {
     mockDb.conferenceRecording.findFirst.mockResolvedValueOnce(
       recording({
         session: {
@@ -90,14 +102,23 @@ describe("publishRecordingAsLessonVideo", () => {
       "egress-1"
     )
     expect(r).toEqual({ published: false, reason: "disabled" })
+    expect(copyObject).not.toHaveBeenCalled()
+    expect(checkSchoolVideoQuota).not.toHaveBeenCalled()
     expect(mockDb.video.create).not.toHaveBeenCalled()
   })
 
-  it("copies the object under the lumos prefix and creates an APPROVED, school-visible, downloadable video", async () => {
+  it("copies the object under the lumos prefix, cross-bucket from the recording's own s3Bucket, and creates an APPROVED, school-visible, downloadable video", async () => {
     mockDb.conferenceRecording.findFirst.mockResolvedValue(recording())
     const out = await publishRecordingAsLessonVideo("s1", "c1", "egr-1")
     expect(out).toEqual({ published: true, videoId: "vid-1" })
+    // Quota was answerable from fileSizeBytes alone — no HEAD round-trip.
+    expect(getObjectSize).not.toHaveBeenCalled()
+    expect(checkSchoolVideoQuota).toHaveBeenCalledWith(
+      "s1",
+      BigInt(150_000_000)
+    )
     expect(copyObject).toHaveBeenCalledWith(
+      "aldar-recordings-me-central-1",
       "schools/s1/live-class/c1/1.mp4",
       "stream/s1/video/live-rec-1.mp4",
       "video/mp4"
@@ -163,7 +184,7 @@ describe("publishRecordingAsLessonVideo", () => {
     expect(mockDb.video.create).not.toHaveBeenCalled()
   })
 
-  it("respects the school's storage quota", async () => {
+  it("respects the school's storage quota — checked from fileSizeBytes BEFORE the copy, so nothing is ever written to S3", async () => {
     mockDb.conferenceRecording.findFirst.mockResolvedValue(recording())
     vi.mocked(checkSchoolVideoQuota).mockResolvedValue({
       allowed: false,
@@ -172,6 +193,33 @@ describe("publishRecordingAsLessonVideo", () => {
       published: false,
       reason: "quota",
     })
+    expect(copyObject).not.toHaveBeenCalled()
+    expect(deleteObject).not.toHaveBeenCalled()
+    expect(mockDb.video.create).not.toHaveBeenCalled()
+  })
+
+  it("falls back to a post-copy HEAD when fileSizeBytes is null, and deletes the copy when quota is exceeded", async () => {
+    mockDb.conferenceRecording.findFirst.mockResolvedValue(
+      recording({ fileSizeBytes: null })
+    )
+    vi.mocked(checkSchoolVideoQuota).mockResolvedValue({
+      allowed: false,
+    } as never)
+    expect(await publishRecordingAsLessonVideo("s1", "c1", "egr-1")).toEqual({
+      published: false,
+      reason: "quota",
+    })
+    // Unlike the pre-copy path, the size was only knowable after copying —
+    // so the copy DID happen, and the leaked object must be cleaned up.
+    expect(copyObject).toHaveBeenCalledWith(
+      "aldar-recordings-me-central-1",
+      "schools/s1/live-class/c1/1.mp4",
+      "stream/s1/video/live-rec-1.mp4",
+      "video/mp4"
+    )
+    expect(getObjectSize).toHaveBeenCalledWith("stream/s1/video/live-rec-1.mp4")
+    expect(checkSchoolVideoQuota).toHaveBeenCalledWith("s1", 150_000_000)
+    expect(deleteObject).toHaveBeenCalledWith("stream/s1/video/live-rec-1.mp4")
     expect(mockDb.video.create).not.toHaveBeenCalled()
   })
 

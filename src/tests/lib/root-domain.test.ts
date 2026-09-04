@@ -16,10 +16,12 @@ import {
   getRootDomain,
   getSubdomainFromHost,
   isMainDomainHost,
+  LIVE_ROOT_DOMAIN,
   mainOriginForHost,
   PRIMARY_ROOT_DOMAIN,
   ROOT_DOMAINS,
   tenantOriginForHost,
+  tenantOriginForRoot,
 } from "@/lib/root-domain"
 
 afterEach(() => {
@@ -175,6 +177,28 @@ describe("tenantOriginForHost", () => {
     expect(tenantOriginForHost("localhost:3000", "demo")).toBe(
       "http://demo.localhost:3000"
     )
+  })
+})
+
+describe("tenantOriginForRoot", () => {
+  // The request-less sibling of tenantOriginForHost, for background contexts
+  // (crons, email rendering) with no host to resolve a root from — used by
+  // dispatch-notification.ts's resolveActionUrl when opts.host is absent.
+  it("defaults to LIVE_ROOT_DOMAIN (balqalam.com), not PRIMARY_ROOT_DOMAIN", () => {
+    expect(LIVE_ROOT_DOMAIN).toBe("balqalam.com")
+    expect(tenantOriginForRoot("demo")).toBe("https://demo.balqalam.com")
+    expect(tenantOriginForRoot("demo")).not.toContain(PRIMARY_ROOT_DOMAIN)
+  })
+
+  it("accepts an explicit root override", () => {
+    expect(tenantOriginForRoot("demo", "databayt.org")).toBe(
+      "https://demo.databayt.org"
+    )
+  })
+
+  it("uses *.localhost:3000 in development regardless of root", () => {
+    vi.stubEnv("NODE_ENV", "development")
+    expect(tenantOriginForRoot("demo")).toBe("http://demo.localhost:3000")
   })
 })
 

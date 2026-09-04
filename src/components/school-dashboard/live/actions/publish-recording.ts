@@ -14,9 +14,9 @@ import "server-only"
 
 import { revalidatePath } from "next/cache"
 
-import { getCloudFrontUrl } from "@/lib/cloudfront-url"
+import { toCloudFrontUrl } from "@/lib/cloudfront-url"
 import { db } from "@/lib/db"
-import { copyObject, getObjectSize } from "@/lib/s3"
+import { copyObject, deleteObject, getObjectSize } from "@/lib/s3"
 import {
   checkSchoolVideoQuota,
   incrementSchoolVideoUsage,
@@ -59,7 +59,9 @@ export async function publishRecordingAsLessonVideo(
       select: {
         id: true,
         status: true,
+        s3Bucket: true,
         s3Key: true,
+        fileSizeBytes: true,
         durationSeconds: true,
         publishedVideoId: true,
         session: {
@@ -91,18 +93,61 @@ export async function publishRecordingAsLessonVideo(
     const uploaderId = session.teacher?.userId ?? null
     if (!uploaderId) return { published: false, reason: "no_uploader" }
 
-    const key = `stream/${schoolId}/video/live-${recording.id}.mp4`
-    const copied = await copyObject(recording.s3Key, key, "video/mp4")
-    if (!copied) return { published: false, reason: "copy_failed" }
-
-    const fileSize = (await getObjectSize(key)) ?? 0
-    if (fileSize > 0) {
-      const quota = await checkSchoolVideoQuota(schoolId, fileSize)
-      if (!quota.allowed) return { published: false, reason: "quota" }
-    }
+    // Both checks below run BEFORE the S3 copy — nothing is copied unless it
+    // will actually be published. Order: the switch first (no S3 call at
+    // all), then quota (usually answerable from the row itself, see below).
     if (!session.school?.conferenceAutoPublishRecordings) {
       // School setting: keep the recording on the session page only.
       return { published: false, reason: "disabled" }
+    }
+
+    const key = `stream/${schoolId}/video/live-${recording.id}.mp4`
+
+    // egress_ended writes `fileSizeBytes` alongside `status: "ready"`
+    // (webhook.ts), so the common case never needs an S3 round-trip to know
+    // whether this publish fits the school's quota. Only an egress payload
+    // that omitted the size (fileSizeBytes null) falls back to a post-copy
+    // HEAD below.
+    let fileSize =
+      recording.fileSizeBytes != null ? Number(recording.fileSizeBytes) : 0
+    if (recording.fileSizeBytes != null) {
+      const quota = await checkSchoolVideoQuota(
+        schoolId,
+        recording.fileSizeBytes
+      )
+      if (!quota.allowed) {
+        console.warn("[conference] recording publish blocked by quota", {
+          schoolId,
+          sessionId,
+        })
+        return { published: false, reason: "quota" }
+      }
+    }
+
+    const copied = await copyObject(
+      recording.s3Bucket,
+      recording.s3Key,
+      key,
+      "video/mp4"
+    )
+    if (!copied) return { published: false, reason: "copy_failed" }
+
+    if (recording.fileSizeBytes == null) {
+      fileSize = (await getObjectSize(key)) ?? 0
+      if (fileSize > 0) {
+        const quota = await checkSchoolVideoQuota(schoolId, fileSize)
+        if (!quota.allowed) {
+          console.warn("[conference] recording publish blocked by quota", {
+            schoolId,
+            sessionId,
+          })
+          // The size was only knowable post-copy, so the copy already
+          // happened — unlike the pre-copy quota path above, this one must
+          // clean up after itself.
+          await deleteObject(key).catch(() => undefined)
+          return { published: false, reason: "quota" }
+        }
+      }
     }
 
     const lang = session.lang === "en" ? "en" : "ar"
@@ -121,7 +166,10 @@ export async function publishRecordingAsLessonVideo(
     //
     // Access note: conference recordings are SECTION-scoped; publishing widens
     // this one to the whole school on that lesson (lumos has no section tier).
-    // Recorded in conference/ISSUE.md as a deliberate decision.
+    // This is the CURRENT behavior, not a reviewed trade-off — nothing in
+    // conference/ISSUE.md records it as a deliberate decision (checked
+    // 2026-09-04). Open item: record it there, or narrow lumos Video
+    // visibility to a section, once lumos grows a section tier.
     const video = await db.video.create({
       data: {
         catalogLessonId: session.catalogLessonId,
@@ -130,7 +178,14 @@ export async function publishRecordingAsLessonVideo(
         title,
         description,
         lang,
-        videoUrl: getCloudFrontUrl(key),
+        // Guarded: falls back to a raw S3 URL rather than rewriting onto a
+        // CloudFront distribution that may not front `AWS_S3_BUCKET` — see
+        // toCloudFrontUrl's own doc comment for the 403 this once caused.
+        videoUrl: toCloudFrontUrl(
+          process.env.AWS_S3_BUCKET
+            ? `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`
+            : key
+        ),
         provider: "self-hosted",
         storageProvider: "s3",
         storageKey: key,
