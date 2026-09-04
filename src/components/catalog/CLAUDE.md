@@ -71,7 +71,10 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
   `sd` then `sd-content`, always, and `sd-content` must be re-run after ANY later
   `sd` run**: every `sd` pass deletes and recreates the SD chapters/lessons, which
   SetNulls the chapter/lesson scope of every ingested question and empties the
-  lumos lesson practice quiz until `sd-content` restores it. Uploading is
+  lumos lesson practice quiz until `sd-content` restores it (the catalog seed
+  index — `seedCatalog` / `seedFullCatalog`, which the prebuild `ensure-demo`
+  path drives — already runs them in that order; only manual `db:seed:single`
+  runs can get it wrong). Uploading is
   deploy-gated: replaced slugs keep their CDN keys, so an upload changes what
   production serves immediately. Full ledger: `curriculum/sd/TEXTBOOK_AUDIT.md`.
 - **PUBLISHED is the visibility floor**: every school-facing catalog read filters
