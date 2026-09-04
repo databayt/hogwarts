@@ -56,11 +56,26 @@
   academic grade, section, stream and enrollments together, then drops the
   coursework anchored to classes they left. `student@balqalam.com` is now in
   الصف الثاني عشر section ب and sees 18 grade-12 subjects.
-  **Both scripts are dry-run by default; pass `--apply`. They have only been run
-  against the LOCAL database. The production demo still holds the stale rows and
-  still has that student in grade 10.**
+  Both scripts are dry-run by default; pass `--apply`.
+  **Also RUN AGAINST PRODUCTION (Neon account #1 `ep-little-credit`) on
+  2026-09-04, scoped to the demo school.** Prod demo went 448 classes to 240,
+  one per curriculum pair, with 208 repointed and 208 deleted; no attendance or
+  results hung off the deleted rows, so the losses were 13,845 enrollments,
+  1,039 assignments and 140 exams. No re-seed was needed there — the repair left
+  no curriculum pair without a class. The student is in الصف الثاني عشر section
+  B with 23 grade-12 subjects. The other prod tenants (qdwa, albayan,
+  kingfahad, alqabas) were NOT touched.
+  **The Neon branch-before-touch step could not run: the project is at its
+  10-branch limit and the spare slots are old archived backups that are not
+  mine to delete. A `pg_dump` of the affected tables was taken instead.**
+  **The read-path fix is still NOT deployed.** Prod results are correct because
+  the data is now correct, but the `?studentId` bypass and the
+  "student with no Student row sees everything" gap persist in the running build
+  until this branch ships. `/subjects` also still returns `/unauthorized` for a
+  student on prod, since the sidebar/authorization half of pass (a) is
+  uncommitted.
   **SEED BUG, still open:** `seedClasses` names a class `<subject.name> - <level
-  name>` while older rows were named from the selection's `customName`, so its
+name>` while older rows were named from the selection's `customName`, so its
   `schoolId_name` upsert misses them and adds a second class for the same
   (grade, subject) — 15 duplicates appeared on the re-seed. The repair script's
   dedupe pass clears them, but the seed should key on the pair instead. That

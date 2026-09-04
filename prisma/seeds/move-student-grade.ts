@@ -29,14 +29,11 @@ export async function moveStudentToGrade(
 ) {
   const { schoolId, email, gradeNumber, apply } = opts
 
-  const user = await prisma.user.findFirst({
-    where: { email },
-    select: { id: true },
-  })
-  if (!user) throw new Error(`No user with email ${email}`)
-
+  // Look the student up through the school, not the email alone: the same
+  // address can own an account in more than one school, and picking the first
+  // user row lands in whichever tenant happens to sort first.
   const student = await prisma.student.findFirst({
-    where: { schoolId, userId: user.id },
+    where: { schoolId, user: { email } },
     select: {
       id: true,
       sectionId: true,
