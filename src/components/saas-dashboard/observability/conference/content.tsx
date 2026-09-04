@@ -116,6 +116,99 @@ export async function ConferenceObservabilityContent({
         </Card>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {t?.usageTitle ?? "This month's live-class usage vs. tier"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="text-muted-foreground text-sm">
+                {t?.usageWebrtc ?? "WebRTC participant-minutes"}
+              </p>
+              <p className="text-2xl font-bold">
+                {data.usage.totals.participantMinutes.toLocaleString()}{" "}
+                <span className="text-muted-foreground text-sm font-normal">
+                  / {data.usage.tier.webrtcMinutes.toLocaleString()} (
+                  {data.usage.percentOfTier.webrtc}%)
+                </span>
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-sm">
+                {t?.usageRecording ?? "Recording minutes"}
+              </p>
+              <p className="text-2xl font-bold">
+                {data.usage.totals.recordingMinutes.toLocaleString()}{" "}
+                <span className="text-muted-foreground text-sm font-normal">
+                  / {data.usage.tier.recordingMinutes.toLocaleString()} (
+                  {data.usage.percentOfTier.recording}%)
+                </span>
+              </p>
+            </div>
+          </div>
+          {data.usage.rows.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              {t?.noUsage ?? "No live-class activity this month."}
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground border-b text-start">
+                    <th className="py-2 pe-4 text-start font-medium">
+                      {t?.usageSchool ?? "School"}
+                    </th>
+                    <th className="py-2 pe-4 text-end font-medium">
+                      {t?.usageWebrtc ?? "WebRTC participant-minutes"}
+                    </th>
+                    <th className="py-2 pe-4 text-end font-medium">
+                      {t?.usageRecording ?? "Recording minutes"}
+                    </th>
+                    <th className="py-2 pe-4 text-end font-medium">
+                      {t?.usageSessions ?? "Sessions"}
+                    </th>
+                    <th className="py-2 text-end font-medium">
+                      {t?.usageOpenSpans ?? "In progress"}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.usage.rows.map((row) => (
+                    <tr key={row.schoolId} className="border-b last:border-0">
+                      <td className="py-2 pe-4">
+                        <span className="block truncate">{row.name}</span>
+                        <span className="text-muted-foreground block truncate text-xs">
+                          {row.subdomain}
+                        </span>
+                      </td>
+                      <td className="py-2 pe-4 text-end font-medium">
+                        {row.participantMinutes.toLocaleString()}
+                      </td>
+                      <td className="py-2 pe-4 text-end font-medium">
+                        {row.recordingMinutes.toLocaleString()}
+                      </td>
+                      <td className="py-2 pe-4 text-end font-medium">
+                        {row.sessions.toLocaleString()}
+                      </td>
+                      <td className="py-2 text-end font-medium">
+                        {row.openSpans.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="text-muted-foreground text-xs">
+            {t?.usageHonesty ??
+              "Minutes are counted when a participant leaves, not while they are connected — a class in progress is undercounted until it ends. “In progress” shows how many currently-open spans are missing from the total above."}
+          </p>
+        </CardContent>
+      </Card>
+
       <p className="text-muted-foreground text-xs">
         {t?.sfuNote ??
           "Egress queue depth and per-room bitrate require the LiveKit SFU and appear once it is provisioned."}

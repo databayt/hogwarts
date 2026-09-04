@@ -170,6 +170,10 @@
     "classProgress": "Class progress",
     "elapsed": "Elapsed",
     "remaining": "Remaining",
+    "pollOpenAnnounce": "Poll open",
+    "hd": "HD",
+    "rec": "REC",
+    "hands": "Hands",
     "card": {
       "joining": "Joining…",
       "more": "MORE",
@@ -384,7 +388,14 @@
     "protectionHint": "School policy, applied everywhere: videos, recordings and materials are viewed in the app and never downloaded; every viewer sees a faint watermark with their identity; picture-in-picture, casting and printing are off.",
     "storage": "Recording storage",
     "storageUsed": "{used} of {quota} used",
-    "storageUnlimited": "{used} used · no quota on this plan",
+    "storageNoQuota": "{used} used · no quota set",
+    "usage": {
+      "title": "Live-class usage this month",
+      "participantMinutes": "{minutes} participant-minutes",
+      "recordingMinutes": "{minutes} recording minutes",
+      "sessions": "{count} sessions",
+      "honestyNote": "Minutes are counted when a participant leaves, not while they are connected — a class in progress is undercounted until it ends."
+    },
     "gradePolicy": {
       "title": "Online teaching by grade",
       "description": "Between the school default and the per-section setting: section ?? grade ?? school.",

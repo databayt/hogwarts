@@ -9,6 +9,11 @@
 import "server-only"
 
 import { db } from "@/lib/db"
+import {
+  currentMonthStart,
+  getPlatformLiveUsage,
+  type PlatformLiveUsage,
+} from "@/components/school-dashboard/live/actions/usage"
 
 export type ConferenceObservability = {
   liveCount: number
@@ -26,6 +31,14 @@ export type ConferenceObservability = {
     schoolId: string
     sessionId: string
   }[]
+  /**
+   * This calendar month's usage against the platform's configured LiveKit
+   * tier (RUNBOOK.md's free-tier numbers by default). Counted from what
+   * LiveKit reported on leave/room_finished — a school mid-class right now
+   * is slightly undercounted until its participants disconnect. See
+   * actions/usage.ts.
+   */
+  usage: PlatformLiveUsage
 }
 
 export async function getConferenceObservability(): Promise<ConferenceObservability> {
@@ -34,6 +47,11 @@ export async function getConferenceObservability(): Promise<ConferenceObservabil
   startOfDay.setHours(0, 0, 0, 0)
   const endOfDay = new Date(now)
   endOfDay.setHours(23, 59, 59, 999)
+  // Platform-wide aggregate, so there is no single school timezone to scope
+  // "this month" by — UTC calendar month, same convention as startOfDay
+  // above (this file's local-clock boundaries are already server-clock,
+  // not any one school's).
+  const monthStart = currentMonthStart(now)
 
   const [
     liveCount,
@@ -43,6 +61,7 @@ export async function getConferenceObservability(): Promise<ConferenceObservabil
     tcpFallbackCount,
     totalParticipants,
     recentEvents,
+    usage,
   ] = await Promise.all([
     db.conference.count({ where: { status: "live", deletedAt: null } }),
     db.conference.groupBy({
@@ -80,6 +99,7 @@ export async function getConferenceObservability(): Promise<ConferenceObservabil
         sessionId: true,
       },
     }),
+    getPlatformLiveUsage(monthStart, now),
   ])
 
   // Resolve school names for the live-by-school breakdown.
@@ -109,6 +129,7 @@ export async function getConferenceObservability(): Promise<ConferenceObservabil
       }))
       .sort((a, b) => b.count - a.count),
     recentEvents,
+    usage,
   }
 }
 

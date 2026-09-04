@@ -197,7 +197,7 @@ reached from a row, not a tab.
 | Host trust from ROOM metadata, not self-attributes         | ✅ `addRoomHost` on join; `RoomMetadataChanged` for late co-hosts       |
 | Join routes rate-limited                                   | ✅ token refresh + mobile join                                          |
 | Cron bridge alerts on failure                              | ✅ comments on #402, 1/hour; schedules no longer cancel each other      |
-| Live-minute metering vs the LiveKit tier                   | 🟡 in progress (`actions/usage.ts`)                                     |
+| Live-minute metering vs the LiveKit tier                 | ✅ `actions/usage.ts` — platform table on `/observability/conference`, the school's month on `/live/settings` |
 
 Any-time-online pass 2026-08-14 (second): a school can now go online **at any
 time, for any length, and either way round**, without ever closing the

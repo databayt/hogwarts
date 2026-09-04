@@ -13,8 +13,12 @@ import {
 vi.mock("@/lib/db", () => ({
   db: {
     conference: { count: vi.fn(), groupBy: vi.fn() },
-    conferenceRecording: { aggregate: vi.fn() },
-    conferenceParticipant: { count: vi.fn() },
+    conferenceRecording: { aggregate: vi.fn(), groupBy: vi.fn() },
+    conferenceParticipant: {
+      count: vi.fn(),
+      groupBy: vi.fn(),
+      findMany: vi.fn(),
+    },
     conferenceEvent: { findMany: vi.fn() },
     school: { findMany: vi.fn() },
   },
@@ -22,6 +26,13 @@ vi.mock("@/lib/db", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Defaults for the LIVEKIT usage sub-query (actions/usage.ts,
+  // getPlatformLiveUsage) that getConferenceObservability now also runs —
+  // empty by default so a test that doesn't care about usage numbers still
+  // exercises real code without crashing on an unmocked call.
+  vi.mocked(db.conferenceParticipant.groupBy).mockResolvedValue([] as never)
+  vi.mocked(db.conferenceParticipant.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.conferenceRecording.groupBy).mockResolvedValue([] as never)
 })
 
 describe("getConferenceObservability", () => {
@@ -76,6 +87,67 @@ describe("getConferenceObservability", () => {
     expect(r.storageBytes).toBe(0)
     expect(r.liveBySchool).toEqual([])
     expect(db.school.findMany).not.toHaveBeenCalled()
+    // No LiveKit usage this month either — the sub-query still ran (it is
+    // not gated on the other metrics) and reports an honest all-zero shape.
+    expect(r.usage.rows).toEqual([])
+    expect(r.usage.totals).toEqual({
+      participantMinutes: 0,
+      recordingMinutes: 0,
+      sessions: 0,
+      openSpans: 0,
+    })
+    expect(r.usage.percentOfTier).toEqual({ webrtc: 0, recording: 0 })
+  })
+
+  it("surfaces this month's LiveKit usage against the configured tier (fl-01)", async () => {
+    vi.mocked(db.conference.count).mockResolvedValue(0 as never)
+    vi.mocked(db.conference.groupBy)
+      // First call: liveBySchool (empty).
+      .mockResolvedValueOnce([] as never)
+      // Second call: getPlatformLiveUsage's sessionGroups.
+      .mockResolvedValueOnce([
+        { schoolId: "sch-a", _count: { _all: 4 } },
+      ] as never)
+    vi.mocked(db.conferenceRecording.aggregate).mockResolvedValue({
+      _count: { _all: 0 },
+      _sum: { fileSizeBytes: null },
+    } as never)
+    vi.mocked(db.conferenceParticipant.count).mockResolvedValue(0 as never)
+    vi.mocked(db.conferenceEvent.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.conferenceParticipant.groupBy).mockResolvedValue([
+      { schoolId: "sch-a", _sum: { durationSeconds: 6000 } }, // 100 min
+    ] as never)
+    vi.mocked(db.conferenceRecording.groupBy).mockResolvedValue([
+      { schoolId: "sch-a", _sum: { durationSeconds: 1200 } }, // 20 min
+    ] as never)
+    vi.mocked(db.school.findMany).mockResolvedValue([
+      { id: "sch-a", name: "Aldar", domain: "aldar" },
+    ] as never)
+
+    const r = await getConferenceObservability()
+
+    expect(r.usage.rows).toEqual([
+      {
+        schoolId: "sch-a",
+        name: "Aldar",
+        subdomain: "aldar",
+        participantMinutes: 100,
+        recordingMinutes: 20,
+        sessions: 4,
+        openSpans: 0,
+      },
+    ])
+    expect(r.usage.totals).toEqual({
+      participantMinutes: 100,
+      recordingMinutes: 20,
+      sessions: 4,
+      openSpans: 0,
+    })
+    expect(r.usage.tier).toEqual({
+      webrtcMinutes: 5000,
+      recordingMinutes: 1000,
+      concurrent: 100,
+    })
   })
 })
 

@@ -84,8 +84,17 @@ Owed / decisions surfaced (not changed):
       500 and nothing materializes.
 - [ ] **Vercel Hobby `maxDuration = 300`** on two cron routes is honoured only
       with Fluid Compute on; check Settings → Functions on the free project.
-- [ ] **Live-minute metering vs the LiveKit tier** (fl-01) — in progress as
-      `actions/usage.ts` + the observability page + `/live/settings`.
+- [x] **Live-minute metering vs the LiveKit tier** (fl-01) — CLOSED:
+      `actions/usage.ts` sums participant minutes (open spans to now) and
+      recording minutes (soft-deleted rows included, so the retention purge
+      never resets the meter) per school per UTC month against `LIVEKIT_TIER`
+      (env-overridable); the DEVELOPER observability page shows every school
+      vs the tier, `/live/settings` the school's own month, both with the
+      "counted when a participant leaves" note. The storage row now says "no
+      quota set" instead of implying a plan limit — nothing writes
+      `School.videoStorageQuotaBytes` anywhere (fl-03): making it real is a
+      plan → bytes mapping written on subscribe plus the existing
+      `checkSchoolVideoQuota` on the upload path.
 - [ ] **Guardian summary and the ADEK compliance export hard-filter
       `periodId: null`**, so VIRTUAL rows never count (attn-02) — a scope
       decision for the attendance block, recorded here so it stops reading as

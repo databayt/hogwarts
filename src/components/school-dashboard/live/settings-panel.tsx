@@ -13,6 +13,10 @@ import {
   listGradeOnlinePolicy,
   listSectionRecordingPolicy,
 } from "@/components/school-dashboard/live/actions/settings"
+import {
+  currentMonthStart,
+  getSchoolLiveUsage,
+} from "@/components/school-dashboard/live/actions/usage"
 import { GradeOnlinePolicy } from "@/components/school-dashboard/live/grade-online-policy"
 import { SectionOnlinePolicy } from "@/components/school-dashboard/live/section-online-policy"
 import { SectionRecordingPolicy } from "@/components/school-dashboard/live/section-recording-policy"
@@ -39,6 +43,7 @@ export async function LiveSettingsPanel({
     coverageResult,
     gradesResult,
     usage,
+    liveUsage,
   ] = await Promise.all([
     getLiveSettings(),
     listLiveTerms(),
@@ -46,6 +51,13 @@ export async function LiveSettingsPanel({
     getLiveLinkCoverage(),
     listGradeOnlinePolicy(),
     schoolId ? getSchoolVideoUsage(schoolId) : Promise.resolve(null),
+    // This school's own live-class minutes for the current UTC calendar
+    // month — see actions/usage.ts's `currentMonthStart` for why this is
+    // UTC rather than the school's own timezone, and its module header for
+    // the honesty note on when these minutes are counted.
+    schoolId
+      ? getSchoolLiveUsage(schoolId, currentMonthStart())
+      : Promise.resolve(null),
   ])
   const grades =
     "success" in gradesResult && gradesResult.success ? gradesResult.data : []
@@ -71,6 +83,7 @@ export async function LiveSettingsPanel({
     ?.onlinePolicy
   const gp = (t as { gradePolicy?: Record<string, string> } | undefined)
     ?.gradePolicy
+  const usageT = (t as { usage?: Record<string, string> } | undefined)?.usage
 
   return (
     // `data-full-width` opts this panel out of the configuration hub's narrow
@@ -306,18 +319,45 @@ export async function LiveSettingsPanel({
                 <span className="font-medium">
                   {t?.storage ?? "Recording storage"}:{" "}
                 </span>
-                {usage.isUnlimited
-                  ? (
-                      t?.storageUnlimited ??
-                      "{used} used · no quota on this plan"
-                    ).replace("{used}", formatBytes(usage.used))
+                {/* A null OR zero quota means nobody has ever set one for
+                    this school — not that the school's plan is unlimited.
+                    Saying "no quota on this plan" implied a deliberate
+                    plan feature that does not exist yet (finding fl-03). */}
+                {usage.quota === null || usage.quota === BigInt(0)
+                  ? (t?.storageNoQuota ?? "{used} used · no quota set").replace(
+                      "{used}",
+                      formatBytes(usage.used)
+                    )
                   : (t?.storageUsed ?? "{used} of {quota} used")
                       .replace("{used}", formatBytes(usage.used))
-                      .replace(
-                        "{quota}",
-                        formatBytes(usage.quota ?? BigInt(0))
-                      )}
+                      .replace("{quota}", formatBytes(usage.quota))}
               </p>
+            )}
+            {liveUsage && (
+              <div className="space-y-1">
+                <p className="text-sm">
+                  <span className="font-medium">
+                    {usageT?.title ?? "Live-class usage this month"}:{" "}
+                  </span>
+                  {(
+                    usageT?.participantMinutes ??
+                    "{minutes} participant-minutes"
+                  ).replace("{minutes}", String(liveUsage.participantMinutes))}
+                  {" · "}
+                  {(
+                    usageT?.recordingMinutes ?? "{minutes} recording minutes"
+                  ).replace("{minutes}", String(liveUsage.recordingMinutes))}
+                  {" · "}
+                  {(usageT?.sessions ?? "{count} sessions").replace(
+                    "{count}",
+                    String(liveUsage.sessions)
+                  )}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {usageT?.honestyNote ??
+                    "Minutes are counted when a participant leaves, not while they are connected — a class in progress is undercounted until it ends."}
+                </p>
+              </div>
             )}
           </div>
           <SectionRecordingPolicy
