@@ -40,6 +40,32 @@
 
 ## Resolved
 
+- **2026-09-04 (c) — The stale class rows are repaired, and the demo student is
+  in grade 12.** `prisma/seeds/repair-class-curriculum.ts` rebuilds a school's
+  classes against its active `SubjectSelection` rows, which are the authority on
+  which (grade, subject) pairs should exist. It repoints a wrong class when the
+  grade's curriculum wants a subject of the same name, so its enrollments,
+  attendance and results survive; deletes what is still unmatched; and collapses
+  duplicates of a pair onto the row carrying the most history. Demo went 504
+  classes (36 correct, 396 grade-mismatched, 72 with no grade) to 123, one per
+  curriculum pair, with 83 repointed and 385 deleted. Re-running the `classes`,
+  `attendance`, `assignments`, `exams` and `grades` seeds restored the demo:
+  8,538 enrollments, 52,560 attendance rows, 9,873 results, 702 assignments,
+  401 exams.
+  `prisma/seeds/move-student-grade.ts` moves one student between grades —
+  academic grade, section, stream and enrollments together, then drops the
+  coursework anchored to classes they left. `student@balqalam.com` is now in
+  الصف الثاني عشر section ب and sees 18 grade-12 subjects.
+  **Both scripts are dry-run by default; pass `--apply`. They have only been run
+  against the LOCAL database. The production demo still holds the stale rows and
+  still has that student in grade 10.**
+  **SEED BUG, still open:** `seedClasses` names a class `<subject.name> - <level
+  name>` while older rows were named from the selection's `customName`, so its
+  `schoolId_name` upsert misses them and adds a second class for the same
+  (grade, subject) — 15 duplicates appeared on the re-seed. The repair script's
+  dedupe pass clears them, but the seed should key on the pair instead. That
+  needs a `@@unique([schoolId, gradeId, subjectId])` on `Class`.
+
 - **2026-09-04 (b) — A student now sees only their own grade's subjects.**
   The first pass treated the student's grade as a fallback, so class
   enrollments decided the list. Demo class rows for grade 10 point at grade
