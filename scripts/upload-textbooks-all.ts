@@ -13,7 +13,18 @@
  * local file exists, so seed and upload never disagree; run this after adding
  * or re-rendering assets so the keys actually resolve on the CDN.
  *
- * Usage: npx tsx scripts/upload-textbooks-all.ts [--dry-run]
+ * Usage: npx tsx scripts/upload-textbooks-all.ts [--dry-run] [--force]
+ *          [--only=sd-g10-biology,sd-g10-arabic] [--bucket=databayt-cdn]
+ *
+ *   --force   overwrite keys that already exist. Without it an existing key is
+ *             skipped, so a REPLACED edition (same slug, same key) would keep
+ *             serving the old file forever — pass it for every replaced slug,
+ *             then invalidate `/catalog/textbooks/<slug>/*` on CloudFront (the
+ *             objects are uploaded `immutable, max-age=1y`).
+ *   --only    comma-separated Subject slugs; everything else is left alone.
+ *   --bucket  target bucket. cdn.databayt.org is served from `databayt-cdn`,
+ *             NOT from `AWS_S3_BUCKET` (the app's own bucket) — a key that is
+ *             missing there 403s; run once per bucket.
  */
 
 import { existsSync, readdirSync, readFileSync, statSync } from "fs"
@@ -38,9 +49,19 @@ const s3 = new S3Client({
   },
 })
 
-const BUCKET = process.env.AWS_S3_BUCKET!
+function argValue(name: string): string | undefined {
+  const hit = process.argv.find((a) => a.startsWith(`${name}=`))
+  return hit ? hit.slice(name.length + 1) : undefined
+}
+
+const BUCKET = argValue("--bucket") ?? process.env.AWS_S3_BUCKET!
 const CURRICULUM_ROOT = resolve(__dirname, "../curriculum")
 const DRY_RUN = process.argv.includes("--dry-run")
+const FORCE = process.argv.includes("--force")
+const ONLY = argValue("--only")
+  ?.split(",")
+  .map((s) => s.trim())
+  .filter(Boolean)
 
 // Every curriculum tree under curriculum/ + how to build the DB Subject.slug
 // it maps to (must match the seed). Sudan resolves through the seed's own
@@ -128,6 +149,7 @@ async function main() {
         if (!statSync(subjectPath).isDirectory()) continue
 
         const slug = cur.slugFor(grade, subject)
+        if (ONLY && !ONLY.includes(slug)) continue
         const assets: AssetEntry[] = []
         for (const spec of SUBJECT_ASSETS) {
           const filePath = join(subjectPath, spec.file)
@@ -163,7 +185,7 @@ async function main() {
     asset: AssetEntry
   ): Promise<"uploaded" | "skipped" | "failed"> {
     if (DRY_RUN) return "uploaded"
-    if (await exists(asset.key)) return "skipped"
+    if (!FORCE && (await exists(asset.key))) return "skipped"
     try {
       await upload(asset.key, asset.filePath, asset.contentType)
       return "uploaded"
