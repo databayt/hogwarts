@@ -17,13 +17,17 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { dispatchNotification } from "@/lib/dispatch-notification"
+import {
+  dispatchNotification,
+  shouldSendNotification,
+} from "@/lib/dispatch-notification"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import type { ProvisionGuardianInput } from "@/lib/student-provisioning"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
+import { settleRegistrationFee } from "@/components/school-marketing/application/offer/settle"
 
 import { assertAdmissionPermission, isPermissionDenied } from "./authorization"
 import {
@@ -98,6 +102,18 @@ const t = (msg: { ar: string; en: string }, lang: string) =>
   lang === "en" ? msg.en : msg.ar
 
 /**
+ * Applicant-facing notices go out in the language the family filled the
+ * wizard in (`Application.lang`); the school's preferred language is only
+ * the fallback. Every status notice used to take the school's language, so
+ * an English-speaking family at an Arabic-preferring school read Arabic.
+ */
+const applicantLang = (
+  appLang: string | null | undefined,
+  schoolLang: string | null | undefined
+): string =>
+  appLang === "en" || appLang === "ar" ? appLang : (schoolLang ?? "ar")
+
+/**
  * Dispatch in-app notification AND send email immediately.
  * Replaces the pattern of dispatchNotification() + daily cron for admission.
  */
@@ -143,6 +159,14 @@ async function dispatchAdmissionNotification(params: {
   // returned null (no in-app row). Nothing further to do.
   if (!params.userId) return
   if (!notificationId || !channels.includes("email")) return
+
+  // The row above was written with the channels the USER left enabled (the
+  // dispatcher filters per preference), but this inline send consulted only
+  // the caller's list — a family that turned email off for this type still
+  // got the mail. Same gate the cron drain applies before it sends.
+  if (!(await shouldSendNotification(params.userId, params.type, "email"))) {
+    return
+  }
 
   // Send email immediately instead of waiting for daily cron
   const user = await db.user.findUnique({
@@ -556,6 +580,7 @@ export async function updateApplicationStatus(params: {
       where: { id: params.id, schoolId },
       select: {
         userId: true,
+        lang: true,
         firstName: true,
         lastName: true,
         campaignId: true,
@@ -577,7 +602,10 @@ export async function updateApplicationStatus(params: {
           domain: true,
         },
       })
-      const notifLang = school?.preferredLanguage ?? "ar"
+      const notifLang = applicantLang(
+        application.lang,
+        school?.preferredLanguage
+      )
       const statusMsgMap: Record<string, { ar: string; en: string }> = {
         SHORTLISTED: NOTIF.statusUpdate.SHORTLISTED,
         SELECTED: NOTIF.statusUpdate.SELECTED,
@@ -595,10 +623,13 @@ export async function updateApplicationStatus(params: {
       const notifMetadata = {
         applicationId: params.id,
         status: params.status,
+        // The applicant's own surface: the offer page when there is one,
+        // else their applications dashboard. `/admission` (the previous
+        // target) is the STAFF tree — a family clicking it hit the role gate.
         url:
           params.status === "SELECTED" && application.accessToken
             ? `/application/${params.id}/offer?token=${encodeURIComponent(application.accessToken)}`
-            : "/admission",
+            : "/application",
       }
 
       // Guest applicants (no userId) have no in-app inbox — fall back to
@@ -694,6 +725,7 @@ export async function updateApplicationStatus(params: {
             expiryDate: application.offerExpiryDate
               ? application.offerExpiryDate.toISOString().slice(0, 10)
               : undefined,
+            langOverride: notifLang === "en" ? "en" : "ar",
           })
           await sendRawEmail({ to: application.email, subject, html })
         } catch (err) {
@@ -1672,14 +1704,23 @@ export async function recordPayment(params: {
     try {
       const application = await db.application.findUnique({
         where: { id: params.id, schoolId },
-        select: { userId: true, email: true, firstName: true, lastName: true },
+        select: {
+          userId: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          lang: true,
+        },
       })
       if (application?.userId) {
         const school = await db.school.findFirst({
           where: { id: schoolId },
           select: { preferredLanguage: true },
         })
-        const notifLang = school?.preferredLanguage ?? "ar"
+        const notifLang = applicantLang(
+          application.lang,
+          school?.preferredLanguage
+        )
         dispatchAdmissionNotification({
           schoolId,
           userId: application.userId,
@@ -1692,7 +1733,7 @@ export async function recordPayment(params: {
           metadata: {
             applicationId: params.id,
             paymentId: params.paymentId,
-            url: "/admission",
+            url: "/application",
           },
           actorId: session.user?.id,
         }).catch((err) =>
@@ -1704,7 +1745,10 @@ export async function recordPayment(params: {
           where: { id: schoolId },
           select: { preferredLanguage: true },
         })
-        const notifLang = school?.preferredLanguage ?? "ar"
+        const notifLang = applicantLang(
+          application.lang,
+          school?.preferredLanguage
+        )
         dispatchAdmissionNotification({
           schoolId,
           directEmail: application.email,
@@ -1717,7 +1761,7 @@ export async function recordPayment(params: {
           metadata: {
             applicationId: params.id,
             paymentId: params.paymentId,
-            url: "/admission",
+            url: "/application",
           },
           actorId: session.user?.id,
         }).catch((err) =>
@@ -1784,6 +1828,8 @@ export async function confirmRegistrationPayment(params: {
       select: {
         registrationFeeMethod: true,
         registrationFeePaid: true,
+        registrationFeeReference: true,
+        registrationFeeAmount: true,
         userId: true,
         email: true,
       },
@@ -1809,76 +1855,28 @@ export async function confirmRegistrationPayment(params: {
       return actionError(ACTION_ERRORS.REGISTRATION_FEE_METHOD_INVALID)
     }
 
-    // `registrationFeePaid: false` in the where makes the confirmation
-    // atomic: two accountants confirming the same intent at once both pass
-    // the read above, but only one update finds an unpaid row — the other
-    // throws P2025 and reports a failure instead of re-confirming (and, once
-    // the confirmation also books a Payment, double-booking it).
-    await db.application.update({
-      where: {
-        id: params.applicationId,
-        schoolId,
-        registrationFeePaid: false,
-      },
-      data: {
-        registrationFeePaid: true,
-        registrationFeeDate: new Date(),
-      },
+    // Settle through the same path the card webhooks use (offer/settle.ts):
+    // the conditional flip is atomic (two accountants confirming at once
+    // resolve to ONE confirmation), the family hears in their own language,
+    // and — new for the manual rails — ADMIN + ACCOUNTANT are told a payment
+    // landed, which only card payments used to announce. The stored amount /
+    // reference / method ride through because settle writes all three.
+    const settled = await settleRegistrationFee({
+      applicationId: params.applicationId,
+      schoolId,
+      method: application.registrationFeeMethod,
+      reference: application.registrationFeeReference,
+      amount:
+        application.registrationFeeAmount != null
+          ? Number(application.registrationFeeAmount)
+          : null,
+      actorId: session.user?.id,
     })
-
-    // Notify the applicant, mirroring recordPayment's userId/directEmail
-    // branch. Non-blocking — failure must not fail the action.
-    try {
-      const school = await db.school.findFirst({
-        where: { id: schoolId },
-        select: { preferredLanguage: true },
-      })
-      const notifLang = school?.preferredLanguage ?? "ar"
-      if (application.userId) {
-        dispatchAdmissionNotification({
-          schoolId,
-          userId: application.userId,
-          type: "fee_paid",
-          title: t(NOTIF.feePaid.title, notifLang),
-          body: t(NOTIF.feePaid.body, notifLang),
-          lang: notifLang,
-          priority: "normal",
-          channels: ["in_app", "email"],
-          metadata: {
-            applicationId: params.applicationId,
-            url: "/admission",
-          },
-          actorId: session.user?.id,
-        }).catch((err) =>
-          console.error("[confirmRegistrationPayment] Notification error:", err)
-        )
-      } else if (application.email) {
-        dispatchAdmissionNotification({
-          schoolId,
-          directEmail: application.email,
-          type: "fee_paid",
-          title: t(NOTIF.feePaid.title, notifLang),
-          body: t(NOTIF.feePaid.body, notifLang),
-          lang: notifLang,
-          priority: "normal",
-          channels: ["email"],
-          metadata: {
-            applicationId: params.applicationId,
-            url: "/admission",
-          },
-          actorId: session.user?.id,
-        }).catch((err) =>
-          console.error(
-            "[confirmRegistrationPayment] Guest notification error:",
-            err
-          )
-        )
-      }
-    } catch (notifErr) {
-      console.warn(
-        "[confirmRegistrationPayment] Notification setup failed:",
-        notifErr
-      )
+    if (settled === "not_found") {
+      return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
+    }
+    if (settled === "already_paid") {
+      return actionError(ACTION_ERRORS.REGISTRATION_FEE_ALREADY_PAID)
     }
 
     revalidatePath("/admission/enrollment")
@@ -1989,7 +1987,13 @@ export async function placeStudentInSection(params: {
     // Get the application and verify it's ADMITTED
     const application = await db.application.findUnique({
       where: { id: params.applicationId, schoolId },
-      select: { status: true, userId: true, firstName: true, lastName: true },
+      select: {
+        status: true,
+        userId: true,
+        firstName: true,
+        lastName: true,
+        lang: true,
+      },
     })
 
     if (!application) return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
@@ -2082,7 +2086,10 @@ export async function placeStudentInSection(params: {
         where: { id: schoolId },
         select: { preferredLanguage: true },
       })
-      const lang = schoolLang2?.preferredLanguage ?? "ar"
+      const lang = applicantLang(
+        application.lang,
+        schoolLang2?.preferredLanguage
+      )
       dispatchAdmissionNotification({
         schoolId,
         userId: application.userId,
@@ -2096,7 +2103,9 @@ export async function placeStudentInSection(params: {
           applicationId: params.applicationId,
           sectionId: params.sectionId,
           sectionName: sectionData.name,
-          url: "/",
+          // The student's dashboard home — bare "/" is the tenant's
+          // marketing root.
+          url: "/dashboard",
         },
       }).catch((err) =>
         console.error("[placeStudentInSection] Notification error:", err)

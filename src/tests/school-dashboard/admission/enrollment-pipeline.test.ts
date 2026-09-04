@@ -133,6 +133,8 @@ vi.mock("@/components/school-dashboard/admission/validation", () => ({
 
 vi.mock("@/lib/dispatch-notification", () => ({
   dispatchNotification: vi.fn().mockReturnValue(Promise.resolve("notif-1")),
+  // The inline email path re-checks the user's per-channel preference.
+  shouldSendNotification: vi.fn().mockResolvedValue(true),
 }))
 
 vi.mock("@/lib/enrollment-sync", () => ({

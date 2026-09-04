@@ -756,7 +756,12 @@ export async function getEnrollmentStats(
   ] = await Promise.all([
     db.application.count({ where: { ...where, admissionConfirmed: false } }),
     db.application.count({ where: { ...where, admissionConfirmed: true } }),
-    db.application.count({ where: { ...where, applicationFeePaid: false } }),
+    // The registration fee is the real money owed to hold the seat; the
+    // vestigial applicationFeePaid flag (applying is free) is never set, so
+    // counting it read as "every candidate has fees pending" forever.
+    db.application.count({
+      where: { ...where, registrationFeePaid: false },
+    }),
     db.application.count({
       where: {
         ...where,

@@ -305,6 +305,9 @@ export async function createTourBooking(
       notifLang === "en"
         ? `${validated.parentName} booked a campus tour`
         : `${validated.parentName} حجز جولة للتعرف على المدرسة`
+    // One dispatch for both roles (the dispatcher takes `targetRoles`). The
+    // link is the Leads tab — the only leads route that exists; the previous
+    // `/admission/tours` 404'd on every click.
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
@@ -313,30 +316,12 @@ export async function createTourBooking(
       priority: "normal",
       channels: ["in_app"],
       targetScope: "role",
-      targetRole: "ADMIN",
+      targetRoles: ["ADMIN", "STAFF"],
       metadata: {
         bookingNumber,
         parentName: validated.parentName,
         email: validated.email,
-        url: `/admission/tours`,
-      },
-    }).catch((err) =>
-      console.error("[createTourBooking] notification error:", err)
-    )
-    dispatchNotificationsToAudience({
-      schoolId,
-      type: "system_alert",
-      title: notifTitle,
-      body: notifBody,
-      priority: "normal",
-      channels: ["in_app"],
-      targetScope: "role",
-      targetRole: "STAFF",
-      metadata: {
-        bookingNumber,
-        parentName: validated.parentName,
-        email: validated.email,
-        url: `/admission/tours`,
+        url: `/admission/leads`,
       },
     }).catch((err) =>
       console.error("[createTourBooking] notification error:", err)

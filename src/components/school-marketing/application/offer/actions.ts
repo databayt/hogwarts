@@ -26,6 +26,7 @@ import {
   type PaymentGateway,
 } from "@/lib/payment/types"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { tenantUrl } from "@/components/school-marketing/admission/actions/urls"
 
 import { selectOfferFeeStructures, sumRegistrationFee } from "./fee-structures"
 import { computeAvailableGateways } from "./gateways"
@@ -133,6 +134,12 @@ const NOTIF = {
 const t = (msg: { ar: string; en: string }, lang: string) =>
   lang === "en" ? msg.en : msg.ar
 
+/** The family's own language (Application.lang), school preference as fallback. */
+const applicantLang = (
+  appLang: string | null | undefined,
+  schoolLang: string
+): string => (appLang === "en" || appLang === "ar" ? appLang : schoolLang)
+
 // ============================================================================
 // Helpers
 // ============================================================================
@@ -170,6 +177,7 @@ async function validateAccessToken(applicationId: string, accessToken: string) {
       admissionOffered: true,
       email: true,
       userId: true,
+      lang: true,
       campaign: {
         select: {
           id: true,
@@ -296,16 +304,6 @@ async function calculateRegistrationFee(
     applyingForClass
   )
   return sumRegistrationFee(structures, campaignApplicationFee)
-}
-
-/**
- * Build the base URL for a school subdomain.
- */
-function getBaseUrl(subdomain: string): string {
-  const isProd = process.env.NODE_ENV === "production"
-  return isProd
-    ? `https://${subdomain}.databayt.org`
-    : `http://${subdomain}.localhost:3000`
 }
 
 // ============================================================================
@@ -543,18 +541,25 @@ export async function acceptOffer(
         applicationId: application.id,
         applicationNumber: application.applicationNumber,
         action: "offer_accepted",
+        url: `/admission/applications/${application.id}`,
       },
     })
 
-    // Notify the applicant's user account if linked
+    // Notify the applicant's user account if linked — in THEIR language, with
+    // a link back to the offer they just accepted.
     if (application.userId) {
+      const familyLang = applicantLang(application.lang, lang)
       await dispatchNotification({
         schoolId: application.schoolId,
         userId: application.userId,
         type: "system_alert",
-        title: t(NOTIF.offerAccepted.title, lang),
-        body: t(NOTIF.offerAccepted.body(applicantName), lang),
-        lang,
+        title: t(NOTIF.offerAccepted.title, familyLang),
+        body: t(NOTIF.offerAccepted.body(applicantName), familyLang),
+        lang: familyLang,
+        metadata: {
+          applicationId: application.id,
+          url: `/application/${application.id}/offer?token=${encodeURIComponent(accessToken)}`,
+        },
       })
     }
 
@@ -644,18 +649,21 @@ export async function declineOffer(
         applicationId: application.id,
         applicationNumber: application.applicationNumber,
         action: "offer_declined",
+        url: `/admission/applications/${application.id}`,
       },
     })
 
-    // Notify the applicant's user account if linked
+    // Notify the applicant's user account if linked — in THEIR language.
     if (application.userId) {
+      const familyLang = applicantLang(application.lang, lang)
       await dispatchNotification({
         schoolId: application.schoolId,
         userId: application.userId,
         type: "system_alert",
-        title: t(NOTIF.offerDeclined.title, lang),
-        body: t(NOTIF.offerDeclined.body(applicantName), lang),
-        lang,
+        title: t(NOTIF.offerDeclined.title, familyLang),
+        body: t(NOTIF.offerDeclined.body(applicantName), familyLang),
+        lang: familyLang,
+        metadata: { applicationId: application.id, url: "/application" },
       })
     }
 
@@ -812,7 +820,23 @@ export async function createRegistrationFeeCheckout(
     }
 
     const referenceNumber = `REG-${nanoid(10).toUpperCase()}`
-    const baseUrl = getBaseUrl(school.domain ?? "")
+    // Root-domain + locale aware (school-marketing/admission/actions/urls.ts):
+    // the hand-assembled `https://${domain}.databayt.org` sent every family of
+    // a balqalam.com school back from the gateway to a host that does not
+    // serve their school.
+    const offerPath = `/application/${applicationId}/offer?token=${encodeURIComponent(accessToken)}`
+    const [successUrl, cancelUrl] = await Promise.all([
+      tenantUrl(
+        school.domain ?? "",
+        `${offerPath}&registration=success`,
+        locale
+      ),
+      tenantUrl(
+        school.domain ?? "",
+        `${offerPath}&registration=cancelled`,
+        locale
+      ),
+    ])
 
     const checkoutResult = await createPaymentCheckout(gateway, {
       amount: feeAmount,
@@ -834,8 +858,8 @@ export async function createRegistrationFeeCheckout(
         type: "registration_fee",
         applicationId: application.id,
       },
-      successUrl: `${baseUrl}/${locale}/application/${applicationId}/offer?token=${encodeURIComponent(accessToken)}&registration=success`,
-      cancelUrl: `${baseUrl}/${locale}/application/${applicationId}/offer?token=${encodeURIComponent(accessToken)}&registration=cancelled`,
+      successUrl,
+      cancelUrl,
     })
 
     if (!checkoutResult.success) {

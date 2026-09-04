@@ -103,6 +103,8 @@ vi.mock("next/cache", () => ({
 
 vi.mock("@/lib/dispatch-notification", () => ({
   dispatchNotification: vi.fn().mockResolvedValue("notif-1"),
+  // The inline email path re-checks the user's per-channel preference.
+  shouldSendNotification: vi.fn().mockResolvedValue(true),
 }))
 
 vi.mock("@/lib/fee-auto-assign", () => ({

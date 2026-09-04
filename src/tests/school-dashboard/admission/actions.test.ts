@@ -33,6 +33,7 @@ import {
   getMeritList,
 } from "@/components/school-dashboard/admission/queries"
 import { campaignSchemaWithValidation } from "@/components/school-dashboard/admission/validation"
+import { settleRegistrationFee } from "@/components/school-marketing/application/offer/settle"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -149,6 +150,15 @@ vi.mock("next/cache", () => ({
 
 vi.mock("@/lib/dispatch-notification", () => ({
   dispatchNotification: vi.fn().mockResolvedValue("notif-1"),
+  // The inline email path re-checks the user's per-channel preference.
+  shouldSendNotification: vi.fn().mockResolvedValue(true),
+}))
+
+// confirmRegistrationPayment settles through the shared registration-fee
+// settler (the same one the card webhooks call) — mocked so the tests pin
+// the hand-off, not the settler's internals (covered by its own suite).
+vi.mock("@/components/school-marketing/application/offer/settle", () => ({
+  settleRegistrationFee: vi.fn().mockResolvedValue("settled"),
 }))
 
 // updateApplicationStatus dynamically imports these for the dedicated
@@ -1317,28 +1327,35 @@ describe("Admission Actions", () => {
   // =========================================================================
 
   describe("confirmRegistrationPayment", () => {
-    it("confirms a cash registration payment", async () => {
+    beforeEach(() => {
+      vi.mocked(settleRegistrationFee).mockResolvedValue("settled")
+    })
+
+    it("confirms a cash registration payment through the shared settler", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         registrationFeeMethod: "cash",
         registrationFeePaid: false,
+        registrationFeeReference: "RCASH-ABC123",
+        registrationFeeAmount: 500,
         userId: "user-1",
         email: "parent@test.com",
       } as any)
-      vi.mocked(db.application.update).mockResolvedValue({} as any)
 
       const result = await confirmRegistrationPayment({
         applicationId: "a-1",
       })
 
       expect(result.success).toBe(true)
-      expect(db.application.update).toHaveBeenCalledWith({
-        // `registrationFeePaid: false` in the where is what makes two
-        // accountants confirming at once resolve to ONE confirmation.
-        where: { id: "a-1", schoolId: SCHOOL_ID, registrationFeePaid: false },
-        data: {
-          registrationFeePaid: true,
-          registrationFeeDate: expect.any(Date),
-        },
+      // The stored intent (method / reference / amount) rides through — the
+      // settler writes all three and would otherwise null what the parent
+      // recorded on the offer page.
+      expect(settleRegistrationFee).toHaveBeenCalledWith({
+        applicationId: "a-1",
+        schoolId: SCHOOL_ID,
+        method: "cash",
+        reference: "RCASH-ABC123",
+        amount: 500,
+        actorId: USER_ID,
       })
     })
 
@@ -1346,16 +1363,39 @@ describe("Admission Actions", () => {
       vi.mocked(db.application.findUnique).mockResolvedValue({
         registrationFeeMethod: "bank_transfer",
         registrationFeePaid: false,
+        registrationFeeReference: "RTRF-XYZ",
+        registrationFeeAmount: null,
         userId: "user-1",
         email: "parent@test.com",
       } as any)
-      vi.mocked(db.application.update).mockResolvedValue({} as any)
 
       const result = await confirmRegistrationPayment({
         applicationId: "a-1",
       })
 
       expect(result.success).toBe(true)
+      expect(settleRegistrationFee).toHaveBeenCalledWith(
+        expect.objectContaining({ method: "bank_transfer", amount: null })
+      )
+    })
+
+    it("reports already-paid when the settler lost the race to another confirmation", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        registrationFeeMethod: "cash",
+        registrationFeePaid: false,
+        registrationFeeReference: "RCASH-1",
+        registrationFeeAmount: 500,
+        userId: "user-1",
+        email: "parent@test.com",
+      } as any)
+      vi.mocked(settleRegistrationFee).mockResolvedValue("already_paid")
+
+      const result = await confirmRegistrationPayment({
+        applicationId: "a-1",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("REGISTRATION_FEE_ALREADY_PAID")
     })
 
     it("rejects when already paid", async () => {
@@ -1372,7 +1412,7 @@ describe("Admission Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("REGISTRATION_FEE_ALREADY_PAID")
-      expect(db.application.update).not.toHaveBeenCalled()
+      expect(settleRegistrationFee).not.toHaveBeenCalled()
     })
 
     it("rejects when no payment method has been recorded yet", async () => {
@@ -1389,7 +1429,7 @@ describe("Admission Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("REGISTRATION_FEE_METHOD_MISSING")
-      expect(db.application.update).not.toHaveBeenCalled()
+      expect(settleRegistrationFee).not.toHaveBeenCalled()
     })
 
     it("rejects card/online methods — those are confirmed only by their payment webhook", async () => {
@@ -1406,7 +1446,7 @@ describe("Admission Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("REGISTRATION_FEE_METHOD_INVALID")
-      expect(db.application.update).not.toHaveBeenCalled()
+      expect(settleRegistrationFee).not.toHaveBeenCalled()
     })
 
     it("returns not found when the application does not exist in this school", async () => {

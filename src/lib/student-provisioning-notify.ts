@@ -31,7 +31,10 @@ import type {
 } from "@prisma/client"
 
 import { db } from "@/lib/db"
-import { dispatchNotification } from "@/lib/dispatch-notification"
+import {
+  dispatchNotification,
+  shouldSendNotification,
+} from "@/lib/dispatch-notification"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
 
 // ---------------------------------------------------------------------------
@@ -187,6 +190,13 @@ async function deliver(params: {
   // Queued: the cron owns the send from here.
   if (params.delivery === "queue") return true
   if (!recipientEmail) return true
+  // The row above was written with the channels the user left enabled (the
+  // dispatcher filters per preference), but this inline send consulted only
+  // the caller's list — a user who had turned email off for this type still
+  // got the mail. Same gate the cron drain applies before it sends.
+  if (!(await shouldSendNotification(params.userId, params.type, "email"))) {
+    return true
+  }
 
   await sendNotificationEmail({
     notificationId,
@@ -312,7 +322,8 @@ export async function notifyProvisionedStudent(
         studentId,
         channel: input.origin,
         ...(enrollmentNumber ? { enrollmentNumber } : {}),
-        url: passwordSetupUrl ?? "/",
+        // The role-aware dashboard home, not the tenant's marketing root.
+        url: passwordSetupUrl ?? "/dashboard",
       },
       actorId: input.actorId,
       delivery,
@@ -440,7 +451,9 @@ export async function notifyProvisionedStudent(
           ...(input.enrollmentNumber
             ? { enrollmentNumber: input.enrollmentNumber }
             : {}),
-          url: "/",
+          // The guardian's dashboard home (children, fees), not the tenant's
+          // marketing root the bare "/" resolved to.
+          url: "/dashboard",
         },
         actorId: input.actorId,
         delivery,

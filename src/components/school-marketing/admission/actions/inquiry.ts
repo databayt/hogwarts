@@ -123,6 +123,9 @@ export async function submitInquiry(
       notifLang === "en"
         ? `${validated.parentName} sent an inquiry via the admission portal`
         : `${validated.parentName} أرسل استفساراً عبر بوابة القبول`
+    // One dispatch for both roles (the dispatcher takes `targetRoles`). The
+    // link is the Leads tab — the only leads route that exists; the previous
+    // `/admission/inquiries` 404'd on every click.
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
@@ -131,28 +134,12 @@ export async function submitInquiry(
       priority: "normal",
       channels: ["in_app"],
       targetScope: "role",
-      targetRole: "ADMIN",
+      targetRoles: ["ADMIN", "STAFF"],
       metadata: {
         inquiryId: inquiry.id,
         parentName: validated.parentName,
         email: validated.email,
-        url: `/admission/inquiries`,
-      },
-    }).catch((err) => console.error("[submitInquiry] notification error:", err))
-    dispatchNotificationsToAudience({
-      schoolId,
-      type: "system_alert",
-      title: notifTitle,
-      body: notifBody,
-      priority: "normal",
-      channels: ["in_app"],
-      targetScope: "role",
-      targetRole: "STAFF",
-      metadata: {
-        inquiryId: inquiry.id,
-        parentName: validated.parentName,
-        email: validated.email,
-        url: `/admission/inquiries`,
+        url: `/admission/leads`,
       },
     }).catch((err) => console.error("[submitInquiry] notification error:", err))
 

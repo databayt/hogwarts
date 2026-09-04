@@ -20,6 +20,7 @@
 import "server-only"
 
 import { db } from "@/lib/db"
+import { MANUAL_GATEWAYS } from "@/lib/payment/types"
 
 export interface SettleRegistrationFeeInput {
   applicationId: string
@@ -30,6 +31,8 @@ export interface SettleRegistrationFeeInput {
   reference: string | null
   /** Captured amount in MAJOR units, or null when the gateway did not say. */
   amount: number | null
+  /** Who confirmed a manual rail (admin / accountant); absent for webhooks. */
+  actorId?: string
 }
 
 export type SettleRegistrationFeeResult =
@@ -50,6 +53,22 @@ const COPY = {
     ar: `دفع ولي أمر ${name} رسوم التسجيل إلكترونياً (الطلب ${applicationNumber}). يمكن الآن تأكيد التسجيل.`,
     en: `The family of ${name} paid the registration fee online (application ${applicationNumber}). Enrollment can now be confirmed.`,
   }),
+  // Manual rails (cash at the office, bank transfer, Bankak, Cashi) are
+  // settled by a person, not a gateway — say so, and name the rail.
+  schoolBodyManual: (
+    name: string,
+    applicationNumber: string,
+    method: string
+  ) => ({
+    ar: `تم تأكيد استلام رسوم التسجيل من ولي أمر ${name} (${method}) — الطلب ${applicationNumber}. يمكن الآن تأكيد التسجيل.`,
+    en: `Registration fee received from the family of ${name} via ${method} (application ${applicationNumber}). Enrollment can now be confirmed.`,
+  }),
+}
+const METHOD_LABEL: Record<string, { ar: string; en: string }> = {
+  cash: { ar: "نقداً في المدرسة", en: "cash at the office" },
+  bank_transfer: { ar: "تحويل بنكي", en: "bank transfer" },
+  bankak: { ar: "بنكك", en: "Bankak" },
+  cashi: { ar: "كاشي", en: "Cashi" },
 }
 const t = (msg: { ar: string; en: string }, lang: string) =>
   lang === "en" ? msg.en : msg.ar
@@ -57,7 +76,7 @@ const t = (msg: { ar: string; en: string }, lang: string) =>
 export async function settleRegistrationFee(
   input: SettleRegistrationFeeInput
 ): Promise<SettleRegistrationFeeResult> {
-  const { applicationId, schoolId, method, reference, amount } = input
+  const { applicationId, schoolId, method, reference, amount, actorId } = input
 
   // Conditional flip: only an UNPAID application transitions, so two callers
   // (webhook + return page) racing on the same capture can't both "win".
@@ -94,6 +113,7 @@ export async function settleRegistrationFee(
         firstName: true,
         lastName: true,
         applicationNumber: true,
+        lang: true,
       },
     })
     if (!app) return "settled"
@@ -104,6 +124,9 @@ export async function settleRegistrationFee(
       resolveSchoolLang,
     } = await import("@/lib/dispatch-notification")
     const lang = await resolveSchoolLang(schoolId)
+    // The family hears in the language they filled the wizard in
+    // (Application.lang); the school's preference is the fallback.
+    const familyLang = app.lang === "en" || app.lang === "ar" ? app.lang : lang
 
     // Family: registered applicants in-app + email; GUEST applicants (no
     // userId — the wizard allows it) by email.
@@ -112,15 +135,19 @@ export async function settleRegistrationFee(
       userId: app.userId ?? undefined,
       directEmail: app.userId ? undefined : (app.email ?? undefined),
       type: "fee_paid",
-      title: t(COPY.familyTitle, lang),
-      body: t(COPY.familyBody(app.applicationNumber), lang),
-      lang,
+      title: t(COPY.familyTitle, familyLang),
+      body: t(COPY.familyBody(app.applicationNumber), familyLang),
+      lang: familyLang,
       priority: "normal",
       channels: ["in_app", "email"],
+      actorId,
       metadata: {
         applicationId,
         paymentType: "registration_fee",
         reference,
+        // The applicant's own dashboard (their applications), never the
+        // staff-only /admission tree.
+        url: "/application",
       },
     })
     // School: the online payment is the one funding event the dashboard
@@ -136,15 +163,22 @@ export async function settleRegistrationFee(
       type: "fee_paid",
       title: t(COPY.familyTitle, lang),
       body: t(
-        COPY.schoolBody(
-          `${app.firstName} ${app.lastName}`.trim(),
-          app.applicationNumber
-        ),
+        (MANUAL_GATEWAYS as readonly string[]).includes(method)
+          ? COPY.schoolBodyManual(
+              `${app.firstName} ${app.lastName}`.trim(),
+              app.applicationNumber,
+              t(METHOD_LABEL[method] ?? { ar: method, en: method }, lang)
+            )
+          : COPY.schoolBody(
+              `${app.firstName} ${app.lastName}`.trim(),
+              app.applicationNumber
+            ),
         lang
       ),
       lang,
       priority: "normal",
       channels: ["in_app"],
+      actorId,
       metadata: {
         applicationId,
         paymentType: "registration_fee",
