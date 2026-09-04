@@ -16,6 +16,7 @@ import {
   titleCardTopGlyph,
   titleCardTopPill,
 } from "@/components/lumos/shared/title-card"
+import type { RoomTools } from "@/components/school-dashboard/live/types"
 
 import { downloadClassIcs } from "./calendar-file"
 
@@ -45,6 +46,10 @@ export interface RoomTitleCardData {
   durationLabel: string | null
   isLive: boolean
   isRecording: boolean
+  /** The school's interaction switches — `chat`/`hands`/`polls`/`whiteboard`
+   *  become the outlined marks; `studentShare` is a token grant, not a
+   *  visible room feature, and is not shown as a mark. */
+  tools: Pick<RoomTools, "chat" | "hands" | "polls" | "whiteboard">
   /** The class's own clock, as epoch milliseconds. Numbers rather than
    *  formatted strings because the pill's progress has to keep MOVING — see
    *  `useClassProgress`. The printed start time above stays server-formatted,
@@ -69,6 +74,19 @@ export interface RoomTitleCardLabels {
   resourceOne: string
   resourceMany: string
   free: string
+  /** The mark row's filled mark — the host's publish resolution, always true
+   *  of a live room, so it carries no data of its own. */
+  hd: string
+  /** The mark row's outlined "recording" mark — shown only when
+   *  `data.isRecording`. */
+  rec: string
+  /** The mark row's outlined marks for the tools THIS room actually turned
+   *  on. `chat`/`poll`/`whiteboard` reuse the same words the in-call panel
+   *  uses for the same tools — one source, two surfaces. */
+  chat: string
+  poll: string
+  whiteboard: string
+  hands: string
   /** Carries `{n}`. The reference's `10m left`. */
   remaining: string
   /** Carries `{h}` and `{m}`. The reference's `1h 5m left`. */
@@ -124,18 +142,42 @@ interface RoomTitleCardProps {
 }
 
 /**
- * One mark in the row under the meta line — the lesson hero's `4K` / `Free` /
- * `CC` / `AD` boxes, same two weights: one filled, the rest outlined.
+ * One mark in the row under the meta line — the lesson hero's box shape, two
+ * weights: one filled, the rest outlined.
  *
- * These are the lesson's marks verbatim, on a class. A live room has no 4K
- * stream (the host publishes 720p), no captions and no audio description, so
- * three of the four are not yet true of what they sit on — this is the shared
- * shape landing first, with the class's own marks to follow.
+ * The row used to be the hero's `4K` / `Free` / `CC` / `AD` verbatim, none of
+ * it true of a live room. It is now honest about THIS room: `HD` filled (the
+ * host publishes 720p, true of every room), then outlined marks for whatever
+ * the school actually turned on — recording and the interaction tools —
+ * built by `buildMarks` below rather than hard-coded here.
  */
 function Mark({ label, solid }: { label: string; solid?: boolean }) {
   return (
     <span className={solid ? titleCardChipSolid : titleCardChip}>{label}</span>
   )
+}
+
+/**
+ * The outlined marks after `HD` — recording, then whichever tools the school
+ * turned on, in the same fixed order every time so the row doesn't reshuffle
+ * class to class. `studentShare` is deliberately excluded: it is enforced as
+ * a token grant, not a room-wide switch a reader would recognise as a mark.
+ */
+function buildMarks(
+  isRecording: boolean,
+  tools: Pick<RoomTools, "chat" | "hands" | "polls" | "whiteboard">,
+  labels: Pick<
+    RoomTitleCardLabels,
+    "rec" | "chat" | "hands" | "poll" | "whiteboard"
+  >
+): string[] {
+  const marks: string[] = []
+  if (isRecording) marks.push(labels.rec)
+  if (tools.chat) marks.push(labels.chat)
+  if (tools.hands) marks.push(labels.hands)
+  if (tools.polls) marks.push(labels.poll)
+  if (tools.whiteboard) marks.push(labels.whiteboard)
+  return marks
 }
 
 /**
@@ -215,6 +257,7 @@ export function RoomTitleCard({
   const metaParts = [data.section, data.startTime, data.durationLabel].filter(
     (part): part is string => Boolean(part)
   )
+  const marks = buildMarks(data.isRecording, data.tools, labels)
   const progress = useClassProgress(data.startsAtMs, data.endsAtMs)
   // A class with no clock cannot become a calendar event, so the button that
   // would make one is not offered.
@@ -350,11 +393,14 @@ export function RoomTitleCard({
           {/* Whether the room is open. Outlined, because the reference spends
               its one filled mark on `4K` and this row mirrors it. */}
           <Mark label={data.isLive ? labels.live : labels.scheduled} />
-          <Mark label="4K" solid />
-          <Mark label={labels.free} />
-          <Mark label="CC" />
-          <Mark label="AD" />
-          {data.isRecording && <Mark label={labels.recorded} />}
+          {/* `HD` is the filled mark now — the host's own publish
+              resolution, true of every room, the way `4K` was true of every
+              lesson video. The rest are earned: recording, then whichever
+              interaction tools this school actually turned on. */}
+          <Mark label={labels.hd} solid />
+          {marks.map((m) => (
+            <Mark key={m} label={m} />
+          ))}
           {data.resourceCount > 0 && (
             <>
               <span>&middot;</span>
@@ -379,6 +425,11 @@ export function RoomTitleCard({
           type="button"
           onClick={onJoin}
           disabled={pending}
+          // Once `progress` shows, the only visible text is the countdown
+          // ("30m left") — nothing left on the button says this control
+          // JOINS the class, so the accessible name carries it explicitly.
+          // `pending`/plain states already say so in their own visible text.
+          aria-label={!pending && progress ? labels.join : undefined}
           className={cn(
             titleCardPill,
             // The reference's phone page gives the button the whole width;
@@ -391,10 +442,11 @@ export function RoomTitleCard({
               Arabic hero points its triangle the same way, because play reads
               as forward in TIME rather than in reading order. */}
           {pending ? (
-            <Loader2 className="size-4 animate-spin" />
+            <Loader2 className="size-4 animate-spin" aria-hidden />
           ) : (
             <Play
               className={cn("size-4 fill-current", progress && "shrink-0")}
+              aria-hidden
             />
           )}
           {pending ? (

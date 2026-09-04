@@ -63,7 +63,12 @@ export function SidePanel(props: SidePanelProps) {
             aria-pressed={tab === t.id}
             className={cn(
               glassPill,
-              "relative px-2.5 py-1 text-sm",
+              // Visually still the compact pill — the extra reach is an
+              // `::after` that stretches past the box (`position: absolute`
+              // takes it out of flow, so the strip's own height is
+              // untouched) rather than a taller button, which would have
+              // grown the whole tab row past its glassPill density.
+              "relative px-2.5 py-1 text-sm after:absolute after:inset-x-0 after:-inset-y-2.5 after:content-['']",
               tab === t.id
                 ? "bg-white/15 font-medium"
                 : "text-white/70 hover:bg-white/10"
@@ -81,7 +86,9 @@ export function SidePanel(props: SidePanelProps) {
           type="button"
           size="icon"
           variant="ghost"
-          className="ms-auto h-7 w-7 text-white hover:bg-white/20 hover:text-white"
+          // Same out-of-flow `::after` reach as the tabs beside it — the
+          // visible 28px glyph stays put, only the tap target grows to 44px.
+          className="relative ms-auto h-7 w-7 text-white after:absolute after:-inset-2 after:content-[''] hover:bg-white/20 hover:text-white"
           onClick={onClose}
           aria-label={labels.close}
         >

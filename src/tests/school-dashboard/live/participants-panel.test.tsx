@@ -99,4 +99,74 @@ describe("ParticipantsPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: /participants \(1\)/i }))
     expect(screen.getByText("user-xyz")).toBeInTheDocument()
   })
+
+  // lr-02: the list used to close only via its own toggle, or Escape while
+  // focus was still inside it — pinning the whole chrome (`onOpenChange`)
+  // visible with no other way to let go of it.
+  it("closes on a pointerdown outside the panel, like control-bar.tsx's Menu", () => {
+    state.participants = [{ identity: "u1", name: "Alice" }]
+    const onOpenChange = vi.fn()
+    render(
+      <ParticipantsPanel
+        sessionId="s1"
+        canModerate
+        labels={labels}
+        onOpenChange={onOpenChange}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /participants \(1\)/i }))
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+    expect(onOpenChange).toHaveBeenLastCalledWith(true)
+
+    fireEvent.pointerDown(document.body)
+
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument()
+    expect(onOpenChange).toHaveBeenLastCalledWith(false)
+  })
+
+  it("stays open on a pointerdown inside the panel", () => {
+    state.participants = [{ identity: "u1", name: "Alice" }]
+    render(<ParticipantsPanel sessionId="s1" canModerate labels={labels} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /participants \(1\)/i }))
+    fireEvent.pointerDown(screen.getByText("Alice"))
+
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+  })
+
+  it("does NOT steal focus back to the toggle on an outside-pointer close", () => {
+    // Forcing focus onto the toggle here would trip room-shell.tsx's
+    // `onFocusCapture` and re-pin the chrome right after a stage tap tried
+    // to let it auto-hide — the toggle should only reclaim focus on the
+    // KEYBOARD dismissal path (Escape), tested below.
+    state.participants = [{ identity: "u1", name: "Alice" }]
+    render(<ParticipantsPanel sessionId="s1" canModerate labels={labels} />)
+
+    const toggle = screen.getByRole("button", { name: /participants \(1\)/i })
+    fireEvent.click(toggle)
+    document.body.focus()
+
+    fireEvent.pointerDown(document.body)
+
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument()
+    expect(document.activeElement).not.toBe(toggle)
+  })
+
+  it("closes on Escape even when focus has moved off the panel, and returns focus to the toggle", () => {
+    state.participants = [{ identity: "u1", name: "Alice" }]
+    render(<ParticipantsPanel sessionId="s1" canModerate labels={labels} />)
+
+    const toggle = screen.getByRole("button", { name: /participants \(1\)/i })
+    fireEvent.click(toggle)
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+
+    // Focus lands elsewhere entirely (e.g. the mic button) — the panel's
+    // own `onKeyDown` would have missed this; the document listener must not.
+    document.body.focus()
+    fireEvent.keyDown(document, { key: "Escape" })
+
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument()
+    expect(document.activeElement).toBe(toggle)
+  })
 })

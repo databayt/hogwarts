@@ -91,6 +91,16 @@ export const DEFAULT_ROOM_LABELS = {
   classProgress: "Class progress",
   elapsed: "Elapsed",
   remaining: "Remaining",
+  /** Announced alongside `discussion` when a poll is open with nothing else
+   *  pending — the panel badge itself is a silent dot for sighted users. */
+  pollOpenAnnounce: "Poll open",
+  /** The pre-join card's filled mark: the host's publish resolution. */
+  hd: "HD",
+  /** The pre-join card's outlined mark, shown when the session records. */
+  rec: "REC",
+  /** The pre-join card's outlined mark for the raise-hand tool — the other
+   *  three tool marks reuse `chat` / `poll` / `whiteboard` above. */
+  hands: "Hands",
 } as const
 
 export type RoomLabelKey = keyof typeof DEFAULT_ROOM_LABELS

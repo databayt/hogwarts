@@ -89,6 +89,15 @@ export function ControlBar({
   const badge = unanswered + (isHost ? channel.hands.length : 0)
   const pollOpen = Boolean(channel.state.poll?.open)
   const defaultTab: PanelTab = tools.chat ? "chat" : "questions"
+  // The visual badge/dot beside the icon is `aria-hidden` — this is the
+  // count and state a screen reader gets instead, since the button's own
+  // label never otherwise changes with what is pending.
+  const panelLabel =
+    badge > 0
+      ? `${labels.discussion} (${badge})`
+      : pollOpen
+        ? `${labels.discussion} — ${labels.pollOpenAnnounce}`
+        : labels.discussion
 
   return (
     // Five slots spread across the card. An OBSERVER publishes nothing and
@@ -103,7 +112,7 @@ export function ControlBar({
         type="button"
         className={cn(glyph, "relative", panel && "bg-white/25")}
         aria-pressed={Boolean(panel)}
-        aria-label={labels.discussion}
+        aria-label={panelLabel}
         onClick={() => onPanel(panel ? null : defaultTab)}
       >
         <MessageSquare className="size-6" aria-hidden />

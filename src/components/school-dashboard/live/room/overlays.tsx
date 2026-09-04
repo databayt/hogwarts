@@ -64,49 +64,9 @@ export function AudioOnlyBanner({
   )
 }
 
-const DOT: Record<QualitySample, string> = {
-  excellent: "bg-emerald-500",
-  good: "bg-emerald-400",
-  poor: "bg-amber-400",
-  lost: "bg-red-500",
-  unknown: "bg-neutral-500",
-}
-
-export function QualityDot({
-  quality,
-  labels,
-}: {
-  quality: QualitySample
-  labels: RoomLabels
-}) {
-  const text =
-    quality === "excellent"
-      ? labels.excellent
-      : quality === "good"
-        ? labels.good
-        : quality === "poor"
-          ? labels.poor
-          : quality === "lost"
-            ? labels.lost
-            : "—"
-  return (
-    <span
-      className="flex items-center gap-1.5 text-xs text-white/80"
-      title={labels.connection}
-    >
-      <span
-        className={"inline-block h-2.5 w-2.5 rounded-full " + DOT[quality]}
-        aria-hidden
-      />
-      <span className="sr-only">{labels.connection}: </span>
-      {text}
-    </span>
-  )
-}
-
 /**
  * The connection as a TINT on a glyph rather than a dot beside a word — what
- * the top-end pill has room for. Same four steps as `DOT` above.
+ * the top-end pill has room for.
  */
 export const QUALITY_TONE: Record<QualitySample, string> = {
   excellent: "text-emerald-400",

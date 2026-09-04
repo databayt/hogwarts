@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRemoteParticipants } from "@livekit/components-react"
 import { Users } from "lucide-react"
 
@@ -69,12 +69,46 @@ export function ParticipantsPanel({
     onOpenChange?.(open)
   }, [open, onOpenChange])
 
-  if (!canModerate) return null
-
-  function closePanel() {
+  const closePanel = useCallback(() => {
     setOpen(false)
-    toggleRef.current?.focus()
-  }
+  }, [])
+
+  // Close on a press anywhere outside the toggle+list, or on Escape
+  // regardless of where focus currently sits — the same document-level
+  // pattern control-bar.tsx's `Menu` uses, scoped to `[data-menu-root]`
+  // rather than a `fixed inset-0` catcher (the glass has a `backdrop-filter`,
+  // which makes it the containing block of a `fixed` descendant, so a
+  // catcher "the size of the screen" would only be the size of the pill).
+  // Without this the list only closed via its own toggle or Escape while
+  // still focused, pinning the whole chrome visible (`onOpenChange`) with no
+  // other way to let go of it.
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      const root = panelRef.current?.closest("[data-menu-root]")
+      const target = e.target as Element | null
+      if (root && target && !root.contains(target)) closePanel()
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closePanel()
+        // Escape is a KEYBOARD dismissal — return focus to the control that
+        // opened it, the usual a11y contract. The pointer-outside close
+        // above deliberately does NOT do this: forcing focus back onto the
+        // toggle would trip room-shell.tsx's `onFocusCapture` and re-pin the
+        // chrome right after a stage tap tried to let it auto-hide again.
+        toggleRef.current?.focus()
+      }
+    }
+    document.addEventListener("pointerdown", onDown)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("pointerdown", onDown)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open, closePanel])
+
+  if (!canModerate) return null
 
   async function onRemove(identity: string) {
     setPending((prev) => new Set(prev).add(identity))
@@ -106,6 +140,7 @@ export function ParticipantsPanel({
     // Positioned by the room's top chrome row, not by itself — it is one
     // pill among the others up there, or one glyph inside one.
     <div
+      data-menu-root
       className={cn(
         "pointer-events-auto relative",
         asGlyph ? "w-auto" : "w-auto sm:w-64"
@@ -152,9 +187,6 @@ export function ParticipantsPanel({
           role="region"
           aria-label={labels.title}
           tabIndex={-1}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") closePanel()
-          }}
           className={cn(
             glassMenu,
             "mt-2 w-64 p-3 text-white shadow-lg outline-none",

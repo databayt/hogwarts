@@ -38,6 +38,8 @@ import { useClassChannel } from "./use-class-channel"
 
 interface RoomShellProps {
   sessionId: string
+  /** The localized subject — the fallback line printed above the clock when
+   *  the in-call chrome carries no other name for the class (see below). */
   title: string
   role: ConferenceParticipantRole
   hostIdentity: string | null
@@ -62,9 +64,11 @@ const gone = "pointer-events-none opacity-0"
  * The chrome is the lesson player's phone layout — the frame's own three
  * groups. A pill at the top start (leave · people · fit), a pill at the top
  * end (the connection), and one glass card along the bottom holding the
- * class's clock and its row of controls. Nothing else sits on the picture:
- * the class name is what the reader just chose, and a room is not the place
- * to keep reading it.
+ * class's clock and its row of controls. The title PILL is gone — the class
+ * name is what the reader just chose — but the player's own `infoTitle` line
+ * survives as a fallback inside the bottom card, above the clock: an open
+ * room has no clock at all (`ClassProgress` renders nothing for one), and
+ * without that line the card named the class to no one.
  *
  * It behaves like the player's too. It fades three seconds after the last
  * touch and comes back on a tap of the stage, and the stage runs edge to edge
@@ -75,6 +79,7 @@ const gone = "pointer-events-none opacity-0"
  */
 export function RoomShell({
   sessionId,
+  title,
   role,
   hostIdentity,
   labels,
@@ -342,6 +347,17 @@ export function RoomShell({
               )}
               style={glassSurface}
             >
+              {/* The player's `infoTitle` line, one above the scrubber
+                  (video-player.tsx). The title pill left the in-call chrome
+                  entirely (see CLAUDE.md "in-call chrome is the player's
+                  phone layout") — on an OPEN room `ClassProgress` renders
+                  nothing at all, so without this line the bottom card names
+                  the class to no one. */}
+              {title && (
+                <p className="truncate text-sm font-medium text-white">
+                  {title}
+                </p>
+              )}
               <ClassProgress
                 startsAtMs={clock.startsAtMs}
                 endsAtMs={clock.endsAtMs}
