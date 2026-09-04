@@ -30,6 +30,7 @@ import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { generateMeritList, getMeritListData } from "./actions"
+import { canPerformAdmissionAction } from "./authorization"
 import type { MeritRow } from "./merit-columns"
 import { getMeritColumns } from "./merit-columns"
 
@@ -40,6 +41,9 @@ interface MeritTableProps {
   lang: Locale
   perPage?: number
   campaignId?: string
+  /** Viewer's role — `generateMeritList` is ADMIN-only on the server, and
+   *  STAFF (who can see this tab) used to get a button that always failed. */
+  role?: string | null
   stats: {
     totalRanked: number
     selected: number
@@ -56,10 +60,13 @@ export function MeritTable({
   perPage = 20,
   campaignId,
   stats,
+  role,
 }: MeritTableProps) {
   const t = dictionary
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const canGenerate =
+    !!role && canPerformAdmissionAction(role, "generateMeritList")
 
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
   const [searchInput, setSearchInput] = useState("")
@@ -226,8 +233,8 @@ export function MeritTable({
         </Card>
       </div>
 
-      {/* Generate Merit List Button */}
-      {campaignId && (
+      {/* Generate Merit List Button — only for roles the server lets run it */}
+      {campaignId && canGenerate && (
         <div className="flex justify-end">
           <Button onClick={handleGenerateMeritList} disabled={isPending}>
             <RefreshCw
@@ -288,7 +295,7 @@ export function MeritTable({
                   icon={asset("/icons/graduation-cap.svg")}
                   title={merit.applicantName}
                   description={`#${merit.meritRank}`}
-                  subtitle={merit.status}
+                  subtitle={getStatusBadge(merit.status).label}
                   onClick={() => handleView(merit.id)}
                 />
               ))}

@@ -24,7 +24,7 @@ export default async function ApplicationsContent({
   lang,
 }: Props) {
   const sp = await applicationsSearchParams.parse(await searchParams)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
   const t = dictionary.admission
 
   let data: ApplicationRow[] = []
@@ -95,6 +95,7 @@ export default async function ApplicationsContent({
         lang={lang}
         perPage={sp.perPage}
         campaignId={sp.campaignId || undefined}
+        role={role}
       />
     </div>
   )

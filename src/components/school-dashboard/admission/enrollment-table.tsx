@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
+import type { Role } from "@/lib/rbac/types"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,9 +29,10 @@ import {
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { getEnrollmentData } from "./actions"
+import { getEnrollmentCSV, getEnrollmentData } from "./actions"
 import type { EnrollmentRow } from "./enrollment-columns"
 import { getEnrollmentColumns } from "./enrollment-columns"
+import { getUIConfigForRole } from "./permissions"
 
 interface EnrollmentTableProps {
   initialData: EnrollmentRow[]
@@ -194,6 +196,24 @@ export function EnrollmentTable({
     loading: tb?.loading || "Loading...",
   }
 
+  // Export follows the role's UI config (ADMIN / STAFF); the offer and
+  // registration-fee ledger is what finance reconciles against.
+  const canExport = getUIConfigForRole(
+    (role ?? null) as Role | null
+  ).showExportButton
+  const handleExportCSV = useCallback(async () => {
+    const result = await getEnrollmentCSV({
+      search: deferredSearch || undefined,
+      campaignId: campaignId || undefined,
+      offerStatus,
+      feeStatus,
+    })
+    if (!result.success || !result.data) {
+      throw new Error(result.error || tb?.exportFailed || "Export failed")
+    }
+    return result.data
+  }, [deferredSearch, campaignId, offerStatus, feeStatus, tb?.exportFailed])
+
   return (
     <>
       {/* Placement Reminder Banner */}
@@ -269,6 +289,7 @@ export function EnrollmentTable({
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t?.columns?.applicant || "Search applicants..."}
+        getCSV={canExport ? handleExportCSV : undefined}
         entityName="enrollment"
         translations={toolbarTranslations}
       />

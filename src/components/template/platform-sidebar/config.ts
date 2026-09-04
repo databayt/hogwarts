@@ -90,7 +90,7 @@ export const platformNav: PlatformNavItem[] = [
     title: "Subjects",
     href: "/subjects",
     icon: "subject",
-    roles: ["ADMIN", "STAFF", "TEACHER"],
+    roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT"],
     className: "",
   },
   {
@@ -105,7 +105,10 @@ export const platformNav: PlatformNavItem[] = [
     title: "Admission",
     href: "/admission",
     icon: "userPlus",
-    roles: ["ADMIN", "STAFF"],
+    // Mirrors ADMISSION_VIEW_ROLES (school-dashboard/admission/permissions.ts):
+    // ACCOUNTANT owns confirming cash / bank registration fees and DEVELOPER
+    // is the platform admin, yet neither had a way into the tree from here.
+    roles: ["ADMIN", "STAFF", "ACCOUNTANT", "DEVELOPER"],
   },
   {
     key: "students",

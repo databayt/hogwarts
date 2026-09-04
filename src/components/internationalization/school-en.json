@@ -9545,7 +9545,8 @@
         "saving": "Saving...",
         "back": "Back",
         "next": "Next",
-        "stepOf": "Step {current} of {total}"
+        "stepOf": "Step {current} of {total}",
+        "exportFailed": "Export failed"
       },
       "bulkPlacement": {
         "title": "Bulk Section Placement",
@@ -10385,7 +10386,8 @@
         "resumeFromEmail": "You can also resume from the link sent to your email",
         "campaignNotFound": "Campaign not found",
         "noSavedFound": "No saved application found",
-        "failedToResume": "Failed to resume application"
+        "failedToResume": "Failed to resume application",
+        "invalidEmail": "Invalid email address"
       },
       "inquiryPage": {
         "thankYou": "Thank You for Reaching Out!",
@@ -10421,7 +10423,8 @@
         "inquirySubmitted": "Inquiry submitted successfully",
         "failedToSubmit": "Failed to submit inquiry",
         "nameRequired": "Name is required",
-        "invalidEmail": "Invalid email address"
+        "invalidEmail": "Invalid email address",
+        "pickDate": "Pick a date"
       },
       "statusTracker": {
         "title": "Track Application Status",

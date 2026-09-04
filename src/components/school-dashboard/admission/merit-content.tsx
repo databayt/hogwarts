@@ -105,6 +105,7 @@ export default async function MeritContent({
         perPage={sp.perPage}
         campaignId={sp.campaignId || undefined}
         stats={stats}
+        role={role}
       />
     </div>
   )

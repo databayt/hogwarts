@@ -23,6 +23,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { updateApplicationStatus } from "./actions"
+import { canPerformAdmissionAction } from "./authorization"
 import { getAllowedTransitions } from "./status-machine"
 
 export type ApplicationRow = {
@@ -74,10 +75,15 @@ function ApplicationActionsCell({
   application,
   dictionary,
   locale,
+  role,
 }: {
   application: ApplicationRow
   dictionary: Dictionary["school"]["admission"]
   locale: Locale
+  /** Viewer's role. `updateApplicationStatus` is ADMIN/STAFF on the server
+   *  (authorization.ts); without this gate ACCOUNTANT — who can see this
+   *  list — got a status menu whose every item died with FORBIDDEN. */
+  role?: string | null
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -116,7 +122,11 @@ function ApplicationActionsCell({
   // validates against. A hand-duplicated map here had silently drifted
   // (ENTRANCE/INTERVIEW_SCHEDULED were missing, so staff couldn't select
   // them from this dropdown even though the server accepts them).
-  const allowedTargets = getAllowedTransitions(application.status)
+  const canUpdateStatus =
+    !!role && canPerformAdmissionAction(role, "updateStatus")
+  const allowedTargets = canUpdateStatus
+    ? getAllowedTransitions(application.status)
+    : []
 
   const allStatusOptions = [
     {
@@ -188,7 +198,8 @@ function ApplicationActionsCell({
 
 export const getApplicationColumns = (
   dictionary: Dictionary["school"]["admission"],
-  locale: Locale
+  locale: Locale,
+  role?: string | null
 ): ColumnDef<ApplicationRow>[] => {
   const t = dictionary
 
@@ -393,6 +404,7 @@ export const getApplicationColumns = (
           application={row.original}
           dictionary={dictionary}
           locale={locale}
+          role={role}
         />
       ),
       enableSorting: false,

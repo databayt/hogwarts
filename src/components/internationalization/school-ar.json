@@ -9553,7 +9553,8 @@
         "saving": "جاري الحفظ...",
         "back": "رجوع",
         "next": "التالي",
-        "stepOf": "الخطوة {current} من {total}"
+        "stepOf": "الخطوة {current} من {total}",
+        "exportFailed": "فشل التصدير"
       },
       "bulkPlacement": {
         "title": "تعيين الشُعب بالجملة",
@@ -10393,7 +10394,8 @@
         "resumeFromEmail": "يمكنك أيضاً استئناف من الرابط المرسل إلى بريدك الإلكتروني",
         "campaignNotFound": "لم يتم العثور على الحملة",
         "noSavedFound": "لم يتم العثور على طلب محفوظ",
-        "failedToResume": "فشل في استئناف الطلب"
+        "failedToResume": "فشل في استئناف الطلب",
+        "invalidEmail": "البريد الإلكتروني غير صالح"
       },
       "inquiryPage": {
         "thankYou": "شكراً لتواصلك معنا!",
@@ -10429,7 +10431,8 @@
         "inquirySubmitted": "تم إرسال استفسارك بنجاح",
         "failedToSubmit": "فشل في إرسال الاستفسار",
         "nameRequired": "الاسم مطلوب",
-        "invalidEmail": "عنوان بريد إلكتروني غير صالح"
+        "invalidEmail": "عنوان بريد إلكتروني غير صالح",
+        "pickDate": "اختر تاريخاً"
       },
       "statusTracker": {
         "title": "تتبع حالة الطلب",

@@ -643,6 +643,15 @@ export async function getEnrollmentList(
         // office sat "Unpaid" until the admin happened to search or page,
         // which refetches through getEnrollmentData (actions.ts) instead.
         registrationFeeMethod: true,
+        // The rest of the registration-fee ledger: what the CSV export and
+        // the accountant's confirmation need to reconcile a manual payment
+        // — amount, the reference the parent quoted, when it was taken,
+        // when the offer was accepted, and the transfer proof they uploaded.
+        registrationFeeAmount: true,
+        registrationFeeReference: true,
+        registrationFeeDate: true,
+        registrationFeeProofUrl: true,
+        offerAcceptedAt: true,
       },
     }),
     db.application.count({ where }),

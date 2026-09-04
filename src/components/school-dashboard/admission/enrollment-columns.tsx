@@ -25,6 +25,7 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 import { confirmEnrollment, confirmRegistrationPayment } from "./actions"
 import { canPerformAdmissionAction } from "./authorization"
 import { PlacementDialog } from "./placement-dialog"
+import { isManuallyConfirmableRegistrationMethod } from "./registration-methods"
 import { translateEnrollmentWarning } from "./warning-messages"
 
 export type EnrollmentRow = {
@@ -58,10 +59,6 @@ export type EnrollmentRow = {
   /** studentId is set after confirmEnrollment creates the Student record */
   studentId?: string | null
 }
-
-/** Manual payment methods the "Confirm Reg. Payment" action applies to —
- *  mirrors MANUALLY_CONFIRMABLE_REGISTRATION_METHODS in ./actions.ts. */
-const MANUALLY_CONFIRMABLE_METHODS = new Set(["cash", "bank_transfer"])
 
 /**
  * Dictionary keys pending merge into school-en/ar.json (see scratchpad
@@ -144,9 +141,18 @@ function EnrollmentActionsCell({
   // the public offer portal only records the parent's INTENT to pay by that
   // method (no way to know the money actually changed hands). Card/online
   // methods (stripe, tap) are confirmed by their payment webhook instead.
+  // Gated on the same permission table the server asserts (`recordPayment`:
+  // ADMIN / ACCOUNTANT / DEVELOPER) — STAFF used to see this item and hit
+  // FORBIDDEN. The rail set is shared with the server too, so the Sudan
+  // wallets (Bankak / Cashi) are confirmable here as the server allows.
   const showConfirmRegPayment =
     !enrollment.registrationFeePaid &&
-    MANUALLY_CONFIRMABLE_METHODS.has(enrollment.registrationFeeMethod ?? "")
+    isManuallyConfirmableRegistrationMethod(enrollment.registrationFeeMethod) &&
+    !!role &&
+    canPerformAdmissionAction(role, "recordPayment")
+  // `placeStudents` is ADMIN / STAFF — ACCOUNTANT (read-only) used to see
+  // "Assign Section" and get FORBIDDEN.
+  const canPlace = !!role && canPerformAdmissionAction(role, "placeStudents")
 
   const onView = () => {
     router.push(`/${locale}/admission/applications/${enrollment.id}`)
@@ -259,7 +265,7 @@ function EnrollmentActionsCell({
             </DropdownMenuItem>
           )}
           {/* Placement: show for confirmed/enrolled rows that still need a section */}
-          {isConfirmed && (
+          {isConfirmed && canPlace && (
             <DropdownMenuItem onClick={() => setPlacementOpen(true)}>
               <MapPin className="me-2 h-4 w-4" />
               {t?.enrollment?.assignSection || "Assign Section"}

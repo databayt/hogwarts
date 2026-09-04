@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs"
 
 import { asset } from "@/lib/asset-url"
+import type { Role } from "@/lib/rbac/types"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import type { Locale } from "@/components/internationalization/config"
@@ -21,9 +22,10 @@ import {
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { getApplications } from "./actions"
+import { getApplications, getApplicationsCSV } from "./actions"
 import type { ApplicationRow } from "./applications-columns"
 import { getApplicationColumns } from "./applications-columns"
+import { getUIConfigForRole } from "./permissions"
 
 interface ApplicationsTableProps {
   initialData: ApplicationRow[]
@@ -32,6 +34,9 @@ interface ApplicationsTableProps {
   lang: Locale
   perPage?: number
   campaignId?: string
+  /** Viewer's role — gates the row's status menu on the same permission
+   *  table the server asserts (ACCOUNTANT is read-only here). */
+  role?: string | null
 }
 
 const getStatusVariant = (status: string) => {
@@ -56,6 +61,7 @@ export function ApplicationsTable({
   lang,
   perPage = 20,
   campaignId,
+  role,
 }: ApplicationsTableProps) {
   const t = dictionary
   const router = useRouter()
@@ -113,7 +119,10 @@ export function ApplicationsTable({
     filters,
   })
 
-  const columns = useMemo(() => getApplicationColumns(t, lang), [t, lang])
+  const columns = useMemo(
+    () => getApplicationColumns(t, lang, role),
+    [t, lang, role]
+  )
 
   const { table } = useDataTable<ApplicationRow>({
     data,
@@ -168,6 +177,24 @@ export function ApplicationsTable({
     loading: tb?.loading || "Loading...",
   }
 
+  // Export follows the role's UI config (ADMIN / STAFF; never the read-only
+  // ACCOUNTANT posture). The labels were always in the toolbar; the button
+  // itself was never wired, so no role could export.
+  const canExport = getUIConfigForRole(
+    (role ?? null) as Role | null
+  ).showExportButton
+  const handleExportCSV = useCallback(async () => {
+    const result = await getApplicationsCSV({
+      search: deferredSearch || undefined,
+      campaignId: campaignId || undefined,
+      channel: channel.length > 0 ? channel : undefined,
+    })
+    if (!result.success || !result.data) {
+      throw new Error(result.error || tb?.exportFailed || "Export failed")
+    }
+    return result.data
+  }, [deferredSearch, campaignId, channel, tb?.exportFailed])
+
   return (
     <>
       <PlatformToolbar
@@ -179,6 +206,7 @@ export function ApplicationsTable({
         searchPlaceholder={
           t?.applications?.searchPlaceholder || "Search applications..."
         }
+        getCSV={canExport ? handleExportCSV : undefined}
         entityName="applications"
         translations={toolbarTranslations}
       />
@@ -218,7 +246,7 @@ export function ApplicationsTable({
                   icon={asset("/icons/document.svg")}
                   title={application.applicantName}
                   description={application.applyingForClass}
-                  subtitle={application.status}
+                  subtitle={getStatusBadge(application.status).label}
                   onClick={() => handleView(application.id)}
                 />
               ))}

@@ -37,6 +37,7 @@ import {
   getEnrollmentList,
   getMeritList,
 } from "./queries"
+import { isManuallyConfirmableRegistrationMethod } from "./registration-methods"
 import { isTransitionAllowed, isValidTargetStatus } from "./status-machine"
 import {
   campaignSchemaWithValidation,
@@ -1784,23 +1785,6 @@ export async function recordPayment(params: {
 }
 
 /**
- * Manual payment methods an admin can confirm here. "stripe"/"tap" (card/
- * online) are confirmed automatically by their payment webhook — never
- * manually, since only the webhook has proof the charge actually settled.
- *
- * Bankak and Cashi belong here, NOT with the online rails: neither publishes a
- * merchant API, so both settle by a human seeing the transfer land in the
- * school's account. Leaving them out meant a Sudan school could record a
- * wallet intent it could then never confirm.
- */
-const MANUALLY_CONFIRMABLE_REGISTRATION_METHODS = new Set([
-  "cash",
-  "bank_transfer",
-  "bankak",
-  "cashi",
-])
-
-/**
  * Admin confirms a cash or bank-transfer registration-fee payment intent.
  *
  * The public offer portal (school-marketing/application/offer/actions.ts)
@@ -1847,8 +1831,10 @@ export async function confirmRegistrationPayment(params: {
       return actionError(ACTION_ERRORS.REGISTRATION_FEE_METHOD_MISSING)
     }
 
+    // Card / online rails are settled only by their webhook (see
+    // ./registration-methods.ts — shared with the enrollment row menu).
     if (
-      !MANUALLY_CONFIRMABLE_REGISTRATION_METHODS.has(
+      !isManuallyConfirmableRegistrationMethod(
         application.registrationFeeMethod
       )
     ) {
@@ -2162,6 +2148,209 @@ export async function fetchCampaignOptions(): Promise<
     return { success: true, data: options }
   } catch (error) {
     console.error("[fetchCampaignOptions]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
+  }
+}
+
+// ============================================================================
+// CSV export
+// ============================================================================
+
+/** RFC 4180 cell: quoted when it carries a comma, quote or line break. */
+function csvCell(value: unknown): string {
+  if (value === null || value === undefined) return ""
+  const text = String(value)
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+}
+
+function toCsv(headers: string[], rows: unknown[][]): string {
+  // The BOM makes Excel read Arabic as UTF-8 instead of mojibake.
+  return (
+    "\uFEFF" +
+    [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n")
+  )
+}
+
+/** Hard cap on an export — a campaign's worth, not the whole table forever. */
+const EXPORT_LIMIT = 5000
+
+/** The reader's locale — headers and enum labels come from that dictionary. */
+async function exportLocale(): Promise<"ar" | "en"> {
+  const { cookies } = await import("next/headers")
+  const value = (await cookies()).get("NEXT_LOCALE")?.value
+  return value === "en" ? "en" : "ar"
+}
+
+function isoDay(date: Date | null | undefined): string {
+  return date ? date.toISOString().slice(0, 10) : ""
+}
+
+/**
+ * The Applications tab as CSV, under the same filters the table shows.
+ * Gated like the list (`viewApplications`); the toolbar offers the button
+ * only to roles whose UI config carries `showExportButton`, so the
+ * read-only ACCOUNTANT posture never sees it. Names and campaign titles are
+ * localized the way the table localizes them.
+ */
+export async function getApplicationsCSV(params: {
+  search?: string
+  campaignId?: string
+  status?: string
+  channel?: string | string[]
+}): Promise<ActionResponse<string>> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+    const role = session?.user?.role
+    if (!schoolId || !role) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    assertAdmissionPermission(role, "viewApplications")
+
+    const lang = await exportLocale()
+    const [{ rows }, { getDictionary }, { getLabels }] = await Promise.all([
+      getApplicationsList(schoolId, {
+        search: params.search,
+        campaignId: params.campaignId,
+        status: params.status,
+        channel: params.channel,
+        page: 1,
+        perPage: EXPORT_LIMIT,
+      }),
+      import("@/components/internationalization/dictionaries"),
+      import("@/components/translation/person"),
+    ])
+    const dictionary = await getDictionary(lang)
+    const admission = dictionary.school.admission
+    const columns = admission.columns
+    const statusLabels = admission.status as Record<string, string>
+    const channelLabels = admission.channel as Record<string, string>
+    const labels = await getLabels(
+      rows.flatMap((a) => [`${a.firstName} ${a.lastName}`, a.campaign.name]),
+      lang,
+      schoolId
+    )
+
+    const headers = [
+      columns.applicationNumber,
+      columns.applicant,
+      columns.campaign,
+      columns.class,
+      columns.channel,
+      columns.status,
+      columns.meritRank,
+      columns.submitted,
+      admission.applicationDetail.email,
+      admission.applicationDetail.phone,
+    ]
+    const body = rows.map((a) => {
+      const name = `${a.firstName} ${a.lastName}`
+      return [
+        a.applicationNumber,
+        labels.get(name) ?? name,
+        labels.get(a.campaign.name) ?? a.campaign.name,
+        a.applyingForClass,
+        channelLabels[a.channel] ?? a.channel,
+        statusLabels[a.status] ?? a.status,
+        a.meritRank ?? "",
+        isoDay(a.submittedAt),
+        a.email,
+        a.phone,
+      ]
+    })
+    return { success: true, data: toCsv(headers, body) }
+  } catch (error) {
+    console.error("[getApplicationsCSV]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
+  }
+}
+
+/**
+ * The Enrollment tab as CSV — the offer / registration-fee ledger the
+ * finance side reconciles against. Same gate and localization as above.
+ */
+export async function getEnrollmentCSV(params: {
+  search?: string
+  campaignId?: string
+  offerStatus?: string
+  feeStatus?: string
+}): Promise<ActionResponse<string>> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+    const role = session?.user?.role
+    if (!schoolId || !role) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    assertAdmissionPermission(role, "viewApplications")
+
+    const lang = await exportLocale()
+    const [{ rows }, { getDictionary }, { getLabels }] = await Promise.all([
+      getEnrollmentList(schoolId, {
+        search: params.search,
+        campaignId: params.campaignId,
+        offerStatus: params.offerStatus,
+        feeStatus: params.feeStatus,
+        page: 1,
+        perPage: EXPORT_LIMIT,
+      }),
+      import("@/components/internationalization/dictionaries"),
+      import("@/components/translation/person"),
+    ])
+    const dictionary = await getDictionary(lang)
+    const admission = dictionary.school.admission
+    const columns = admission.columns
+    const enrollment = admission.enrollment
+    const statusLabels = admission.status as Record<string, string>
+    const labels = await getLabels(
+      rows.flatMap((a) => [`${a.firstName} ${a.lastName}`, a.campaign.name]),
+      lang,
+      schoolId
+    )
+
+    const headers = [
+      columns.applicationNumber,
+      columns.applicant,
+      columns.campaign,
+      columns.class,
+      columns.status,
+      columns.offerStatus,
+      admission.applicationDetail.offerAcceptedAt,
+      columns.fees,
+      admission.applicationDetail.registrationFeeMethod,
+      admission.applicationDetail.registrationFeeAmount,
+      admission.applicationDetail.registrationFeeReference,
+      admission.applicationDetail.confirmationDate,
+    ]
+    const body = rows.map((a) => {
+      const name = `${a.firstName} ${a.lastName}`
+      const offer = a.admissionConfirmed
+        ? enrollment.accepted
+        : a.admissionOffered
+          ? a.offerAccepted
+            ? enrollment.offerAccepted
+            : enrollment.pending
+          : enrollment.pendingOffer
+      return [
+        a.applicationNumber,
+        labels.get(name) ?? name,
+        labels.get(a.campaign.name) ?? a.campaign.name,
+        a.applyingForClass,
+        statusLabels[a.status] ?? a.status,
+        offer,
+        isoDay(a.offerAcceptedAt),
+        a.registrationFeePaid ? enrollment.paid : enrollment.unpaid,
+        a.registrationFeeMethod ?? "",
+        a.registrationFeeAmount != null ? Number(a.registrationFeeAmount) : "",
+        a.registrationFeeReference ?? "",
+        isoDay(a.confirmationDate),
+      ]
+    })
+    return { success: true, data: toCsv(headers, body) }
+  } catch (error) {
+    console.error("[getEnrollmentCSV]", error)
     if (isPermissionDenied(error)) {
       return actionError(ACTION_ERRORS.FORBIDDEN)
     }
