@@ -55,6 +55,21 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
   Video rows pointing at objects that don't exist on the CDN; `videos.ts` HEAD-probes).
   curriculum/ is .vercelignore'd, so all SD ingest runs are LOCAL against the target DB;
   deploy-time seeds skip without deleting.
+- **SD textbook editions are archived, never overwritten** (2026-09-04): grade 10 is on
+  the NEW Sudanese national curriculum (NCCER first editions dated 2025) and
+  `curriculum/sd/g10/*` now holds that set; a replaced edition moves to
+  `<subject>/_old/<label>/` (pdf, structure, cover, qbank/exams, `chapters-tree.json`),
+  superseded subject dirs move to `curriculum/sd/_old/<date>/`, and both are inert
+  because `sd.ts`, `sd-content.ts` and `upload-textbooks-all.ts` walk `g1..g12` only.
+  Two seed facts that decide how an update lands: Phase 3 **refreshes `name` from
+  `curriculum.json` on every run** (so a renamed subject — الدراسات الإسلامية → التربية
+  الإسلامية, علوم الحاسوب → تكنولوجيا المعلومات — is a curriculum.json edit, not a new
+  dir), and the description says "يتناول N وحدات", so `structure.json` chapters must be
+  the book's units. A replaced subject whose qbank moved to `_old/` keeps its old
+  questions at subject scope, chapter-less (sd-content skips without deleting; the
+  chapter rebuild SetNulls) — re-author before relying on them. Uploading is
+  deploy-gated: replaced slugs keep their CDN keys, so an upload changes what
+  production serves immediately. Full ledger: `curriculum/sd/TEXTBOOK_AUDIT.md`.
 - **PUBLISHED is the visibility floor**: every school-facing catalog read filters
   `status: "PUBLISHED"` (+ `approvalStatus`/`visibility` where the model has them).
 - **Approval publishes**: `approveContent` sets `status: "PUBLISHED"` for

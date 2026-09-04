@@ -147,10 +147,12 @@ export const SUBJECT_CONCEPT_BY_SLUG: Record<string, string> = {
   "uae-social-studies": "civics",
   "moral-education": "civics",
   civics: "civics",
+  "national-education": "civics", // Sudan التربية الوطنية (g8 + new-curriculum g10)
   "military-science": "civics",
   "global-perspectives": "civics",
   economics: "economics",
   business: "economics",
+  entrepreneurship: "economics", // Sudan ريادة الأعمال (new-curriculum g10)
   "business-studies": "economics",
   accounting: "economics",
   "commercial-studies": "economics",

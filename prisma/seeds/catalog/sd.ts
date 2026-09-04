@@ -158,6 +158,7 @@ const GRADE_SLUG_OVERRIDES: Record<string, Record<string, string>> = {
     arabic: "arabic-v2",
     ict: "technology",
     technology: "technology",
+    art: "arts", // elementary convention (g2/g4/g5); dir added 2026-09-04
   },
   g7: {
     islamic: "islamic-education",

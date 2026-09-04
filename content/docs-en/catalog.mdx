@@ -504,7 +504,7 @@ ministry textbook structures are authored.
 | Curriculum      | Code         | Grades | Subjects | Chapters | Lessons | Source                  | Seed         |
 | --------------- | ------------ | ------ | -------- | -------- | ------- | ----------------------- | ------------ |
 | United States   | `US`         | 1–12   | ~240     | ~750     | ~3,993  | US-inventory            | `us`         |
-| Sudan           | `SD`         | 1–12   | 125      | 864      | 2,937   | `curriculum/sd`         | `sd`         |
+| Sudan           | `SD`         | 1–12   | 130      | 855      | 4,090   | `curriculum/sd`         | `sd`         |
 | England         | `GB`         | 1–12   | 184      | 363      | 730     | `curriculum/uk`         | `gb`         |
 | Cambridge IGCSE | `CAIE-IGCSE` | 10     | 8        | 76       | 76      | `curriculum/caie-igcse` | `caie-igcse` |
 | IB Diploma      | `IB-DP`      | 12     | 9        | 49       | 49      | `curriculum/ib`         | `ib`         |
@@ -647,20 +647,35 @@ the catalog with `country: "SD"` and `curriculum: "SD"`. Slug pattern
 `sd-g{N}-{subject}` (e.g. `sd-g5-math`); the slug prefix is cosmetic, the
 `curriculum` code is the canonical join key.
 
-| Grade | Level      | Subjects | Chapters | Lessons | Notes                                     |
-| :---: | ---------- | -------: | -------: | ------: | ----------------------------------------- |
-|   1   | Elementary |        4 |       17 |     112 | Arabic, Math, Islamic, English            |
-|   2   | Elementary |        7 |       36 |     195 | + Science, Arts, History                  |
-|   3   | Elementary |        6 |       35 |     212 | + Geography                               |
-|   4   | Elementary |        5 |       24 |      55 | + Computer                                |
-|   5   | Elementary |       12 |       53 |     222 | + Earth Environment, Resources, Clothing  |
-|   6   | Elementary |        5 |       10 |       0 | Scanned PDFs — chapters only              |
-|   7   | Middle     |        1 |        1 |       0 | English activity book only                |
-|   8   | Middle     |        — |        — |       — | No textbooks available                    |
-|   9   | Middle     |        9 |       34 |      40 | + Technical Education, Communication Tech |
-|  10   | Secondary  |       11 |       49 |      80 | + Physics, Chemistry, Biology, French     |
-|  11   | Secondary  |       19 |       71 |      77 | Full catalog including streams            |
-|  12   | Secondary  |       18 |       76 |      56 | Shahada year — all streams                |
+| Grade | Level      | Subjects | Chapters | Lessons | Notes                                                                                    |
+| :---: | ---------- | -------: | -------: | ------: | ---------------------------------------------------------------------------------------- |
+|   1   | Elementary |        4 |       17 |     173 | Arabic, English (SMILE Starter 1), Islamic, Math — 2020 series                           |
+|   2   | Elementary |        4 |       22 |     131 | Same set, SMILE Starter 2                                                                |
+|   3   | Elementary |        6 |       36 |     176 | + Geography, Science (2020 series, updated 2026-09); English = SMILE Book 1 pupil's      |
+|   4   | Elementary |        8 |       40 |     232 | + Art, ICT, History, Science (added 2026-09); Math PDF added 2026-09                     |
+|   5   | Elementary |       14 |       66 |     406 | + ملبسنا، المورد، الأرض بيئة الحياة، home economics, technology                          |
+|   6   | Elementary |        9 |       44 |     176 | + Art, Science (added 2026-09); English still the wrong reader (SMILE Book 4 not online) |
+|   7   | Middle     |        9 |       67 |     309 | Full set incl. SMILE Book 7 (2024)                                                       |
+|   8   | Middle     |       10 |       66 |     361 | Full set; Geography replaced + National Education added 2026-09; Art not online          |
+|   9   | Middle     |        9 |      106 |     668 | 2024 finals, SMILE Book 9                                                                |
+|  10   | Secondary  |       18 |      110 |     488 | **New national curriculum (NCCER 2025)** — see below                                     |
+|  11   | Secondary  |       19 |      119 |     382 | Old curriculum, all streams (new editions expected 2026/27, none online yet)             |
+|  12   | Secondary  |       20 |      162 |     588 | Shahada year — all streams; SPINE 6 + specialised maths added 2026-09                    |
+
+**Grade 10 moved to the new Sudanese national curriculum in 2025/26** (NCCER first
+editions dated 2025). Since 2026-09-04 `curriculum/sd/g10/` carries that set: four
+new subjects (التربية الوطنية، ريادة الأعمال، الفيزياء، and a unified اللغة العربية
+book that replaces the old المطالعة/البلاغة/النحو sub-books), and eight subjects
+replaced in place (biology, chemistry, history, maths 3rd ed., engineering,
+التربية الإسلامية — formerly الدراسات الإسلامية, التربية الفنية — formerly الفنون
+والتصميم, and تكنولوجيا المعلومات والاتصالات — formerly علوم الحاسوب). The old
+editions are archived under `<subject>/_old/<label>/` and the superseded Arabic
+sub-book directories under `curriculum/sd/_old/2026-09-04/`; both locations are
+inert (the seed and the uploader walk `g1..g12` only). Their DB rows
+(`sd-g10-literature`, `sd-g10-rhetoric`, `sd-g10-arabic-advanced`) remain
+PUBLISHED until archived by decision. Structures come from the books' own tables
+of contents (`structure.json`, `source: official-toc-2026-09`); the ledger is
+`curriculum/sd/TEXTBOOK_AUDIT.md`.
 
 Secondary streams (10–12) are routed by patterns in `setup.ts`:
 
@@ -695,9 +710,12 @@ const ARTS_ONLY_PATTERNS = [
   → prisma/seeds/catalog/sd.ts   → Subject + Chapter + Lesson (upsert)
 ```
 
-Known gaps: grade-6 PDFs are scanned images (chapters only, 0 lessons), grade 7
-has one textbook, grade 8 has none, and several secondary PDFs are garbled —
-remedied by OCR, sourcing remaining textbooks, or community contribution.
+Known gaps (2026-09-04): grade-3 English should be SMILE Starter 3 and grade-6
+English SMILE Book 4 (neither is online), grade-8 Art is not online, the
+new-curriculum grade-10 books for Quran, French, family sciences, military
+sciences, English and Christian education have not been issued online, and the
+eleven subjects whose textbooks were replaced still carry their old-curriculum
+question banks at subject scope (re-authoring pending).
 
 ### Adding a national curriculum
 
