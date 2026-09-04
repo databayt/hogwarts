@@ -39,7 +39,19 @@ vi.mock("@/lib/db", () => ({
     class: {
       findMany: vi.fn(),
     },
+    academicGrade: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
   },
+}))
+
+// The Sudan wallet rails read SchoolPaymentSettings (a model the db mock
+// above does not carry); without this mock every checkout attempt threw
+// past the offer gates and surfaced as CHECKOUT_FAILED.
+vi.mock("@/lib/payment/manual-rail-settings", () => ({
+  getSchoolPaymentSettings: vi.fn().mockResolvedValue(null),
+  resolveWalletDetails: vi.fn().mockReturnValue(null),
+  filterConfiguredManualRails: vi.fn(() => []),
 }))
 
 vi.mock("@/lib/rate-limit", () => ({
@@ -296,7 +308,23 @@ describe("createRegistrationFeeCheckout", () => {
     expect(result).toEqual({ success: false, error: "OFFER_NOT_AVAILABLE" })
   })
 
-  it("rejects payment for an expired offer", async () => {
+  it("rejects payment for an expired offer nobody accepted", async () => {
+    mockFindFirst.mockResolvedValue(
+      makeApplication({ offerAccepted: false, offerExpiryDate: new Date(0) })
+    )
+    const result = await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en",
+      "stripe"
+    )
+    expect(result).toEqual({ success: false, error: "OFFER_EXPIRED" })
+  })
+
+  it("still lets a family that accepted in time pay after the deadline", async () => {
+    // The deadline binds ACCEPTANCE (the offer page hides the countdown once
+    // accepted, and the daily cron never expires an accepted offer). With no
+    // fee structures the attempt gets past the expiry gate to the fee check.
     mockFindFirst.mockResolvedValue(
       makeApplication({ offerAccepted: true, offerExpiryDate: new Date(0) })
     )
@@ -306,7 +334,7 @@ describe("createRegistrationFeeCheckout", () => {
       "en",
       "stripe"
     )
-    expect(result).toEqual({ success: false, error: "OFFER_EXPIRED" })
+    expect(result).toEqual({ success: false, error: "NO_FEE_CONFIGURED" })
   })
 
   it("returns REGISTRATION_FEE_ALREADY_PAID when fee is already paid", async () => {

@@ -1184,9 +1184,15 @@ export async function confirmEnrollment(params: {
 
     const { userId: txUserId, isNewGuestUser } = await db.$transaction(
       async (tx) => {
-        // 2. Update application status to ADMITTED
+        // 2. Update application status to ADMITTED. `status: "SELECTED"` in
+        //    the where makes the flip atomic: two admins confirming the same
+        //    row at once both pass the read-time gate above, but only one
+        //    update finds a SELECTED row — the other throws P2025 here and
+        //    its transaction aborts before a second Student is minted (the
+        //    unique Student.applicationId index was the only thing catching
+        //    that, and it failed late, after the fee fan-out).
         await tx.application.update({
-          where: { id: params.id, schoolId },
+          where: { id: params.id, schoolId, status: "SELECTED" },
           data: {
             status: "ADMITTED",
             admissionConfirmed: true,
@@ -1346,7 +1352,12 @@ export async function confirmEnrollment(params: {
                     ],
                   },
                 },
-                select: { id: true, status: true },
+                select: {
+                  id: true,
+                  status: true,
+                  finalAmount: true,
+                  currency: true,
+                },
               })
 
               if (regAssignment) {
@@ -1390,6 +1401,21 @@ export async function confirmEnrollment(params: {
                     application.registrationFeeDate ?? new Date()
                   const regAmount = Number(application.registrationFeeAmount)
 
+                  // Snapshot the currency the way every other Payment writer
+                  // does (fees.prisma: new rows MUST write currency) — the
+                  // assignment's snapshot first, the school's setting as the
+                  // fallback — so the receipt survives a later currency
+                  // change. This row was the one writer leaving it null.
+                  let paymentCurrency: string | null =
+                    regAssignment.currency ?? null
+                  if (!paymentCurrency) {
+                    const schoolRow = await tx.school.findUnique({
+                      where: { id: schoolId },
+                      select: { currency: true },
+                    })
+                    paymentCurrency = schoolRow?.currency ?? null
+                  }
+
                   const newPayment = await tx.payment.create({
                     data: {
                       schoolId,
@@ -1398,6 +1424,7 @@ export async function confirmEnrollment(params: {
                       paymentNumber,
                       receiptNumber,
                       amount: regAmount,
+                      currency: paymentCurrency,
                       paymentMethod,
                       paymentDate: regPaymentDate,
                       status: "SUCCESS",
@@ -1408,10 +1435,19 @@ export async function confirmEnrollment(params: {
                     select: { id: true },
                   })
 
-                  // Mark the fee assignment as PAID
+                  // The matched assignment is normally the student's ANNUAL
+                  // structure — the auto-provisioned per-grade rows carry the
+                  // registration component inside their total — so the
+                  // registration payment settles it only when it covers the
+                  // whole balance. Marking it PAID unconditionally (as this
+                  // did) declared a year's tuition settled on a deposit, and
+                  // the fee-due / fee-overdue crons stopped chasing it.
+                  const assignmentTotal = Number(regAssignment.finalAmount)
+                  const settlesAssignment =
+                    !(assignmentTotal > 0) || regAmount >= assignmentTotal
                   await tx.feeAssignment.update({
                     where: { id: regAssignment.id },
-                    data: { status: "PAID" },
+                    data: { status: settlesAssignment ? "PAID" : "PARTIAL" },
                   })
 
                   // Post the ledger entry (non-blocking — failure must not
@@ -1773,8 +1809,17 @@ export async function confirmRegistrationPayment(params: {
       return actionError(ACTION_ERRORS.REGISTRATION_FEE_METHOD_INVALID)
     }
 
+    // `registrationFeePaid: false` in the where makes the confirmation
+    // atomic: two accountants confirming the same intent at once both pass
+    // the read above, but only one update finds an unpaid row — the other
+    // throws P2025 and reports a failure instead of re-confirming (and, once
+    // the confirmation also books a Payment, double-booking it).
     await db.application.update({
-      where: { id: params.applicationId, schoolId },
+      where: {
+        id: params.applicationId,
+        schoolId,
+        registrationFeePaid: false,
+      },
       data: {
         registrationFeePaid: true,
         registrationFeeDate: new Date(),

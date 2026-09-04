@@ -519,7 +519,7 @@ describe("confirmEnrollment — registration-fee materialization", () => {
     )
   })
 
-  it("marks the fee assignment PAID after creating the payment", async () => {
+  it("marks the fee assignment PAID when the registration payment covers its whole balance", async () => {
     setupEnrollment({
       registrationFeePaid: true,
       registrationFeeAmount: 500 as any,
@@ -528,6 +528,8 @@ describe("confirmEnrollment — registration-fee materialization", () => {
     vi.mocked(db.feeAssignment.findFirst).mockResolvedValue({
       id: "fa-reg-1",
       status: "PENDING",
+      finalAmount: 500,
+      currency: "SDG",
     } as any)
     vi.mocked(db.payment.findFirst).mockResolvedValue(null)
     vi.mocked(db.payment.create).mockResolvedValue({ id: "pay-new" } as any)
@@ -538,6 +540,46 @@ describe("confirmEnrollment — registration-fee materialization", () => {
       where: { id: "fa-reg-1" },
       data: { status: "PAID" },
     })
+    // The Payment snapshots the assignment's currency (every other Payment
+    // writer does; this one left it null and the receipt drifted).
+    expect(db.payment.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ currency: "SDG" }),
+      })
+    )
+  })
+
+  it("marks the assignment PARTIAL when the registration fee is a deposit on a larger annual total", async () => {
+    // The matched assignment is normally the student's annual structure —
+    // the auto-provisioned per-grade rows carry the registration component
+    // inside their total. Flipping it to PAID on a 500 deposit against a
+    // 5000 year declared the tuition settled and silenced the fee crons.
+    setupEnrollment({
+      registrationFeePaid: true,
+      registrationFeeAmount: 500 as any,
+      registrationFeeMethod: "cash",
+    })
+    vi.mocked(db.feeAssignment.findFirst).mockResolvedValue({
+      id: "fa-annual-1",
+      status: "PENDING",
+      finalAmount: 5000,
+      currency: null,
+    } as any)
+    vi.mocked(db.payment.findFirst).mockResolvedValue(null)
+    vi.mocked(db.payment.create).mockResolvedValue({ id: "pay-new" } as any)
+
+    await confirmEnrollment({ id: "app-1" })
+
+    expect(db.feeAssignment.update).toHaveBeenCalledWith({
+      where: { id: "fa-annual-1" },
+      data: { status: "PARTIAL" },
+    })
+    // No assignment snapshot → the school's currency is the fallback.
+    expect(db.payment.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ currency: "USD" }),
+      })
+    )
   })
 
   it("is idempotent — skips Payment creation if one already exists for the assignment", async () => {

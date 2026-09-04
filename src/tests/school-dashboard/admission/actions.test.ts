@@ -1019,7 +1019,9 @@ describe("Admission Actions", () => {
       expect(result.success).toBe(true)
       // Verify application status set to ADMITTED
       expect(db.application.update).toHaveBeenCalledWith({
-        where: { id: "a-1", schoolId: SCHOOL_ID },
+        // `status: "SELECTED"` in the where is what makes the flip atomic
+        // under two concurrent confirmations.
+        where: { id: "a-1", schoolId: SCHOOL_ID, status: "SELECTED" },
         data: expect.objectContaining({
           status: "ADMITTED",
           admissionConfirmed: true,
@@ -1330,7 +1332,9 @@ describe("Admission Actions", () => {
 
       expect(result.success).toBe(true)
       expect(db.application.update).toHaveBeenCalledWith({
-        where: { id: "a-1", schoolId: SCHOOL_ID },
+        // `registrationFeePaid: false` in the where is what makes two
+        // accountants confirming at once resolve to ONE confirmation.
+        where: { id: "a-1", schoolId: SCHOOL_ID, registrationFeePaid: false },
         data: {
           registrationFeePaid: true,
           registrationFeeDate: expect.any(Date),

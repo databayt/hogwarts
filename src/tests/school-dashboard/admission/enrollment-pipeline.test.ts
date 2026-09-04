@@ -676,10 +676,12 @@ describe("confirmEnrollment - full pipeline", () => {
     const result = await confirmEnrollment({ id: "app-1" })
 
     expect(result.success).toBe(true)
-    // The first call to application.update should set status to ADMITTED
+    // The first call to application.update should set status to ADMITTED —
+    // and only from a still-SELECTED row, which is what makes the flip
+    // atomic under two concurrent confirmations.
     expect(db.application.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "app-1", schoolId: SCHOOL_ID },
+        where: { id: "app-1", schoolId: SCHOOL_ID, status: "SELECTED" },
         data: expect.objectContaining({
           status: "ADMITTED",
           admissionConfirmed: true,
