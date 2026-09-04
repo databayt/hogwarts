@@ -459,7 +459,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 - [x] Recording no longer gates rooms — `isLiveKitConfigured()` (4 vars) vs
       `isRecordingConfigured()` (bucket). Was the single code defect standing
       between the block and a working room.
-- [x] Cron bridge: `.github/workflows/live-crons.yml`. Every Vercel cron
+- [x] Cron bridge: `.github/workflows/conference-crons.yml`. Every Vercel cron
       has been off since 2026-08-27 and `live-class-reminders` is the only
       caller of `materializeOnlineSchools()`, so an online school materialized
       nothing after the day it saved its settings.
@@ -470,7 +470,7 @@ the test ran on a Saturday, `student@balqalam.com`'s section has zero slots, and
 - [x] Parent portal shows a "Today" strip with Join — guardians previously had
       no discoverable path to a child's live class at all.
 - [x] Mobile can join: `live_class` on `/api/mobile/timetable/[userId]` +
-      `GET /api/mobile/live/[id]/join` (shares `join-core`, JWT actor).
+      `GET /api/mobile/conference/[id]/join` (shares `join-core`, JWT actor).
       Conference notifications now request the `push` channel too.
 - [x] `started` notifications deep-link to `/room`; notification URLs are stored
       relative (they were `{subdomain}.databayt.org` — a host that serves a

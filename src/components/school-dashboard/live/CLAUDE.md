@@ -22,7 +22,7 @@ AWS S3 `me-central-1` with PDPL-configurable retention.
 
 1. Read `README.md` here for file inventory + routes
 2. Read `ISSUE.md` for the open backlog
-3. The Prisma models live in `prisma/models/live.prisma` (renamed from
+3. The Prisma models live in `prisma/models/conference.prisma` (renamed from
    `live-class.prisma`; `Conference*` model names, DB tables preserved via `@@map`):
    - `Conference` — scheduled or ad-hoc session (`provider`, `meetingUrl?`, `meetingProvider?`,
      `visibility` section|school, `catalogLessonId?` → catalog Lesson)
@@ -591,7 +591,7 @@ createLiveClass` branches on `provider` — `livekit` mirrors
   `vercel.json` is `"crons": []` (free-plan bridge, `DEPLOYMENT.md`), and
   `live-class-reminders` is the ONLY caller of `materializeOnlineSchools()` — so
   with it off an online school materializes nothing after the day an admin saved
-  its settings. `.github/workflows/live-crons.yml` restores the three
+  its settings. `.github/workflows/conference-crons.yml` restores the three
   conference jobs and nothing else. Delete it when the Vercel cron array comes
   back, or they fire twice. `process-email-notifications` is deliberately NOT in
   the bridge: it drains ~19,996 unsent emails with no age gate.

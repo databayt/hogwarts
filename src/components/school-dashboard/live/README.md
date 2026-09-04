@@ -88,7 +88,7 @@ conference/
 ```
 
 Tests live under `src/tests/` (URL-mirror reorg), **not** in a `__tests__/` folder here.
-The Prisma models are in `prisma/models/live.prisma`.
+The Prisma models are in `prisma/models/conference.prisma`.
 
 ## Routes
 
@@ -118,7 +118,7 @@ reached from a row, not a tab.
 | `/api/cron/live-class-reminders`   | GET    | Materializes today's online-school slots, then dispatches 5–20-min start reminders (every 15 min, idempotent) |
 | `/api/cron/end-stale-live-classes` | GET    | Close sessions stuck `live` past end + attendance sync; cancel never-started `scheduled` rows (every 30 min)  |
 | `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500)                                                                   |
-| `/api/mobile/live/[id]/join`       | GET    | Mobile join ticket — same `join-core` eligibility as the web, JWT actor instead of a session cookie           |
+| `/api/mobile/conference/[id]/join` | GET    | Mobile join ticket — same `join-core` eligibility as the web, JWT actor instead of a session cookie           |
 
 ## Status
 
@@ -258,7 +258,7 @@ written up as `prisma/migrations/20260828000000_conference_online_school/`.
 **Every Vercel cron is off** (`"crons": []`, free-plan bridge — see `DEPLOYMENT.md`), and
 `live-class-reminders` is the only caller of `materializeOnlineSchools()`. An online school therefore
 materialized nothing after the day it saved its settings. Restored via
-`.github/workflows/live-crons.yml`.
+`.github/workflows/conference-crons.yml`.
 
 Also: recording no longer gates rooms; `createLiveClass` gained the server-side provider check the
 wizard only had client-side; notifications for a _started_ class link straight to the room; and

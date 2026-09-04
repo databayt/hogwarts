@@ -138,7 +138,7 @@ entirely.
 <LiveStructure />
 
 Routes mirror this block (see [Routes](#routes)). The 6 Prisma models live
-in `prisma/models/live.prisma`. Tests live under `src/tests/` (URL-mirror reorg), not in a
+in `prisma/models/conference.prisma`. Tests live under `src/tests/` (URL-mirror reorg), not in a
 `__tests__/` folder inside the block.
 
 ## Components
@@ -227,7 +227,7 @@ poll would ship a full RSC re-render per response), `api/cron/live-class-reminde
 5–20-min idempotent window), `api/cron/end-stale-live-classes` (every 30 min — closes sessions stuck
 `live` past their end + runs the attendance sync), `api/cron/expire-live-recordings` (daily).
 
-## Schema — `prisma/models/live.prisma`
+## Schema — `prisma/models/conference.prisma`
 
 `LiveClass*` → `Conference*`; every DB table / column / enum-type name preserved via `@@map`/`@map`
 → **zero-change migration** (byte-identical `migrate diff` vs baseline).
@@ -539,7 +539,7 @@ and syncs when the connection returns; `/offline` shows what is waiting.
 - **A configured SFU does nothing on its own** — `School.conferenceProviderDefault` is `external`
   until a school opts in on `/live/settings`.
 - **The materialization sweep runs on GitHub Actions**, not Vercel Cron, while the project is on the
-  free plan (`.github/workflows/live-crons.yml`). Without it an online school materializes no
+  free plan (`.github/workflows/conference-crons.yml`). Without it an online school materializes no
   sessions after the day it saved its settings — nothing to join, and no reminders.
 
 ## Demo and the hybrid school

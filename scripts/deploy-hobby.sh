@@ -27,6 +27,32 @@ cd "$(dirname "$0")/.."
 echo "==> building locally (Vercel's Hobby builder cannot finish this cold)"
 vercel build --prod --scope databayt
 
+echo "==> checking the Prisma engines the functions will need"
+# `vercel build` on Apple Silicon tags every function `architecture: arm64`
+# (see .vercel/output/functions/**/.vc-config.json), and Prisma only ships the
+# engines named in the generator's binaryTargets. From 2026-08-31 to 09-03 the
+# client carried darwin + rhel (x86-64) only, so every function that actually
+# landed on arm64 threw PrismaClientInitializationError at its first query —
+# the live-class crons and fee-due 500'd on every run while tsc, vitest and the
+# build stayed green. Nothing but a prod request can catch it, so refuse to
+# upload a bundle whose architecture has no matching engine.
+node -e '
+const fs = require("fs"), path = require("path");
+const root = ".vercel/output/functions";
+const ENGINE = { arm64: "libquery_engine-linux-arm64-openssl-3.0.x.so.node", x86_64: "libquery_engine-rhel-openssl-3.0.x.so.node" };
+const need = new Set(), have = new Set();
+const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+  const f = path.join(d, e.name);
+  if (e.isDirectory()) walk(f);
+  else if (e.name === ".vc-config.json") { try { need.add(JSON.parse(fs.readFileSync(f, "utf8")).architecture || "x86_64"); } catch {} }
+  else if (e.name.startsWith("libquery_engine-")) have.add(e.name);
+} };
+walk(root);
+const missing = [...need].filter((a) => ENGINE[a] && !have.has(ENGINE[a]));
+console.log(`    architectures: ${[...need].join(", ") || "none"}; engines bundled: ${[...have].join(", ") || "none"}`);
+if (missing.length) { console.error(`    ABORT: no Prisma engine bundled for ${missing.join(", ")} — add it to binaryTargets in prisma/schema.prisma and run pnpm prisma generate`); process.exit(1); }
+'
+
 echo "==> stripping Next 16 segment-prefetch routes to fit the 2048 route cap"
 node -e '
 const fs = require("fs");
