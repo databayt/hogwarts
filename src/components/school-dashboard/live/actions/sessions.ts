@@ -36,6 +36,7 @@ import {
 } from "./helpers"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
 import { findSlotSessionForDay } from "./slot-session"
+import { transitionToLive } from "./went-live"
 
 /**
  * Create a scheduled or ad-hoc live class. Teachers schedule own; admins
@@ -328,12 +329,20 @@ export async function startLiveClass(input: IdOnly) {
       select: {
         id: true,
         status: true,
+        provider: true,
         roomName: true,
         maxParticipants: true,
+        recordingEnabled: true,
         teacher: { select: { userId: true } },
       },
     })
     if (!session) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+    // An external session has no SFU room to start — it IS its meeting URL.
+    // Starting one here would open a LiveKit room under an `ext-…` name that
+    // no webhook can parse back, and strand the row `live`.
+    if (session.provider !== "livekit") {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
+    }
 
     // Teachers can only start own classes; admins can start any.
     if (ctx.role === "TEACHER" && session.teacher.userId !== ctx.userId) {
@@ -361,9 +370,14 @@ export async function startLiveClass(input: IdOnly) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
     }
 
-    await db.conference.update({
-      where: { id: session.id },
-      data: { status: "live", actualStart: new Date() },
+    // The guarded flip + its side effects (roster notification, recording
+    // egress) — performed by whichever writer wins, this one or the SFU's
+    // room_started webhook. See ./went-live.ts.
+    await transitionToLive({
+      schoolId: ctx.schoolId,
+      sessionId: session.id,
+      roomName: session.roomName,
+      recordingEnabled: session.recordingEnabled,
     })
 
     for (const path of liveListRevalidatePaths()) {

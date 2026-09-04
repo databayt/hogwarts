@@ -47,6 +47,7 @@ const liveClass = (school: Record<string, unknown> = {}) => ({
   maxParticipants: 50,
   status: "live",
   lang: "ar",
+  provider: "livekit",
   recordingEnabled: true,
   studentsJoinMuted: null,
   teacher: { userId: "u-teacher" },

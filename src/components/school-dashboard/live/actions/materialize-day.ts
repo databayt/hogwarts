@@ -481,8 +481,8 @@ const WINDOW_GRACE_MS = 48 * 60 * 60 * 1000
 
 /**
  * Every school that might be online today — school-wide, through at least one
- * section override, or inside a temporary "go online" window. A school with
- * none of the three is never touched.
+ * section or grade override, or inside a temporary "go online" window. A
+ * school with none of the four is never touched.
  *
  * The window arm is deliberately COARSE (any school with a start date and no
  * long-expired end date), because window activeness depends on the school's
@@ -505,6 +505,11 @@ export async function materializeOnlineSchools(
       OR: [
         { conferenceOnlineDefault: true },
         { sections: { some: { conferenceOnline: true } } },
+        // The per-grade override (hybrid mode: section ?? GRADE ?? school).
+        // Shipped 2026-08-30 without this arm, so a school online through a
+        // grade alone was never a candidate and never swept — the same
+        // failure the window arm below guards against.
+        { academicGrades: { some: { conferenceOnline: true } } },
         {
           conferenceOnlineFrom: { not: null },
           OR: [

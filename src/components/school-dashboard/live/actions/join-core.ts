@@ -26,6 +26,7 @@ import { issueAccessToken } from "@/components/school-dashboard/live/livekit/tok
 import type { RoomJoinTicket } from "@/components/school-dashboard/live/types"
 
 import { concurrentCapError } from "./helpers"
+import { transitionToLive } from "./went-live"
 
 /**
  * Decide a user's role within a given session based on their UserRole and
@@ -162,6 +163,7 @@ export async function performLiveClassJoin(
       select: {
         id: true,
         roomName: true,
+        provider: true,
         sectionId: true,
         visibility: true,
         maxParticipants: true,
@@ -194,6 +196,15 @@ export async function performLiveClassJoin(
     }),
   ])
   if (!liveClass) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+  // Only an in-app (LiveKit) session has a room to mint a ticket for. An
+  // external session IS its meeting URL: the web room page redirects to it
+  // before ever calling this, but the mobile route and any future caller land
+  // here directly — and without this gate a HOST would open a real SFU room
+  // under the `ext-…` name (which no webhook can parse back) and flip the row
+  // `live` with nothing to run it.
+  if (liveClass.provider !== "livekit") {
+    return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
+  }
   // A kicked participant cannot rejoin — revocation that doesn't wait for TTL.
   if (existingParticipant?.status === "removed") {
     return actionError(ACTION_ERRORS.LIVE_CLASS_PARTICIPANT_DENIED)
@@ -237,13 +248,18 @@ export async function performLiveClassJoin(
         roomName: liveClass.roomName,
         maxParticipants: liveClass.maxParticipants,
       })
-      await db.conference.update({
-        where: { id: sessionId },
-        data: { status: "live", actualStart: new Date() },
-      })
     } catch {
       return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
     }
+    // The guarded flip + its side effects (roster notification, recording
+    // egress) — performed by whichever writer wins, this one or the SFU's
+    // room_started webhook. See actions/went-live.ts.
+    await transitionToLive({
+      schoolId,
+      sessionId,
+      roomName: liveClass.roomName,
+      recordingEnabled: liveClass.recordingEnabled,
+    })
   }
 
   // Upsert participant row + token timestamp.

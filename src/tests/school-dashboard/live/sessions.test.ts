@@ -305,6 +305,8 @@ describe("startLiveClass", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "scheduled",
+      provider: "livekit",
+      recordingEnabled: false,
       roomName: `sch-${SCHOOL_ID}-lc-${SESSION_ID}`,
       maxParticipants: 50,
       teacher: { userId: TEACHER_USER_ID },
@@ -312,11 +314,30 @@ describe("startLiveClass", () => {
     const result = await startLiveClass({ id: SESSION_ID })
     expect("success" in result && result.success).toBe(true)
     expect(ensureRoom).toHaveBeenCalled()
-    expect(db.conference.update).toHaveBeenCalledWith(
+    // Status-guarded, tenant-scoped: the same write the webhook races for.
+    expect(db.conference.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: { id: SESSION_ID, schoolId: SCHOOL_ID, status: "scheduled" },
         data: expect.objectContaining({ status: "live" }),
       })
     )
+  })
+
+  it("an EXTERNAL session cannot be started — it has no SFU room to open", async () => {
+    mockTeacher()
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      status: "scheduled",
+      provider: "external",
+      recordingEnabled: false,
+      roomName: `ext-${SESSION_ID}`,
+      maxParticipants: 50,
+      teacher: { userId: TEACHER_USER_ID },
+    } as never)
+    const result = await startLiveClass({ id: SESSION_ID })
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result) expect(result.error).toBe("LIVE_CLASS_INVALID_STATE")
+    expect(ensureRoom).not.toHaveBeenCalled()
   })
 
   it("rejects starting once the school's concurrent cap is reached", async () => {
@@ -324,6 +345,8 @@ describe("startLiveClass", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "scheduled",
+      provider: "livekit",
+      recordingEnabled: false,
       roomName: "x",
       maxParticipants: 50,
       teacher: { userId: "admin-user" },
@@ -342,6 +365,8 @@ describe("startLiveClass", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "scheduled",
+      provider: "livekit",
+      recordingEnabled: false,
       roomName: "x",
       maxParticipants: 50,
       teacher: { userId: TEACHER_USER_ID },
@@ -356,6 +381,8 @@ describe("startLiveClass", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "live",
+      provider: "livekit",
+      recordingEnabled: false,
       roomName: "x",
       maxParticipants: 50,
       teacher: { userId: TEACHER_USER_ID },
@@ -370,6 +397,8 @@ describe("startLiveClass", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "ended",
+      provider: "livekit",
+      recordingEnabled: false,
       roomName: "x",
       maxParticipants: 50,
       teacher: { userId: TEACHER_USER_ID },
@@ -384,6 +413,8 @@ describe("startLiveClass", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "scheduled",
+      provider: "livekit",
+      recordingEnabled: false,
       roomName: "x",
       maxParticipants: 50,
       teacher: { userId: TEACHER_USER_ID },

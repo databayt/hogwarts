@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { joinLiveClass } from "@/components/school-dashboard/live/actions/tokens"
+import { ensureRoom } from "@/components/school-dashboard/live/livekit/rooms"
 
 /** The `school` columns `performLiveClassJoin` selects for `roomConfig`. */
 const SCHOOL_ROOM_CONFIG = {
@@ -36,12 +37,14 @@ vi.mock("@/lib/db", () => ({
     conference: {
       findFirst: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(async () => ({ count: 1 })),
       count: vi.fn(),
     },
     conferenceParticipant: {
       upsert: vi.fn(),
       findUnique: vi.fn(),
     },
+    conferenceRecording: { upsert: vi.fn() },
     school: { findUnique: vi.fn() },
     student: { findFirst: vi.fn() },
     guardian: { findFirst: vi.fn() },
@@ -51,6 +54,11 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
+// The went-live side effects (roster notification, egress) have their own
+// spec; here they must only not run for real.
+vi.mock("@/components/school-dashboard/live/actions/notifications", () => ({
+  notifyClassStarted: vi.fn(async () => ({ created: 0 })),
+}))
 vi.mock("@/components/school-dashboard/live/livekit/rooms", () => ({
   ensureRoom: vi.fn(async () => undefined),
 }))
@@ -85,6 +93,7 @@ beforeEach(() => {
   vi.mocked(db.conference.findFirst).mockResolvedValue({
     id: SESSION_ID,
     roomName: ROOM_NAME,
+    provider: "livekit",
     recordingEnabled: true,
     studentsJoinMuted: null,
     sectionId: SECTION_ID,
@@ -248,6 +257,7 @@ describe("joinLiveClass eligibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      provider: "livekit",
       recordingEnabled: true,
       studentsJoinMuted: null,
       sectionId: null, // ad-hoc class with no section roster
@@ -286,6 +296,7 @@ describe("joinLiveClass eligibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      provider: "livekit",
       recordingEnabled: true,
       studentsJoinMuted: null,
       sectionId: SECTION_ID,
@@ -307,6 +318,7 @@ describe("joinLiveClass eligibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      provider: "livekit",
       recordingEnabled: true,
       studentsJoinMuted: null,
       sectionId: SECTION_ID,
@@ -320,11 +332,35 @@ describe("joinLiveClass eligibility", () => {
     } as never)
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(true)
-    expect(db.conference.update).toHaveBeenCalledWith(
+    // Status-guarded, tenant-scoped: the same write the webhook races for.
+    expect(db.conference.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: { id: SESSION_ID, schoolId: SCHOOL_ID, status: "scheduled" },
         data: expect.objectContaining({ status: "live" }),
       })
     )
+  })
+
+  it("an EXTERNAL session never mints a ticket — the meeting URL is the room", async () => {
+    mockUser(TEACHER_USER_ID, "TEACHER")
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      roomName: `ext-${SESSION_ID}`,
+      provider: "external",
+      recordingEnabled: false,
+      studentsJoinMuted: null,
+      sectionId: SECTION_ID,
+      maxParticipants: 50,
+      status: "scheduled",
+      lang: "ar",
+      teacher: { userId: TEACHER_USER_ID },
+      school: SCHOOL_ROOM_CONFIG,
+    } as never)
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result) expect(result.error).toBe("LIVE_CLASS_INVALID_STATE")
+    expect(ensureRoom).not.toHaveBeenCalled()
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
   })
 
   it("scheduled class cannot be joined by non-host → LIVE_CLASS_INVALID_STATE", async () => {
@@ -335,6 +371,7 @@ describe("joinLiveClass eligibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      provider: "livekit",
       recordingEnabled: true,
       studentsJoinMuted: null,
       sectionId: SECTION_ID,
@@ -377,6 +414,7 @@ describe("joinLiveClass eligibility — school-wide visibility", () => {
     vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
+      provider: "livekit",
       recordingEnabled: true,
       studentsJoinMuted: null,
       sectionId,

@@ -9,18 +9,11 @@ import { WebhookReceiver, type WebhookEvent } from "livekit-server-sdk"
 
 import { db } from "@/lib/db"
 import { syncLiveAttendance } from "@/components/school-dashboard/live/actions/attendance-sync"
-import {
-  notifyClassRecordingReady,
-  notifyClassStarted,
-} from "@/components/school-dashboard/live/actions/notifications"
+import { notifyClassRecordingReady } from "@/components/school-dashboard/live/actions/notifications"
 
 import { publishRecordingAsLessonVideo } from "../actions/publish-recording"
-import {
-  getLiveKitConfig,
-  getLiveKitRecordingConfig,
-  isRecordingConfigured,
-} from "./client"
-import { startCompositeEgress } from "./egress"
+import { transitionToLive } from "../actions/went-live"
+import { getLiveKitConfig, getLiveKitRecordingConfig } from "./client"
 import { parseRoomName } from "./room-naming"
 
 let receiver: WebhookReceiver | null = null
@@ -109,49 +102,24 @@ export async function handleWebhookEvent(
 
   switch (event.event) {
     case "room_started": {
-      // Guard on the source status so a late/retried room_started can't
-      // resurrect an already ended/cancelled session or re-fire notifications.
-      const { count } = await db.conference.updateMany({
-        where: { id: sessionId, schoolId, status: "scheduled" },
-        data: {
-          status: "live",
-          actualStart: new Date(),
-          roomSid: event.room?.sid ?? null,
-        },
+      // Whoever wins the guarded `scheduled → live` write notifies the roster
+      // and starts the egress — see actions/went-live.ts. The app's own
+      // writers (Join as HOST, the Start action) usually beat this webhook, in
+      // which case this is a no-op that only records the room SID below.
+      const { transitioned } = await transitionToLive({
+        schoolId,
+        sessionId,
+        roomName,
+        recordingEnabled: session.recordingEnabled,
+        roomSid: event.room?.sid ?? null,
       })
-      if (count > 0) {
-        // Best-effort fan-out to enrolled students + guardians + teacher.
-        after(() => notifyClassStarted(schoolId, sessionId))
-        // Auto-start recording when the session opted in. Create the recording
-        // row immediately (status "pending") from the egress result so an early
-        // endLiveClass can find + stop the in-flight egress before the SFU's
-        // egress_started webhook lands (which flips it to "processing").
-        // Best-effort: an egress failure must never roll back the room going live.
-        if (session.recordingEnabled && isRecordingConfigured()) {
-          try {
-            const eg = await startCompositeEgress({
-              roomName,
-              schoolId,
-              sessionId,
-            })
-            await db.conferenceRecording.upsert({
-              where: { egressId: eg.egressId },
-              create: {
-                schoolId,
-                sessionId,
-                egressId: eg.egressId,
-                s3Bucket: eg.s3Bucket,
-                s3Region: eg.s3Region,
-                s3Key: "",
-                status: "pending",
-                startedAt: new Date(),
-              },
-              update: {},
-            })
-          } catch (err) {
-            console.error("[webhook] auto-egress start failed:", err)
-          }
-        }
+      if (!transitioned && event.room?.sid) {
+        // The app flipped the row first and had no SID to write; capture it
+        // now so the row still names the SFU room it is running in.
+        await db.conference.updateMany({
+          where: { id: sessionId, schoolId, status: "live", roomSid: null },
+          data: { roomSid: event.room.sid },
+        })
       }
       break
     }

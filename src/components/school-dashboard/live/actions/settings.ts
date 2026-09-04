@@ -226,6 +226,27 @@ export async function listSectionRecordingPolicy() {
  * only way to hold one section back, and it must stay distinguishable from
  * "never decided".
  */
+/**
+ * Materialize today inline after a per-section / per-grade flip to ONLINE, so
+ * the classes become joinable while the admin is still on the page instead of
+ * at the next 15-minute cron tick. Same `after()` + best-effort contract as the school-
+ * wide save above; the cron re-runs the same idempotent sweep either way.
+ * Flipping to inherit/offline needs nothing: online is additive and existing
+ * sessions are left to run.
+ */
+function materializeTodayAfterResponse(schoolId: string): void {
+  after(async () => {
+    try {
+      await materializeSchoolDay(schoolId)
+    } catch (err) {
+      console.error("[conference] override-save materialization failed", {
+        schoolId,
+        err: err instanceof Error ? err.message : String(err),
+      })
+    }
+  })
+}
+
 export async function setSectionOnline(
   sectionId: string,
   online: boolean | null
@@ -239,6 +260,7 @@ export async function setSectionOnline(
     data: { conferenceOnline: online },
   })
   if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
+  if (online === true) materializeTodayAfterResponse(ctx.schoolId)
 
   revalidatePath(liveRevalidatePath("settings"), "page")
   return { success: true as const, data: { sectionId, online } }
@@ -399,6 +421,7 @@ export async function setGradeOnline(gradeId: string, online: boolean | null) {
     data: { conferenceOnline: online },
   })
   if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
+  if (online === true) materializeTodayAfterResponse(ctx.schoolId)
   revalidatePath(liveRevalidatePath("settings"), "page")
   return { success: true as const, data: { gradeId, online } }
 }
