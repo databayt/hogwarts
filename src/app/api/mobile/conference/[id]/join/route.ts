@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { performLiveClassJoin } from "@/components/school-dashboard/live/actions/join-core"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
@@ -45,6 +46,21 @@ export async function GET(
     return NextResponse.json(
       { success: false, error: "VALIDATION_ERROR" },
       { status: 400 }
+    )
+  }
+
+  // Rate-limited per user+session, generous enough for a phone's own refresh
+  // cadence (mirrors the web token route's LUMOS_MEDIA-shaped budget — a
+  // short-lived credential re-minted on a timer).
+  const rl = await checkUserRateLimit(
+    `${auth.userId}:${id}`,
+    RATE_LIMITS.LUMOS_MEDIA,
+    "conference-mobile-join"
+  )
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { success: false, error: ACTION_ERRORS.RATE_LIMITED },
+      { status: 429, headers: { "Cache-Control": "no-store" } }
     )
   }
 

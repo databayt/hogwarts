@@ -1,8 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { NextResponse, type NextRequest } from "next/server"
+import { auth } from "@/auth"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { performLiveClassJoin } from "@/components/school-dashboard/live/actions/join-core"
 
 export const runtime = "nodejs"
@@ -28,6 +30,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       { success: false, error: "VALIDATION_ERROR" },
       { status: 400 }
+    )
+  }
+
+  // Rate-limited per user+session, generous enough for the ~4-minute
+  // legitimate cadence (mirrors the LUMOS_MEDIA re-mint budget — same shape:
+  // a client re-fetches a short-lived credential on a timer). auth() here is
+  // a cheap JWT decode ("jwt" session strategy, no DB hit) purely to key the
+  // limiter; performLiveClassJoin re-resolves the session on its own below.
+  // RATE_LIMITED is deliberately NOT one of the room's DENY_CODES, so a 429
+  // here is just another transient failure the client already retries with
+  // backoff — never an eject.
+  const session = await auth()
+  const rl = await checkUserRateLimit(
+    `${session?.user?.id ?? "anon"}:${sessionId}`,
+    RATE_LIMITS.LUMOS_MEDIA,
+    "conference-token"
+  )
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { success: false, error: ACTION_ERRORS.RATE_LIMITED },
+      { status: 429, headers: { "Cache-Control": "no-store" } }
     )
   }
 

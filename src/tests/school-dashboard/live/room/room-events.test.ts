@@ -33,7 +33,7 @@ beforeEach(() => {
     userId: "u-teacher",
     role: "TEACHER",
   })
-  mSession.mockResolvedValue({ id: "s1", teacherId: "t1" })
+  mSession.mockResolvedValue({ id: "s1" })
   mTeacher.mockResolvedValue({ id: "t1" })
   mFind.mockResolvedValue(null)
   mCreate.mockResolvedValue({ id: "ev1" })
@@ -76,8 +76,27 @@ describe("recordClassEvent", () => {
     expect(mCreate).not.toHaveBeenCalled()
   })
 
-  it("refuses another teacher's session, an unknown kind, and a bad key", async () => {
+  it("a co-teaching TEACHER (not the session's assigned owner) may still persist events — CO_HOST parity with join-core", async () => {
+    // teacher.findFirst resolves a Teacher row in THIS school whose id differs
+    // from the session's assigned teacherId — exactly the co-host case
+    // join-core's resolveParticipantRole admits as CO_HOST.
     mTeacher.mockResolvedValueOnce({ id: "someone-else" })
+    const r = await recordClassEvent({
+      sessionId: "s1",
+      kind: "question",
+      key: "q1",
+      payload: {},
+    })
+    expect(r).toEqual({ success: true, data: { id: "ev1", duplicate: false } })
+    expect(mCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ actorUserId: "u-teacher" }),
+      })
+    )
+  })
+
+  it("refuses a TEACHER with no Teacher row in this school (tenant-scoped), an unknown kind, and a bad key", async () => {
+    mTeacher.mockResolvedValueOnce(null)
     let r = await recordClassEvent({
       sessionId: "s1",
       kind: "question",
@@ -102,5 +121,22 @@ describe("recordClassEvent", () => {
     })
     expect(r.success).toBe(false)
     expect(mCreate).not.toHaveBeenCalled()
+  })
+
+  it("ADMIN as CO_HOST persists events with no Teacher lookup at all", async () => {
+    mCtx.mockResolvedValueOnce({
+      ok: true,
+      schoolId: "school-1",
+      userId: "u-admin",
+      role: "ADMIN",
+    })
+    const r = await recordClassEvent({
+      sessionId: "s1",
+      kind: "poll_closed",
+      key: "p2",
+      payload: {},
+    })
+    expect(r.success).toBe(true)
+    expect(mTeacher).not.toHaveBeenCalled()
   })
 })
