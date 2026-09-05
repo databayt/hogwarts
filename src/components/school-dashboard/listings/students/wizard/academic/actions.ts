@@ -193,6 +193,7 @@ export async function updateStudentAcademic(
     const { schoolId } = authz
 
     const parsed = academicSchema.parse(input)
+    let noClassesWarning = false
 
     await db.student.updateMany({
       where: { id: studentId, schoolId },
@@ -219,8 +220,10 @@ export async function updateStudentAcademic(
           studentId,
           gradeId
         )
-        if (result.warning) {
-          return { success: true, warning: result.warning } as ActionResponse
+        if (result.classIds.length === 0) {
+          // A code the client translates — the helper's own `warning` is
+          // English prose, and the form used to drop it on the floor anyway.
+          noClassesWarning = true
         }
       }
     }
@@ -246,7 +249,9 @@ export async function updateStudentAcademic(
       }
     }
 
-    return { success: true }
+    return noClassesWarning
+      ? { success: true, warning: ACTION_ERRORS.NO_CLASSES_FOR_GRADE }
+      : { success: true }
   } catch (error) {
     return actionError(
       ACTION_ERRORS.SAVE_FAILED,

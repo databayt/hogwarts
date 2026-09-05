@@ -131,6 +131,10 @@ export async function createDraftStudent(): Promise<
 export async function completeStudentWizard(studentId: string): Promise<
   ActionResponse<{
     studentId: string
+    /** Display name — the credentials dialog titles itself with it. */
+    name: string
+    /** Phone on file, for the dialog's WhatsApp share channel. */
+    phone: string | null
     credentials: { username: string; password: string } | null
     /** Non-fatal provisioning notes — e.g. no fee structure for the grade, or
      *  no grade set so no fees. Codes map to translated copy via
@@ -212,11 +216,18 @@ export async function completeStudentWizard(studentId: string): Promise<
     // and re-send the "your account was created" notice.
     const alreadyProvisioned =
       student.wizardStep === null && !!student.userId && !!student.applicationId
+    const displayName = `${student.firstName} ${student.lastName}`.trim()
     if (alreadyProvisioned) {
       revalidatePath("/[lang]/s/[subdomain]/students", "page")
       return {
         success: true,
-        data: { studentId, credentials: null, warnings: [] },
+        data: {
+          studentId,
+          name: displayName,
+          phone: student.mobileNumber ?? null,
+          credentials: null,
+          warnings: [],
+        },
       }
     }
 
@@ -272,8 +283,8 @@ export async function completeStudentWizard(studentId: string): Promise<
     // `@student.local` placeholder), so their notice stays in-app and the
     // email channel is dropped from the row — but the GUARDIANS collected in
     // the personal step do have addresses, and before this they were never
-    // told their child had been enrolled. Credentials still travel through
-    // `result` to the admin's dialog, not through mail.
+    // told their child had been enrolled. Credentials travel through `result`
+    // to the shared credentials dialog (wizard/finish.ts), not through mail.
     after(() =>
       notifyProvisionedStudent({
         schoolId,
@@ -300,6 +311,8 @@ export async function completeStudentWizard(studentId: string): Promise<
       success: true,
       data: {
         studentId,
+        name: displayName,
+        phone: student.mobileNumber ?? null,
         credentials: result.credentials ?? null,
         warnings: result.warnings,
       },

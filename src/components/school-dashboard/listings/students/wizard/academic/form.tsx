@@ -14,13 +14,15 @@ import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import { isStreamGrade } from "@/lib/grade-utils"
 import { Form } from "@/components/ui/form"
-import { ErrorToast } from "@/components/atom/toast"
+import { ErrorToast, WarningToast } from "@/components/atom/toast"
 import { InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { translateEnrollmentWarning } from "@/components/school-dashboard/admission/warning-messages"
 
 import {
   getGradeOptions,
@@ -158,6 +160,22 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
                 )
                 reject(new Error(result.error))
                 return
+              }
+              // The seat was saved, but the grade has no classes yet — say
+              // so, or the student silently sits on no timetable/roster.
+              if (result.warning === ACTION_ERRORS.NO_CLASSES_FOR_GRADE) {
+                const admissionDict = (
+                  dictionary?.school as Record<string, unknown> | undefined
+                )?.admission as
+                  | Parameters<typeof translateEnrollmentWarning>[1]
+                  | undefined
+                if (admissionDict) {
+                  const msg = translateEnrollmentWarning(
+                    { code: "NO_CLASSES_FOR_GRADE" },
+                    admissionDict
+                  )
+                  if (msg) WarningToast(msg)
+                }
               }
               resolve()
             } catch (err) {

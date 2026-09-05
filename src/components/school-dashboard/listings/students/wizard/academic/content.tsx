@@ -5,16 +5,14 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
-import { ErrorToast, WarningToast } from "@/components/atom/toast"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
-import { translateEnrollmentWarning } from "@/components/school-dashboard/admission/warning-messages"
 
-import { completeStudentWizard } from "../actions"
+import { finishStudentWizard } from "../finish"
 import { useStudentWizard } from "../use-student-wizard"
 import { AcademicForm } from "./form"
 import type { AcademicFormData } from "./validation"
@@ -101,56 +99,22 @@ export default function AcademicContent() {
     | Record<string, unknown>
     | undefined
   const t = students?.academic as Record<string, string> | undefined
-  const tRoot = students as Record<string, string> | undefined
   const tEnrollment = students?.enrollment as Record<string, string> | undefined
 
-  // Academic is the final step. Next triggers save + completeStudentWizard
-  // + redirect to listings.
+  // Academic is the final step. Next saves this step, then runs the shared
+  // finisher (provision + warnings + credentials dialog) and returns to the
+  // list. The footer's "Skip & Create" runs the same finisher (see the wizard
+  // layout), so both exits behave identically.
   useEffect(() => {
-    const requirementsMsg =
-      t?.completeRequirements ||
-      "Complete the Personal step first: a name and at least one parent are required."
     const handleNext = async () => {
       if (isSavingRef.current) return
       isSavingRef.current = true
       try {
         await formRef.current?.saveAndNext()
-        const result = await completeStudentWizard(studentId)
-        if (result.success) {
-          // Non-fatal provisioning notes ("no fee structure for this grade",
-          // "no grade set → no fees") used to be dropped on the floor here, so
-          // an admin created a student with zero fees and never knew. Same
-          // translator the admission Confirm-Enrollment button uses.
-          const admissionDict = (dictionary?.school as Record<string, unknown>)
-            ?.admission as
-            | Parameters<typeof translateEnrollmentWarning>[1]
-            | undefined
-          for (const w of result.data?.warnings ?? []) {
-            const msg = admissionDict
-              ? translateEnrollmentWarning(
-                  w as Parameters<typeof translateEnrollmentWarning>[0],
-                  admissionDict
-                )
-              : ""
-            if (msg) WarningToast(msg)
-          }
-          router.push(`/${locale}/students`)
-        } else {
-          // completeStudentWizard returns { success: false } (it never throws).
-          // Its `error` is a raw ACTION_ERRORS code (e.g. "VALIDATION_ERROR"),
-          // not user text — so map the expected missing-name/parent failure to a
-          // friendly translated message, and fall back to a generic one for the
-          // rarer codes. Without surfacing anything the "Create" button appeared
-          // to do nothing and the admin was stuck with zero feedback (issue #380).
-          const code = "error" in result ? result.error : undefined
-          ErrorToast(
-            code === "VALIDATION_ERROR" || !code
-              ? requirementsMsg
-              : tRoot?.failedToCreate || requirementsMsg
-          )
-        }
-      } catch (e) {
-        ErrorToast(e instanceof Error ? e.message : requirementsMsg)
+        const ok = await finishStudentWizard(studentId, dictionary)
+        if (ok) router.push(`/${locale}/students`)
+      } catch {
+        // saveAndNext already toasted its own error.
       } finally {
         isSavingRef.current = false
       }
@@ -158,7 +122,7 @@ export default function AcademicContent() {
 
     setCustomNavigation({ onNext: handleNext })
     return () => setCustomNavigation(undefined)
-  }, [studentId, router, locale, setCustomNavigation, t, tRoot, dictionary])
+  }, [studentId, router, locale, setCustomNavigation, dictionary])
 
   return (
     <WizardStep

@@ -9801,7 +9801,8 @@
         "feeAutoAssignFailed": "Fee auto-assignment failed — assign fees manually from Finance > Fees.",
         "invoiceGenerationFailed": "Invoice generation failed — create the invoice manually.",
         "guardianCreateFailed": "Guardian creation failed — add the guardian manually.",
-        "registrationFeeNoStructure": "Registration fee was paid but no matching fee structure was found — record the payment manually in Finance > Fees."
+        "registrationFeeNoStructure": "Registration fee was paid but no matching fee structure was found — record the payment manually in Finance > Fees.",
+        "noClassesForGrade": "The student has a seat, but this grade has no classes yet — no timetable or attendance roster. Generate classes from Classrooms > Configure."
       },
       "settings": {
         "title": "Admission Settings",

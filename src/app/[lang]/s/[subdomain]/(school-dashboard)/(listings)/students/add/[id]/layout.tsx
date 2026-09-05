@@ -6,11 +6,9 @@ import React, { useMemo } from "react"
 
 import { WizardLayout } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import {
-  completeStudentWizard,
-  updateStudentWizardStep,
-} from "@/components/school-dashboard/listings/students/wizard/actions"
+import { updateStudentWizardStep } from "@/components/school-dashboard/listings/students/wizard/actions"
 import { STUDENT_WIZARD_CONFIG } from "@/components/school-dashboard/listings/students/wizard/config"
+import { finishStudentWizard } from "@/components/school-dashboard/listings/students/wizard/finish"
 import {
   StudentWizardProvider,
   useStudentWizard,
@@ -49,7 +47,11 @@ export default function StudentWizardLayout({
         updateStudentWizardStep(entityId, step)
       }}
       onComplete={async (entityId) => {
-        await completeStudentWizard(entityId)
+        // Same finisher as the academic step's Next: warnings toasted, the
+        // minted login handed to the credentials dialog. The footer only
+        // navigates when this resolves, so a failed finish must throw.
+        const ok = await finishStudentWizard(entityId, dictionary)
+        if (!ok) throw new Error("WIZARD_INCOMPLETE")
       }}
       finalDestination="/students"
       wizardStepField="wizardStep"

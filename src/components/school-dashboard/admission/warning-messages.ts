@@ -42,6 +42,11 @@ export function translateEnrollmentWarning(
         messages?.registrationFeeNoStructure ||
         "Registration fee was paid but no matching fee structure was found — record the payment manually in Finance > Fees."
       )
+    case "NO_CLASSES_FOR_GRADE":
+      return (
+        messages?.noClassesForGrade ||
+        "The student has a seat, but this grade has no classes yet — no timetable or attendance roster. Generate classes from Classrooms > Configure."
+      )
     default:
       return ""
   }

@@ -1157,6 +1157,9 @@ export type EnrollmentWarningCode =
   | "NO_FEE_STRUCTURE_MATCH"
   | "REGISTRATION_FEE_NO_STRUCTURE"
   | "FEES_SKIPPED_NO_GRADE"
+  // A seat was assigned but the grade has no Class rows yet — the student is
+  // placed and billed, but sits on no timetable and no attendance roster.
+  | "NO_CLASSES_FOR_GRADE"
 
 export interface EnrollmentWarning {
   code: EnrollmentWarningCode
