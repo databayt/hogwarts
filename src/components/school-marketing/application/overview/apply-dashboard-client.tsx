@@ -15,7 +15,9 @@ interface ApplyDashboardClientProps {
   userName?: string
   draftApplications: DraftApplication[]
   submittedApplications?: SubmittedApplication[]
-  campaignId: string
+  /** The open campaign to start a new application in; null when admissions
+   *  are closed — existing applications still render, nothing new starts. */
+  campaignId: string | null
   dictionary: any
   lang: string
   subdomain: string
@@ -42,7 +44,7 @@ export default function ApplyDashboardClient({
 
   const handleResumeDraft = (sessionToken: string) => {
     const draft = draftApplications.find((d) => d.sessionToken === sessionToken)
-    if (draft) {
+    if (draft && (draft.campaignId || campaignId)) {
       // Resume straight into the wizard with the draft's session token so
       // ApplySessionProvider can rehydrate the saved formData, instead of
       // routing through the marketing overview page (which drops the token
@@ -54,11 +56,13 @@ export default function ApplyDashboardClient({
   }
 
   const handleCreateNew = () => {
+    if (!campaignId) return
     router.push(`/${lang}/application/overview?id=${campaignId}`)
   }
 
   const handleCreateFromTemplate = () => {
     // TODO: implement profile import flow
+    if (!campaignId) return
     router.push(`/${lang}/application/overview?id=${campaignId}`)
   }
 
@@ -71,6 +75,7 @@ export default function ApplyDashboardClient({
       onViewOffer={handleViewOffer}
       onCreateNew={handleCreateNew}
       onCreateFromTemplate={handleCreateFromTemplate}
+      canStartNew={campaignId !== null}
       dictionary={dictionary}
       locale={lang}
     />

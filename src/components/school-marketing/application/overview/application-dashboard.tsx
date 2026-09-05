@@ -20,6 +20,9 @@ interface ApplicationDashboardProps {
   onViewOffer?: (application: SubmittedApplication) => void
   onCreateNew?: () => void
   onCreateFromTemplate?: () => void
+  /** False when no campaign is open: existing applications still render,
+   *  the "start a new application" options give way to a closed notice. */
+  canStartNew?: boolean
   dictionary?: any
   locale?: string
 }
@@ -32,6 +35,7 @@ const ApplicationDashboard: React.FC<ApplicationDashboardProps> = ({
   onViewOffer,
   onCreateNew,
   onCreateFromTemplate,
+  canStartNew = true,
   dictionary,
   locale,
 }) => {
@@ -89,13 +93,24 @@ const ApplicationDashboard: React.FC<ApplicationDashboardProps> = ({
         </div>
       )}
 
-      {/* Start a new application section */}
-      <NewApplicationOptions
-        onCreateNew={onCreateNew}
-        onCreateFromTemplate={onCreateFromTemplate}
-        dictionary={dictionary}
-        locale={locale}
-      />
+      {/* Start a new application section — or, with admissions closed, say
+          so under the family's existing applications instead of hiding them */}
+      {canStartNew ? (
+        <NewApplicationOptions
+          onCreateNew={onCreateNew}
+          onCreateFromTemplate={onCreateFromTemplate}
+          dictionary={dictionary}
+          locale={locale}
+        />
+      ) : (
+        <div className="space-y-1">
+          <h5>{dict.enrollmentClosed || "Enrollment is Currently Closed"}</h5>
+          <p className="muted">
+            {dict.enrollmentClosedExisting ||
+              "No new applications can start right now. Your existing applications above stay open."}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

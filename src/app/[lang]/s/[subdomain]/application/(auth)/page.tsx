@@ -70,22 +70,12 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
 
   const campaigns = campaignsResult.success ? campaignsResult.data || [] : []
 
-  // No active campaigns → show enrollment closed
-  if (campaigns.length === 0) {
-    return (
-      <EnrollmentClosed
-        school={schoolResult.data}
-        dictionary={dictionary}
-        lang={lang}
-        subdomain={subdomain}
-      />
-    )
-  }
-
-  // Pick campaign (K-12: single, multi: first active)
-  const campaignId = campaigns[0].id
-
-  // Fetch draft + submitted applications for authenticated users
+  // The family's own applications come FIRST. A campaign window routinely
+  // closes while review, offers and enrollment are still running, and this
+  // page used to answer "enrollment is closed" the moment it did — hiding a
+  // submitted application, a live offer and the fee state behind a wall the
+  // family could not get past. Closed admissions only means no NEW
+  // application can start.
   let draftApplications: Awaited<
     ReturnType<typeof getDraftApplicationsByUser>
   >["data"] = []
@@ -104,6 +94,26 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
       submittedApplications = submittedResult.data
     }
   }
+
+  const hasApplications =
+    (draftApplications?.length ?? 0) > 0 ||
+    (submittedApplications?.length ?? 0) > 0
+
+  // No active campaign AND nothing of theirs to show → enrollment closed.
+  if (campaigns.length === 0 && !hasApplications) {
+    return (
+      <EnrollmentClosed
+        school={schoolResult.data}
+        dictionary={dictionary}
+        lang={lang}
+        subdomain={subdomain}
+      />
+    )
+  }
+
+  // Pick campaign (K-12: single, multi: first active); null when none is
+  // open — the dashboard then shows what exists and offers no new start.
+  const campaignId = campaigns[0]?.id ?? null
 
   return (
     <ApplyDashboardClient

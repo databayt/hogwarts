@@ -75,6 +75,14 @@ Shipped:
       tour confirmation date in the school's language; dead `FORM_STEPS` and
       the Hogwarts fallback copy deleted; two missing dict keys added.
 
+- [x] **P1 — found in the browser check, not by the audits**: `/application`
+      hid a family's submitted application behind "Enrollment is closed" the
+      moment the campaign's end date passed (the demo campaigns end 08-31 —
+      exactly the case). Their applications now render first; the closed
+      page is only for a family with nothing on file. And the sidebar's
+      Admission entry was a dead end for STAFF/ACCOUNTANT (`/admission` was
+      admin-only in `routes.ts`); the index now lands them on Applications.
+
 Verified wrong from the audits (not changed): the cash-confirm action DID have
 a UI caller; `submitApplication` already maps the sibling P2002 to
 `APPLICATION_DUPLICATE`; the `INQUIRY_SOURCES`/`DEFAULT_GRADES`/status-banner

@@ -10385,7 +10385,8 @@
         "daysAgoFormat": "منذ {n} أيام",
         "feePaid": "تم دفع رسوم التسجيل",
         "awaitingPaymentConfirmation": "تم تسجيل الدفع — بانتظار تأكيد المدرسة",
-        "offerAcceptedFeeDue": "تم قبول العرض — رسوم التسجيل مستحقة"
+        "offerAcceptedFeeDue": "تم قبول العرض — رسوم التسجيل مستحقة",
+        "enrollmentClosedExisting": "لا يمكن بدء طلبات جديدة الآن. طلباتك الحالية أعلاه تبقى مفتوحة."
       },
       "continueApp": {
         "title": "استئناف طلبك",

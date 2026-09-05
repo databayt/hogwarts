@@ -112,7 +112,11 @@ export const roleRoutes: Record<string, Role[]> = {
   // Admission routes (staff-side only — applicant PII, merit, bank settings)
   // Exact entries narrow admin-only tabs; the wildcard covers the rest.
   // ============================================================================
-  "/admission": ["ADMIN", "DEVELOPER"],
+  // The index is the sidebar's landing for every admission role; the page
+  // itself sends non-admin roles on to the Applications tab (campaigns are
+  // admin-only). Keeping this admin-only made the sidebar entry a dead end
+  // (/unauthorized) for STAFF and ACCOUNTANT.
+  "/admission": ["ADMIN", "STAFF", "ACCOUNTANT", "DEVELOPER"],
   "/admission/settings": ["ADMIN", "DEVELOPER"],
   "/admission/merit": ["ADMIN", "STAFF", "DEVELOPER"],
   "/admission/leads": ["ADMIN", "STAFF", "DEVELOPER"],
@@ -289,8 +293,13 @@ export const roleRoutes: Record<string, Role[]> = {
   // ============================================================================
   "/teachers": ["ADMIN", "DEVELOPER"],
   "/teachers/*": ["ADMIN", "DEVELOPER"],
-  "/subjects": ["ADMIN", "TEACHER", "DEVELOPER"],
-  "/subjects/*": ["ADMIN", "TEACHER", "DEVELOPER"],
+  "/subjects": ["ADMIN", "STAFF", "TEACHER", "STUDENT", "DEVELOPER"],
+  "/subjects/catalog": ["ADMIN", "DEVELOPER"],
+  "/subjects/catalog/*": ["ADMIN", "DEVELOPER"],
+  "/subjects/contribute": ["ADMIN", "TEACHER", "DEVELOPER"],
+  "/subjects/contribute/*": ["ADMIN", "TEACHER", "DEVELOPER"],
+  "/subjects/contributions": ["ADMIN", "TEACHER", "DEVELOPER"],
+  "/subjects/*": ["ADMIN", "STAFF", "TEACHER", "STUDENT", "DEVELOPER"],
   "/classrooms": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/classrooms/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   // The timetable block renders a read-only "Today"/"Full" lane for non-admins
@@ -479,13 +488,15 @@ export function isRouteAllowedForRole(pathname: string, role: Role): boolean {
     return roleRoutes[pathname].includes(role)
   }
 
-  // Check wildcard patterns (e.g., "/admin/*" matches "/admin/users")
-  for (const [pattern, allowedRoles] of Object.entries(roleRoutes)) {
-    if (pattern.endsWith("/*")) {
-      const basePattern = pattern.slice(0, -2) // Remove "/*"
-      if (pathname.startsWith(basePattern + "/") || pathname === basePattern) {
-        return allowedRoles.includes(role)
-      }
+  // Check wildcard patterns (longest prefix first, e.g. "/subjects/catalog/*" before "/subjects/*")
+  const wildcardEntries = Object.entries(roleRoutes)
+    .filter(([pattern]) => pattern.endsWith("/*"))
+    .sort(([a], [b]) => b.length - a.length)
+
+  for (const [pattern, allowedRoles] of wildcardEntries) {
+    const basePattern = pattern.slice(0, -2) // Remove "/*"
+    if (pathname.startsWith(basePattern + "/") || pathname === basePattern) {
+      return allowedRoles.includes(role)
     }
   }
 

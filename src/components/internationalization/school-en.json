@@ -10377,7 +10377,8 @@
         "daysAgoFormat": "{n}d ago",
         "feePaid": "Registration fee paid",
         "awaitingPaymentConfirmation": "Payment recorded — awaiting the school's confirmation",
-        "offerAcceptedFeeDue": "Offer accepted — registration fee due"
+        "offerAcceptedFeeDue": "Offer accepted — registration fee due",
+        "enrollmentClosedExisting": "No new applications can start right now. Your existing applications above stay open."
       },
       "continueApp": {
         "title": "Continue Your Application",
