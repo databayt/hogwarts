@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState, useTransition } from "react"
+import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Check, Clock, Ellipsis, ExternalLink, MapPin, X } from "lucide-react"
@@ -24,7 +24,7 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 
 import { confirmEnrollment, confirmRegistrationPayment } from "./actions"
 import { canPerformAdmissionAction } from "./authorization"
-import { PlacementDialog } from "./placement-dialog"
+import { openPlacementDialog } from "./placement-store"
 import { isManuallyConfirmableRegistrationMethod } from "./registration-methods"
 import { translateEnrollmentWarning } from "./warning-messages"
 
@@ -133,7 +133,6 @@ function EnrollmentActionsCell({
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [placementOpen, setPlacementOpen] = useState(false)
   const t = dictionary
 
   const isConfirmed =
@@ -216,14 +215,6 @@ function EnrollmentActionsCell({
 
   return (
     <>
-      <PlacementDialog
-        applicationId={enrollment.id}
-        applicantName={enrollment.applicantName}
-        applyingForClass={enrollment.applyingForClass}
-        open={placementOpen}
-        onOpenChange={setPlacementOpen}
-        dictionary={dictionary}
-      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
@@ -281,8 +272,19 @@ function EnrollmentActionsCell({
             </DropdownMenuItem>
           )}
           {/* Placement: show for confirmed/enrolled rows that still need a section */}
+          {/* The dialog itself is hosted once by the table (PlacementDialogHost)
+              and driven by a module store — a cell-local open flag was wiped by
+              the table remount that follows the dialog's own section fetch. */}
           {isConfirmed && canPlace && (
-            <DropdownMenuItem onClick={() => setPlacementOpen(true)}>
+            <DropdownMenuItem
+              onClick={() =>
+                openPlacementDialog({
+                  applicationId: enrollment.id,
+                  name: enrollment.applicantName,
+                  applyingForClass: enrollment.applyingForClass,
+                })
+              }
+            >
               <MapPin className="me-2 h-4 w-4" />
               {t?.enrollment?.assignSection || "Assign Section"}
             </DropdownMenuItem>

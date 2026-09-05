@@ -33,6 +33,7 @@ import { getEnrollmentCSV, getEnrollmentData } from "./actions"
 import type { EnrollmentRow } from "./enrollment-columns"
 import { getEnrollmentColumns } from "./enrollment-columns"
 import { getUIConfigForRole } from "./permissions"
+import { PlacementDialogHost } from "./placement-dialog-host"
 
 interface EnrollmentTableProps {
   initialData: EnrollmentRow[]
@@ -351,6 +352,10 @@ export function EnrollmentTable({
           )}
         </>
       )}
+
+      {/* ONE placement dialog for the whole table, driven by a module store —
+          see placement-store.ts for why a row-cell useState did not survive. */}
+      <PlacementDialogHost dictionary={t} onPlaced={() => refresh()} />
     </>
   )
 }

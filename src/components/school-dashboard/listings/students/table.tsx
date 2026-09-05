@@ -24,6 +24,8 @@ import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { canPerformAdmissionAction } from "@/components/school-dashboard/admission/authorization"
+import { PlacementDialogHost } from "@/components/school-dashboard/admission/placement-dialog-host"
+import { openPlacementDialog } from "@/components/school-dashboard/admission/placement-store"
 import {
   GridCard,
   GridContainer,
@@ -38,8 +40,6 @@ import { AccessCodeDialog } from "./access-code-dialog"
 import { openAccessCodeDialog } from "./access-code-store"
 import { bulkSyncStudentGrades, getStudents, getStudentsCSV } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
-import { StudentPlacementDialog } from "./placement-dialog"
-import { openPlacementDialog } from "./placement-store"
 import { PurgeDialog } from "./purge-dialog"
 import { createDraftStudent } from "./wizard/actions"
 
@@ -171,7 +171,7 @@ function StudentsTableInner({
   // Enrollment tab offers it to PORTAL admits; this offers the SAME dialog to a
   // direct-admit or imported student who has a grade but no seat, so nobody is
   // stuck re-running the wizard just to pick a section. Open-state lives in a
-  // module store (./placement-store), NOT useState — see the access-code
+  // module store (admission/placement-store), NOT useState — see the access-code
   // dialog: the table remounts when a Server Action completes, and a local
   // flag was wiped before the section list arrived.
   const canPlace =
@@ -179,7 +179,12 @@ function StudentsTableInner({
     !!admissionDictionary &&
     canPerformAdmissionAction(role, "placeStudents")
   const handleAssignSection = useCallback((student: StudentRow) => {
-    openPlacementDialog(student)
+    openPlacementDialog({
+      studentId: student.id,
+      name: student.name,
+      gradeId: student.academicGradeId,
+      applyingForClass: student.gradeName,
+    })
   }, [])
 
   // Purge dialog state
@@ -496,7 +501,7 @@ function StudentsTableInner({
       <AccessCodeDialog />
 
       {admissionDictionary && (
-        <StudentPlacementDialog
+        <PlacementDialogHost
           dictionary={admissionDictionary}
           onPlaced={() => refresh()}
         />

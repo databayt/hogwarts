@@ -5,8 +5,8 @@
 import { useEffect } from "react"
 
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { PlacementDialog } from "@/components/school-dashboard/admission/placement-dialog"
 
+import { PlacementDialog } from "./placement-dialog"
 import {
   closePlacementDialog,
   ensurePlacementSections,
@@ -14,36 +14,36 @@ import {
 } from "./placement-store"
 
 /**
- * The admission block's PlacementDialog, driven by the students-list store —
- * one dialog for every intake channel. The admission block renders the same
- * component from the Enrollment tab for PORTAL admits; this renders it for a
- * direct-admit or imported student who has a grade but no seat.
+ * Mount ONCE per listing table (Enrollment tab, students list). Row actions
+ * call `openPlacementDialog(target)`; this renders the shared PlacementDialog
+ * from the store so a table remount cannot close it.
  */
-export function StudentPlacementDialog({
+export function PlacementDialogHost({
   dictionary,
   onPlaced,
 }: {
   dictionary: Dictionary["school"]["admission"]
   onPlaced?: () => void
 }) {
-  const { open, student, sections, isLoading, loaded } =
+  const { open, target, sections, isLoading, loaded } =
     usePlacementDialogState()
 
   // Remount-safe: no-ops while the sections exist or a fetch is in flight.
   useEffect(() => {
-    if (open && student && !loaded && !isLoading) {
+    if (open && target && !loaded && !isLoading) {
       void ensurePlacementSections()
     }
-  }, [open, student, loaded, isLoading])
+  }, [open, target, loaded, isLoading])
 
-  if (!open || !student) return null
+  if (!open || !target) return null
 
   return (
     <PlacementDialog
-      studentId={student.id}
-      applicantName={student.name}
-      applyingForClass={student.gradeName ?? undefined}
-      gradeId={student.academicGradeId}
+      applicationId={target.applicationId}
+      studentId={target.studentId}
+      applicantName={target.name}
+      applyingForClass={target.applyingForClass ?? undefined}
+      gradeId={target.gradeId}
       sections={sections}
       sectionsLoading={!loaded}
       open
