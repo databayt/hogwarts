@@ -176,6 +176,73 @@ describe("createOrLinkGuardian — guardian type reuse", () => {
     )
   })
 
+  it("reuses a father already linked under the English twin type when the save resolves to the Arabic row", async () => {
+    // Student created by the wizard before the fix: father linked under
+    // "father". The school's older type row is "الأب", so the re-save
+    // resolves to it. Same role → same father, not a duplicate.
+    const tx = makeTx()
+    tx.guardianType.findFirst.mockResolvedValue({ id: "gt-ab", name: "الأب" })
+    tx.guardianPhoneNumber.findMany.mockResolvedValue([{ guardianId: "g-1" }])
+    tx.studentGuardian.findMany.mockResolvedValue([]) // no OTHER-role link
+    tx.guardian.findFirst.mockResolvedValue({ id: "g-1", userId: null })
+
+    await createOrLinkGuardian(tx as never, { ...base, phone: "0912000222" })
+
+    expect(tx.studentGuardian.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          guardianId: { in: ["g-1"] },
+          guardianType: {
+            name: { notIn: expect.arrayContaining(["father", "الأب"]) },
+          },
+        }),
+      })
+    )
+    expect(tx.guardian.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "g-1", schoolId: "school-1" } })
+    )
+    expect(tx.guardian.create).not.toHaveBeenCalled()
+    expect(tx.studentGuardian.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          schoolId_studentId_guardianId: {
+            schoolId: "school-1",
+            studentId: "stu-1",
+            guardianId: "g-1",
+          },
+        },
+      })
+    )
+  })
+
+  it("still refuses to turn the father into the mother when both share a phone", async () => {
+    const tx = makeTx()
+    tx.guardianType.findFirst.mockResolvedValue({ id: "gt-am", name: "الأم" })
+    tx.guardianPhoneNumber.findMany.mockResolvedValue([{ guardianId: "g-1" }])
+    // g-1 is linked to this student under a father-role type → conflicting
+    tx.studentGuardian.findMany.mockResolvedValue([{ guardianId: "g-1" }])
+    tx.guardian.create.mockResolvedValue({ id: "g-2", userId: null })
+
+    await createOrLinkGuardian(tx as never, {
+      ...base,
+      typeName: "mother",
+      firstName: "Hiba",
+      phone: "0912000222",
+    })
+
+    expect(tx.studentGuardian.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          guardianType: {
+            name: { notIn: expect.arrayContaining(["mother", "الأم"]) },
+          },
+        }),
+      })
+    )
+    expect(tx.guardian.findFirst).not.toHaveBeenCalled()
+    expect(tx.guardian.create).toHaveBeenCalledTimes(1)
+  })
+
   it("does not search for aliases of a non-parent type", async () => {
     const tx = makeTx()
     tx.guardianType.upsert.mockResolvedValue({ id: "gt-g", name: "guardian" })

@@ -1,6 +1,6 @@
 # Students — Production Readiness Tracker
 
-## 2026-09-05 — intake pass: the four channels meet at one placement step (LOCAL, 13 commits, not pushed)
+## 2026-09-05 — intake pass: the four channels meet at one placement step (LOCAL, 14 commits, not pushed)
 
 Read with `admission/ISSUE.md` (same date). The ask: trace adding a student
 through every channel to the assembly point (`provisionStudent`) and make
@@ -84,8 +84,11 @@ Shipped (this block):
       row beside `الأب` in the same school (demo: `father` 5 links, `الأب`
       970). It now reuses any existing spelling of the role
       (`guardianTypeNamesForRole`) and creates the requested name only when
-      the school has none. Admission's `confirmEnrollment` and the CSV imports
-      go through the same function. `src/tests/lib/guardian-utils.test.ts`.
+      the school has none. "Already this student's OTHER parent" (the phone
+      dedupe's exclusion) is judged by role too, so a father linked under the
+      twin row is recognised on re-save instead of duplicated. Admission's
+      `confirmEnrollment` and the CSV imports go through the same function.
+      `src/tests/lib/guardian-utils.test.ts`.
 - [x] **P1 — the shared table hook swapped a search result for the whole
       list.** `usePlatformData` adopts the server's rows after a row action
       (they were stale until a hard reload), but a search/filter is client

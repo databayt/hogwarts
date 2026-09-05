@@ -178,6 +178,11 @@ export async function createOrLinkGuardian(
     //    Guardian row, the StudentGuardian upsert below then hit the existing
     //    father link and no-op'd, and her name was silently discarded — the
     //    father's details showed up as the mother's.
+    //    "Another role" is judged by ROLE, not by type id: a father linked
+    //    under the English twin type ("father") is the same father when the
+    //    save resolves to the school's seeded "الأب" row — comparing ids
+    //    would call him taken and create a duplicate Guardian on every
+    //    re-save of the personal step.
     const phoneMatches = await tx.guardianPhoneNumber.findMany({
       where: { schoolId, phoneNumber: phone },
       select: { guardianId: true },
@@ -189,7 +194,13 @@ export async function createOrLinkGuardian(
             schoolId,
             studentId,
             guardianId: { in: candidateIds },
-            guardianTypeId: { not: guardianType.id },
+            ...(role
+              ? {
+                  guardianType: {
+                    name: { notIn: guardianTypeNamesForRole(role) },
+                  },
+                }
+              : { guardianTypeId: { not: guardianType.id } }),
           },
           select: { guardianId: true },
         })
