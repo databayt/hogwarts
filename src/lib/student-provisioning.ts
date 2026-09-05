@@ -280,12 +280,36 @@ export async function provisionStudent(
   //    write here; the caller owns its lifecycle) or mint a hidden shadow
   //    Application for non-PORTAL channels.
   // ---------------------------------------------------------------------
+  // A shadow Application's `applyingForClass` is what the Applications tab
+  // shows in its Class column and what the placement dialog falls back to.
+  // The wizard hands over a grade ID and no label, so its rows showed an
+  // empty class while imported rows (which carry the CSV label) did not —
+  // derive the label from the grade the student is actually in.
+  let shadowApplyingForClass = input.applyingForClass ?? null
+  if (
+    !input.applicationId &&
+    !priorStudent?.applicationId &&
+    !shadowApplyingForClass &&
+    resolvedAcademicGradeId
+  ) {
+    const grade = await tx.academicGrade.findFirst({
+      where: { id: resolvedAcademicGradeId, schoolId },
+      select: { name: true },
+    })
+    shadowApplyingForClass = grade?.name ?? null
+  }
+
   const applicationId: string =
     input.applicationId ??
     priorStudent?.applicationId ??
     (await ensureDirectAdmitApplication(
       tx,
-      { ...input, email, userId },
+      {
+        ...input,
+        email,
+        userId,
+        applyingForClass: shadowApplyingForClass ?? undefined,
+      },
       opts.origin,
       studentCode
     ))

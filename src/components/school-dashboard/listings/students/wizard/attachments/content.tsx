@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { FormHeading, FormLayout } from "@/components/form"
@@ -23,21 +23,27 @@ export default function AttachmentsContent() {
   const { isLoading, updateData } = useStudentWizard()
   const [isValid, setIsValid] = useState(true)
   const [initialData, setInitialData] = useState<Record<string, string>>()
-  const [loaded, setLoaded] = useState(false)
   const { dictionary } = useDictionary()
   const t = (dictionary?.school as any)?.students?.attachments as
     | Record<string, string>
     | undefined
 
-  // Load attachment data (documents come from StudentDocument, not the wizard provider)
-  if (!loaded) {
-    setLoaded(true)
+  // Load attachment data (documents come from StudentDocument, not the wizard
+  // provider). In an effect: this used to run during render behind a `loaded`
+  // flag, which React 19 reports as "Cannot update a component while rendering
+  // a different component" and "state update on a component that hasn't
+  // mounted yet" on every wizard open.
+  useEffect(() => {
+    let cancelled = false
     getStudentAttachments(studentId).then((res) => {
-      if (res.success && res.data) {
+      if (!cancelled && res.success && res.data) {
         setInitialData(res.data as unknown as Record<string, string>)
       }
     })
-  }
+    return () => {
+      cancelled = true
+    }
+  }, [studentId])
 
   // AI auto-fill: fire-and-forget extraction on document upload
   const handleDocumentUploaded = useCallback(

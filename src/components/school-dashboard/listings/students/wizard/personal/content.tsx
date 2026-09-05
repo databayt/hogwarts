@@ -50,6 +50,18 @@ export default function PersonalContent() {
 
   const nameFormat = (data?.nameFormat as NameFormat) ?? "full"
 
+  // A draft row carries stub values for its NOT NULL columns (DOB 2000-01-01,
+  // gender "male" — see createDraftStudent). Showing them pre-filled read as
+  // real data, so admins skipped both and every wizard student was born on
+  // New Year 2000. Present the stubs as empty while the wizard is still a
+  // draft; an enrolled student's real values (edit mode) show as before.
+  const isDraft = !!data?.wizardStep
+  const dobIso = data?.dateOfBirth
+    ? new Date(data.dateOfBirth).toISOString().slice(0, 10)
+    : undefined
+  const initialDob = isDraft && dobIso === "2000-01-01" ? undefined : dobIso
+  const initialGender = isDraft ? undefined : (data?.gender ?? undefined)
+
   // Load existing guardian data (not included in the wizard provider cache).
   useEffect(() => {
     if (!studentId) return
@@ -169,10 +181,8 @@ export default function PersonalContent() {
                     lastName: data.lastName,
                     mobileNumber: data.mobileNumber ?? undefined,
                     alternatePhone: data.alternatePhone ?? undefined,
-                    dateOfBirth: data.dateOfBirth
-                      ? new Date(data.dateOfBirth).toISOString().slice(0, 10)
-                      : undefined,
-                    gender: data.gender ?? undefined,
+                    dateOfBirth: initialDob,
+                    gender: initialGender,
                   }
                 : undefined
             }

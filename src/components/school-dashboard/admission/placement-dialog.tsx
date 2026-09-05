@@ -81,6 +81,13 @@ interface PlacementDialogProps {
   dictionary: Dictionary["school"]["admission"]
   /** Fires after a successful placement (the dialog also refreshes the router). */
   onPlaced?: () => void
+  /**
+   * Controlled mode: the caller owns the section list (the students list keeps
+   * it in a module store so a table remount cannot wipe it or refetch it).
+   * When omitted the dialog fetches its own sections on open.
+   */
+  sections?: SectionOption[]
+  sectionsLoading?: boolean
 }
 
 export function PlacementDialog({
@@ -93,28 +100,34 @@ export function PlacementDialog({
   onOpenChange,
   dictionary,
   onPlaced,
+  sections: controlledSections,
+  sectionsLoading,
 }: PlacementDialogProps) {
   const t = dictionary
   const router = useRouter()
-  const [sections, setSections] = useState<SectionOption[]>([])
+  const isControlled = controlledSections !== undefined
+  const [ownSections, setOwnSections] = useState<SectionOption[]>([])
   const [selectedSection, setSelectedSection] = useState<string>("")
-  const [isLoadingSections, setIsLoadingSections] = useState(false)
+  const [ownLoading, setOwnLoading] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  // Fetch sections when dialog opens
+  // Fetch sections when dialog opens (uncontrolled mode only)
   useEffect(() => {
-    if (!open) return
-    setIsLoadingSections(true)
+    if (!open || isControlled) return
+    setOwnLoading(true)
     getAvailableSectionsForPlacement({ applyingForClass, gradeId })
       .then((result) => {
         if (result.success && result.data) {
-          setSections(result.data)
+          setOwnSections(result.data)
         } else {
-          setSections([])
+          setOwnSections([])
         }
       })
-      .finally(() => setIsLoadingSections(false))
-  }, [open, applyingForClass, gradeId])
+      .finally(() => setOwnLoading(false))
+  }, [open, applyingForClass, gradeId, isControlled])
+
+  const sections = isControlled ? controlledSections : ownSections
+  const isLoadingSections = isControlled ? !!sectionsLoading : ownLoading
 
   const handlePlace = () => {
     if (!selectedSection) return

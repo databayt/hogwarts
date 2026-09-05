@@ -148,33 +148,41 @@ export default function AcademicContent() {
             "Select the student's grade and section to enrol them."
           }
         />
-        {data?.application && (
-          <AdmissionInfo
-            application={data.application}
-            t={tEnrollment}
-            statusLabels={
-              (
-                (dictionary?.school as Record<string, unknown> | undefined)
-                  ?.admission as Record<string, unknown> | undefined
-              )?.status as Record<string, string> | undefined
+        {/* ONE right-column child: FormLayout renders exactly two children
+            (heading | content). With the admission card as a bare sibling,
+            the form became a third child and was silently dropped — an
+            enrolled student's edit screen showed the card and no grade or
+            section controls at all. */}
+        <div className="space-y-6">
+          {data?.application && (
+            <AdmissionInfo
+              application={data.application}
+              t={tEnrollment}
+              statusLabels={
+                (
+                  (dictionary?.school as Record<string, unknown> | undefined)
+                    ?.admission as Record<string, unknown> | undefined
+                )?.status as Record<string, string> | undefined
+              }
+              locale={locale === "en" ? "en" : "ar"}
+            />
+          )}
+          <AcademicForm
+            ref={formRef}
+            studentId={studentId}
+            initialData={
+              data
+                ? ({
+                    academicGradeId: data.academicGradeId ?? undefined,
+                    academicStreamId: data.academicStreamId ?? undefined,
+                    sectionId: data.sectionId ?? undefined,
+                    previousSchoolName: data.previousSchoolName ?? undefined,
+                  } as Partial<AcademicFormData>)
+                : undefined
             }
-            locale={locale === "en" ? "en" : "ar"}
+            onValidChange={setIsValid}
           />
-        )}
-        <AcademicForm
-          ref={formRef}
-          studentId={studentId}
-          initialData={
-            data
-              ? ({
-                  academicGradeId: data.academicGradeId ?? undefined,
-                  sectionId: data.sectionId ?? undefined,
-                  previousSchoolName: data.previousSchoolName ?? undefined,
-                } as Partial<AcademicFormData>)
-              : undefined
-          }
-          onValidChange={setIsValid}
-        />
+        </div>
       </FormLayout>
     </WizardStep>
   )

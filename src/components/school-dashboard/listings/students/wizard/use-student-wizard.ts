@@ -38,6 +38,7 @@ export interface StudentWizardData {
   studentType: string
   category: string | null
   academicGradeId: string | null
+  academicStreamId: string | null
   sectionId: string | null
   // Health
   medicalConditions: string | null

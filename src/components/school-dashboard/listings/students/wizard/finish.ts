@@ -22,13 +22,14 @@ import { openCredentialsDialog } from "../../credentials"
 import { setCachedCredentials } from "../../credentials/store"
 import { completeStudentWizard } from "./actions"
 
-type Dict = Record<string, unknown> | undefined
-
 export async function finishStudentWizard(
   studentId: string,
-  dictionary: Dict
+  /** The root dictionary from `useDictionary()` (any shape). */
+  dictionary: unknown
 ): Promise<boolean> {
-  const school = dictionary?.school as Record<string, unknown> | undefined
+  const school = (dictionary as Record<string, unknown> | undefined)?.school as
+    | Record<string, unknown>
+    | undefined
   const students = school?.students as Record<string, unknown> | undefined
   const tAcademic = students?.academic as Record<string, string> | undefined
   const admissionDict = school?.admission as

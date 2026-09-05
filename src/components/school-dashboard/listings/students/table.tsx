@@ -24,7 +24,6 @@ import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { canPerformAdmissionAction } from "@/components/school-dashboard/admission/authorization"
-import { PlacementDialog } from "@/components/school-dashboard/admission/placement-dialog"
 import {
   GridCard,
   GridContainer,
@@ -39,6 +38,8 @@ import { AccessCodeDialog } from "./access-code-dialog"
 import { openAccessCodeDialog } from "./access-code-store"
 import { bulkSyncStudentGrades, getStudents, getStudentsCSV } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
+import { StudentPlacementDialog } from "./placement-dialog"
+import { openPlacementDialog } from "./placement-store"
 import { PurgeDialog } from "./purge-dialog"
 import { createDraftStudent } from "./wizard/actions"
 
@@ -169,16 +170,16 @@ function StudentsTableInner({
   // Placement — the step every intake channel shares after provisioning. The
   // Enrollment tab offers it to PORTAL admits; this offers the SAME dialog to a
   // direct-admit or imported student who has a grade but no seat, so nobody is
-  // stuck re-running the wizard just to pick a section.
+  // stuck re-running the wizard just to pick a section. Open-state lives in a
+  // module store (./placement-store), NOT useState — see the access-code
+  // dialog: the table remounts when a Server Action completes, and a local
+  // flag was wiped before the section list arrived.
   const canPlace =
     !!role &&
     !!admissionDictionary &&
     canPerformAdmissionAction(role, "placeStudents")
-  const [placementTarget, setPlacementTarget] = useState<StudentRow | null>(
-    null
-  )
   const handleAssignSection = useCallback((student: StudentRow) => {
-    setPlacementTarget(student)
+    openPlacementDialog(student)
   }, [])
 
   // Purge dialog state
@@ -494,16 +495,8 @@ function StudentsTableInner({
 
       <AccessCodeDialog />
 
-      {placementTarget && admissionDictionary && (
-        <PlacementDialog
-          studentId={placementTarget.id}
-          applicantName={placementTarget.name}
-          applyingForClass={placementTarget.gradeName ?? undefined}
-          gradeId={placementTarget.academicGradeId}
-          open
-          onOpenChange={(open) => {
-            if (!open) setPlacementTarget(null)
-          }}
+      {admissionDictionary && (
+        <StudentPlacementDialog
           dictionary={admissionDictionary}
           onPlaced={() => refresh()}
         />
