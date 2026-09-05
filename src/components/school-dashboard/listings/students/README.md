@@ -81,7 +81,9 @@ same steps regardless of channel: **Assign Section** (the admission
 for everyone with a grade and no seat), fee assignment + invoices
 (`ensureStudentFeeAssignments`), the fee-due / fee-overdue crons, and the
 `Applications` tab that lists every channel. Guardians for every channel are
-written by `createOrLinkGuardian` (phone + WhatsApp rows).
+written by `createOrLinkGuardian` (phone + WhatsApp rows), which matches the
+parent types by role — `الأب`, `Father` and `father` are one type — so an
+Arabic-seeded school never gets an English twin row.
 
 ### Status
 

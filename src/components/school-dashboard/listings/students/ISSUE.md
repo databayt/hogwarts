@@ -1,6 +1,6 @@
 # Students — Production Readiness Tracker
 
-## 2026-09-05 — intake pass: the four channels meet at one placement step (LOCAL, 10 commits, not pushed)
+## 2026-09-05 — intake pass: the four channels meet at one placement step (LOCAL, 13 commits, not pushed)
 
 Read with `admission/ISSUE.md` (same date). The ask: trace adding a student
 through every channel to the assembly point (`provisionStudent`) and make
@@ -57,6 +57,41 @@ Shipped (this block):
       `enroll/` returns `CLASS_AT_CAPACITY` and translates codes.
 - [x] Shadow application for a wizard student carries the grade name as
       `applyingForClass` (the Applications tab's Class column was blank).
+- [x] **P0 — Update on a LEGACY student re-provisioned it, then could not
+      leave the wizard.** The edit-mode short-circuit above required a
+      `userId` AND an `applicationId`; 970 of 978 demo students (and prod,
+      until the backfill runs) have no `applicationId`, so their Update fell
+      through to `provisionStudent` — re-stamped status/dates, a new shadow
+      Application, a second welcome notice. And the parent gate matched only
+      the English `father`/`mother` type names while the seed stores `الأب`/
+      `الأم` (973 of 978 rows) — so the Save then errored "complete the
+      personal step" and stayed on the last step. Now `wizardStep === null`
+      alone means "past the wizard", the gate runs only before provisioning,
+      and parent roles are matched by role through `canonicalGuardianRole` /
+      `PARENT_GUARDIAN_TYPE_NAMES` (`src/lib/guardian-utils.ts`). Verified on
+      علي الحسن (legacy, Arabic types): Update returns to the list; code,
+      status, dates, notices (0), fees (6), classes (18) and channel counts
+      unchanged. `src/tests/school-dashboard/listings/students/wizard/complete.test.ts`.
+- [x] **P1 — edit mode showed two EMPTY parents for every student.**
+      `getStudentPersonalGuardians` resolves after `GuardianForm` mounts and
+      `useForm` reads `defaultValues` once — the loaded parents never reached
+      the fields (an admin "fixing" them re-entered duplicates). The form now
+      `reset`s when the data lands; the loader maps type names by role, so
+      Arabic-typed parents reach the tabs too. Verified on a wizard-created
+      student (حسن عبدالله محمد) and a legacy one (الفاتح الحسن / هبة الحسن).
+- [x] **P1 — `createOrLinkGuardian` minted an English twin of every
+      Arabic-seeded parent type.** Upsert by exact name → a second `father`
+      row beside `الأب` in the same school (demo: `father` 5 links, `الأب`
+      970). It now reuses any existing spelling of the role
+      (`guardianTypeNamesForRole`) and creates the requested name only when
+      the school has none. Admission's `confirmEnrollment` and the CSV imports
+      go through the same function. `src/tests/lib/guardian-utils.test.ts`.
+- [x] **P1 — the shared table hook swapped a search result for the whole
+      list.** `usePlatformData` adopts the server's rows after a row action
+      (they were stale until a hard reload), but a search/filter is client
+      state, so the server page is always UNFILTERED; with a filter active the
+      hook now refetches through the fetcher instead. All 31 platform tables.
+      `src/tests/table/load-more.test.tsx`.
 
 Found, not fixed (recorded):
 
@@ -75,6 +110,11 @@ Found, not fixed (recorded):
 - [ ] `PhoneField` with no country selected stores "+0912…" (leading plus on a
       local number) in both wizards.
 - [ ] Demo seed has each section twice (Arabic-named and English-named rows).
+- [ ] The English twin guardian-type rows created BEFORE the reuse fix are
+      still there (demo: `father` with 5 links, `mother` with 1, beside
+      `الأب`/`الأم`). Harmless now — every reader matches by role — but a
+      one-off script could re-point those links to the seeded row and drop
+      the twins. Data change: needs approval.
 
 ## 2026-08-14 — intake unification finished: the invariant is now unconditional (LOCAL, not pushed)
 

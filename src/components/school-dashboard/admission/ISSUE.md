@@ -59,7 +59,16 @@ student created + graded + notified. Fixed here:
 - [x] `NO_CLASSES_FOR_GRADE` joined the enrollment warning codes (translated).
 - [x] Platform tables adopt the server's rows after `router.refresh()`
       (`usePlatformData`) — a confirmed enrollment row kept offering "Confirm
-      Enrollment" until a hard reload.
+      Enrollment" until a hard reload. With a client search/filter active the
+      hook refetches instead (the server page is always unfiltered, and
+      adopting it replaced a search result with the whole list).
+- [x] **Guardian types matched by role.** `createOrLinkGuardian` (the writer
+      behind `confirmEnrollment`, the student wizard and the CSV imports)
+      upserted the type by its exact English name, so an Arabic-seeded school
+      (`الأب`/`الأم`) grew a second `father`/`mother` row per role and every
+      "has a parent" check keyed off the English one missed the seeded links.
+      It now reuses any existing spelling (`guardianTypeNamesForRole`) —
+      `src/lib/guardian-utils.ts`, `src/tests/lib/guardian-utils.test.ts`.
 
 Found, not fixed:
 

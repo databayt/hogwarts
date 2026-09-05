@@ -7,7 +7,11 @@ import { cookies } from "next/headers"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { createOrLinkGuardian, splitGuardianName } from "@/lib/guardian-utils"
+import {
+  canonicalGuardianRole,
+  createOrLinkGuardian,
+  splitGuardianName,
+} from "@/lib/guardian-utils"
 import type { NameFormat } from "@/lib/name-utils"
 
 import { authorizeWizardAction } from "../authorize"
@@ -152,7 +156,10 @@ export async function getStudentPersonalGuardians(
     }
 
     for (const sg of studentGuardians) {
-      const typeName = sg.guardianType.name.toLowerCase()
+      // The seed stores the roles in Arabic ("الأب"/"الأم") and other schools
+      // capitalise them — a plain lowercase compare left every legacy
+      // student's parents out of the edit form, inviting a duplicate re-entry.
+      const typeName = canonicalGuardianRole(sg.guardianType.name)
       const phones = await db.guardianPhoneNumber.findMany({
         where: { guardianId: sg.guardianId, schoolId },
         orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],

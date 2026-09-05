@@ -61,6 +61,8 @@ Every wizard action — the four step files and the draft/complete/delete action
 
 A draft carries stub values for its `NOT NULL` columns (DOB `2000-01-01`, gender `male`); the wizard presents them as empty so the admin fills them, and a value the admin does not enter stays the stub.
 
+A row with **no** `wizardStep` is past the wizard — built by the core, or older than it. Opening it in the wizard is edit mode: every step saves its own fields, and the final **Update** returns to the list without running the core again and without the "name + one parent" gate, which guards provisioning only. Legacy rows keep whatever code, status, dates and application link they have; giving them a login and a channel-tagged application is the backfill script's job, never a Save.
+
 ## The students list
 
 `/{lang}/students` — server-rendered first page, load-more and search through `getStudents`, both ordering through the same `buildStudentOrderBy` so sorting a derived column (name, grade, classroom, phone) never reaches Prisma raw.
@@ -98,7 +100,9 @@ The shared core and its helpers live outside the block: `src/lib/student-provisi
 
 ## Guardians
 
-Both one-by-one channels write guardians through `createOrLinkGuardian`: a `GuardianType` (father / mother / guardian), a `Guardian` found by email or by phone (school-wide on purpose — siblings share a parent — but never resolving to this student's other parent), the `StudentGuardian` link, a primary phone row and, when given, a second phone row typed `whatsapp`. The public application stores a guardian's WhatsApp in its `*Email` columns (it has no other column); enrollment classifies those by shape so a phone number never becomes a guardian's email address.
+Both one-by-one channels write guardians through `createOrLinkGuardian`: a `GuardianType` (father / mother / guardian), a `Guardian` found by email or by phone (school-wide on purpose — siblings share a parent — but never resolving to this student's other parent), the `StudentGuardian` link, a primary phone row and, when given, a second phone row typed `whatsapp`.
+
+Guardian types are matched **by role, not by spelling**. The demo seed stores the parents as `الأب` / `الأم`, other seeds as `Father`, the wizard and admission ask for `father` / `mother`. `canonicalGuardianRole` and `PARENT_GUARDIAN_TYPE_NAMES` in `src/lib/guardian-utils.ts` are the only place that knows the spellings; `createOrLinkGuardian` links under whichever spelling the school already has and creates the requested name only when it has none, so a school never grows a second type row per role. Anything that asks "does this student have a parent" (the wizard's provisioning gate, the personal step's father/mother tabs) goes through those helpers. The public application stores a guardian's WhatsApp in its `*Email` columns (it has no other column); enrollment classifies those by shape so a phone number never becomes a guardian's email address.
 
 ## Keeping the invariant true
 
@@ -109,6 +113,7 @@ Both one-by-one channels write guardians through `createOrLinkGuardian`: a `Guar
 - A student with a grade and **no** fee assignment (the school has no fee structure for the campaign's academic year) is invisible to the reminders and to the unplaced chip — only a transient warning toast at creation says so.
 - The wizard's admission card prints the system campaign's stored name unlocalised.
 - `PhoneField` with no country selected stores a leading `+` on a local number.
+- Schools seeded in Arabic still carry the English twin guardian-type rows created before types were matched by role; every reader copes, but the twins are not merged.
 
 ## See also
 

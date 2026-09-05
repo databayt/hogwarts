@@ -62,6 +62,23 @@ export const GuardianForm = forwardRef<WizardFormRef, GuardianFormProps>(
       },
     })
 
+    // The parents arrive AFTER the form mounts — a separate server round-trip,
+    // not part of the wizard provider's cache — and `defaultValues` is read
+    // once, so edit mode showed two empty parents for every student and
+    // invited a duplicate re-entry. Reset when the data lands; it lands once,
+    // right after mount, before anyone has typed.
+    useEffect(() => {
+      if (!initialData) return
+      form.reset({
+        fatherName: initialData.fatherName || "",
+        fatherPhone: initialData.fatherPhone || "",
+        fatherWhatsapp: initialData.fatherWhatsapp || "",
+        motherName: initialData.motherName || "",
+        motherPhone: initialData.motherPhone || "",
+        motherWhatsapp: initialData.motherWhatsapp || "",
+      })
+    }, [initialData, form])
+
     // Auto-fill whatsapp from phone for the active parent.
     const fatherPhone = form.watch("fatherPhone")
     const motherPhone = form.watch("motherPhone")

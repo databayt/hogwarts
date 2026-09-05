@@ -58,6 +58,44 @@ type TxClient = Omit<
 >
 
 // ---------------------------------------------------------------------------
+// Guardian roles
+// ---------------------------------------------------------------------------
+
+export type ParentRole = "father" | "mother"
+
+// Every spelling the two parent roles are stored under. The seed writes the
+// demo school's types in Arabic ("الأب"/"الأم"), the Al-Qabas / Aldar seeds
+// capitalise ("Father"), and the wizard and admission create lowercase
+// English. Anything that decides "does this student have a parent" or "which
+// tab does this guardian belong to" must go through these, never a literal.
+const FATHER_TYPE_NAMES = ["father", "Father", "FATHER", "الأب", "أب", "الوالد", "والد"] as const
+const MOTHER_TYPE_NAMES = ["mother", "Mother", "MOTHER", "الأم", "أم", "الوالدة", "والدة"] as const
+
+/** Stored names for one parent role — for `name: { in }` filters, which are
+ *  case-sensitive in Prisma. */
+export function guardianTypeNamesForRole(role: ParentRole): string[] {
+  return [...(role === "father" ? FATHER_TYPE_NAMES : MOTHER_TYPE_NAMES)]
+}
+
+/** Both parent roles, every spelling. */
+export const PARENT_GUARDIAN_TYPE_NAMES: readonly string[] = [
+  ...FATHER_TYPE_NAMES,
+  ...MOTHER_TYPE_NAMES,
+]
+
+/** Map a stored GuardianType name onto the parent role it denotes, or null
+ *  for a non-parent type (guardian, grandparent, sibling, …). */
+export function canonicalGuardianRole(
+  name: string | null | undefined
+): ParentRole | null {
+  const n = (name ?? "").trim().toLowerCase()
+  if (!n) return null
+  if (FATHER_TYPE_NAMES.some((x) => x.toLowerCase() === n)) return "father"
+  if (MOTHER_TYPE_NAMES.some((x) => x.toLowerCase() === n)) return "mother"
+  return null
+}
+
+// ---------------------------------------------------------------------------
 // Core utility
 // ---------------------------------------------------------------------------
 
@@ -93,14 +131,28 @@ export async function createOrLinkGuardian(
   } = params
   let credentials: { username: string; password: string } | null = null
 
-  // 1. Ensure GuardianType exists
-  const guardianType = await tx.guardianType.upsert({
-    where: {
-      schoolId_name: { schoolId, name: typeName },
-    },
-    create: { schoolId, name: typeName },
-    update: {},
-  })
+  // 1. Resolve the GuardianType. Callers always ask for the lowercase English
+  //    role, but an Arabic-seeded school already holds the role as "الأب" /
+  //    "الأم". Upserting by the exact name minted a SECOND type row per role
+  //    in every such school, and the parent checks that key off the type then
+  //    missed the seeded links. Reuse any spelling of the role that exists;
+  //    create the requested name only when the school has none.
+  const role = canonicalGuardianRole(typeName)
+  const existingType = role
+    ? await tx.guardianType.findFirst({
+        where: { schoolId, name: { in: guardianTypeNamesForRole(role) } },
+        orderBy: { createdAt: "asc" },
+      })
+    : null
+  const guardianType =
+    existingType ??
+    (await tx.guardianType.upsert({
+      where: {
+        schoolId_name: { schoolId, name: typeName },
+      },
+      create: { schoolId, name: typeName },
+      update: {},
+    }))
 
   // 2. Create or find Guardian.
   //    - Unique by schoolId + email when provided.

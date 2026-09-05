@@ -96,6 +96,9 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
     },
     guardianType: {
+      // createOrLinkGuardian looks for an existing spelling of the parent role
+      // before minting one; null = "none yet", so the upsert path runs.
+      findFirst: vi.fn().mockResolvedValue(null),
       upsert: vi.fn(),
     },
     guardian: {

@@ -8,6 +8,7 @@ import { after } from "next/server"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { PARENT_GUARDIAN_TYPE_NAMES } from "@/lib/guardian-utils"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 
@@ -186,25 +187,15 @@ export async function completeStudentWizard(studentId: string): Promise<
         where: {
           studentId,
           schoolId,
-          guardianType: { name: { in: ["father", "mother"] } },
+          // Every stored spelling of father/mother — the demo seed writes
+          // them in Arabic, so the English literals matched 5 of 978 rows.
+          guardianType: { name: { in: [...PARENT_GUARDIAN_TYPE_NAMES] } },
         },
       }),
     ])
 
     if (!student) {
       return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
-    }
-
-    const completeness = getPersonalCompleteness({
-      firstName: student.firstName,
-      lastName: student.lastName,
-      hasFatherOrMother: parentCount > 0,
-    })
-    if (!isPersonalComplete(completeness)) {
-      return actionError(
-        ACTION_ERRORS.VALIDATION_ERROR,
-        `Missing: ${listMissingRequirements(completeness).join(", ")}`
-      )
     }
 
     // The wizard doubles as the EDIT surface for an enrolled student (the
@@ -214,8 +205,13 @@ export async function completeStudentWizard(studentId: string): Promise<
     // to mint a second shadow Application per save (re-pointing the student
     // at it and orphaning a PORTAL application), regenerate the student code
     // and re-send the "your account was created" notice.
-    const alreadyProvisioned =
-      student.wizardStep === null && !!student.userId && !!student.applicationId
+    //
+    // A row with no wizard step is past the wizard, whether the core built it
+    // or it predates the core (most legacy rows carry no applicationId, and
+    // many no userId, until the backfill runs). Requiring either here would
+    // push every legacy student back through the core on Update: a re-stamped
+    // status and dates, a fresh shadow application, a second welcome notice.
+    const alreadyProvisioned = student.wizardStep === null
     const displayName = `${student.firstName} ${student.lastName}`.trim()
     if (alreadyProvisioned) {
       revalidatePath("/[lang]/s/[subdomain]/students", "page")
@@ -229,6 +225,23 @@ export async function completeStudentWizard(studentId: string): Promise<
           warnings: [],
         },
       }
+    }
+
+    // The completeness gate guards PROVISIONING only — the core needs a name
+    // and a parent to mint the login and notify a family. An enrolled student
+    // saving edits has already left the wizard; gating their Save on a parent
+    // link (which legacy rows may carry under another type name) locked them
+    // on the last step with no way out but Close.
+    const completeness = getPersonalCompleteness({
+      firstName: student.firstName,
+      lastName: student.lastName,
+      hasFatherOrMother: parentCount > 0,
+    })
+    if (!isPersonalComplete(completeness)) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        `Missing: ${listMissingRequirements(completeness).join(", ")}`
+      )
     }
 
     // Provision the full student graph via the shared core: creates the User +

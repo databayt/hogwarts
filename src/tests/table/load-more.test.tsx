@@ -149,3 +149,91 @@ describe("usePlatformData.loadMore", () => {
     expect(fetcher).toHaveBeenCalledTimes(1)
   })
 })
+
+describe("usePlatformData — adopting the server's rows after a refresh", () => {
+  interface Props {
+    rows: Row[]
+    total: number
+    filters?: Record<string, unknown>
+    fetcher: ReturnType<typeof vi.fn>
+  }
+  const setup = (props: Props) =>
+    renderHook(
+      (p: Props) =>
+        usePlatformData<Row>({
+          initialData: p.rows,
+          total: p.total,
+          perPage: 20,
+          filters: p.filters,
+          fetcher: p.fetcher,
+        }),
+      { initialProps: props }
+    )
+
+  it("adopts re-rendered server rows when no client filter is active", async () => {
+    const fetcher = vi.fn()
+    const { result, rerender } = setup({
+      rows: makeRows(1, 3),
+      total: 3,
+      fetcher,
+    })
+    expect(result.current.data.map((r) => r.name)).toEqual([
+      "Row 1",
+      "Row 2",
+      "Row 3",
+    ])
+
+    // router.refresh() after a row action: the server re-renders page 1 with
+    // the changed row. The hook must show it without a hard reload.
+    const changed = [{ id: "id-1", name: "Row 1 (placed)" }, ...makeRows(2, 2)]
+    await act(async () => {
+      rerender({ rows: changed, total: 3, fetcher })
+    })
+
+    expect(result.current.data[0]?.name).toBe("Row 1 (placed)")
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it("ignores an equal array with a new identity, so a rebuilding parent cannot loop it", async () => {
+    const fetcher = vi.fn()
+    const { result, rerender } = setup({
+      rows: makeRows(1, 3),
+      total: 3,
+      fetcher,
+    })
+    const before = result.current.data
+
+    await act(async () => {
+      rerender({ rows: makeRows(1, 3), total: 3, fetcher })
+    })
+
+    expect(result.current.data).toBe(before)
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it("re-runs the client filter instead of showing the server's unfiltered page", async () => {
+    // A search typed into the table lives in client state, not the URL: the
+    // server always re-renders the UNFILTERED first page. Adopting it would
+    // replace the search results while the box still holds the text.
+    const filtered = [{ id: "id-7", name: "Ali (placed)" }]
+    const fetcher = vi.fn(async () => ({ rows: filtered, total: 1 }))
+    const filters = { search: "ali" }
+    const { result, rerender } = setup({
+      rows: makeRows(1, 3),
+      total: 3,
+      filters,
+      fetcher,
+    })
+
+    const unfiltered = [{ id: "id-1", name: "Row 1 (changed)" }, ...makeRows(2, 2)]
+    await act(async () => {
+      rerender({ rows: unfiltered, total: 3, filters, fetcher })
+    })
+
+    await waitFor(() => expect(result.current.data).toEqual(filtered))
+    expect(fetcher).toHaveBeenCalledWith(
+      expect.objectContaining({ search: "ali", page: 1, perPage: 20 })
+    )
+    expect(result.current.total).toBe(1)
+  })
+})

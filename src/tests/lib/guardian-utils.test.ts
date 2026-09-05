@@ -12,7 +12,12 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { createOrLinkGuardian } from "@/lib/guardian-utils"
+import {
+  canonicalGuardianRole,
+  createOrLinkGuardian,
+  guardianTypeNamesForRole,
+  PARENT_GUARDIAN_TYPE_NAMES,
+} from "@/lib/guardian-utils"
 
 vi.mock("@/lib/credentials", () => ({
   mintTempPassword: vi.fn(),
@@ -22,6 +27,7 @@ vi.mock("@/lib/credentials", () => ({
 function makeTx() {
   return {
     guardianType: {
+      findFirst: vi.fn().mockResolvedValue(null),
       upsert: vi.fn().mockResolvedValue({ id: "gt-father", name: "father" }),
     },
     guardian: {
@@ -105,5 +111,82 @@ describe("createOrLinkGuardian — WhatsApp", () => {
       data: Record<string, unknown>
     }
     expect(created.data.emailAddress).toBeUndefined()
+  })
+})
+
+describe("guardian roles — every stored spelling of father/mother", () => {
+  it("maps the seeded Arabic and capitalised names onto the two roles", () => {
+    expect(canonicalGuardianRole("الأب")).toBe("father")
+    expect(canonicalGuardianRole("الأم")).toBe("mother")
+    expect(canonicalGuardianRole("Father")).toBe("father")
+    expect(canonicalGuardianRole(" MOTHER ")).toBe("mother")
+    expect(canonicalGuardianRole("father")).toBe("father")
+  })
+
+  it("leaves non-parent types alone", () => {
+    expect(canonicalGuardianRole("guardian")).toBeNull()
+    expect(canonicalGuardianRole("الجد/الجدة")).toBeNull()
+    expect(canonicalGuardianRole("")).toBeNull()
+    expect(canonicalGuardianRole(null)).toBeNull()
+  })
+
+  it("exposes the spellings for case-sensitive `in` filters", () => {
+    expect(PARENT_GUARDIAN_TYPE_NAMES).toEqual(
+      expect.arrayContaining(["father", "mother", "الأب", "الأم", "Father"])
+    )
+    expect(guardianTypeNamesForRole("mother")).toContain("الأم")
+    expect(guardianTypeNamesForRole("mother")).not.toContain("الأب")
+  })
+})
+
+describe("createOrLinkGuardian — guardian type reuse", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("links under the school's existing Arabic-named type instead of minting an English twin", async () => {
+    const tx = makeTx()
+    tx.guardianType.findFirst.mockResolvedValue({ id: "gt-ab", name: "الأب" })
+
+    await createOrLinkGuardian(tx as never, { ...base, phone: "0912000000" })
+
+    expect(tx.guardianType.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          schoolId: "school-1",
+          name: { in: expect.arrayContaining(["father", "الأب"]) },
+        }),
+      })
+    )
+    expect(tx.guardianType.upsert).not.toHaveBeenCalled()
+    expect(tx.studentGuardian.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ guardianTypeId: "gt-ab" }),
+      })
+    )
+  })
+
+  it("creates the requested type when the school has no spelling of the role", async () => {
+    const tx = makeTx()
+
+    await createOrLinkGuardian(tx as never, { ...base, phone: "0912000000" })
+
+    expect(tx.guardianType.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: { schoolId: "school-1", name: "father" },
+      })
+    )
+  })
+
+  it("does not search for aliases of a non-parent type", async () => {
+    const tx = makeTx()
+    tx.guardianType.upsert.mockResolvedValue({ id: "gt-g", name: "guardian" })
+
+    await createOrLinkGuardian(tx as never, {
+      ...base,
+      typeName: "guardian",
+      phone: "0912000000",
+    })
+
+    expect(tx.guardianType.findFirst).not.toHaveBeenCalled()
+    expect(tx.guardianType.upsert).toHaveBeenCalled()
   })
 })

@@ -110,34 +110,6 @@ export function usePlatformData<
     dataLengthRef.current = data.length
   }, [data.length])
 
-  // WHY RESYNC FROM THE SERVER:
-  // After `router.refresh()` — which every row action here calls on success —
-  // the server re-renders the table with fresh rows, but this hook kept the
-  // rows it captured on mount: an admission row that had just been confirmed
-  // kept offering "Confirm Enrollment" until a hard reload. Adopt the server's
-  // rows whenever their CONTENT changes. Content, not identity: a client parent
-  // that rebuilds an equal array on every render would otherwise loop
-  // (adopt → re-render → new array → adopt…). The signature is computed only
-  // when the reference changes, so ordinary client re-renders cost nothing.
-  // Adopting collapses any loaded-more pages back to the first — the state the
-  // server just rendered anyway.
-  const serverSignature = useMemo(
-    () => `${initialTotal}|${JSON.stringify(initialData)}`,
-    [initialData, initialTotal]
-  )
-  const adoptedSignatureRef = useRef(serverSignature)
-  useEffect(() => {
-    if (adoptedSignatureRef.current === serverSignature) return
-    adoptedSignatureRef.current = serverSignature
-    requestTokenRef.current += 1
-    inFlightRef.current = false
-    pageRef.current = 1
-    setCurrentPage(1)
-    setData(initialData)
-    setTotal(initialTotal)
-    setIsLoading(false)
-  }, [serverSignature, initialData, initialTotal])
-
   // WHY A REQUEST TOKEN:
   // Responses can land out of order — a slow loadMore resolving after a filter
   // change would append rows matching the OLD filter onto the new result set.
@@ -217,6 +189,45 @@ export function usePlatformData<
       if (token === requestTokenRef.current) setIsLoading(false)
     }
   }, [])
+
+  // WHY RESYNC FROM THE SERVER:
+  // After `router.refresh()` — which every row action here calls on success —
+  // the server re-renders the table with fresh rows, but this hook kept the
+  // rows it captured on mount: an admission row that had just been confirmed
+  // kept offering "Confirm Enrollment" until a hard reload. Adopt the server's
+  // rows whenever their CONTENT changes. Content, not identity: a client parent
+  // that rebuilds an equal array on every render would otherwise loop
+  // (adopt → re-render → new array → adopt…). The signature is computed only
+  // when the reference changes, so ordinary client re-renders cost nothing.
+  // Adopting collapses any loaded-more pages back to the first — the state the
+  // server just rendered anyway.
+  const serverSignature = useMemo(
+    () => `${initialTotal}|${JSON.stringify(initialData)}`,
+    [initialData, initialTotal]
+  )
+  const adoptedSignatureRef = useRef(serverSignature)
+  useEffect(() => {
+    if (adoptedSignatureRef.current === serverSignature) return
+    adoptedSignatureRef.current = serverSignature
+    // A client-side search or filter is not in the URL, so the server always
+    // renders the UNFILTERED first page. Adopting it would swap a family's
+    // search results for the whole list while the search box still holds
+    // their text — refetch through the fetcher, which honours the filters.
+    const hasClientFilters = Object.values(
+      (filtersRef.current ?? {}) as Record<string, unknown>
+    ).some((v) => v !== undefined && v !== null && v !== "")
+    if (hasClientFilters) {
+      void refresh()
+      return
+    }
+    requestTokenRef.current += 1
+    inFlightRef.current = false
+    pageRef.current = 1
+    setCurrentPage(1)
+    setData(initialData)
+    setTotal(initialTotal)
+    setIsLoading(false)
+  }, [serverSignature, initialData, initialTotal, refresh])
 
   // WHY REFS:
   // - prevFiltersRef: Compare current vs previous without triggering re-renders
