@@ -48,6 +48,12 @@ src/components/school-dashboard/listings/students/
   access-code-store.ts # Module store for the access-code dialog — open-state +
                        #   codes live outside React so the dialog survives the table
                        #   remount the generate action triggers (issue #381)
+  (placement)          # "Assign Section" uses admission/placement-store.ts +
+                       #   admission/placement-dialog-host.tsx — ONE store-driven
+                       #   dialog shared with the Enrollment tab
+  wizard/authorize.ts  # The one auth+role guard every wizard action calls
+  wizard/finish.ts     # The one wizard finisher (academic Next + footer Skip):
+                       #   provision, toast warnings, open the credentials dialog
   list-params.ts       # nuqs URL state (page, perPage, name, status, sort)
   queries.ts           # Read-only database queries
   table.tsx            # Client DataTable with useDataTable
@@ -65,9 +71,22 @@ wizard sub-actions (`wizard/{personal,location,attachments}/actions.ts`) — mus
 call `auth()` + `assertStudentPermission(...)` (the `authorizeWizardAction` guard),
 not just resolve the tenant. See `authorization.ts` for the permission matrix.
 
+### The assembly point
+
+Four intake channels (public application, this wizard, onboarding CSV,
+`/school/bulk` CSV) all call `provisionStudent` (`src/lib/student-provisioning.ts`)
+and `notifyProvisionedStudent`. From that point every student is handled by the
+same steps regardless of channel: **Assign Section** (the admission
+`PlacementDialog`, offered on the Enrollment tab for PORTAL rows and on this list
+for everyone with a grade and no seat), fee assignment + invoices
+(`ensureStudentFeeAssignments`), the fee-due / fee-overdue crons, and the
+`Applications` tab that lists every channel. Guardians for every channel are
+written by `createOrLinkGuardian` (phone + WhatsApp rows).
+
 ### Status
 
-**Completion:** 90% | **Blockers:** None
+**Completion:** 95% | **Blockers:** None (see ISSUE.md 2026-09-05 for the
+"graded but unbilled" gap)
 
 ### Integration Points
 

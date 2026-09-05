@@ -26,7 +26,7 @@ Single shared `FormFooter` with three progress bars (one per phase). 30 s auto-s
 | 1   | Attachments | Optional by default (photo, degree, transcript, ID, resume, other) — triggers AI extraction. When the school sets `requireDocuments`, this step blocks Next with a visible hint until ≥ 1 document is uploaded | `/{lang}/application/{id}/attachments` |
 | 2   | Personal    | Student name, dateOfBirth, gender, nationality + guardian (Father/Mother) in tabs                                                                                                                              | `/{lang}/application/{id}/personal`    |
 | 3   | Location    | address, city, state, country (Mapbox if `NEXT_PUBLIC_MAPBOX_TOKEN`)                                                                                                                                           | `/{lang}/application/{id}/location`    |
-| 4   | Academic    | applyingForClass (14 grade levels: KG1, KG2, Grade 1–12)                                                                                                                                                       | `/{lang}/application/{id}/academic`    |
+| 4   | Academic    | applyingForClass — the school's own grades (the static KG1–12 list narrowed by `getSchoolGradeNumbers`; the full list only when the school has defined none)                                                   | `/{lang}/application/{id}/academic`    |
 | 5   | Fees        | Informational fee preview by grade (applying is free — no payment UI) — submits the application                                                                                                                | `/{lang}/application/{id}/fees`        |
 
 The Personal step uses single "Full Name" or split fields based on the school's `nameFormat`, and folds the former **Guardian** step into Student / Father / Mother tabs. The former standalone **Contact** step was removed — `email` is back-filled at submit from the session / logged-in user. **Fees** is the final step: it previews the tuition for the chosen grade, then its button submits the application and shows the success dialog inline. Each step's Next button is gated by the same rules the real validation enforces (phone length, ≥ 2-character parent name), and any save/validation failure surfaces as an inline alert — never a silent no-op.
@@ -95,6 +95,10 @@ Server-rendered banner on the school site for logged-in applicants. Dismissible 
 | REJECTED        | "Application #N — Not Selected"         | —               |
 
 Banner includes a 4-dot timeline: Submitted → Review → Decision → Enrolled.
+
+## Guardian contact fields
+
+The guardian tab collects each parent's name, phone and **WhatsApp**; it collects no email. `Application` has only `fatherEmail` / `motherEmail` / `guardianEmail` to hold the third value, so for every online applicant those columns carry a phone number. The columns are not renamed (no DDL); the read side classifies by shape — `confirmEnrollment` hands a non-address value to `createOrLinkGuardian` as `whatsapp` (a second phone row), and the admin detail page labels it "WhatsApp". Before 2026-09-05 the number was written into `Guardian.emailAddress`, the enrollment mail tried to deliver to it, and a father and mother who shared a household number collapsed into one guardian row.
 
 ## Sessions
 

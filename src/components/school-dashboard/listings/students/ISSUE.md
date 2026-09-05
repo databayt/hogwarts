@@ -1,5 +1,81 @@
 # Students — Production Readiness Tracker
 
+## 2026-09-05 — intake pass: the four channels meet at one placement step (LOCAL, 10 commits, not pushed)
+
+Read with `admission/ISSUE.md` (same date). The ask: trace adding a student
+through every channel to the assembly point (`provisionStudent`) and make
+everything from there forward — placement, fees, invoices, notices,
+reminders — the same step for all four. Browser-verified on
+`demo.localhost:3000/ar` as ADMIN and as the applicant account.
+
+Shipped (this block):
+
+- [x] **P0 — one auth guard for every wizard action** (`wizard/authorize.ts`).
+      `getStudentForWizard` had NO `auth()` (unauthenticated PII read on any
+      subdomain); `createDraftStudent` / `completeStudentWizard` /
+      `updateStudentWizardStep` / `deleteDraftStudent` checked a session but no
+      role. The four step files carried identical copies of the guard.
+- [x] **P0 — edit-mode Save re-provisioned the student.** The wizard is also
+      the edit surface, and its final Save ran `provisionStudent` with only the
+      row id: a NEW student code (login username stayed → drift), a NEW
+      ADMIN_DIRECT shadow Application (re-pointing `Student.applicationId`,
+      orphaning a PORTAL application), re-stamped dates, a re-sent welcome
+      notice. `completeStudentWizard` now short-circuits for a provisioned
+      row; the core reuses code/application/user it finds
+      (`src/tests/lib/student-provisioning.test.ts`). Verified: Update on an
+      enrolled student left channel counts, code, notices and fees unchanged.
+- [x] **P1 — the minted login reached nobody.** `completeStudentWizard`
+      returned the temp password and neither exit of the wizard read it.
+      `wizard/finish.ts` is the ONE finisher (academic Next + footer Skip):
+      toasts warnings, seeds the shared credentials dialog store and opens it
+      on the list page the admin lands on. Verified in the browser.
+- [x] **P1 — shared placement.** "Assign Section" row action on the students
+      list for any provisioned student with a grade and no seat, reusing the
+      admission `PlacementDialog` (`placeStudentInSection({ studentId })`,
+      `getAvailableSectionsForPlacement({ gradeId })`), gated on the admission
+      `placeStudents` permission. Open-state + fetched sections live in a
+      module store (`admission/placement-store.ts`, hosted once per table by
+      `admission/placement-dialog-host.tsx`, shared with the Enrollment tab) —
+      the table remounts when a Server Action completes and a `useState`
+      flag was wiped before the list arrived (third time this block hit
+      that; see access-code-store).
+- [x] **P1 — guardians written through ONE function.** `saveStudentPersonalGuardians`
+      calls `createOrLinkGuardian(..., { whatsapp })` instead of hand-rolling
+      the WhatsApp phone row; the same writer now classifies the public
+      application's `*Email` columns (which hold WhatsApp numbers) so a phone
+      never lands in `Guardian.emailAddress`. A same-number WhatsApp is skipped
+      (it used to retype the primary row and blank the phone on re-open).
+- [x] Edit mode showed the admission card and NO form: `FormLayout` renders
+      exactly two children and the card had pushed `AcademicForm` out as a
+      third. Wrapped; stream carried into edit mode.
+- [x] Academic step: `NO_CLASSES_FOR_GRADE` returned as a code and toasted
+      (translated) instead of an English string the form dropped.
+- [x] Attachments step loaded during render (React 19 warnings on every
+      open) → effect. Draft stub DOB/gender no longer presented as entered.
+- [x] `ar-SA` (Hijri) dates in the list → `formatDate(value, lang)`.
+      `STUDENTS_PATH` is a route pattern + "page" (six sites were no-ops).
+      `enroll/` returns `CLASS_AT_CAPACITY` and translates codes.
+- [x] Shadow application for a wizard student carries the grade name as
+      `applyingForClass` (the Applications tab's Class column was blank).
+
+Found, not fixed (recorded):
+
+- [ ] **A student with a grade and ZERO fee assignments is invisible to every
+      money surface.** Seen on the demo: the 2026-2027 campaign has no fee
+      structures (all 16 are 2025-2026), so a PORTAL enrollment produced a
+      student with no fees, no invoices, no reminders — with only a transient
+      warning toast. The `unplaced` filter / weekly alert cover no-grade and
+      no-seat, not no-fees. Fix sketch: a fourth arm in the fee-due cron part D
+      (students with a grade and no `FeeAssignment`) + an "unbilled" chip.
+- [ ] `AdmissionInfo` in the academic step prints the system campaign name
+      raw ("Direct Admission" on an Arabic school); the Applications tab
+      localizes it through `getLabels`.
+- [ ] Mapbox picker on the location step logs `TypeError: mo is not a
+    function` (pre-existing; `NEXT_PUBLIC_MAPBOX_TOKEN` set locally).
+- [ ] `PhoneField` with no country selected stores "+0912…" (leading plus on a
+      local number) in both wizards.
+- [ ] Demo seed has each section twice (Arabic-named and English-named rows).
+
 ## 2026-08-14 — intake unification finished: the invariant is now unconditional (LOCAL, not pushed)
 
 The 08-12 pass left two flows exempt from the "every student is born from an
@@ -69,8 +145,8 @@ Still open:
 ---
 
 **Status:** 🟡 IN PROGRESS
-**Completion:** 93%
-**Last Updated:** 2026-08-12
+**Completion:** 95%
+**Last Updated:** 2026-09-05
 
 ---
 

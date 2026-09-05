@@ -30,6 +30,9 @@ Public multi-step application form for prospective students (5 steps: attachment
 - **Public status tracker is localized (2026-08-15)**: `getApplicationStatus(subdomain, token, lang)` reads timeline labels from `admission.status.*` and checklist labels from `admission.statusDisplay.check*`; `EXPIRED` renders as a special status. The Arabic `STATUS_LABELS` map in `actions/status.ts` is a fallback only.
 - **`tenantUrl()` survives no request scope** (crons, webhooks, tests) — falls back to the primary root + default locale rather than throwing.
 - **`ApplicationStatusBanner` is `channel: "PORTAL"` only** — a direct-admit / imported student also has an Application (ADMITTED, userId set) and would otherwise be greeted with a form they never filed.
+- **Guardian WhatsApp lives in the `*Email` columns (2026-09-05)**: the guardian tab collects a WhatsApp number and no email, and `Application` has only `fatherEmail`/`motherEmail`/`guardianEmail` to hold it. Do NOT rename the columns (DDL); the READ side classifies by shape — `confirmEnrollment` routes a non-`@` value to `createOrLinkGuardian(..., { whatsapp })` and the detail page labels it "WhatsApp". Before this a phone number was written into `Guardian.emailAddress`, the enrollment mail tried to deliver to it, and a father and mother sharing a household number collapsed into one guardian row.
+- **The grade picker is the school's grade list (2026-09-05)**: `filterGradeOptionsBySchool` narrows the static KG1–12 list by `getSchoolGradeNumbers()` (public, tenant-scoped); the full list stays when the school has defined no grades. Stored value unchanged. `extractGradeNumber` matches Arabic ordinals longest-first — "الصف الثاني عشر" used to resolve to 2.
+- **Success modal shows `window.location.host`**, not `<sub>.databayt.org` — balqalam.com schools.
 
 ## Danger Zones
 

@@ -8,7 +8,7 @@ maturity: Built
 completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-09-04
+last_audited: 2026-09-05
 ---
 
 ## Admission (Dashboard) — School-side admission management pipeline
@@ -96,7 +96,7 @@ src/components/school-dashboard/admission/
 
 ### Status
 
-**Completion:** ~96% | **Status:** 🟢 production-ready core (audited 2026-09-04)
+**Completion:** ~96% | **Status:** 🟢 production-ready core (audited 2026-09-04; intake pass 2026-09-05 — crons bridged, guardian WhatsApp, placement for every channel, Arabic grade-12 resolver)
 
 Full admit→accept→pay→enroll→fee pipeline verified twice (08-15, 09-04). The 09-04 pass closed the money and expiry P0s (accepted offers no longer lapse; the registration fee books as a deposit, not the year; the offer quotes what enrollment bills), made every notification land on the family's own surface in their language, aligned every row menu with the server's permission table, wired CSV export, and gave the family a rejection note, a live offer link on the tracker, a restored manual-payment state with receipt upload, and a fee line on their dashboard. Remaining open: the applicant account model (one parent, two children), interview scheduling dates (needs DDL), tour confirmation mail, WhatsApp breadth (BUG-10), issue #269. See `ISSUE.md`.
 

@@ -17,7 +17,9 @@ A student can enter the system four ways. **All four funnel through one shared c
     C2["Admin adds one — /students wizard"] --> Core
     C3["Bulk import — school onboarding"] --> Core
     C4["Bulk import — /school/bulk"] --> Core
-    Core["provisionStudent (one shared core)"] --> Out["Every student gets: a login (User) + credentials, fee assignments + invoices, guardians, grade + year-level, a class seat, and a channel-tagged Application"]`}
+    Core["provisionStudent (one shared core)"] --> Out["Every student gets: a login (User) + credentials, fee assignments + invoices, guardians, grade + year-level, and a channel-tagged Application"]
+    Out --> Place["Assign Section — one PlacementDialog (Enrollment tab for PORTAL, students list for every channel)"]
+    Place --> Chase["fee-due / fee-overdue reminders · payments → receipts · roster, timetable, attendance"]`}
 />
 
 | Channel         | How a student is added                                                             | `Application.channel` |
@@ -151,6 +153,25 @@ Still open after this pass — product decisions and follow-ups, each with its r
 - **A started Stripe checkout is not expired** when the family switches to a manual rail.
 - **An accepted-but-unpaid offer never lapses** — the price of the expiry fix: the cron exempts accepted offers, so a family that accepts and then never pays holds the seat until an admin withdraws it. Needs a payment deadline distinct from the acceptance deadline, with its own reminder and lapse.
 - **WhatsApp / SMS** are unused by admission; instalment reminders and OVERDUE detection still read only `paymentSchedule`, in UTC (unchanged from 08-15).
+
+## The intake pass, 2026-09-05
+
+A third trace, this time of all four intake channels to the assembly point and of everything after it, verified in the browser as ADMIN and as the applicant on the local demo (wizard → credentials dialog → Applications tab → Assign Section; portal SUBMITTED → SHORTLISTED → SELECTED → family accepts → Confirm Enrollment → student created, graded, notified). Fixed:
+
+| Where                       | What was broken                                                                                                                              | Now                                                                                                                               |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Production crons            | `vercel.json` is `crons: []`; only the conference jobs were bridged — fee-due, fee-overdue, the email drain and document jobs never ran      | `admission-crons.yml` bridges the four; the email drain has a 3-day age gate that retires the stale backlog before its first send |
+| Wizard actions              | `getStudentForWizard` had no `auth()`; draft / complete / delete had no role check                                                           | One guard (`wizard/authorize.ts`) for every wizard action                                                                         |
+| Editing an enrolled student | Save re-ran the core: new student code, new shadow Application (orphaning a portal one), re-sent welcome mail                                | The finisher recognises a provisioned row; the core reuses code / application / user                                              |
+| Wizard credentials          | The minted temp password was returned and never shown                                                                                        | One finisher opens the shared credentials dialog on the list page                                                                 |
+| Guardian WhatsApp           | Stored in `*Email` columns, written to `Guardian.emailAddress` at enrollment; a shared household number merged two parents                   | Classified by shape; `createOrLinkGuardian` writes a `whatsapp` phone row; the detail page labels it                              |
+| Placement for direct admits | Only the Enrollment tab (PORTAL) could place; an empty `applyingForClass` matched every section                                              | One `PlacementDialog`, also on the students list; matching by grade id                                                            |
+| Reminders                   | fee-due's invoice arm skipped every invoice whose assignment existed; fee-overdue read only `paymentSchedule`; archived students were chased | Skip only assignments reminded this run; overdue on invoice due dates; archived excluded                                          |
+| Arabic grade 12             | `extractGradeNumber("الصف الثاني عشر")` returned 2                                                                                           | Longest ordinal wins                                                                                                              |
+| Public grade picker         | Static KG1–12 regardless of the school                                                                                                       | Narrowed to the school's grades                                                                                                   |
+| Tables after an action      | Rows kept their mounted state after `router.refresh()`; a confirmed row still offered Confirm Enrollment                                     | Platform tables adopt the server's rows when their content changes                                                                |
+
+Still open after this pass: a student with a grade and **no** fee assignment (the demo campaign is 2026-2027, every active structure is 2025-2026) is invisible to the reminders and the unplaced chip — only a warning toast at creation says so; the account-model, interview-date, tour-mail and out-of-request-link items from 2026-09-04 are unchanged.
 
 ## Flow
 

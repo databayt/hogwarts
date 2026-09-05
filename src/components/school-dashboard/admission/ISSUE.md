@@ -15,11 +15,70 @@ last_audited: 2026-09-04
 
 **Status:** 🟢 PRODUCTION-READY CORE — full admit→accept→pay→enroll→fee flow verified twice; ~96% complete
 **Real Completion:** ~96% (2026-09-04 pass closed the money/expiry/notification/role P0s; the account model, interview scheduling and tour mail remain product work)
-**Last Updated:** 2026-09-04 (production pass — six commits `f8a16b718..` on `main`, see below)
+**Last Updated:** 2026-09-05 (intake pass — see the section below; 2026-09-04 production pass follows)
 **Last Audited:** 2026-09-04 (four parallel traces: finance, notifications, roles + family surfaces, i18n/RTL/mobile; tsc 0; 428 admission-area tests passing)
 **Ship Issue:** [#239](https://github.com/databayt/hogwarts/issues/239)
 
 ---
+
+## 2026-09-05 — intake pass: four channels, one assembly point (LOCAL, not deployed)
+
+Read with `listings/students/ISSUE.md` (same date). The ask was to trace adding
+a student through every channel and make everything after `provisionStudent`
+one shared path. Browser-verified (ADMIN + applicant) on the local demo:
+wizard → credentials dialog → Applications tab → Assign Section; portal
+SUBMITTED → SHORTLISTED → SELECTED → family accepts → Confirm Enrollment →
+student created + graded + notified. Fixed here:
+
+- [x] **P0 — crons did not run in production.** `vercel.json` is `crons: []`
+      and only the conference jobs were bridged, so fee-due (reminders,
+      offer-expiry flip, unplaced alerts), fee-overdue, the email drain and
+      the document-AI queue were dead. `.github/workflows/admission-crons.yml`
+      bridges the four; `processPendingEmailNotifications` carries an age gate
+      (`EMAIL_QUEUE_MAX_AGE_DAYS = 3`) that retires the ~20k stale rows before
+      the first send. Activates on the next push of `main`.
+- [x] **P1 — guardian WhatsApp written as email.** The public wizard's
+      guardian tab collects WhatsApp in the `*Email` columns; `confirmEnrollment`
+      passed it as `email` → `Guardian.emailAddress = "+249…"`, enrollment mail
+      to a phone number, and a father + mother sharing a household number
+      collapsed into ONE guardian (upsert by address). `splitGuardianContact`
+      classifies by shape; `createOrLinkGuardian` takes `whatsapp`; the detail
+      page labels the value "WhatsApp".
+- [x] **P1 — reminders never fired for unscheduled fees.** fee-due's invoice
+      arm skipped every invoice whose assignment merely EXISTED (all of them);
+      it now skips only assignments reminded in the same run. fee-overdue also
+      reads invoice due dates. Both crons stop chasing archived students.
+- [x] **P1 — `extractGradeNumber("الصف الثاني عشر") === 2`.** Arabic ordinals
+      matched in insertion order; longest wins now. Grade 12 applicants
+      written in Arabic resolved to Grade 2 at enrollment, fee preview and
+      placement.
+- [x] **Placement for every channel.** `placeStudentInSection({ studentId })`
+      and `getAvailableSectionsForPlacement({ gradeId })` — an empty label used
+      to match every section; the students list reuses `PlacementDialog`
+      (controlled `sections` mode) for direct-admit / imported students.
+- [x] `NO_CLASSES_FOR_GRADE` joined the enrollment warning codes (translated).
+- [x] Platform tables adopt the server's rows after `router.refresh()`
+      (`usePlatformData`) — a confirmed enrollment row kept offering "Confirm
+      Enrollment" until a hard reload.
+
+Found, not fixed:
+
+- [ ] **Graded but unbilled students are invisible.** The demo campaign is
+      2026-2027; all 16 active fee structures are 2025-2026, so the PORTAL
+      enrollment above produced zero fee assignments with only a transient
+      warning toast. Needs a fourth arm in fee-due part D + an "unbilled"
+      chip (see students ISSUE.md).
+- [ ] Registration fee: no 2026-2027 structure carries one on the demo, so the
+      offer page correctly skipped the payment step — the paid path was
+      verified on 2026-09-04, not re-run today.
+- [x] ~~Row menus in the enrollment table were stale after an action~~ —
+      `usePlatformData` adopts the server's rows (content signature; the
+      identity version looped). The Enrollment tab's Assign Section dialog
+      also closed on its own section fetch (row-cell `useState` wiped by the
+      table remount) — it is now hosted once per table from
+      `placement-store.ts` + `placement-dialog-host.tsx`, shared with the
+      students list. Browser-verified: APP-2026-6ZH1DP placed in
+      "الصف الأول - ب" with 4 class enrollments and a placement notice.
 
 ## 2026-09-04 — production pass (LOCAL, six commits, not deployed)
 
