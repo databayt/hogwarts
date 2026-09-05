@@ -95,6 +95,23 @@ minutes. The original array is preserved verbatim in **`vercel.crons.full.json`*
 > Gate it first: suppress the backlog with an explicit age-bounded statement, then verify the
 > remaining queue is small, then enable. Better still, add the age cutoff inside
 > `processPendingEmailNotifications()` so this cannot recur.
+>
+> **Done 2026-09-05:** `processPendingEmailNotifications()` now carries an age gate
+> (`EMAIL_QUEUE_MAX_AGE_DAYS = 3` in `email-service.ts`). Every run first marks rows older than the
+> gate `emailSent: true` with `emailError: "Expired: …"`, then drains only recent rows. The first
+> live run therefore retires the whole backlog above without sending it. From that run on, queued
+> notification email reaches real recipients — the bridge below enables it knowingly.
+
+### The four admission / finance jobs run on GitHub Actions too
+
+`.github/workflows/admission-crons.yml` pings `fee-due` (daily 08:00), `fee-overdue` (daily 09:00),
+`process-email-notifications` (`*/15`) and `process-document-jobs` (`*/30`) the same way. Without
+them the student-intake pipeline stops after enrollment: no instalment reminders, no offer-expiry
+reminders or `EXPIRED` flips, no OVERDUE detection or late fees, no unplaced-student alerts, and every
+notification written with `delivery: "queue"` (every bulk-import notice) sits unsent forever. It alerts
+on databayt/hogwarts#314 and uses the same `CRON_SECRET` repo secret.
+
+**Delete that workflow too when you restore the cron array**, or the four jobs fire twice.
 
 ### The three conference jobs run on GitHub Actions instead
 
@@ -110,7 +127,8 @@ matching the Vercel project value.
 ## Moving back to the paid account
 
 1. Restore the cron array: copy `vercel.crons.full.json`'s `crons` back into `vercel.json`,
-   and delete `.github/workflows/conference-crons.yml` (see above).
+   and delete `.github/workflows/conference-crons.yml` and `.github/workflows/admission-crons.yml`
+   (see above).
 2. Move the five hostnames from the Hobby project to the Pro one.
 3. Redeploy from git on Pro. Its warm cache builds this in ~2.6 minutes.
 

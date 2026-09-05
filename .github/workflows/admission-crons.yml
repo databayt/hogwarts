@@ -1,0 +1,153 @@
+# Admission + finance cron bridge — a stand-in for Vercel Cron.
+#
+# `vercel.json` carries `"crons": []` because the Hobby plan rejects an entire
+# deployment that contains any sub-daily schedule (see DEPLOYMENT.md). The
+# conference jobs were restored by conference-crons.yml; this file restores the
+# four jobs the student-intake pipeline depends on and nothing else:
+#
+#   fee-due                      daily 08:00  instalment reminders, offer-expiry
+#                                             reminders + the EXPIRED flip,
+#                                             unplaced-student alerts
+#   fee-overdue                  daily 09:00  PENDING/PARTIAL → OVERDUE, late fees,
+#                                             overdue reminders
+#   process-email-notifications  */15         drains queued notification email —
+#                                             every bulk-import notice and every
+#                                             row whose inline send was skipped
+#   process-document-jobs        */30         the document-AI extraction queue
+#
+# The email drain was deliberately left out of the conference bridge because
+# ~20,000 stale rows were queued and processPendingEmailNotifications() had no
+# age gate. It has one now (EMAIL_QUEUE_MAX_AGE_DAYS in email-service.ts): the
+# first run retires everything older than the gate as expired and sends only
+# what is recent. That is still the moment real recipients start receiving
+# notification email — enable this workflow knowingly.
+#
+# Delete this file when the Vercel Pro account is restored and vercel.json's
+# cron array goes back, or every job here fires twice.
+#
+# Alerting: a failed step comments on databayt/hogwarts#314 (the admission
+# tracker), rate-limited to one comment per hour via a marker-string search
+# over the issue's recent comments.
+name: Admission crons
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+    - cron: "0 9 * * *"
+    - cron: "*/15 * * * *"
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which job to run (all | fee-due | fee-overdue | email | documents)"
+        required: false
+        default: "all"
+
+# Keyed by schedule so the four jobs overlap freely (their writers are
+# idempotent and touch different rows) while back-to-back ticks of the SAME
+# schedule still serialize. See conference-crons.yml for the reasoning.
+concurrency:
+  group: admission-crons-${{ github.event.schedule || 'dispatch' }}
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    if: github.repository == 'databayt/hogwarts'
+    permissions:
+      issues: write
+    env:
+      BASE_URL: https://ed.databayt.org
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Guard — the secret must exist
+        id: guard
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET repo secret is unset. verifyCronSecret fails closed, so every ping would 401. Set it to the same value as the Vercel project env."
+            exit 1
+          fi
+
+      # `--retry 2 --retry-delay 20` covers a cold Neon compute (see
+      # conference-crons.yml). Every writer here is idempotent per day, so a
+      # repeated tick repeats no mail.
+      - name: fee-due
+        id: fee_due
+        if: |
+          github.event.schedule == '0 8 * * *' ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.job == 'all' || inputs.job == 'fee-due'))
+        run: |
+          curl -fsS --max-time 300 --retry 2 --retry-delay 20 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$BASE_URL/api/cron/fee-due"
+
+      - name: fee-overdue
+        id: fee_overdue
+        if: |
+          github.event.schedule == '0 9 * * *' ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.job == 'all' || inputs.job == 'fee-overdue'))
+        run: |
+          curl -fsS --max-time 300 --retry 2 --retry-delay 20 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$BASE_URL/api/cron/fee-overdue"
+
+      - name: process-email-notifications
+        id: email
+        if: |
+          github.event.schedule == '*/15 * * * *' ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.job == 'all' || inputs.job == 'email'))
+        run: |
+          curl -fsS --max-time 120 --retry 2 --retry-delay 20 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$BASE_URL/api/cron/process-email-notifications"
+
+      - name: process-document-jobs
+        id: documents
+        if: |
+          github.event.schedule == '*/30 * * * *' ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.job == 'all' || inputs.job == 'documents'))
+        run: |
+          curl -fsS --max-time 300 --retry 2 --retry-delay 20 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$BASE_URL/api/cron/process-document-jobs"
+
+      - name: Alert on failure (rate-limited to 1/hour)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GUARD_OUTCOME: ${{ steps.guard.outcome }}
+          FEE_DUE_OUTCOME: ${{ steps.fee_due.outcome }}
+          FEE_OVERDUE_OUTCOME: ${{ steps.fee_overdue.outcome }}
+          EMAIL_OUTCOME: ${{ steps.email.outcome }}
+          DOCUMENTS_OUTCOME: ${{ steps.documents.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # `if [ cond ]` on purpose — the runner shell is `bash -e`, and a
+          # false `[ cond ] && x=y` aborts the step.
+          FAILED=""
+          if [ "$GUARD_OUTCOME" = "failure" ]; then FAILED="${FAILED}CRON_SECRET missing, "; fi
+          if [ "$FEE_DUE_OUTCOME" = "failure" ]; then FAILED="${FAILED}fee-due, "; fi
+          if [ "$FEE_OVERDUE_OUTCOME" = "failure" ]; then FAILED="${FAILED}fee-overdue, "; fi
+          if [ "$EMAIL_OUTCOME" = "failure" ]; then FAILED="${FAILED}process-email-notifications, "; fi
+          if [ "$DOCUMENTS_OUTCOME" = "failure" ]; then FAILED="${FAILED}process-document-jobs, "; fi
+          FAILED="${FAILED%, }"
+          if [ -z "$FAILED" ]; then FAILED="(unknown step)"; fi
+
+          MARKER="<!-- admission-crons-alert -->"
+          SINCE=$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
+          RECENT=$(gh api "repos/${{ github.repository }}/issues/314/comments?since=${SINCE}&per_page=100" \
+            --jq "[.[] | select(.body | contains(\"${MARKER}\"))] | length")
+
+          if [ "$RECENT" -gt 0 ]; then
+            echo "Already alerted on #314 within the last hour (${RECENT} comment(s)) — skipping."
+            exit 0
+          fi
+
+          BODY=$(printf '%s\nAdmission cron bridge failed: **%s**\n\nRun: %s\n' \
+            "$MARKER" "$FAILED" "$RUN_URL")
+
+          gh issue comment 314 --repo "${{ github.repository }}" --body "$BODY"

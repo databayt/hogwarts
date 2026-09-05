@@ -452,6 +452,20 @@ async function logDeliveryAttempt(data: {
  * Process pending email notifications in batch
  * Called by cron job
  */
+/**
+ * Age gate for the email queue. A notification older than this is no longer
+ * worth an email — a fee reminder, an offer nudge or an enrollment notice from
+ * weeks ago is at best noise and at worst wrong — so the drain marks it
+ * processed instead of sending it.
+ *
+ * This exists because the drain had never run in production (the cron array
+ * is empty on the Hobby plan; see DEPLOYMENT.md) and ~20,000 unsent rows had
+ * piled up since April addressed to real families at live schools. Turning the
+ * job on without this would have sent months-old mail for days. The sweep
+ * below makes the cutoff self-enforcing rather than a one-off SQL statement.
+ */
+export const EMAIL_QUEUE_MAX_AGE_DAYS = 3
+
 export async function processPendingEmailNotifications(
   schoolId?: string,
   limit = 50
@@ -459,13 +473,40 @@ export async function processPendingEmailNotifications(
   processed: number
   succeeded: number
   failed: number
+  /** Rows older than the age gate marked processed without a send. */
+  expired: number
 }> {
+  const cutoff = new Date(
+    Date.now() - EMAIL_QUEUE_MAX_AGE_DAYS * 24 * 60 * 60 * 1000
+  )
+
+  // Retire anything past the age gate first — cheap when nothing matches.
+  let expired = 0
+  try {
+    const swept = await db.notification.updateMany({
+      where: {
+        ...(schoolId && { schoolId }),
+        emailSent: false,
+        channels: { has: "email" },
+        createdAt: { lt: cutoff },
+      },
+      data: {
+        emailSent: true,
+        emailError: `Expired: older than ${EMAIL_QUEUE_MAX_AGE_DAYS} days when the email drain ran`,
+      },
+    })
+    expired = swept.count
+  } catch (error) {
+    console.error("[NotificationEmail] Age-gate sweep failed:", error)
+  }
+
   // Get pending notifications that should be sent via email
   const pending = await db.notification.findMany({
     where: {
       ...(schoolId && { schoolId }),
       emailSent: false,
       channels: { has: "email" },
+      createdAt: { gte: cutoff },
     },
     take: limit,
     orderBy: [
@@ -577,6 +618,7 @@ export async function processPendingEmailNotifications(
     processed: pending.length,
     succeeded,
     failed,
+    expired,
   }
 }
 
