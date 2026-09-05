@@ -230,6 +230,8 @@ async function processSchool(
     where: {
       schoolId,
       status: { in: ["PENDING", "PARTIAL"] },
+      // A withdrawn (archived) student's open fees accrue no fines or reminders.
+      student: { archivedAt: null },
     },
     select: {
       id: true,
@@ -245,11 +247,24 @@ async function processSchool(
           lateFeeType: true,
         },
       },
+      // The invoices carry real due dates even when the structure has no
+      // `paymentSchedule` (single-instalment and admin-created fees) — this
+      // job used to read only the schedule, so those fees never went overdue.
+      invoices: {
+        where: { status: { in: ["UNPAID", "PARTIAL"] }, due_date: { lt: now } },
+        select: { due_date: true },
+        orderBy: { due_date: "asc" },
+        take: 1,
+      },
     },
   })
 
   for (const assignment of pendingAssignments) {
-    if (!hasOverdueScheduleEntry(assignment.feeStructure.paymentSchedule, now))
+    const overdueInvoiceDue = assignment.invoices?.[0]?.due_date ?? null
+    if (
+      !hasOverdueScheduleEntry(assignment.feeStructure.paymentSchedule, now) &&
+      !overdueInvoiceDue
+    )
       continue
 
     newlyOverdue++
@@ -273,10 +288,9 @@ async function processSchool(
       .lateFeeType as LateFeeType | null
 
     if (lateFeeAmount > 0 && lateFeeType) {
-      const earliestOverdue = getEarliestOverdueDate(
-        assignment.feeStructure.paymentSchedule,
-        now
-      )
+      const earliestOverdue =
+        getEarliestOverdueDate(assignment.feeStructure.paymentSchedule, now) ??
+        overdueInvoiceDue
       const daysOverdue = earliestOverdue
         ? Math.max(
             1,
@@ -319,6 +333,7 @@ async function processSchool(
     where: {
       schoolId,
       status: "OVERDUE",
+      student: { archivedAt: null },
     },
     select: {
       id: true,

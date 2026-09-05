@@ -198,10 +198,12 @@ async function processSchool(
   // ── A1: FeeAssignments due within the window ──────────────────────────────
   // We check the feeStructure.paymentSchedule JSON for upcoming dueDate entries.
   // PENDING and PARTIAL statuses are eligible (PAID/CANCELLED/OVERDUE are not).
+  // An archived (withdrawn) student's open fees are not chased.
   const feeAssignments = await db.feeAssignment.findMany({
     where: {
       schoolId,
       status: { in: ["PENDING", "PARTIAL"] },
+      student: { archivedAt: null },
     },
     select: {
       id: true,
@@ -215,6 +217,14 @@ async function processSchool(
       },
     },
   })
+
+  // Assignments A1 actually reminded today — A2 skips ONLY these. It used to
+  // skip every invoice whose assignment merely EXISTED in the list above, which
+  // is every invoice there is, so an invoice on a structure with no
+  // `paymentSchedule` (a single-instalment or admin-created fee) was never
+  // reminded by either arm: A1 had no schedule entry to fire on and A2 threw
+  // it away as "already handled".
+  const remindedAssignmentIds = new Set<string>()
 
   for (const assignment of feeAssignments) {
     // Find any schedule entry whose dueDate falls in [now, windowEnd].
@@ -241,6 +251,7 @@ async function processSchool(
       continue
 
     feeAssignmentReminders++
+    remindedAssignmentIds.add(assignment.id)
 
     const recipientIds = await getRecipientIds(assignment.studentId)
     const amount = assignment.finalAmount.toString()
@@ -276,6 +287,12 @@ async function processSchool(
       schoolId,
       status: { in: ["UNPAID", "PARTIAL"] },
       due_date: { gte: now, lte: windowEnd },
+      // Invoices of a withdrawn (archived) student are not chased. Invoices
+      // with no assignment (manual, admin-raised) have no student to check.
+      OR: [
+        { feeAssignmentId: null },
+        { feeAssignment: { student: { archivedAt: null } } },
+      ],
     },
     select: {
       id: true,
@@ -288,13 +305,13 @@ async function processSchool(
   })
 
   for (const invoice of dueInvoices) {
-    // Skip invoices that belong to a FeeAssignment already handled above
-    // (to avoid double-notifying the same student).
-    if (invoice.feeAssignmentId) {
-      const alreadyHandled = feeAssignments.some(
-        (fa) => fa.id === invoice.feeAssignmentId
-      )
-      if (alreadyHandled) continue
+    // Skip invoices whose FeeAssignment A1 already reminded today (so the
+    // same student is not told twice) — and only those.
+    if (
+      invoice.feeAssignmentId &&
+      remindedAssignmentIds.has(invoice.feeAssignmentId)
+    ) {
+      continue
     }
 
     // Idempotency: use the invoice id as the entity key in metadata.
