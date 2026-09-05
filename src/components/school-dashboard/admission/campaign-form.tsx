@@ -169,7 +169,7 @@ export function CampaignForm({
               disabled={isPending}
             />
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <SelectField
                 name="academicYear"
                 label={labels.academicYear}
@@ -216,18 +216,18 @@ export function CampaignForm({
                       watched.endDate ? (
                         <>
                           {watched.startDate.toLocaleDateString(
-                            lang === "ar" ? "ar-SA" : "en-US",
+                            lang === "ar" ? "ar" : "en-US",
                             { day: "numeric", month: "short", year: "2-digit" }
                           )}{" "}
                           -{" "}
                           {watched.endDate.toLocaleDateString(
-                            lang === "ar" ? "ar-SA" : "en-US",
+                            lang === "ar" ? "ar" : "en-US",
                             { day: "numeric", month: "short", year: "2-digit" }
                           )}
                         </>
                       ) : (
                         watched.startDate.toLocaleDateString(
-                          lang === "ar" ? "ar-SA" : "en-US",
+                          lang === "ar" ? "ar" : "en-US",
                           { day: "numeric", month: "short", year: "2-digit" }
                         )
                       )

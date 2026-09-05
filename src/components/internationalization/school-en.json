@@ -10756,7 +10756,8 @@
         "review": "Review",
         "reprocess": "Retry",
         "process": "Process",
-        "document": "Document"
+        "document": "Document",
+        "close": "Close"
       },
       "leads": {
         "bookingStatus": {

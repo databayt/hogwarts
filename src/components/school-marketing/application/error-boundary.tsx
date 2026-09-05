@@ -75,7 +75,7 @@ class ApplyErrorBoundary extends Component<Props, State> {
             {t?.description ||
               "An error occurred while processing your application. Please try again or contact support if the problem persists."}
           </p>
-          <div className="flex gap-4 rtl:flex-row-reverse">
+          <div className="flex gap-4">
             <Button onClick={this.handleReset} variant="outline">
               <RefreshCw className="me-2 h-4 w-4" />
               {t?.tryAgain || "Try Again"}

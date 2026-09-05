@@ -49,8 +49,7 @@ export function AdmissionHero({ lang, dictionary }: AdmissionHeroProps) {
           {/* 27rem is zenda's own lede measure -- one short line at 40px, which
            * is what this pattern is sized for. */}
           <p className="zenda-lede mt-6 max-w-[27rem]">
-            {t?.subtitle ||
-              "Your Hogwarts letter will be delivered by owl post on your 11th birthday. If you haven't received it by then, please check with your local Ministry of Magic office."}
+            {t?.subtitle || "Apply in five minutes."}
           </p>
 
           {/* One pill, zenda's EXPLORE button in its default purple. The hero

@@ -330,12 +330,18 @@ export async function createTourBooking(
     // Send confirmation email
     if (resend) {
       try {
-        const formattedDate = slot.date.toLocaleDateString("en-US", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
+        // The reschedule email already formats in the school's language; the
+        // confirmation hard-coded en-US, so an Arabic school's first mail to
+        // a family carried an English date.
+        const formattedDate = slot.date.toLocaleDateString(
+          schoolResult.data.preferredLanguage === "en" ? "en-US" : "ar",
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }
+        )
         const startTime = slot.startTime
           .toISOString()
           .split("T")[1]

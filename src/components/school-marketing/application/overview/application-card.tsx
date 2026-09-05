@@ -135,7 +135,7 @@ export function ApplicationCard({
                 {dict.draft || "Draft"}
               </Badge>
             </div>
-            <div className="mt-0.5 flex flex-col sm:flex-row sm:items-center sm:gap-2 rtl:flex-row-reverse">
+            <div className="mt-0.5 flex flex-col sm:flex-row sm:items-center sm:gap-2">
               <p className="text-muted-foreground flex items-center gap-1 text-xs">
                 {application.studentName && (
                   <>

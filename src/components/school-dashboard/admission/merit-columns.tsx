@@ -145,7 +145,7 @@ function ScoreEntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>
             {t?.meritList?.editScores || "Edit Scores"} — {merit.applicantName}

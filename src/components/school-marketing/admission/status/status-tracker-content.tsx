@@ -270,7 +270,7 @@ export default function StatusTrackerContent({
                         {dict.applicationNumber || "Application Number"}
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="APP-2024-XXXXX" />
+                        <Input {...field} placeholder="APP-YYYY-XXXXX" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

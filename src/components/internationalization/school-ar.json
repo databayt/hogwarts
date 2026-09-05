@@ -10764,7 +10764,8 @@
         "review": "مراجعة",
         "reprocess": "إعادة المحاولة",
         "process": "معالجة",
-        "document": "مستند"
+        "document": "مستند",
+        "close": "إغلاق"
       },
       "leads": {
         "bookingStatus": {

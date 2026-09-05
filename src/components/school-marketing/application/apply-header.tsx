@@ -64,9 +64,9 @@ export function ApplyHeader({
 
   return (
     <header className="w-full py-4">
-      <div className="flex items-center justify-between rtl:flex-row-reverse">
+      <div className="flex items-center justify-between">
         {/* Left side - Exit button and logo */}
-        <div className="flex items-center gap-2 rtl:flex-row-reverse">
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
@@ -90,10 +90,10 @@ export function ApplyHeader({
         </div>
 
         {/* Right side - Save status, Help and Save buttons */}
-        <div className="flex items-center gap-1 rtl:flex-row-reverse">
+        <div className="flex items-center gap-1">
           {/* Save status indicator */}
           {lastSaved && !isSaving && (
-            <div className="text-muted-foreground hidden items-center gap-1 text-xs sm:flex rtl:flex-row-reverse">
+            <div className="text-muted-foreground hidden items-center gap-1 text-xs sm:flex">
               <Check className="h-3 w-3 text-green-500" />
               <span>
                 {(dict.lastSaved || "Last saved {time}").replace(
