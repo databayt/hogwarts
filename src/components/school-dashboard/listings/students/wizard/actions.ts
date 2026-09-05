@@ -4,15 +4,14 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { after } from "next/server"
-import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { authorizeWizardAction } from "./authorize"
 import type { StudentWizardData } from "./use-student-wizard"
 import {
   getPersonalCompleteness,
@@ -28,8 +27,16 @@ export async function getStudentForWizard(
   | { success: false; error: string; details?: string }
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    // Reads the whole student graph (PII, address, guardians). It used to
+    // resolve the tenant only — callable unauthenticated on any subdomain.
+    const authz = await authorizeWizardAction("read")
+    if (!authz.ok) {
+      return {
+        success: false,
+        error: authz.response.error ?? ACTION_ERRORS.UNAUTHORIZED,
+      }
+    }
+    const { schoolId } = authz
 
     const [student, school] = await Promise.all([
       db.student.findFirst({
@@ -91,15 +98,9 @@ export async function createDraftStudent(): Promise<
   ActionResponse<{ id: string }>
 > {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    const authz = await authorizeWizardAction("create")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const student = await db.student.create({
       data: {
@@ -138,15 +139,11 @@ export async function completeStudentWizard(studentId: string): Promise<
   }>
 > {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    // Mints a login, fees and invoices — the same permission as creating the
+    // student in the first place.
+    const authz = await authorizeWizardAction("create")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     // Validate required fields are present. The student wizard now mirrors
     // the application wizard's structure: personal step is the only required
@@ -301,11 +298,9 @@ export async function updateStudentWizardStep(
   step: string
 ): Promise<void> {
   try {
-    const session = await auth()
-    if (!session?.user) return
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return
+    const authz = await authorizeWizardAction("update")
+    if (!authz.ok) return
+    const { schoolId } = authz
 
     // Only update wizardStep for draft students (wizardStep is non-null).
     // Enrolled/complete students (wizardStep: null) should not be reverted to draft.
@@ -323,15 +318,9 @@ export async function deleteDraftStudent(
   studentId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    const authz = await authorizeWizardAction("delete")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     // Atomic delete — only if it's still a draft
     const { count } = await db.student.deleteMany({

@@ -81,7 +81,12 @@ describe("student intake invariant", () => {
 
     for (const relPath of tracked) {
       if (isAllowed(relPath)) continue
-      const source = fs.readFileSync(path.join(REPO_ROOT, relPath), "utf8")
+      // `git ls-files` lists the INDEX; a file another session deleted from the
+      // working tree but has not yet committed is still tracked and would throw
+      // ENOENT here, failing the invariant for a reason unrelated to it.
+      const absPath = path.join(REPO_ROOT, relPath)
+      if (!fs.existsSync(absPath)) continue
+      const source = fs.readFileSync(absPath, "utf8")
       if (!DIRECT_CREATE.test(source)) continue
 
       stripComments(source)
