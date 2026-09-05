@@ -149,6 +149,7 @@ Still open after this pass — product decisions and follow-ups, each with its r
 - **Registration fee materializes only at enrollment** (a `Payment` needs a `Student`): a cash fee confirmed for a family that later withdraws is never on the books.
 - **`createJournalEntry` inside `confirmEnrollment`'s transaction uses the global client** — the ledger entry commits independently of the enrollment.
 - **A started Stripe checkout is not expired** when the family switches to a manual rail.
+- **An accepted-but-unpaid offer never lapses** — the price of the expiry fix: the cron exempts accepted offers, so a family that accepts and then never pays holds the seat until an admin withdraws it. Needs a payment deadline distinct from the acceptance deadline, with its own reminder and lapse.
 - **WhatsApp / SMS** are unused by admission; instalment reminders and OVERDUE detection still read only `paymentSchedule`, in UTC (unchanged from 08-15).
 
 ## Flow

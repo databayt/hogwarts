@@ -106,6 +106,12 @@ Open — product decisions and follow-ups (details in the docs table):
       confirmed cash is never on the books. `createJournalEntry` posts outside
       the enrollment transaction.
 - [ ] **Stripe session not expired** when the family switches to a manual rail.
+- [ ] **An accepted-but-unpaid offer now never lapses** — a consequence of the
+      expiry fix (the cron exempts `offerAccepted`). A family that accepts and
+      then never pays holds the seat until an admin acts (WITHDRAWN via the
+      status menu). Needs a payment deadline distinct from the acceptance
+      deadline (e.g. `offerExpiryDays` for acceptance + a settings-driven
+      payment window), with its own reminder and lapse.
 - [ ] Issue #269, WhatsApp breadth (BUG-10), tour-config settings — unchanged.
 
 ---

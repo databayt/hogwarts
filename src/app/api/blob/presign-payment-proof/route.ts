@@ -23,7 +23,11 @@ import { auth } from "@/auth"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
-import { getTenantContext } from "@/lib/tenant-context"
+import { getSubdomainFromHost } from "@/lib/root-domain"
+import {
+  getSchoolIdFromSubdomain,
+  getTenantContext,
+} from "@/lib/tenant-context"
 
 let s3Client: S3Client | null = null
 
@@ -68,7 +72,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { schoolId } = await getTenantContext()
+    let { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      // API routes sit outside the proxy's matcher, so no `x-subdomain`
+      // header reaches here and `getTenantContext` falls back to the session.
+      // An APPLICANT (role USER) has no school on their account yet — and the
+      // offer page's registration-fee receipt upload is exactly who this
+      // route serves — so resolve the school from the tenant host the
+      // request arrived on. Ownership of the specific application is still
+      // enforced by the action that records the proof (token-validated).
+      const subdomain = getSubdomainFromHost(request.headers.get("host"))
+      if (subdomain) {
+        schoolId = await getSchoolIdFromSubdomain(subdomain)
+      }
+    }
     if (!schoolId) {
       return NextResponse.json(
         { error: "School context required" },

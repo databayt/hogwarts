@@ -50,7 +50,7 @@ const REDIS_CACHE_TTL_S = 300 // 5 minutes (shared)
  * 2. In-memory Map (per-instance fallback, 1 min TTL)
  * 3. Database lookup (last resort)
  */
-async function getSchoolIdFromSubdomain(
+export async function getSchoolIdFromSubdomain(
   subdomain: string
 ): Promise<string | null> {
   const now = Date.now()
