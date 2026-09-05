@@ -41,6 +41,8 @@ export interface ProvisionGuardianInput {
   lastName: string
   email?: string | null
   phone?: string | null
+  /** WhatsApp number — see `GuardianEntry.whatsapp` in guardian-utils. */
+  whatsapp?: string | null
   occupation?: string | null
   isPrimary?: boolean
   /** Reserved — minting a guardian login is not implemented in this pass. */
@@ -610,6 +612,7 @@ export async function provisionStudent(
         lastName: guardian.lastName,
         email: guardian.email ?? null,
         phone: guardian.phone ?? null,
+        whatsapp: guardian.whatsapp ?? null,
         occupation: guardian.occupation ?? null,
         isPrimary: guardian.isPrimary ?? false,
         createLogin: guardian.createLogin,

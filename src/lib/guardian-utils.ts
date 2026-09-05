@@ -20,6 +20,14 @@ export interface GuardianEntry {
   lastName: string
   email: string | null
   phone: string | null
+  /**
+   * WhatsApp number, stored as a second `GuardianPhoneNumber` row with
+   * `phoneType: "whatsapp"` — the shape the admin wizard has always written.
+   * The public application has no column for it and captured it in the
+   * `*Email` fields; `confirmEnrollment` classifies those and routes a phone
+   * number here instead of into `Guardian.emailAddress`.
+   */
+  whatsapp?: string | null
   occupation: string | null
   isPrimary: boolean
 }
@@ -29,6 +37,7 @@ export interface GuardianFullNameEntry {
   fullName: string
   email: string | null
   phone: string | null
+  whatsapp?: string | null
   occupation: string | null
   isPrimary: boolean
 }
@@ -77,6 +86,7 @@ export async function createOrLinkGuardian(
     lastName,
     email,
     phone,
+    whatsapp,
     occupation,
     isPrimary,
     createLogin,
@@ -223,6 +233,32 @@ export async function createOrLinkGuardian(
         isPrimary: true,
       },
       update: {},
+    })
+  }
+
+  // 5. WhatsApp — a second row typed "whatsapp". Both wizards auto-fill it
+  //    from the phone, so the common case is the SAME number: skip it then,
+  //    or the upsert would retype the primary row to "whatsapp" and the
+  //    wizard's read-back (`phoneType !== "whatsapp"` = phone) would show the
+  //    phone field empty on the next open.
+  const whatsappNumber = whatsapp?.trim()
+  if (whatsappNumber && whatsappNumber !== phone?.trim()) {
+    await tx.guardianPhoneNumber.upsert({
+      where: {
+        schoolId_guardianId_phoneNumber: {
+          schoolId,
+          guardianId: guardian.id,
+          phoneNumber: whatsappNumber,
+        },
+      },
+      create: {
+        schoolId,
+        guardianId: guardian.id,
+        phoneNumber: whatsappNumber,
+        phoneType: "whatsapp",
+        isPrimary: false,
+      },
+      update: { phoneType: "whatsapp" },
     })
   }
 

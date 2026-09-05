@@ -195,10 +195,14 @@ export async function saveStudentPersonalGuardians(
 
     const parsed = personalGuardianSchema.parse(input)
 
+    // Same writer the admission side uses at enrollment (createOrLinkGuardian
+    // owns the phone + WhatsApp rows) — this used to hand-roll the WhatsApp
+    // upsert, and when the auto-filled WhatsApp equalled the phone it retyped
+    // the one row to "whatsapp", so the phone field came back empty.
     await db.$transaction(async (tx) => {
       if (parsed.fatherName?.trim()) {
         const { firstName, lastName } = splitGuardianName(parsed.fatherName)
-        const { guardianId } = await createOrLinkGuardian(tx, {
+        await createOrLinkGuardian(tx, {
           schoolId,
           studentId,
           typeName: "father",
@@ -206,33 +210,15 @@ export async function saveStudentPersonalGuardians(
           lastName,
           email: null,
           phone: parsed.fatherPhone?.trim() || null,
+          whatsapp: parsed.fatherWhatsapp?.trim() || null,
           occupation: null,
           isPrimary: true,
         })
-        if (parsed.fatherWhatsapp?.trim()) {
-          await tx.guardianPhoneNumber.upsert({
-            where: {
-              schoolId_guardianId_phoneNumber: {
-                schoolId,
-                guardianId,
-                phoneNumber: parsed.fatherWhatsapp.trim(),
-              },
-            },
-            create: {
-              schoolId,
-              guardianId,
-              phoneNumber: parsed.fatherWhatsapp.trim(),
-              phoneType: "whatsapp",
-              isPrimary: false,
-            },
-            update: { phoneType: "whatsapp" },
-          })
-        }
       }
 
       if (parsed.motherName?.trim()) {
         const { firstName, lastName } = splitGuardianName(parsed.motherName)
-        const { guardianId } = await createOrLinkGuardian(tx, {
+        await createOrLinkGuardian(tx, {
           schoolId,
           studentId,
           typeName: "mother",
@@ -240,29 +226,11 @@ export async function saveStudentPersonalGuardians(
           lastName,
           email: null,
           phone: parsed.motherPhone?.trim() || null,
+          whatsapp: parsed.motherWhatsapp?.trim() || null,
           occupation: null,
           // Mother is primary only if father wasn't provided.
           isPrimary: !parsed.fatherName?.trim(),
         })
-        if (parsed.motherWhatsapp?.trim()) {
-          await tx.guardianPhoneNumber.upsert({
-            where: {
-              schoolId_guardianId_phoneNumber: {
-                schoolId,
-                guardianId,
-                phoneNumber: parsed.motherWhatsapp.trim(),
-              },
-            },
-            create: {
-              schoolId,
-              guardianId,
-              phoneNumber: parsed.motherWhatsapp.trim(),
-              phoneType: "whatsapp",
-              isPrimary: false,
-            },
-            update: { phoneType: "whatsapp" },
-          })
-        }
       }
     })
 

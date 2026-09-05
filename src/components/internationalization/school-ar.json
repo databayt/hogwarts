@@ -9739,7 +9739,8 @@
         "yes": "نعم",
         "no": "لا",
         "registrationFeeProof": "إثبات الدفع",
-        "viewProof": "عرض الإيصال"
+        "viewProof": "عرض الإيصال",
+        "whatsapp": "واتساب"
       },
       "meritList": {
         "title": "قائمة الجدارة",

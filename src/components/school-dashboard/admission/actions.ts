@@ -118,6 +118,22 @@ const applicantLang = (
  * Dispatch in-app notification AND send email immediately.
  * Replaces the pattern of dispatchNotification() + daily cron for admission.
  */
+/**
+ * An Application `*Email` column holds either a real address or — for every
+ * family that applied through the public wizard, whose guardian tab collects
+ * WhatsApp and no email — a phone number. Route each to the right place.
+ */
+function splitGuardianContact(value: string | null | undefined): {
+  email: string | null
+  whatsapp: string | null
+} {
+  const v = value?.trim()
+  if (!v) return { email: null, whatsapp: null }
+  return v.includes("@")
+    ? { email: v, whatsapp: null }
+    : { email: null, whatsapp: v }
+}
+
 async function dispatchAdmissionNotification(params: {
   schoolId: string
   userId?: string
@@ -1289,15 +1305,27 @@ export async function confirmEnrollment(params: {
             fullName: string
             email: string | null
             phone: string | null
+            whatsapp: string | null
             occupation: string | null
             isPrimary: boolean
           }> = []
+
+          // The public wizard's guardian tab has a WhatsApp field and no
+          // email field, but Application has only `*Email` columns to hold
+          // it — so those columns carry a phone number for every family
+          // that applied online. Handing that to createOrLinkGuardian as
+          // `email` wrote "+249…" into Guardian.emailAddress, made the
+          // enrollment mail try to deliver to it, and — because the email
+          // path upserts by address — collapsed a father and mother who
+          // share a household WhatsApp into ONE guardian row, dropping the
+          // mother's name. Classify by shape; the columns keep their names.
+          const contact = splitGuardianContact
 
           if (application.fatherName) {
             guardianEntries.push({
               typeName: "father",
               fullName: application.fatherName,
-              email: application.fatherEmail,
+              ...contact(application.fatherEmail),
               phone: application.fatherPhone,
               occupation: application.fatherOccupation,
               isPrimary: true,
@@ -1307,7 +1335,7 @@ export async function confirmEnrollment(params: {
             guardianEntries.push({
               typeName: "mother",
               fullName: application.motherName,
-              email: application.motherEmail,
+              ...contact(application.motherEmail),
               phone: application.motherPhone,
               occupation: application.motherOccupation,
               isPrimary: !application.fatherName,
@@ -1322,7 +1350,7 @@ export async function confirmEnrollment(params: {
               typeName:
                 application.guardianRelation?.toLowerCase() || "guardian",
               fullName: application.guardianName,
-              email: application.guardianEmail,
+              ...contact(application.guardianEmail),
               phone: application.guardianPhone,
               occupation: null,
               isPrimary: false,

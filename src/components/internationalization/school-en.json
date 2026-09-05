@@ -9731,7 +9731,8 @@
         "yes": "Yes",
         "no": "No",
         "registrationFeeProof": "Payment proof",
-        "viewProof": "View receipt"
+        "viewProof": "View receipt",
+        "whatsapp": "WhatsApp"
       },
       "meritList": {
         "title": "Merit List",

@@ -223,6 +223,14 @@ export default async function ApplicationDetailContent({
     schoolId
   )
 
+  // The public wizard's guardian tab collects WhatsApp, not email, and the
+  // Application has only `*Email` columns to store it in — so this value is a
+  // phone number for every online applicant. Label it for what it is.
+  const contactLabel = (value: string | null | undefined): string =>
+    value && !value.includes("@")
+      ? t?.applicationDetail?.whatsapp || "WhatsApp"
+      : t?.applicationDetail?.email || "Email"
+
   // Helper to get translated value or fall back to original
   const d = (field: string): string | null => {
     const t_val = translated[field]
@@ -474,7 +482,7 @@ export default async function ApplicationDetailContent({
               value={application.fatherPhone}
             />
             <InfoRow
-              label={t?.applicationDetail?.email || "Email"}
+              label={contactLabel(application.fatherEmail)}
               value={application.fatherEmail}
             />
             <InfoRow
@@ -490,7 +498,7 @@ export default async function ApplicationDetailContent({
               value={application.motherPhone}
             />
             <InfoRow
-              label={t?.applicationDetail?.email || "Email"}
+              label={contactLabel(application.motherEmail)}
               value={application.motherEmail}
             />
             <InfoRow
@@ -509,7 +517,7 @@ export default async function ApplicationDetailContent({
               value={application.guardianPhone}
             />
             <InfoRow
-              label={t?.applicationDetail?.email || "Email"}
+              label={contactLabel(application.guardianEmail)}
               value={application.guardianEmail}
             />
           </div>
