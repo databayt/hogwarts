@@ -5,10 +5,10 @@ title: Admission (school dashboard)
 file_type: readme
 owner: Abdout
 maturity: Built
-completion: 90
+completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-06-13
+last_audited: 2026-09-04
 ---
 
 ## Admission (Dashboard) — School-side admission management pipeline
@@ -66,6 +66,8 @@ src/components/school-dashboard/admission/
 ├── enrollment-table.tsx            # Enrollment DataTable (client) — PlacementDialog wired
 ├── placement-dialog.tsx            # Student placement dialog with seat counts (client)
 ├── access-denied.tsx               # Role-gated tab denial panel (shared)
+├── registration-methods.ts         # The ONE manual-rail list (cash/bank/bankak/cashi) — server + row menu
+├── status-reason-dialog.tsx        # Optional note to the family on REJECTED / WAITLISTED (client)
 ├── settings-content.tsx            # Admission settings (client component)
 ├── leads/                          # Leads tab [NEW]
 │   ├── leads-content.tsx           # Leads tab server component (inquiries + tour bookings)
@@ -94,14 +96,14 @@ src/components/school-dashboard/admission/
 
 ### Status
 
-**Completion:** ~90% | **Status:** 🟢 production-ready core (audited 2026-06-13)
+**Completion:** ~96% | **Status:** 🟢 production-ready core (audited 2026-09-04)
 
-Full admit→accept→pay→enroll→fee pipeline verified. Merit ranking (score entry + weighted 60/40), AI document cron, PlacementDialog, Leads tab, ACCOUNTANT RBAC, tour TOCTOU, OTP hardening, all public writes rate-limited, webhook retry-on-catch, multi-installment amortization all shipped. Remaining open: server-side search on merit/enrollment tables, WhatsApp breadth (BUG-10), issue #269, `Application.lang` field (schema flag). See `ISSUE.md`.
+Full admit→accept→pay→enroll→fee pipeline verified twice (08-15, 09-04). The 09-04 pass closed the money and expiry P0s (accepted offers no longer lapse; the registration fee books as a deposit, not the year; the offer quotes what enrollment bills), made every notification land on the family's own surface in their language, aligned every row menu with the server's permission table, wired CSV export, and gave the family a rejection note, a live offer link on the tracker, a restored manual-payment state with receipt upload, and a fee line on their dashboard. Remaining open: the applicant account model (one parent, two children), interview scheduling dates (needs DDL), tour confirmation mail, WhatsApp breadth (BUG-10), issue #269. See `ISSUE.md`.
 
 ### Integration Points
 
 - `src/components/school-marketing/admission/` -- public-facing admission pages, inquiry forms, tour booking (oversell-safe, rate-limited, OTP hashed)
-- `src/components/school-marketing/application/` -- multi-step student application wizard (fees step is informational — applying is always free; payment only at registration-fee + tuition stages)
+- `src/components/school-marketing/application/` -- multi-step student application wizard (fees step is informational — applying is always free; payment only at registration-fee + tuition stages). `offer/fee-structures.ts` is the offer's fee resolver (same set enrollment assigns); `offer/settle.ts` is the ONE registration-fee settler (card webhooks AND the dashboard's cash/bank/wallet confirmation)
 - `ai/` subsystem -- Claude document classification/extraction/completeness/merit-scoring + bank-receipt OCR. Drained by `/api/cron/process-document-jobs` (\*/10 min); budget-gated + RBAC-gated.
 - `/api/cron/process-document-jobs` -- new cron (\*/10) that processes the document-extraction queue
 - `/api/cron/fee-due` -- daily cron for upcoming-due + offer-expiry reminders

@@ -234,10 +234,10 @@ Active step order: **attachments → personal → location → academic → fees
 
 ### Open — Deferred (2026-06-13)
 
-- [ ] **application-status-banner-client.tsx i18n migration** — status banner still has hardcoded English strings; needs dictionary key migration
-- [ ] **INQUIRY_SOURCES / DEFAULT_GRADES i18n migration** — constants still hardcoded in English; needs config factory pattern (see translation rules)
+- [x] ~~**application-status-banner-client.tsx i18n migration**~~ — verified 2026-09-04: every message is resolved server-side from `school.admission.statusBanner.*` (`application-status-banner.tsx`); the client only carries English defaults for isolated renders
+- [x] ~~**INQUIRY_SOURCES / DEFAULT_GRADES i18n migration**~~ — verified 2026-09-04: both go through `getInquirySourceOptions()` / `getGradeOptions()` (`admission/types.ts`) with bilingual label maps
 - [ ] **payment/content.tsx dead-file cleanup** — payment step file can be removed now that application is always free
-- [ ] **Leads tab i18n sweep** — `src/components/school-dashboard/admission/leads/` was added without full i18n coverage (tracked in dashboard-admission block)
+- [x] ~~**Leads tab i18n sweep**~~ — verified 2026-09-04: `leads-columns.tsx` / `leads-table.tsx` read `school.admission.leads.*` for every label; EN/AR key parity is exact
 
 ### Zenda homepage clone (2026-08-03)
 

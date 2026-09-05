@@ -5,19 +5,100 @@ title: Admission (school dashboard)
 file_type: issue
 owner: Abdout
 maturity: Built
-completion: 90
+completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-08-15
+last_audited: 2026-09-04
 ---
 
 # Admission — Production Readiness Tracker
 
-**Status:** 🟢 PRODUCTION-READY CORE — full admit→accept→pay→enroll→fee flow verified; ~95% complete
-**Real Completion:** ~95% (core pipeline end-to-end; 2026-07-18 audit pass closed the wizard P0s, role-aware UI, EXPIRED status, weights defaults; #269 + WhatsApp breadth + tour-config settings remain)
-**Last Updated:** 2026-07-18 (full-flow audit + fix pass — see #376)
-**Last Audited:** 2026-06-13 (production-readiness pass; tsc 0, ~1010 tests passing)
+**Status:** 🟢 PRODUCTION-READY CORE — full admit→accept→pay→enroll→fee flow verified twice; ~96% complete
+**Real Completion:** ~96% (2026-09-04 pass closed the money/expiry/notification/role P0s; the account model, interview scheduling and tour mail remain product work)
+**Last Updated:** 2026-09-04 (production pass — six commits `f8a16b718..` on `main`, see below)
+**Last Audited:** 2026-09-04 (four parallel traces: finance, notifications, roles + family surfaces, i18n/RTL/mobile; tsc 0; 428 admission-area tests passing)
 **Ship Issue:** [#239](https://github.com/databayt/hogwarts/issues/239)
+
+---
+
+## 2026-09-04 — production pass (LOCAL, six commits, not deployed)
+
+A second full trace after 08-15 — four parallel audits (finance, notifications,
+roles + parent/student surfaces, i18n/RTL/mobile) reconciled against the code,
+then fixed in slices, each committed on its own. The condensed table is in
+`content/docs-en/admission.mdx` → "The production pass, 2026-09-04".
+
+Shipped:
+
+- [x] **P0 — accepted offers no longer expire** (`f8a16b718`). The fee-due cron
+      flipped every SELECTED offer past `offerExpiryDate` to EXPIRED, accepted +
+      paid ones included; `confirmEnrollment` then refused them and the family
+      saw "offer expired". The deadline binds ACCEPTANCE: cron flip + reminders,
+      `confirmEnrollment`, `getOfferDetails` and all four payment actions apply
+      the same `offerAccepted` exemption. (The cron had been dead in prod until
+      09-03 — its first live run would have swept every waiting family.)
+- [x] **P0 — registration fee books as a deposit** (`ef1cee599`). The ledger
+      step matched the ANNUAL assignment (auto-provisioned per-grade structures
+      carry the registration component inside their total) and flipped it to
+      PAID; now PARTIAL unless the payment covers `finalAmount`; `Payment.currency`
+      snapshotted. The offer quote uses `offer/fee-structures.ts` — the same
+      matching arms + one-variant-per-grade rule as `ensureStudentFeeAssignments`
+      — so the amount on the offer page equals the invoices. Atomic status
+      flips (`status: "SELECTED"` / `registrationFeePaid: false` in the where).
+- [x] **P1 — notifications land where the family can act** (`b3ed3df0f`).
+      Applicant notices linked `/admission` (staff-only → role gate), leads
+      linked `/admission/inquiries|tours` (404). Applicant lang =
+      `Application.lang` (status notices, fee paid, placement, offer email).
+      `resolveActionUrl` is root-domain aware + locale-prefixed; Stripe/Tap
+      return URLs via `tenantUrl`. Inline email sends re-check the user's
+      per-channel preference (`shouldSendNotification` exported). Cash/bank/
+      wallet confirmation goes through `settleRegistrationFee` (ADMIN +
+      ACCOUNTANT told; method-aware copy; family in their language).
+      `feesPending` counts `registrationFeePaid`.
+- [x] **P1 — role gates match the server** (`efa309dd3`). ACCOUNTANT no longer
+      sees the status menu / Assign Section; STAFF no longer sees Generate Merit
+      List / Confirm Reg Payment. `registration-methods.ts` is the ONE manual-
+      rail list (the row copy lacked bankak/cashi, so wallet intents had no
+      confirm action). Sidebar admits ACCOUNTANT + DEVELOPER. Grid cards show
+      translated status. CSV export wired for Applications + Enrollment.
+- [x] **P1 — the family sees where they stand** (`55381b1d9`). Rejection /
+      waitlist note (`StatusReasonDialog` → `reviewNotes` → notice + tracker).
+      Tracker shows the offer link + registration-fee checklist. Offer page
+      restores a manual intent after reload and takes a transfer receipt
+      (`submitRegistrationFeeProof` → `registrationFeeProofUrl`, linked for the
+      accountant). Applicant card fee line. Re-offer resets unpaid state +
+      extends the token. OTP bound to email.
+- [x] **P2 — i18n/RTL/mobile** (slice 6): `rtl:flex-row-reverse` double
+      reversals removed (apply-header, error-boundary, application-card);
+      campaign form `grid-cols-1 sm:grid-cols-3`; `ar-SA` → `ar`; dialogs get
+      `max-h-[85vh] overflow-y-auto`; review panel `border-s` + sr-only close;
+      tour confirmation date in the school's language; dead `FORM_STEPS` and
+      the Hogwarts fallback copy deleted; two missing dict keys added.
+
+Verified wrong from the audits (not changed): the cash-confirm action DID have
+a UI caller; `submitApplication` already maps the sibling P2002 to
+`APPLICATION_DUPLICATE`; the `INQUIRY_SOURCES`/`DEFAULT_GRADES`/status-banner
+i18n items were already localized.
+
+Open — product decisions and follow-ups (details in the docs table):
+
+- [ ] **Account model** — the applicant account becomes the STUDENT
+      (`provisionStudent` promotes `Application.userId`); one parent, two
+      children is blocked by `@@unique([schoolId, campaignId, userId])`.
+- [ ] **Interview / entrance date, time, venue** — no schema columns; needs DDL
+      (`interviewAt`, `interviewLocation`) + a scheduling dialog + a dated notice.
+- [ ] **EXPIRED notice** on the cron flip (family + admin roll-up).
+- [ ] **Tour confirmation email + day-before reminder** (only cancel/reschedule
+      templates exist).
+- [ ] **Out-of-request links** (crons/webhooks) fall back to `databayt.org`;
+      needs the school's root recorded on `School`.
+- [ ] **Notification copy** inline in five modules instead of the dictionary /
+      `NotificationTemplate`.
+- [ ] **Registration fee materializes only at enrollment**; a withdrawn family's
+      confirmed cash is never on the books. `createJournalEntry` posts outside
+      the enrollment transaction.
+- [ ] **Stripe session not expired** when the family switches to a manual rail.
+- [ ] Issue #269, WhatsApp breadth (BUG-10), tour-config settings — unchanged.
 
 ---
 
@@ -72,10 +153,10 @@ Shipped (this block):
 
 Open — flagged in the docs table, not fixed here:
 
-- [ ] Rejection reason: `reviewNotes` has no write site; the rejection notice
-      is contentless. Needs a small reason field on the status change.
-- [ ] `WAITLISTED → SELECTED` promotion and EXPIRED re-offer do not reset
-      `offerAccepted` / `registrationFeeMethod` — confirm as deliberate.
+- [x] ~~Rejection reason~~ — fixed 2026-09-04 (`StatusReasonDialog`).
+- [x] ~~`WAITLISTED → SELECTED` promotion and EXPIRED re-offer do not reset
+      `offerAccepted` / `registrationFeeMethod`~~ — fixed 2026-09-04: reset
+      unless the fee was paid; the token is extended past the new deadline.
 - [ ] Sibling hazard: `provisionStudent` reuses a Student by `userId`; one
       parent account applying for two children in different campaigns would
       reuse child A's Student. `@@unique([schoolId,campaignId,userId])` also
@@ -84,7 +165,8 @@ Open — flagged in the docs table, not fixed here:
 - [ ] `ENTRANCE_SCHEDULED` / `INTERVIEW_SCHEDULED` carry no date/slot and
       fall through to the generic status notice.
 - [ ] Bulk placement is dictionary-only (`school.admission.bulkPlacement`).
-- [ ] `registrationFeeProofUrl`, `waitlistNumber`: schema fields nothing writes.
+- [ ] `waitlistNumber`: schema field nothing writes. (`registrationFeeProofUrl`
+      is written since 2026-09-04 — the offer page's receipt upload.)
 
 > The 2026-05-21 audit found 3 live P0-class breaks. The 2026-05-22 pass fixed offer flow, PII/enumeration, and
 > error-code UX. The 2026-06-13 production-readiness pass fixed the remaining core blockers: merit ranking (P0-3),
@@ -188,10 +270,10 @@ Shared model: `prisma/models/admission.prisma` (9 models). Cross-block rule: `.c
 - [ ] **Server-side search on merit/enrollment tables** — `deferredSearch` computed but never sent to the fetcher; only client-side filters the current page (`merit-table.tsx`, `enrollment-table.tsx`)
 - [ ] **WhatsApp channel coverage** — BUG-10: WhatsApp not wired for more admission events beyond current scope
 - [ ] **Issue #269** — fee-structure creation as modal (not a blocking flow issue)
-- [ ] `Application.lang` field — absent; violates Single-Language Storage, see P1-6 (schema flag)
+- [x] ~~`Application.lang` field~~ — exists, written on submit, read everywhere applicant-facing (2026-09-04 extended it to every notice)
 - [ ] Onboarding price-step re-provision on tuition change — deferred
-- [ ] `application-status-banner-client.tsx` + `INQUIRY_SOURCES`/`DEFAULT_GRADES` i18n migration — deferred
-- [ ] `payment/content.tsx` dead-file cleanup — deferred
+- [x] ~~`application-status-banner-client.tsx` + `INQUIRY_SOURCES`/`DEFAULT_GRADES` i18n migration~~ — verified already localized (2026-09-04 audit)
+- [x] ~~`payment/content.tsx` dead-file cleanup~~ — deleted 2026-07-18
 
 ---
 

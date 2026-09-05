@@ -5,17 +5,17 @@ title: Admission (school dashboard)
 file_type: claude
 owner: Abdout
 maturity: Built
-completion: 90
+completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-06-13
+last_audited: 2026-09-04
 ---
 
 # Admission (Dashboard) Block
 
 ## Context
 
-School-side admission pipeline: campaigns, applications, merit lists, enrollment, leads. Tabbed DataTable UI with RBAC-protected server actions. **Status: ~90%, production-ready core** — the 2026-06-13 pass fixed all P0/P1 breaks; the full admit→accept→pay→enroll→fee pipeline is end-to-end verified. **PRODUCT DECISION (2026-06-12): applying is always free — no application fee at the wizard; payment only at the fee stage (registration fee on acceptance + tuition invoices).** Read `ISSUE.md` for remaining open items (server-side search, WhatsApp breadth, #269). The feature spans 3 sides sharing one Prisma model: this dashboard block + `../../school-marketing/admission/` (public portal) + `../../school-marketing/application/` (wizard, ~68 files).
+School-side admission pipeline: campaigns, applications, merit lists, enrollment, leads. Tabbed DataTable UI with RBAC-protected server actions. **Status: ~96%, production-ready core** — the 2026-06-13 pass fixed the original P0/P1 breaks and the 2026-09-04 pass closed the money, expiry, notification and role gaps; the full admit→accept→pay→enroll→fee pipeline is end-to-end verified twice. **PRODUCT DECISION (2026-06-12): applying is always free — no application fee at the wizard; payment only at the fee stage (registration fee on acceptance + tuition invoices).** Read `ISSUE.md` for remaining open items (the applicant account model, interview scheduling dates, tour confirmation mail, WhatsApp breadth, #269). The feature spans 3 sides sharing one Prisma model: this dashboard block + `../../school-marketing/admission/` (public portal) + `../../school-marketing/application/` (wizard, ~68 files).
 
 ## Before You Start
 
@@ -56,7 +56,49 @@ School-side admission pipeline: campaigns, applications, merit lists, enrollment
 - **`dispatchAdmissionNotification` sends email INLINE** (its own comment: "Send
   email immediately instead of waiting for daily cron"). That is fine for a
   single student an admin is watching, and wrong for bulk — the shared
-  dispatcher takes a `delivery: "immediate" | "queue"` for exactly this.
+  dispatcher takes a `delivery: "immediate" | "queue"` for exactly this. Since
+  2026-09-04 the inline send re-checks the user's per-channel preference via
+  the exported `shouldSendNotification` (so do `deliver()` in
+  `student-provisioning-notify.ts`) — the row is written with only the enabled
+  channels, and the inline path used to ignore that.
+
+- **The offer deadline binds ACCEPTANCE, not the office's confirmation
+  (2026-09-04)**: the fee-due cron flips only `offerAccepted: false` rows to
+  EXPIRED, `confirmEnrollment` checks expiry only when unaccepted, and
+  `getOfferDetails` + the four payment actions keep an accepted offer live.
+  Before this, a family that accepted and paid but whose admin was slow got
+  flipped, dropped off the Enrollment tab and shown "offer expired". Keep the
+  four sites in agreement.
+- **The registration-fee ledger step matches the ANNUAL assignment** — the
+  auto-provisioned per-grade structures carry the registration component
+  inside their total — so it must set PARTIAL unless the payment covers
+  `finalAmount`. `offer/fee-structures.ts` decides the offer's fee set with
+  the same three matching arms and one-variant-per-grade rule as
+  `ensureStudentFeeAssignments`; change one, change both.
+- **Applicant-facing notices use `Application.lang`** (`applicantLang()` in
+  actions.ts and offer/actions.ts, `familyLang` in settle.ts) and link the
+  applicant's OWN surfaces (`/application`, the offer page) — never
+  `/admission`, which is role-gated to staff. Staff notices link the tab that
+  exists (`/admission/leads`, `/admission/enrollment`, the detail page).
+- **`registration-methods.ts` is the one manual-rail list** shared by
+  `confirmRegistrationPayment` and the enrollment row menu; the row used to
+  carry a copy without the Sudan wallets. Cash/bank/wallet confirmation goes
+  through `settleRegistrationFee` (offer/settle.ts) — the same settler as the
+  card webhooks — so the idempotent flip and the ADMIN/ACCOUNTANT notice are
+  written once. Pass the stored amount/reference/method; settle writes all three.
+- **Every row menu item is gated on `canPerformAdmissionAction(role, …)`**
+  with the same action the server asserts (status menu → `updateStatus`,
+  confirm payment → `recordPayment`, placement → `placeStudents`, merit
+  generation → `generateMeritList`). `role` is threaded content → table →
+  columns; a menu item without a gate is a FORBIDDEN toast waiting to happen.
+- **A (re-)offer resets unpaid state**: `updateApplicationStatus(SELECTED)`
+  clears `offerAccepted` / the manual intent / the proof unless
+  `registrationFeePaid`, and extends `accessTokenExpiry` past the new deadline
+  (the applicant dashboard and the tracker hide an offer whose token lapsed).
+- **Commit hygiene**: `school-en.json` / `school-ar.json` are shared with every
+  other block and routinely carry another session's uncommitted hunks — stage
+  the `school.admission` subtree only (build the index blob from HEAD + the
+  subtree; never `git add` the whole file).
 
 ## Related Blocks
 
