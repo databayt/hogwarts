@@ -248,6 +248,9 @@ export default async function StudentsContent({
           : null,
         wizardStep: s.wizardStep || null,
         profilePhotoUrl: s.profilePhotoUrl || null,
+        applicationId: (s.applicationId as string | null) || null,
+        academicGradeId: (s.academicGradeId as string | null) || null,
+        sectionId: (s.sectionId as string | null) || null,
       }
     })
     total = count as number
@@ -257,11 +260,13 @@ export default async function StudentsContent({
       initialData={data}
       total={total}
       dictionary={dictionary?.students}
+      admissionDictionary={dictionary?.admission}
       lang={lang}
       perPage={sp.perPage}
       gradeOptions={gradeOptions}
       scope={sp.scope}
       permissions={permissions}
+      role={role ?? null}
     />
   )
 }

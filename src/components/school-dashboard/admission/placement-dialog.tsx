@@ -67,21 +67,32 @@ interface SectionOption {
 }
 
 interface PlacementDialogProps {
-  applicationId: string
+  /** PORTAL path (Enrollment tab): place by the ADMITTED application. */
+  applicationId?: string
+  /** Any-channel path (students list): place the Student directly. */
+  studentId?: string
   applicantName: string
-  applyingForClass: string
+  /** Grade label for the header and, without `gradeId`, the section match. */
+  applyingForClass?: string
+  /** Exact AcademicGrade — preferred for the section match when known. */
+  gradeId?: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
   dictionary: Dictionary["school"]["admission"]
+  /** Fires after a successful placement (the dialog also refreshes the router). */
+  onPlaced?: () => void
 }
 
 export function PlacementDialog({
   applicationId,
+  studentId,
   applicantName,
   applyingForClass,
+  gradeId,
   open,
   onOpenChange,
   dictionary,
+  onPlaced,
 }: PlacementDialogProps) {
   const t = dictionary
   const router = useRouter()
@@ -94,7 +105,7 @@ export function PlacementDialog({
   useEffect(() => {
     if (!open) return
     setIsLoadingSections(true)
-    getAvailableSectionsForPlacement({ applyingForClass })
+    getAvailableSectionsForPlacement({ applyingForClass, gradeId })
       .then((result) => {
         if (result.success && result.data) {
           setSections(result.data)
@@ -103,13 +114,14 @@ export function PlacementDialog({
         }
       })
       .finally(() => setIsLoadingSections(false))
-  }, [open, applyingForClass])
+  }, [open, applyingForClass, gradeId])
 
   const handlePlace = () => {
     if (!selectedSection) return
     startTransition(async () => {
       const result = await placeStudentInSection({
         applicationId,
+        studentId,
         sectionId: selectedSection,
       })
       if (result.success) {
@@ -117,6 +129,7 @@ export function PlacementDialog({
           t?.enrollment?.placementConfirmed || "Student placed in section"
         )
         onOpenChange(false)
+        onPlaced?.()
         router.refresh()
       } else {
         ErrorToast(resolveAdmissionErrorMessage(result.error, t))
@@ -136,7 +149,9 @@ export function PlacementDialog({
             {t?.enrollment?.assignSection || "Assign Section"}
           </DialogTitle>
           <DialogDescription>
-            {applicantName} &mdash; {applyingForClass}
+            {applyingForClass
+              ? `${applicantName} — ${applyingForClass}`
+              : applicantName}
           </DialogDescription>
         </DialogHeader>
 

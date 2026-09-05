@@ -1035,6 +1035,9 @@ export async function getStudents(
       enrollmentDate: string | null
       wizardStep: string | null
       profilePhotoUrl: string | null
+      applicationId: string | null
+      academicGradeId: string | null
+      sectionId: string | null
     }>
     total: number
   }>
@@ -1220,6 +1223,9 @@ export async function getStudents(
           : null,
         wizardStep: (s.wizardStep as string | null) || null,
         profilePhotoUrl: (s.profilePhotoUrl as string | null) || null,
+        applicationId: (s.applicationId as string | null) || null,
+        academicGradeId: (s.academicGradeId as string | null) || null,
+        sectionId: (s.sectionId as string | null) || null,
       }
     })
 

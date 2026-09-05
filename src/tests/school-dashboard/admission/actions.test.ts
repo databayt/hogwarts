@@ -1513,6 +1513,29 @@ describe("Admission Actions", () => {
         maxCapacity: 35,
       })
     })
+
+    it("matches on the exact grade id when one is given (direct-admit rows have no usable label)", async () => {
+      vi.mocked(db.section.findMany).mockResolvedValue([] as any)
+
+      await getAvailableSectionsForPlacement({
+        applyingForClass: "",
+        gradeId: "grade-3",
+      })
+
+      const where = vi.mocked(db.section.findMany).mock.calls[0][0]?.where
+      expect(where).toMatchObject({ schoolId: SCHOOL_ID, gradeId: "grade-3" })
+      expect(where).not.toHaveProperty("OR")
+    })
+
+    it("returns nothing, not every section, when neither a grade id nor a label is given", async () => {
+      const result = await getAvailableSectionsForPlacement({
+        applyingForClass: "",
+      })
+
+      expect(result.success).toBe(true)
+      expect(result.data).toEqual([])
+      expect(db.section.findMany).not.toHaveBeenCalled()
+    })
   })
 
   // =========================================================================
@@ -1555,6 +1578,41 @@ describe("Admission Actions", () => {
         where: { id: "student-1" },
         data: { sectionId: "sec-1" },
       })
+    })
+
+    it("places a student directly by id — the students-list path shared by every intake channel", async () => {
+      setupPlacementMocks()
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: "student-9",
+        sectionId: null,
+        userId: "user-9",
+        applicationId: "app-shadow-9",
+        lang: "ar",
+      } as any)
+
+      const result = await placeStudentInSection({
+        studentId: "student-9",
+        sectionId: "sec-1",
+      })
+
+      expect(result.success).toBe(true)
+      // Never consults an Application — direct admits are ADMITTED shadows and
+      // imports may predate the unification entirely.
+      expect(db.application.findUnique).not.toHaveBeenCalled()
+      // Only provisioned students (wizardStep null) are placeable.
+      expect(vi.mocked(db.student.findFirst).mock.calls[0][0]).toMatchObject({
+        where: { id: "student-9", schoolId: SCHOOL_ID, wizardStep: null },
+      })
+      expect(db.student.update).toHaveBeenCalledWith({
+        where: { id: "student-9" },
+        data: { sectionId: "sec-1" },
+      })
+    })
+
+    it("rejects a direct placement when neither id is given", async () => {
+      const result = await placeStudentInSection({ sectionId: "sec-1" })
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("VALIDATION_ERROR")
     })
 
     it("row-locks the section (FOR UPDATE) before reading its capacity, to serialize concurrent placements", async () => {

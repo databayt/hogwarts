@@ -47,10 +47,23 @@ export type StudentRow = {
   enrollmentDate: string | null
   wizardStep: string | null
   profilePhotoUrl: string | null
+  /** Set once provisionStudent has run — every channel's assembly point. */
+  applicationId: string | null
+  academicGradeId: string | null
+  sectionId: string | null
 }
 
 interface ColumnOptions {
   onDeleteSuccess?: (id: string) => void
+  /**
+   * Opens the shared admission PlacementDialog for a student with a grade but
+   * no seat — the same step the Enrollment tab offers PORTAL admits, made
+   * available to direct-admit and imported students here.
+   */
+  onAssignSection?: (student: StudentRow) => void
+  /** Viewer may place students (admission `placeStudents`). */
+  canPlace?: boolean
+  assignSectionLabel?: string
   onGenerateAccessCode?: (studentId: string, studentName: string) => void
   onGenerateCredentials?: (
     studentId: string,
@@ -414,6 +427,15 @@ export const getStudentColumns = (
               label={t.viewClasses}
               href={`/${lang}/classrooms?studentId=${student.id}`}
             />
+            {options?.canPlace &&
+              !student.wizardStep &&
+              !student.sectionId &&
+              student.academicGradeId && (
+                <ActionMenuItem
+                  label={options.assignSectionLabel || "Assign Section"}
+                  onClick={() => options.onAssignSection?.(student)}
+                />
+              )}
             {permissions.showAddButton && (
               <>
                 <DropdownMenuSeparator />

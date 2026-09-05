@@ -23,6 +23,8 @@ import { ErrorToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { canPerformAdmissionAction } from "@/components/school-dashboard/admission/authorization"
+import { PlacementDialog } from "@/components/school-dashboard/admission/placement-dialog"
 import {
   GridCard,
   GridContainer,
@@ -44,22 +46,30 @@ interface StudentsTableProps {
   initialData: StudentRow[]
   total: number
   dictionary?: Dictionary["school"]["students"]
+  /** Placement copy lives with the admission block — the dialog is shared. */
+  admissionDictionary?: Dictionary["school"]["admission"]
   lang: Locale
   perPage?: number
   gradeOptions?: Array<{ label: string; value: string }>
   scope?: ArchiveScope
   permissions?: UIPermissions
+  /** Viewer's role — gates the placement action on the admission permission
+   *  table (`placeStudents`: ADMIN / STAFF / DEVELOPER), which is narrower than
+   *  the students-block edit right a TEACHER holds. */
+  role?: string | null
 }
 
 function StudentsTableInner({
   initialData,
   total,
   dictionary,
+  admissionDictionary,
   lang,
   perPage = 20,
   gradeOptions = [],
   scope = "active",
   permissions = FULL_UI_PERMISSIONS,
+  role = null,
 }: StudentsTableProps) {
   const router = useRouter()
 
@@ -156,6 +166,21 @@ function StudentsTableInner({
     [optimisticRemove]
   )
 
+  // Placement — the step every intake channel shares after provisioning. The
+  // Enrollment tab offers it to PORTAL admits; this offers the SAME dialog to a
+  // direct-admit or imported student who has a grade but no seat, so nobody is
+  // stuck re-running the wizard just to pick a section.
+  const canPlace =
+    !!role &&
+    !!admissionDictionary &&
+    canPerformAdmissionAction(role, "placeStudents")
+  const [placementTarget, setPlacementTarget] = useState<StudentRow | null>(
+    null
+  )
+  const handleAssignSection = useCallback((student: StudentRow) => {
+    setPlacementTarget(student)
+  }, [])
+
   // Purge dialog state
   const [purgeOpen, setPurgeOpen] = useState(false)
   const [purgeStudentId, setPurgeStudentId] = useState<string | null>(null)
@@ -183,6 +208,9 @@ function StudentsTableInner({
         onGenerateAccessCode: handleGenerateAccessCode,
         onGenerateCredentials: handleGenerateCredentials,
         onPurge: handlePurge,
+        onAssignSection: handleAssignSection,
+        canPlace,
+        assignSectionLabel: admissionDictionary?.enrollment?.assignSection,
         gradeOptions,
         scope,
         permissions,
@@ -194,6 +222,9 @@ function StudentsTableInner({
       handleGenerateAccessCode,
       handleGenerateCredentials,
       handlePurge,
+      handleAssignSection,
+      canPlace,
+      admissionDictionary,
       gradeOptions,
       scope,
       permissions,
@@ -462,6 +493,21 @@ function StudentsTableInner({
       )}
 
       <AccessCodeDialog />
+
+      {placementTarget && admissionDictionary && (
+        <PlacementDialog
+          studentId={placementTarget.id}
+          applicantName={placementTarget.name}
+          applyingForClass={placementTarget.gradeName ?? undefined}
+          gradeId={placementTarget.academicGradeId}
+          open
+          onOpenChange={(open) => {
+            if (!open) setPlacementTarget(null)
+          }}
+          dictionary={admissionDictionary}
+          onPlaced={() => refresh()}
+        />
+      )}
 
       <CredentialsDialog
         labels={dictionary?.credentials as Record<string, string> | undefined}

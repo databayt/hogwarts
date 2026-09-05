@@ -1951,7 +1951,14 @@ export async function confirmRegistrationPayment(params: {
 // ============================================================================
 
 export async function getAvailableSectionsForPlacement(params: {
-  applyingForClass: string
+  /** Free-text grade label from a PORTAL application ("Grade 3", "الصف الثالث"). */
+  applyingForClass?: string
+  /**
+   * The student's AcademicGrade id — exact, so preferred when known. Direct-admit
+   * and imported students carry a shadow Application whose `applyingForClass`
+   * is often empty, and an empty label used to match EVERY section.
+   */
+  gradeId?: string | null
 }): Promise<
   ActionResponse<
     Array<{
@@ -1969,30 +1976,32 @@ export async function getAvailableSectionsForPlacement(params: {
     if (!schoolId || !role) return actionError(ACTION_ERRORS.UNAUTHORIZED)
     assertAdmissionPermission(role, "viewApplications")
 
-    // Cascading match: text contains OR grade number
-    const gradeNum = extractGradeNumber(params.applyingForClass)
-    const gradeWhere = gradeNum
-      ? {
-          OR: [
-            {
-              grade: {
-                name: {
-                  contains: params.applyingForClass,
-                  mode: "insensitive" as const,
+    const label = params.applyingForClass?.trim() ?? ""
+    if (!params.gradeId && !label) {
+      // Nothing to match on — never fall through to "every section".
+      return { success: true, data: [] }
+    }
+
+    // Exact grade when known; else cascading match: text contains OR grade number
+    const gradeNum = label ? extractGradeNumber(label) : null
+    const gradeWhere = params.gradeId
+      ? { gradeId: params.gradeId }
+      : gradeNum
+        ? {
+            OR: [
+              {
+                grade: {
+                  name: { contains: label, mode: "insensitive" as const },
                 },
               },
+              { grade: { gradeNumber: gradeNum } },
+            ],
+          }
+        : {
+            grade: {
+              name: { contains: label, mode: "insensitive" as const },
             },
-            { grade: { gradeNumber: gradeNum } },
-          ],
-        }
-      : {
-          grade: {
-            name: {
-              contains: params.applyingForClass,
-              mode: "insensitive" as const,
-            },
-          },
-        }
+          }
 
     const sections = await db.section.findMany({
       where: {
@@ -2030,7 +2039,15 @@ export async function getAvailableSectionsForPlacement(params: {
 export const getAvailableClassesForPlacement = getAvailableSectionsForPlacement
 
 export async function placeStudentInSection(params: {
-  applicationId: string
+  /** PORTAL path: the ADMITTED application (Enrollment tab). */
+  applicationId?: string
+  /**
+   * Any-channel path: the Student directly (students list). Placement is the
+   * step every intake channel shares once provisionStudent has run, but only
+   * PORTAL rows ever reached the Enrollment tab — a direct-admit or imported
+   * student with no seat had no placement UI at all.
+   */
+  studentId?: string
   sectionId: string
 }): Promise<ActionResponse> {
   try {
@@ -2040,35 +2057,56 @@ export async function placeStudentInSection(params: {
     if (!schoolId || !role) return actionError(ACTION_ERRORS.UNAUTHORIZED)
     assertAdmissionPermission(role, "placeStudents")
 
-    // Get the application and verify it's ADMITTED
-    const application = await db.application.findUnique({
-      where: { id: params.applicationId, schoolId },
-      select: {
-        status: true,
-        userId: true,
-        firstName: true,
-        lastName: true,
-        lang: true,
-      },
-    })
+    let student: {
+      id: string
+      sectionId: string | null
+      userId: string | null
+      applicationId: string | null
+      lang: string | null
+    } | null = null
 
-    if (!application) return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
-    if (application.status !== "ADMITTED") {
-      return actionError(ACTION_ERRORS.PLACEMENT_INVALID_STATUS)
-    }
+    if (params.studentId) {
+      // Drafts (wizardStep set) are not placeable — they have no login yet.
+      student = await db.student.findFirst({
+        where: { id: params.studentId, schoolId, wizardStep: null },
+        select: {
+          id: true,
+          sectionId: true,
+          userId: true,
+          applicationId: true,
+          lang: true,
+        },
+      })
+      if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+    } else if (params.applicationId) {
+      // Get the application and verify it's ADMITTED
+      const application = await db.application.findUnique({
+        where: { id: params.applicationId, schoolId },
+        select: { id: true, status: true, userId: true, lang: true },
+      })
 
-    // Find the student record via userId
-    if (!application.userId) {
-      return actionError(ACTION_ERRORS.PLACEMENT_NO_USER)
-    }
+      if (!application) return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
+      if (application.status !== "ADMITTED") {
+        return actionError(ACTION_ERRORS.PLACEMENT_INVALID_STATUS)
+      }
 
-    const student = await db.student.findFirst({
-      where: { userId: application.userId, schoolId },
-      select: { id: true, sectionId: true },
-    })
+      // Find the student record via userId
+      if (!application.userId) {
+        return actionError(ACTION_ERRORS.PLACEMENT_NO_USER)
+      }
 
-    if (!student) {
-      return actionError(ACTION_ERRORS.ENROLLMENT_FAILED)
+      const byUser = await db.student.findFirst({
+        where: { userId: application.userId, schoolId },
+        select: { id: true, sectionId: true, userId: true, lang: true },
+      })
+      if (!byUser) return actionError(ACTION_ERRORS.ENROLLMENT_FAILED)
+      student = {
+        ...byUser,
+        applicationId: application.id,
+        lang: application.lang ?? byUser.lang,
+      }
+    } else {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     // Check section capacity and assign atomically
@@ -2137,18 +2175,15 @@ export async function placeStudentInSection(params: {
     }
 
     // Notify student about section placement (non-blocking)
-    if (application.userId) {
+    if (student.userId) {
       const schoolLang2 = await db.school.findFirst({
         where: { id: schoolId },
         select: { preferredLanguage: true },
       })
-      const lang = applicantLang(
-        application.lang,
-        schoolLang2?.preferredLanguage
-      )
+      const lang = applicantLang(student.lang, schoolLang2?.preferredLanguage)
       dispatchAdmissionNotification({
         schoolId,
-        userId: application.userId,
+        userId: student.userId,
         type: "system_alert",
         title: t(NOTIF.sectionPlacement.title, lang),
         body: t(NOTIF.sectionPlacement.body(sectionData.name), lang),
@@ -2156,7 +2191,7 @@ export async function placeStudentInSection(params: {
         priority: "normal",
         channels: ["in_app", "email"],
         metadata: {
-          applicationId: params.applicationId,
+          applicationId: student.applicationId,
           sectionId: params.sectionId,
           sectionName: sectionData.name,
           // The student's dashboard home — bare "/" is the tenant's
@@ -2193,7 +2228,8 @@ export async function placeStudentInSection(params: {
 /** @deprecated Use placeStudentInSection instead */
 export const placeStudentInClass =
   placeStudentInSection as unknown as (params: {
-    applicationId: string
+    applicationId?: string
+    studentId?: string
     classId: string
   }) => Promise<ActionResponse>
 
