@@ -504,7 +504,7 @@ ministry textbook structures are authored.
 | Curriculum      | Code         | Grades | Subjects | Chapters | Lessons | Source                  | Seed         |
 | --------------- | ------------ | ------ | -------- | -------- | ------- | ----------------------- | ------------ |
 | United States   | `US`         | 1–12   | ~240     | ~750     | ~3,993  | US-inventory            | `us`         |
-| Sudan           | `SD`         | 1–12   | 135      | 885      | 4,372   | `curriculum/sd`         | `sd`         |
+| Sudan           | `SD`         | 1–12   | 135      | 888      | 4,501   | `curriculum/sd`         | `sd`         |
 | England         | `GB`         | 1–12   | 184      | 363      | 730     | `curriculum/uk`         | `gb`         |
 | Cambridge IGCSE | `CAIE-IGCSE` | 10     | 8        | 76       | 76      | `curriculum/caie-igcse` | `caie-igcse` |
 | IB Diploma      | `IB-DP`      | 12     | 9        | 49       | 49      | `curriculum/ib`         | `ib`         |
@@ -676,6 +676,14 @@ inert (the seed and the uploader walk `g1..g12` only). Their DB rows
 PUBLISHED until archived by decision. Structures come from the books' own tables
 of contents (`structure.json`, `source: official-toc-2026-09`); the ledger is
 `curriculum/sd/TEXTBOOK_AUDIT.md`.
+
+Grade 11 followed on 2026-09-05: its 18 legacy structures (generic units, few
+lessons) were rebuilt from the books' own tables of contents (19 subjects, 122
+chapters, 511 lessons), and every grade-11 and grade-12 textbook now has a
+Markdown twin beside the PDF on the CDN (`catalog/textbooks/<slug>/textbook.md`,
+produced by the `textbook` keyword: MarkItDown, an Arabic RTL repair, and a
+tesseract OCR fallback, graded A–C in the front matter). Production picks the
+rebuilt structures up on the next deploy-time `sd` + `sd-content` seed.
 
 Secondary streams (10–12) are routed by patterns in `setup.ts`:
 

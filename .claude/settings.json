@@ -112,7 +112,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent || exit 0"
+            "command": "[ -n \"$CLAUDE_FILE_PATH\" ] && npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent; exit 0"
           },
           {
             "type": "command",
@@ -137,7 +137,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent || exit 0"
+            "command": "[ -n \"$CLAUDE_FILE_PATH\" ] && npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent; exit 0"
           },
           {
             "type": "command",
