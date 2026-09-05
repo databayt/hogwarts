@@ -6,6 +6,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { enrollStudent } from "./actions"
 
@@ -59,6 +61,8 @@ export default function EnrollStudentContent({
 }: Props) {
   const d = dictionary?.students
   const e = (d as any)?.enroll
+  // Root dictionary (common.errors) — action failures come back as CODES.
+  const { dictionary: rootDictionary } = useDictionary()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [studentId, setStudentId] = useState("")
@@ -93,7 +97,11 @@ export default function EnrollStudentContent({
         router.refresh()
       } else {
         toast.error(
-          result.error || e?.enrollFailed || "Failed to enroll student"
+          actionErrorMessage(
+            result.error,
+            rootDictionary,
+            e?.enrollFailed || "Failed to enroll student"
+          )
         )
       }
     })

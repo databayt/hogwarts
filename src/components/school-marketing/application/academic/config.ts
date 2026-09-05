@@ -3,6 +3,8 @@
 
 // Academic Step Configuration
 
+import { extractGradeNumber } from "@/lib/grade-utils"
+
 export const ACADEMIC_STEP_CONFIG = {
   id: "academic",
   label: (isRTL: boolean) =>
@@ -31,6 +33,32 @@ export const getGradeOptions = (d: OptionDict) => [
   { value: "الصف الحادي عشر", label: d.grade11 || "Grade 11" },
   { value: "الصف الثاني عشر", label: d.grade12 || "Grade 12" },
 ]
+
+/**
+ * Narrow the static grade list to the grades this school actually teaches.
+ *
+ * The public wizard's picker is a fixed KG1–Grade 12 list; the admin wizard
+ * reads the school's own `AcademicGrade` rows. A family at a grades-1–8 school
+ * could therefore apply for Grade 12, and enrollment then found no year level
+ * to place them in. `gradeNumbers` is the school's set (0 = KG, -1 = nursery,
+ * 1–12); an empty set means the school has not defined grades yet, so the
+ * full list stays on offer rather than an empty picker.
+ */
+export const filterGradeOptionsBySchool = <T extends { value: string }>(
+  options: T[],
+  gradeNumbers: readonly number[] | null | undefined
+): T[] => {
+  if (!gradeNumbers || gradeNumbers.length === 0) return options
+  const have = new Set(gradeNumbers)
+  const hasKindergarten = gradeNumbers.some((n) => n <= 0)
+  return options.filter((o) => {
+    // KG values carry a trailing 1/2 that the numeric resolver would read as
+    // Grade 1/2 — recognise them by the label root instead.
+    if (o.value.startsWith("روضة")) return hasKindergarten
+    const n = extractGradeNumber(o.value)
+    return n !== null && have.has(n)
+  })
+}
 
 export const getStreamOptions = (d: OptionDict) => [
   { value: "science", label: d.science || "Science" },

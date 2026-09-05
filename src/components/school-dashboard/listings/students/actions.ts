@@ -154,7 +154,11 @@ function buildStudentStatusFilter(status: string): Record<string, any> {
 // Constants
 // ============================================================================
 
-const STUDENTS_PATH = "/students"
+// Route PATTERN, not a clean URL: the page lives at `/[lang]/s/[subdomain]/
+// students` (the `(listings)` group is not part of the path) and
+// `revalidatePath` only matches a cache tag with the pattern + "page". The
+// bare "/students" this used to be matched nothing.
+const STUDENTS_PATH = "/[lang]/s/[subdomain]/students"
 
 // ============================================================================
 // Grade + Section Queries
@@ -404,7 +408,7 @@ export async function updateStudent(
     }
 
     // Revalidate cache
-    revalidatePath(STUDENTS_PATH)
+    revalidatePath(STUDENTS_PATH, "page")
     revalidateSpotlight(schoolId)
 
     return { success: true, data: undefined }
@@ -531,7 +535,7 @@ export async function deleteStudent(input: {
     })
 
     // Revalidate cache
-    revalidatePath(STUDENTS_PATH)
+    revalidatePath(STUDENTS_PATH, "page")
     revalidateSpotlight(schoolId)
 
     return { success: true, data: undefined }
@@ -591,7 +595,7 @@ export async function archiveStudent(input: {
       data: { archivedAt: new Date(), archivedBy: authContext.userId },
     })
 
-    revalidatePath(STUDENTS_PATH)
+    revalidatePath(STUDENTS_PATH, "page")
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[archiveStudent] Error:", error, { input })
@@ -672,7 +676,7 @@ export async function restoreStudent(input: {
       data: { archivedAt: null, archivedBy: null },
     })
 
-    revalidatePath(STUDENTS_PATH)
+    revalidatePath(STUDENTS_PATH, "page")
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[restoreStudent] Error:", error, { input })
@@ -894,7 +898,7 @@ export async function purgeStudent(input: {
       await tx.purgeExportToken.delete({ where: { id: tokenRow.id } })
     })
 
-    revalidatePath(STUDENTS_PATH)
+    revalidatePath(STUDENTS_PATH, "page")
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[purgeStudent] Error:", error, { input: { id: input.id } })
@@ -1752,7 +1756,7 @@ export async function bulkDeleteStudents(input: {
       })
     })
 
-    revalidatePath("/students")
+    revalidatePath(STUDENTS_PATH, "page")
     return { success: true, data: { count: result.count as number } }
   } catch (error) {
     console.error("[bulkDeleteStudents] Error:", error)
@@ -1957,7 +1961,7 @@ export async function bulkSyncStudentGrades(): Promise<
 
     const result = await syncStudentGrades(schoolId)
 
-    revalidatePath(STUDENTS_PATH)
+    revalidatePath(STUDENTS_PATH, "page")
 
     return { success: true, data: result }
   } catch (error) {

@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 
 import type { ArchiveScope } from "@/lib/archive-scope"
+import { formatDate } from "@/lib/i18n-format"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -285,11 +286,11 @@ export const getStudentColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.created} />
       ),
+      // `formatDate` uses the bare `ar` locale: `ar-SA` selects the Hijri
+      // calendar in some ICU builds, which put a 1447 date on every row.
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<string>()).toLocaleDateString(
-            lang === "ar" ? "ar-SA" : "en-US"
-          )}
+          {formatDate(getValue<string>(), lang ?? "ar")}
         </span>
       ),
       meta: { label: t.created, variant: "text" },
@@ -317,9 +318,7 @@ export const getStudentColumns = (
         if (!val) return "-"
         return (
           <span className="text-muted-foreground text-xs tabular-nums">
-            {new Date(val).toLocaleDateString(
-              lang === "ar" ? "ar-SA" : "en-US"
-            )}
+            {formatDate(val, lang ?? "ar")}
           </span>
         )
       },
@@ -336,9 +335,7 @@ export const getStudentColumns = (
         if (!val) return "-"
         return (
           <span className="text-muted-foreground text-xs tabular-nums">
-            {new Date(val).toLocaleDateString(
-              lang === "ar" ? "ar-SA" : "en-US"
-            )}
+            {formatDate(val, lang ?? "ar")}
           </span>
         )
       },

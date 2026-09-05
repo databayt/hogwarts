@@ -5,6 +5,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
+import { formatDate } from "@/lib/i18n-format"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
@@ -22,11 +23,16 @@ import type { AcademicFormData } from "./validation"
 function AdmissionInfo({
   application,
   t,
+  statusLabels,
+  locale,
 }: {
   application: NonNullable<
     NonNullable<ReturnType<typeof useStudentWizard>["data"]>["application"]
   >
   t?: Record<string, string>
+  /** `school.admission.status.*` — the raw enum used to render here. */
+  statusLabels?: Record<string, string>
+  locale: "ar" | "en"
 }) {
   return (
     <div className="bg-muted/50 rounded-lg border p-4">
@@ -56,7 +62,9 @@ function AdmissionInfo({
           <span className="text-muted-foreground">
             {t?.applicationStatus || "Status"}
           </span>
-          <p className="font-medium">{application.status}</p>
+          <p className="font-medium">
+            {statusLabels?.[application.status] || application.status}
+          </p>
         </div>
         {application.submittedAt && (
           <div>
@@ -64,7 +72,7 @@ function AdmissionInfo({
               {t?.submittedAt || "Submitted"}
             </span>
             <p className="font-medium">
-              {new Date(application.submittedAt).toLocaleDateString()}
+              {formatDate(application.submittedAt, locale)}
             </p>
           </div>
         )}
@@ -74,7 +82,7 @@ function AdmissionInfo({
               {t?.enrolledAt || "Enrolled"}
             </span>
             <p className="font-medium">
-              {new Date(application.confirmationDate).toLocaleDateString()}
+              {formatDate(application.confirmationDate, locale)}
             </p>
           </div>
         )}
@@ -141,7 +149,17 @@ export default function AcademicContent() {
           }
         />
         {data?.application && (
-          <AdmissionInfo application={data.application} t={tEnrollment} />
+          <AdmissionInfo
+            application={data.application}
+            t={tEnrollment}
+            statusLabels={
+              (
+                (dictionary?.school as Record<string, unknown> | undefined)
+                  ?.admission as Record<string, unknown> | undefined
+              )?.status as Record<string, string> | undefined
+            }
+            locale={locale === "en" ? "en" : "ar"}
+          />
         )}
         <AcademicForm
           ref={formRef}

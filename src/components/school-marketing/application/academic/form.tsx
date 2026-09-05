@@ -36,8 +36,9 @@ import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useApplySession } from "../application-context"
 import { useAutoFillMerge } from "../use-auto-fill-merge"
 import { getApplyDict, getApplyOptionsDict } from "../utils"
-import { saveAcademicStep } from "./actions"
+import { getSchoolGradeNumbers, saveAcademicStep } from "./actions"
 import {
+  filterGradeOptionsBySchool,
   getGradeOptions,
   getPerformanceOptions,
   getStreamOptions,
@@ -84,6 +85,32 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
 
     const dict = getApplyDict(dictionary, "academic")
     const optionsDict = getApplyOptionsDict(dictionary)
+
+    // The school's real grades narrow the static picker (the admin wizard reads
+    // the same rows). Until they arrive — or when the school has none — the
+    // full list stays on offer.
+    const [schoolGradeNumbers, setSchoolGradeNumbers] = React.useState<
+      number[] | null
+    >(null)
+    useEffect(() => {
+      let cancelled = false
+      getSchoolGradeNumbers().then((res) => {
+        if (!cancelled && res.success && res.data) {
+          setSchoolGradeNumbers(res.data)
+        }
+      })
+      return () => {
+        cancelled = true
+      }
+    }, [])
+    const allGradeOptions = useMemo(
+      () => getGradeOptions(optionsDict.grade || {}),
+      [optionsDict.grade]
+    )
+    const applyingGradeOptions = useMemo(
+      () => filterGradeOptionsBySchool(allGradeOptions, schoolGradeNumbers),
+      [allGradeOptions, schoolGradeNumbers]
+    )
 
     const prevDataRef = React.useRef<string>("")
     useEffect(() => {
@@ -222,13 +249,11 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {getGradeOptions(optionsDict.grade || {}).map(
-                          (option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          )
-                        )}
+                        {applyingGradeOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

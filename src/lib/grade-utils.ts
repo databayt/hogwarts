@@ -19,6 +19,10 @@ const ARABIC_ORDINALS: Record<string, number> = {
   "الثاني عشر": 12,
 }
 
+const ARABIC_ORDINALS_LONGEST_FIRST = Object.entries(ARABIC_ORDINALS).sort(
+  ([a], [b]) => b.length - a.length
+)
+
 const ENGLISH_ORDINALS: Record<string, number> = {
   first: 1,
   second: 2,
@@ -65,8 +69,11 @@ export function extractGradeNumber(text: string): number | null {
     if (num >= 1 && num <= 12) return num
   }
 
-  // Arabic ordinals: "الصف الخامس" -> 5
-  for (const [word, num] of Object.entries(ARABIC_ORDINALS)) {
+  // Arabic ordinals: "الصف الخامس" -> 5. Longest match first: "الثاني عشر"
+  // (12) contains "الثاني" (2), and insertion order used to win — so every
+  // Grade 12 applicant written in Arabic resolved to Grade 2 (wrong year
+  // level at enrollment, wrong fee preview, wrong section list).
+  for (const [word, num] of ARABIC_ORDINALS_LONGEST_FIRST) {
     if (text.includes(word)) return num
   }
 

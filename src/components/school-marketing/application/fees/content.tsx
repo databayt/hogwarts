@@ -436,7 +436,13 @@ export default function FeesContent({ dictionary }: Props) {
           applicationNumber={submitResult.applicationNumber}
           applicantEmail={applicantEmail}
           trackingCode={submitResult.accessToken}
-          schoolUrl={`${subdomain}.databayt.org`}
+          // The host the family is actually on — a balqalam.com school used to
+          // be told its portal lived at `<sub>.databayt.org`.
+          schoolUrl={
+            typeof window !== "undefined"
+              ? window.location.host
+              : `${subdomain}.databayt.org`
+          }
           showModal={showSuccessModal}
           setShowModal={setShowSuccessModal}
           isRTL={isRTL}

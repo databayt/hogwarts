@@ -117,7 +117,7 @@ export async function enrollStudent(input: {
 
       const maxCapacity = classData.maxCapacity || 50
       if (classData._count.studentClasses >= maxCapacity) {
-        return actionError(ACTION_ERRORS.UNKNOWN)
+        return actionError(ACTION_ERRORS.CLASS_AT_CAPACITY)
       }
 
       // Check if already enrolled
@@ -178,7 +178,8 @@ export async function enrollStudent(input: {
       }
     }
 
-    revalidatePath("/students")
+    // Route pattern + "page" — the bare "/students" matched no cache tag.
+    revalidatePath("/[lang]/s/[subdomain]/students", "page")
     return { success: true, data: { studentId } }
   } catch (error) {
     console.error("[enrollStudent] Error:", error)

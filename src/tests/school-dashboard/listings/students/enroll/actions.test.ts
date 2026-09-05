@@ -183,7 +183,8 @@ describe("enrollStudent", () => {
     })
 
     expect(result.success).toBe(false)
-    expect(result.error).toBe("UNKNOWN")
+    // A real code the client can translate — this used to be UNKNOWN.
+    expect(result.error).toBe("CLASS_AT_CAPACITY")
   })
 
   it("skips duplicate class enrollment", async () => {
