@@ -22,6 +22,8 @@
  *             then invalidate `/catalog/textbooks/<slug>/*` on CloudFront (the
  *             objects are uploaded `immutable, max-age=1y`).
  *   --only    comma-separated Subject slugs; everything else is left alone.
+ *   --assets  comma-separated file names to upload (textbook.pdf, cover.jpg,
+ *             thumbnail.jpg, banner.jpg, textbook.md); default all.
  *   --bucket  target bucket. cdn.databayt.org is served from `databayt-cdn`,
  *             NOT from `AWS_S3_BUCKET` (the app's own bucket) — a key that is
  *             missing there 403s; run once per bucket.
@@ -83,9 +85,22 @@ const SUBJECT_ASSETS = [
   { file: "cover.jpg", field: "cover", contentType: "image/jpeg" },
   { file: "thumbnail.jpg", field: "thumbnail", contentType: "image/jpeg" },
   { file: "banner.jpg", field: "banner", contentType: "image/jpeg" },
+  // Markdown twin of the textbook (MarkItDown output). No Subject field points at
+  // it: the key is deterministic — same prefix as textbook.pdf, `.md` extension.
+  {
+    file: "textbook.md",
+    field: null,
+    contentType: "text/markdown; charset=utf-8",
+  },
 ] as const
 
-type SubjectField = (typeof SUBJECT_ASSETS)[number]["field"]
+type SubjectField = Exclude<(typeof SUBJECT_ASSETS)[number]["field"], null>
+
+// --assets=textbook.md,cover.jpg limits the run to those files (default: all)
+const ASSETS_FILTER = argValue("--assets")
+  ?.split(",")
+  .map((s) => s.trim())
+  .filter(Boolean)
 
 async function exists(key: string): Promise<boolean> {
   try {
@@ -117,7 +132,7 @@ interface AssetEntry {
   key: string
   filePath: string
   contentType: string
-  field: SubjectField
+  field: SubjectField | null
   sizeMB: number
 }
 
@@ -152,6 +167,7 @@ async function main() {
         if (ONLY && !ONLY.includes(slug)) continue
         const assets: AssetEntry[] = []
         for (const spec of SUBJECT_ASSETS) {
+          if (ASSETS_FILTER && !ASSETS_FILTER.includes(spec.file)) continue
           const filePath = join(subjectPath, spec.file)
           if (!existsSync(filePath)) continue
           assets.push({
@@ -210,9 +226,9 @@ async function main() {
         continue // failed upload → leave the DB pointer alone
       }
       // uploaded or already-in-S3: the object resolves, point the DB at it
-      data[asset.field] = asset.key
+      if (asset.field) data[asset.field] = asset.key
       parts.push(
-        `${asset.field}${asset.field === "pdf" ? ` (${asset.sizeMB.toFixed(1)} MB)` : ""} [${result}]`
+        `${asset.field ?? asset.key.split("/").pop()}${asset.field === "pdf" ? ` (${asset.sizeMB.toFixed(1)} MB)` : ""} [${result}]`
       )
     }
 
