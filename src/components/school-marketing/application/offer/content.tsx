@@ -32,6 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import {
   Table,
@@ -52,6 +53,7 @@ import {
   recordRegistrationBankTransferIntent,
   recordRegistrationCashIntent,
   recordRegistrationWalletIntent,
+  submitRegistrationFeeProof,
 } from "./actions"
 
 // Narrow type for the school.admission.offer dictionary slice.
@@ -130,6 +132,14 @@ type OfferDict = Partial<{
   payWithBankakDesc: string
   payWithCashi: string
   payWithCashiDesc: string
+  awaitingConfirmation: string
+  awaitingConfirmationMessage: string
+  uploadProof: string
+  uploadProofHint: string
+  uploading: string
+  proofUploaded: string
+  uploadFailed: string
+  changeMethod: string
 }>
 
 interface OfferContentProps {
@@ -181,13 +191,85 @@ export default function OfferContent({
   // not just a decline that happens live in this session.
   const [declined, setDeclined] = useState(offerState === "declined")
   const [regPaid, setRegPaid] = useState(application.registrationFeePaid)
+  // Restored from the server when the family already recorded a manual
+  // intent (cash / bank / wallet) the school has not confirmed yet. The
+  // reference and account details used to live only in this state, so a
+  // reload sent the family back to the picker to record — and be quoted —
+  // a second intent.
   const [paymentResult, setPaymentResult] = useState<{
     method: string
     referenceNumber?: string
     cashInstructions?: string
     bankDetails?: BankDetails
     wallet?: WalletDetails
-  } | null>(null)
+    /** True when rebuilt from the stored intent rather than a fresh click. */
+    restored?: boolean
+  } | null>(() =>
+    offer.manualPayment
+      ? {
+          method: offer.manualPayment.method,
+          referenceNumber: offer.manualPayment.referenceNumber ?? undefined,
+          cashInstructions: offer.manualPayment.cashInstructions,
+          bankDetails: offer.manualPayment.bankDetails,
+          wallet: offer.manualPayment.wallet,
+          restored: true,
+        }
+      : null
+  )
+  // Transfer receipt for the manual rails (not cash — that is paid in person).
+  const [proofUrl, setProofUrl] = useState<string | null>(
+    application.registrationFeeProofUrl
+  )
+  const [proofFile, setProofFile] = useState<File | null>(null)
+  const [proofBusy, setProofBusy] = useState(false)
+  const [proofError, setProofError] = useState<string | null>(null)
+
+  const handleUploadProof = async () => {
+    if (!proofFile) return
+    setProofBusy(true)
+    setProofError(null)
+    try {
+      // Direct-to-storage through the shared payment-proof presign route (the
+      // fees side uses the same one); the bytes never round-trip the server.
+      const presign = await fetch("/api/blob/presign-payment-proof", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          filename: proofFile.name,
+          contentType: proofFile.type,
+          size: proofFile.size,
+          feeAssignmentId: `application-${application.id}`,
+        }),
+      })
+      if (!presign.ok) throw new Error("presign failed")
+      const { presignedUrl, finalUrl } = (await presign.json()) as {
+        presignedUrl: string
+        finalUrl: string
+      }
+      const put = await fetch(presignedUrl, {
+        method: "PUT",
+        body: proofFile,
+        headers: { "content-type": proofFile.type },
+      })
+      if (!put.ok) throw new Error("upload failed")
+      const result = await submitRegistrationFeeProof(
+        application.id,
+        accessToken,
+        finalUrl
+      )
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "record failed")
+      }
+      setProofUrl(result.data.proofUrl)
+      setProofFile(null)
+    } catch {
+      setProofError(
+        t?.uploadFailed || "Could not upload the receipt. Please try again."
+      )
+    } finally {
+      setProofBusy(false)
+    }
+  }
 
   // Calculate time remaining
   const expiryDate = application.offerExpiryDate
@@ -249,7 +331,6 @@ export default function OfferContent({
             referenceNumber: result.data.referenceNumber,
             cashInstructions: result.data.cashInstructions,
           })
-          setRegPaid(true)
         } else {
           setError(
             result.error || t?.failedPayment || "Failed to record payment"
@@ -266,7 +347,6 @@ export default function OfferContent({
             referenceNumber: result.data.referenceNumber,
             bankDetails: result.data.bankDetails,
           })
-          setRegPaid(true)
         } else {
           setError(
             result.error || t?.failedPayment || "Failed to record payment"
@@ -288,7 +368,6 @@ export default function OfferContent({
             referenceNumber: result.data.referenceNumber,
             wallet: result.data.wallet,
           })
-          setRegPaid(true)
         } else {
           setError(
             result.error || t?.failedPayment || "Failed to record payment"
@@ -379,8 +458,17 @@ export default function OfferContent({
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold">
-              {t?.paymentMethodRecorded || "Payment Method Recorded"}
+              {paymentResult.restored
+                ? t?.awaitingConfirmation ||
+                  "Awaiting the school's confirmation"
+                : t?.paymentMethodRecorded || "Payment Method Recorded"}
             </h1>
+            {paymentResult.restored && (
+              <p className="text-muted-foreground mt-2">
+                {t?.awaitingConfirmationMessage ||
+                  "We have recorded how you will pay. You will be notified as soon as the school confirms the payment."}
+              </p>
+            )}
           </div>
 
           <Card className="mb-6">
@@ -527,10 +615,64 @@ export default function OfferContent({
             </CardContent>
           </Card>
 
+          {/* Transfer rails: the receipt the accountant verifies before
+              confirming. Cash is paid in person, so nothing to upload. */}
+          {paymentResult.method !== "cash" && (
+            <Card className="mb-6">
+              <CardContent className="space-y-3 pt-6">
+                <p className="font-medium">
+                  {t?.uploadProof || "Upload transfer receipt"}
+                </p>
+                {proofUrl ? (
+                  <p className="flex items-center gap-2 text-sm text-green-700 dark:text-green-300">
+                    <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                    {t?.proofUploaded ||
+                      "Receipt uploaded — the school will verify it."}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground text-sm">
+                      {t?.uploadProofHint ||
+                        "A screenshot from your banking app or a photo of the deposit slip (image or PDF, up to 10MB)."}
+                    </p>
+                    <Input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      aria-label={t?.uploadProof || "Upload transfer receipt"}
+                      onChange={(event) =>
+                        setProofFile(event.target.files?.[0] ?? null)
+                      }
+                    />
+                    {proofError && (
+                      <p className="text-destructive text-sm">{proofError}</p>
+                    )}
+                    <Button
+                      onClick={handleUploadProof}
+                      disabled={!proofFile || proofBusy}
+                      className="w-full sm:w-auto"
+                    >
+                      {proofBusy && (
+                        <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                      )}
+                      {proofBusy
+                        ? t?.uploading || "Uploading..."
+                        : t?.uploadProof || "Upload transfer receipt"}
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           <p className="text-muted-foreground text-center text-sm">
             {t?.notificationMessage ||
               "You will be notified once payment is confirmed and enrollment is finalized."}
           </p>
+          <div className="mt-4 text-center">
+            <Button variant="ghost" onClick={() => setPaymentResult(null)}>
+              {t?.changeMethod || "Choose a different payment method"}
+            </Button>
+          </div>
         </div>
       </div>
     )

@@ -424,6 +424,11 @@ export async function getSubmittedApplicationsByUser(
       submittedAt: Date | null
       /** Non-null when a live offer link can be shown (status SELECTED) */
       offerToken: string | null
+      /** Where the family is on the offer leg — drives the card's fee line. */
+      offerAccepted: boolean
+      registrationFeePaid: boolean
+      /** Manual rail recorded but not yet confirmed by the school, if any. */
+      registrationFeeMethod: string | null
     }>
   >
 > {
@@ -446,6 +451,9 @@ export async function getSubmittedApplicationsByUser(
         submittedAt: true,
         accessToken: true,
         accessTokenExpiry: true,
+        offerAccepted: true,
+        registrationFeePaid: true,
+        registrationFeeMethod: true,
         campaign: { select: { name: true } },
       },
       orderBy: { submittedAt: "desc" },
@@ -470,6 +478,9 @@ export async function getSubmittedApplicationsByUser(
           (!app.accessTokenExpiry || app.accessTokenExpiry > now)
             ? app.accessToken
             : null,
+        offerAccepted: app.offerAccepted,
+        registrationFeePaid: app.registrationFeePaid,
+        registrationFeeMethod: app.registrationFeeMethod,
       })),
     }
   } catch (error) {

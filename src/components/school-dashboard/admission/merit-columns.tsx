@@ -32,6 +32,10 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { updateApplicationScores, updateApplicationStatus } from "./actions"
+import {
+  STATUSES_WITH_REASON,
+  StatusReasonDialog,
+} from "./status-reason-dialog"
 
 /**
  * Dict-first mapping for admission action error CODES (see ACTION_ERRORS in
@@ -220,11 +224,14 @@ function MeritActionsCell({
     router.push(`/${locale}/admission/applications/${merit.id}`)
   }
 
-  const onStatusChange = (status: string) => {
+  const [reasonFor, setReasonFor] = useState<string | null>(null)
+
+  const applyStatus = (status: string, reason?: string) => {
     startTransition(async () => {
       const result = await updateApplicationStatus({
         id: merit.id,
         status,
+        reason,
       })
       if (result.success) {
         SuccessToast(t?.applicationDetail?.statusUpdated || "Status updated")
@@ -239,8 +246,32 @@ function MeritActionsCell({
     })
   }
 
+  // A rejection or waitlist asks for an optional note to the family first.
+  const onStatusChange = (status: string) => {
+    if (STATUSES_WITH_REASON.has(status)) setReasonFor(status)
+    else applyStatus(status)
+  }
+
   return (
     <>
+      <StatusReasonDialog
+        open={reasonFor !== null}
+        onOpenChange={(open) => {
+          if (!open) setReasonFor(null)
+        }}
+        statusLabel={
+          reasonFor
+            ? t?.status?.[reasonFor as keyof typeof t.status] || reasonFor
+            : ""
+        }
+        dictionary={t}
+        isPending={isPending}
+        onConfirm={(reason) => {
+          const status = reasonFor
+          setReasonFor(null)
+          if (status) applyStatus(status, reason)
+        }}
+      />
       <ScoreEntryDialog
         merit={merit}
         open={scoreDialogOpen}

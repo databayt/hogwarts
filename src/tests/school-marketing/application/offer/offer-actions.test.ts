@@ -4,7 +4,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { resolveSchoolLang } from "@/lib/dispatch-notification"
+import {
+  dispatchNotificationsToAudience,
+  resolveSchoolLang,
+} from "@/lib/dispatch-notification"
 import { resolveAvailableMethods } from "@/lib/payment/provider"
 import { checkUserRateLimit } from "@/lib/rate-limit"
 import {
@@ -14,6 +17,7 @@ import {
   getOfferDetails,
   recordRegistrationBankTransferIntent,
   recordRegistrationCashIntent,
+  submitRegistrationFeeProof,
 } from "@/components/school-marketing/application/offer/actions"
 import { computeAvailableGateways } from "@/components/school-marketing/application/offer/gateways"
 
@@ -473,5 +477,89 @@ describe("createRegistrationFeeCheckout", () => {
       success: false,
       error: "PAYMENT_METHOD_NOT_AVAILABLE",
     })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// submitRegistrationFeeProof
+// ---------------------------------------------------------------------------
+
+describe("submitRegistrationFeeProof", () => {
+  const PROOF =
+    "https://cdn.example.com/payment-proof/school-1/app-1/receipt.png"
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    allowRateLimit()
+    mockUpdate.mockResolvedValue({})
+  })
+
+  it("attaches the receipt to an accepted bank-transfer intent and alerts finance", async () => {
+    mockFindFirst.mockResolvedValue(
+      makeApplication({
+        offerAccepted: true,
+        registrationFeeMethod: "bank_transfer",
+        registrationFeeReference: "RTRF-1",
+      })
+    )
+
+    const result = await submitRegistrationFeeProof(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      PROOF
+    )
+
+    expect(result).toEqual({ success: true, data: { proofUrl: PROOF } })
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: APPLICATION_ID, schoolId: SCHOOL_ID },
+      data: { registrationFeeProofUrl: PROOF },
+    })
+    expect(dispatchNotificationsToAudience).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetRoles: ["ADMIN", "ACCOUNTANT"],
+        metadata: expect.objectContaining({ url: "/admission/enrollment" }),
+      })
+    )
+  })
+
+  it("refuses a receipt for cash — it is paid in person", async () => {
+    mockFindFirst.mockResolvedValue(
+      makeApplication({ offerAccepted: true, registrationFeeMethod: "cash" })
+    )
+    const result = await submitRegistrationFeeProof(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      PROOF
+    )
+    expect(result).toEqual({
+      success: false,
+      error: "PAYMENT_METHOD_NOT_AVAILABLE",
+    })
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it("requires an accepted offer", async () => {
+    mockFindFirst.mockResolvedValue(
+      makeApplication({ offerAccepted: false, registrationFeeMethod: "bankak" })
+    )
+    const result = await submitRegistrationFeeProof(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      PROOF
+    )
+    expect(result).toEqual({ success: false, error: "OFFER_NOT_ACCEPTED" })
+  })
+
+  it("rejects anything but an https URL", async () => {
+    mockFindFirst.mockResolvedValue(
+      makeApplication({ offerAccepted: true, registrationFeeMethod: "cashi" })
+    )
+    const result = await submitRegistrationFeeProof(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "javascript:alert(1)"
+    )
+    expect(result).toEqual({ success: false, error: "VALIDATION_ERROR" })
+    expect(mockFindFirst).not.toHaveBeenCalled()
   })
 })

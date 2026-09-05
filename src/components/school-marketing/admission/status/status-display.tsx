@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import Link from "next/link"
 import {
   AlertCircle,
   ArrowLeft,
@@ -179,6 +180,43 @@ export default function StatusDisplay({
         </CardContent>
       </Card>
 
+      {/* A live offer — the one status with something for the family to DO.
+          The tracker used to show a bare "Selected" and nothing else. */}
+      {status.offerUrl && (
+        <Card className="border-primary">
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {dict.offerReady || "Your admission offer is ready"}
+            </CardTitle>
+            <CardDescription>
+              {dict.offerReadyDesc ||
+                "Review the offer, accept it, and pay the registration fee to secure the seat."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full sm:w-auto">
+              <Link href={status.offerUrl}>
+                {dict.viewOffer || "View offer"}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* The reviewer's note (rejection / waitlist reason) */}
+      {status.note && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {dict.schoolNote || "A note from the school"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm whitespace-pre-line">{status.note}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Timeline */}
       <Card>
         <CardHeader>
@@ -300,7 +338,9 @@ function TimelineItem({ entry, isLast, isRTL }: TimelineItemProps) {
         {entry.date && (
           <p className="text-muted-foreground text-sm">
             {new Date(entry.date).toLocaleDateString(
-              isRTL ? "ar-SA" : "en-US",
+              // Plain "ar", not "ar-SA": the Saudi tag selects the Umm al-Qura
+              // (Hijri) calendar in some ICU builds, for a Sudan-first product.
+              isRTL ? "ar" : "en-US",
               {
                 year: "numeric",
                 month: "long",

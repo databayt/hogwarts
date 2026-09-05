@@ -56,6 +56,8 @@ export type EnrollmentRow = {
    *  select this field from queries.ts — see final report. Falls back to
    *  "not confirmable" (button hidden) when absent, never mis-shown. */
   registrationFeeMethod?: string | null
+  /** Transfer receipt the family uploaded for a manual rail (bank / wallet). */
+  registrationFeeProofUrl?: string | null
   /** studentId is set after confirmEnrollment creates the Student record */
   studentId?: string | null
 }
@@ -255,6 +257,20 @@ function EnrollmentActionsCell({
                 {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
               </DropdownMenuItem>
             )}
+          {enrollment.registrationFeeProofUrl && (
+            <DropdownMenuItem
+              onClick={() =>
+                window.open(
+                  enrollment.registrationFeeProofUrl ?? "",
+                  "_blank",
+                  "noopener"
+                )
+              }
+            >
+              <ExternalLink className="me-2 h-4 w-4" />
+              {t?.enrollment?.viewProof || "View payment proof"}
+            </DropdownMenuItem>
+          )}
           {showConfirmRegPayment && (
             <DropdownMenuItem
               onClick={onConfirmRegPayment}

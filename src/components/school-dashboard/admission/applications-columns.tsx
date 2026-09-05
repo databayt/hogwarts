@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
@@ -25,6 +25,10 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 import { updateApplicationStatus } from "./actions"
 import { canPerformAdmissionAction } from "./authorization"
 import { getAllowedTransitions } from "./status-machine"
+import {
+  STATUSES_WITH_REASON,
+  StatusReasonDialog,
+} from "./status-reason-dialog"
 
 export type ApplicationRow = {
   id: string
@@ -93,11 +97,14 @@ function ApplicationActionsCell({
     router.push(`/${locale}/admission/applications/${application.id}`)
   }
 
-  const onUpdateStatus = (status: string) => {
+  const [reasonFor, setReasonFor] = useState<string | null>(null)
+
+  const applyStatus = (status: string, reason?: string) => {
     startTransition(async () => {
       const result = await updateApplicationStatus({
         id: application.id,
         status,
+        reason,
       })
       if (result.success) {
         SuccessToast(t?.applicationDetail?.statusUpdated || "Status updated")
@@ -110,6 +117,12 @@ function ApplicationActionsCell({
         )
       }
     })
+  }
+
+  // A rejection or waitlist asks for an optional note to the family first.
+  const onUpdateStatus = (status: string) => {
+    if (STATUSES_WITH_REASON.has(status)) setReasonFor(status)
+    else applyStatus(status)
   }
 
   const onSendEmail = () => {
@@ -156,43 +169,65 @@ function ApplicationActionsCell({
   )
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
-          <Ellipsis className="h-4 w-4" />
-          <span className="sr-only">{t?.toolbar?.openMenu || "Open menu"}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>
-          {t?.columns?.actions || "Actions"}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onView}>
-          {t?.applications?.viewDetails || "View Details"}
-        </DropdownMenuItem>
-        {statusOptions.length > 0 && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-muted-foreground text-xs font-normal">
-              {t?.applications?.updateStatus || "Update Status"}
-            </DropdownMenuLabel>
-            {statusOptions.map((opt) => (
-              <DropdownMenuItem
-                key={opt.value}
-                onClick={() => onUpdateStatus(opt.value)}
-              >
-                {opt.label}
-              </DropdownMenuItem>
-            ))}
-          </>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onSendEmail}>
-          {t?.applications?.sendEmail || "Send Email"}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <StatusReasonDialog
+        open={reasonFor !== null}
+        onOpenChange={(open) => {
+          if (!open) setReasonFor(null)
+        }}
+        statusLabel={
+          reasonFor
+            ? t?.status?.[reasonFor as keyof typeof t.status] || reasonFor
+            : ""
+        }
+        dictionary={t}
+        isPending={isPending}
+        onConfirm={(reason) => {
+          const status = reasonFor
+          setReasonFor(null)
+          if (status) applyStatus(status, reason)
+        }}
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+            <Ellipsis className="h-4 w-4" />
+            <span className="sr-only">
+              {t?.toolbar?.openMenu || "Open menu"}
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>
+            {t?.columns?.actions || "Actions"}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onView}>
+            {t?.applications?.viewDetails || "View Details"}
+          </DropdownMenuItem>
+          {statusOptions.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-muted-foreground text-xs font-normal">
+                {t?.applications?.updateStatus || "Update Status"}
+              </DropdownMenuLabel>
+              {statusOptions.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.value}
+                  onClick={() => onUpdateStatus(opt.value)}
+                >
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+            </>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onSendEmail}>
+            {t?.applications?.sendEmail || "Send Email"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   )
 }
 

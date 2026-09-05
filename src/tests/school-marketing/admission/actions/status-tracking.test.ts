@@ -257,6 +257,46 @@ describe("Status Tracking", () => {
       )
     })
 
+    it("binds the lookup to the email the code was sent to", async () => {
+      // With the application number alone, anyone could burn the five
+      // attempts and lock the real applicant out of their own fresh code.
+      vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce({
+        id: "otp-1",
+        otp: OTP_HASH,
+        verified: false,
+        expiresAt: new Date(Date.now() + 600000),
+        attempts: 0,
+      } as any)
+      vi.mocked(db.admissionOTP.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
+      vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
+      vi.mocked(db.application.findFirst).mockResolvedValue({
+        id: "app-1",
+        applicationNumber: APP_NUMBER,
+        accessToken: null,
+        accessTokenExpiry: null,
+      } as any)
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+
+      const result = await verifyStatusOTP(
+        SUBDOMAIN,
+        APP_NUMBER,
+        OTP_PLAINTEXT,
+        "  Parent@Example.com "
+      )
+
+      expect(result.success).toBe(true)
+      expect(db.admissionOTP.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            applicationNumber: APP_NUMBER,
+            email: { equals: "parent@example.com", mode: "insensitive" },
+          }),
+        })
+      )
+    })
+
     it("T-08: reuses existing valid access token", async () => {
       const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce({
@@ -455,14 +495,19 @@ describe("Status Tracking", () => {
       expect(shortlistedStep?.current).toBe(false)
     })
 
-    it("includes checklist with application submission and payment status", async () => {
-      vi.mocked(db.application.findFirst).mockResolvedValue({
+    it("includes checklist with application submission, and the offer leg once an offer exists", async () => {
+      const base = {
         id: "app-1",
         applicationNumber: APP_NUMBER,
         status: "SUBMITTED",
         submittedAt: new Date("2026-01-15"),
         updatedAt: new Date("2026-01-15"),
         applicationFeePaid: false,
+        admissionOffered: false,
+        offerAccepted: false,
+        registrationFeePaid: false,
+        registrationFeeMethod: null,
+        reviewNotes: null,
         documents: [],
         campaign: {
           name: "Fall 2026",
@@ -471,7 +516,8 @@ describe("Status Tracking", () => {
         },
         communications: [],
         tourBookings: [],
-      } as any)
+      }
+      vi.mocked(db.application.findFirst).mockResolvedValue(base as any)
 
       const result = await getApplicationStatus("demo", "valid-token")
 
@@ -483,10 +529,34 @@ describe("Status Tracking", () => {
       const appItem = checklist!.find((c) => c.id === "application")
       expect(appItem?.completed).toBe(true)
 
-      // Payment should be not completed
-      const paymentItem = checklist!.find((c) => c.id === "payment")
-      expect(paymentItem?.completed).toBe(false)
-      expect(paymentItem?.required).toBe(true)
+      // Applying is free: no payment item until an offer is on the table —
+      // the campaign's legacy applicationFee must not conjure one.
+      expect(checklist!.find((c) => c.id === "payment")).toBeUndefined()
+      expect(
+        checklist!.find((c) => c.id === "registration-fee")
+      ).toBeUndefined()
+      expect(result.data?.offerUrl).toBeUndefined()
+
+      // Once selected and accepted, the registration fee is the money step,
+      // and the tracker hands the family the offer link it verified.
+      vi.mocked(db.application.findFirst).mockResolvedValue({
+        ...base,
+        status: "SELECTED",
+        admissionOffered: true,
+        offerAccepted: true,
+      } as any)
+      const selected = await getApplicationStatus("demo", "valid-token", "en")
+      const offerItem = selected.data?.checklist.find((c) => c.id === "offer")
+      expect(offerItem?.completed).toBe(true)
+      const feeItem = selected.data?.checklist.find(
+        (c) => c.id === "registration-fee"
+      )
+      expect(feeItem?.completed).toBe(false)
+      expect(feeItem?.required).toBe(true)
+      expect(feeItem?.type).toBe("payment")
+      expect(selected.data?.offerUrl).toBe(
+        "/en/application/app-1/offer?token=valid-token"
+      )
     })
 
     it("includes document checklist items from campaign requirements", async () => {

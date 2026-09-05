@@ -91,6 +91,7 @@ export default async function EnrollmentContent({
           // bank-transfer intents. Was never mapped on this SSR path, so the
           // action only appeared after a client refetch.
           registrationFeeMethod: a.registrationFeeMethod ?? null,
+          registrationFeeProofUrl: a.registrationFeeProofUrl ?? null,
           paymentDate: a.paymentDate
             ? new Date(a.paymentDate).toISOString()
             : null,

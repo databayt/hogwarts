@@ -505,6 +505,9 @@ export async function getApplications(params: {
 export async function updateApplicationStatus(params: {
   id: string
   status: string
+  /** Optional note for the family (a rejection or waitlist reason). Stored
+   *  on `reviewNotes` and carried in the notice they receive. */
+  reason?: string
 }): Promise<ActionResponse> {
   try {
     const session = await auth()
@@ -547,6 +550,12 @@ export async function updateApplicationStatus(params: {
       reviewedBy: session.user?.id,
     }
 
+    // `reviewNotes` had no write site at all, so every rejection notice went
+    // out contentless. The note is optional and short; it reaches the family
+    // in the notification body and on the public status tracker.
+    const reason = params.reason?.trim().slice(0, 1000) || null
+    if (reason) data.reviewNotes = reason
+
     // Auto-offer admission when selecting a student
     if (params.status === "SELECTED") {
       data.admissionOffered = true
@@ -561,13 +570,39 @@ export async function updateApplicationStatus(params: {
       )
       const existing = await db.application.findUnique({
         where: { id: params.id, schoolId },
-        select: { accessToken: true },
+        select: {
+          accessToken: true,
+          accessTokenExpiry: true,
+          registrationFeePaid: true,
+        },
       })
+      // The token must outlive the offer window: the applicant dashboard and
+      // the status tracker hide an offer whose token has lapsed, so a
+      // re-offer months after submission was mailing a link nothing would
+      // show. A month of slack covers the office's confirmation time.
+      const tokenExpiry = new Date(
+        (data.offerExpiryDate as Date).getTime() + 30 * 24 * 60 * 60 * 1000
+      )
       if (!existing?.accessToken) {
         data.accessToken = nanoid(32)
-        data.accessTokenExpiry = new Date(
-          Date.now() + expiryDays * 24 * 60 * 60 * 1000
-        )
+        data.accessTokenExpiry = tokenExpiry
+      } else if (
+        !existing.accessTokenExpiry ||
+        existing.accessTokenExpiry < tokenExpiry
+      ) {
+        data.accessTokenExpiry = tokenExpiry
+      }
+      // A (re-)offer starts the acceptance clock afresh: clear a stale
+      // acceptance and any UNPAID manual-payment intent so the family is
+      // asked again. A fee that was actually paid is never touched — an
+      // applicant waitlisted after paying keeps their acceptance and money.
+      if (existing && !existing.registrationFeePaid) {
+        data.offerAccepted = false
+        data.offerAcceptedAt = null
+        data.registrationFeeMethod = null
+        data.registrationFeeReference = null
+        data.registrationFeeAmount = null
+        data.registrationFeeProofUrl = null
       }
     }
 
@@ -616,11 +651,14 @@ export async function updateApplicationStatus(params: {
         WITHDRAWN: NOTIF.statusUpdate.WITHDRAWN,
         SUBMITTED: NOTIF.statusUpdate.SUBMITTED,
       }
-      const statusMessage = t(
+      const baseMessage = t(
         statusMsgMap[params.status] ||
           NOTIF.statusUpdate.fallback(params.status),
         notifLang
       )
+      // The reviewer's note rides in the same notice (and email) — a
+      // rejection or waitlist with no "why" is what families phone about.
+      const statusMessage = reason ? `${baseMessage}\n\n${reason}` : baseMessage
       const notifMetadata = {
         applicationId: params.id,
         status: params.status,
@@ -1082,6 +1120,7 @@ export async function getEnrollmentData(params: {
           offerAccepted: a.offerAccepted,
           registrationFeePaid: a.registrationFeePaid,
           registrationFeeMethod: a.registrationFeeMethod ?? null,
+          registrationFeeProofUrl: a.registrationFeeProofUrl ?? null,
         })),
         total: result.count,
       },

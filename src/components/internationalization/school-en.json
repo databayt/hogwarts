@@ -9635,7 +9635,11 @@
         "viewDetails": "View Details",
         "updateStatus": "Update Status",
         "sendEmail": "Send Email",
-        "call": "Call"
+        "call": "Call",
+        "reasonTitle": "Add a note for the family",
+        "reasonDescription": "Optional. It is included in the notice the family receives and shown on their status page.",
+        "reasonPlaceholder": "e.g. Places in this grade are full this year.",
+        "confirmStatus": "Confirm"
       },
       "applicationDetail": {
         "personalInfo": "Personal Info",
@@ -9725,7 +9729,9 @@
         "createdAt": "Created",
         "updatedAt": "Last Updated",
         "yes": "Yes",
-        "no": "No"
+        "no": "No",
+        "registrationFeeProof": "Payment proof",
+        "viewProof": "View receipt"
       },
       "meritList": {
         "title": "Merit List",
@@ -9784,7 +9790,8 @@
         "sectionFull": "Full",
         "viewFees": "View Fees",
         "confirmRegPayment": "Confirm Registration Payment",
-        "regPaymentConfirmed": "Registration payment confirmed"
+        "regPaymentConfirmed": "Registration payment confirmed",
+        "viewProof": "View payment proof"
       },
       "warnings": {
         "noFeeStructureMatch": "No fee structure matched — fees skipped. Configure a fee structure in Finance > Fees.",
@@ -10367,7 +10374,10 @@
         "justNow": "Just now",
         "hoursAgoFormat": "{n}h ago",
         "yesterday": "Yesterday",
-        "daysAgoFormat": "{n}d ago"
+        "daysAgoFormat": "{n}d ago",
+        "feePaid": "Registration fee paid",
+        "awaitingPaymentConfirmation": "Payment recorded — awaiting the school's confirmation",
+        "offerAcceptedFeeDue": "Offer accepted — registration fee due"
       },
       "continueApp": {
         "title": "Continue Your Application",
@@ -10480,7 +10490,13 @@
         "checkApplicationSubmitted": "Application submitted",
         "checkApplicationFee": "Application fee paid",
         "checkTour": "Campus tour",
-        "checkInterview": "Interview"
+        "checkInterview": "Interview",
+        "offerReady": "Your admission offer is ready",
+        "offerReadyDesc": "Review the offer, accept it, and pay the registration fee to secure the seat.",
+        "viewOffer": "View offer",
+        "schoolNote": "A note from the school",
+        "checkOfferAccepted": "Admission offer accepted",
+        "checkRegistrationFee": "Registration fee paid"
       },
       "formSteps": {
         "firstName": "First Name",
@@ -10723,7 +10739,15 @@
         "payWithBankak": "Bankak",
         "payWithBankakDesc": "Transfer in the Bankak app, then the school confirms it",
         "payWithCashi": "Cashi",
-        "payWithCashiDesc": "Transfer in the MyCashi app, then the school confirms it"
+        "payWithCashiDesc": "Transfer in the MyCashi app, then the school confirms it",
+        "awaitingConfirmation": "Awaiting the school's confirmation",
+        "awaitingConfirmationMessage": "We have recorded how you will pay. You will be notified as soon as the school confirms the payment.",
+        "uploadProof": "Upload transfer receipt",
+        "uploadProofHint": "A screenshot from your banking app or a photo of the deposit slip (image or PDF, up to 10MB).",
+        "uploading": "Uploading...",
+        "proofUploaded": "Receipt uploaded — the school will verify it.",
+        "uploadFailed": "Could not upload the receipt. Please try again.",
+        "changeMethod": "Choose a different payment method"
       },
       "ai": {
         "extractedData": "Extracted Data",

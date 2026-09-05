@@ -9643,7 +9643,11 @@
         "viewDetails": "عرض التفاصيل",
         "updateStatus": "تحديث الحالة",
         "sendEmail": "إرسال بريد",
-        "call": "اتصال"
+        "call": "اتصال",
+        "reasonTitle": "إضافة ملاحظة للأسرة",
+        "reasonDescription": "اختياري. تُضمَّن في الإشعار الذي تتلقاه الأسرة وتظهر في صفحة حالة الطلب.",
+        "reasonPlaceholder": "مثال: اكتملت المقاعد في هذا الصف لهذا العام.",
+        "confirmStatus": "تأكيد"
       },
       "applicationDetail": {
         "personalInfo": "المعلومات الشخصية",
@@ -9733,7 +9737,9 @@
         "createdAt": "تاريخ الإنشاء",
         "updatedAt": "آخر تحديث",
         "yes": "نعم",
-        "no": "لا"
+        "no": "لا",
+        "registrationFeeProof": "إثبات الدفع",
+        "viewProof": "عرض الإيصال"
       },
       "meritList": {
         "title": "قائمة الجدارة",
@@ -9792,7 +9798,8 @@
         "sectionFull": "ممتلئ",
         "viewFees": "عرض الرسوم",
         "confirmRegPayment": "تأكيد دفع رسوم التسجيل",
-        "regPaymentConfirmed": "تم تأكيد دفع رسوم التسجيل"
+        "regPaymentConfirmed": "تم تأكيد دفع رسوم التسجيل",
+        "viewProof": "عرض إثبات الدفع"
       },
       "warnings": {
         "noFeeStructureMatch": "لا يوجد هيكل رسوم مطابق — تم تخطي الرسوم. قم بتكوين هيكل رسوم في المالية > الرسوم.",
@@ -10375,7 +10382,10 @@
         "justNow": "منذ قليل",
         "hoursAgoFormat": "منذ {n} ساعة",
         "yesterday": "أمس",
-        "daysAgoFormat": "منذ {n} أيام"
+        "daysAgoFormat": "منذ {n} أيام",
+        "feePaid": "تم دفع رسوم التسجيل",
+        "awaitingPaymentConfirmation": "تم تسجيل الدفع — بانتظار تأكيد المدرسة",
+        "offerAcceptedFeeDue": "تم قبول العرض — رسوم التسجيل مستحقة"
       },
       "continueApp": {
         "title": "استئناف طلبك",
@@ -10488,7 +10498,13 @@
         "checkApplicationSubmitted": "تم تقديم الطلب",
         "checkApplicationFee": "دفع رسوم التقديم",
         "checkTour": "جولة الحرم المدرسي",
-        "checkInterview": "المقابلة"
+        "checkInterview": "المقابلة",
+        "offerReady": "عرض القبول جاهز",
+        "offerReadyDesc": "راجع العرض واقبله وادفع رسوم التسجيل لحجز المقعد.",
+        "viewOffer": "عرض القبول",
+        "schoolNote": "ملاحظة من المدرسة",
+        "checkOfferAccepted": "قبول عرض القبول",
+        "checkRegistrationFee": "دفع رسوم التسجيل"
       },
       "formSteps": {
         "firstName": "الاسم الأول",
@@ -10731,7 +10747,15 @@
         "payWithBankak": "بنكك",
         "payWithBankakDesc": "حوّل عبر تطبيق بنكك ثم تؤكد المدرسة الدفعة",
         "payWithCashi": "كاشي",
-        "payWithCashiDesc": "حوّل عبر تطبيق ماي كاشي ثم تؤكد المدرسة الدفعة"
+        "payWithCashiDesc": "حوّل عبر تطبيق ماي كاشي ثم تؤكد المدرسة الدفعة",
+        "awaitingConfirmation": "بانتظار تأكيد المدرسة",
+        "awaitingConfirmationMessage": "سجّلنا طريقة الدفع التي اخترتها. سيتم إشعارك فور تأكيد المدرسة لاستلام الدفعة.",
+        "uploadProof": "رفع إيصال التحويل",
+        "uploadProofHint": "لقطة شاشة من تطبيق البنك أو صورة لقسيمة الإيداع (صورة أو PDF، حتى 10 ميجابايت).",
+        "uploading": "جاري الرفع...",
+        "proofUploaded": "تم رفع الإيصال — ستتحقق المدرسة منه.",
+        "uploadFailed": "تعذر رفع الإيصال. حاول مرة أخرى.",
+        "changeMethod": "اختيار طريقة دفع أخرى"
       },
       "ai": {
         "extractedData": "البيانات المستخرجة",

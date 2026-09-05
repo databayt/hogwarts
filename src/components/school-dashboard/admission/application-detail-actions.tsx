@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronDown, Printer } from "lucide-react"
 
@@ -19,6 +19,10 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { confirmEnrollment, updateApplicationStatus } from "./actions"
 import { canPerformAdmissionAction } from "./authorization"
 import { getAllowedTransitions } from "./status-machine"
+import {
+  STATUSES_WITH_REASON,
+  StatusReasonDialog,
+} from "./status-reason-dialog"
 import { translateEnrollmentWarning } from "./warning-messages"
 
 // ---------------------------------------------------------------------------
@@ -84,11 +88,14 @@ export default function ApplicationDetailActions({
     allowedTargets.includes(opt.value)
   )
 
-  const onUpdateStatus = (status: string) => {
+  const [reasonFor, setReasonFor] = useState<string | null>(null)
+
+  const applyStatus = (status: string, reason?: string) => {
     startTransition(async () => {
       const result = await updateApplicationStatus({
         id: applicationId,
         status,
+        reason,
       })
       if (result.success) {
         SuccessToast(t?.applicationDetail?.statusUpdated || "Status updated")
@@ -101,6 +108,12 @@ export default function ApplicationDetailActions({
         )
       }
     })
+  }
+
+  // A rejection or waitlist asks for an optional note to the family first.
+  const onUpdateStatus = (status: string) => {
+    if (STATUSES_WITH_REASON.has(status)) setReasonFor(status)
+    else applyStatus(status)
   }
 
   const onConfirmEnrollment = () => {
@@ -147,6 +160,24 @@ export default function ApplicationDetailActions({
 
   return (
     <div className="flex flex-col gap-2 print:hidden">
+      <StatusReasonDialog
+        open={reasonFor !== null}
+        onOpenChange={(open) => {
+          if (!open) setReasonFor(null)
+        }}
+        statusLabel={
+          reasonFor
+            ? t?.status?.[reasonFor as keyof typeof t.status] || reasonFor
+            : ""
+        }
+        dictionary={t}
+        isPending={isPending}
+        onConfirm={(reason) => {
+          const status = reasonFor
+          setReasonFor(null)
+          if (status) applyStatus(status, reason)
+        }}
+      />
       {statusOptions.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

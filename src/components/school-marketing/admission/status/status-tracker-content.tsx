@@ -171,7 +171,8 @@ export default function StatusTrackerContent({
       const result = await verifyStatusOTP(
         subdomain,
         applicationNumber,
-        data.otp
+        data.otp,
+        email
       )
 
       if (result.success && result.data?.accessToken) {

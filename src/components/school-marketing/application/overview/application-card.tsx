@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
-import { Clock, FileText, User } from "lucide-react"
+import { Clock, CreditCard, FileText, User } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -175,6 +175,10 @@ export interface SubmittedApplication {
   campaignName: string | null
   submittedAt: Date | null
   offerToken: string | null
+  /** Where the family is on the offer leg — drives the fee line below. */
+  offerAccepted: boolean
+  registrationFeePaid: boolean
+  registrationFeeMethod: string | null
 }
 
 function statusVariant(
@@ -200,6 +204,9 @@ interface SubmittedApplicationCardProps {
   dictionary?: {
     applicationFallback?: string
     viewOffer?: string
+    feePaid?: string
+    awaitingPaymentConfirmation?: string
+    offerAcceptedFeeDue?: string
   }
   /** school.admission.status.* labels keyed by status value */
   statusDict?: Record<string, string>
@@ -214,6 +221,21 @@ export function SubmittedApplicationCard({
   statusDict,
 }: SubmittedApplicationCardProps) {
   const dict = dictionary || {}
+
+  // The money line: paid, recorded-and-awaiting-confirmation, or still due.
+  // Only meaningful once an offer is on the table.
+  const onOfferLeg =
+    application.status === "SELECTED" || application.status === "ADMITTED"
+  const feeLine = !onOfferLeg
+    ? null
+    : application.registrationFeePaid
+      ? dict.feePaid || "Registration fee paid"
+      : application.offerAccepted && application.registrationFeeMethod
+        ? dict.awaitingPaymentConfirmation ||
+          "Payment recorded — awaiting the school's confirmation"
+        : application.offerAccepted
+          ? dict.offerAcceptedFeeDue || "Offer accepted — registration fee due"
+          : null
 
   return (
     <Card className="bg-card min-h-[50px] rounded-lg border py-3 shadow-none sm:min-h-[60px] sm:py-4">
@@ -256,6 +278,12 @@ export function SubmittedApplicationCard({
                       { month: "short", day: "numeric" }
                     )}
                   </span>
+                </p>
+              )}
+              {feeLine && (
+                <p className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <CreditCard className="h-3 w-3" />
+                  <span>{feeLine}</span>
                 </p>
               )}
             </div>

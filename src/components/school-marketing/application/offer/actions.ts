@@ -22,8 +22,11 @@ import {
 import { createPaymentCheckout } from "@/lib/payment/provider"
 import {
   isManualGateway,
+  MANUAL_GATEWAYS,
+  type BankDetails,
   type PaymentCheckoutResult,
   type PaymentGateway,
+  type WalletDetails,
 } from "@/lib/payment/types"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { tenantUrl } from "@/components/school-marketing/admission/actions/urls"
@@ -65,6 +68,8 @@ export interface OfferDetails {
     registrationFeeMethod: string | null
     registrationFeeReference: string | null
     registrationFeeDate: Date | null
+    /** Transfer receipt the family uploaded for a manual rail, if any. */
+    registrationFeeProofUrl: string | null
     applicationFeePaid: boolean
   }
   school: {
@@ -92,6 +97,22 @@ export interface OfferDetails {
   registrationFeeTotal: number
   /** Gateways the applicant may pay the registration fee with, in priority order. */
   availableGateways: PaymentGateway[]
+  /**
+   * A manual-rail intent the family recorded (cash / bank transfer / wallet)
+   * that the school has not yet confirmed — with the same account details
+   * and reference the intent action returned, so the page can show them
+   * again after a reload instead of asking the family to pay twice.
+   */
+  manualPayment: ManualPaymentIntent | null
+}
+
+export interface ManualPaymentIntent {
+  method: PaymentGateway
+  referenceNumber: string | null
+  amount: number | null
+  cashInstructions?: string
+  bankDetails?: BankDetails
+  wallet?: WalletDetails
 }
 
 // ============================================================================
@@ -117,6 +138,16 @@ const NOTIF = {
     body: (name: string) => ({
       ar: `قام ولي أمر ${name} برفض عرض القبول وسحب الطلب`,
       en: `The parent/guardian of ${name} has declined the offer and withdrawn the application`,
+    }),
+  },
+  registrationFeeProof: {
+    title: {
+      ar: "إيصال تحويل رسوم التسجيل",
+      en: "Registration fee receipt uploaded",
+    },
+    body: (name: string, applicationNumber: string) => ({
+      ar: `رفع ولي أمر ${name} إيصال تحويل رسوم التسجيل (الطلب ${applicationNumber}). يرجى التحقق منه وتأكيد الدفع.`,
+      en: `The family of ${name} uploaded a transfer receipt for the registration fee (application ${applicationNumber}). Please verify it and confirm the payment.`,
     }),
   },
   registrationFeePaid: {
@@ -173,6 +204,7 @@ async function validateAccessToken(applicationId: string, accessToken: string) {
       registrationFeeMethod: true,
       registrationFeeReference: true,
       registrationFeeDate: true,
+      registrationFeeProofUrl: true,
       applicationFeePaid: true,
       admissionOffered: true,
       email: true,
@@ -385,7 +417,12 @@ export async function getOfferDetails(
     const [admissionSettings, paymentSettings] = await Promise.all([
       db.admissionSettings.findUnique({
         where: { schoolId },
-        select: { enableOnlinePayment: true, paymentMethods: true },
+        select: {
+          enableOnlinePayment: true,
+          paymentMethods: true,
+          cashPaymentInstructions: true,
+          bankDetails: true,
+        },
       }),
       getSchoolPaymentSettings(schoolId),
     ])
@@ -396,6 +433,51 @@ export async function getOfferDetails(
       admissionSettings,
       paymentSettings
     )
+
+    // A recorded-but-unconfirmed manual intent survives a reload: the page
+    // used to keep the reference and account details only in component
+    // state, so a family that closed the tab came back to the payment
+    // picker and recorded a second intent (and a second reference).
+    let manualPayment: ManualPaymentIntent | null = null
+    const recordedMethod = application.registrationFeeMethod
+    if (
+      !application.registrationFeePaid &&
+      recordedMethod &&
+      (MANUAL_GATEWAYS as readonly string[]).includes(recordedMethod)
+    ) {
+      const method = recordedMethod as PaymentGateway
+      const reference = application.registrationFeeReference ?? ""
+      const bank = admissionSettings?.bankDetails as Record<
+        string,
+        string
+      > | null
+      manualPayment = {
+        method,
+        referenceNumber: application.registrationFeeReference,
+        amount: application.registrationFeeAmount
+          ? Number(application.registrationFeeAmount)
+          : null,
+        cashInstructions:
+          method === "cash"
+            ? (admissionSettings?.cashPaymentInstructions ?? undefined)
+            : undefined,
+        bankDetails:
+          method === "bank_transfer" && bank
+            ? {
+                bankName: bank.bankName ?? "",
+                accountName: bank.accountName ?? "",
+                accountNumber: bank.accountNumber ?? "",
+                iban: bank.iban || undefined,
+                swiftCode: bank.swiftCode || undefined,
+                reference,
+              }
+            : undefined,
+        wallet:
+          method === "bankak" || method === "cashi"
+            ? resolveWalletDetails(method, paymentSettings, reference)
+            : undefined,
+      }
+    }
 
     // Fee schedule preview + registration total from ONE resolution — the
     // same structures enrollment will assign (see resolveOfferFeeStructures).
@@ -433,6 +515,7 @@ export async function getOfferDetails(
           registrationFeeMethod: application.registrationFeeMethod,
           registrationFeeReference: application.registrationFeeReference,
           registrationFeeDate: application.registrationFeeDate,
+          registrationFeeProofUrl: application.registrationFeeProofUrl,
           applicationFeePaid: application.applicationFeePaid,
         },
         school: {
@@ -453,6 +536,7 @@ export async function getOfferDetails(
         feeSchedulePreview: feeStructures,
         registrationFeeTotal,
         availableGateways,
+        manualPayment,
       },
     }
   } catch (error) {
@@ -1344,6 +1428,117 @@ export async function recordRegistrationWalletIntent(
     }
   } catch (error) {
     console.error("[recordRegistrationWalletIntent]", error)
+    return { success: false, error: "PAYMENT_RECORD_FAILED" }
+  }
+}
+
+// ============================================================================
+// 8. Registration-fee transfer proof (manual rails)
+// ============================================================================
+
+const PROOF_URL_MAX = 2048
+
+/**
+ * Attach the family's transfer receipt (a screenshot from their banking app,
+ * a photo of the deposit slip) to a manual-rail registration-fee intent.
+ *
+ * The file itself goes straight to storage through the shared payment-proof
+ * presign route (the same one the fees side uses); this records where it
+ * landed on `Application.registrationFeeProofUrl` — a column nothing wrote
+ * before, so the accountant confirming a Bankak / Cashi / bank transfer had
+ * nothing to look at — and tells ADMIN + ACCOUNTANT a receipt is waiting.
+ */
+export async function submitRegistrationFeeProof(
+  applicationId: string,
+  accessToken: string,
+  proofUrl: string
+): Promise<ActionResponse<{ proofUrl: string }>> {
+  try {
+    const rl = await checkUserRateLimit(
+      `reg-proof:${accessToken}`,
+      RATE_LIMITS.AUTH,
+      "reg-proof"
+    )
+    if (!rl.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
+    const url = proofUrl.trim()
+    if (
+      !url ||
+      url.length > PROOF_URL_MAX ||
+      !/^https:\/\/[^\s]+$/i.test(url)
+    ) {
+      return { success: false, error: "VALIDATION_ERROR" }
+    }
+
+    const result = await validateAccessToken(applicationId, accessToken)
+    if ("error" in result) {
+      return { success: false, error: result.error }
+    }
+    const { application } = result
+
+    if (application.status !== "SELECTED") {
+      return { success: false, error: "OFFER_NOT_AVAILABLE" }
+    }
+    if (!application.offerAccepted) {
+      return { success: false, error: "OFFER_NOT_ACCEPTED" }
+    }
+    if (application.registrationFeePaid) {
+      return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
+    }
+    const method = application.registrationFeeMethod
+    if (
+      !method ||
+      method === "cash" ||
+      !(MANUAL_GATEWAYS as readonly string[]).includes(method)
+    ) {
+      // Cash is paid at the office in person; only the transfer rails carry
+      // a receipt the school needs to see.
+      return { success: false, error: "PAYMENT_METHOD_NOT_AVAILABLE" }
+    }
+
+    const schoolId = application.schoolId
+    await db.application.update({
+      where: { id: applicationId, schoolId },
+      data: { registrationFeeProofUrl: url },
+    })
+
+    // Tell the people who confirm manual payments that there is something
+    // to check — in the school's language, linking the enrollment tab.
+    try {
+      const lang = await resolveSchoolLang(schoolId)
+      const applicantName = `${application.firstName} ${application.lastName}`
+      await dispatchNotificationsToAudience({
+        schoolId,
+        type: "system_alert",
+        title: t(NOTIF.registrationFeeProof.title, lang),
+        body: t(
+          NOTIF.registrationFeeProof.body(
+            applicantName,
+            application.applicationNumber
+          ),
+          lang
+        ),
+        lang,
+        priority: "normal",
+        targetScope: "role",
+        targetRoles: ["ADMIN", "ACCOUNTANT"],
+        metadata: {
+          applicationId: application.id,
+          applicationNumber: application.applicationNumber,
+          action: "registration_fee_proof",
+          url: "/admission/enrollment",
+        },
+      })
+    } catch (err) {
+      console.error("[submitRegistrationFeeProof] notification error:", err)
+    }
+
+    revalidatePath("/application")
+    return { success: true, data: { proofUrl: url } }
+  } catch (error) {
+    console.error("[submitRegistrationFeeProof]", error)
     return { success: false, error: "PAYMENT_RECORD_FAILED" }
   }
 }

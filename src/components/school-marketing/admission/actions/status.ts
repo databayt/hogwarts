@@ -12,6 +12,8 @@ import { db } from "@/lib/db"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getText } from "@/components/translation/display"
+import { detectScript } from "@/components/translation/util"
 
 import type {
   ActionResult,
@@ -216,7 +218,14 @@ export async function requestStatusOTP(
 export async function verifyStatusOTP(
   subdomain: string,
   applicationNumber: string,
-  otp: string
+  otp: string,
+  /**
+   * The address the code was sent to. Binding the lookup to it closes an
+   * attempt-burning hole: with the application number alone, anyone could
+   * feed five wrong codes and lock the real applicant out of their own
+   * freshly-requested code.
+   */
+  email?: string
 ): Promise<ActionResult<{ accessToken: string }>> {
   try {
     const schoolResult = await getSchoolBySubdomain(subdomain)
@@ -230,10 +239,14 @@ export async function verifyStatusOTP(
     // Find the most-recent active (non-expired, unverified) OTP record for
     // this application, regardless of hash — we need the record to atomically
     // increment attempts even on a wrong guess.
+    const normalizedEmail = email?.trim().toLowerCase()
     const existingOTP = await db.admissionOTP.findFirst({
       where: {
         schoolId,
         applicationNumber,
+        ...(normalizedEmail
+          ? { email: { equals: normalizedEmail, mode: "insensitive" } }
+          : {}),
         expiresAt: { gte: new Date() },
         verified: false,
       },
@@ -434,18 +447,35 @@ export async function getApplicationStatus(
       type: "other",
     })
 
-    // Payment
-    if (
-      application.campaign.applicationFee &&
-      Number(application.campaign.applicationFee) > 0
-    ) {
+    // The offer leg — the only money in the flow (applying is free; the
+    // campaign application-fee item this replaced was vestigial and never
+    // flipped). Shown once an offer exists: accept it, then pay the
+    // registration fee that holds the seat.
+    const onOfferLeg =
+      application.admissionOffered ||
+      ["SELECTED", "ADMITTED", "EXPIRED"].includes(application.status)
+    if (onOfferLeg) {
       checklist.push({
-        id: "payment",
-        label: displayDict.checkApplicationFee ?? "دفع رسوم التقديم",
-        completed: application.applicationFeePaid,
+        id: "offer",
+        label: displayDict.checkOfferAccepted ?? "Admission offer accepted",
+        completed:
+          application.offerAccepted || application.status === "ADMITTED",
         required: true,
-        type: "payment",
+        type: "other",
       })
+      if (
+        application.registrationFeePaid ||
+        application.registrationFeeMethod ||
+        application.offerAccepted
+      ) {
+        checklist.push({
+          id: "registration-fee",
+          label: displayDict.checkRegistrationFee ?? "Registration fee paid",
+          completed: application.registrationFeePaid,
+          required: true,
+          type: "payment",
+        })
+      }
     }
 
     // Documents
@@ -495,6 +525,34 @@ export async function getApplicationStatus(
       })
     }
 
+    // The reviewer's note to the family (a rejection or waitlist reason),
+    // rendered in the reader's language. Written in whichever language the
+    // reviewer typed, so detect it from the text itself.
+    let note: string | undefined
+    if (
+      ["REJECTED", "WAITLISTED"].includes(application.status) &&
+      application.reviewNotes
+    ) {
+      try {
+        note = await getText(
+          application.reviewNotes,
+          detectScript(application.reviewNotes),
+          lang,
+          schoolResult.data.id
+        )
+      } catch {
+        note = application.reviewNotes
+      }
+    }
+
+    // A live offer is the one state where the tracker has a call to action:
+    // the family verified this token by OTP, and it is the same token the
+    // offer page takes, so hand them the link instead of a dead "Selected".
+    const offerUrl =
+      application.status === "SELECTED"
+        ? `/${lang}/application/${application.id}/offer?token=${encodeURIComponent(accessToken)}`
+        : undefined
+
     const status: ApplicationStatus = {
       applicationNumber: application.applicationNumber,
       status: application.status,
@@ -506,6 +564,8 @@ export async function getApplicationStatus(
       },
       timeline,
       checklist,
+      note,
+      offerUrl,
     }
 
     return { success: true, data: status }

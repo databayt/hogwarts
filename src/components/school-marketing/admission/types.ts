@@ -227,6 +227,11 @@ export interface ApplicationStatus {
   timeline: StatusTimelineEntry[]
   checklist: ChecklistItem[]
   nextSteps?: string[]
+  /** The reviewer's note to the family (rejection / waitlist reason), in
+   *  the reader's language. */
+  note?: string
+  /** Client-facing offer page path when a live offer awaits the family. */
+  offerUrl?: string
 }
 
 export interface StatusStep {

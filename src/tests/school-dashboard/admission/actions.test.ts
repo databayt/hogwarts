@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import {
   confirmEnrollment,
@@ -1749,5 +1750,116 @@ describe("Admission Actions", () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe("ADMISSION_UPDATE_FAILED")
     })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// updateApplicationStatus — the family's note, and what a (re-)offer resets
+// ---------------------------------------------------------------------------
+
+describe("updateApplicationStatus — note to the family + re-offer reset", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAuthenticated()
+    vi.mocked(db.application.update).mockResolvedValue({} as any)
+    vi.mocked(db.application.findFirst).mockResolvedValue({
+      userId: "applicant-user-1",
+      lang: "en",
+      firstName: "Test",
+      lastName: "Student",
+      campaignId: "camp-1",
+      email: "family@example.com",
+    } as any)
+    vi.mocked(db.school.findFirst).mockResolvedValue({
+      preferredLanguage: "ar",
+    } as any)
+  })
+
+  it("stores the reviewer's note on reviewNotes and carries it in the family's notice", async () => {
+    vi.mocked(db.application.findUnique).mockResolvedValue({
+      status: "UNDER_REVIEW",
+    } as any)
+
+    const result = await updateApplicationStatus({
+      id: "app-1",
+      status: "REJECTED",
+      reason: "  Places in this grade are full this year.  ",
+    })
+
+    expect(result.success).toBe(true)
+    expect(db.application.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "REJECTED",
+          reviewNotes: "Places in this grade are full this year.",
+        }),
+      })
+    )
+    // The notice is dispatched fire-and-forget after the write.
+    await vi.waitFor(() => expect(dispatchNotification).toHaveBeenCalled())
+    const notice = vi.mocked(dispatchNotification).mock.calls[0][0]
+    expect(notice.body).toContain("Places in this grade are full this year.")
+    // Application.lang (en) wins over the school's Arabic preference.
+    expect(notice.lang).toBe("en")
+    // The family lands on THEIR dashboard, never the staff-only /admission.
+    expect(notice.metadata).toMatchObject({ url: "/application" })
+  })
+
+  it("leaves reviewNotes untouched when no note is given", async () => {
+    vi.mocked(db.application.findUnique).mockResolvedValue({
+      status: "UNDER_REVIEW",
+    } as any)
+
+    await updateApplicationStatus({ id: "app-1", status: "SHORTLISTED" })
+
+    const data = (vi.mocked(db.application.update).mock.calls[0][0] as any).data
+    expect("reviewNotes" in data).toBe(false)
+  })
+
+  it("re-offering clears a stale acceptance and unpaid intent, and extends the token past the new deadline", async () => {
+    const staleExpiry = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    vi.mocked(db.application.findUnique).mockResolvedValue({
+      status: "EXPIRED",
+      accessToken: "existing-token",
+      accessTokenExpiry: staleExpiry,
+      registrationFeePaid: false,
+    } as any)
+    vi.mocked(db.admissionSettings.findUnique).mockResolvedValue({
+      offerExpiryDays: 7,
+    } as any)
+
+    const result = await updateApplicationStatus({
+      id: "app-1",
+      status: "SELECTED",
+    })
+
+    expect(result.success).toBe(true)
+    const data = (vi.mocked(db.application.update).mock.calls[0][0] as any).data
+    expect(data.offerAccepted).toBe(false)
+    expect(data.offerAcceptedAt).toBeNull()
+    expect(data.registrationFeeMethod).toBeNull()
+    expect(data.registrationFeeReference).toBeNull()
+    // The existing token is kept (links already mailed keep working) but
+    // its expiry now outlives the new offer window.
+    expect(data.accessToken).toBeUndefined()
+    expect(data.accessTokenExpiry.getTime()).toBeGreaterThan(
+      data.offerExpiryDate.getTime()
+    )
+  })
+
+  it("re-offering never touches a registration fee that was actually paid", async () => {
+    vi.mocked(db.application.findUnique).mockResolvedValue({
+      status: "WAITLISTED",
+      accessToken: "existing-token",
+      accessTokenExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      registrationFeePaid: true,
+    } as any)
+    vi.mocked(db.admissionSettings.findUnique).mockResolvedValue(null)
+
+    await updateApplicationStatus({ id: "app-1", status: "SELECTED" })
+
+    const data = (vi.mocked(db.application.update).mock.calls[0][0] as any).data
+    expect("offerAccepted" in data).toBe(false)
+    expect("registrationFeeMethod" in data).toBe(false)
   })
 })

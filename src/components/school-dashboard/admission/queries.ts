@@ -181,6 +181,7 @@ export const applicationDetailSelect = {
   registrationFeeMethod: true,
   registrationFeeReference: true,
   registrationFeeDate: true,
+  registrationFeeProofUrl: true,
   paymentId: true,
   paymentDate: true,
   createdAt: true,

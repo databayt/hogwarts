@@ -750,6 +750,24 @@ export default async function ApplicationDetailContent({
                   }
                   value={formatDate(application.registrationFeeDate, lang)}
                 />
+                {application.registrationFeeProofUrl && (
+                  <div className="py-1.5">
+                    <span className="text-muted-foreground text-xs">
+                      {t?.applicationDetail?.registrationFeeProof ||
+                        "Payment proof"}
+                    </span>
+                    <p className="text-sm font-medium">
+                      <a
+                        href={application.registrationFeeProofUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary underline-offset-4 hover:underline"
+                      >
+                        {t?.applicationDetail?.viewProof || "View receipt"}
+                      </a>
+                    </p>
+                  </div>
+                )}
                 <InfoRow
                   label={t?.applicationDetail?.paymentId || "Payment ID"}
                   value={application.paymentId}
