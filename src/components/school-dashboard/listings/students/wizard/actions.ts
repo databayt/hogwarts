@@ -174,6 +174,8 @@ export async function completeStudentWizard(studentId: string): Promise<
           previousGrade: true,
           lang: true,
           userId: true,
+          applicationId: true,
+          wizardStep: true,
         },
       }),
       db.studentGuardian.count({
@@ -199,6 +201,23 @@ export async function completeStudentWizard(studentId: string): Promise<
         ACTION_ERRORS.VALIDATION_ERROR,
         `Missing: ${listMissingRequirements(completeness).join(", ")}`
       )
+    }
+
+    // The wizard doubles as the EDIT surface for an enrolled student (the
+    // final button reads "Save"). Every step has already persisted its fields
+    // — the academic step re-runs fee assignment and class enrollment itself —
+    // so there is nothing left to provision. Running the core again here used
+    // to mint a second shadow Application per save (re-pointing the student
+    // at it and orphaning a PORTAL application), regenerate the student code
+    // and re-send the "your account was created" notice.
+    const alreadyProvisioned =
+      student.wizardStep === null && !!student.userId && !!student.applicationId
+    if (alreadyProvisioned) {
+      revalidatePath("/[lang]/s/[subdomain]/students", "page")
+      return {
+        success: true,
+        data: { studentId, credentials: null, warnings: [] },
+      }
     }
 
     // Provision the full student graph via the shared core: creates the User +
@@ -234,6 +253,7 @@ export async function completeStudentWizard(studentId: string): Promise<
             photoUrl: student.profilePhotoUrl,
             lang: student.lang,
             userId: student.userId,
+            applicationId: student.applicationId,
           },
           {
             // `notify` is informational — provisionStudent never dispatches;

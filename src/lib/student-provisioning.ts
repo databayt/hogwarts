@@ -166,6 +166,32 @@ export async function provisionStudent(
   const warnings: ProvisionWarning[] = []
 
   // ---------------------------------------------------------------------
+  // 0. A caller that hands us an existing Student (the wizard's draft-reuse
+  //    path) may be handing us one that was ALREADY provisioned — the wizard
+  //    is also the edit surface for enrolled students, and its final "Save"
+  //    used to land here with only the id. Every save then minted a fresh
+  //    student code (the login username stayed put — they drifted apart), a
+  //    fresh shadow Application (re-pointing Student.applicationId at it and
+  //    orphaning the real PORTAL one), and re-stamped the enrollment dates.
+  //    Read what the row already carries so the steps below reuse it.
+  // ---------------------------------------------------------------------
+  const priorStudent = input.existingStudentId
+    ? await tx.student.findUnique({
+        where: { id: input.existingStudentId },
+        select: {
+          id: true,
+          schoolId: true,
+          studentId: true,
+          applicationId: true,
+          userId: true,
+        },
+      })
+    : null
+  if (priorStudent && priorStudent.schoolId !== schoolId) {
+    throw new Error("Student is already enrolled in another school")
+  }
+
+  // ---------------------------------------------------------------------
   // 1. Resolve AcademicGrade — explicit id wins; else cascade from
   //    applyingForClass (mirrors confirmEnrollment's original cascade,
   //    used only to scope the generated student code).
@@ -186,11 +212,13 @@ export async function provisionStudent(
   // 2. Per-school student code (YYGGNNNN), generated inside the tx so
   //    concurrent provisioning calls see each other's increments.
   // ---------------------------------------------------------------------
-  const studentCode = await generateStudentUsername({
-    schoolId,
-    academicGradeId: resolvedAcademicGradeId,
-    tx,
-  })
+  const studentCode =
+    priorStudent?.studentId?.trim() ||
+    (await generateStudentUsername({
+      schoolId,
+      academicGradeId: resolvedAcademicGradeId,
+      tx,
+    }))
 
   // Every student gets a login, so User.email (unique per school) must exist.
   // Synthesize a stable placeholder when the source has none (admin wizard).
@@ -203,7 +231,7 @@ export async function provisionStudent(
   // 3. Resolve/create User — BEFORE fees (invoice fan-out is a no-op
   //    without a userId).
   // ---------------------------------------------------------------------
-  let userId: string | null = input.userId ?? null
+  let userId: string | null = input.userId ?? priorStudent?.userId ?? null
   let isNewUser = false
   if (!userId) {
     // MUST be schoolId-scoped: User is @@unique([email, schoolId]) and the
@@ -252,6 +280,7 @@ export async function provisionStudent(
   // ---------------------------------------------------------------------
   const applicationId: string =
     input.applicationId ??
+    priorStudent?.applicationId ??
     (await ensureDirectAdmitApplication(
       tx,
       { ...input, email, userId },
@@ -262,15 +291,14 @@ export async function provisionStudent(
   // ---------------------------------------------------------------------
   // 5. Find-or-create Student.
   // ---------------------------------------------------------------------
-  const existingStudent = input.existingStudentId
-    ? await tx.student.findUnique({
-        where: { id: input.existingStudentId },
-        select: { id: true, schoolId: true },
-      })
-    : await tx.student.findUnique({
-        where: { userId },
-        select: { id: true, schoolId: true },
-      })
+  const existingStudent =
+    priorStudent ??
+    (input.existingStudentId
+      ? null
+      : await tx.student.findUnique({
+          where: { userId },
+          select: { id: true, schoolId: true },
+        }))
 
   if (existingStudent && existingStudent.schoolId !== schoolId) {
     throw new Error("Student is already enrolled in another school")
