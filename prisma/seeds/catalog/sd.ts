@@ -189,6 +189,7 @@ const GRADE_SLUG_OVERRIDES: Record<string, Record<string, string>> = {
     arabic: "arabic-advanced", // g12 only has arabic-advanced in DB
     math: "basic-math", // g12 DB uses "basic-math" slug
     "home-economics": "family-sciences",
+    art: "arts-design", // الفنون والتصميم, same convention as g11; dir added 2026-09-05
   },
 }
 

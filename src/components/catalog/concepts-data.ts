@@ -148,6 +148,8 @@ export const SUBJECT_CONCEPT_BY_SLUG: Record<string, string> = {
   "moral-education": "civics",
   civics: "civics",
   "national-education": "civics", // Sudan التربية الوطنية (g8 + new-curriculum g10)
+  "christian-education": "religion", // Sudan التربية المسيحية (optional, secondary)
+  "literary-studies": "languages", // Sudan دراسات أدبية ولغوية (g12 arts stream)
   "military-science": "civics",
   "global-perspectives": "civics",
   economics: "economics",
