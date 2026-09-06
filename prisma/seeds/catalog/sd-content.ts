@@ -85,10 +85,81 @@ interface RawQuestion {
 
 interface RawExam {
   title?: string
+  description?: string
+  /** final | midterm | chapter_test | practice | quiz | diagnostic (default final). */
+  type?: string
+  /** 1-based unit → the exam is scoped to that chapter (chapter_test/practice). */
+  unit?: number
   duration?: number
   total_marks?: number
+  passing_marks?: number
   total_questions?: number
   questions?: RawQuestion[]
+  /** qbank question ids — an alternative to repeating the questions inline. */
+  question_ids?: string[]
+}
+
+type ContentLang = "ar" | "en" | "fr"
+
+const EXAM_TYPES = new Set([
+  "final",
+  "midterm",
+  "chapter_test",
+  "practice",
+  "quiz",
+  "diagnostic",
+])
+
+/** Content language: structure.json `lang` (the authored truth since the
+ *  2026-09 TOC rebuilds), else the historical directory-name rule. */
+function contentLangFor(subjectPath: string, dir: string): ContentLang {
+  const lang = readJson<{ lang?: string }>(
+    path.join(subjectPath, "structure.json")
+  )?.lang
+  if (lang === "ar" || lang === "en" || lang === "fr") return lang
+  return dir === "english" ? "en" : dir === "french" ? "fr" : "ar"
+}
+
+const TF_LABELS: Record<ContentLang, [string, string]> = {
+  ar: ["صح", "خطأ"],
+  en: ["True", "False"],
+  fr: ["Vrai", "Faux"],
+}
+
+function defaultExamTitle(
+  type: string,
+  lang: ContentLang,
+  subjectName: string,
+  chapterName?: string
+): string {
+  const scope = chapterName ?? subjectName
+  const table: Record<ContentLang, Record<string, string>> = {
+    ar: {
+      final: "الامتحان النهائي",
+      midterm: "امتحان نصف الفصل",
+      chapter_test: "اختبار الوحدة",
+      practice: "تدريب",
+      quiz: "اختبار قصير",
+      diagnostic: "اختبار تشخيصي",
+    },
+    en: {
+      final: "Final Exam",
+      midterm: "Midterm Exam",
+      chapter_test: "Unit Test",
+      practice: "Practice",
+      quiz: "Quiz",
+      diagnostic: "Diagnostic",
+    },
+    fr: {
+      final: "Examen final",
+      midterm: "Examen de mi-parcours",
+      chapter_test: "Contrôle d'unité",
+      practice: "Entraînement",
+      quiz: "Quiz",
+      diagnostic: "Diagnostic",
+    },
+  }
+  return `${table[lang][type] ?? table[lang].final} — ${scope}`
 }
 
 /** exams.json is either `{ exams: [...] }` (most grades), one flat exam
@@ -322,7 +393,7 @@ function mapType(t: string): QuestionType {
 
 function buildOptions(
   q: RawQuestion,
-  lang: "ar" | "en"
+  lang: ContentLang
 ): Prisma.InputJsonValue | undefined {
   if (q.type === "mcq" && Array.isArray(q.options)) {
     const answer = String(q.answer)
@@ -333,8 +404,7 @@ function buildOptions(
   }
   if (q.type === "true_false") {
     const isTrue = q.answer === true || q.answer === "true"
-    const yes = lang === "ar" ? "صح" : "True"
-    const no = lang === "ar" ? "خطأ" : "False"
+    const [yes, no] = TF_LABELS[lang]
     return [
       { text: yes, isCorrect: isTrue },
       { text: no, isCorrect: !isTrue },
@@ -425,6 +495,7 @@ export async function seedSdContent(prisma: PrismaClient): Promise<void> {
             select: {
               id: true,
               slug: true,
+              name: true,
               lessons: {
                 orderBy: { sequenceOrder: "asc" },
                 select: { id: true, slug: true },
@@ -445,7 +516,7 @@ export async function seedSdContent(prisma: PrismaClient): Promise<void> {
         )
       }
 
-      const lang: "ar" | "en" = dir === "english" ? "en" : "ar"
+      const lang = contentLangFor(subjectPath, dir)
       const difficulty = gradeNum <= 6 ? "EASY" : "MEDIUM"
 
       // Collect every question (qbank ∪ exams), deduped by text — the
@@ -543,12 +614,21 @@ export async function seedSdContent(prisma: PrismaClient): Promise<void> {
       })
       const idByText = new Map(created.map((c) => [c.questionText, c]))
 
+      // `question_ids` entries point at qbank rows by authored id.
+      const bankById = new Map(bankQuestions.map((q) => [q.id, q]))
+
       let examCount = 0
       let linkCount = 0
       for (const ex of exams) {
         const links: Prisma.ExamQuestionCreateManyInput[] = []
         const usedQuestionIds = new Set<string>()
-        for (const q of ex.questions ?? []) {
+        const examQuestions: RawQuestion[] = [
+          ...(ex.questions ?? []),
+          ...(ex.question_ids ?? [])
+            .map((id) => bankById.get(id))
+            .filter((q): q is RawQuestion => !!q),
+        ]
+        for (const q of examQuestions) {
           const match = idByText.get(q.question)
           if (!match || usedQuestionIds.has(match.id)) continue
           usedQuestionIds.add(match.id)
@@ -561,19 +641,26 @@ export async function seedSdContent(prisma: PrismaClient): Promise<void> {
         }
         if (links.length === 0) continue
 
+        const examType =
+          ex.type && EXAM_TYPES.has(ex.type) ? ex.type : "final"
+        const scopedChapter =
+          typeof ex.unit === "number" && ex.unit >= 1
+            ? (subject.chapters[ex.unit - 1] ?? null)
+            : null
         const title =
           ex.title?.trim() ||
-          (lang === "en"
-            ? `Final Exam — ${subject.name}`
-            : `الامتحان النهائي — ${subject.name}`)
+          defaultExamTitle(examType, lang, subject.name, scopedChapter?.name)
 
         const examRow = await prisma.exam.create({
           data: {
             subjectId: subject.id,
+            chapterId: scopedChapter?.id ?? null,
             title,
-            examType: "final",
+            description: ex.description?.trim() || null,
+            examType,
             durationMinutes: ex.duration ?? null,
             totalMarks: ex.total_marks ?? links.length,
+            passingMarks: ex.passing_marks ?? null,
             totalQuestions: links.length,
             lang,
             status: "PUBLISHED",

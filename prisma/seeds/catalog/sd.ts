@@ -11,6 +11,9 @@
  *
  * Also sets:
  * - `concept`, `thumbnail`, `banner` on subjects/chapters/lessons
+ * - optional authored `concept` / `image` / `objectives` / `durationMinutes` per
+ *   chapter/lesson and `objectives` / `prerequisites` / `targetAudience` per
+ *   subject, read from structure.json (see StructureFile below)
  * - Arabic/English names from curriculum.json metadata
  * - `pdf` field pointing to S3 textbook path (if textbook.pdf exists locally)
  *
@@ -21,13 +24,14 @@
 
 import fs from "fs"
 import path from "path"
-import type { PrismaClient, SchoolLevel } from "@prisma/client"
+import type { Prisma, PrismaClient, SchoolLevel } from "@prisma/client"
 
 import {
   clickviewConceptKey,
   gradeToLevel as cvGradeToLevel,
 } from "../../../src/components/catalog/clickview-key"
 import {
+  CONCEPTS,
   nearestConcept,
   SUBJECT_CONCEPT_BY_SLUG as SUBJECT_CONCEPT_MAP,
   CONCEPT_POOL as SUBJECT_CONCEPT_POOL,
@@ -325,20 +329,86 @@ interface StructureLesson {
   title: string
   titleEn?: string
   description?: string
+  /** Registry concept (concepts-data CONCEPTS); beats the type/chapter default. */
+  concept?: string
+  /** Full CDN key WITH an image extension (e.g. `clickview/high-optics-cover.jpg`). */
+  image?: string
+  objectives?: string[] | string
+  durationMinutes?: number
 }
 interface StructureChapter {
   slug: string
   title: string
   titleEn?: string
   description?: string
+  /** Registry concept; beats the CONCEPT_POOL rotation. */
+  concept?: string
+  /** Full CDN key WITH an image extension; lessons inherit it unless they carry their own. */
+  image?: string
   lessons?: StructureLesson[]
 }
 interface StructureFile {
   lang?: string
   subjectAr?: string
   subjectEn?: string
+  /** Registry concept for the subject; beats SUBJECT_CONCEPT_BY_SLUG / nearestConcept. */
+  concept?: string
   description?: string
+  objectives?: string[]
+  prerequisites?: string
+  targetAudience?: string
   chapters?: StructureChapter[]
+}
+
+// Authored per-chapter/lesson fields (2026-09-05, grade-12 optimisation).
+// Everything here is optional and validated: an unknown concept or an
+// extension-less image key is ignored with a warning, so the pool rotation
+// and the concept art stay the fallback for every grade that has not been
+// hand-mapped.
+const CONCEPT_SET = new Set<string>(CONCEPTS)
+
+function authoredConcept(
+  value: string | undefined,
+  where: string
+): string | null {
+  if (!value) return null
+  if (CONCEPT_SET.has(value)) return value
+  console.warn(`   [structure] ${where}: unknown concept "${value}" ignored`)
+  return null
+}
+
+/** Keys with an image extension are served verbatim by resolveKey(); anything
+ *  else would be treated as a WebP-variant prefix and 403. */
+function authoredImage(
+  value: string | undefined,
+  where: string
+): string | null {
+  if (!value) return null
+  if (/\.(jpe?g|png|webp|avif|gif|svg)$/i.test(value)) return value
+  console.warn(
+    `   [structure] ${where}: image "${value}" has no image extension — ignored`
+  )
+  return null
+}
+
+function authoredObjectives(
+  value: string[] | string | undefined
+): string | null {
+  const lines = Array.isArray(value)
+    ? value.map((v) => String(v).trim()).filter(Boolean)
+    : typeof value === "string"
+      ? value
+          .split("\n")
+          .map((v) => v.trim())
+          .filter(Boolean)
+      : []
+  return lines.length > 0 ? lines.join("\n") : null
+}
+
+function authoredDuration(value: number | undefined): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? Math.round(value)
+    : null
 }
 
 /** Load a subject's structure.json (null when missing/unparseable). */
@@ -409,6 +479,9 @@ function gradeLabelAr(g: number): string {
  * TOC pass captured one, followed by the verified unit list. Composed, never
  * invented — every unit title comes from the printed table of contents.
  */
+/** Long enough for an authored مقدمة plus a 22-unit list (g12 biology). */
+const DESCRIPTION_CAP = 1200
+
 function composeDescription(
   lang: string,
   gradeNum: number,
@@ -432,7 +505,7 @@ function composeDescription(
       : ""
     return cap(
       `${intro}كتاب ${nameAr} — ${STAGE_AR(gradeNum)}، ${gradeLabelAr(gradeNum)}.${units}`,
-      700
+      DESCRIPTION_CAP
     )
   }
   const titles = chapters.map((c) => (c.titleEn ?? c.title).trim())
@@ -443,7 +516,7 @@ function composeDescription(
   const label = nameEn ?? nameAr
   return cap(
     `${intro}${label} textbook — Sudan ${STAGE_EN(gradeNum)}, grade ${gradeNum}.${units}`,
-    700
+    DESCRIPTION_CAP
   )
 }
 
@@ -695,7 +768,7 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
     const dbSubject = slugToDb.get(entry.dbSlug)
     if (!dbSubject || !entry.concept) continue
 
-    const updates: Record<string, string | null> = {}
+    const updates: Prisma.SubjectUpdateInput = {}
 
     // Prefer the real per-subject art (rendered/authored next to the textbook
     // and uploaded by scripts/upload-textbooks-all.ts) over the shared concept
@@ -723,7 +796,17 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
     const conceptBanner = `catalog/concepts/g${entry.gradeNum}-${entry.concept}/banner`
     const conceptCover = `catalog/concepts/${entry.concept}/cover`
 
-    if (!dbSubject.concept) updates.concept = entry.concept
+    // An authored subject concept (structure.json) is refreshed on every run;
+    // the registry/nearest guess only ever fills an empty value.
+    const structureForConcept = loadStructure(entry.grade, entry.dirName)
+    const subjectConceptAuthored = authoredConcept(
+      structureForConcept?.concept,
+      `${entry.grade}/${entry.dirName}`
+    )
+    if (subjectConceptAuthored) {
+      if (dbSubject.concept !== subjectConceptAuthored)
+        updates.concept = subjectConceptAuthored
+    } else if (!dbSubject.concept) updates.concept = entry.concept
     if (localThumb) {
       if (dbSubject.thumbnail !== localThumb) updates.thumbnail = localThumb
     } else if (!dbSubject.thumbnail) updates.thumbnail = conceptThumb
@@ -764,6 +847,19 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
     )
     if (description) updates.description = description
 
+    // Authored course metadata (structure.json, optional) — the lumos course
+    // page renders all three. Absent fields are left untouched.
+    if (Array.isArray(structure?.objectives)) {
+      const objectives = structure.objectives
+        .map((o) => String(o).trim())
+        .filter(Boolean)
+      if (objectives.length > 0) updates.objectives = objectives
+    }
+    if (structure?.prerequisites?.trim())
+      updates.prerequisites = structure.prerequisites.trim()
+    if (structure?.targetAudience?.trim())
+      updates.targetAudience = structure.targetAudience.trim()
+
     if (Object.keys(updates).length > 0) {
       await prisma.subject.update({
         where: { id: dbSubject.id },
@@ -797,11 +893,14 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
     if (!dbSubject) continue
     if (entry.chapters.length === 0) continue
 
-    const subjectConcept = dbSubject.concept ?? entry.concept
     const gradeNum = entry.gradeNum
 
     // Load structure.json for real titles (folder name === structure slug)
     const structureData = loadStructure(entry.grade, entry.dirName)
+    const subjectConcept =
+      authoredConcept(structureData?.concept, `${entry.grade}/${entry.dirName}`) ??
+      dbSubject.concept ??
+      entry.concept
     const contentLang = subjectLangFor(entry.dirName, structureData)
     const structChapterMap = new Map(
       (structureData?.chapters ?? []).map((c) => [c.slug, c])
@@ -829,29 +928,30 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
         for (const ch of entry.chapters) {
           const structChapter = structChapterMap.get(ch.slug)
           const chapterName = structChapter?.title ?? ch.name
+          const chapterWhere = `${entry.grade}/${entry.dirName}/${ch.slug}`
 
-          // Rotate chapter concept through the pool by sequenceOrder
+          // An authored concept beats the pool rotation — the rotation only
+          // exists to vary the art when nothing better is known.
           const chapterConcept =
-            pool.length > 0
+            authoredConcept(structChapter?.concept, chapterWhere) ??
+            (pool.length > 0
               ? pool[(ch.sequenceOrder - 1) % pool.length]
-              : subjectConcept
-          const chapterThumbnail = USE_CLICKVIEW
-            ? clickviewConceptKey(
-                cvGradeToLevel(gradeNum),
-                chapterConcept,
-                "thumbnail"
-              )
-            : chapterConcept
-              ? `catalog/concepts/g${gradeNum}-${chapterConcept}/thumbnail`
-              : null
+              : subjectConcept)
+          const chapterImage = authoredImage(structChapter?.image, chapterWhere)
+          const chapterThumbnail =
+            chapterImage ??
+            (USE_CLICKVIEW
+              ? clickviewConceptKey(
+                  cvGradeToLevel(gradeNum),
+                  chapterConcept,
+                  "thumbnail"
+                )
+              : chapterConcept
+                ? `catalog/concepts/g${gradeNum}-${chapterConcept}/thumbnail`
+                : null)
 
           const structLessonMap = new Map(
-            (structChapter?.lessons ?? []).map((l) => [l.slug, l.title])
-          )
-          const structLessonDesc = new Map(
-            (structChapter?.lessons ?? [])
-              .filter((l) => !!l.description)
-              .map((l) => [l.slug, l.description as string])
+            (structChapter?.lessons ?? []).map((l) => [l.slug, l])
           )
 
           const chapter = await tx.chapter.create({
@@ -874,31 +974,45 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
           if (ch.lessons.length > 0) {
             await tx.lesson.createMany({
               data: ch.lessons.map((l) => {
+                const structLesson = structLessonMap.get(l.slug)
+                const lessonWhere = `${chapterWhere}/${l.slug}`
                 // Strip leading number prefix: "01-reading" → "reading"
                 const lessonType = l.slug.replace(/^\d+-/, "")
                 const lessonConcept =
+                  authoredConcept(structLesson?.concept, lessonWhere) ??
                   LESSON_TYPE_CONCEPT[lessonType] ??
                   chapterConcept ??
                   subjectConcept
-                const lessonThumbnail = USE_CLICKVIEW
-                  ? clickviewConceptKey(
-                      cvGradeToLevel(gradeNum),
-                      lessonConcept,
-                      "thumbnail"
-                    )
-                  : lessonConcept
-                    ? `catalog/concepts/g${gradeNum}-${lessonConcept}/thumbnail`
-                    : null
+                // A lesson inherits its chapter's authored image unless it
+                // carries a more specific one of its own.
+                const lessonImage =
+                  authoredImage(structLesson?.image, lessonWhere) ??
+                  chapterImage
+                const lessonThumbnail =
+                  lessonImage ??
+                  (USE_CLICKVIEW
+                    ? clickviewConceptKey(
+                        cvGradeToLevel(gradeNum),
+                        lessonConcept,
+                        "thumbnail"
+                      )
+                    : lessonConcept
+                      ? `catalog/concepts/g${gradeNum}-${lessonConcept}/thumbnail`
+                      : null)
 
                 return {
                   chapterId: chapter.id,
-                  name: structLessonMap.get(l.slug) ?? l.name,
+                  name: structLesson?.title ?? l.name,
                   slug: l.slug,
                   lang: contentLang,
-                  description: structLessonDesc.get(l.slug) ?? null,
+                  description: structLesson?.description ?? null,
                   sequenceOrder: l.sequenceOrder,
                   concept: lessonConcept,
                   thumbnail: lessonThumbnail,
+                  objectives: authoredObjectives(structLesson?.objectives),
+                  durationMinutes: authoredDuration(
+                    structLesson?.durationMinutes
+                  ),
                   status: "PUBLISHED",
                 }
               }),
