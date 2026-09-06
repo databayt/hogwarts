@@ -522,6 +522,30 @@ ministry textbook structures are authored.
 > **not ingested** — it collides on the `us-g{N}-*` slug space and is shallower;
 > it stays as a reference overlay. No merge planned.
 
+### Textbook reader — native text (2026-09-06)
+
+Every catalog subject with a `pdf` key now has a reader at
+`/{lang}/subjects/{slug}/textbook` (the textbook tile on the subject page opens
+it; the raw PDF stays one click away inside). It renders the book's **Markdown
+twin** (`…/textbook.md`, produced by the kun `textbook` skill from the PDF's
+text layer or OCR and uploaded beside it) as semantic HTML on the server — no
+Markdown engine, no `dangerouslySetInnerHTML` — with reading typography in the
+Thmanyah serif, a sticky toolbar (contents, six text sizes, page images,
+search, PDF), Arabic-folded search (تشكيل, hamza seats, ة/ه and ى/ي fold before
+matching) that highlights and steps through hits in the live DOM, and a
+contents panel anchored to pages by matching chapter and lesson names against
+the text. The twin's own front matter decides language and direction and feeds
+the extraction notice (quality + coverage), so it works for any curriculum
+that has a twin. Equations, tables and figures are OCR noise in the text, so
+each page section can show the **original page** (`…/pages/<N>.webp`, one
+WebP per PDF page, numbered like the twin's `<!-- page N -->` markers, loaded
+only when switched on). Files: `school-dashboard/listings/subjects/textbook/`
+(`parse.ts` + tests, `article.tsx` server body, `reader.tsx` client shell,
+`content.tsx`); `catalog/textbooks/<slug>/{textbook.md,pages/}` on the CDN.
+Twins from the text-layer path (no page markers yet: engineering, geography,
+agriculture, art, French, history, family sciences in g12) render as one
+continuous text with the page strip unaligned.
+
 ### Real content — Sudan (all grades)
 
 `catalog/sd-content.ts` ingests the **authored** question banks and final exams

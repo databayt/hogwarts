@@ -40,6 +40,18 @@
 
 ## Resolved
 
+- **2026-09-06 — Textbook reader.** The textbook tile no longer opens the raw
+  PDF; it opens `/subjects/[slug]/textbook`, a native-text reader of the book's
+  Markdown twin (Thmanyah serif, six text sizes, Arabic-folded search, contents
+  anchored to pages, optional original-page images, PDF one click away).
+  Verified with an authenticated fetch of `sd-g12-biology`: 253 page sections,
+  Arabic toolbar, hero hidden, 56/73 TOC entries anchored; a bogus slug 404s.
+  Not visually checked in a browser this session (the browser MCPs failed to
+  connect) — tsc, eslint and 11 parser tests are the evidence.
+  Follow-ups (P3): page markers for the text-layer twins (kun `textbook`
+  skill), `structure.json` beside the twin on the CDN for exact chapter
+  pages, inline figure extraction, an e2e spec for the route.
+
 - **2026-09-04 (c) — The stale class rows are repaired, and the demo student is
   in grade 12.** `prisma/seeds/repair-class-curriculum.ts` rebuilds a school's
   classes against its active `SubjectSelection` rows, which are the authority on

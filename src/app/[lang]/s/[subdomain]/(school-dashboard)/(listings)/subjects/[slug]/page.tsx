@@ -479,6 +479,9 @@ export default async function SubjectDetailPage({ params }: Props) {
         subjectSlug={subject.slug}
         catalogSubjectId={subject.id}
         textbookPdfUrl={subject.pdf ? getCloudFrontUrl(subject.pdf) : null}
+        textbookReaderHref={
+          subject.pdf ? `/${lang}/subjects/${subject.slug}/textbook` : null
+        }
         textbookCoverUrl={
           subject.cover ? getCloudFrontUrl(subject.cover) : null
         }

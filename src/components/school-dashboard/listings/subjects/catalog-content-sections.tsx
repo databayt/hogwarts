@@ -100,6 +100,8 @@ interface Props {
   subjectSlug: string
   catalogSubjectId: string
   textbookPdfUrl: string | null
+  /** In-app reader route (`/${lang}/subjects/${slug}/textbook`); null when the subject has no PDF. */
+  textbookReaderHref?: string | null
   textbookCoverUrl: string | null
   /**
    * Section "see all" / per-video deep links. Default to the school-dashboard
@@ -216,6 +218,7 @@ export function CatalogContentSections({
   subjectSlug,
   catalogSubjectId,
   textbookPdfUrl,
+  textbookReaderHref,
   textbookCoverUrl,
   materialsHref = `/${lang}/subjects/${subjectSlug}/materials`,
   qbankHref = `/${lang}/exams/qbank?catalogSubjectId=${catalogSubjectId}`,
@@ -411,6 +414,7 @@ export function CatalogContentSections({
           accentColor={accentColor}
           t={t}
           textbookPdfUrl={textbookPdfUrl}
+          textbookReaderHref={textbookReaderHref}
           textbookCoverUrl={textbookCoverUrl}
         />
       </ContentSection>
@@ -643,12 +647,15 @@ function MaterialTypePipeline({
   accentColor,
   t,
   textbookPdfUrl,
+  textbookReaderHref,
   textbookCoverUrl,
 }: {
   materials: MaterialItem[]
   accentColor: string
   t: Record<string, string>
   textbookPdfUrl: string | null
+  /** In-app reader route (`/${lang}/subjects/${slug}/textbook`); null when the subject has no PDF. */
+  textbookReaderHref?: string | null
   textbookCoverUrl: string | null
 }) {
   const [coverError, setCoverError] = useState(false)
@@ -698,40 +705,59 @@ function MaterialTypePipeline({
           if (!hasTextbook && group.count === 0) return null
 
           if (hasTextbook) {
-            const Wrapper = textbookPdfUrl ? "a" : "div"
-            const wrapperProps = textbookPdfUrl
-              ? {
-                  href: textbookPdfUrl,
-                  target: "_blank" as const,
-                  rel: "noopener noreferrer",
-                }
-              : {}
+            // The cover opens the in-app reader (native text of the book's
+            // Markdown twin); the raw PDF stays one click away inside it.
+            const tileClass = "group relative block shrink-0 overflow-hidden"
+            const tileStyle = { width: 180, height: 260 }
+            const cover =
+              textbookCoverUrl && !coverError ? (
+                <Image
+                  src={textbookCoverUrl}
+                  alt={t.textbook ?? group.label}
+                  fill
+                  className="object-cover"
+                  sizes="180px"
+                  unoptimized
+                  onError={() => setCoverError(true)}
+                />
+              ) : (
+                <div
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{ backgroundColor: accentColor }}
+                >
+                  <BookOpen className="size-20 text-white/10" />
+                </div>
+              )
+            if (textbookReaderHref) {
+              return (
+                <Link
+                  key={group.key}
+                  href={textbookReaderHref}
+                  className={tileClass}
+                  style={tileStyle}
+                >
+                  {cover}
+                </Link>
+              )
+            }
+            if (textbookPdfUrl) {
+              return (
+                <a
+                  key={group.key}
+                  href={textbookPdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={tileClass}
+                  style={tileStyle}
+                >
+                  {cover}
+                </a>
+              )
+            }
             return (
-              <Wrapper
-                key={group.key}
-                {...wrapperProps}
-                className="group relative block shrink-0 overflow-hidden"
-                style={{ width: 180, height: 260 }}
-              >
-                {textbookCoverUrl && !coverError ? (
-                  <Image
-                    src={textbookCoverUrl}
-                    alt={t.textbook ?? group.label}
-                    fill
-                    className="object-cover"
-                    sizes="180px"
-                    unoptimized
-                    onError={() => setCoverError(true)}
-                  />
-                ) : (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center"
-                    style={{ backgroundColor: accentColor }}
-                  >
-                    <BookOpen className="size-20 text-white/10" />
-                  </div>
-                )}
-              </Wrapper>
+              <div key={group.key} className={tileClass} style={tileStyle}>
+                {cover}
+              </div>
             )
           }
         }

@@ -1,0 +1,138 @@
+/* Textbook reader — reading typography for the Markdown twin of a textbook.
+   Thmanyah serif text is the house Arabic reading face (see atom/fonts.ts);
+   Latin books fall through to the serif stack glyph by glyph. Sizes scale
+   from --reader-scale, which the toolbar sets and persists. */
+
+.reader-root {
+  --reader-scale: 1;
+}
+
+.reader-article {
+  font-family:
+    var(--font-thmanyah-text), ui-serif, Georgia, "Times New Roman", serif;
+  font-size: calc(1.0625rem * var(--reader-scale));
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+
+.reader-article p {
+  margin-block: 0.9em;
+  text-align: start;
+}
+
+.reader-article h2,
+.reader-article h3,
+.reader-article h4,
+.reader-article h5 {
+  font-weight: 700;
+  line-height: 1.45;
+  margin-block: 1.6em 0.5em;
+  scroll-margin-top: 7rem;
+}
+
+.reader-article h2 {
+  font-size: 1.6em;
+}
+.reader-article h3 {
+  font-size: 1.35em;
+}
+.reader-article h4 {
+  font-size: 1.2em;
+}
+.reader-article h5 {
+  font-size: 1.1em;
+}
+
+.reader-article ul,
+.reader-article ol {
+  margin-block: 0.8em;
+  padding-inline-start: 1.6em;
+}
+.reader-article ul {
+  list-style: disc;
+}
+.reader-article ol {
+  list-style: decimal;
+}
+.reader-article li {
+  margin-block: 0.25em;
+}
+
+.reader-article hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin-block: 1.5em;
+}
+
+.reader-article .reader-table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: 1em;
+}
+.reader-article table {
+  border-collapse: collapse;
+  font-size: 0.92em;
+  line-height: 1.5;
+  min-width: 100%;
+}
+.reader-article th,
+.reader-article td {
+  border: 1px solid var(--border);
+  padding: 0.35em 0.65em;
+  vertical-align: top;
+  text-align: start;
+}
+.reader-article th {
+  font-weight: 700;
+  background: var(--muted);
+}
+
+.reader-page {
+  position: relative;
+  padding-block: 0.5rem;
+  scroll-margin-top: 6.5rem;
+}
+.reader-page + .reader-page {
+  border-top: 1px dashed var(--border);
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+
+.reader-page-number {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.reader-page-image {
+  display: none;
+  margin: 0.75rem 0 1rem;
+}
+.reader-root[data-pages="on"] .reader-page-image {
+  display: block;
+}
+.reader-page-image img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: white;
+}
+
+.reader-article mark[data-reader-hit] {
+  background: color-mix(in oklab, var(--primary) 22%, transparent);
+  color: inherit;
+  border-radius: 0.15em;
+  padding-inline: 0.05em;
+}
+.reader-article mark[data-reader-hit][data-active] {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+@media print {
+  .reader-toolbar {
+    display: none;
+  }
+}

@@ -3876,7 +3876,34 @@
         "unitTests": "tests",
         "unitItem": "item",
         "unitItems": "items",
-        "pagesAvg": "pg avg"
+        "pagesAvg": "pg avg",
+        "reader": {
+          "title": "Reader",
+          "backToSubject": "Back to subject",
+          "openPdf": "Open PDF",
+          "textSize": "Text size",
+          "smaller": "Smaller text",
+          "larger": "Larger text",
+          "resetSize": "Default size",
+          "showPages": "Show page images",
+          "hidePages": "Hide page images",
+          "contents": "Contents",
+          "notAnchored": "Not located in the text",
+          "search": "Search in the book",
+          "searchPlaceholder": "Type a word or phrase…",
+          "noMatches": "No matches",
+          "matchOf": "{current} of {total}",
+          "previous": "Previous",
+          "next": "Next",
+          "clear": "Clear",
+          "page": "Page",
+          "pageOf": "Page {page} of {total}",
+          "noTextOnPage": "No text was recognised on this page — open the page image.",
+          "notice": "Text extracted automatically from the book (quality {quality}, coverage {coverage}%). Equations, tables and figures may be garbled; turn on page images to see the original.",
+          "noText": "No text is available for this book yet. You can open the PDF.",
+          "unavailable": "The book text could not be loaded right now. Try again later or open the PDF.",
+          "pagesUnaligned": "Page images are available as a separate strip because this book's text carries no page numbers."
+        }
       }
     },
     "timetable": {

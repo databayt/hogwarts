@@ -7,6 +7,7 @@ import { db } from "@/lib/db"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import { CatalogHero } from "@/components/school-dashboard/listings/subjects/catalog-hero"
+import { HeroGate } from "@/components/school-dashboard/listings/subjects/textbook/hero-gate"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
@@ -60,26 +61,28 @@ export default async function SubjectLayout({ params, children }: Props) {
 
   return (
     <div className="mt-3 space-y-5">
-      <CatalogHero
-        subject={{
-          name: subject.name,
-          slug: subject.slug,
-          description: subject.description,
-          department: subject.department,
-          color: subject.color,
-          heroImageUrl,
-          imageUrl,
-          levels: subject.levels,
-          grades: subject.grades,
-          totalChapters: subject.totalChapters,
-          totalLessons: subject.totalLessons,
-          averageRating: subject.averageRating,
-          usageCount: subject.usageCount,
-          ratingCount: subject.ratingCount,
-        }}
-        gradeSiblings={gradeSiblings}
-        lang={lang}
-      />
+      <HeroGate>
+        <CatalogHero
+          subject={{
+            name: subject.name,
+            slug: subject.slug,
+            description: subject.description,
+            department: subject.department,
+            color: subject.color,
+            heroImageUrl,
+            imageUrl,
+            levels: subject.levels,
+            grades: subject.grades,
+            totalChapters: subject.totalChapters,
+            totalLessons: subject.totalLessons,
+            averageRating: subject.averageRating,
+            usageCount: subject.usageCount,
+            ratingCount: subject.ratingCount,
+          }}
+          gradeSiblings={gradeSiblings}
+          lang={lang}
+        />
+      </HeroGate>
       {children}
     </div>
   )

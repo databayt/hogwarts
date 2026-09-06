@@ -28,6 +28,36 @@ and are enforced in the stream read paths.
 
 > Enforced in `src/components/lumos/data/catalog/*` (`get-course`,
 > `get-course-sidebar-data`, `get-lesson-with-progress`, `get-lesson-content`).
+
+### Textbook reader (`textbook/`)
+
+`/{lang}/subjects/{slug}/textbook` renders the subject's textbook as native text
+(the textbook tile in `catalog-content-sections.tsx` links here; the PDF stays a
+toolbar button). Generic for every curriculum: the page reads `Subject.pdf`,
+fetches the Markdown twin at the sibling key `…/textbook.md` from the CDN
+(revalidated hourly) and lets the twin's front matter decide language, direction
+and the extraction notice.
+
+- `parse.ts` — front matter, `<!-- page N -->` markers (both forms), headings /
+  lists / tables / paragraphs into a page→block tree; Arabic-folding
+  `normalizeForSearch` / `normalizeWithMap`; `anchorToc` matches chapter and
+  lesson names to pages (prefix, containment, then 3-of-4 token overlap).
+  Tests: `src/tests/school-dashboard/listings/subjects/textbook-parse.test.ts`.
+- `article.tsx` — server-rendered `<article dir lang>` with one `<section
+id="p-N">` per page; page images as `<img data-src>` (copied to `src` only
+  when switched on).
+- `reader.tsx` (client) — sticky toolbar: contents panel, text size (six steps,
+  persisted), page-image toggle (persisted), debounced DOM search with
+  `<mark>` hits and prev/next, current page, Open PDF. Preferences ride
+  `useSyncExternalStore` over localStorage so hydration never mismatches.
+- `hero-gate.tsx` — the `[slug]` layout wraps every sub-route in the catalog
+  hero; this client gate drops it on `…/textbook` for a focused page.
+- `reader.css` — reading typography (Thmanyah serif text, `--reader-scale`).
+
+Page images: `catalog/textbooks/<slug>/pages/<N>.webp` (kun
+`textbook-pages.py`, N = PDF page = twin marker). Twins without markers render
+as one continuous text.
+
 > Tracked under the LMS/Stream epic (#323).
 
 ### Routes
