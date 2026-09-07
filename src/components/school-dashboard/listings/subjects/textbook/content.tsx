@@ -10,8 +10,14 @@ import { isRTL, type Locale } from "@/components/internationalization/config"
 import { TextbookArticle, type Opener } from "./article"
 import { BookReader } from "./book"
 import { fill, formatNumber } from "./format"
-import { anchorToc, detectPageOffset, parseTwin } from "./parse"
-import { groupSections, resolveToc, type DbChapter } from "./spine"
+import { anchorToc, parseTwin } from "./parse"
+import {
+  groupSections,
+  isCoverPage,
+  resolvePageOffset,
+  resolveToc,
+  type DbChapter,
+} from "./spine"
 import { fetchStructure } from "./structure"
 import type { BookMeta, CoverInfo, ReaderLabels, SectionMeta } from "./types"
 
@@ -109,8 +115,13 @@ export async function TextbookContent({
       />
     )
 
-  const offset = detectPageOffset(parsed.pages)
-  const anchors = anchorToc(parsed.pages, subject.chapters)
+  const coverUrl = subject.coverKey ? getCloudFrontUrl(subject.coverKey) : null
+  // The cover screen shows the scan's first page; its OCR is not a page.
+  const pages = coverUrl
+    ? parsed.pages.filter((p) => !isCoverPage(p))
+    : parsed.pages
+  const offset = resolvePageOffset(pages, structure)
+  const anchors = anchorToc(pages, subject.chapters)
   const toc = resolveToc(
     subject.chapters,
     structure,
@@ -118,7 +129,7 @@ export async function TextbookContent({
     parsed.meta.sourcePages,
     anchors
   )
-  const groups = groupSections(parsed.pages, toc, parsed.hasPageMarkers)
+  const groups = groupSections(pages, toc, parsed.hasPageMarkers)
 
   const bookLang = parsed.meta.lang || "ar"
   const dir: "rtl" | "ltr" = RTL_LANGS.has(bookLang) ? "rtl" : "ltr"
@@ -205,7 +216,7 @@ export async function TextbookContent({
     hasPageImages: parsed.hasPageMarkers,
   }
   const cover: CoverInfo = {
-    url: subject.coverKey ? getCloudFrontUrl(subject.coverKey) : null,
+    url: coverUrl,
     kicker: [
       labels.textbook,
       subject.grade != null

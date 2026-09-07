@@ -1,7 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { normalizeForSearch, type TocEntry, type TwinPage } from "./parse"
+import {
+  detectPageOffset,
+  normalizeForSearch,
+  type Block,
+  type TocEntry,
+  type TwinPage,
+} from "./parse"
 
 /**
  * The spine of the book — pure functions that turn the twin's pages, the DB
@@ -22,6 +28,9 @@ export interface StructureChapter {
 export interface StructurePages {
   /** Whether `page` fields count printed pages ("book") or PDF pages. */
   pageNumbers: "book" | "pdf"
+  /** The author's printed→PDF offset (PDF = printed + offset), for a scan
+   *  whose folios are too damaged for the reader to vote one. */
+  pageOffset: number | null
   chapters: StructureChapter[]
 }
 
@@ -29,6 +38,11 @@ function positiveInt(v: unknown): number | null {
   if (typeof v === "number" && Number.isInteger(v) && v > 0) return v
   if (typeof v === "string" && /^\d+$/.test(v)) return Number(v)
   return null
+}
+
+function nonNegativeInt(v: unknown): number | null {
+  if (v === 0 || v === "0") return 0
+  return positiveInt(v)
 }
 
 /** Accept only what the reader needs from an arbitrary structure.json. */
@@ -53,7 +67,99 @@ export function normalizeStructure(json: unknown): StructurePages | null {
       lessons,
     }
   })
-  return { pageNumbers: o.pageNumbers === "pdf" ? "pdf" : "book", chapters }
+  return {
+    pageNumbers: o.pageNumbers === "pdf" ? "pdf" : "book",
+    pageOffset: nonNegativeInt(o.pageOffset),
+    chapters,
+  }
+}
+
+function blockTexts(b: Block): string[] {
+  return b.kind === "heading" || b.kind === "paragraph"
+    ? [b.text]
+    : b.kind === "list"
+      ? b.items
+      : b.kind === "table"
+        ? b.rows.flat()
+        : []
+}
+
+/**
+ * The printed→PDF offset, from the most trustworthy source that has one:
+ * the author's statement, the folios the OCR kept, and finally the
+ * structure's own headings found in the page text.
+ */
+export function resolvePageOffset(
+  pages: TwinPage[],
+  structure: StructurePages | null
+): number | null {
+  if (structure?.pageOffset != null) return structure.pageOffset
+  return detectPageOffset(pages) ?? inferPageOffset(pages, structure)
+}
+
+/**
+ * Vote the offset from the structure's chapter and lesson titles: each page
+ * whose text contains a title votes (PDF page − printed page). A page that
+ * matches many titles at once is a contents page and abstains. The winner
+ * needs a clear majority, else null — a wrong offset misplaces every chapter.
+ */
+export function inferPageOffset(
+  pages: TwinPage[],
+  structure: StructurePages | null
+): number | null {
+  if (!structure || structure.pageNumbers !== "book") return null
+  const titles: { key: string; page: number }[] = []
+  for (const c of structure.chapters) {
+    if (c.page !== null)
+      titles.push({ key: normalizeForSearch(c.title), page: c.page })
+    for (const l of c.lessons)
+      if (l.page !== null)
+        titles.push({ key: normalizeForSearch(l.title), page: l.page })
+  }
+  const usable = titles.filter((t) => t.key.length >= 6)
+  if (usable.length === 0) return null
+
+  const votes = new Map<number, number>()
+  for (const p of pages) {
+    if (p.number === null || p.blocks.length === 0) continue
+    const text = normalizeForSearch(p.blocks.flatMap(blockTexts).join(" "))
+    const hits = usable.filter((t) => text.includes(t.key))
+    if (hits.length === 0 || hits.length >= 4) continue
+    for (const t of hits) {
+      const off = p.number - t.page
+      if (off < 0 || off > 80) continue
+      votes.set(off, (votes.get(off) ?? 0) + 1)
+    }
+  }
+  let best: number | null = null
+  let bestVotes = 0
+  let second = 0
+  for (const [off, n] of votes) {
+    if (n > bestVotes) {
+      second = bestVotes
+      best = off
+      bestVotes = n
+    } else if (n > second) second = n
+  }
+  return best !== null && bestVotes >= 3 && bestVotes >= 2 * second
+    ? best
+    : null
+}
+
+/**
+ * A scanned PDF opens on its cover: a few lines of title text, no prose,
+ * and whatever the OCR made of the artwork. The reader shows the cover
+ * image instead, so that page's text is not a page of the book. Counted in
+ * words of three letters or more — the artwork's debris is shorter.
+ */
+export function isCoverPage(page: TwinPage): boolean {
+  if (page.number !== 1) return false
+  const words = page.blocks
+    .flatMap(blockTexts)
+    .join(" ")
+    .split(/\s+/)
+    .filter((w) => /\p{L}{3,}/u.test(w)).length
+  return words <= 40
 }
 
 export interface DbChapter {
@@ -85,7 +191,8 @@ function sameTitle(a: string, b: string): boolean {
  * A PDF page for every chapter and lesson. Structure pages win (mapped
  * through the printed→PDF offset and clamped to the book); anything the
  * structure cannot place falls back to the name-matched anchors. Pages must
- * increase along the book, so a stray value is dropped rather than trusted.
+ * not go backwards along the book, so a stray value is dropped rather than
+ * trusted; two short chapters may open on the same page.
  */
 export function resolveToc(
   chapters: DbChapter[],
@@ -130,7 +237,7 @@ export function resolveToc(
       sameCount ? structure?.chapters[i] : undefined
     )
     let page = toPdf(sc?.page ?? null)
-    if (page !== null && page <= prev) page = null
+    if (page !== null && page < prev) page = null
     if (page === null) {
       const a = anchorPage.get(ch.id)
       if (a !== undefined && a > prev) page = a
@@ -167,15 +274,7 @@ export function isNoisePage(page: TwinPage): boolean {
   let letters = 0
   let total = 0
   for (const b of page.blocks) {
-    const texts =
-      b.kind === "heading" || b.kind === "paragraph"
-        ? [b.text]
-        : b.kind === "list"
-          ? b.items
-          : b.kind === "table"
-            ? b.rows.flat()
-            : []
-    for (const t of texts)
+    for (const t of blockTexts(b))
       for (const ch of t) {
         if (/\s/.test(ch)) continue
         total++

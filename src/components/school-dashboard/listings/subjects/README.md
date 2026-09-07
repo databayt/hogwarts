@@ -41,16 +41,23 @@ contents table with the book's printed page numbers, then the text.
 Data, all from the CDN beside `Subject.pdf`: the Markdown twin
 (`…/textbook.md`, kun `textbook` skill), the optional authoring
 `…/structure.json` (chapter and lesson start pages — published for
-`sd-g12-physics` so far; without it the contents are anchored by name
-matching) and `…/pages/<N>.webp` for the original-pages view.
+`sd-g12-physics` and `sd-g12-biology` so far; it may state `pageOffset`,
+printed → PDF, when the scan's folios are unreadable; without it the contents
+are anchored by name matching) and `…/pages/<N>.webp` for the original-pages
+view.
 
 - `parse.ts` — twin → page/block tree; reads the printed folio off each page
   and `detectPageOffset` votes the PDF→printed offset (physics: 8);
   Arabic-folded search normalisation; `anchorToc` name matching.
-- `spine.ts` — pure: `normalizeStructure`, `resolveToc` (structure pages
-  through the offset, clamped and monotonic, anchors as fallback),
-  `groupSections` (front matter + one flow per chapter, or fixed chunks;
-  `isNoisePage` drops digit-soup pages from the front matter).
+- `spine.ts` — pure: `normalizeStructure`, `resolvePageOffset` (the
+  author's `pageOffset`, else the folios' vote, else `inferPageOffset` — the
+  structure's own headings found in the page text, contents pages abstain;
+  biology's folios are OCR debris, its headings vote 8), `resolveToc`
+  (structure pages through the offset, clamped, never backwards — two short
+  chapters may share a page — anchors as fallback), `groupSections` (front
+  matter + one flow per chapter, or fixed chunks; `isNoisePage` drops
+  digit-soup pages from the front matter), `isCoverPage` (a scan's first
+  page is its cover: the cover screen shows it, the text does not).
 - `article.tsx` — server: one `.book-flow` per section, `<section id="p-N">`
   per page, chapter/lesson openers (kicker, title, ornament), folio marks.
 - `engine.ts` — client, no React: each flow is a CSS multi-column box whose

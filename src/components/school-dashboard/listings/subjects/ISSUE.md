@@ -40,6 +40,31 @@
 
 ## Resolved
 
+- **2026-09-07 — Biology is the second book.**
+  `/subjects/sd-g12-biology/textbook`: the twin keeps only 19 readable folios
+  of 253 (OCR debris), so the printed→PDF offset now comes from the first
+  source that has one — the author's `pageOffset` in `structure.json`, the
+  folios' vote, or a vote from the structure's own chapter/lesson headings
+  found in the page text (a page matching many headings is a contents page
+  and abstains; the winner needs a 2:1 majority). Biology's `structure.json`
+  is published to both buckets with `pageOffset: 8`, and chapter 2 corrected
+  to printed 25 — the book's own contents table says 9, but printed 9 is
+  still asexual reproduction and the heading sits on 25. The scanned cover's
+  OCR (the aggregator's banner) no longer opens the front matter: the cover
+  screen shows that page. A chapter that opens on its predecessor's page
+  keeps its contents link (genetic engineering and genetic counselling share
+  printed 199; one flow, two rows). Verified headless at 390×844: 303
+  screens, 24 sections, 73 of 73 contents rows live with printed numbers,
+  chapters open on PDF 9 / 33 / 140 (printed 1 / 25 / 132), no console
+  errors; 29 parser/spine tests, tsc and eslint green. Follow-ups: the
+  biology cover on the CDN is the aggregator's scan — no designed cover file
+  exists in git, on the CDN or on this Mac (only the square subject tile), so
+  a designed cover is a one-file upload to
+  `catalog/textbooks/sd-g12-biology/cover.jpg`; the OCR is noisy («الشكاخر»
+  for «التكاثر», Latin headings as digit soup) — a kun `textbook` re-OCR
+  job, not the reader's; the catalog's 22 biology chapters are the book's
+  sections (the book has three units), so the opener kicker «الوحدة N»
+  counts sections.
 - **2026-09-07 — Textbook reader rebuilt as a book (iOS Books pattern),
   physics first.** `/subjects/sd-g12-physics/textbook` now opens on the cover
   (tinted hero, 3D frame, title/edition/counts, Contents + Start reading, About

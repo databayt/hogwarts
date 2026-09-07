@@ -11,8 +11,11 @@ import {
 } from "@/components/school-dashboard/listings/subjects/textbook/parse"
 import {
   groupSections,
+  inferPageOffset,
+  isCoverPage,
   isNoisePage,
   normalizeStructure,
+  resolvePageOffset,
   resolveToc,
 } from "@/components/school-dashboard/listings/subjects/textbook/spine"
 
@@ -269,6 +272,7 @@ describe("spine", () => {
       })
     ).toEqual({
       pageNumbers: "book",
+      pageOffset: null,
       chapters: [
         {
           title: "أ",
@@ -424,5 +428,130 @@ describe("isNoisePage", () => {
         ["chapter", [3]],
       ]
     )
+  })
+})
+
+describe("page offset from the structure", () => {
+  const page = (number: number, ...texts: string[]) => ({
+    number,
+    empty: false,
+    folio: null,
+    blocks: texts.map((text) => ({ kind: "paragraph" as const, text })),
+  })
+  const structure = normalizeStructure({
+    pageNumbers: "book",
+    chapters: [
+      {
+        title: "التكاثر غير الجنسي",
+        page: 1,
+        lessons: [{ title: "خصائص التكاثر غير الجنسي", page: 2 }],
+      },
+      {
+        title: "تجارب وقوانين مندل",
+        page: 132,
+        lessons: [{ title: "قانون مندل الأول", page: 136 }],
+      },
+      { title: "الطفرات", page: 189, lessons: [] },
+    ],
+  })
+  // Printed = PDF − 8: a contents page lists every title, headings sit on
+  // their pages, and a title also recurs in running text two pages later.
+  const pages = [
+    page(1, "المناهج الدراسية السودانية", "الصف الثالث ثانوي"),
+    page(
+      7,
+      "محتويات الوحدة",
+      "التكاثر غير الجنسي 1",
+      "خصائص التكاثر غير الجنسي 2",
+      "تجارب وقوانين مندل 132",
+      "قانون مندل الأول 136",
+      "الطفرات 189"
+    ),
+    page(9, "التكاثر غير الجنسي هو إنتاج أفراد جديدة"),
+    page(10, "خصائص التكاثر غير الجنسي كثيرة"),
+    page(140, "تجارب وقوانين مندل بدأت في حديقة الدير"),
+    page(144, "قانون مندل الأول ينص على"),
+    page(146, "وهكذا يفسر قانون مندل الأول النتائج"),
+    page(197, "الطفرات تغيرات فجائية"),
+  ]
+
+  it("normalizeStructure reads a non-negative pageOffset", () => {
+    expect(
+      normalizeStructure({ pageOffset: 8, chapters: [] })?.pageOffset
+    ).toBe(8)
+    expect(
+      normalizeStructure({ pageOffset: "0", chapters: [] })?.pageOffset
+    ).toBe(0)
+    expect(
+      normalizeStructure({ pageOffset: -3, chapters: [] })?.pageOffset
+    ).toBeNull()
+  })
+
+  it("inferPageOffset votes the offset from headings, ignoring the contents page", () => {
+    expect(inferPageOffset(pages, structure)).toBe(8)
+    // Too few agreeing pages: no guess.
+    expect(inferPageOffset(pages.slice(0, 4), structure)).toBeNull()
+    // PDF-numbered structures need no offset.
+    expect(
+      inferPageOffset(
+        pages,
+        structure ? { ...structure, pageNumbers: "pdf" } : null
+      )
+    ).toBeNull()
+    expect(inferPageOffset(pages, null)).toBeNull()
+  })
+
+  it("resolvePageOffset prefers the author's offset, then folios, then inference", () => {
+    expect(
+      resolvePageOffset(
+        pages,
+        structure ? { ...structure, pageOffset: 11 } : null
+      )
+    ).toBe(11)
+    const withFolios = pages.map((p) =>
+      p.number >= 9 ? { ...p, folio: p.number - 6 } : p
+    )
+    expect(resolvePageOffset(withFolios, structure)).toBe(6)
+    expect(resolvePageOffset(pages, structure)).toBe(8)
+    expect(resolvePageOffset(pages, null)).toBeNull()
+  })
+
+  it("resolveToc keeps a chapter that opens on its predecessor's page", () => {
+    const shared = normalizeStructure({
+      pageNumbers: "book",
+      pageOffset: 8,
+      chapters: [
+        { title: "الهندسة الوراثية", page: 199, lessons: [] },
+        { title: "الاستشارة الوراثية", page: 199, lessons: [] },
+        { title: "الدورات", page: 190, lessons: [] },
+      ],
+    })
+    const toc = resolveToc(
+      [
+        { id: "a", name: "الهندسة الوراثية", lessons: [] },
+        { id: "b", name: "الاستشارة الوراثية", lessons: [] },
+        { id: "c", name: "الدورات", lessons: [] },
+      ],
+      shared,
+      8,
+      253,
+      []
+    )
+    expect(toc.map((c) => c.page)).toEqual([207, 207, null])
+    // One flow for the shared page: the second chapter has no section of its own.
+    const sections = groupSections(
+      [page(207, "الهندسة الوراثية"), page(208, "الاستشارة")],
+      toc,
+      true
+    )
+    expect(sections.map((s) => s.chapterIndex)).toEqual([0])
+  })
+
+  it("isCoverPage flags a short first page only", () => {
+    expect(isCoverPage(pages[0])).toBe(true)
+    expect(isCoverPage(pages[2])).toBe(false)
+    expect(
+      isCoverPage(page(1, Array.from({ length: 80 }, () => "كلمة").join(" ")))
+    ).toBe(false)
   })
 })
