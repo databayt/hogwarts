@@ -169,17 +169,22 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 
 ### Status
 
-- **2026-09-07 13:00Z — Worker LIVE.** Workers Paid active; image pushed; Worker `hogwarts` version
-  `a27b9d45` deployed with routes `balqalam.com/*` + `*.balqalam.com/*`; 25 secrets set; container
-  booted against the prod DB. Verified through the edge with the real hostnames (`curl --resolve` /
-  Playwright host-resolver rules, no DNS change): demo Administrator login, session cookie
-  `Domain=.balqalam.com`, tenant pages render. Sanity URL: https://hogwarts.osmanabdout.workers.dev
-- **Waiting on the DNS toggles** (token has no DNS:Edit; Cowork/Abdout do them in the dashboard):
-  `demo` → Proxied, verify, then `balqalam.com` + `www`, then add Proxied `*` CNAME → `balqalam.com`.
+- **2026-09-07 14:45Z — balqalam.com is LIVE on Cloudflare.** Abdout toggled `*.balqalam.com`,
+  `balqalam.com` and `www` to Proxied (targets unchanged); the Worker routes capture them. Verified
+  from a US vantage point (apex serves the Arabic marketing page, demo login works) and through the
+  edge from here. The existing proxied `*` CNAME already covers every new school subdomain — no DNS
+  work per school.
+- **Regional IP block (open):** Cloudflare answers UAE/Sudan resolvers with `188.114.96.x/97.x` for
+  this free zone, and the ISP on Abdout's Mac resets TCP to several of those exact addresses (any
+  site, ports 80 and 443; intermittent). Visitors on 1.1.1.1 get `104.21.x/172.67.x` and are fine.
+  Recommended: move the zone to **Pro** (different IP pool) before onboarding the three schools.
+- Vercel leftovers in the zone (`_vercel` TXT, `_acme-challenge` NS) are inert and can stay.
 - Docker on this Mac needed the `buildx` plugin for wrangler's `docker build --load`
   (`brew install docker-buildx` + symlink into `~/.docker/cli-plugins`).
 - `/api/health` reports memory warn/fail: it divides heapUsed by heapTotal (currently allocated,
   ~213 MB) instead of the heap limit; RSS is ~330 MB on a 4 GiB instance. Cosmetic; fix next release.
+- Crons: none on Cloudflare yet (same as the Vercel hobby lane). The GitHub Actions jobs now reach
+  the container through the public hostname. Adding Worker cron triggers is the next step.
 
 ### Shape
 
