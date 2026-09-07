@@ -159,48 +159,89 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 
 ## Cloudflare Workers pilot — a second host, in parallel
 
-> Started 2026-09-07. The question is whether Cloudflare can replace Vercel + Neon. The answer
-> is being measured on a live pilot that runs **beside** the Vercel deployment, not instead of it.
-> Everything above still applies; nothing here changes the Vercel lane.
+> Started 2026-09-07. The question was whether Cloudflare can replace Vercel + Neon. It was measured
+> on the exact commit balqalam.com runs (`bb675c5af`, deployed 2026-09-02), beside the Vercel
+> deployment, not instead of it. **Verdict: hogwarts does not fit a Cloudflare Worker.** The build
+> works end to end; the bundle is 3.4× the platform ceiling. Nothing in the Vercel lane changed.
+
+### The measurement
+
+| | |
+| --- | --- |
+| Worker script (wrangler dry run) | **172 MB raw · 31.6 MB gzipped** |
+| Ceiling | 3 MiB gzipped free · **10 MiB gzipped paid** |
+| Compiled app code (Next SSR chunks + app pages) | ~85 MB raw — 491 pages, 215 route handlers |
+| Next runtime | 16 MB raw |
+| Docs stack (shiki + langs + themes + prettier + compiled MDX source chunk) | ~33 MB raw |
+| Prisma (Wasm engine, shipped as a separate module) | 2.2 MB raw · 0.8 MB gzipped |
+
+Even with the docs stack removed the script is ~100 MB raw (≈19 MB gzipped), still twice the paid
+ceiling. The app code alone is over it. This is a property of the app's surface area, not of any
+one dependency.
+
+### What was proven on the way (all reusable)
+
+- `next build` + OpenNext produce a working Worker bundle for this app, including `proxy.ts` (Node
+  middleware, supported since `@opennextjs/cloudflare` 1.20.3 → needs Next ≥16.3.3, hence the bump).
+- Prisma on workerd: `@prisma/adapter-pg` with `maxUses: 1` behind `DB_ADAPTER=pg`; the same
+  `src/lib/db.ts` returns identical rows with and without the adapter against local Postgres.
+- Two Turbopack traps and their fixes are in `next.config.ts`: the adapter must resolve to a stub in
+  browser bundles, and `pg-cloudflare` must be force-included in output tracing (its default export
+  condition is an empty stub).
+- vinext (Cloudflare's recommended path) is not an option: `npx vinext check` flags next-auth as
+  unsupported and requires `"type": "module"`.
+
+### Options if Cloudflare is still the goal
+
+1. **Cloudflare Containers** — run the standalone `next start` server in a container behind a
+   Worker. No size ceiling, no adapter, Prisma's normal engine, crons via Worker cron triggers.
+   Needs the $5/mo Workers Paid plan; an always-on `basic` instance (¼ vCPU, 1 GiB) is roughly
+   $20/mo at list price, `standard-1` (½ vCPU, 4 GiB) roughly $50/mo. Cold starts if scaled to zero.
+   This is the drop-in path and the one to pilot next.
+2. **Multi-worker split** — OpenNext can run middleware and server in separate Workers and "could
+   split further"; fitting ~85 MB of app code under 10 MiB per Worker would need 5–8 Workers by route
+   prefix, loses `opennextjs-cloudflare deploy`, preview URLs and skew protection, and the fit is
+   unproven. Weeks, not days.
+3. **Stay on Vercel** — the Hobby lane above is the working state; the Pro block was an invoice, not
+   a platform limit.
+
+### The lane, as built
 
 |                 |                                                                                   |
 | --------------- | --------------------------------------------------------------------------------- |
-| Account         | Cloudflare `ce9a5376d149c808a0b97072421ba12f` (osmanabdout@hotmail.com)          |
-| Worker          | `hogwarts` → `https://hogwarts.osmanabdout.workers.dev`                           |
-| Adapter         | `@opennextjs/cloudflare` 1.20.2 (pinned: 1.20.3+ needs Next ≥16.3.3)              |
-| Database        | Neon branch `br-proud-breeze-adn79b1b` (a 2026-08-29 snapshot of prod) via `pg`   |
-| Crons           | **None** — the Worker has no triggers; schedules must never run from two hosts    |
-| DNS             | Untouched. `workers.dev` only until the hostname decision below is made           |
-
-### Deploying the pilot
+| Account         | Cloudflare `ce9a5376d149c808a0b97072421ba12f` (osmanabdout@hotmail.com), workers.dev subdomain `osmanabdout` |
+| Worker          | `hogwarts` (never deployed — size gate)                                           |
+| Adapter         | `@opennextjs/cloudflare` 1.20.6 on Next 16.3.4                                    |
+| Database        | Neon branch `br-proud-breeze-adn79b1b` (a 2026-08-29 prod snapshot) was wired for the smoke test; the pinned commit's `prebuild` re-asserted the demo seed on it. Prod was never touched. The project is at its 10-branch limit, so no new branch was created |
+| Crons           | None in `wrangler.jsonc` on purpose                                              |
+| DNS             | Untouched                                                                         |
 
 ```bash
-# 1. runtime secrets (once, or when they change) — from a pulled Vercel prod env
+# runtime secrets (once) — from a pulled Vercel prod env; drops empties, Vercel/Turbo/Nx, Sentry
 vercel env pull /tmp/prod.env --environment=production --scope databayt && rm -f .env.local
 scripts/cf-secrets.sh /tmp/prod.env https://hogwarts.osmanabdout.workers.dev "<neon branch pooled url>"
 
-# 2. build from a clean `git archive HEAD` export and deploy
-scripts/deploy-cloudflare.sh /tmp/build.env            # add --no-deploy for a size check only
+# build the live commit from a clean export (+ the one file HEAD forgot), size gate, no deploy
+CF_SOURCE=bb675c5af CF_OVERLAY="package.json pnpm-lock.yaml next.config.ts prisma/schema.prisma \
+  src/lib/db.ts src/lib/db-adapter.browser.ts src/components/saas-marketing/pricing/lib/db.ts \
+  wrangler.jsonc open-next.config.ts src/lib/platform-notification.ts" \
+  scripts/deploy-cloudflare.sh /tmp/build.env --no-deploy
 ```
 
-`cf-secrets.sh` rewrites the host-bound values (`NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`,
-`NEXT_PUBLIC_MAIN_APP_URL`, `DOMAIN`, `NEXT_PUBLIC_ROOT_DOMAIN`) to the pilot origin, blanks Sentry,
-drops `VERCEL_*`/`TURBO_*`/`NX_*`, and swaps `DATABASE_URL` for the branch. The build env file must
-carry the same `NEXT_PUBLIC_*` values because `next build` inlines them.
+The build env file must carry the same `NEXT_PUBLIC_*` values as the secrets because `next build`
+inlines them. Builds run at 2 workers / 3 GB heap; 9 workers + 8 GB and 4 + 4 GB were both killed
+for memory on this 16 GB machine while other sessions had `next dev` and `tsc` resident.
 
 ### What is shared with the Vercel lane (all inert there)
 
-- `prisma/schema.prisma` — `previewFeatures = ["driverAdapters"]`. Only enables the `adapter`
-  constructor option; `new PrismaClient()` with no adapter is byte-for-byte the same path.
+- `next` 16.3.0 → 16.3.4 (+ `@next/mdx`, `eslint-config-next`). Reaches Vercel only on the next
+  manual hobby deploy.
 - `src/lib/db.ts` — when `DB_ADAPTER=pg` (set only in `wrangler.jsonc`) the client is built on
-  `@prisma/adapter-pg` with `maxUses: 1`, because a Worker may not reuse a socket across requests.
-  Verified locally: the same script returns the same rows with and without the adapter.
-- `src/components/saas-marketing/pricing/lib/db.ts` re-exports the shared singleton.
-- `next.config.ts` — `.prisma/client` added to `serverExternalPackages` so OpenNext can patch it,
-  and a Turbopack alias that resolves `@prisma/adapter-pg` to `src/lib/db-adapter.browser.ts` in
-  browser bundles. Client components reach `db.ts` through modules they import for other exports
-  (`@prisma/client` has always resolved to its own browser stub there); the real adapter would drag
-  `pg` and its `dns`/`net`/`tls` requires into the client graph and fail the build.
+  `@prisma/adapter-pg` with `maxUses: 1`. `src/components/saas-marketing/pricing/lib/db.ts`
+  re-exports the shared singleton. `global` → `globalThis`.
+- `next.config.ts` — `.prisma/client` in `serverExternalPackages`; a Turbopack alias resolving
+  `@prisma/adapter-pg` to `src/lib/db-adapter.browser.ts` in browser bundles; `pg-cloudflare` in
+  `outputFileTracingIncludes`; `experimental.cpus` from `NEXT_BUILD_CPUS` when set.
 
 Vercel never sees `wrangler.jsonc`, `open-next.config.ts`, `.open-next/`, or the two scripts.
 
@@ -228,13 +269,6 @@ CF_SOURCE=head CF_OVERLAY="src/lib/platform-notification.ts" scripts/deploy-clou
 `CF_SOURCE=worktree` exists too, but the working tree is a moving target while other sessions edit —
 two builds died on a half-written i18n JSON and a file that vanished mid-copy.
 
-### Why OpenNext and not vinext
-
-Cloudflare's docs now recommend vinext (their Vite reimplementation of Next, in beta). `npx vinext
-check` on this repo: 85% compatible, but **next-auth is unsupported** and it requires
-`"type": "module"` in package.json — both would reach into the Vercel lane. OpenNext runs the real
-`next build` output, so the two hosts serve the same compiled app.
-
 ### What the `workers.dev` host can and cannot prove
 
 `hogwarts.osmanabdout.workers.dev` is not a known root domain, so `src/proxy.ts` takes its default
@@ -246,17 +280,7 @@ to `.balqalam.com` and send it to live prod. Phase 2 needs either a throwaway do
 Cloudflare account or an additive host shape in `src/lib/root-domain.ts` (like the existing
 `tenant---branch.vercel.app` pattern).
 
-### Expected gaps on the pilot (not bugs to chase yet)
+### Removing the lane
 
-- `/docs` pages read `content/` through `fs` at request time; that directory is excluded from
-  tracing.
-- `/_next/image` has no `IMAGES` binding yet, so remote images pass through unoptimized.
-- `@react-pdf/renderer` routes (report cards, transcripts) and the `runtime = "nodejs"` LiveKit and
-  banking-stream routes are untested on workerd.
-- No incremental cache binding: `revalidate` and the fetch cache are no-ops; ISR pages serve their
-  build-time render. An R2 bucket (`NEXT_INC_CACHE_R2_BUCKET`) fixes that when the runtime is proven.
-
-### Removing the pilot
-
-`pnpm exec wrangler delete hogwarts`, delete the Neon branch, and revert the commit that added this
-section. The four shared edits can stay — they are inert — or go with it.
+Revert the pilot commits (`be65e69db`, `5317961f6`, `a4f39f535` and the docs commit). The Worker was never
+created. The Neon snapshot branch `br-proud-breeze-adn79b1b` predates the pilot and can stay or go.
