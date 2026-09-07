@@ -253,12 +253,14 @@ export function BookReader({
         }
         return
       }
+      // Typing, and Space/Enter on a focused control, belong to that control.
       const t = e.target as HTMLElement | null
       if (
         t &&
         (t.tagName === "INPUT" ||
           t.tagName === "TEXTAREA" ||
-          t.isContentEditable)
+          t.isContentEditable ||
+          t.closest("button, a, [role='menuitem']"))
       )
         return
       switch (e.key) {
