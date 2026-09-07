@@ -170,21 +170,22 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 | --- | --- |
 | Worker script (wrangler dry run) | **172 MB raw · 31.6 MB gzipped** |
 | Ceiling | 3 MiB gzipped free · **10 MiB gzipped paid** |
-| Compiled app code (Next SSR chunks + app pages) | ~85 MB raw — 491 pages, 215 route handlers |
+| Compiled server chunks (app + vendor code Turbopack folded in, not attributed further) | ~85 MB raw — 491 pages, 215 route handlers |
 | Next runtime | 16 MB raw |
 | Docs stack (shiki + langs + themes + prettier + compiled MDX source chunk) | ~33 MB raw |
 | Prisma (Wasm engine, shipped as a separate module) | 2.2 MB raw · 0.8 MB gzipped |
 
 Even with the docs stack removed the script is ~100 MB raw (≈19 MB gzipped), still twice the paid
-ceiling. The app code alone is over it. This is a property of the app's surface area, not of any
+ceiling. The server chunks alone are over it. This is a property of the app's surface area, not of any
 one dependency.
 
 ### What was proven on the way (all reusable)
 
 - `next build` + OpenNext produce a working Worker bundle for this app, including `proxy.ts` (Node
   middleware, supported since `@opennextjs/cloudflare` 1.20.3 → needs Next ≥16.3.3, hence the bump).
-- Prisma on workerd: `@prisma/adapter-pg` with `maxUses: 1` behind `DB_ADAPTER=pg`; the same
-  `src/lib/db.ts` returns identical rows with and without the adapter against local Postgres.
+- Prisma builds for workerd: `@prisma/adapter-pg` with `maxUses: 1` behind `DB_ADAPTER=pg`; the same
+  `src/lib/db.ts` returns identical rows with and without the adapter **on Node** against local
+  Postgres. Runtime on workerd itself is unproven — nothing was deployed.
 - Two Turbopack traps and their fixes are in `next.config.ts`: the adapter must resolve to a stub in
   browser bundles, and `pg-cloudflare` must be force-included in output tracing (its default export
   condition is an empty stub).
