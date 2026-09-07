@@ -40,6 +40,24 @@
 
 ## Resolved
 
+- **2026-09-07 — Biology has its designed cover.** `curriculum/sd/g12/biology/cover.svg`
+  (a Figma export: blue line-art of corals, algae and diatoms across the lower
+  half of a white board, 2669×3691, one embedded 1000 px raster, no text)
+  is rasterised to `cover.jpg` at 1000×1383, q82 4:4:4, 251 KB, and published
+  to `catalog/textbooks/sd-g12-biology/cover.jpg` in both buckets. The
+  aggregator's scan it replaces is kept at
+  `curriculum/sd/g12/biology/_old/2026-09-07-aggregator-cover/cover.jpg` and
+  is still on the CDN as `pages/1.webp`. The hero tint the cover screen
+  samples now reads `hsl(225 30% 30%)`, a navy drawn from the line art.
+  **Gotcha:** textbook art is served `max-age=31536000, immutable`, so
+  overwriting a key is not enough — the edge keeps the old bytes until a
+  CloudFront invalidation on distribution `E3PHDXTDSBCQSJ` (alias
+  `cdn.databayt.org`); browsers that already hold the old cover keep it until
+  the year expires. No code changed: the reader reads `Subject.cover`, and
+  the seed resolves that from the local `cover.jpg`, so the new art survives
+  the next `pnpm db:seed:single sd`. Open: the design leaves the top half of
+  the board empty, and our title is set below the book rather than on it.
+
 - **2026-09-07 — Footer menu measured against the reference crop.** With
   ours rendered at the same 390×844 and cropped to the same rectangle as
   `IMG_2579`, three things were wrong and are now fixed. The round row is
@@ -89,11 +107,7 @@
   printed 199; one flow, two rows). Verified headless at 390×844: 303
   screens, 24 sections, 73 of 73 contents rows live with printed numbers,
   chapters open on PDF 9 / 33 / 140 (printed 1 / 25 / 132), no console
-  errors; 29 parser/spine tests, tsc and eslint green. Follow-ups: the
-  biology cover on the CDN is the aggregator's scan — no designed cover file
-  exists in git, on the CDN or on this Mac (only the square subject tile), so
-  a designed cover is a one-file upload to
-  `catalog/textbooks/sd-g12-biology/cover.jpg`; the OCR is noisy («الشكاخر»
+  errors; 29 parser/spine tests, tsc and eslint green. Follow-ups: the OCR is noisy («الشكاخر»
   for «التكاثر», Latin headings as digit soup) — a kun `textbook` re-OCR
   job, not the reader's; the catalog's 22 biology chapters are the book's
   sections (the book has three units), so the opener kicker «الوحدة N»

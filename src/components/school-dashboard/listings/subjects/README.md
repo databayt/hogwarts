@@ -34,7 +34,8 @@ and are enforced in the stream read paths.
 `/{lang}/subjects/{slug}/textbook` opens the subject's textbook as a book, one
 screen per page, in the reading pattern of the iOS Books app (the textbook tile
 in `catalog-content-sections.tsx` links here). Screen one is the cover (hero
-tinted from the cover image, 3D frame, title, edition, page/unit/lesson counts,
+tinted by sampling the cover image — biology's designed cover gives a navy,
+`hsl(225 30% 30%)`; 3D frame, title, edition, page/unit/lesson counts,
 Contents and Start-reading pills, an About-the-book sheet), screen two the
 contents table with the book's printed page numbers, then the text.
 
