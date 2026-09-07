@@ -5,6 +5,14 @@
    page reads them. The multi-column flow is the pagination: column width and
    height equal the viewport, the track slides one column per page. */
 
+/* The chrome speaks the platform's UI face, as the reference does. Declared
+   on :root because the sheets portal to <body>, outside .book. */
+:root {
+  --book-ui:
+    -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
 .book {
   position: fixed;
   inset: 0;
@@ -23,10 +31,6 @@
   --book-tint: #2b3a4a;
   --book-font:
     var(--font-thmanyah-text), ui-serif, Georgia, "Times New Roman", serif;
-  /* The chrome speaks the platform's UI face, as the reference does. */
-  --book-ui:
-    -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
   --book-safe-bottom: env(safe-area-inset-bottom, 0px);
   --book-lh: 1.9;
   background: var(--book-bg);

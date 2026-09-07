@@ -53,7 +53,11 @@
   title, blank body, a 47 pt field with its round ✕ at the bottom, no header
   ✕ and no drag handle, 94 svh tall. Kept deliberately: PDF and original
   pages in the round row where the reference has rotation lock and vertical
-  scroll (neither exists on the web yet).
+  scroll (neither exists on the web yet). Gotcha: the sheets portal to
+  `<body>`, outside `.book`, so reader variables do not reach them —
+  `--book-ui` lives on `:root` for that reason, while the contents sheet's
+  `var(--book-font)` still resolves to the page default rather than the
+  reader's font preference (open).
 - **2026-09-07 — Biology is the second book.**
   `/subjects/sd-g12-biology/textbook`: the twin keeps only 19 readable folios
   of 253 (OCR debris), so the printed→PDF offset now comes from the first
