@@ -47,7 +47,10 @@ node scripts/fetch-thmanyah.mjs                 # woff2 are gitignored, fetch-on
 
 echo "==> building with $ENV_FILE"
 set -a; . "$ENV_FILE"; set +a
-export NODE_OPTIONS='--max-old-space-size=8192' NEXT_TELEMETRY_DISABLED=1
+# 2 workers / 3 GB heap (CF_HEAP_MB, NEXT_BUILD_CPUS to override): 9 workers +
+# 8 GB, then 4 + 4 GB, both got the build killed for memory during static
+# generation on a 16 GB machine with other sessions resident (2026-09-07).
+export NODE_OPTIONS="--max-old-space-size=${CF_HEAP_MB:-3072}" NEXT_TELEMETRY_DISABLED=1 NEXT_BUILD_CPUS=${NEXT_BUILD_CPUS:-2}
 pnpm exec opennextjs-cloudflare build
 
 SIZE=$(gzip -c .open-next/worker.js | wc -c | tr -d ' ')

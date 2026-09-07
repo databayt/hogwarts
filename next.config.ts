@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
 
   // Optimize package imports for tree-shaking
   experimental: {
+    // Build worker cap. Unset = Next default (cores - 1). The Cloudflare lane
+    // sets NEXT_BUILD_CPUS=4 because a 16 GB machine with other sessions
+    // resident gets the build killed at 9 workers during static generation.
+    ...(process.env.NEXT_BUILD_CPUS
+      ? { cpus: Number(process.env.NEXT_BUILD_CPUS) }
+      : {}),
     // Allow file uploads up to 10MB via server actions (default is 1MB)
     serverActions: {
       bodySizeLimit: "10mb",
@@ -28,6 +34,15 @@ const nextConfig: NextConfig = {
       "lucide-react",
       "framer-motion",
     ],
+  },
+
+  // pg (via @prisma/adapter-pg, the Cloudflare lane) requires pg-cloudflare,
+  // whose package.json exports the real module only under the "workerd"
+  // condition and an empty stub by default. Output tracing runs with Node
+  // conditions and copies just the stub; OpenNext then bundles for workerd
+  // and cannot resolve dist/index.js. Include the whole package. A few KB.
+  outputFileTracingIncludes: {
+    "*": ["./node_modules/.pnpm/pg-cloudflare@*/node_modules/pg-cloudflare/**/*"],
   },
 
   // Exclude heavy packages from serverless function tracing
