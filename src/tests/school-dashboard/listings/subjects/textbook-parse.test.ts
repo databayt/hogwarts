@@ -3,11 +3,18 @@ import { describe, expect, it } from "vitest"
 import {
   anchorToc,
   cleanInline,
+  detectPageOffset,
   normalizeForSearch,
   normalizeWithMap,
   parseFrontMatter,
   parseTwin,
 } from "@/components/school-dashboard/listings/subjects/textbook/parse"
+import {
+  groupSections,
+  isNoisePage,
+  normalizeStructure,
+  resolveToc,
+} from "@/components/school-dashboard/listings/subjects/textbook/spine"
 
 const TWIN = `---
 title: "الفيزياء"
@@ -185,5 +192,237 @@ describe("anchorToc", () => {
       },
     ])
     expect(toc[0].anchor).toBe("p-7")
+  })
+})
+
+describe("folios and detectPageOffset", () => {
+  const book = [
+    "<!-- page 9 -->\n\nمقدمة\n\nنص المقدمة.\n",
+    ...Array.from({ length: 12 }, (_, i) => {
+      const pdf = 10 + i
+      const printed = pdf - 8
+      // The printed number sits alone at the foot of the page, sometimes in Arabic-Indic digits.
+      const folio =
+        i % 2
+          ? String(printed)
+          : String(printed).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)])
+      return `<!-- page ${pdf} -->\n\nفقرة في الصفحة ${pdf}.\n\n${folio}\n`
+    }),
+  ].join("\n")
+
+  it("reads the lone number at the foot of a page as its folio and drops it from the text", () => {
+    const parsed = parseTwin(book)
+    const p10 = parsed.pages.find((p) => p.number === 10)!
+    expect(p10.folio).toBe(2)
+    expect(p10.blocks).toEqual([
+      { kind: "paragraph", text: "فقرة في الصفحة 10." },
+    ])
+    expect(parsed.pages.find((p) => p.number === 9)!.folio).toBeNull()
+  })
+
+  it("votes the PDF→printed offset across the book", () => {
+    expect(detectPageOffset(parseTwin(book).pages)).toBe(8)
+  })
+
+  it("returns null when too few pages carry a folio", () => {
+    expect(detectPageOffset(parseTwin(TWIN).pages)).toBeNull()
+  })
+
+  it("ignores numbers larger than the PDF index (figure numbers, years)", () => {
+    const parsed = parseTwin(
+      "<!-- page 3 -->\n\nنص\n\n2005\n\n<!-- page 4 -->\n\nنص\n\n120\n"
+    )
+    expect(parsed.pages.map((p) => p.folio)).toEqual([null, null])
+    expect(parsed.pages[0].blocks).toHaveLength(2)
+  })
+})
+
+describe("spine", () => {
+  const chapters = [
+    {
+      id: "c1",
+      name: "المجال التثاقلي",
+      lessons: [{ id: "l1", name: "الحركة الدائرية" }],
+    },
+    {
+      id: "c2",
+      name: "الموجات والضوء",
+      lessons: [{ id: "l2", name: "الانكسار" }],
+    },
+  ]
+
+  it("normalizeStructure keeps titles and positive integer pages only", () => {
+    expect(
+      normalizeStructure({
+        pageNumbers: "book",
+        chapters: [
+          {
+            title: "أ",
+            page: 2,
+            lessons: [
+              { title: "x", page: "7" },
+              { title: "y", page: 0 },
+            ],
+          },
+          { title: "ب" },
+        ],
+      })
+    ).toEqual({
+      pageNumbers: "book",
+      chapters: [
+        {
+          title: "أ",
+          page: 2,
+          lessons: [
+            { title: "x", page: 7 },
+            { title: "y", page: null },
+          ],
+        },
+        { title: "ب", page: null, lessons: [] },
+      ],
+    })
+    expect(normalizeStructure({ chapters: "no" })).toBeNull()
+    expect(normalizeStructure(null)).toBeNull()
+  })
+
+  it("resolveToc maps printed structure pages through the offset, in book order", () => {
+    const structure = normalizeStructure({
+      pageNumbers: "book",
+      chapters: [
+        {
+          title: "المجال التثاقلي",
+          page: 2,
+          lessons: [{ title: "الحركة الدائرية", page: 19 }],
+        },
+        {
+          title: "الموجات والضوء",
+          page: 59,
+          lessons: [{ title: "الانكسار", page: 96 }],
+        },
+      ],
+    })
+    const toc = resolveToc(chapters, structure, 8, 218, [])
+    expect(toc.map((c) => c.page)).toEqual([10, 67])
+    expect(toc[0].lessons[0].page).toBe(27)
+    expect(toc[1].lessons[0].page).toBe(104)
+  })
+
+  it("resolveToc falls back to name anchors and drops out-of-order pages", () => {
+    const structure = normalizeStructure({
+      pageNumbers: "pdf",
+      chapters: [
+        { title: "المجال التثاقلي", page: 50, lessons: [] },
+        { title: "الموجات والضوء", page: 20, lessons: [] }, // earlier than chapter 1 → dropped
+      ],
+    })
+    const anchors = [
+      {
+        id: "c1",
+        name: "",
+        anchor: "p-5",
+        children: [{ id: "l1", name: "", anchor: "p-6", children: [] }],
+      },
+      {
+        id: "c2",
+        name: "",
+        anchor: "p-70",
+        children: [{ id: "l2", name: "", anchor: "p-80", children: [] }],
+      },
+    ]
+    const toc = resolveToc(chapters, structure, null, 218, anchors)
+    expect(toc.map((c) => c.page)).toEqual([50, 70])
+    // anchor p-6 lies before its chapter start (50): a mis-anchor, so it is dropped
+    expect(toc[0].lessons[0].page).toBeNull()
+    expect(toc[1].lessons[0].page).toBe(80)
+  })
+
+  it("resolveToc without a structure uses the anchors alone", () => {
+    const toc = resolveToc(chapters, null, 8, 218, [
+      { id: "c1", name: "", anchor: "p-10", children: [] },
+      { id: "c2", name: "", anchor: null, children: [] },
+    ])
+    expect(toc.map((c) => c.page)).toEqual([10, null])
+  })
+
+  it("groupSections cuts the book at chapter starts with the front matter first", () => {
+    const md = Array.from(
+      { length: 12 },
+      (_, i) => `<!-- page ${i + 1} -->\n\nنص ${i + 1}\n`
+    ).join("\n")
+    const pages = parseTwin(md).pages
+    const toc = [
+      { id: "c1", name: "أ", page: 4, lessons: [] },
+      { id: "c2", name: "ب", page: 9, lessons: [] },
+    ]
+    const sections = groupSections(pages, toc, true)
+    expect(
+      sections.map((s) => [
+        s.kind,
+        s.chapterIndex,
+        s.pages.map((p) => p.number),
+      ])
+    ).toEqual([
+      ["front", null, [1, 2, 3]],
+      ["chapter", 0, [4, 5, 6, 7, 8]],
+      ["chapter", 1, [9, 10, 11, 12]],
+    ])
+  })
+
+  it("groupSections falls back to fixed chunks when no chapter can be placed", () => {
+    const md = Array.from(
+      { length: 25 },
+      (_, i) => `<!-- page ${i + 1} -->\n\nنص ${i + 1}\n`
+    ).join("\n")
+    const sections = groupSections(
+      parseTwin(md).pages,
+      [{ id: "c", name: "x", page: null, lessons: [] }],
+      true
+    )
+    expect(sections.map((s) => s.pages.length)).toEqual([10, 10, 5])
+    expect(sections.every((s) => s.kind === "chunk")).toBe(true)
+  })
+
+  it("groupSections skips empty pages and treats a marker-less twin as one flow", () => {
+    const withEmpty = parseTwin(
+      "<!-- page 1 -->\n\nنص\n\n<!-- page 2: no text recognised -->\n<!-- page 3 -->\n\nنص\n"
+    ).pages
+    expect(
+      groupSections(
+        withEmpty,
+        [{ id: "c", name: "x", page: 1, lessons: [] }],
+        true
+      )[0].pages.map((p) => p.number)
+    ).toEqual([1, 3])
+    const single = parseTwin("---\nlang: en\n---\n\nSome text.\n").pages
+    expect(groupSections(single, [], false)).toEqual([
+      { kind: "chunk", chapterIndex: null, pages: single },
+    ])
+  })
+})
+
+describe("isNoisePage", () => {
+  it("flags a front-matter page that is mostly digits and symbols", () => {
+    const [noise, prose] = parseTwin(
+      "<!-- page 1 -->\n\nالمناهج الدراسية السودانية\n\n1 171 2 7 5 7 2 - 7 6 2 2 3 -327 0 2 4 1 6 2 - 52 0 -- 3 . 7\n\n<!-- page 6 -->\n\nيسرنا أن نقدم هذا الكتاب الثالث في الفيزياء للمرحلة الثانوية.\n"
+    ).pages
+    expect(isNoisePage(noise)).toBe(true)
+    expect(isNoisePage(prose)).toBe(false)
+  })
+
+  it("keeps such a page out of the front matter but never out of a chapter", () => {
+    const pages = parseTwin(
+      "<!-- page 1 -->\n\n1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 ab\n\n<!-- page 2 -->\n\nمقدمة الكتاب\n\n<!-- page 3 -->\n\n1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 ab\n"
+    ).pages
+    const sections = groupSections(
+      pages,
+      [{ id: "c", name: "x", page: 3, lessons: [] }],
+      true
+    )
+    expect(sections.map((s) => [s.kind, s.pages.map((p) => p.number)])).toEqual(
+      [
+        ["front", [2]],
+        ["chapter", [3]],
+      ]
+    )
   })
 })

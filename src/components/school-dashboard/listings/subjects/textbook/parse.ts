@@ -17,6 +17,8 @@
 
 export interface TwinMeta {
   title: string | null
+  /** The edition line from the front matter (e.g. "الطبعة الثانية ٢٠٠٥م"). */
+  edition: string | null
   lang: string
   sourcePages: number | null
   quality: string | null
@@ -36,6 +38,9 @@ export interface TwinPage {
   number: number | null
   /** The generator's "no text recognised" marker. */
   empty: boolean
+  /** The printed page number found standing alone at the top or bottom of the
+   *  page's text (folio), or null. Feeds `detectPageOffset`. */
+  folio: number | null
   blocks: Block[]
 }
 
@@ -176,6 +181,7 @@ export function parseTwin(md: string): ParsedTwin {
   const sourcePages = Number(fields.sourcePages)
   const meta: TwinMeta = {
     title: fields.title || null,
+    edition: fields.edition || null,
     lang: fields.lang || "ar",
     sourcePages:
       Number.isFinite(sourcePages) && sourcePages > 0 ? sourcePages : null,
@@ -195,16 +201,25 @@ export function parseTwin(md: string): ParsedTwin {
   const push = () => {
     // The generator writes `# <title>` before the first marker — keep it as
     // the book's front page only when it carries text beyond that heading.
-    const blocks = parseBlocks(current.lines)
+    const { folio, lines: bodyLines } = extractFolio(
+      current.lines,
+      current.number
+    )
+    const blocks = parseBlocks(bodyLines)
     const onlyTitle =
       current.number === null &&
       blocks.length === 1 &&
       blocks[0].kind === "heading" &&
       blocks[0].level === 1
     if (blocks.length > 0 && !onlyTitle)
-      pages.push({ number: current.number, empty: current.empty, blocks })
+      pages.push({
+        number: current.number,
+        empty: current.empty,
+        folio,
+        blocks,
+      })
     else if (current.number !== null)
-      pages.push({ number: current.number, empty: true, blocks: [] })
+      pages.push({ number: current.number, empty: true, folio, blocks: [] })
   }
   for (const line of lines) {
     const m = line.match(PAGE_MARKER)
@@ -222,6 +237,80 @@ export function parseTwin(md: string): ParsedTwin {
   }
   push()
   return { meta, pages, hasPageMarkers }
+}
+
+// ─── Printed page numbers (folios) ───────────────────────────────────────────
+
+const ARABIC_INDIC = "٠١٢٣٤٥٦٧٨٩"
+const FOLIO_LINE =
+  /^[\s.\-–—_()\u200e\u200f]*([0-9٠-٩]{1,3})[\s.\-–—_()\u200e\u200f]*$/
+
+/** A line that is nothing but a 1–3 digit number (Latin or Arabic-Indic). */
+function folioValue(line: string): number | null {
+  const m = line.match(FOLIO_LINE)
+  if (!m) return null
+  const latin = [...m[1]]
+    .map((ch) => {
+      const i = ARABIC_INDIC.indexOf(ch)
+      return i >= 0 ? String(i) : ch
+    })
+    .join("")
+  const v = Number(latin)
+  return Number.isInteger(v) && v > 0 ? v : null
+}
+
+/**
+ * Scanned textbooks carry their printed page number as a lone line at the top
+ * or bottom of every page. Read it from the first/last three non-empty lines
+ * (it must not exceed the PDF index, which rules out most figure numbers),
+ * and drop those lines so the number does not render as a stray paragraph.
+ */
+function extractFolio(
+  lines: string[],
+  pdfPage: number | null
+): { folio: number | null; lines: string[] } {
+  if (pdfPage === null) return { folio: null, lines }
+  const nonEmpty: number[] = []
+  for (let i = 0; i < lines.length; i++) if (lines[i].trim()) nonEmpty.push(i)
+  const edge = new Set([...nonEmpty.slice(0, 3), ...nonEmpty.slice(-3)])
+  let folio: number | null = null
+  const drop = new Set<number>()
+  for (const i of edge) {
+    const v = folioValue(lines[i])
+    if (v === null || v > pdfPage) continue
+    if (folio === null) folio = v
+    if (v === folio) drop.add(i)
+  }
+  if (folio === null) return { folio: null, lines }
+  return { folio, lines: lines.filter((_, i) => !drop.has(i)) }
+}
+
+/**
+ * The constant to subtract from a PDF page index to get the printed page
+ * number (front matter is unnumbered, so PDF 10 is often printed 2). Voted
+ * across every page that carries a folio; null when too few pages agree,
+ * so callers fall back to PDF numbering rather than trust a guess.
+ */
+export function detectPageOffset(pages: TwinPage[]): number | null {
+  const votes = new Map<number, number>()
+  let marked = 0
+  for (const p of pages) {
+    if (p.number === null) continue
+    marked++
+    if (p.folio === null) continue
+    const off = p.number - p.folio
+    if (off < 0) continue
+    votes.set(off, (votes.get(off) ?? 0) + 1)
+  }
+  let best: number | null = null
+  let bestVotes = 0
+  for (const [off, n] of votes)
+    if (n > bestVotes || (n === bestVotes && best !== null && off < best)) {
+      best = off
+      bestVotes = n
+    }
+  if (best === null) return null
+  return bestVotes >= Math.max(5, Math.ceil(marked * 0.15)) ? best : null
 }
 
 // ─── Arabic-aware normalisation (search + TOC anchoring) ─────────────────────
@@ -252,6 +341,18 @@ export function normalizeForSearch(text: string): string {
  * the normalised string back to its index in the source, so a hit found in the
  * normalised text can be wrapped in the live DOM text node.
  */
+/** Per-character fold cache: the regex chain in normalizeForSearch is far too
+ *  slow to run once per character of a whole book on every keystroke. */
+const FOLD_CACHE = new Map<string, string>()
+function foldChar(ch: string): string {
+  let folded = FOLD_CACHE.get(ch)
+  if (folded === undefined) {
+    folded = normalizeForSearch(ch)
+    if (FOLD_CACHE.size < 4096) FOLD_CACHE.set(ch, folded)
+  }
+  return folded
+}
+
 export function normalizeWithMap(text: string): {
   norm: string
   map: number[]
@@ -261,11 +362,11 @@ export function normalizeWithMap(text: string): {
   let pendingSpace = false
   for (let i = 0; i < text.length; i++) {
     const ch = text[i]
-    if (/\s/.test(ch)) {
+    if (ch === " " || ch === "\n" || /\s/.test(ch)) {
       pendingSpace = out.length > 0
       continue
     }
-    const folded = normalizeForSearch(ch)
+    const folded = foldChar(ch)
     if (!folded) continue
     if (pendingSpace) {
       out.push(" ")

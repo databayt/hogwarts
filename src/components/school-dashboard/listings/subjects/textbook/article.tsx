@@ -1,85 +1,84 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { formatNumber } from "./format"
+import { Ornament } from "./ornament"
 import type { Block, TwinPage } from "./parse"
 
 /**
- * Server-rendered body of the reader: one `<section>` per PDF page, blocks as
- * semantic HTML. Rendered once on the server and handed to the client shell
- * as children, so the book text never travels as a prop.
- *
- * Page images are emitted with `data-src` only; the client copies it to `src`
- * when the reader turns page images on, so nothing is fetched until asked.
+ * One flow of the book, server-rendered: a `<section id="p-N">` per PDF
+ * page with the page's blocks as semantic HTML. The client lays the flow out
+ * in screen-sized columns; the page sections are what it reads back to know
+ * which printed page a screen shows. Chapter and lesson openers are the
+ * designed headings (kicker, title, ornament) placed at the page they start.
  */
-export interface ArticleLabels {
-  page: string
-  noTextOnPage: string
+export interface Opener {
+  kicker: string | null
+  title: string
+  level: "chapter" | "lesson"
 }
 
 export function TextbookArticle({
   pages,
+  openers,
   dir,
   lang,
-  pagesBaseUrl,
-  labels,
+  offset,
 }: {
   pages: TwinPage[]
+  openers: Record<number, Opener>
   dir: "rtl" | "ltr"
   lang: string
-  pagesBaseUrl: string
-  labels: ArticleLabels
+  /** PDF index − printed number; null hides the printed folios. */
+  offset: number | null
 }) {
   return (
-    <article
-      id="textbook-article"
-      className="reader-article mx-auto w-full max-w-[72ch]"
-      dir={dir}
-      lang={lang}
-    >
-      {pages.map((page, idx) => (
-        <section
-          key={page.number ?? `s-${idx}`}
-          id={page.number != null ? `p-${page.number}` : undefined}
-          data-page={page.number ?? undefined}
-          className="reader-page"
-        >
-          {page.number != null && (
-            <>
-              <p className="reader-page-number">
-                {labels.page} {page.number}
-              </p>
-              <figure className="reader-page-image">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  data-src={`${pagesBaseUrl}/${page.number}.webp`}
-                  alt={`${labels.page} ${page.number}`}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </figure>
-            </>
-          )}
-          {page.empty && (
-            <p className="text-muted-foreground">{labels.noTextOnPage}</p>
-          )}
-          {page.blocks.map((block, i) => (
-            <BlockView key={i} block={block} />
-          ))}
-        </section>
-      ))}
-    </article>
+    <div className="book-flow" dir={dir} lang={lang}>
+      {pages.map((page, idx) => {
+        const n = page.number
+        const opener = n != null ? openers[n] : undefined
+        const printed =
+          n != null && offset != null && n - offset > 0 ? n - offset : null
+        return (
+          <section
+            key={n ?? `s-${idx}`}
+            id={n != null ? `p-${n}` : undefined}
+            data-page={n ?? undefined}
+            className="book-page"
+          >
+            {opener && (
+              <header className="book-opener" data-level={opener.level}>
+                {opener.kicker && (
+                  <p className="book-kicker">{opener.kicker}</p>
+                )}
+                {opener.level === "chapter" ? (
+                  <h2>{opener.title}</h2>
+                ) : (
+                  <h3>{opener.title}</h3>
+                )}
+                <Ornament />
+              </header>
+            )}
+            {printed != null && (
+              <span className="book-folio" aria-hidden="true">
+                {formatNumber(printed, lang)}
+              </span>
+            )}
+            {page.blocks.map((block, i) => (
+              <BlockView key={i} block={block} />
+            ))}
+          </section>
+        )
+      })}
+    </div>
   )
 }
 
 function BlockView({ block }: { block: Block }) {
   switch (block.kind) {
     case "heading": {
-      // h1 is the page title; book headings start at h2.
-      const Tag = `h${Math.min(block.level + 1, 5)}` as
-        | "h2"
-        | "h3"
-        | "h4"
-        | "h5"
+      // h2 is reserved for the chapter opener; book headings start at h3.
+      const Tag = `h${Math.min(block.level + 2, 5)}` as "h3" | "h4" | "h5"
       return <Tag>{block.text}</Tag>
     }
     case "paragraph":
@@ -101,7 +100,7 @@ function BlockView({ block }: { block: Block }) {
     case "table": {
       const [head, ...body] = block.rows
       return (
-        <div className="reader-table">
+        <div className="book-table">
           <table>
             <thead>
               <tr>

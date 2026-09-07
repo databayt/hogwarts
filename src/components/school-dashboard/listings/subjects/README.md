@@ -31,32 +31,54 @@ and are enforced in the stream read paths.
 
 ### Textbook reader (`textbook/`)
 
-`/{lang}/subjects/{slug}/textbook` renders the subject's textbook as native text
-(the textbook tile in `catalog-content-sections.tsx` links here; the PDF stays a
-toolbar button). Generic for every curriculum: the page reads `Subject.pdf`,
-fetches the Markdown twin at the sibling key `…/textbook.md` from the CDN
-(revalidated hourly) and lets the twin's front matter decide language, direction
-and the extraction notice.
+`/{lang}/subjects/{slug}/textbook` opens the subject's textbook as a book, one
+screen per page, in the reading pattern of the iOS Books app (the textbook tile
+in `catalog-content-sections.tsx` links here). Screen one is the cover (hero
+tinted from the cover image, 3D frame, title, edition, page/unit/lesson counts,
+Contents and Start-reading pills, an About-the-book sheet), screen two the
+contents table with the book's printed page numbers, then the text.
 
-- `parse.ts` — front matter, `<!-- page N -->` markers (both forms), headings /
-  lists / tables / paragraphs into a page→block tree; Arabic-folding
-  `normalizeForSearch` / `normalizeWithMap`; `anchorToc` matches chapter and
-  lesson names to pages (prefix, containment, then 3-of-4 token overlap).
-  Tests: `src/tests/school-dashboard/listings/subjects/textbook-parse.test.ts`.
-- `article.tsx` — server-rendered `<article dir lang>` with one `<section
-id="p-N">` per page; page images as `<img data-src>` (copied to `src` only
-  when switched on).
-- `reader.tsx` (client) — sticky toolbar: contents panel, text size (six steps,
-  persisted), page-image toggle (persisted), debounced DOM search with
-  `<mark>` hits and prev/next, current page, Open PDF. Preferences ride
-  `useSyncExternalStore` over localStorage so hydration never mismatches.
+Data, all from the CDN beside `Subject.pdf`: the Markdown twin
+(`…/textbook.md`, kun `textbook` skill), the optional authoring
+`…/structure.json` (chapter and lesson start pages — published for
+`sd-g12-physics` so far; without it the contents are anchored by name
+matching) and `…/pages/<N>.webp` for the original-pages view.
+
+- `parse.ts` — twin → page/block tree; reads the printed folio off each page
+  and `detectPageOffset` votes the PDF→printed offset (physics: 8);
+  Arabic-folded search normalisation; `anchorToc` name matching.
+- `spine.ts` — pure: `normalizeStructure`, `resolveToc` (structure pages
+  through the offset, clamped and monotonic, anchors as fallback),
+  `groupSections` (front matter + one flow per chapter, or fixed chunks;
+  `isNoisePage` drops digit-soup pages from the front matter).
+- `article.tsx` — server: one `.book-flow` per section, `<section id="p-N">`
+  per page, chapter/lesson openers (kicker, title, ornament), folio marks.
+- `engine.ts` — client, no React: each flow is a CSS multi-column box whose
+  column equals the viewport, so the browser's columns are the pages. Measures
+  `flow.scrollWidth` (translation-invariant), maps page markers and elements
+  to columns by rect deltas (RTL-aware, fragment ranges via
+  `getClientRects`), keeps an anchor (page + block) across relayouts and
+  exposes an external store the shell subscribes to.
+- `book.tsx` — client shell: cover + contents screens, the server flows
+  wrapped in sliding tracks, chrome (running head, round close, `N of T`
+  counter, round menu button), tap zones (edges turn, centre toggles the
+  chrome), swipe and keys mirrored by book direction, position memory,
+  bookmarks, search, the original-pages layer.
+- `sheets.tsx` — reading menu (Contents — %, Search Book, Themes & Settings,
+  share / PDF / original pages / bookmark) and the bottom sheets (vaul Drawer).
+- `cover.tsx`, `toc.tsx`, `ornament.tsx`, `prefs.ts`, `search.ts`,
+  `format.ts`, `types.ts`, `structure.ts`, `reader.css` (themes
+  original/paper/quiet/night, Thmanyah or Rubik, six sizes, three leadings).
 - `hero-gate.tsx` — the `[slug]` layout wraps every sub-route in the catalog
-  hero; this client gate drops it on `…/textbook` for a focused page.
-- `reader.css` — reading typography (Thmanyah serif text, `--reader-scale`).
+  hero; this client gate drops it on `…/textbook`.
 
-Page images: `catalog/textbooks/<slug>/pages/<N>.webp` (kun
-`textbook-pages.py`, N = PDF page = twin marker). Twins without markers render
-as one continuous text.
+Gotchas: the reader root must stay below the app's dialog layer (`z-index:
+45`; drawers are 50) or the sheets render underneath yet still take clicks;
+never put `data-chrome` on the root — the stage click handler ignores anything
+inside `[data-chrome]`; measure the flow, not its wrapper (a translated wrapper
+inflates `scrollWidth` in LTR); the page at the top of a screen is the earliest
+page with a fragment in that column, not the last marker before it. Tests:
+`src/tests/school-dashboard/listings/subjects/textbook-parse.test.ts`.
 
 > Tracked under the LMS/Stream epic (#323).
 

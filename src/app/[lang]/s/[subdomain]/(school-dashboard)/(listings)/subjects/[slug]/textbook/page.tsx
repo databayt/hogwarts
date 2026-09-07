@@ -9,16 +9,17 @@ import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { TextbookContent } from "@/components/school-dashboard/listings/subjects/textbook/content"
-import type { ReaderLabels } from "@/components/school-dashboard/listings/subjects/textbook/reader"
+import type { ReaderLabels } from "@/components/school-dashboard/listings/subjects/textbook/types"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
 }
 
 /**
- * /subjects/[slug]/textbook — native-text reader for the subject's textbook.
- * Catalog reads are global (no schoolId); the tenant context is resolved for
- * parity with the sibling sub-routes so the school chrome stays consistent.
+ * /subjects/[slug]/textbook — the subject's textbook as a book, one screen
+ * per page. Catalog reads are global (no schoolId); the tenant context is
+ * resolved for parity with the sibling sub-routes so the school chrome stays
+ * consistent.
  */
 export default async function SubjectTextbookPage({ params }: Props) {
   const { lang, slug } = await params
@@ -31,6 +32,9 @@ export default async function SubjectTextbookPage({ params }: Props) {
       name: true,
       slug: true,
       pdf: true,
+      cover: true,
+      description: true,
+      grades: true,
       chapters: {
         where: { status: "PUBLISHED" },
         orderBy: { sequenceOrder: "asc" },
@@ -59,6 +63,9 @@ export default async function SubjectTextbookPage({ params }: Props) {
           name: subject.name,
           slug: subject.slug,
           pdfKey: subject.pdf,
+          coverKey: subject.cover,
+          description: subject.description,
+          grade: subject.grades[0] ?? null,
           chapters: subject.chapters,
         }}
         labels={labels}

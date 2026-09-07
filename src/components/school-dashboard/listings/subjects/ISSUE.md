@@ -40,6 +40,29 @@
 
 ## Resolved
 
+- **2026-09-07 — Textbook reader rebuilt as a book (iOS Books pattern),
+  physics first.** `/subjects/sd-g12-physics/textbook` now opens on the cover
+  (tinted hero, 3D frame, title/edition/counts, Contents + Start reading, About
+  sheet), then a designed contents page carrying the printed page numbers, then
+  the text one screen per page: CSS multi-column flows per chapter, slide
+  transition, edge taps / swipes / arrow keys (mirrored for RTL), a running
+  head, round close, `N of T` counter (the number alone when the chrome is
+  hidden) and the round menu → Contents — %, Search Book, Themes & Settings,
+  share / PDF / original pages / bookmark. Printed page numbers come from the
+  folios OCR left on the pages (`detectPageOffset`, physics: PDF − 8);
+  chapter/lesson pages from `structure.json`, published on the CDN for physics
+  only. Verified headless in Chromium at 390×844 and 1440×900: 282 / 165
+  screens, chapter 1 opens on printed page 2, taps and keys advance, search
+  hits land in view, original pages load, themes apply; tsc, eslint and the
+  parser/spine tests are green. Follow-ups: publish `structure.json` for the
+  other g12 subjects (name anchoring can land on the printed contents page);
+  the physics cover on the CDN is the aggregator's scan — swap in a designed
+  cover; the opener kicker says «الوحدة N» while the book says «الباب» — read
+  the book's own term from the structure; text-layer twins (no markers) get
+  fixed 10-page chunks and no original-pages view; a hydration warning on the
+  route comes from the dashboard header's spotlight button, not the reader;
+  no e2e spec yet; curl / vertical-scrolling modes are not built.
+
 - **2026-09-06 — Textbook reader.** The textbook tile no longer opens the raw
   PDF; it opens `/subjects/[slug]/textbook`, a native-text reader of the book's
   Markdown twin (Thmanyah serif, six text sizes, Arabic-folded search, contents
