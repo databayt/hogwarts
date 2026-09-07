@@ -63,7 +63,7 @@ const nextConfig: NextConfig = {
   },
 
   // Keep Prisma binary engine out of edge/serverless bundles
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  serverExternalPackages: ["@prisma/client", ".prisma/client", "prisma"],
 
   // Security headers
   async headers() {

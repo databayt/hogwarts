@@ -1,20 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { PrismaClient } from "@prisma/client"
-
 import "server-only"
 
-declare global {
-  var cachedPrisma: PrismaClient
-}
-
-export let prisma: PrismaClient
-if (process.env.NODE_ENV === "production") {
-  prisma = new PrismaClient()
-} else {
-  if (!global.cachedPrisma) {
-    global.cachedPrisma = new PrismaClient()
-  }
-  prisma = global.cachedPrisma
-}
+// One Prisma singleton for the whole app. A second `new PrismaClient()` here
+// would need its own driver adapter on Cloudflare Workers (see src/lib/db.ts);
+// re-exporting keeps the pricing block on the shared, adapter-aware client.
+export { db as prisma } from "@/lib/db"

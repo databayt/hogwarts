@@ -92,3 +92,11 @@ scratchpad/
 public/fonts/thmanyah/*.woff2
 public/fonts/thmanyah/.manifest-version
 .claude/screenshots/
+
+# wordmark generator scratch (scripts/wordmark)
+.wordmark/
+.clone/
+
+# Cloudflare Workers pilot (scripts/deploy-cloudflare.sh)
+.open-next/
+.dev.vars*

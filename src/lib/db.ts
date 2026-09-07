@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
 
 /**
  * Prisma Client Singleton - Database Connection Management
@@ -98,10 +99,25 @@ const connectionString = process.env.DATABASE_URL as string
 
 const IS_DEV = process.env.NODE_ENV !== "production"
 
-const globalForPrisma = global as unknown as { db: PrismaClient }
+const globalForPrisma = globalThis as unknown as { db: PrismaClient }
+
+/**
+ * Cloudflare Workers (OpenNext, scripts/deploy-cloudflare.sh) run Prisma's
+ * query engine as Wasm and need a driver adapter. `DB_ADAPTER=pg` is set only
+ * in wrangler.jsonc, so Vercel and local dev keep the plain client below.
+ * maxUses: 1 — a Worker may not reuse a TCP socket across requests; Neon's
+ * `-pooler` host does the real pooling.
+ */
+function createBaseClient(): PrismaClient {
+  if (process.env.DB_ADAPTER === "pg") {
+    const adapter = new PrismaPg({ connectionString, maxUses: 1 })
+    return new PrismaClient({ adapter })
+  }
+  return new PrismaClient()
+}
 
 function createClient(): PrismaClient {
-  const client = new PrismaClient()
+  const client = createBaseClient()
 
   if (!IS_DEV) return client
 

@@ -1,0 +1,30 @@
+{
+  // Cloudflare Workers pilot — runs IN PARALLEL with the Vercel deployment and
+  // touches nothing Vercel reads. Build + deploy: scripts/deploy-cloudflare.sh.
+  // Secrets: scripts/cf-secrets.sh (never committed).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hogwarts",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "hogwarts"
+    }
+  ],
+  "vars": {
+    // Switches src/lib/db.ts to the pg driver adapter (Wasm engine). Only here.
+    "DB_ADAPTER": "pg",
+    "NEXTJS_ENV": "production"
+  },
+  "observability": {
+    "enabled": true
+  }
+  // No cron triggers on purpose: the schedules live in vercel.crons.full.json
+  // and must not run from two hosts at once.
+}
