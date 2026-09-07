@@ -23,12 +23,13 @@
     "bindings": [{ "name": "HOGWARTS", "class_name": "HogwartsContainer" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["HogwartsContainer"] }],
-  // Cutover: uncomment, deploy, then orange-cloud the balqalam.com records
-  // (demo first, then apex/www, then the `*` record). Rollback = grey-cloud.
-  // Needs an API token with Workers Routes:Edit on the zone.
-  // "routes": [
-  //   { "pattern": "balqalam.com/*", "zone_name": "balqalam.com" },
-  //   { "pattern": "*.balqalam.com/*", "zone_name": "balqalam.com" }
-  // ],
+  // Routes capture a hostname only once its DNS record is PROXIED (orange cloud):
+  // grey-clouded records still resolve straight to Vercel. Cutover = toggle the
+  // cloud per record (demo first, then apex/www, then the `*` record); rollback =
+  // toggle it back. scripts/cf-cutover.sh does it through the API.
+  "routes": [
+    { "pattern": "balqalam.com/*", "zone_name": "balqalam.com" },
+    { "pattern": "*.balqalam.com/*", "zone_name": "balqalam.com" }
+  ],
   // No cron triggers on purpose: schedules must not run from two hosts at once.
 }

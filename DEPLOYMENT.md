@@ -193,7 +193,7 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 | Database | the same prod Neon (`ep-little-credit`, pooled) that Vercel uses — both hosts serve one DB |
 | Env | prod values verbatim: 110 config vars baked as `env.json`, 25 secrets on the Worker → container env |
 | Crons | none in the Worker; the GitHub Actions jobs keep running and reach the container after cutover |
-| Cost | Workers Paid $5/mo + one always-on standard-1 ≈ $50/mo at list |
+| Cost | Workers Paid $5/mo + one always-on standard-1 ≈ $33/mo (container CPU bills on active use, not allocated vCPU — Cowork's correction 2026-09-07) |
 
 ### Commands
 
