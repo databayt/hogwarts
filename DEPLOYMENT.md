@@ -159,10 +159,28 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 
 ## Cloudflare Containers — balqalam.com's next home
 
-> Decided 2026-09-07: balqalam.com moves to Cloudflare (Abdout has a card for it); Vercel stays as
-> the fallback until DNS is flipped and for as long as it is useful. Three client schools are about
-> to be onboarded on `*.balqalam.com` subdomains, which is why wildcard routing is part of this lane.
-> The Worker path was measured and rejected first — see the section below.
+> Decided 2026-09-07: balqalam.com moves to Cloudflare (Abdout has a card for it). Three client
+> schools are about to be onboarded on `*.balqalam.com` subdomains, which is why wildcard routing is
+> part of this lane. The Worker path was measured and rejected first — see the section below.
+>
+> **2026-09-07 08:17Z: every Vercel hostname (balqalam.com, www, demo, ed.databayt.org,
+> demo.databayt.org) answers 402 `DEPLOYMENT_DISABLED` — the free account has now been disabled the
+> way the Pro team was on 2026-08-22. The site is down; this lane is the recovery, not an experiment.**
+
+### Status
+
+- Image built from `bb675c5af` and smoked locally in Docker (linux/amd64): `/api/health` 200 through
+  the debian Prisma engine, marketing/login/pricing/docs 200, tenant paths redirect to login,
+  `Host: demo.balqalam.com` resolves `subdomain=demo`; a headless-browser login as the demo
+  Administrator rendered the tenant dashboard. Boot 4 s.
+- **Blocked on two dashboard actions** (the API token cannot do either):
+  1. Upgrade the account to Workers Paid — https://dash.cloudflare.com/?to=/:account/workers/plans
+  2. Give the API token **Zone → DNS → Edit** and **Zone → Workers Routes → Edit** on balqalam.com
+     (or do the DNS toggles by hand: see Cutover).
+- Then: `scripts/cf-go-live.sh /tmp/prod.env` (deploy → secrets → first boot on workers.dev),
+  enable `routes` in `wrangler.jsonc`, deploy again, `scripts/cf-cutover.sh on demo.balqalam.com`,
+  verify, then `on balqalam.com`, `on www.balqalam.com`, `wildcard`.
+
 
 ### Shape
 
@@ -197,14 +215,19 @@ predates the lane's files.
 
 ### Cutover (staged, each step reversible by toggling the cloud icon back)
 
+`scripts/cf-cutover.sh list | on <host> | off <host> | wildcard` drives it through the API once the
+token has DNS:Edit; the dashboard cloud icon does the same by hand.
+
 1. Uncomment `routes` in `wrangler.jsonc` (`balqalam.com/*`, `*.balqalam.com/*`) and deploy.
 2. `demo.balqalam.com`: set the existing CNAME to **proxied** (orange). Keep the Vercel target —
    the Worker route captures the request before origin matters. Verify login + dashboard + cookie
    `Domain=.balqalam.com`.
 3. `balqalam.com` and `www`: same toggle.
 4. Add one **proxied** `*` CNAME → `balqalam.com` so new school subdomains resolve without DNS work.
-5. Rollback: grey-cloud the record; Vercel serves again within DNS TTL. Note Vercel's cert renewal
-   for a hostname fails while it is orange-clouded; grey-clouding restores it.
+5. Rollback: grey-cloud the record; Vercel serves again within DNS TTL (while it is serving at all).
+   Vercel's cert renewal for a hostname fails while it is orange-clouded; grey-clouding restores it.
+6. Secrets are read when a container starts: after `scripts/cf-secrets.sh`, deploy again so the
+   instance restarts with the new values.
 
 Needs an API token with **Zone DNS:Edit + Workers Routes:Edit** on balqalam.com (the current one
 cannot read the zone's records), or the toggles done by hand in the dashboard.
@@ -215,7 +238,10 @@ cannot read the zone's records), or the toggles done by hand in the dashboard.
   `VERCEL_CNAME_TARGET`. Irrelevant for schools on `*.balqalam.com`; custom domains later need
   Cloudflare for SaaS.
 - `ed.databayt.org` / `demo.databayt.org` stay on Vercel (that zone's DNS is on Vercel).
-- WebSockets (`server.js`, geofence) were never on Vercel either; parity, not a regression.
+- WebSockets (`server.js`, geofence) were never on Vercel either; parity, not a regression. The
+  dashboard's console shows the same `ws://localhost:3001` socket.io failures and `/_vercel/insights`
+  404s it showed on Vercel (`NEXT_PUBLIC_SOCKET_URL` is localhost in prod; the analytics scripts are
+  Vercel-hosted). Noise, not breakage — gate `@vercel/analytics` on `VERCEL` when convenient.
 - Prisma runs its normal engine (`debian-openssl-3.0.x`, generated at build); the driver-adapter
   code in `src/lib/db.ts` stays inert unless `DB_ADAPTER=pg`.
 
