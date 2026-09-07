@@ -65,6 +65,14 @@ const nextConfig: NextConfig = {
   // Keep Prisma binary engine out of edge/serverless bundles
   serverExternalPackages: ["@prisma/client", ".prisma/client", "prisma"],
 
+  turbopack: {
+    resolveAlias: {
+      // src/lib/db.ts imports the pg driver adapter for the Cloudflare lane;
+      // client bundles that reach db.ts get a stub instead (see the file).
+      "@prisma/adapter-pg": { browser: "./src/lib/db-adapter.browser.ts" },
+    },
+  },
+
   // Security headers
   async headers() {
     return [

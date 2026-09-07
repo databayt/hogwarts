@@ -27,8 +27,4 @@ generator client {
   // PrismaClientInitializationError at runtime — the live-class crons 500'd
   // on every run from 2026-08-31 to 2026-09-03 for exactly this reason.
   binaryTargets = ["native", "rhel-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
-  // Cloudflare Workers (scripts/deploy-cloudflare.sh) run the Wasm engine
-  // through @prisma/adapter-pg. The flag only enables the `adapter` option;
-  // `new PrismaClient()` with no adapter — Vercel, local dev — is unchanged.
-  previewFeatures = ["driverAdapters"]
 }

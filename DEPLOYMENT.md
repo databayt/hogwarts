@@ -156,3 +156,107 @@ Nothing else needs undoing. No application code was changed for the bridge — t
   other projects' deploys. Worth a glance at the usage page while we are here.
 - **There is no `robots.txt`.** All ~420 routes across every tenant subdomain are crawlable, which is
   the cheapest way to burn the shared quota if this arrangement lasts.
+
+## Cloudflare Workers pilot — a second host, in parallel
+
+> Started 2026-09-07. The question is whether Cloudflare can replace Vercel + Neon. The answer
+> is being measured on a live pilot that runs **beside** the Vercel deployment, not instead of it.
+> Everything above still applies; nothing here changes the Vercel lane.
+
+|                 |                                                                                   |
+| --------------- | --------------------------------------------------------------------------------- |
+| Account         | Cloudflare `ce9a5376d149c808a0b97072421ba12f` (osmanabdout@hotmail.com)          |
+| Worker          | `hogwarts` → `https://hogwarts.osmanabdout.workers.dev`                           |
+| Adapter         | `@opennextjs/cloudflare` 1.20.2 (pinned: 1.20.3+ needs Next ≥16.3.3)              |
+| Database        | Neon branch `br-proud-breeze-adn79b1b` (a 2026-08-29 snapshot of prod) via `pg`   |
+| Crons           | **None** — the Worker has no triggers; schedules must never run from two hosts    |
+| DNS             | Untouched. `workers.dev` only until the hostname decision below is made           |
+
+### Deploying the pilot
+
+```bash
+# 1. runtime secrets (once, or when they change) — from a pulled Vercel prod env
+vercel env pull /tmp/prod.env --environment=production --scope databayt && rm -f .env.local
+scripts/cf-secrets.sh /tmp/prod.env https://hogwarts.osmanabdout.workers.dev "<neon branch pooled url>"
+
+# 2. build from a clean `git archive HEAD` export and deploy
+scripts/deploy-cloudflare.sh /tmp/build.env            # add --no-deploy for a size check only
+```
+
+`cf-secrets.sh` rewrites the host-bound values (`NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`,
+`NEXT_PUBLIC_MAIN_APP_URL`, `DOMAIN`, `NEXT_PUBLIC_ROOT_DOMAIN`) to the pilot origin, blanks Sentry,
+drops `VERCEL_*`/`TURBO_*`/`NX_*`, and swaps `DATABASE_URL` for the branch. The build env file must
+carry the same `NEXT_PUBLIC_*` values because `next build` inlines them.
+
+### What is shared with the Vercel lane (all inert there)
+
+- `prisma/schema.prisma` — `previewFeatures = ["driverAdapters"]`. Only enables the `adapter`
+  constructor option; `new PrismaClient()` with no adapter is byte-for-byte the same path.
+- `src/lib/db.ts` — when `DB_ADAPTER=pg` (set only in `wrangler.jsonc`) the client is built on
+  `@prisma/adapter-pg` with `maxUses: 1`, because a Worker may not reuse a socket across requests.
+  Verified locally: the same script returns the same rows with and without the adapter.
+- `src/components/saas-marketing/pricing/lib/db.ts` re-exports the shared singleton.
+- `next.config.ts` — `.prisma/client` added to `serverExternalPackages` so OpenNext can patch it,
+  and a Turbopack alias that resolves `@prisma/adapter-pg` to `src/lib/db-adapter.browser.ts` in
+  browser bundles. Client components reach `db.ts` through modules they import for other exports
+  (`@prisma/client` has always resolved to its own browser stub there); the real adapter would drag
+  `pg` and its `dns`/`net`/`tls` requires into the client graph and fail the build.
+
+Vercel never sees `wrangler.jsonc`, `open-next.config.ts`, `.open-next/`, or the two scripts.
+
+### HEAD does not build from a clean checkout (found 2026-09-07)
+
+The first pilot build used `git archive HEAD` and failed. Committed code imports
+`src/lib/platform-notification.ts` (from the lumos video actions and the catalog approval actions),
+but that file was never `git add`ed — and neither were the two things it depends on:
+
+- `prisma/models/notifications.prisma` — the `content_review` enum label (HEAD lacks it; prod has it)
+- `prisma/migrations/20260828010000_add_content_review_notification_types/`
+
+Vercel never noticed because the hobby lane builds the working tree. A tracked test
+(`src/tests/lib/platform-notification.test.ts`) imports the module too. Whoever owns the
+content-review work should commit those three together. Ten more untracked modules (lumos courses
+shelves, dashboard home-block/next-action/today-timetable, textbook format/ornament) are imported
+only by *uncommitted* edits, so they belong to that session's work, not to HEAD.
+
+Until then the pilot builds HEAD with the one file copied over the export:
+
+```bash
+CF_SOURCE=head CF_OVERLAY="src/lib/platform-notification.ts" scripts/deploy-cloudflare.sh <env>
+```
+
+`CF_SOURCE=worktree` exists too, but the working tree is a moving target while other sessions edit —
+two builds died on a half-written i18n JSON and a file that vanished mid-copy.
+
+### Why OpenNext and not vinext
+
+Cloudflare's docs now recommend vinext (their Vite reimplementation of Next, in beta). `npx vinext
+check` on this repo: 85% compatible, but **next-auth is unsupported** and it requires
+`"type": "module"` in package.json — both would reach into the Vercel lane. OpenNext runs the real
+`next build` output, so the two hosts serve the same compiled app.
+
+### What the `workers.dev` host can and cannot prove
+
+`hogwarts.osmanabdout.workers.dev` is not a known root domain, so `src/proxy.ts` takes its default
+branch: marketing pages, login, and DB round-trips work. Tenant dashboards need a **wildcard
+hostname** (`demo.<root>`) — on the pilot they are reachable only by the internal path
+`/en/s/<school>/…`, and post-login redirects resolve an unknown root to `databayt.org`. Do **not**
+use a `*.pilot.balqalam.com` wildcard: `cookieDomainForHost` would scope the pilot's session cookie
+to `.balqalam.com` and send it to live prod. Phase 2 needs either a throwaway domain on the
+Cloudflare account or an additive host shape in `src/lib/root-domain.ts` (like the existing
+`tenant---branch.vercel.app` pattern).
+
+### Expected gaps on the pilot (not bugs to chase yet)
+
+- `/docs` pages read `content/` through `fs` at request time; that directory is excluded from
+  tracing.
+- `/_next/image` has no `IMAGES` binding yet, so remote images pass through unoptimized.
+- `@react-pdf/renderer` routes (report cards, transcripts) and the `runtime = "nodejs"` LiveKit and
+  banking-stream routes are untested on workerd.
+- No incremental cache binding: `revalidate` and the fetch cache are no-ops; ISR pages serve their
+  build-time render. An R2 bucket (`NEXT_INC_CACHE_R2_BUCKET`) fixes that when the runtime is proven.
+
+### Removing the pilot
+
+`pnpm exec wrangler delete hogwarts`, delete the Neon branch, and revert the commit that added this
+section. The four shared edits can stay — they are inert — or go with it.
