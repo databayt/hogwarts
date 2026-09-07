@@ -40,6 +40,20 @@
 
 ## Resolved
 
+- **2026-09-07 — Footer menu mirrored to the reference, point for point.**
+  Measured from the 12 Books screenshots (iPhone, 390×844 pt): the ✕ and the
+  menu button are 46 pt circles inset 35 pt from the end edge, the running
+  head and the `N of T` counter (15 pt, system font) sit centred on those two
+  lines; the open menu is a 274 pt column at the end side (16 pt inset) of
+  45 pt pills 7 pt apart (17 pt system font, text 17 pt from the start edge,
+  20 pt icons 20 pt from the end), then four 43 pt circles spread across the
+  column with 12 pt insets, ending 34 pt above the counter, which stays in
+  view over the scrim (page fades to the paper colour under a 10 px blur).
+  The `AA` glyph is a small A beside a large one. The search sheet is bare:
+  title, blank body, a 47 pt field with its round ✕ at the bottom, no header
+  ✕ and no drag handle, 94 svh tall. Kept deliberately: PDF and original
+  pages in the round row where the reference has rotation lock and vertical
+  scroll (neither exists on the web yet).
 - **2026-09-07 — Biology is the second book.**
   `/subjects/sd-g12-biology/textbook`: the twin keeps only 19 readable folios
   of 253 (OCR debris), so the printed→PDF offset now comes from the first

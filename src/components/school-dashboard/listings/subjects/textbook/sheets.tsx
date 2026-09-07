@@ -134,7 +134,7 @@ export function ReadingMenu({
         >
           <span>{labels.themesSettings}</span>
           <span className="book-aa" aria-hidden="true">
-            aA
+            <span className="book-aa-small">A</span>A
           </span>
         </button>
         <div className="book-menu-round-row">
@@ -194,6 +194,7 @@ function Sheet({
   title,
   description,
   tall,
+  hideClose,
   children,
 }: {
   open: boolean
@@ -201,6 +202,8 @@ function Sheet({
   title: string
   description: string
   tall?: boolean
+  /** The search sheet closes from its field's ✕, as in the reference. */
+  hideClose?: boolean
   children: ReactNode
 }) {
   return (
@@ -211,21 +214,29 @@ function Sheet({
       }}
     >
       <DrawerContent
-        className={tall ? "book-sheet h-[92svh] max-h-[92svh]" : "book-sheet"}
+        className={[
+          "book-sheet",
+          tall ? "book-sheet-tall" : "",
+          hideClose ? "book-sheet-bare" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
         <DrawerHeader className="relative text-center">
           <DrawerTitle className="book-sheet-title">{title}</DrawerTitle>
           <DrawerDescription className="sr-only">
             {description}
           </DrawerDescription>
-          <button
-            type="button"
-            className="book-round book-sheet-close"
-            aria-label={description}
-            onClick={onClose}
-          >
-            <X />
-          </button>
+          {!hideClose && (
+            <button
+              type="button"
+              className="book-round book-sheet-close"
+              aria-label={description}
+              onClick={onClose}
+            >
+              <X />
+            </button>
+          )}
         </DrawerHeader>
         {children}
       </DrawerContent>
@@ -347,13 +358,10 @@ export function SearchSheet({
       title={labels.searchBook}
       description={labels.close}
       tall
+      hideClose
     >
       <div className="book-sheet-body book-search-results">
-        {trimmed.length < 2 ? (
-          <p className="text-muted-foreground py-6 text-center text-sm">
-            {labels.searchHint}
-          </p>
-        ) : results.length === 0 ? (
+        {trimmed.length < 2 ? null : results.length === 0 ? (
           <p className="text-muted-foreground py-6 text-center text-sm">
             {labels.noResults}
           </p>

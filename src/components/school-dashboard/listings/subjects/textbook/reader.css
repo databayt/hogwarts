@@ -16,13 +16,18 @@
   --book-rule: rgba(0, 0, 0, 0.12);
   --book-chrome-bg: rgba(255, 255, 255, 0.84);
   --book-chrome-fg: #1c1c1e;
-  --book-pill: rgba(242, 242, 247, 0.94);
+  --book-pill: rgba(233, 233, 238, 0.97);
   --book-pill-fg: #1c1c1e;
   --book-pill-dark: #1c1c1e;
   --book-pill-dark-fg: #ffffff;
   --book-tint: #2b3a4a;
   --book-font:
     var(--font-thmanyah-text), ui-serif, Georgia, "Times New Roman", serif;
+  /* The chrome speaks the platform's UI face, as the reference does. */
+  --book-ui:
+    -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --book-safe-bottom: env(safe-area-inset-bottom, 0px);
   --book-lh: 1.9;
   background: var(--book-bg);
   color: var(--book-fg);
@@ -314,13 +319,16 @@
 /* ── Chrome ────────────────────────────────────────────────────────────── */
 .book-running-head {
   position: absolute;
-  top: 1.05rem;
+  top: 0.75rem;
   inset-inline: 0;
   z-index: 2;
-  padding-inline: 4rem;
-  text-align: center;
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.875rem;
+  padding-inline: 5.5rem;
+  font-family: var(--book-ui);
+  font-size: 0.9375rem;
   color: var(--book-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -329,12 +337,16 @@
 }
 .book-counter {
   position: absolute;
-  bottom: 1.05rem;
+  bottom: calc(0.75rem + var(--book-safe-bottom));
   inset-inline: 0;
-  z-index: 2;
-  text-align: center;
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 0.8rem;
+  /* Above the open menu's scrim: the reference keeps "N of T" in view. */
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.875rem;
+  font-family: var(--book-ui);
+  font-size: 0.9375rem;
   color: var(--book-muted);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
@@ -343,8 +355,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.875rem;
+  height: 2.875rem;
   border-radius: 9999px;
   border: 0;
   background: var(--book-chrome-bg);
@@ -364,20 +376,29 @@
   cursor: default;
 }
 .book-round svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.3rem;
+  height: 1.3rem;
 }
 .book-close {
   position: absolute;
   top: 0.75rem;
-  inset-inline-end: 0.9rem;
+  inset-inline-end: 2.1875rem;
   z-index: 3;
+}
+.book-close svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  stroke-width: 1.5;
 }
 .book-menu-button {
   position: absolute;
-  bottom: 0.75rem;
-  inset-inline-end: 0.9rem;
+  bottom: calc(0.75rem + var(--book-safe-bottom));
+  inset-inline-end: 2.1875rem;
   z-index: 3;
+}
+.book-menu-button svg {
+  width: 2.15rem;
+  height: 2.15rem;
 }
 
 /* ── Reading menu ──────────────────────────────────────────────────────── */
@@ -385,58 +406,78 @@
   position: absolute;
   inset: 0;
   z-index: 4;
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
-  mask-image: linear-gradient(to top, black 50%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
+  background: linear-gradient(
+    to top,
+    var(--book-bg) 0%,
+    color-mix(in srgb, var(--book-bg) 82%, transparent) 40%,
+    transparent 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  mask-image: linear-gradient(to top, black 45%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 45%, transparent 100%);
 }
 .book-menu {
   position: absolute;
-  bottom: 1.1rem;
-  inset-inline-end: 0.9rem;
+  /* The round row ends 34pt above the counter's centre line. */
+  bottom: calc(4.3125rem + var(--book-safe-bottom));
+  inset-inline-end: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  width: min(22rem, calc(100% - 1.8rem));
+  gap: 0.45rem;
+  width: min(17.125rem, calc(100% - 2rem));
 }
 .book-pill {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.85rem 1.15rem;
+  height: 2.8125rem;
+  padding-inline: 1.0625rem 1.25rem;
   border: 0;
   border-radius: 9999px;
   background: var(--book-pill);
   color: var(--book-pill-fg);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 1rem;
+  font-family: var(--book-ui);
+  font-size: 1.0625rem;
+  line-height: 1;
   text-align: start;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
   backdrop-filter: blur(12px);
   cursor: pointer;
 }
 .book-pill svg {
   flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 .book-pill-dark {
   background: var(--book-pill-dark);
   color: var(--book-pill-dark-fg);
 }
 .book-aa {
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--book-ui);
+  font-weight: 500;
+  font-size: 1.25rem;
+  line-height: 1;
   letter-spacing: -0.02em;
+}
+.book-aa-small {
+  font-size: 0.75em;
 }
 .book-menu-round-row {
   display: flex;
-  gap: 0.5rem;
+  justify-content: space-between;
+  margin-top: 0.1rem;
+  padding-inline: 0.75rem;
 }
 .book-menu-round-row .book-round {
-  flex: 1;
-  width: auto;
-  height: 2.9rem;
+  width: 2.6875rem;
+  height: 2.6875rem;
+  background: var(--book-pill);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
 }
 
 /* ── Cover screen ──────────────────────────────────────────────────────── */
@@ -588,10 +629,20 @@
 .book-sheet {
   max-width: 36rem;
   margin-inline: auto;
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--book-ui);
+}
+/* The drawer's own bottom-direction rule caps height at 80vh; the search
+   sheet reaches the status bar in the reference, so outrank it. */
+.book-sheet.book-sheet-tall[data-vaul-drawer-direction] {
+  height: 94svh;
+  max-height: 94svh;
+}
+/* A bare sheet: no drag handle, no header ✕ — it closes from its field. */
+.book-sheet-bare > .bg-muted:first-child {
+  display: none;
 }
 .book-sheet-title {
-  font-size: 1.05rem;
+  font-size: 1.0625rem;
   font-weight: 600;
 }
 .book-sheet-close {
@@ -653,9 +704,13 @@
   bottom: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  gap: 0.8rem;
+  padding: 0.75rem 0.8rem calc(0.75rem + env(safe-area-inset-bottom));
   background: var(--background);
+}
+.book-search-bar .book-round {
+  width: 2.9375rem;
+  height: 2.9375rem;
 }
 .book-search-field {
   position: relative;
@@ -671,8 +726,9 @@
 }
 .book-search-input {
   width: 100%;
-  height: 3rem;
+  height: 2.9375rem;
   padding-inline: 2.8rem 1rem;
+  font-family: var(--book-ui);
   border: 0;
   border-radius: 9999px;
   background: var(--muted);
