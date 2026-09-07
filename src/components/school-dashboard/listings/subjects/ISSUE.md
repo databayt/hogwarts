@@ -40,6 +40,21 @@
 
 ## Resolved
 
+- **2026-09-07 — Footer menu measured against the reference crop.** With
+  ours rendered at the same 390×844 and cropped to the same rectangle as
+  `IMG_2579`, three things were wrong and are now fixed. The round row is
+  four capsules that fill the column (64×47 pt, 5 pt gaps), not spread
+  circles — an earlier pixel-threshold reading had been polluted by the page
+  text behind the glass. The pill charcoal is #36363a and the grey #e6e6e9,
+  read off the crop; gaps are 5 pt and pill icons 22 pt, round-row icons
+  24 pt. And the scrim does not whiten the page — it _dissolves_ it: a 24 px
+  backdrop blur veiled 35% toward the paper, masked to fade in above the
+  first pill. Proof it renders: the page-text band's standard deviation
+  falls from 63.6 with the menu closed to 2.6 with it open. **Gotcha:**
+  writing `backdrop-filter` and `-webkit-backdrop-filter` together makes
+  Lightning CSS emit only the prefixed one, and Chromium then reports
+  `backdropFilter: none` — the blur silently never applied. Declare the
+  unprefixed property alone and let the transformer prefix it.
 - **2026-09-07 — Footer menu mirrored to the reference, point for point.**
   Measured from the 12 Books screenshots (iPhone, 390×844 pt): the ✕ and the
   menu button are 46 pt circles inset 35 pt from the end edge, the running

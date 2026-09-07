@@ -24,9 +24,9 @@
   --book-rule: rgba(0, 0, 0, 0.12);
   --book-chrome-bg: rgba(255, 255, 255, 0.84);
   --book-chrome-fg: #1c1c1e;
-  --book-pill: rgba(233, 233, 238, 0.97);
+  --book-pill: #e6e6e9;
   --book-pill-fg: #1c1c1e;
-  --book-pill-dark: #1c1c1e;
+  --book-pill-dark: #36363a;
   --book-pill-dark-fg: #ffffff;
   --book-tint: #2b3a4a;
   --book-font:
@@ -410,16 +410,13 @@
   position: absolute;
   inset: 0;
   z-index: 4;
-  background: linear-gradient(
-    to top,
-    var(--book-bg) 0%,
-    color-mix(in srgb, var(--book-bg) 82%, transparent) 40%,
-    transparent 100%
-  );
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  mask-image: linear-gradient(to top, black 45%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to top, black 45%, transparent 100%);
+  /* The reference does not whiten the page, it dissolves it: a blur strong
+     enough that the words become a wash whose weight follows the ink under
+     it, veiled slightly toward the paper, fading to a sharp page above the
+     first pill. */
+  background: color-mix(in srgb, var(--book-bg) 35%, transparent);
+  backdrop-filter: blur(24px);
+  mask-image: linear-gradient(to top, black 30%, transparent 46%);
 }
 .book-menu {
   position: absolute;
@@ -428,7 +425,7 @@
   inset-inline-end: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.3125rem;
   width: min(17.125rem, calc(100% - 2rem));
 }
 .book-pill {
@@ -437,7 +434,7 @@
   justify-content: space-between;
   gap: 0.75rem;
   height: 2.8125rem;
-  padding-inline: 1.0625rem 1.25rem;
+  padding-inline: 1rem 1.25rem;
   border: 0;
   border-radius: 9999px;
   background: var(--book-pill);
@@ -452,8 +449,8 @@
 }
 .book-pill svg {
   flex: none;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 .book-pill-dark {
   background: var(--book-pill-dark);
@@ -473,15 +470,19 @@
 }
 .book-menu-round-row {
   display: flex;
-  justify-content: space-between;
-  margin-top: 0.1rem;
-  padding-inline: 0.75rem;
+  gap: 0.3125rem;
 }
 .book-menu-round-row .book-round {
-  width: 2.6875rem;
-  height: 2.6875rem;
+  flex: 1;
+  width: auto;
+  height: 2.9375rem;
+  border-radius: 1.46875rem;
   background: var(--book-pill);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+.book-menu-round-row .book-round svg {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 /* ── Cover screen ──────────────────────────────────────────────────────── */
