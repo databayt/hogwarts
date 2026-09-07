@@ -178,8 +178,14 @@ Nothing else needs undoing. No application code was changed for the bridge — t
   `188.114.96.x/97.x` for this free zone and Abdout's ISP resets TCP to those exact addresses (any
   site, ports 80 and 443). Visitors on 1.1.1.1 get `104.21.x/172.67.x` and are fine. This also
   breaks `wrangler tail` from that network. Do it before onboarding schools in the region.
-- **Open — Resend API key is dead** (since 2026-08); all mail from the app fails, including
-  onboarding invitations. One human login at resend.com, then `scripts/cf-secrets.sh` + deploy.
+- **Email FIXED 2026-09-07.** The Resend account had **no API keys at all** — that, not an expired
+  key, is why mail had been failing. A new key (`hogwarts-cloudflare-2026-09`, full access) was
+  created and set as the Worker secret `RESEND_API_KEY`; a real test send from
+  `noreply@databayt.org` was accepted. `databayt.org` is Verified in Resend.
+  **The key is NOT on Vercel** (that account rejects writes now), so it lives in the macOS Keychain:
+  `security find-generic-password -s RESEND_API_KEY -w`. A future `scripts/cf-secrets.sh` run from a
+  pulled Vercel env simply omits it and leaves the Worker secret intact — but never re-add a stale
+  key to Vercel, or a bulk push would overwrite the good one.
 - **Open — `/api/health` memory heuristic** divides heapUsed by heapTotal (currently allocated,
   ~220 MB) instead of the limit, so it reports warn/fail while RSS is ~330 MB of 4 GiB. Cosmetic.
 - Vercel leftovers in the zone (`_vercel` TXT, `_acme-challenge` NS) are inert and can stay.
