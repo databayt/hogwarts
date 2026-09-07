@@ -4,9 +4,16 @@ import { createMDX } from "fumadocs-mdx/next"
 
 import { securityHeaders } from "./src/lib/security-headers"
 
+// Cloudflare Containers lane (scripts/deploy-cloudflare.sh): the standalone
+// server runs in a container, so it needs `output: "standalone"` and must keep
+// sharp (image optimization) and content/ (docs read it at request time) in the
+// trace. Vercel handles both itself and excludes them to stay under its size cap.
+const CF_CONTAINER = process.env.CF_CONTAINER === "1"
+
 const nextConfig: NextConfig = {
   /* config options here */
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
+  ...(CF_CONTAINER ? { output: "standalone" as const } : {}),
 
   // Docs pages are shiki/mermaid-heavy MDX; under 9 parallel workers a single
   // page can exceed Next's 60s default and abort the whole export. 5 minutes.
@@ -55,7 +62,7 @@ const nextConfig: NextConfig = {
       "./node_modules/@esbuild",
       "./node_modules/esbuild",
       "./node_modules/tsx",
-      "./node_modules/sharp",
+      ...(CF_CONTAINER ? [] : ["./node_modules/sharp"]),
       // Large static assets (served from CDN/S3, not serverless functions)
       "./public/anthropic/**",
       "./public/site/**",
@@ -67,7 +74,7 @@ const nextConfig: NextConfig = {
       "./public/library/**",
       "./public/icons/**",
       // Content (processed at build time by fumadocs-mdx)
-      "./content/**",
+      ...(CF_CONTAINER ? [] : ["./content/**"]),
       // Dev/tests artifacts
       "./playwright-report/**",
       "./tests-results/**",

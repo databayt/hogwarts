@@ -1,0 +1,7 @@
+# Whitelist: the build context is the whole export dir (node_modules, .next
+# cache, public — gigabytes). Only the standalone output enters the image.
+*
+!.next/standalone
+!.next/static
+!public
+!cf/entry.cjs

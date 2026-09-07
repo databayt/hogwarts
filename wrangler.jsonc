@@ -1,30 +1,34 @@
 {
-  // Cloudflare Workers pilot — runs IN PARALLEL with the Vercel deployment and
-  // touches nothing Vercel reads. Build + deploy: scripts/deploy-cloudflare.sh.
-  // Secrets: scripts/cf-secrets.sh (never committed).
+  // hogwarts on Cloudflare — a thin Worker in front of ONE always-on container
+  // running the Next standalone server (the app is far too large for a Worker:
+  // 31.6 MB gzipped vs a 10 MiB ceiling, measured 2026-09-07). Build + deploy:
+  // scripts/deploy-cloudflare.sh. Secrets: scripts/cf-secrets.sh.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "hogwarts",
-  "main": ".open-next/worker.js",
+  "main": "cf/worker.js",
   "compatibility_date": "2026-09-01",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "services": [
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "containers": [
     {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "hogwarts"
+      "class_name": "HogwartsContainer",
+      "image": "./Dockerfile",
+      "max_instances": 1,
+      // ½ vCPU, 4 GiB. `basic` (1 GiB) is too small for a next start of this size.
+      "instance_type": "standard-1"
     }
   ],
-  "vars": {
-    // Switches src/lib/db.ts to the pg driver adapter (Wasm engine). Only here.
-    "DB_ADAPTER": "pg",
-    "NEXTJS_ENV": "production"
+  "durable_objects": {
+    "bindings": [{ "name": "HOGWARTS", "class_name": "HogwartsContainer" }]
   },
-  "observability": {
-    "enabled": true
-  }
-  // No cron triggers on purpose: the schedules live in vercel.crons.full.json
-  // and must not run from two hosts at once.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["HogwartsContainer"] }],
+  // Cutover: uncomment, deploy, then orange-cloud the balqalam.com records
+  // (demo first, then apex/www, then the `*` record). Rollback = grey-cloud.
+  // Needs an API token with Workers Routes:Edit on the zone.
+  // "routes": [
+  //   { "pattern": "balqalam.com/*", "zone_name": "balqalam.com" },
+  //   { "pattern": "*.balqalam.com/*", "zone_name": "balqalam.com" }
+  // ],
+  // No cron triggers on purpose: schedules must not run from two hosts at once.
 }
