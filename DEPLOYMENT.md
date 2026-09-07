@@ -157,9 +157,9 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 - **There is no `robots.txt`.** All ~420 routes across every tenant subdomain are crawlable, which is
   the cheapest way to burn the shared quota if this arrangement lasts.
 
-## Cloudflare Containers — balqalam.com's next home
+## Cloudflare Containers — where balqalam.com runs
 
-> Decided 2026-09-07: balqalam.com moves to Cloudflare (Abdout has a card for it). Three client
+> Live since 2026-09-07: balqalam.com runs on Cloudflare (Abdout has a card for it). Three client
 > schools are about to be onboarded on `*.balqalam.com` subdomains, which is why wildcard routing is
 > part of this lane. The Worker path was measured and rejected first — see the section below.
 >
@@ -169,23 +169,21 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 
 ### Status
 
-- **2026-09-07 14:45Z — balqalam.com is LIVE on Cloudflare.** Abdout toggled `*.balqalam.com`,
-  `balqalam.com` and `www` to Proxied (targets unchanged); the Worker routes capture them. Verified
-  from a US vantage point (apex serves the Arabic marketing page, demo login works) and through the
-  edge from here. The existing proxied `*` CNAME already covers every new school subdomain — no DNS
-  work per school.
-- **Regional IP block (open):** Cloudflare answers UAE/Sudan resolvers with `188.114.96.x/97.x` for
-  this free zone, and the ISP on Abdout's Mac resets TCP to several of those exact addresses (any
-  site, ports 80 and 443; intermittent). Visitors on 1.1.1.1 get `104.21.x/172.67.x` and are fine.
-  Recommended: move the zone to **Pro** (different IP pool) before onboarding the three schools.
+- **LIVE since 2026-09-07 14:45Z.** Apex, `www` and `*.balqalam.com` are Proxied; the Worker routes
+  serve them from the container. Verified: apex marketing page, demo Administrator login on
+  `demo.balqalam.com`, dashboard/students/attendance, `/api/health` database check passing.
+  New school subdomains need no DNS work — the proxied `*` record covers them.
+- **Crons restored** (see below) — 15 triggers driving 24 jobs.
+- **Open — move the zone to Pro ($20/mo):** Cloudflare answers UAE/Sudan resolvers with
+  `188.114.96.x/97.x` for this free zone and Abdout's ISP resets TCP to those exact addresses (any
+  site, ports 80 and 443). Visitors on 1.1.1.1 get `104.21.x/172.67.x` and are fine. This also
+  breaks `wrangler tail` from that network. Do it before onboarding schools in the region.
+- **Open — Resend API key is dead** (since 2026-08); all mail from the app fails, including
+  onboarding invitations. One human login at resend.com, then `scripts/cf-secrets.sh` + deploy.
+- **Open — `/api/health` memory heuristic** divides heapUsed by heapTotal (currently allocated,
+  ~220 MB) instead of the limit, so it reports warn/fail while RSS is ~330 MB of 4 GiB. Cosmetic.
 - Vercel leftovers in the zone (`_vercel` TXT, `_acme-challenge` NS) are inert and can stay.
-- Docker on this Mac needed the `buildx` plugin for wrangler's `docker build --load`
-  (`brew install docker-buildx` + symlink into `~/.docker/cli-plugins`).
-- `/api/health` reports memory warn/fail: it divides heapUsed by heapTotal (currently allocated,
-  ~213 MB) instead of the heap limit; RSS is ~330 MB on a 4 GiB instance. Cosmetic; fix next release.
-- Crons: none on Cloudflare yet (same as the Vercel hobby lane). The GitHub Actions jobs now reach
-  the container through the public hostname. Adding Worker cron triggers is the next step.
-
+- The whole free Vercel account is 402-disabled — `kun.databayt.org` and `mkan.sd` are down too.
 ### Shape
 
 | | |
@@ -216,6 +214,41 @@ scripts/deploy-cloudflare.sh /tmp/prod.env deploy   # wrangler builds + pushes t
 Secrets reach the container at its next start; after `cf-secrets.sh` redeploy or let the instance
 cycle. `CF_OVERLAY` exists because HEAD does not build clean (below) and because the pinned commit
 predates the lane's files.
+
+### Shipping a new release
+
+`main` builds from a clean checkout again (the missing `platform-notification` module, its three
+`NotificationType` values and their migration were committed on 2026-09-07), so a release is two
+commands with no overlay and no pin:
+
+```bash
+vercel env pull /tmp/prod.env --environment=production --scope databayt && rm -f .env.local
+scripts/deploy-cloudflare.sh /tmp/prod.env build     # ~12 min: clean export of HEAD, install, next build
+scripts/deploy-cloudflare.sh /tmp/prod.env deploy    # wrangler builds + pushes the image, swaps the container
+```
+
+- **Optional gate before deploying:** `SMOKE_DATABASE_URL="<neon branch url>" scripts/deploy-cloudflare.sh
+  /tmp/prod.env smoke` runs the image locally on :3300 against a branch DB and curls the key routes.
+- **Pin instead of HEAD** with `CF_SOURCE=<ref>`; `CF_OVERLAY="a b"` copies working-tree files over
+  the export. Neither is needed for an ordinary release any more.
+- **Schema changes** are not applied by the deploy. This repo's migration history is empty by
+  design — apply DDL out-of-band against Neon (branch first) *before* shipping code that needs it,
+  exactly as on Vercel.
+- **Rollback:** `pnpm exec wrangler rollback` (or `wrangler deployments list` → `rollback <id>`).
+  The previous image stays in Cloudflare's registry, so it is a swap, not a rebuild.
+- **Secrets** only change on rotation: `scripts/cf-secrets.sh /tmp/prod.env`, then deploy again —
+  a container reads `envVars` at start.
+- The build needs Docker running (colima) and the `buildx` plugin.
+
+### Crons
+
+The 31 Vercel schedules were off from 2026-08-22. They now run on Cloudflare: `wrangler.jsonc`
+registers **15 distinct UTC cron triggers**, and the Worker's `scheduled()` maps the expression that
+fired back to its `/api/cron/*` routes through `cf/crons.json`, calling them inside the container
+with the `CRON_SECRET` bearer. The **7 jobs already on `.github/workflows/*-crons.yml`** are excluded
+so nothing fires twice — regenerate `cf/crons.json` from `vercel.crons.full.json` minus that set if
+the table changes. Cron runs are visible in the Workers logs (observability is on); `wrangler tail`
+does not work from Abdout's network (the same regional IP block).
 
 ### Cutover (staged, each step reversible by toggling the cloud icon back)
 
@@ -337,30 +370,6 @@ for memory on this 16 GB machine while other sessions had `next dev` and `tsc` r
   `outputFileTracingIncludes`; `experimental.cpus` from `NEXT_BUILD_CPUS` when set.
 
 Vercel never sees `wrangler.jsonc`, `open-next.config.ts`, `.open-next/`, or the two scripts.
-
-### HEAD does not build from a clean checkout (found 2026-09-07)
-
-The first pilot build used `git archive HEAD` and failed. Committed code imports
-`src/lib/platform-notification.ts` (from the lumos video actions and the catalog approval actions),
-but that file was never `git add`ed — and neither were the two things it depends on:
-
-- `prisma/models/notifications.prisma` — the `content_review` enum label (HEAD lacks it; prod has it)
-- `prisma/migrations/20260828010000_add_content_review_notification_types/`
-
-Vercel never noticed because the hobby lane builds the working tree. A tracked test
-(`src/tests/lib/platform-notification.test.ts`) imports the module too. Whoever owns the
-content-review work should commit those three together. Ten more untracked modules (lumos courses
-shelves, dashboard home-block/next-action/today-timetable, textbook format/ornament) are imported
-only by *uncommitted* edits, so they belong to that session's work, not to HEAD.
-
-Until then the pilot builds HEAD with the one file copied over the export:
-
-```bash
-CF_SOURCE=head CF_OVERLAY="src/lib/platform-notification.ts" scripts/deploy-cloudflare.sh <env>
-```
-
-`CF_SOURCE=worktree` exists too, but the working tree is a moving target while other sessions edit —
-two builds died on a half-written i18n JSON and a file that vanished mid-copy.
 
 ### What the `workers.dev` host can and cannot prove
 
