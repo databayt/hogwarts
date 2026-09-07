@@ -63,6 +63,19 @@ const nextConfig: NextConfig = {
       "./node_modules/esbuild",
       "./node_modules/tsx",
       ...(CF_CONTAINER ? [] : ["./node_modules/sharp"]),
+      // Container image only: the install pulls sharp/libvips for every platform
+      // and Prisma ships one engine per binaryTarget; the linux/amd64 image needs
+      // exactly one of each (~230 MB saved).
+      ...(CF_CONTAINER
+        ? [
+            "./node_modules/.pnpm/@img+sharp-*darwin*/**",
+            "./node_modules/.pnpm/@img+sharp-*linuxmusl*/**",
+            "./node_modules/.pnpm/@img+sharp-*linux-arm64*/**",
+            "./node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/libquery_engine-darwin*",
+            "./node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/libquery_engine-rhel*",
+            "./node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/libquery_engine-linux-arm64*",
+          ]
+        : []),
       // Large static assets (served from CDN/S3, not serverless functions)
       "./public/anthropic/**",
       "./public/site/**",

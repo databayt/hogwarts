@@ -157,7 +157,69 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 - **There is no `robots.txt`.** All ~420 routes across every tenant subdomain are crawlable, which is
   the cheapest way to burn the shared quota if this arrangement lasts.
 
-## Cloudflare Workers pilot — a second host, in parallel
+## Cloudflare Containers — balqalam.com's next home
+
+> Decided 2026-09-07: balqalam.com moves to Cloudflare (Abdout has a card for it); Vercel stays as
+> the fallback until DNS is flipped and for as long as it is useful. Three client schools are about
+> to be onboarded on `*.balqalam.com` subdomains, which is why wildcard routing is part of this lane.
+> The Worker path was measured and rejected first — see the section below.
+
+### Shape
+
+| | |
+| --- | --- |
+| Worker | `hogwarts` (`cf/worker.js`) — forwards every request to one container, Host header intact |
+| Container | `HogwartsContainer`, `standard-1` (½ vCPU, 4 GiB), `max_instances: 1`, `sleepAfter: 24h` |
+| Image | `Dockerfile`: `node:22-bookworm-slim` + prebuilt Next standalone, COPY-only, linux/amd64 |
+| Code | pinned with `CF_SOURCE=bb675c5af` (what balqalam.com ran on Vercel) for a like-for-like cutover |
+| Database | the same prod Neon (`ep-little-credit`, pooled) that Vercel uses — both hosts serve one DB |
+| Env | prod values verbatim: 110 config vars baked as `env.json`, 25 secrets on the Worker → container env |
+| Crons | none in the Worker; the GitHub Actions jobs keep running and reach the container after cutover |
+| Cost | Workers Paid $5/mo + one always-on standard-1 ≈ $50/mo at list |
+
+### Commands
+
+```bash
+vercel env pull /tmp/prod.env --environment=production --scope databayt && rm -f .env.local
+
+# build (standalone, no prebuild), local docker smoke on :3300, deploy — or one at a time
+CF_SOURCE=bb675c5af CF_OVERLAY="package.json pnpm-lock.yaml next.config.ts prisma/schema.prisma \
+  Dockerfile .dockerignore cf wrangler.jsonc src/lib/platform-notification.ts" \
+  scripts/deploy-cloudflare.sh /tmp/prod.env build
+SMOKE_DATABASE_URL="<neon branch url>" scripts/deploy-cloudflare.sh /tmp/prod.env smoke
+scripts/cf-secrets.sh /tmp/prod.env            # 25 secrets → Worker (once, and on rotation)
+scripts/deploy-cloudflare.sh /tmp/prod.env deploy   # wrangler builds + pushes the image
+```
+
+Secrets reach the container at its next start; after `cf-secrets.sh` redeploy or let the instance
+cycle. `CF_OVERLAY` exists because HEAD does not build clean (below) and because the pinned commit
+predates the lane's files.
+
+### Cutover (staged, each step reversible by toggling the cloud icon back)
+
+1. Uncomment `routes` in `wrangler.jsonc` (`balqalam.com/*`, `*.balqalam.com/*`) and deploy.
+2. `demo.balqalam.com`: set the existing CNAME to **proxied** (orange). Keep the Vercel target —
+   the Worker route captures the request before origin matters. Verify login + dashboard + cookie
+   `Domain=.balqalam.com`.
+3. `balqalam.com` and `www`: same toggle.
+4. Add one **proxied** `*` CNAME → `balqalam.com` so new school subdomains resolve without DNS work.
+5. Rollback: grey-cloud the record; Vercel serves again within DNS TTL. Note Vercel's cert renewal
+   for a hostname fails while it is orange-clouded; grey-clouding restores it.
+
+Needs an API token with **Zone DNS:Edit + Workers Routes:Edit** on balqalam.com (the current one
+cannot read the zone's records), or the toggles done by hand in the dashboard.
+
+### Known edges
+
+- `src/components/saas-dashboard/domains/actions.ts` (school custom domains) is Vercel-bound via
+  `VERCEL_CNAME_TARGET`. Irrelevant for schools on `*.balqalam.com`; custom domains later need
+  Cloudflare for SaaS.
+- `ed.databayt.org` / `demo.databayt.org` stay on Vercel (that zone's DNS is on Vercel).
+- WebSockets (`server.js`, geofence) were never on Vercel either; parity, not a regression.
+- Prisma runs its normal engine (`debian-openssl-3.0.x`, generated at build); the driver-adapter
+  code in `src/lib/db.ts` stays inert unless `DB_ADAPTER=pg`.
+
+## Cloudflare Workers pilot (rejected) — the measurement that led here
 
 > Started 2026-09-07. The question was whether Cloudflare can replace Vercel + Neon. It was measured
 > on the exact commit balqalam.com runs (`bb675c5af`, deployed 2026-09-02), beside the Vercel

@@ -26,5 +26,6 @@ generator client {
   // engine every query in those functions throws
   // PrismaClientInitializationError at runtime — the live-class crons 500'd
   // on every run from 2026-08-31 to 2026-09-03 for exactly this reason.
-  binaryTargets = ["native", "rhel-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+  // `debian-openssl-3.0.x` is the Cloudflare container (node:22-bookworm-slim).
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
