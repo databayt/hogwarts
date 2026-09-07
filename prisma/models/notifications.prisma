@@ -32,6 +32,9 @@ enum NotificationType {
   live_class_started // Live class is now live (webhook)
   live_class_cancelled // Live class was cancelled
   live_class_recording_ready // Recording is processed and viewable
+  content_review // School submitted content awaiting platform review
+  content_approved // Platform approved a school's content submission
+  content_rejected // Platform rejected a school's content submission
 }
 
 // Notification priority levels
