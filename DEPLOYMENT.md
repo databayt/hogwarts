@@ -169,18 +169,17 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 
 ### Status
 
-- Image built from `bb675c5af` and smoked locally in Docker (linux/amd64): `/api/health` 200 through
-  the debian Prisma engine, marketing/login/pricing/docs 200, tenant paths redirect to login,
-  `Host: demo.balqalam.com` resolves `subdomain=demo`; a headless-browser login as the demo
-  Administrator rendered the tenant dashboard. Boot 4 s.
-- **Blocked on two dashboard actions** (the API token cannot do either):
-  1. Upgrade the account to Workers Paid — https://dash.cloudflare.com/?to=/:account/workers/plans
-  2. Give the API token **Zone → DNS → Edit** and **Zone → Workers Routes → Edit** on balqalam.com
-     (or do the DNS toggles by hand: see Cutover).
-- Then: `scripts/cf-go-live.sh /tmp/prod.env` (deploy → secrets → first boot on workers.dev),
-  enable `routes` in `wrangler.jsonc`, deploy again, `scripts/cf-cutover.sh on demo.balqalam.com`,
-  verify, then `on balqalam.com`, `on www.balqalam.com`, `wildcard`.
-
+- **2026-09-07 13:00Z — Worker LIVE.** Workers Paid active; image pushed; Worker `hogwarts` version
+  `a27b9d45` deployed with routes `balqalam.com/*` + `*.balqalam.com/*`; 25 secrets set; container
+  booted against the prod DB. Verified through the edge with the real hostnames (`curl --resolve` /
+  Playwright host-resolver rules, no DNS change): demo Administrator login, session cookie
+  `Domain=.balqalam.com`, tenant pages render. Sanity URL: https://hogwarts.osmanabdout.workers.dev
+- **Waiting on the DNS toggles** (token has no DNS:Edit; Cowork/Abdout do them in the dashboard):
+  `demo` → Proxied, verify, then `balqalam.com` + `www`, then add Proxied `*` CNAME → `balqalam.com`.
+- Docker on this Mac needed the `buildx` plugin for wrangler's `docker build --load`
+  (`brew install docker-buildx` + symlink into `~/.docker/cli-plugins`).
+- `/api/health` reports memory warn/fail: it divides heapUsed by heapTotal (currently allocated,
+  ~213 MB) instead of the heap limit; RSS is ~330 MB on a 4 GiB instance. Cosmetic; fix next release.
 
 ### Shape
 
