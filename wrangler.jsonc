@@ -31,8 +31,10 @@
     { "pattern": "balqalam.com/*", "zone_name": "balqalam.com" },
     { "pattern": "*.balqalam.com/*", "zone_name": "balqalam.com" }
   ],
-  // No cron triggers here: Cloudflare never invoked scheduled() on this
-  // container-backed Worker (16 registered, 0 delivered, verified with an
-  // every-minute probe on 2026-09-07). The schedules live in cf/cron/ as a
-  // separate plain Worker that calls the cron routes over HTTPS.
+  // Cron triggers (UTC): every distinct schedule in cf/crons.json. The Worker's
+  // scheduled() maps the expression that fired back to its /api/cron/* routes.
+  // NOTE: newly added triggers took ~19 hours to start firing on this
+  // container-backed Worker — registered and shown in the dashboard the whole
+  // time, but not delivered. Do not assume they are broken on day one.
+  "triggers": { "crons": ["*/15 * * * *","0 * * * *","*/30 * * * *","0 3 * * *","0 2 * * *","0 8 * * *","0 1 * * *","0 8-16 * * 1-5","0 */6 * * *","0 0 * * *","0 10 * * *","0 7 * * *","0 20 * * *","30 3 * * *","17 * * * *"] },
 }
