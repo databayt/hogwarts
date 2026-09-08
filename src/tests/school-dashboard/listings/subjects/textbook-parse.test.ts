@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { elongate } from "@/components/school-dashboard/listings/subjects/textbook/format"
 import {
   anchorToc,
   cleanInline,
@@ -553,5 +554,22 @@ describe("page offset from the structure", () => {
     expect(
       isCoverPage(page(1, Array.from({ length: 80 }, () => "كلمة").join(" ")))
     ).toBe(false)
+  })
+})
+
+describe("elongate", () => {
+  it("stretches an Arabic word with kashida, not with spacing", () => {
+    expect(elongate("الأحياء")).toBe("الأحــيــاء")
+    expect(elongate("الفيزياء")).toBe("الــفــيــزيــاء")
+  })
+
+  it("never breaks the lam-alef ligature", () => {
+    expect(elongate("الإسلامية")).not.toContain("لــإ")
+    expect(elongate("لا")).toBe("لا")
+  })
+
+  it("leaves text with no Arabic joins alone", () => {
+    expect(elongate("Biology")).toBe("Biology")
+    expect(elongate("الأحياء", 0)).toBe("الأحياء")
   })
 })

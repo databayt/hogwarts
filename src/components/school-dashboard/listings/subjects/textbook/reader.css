@@ -541,9 +541,12 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 4rem 1.75rem 1.5rem;
+  padding: 4rem 1.5rem 1.5rem;
   text-align: center;
-  color: var(--book-tint);
+  color: var(--book-fg);
+  /* The title is sized against the board, not the window, so it reads the
+     same width on a phone and on a desktop. */
+  container-type: inline-size;
   background: linear-gradient(
     to bottom,
     rgba(255, 255, 255, 0.97) 0%,
@@ -554,97 +557,38 @@
 }
 .book-cover-stage {
   font-family: var(--book-font);
-  font-size: clamp(0.95rem, 2.6vw, 1.15rem);
+  font-size: clamp(1rem, 5cqw, 1.35rem);
   font-weight: 600;
-  color: color-mix(in srgb, var(--book-tint) 72%, transparent);
+  color: var(--book-fg);
   margin: 0;
 }
 .book-cover-grade {
   font-family: var(--book-font);
-  font-size: clamp(1.05rem, 3vw, 1.35rem);
+  font-size: clamp(1.05rem, 5.6cqw, 1.5rem);
   font-weight: 600;
-  color: color-mix(in srgb, var(--book-tint) 84%, transparent);
+  color: var(--book-fg);
   margin: 0;
-}
-/* The foot carries what the app adds: the counts and the two ways in. */
-.book-cover-foot {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  width: min(100%, 34rem);
-  margin-inline: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  /* Clear of the reading-menu button in the end corner. */
-  padding: 2.25rem 1.5rem calc(4.25rem + var(--book-safe-bottom));
-  text-align: center;
-  color: var(--book-tint);
-  background: linear-gradient(
-    to top,
-    rgba(255, 255, 255, 0.97) 0%,
-    rgba(255, 255, 255, 0.9) 62%,
-    rgba(255, 255, 255, 0) 100%
-  );
 }
 .book-cover-title {
   font-family: var(--book-font);
-  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  /* Big: the one word a cover is really made of. */
+  font-size: clamp(2.25rem, 21cqw, 4.5rem);
   font-weight: 700;
-  line-height: 1.25;
-  margin: 0;
+  line-height: 1.15;
+  margin: 0.1em 0;
+  text-wrap: balance;
 }
 .book-cover-edition {
   font-family: var(--book-ui);
-  font-size: 0.95rem;
-  color: color-mix(in srgb, var(--book-tint) 78%, transparent);
-  margin: 0;
+  font-size: clamp(0.8rem, 3.4cqw, 0.95rem);
+  color: color-mix(in srgb, var(--book-fg) 55%, transparent);
+  margin: 0.35rem 0 0;
 }
 .book-cover-stats {
   font-family: var(--book-ui);
   font-size: 0.85rem;
   color: color-mix(in srgb, var(--book-tint) 65%, transparent);
   margin: 0;
-}
-.book-cover-card {
-  width: min(100%, 26rem);
-  margin-top: 1.25rem;
-  padding: 1rem;
-  border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--book-tint) 9%, transparent);
-}
-.book-cover-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-.book-cover-actions .book-pill {
-  flex: 1;
-  justify-content: center;
-  padding: 0.8rem 1rem;
-  font-weight: 500;
-  box-shadow: none;
-}
-.book-pill-solid {
-  background: var(--book-tint);
-  color: #ffffff;
-}
-.book-pill-ghost {
-  background: color-mix(in srgb, var(--book-tint) 14%, transparent);
-  color: var(--book-tint);
-}
-.book-cover-about {
-  margin-top: 0.9rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: color-mix(in srgb, var(--book-tint) 80%, transparent);
-  font-family: var(--book-ui);
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-  cursor: pointer;
 }
 
 /* ── Original pages ────────────────────────────────────────────────────── */

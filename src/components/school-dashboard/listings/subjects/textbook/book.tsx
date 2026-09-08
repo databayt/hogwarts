@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   Children,
-  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -42,7 +41,6 @@ import {
   type SearchResult,
 } from "./search"
 import {
-  AboutSheet,
   ContentsSheet,
   MenuIcon,
   ReadingMenu,
@@ -63,7 +61,7 @@ import type { BookMeta, CoverInfo, ReaderLabels, SectionMeta } from "./types"
  * or show the chrome, tap or swipe the edges to turn.
  */
 const GAP = 64
-type SheetName = null | "contents" | "search" | "settings" | "about"
+type SheetName = null | "contents" | "search" | "settings"
 
 const posKey = (slug: string) => `hogwarts:textbook:${slug}:pos`
 const bookmarksKey = (slug: string) => `hogwarts:textbook:${slug}:bookmarks`
@@ -172,10 +170,6 @@ export function BookReader({
     () => [null, null, ...sections.map((s) => s.pages)],
     [sections]
   )
-  const firstChapterSec = useMemo(() => {
-    const i = sections.findIndex((s) => s.kind === "chapter")
-    return i >= 0 ? i + 2 : 2
-  }, [sections])
 
   // ── Geometry ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -336,12 +330,6 @@ export function BookReader({
   }
 
   // ── Navigation ────────────────────────────────────────────────────────
-  const start = useCallback(() => {
-    const saved = readAnchor(slug)
-    if (saved?.page != null && engine.goToPage(saved.page)) return
-    engine.go(firstChapterSec, 0, true)
-  }, [engine, firstChapterSec, slug])
-
   const onStageClick = (e: ReactMouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
     const go = target.closest<HTMLElement>("[data-go]")
@@ -438,7 +426,6 @@ export function BookReader({
         : (current?.title ?? meta.title)
   const translate = (col: number) =>
     `translateX(${(rtl ? 1 : -1) * col * (size.W + GAP)}px)`
-  const canResume = snap.ready && readAnchor(slug)?.page != null
 
   return (
     <div
@@ -477,10 +464,6 @@ export function BookReader({
               title={meta.title}
               edition={meta.edition}
               labels={labels}
-              canResume={canResume}
-              onStart={start}
-              onContents={() => engine.go(1, 0, true)}
-              onAbout={() => setSheet("about")}
             />
           </div>
           <div
@@ -650,12 +633,6 @@ export function BookReader({
         canFacsimile={meta.hasPageImages}
         facsimile={facsimile}
         onFacsimile={(on) => setFacsimilePref(on ? "on" : "off")}
-      />
-      <AboutSheet
-        open={sheet === "about"}
-        onClose={() => setSheet(null)}
-        labels={labels}
-        text={cover.description ?? ""}
       />
     </div>
   )

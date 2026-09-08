@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, type CSSProperties } from "react"
 
-import { fill } from "./format"
+import { elongate, fill } from "./format"
 import type { CoverInfo, ReaderLabels } from "./types"
 
 /** Average the cover's pixels into a deep, slightly saturated tint for the
@@ -51,19 +51,11 @@ export function CoverScreen({
   title,
   edition,
   labels,
-  canResume,
-  onStart,
-  onContents,
-  onAbout,
 }: {
   cover: CoverInfo
   title: string
   edition: string | null
   labels: ReaderLabels
-  canResume: boolean
-  onStart: () => void
-  onContents: () => void
-  onAbout: () => void
 }) {
   const [tint, setTint] = useState<string | null>(null)
 
@@ -102,39 +94,11 @@ export function CoverScreen({
       {/* The board's free head carries what a textbook prints there. */}
       <div className="book-cover-plate">
         {cover.stage && <p className="book-cover-stage">{cover.stage}</p>}
-        <h1 className="book-cover-title">{title}</h1>
+        <h1 className="book-cover-title">{elongate(title)}</h1>
         {cover.gradeLine && (
           <p className="book-cover-grade">{cover.gradeLine}</p>
         )}
         {edition && <p className="book-cover-edition">{edition}</p>}
-        {cover.stats.length > 0 && (
-          <p className="book-cover-stats">{cover.stats.join(" • ")}</p>
-        )}
-      </div>
-      <div className="book-cover-foot">
-        <div className="book-cover-card">
-          <div className="book-cover-actions">
-            <button
-              type="button"
-              className="book-pill book-pill-ghost"
-              onClick={onContents}
-            >
-              {labels.contents}
-            </button>
-            <button
-              type="button"
-              className="book-pill book-pill-solid"
-              onClick={onStart}
-            >
-              {canResume ? labels.continueReading : labels.startReading}
-            </button>
-          </div>
-        </div>
-        {cover.description && (
-          <button type="button" className="book-cover-about" onClick={onAbout}>
-            {labels.aboutBook}
-          </button>
-        )}
       </div>
     </div>
   )

@@ -58,6 +58,31 @@
   the next `pnpm db:seed:single sd`. Open: the design leaves the top half of
   the board empty, and our title is set below the book rather than on it.
 
+- **2026-09-08 — Gotcha: `git apply --cached --unidiff-zero` lands at the
+  working tree's line numbers, not the index's.** The three stage keys in the
+  previous commit went into `school.timetable` instead of
+  `school.subjects.catalog.reader`. The JSON stayed valid, and the app was
+  right because it reads the working tree, so nothing failed — the mistake
+  only existed in the commit. When staging a hunk of a shared dictionary,
+  verify semantically afterwards (`git show :<file> | python -c "…json…"`),
+  never by reading the diff. The safe move is to rebuild the blob from
+  `git show HEAD:<file>`, insert at a structural anchor, `git hash-object -w`
+  and `git update-index --cacheinfo`.
+- **2026-09-08 — The cover is only a cover.** Contents, Start reading and
+  About are gone from it; the book is entered by turning the page, and the
+  reading menu still carries Contents, Search and the rest. The About sheet
+  had no other entry, so it went with them (`AboutSheet`, `CoverInfo.description`
+  and the cover's `stats` are all deleted rather than left dead). What is left
+  is what a textbook prints: **المرحلة الثانوية / الأحــيــاء / الصف الثالث
+  ثانوي**, big, all in the foreground colour, centred in the board's free
+  head. Three details: the title is the catalog's own name (`Subject.name`)
+  rather than the twin's longer authoring title; the grade is the book's
+  place inside its stage, not in the school, so grade 12 reads "الثالث ثانوي"
+  (`gradeOrdinal` + `ordinal1..6` + `stageSuffix*`, and the English template
+  reads `{n}` so it stays "Grade 12"); and the title is stretched with
+  kashida (`elongate` in `format.ts`, U+0640 after forward-joining letters),
+  never with `letter-spacing`, which would break the joins — with an
+  exception for lam-alef, whose ligature a stroke would spoil.
 - **2026-09-08 — The reader opens on the cover, full screen.** The first
   screen was a small 3D book on a tinted hero; it is now the cover itself at
   the size of the page — `object-fit: cover` in portrait, `contain` once the

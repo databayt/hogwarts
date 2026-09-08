@@ -52,6 +52,39 @@ const STAGE_LABEL: Record<string, string> = {
   MIDDLE: "stageMiddle",
   HIGH: "stageHigh",
 }
+/** The grade a book prints is its place inside its stage, not its place in
+ *  the whole school: grade 12 is the third secondary year. */
+const STAGE_START: Record<string, number> = {
+  ELEMENTARY: 1,
+  MIDDLE: 7,
+  HIGH: 10,
+}
+const STAGE_SUFFIX: Record<string, string> = {
+  ELEMENTARY: "stageSuffixElementary",
+  MIDDLE: "stageSuffixMiddle",
+  HIGH: "stageSuffixHigh",
+}
+
+/** "الصف الثالث ثانوي" from grade 12 + HIGH; English keeps the plain number,
+ *  because its template reads `{n}` and ignores the ordinal. */
+function gradeLine(
+  grade: number | null,
+  level: string | null,
+  labels: ReaderLabels,
+  lang: string
+): string | null {
+  if (grade == null) return null
+  const nth = grade - (level ? (STAGE_START[level] ?? 1) : 1) + 1
+  const template = labels.gradeOrdinal || labels.gradeN
+  if (!template) return null
+  return fill(template, {
+    ordinal: (nth >= 1 && nth <= 6 && labels[`ordinal${nth}`]) || "",
+    suffix: (level && labels[STAGE_SUFFIX[level]]) || "",
+    n: formatNumber(grade, lang),
+  })
+    .replace(/\s+/g, " ")
+    .trim()
+}
 
 async function fetchTwin(url: string): Promise<string | null> {
   try {
@@ -140,10 +173,12 @@ export async function TextbookContent({
   )
   const groups = groupSections(pages, toc, parsed.hasPageMarkers)
 
+  // The catalog's own name is what a cover prints ("الأحياء"); the twin's
+  // front matter carries the longer authoring title.
   const bookLang = parsed.meta.lang || "ar"
   const dir: "rtl" | "ltr" = RTL_LANGS.has(bookLang) ? "rtl" : "ltr"
   const uiDir: "rtl" | "ltr" = isRTL(lang as Locale) ? "rtl" : "ltr"
-  const title = parsed.meta.title || subject.name
+  const title = subject.name || parsed.meta.title || ""
 
   const sections: SectionMeta[] = groups.map((g) => {
     const ch = g.chapterIndex != null ? toc[g.chapterIndex] : null
@@ -187,27 +222,6 @@ export async function TextbookContent({
     return out
   })
 
-  const printedPages =
-    parsed.meta.sourcePages != null
-      ? offset != null
-        ? parsed.meta.sourcePages - offset
-        : parsed.meta.sourcePages
-      : null
-  const lessonCount = subject.chapters.reduce((n, c) => n + c.lessons.length, 0)
-  const stats: string[] = []
-  if (printedPages)
-    stats.push(fill(labels.pagesCount, { n: formatNumber(printedPages, lang) }))
-  if (subject.chapters.length)
-    stats.push(
-      fill(labels.unitsCount, {
-        n: formatNumber(subject.chapters.length, lang),
-      })
-    )
-  if (lessonCount)
-    stats.push(
-      fill(labels.lessonsCount, { n: formatNumber(lessonCount, lang) })
-    )
-
   const meta: BookMeta = {
     title,
     edition: parsed.meta.edition,
@@ -228,12 +242,7 @@ export async function TextbookContent({
   const cover: CoverInfo = {
     url: coverUrl,
     stage: (stageKey ? labels[stageKey] : null) || labels.textbook || null,
-    gradeLine:
-      subject.grade != null
-        ? fill(labels.gradeN, { n: formatNumber(subject.grade, lang) })
-        : null,
-    description: subject.description,
-    stats,
+    gradeLine: gradeLine(subject.grade, subject.level, labels, lang),
   }
 
   return (

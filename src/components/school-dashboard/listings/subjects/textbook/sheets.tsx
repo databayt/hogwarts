@@ -586,30 +586,3 @@ export function SettingsSheet({
     </Sheet>
   )
 }
-
-export function AboutSheet({
-  open,
-  onClose,
-  labels,
-  text,
-}: {
-  open: boolean
-  onClose: () => void
-  labels: ReaderLabels
-  text: string
-}) {
-  return (
-    <Sheet
-      open={open}
-      onClose={onClose}
-      title={labels.aboutBook}
-      description={labels.close}
-      tall
-    >
-      <div className="book-sheet-body">
-        <div className="book-about-rule" aria-hidden="true" />
-        <p className="book-about-text">{text}</p>
-      </div>
-    </Sheet>
-  )
-}
