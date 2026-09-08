@@ -173,7 +173,7 @@ Nothing else needs undoing. No application code was changed for the bridge — t
   serve them from the container. Verified: apex marketing page, demo Administrator login on
   `demo.balqalam.com`, dashboard/students/attendance, `/api/health` database check passing.
   New school subdomains need no DNS work — the proxied `*` record covers them.
-- **Crons restored** (see below) — 15 triggers driving 24 jobs.
+- **Crons working** (see below) — 15 triggers driving 24 jobs, verified firing once each.
 - **Open — move the zone to Pro ($20/mo):** Cloudflare answers UAE/Sudan resolvers with
   `188.114.96.x/97.x` for this free zone and Abdout's ISP resets TCP to those exact addresses (any
   site, ports 80 and 443). Visitors on 1.1.1.1 get `104.21.x/172.67.x` and are fine. This also
@@ -248,14 +248,26 @@ scripts/deploy-cloudflare.sh /tmp/prod.env deploy    # wrangler builds + pushes 
 
 ### Crons
 
-The 31 Vercel schedules were off from 2026-08-22. They now run on Cloudflare: `wrangler.jsonc`
-registers **15 distinct UTC cron triggers**, and the Worker's `scheduled()` maps the expression that
-fired back to its `/api/cron/*` routes through `cf/crons.json`, calling them inside the container
-with the `CRON_SECRET` bearer. The **7 jobs already on `.github/workflows/*-crons.yml`** are excluded
-so nothing fires twice — regenerate `cf/crons.json` from `vercel.crons.full.json` minus that set if
-the table changes. Cron runs are visible in the Workers logs (observability is on); `wrangler tail`
-does not work from Abdout's network (the same regional IP block).
+**Working since 2026-09-08.** `wrangler.jsonc` registers **15 UTC cron triggers**; the Worker's
+`scheduled()` maps the expression that fired back to its `/api/cron/*` routes through
+`cf/crons.json` and calls them inside the container with the `CRON_SECRET` bearer. The **7 jobs on
+`.github/workflows/*-crons.yml`** are excluded so nothing fires twice — regenerate `cf/crons.json`
+from `vercel.crons.full.json` minus that set if the table changes. Verified at the 09:30 boundary:
+8 distinct jobs, each exactly once.
 
+Two things cost hours here; both are written down so nobody repeats them:
+
+- **New cron triggers took ~19 hours to start firing.** They were registered, listed by the API and
+  shown in the dashboard with next-run times the whole time, while Cloudflare delivered nothing —
+  three boundaries and a deliberate `* * * * *` probe all produced zero `eventType: scheduled`
+  events. Then they simply began working. A standalone cron Worker was built as a workaround and
+  deleted once the real triggers fired. **Do not conclude cron triggers are broken on day one.**
+- **Omitting `"triggers"` from `wrangler.jsonc` does not remove existing schedules.** A deploy
+  without the key left all 16 in place. Set the array explicitly to change it.
+
+Cron runs are visible in the Workers logs (observability is on). `wrangler tail` does not work from
+Abdout's network — use the telemetry API and filter `$metadata.service`, checking
+`$workers.eventType` for `scheduled`.
 ### Cutover (staged, each step reversible by toggling the cloud icon back)
 
 `scripts/cf-cutover.sh list | on <host> | off <host> | wildcard` drives it through the API once the
