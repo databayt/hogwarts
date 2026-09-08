@@ -1,0 +1,59 @@
+{
+  "_note": "Generated from vercel.crons.full.json minus the 7 jobs that run on GitHub Actions (.github/workflows/*-crons.yml). Keyed by cron expression (UTC) → cron route paths.",
+  "schedules": {
+    "*/15 * * * *": [
+      "/api/cron/publish-announcements",
+      "/api/cron/process-push-notifications",
+      "/api/cron/process-whatsapp-notifications",
+      "/api/cron/process-broadcast-batches",
+      "/api/cron/exam-lifecycle"
+    ],
+    "0 * * * *": [
+      "/api/cron/expire-announcements"
+    ],
+    "*/30 * * * *": [
+      "/api/cron/process-report-card-pdfs",
+      "/api/cron/process-transcript-pdfs",
+      "/api/cron/absence-followup"
+    ],
+    "0 3 * * *": [
+      "/api/cron/term-end-report-cards",
+      "/api/cron/cleanup-trip-locations"
+    ],
+    "0 2 * * *": [
+      "/api/cron/cleanup-notifications"
+    ],
+    "0 8 * * *": [
+      "/api/cron/event-reminders",
+      "/api/cron/assignment-reminders"
+    ],
+    "0 1 * * *": [
+      "/api/cron/attendance-policies"
+    ],
+    "0 8-16 * * 1-5": [
+      "/api/cron/teacher-reminders"
+    ],
+    "0 */6 * * *": [
+      "/api/cron/scheduled-reports",
+      "/api/cron/process-certificate-pdfs"
+    ],
+    "0 0 * * *": [
+      "/api/cron/expire-invitations"
+    ],
+    "0 10 * * *": [
+      "/api/cron/esis-submit"
+    ],
+    "0 7 * * *": [
+      "/api/cron/exam-reminders"
+    ],
+    "0 20 * * *": [
+      "/api/cron/build-tomorrow-trips"
+    ],
+    "30 3 * * *": [
+      "/api/cron/translation-sweep"
+    ],
+    "17 * * * *": [
+      "/api/cron/funnel-apply"
+    ]
+  }
+}
