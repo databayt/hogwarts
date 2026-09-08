@@ -438,7 +438,6 @@ export function BookReader({
         : (current?.title ?? meta.title)
   const translate = (col: number) =>
     `translateX(${(rtl ? 1 : -1) * col * (size.W + GAP)}px)`
-  const coverWidth = size.H < 640 ? 150 : size.H < 820 ? 190 : 230
   const canResume = snap.ready && readAnchor(slug)?.page != null
 
   return (
@@ -478,7 +477,6 @@ export function BookReader({
               title={meta.title}
               edition={meta.edition}
               labels={labels}
-              coverWidth={coverWidth}
               canResume={canResume}
               onStart={start}
               onContents={() => engine.go(1, 0, true)}

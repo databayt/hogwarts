@@ -35,6 +35,7 @@ export default async function SubjectTextbookPage({ params }: Props) {
       cover: true,
       description: true,
       grades: true,
+      levels: true,
       chapters: {
         where: { status: "PUBLISHED" },
         orderBy: { sequenceOrder: "asc" },
@@ -66,6 +67,7 @@ export default async function SubjectTextbookPage({ params }: Props) {
           coverKey: subject.cover,
           description: subject.description,
           grade: subject.grades[0] ?? null,
+          level: subject.levels[0] ?? null,
           chapters: subject.chapters,
         }}
         labels={labels}

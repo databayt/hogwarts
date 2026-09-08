@@ -58,6 +58,19 @@
   the next `pnpm db:seed:single sd`. Open: the design leaves the top half of
   the board empty, and our title is set below the book rather than on it.
 
+- **2026-09-08 — The reader opens on the cover, full screen.** The first
+  screen was a small 3D book on a tinted hero; it is now the cover itself at
+  the size of the page — `object-fit: cover` in portrait, `contain` once the
+  screen is wider than 5/7 so the board is never cropped, the sampled tint
+  carrying the margins. A drawn cover leaves its head free, so that is where
+  the book's own titling goes: stage, subject, grade, centred in the upper
+  half over a white veil, with the counts beneath (`stageElementary`,
+  `stageMiddle`, `stageHigh` are new keys; the stage comes from
+  `Subject.levels[0]`, not from a guess at the grade number). The app's own
+  affordances — Contents, Start reading, About — sit in a slim foot. On a
+  subject that still shows the aggregator's scan the veil mutes the scan's
+  printed titling behind ours rather than hiding it; that doubling ends when
+  the subject gets a drawn cover.
 - **2026-09-08 — The subject page wears the same design.**
   `/subjects/sd-g12-biology` drew its hero from `banner.jpg`, a ClickView
   triptych, while the drawn cover appeared only in the textbook card far

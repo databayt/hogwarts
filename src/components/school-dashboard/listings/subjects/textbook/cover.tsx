@@ -4,8 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, type CSSProperties } from "react"
 
-import { Book as BookFrame } from "@/components/ui/book"
-
 import { fill } from "./format"
 import type { CoverInfo, ReaderLabels } from "./types"
 
@@ -53,7 +51,6 @@ export function CoverScreen({
   title,
   edition,
   labels,
-  coverWidth,
   canResume,
   onStart,
   onContents,
@@ -63,7 +60,6 @@ export function CoverScreen({
   title: string
   edition: string | null
   labels: ReaderLabels
-  coverWidth: number
   canResume: boolean
   onStart: () => void
   onContents: () => void
@@ -90,31 +86,32 @@ export function CoverScreen({
       className="book-cover"
       style={tint ? ({ "--book-tint": tint } as CSSProperties) : undefined}
     >
-      <div className="book-cover-hero">
-        {/* The 3D frame's spine and page-edge geometry is built LTR. */}
-        <div className="book-cover-art" data-chrome dir="ltr">
-          <BookFrame
-            coverUrl={cover.url ?? undefined}
-            width={coverWidth}
-            color={tint ?? "#2b3a4a"}
-            hoverAnimation={false}
-            variant={cover.url ? "default" : "simple"}
-          >
-            {cover.url ? (
-              <span className="sr-only">
-                {fill(labels.coverAlt, { title })}
-              </span>
-            ) : (
-              <div className="book-cover-fallback">{title}</div>
-            )}
-          </BookFrame>
-        </div>
-        <p className="book-cover-kicker">{cover.kicker}</p>
+      {/* The book opens on its cover, at the size of the screen. */}
+      <div className="book-cover-art" data-chrome>
+        {cover.url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={cover.url}
+            alt={fill(labels.coverAlt, { title })}
+            decoding="async"
+          />
+        ) : (
+          <div className="book-cover-fallback">{title}</div>
+        )}
+      </div>
+      {/* The board's free head carries what a textbook prints there. */}
+      <div className="book-cover-plate">
+        {cover.stage && <p className="book-cover-stage">{cover.stage}</p>}
         <h1 className="book-cover-title">{title}</h1>
+        {cover.gradeLine && (
+          <p className="book-cover-grade">{cover.gradeLine}</p>
+        )}
         {edition && <p className="book-cover-edition">{edition}</p>}
         {cover.stats.length > 0 && (
           <p className="book-cover-stats">{cover.stats.join(" • ")}</p>
         )}
+      </div>
+      <div className="book-cover-foot">
         <div className="book-cover-card">
           <div className="book-cover-actions">
             <button
@@ -135,9 +132,7 @@ export function CoverScreen({
         </div>
         {cover.description && (
           <button type="button" className="book-cover-about" onClick={onAbout}>
-            <span className="book-cover-about-title">{labels.aboutBook}</span>
-            <span className="book-cover-about-text">{cover.description}</span>
-            <span className="book-cover-more">{labels.more}</span>
+            {labels.aboutBook}
           </button>
         )}
       </div>

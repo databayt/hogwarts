@@ -28,7 +28,9 @@ export interface SectionMeta {
 
 export interface CoverInfo {
   url: string | null
-  kicker: string
+  /** The three lines a textbook prints on its board: stage, title, grade. */
+  stage: string | null
+  gradeLine: string | null
   description: string | null
   stats: string[]
 }

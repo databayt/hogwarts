@@ -41,7 +41,16 @@ export interface TextbookSubject {
   coverKey: string | null
   description: string | null
   grade: number | null
+  /** ELEMENTARY | MIDDLE | HIGH — prints the stage line on the cover. */
+  level: string | null
   chapters: DbChapter[]
+}
+
+/** The stage a textbook names on its board, from the subject's school level. */
+const STAGE_LABEL: Record<string, string> = {
+  ELEMENTARY: "stageElementary",
+  MIDDLE: "stageMiddle",
+  HIGH: "stageHigh",
 }
 
 async function fetchTwin(url: string): Promise<string | null> {
@@ -215,16 +224,14 @@ export async function TextbookContent({
         : null,
     hasPageImages: parsed.hasPageMarkers,
   }
+  const stageKey = subject.level ? STAGE_LABEL[subject.level] : null
   const cover: CoverInfo = {
     url: coverUrl,
-    kicker: [
-      labels.textbook,
+    stage: (stageKey ? labels[stageKey] : null) || labels.textbook || null,
+    gradeLine:
       subject.grade != null
         ? fill(labels.gradeN, { n: formatNumber(subject.grade, lang) })
         : null,
-    ]
-      .filter(Boolean)
-      .join(" · "),
     description: subject.description,
     stats,
   }
