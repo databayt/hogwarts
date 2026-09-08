@@ -58,6 +58,20 @@
   the next `pnpm db:seed:single sd`. Open: the design leaves the top half of
   the board empty, and our title is set below the book rather than on it.
 
+- **2026-09-08 — The subject page wears the same design.**
+  `/subjects/sd-g12-biology` drew its hero from `banner.jpg`, a ClickView
+  triptych, while the drawn cover appeared only in the textbook card far
+  below. The 1000×1000 artwork is now taken straight out of the cover SVG's
+  embedded raster (no re-render), upscaled to 2048 and cropped to the densest
+  2048×378 band — picked by scanning ink coverage — then published as
+  `banner.jpg` to both buckets and invalidated. The hero's own scrim
+  (`from-black/75`) keeps the white title readable over the light ground, and
+  `catalog-hero.tsx` mirrors the art in Arabic, which an abstract pattern
+  takes without complaint. Left alone deliberately: `thumbnail.jpg`, the
+  square subject tile, is still the ClickView art authored for all 25
+  grade-12 subjects in the 2026-09-05 pass — replacing it would change browse
+  pages nobody asked about.
+
 - **2026-09-07 — Footer menu measured against the reference crop.** With
   ours rendered at the same 390×844 and cropped to the same rectangle as
   `IMG_2579`, three things were wrong and are now fixed. The round row is
