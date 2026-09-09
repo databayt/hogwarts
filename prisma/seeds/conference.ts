@@ -36,6 +36,12 @@
  *   5. A school-wide assembly, three recurring external links, and one declared
  *      holiday ten days out — each a feature the UI can show.
  *
+ * Every session it writes is anchored to the day it RUNS on, so the guard is
+ * not a plain row count: the fixture is also rebuilt once its newest session
+ * has fallen behind today (in the SCHOOL's zone). Without that a demo seeded
+ * last week has nothing live, nothing upcoming and nothing recent, and a
+ * student's /live is correct and empty — which reads as a broken block.
+ *
  * Recordings are seeded ONLY when the demo already holds a playable object.
  * The original note here said they were deliberately absent, because a `ready`
  * row with no object behind it is a broken player — that reasoning stands, and
@@ -61,6 +67,7 @@ import type { PrismaClient } from "@prisma/client"
 
 import {
   schoolDayOfWeek,
+  schoolDayWindow,
   slotInstantsOn,
 } from "@/components/school-dashboard/live/day-window"
 import { roomNameFor } from "@/components/school-dashboard/live/livekit/room-naming"
@@ -174,7 +181,31 @@ export async function seedConference(
   const existing = await prisma.conference.count({
     where: { schoolId, timetableId: { not: null } },
   })
-  if (existing > 0 && process.env.SEED_FORCE !== "1") {
+
+  // A count guard alone can only rot. Every session this seed writes is
+  // anchored to the day it ran on — five school days behind, one ahead — so a
+  // demo seeded last week holds nothing a student's /live page can show: not
+  // live, not upcoming, and (for their own section) nothing recent to catch up
+  // on. The page is then correct and empty, which reads as a broken block.
+  //
+  // So the fixture is rebuilt when its newest session has fallen behind TODAY,
+  // measured in the SCHOOL's zone — on Vercel and in a container the runtime is
+  // UTC, which rolls the day over at the wrong hour for a school that is not.
+  //
+  // Known edge, on the prod demo: `prebuild` runs this on every deploy, so a
+  // deploy that lands before the day's materializer has ticked sees yesterday
+  // as the newest row and rebuilds — discarding whatever real participants
+  // yesterday's demo sessions had gathered. Acceptable for a demo tenant whose
+  // whole point is to look alive; written down so nobody hunts for it.
+  const newest = await prisma.conference.aggregate({
+    where: { schoolId, timetableId: { not: null } },
+    _max: { scheduledStart: true },
+  })
+  const today = schoolDayWindow(tz).start
+  const stale = !newest._max.scheduledStart || newest._max.scheduledStart < today
+  const rebuild = process.env.SEED_FORCE === "1" || stale
+
+  if (existing > 0 && !rebuild) {
     // The lesson anchoring is a REPAIR on rows that already exist, so it has
     // to reach the skip path too — it was added after the demo was first
     // seeded, and a count guard that returns before it would leave every
@@ -191,8 +222,9 @@ export async function seedConference(
     return existing
   }
   if (existing > 0) {
-    // SEED_FORCE: rebuild the demo's sessions. Cascades take participants,
-    // events and resources; the VIRTUAL attendance is ours to remove too.
+    // SEED_FORCE, or the fixture went stale: rebuild the demo's sessions.
+    // Cascades take participants, events and resources; the VIRTUAL attendance
+    // is ours to remove too.
     await prisma.attendance.deleteMany({
       where: { schoolId, method: "VIRTUAL" },
     })
@@ -1580,47 +1612,83 @@ async function seedClockShowcase(
     where: { schoolId: ctx.schoolId, description: CLOCK_SHOWCASE },
   })
 
+  const slotWhere = {
+    schoolId: ctx.schoolId,
+    termId: ctx.termId,
+    weekOffset: 0,
+    sectionId: { not: null },
+    subjectId: { not: null },
+    teacherId: { not: null },
+    period: { isBreak: false },
+  } as const
+  // `dayOfWeek` and `periodId` are unused here but keep the rows assignable
+  // to `SlotRow`, which `sessionTitle` takes.
+  const slotSelect = {
+    id: true,
+    dayOfWeek: true,
+    periodId: true,
+    sectionId: true,
+    subjectId: true,
+    teacherId: true,
+    subject: { select: { name: true } },
+    section: { select: { name: true } },
+    teacher: { select: { userId: true } },
+  } as const
+
+  // The documented demo student's own section is read SEPARATELY, and goes
+  // first — so it takes the "started" shape below.
+  //
+  // Without it the three cards land on whichever sections the sampled
+  // timetable read happened to return, and a STUDENT — whose page is
+  // section-scoped — sees none of them. Their /live then has no live class and
+  // no class today at all: the history stops at the last school day and the
+  // scheduled rows are tomorrow's, so the one question the page exists to
+  // answer ("can I join my class right now") is the one it could not show.
+  // A separate read rather than a filter over the sample, because the sample
+  // is capped and need not contain that section at all. Same reasoning as
+  // `pickFocusSections`: the documented test trio has to work end to end.
+  const testStudent = await prisma.student.findFirst({
+    where: {
+      schoolId: ctx.schoolId,
+      user: { email: { in: TEST_STUDENT_EMAILS } },
+    },
+    select: { sectionId: true },
+  })
+
   // Loads its own slots rather than taking them: the count guard returns
   // before the main flow reads the timetable, and this phase has to run on
   // that skip path too or a re-run never refreshes the clock.
-  const usable = await prisma.timetable.findMany({
-    where: {
-      schoolId: ctx.schoolId,
-      termId: ctx.termId,
-      weekOffset: 0,
-      sectionId: { not: null },
-      subjectId: { not: null },
-      teacherId: { not: null },
-      period: { isBreak: false },
-    },
-    // `dayOfWeek` and `periodId` are unused here but keep the rows assignable
-    // to `SlotRow`, which `sessionTitle` takes.
-    select: {
-      id: true,
-      dayOfWeek: true,
-      periodId: true,
-      sectionId: true,
-      subjectId: true,
-      teacherId: true,
-      subject: { select: { name: true } },
-      section: { select: { name: true } },
-      teacher: { select: { userId: true } },
-    },
-    take: 40,
-  })
-  if (usable.length < 3) return 0
+  const [own, sample] = await Promise.all([
+    testStudent?.sectionId
+      ? prisma.timetable.findMany({
+          where: { ...slotWhere, sectionId: testStudent.sectionId },
+          select: slotSelect,
+          take: 1,
+        })
+      : Promise.resolve([]),
+    prisma.timetable.findMany({
+      where: slotWhere,
+      select: slotSelect,
+      take: 40,
+    }),
+  ])
+  const ordered = [
+    ...own,
+    ...sample.filter((s) => !own.some((o) => o.id === s.id)),
+  ]
+  if (ordered.length < 3) return 0
 
   // Distinct sections where possible, so the three cards do not all read as
   // the same class.
-  const picked: (typeof usable)[number][] = []
+  const picked: (typeof ordered)[number][] = []
   const seen = new Set<string>()
-  for (const slot of usable) {
+  for (const slot of ordered) {
     if (seen.has(slot.sectionId!)) continue
     seen.add(slot.sectionId!)
     picked.push(slot)
     if (picked.length === 3) break
   }
-  while (picked.length < 3) picked.push(usable[picked.length])
+  while (picked.length < 3) picked.push(ordered[picked.length])
 
   const now = Date.now()
   const at = (minutes: number) => new Date(now + minutes * 60_000)

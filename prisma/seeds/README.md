@@ -117,10 +117,19 @@ slot. This module **repairs before it seeds**, in order, each step idempotent:
    - assignment + link. Plus a school-wide assembly, three recurring external
      links and one declared holiday.
 
-Count-guard: sessions skip when any `Conference` with a `timetableId` exists;
-`SEED_FORCE=1` rebuilds them (and the VIRTUAL attendance). The repairs and the
-policy always run and are no-ops the second time. Runs in ~7 min against Neon
-from a laptop, ~9 s when already seeded.
+Count-guard **plus a staleness guard**: sessions skip when any `Conference`
+with a `timetableId` exists AND its newest one is not already behind today.
+Every session this seed writes is anchored to the day it runs on, so a count
+guard alone could only rot — a demo seeded last week shows a student nothing
+live, nothing upcoming and nothing recent, which reads as a broken block. Today
+is measured in the SCHOOL's zone, never the runtime's UTC. `SEED_FORCE=1` still
+forces the rebuild (and drops the VIRTUAL attendance with it). The repairs and
+the policy always run and are no-ops the second time. Runs in ~7 min against
+Neon from a laptop, ~9 s when already seeded.
+
+The clock showcase (`started` · `ending` · `soon`) puts its first card in the
+documented demo student's own section — their page is section-scoped, and the
+history/next-day pair leaves them no class TODAY without it.
 
 **Every write carries `select: { id: true }`.** A write with no select returns
 every column and P2022s on a database one column behind the schema — prod

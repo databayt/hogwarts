@@ -4,6 +4,46 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Demo fixture rots by the day — fixed 2026-09-09
+
+A STUDENT on `/live` saw "لا توجد جلسات مجدولة بعد" on a demo that had 213
+sessions in it. The page was right and the fixture was three days dead.
+
+`seedConference` anchors everything it writes to the day it RUNS on — five
+school days of history behind, one school day of `scheduled` rows ahead — but
+guarded itself on a plain row COUNT. So it could only ever rot: seeded on
+09-06, by 09-09 its newest row was in the past, and for the demo student's own
+section that left nothing live, nothing upcoming, and (their section having
+been moved after the first seed) no `ended` rows either. Every re-run took the
+skip path and refreshed the clock showcase only.
+
+- [x] The guard now also fires on STALENESS — newest `timetableId`-bound
+      session older than today's school-day start, measured in the school's own
+      zone via `schoolDayWindow`, never the runtime's UTC. `SEED_FORCE=1` still
+      forces. `prebuild` → `ensure-demo` runs the full seed on every deploy, so
+      the prod demo self-heals from this too. Known edge, written into the
+      seed: a deploy landing before the day's materializer tick sees yesterday
+      as newest and rebuilds, discarding yesterday's demo participants.
+- [x] The clock showcase (`started` · `ending` · `soon`) now puts its FIRST
+      shape in the documented demo student's section, read separately rather
+      than filtered out of a capped timetable sample that need not contain it.
+      A student's page is section-scoped, so all three cards previously landed
+      where they could not see them — and since the history stops at the last
+      school day and the scheduled rows are tomorrow's, that left the student
+      with no class TODAY at all. The one question the page exists to answer
+      was the one it could not show.
+
+Verified as `student@balqalam.com` on `demo.localhost:3000/ar/live`: one live
+class linking to `/live/<id>/room`, two upcoming, nine catch-up cards, two
+recordings. tsc 0.
+
+### Found while here, NOT fixed
+
+- **Nothing swept the demo's stale `scheduled` rows.** 09-06's sessions sat at
+  `scheduled` for three days rather than moving to `ended`. On a local database
+  no cron runs, so this says nothing about prod — but it is worth confirming
+  the materializer/sweep actually reaches the demo school there.
+
 ## Production-readiness pass 2026-09-03/04 — closed (code), deploy owed
 
 Traced with a ten-lens adversarial audit (57 findings, every one re-read in
