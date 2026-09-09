@@ -164,13 +164,21 @@ export function TitleCard({
               its own line; two lines are fine here, the band overflows upward
               into the fade.
 
-              Thmanyah SANS, not the app's Arabic reading face. The serif text
-              family is right for running prose and this is display type — the
-              frame's own title is drawn, not set — and the sans is the same
-              family's UI face, already fetched by the build. The stack after
-              it is what a Latin title falls back to, since the room and the
-              lesson both carry English names. */}
-          <h1 className="font-[family-name:var(--font-thmanyah-sans),ui-sans-serif,system-ui,sans-serif] text-[44px] leading-[48px] font-bold tracking-tight text-balance text-white sm:text-6xl sm:leading-none lg:text-7xl">
+              Thmanyah SANS at its heaviest, not the app's Arabic reading face.
+              The serif text family is right for running prose and this is
+              display type — the frame's own title is drawn, not set — and the
+              sans is the same family's UI face, already fetched by the build
+              at five weights, so `font-black` is a real 900 rather than a
+              synthesised smear. The stack after it is what a Latin title falls
+              back to, since the room and the lesson both carry English names.
+
+              No negative tracking. It was `tracking-tight`, borrowed from a
+              Latin display convention that does not transfer: Arabic is
+              cursive, its letters already join, and pulling them together
+              closes the counters and muddies those joins at this size. Left at
+              normal the word opens up, which is what makes it read as the
+              drawn logo the frame has rather than as set type. */}
+          <h1 className="font-[family-name:var(--font-thmanyah-sans),ui-sans-serif,system-ui,sans-serif] text-[52px] leading-[58px] font-black tracking-normal text-balance text-white sm:text-7xl sm:leading-none lg:text-8xl">
             {title}
           </h1>
 

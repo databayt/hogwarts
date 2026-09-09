@@ -1226,7 +1226,13 @@ export async function findRoomCardSession(schoolId: string, id: string) {
           name: true,
           description: true,
           lang: true,
-          chapter: { select: { id: true, name: true } },
+          // Which lesson of which chapter, as NUMBERS. The join button names
+          // what it is about to open the way the frame's does — "Play S2, E1"
+          // — and a season and an episode are ordinals, not titles.
+          sequenceOrder: true,
+          chapter: {
+            select: { id: true, name: true, sequenceOrder: true },
+          },
         },
       },
     },

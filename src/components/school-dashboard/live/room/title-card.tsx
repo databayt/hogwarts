@@ -45,6 +45,10 @@ export interface RoomTitleCardData {
    *  rendered empty. */
   chapter: string | null
   lesson: string | null
+  /** The same two as NUMBERS — the frame's "S2, E1". Null together with the
+   *  names above, and the button falls back to the bare verb. */
+  chapterOrder: number | null
+  lessonOrder: number | null
   /** Already in the school's timezone. */
   startTime: string | null
   durationLabel: string | null
@@ -70,6 +74,10 @@ export interface RoomTitleCardData {
 
 export interface RoomTitleCardLabels {
   join: string
+  /** The frame's `Play S2, E1`: the verb plus WHICH lesson it opens. Carries
+   *  `{c}` and `{l}`, the chapter and lesson numbers. Used only when the class
+   *  is anchored to a catalog lesson; `join` alone covers the rest. */
+  joinLesson: string
   joining: string
   more: string
   live: string
@@ -269,6 +277,16 @@ export function RoomTitleCard({
     data.durationLabel,
   ].filter((part): part is string => Boolean(part))
   const marks = buildMarks(data.isRecording, data.tools, labels)
+  // "Join C1, L1" where the class is anchored to a catalog lesson, the bare
+  // verb where it is not — a slot materialized from the timetable knows its
+  // subject but not which lesson of it is being taught today, and a button
+  // reading "Join C, L" would be worse than one reading "Join".
+  const joinLabel =
+    data.chapterOrder !== null && data.lessonOrder !== null
+      ? labels.joinLesson
+          .replace("{c}", String(data.chapterOrder))
+          .replace("{l}", String(data.lessonOrder))
+      : labels.join
   const progress = useClassProgress(data.startsAtMs, data.endsAtMs)
   // A class with no clock cannot become a calendar event, so the button that
   // would make one is not offered.
@@ -431,21 +449,22 @@ export function RoomTitleCard({
         </>
       }
       action={
-        /* Two pills, the same two the reference's hero has. A class that has
-           not started yet gets the plain one; a class already running gets the
-           resume pill — `px-5`, the progress track, the minutes left, and NO
-           word, exactly as the hero drops "Play" once it has progress to show.
-           The class IS the thing in progress here, the way the video is
-           there. */
+        /* The frame's button, which does not just say "Play" — it says
+           `Play S2, E1`, naming the episode it is about to open. A class's
+           equivalent is the lesson it is about to teach, so the verb carries
+           the chapter and lesson NUMBERS: "Join C1, L1".
+
+           Where this departs from the frame on purpose: the frame drops its
+           word entirely once it has progress to show, leaving `▶ ——— 12m left`.
+           That works for a video, whose one control is obvious. Here the same
+           pill was the only way into a live class and said nothing about
+           joining — the accessible name had to carry it, which is the tell.
+           So the label stays and the countdown follows it. The button is full
+           width on a phone; there is room. */
         <button
           type="button"
           onClick={onJoin}
           disabled={pending}
-          // Once `progress` shows, the only visible text is the countdown
-          // ("30m left") — nothing left on the button says this control
-          // JOINS the class, so the accessible name carries it explicitly.
-          // `pending`/plain states already say so in their own visible text.
-          aria-label={!pending && progress ? labels.join : undefined}
           className={cn(
             titleCardPill,
             // The reference's phone page gives the button the whole width;
@@ -467,20 +486,23 @@ export function RoomTitleCard({
           )}
           {pending ? (
             labels.joining
-          ) : progress ? (
-            <>
-              <span className="h-1 w-12 overflow-hidden rounded-full bg-black/20">
-                <span
-                  className="block h-full rounded-full bg-black"
-                  style={{ width: `${progress.percent}%` }}
-                />
-              </span>
-              <span className="text-xs text-black/60">
-                {formatRemaining(progress.minutesLeft, labels)}
-              </span>
-            </>
           ) : (
-            labels.join
+            <>
+              <span className={cn(progress && "shrink-0")}>{joinLabel}</span>
+              {progress && (
+                <>
+                  <span className="h-1 w-12 overflow-hidden rounded-full bg-black/20">
+                    <span
+                      className="block h-full rounded-full bg-black"
+                      style={{ width: `${progress.percent}%` }}
+                    />
+                  </span>
+                  <span className="shrink-0 text-xs text-black/60">
+                    {formatRemaining(progress.minutesLeft, labels)}
+                  </span>
+                </>
+              )}
+            </>
           )}
         </button>
       }

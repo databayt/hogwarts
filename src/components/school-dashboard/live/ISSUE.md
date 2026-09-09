@@ -4,6 +4,40 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## The title at display size, and a button that names the lesson — 2026-09-09
+
+Read against Figma `Hogwarts` node `574:37` — the frame's button, `▶ Play S2, E1`.
+
+- [x] **The title is 52px / 900 / no negative tracking** (72px, 96px above).
+      `tracking-tight` was borrowed from a Latin display convention that does
+      not transfer: Arabic is cursive, its letters already join, and pulling
+      them together closes the counters and muddies the joins at this size.
+      Thmanyah Sans ships a real 900, so `font-black` loads a drawn weight
+      rather than a synthesised smear — verified in the browser, not assumed.
+- [x] **The join button names the lesson it opens.** The frame's does not just
+      say "Play"; it says `Play S2, E1`. A class's equivalent is the chapter
+      and lesson it sits at, so the pill reads `Join C1, L1` — `انضمام ف١، د١`
+      — from `Chapter.sequenceOrder` and `Lesson.sequenceOrder`, selected only
+      in `findRoomCardSession`. A class anchored to no catalog lesson keeps the
+      bare verb: "Join C, L" would be worse than "Join".
+- [x] **The label no longer disappears once the class is running.** This is a
+      deliberate departure from the frame, which drops its word for
+      `▶ ——— 12m left`. That works for a video, whose one control is obvious;
+      here the same pill was the only way into a live class and said nothing
+      about joining, so an `aria-label` had to carry it — which is the tell.
+      The words are on the button now, where a sighted reader needs them too,
+      and the countdown follows. `lr-04`'s tests were rewritten to the new
+      contract rather than deleted.
+- [x] The lumos lesson hero draws the same button from the same shared card, so
+      it reads `تشغيل ف١، د١` / `Play C1, L1` on the same rule.
+
+### Found while here, NOT fixed
+
+- **lumos's `formatRemaining` is English-only** — its play pill prints "10m
+  left" on an Arabic page. The room's equivalent is translated
+  (`remaining` / `remainingHours`); lumos's is a local helper with the units
+  hardcoded. Not this ask.
+
 ## The shelf heading says what it holds — 2026-09-09
 
 - [x] **It printed the section name**, "الصف الثاني عشر - ب", on the reading

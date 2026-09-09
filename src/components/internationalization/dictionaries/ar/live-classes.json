@@ -175,6 +175,7 @@
     "rec": "REC",
     "hands": "الأيدي",
     "card": {
+      "joinLesson": "انضمام ف{c}، د{l}",
       "joining": "جارٍ الانضمام…",
       "more": "المزيد",
       "recorded": "يُسجَّل",

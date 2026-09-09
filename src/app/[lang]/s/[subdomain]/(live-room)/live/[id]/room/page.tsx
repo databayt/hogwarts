@@ -236,6 +236,9 @@ export default async function Page({ params }: Props) {
     teacher,
     chapter: label(row?.catalogLesson?.chapter?.name),
     lesson: label(row?.catalogLesson?.name),
+    // Not through `label()`: these are ordinals, not text to translate.
+    chapterOrder: row?.catalogLesson?.chapter?.sequenceOrder ?? null,
+    lessonOrder: row?.catalogLesson?.sequenceOrder ?? null,
     startTime: row?.scheduledStart
       ? timeFormat.format(row.scheduledStart)
       : null,
@@ -531,6 +534,7 @@ export default async function Page({ params }: Props) {
         room: resolveRoomLabels(t?.room),
         card: {
           join: t?.actions?.join ?? "Join",
+          joinLesson: c?.joinLesson ?? "Join C{c}, L{l}",
           joining: c?.joining ?? "Joining…",
           more: c?.more ?? "MORE",
           live: t?.status?.live ?? "Live",

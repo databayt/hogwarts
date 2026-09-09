@@ -2,7 +2,14 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -158,6 +165,32 @@ export function LumosLessonContent({
     minuteUnit: vp?.minuteUnit,
   }
   const [showHero, setShowHero] = useState(true)
+  const heroRef = useRef<HTMLDivElement>(null)
+
+  // The page opens ON the hero, not above it.
+  //
+  // The lesson is what the reader came for, and the chrome over it — the
+  // header, the row's own `pt-6` — is about 72px of app furniture between them
+  // on arrival. So the page lands scrolled to the poster's own top edge, which
+  // is the reference app's opening frame; the header is one short scroll up,
+  // where anyone looking for it already scrolls.
+  //
+  // MEASURED, not computed: the offset above the hero is the header plus the
+  // layout's padding plus whatever the live strip and the offline banner
+  // decided to render today, and any constant here would be wrong the first
+  // time one of them appears.
+  useEffect(() => {
+    if (!showHero) return
+    const el = heroRef.current
+    if (!el) return
+    // A restored position — back/forward, a reload part-way down — is the
+    // reader's own and outranks this.
+    if (window.scrollY !== 0) return
+    const top = el.getBoundingClientRect().top + window.scrollY
+    if (top <= 0) return
+    // `instant`: this is where the page STARTS, not somewhere it travels to.
+    window.scrollTo({ top, behavior: "instant" })
+  }, [lesson.id, showHero])
   const [isCompleted, setIsCompleted] = useState(
     lesson.progress?.isCompleted ?? false
   )
@@ -358,10 +391,30 @@ export function LumosLessonContent({
   // Get initial position for resume (from server)
   const initialPosition = lesson.progress?.watchedSeconds ?? 0
 
+  // The frame's button does not just say "Play" — it says `Play S2, E1`,
+  // naming the episode it is about to open. A lesson's equivalent is the
+  // chapter and lesson it sits at, which the info line above already prints in
+  // the same shorthand. The live room draws the identical button from the same
+  // shared card, so the two say the same kind of thing.
+  //
+  // The label also stays put once there is progress, where the frame drops it:
+  // that leaves the pill saying nothing about what it does, and here it is the
+  // only way into the lesson.
+  const playLabel = (d?.playAt || "Play {c}{cn}, {l}{ln}")
+    .replace("{c}", d?.chapterShort || "C")
+    .replace("{cn}", String(lesson.chapter.position))
+    .replace("{l}", d?.lessonShort || "L")
+    .replace("{ln}", String(lesson.position))
+
   return (
-    <div className="space-y-6 pt-2 pb-6">
+    /* `data-immersive` — read by the school-dashboard layout, which unpins the
+       header and lets the container stop clipping so the hero below can reach
+       the page edges. On the page ROOT rather than on the hero, so pressing
+       Play does not pop a sticky bar back over the player. */
+    <div data-immersive className="space-y-6 pt-2 pb-6">
       {/* Hero / Video Player */}
       <div
+        ref={heroRef}
         className={cn(
           "relative w-full",
           // The HERO flows; the PLAYER is a 16:9 box.
@@ -380,12 +433,24 @@ export function LumosLessonContent({
           //
           // Full-bleed, the way the room's own layout does it: the artwork is
           // the page here, and a card inset from the page ground reads as a
-          // picture in a frame. `px-2` is the dashboard container's phone
-          // gutter and is cancelled below `sm`, where it exists; the section's
-          // own 2px of top padding goes with it so the poster starts at the
-          // chrome.
+          // picture in a frame.
+          //
+          // TWO gutters stand between this and the page edge, not one. The
+          // dashboard container's own `px-2` exists only on a phone; the ROOT
+          // layout's `layout-container` puts `--container-px` outside it at
+          // every width (8px on a phone, 32px at `xl`), and cancelling that is
+          // exactly what the live room's layout does. Cancelling only the
+          // first, which is what this did, left the artwork short of the edge
+          // by 8-32px on every screen wider than `sm`.
+          //
+          // The start side is asymmetric above `sm` ON PURPOSE: the sidebar
+          // sits between the page edge and this container, so a negative
+          // inline-start margin would run the poster UNDER it rather than out
+          // to the glass. Flush against the sidebar is as far start as
+          // full-bleed goes here. Below `sm` the sidebar is off-canvas and
+          // both sides escape.
           showHero
-            ? "-mx-2 -mt-2 w-[calc(100%+1rem)] sm:mx-0 sm:mt-0 sm:w-full"
+            ? "ms-[calc(-0.5rem-var(--container-px,0px))] me-[calc(-0.5rem-var(--container-px,0px))] -mt-2 w-[calc(100%+1rem+2*var(--container-px,0px))] sm:ms-0 sm:me-[calc(-1*var(--container-px,0px))] sm:w-[calc(100%+var(--container-px,0px))]"
             : "aspect-video overflow-hidden"
         )}
         style={{ backgroundColor: lesson.color || "#1a1a1a" }}
@@ -533,6 +598,7 @@ export function LumosLessonContent({
                     )}
                   >
                     <Play className="size-4 shrink-0 fill-current" />
+                    <span className="shrink-0">{playLabel}</span>
                     <div className="h-1 w-12 overflow-hidden rounded-full bg-black/20">
                       <div
                         className="h-full rounded-full bg-black"
@@ -541,7 +607,7 @@ export function LumosLessonContent({
                         }}
                       />
                     </div>
-                    <span className="text-xs text-black/60">
+                    <span className="shrink-0 text-xs text-black/60">
                       {formatRemaining(
                         lesson.progress.watchedSeconds,
                         lesson.progress.totalSeconds
@@ -563,7 +629,7 @@ export function LumosLessonContent({
                     )}
                   >
                     <Play className="size-4 fill-current" />
-                    {d?.play || "Play"}
+                    {playLabel}
                   </button>
                 )
               }

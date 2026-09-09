@@ -175,6 +175,7 @@
     "rec": "REC",
     "hands": "Hands",
     "card": {
+      "joinLesson": "Join C{c}, L{l}",
       "joining": "Joining…",
       "more": "MORE",
       "recorded": "Recorded",

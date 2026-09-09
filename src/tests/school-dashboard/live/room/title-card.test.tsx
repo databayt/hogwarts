@@ -2,9 +2,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * lr-04: once the Join pill shows progress ("30m left"), the visible text no
- * longer says "Join" anywhere — the fix adds an explicit `aria-label` so the
- * button keeps a real accessible name.
+ * lr-04: the Join pill always says what it does.
+ *
+ * It used to drop its word the moment it had progress to show — the frame's
+ * own behaviour — leaving `▶ ——— 25m left` and an `aria-label` carrying the
+ * only mention of joining. The label stays now, and where the class is
+ * anchored to a catalog lesson it names it: `Join C1, L1`, the frame's
+ * `Play S2, E1`.
  *
  * lr-07: the mark row used to be the lesson hero's placeholder verbatim
  * (`4K` / `Free` / `CC` / `AD`), none of it true of a live room. It is now
@@ -22,6 +26,7 @@ import {
 
 const labels: RoomTitleCardLabels = {
   join: "Join",
+  joinLesson: "Join C{c}, L{l}",
   joining: "Joining…",
   more: "MORE",
   live: "Live",
@@ -52,6 +57,8 @@ const baseData: RoomTitleCardData = {
   teacher: "Ms. Smith",
   chapter: null,
   lesson: null,
+  chapterOrder: null,
+  lessonOrder: null,
   startTime: "10:00 AM",
   durationLabel: "45 min",
   isLive: true,
@@ -76,10 +83,23 @@ const baseProps = {
 }
 
 describe("RoomTitleCard action button accessible name (lr-04)", () => {
-  it("has no separate aria-label when it just says Join", () => {
+  it("says just Join when the class is anchored to no lesson", () => {
     render(<RoomTitleCard data={baseData} {...baseProps} />)
-    // The visible text alone is the accessible name — "Join".
+    // A slot materialized from the timetable knows its subject but not which
+    // lesson of it is taught today, and "Join C, L" would be worse than "Join".
     expect(screen.getByRole("button", { name: "Join" })).toBeInTheDocument()
+  })
+
+  it("names the lesson it opens when the class is anchored to one", () => {
+    render(
+      <RoomTitleCard
+        data={{ ...baseData, chapterOrder: 1, lessonOrder: 3 }}
+        {...baseProps}
+      />
+    )
+    expect(
+      screen.getByRole("button", { name: "Join C1, L3" })
+    ).toBeInTheDocument()
   })
 
   it("says Joining… while pending", () => {
@@ -87,18 +107,22 @@ describe("RoomTitleCard action button accessible name (lr-04)", () => {
     expect(screen.getByRole("button", { name: "Joining…" })).toBeInTheDocument()
   })
 
-  it("keeps an accessible name of Join once progress shows only a countdown", () => {
+  it("keeps the label VISIBLE beside the countdown once progress shows", () => {
     const now = Date.now()
     const data: RoomTitleCardData = {
       ...baseData,
+      chapterOrder: 2,
+      lessonOrder: 1,
       startsAtMs: now - 5 * 60_000,
       endsAtMs: now + 25 * 60_000,
     }
     render(<RoomTitleCard data={data} {...baseProps} />)
-    // Visible text is just "25m left" — the accessible name must say Join.
-    const button = screen.getByRole("button", { name: "Join" })
-    expect(button).toBeInTheDocument()
+    // Not an aria-label carrying it: the words are on the button, where a
+    // sighted reader needs them too. This is the deliberate departure from the
+    // frame, which drops its word here.
+    const button = screen.getByRole("button", { name: /Join C2, L1/ })
     expect(button).toHaveTextContent(/m left/)
+    expect(button).not.toHaveAttribute("aria-label")
   })
 })
 

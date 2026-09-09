@@ -147,6 +147,7 @@
       "grade": "Grade",
       "brandName": "balqalam",
       "more": "MORE",
+      "playAt": "Play {c}{cn}, {l}{ln}",
       "add": "ADD",
       "addToWatchlist": "Add to your watchlist",
       "free": "Free",

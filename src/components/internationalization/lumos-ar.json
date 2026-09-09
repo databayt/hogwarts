@@ -147,6 +147,7 @@
       "grade": "الصف",
       "brandName": "بالقلم",
       "more": "المزيد",
+      "playAt": "تشغيل {c}{cn}، {l}{ln}",
       "add": "إضافة",
       "addToWatchlist": "أضف إلى قائمتك",
       "free": "مجاني",
