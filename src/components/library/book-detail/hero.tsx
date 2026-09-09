@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import Link from "next/link"
 import { ChevronRight, Star } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -17,6 +18,9 @@ interface Props {
   coverColor?: string | null
   /** Grade-level label, already resolved. Omitted for a general-audience book. */
   gradeLabel?: string | null
+  /** Raw `BookGradeLevel` behind the label — what the listing filters on. */
+  gradeLevel?: string | null
+  lang: string
   publicationYear?: number | null
   pageCount?: number | null
   availableCopies: number
@@ -52,6 +56,8 @@ export function BookHero({
   coverUrl,
   coverColor,
   gradeLabel,
+  gradeLevel,
+  lang,
   publicationYear,
   pageCount,
   availableCopies,
@@ -111,12 +117,21 @@ export function BookHero({
 
         {/* The reference's "APPLE BOOKS CLASSICS" line — the shelf this book
             belongs to. Ours is the grade it is written for, and a book for
-            everybody names no grade rather than saying so. */}
-        {gradeLabel && (
-          <p className="mt-6 inline-flex items-center gap-1 border-b border-white/30 pb-2 text-[13px] font-semibold tracking-[0.12em] text-white/85 uppercase">
+            everybody names no grade rather than saying so.
+
+            A LINK, because it draws a chevron: the reference's chevron opens
+            the collection, and one on inert text promises a page that is not
+            there. The listing takes `gradeLevel` and checks it against
+            `BOOK_GRADE_LEVELS`, so the raw enum goes in the query, never the
+            label. */}
+        {gradeLabel && gradeLevel && (
+          <Link
+            href={`/${lang}/library/books?gradeLevel=${encodeURIComponent(gradeLevel)}`}
+            className="mt-6 inline-flex items-center gap-1 border-b border-white/30 pb-2 text-[13px] font-semibold tracking-[0.12em] text-white/85 uppercase transition-opacity hover:opacity-80"
+          >
             {gradeLabel}
             <ChevronRight className="size-3.5 rtl:rotate-180" />
-          </p>
+          </Link>
         )}
 
         {/* No font family is set here on purpose. The reference is serif, and
@@ -127,21 +142,33 @@ export function BookHero({
           {title}
         </h1>
 
-        <p className="mt-2 inline-flex items-center gap-1 text-lg text-white/90">
+        {/* Same reasoning as the eyebrow. There is no author filter, but the
+            listing's `search` matches title OR author with `contains`, so this
+            genuinely lands on this author's books. */}
+        <Link
+          href={`/${lang}/library/books?search=${encodeURIComponent(author)}`}
+          className="mt-2 inline-flex items-center gap-1 text-lg text-white/90 transition-opacity hover:opacity-80"
+        >
           {author}
           <ChevronRight className="size-4 rtl:rotate-180" />
-        </p>
+        </Link>
 
         {/* One line, the way the reference has it — a single star and the
             number, not a five-star row. There is no ratings COUNT on the
             model, so the reference's "(1.5k)" has no honest equivalent and is
             left out rather than invented. */}
         <p className="mt-3 flex items-center justify-center gap-2 text-[15px] text-white/80">
-          <span className="inline-flex items-center gap-1.5">
-            <Star className="size-4 fill-white text-white" />
-            {rating.toFixed(1)}
-          </span>
-          <span aria-hidden>&middot;</span>
+          {/* A book nobody has rated has no rating, and "0.0" reads as a bad
+              one. The genre stands alone in that case, dot and all dropped. */}
+          {rating > 0 && (
+            <>
+              <span className="inline-flex items-center gap-1.5">
+                <Star className="size-4 fill-white text-white" />
+                {rating.toFixed(1)}
+              </span>
+              <span aria-hidden>&middot;</span>
+            </>
+          )}
           <span>{genre}</span>
         </p>
 

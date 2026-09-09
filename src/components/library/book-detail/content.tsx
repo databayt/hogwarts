@@ -225,6 +225,8 @@ export default async function LibraryBookDetailContent({
         coverUrl={catalogBook.coverUrl}
         coverColor={catalogBook.coverColor}
         gradeLabel={gradeLabel}
+        gradeLevel={catalogBook.gradeLevel}
+        lang={lang}
         publicationYear={catalogBook.publicationYear}
         pageCount={catalogBook.pageCount}
         availableCopies={schoolBook.availableCopies}

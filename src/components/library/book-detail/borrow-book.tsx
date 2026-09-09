@@ -118,10 +118,15 @@ export default function BorrowBook({
 
   if (availableCopies === 0) {
     return (
+      // `opacity-100` cancels the base `disabled:opacity-50`. This pill is
+      // disabled for its whole life rather than for the length of a request,
+      // so the two compound: a 20%-white fill at half strength is 10%, which
+      // on a dark cover is no pill at all. It reads as unavailable by being
+      // flat and unfilled, not by being faint.
       <button
         type="button"
         disabled
-        className={`${PILL} bg-white/20 text-white`}
+        className={`${PILL} bg-white/20 text-white opacity-100`}
       >
         {lib?.currentlyUnavailable || "Currently Unavailable"}
       </button>
