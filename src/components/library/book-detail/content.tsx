@@ -212,6 +212,13 @@ export default async function LibraryBookDetailContent({
       value: String(shown.publicationYear),
     },
     shown.isbn && { label: "ISBN", value: shown.isbn },
+    // Moved off the hero card. The reference's card names the edition, not
+    // the stock, so the count belongs with the other facts about this book —
+    // and the borrow pill still says Unavailable on its own at zero.
+    {
+      label: lib?.availability || "Availability",
+      value: `${schoolBook.availableCopies} ${lib?.of || "of"} ${schoolBook.totalCopies}`,
+    },
     totalBorrows > 0 && {
       label: lib?.timesBorrowed || "Times borrowed",
       value: String(totalBorrows),

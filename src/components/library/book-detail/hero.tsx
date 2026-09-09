@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import Link from "next/link"
-import { ChevronRight, Star } from "lucide-react"
+import { ChevronRight, Info, Star } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -72,8 +72,13 @@ export function BookHero({
   borrowRecordId,
   dictionary: lib,
 }: Props) {
-  // `publicationYear • pageCount`, with either half allowed to be missing —
-  // a catalog row carries whichever its source had.
+  // `publicationYear · pageCount`, either half allowed to be missing — a
+  // catalog row carries whichever its source had.
+  //
+  // The reference reads "January 1813 · 490 Pages" and this reads "1813 · 490
+  // Pages", because there is no month to read: `Book.publicationYear` is an
+  // Int and the schema holds no publication date. Printing a month would mean
+  // inventing one.
   const format = [
     publicationYear ? String(publicationYear) : null,
     pageCount ? `${pageCount} ${lib?.pages || "pages"}` : null,
@@ -90,18 +95,22 @@ export function BookHero({
         // because the sidebar sits on the start side of this container and a
         // negative start margin would run the colour underneath it.
         "relative ms-[calc(-0.5rem-var(--container-px,0px))] me-[calc(-0.5rem-var(--container-px,0px))] -mt-2 w-[calc(100%+1rem+2*var(--container-px,0px))]",
-        "sm:ms-0 sm:me-[calc(-1*var(--container-px,0px))] sm:w-[calc(100%+var(--container-px,0px))]"
+        "sm:ms-0 sm:me-[calc(-1*var(--container-px,0px))] sm:w-[calc(100%+var(--container-px,0px))]",
+        // One green, the marketing hero's `#00bc6d`, the same ground the
+        // library's own banner stands on two pages up. It replaces a tint
+        // taken from each book's `coverColor`, which meant the page changed
+        // colour per book and needed a black scrim over it to keep any text
+        // readable at all.
+        //
+        // Every piece of ink on this ground is pinned DARK and none of it is
+        // tokenised, exactly as `library/hero.tsx` sets out: white on
+        // `#00bc6d` measures about 2.5:1 and is unreadable, and
+        // `primary-foreground` is white in light mode and black in dark, which
+        // is backwards here. This ground does not invert.
+        "bg-[#00bc6d] text-[#050505]"
       )}
-      style={{ backgroundColor: coverColor || "#1a1a2e" }}
     >
-      {/* `coverColor` is whatever the cover happened to be — it can come back
-          pale yellow, and white text on that is unreadable. The title card in
-          the live room has the same problem and answers it the same way: a
-          black scrim over the raw colour, which darkens a light tint without
-          flattening a dark one. */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/40 to-black/65" />
-
-      <div className="relative mx-auto flex max-w-xl flex-col items-center px-6 pt-10 pb-9 text-center">
+      <div className="mx-auto flex max-w-xl flex-col items-center px-6 pt-10 pb-9 text-center">
         <BookJacket
           coverUrl={coverUrl}
           coverColor={coverColor}
@@ -111,7 +120,7 @@ export function BookHero({
           height={288}
           priority
           textSize="md"
-          className="aspect-[2/3] w-40 shadow-[0_24px_50px_rgba(0,0,0,0.45)] sm:w-48"
+          className="aspect-[2/3] w-40 shadow-[0_18px_40px_rgba(5,5,5,0.28)] sm:w-48"
         />
 
         {/* The reference's "APPLE BOOKS CLASSICS" line — the shelf this book
@@ -126,7 +135,7 @@ export function BookHero({
         {gradeLabel && gradeLevel && (
           <Link
             href={`/${lang}/library/books?gradeLevel=${encodeURIComponent(gradeLevel)}`}
-            className="mt-6 inline-flex items-center gap-1 border-b border-white/30 pb-2 text-[13px] font-semibold tracking-[0.12em] text-white/85 uppercase transition-opacity hover:opacity-80"
+            className="mt-6 inline-flex items-center gap-1 border-b border-[#050505]/25 pb-2 text-[13px] font-semibold tracking-[0.12em] text-[#050505]/80 uppercase transition-opacity hover:opacity-80"
           >
             {gradeLabel}
             <ChevronRight className="size-3.5 rtl:rotate-180" />
@@ -137,7 +146,7 @@ export function BookHero({
             Arabic already reads that way — `--font-sans` under `ar` is the
             Thmanyah text face. Forcing `font-serif` would hand Arabic Georgia,
             which has no Arabic glyphs at all. */}
-        <h1 className="mt-5 text-[30px] leading-tight font-bold text-balance text-white sm:text-4xl">
+        <h1 className="mt-5 text-[30px] leading-tight font-bold text-balance sm:text-4xl">
           {title}
         </h1>
 
@@ -146,7 +155,7 @@ export function BookHero({
             genuinely lands on this author's books. */}
         <Link
           href={`/${lang}/library/books?search=${encodeURIComponent(author)}`}
-          className="mt-2 inline-flex items-center gap-1 text-lg text-white/90 transition-opacity hover:opacity-80"
+          className="mt-2 inline-flex items-center gap-1 text-lg text-[#050505]/85 transition-opacity hover:opacity-70"
         >
           {author}
           <ChevronRight className="size-4 rtl:rotate-180" />
@@ -156,13 +165,13 @@ export function BookHero({
             number, not a five-star row. There is no ratings COUNT on the
             model, so the reference's "(1.5k)" has no honest equivalent and is
             left out rather than invented. */}
-        <p className="mt-3 flex items-center justify-center gap-2 text-[15px] text-white/80">
+        <p className="mt-3 flex items-center justify-center gap-2 text-[15px] text-[#050505]/75">
           {/* A book nobody has rated has no rating, and "0.0" reads as a bad
               one. The genre stands alone in that case, dot and all dropped. */}
           {rating > 0 && (
             <>
               <span className="inline-flex items-center gap-1.5">
-                <Star className="size-4 fill-white text-white" />
+                <Star className="size-4 fill-[#050505] text-[#050505]" />
                 {rating.toFixed(1)}
               </span>
               <span aria-hidden>&middot;</span>
@@ -171,20 +180,24 @@ export function BookHero({
           <span>{genre}</span>
         </p>
 
-        {/* The action card. Everything about getting hold of the book lives
-            inside it: what it is, how long, how many are left, and the pill
-            that does it. */}
-        <div className="mt-7 w-full rounded-2xl bg-white/12 p-4 text-start ring-1 ring-white/15 backdrop-blur-sm">
-          <p className="text-[17px] font-semibold text-white">
+        {/* The action card, three rows exactly as the reference has them: what
+            this is, when and how long, then the two things you can do.
+            
+            The copies count used to sit as a fourth row and does not belong
+            here — the reference's card names the edition, not the stock. It
+            moved to the Information list below, where the rest of the facts
+            about this book already live, and the pill still says Unavailable
+            on its own when there is nothing to lend. */}
+        <div className="mt-7 w-full rounded-[28px] bg-[#050505]/10 p-5 text-start">
+          <p className="inline-flex items-center gap-1.5 text-[17px] font-semibold">
             {lib?.book || "Book"}
+            <Info className="size-[15px] opacity-60" />
           </p>
           {format.length > 0 && (
-            <p className="mt-0.5 text-sm text-white/75">{format.join(" · ")}</p>
+            <p className="mt-0.5 text-sm text-[#050505]/70">
+              {format.join(" · ")}
+            </p>
           )}
-          <p className="mt-0.5 text-sm text-white/75">
-            {availableCopies} {lib?.of || "of"} {totalCopies}{" "}
-            {lib?.copiesAvailable || "copies available"}
-          </p>
 
           <div className="mt-4">
             <BorrowBook

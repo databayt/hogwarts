@@ -24,23 +24,39 @@ interface Props {
 }
 
 /**
- * The action row at the foot of the tinted card: a quieter pill beside a solid
- * one, the way the reference pairs Sample with Get.
+ * The action row at the foot of the card: a quieter pill beside a solid one,
+ * the way the reference pairs Sample with Get.
  *
  * Not `<Button>`: every variant that component offers is themed against the
- * page ground, and this row sits on the book's own colour. The shapes are
- * written out here rather than bent out of a variant that assumes a light
- * background.
+ * page ground, and this row sits on the marketing green. The shapes are
+ * written out here rather than bent out of a variant that would invert.
  */
 
+/**
+ * Taller and narrower than a standard button, and fully rounded.
+ *
+ * Measured off the reference: its pills run about 3.2 wide to 1 tall inside a
+ * card that is a little over 300pt across. At `h-14` in this column each pill
+ * lands near 3.0, which reads as the reference's shape; the `h-11` this had
+ * before came out at 3.8 and read as a wide lozenge.
+ *
+ * Labels are ONE word for the same reason — "Borrow Book" and "Return Book"
+ * pushed the pill wide and flattened it further, and the card above already
+ * says the noun.
+ */
 const PILL =
-  "inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full px-5 font-semibold transition-opacity"
+  "inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full px-5 font-semibold transition-colors"
 
-/** Solid white. The commitment — borrowing, or giving it back. */
-const PRIMARY = "bg-white text-black hover:opacity-90 disabled:opacity-50"
+/**
+ * The ground under these is the marketing green, so both pills are pinned
+ * dark-on-light exactly as `library/hero.tsx` pins its own: white on `#00bc6d`
+ * is unreadable, and a token pair would invert in dark mode and lose the
+ * contrast the ground was chosen for.
+ */
+const PRIMARY = "bg-white text-[#050505] hover:bg-white/90 disabled:opacity-50"
 
-/** Translucent. The lesser thing you can do without committing. */
-const SECONDARY = "bg-white/20 text-white hover:bg-white/30"
+/** A darker patch of the same ground — the lesser thing, not a second CTA. */
+const SECONDARY = "bg-[#050505]/12 text-[#050505] hover:bg-[#050505]/20"
 
 export default function BorrowBook({
   bookId,
@@ -132,7 +148,7 @@ export default function BorrowBook({
     <button
       type="button"
       disabled
-      className={cn(PILL, SECONDARY, "opacity-40")}
+      className={cn(PILL, SECONDARY, "opacity-45")}
     >
       <BookOpen className="size-4" />
       {readLabel}
@@ -142,7 +158,7 @@ export default function BorrowBook({
   if (hasBorrowedBook) {
     return (
       <div className="space-y-3">
-        <p className="inline-flex items-center gap-1.5 text-sm text-white">
+        <p className="inline-flex items-center gap-1.5 text-sm text-[#050505]/80">
           <Check className="size-4" />
           {lib?.borrowedThisBook || "You have borrowed this book"}
         </p>
@@ -156,7 +172,7 @@ export default function BorrowBook({
           >
             {isLoading
               ? lib?.returning || "Returning..."
-              : lib?.returnBook || "Return Book"}
+              : lib?.returnShort || "Return"}
           </button>
         </div>
       </div>
@@ -167,16 +183,12 @@ export default function BorrowBook({
     <div className="flex gap-3">
       {readPill}
       {availableCopies === 0 ? (
-        // `opacity-100` cancels PRIMARY's `disabled:opacity-50`. This pill is
-        // disabled for its whole life rather than for the length of a request,
-        // so the two would compound and leave it barely visible. It reads as
-        // unavailable by being unfilled, not by being faint.
-        <button
-          type="button"
-          disabled
-          className={cn(PILL, SECONDARY, "opacity-100")}
-        >
-          {lib?.currentlyUnavailable || "Currently Unavailable"}
+        // The SECONDARY palette, not PRIMARY dimmed: this pill is disabled for
+        // its whole life rather than for the length of a request, and a
+        // half-faded solid pill reads as broken where an unfilled one reads as
+        // nothing to do.
+        <button type="button" disabled className={cn(PILL, SECONDARY)}>
+          {lib?.unavailable || "Unavailable"}
         </button>
       ) : (
         <button
@@ -187,7 +199,7 @@ export default function BorrowBook({
         >
           {isLoading
             ? lib?.borrowing || "Borrowing..."
-            : lib?.borrowBook || "Borrow Book"}
+            : lib?.borrow || "Borrow"}
         </button>
       )}
     </div>
