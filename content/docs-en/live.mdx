@@ -571,6 +571,12 @@ lesson session carrying an exam, an assignment and a link, three recurring exter
 declared holiday. It repairs first — break periods, teacher expertise, and a teacher on every
 teacherless slot — because a slot with no teacher has no host and never goes online.
 
+Every session it writes is dated relative to the day it runs, so the seed rebuilds itself once its
+newest session has fallen behind today — in the school's own timezone. Re-running it keeps the demo
+current instead of leaving a student a page with nothing live, nothing upcoming and nothing recent.
+One of the running sessions it stages is always in the demo student's own section, because their
+page is scoped to it.
+
 What "hybrid" means in the product: online is **additive**. The session detail shows the physical
 room the class still meets in; the timetable card shows the room with an Online marker beside it;
 a confirmed substitute hosts the online arm of the class they cover; a lumos lesson shows its live
