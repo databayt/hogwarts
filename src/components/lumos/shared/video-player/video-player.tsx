@@ -25,7 +25,6 @@ import type { VideoPlayerProps } from "./types"
 import { VideoOverlay } from "./video-overlay"
 import { VideoProgressBar } from "./video-progress-bar"
 import { VideoUpNext } from "./video-up-next"
-import { VideoWatermark } from "./video-watermark"
 
 // Format time as MM:SS or HH:MM:SS
 function formatTime(seconds: number): string {
@@ -194,8 +193,6 @@ export function VideoPlayer({
   url,
   title,
   lessonId,
-  userId,
-  userEmail,
   initialPosition = 0,
   posterUrl,
   nextLesson,
@@ -646,15 +643,14 @@ export function VideoPlayer({
         onError={handleSourceError}
         aria-label={title}
         controlsList="nodownload"
-        // PiP and casting render the bare video element, leaving the
-        // watermark overlay behind — a clean capture path on school content.
+        // PiP and casting hand the raw element to the OS, out of reach of
+        // anything this player does about capture. Kept off for protected
+        // sources.
         disablePictureInPicture={isProtected}
         disableRemotePlayback={isProtected}
         onDragStart={(e) => e.preventDefault()}
       />
 
-      {/* Dynamic watermark for video ownership protection */}
-      <VideoWatermark userId={userId} userEmail={userEmail} />
       {/* PrintScreen mitigation: the protection hook stamps this attribute for 1.5s */}
       <style>{`[data-capture-blank] video { visibility: hidden; }`}</style>
 

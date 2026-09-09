@@ -20,6 +20,37 @@ last_audited: 2026-09-02
 
 ---
 
+## 2026-09-09 — the forensic watermark comes off the LESSON player
+
+- [x] **Both marks removed from the lesson video player** — the roaming
+      id+timestamp and the fixed diagonal. Asked for directly; they were the
+      two visible overlays on the picture.
+- [x] **Scoped to that player only.** `VideoWatermark` still renders on the
+      three other surfaces, which import it directly:
+      `shared/material-viewer`, `school-dashboard/live/room/room-shell`, and
+      `school-dashboard/live/recording-player`. The component is untouched.
+      `VideoPlayer` has exactly one consumer, so removing the render there
+      removes it from the lesson and nowhere else.
+- [x] **The dead prop chain went with it.** `userId`/`userEmail` are off
+      `VideoPlayerProps` and off the lesson's call site. The page still passes
+      `viewer` — the MATERIAL viewer needs it — and the comments on both ends
+      now say so instead of naming a player watermark that no longer exists.
+- [x] Verified in the headed browser: no watermark overlay and no `font-mono`
+      mark in the player, fullscreen and playback unaffected.
+
+Open:
+
+- [ ] **Lesson video now carries no viewer attribution.** A capture of a
+      lesson can no longer be traced to who was watching. This was the only
+      layer that did anything about screen recording — prevention was never
+      possible in a browser, and the records say so at length. Deliberate, on
+      request; reversing it is one line plus the prop chain.
+- [ ] **PiP and casting stay disabled for protected sources** even though the
+      watermark they used to strip is gone. Kept as-is rather than quietly
+      widening the change; the stated reason in the code has been corrected.
+
+---
+
 ## 2026-09-09 — Play opens fullscreen, and leaving it lands back on the lesson
 
 - [x] **Play now opens the player in fullscreen and starts playing.** Both

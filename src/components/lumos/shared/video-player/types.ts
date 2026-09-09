@@ -7,8 +7,6 @@ export interface VideoPlayerProps {
   url: string
   title?: string
   lessonId: string
-  userId?: string
-  userEmail?: string
   initialPosition?: number
   posterUrl?: string | null
   nextLesson?: NextLesson | null

@@ -94,9 +94,9 @@ interface LumosLessonContentProps {
    */
   quizQuestions?: LessonQuizQuestion[]
   /**
-   * Who is watching. Feeds the player's forensic watermark, which is the only
-   * layer that does anything about screen recording — and which renders
-   * nothing at all when this is absent.
+   * Who is watching. Feeds the forensic watermark on the MATERIAL viewer —
+   * the lesson's own video player no longer carries one. Renders nothing at
+   * all when this is absent.
    */
   viewer?: { id: string; email: string | null }
 }
@@ -946,8 +946,6 @@ export function LumosLessonContent({
             courseTitle={lesson.chapter.course.title}
             className="h-full w-full"
             labels={playerLabels}
-            userId={viewer?.id}
-            userEmail={viewer?.email ?? undefined}
           />
         ) : null}
       </div>
