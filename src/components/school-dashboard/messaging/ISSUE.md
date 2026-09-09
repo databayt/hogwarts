@@ -309,6 +309,25 @@ header and tab bar stopped being bars.
 
 Still four tabs against the reference's five; "Updates" has nowhere to route yet.
 
+### Filling the phone screen — 2026-09-09
+
+- [x] **The footer sat above Safari's URL bar.** The messaging shell was
+      `h-screen`, and on mobile Safari `100vh` is the _tall_ viewport measured with
+      the URL bar hidden, so the page was always taller than what you can see. Now
+      `h-dvh`, which tracks the visible height as the bar collapses.
+- [x] **Safe areas.** The root layout exports `viewportFit: "cover"`, so the page
+      may draw into the notch and the home-indicator strip, and
+      `env(safe-area-inset-*)` starts reporting real numbers. The header is
+      `inset-top + 56` and the tab pill sits `inset-bottom + 8` off the floor. In a
+      browser both insets are 0, which is why the header no longer reserves 98px for
+      a status bar that is not there.
+- [x] **`apple-mobile-web-app-capable`** via `metadata.appleWebApp`. The manifest
+      already said `display: standalone`, so Add to Home Screen now opens with no
+      browser chrome at all — the only way to be rid of the URL bar on iOS.
+- [x] **Footer labels removed**, four tabs kept, each label preserved as the
+      button's `aria-label`. The fake home indicator went with them: standalone iOS
+      draws the real one over that space, and a browser has none.
+
 ### i18n debt (P2)
 
 Client UI is dictionary-keyed (dedicated `messaging` namespace, `dictionaries.ts:142`). Server-action error i18n is now done; two logic-layer items remain:

@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { cookies, headers } from "next/headers"
 import { preconnect } from "react-dom"
 
@@ -21,6 +21,22 @@ import "@/styles/thmanyah-clone.css"
 export const metadata: Metadata = {
   title: "balqalam",
   description: "School automation",
+  // Added to the Home Screen, the app opens without Safari's chrome — which is
+  // the only way to be rid of the URL bar on iOS.
+  appleWebApp: {
+    capable: true,
+    title: "balqalam",
+    statusBarStyle: "default",
+  },
+}
+
+// `viewport-fit=cover` lets the page draw into the notch and the home-indicator
+// strip, and turns on the `env(safe-area-inset-*)` values that keep content
+// clear of them.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 }
 
 export default async function RootLayout({

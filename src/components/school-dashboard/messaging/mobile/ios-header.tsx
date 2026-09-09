@@ -37,7 +37,8 @@ export function IosHeader({
       className={cn(
         // Liquid glass: the bar itself has no surface. The buttons float as
         // glass discs and the list scrolls underneath them.
-        "pointer-events-none relative flex h-[98px] w-full items-end justify-end gap-[14px] px-[16px] pb-[10px]",
+        "pointer-events-none relative flex w-full items-end justify-end gap-[14px] px-[16px] pb-[8px]",
+        "h-[calc(env(safe-area-inset-top,0px)+56px)]",
         className
       )}
     >

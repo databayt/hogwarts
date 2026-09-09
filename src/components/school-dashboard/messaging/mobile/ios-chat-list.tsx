@@ -236,7 +236,7 @@ export function IosChatList({
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain pt-[98px] pb-[128px]">
+      <div className="flex-1 overflow-y-auto overscroll-contain pt-[calc(env(safe-area-inset-top,0px)+56px)] pb-[calc(env(safe-area-inset-bottom,0px)+96px)]">
         <IosTitleBlock
           title={L.titleChats}
           searchPlaceholder={L.searchPlaceholder}

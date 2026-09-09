@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils"
 
 import { PersonGlyph } from "./ios-chat-row"
-import { IosHomeIndicator } from "./ios-home-indicator"
 import { WaIcon, type WaIconName } from "./wa-icon"
 
 export type IosTabId =
@@ -36,7 +35,8 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
       className={cn(
         // Liquid glass: a capsule floating clear of the screen edges, with the
         // list scrolling beneath it rather than stopping at a bar.
-        "pointer-events-none relative flex w-full flex-col items-center px-[16px] pb-[6px]",
+        "pointer-events-none relative flex w-full flex-col items-center px-[16px]",
+        "pb-[calc(env(safe-area-inset-bottom,0px)+8px)]",
         className
       )}
     >
@@ -57,10 +57,11 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
               <button
                 type="button"
                 onClick={() => onChange(tab.id)}
+                aria-label={tab.label}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   // The selected tab sits in its own recessed pill.
-                  "flex flex-col items-center rounded-[20px] px-[12px] py-[4px]",
+                  "flex items-center justify-center rounded-[22px] px-[18px] py-[7px]",
                   isActive && "bg-[color:var(--wa-glass-inner)]"
                 )}
               >
@@ -87,14 +88,6 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
                     className={cn("size-[32px]", color)}
                   />
                 )}
-                <span
-                  className={cn(
-                    "text-center text-[10px] leading-none font-medium tracking-[0.05px]",
-                    color
-                  )}
-                >
-                  {tab.label}
-                </span>
               </button>
               {typeof tab.badge === "number" && tab.badge > 0 && (
                 <span className="absolute end-[2px] top-[-2px] flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[color:var(--wa-surface-product)] px-[6px] text-[12px] leading-none tracking-[-0.12px] text-[color:var(--wa-text-invert)]">
@@ -105,7 +98,6 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
           )
         })}
       </ul>
-      <IosHomeIndicator />
     </nav>
   )
 }

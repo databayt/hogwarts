@@ -127,7 +127,7 @@ export default async function MessagingLayout({
       <SchoolProvider school={school}>
         <ModalProvider>
           <div
-            className="h-screen overflow-hidden"
+            className="h-dvh overflow-hidden"
             style={{
               marginInlineStart: "calc(-1 * var(--container-px))",
               marginInlineEnd: "calc(-1 * var(--container-px))",
