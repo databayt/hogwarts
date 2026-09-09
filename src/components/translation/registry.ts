@@ -61,6 +61,11 @@ export const TRANSLATABLE = {
   // Field names mirror the ACTUAL prisma columns (registry-schema.test.ts
   // enforces this — a wrong name here silently no-ops localize/prewarm).
   Department: ["departmentName"],
+  // Fee structure names are school-authored content ("الصف العاشر", "Primary
+  // Fee Structure") and they render on the family money surface, which a
+  // parent may read in either language. `name` only — `description` is
+  // internal bursar copy that never reaches a family.
+  FeeStructure: ["name"],
   GradingScheme: ["name"],
   YearLevel: ["levelName"],
   Route: ["name", "originName", "destinationName"],

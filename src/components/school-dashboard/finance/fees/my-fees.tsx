@@ -94,6 +94,19 @@ interface MyFeesProps {
   methods?: PaymentGateway[]
   gatewayDictionary?: GatewayPickerDictionary
   manualRailDictionary?: ManualRailDictionary
+  /**
+   * Totals resolved by `getFamilyMoney`, which derives OVERDUE from each
+   * instalment invoice's own due date. Without them this component falls back
+   * to reading `FeeAssignment.status`, which only ever flips to OVERDUE when a
+   * cron relabels it — so the same family read "overdue 0" here while
+   * `/finance` correctly showed months of missed instalments. Pass them.
+   */
+  totals?: {
+    billed: number
+    paid: number
+    remaining: number
+    overdue: number
+  }
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -114,16 +127,26 @@ export function MyFees({
   methods = [],
   gatewayDictionary,
   manualRailDictionary,
+  totals,
 }: MyFeesProps) {
   const d = dictionary
-  const totalFees = assignments.reduce((sum, a) => sum + a.finalAmount, 0)
-  const totalPaid = assignments.reduce((sum, a) => sum + a.paidAmount, 0)
-  const totalPending = assignments
-    .filter((a) => a.status === "PENDING" || a.status === "PARTIAL")
-    .reduce((sum, a) => sum + (a.finalAmount - a.paidAmount), 0)
-  const totalOverdue = assignments
-    .filter((a) => a.status === "OVERDUE")
-    .reduce((sum, a) => sum + (a.finalAmount - a.paidAmount), 0)
+  const totalFees =
+    totals?.billed ?? assignments.reduce((sum, a) => sum + a.finalAmount, 0)
+  const totalPaid =
+    totals?.paid ?? assignments.reduce((sum, a) => sum + a.paidAmount, 0)
+  const totalOverdue =
+    totals?.overdue ??
+    assignments
+      .filter((a) => a.status === "OVERDUE")
+      .reduce((sum, a) => sum + (a.finalAmount - a.paidAmount), 0)
+  // What is still owed but not yet late — the remainder, once the overdue part
+  // is taken out of it, so "pending" and "overdue" never count the same money
+  // twice.
+  const totalPending = totals
+    ? Math.max(totals.remaining - totals.overdue, 0)
+    : assignments
+        .filter((a) => a.status === "PENDING" || a.status === "PARTIAL")
+        .reduce((sum, a) => sum + (a.finalAmount - a.paidAmount), 0)
 
   const progressPercent =
     totalFees > 0 ? Math.round((totalPaid / totalFees) * 100) : 0

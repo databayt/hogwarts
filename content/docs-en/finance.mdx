@@ -113,6 +113,22 @@ DB-stored text is the remaining debt. **No finance Prisma model has a `lang` fie
 
 RTL: the block uses logical utilities only (`ms-`/`me-`/`text-start`), navigation arrows carry `rtl:rotate-180`, and `dir="ltr"` appears only on IBAN / URL / key inputs. All 39 routes were verified rendering `dir="rtl"` on `/ar`.
 
+## What a family sees at `/finance`
+
+`/finance` is two different pages depending on who opens it. For an admin or an accountant it is the hub above: school-wide revenue, expenses, payroll, gated on the `reports` permission. A student or a guardian holds none of that permission, and until 2026-09-09 got the deny screen on the one page named after their own money.
+
+Since then the route forks by role before the gate is reached. A family gets its own money surface, built phone-first because that is where a parent opens it when a reminder arrives:
+
+- **What is owed**, with the overdue part named separately, and one button to pay.
+- **The instalments still to pay**, oldest due date first, each carrying the invoice number that proves it and a link to the hosted invoice where the school published one.
+- **Each fee** with its full schedule and how far through it the family is.
+- **The ways this school actually takes money** — the rails it has configured, wallet rails included, with the cash and bank-transfer options it settles at the office.
+- **Receipts** for everything already paid.
+
+Instalments are read from the invoice ledger rather than from the fee structure's schedule: the school issues one `UserInvoice` per scheduled payment at enrollment and the payment allocator settles them oldest-first, so those rows are what is actually owed rather than what was once planned. A past-due unpaid invoice reads as overdue immediately, without waiting for a cron to relabel it.
+
+One qualification the page states in words: paying online settles a fee's **whole remaining balance**, not the single instalment the button sits beside. The checkout action takes no amount. Per-instalment charging needs that amount threaded through both the checkout and the webhook that allocates the payment.
+
 ## RBAC
 
 Role defaults, refined by the granular `FinancePermission` model and enforced by `checkCurrentUserPermission()` before every mutation.

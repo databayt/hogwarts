@@ -2253,14 +2253,15 @@ export async function createFeePaymentCheckout(
     // Where the payer lands afterwards. Families cannot open the admin-only
     // assignment page (it is gated on fees:view — every parent who was sent
     // there after paying saw "access denied"), so they return to their own
-    // portal; finance staff return to the assignment they were looking at.
+    // money surface at /finance, which mounts the return banner; finance staff
+    // return to the assignment they were looking at.
     // `assignment` + `gateway` let the landing page verify the charge with
     // the gateway (Tap appends `tap_id`; Stripe substitutes
     // `{CHECKOUT_SESSION_ID}`), so it shows a truthful state even before the
     // webhook lands — or if it never does.
     const returnPath = isFinanceAdmin
       ? `/${lang}/finance/fees/assignments/${feeAssignmentId}`
-      : `/${lang}/finance/fees/my`
+      : `/${lang}/finance`
     const returnQuery = `assignment=${encodeURIComponent(feeAssignmentId)}&gateway=${gateway}`
     const stripeSessionParam =
       gateway === "stripe" ? "&session_id={CHECKOUT_SESSION_ID}" : ""

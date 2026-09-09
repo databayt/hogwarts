@@ -8,8 +8,64 @@ maturity: Built+Polish
 completion: 88
 tracker: https://github.com/databayt/hogwarts/issues/313
 docs: https://ed.databayt.org/en/docs/fees
-last_audited: 2026-08-15
+last_audited: 2026-09-09
 ---
+
+## 2026-09-09 — /finance is now a family money surface for students and guardians (LOCAL, not pushed)
+
+A student or guardian opening `/finance` got **"access denied"** — the hub gates on
+the `reports` permission, which no family role holds. The page named after their own
+money was the one page they could not read. `src/components/school-dashboard/finance/family/`
+is what that URL means to them now; the staff hub is untouched and its gate is
+unchanged.
+
+Built phone-first (single column widening at `sm`/`lg`, full-width pay button),
+composed the way `/live`'s landing is: one server section per idea, each hiding
+itself when it has no rows, no client code but the pay dialog.
+
+- [x] **Role branch before the gate.** `finance/page.tsx` resolves `getFamilyMoney`
+      for STUDENT/GUARDIAN and renders the family surface; everyone else falls
+      through to `FinanceContent` and `resolveFinanceAccess("reports")` exactly as
+      before. `getFamilyMoney` returns `null` for anyone without a resolvable
+      student, so the fall-through is the default, not an exception.
+- [x] **One reader for both family surfaces.** `family/queries.ts` resolves
+      students → assignments → instalments → payments → currency → rails once.
+      `/finance/fees/my` now reads it too instead of resolving all of that inline.
+- [x] **Instalments come from the invoice ledger**, not `paymentSchedule` — the
+      invoices are what `allocatePaymentToInvoices` settles, so they are the only
+      rows that reflect what is actually owed. Each row carries its invoice number,
+      and its hosted invoice link when the school published one.
+- [x] **The two family pages no longer disagree on OVERDUE.** `MyFees` derived it
+      from `FeeAssignment.status`, which only flips when a cron relabels it: the
+      demo student read "overdue 0" on `/fees/my` while four instalments had been
+      past due since Sep 2025. `MyFees` now takes the resolved `totals`, and
+      "pending" is the remainder net of overdue so the same money is never counted
+      in both tiles.
+- [x] **Family checkout returns to `/finance`**, which mounts `PaymentReturnBanner`;
+      `/fees/my` still honours the params so an in-flight redirect resolves.
+- [x] **`FeeStructure.name` registered as translatable.** School-authored fee names
+      rendered raw: "الصف العاشر" to an English reader, "Primary Fee Structure" to an
+      Arabic one. One batched `localize` pass over the distinct names.
+- [x] New copy under `finance.family` in `dictionaries/{en,ar}/finance.json` (additive).
+- [x] Single receipt action per payment — the `/api/payment/[id]/receipt` route, which
+      renders the same PDF server-side in the reader's language. The in-page generator
+      shipped `@react-pdf/renderer` to a phone and labelled itself "Download Receipt"
+      in Arabic.
+
+Verified: `tsc --noEmit` clean · browser pass at 390px and 1280px on `/ar` and `/en`
+as `student@balqalam.com` on `demo.localhost:3000` (balance, to-pay list, pay dialog
+offering the school's two configured wallet rails, fee cards, receipts) · both family
+pages now report the same billed / paid / pending / overdue.
+
+**Not done:** per-instalment charging. `createFeePaymentCheckout` takes no amount and
+charges the fee's whole remaining balance; the wallet rails submit the server-resolved
+remaining. The to-pay list states this rather than letting the button imply otherwise.
+Wiring it needs an amount on the checkout action AND on the webhook allocation.
+
+**Pre-existing, untouched:** `i18n-audit.test.ts` fails at 31 bare-English JSX literals
+against a baseline of 29. All 31 are in `fees/manual-payment-rail.tsx`,
+`fees/fee-payment-methods.tsx`, `fees/pay-fee-dialog.tsx` and two invoice wizard forms —
+none in files this pass touched.
 
 ## 2026-08-15 — production-readiness pass: RBAC, i18n/RTL, error codes, invoice loop, hub charts (LOCAL, not pushed)
 

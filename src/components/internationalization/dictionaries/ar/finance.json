@@ -2981,5 +2981,39 @@
     "rejected": "تم رفض المصروف",
     "paid": "تم تعليم المصروف كمدفوع",
     "failed": "فشل الإجراء"
-  }
+  },
+    "family": {
+      "title": "رسومك",
+      "outstanding": "المتبقي",
+      "dueNow": "للدفع",
+      "dueOn": "تستحق في {date}",
+      "overdueSince": "متأخرة منذ {date}",
+      "noDueDate": "لا يوجد تاريخ استحقاق",
+      "payNow": "ادفع",
+      "paid": "مدفوع",
+      "billed": "إجمالي الرسوم",
+      "remaining": "متبقٍ",
+      "overdue": "متأخرة",
+      "awaitingVerification": "بانتظار التحقق",
+      "allSettled": "سددت كل ما عليك",
+      "nothingBilled": "لم تُصدر أي رسوم بعد",
+      "nothingBilledBody": "عندما تصدر المدرسة رسومك ستظهر هنا مع تواريخ استحقاقها.",
+      "installmentOf": "القسط {n} من {total}",
+      "fees": "رسومك",
+      "payWith": "طرق الدفع",
+      "receipts": "الإيصالات",
+      "viewReceipt": "الإيصال",
+      "fullBalanceNote": "الدفع الإلكتروني يسدد كامل المبلغ المتبقي من هذه الرسوم.",
+      "statusLabels": {
+        "PAID": "مدفوع",
+        "PARTIAL": "مدفوع جزئيًا",
+        "PENDING": "مستحق",
+        "OVERDUE": "متأخر",
+        "CANCELLED": "ملغى"
+      },
+      "paymentStatusLabels": {
+        "PENDING_VERIFICATION": "بانتظار التحقق",
+        "PENDING": "قيد المعالجة"
+      }
+    }
 }

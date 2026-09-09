@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 79
 tracker: https://github.com/databayt/hogwarts/issues/313
 docs: https://ed.databayt.org/en/docs/fees
-last_audited: 2026-08-15
+last_audited: 2026-09-09
 ---
 
 ## Finance Block -- Comprehensive School Finance Management
@@ -22,6 +22,15 @@ The Finance Block is a feature-based financial management system for multi-tenan
 ### Honest Status Matrix
 
 This matrix is the readiness view, mirrored in `ISSUE.md` and at `/docs/finance`. The **Ledger** column is the key honesty signal — it now tracks whether a money event can actually _reach_ the ledger from the UI, not merely whether a posting function has a caller.
+
+> **2026-09-09 — `/finance` is role-forked.** For STUDENT and GUARDIAN the route now
+> renders `finance/family/` — their own balance, the instalments still to pay, the
+> school's payment rails and their receipts — instead of the "access denied" the
+> `reports` gate had always given them. The staff hub and its gate are unchanged; the
+> fork happens in `finance/page.tsx` before the gate is reached, and falls through
+> whenever `getFamilyMoney` returns null. `family/queries.ts` is now the single reader
+> behind BOTH family surfaces (`/finance` and `/finance/fees/my`), which is what stopped
+> the two pages reporting different OVERDUE totals. See `family/README.md`.
 
 > **2026-08-15 — production-readiness pass: RBAC · i18n/RTL · error codes · invoice
 > loop · hub charts (see `ISSUE.md`, dated section).** All 80 route pages traced to

@@ -2981,5 +2981,39 @@
     "rejected": "Expense rejected",
     "paid": "Expense marked paid",
     "failed": "Action failed"
-  }
+  },
+    "family": {
+      "title": "Your fees",
+      "outstanding": "Outstanding",
+      "dueNow": "To pay",
+      "dueOn": "Due {date}",
+      "overdueSince": "Overdue since {date}",
+      "noDueDate": "No due date set",
+      "payNow": "Pay",
+      "paid": "paid",
+      "billed": "billed",
+      "remaining": "remaining",
+      "overdue": "Overdue",
+      "awaitingVerification": "Awaiting verification",
+      "allSettled": "You're all paid up",
+      "nothingBilled": "No fees have been issued yet",
+      "nothingBilledBody": "When the school issues your fees, they will appear here with their due dates.",
+      "installmentOf": "Instalment {n} of {total}",
+      "fees": "Your fees",
+      "payWith": "Ways to pay",
+      "receipts": "Receipts",
+      "viewReceipt": "Receipt",
+      "fullBalanceNote": "Paying online settles the whole remaining balance of that fee.",
+      "statusLabels": {
+        "PAID": "Paid",
+        "PARTIAL": "Partly paid",
+        "PENDING": "Due",
+        "OVERDUE": "Overdue",
+        "CANCELLED": "Cancelled"
+      },
+      "paymentStatusLabels": {
+        "PENDING_VERIFICATION": "Awaiting verification",
+        "PENDING": "Pending"
+      }
+    }
 }
