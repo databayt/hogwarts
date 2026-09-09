@@ -131,6 +131,11 @@
       "prefix": "Your personal",
       "topic_messages": "messages",
       "suffix": "are"
+    },
+    "mobile": {
+      "input_placeholder": "Message",
+      "tap_for_info": "tap here for contact info",
+      "group_fallback": "Group"
     }
   },
   "info": {

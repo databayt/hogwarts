@@ -6,12 +6,10 @@ type Props = {
 }
 
 /**
- * WhatsApp-style chat wallpaper.
- * TODO(cdn): still served from a third-party CloudFront. Re-host on
- * cdn.databayt.org (the desktop list uses cdn.databayt.org/hogwarts/whatsapp-bg.png).
+ * WhatsApp-style chat wallpaper. Served from this app's own `public/`, because
+ * the CloudFront origin this used to point at answers HTTP 403.
  */
-const WA_CHAT_BG =
-  "https://d1dlwtcfl0db67.cloudfront.net/wallpapers/wp-wa-chat-bg.svg"
+const WA_CHAT_BG = "/icons/whatsapp/wp-wa-chat-bg.svg"
 
 export function ChatWallpaper({ children, className }: Props) {
   return (
@@ -22,9 +20,8 @@ export function ChatWallpaper({ children, className }: Props) {
       )}
       style={{
         backgroundImage: `url('${WA_CHAT_BG}')`,
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-        backgroundPosition: "center top",
+        backgroundRepeat: "repeat",
+        backgroundSize: "412px auto",
       }}
     >
       {children}

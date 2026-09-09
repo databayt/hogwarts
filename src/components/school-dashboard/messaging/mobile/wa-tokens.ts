@@ -2,8 +2,10 @@
 // Source of truth: ~/.claude/memory/whatsapp_tokens.json
 // Regenerate with: pnpm tsx scripts/generate-whatsapp-tokens.mjs
 
-export const WA_CDN_BASE =
-  "https://d1dlwtcfl0db67.cloudfront.net/icons" as const
+// Served from this app's own `public/icons/whatsapp/`. The former CloudFront and
+// cdn.databayt.org origins both answer HTTP 403, which rendered every icon in the
+// mobile WhatsApp UI as a broken image.
+export const WA_CDN_BASE = "/icons/whatsapp" as const
 
 export const WA_ICONS = {
   "ic-wa-lock-12": `${WA_CDN_BASE}/ic-wa-lock-12.svg`,

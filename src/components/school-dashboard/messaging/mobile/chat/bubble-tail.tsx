@@ -18,7 +18,9 @@ export function BubbleTail({ side, className }: Props) {
       height="18"
       className={cn(
         "pointer-events-none absolute bottom-0",
-        side === "me" ? "-right-[7.5px]" : "-left-[7.5px] scale-x-[-1]",
+        // Logical insets: under RTL "me" sits on the left, so the tail has to
+        // follow the bubble rather than stay pinned to a physical edge.
+        side === "me" ? "-end-[7.5px]" : "-start-[7.5px] scale-x-[-1]",
         "rtl:scale-x-[-1]",
         color,
         className

@@ -29,7 +29,13 @@ import { ConversationInfoPanel } from "./conversation-info-panel"
 import { NoActiveConversation } from "./empty-state"
 import { resolveMessagingError } from "./errors"
 import { usePresence } from "./hooks"
-import { IosChatList } from "./mobile"
+import { IosChatList, MessagesView } from "./mobile"
+import {
+  conversationAvatar,
+  conversationTitle,
+  toChatItems,
+  type AdaptLabels,
+} from "./mobile/chat/adapt"
 import type { ConversationDTO, MessageAttachmentDTO, MessageDTO } from "./types"
 
 // Build a MessageDTO from Socket.IO event data
@@ -650,6 +656,31 @@ export function MessagingClient({
     [activeConversation?.id]
   )
 
+  // Labels the mobile WhatsApp conversation view needs to render a message.
+  const adaptLabels: AdaptLabels = {
+    today: m?.ui?.today ?? "Today",
+    yesterday: m?.ui?.yesterday ?? "Yesterday",
+    deleted: m?.ui?.this_message_deleted ?? "This message was deleted",
+    photo: m?.ui?.photo ?? "Photo",
+    video: m?.ui?.video ?? "Video",
+    voice: m?.ui?.voice_message ?? "Voice message",
+    location: m?.ui?.preview?.location ?? "Location",
+    document: m?.ui?.document ?? "Document",
+    attachment: m?.ui?.attachment ?? "Attachment",
+    userFallback: m?.ui?.user_fallback ?? "User",
+    groupFallback: m?.ui?.mobile?.group_fallback ?? "Group",
+  }
+
+  const mobileChatItems = activeConversation
+    ? toChatItems(
+        messages,
+        currentUserId,
+        activeConversation.type !== "direct",
+        locale,
+        adaptLabels
+      )
+    : []
+
   return (
     <div className="bg-msg-chat-bg relative flex h-full">
       {/* Mobile (<md) — iOS WhatsApp chat list when no active conversation */}
@@ -713,13 +744,38 @@ export function MessagingClient({
         />
       </div>
 
-      {/* Chat area — hidden on mobile when no conversation */}
-      <div
-        className={cn(
-          "flex flex-1 flex-col",
-          !activeConversation ? "hidden md:flex" : "flex"
-        )}
-      >
+      {/* Mobile (<md) — iOS WhatsApp conversation view for the open chat */}
+      {activeConversation && (
+        <div className="flex h-full w-full flex-col md:hidden">
+          <MessagesView
+            contactName={conversationTitle(
+              activeConversation,
+              currentUserId,
+              adaptLabels
+            )}
+            contactSubtitle={
+              m?.ui?.mobile?.tap_for_info ?? "tap here for contact info"
+            }
+            contactAvatarUrl={conversationAvatar(
+              activeConversation,
+              currentUserId
+            )}
+            items={mobileChatItems}
+            hasMore={hasMoreMessages}
+            onLoadMore={handleLoadMoreMessages}
+            onBack={handleBack}
+            onTapInfo={() => setShowInfoPanel(true)}
+            onSend={(text) => {
+              void handleSendMessage(text)
+            }}
+            inputPlaceholder={m?.ui?.mobile?.input_placeholder ?? "Message"}
+            encryptionNotice={m?.ui?.encryption_notice}
+          />
+        </div>
+      )}
+
+      {/* Chat area — desktop only; mobile uses MessagesView above */}
+      <div className="hidden flex-1 flex-col md:flex">
         {activeConversation ? (
           <ChatInterface
             conversation={activeConversation}

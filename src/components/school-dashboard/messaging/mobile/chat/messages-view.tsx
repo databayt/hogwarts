@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -74,8 +74,16 @@ type Props = {
   onMic?: () => void
   replyDraft?: ReplyDraft | null
   draftText?: string
+  /** Fetches older messages when the reader reaches the top of the thread. */
+  onLoadMore?: () => void
+  hasMore?: boolean
+  inputPlaceholder?: string
+  encryptionNotice?: string
   className?: string
 }
+
+/** How close to the top counts as "asking for older messages". */
+const LOAD_MORE_THRESHOLD_PX = 120
 
 export function MessagesView({
   contactName,
@@ -94,8 +102,53 @@ export function MessagesView({
   onMic,
   replyDraft,
   draftText,
+  onLoadMore,
+  hasMore,
+  inputPlaceholder,
+  encryptionNotice,
   className,
 }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  // Distinguishes "older messages were prepended" from "a new one arrived".
+  const prevFirstId = useRef<string | null>(null)
+  const prevCount = useRef(0)
+  const prevScrollHeight = useRef(0)
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    const firstId = items[0]?.id ?? null
+    const grewAtTop =
+      prevFirstId.current !== null &&
+      firstId !== prevFirstId.current &&
+      items.length > prevCount.current
+
+    if (grewAtTop) {
+      // Older messages were prepended — hold the reader's place instead of
+      // yanking them back to the bottom.
+      el.scrollTop += el.scrollHeight - prevScrollHeight.current
+    } else if (items.length !== prevCount.current) {
+      el.scrollTop = el.scrollHeight
+    }
+
+    prevFirstId.current = firstId
+    prevCount.current = items.length
+    prevScrollHeight.current = el.scrollHeight
+  }, [items])
+
+  // Open every conversation at its newest message, as WhatsApp does.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [])
+
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el || !hasMore || !onLoadMore) return
+    if (el.scrollTop <= LOAD_MORE_THRESHOLD_PX) onLoadMore()
+  }
+
   const renderedItems = useMemo(
     () =>
       items.map((item) => {
@@ -170,12 +223,26 @@ export function MessagesView({
         onTapInfo={onTapInfo}
       />
 
-      <ChatWallpaper className="flex-1 overflow-hidden">
-        <div className="flex-1 overflow-y-auto pb-[8px]">{renderedItems}</div>
+      <ChatWallpaper className="min-h-0 flex-1 overflow-hidden">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto overscroll-contain pb-[8px]"
+        >
+          {encryptionNotice && (
+            <div className="flex w-full justify-center px-[16px] pt-[12px] pb-[4px]">
+              <p className="max-w-[320px] rounded-[8px] bg-[color:var(--wa-surface-date)] px-[12px] py-[6px] text-center text-[12px] leading-[16px] text-[color:var(--wa-text-primary)]">
+                {encryptionNotice}
+              </p>
+            </div>
+          )}
+          {renderedItems}
+        </div>
       </ChatWallpaper>
 
       <InputBar
         value={draftText}
+        placeholder={inputPlaceholder}
         onSend={onSend}
         onAttach={onAttach}
         onSticker={onSticker}

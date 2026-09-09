@@ -131,6 +131,11 @@
       "prefix": "رسائلك الشخصية",
       "topic_messages": "الرسائل",
       "suffix": "مشفرة"
+    },
+    "mobile": {
+      "input_placeholder": "رسالة",
+      "tap_for_info": "اضغط هنا لمعلومات جهة الاتصال",
+      "group_fallback": "مجموعة"
     }
   },
   "info": {
