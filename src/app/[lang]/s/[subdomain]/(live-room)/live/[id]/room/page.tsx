@@ -37,6 +37,7 @@ import {
 } from "@/components/school-dashboard/live/room/shelves"
 import { getSlideOptions } from "@/components/school-dashboard/live/room/slide-options"
 import type { RoomTitleCardData } from "@/components/school-dashboard/live/room/title-card"
+import { getText } from "@/components/translation/display"
 import { getLabels, getName, getNames } from "@/components/translation/person"
 
 // Page-data OOM safety: auth-gated room, render on demand.
@@ -197,6 +198,26 @@ export default async function Page({ params }: Props) {
   const label = (value: string | null | undefined) =>
     value ? (labels.get(value) ?? value) : null
 
+  // The lesson's own synopsis — the paragraph the frame runs under its button,
+  // and the only long prose on this card.
+  //
+  // `getText`, not the `getLabels` batch above: that one falls back to
+  // TRANSLITERATION when the translation API is down, which is right for a
+  // name and useless for a paragraph — 200 characters of Arabic prose rendered
+  // in Latin letters is unreadable in either language. `getText` falls back to
+  // the source text instead. It costs one more round trip, and only on a cache
+  // miss in the other language: a school reading its own storage language
+  // short-circuits before any network call.
+  const lessonSynopsis =
+    row?.catalogLesson?.description && schoolId
+      ? await getText(
+          row.catalogLesson.description,
+          (row.catalogLesson.lang === "en" ? "en" : "ar") as "ar" | "en",
+          lang === "en" ? "en" : "ar",
+          schoolId
+        )
+      : (row?.catalogLesson?.description ?? null)
+
   const minutes =
     row?.scheduledStart && row?.scheduledEnd
       ? Math.round(
@@ -250,6 +271,11 @@ export default async function Page({ params }: Props) {
           .filter(Boolean)
           .map((part) => label(part as string))
           .join(" · ") || null,
+        // What the lesson actually covers, in the curriculum's own words. This
+        // is the part that gives the paragraph the frame's LENGTH — the two
+        // rows above are labels, and a card carrying only those had one line
+        // where the reference has three and a `more`.
+        lessonSynopsis,
         row?.description ?? null,
       ]
         .filter(Boolean)

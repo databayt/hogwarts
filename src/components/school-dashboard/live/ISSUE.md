@@ -4,6 +4,62 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## The room card, closer to its frame — 2026-09-09
+
+Read against Figma `Hogwarts` node `574:31`, the Apple-TV show page the card
+was built from, on the phone width the frame is drawn at.
+
+- [x] **The title is the loudest thing on the card again.** The frame sets it
+      as a 50px logo across 350 of its 390 points; ours was 28px, which read as
+      a heading over a picture rather than as the identity of the thing. Now
+      40px on a phone, `text-5xl`/`text-6xl` above. Changed in the SHARED
+      frame, so the lumos lesson hero grew with it — checked at 1440 and 390.
+- [x] **The meta line carries the GRADE, not the section.** It read "الصف
+      الثاني عشر - ب": the frame's first item is a genre, the kind of thing you
+      are looking at, and the class letter is an identifier for whoever has to
+      tell two rooms apart. A student's rows are all one section anyway — the
+      same reason the landing page's `rowContext` shows them the grade.
+- [x] **"More" moved off the info line and onto the end of the paragraph**,
+      where the frame has it: three lines, then `… المزيد` in the reference's
+      blue, laid over the end of the third line on the shelf's own black. It
+      appears only when the text actually overflows, measured with a
+      ResizeObserver rather than assumed — the paragraph's width settles after
+      first paint and changes again on rotation.
+- [x] **The paragraph says what the class covers.** It was the teacher's name
+      plus two labels, one line where the frame has three; the lesson's own
+      `description` — the curriculum's synopsis — is now in it. Selected only
+      in `findRoomCardSession`, never in `landingSessionInclude`: the landing
+      page draws a dozen cards and would pull a dozen text columns to render
+      none. Translated with `getText`, not the `getLabels` batch, whose
+      fallback TRANSLITERATES — right for a name, unreadable for 200 characters
+      of Arabic prose.
+- [x] **The seed stopped writing its own bookkeeping into the card.** The clock
+      showcase marked its three rows with `description: "seed:clock-showcase"`,
+      and this card renders the description, so the demo student read it under
+      the join button. The rows carry fixed ids now (`clockshow<n><schoolId>`)
+      — nothing about a Conference id has to be a cuid, and `roomNameFor` still
+      parses because the id holds no `-lc-`. The demo gains a showcase URL that
+      survives a re-seed.
+- [x] **The showcase anchors a lesson that is actually written.** Roughly half
+      the catalog's lessons carry no `description` and whole subjects carry
+      none, so the demo student's card demonstrated the paragraph with one
+      line. The student's slot is now picked from a subject whose curriculum
+      has synopses, and the three rows anchor a described lesson where one
+      exists rather than waiting for `attachCatalogLessons`' curriculum walk.
+
+Desktop is deliberately unchanged: above `sm` the card is the wide overlay
+(marks above the button, no paragraph), which is its own documented layout —
+the frame is a phone frame. tsc 0.
+
+### Found while here, NOT fixed
+
+- **The lumos lesson hero clips its own button on a phone.** `dashboard/lesson/
+  content.tsx` wraps the shared card in a fixed `aspect-[4/5]` box with
+  `overflow-hidden` and `absolute inset-0`, so the stack that is meant to FLOW
+  under the poster is cut off at the poster's foot. Verified pre-existing by
+  forcing the title back to 28px — identical clipping. Not this block, and not
+  this ask.
+
 ## Demo fixture rots by the day — fixed 2026-09-09
 
 A STUDENT on `/live` saw "لا توجد جلسات مجدولة بعد" on a demo that had 213

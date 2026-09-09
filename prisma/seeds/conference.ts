@@ -1582,8 +1582,58 @@ async function attachCatalogLessons(
   return count
 }
 
-/** Marks the rows the clock showcase owns, so a re-run can replace its own. */
-const CLOCK_SHOWCASE = "seed:clock-showcase"
+/**
+ * A lesson of this subject that actually says what it covers, for the three
+ * showcase rows. Falls back to any published lesson, and then to null — which
+ * leaves the row for `attachCatalogLessons` to fill the ordinary way.
+ */
+async function describedLessonFor(
+  prisma: PrismaClient,
+  subjectId: string | null
+): Promise<string | null> {
+  if (!subjectId) return null
+  const order = [
+    { chapter: { sequenceOrder: "asc" as const } },
+    { sequenceOrder: "asc" as const },
+  ]
+  const described = await prisma.lesson.findFirst({
+    where: {
+      chapter: { subjectId },
+      status: "PUBLISHED",
+      description: { not: null },
+    },
+    orderBy: order,
+    ...ID,
+  })
+  if (described) return described.id
+  const any = await prisma.lesson.findFirst({
+    where: { chapter: { subjectId }, status: "PUBLISHED" },
+    orderBy: order,
+    ...ID,
+  })
+  return any?.id ?? null
+}
+
+/**
+ * The ids the clock showcase owns, so a re-run replaces its own three rows.
+ *
+ * It used to mark them by writing `seed:clock-showcase` into `description` —
+ * and the room card RENDERS the description, so the demo student read the
+ * seed's own bookkeeping in the paragraph under the join button. A marker
+ * belongs in a field nothing shows, and this model has none: `roomName` is
+ * rewritten to `roomNameFor(...)` on create (the webhook recovers the tenant by
+ * parsing it, so it cannot be repurposed) and `meetingProvider` surfaces in the
+ * sessions table.
+ *
+ * So the rows carry FIXED ids instead. Nothing about a Conference id has to be
+ * a cuid — it is the URL and the lookup key — and `roomNameFor` splits on its
+ * own `-lc-` separator, which these do not contain, so the room name still
+ * parses. The demo gains something from it too: the showcase URL survives a
+ * re-seed, where before every refresh handed out three new ones.
+ */
+function clockShowcaseIds(schoolId: string): string[] {
+  return [0, 1, 2].map((i) => `clockshow${i}${schoolId}`)
+}
 
 /**
  * Three sessions whose windows straddle the clock, so the landing card's phase
@@ -1608,8 +1658,9 @@ async function seedClockShowcase(
   prisma: PrismaClient,
   ctx: { schoolId: string; lang: string; termId: string }
 ): Promise<number> {
+  const ids = clockShowcaseIds(ctx.schoolId)
   await prisma.conference.deleteMany({
-    where: { schoolId: ctx.schoolId, description: CLOCK_SHOWCASE },
+    where: { schoolId: ctx.schoolId, id: { in: ids } },
   })
 
   const slotWhere = {
@@ -1658,12 +1709,12 @@ async function seedClockShowcase(
   // Loads its own slots rather than taking them: the count guard returns
   // before the main flow reads the timetable, and this phase has to run on
   // that skip path too or a re-run never refreshes the clock.
-  const [own, sample] = await Promise.all([
+  const [ownSlots, sample] = await Promise.all([
     testStudent?.sectionId
       ? prisma.timetable.findMany({
           where: { ...slotWhere, sectionId: testStudent.sectionId },
           select: slotSelect,
-          take: 1,
+          take: 20,
         })
       : Promise.resolve([]),
     prisma.timetable.findMany({
@@ -1672,6 +1723,45 @@ async function seedClockShowcase(
       take: 40,
     }),
   ])
+
+  // Of the student's own subjects, one whose curriculum is actually WRITTEN.
+  // Roughly half the catalog's lessons carry a `description` and whole
+  // subjects carry none, and the room card's paragraph is built from it — so
+  // taking the first slot on the timetable gave the showcase a class the card
+  // could only describe in labels. Which class it is does not matter here;
+  // that it demonstrates the card does.
+  const describedSubjects = new Set(
+    (
+      await prisma.lesson.findMany({
+        where: {
+          status: "PUBLISHED",
+          description: { not: null },
+          chapter: {
+            subjectId: {
+              in: [
+                ...new Set(
+                  ownSlots
+                    .map((slot) => slot.subjectId)
+                    .filter((id): id is string => Boolean(id))
+                ),
+              ],
+            },
+          },
+        },
+        select: { chapter: { select: { subjectId: true } } },
+        distinct: ["chapterId"],
+      })
+    ).map((lesson) => lesson.chapter.subjectId)
+  )
+  const own = [
+    ...ownSlots.filter(
+      (slot) => slot.subjectId && describedSubjects.has(slot.subjectId)
+    ),
+    ...ownSlots.filter(
+      (slot) => !slot.subjectId || !describedSubjects.has(slot.subjectId)
+    ),
+  ].slice(0, 1)
+
   const ordered = [
     ...own,
     ...sample.filter((s) => !own.some((o) => o.id === s.id)),
@@ -1702,24 +1792,47 @@ async function seedClockShowcase(
     { slot: picked[2], start: at(10), end: at(55), live: false },
   ]
 
-  for (const shape of shapes) {
-    const sessionId = await createSession(prisma, {
-      schoolId: ctx.schoolId,
-      teacherId: shape.slot.teacherId!,
-      sectionId: shape.slot.sectionId!,
-      subjectId: shape.slot.subjectId,
-      provider: "livekit",
-      roomName: `pending-clock-${shape.start.getTime()}-${shape.slot.id}`,
-      scheduledStart: shape.start,
-      scheduledEnd: shape.end,
-      actualStart: shape.live ? shape.start : null,
-      status: shape.live ? "live" : "scheduled",
-      recordingEnabled: false,
-      maxParticipants: 50,
-      visibility: "section",
-      title: sessionTitle(shape.slot),
-      description: CLOCK_SHOWCASE,
-      lang: ctx.lang,
+  for (const [index, shape] of shapes.entries()) {
+    const sessionId = ids[index]
+    // The id is ours rather than generated, so this is a plain create with the
+    // room name already final — `createSession`'s create-then-rename exists to
+    // get the generated id into `roomNameFor`, and there is nothing to wait for
+    // here.
+    await prisma.conference.create({
+      data: {
+        id: sessionId,
+        schoolId: ctx.schoolId,
+        teacherId: shape.slot.teacherId!,
+        sectionId: shape.slot.sectionId!,
+        subjectId: shape.slot.subjectId,
+        provider: "livekit",
+        roomName: roomNameFor(ctx.schoolId, sessionId),
+        scheduledStart: shape.start,
+        scheduledEnd: shape.end,
+        actualStart: shape.live ? shape.start : null,
+        status: shape.live ? "live" : "scheduled",
+        recordingEnabled: false,
+        maxParticipants: 50,
+        visibility: "section",
+        title: sessionTitle(shape.slot),
+        // No description. The card composes its paragraph from the teacher and
+        // the anchored lesson; a session's own blurb is what the wizard writes
+        // and a materialized slot writes none, so these read like the rest.
+        lang: ctx.lang,
+        // Anchored HERE rather than left to `attachCatalogLessons`, and to a
+        // lesson that has a written synopsis where the subject has one.
+        //
+        // That walk moves through the curriculum in order, which is right for
+        // the 161 dated sessions and arbitrary for three rows dated "now" — it
+        // handed these whichever lesson its cursor had reached, and roughly
+        // half the catalog's lessons carry no `description` at all. The room
+        // card's paragraph is built from that synopsis, so a showcase row that
+        // drew an undescribed lesson demonstrated the card with one line where
+        // the design has three. Same reasoning as the recordings above, where
+        // WHICH four rows get one is the point.
+        catalogLessonId: await describedLessonFor(prisma, shape.slot.subjectId),
+      },
+      ...ID,
     })
 
     const hostUserId = shape.slot.teacher?.userId ?? null

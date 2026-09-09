@@ -1212,7 +1212,24 @@ export async function getLiveSessionsForLesson(
 export async function findRoomCardSession(schoolId: string, id: string) {
   return db.conference.findFirst({
     where: { id, schoolId, deletedAt: null },
-    include: landingSessionInclude,
+    include: {
+      ...landingSessionInclude,
+      // The room card's paragraph, and the one place it is read. The lesson's
+      // own synopsis is what the reference frame puts under its button — the
+      // long sentence you read before deciding — where the shared include
+      // carries only names. It stays OUT of that include on purpose: the
+      // landing page draws a dozen cards at once and would pull a dozen text
+      // columns to render none of them.
+      catalogLesson: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          lang: true,
+          chapter: { select: { id: true, name: true } },
+        },
+      },
+    },
   })
 }
 

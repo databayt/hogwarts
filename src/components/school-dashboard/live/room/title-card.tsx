@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Check, ChevronLeft, Loader2, Play, Plus, Share } from "lucide-react"
 
@@ -11,7 +11,6 @@ import {
   TitleCard,
   titleCardChip,
   titleCardChipSolid,
-  titleCardMoreChip,
   titleCardPill,
   titleCardTopGlyph,
   titleCardTopPill,
@@ -31,9 +30,13 @@ export interface RoomTitleCardData {
    *  line below already carries, and wrap to two lines on a phone. Same
    *  decision the landing card records. */
   subject: string
-  /** The badge. Off `Section.grade`, never parsed out of `Section.name` —
-   *  that name is "Grade 7-A", the section including its letter. */
+  /** Where the class sits, for the meta line. Off `Section.grade`, never
+   *  parsed out of `Section.name` — that name is "Grade 7-A", the section
+   *  INCLUDING its class letter, and the letter is not a fact a reader of this
+   *  card needs. */
   grade: string | null
+  /** The section with its letter. Kept for the callers and the shelves below;
+   *  the meta line prefers `grade`. */
   section: string | null
   teacher: string | null
   /** Only a teacher who anchored a catalog lesson through the wizard has
@@ -222,6 +225,71 @@ function useClassProgress(startsAtMs: number | null, endsAtMs: number | null) {
 }
 
 /**
+ * The frame's paragraph: three lines, then `… more` into the long version.
+ *
+ * The reference truncates mid-sentence and puts its one blue word right after
+ * the ellipsis — "amazing creatures and… more" — so the cut itself is the
+ * invitation. Ours used to print the whole thing, however long, and offer the
+ * long version from a chip up on the info line, where the frame has nothing.
+ *
+ * `line-clamp-3` does the cutting and draws its own ellipsis; the link is laid
+ * OVER the end of the third line on the same black the shelf is painted in,
+ * which is what lets it sit inline rather than on a fourth line of its own.
+ * That only works while the text actually overflows — otherwise it would cover
+ * the tail of a short paragraph — so it is measured rather than assumed, and a
+ * class whose blurb fits in three lines simply has no link. `end-0` and not
+ * `right-0`: under Arabic the third line ends on the left.
+ *
+ * Measured with a ResizeObserver rather than once on mount: the shelf is a
+ * flex child of a card whose poster is clamped against the viewport, so this
+ * paragraph's width settles after the first paint and changes again on every
+ * rotation.
+ */
+function ClampedDescription({
+  text,
+  href,
+  more,
+}: {
+  text: string
+  href: string
+  more: string
+}) {
+  const ref = useRef<HTMLParagraphElement>(null)
+  const [clamped, setClamped] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    // A pixel of slack: sub-pixel line heights make an exactly-fitting
+    // paragraph report one scroll pixel more than it has.
+    const measure = () => setClamped(el.scrollHeight > el.clientHeight + 1)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [text])
+
+  return (
+    <div className="relative">
+      <p ref={ref} className="line-clamp-3">
+        {text}
+      </p>
+      {clamped && (
+        <Link
+          href={href}
+          /* Literal hex for the same reason the pill and the marks carry
+             theirs: this shelf is pinned dark, and a theme-aware token would
+             invert the link and its ground in light mode. */
+          className="absolute end-0 bottom-0 bg-black ps-1 text-[#0A84FF]"
+        >
+          &hellip;&nbsp;{more}
+        </Link>
+      )}
+    </div>
+  )
+}
+
+/**
  * The card a class opens on: its artwork, who teaches it, when it runs, and
  * one white pill that walks you in.
  *
@@ -249,14 +317,21 @@ export function RoomTitleCard({
   // marks row below the button is left holding only boxes, as it is there.
   // THREE items, like the frame's "Documentary · Jun 27, 2021 · 30 min TV+".
   // Where the class is, when it starts, how long it runs. Six items wrapped
-  // this line onto two, and the frame's is one.
+  // this line onto two, and the frame's is one. The teacher, the chapter and
+  // the lesson move into the paragraph, which is where the frame puts its
+  // narrator too.
   //
-  // `Section.name` is already "Grade 10 - A", so the grade would repeat it;
-  // the teacher, the chapter and the lesson move into the paragraph, which is
-  // where the frame puts its narrator too.
-  const metaParts = [data.section, data.startTime, data.durationLabel].filter(
-    (part): part is string => Boolean(part)
-  )
+  // The GRADE, not the section. The frame's first item is a genre — the kind
+  // of thing you are looking at — and "Grade 12" is that; the "- B" that
+  // `Section.name` carries is an identifier for whoever has to tell two
+  // rooms apart, which the reader of their own class never does. A student's
+  // rows are all one section anyway, the same reason the landing page's
+  // `rowContext` shows them the grade.
+  const metaParts = [
+    data.grade ?? data.section,
+    data.startTime,
+    data.durationLabel,
+  ].filter((part): part is string => Boolean(part))
   const marks = buildMarks(data.isRecording, data.tools, labels)
   const progress = useClassProgress(data.startsAtMs, data.endsAtMs)
   // A class with no clock cannot become a calendar event, so the button that
@@ -377,16 +452,21 @@ export function RoomTitleCard({
       color={data.color}
       alt={data.subject}
       title={data.subject}
-      description={data.description ?? undefined}
-      meta={
-        metaParts.length > 0 ? (
-          <>
-            <span>{metaParts.join(" · ")}</span>
-            <Link href={detailHref} className={titleCardMoreChip}>
-              {labels.more}
-            </Link>
-          </>
+      description={
+        data.description ? (
+          <ClampedDescription
+            text={data.description}
+            href={detailHref}
+            more={labels.more}
+          />
         ) : undefined
+      }
+      meta={
+        /* The frame's info line is exactly one grey sentence. The chip that
+           used to end it was the frame's "more" put in the wrong place: there
+           it belongs at the end of the truncated PARAGRAPH, which is where it
+           now is — see `ClampedDescription`. */
+        metaParts.length > 0 ? <span>{metaParts.join(" · ")}</span> : undefined
       }
       chips={
         <>

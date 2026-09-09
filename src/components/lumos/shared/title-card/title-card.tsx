@@ -152,9 +152,14 @@ export function TitleCard({
             </div>
           )}
 
-          {/* The frame sets its title as a 50px logo. 28px is what that reads
-              as in type at this width without wrapping a long subject. */}
-          <h1 className="text-[28px] leading-[34px] font-bold tracking-tight text-white sm:text-4xl sm:leading-none">
+          {/* The frame sets its title as a 50px logo across 350 of its 390
+              points — nine tenths of the width, and the single loudest thing
+              on the page. 28px read as a heading rather than as that, which is
+              what made the card look like a list row with a picture behind it.
+              40px is the same proportion in type, and `text-balance` keeps a
+              long subject from breaking one word onto its own line; two lines
+              are fine here, the band overflows upward into the fade. */}
+          <h1 className="text-[40px] leading-[44px] font-bold tracking-tight text-balance text-white sm:text-5xl sm:leading-none lg:text-6xl">
             {title}
           </h1>
 
