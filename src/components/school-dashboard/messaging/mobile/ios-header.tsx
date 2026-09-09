@@ -35,8 +35,9 @@ export function IosHeader({
   return (
     <div
       className={cn(
-        "relative flex h-[98px] w-full items-end justify-end gap-[16px] px-[16px] py-[8px]",
-        "bg-[color:var(--wa-surface-primary)]",
+        // Liquid glass: the bar itself has no surface. The buttons float as
+        // glass discs and the list scrolls underneath them.
+        "pointer-events-none relative flex h-[98px] w-full items-end justify-end gap-[14px] px-[16px] pb-[10px]",
         className
       )}
     >
@@ -72,7 +73,7 @@ export function IosHeader({
           <HeaderCircularButton onClick={onOptions} ariaLabel="More options">
             <WaIcon
               name="ic-wa-meetball-24"
-              className="size-[18px] text-[color:var(--wa-text-primary)]"
+              className="size-[22px] text-[color:var(--wa-text-primary)]"
             />
           </HeaderCircularButton>
           <div className="h-[26px] flex-1" />
@@ -83,7 +84,7 @@ export function IosHeader({
         <HeaderCircularButton onClick={onCamera} ariaLabel="Camera">
           <WaIcon
             name="ic-wa-camera-24"
-            className="size-[18px] text-[color:var(--wa-text-primary)]"
+            className="size-[22px] text-[color:var(--wa-text-primary)]"
           />
         </HeaderCircularButton>
       )}
@@ -96,7 +97,7 @@ export function IosHeader({
         >
           <WaIcon
             name="ic-wa-plus-add-24"
-            className="size-[17px] text-[color:var(--wa-text-invert)]"
+            className="size-[21px] text-[color:var(--wa-text-invert)]"
           />
         </HeaderCircularButton>
       )}
@@ -121,10 +122,11 @@ function HeaderCircularButton({
       onClick={onClick}
       aria-label={ariaLabel}
       className={cn(
-        "flex size-[28px] shrink-0 items-center justify-center rounded-full active:opacity-70",
+        "pointer-events-auto flex size-[42px] shrink-0 items-center justify-center rounded-full",
+        "shadow-[var(--wa-glass-shadow)] backdrop-blur-[20px] active:opacity-70",
         variant === "product"
           ? "bg-[color:var(--wa-surface-product)]"
-          : "bg-[color:var(--wa-surface-cta-circular)]"
+          : "border-[0.5px] border-[color:var(--wa-glass-border)] bg-[color:var(--wa-glass-bg)]"
       )}
     >
       {children}

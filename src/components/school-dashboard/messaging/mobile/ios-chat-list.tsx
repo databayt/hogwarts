@@ -170,7 +170,10 @@ export function IosChatList({
       .filter((c) => {
         if (activeFilter === "unread" && (c.unreadCount ?? 0) === 0)
           return false
-        if (activeFilter === "groups" && c.type !== "group") return false
+        // Anything that is not a 1:1 reads as a group in this list — the rows
+        // already draw `class`/`department` with the group avatar, so the
+        // filter has to agree or it hides every group the reader is in.
+        if (activeFilter === "groups" && c.type === "direct") return false
         if (activeFilter === "favourites") {
           const self = c.participants?.find((p) => p.userId === currentUserId)
           if (!self?.isPinned) return false
@@ -219,17 +222,21 @@ export function IosChatList({
   }
 
   return (
-    <div className="relative flex h-full w-full flex-col bg-[color:var(--wa-surface-primary)]">
-      <IosHeader
-        showOptions
-        showCamera
-        showAdd
-        onOptions={onOptions}
-        onCamera={onCamera}
-        onAdd={onNewChat}
-      />
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-[color:var(--wa-surface-primary)]">
+      {/* Header and tab bar float; the list is the only thing that scrolls,
+          and it passes underneath both. */}
+      <div className="absolute inset-x-0 top-0 z-20">
+        <IosHeader
+          showOptions
+          showCamera
+          showAdd
+          onOptions={onOptions}
+          onCamera={onCamera}
+          onAdd={onNewChat}
+        />
+      </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="flex-1 overflow-y-auto overscroll-contain pt-[98px] pb-[128px]">
         <IosTitleBlock
           title={L.titleChats}
           searchPlaceholder={L.searchPlaceholder}
@@ -276,7 +283,9 @@ export function IosChatList({
         </div>
       </div>
 
-      <IosTabbar tabs={tabs} active={activeTab} onChange={handleTabChange} />
+      <div className="absolute inset-x-0 bottom-0 z-20">
+        <IosTabbar tabs={tabs} active={activeTab} onChange={handleTabChange} />
+      </div>
     </div>
   )
 }

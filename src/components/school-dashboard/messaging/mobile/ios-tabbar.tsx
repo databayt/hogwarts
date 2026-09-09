@@ -34,28 +34,35 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
     <nav
       aria-label="Main tabs"
       className={cn(
-        "relative flex w-full flex-col items-center px-[23px]",
-        "border-t-[0.33px] border-[color:var(--wa-border-panel)]",
-        "bg-[color:var(--wa-surface-panel-blur)] backdrop-blur-[25px]",
+        // Liquid glass: a capsule floating clear of the screen edges, with the
+        // list scrolling beneath it rather than stopping at a bar.
+        "pointer-events-none relative flex w-full flex-col items-center px-[16px] pb-[6px]",
         className
       )}
     >
-      <ul className="flex w-full items-start justify-between pt-[3px] pb-[2px]">
+      <ul
+        className={cn(
+          "pointer-events-auto flex w-full items-center justify-between rounded-[32px] px-[10px] py-[8px]",
+          "border-[0.5px] border-[color:var(--wa-glass-border)] bg-[color:var(--wa-glass-bg)]",
+          "shadow-[var(--wa-glass-shadow)] backdrop-blur-[20px]"
+        )}
+      >
         {tabs.map((tab) => {
           const isActive = tab.id === active
           const color = isActive
             ? "text-[color:var(--wa-text-tabbar-selected)]"
             : "text-[color:var(--wa-text-tabbar)]"
           return (
-            <li
-              key={tab.id}
-              className="relative flex w-[32px] flex-col items-center"
-            >
+            <li key={tab.id} className="relative flex flex-1 justify-center">
               <button
                 type="button"
                 onClick={() => onChange(tab.id)}
                 aria-current={isActive ? "page" : undefined}
-                className="flex w-full flex-col items-center"
+                className={cn(
+                  // The selected tab sits in its own recessed pill.
+                  "flex flex-col items-center rounded-[20px] px-[12px] py-[4px]",
+                  isActive && "bg-[color:var(--wa-glass-inner)]"
+                )}
               >
                 {tab.id === "settings" ? (
                   // The reference's "You" slot: the reader's own face, or a
@@ -90,7 +97,7 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
                 </span>
               </button>
               {typeof tab.badge === "number" && tab.badge > 0 && (
-                <span className="absolute end-[-13px] top-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[color:var(--wa-surface-product)] px-[6px] text-[12px] leading-none tracking-[-0.12px] text-[color:var(--wa-text-invert)]">
+                <span className="absolute end-[2px] top-[-2px] flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[color:var(--wa-surface-product)] px-[6px] text-[12px] leading-none tracking-[-0.12px] text-[color:var(--wa-text-invert)]">
                   {tab.badge}
                 </span>
               )}

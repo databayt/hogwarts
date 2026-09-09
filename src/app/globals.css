@@ -765,11 +765,18 @@ body {
   --wa-text-cta-filters-active: #15603e;
   --wa-text-tabbar: #767779;
   --wa-text-tabbar-selected: #0a0a0a;
-  --wa-surface-avatar-group: #f5e3cd;
-  --wa-text-avatar-group: #9c6f38;
-  --wa-surface-avatar-person: #d7e7f8;
-  --wa-text-avatar-person: #2b7ac4;
+  /* Sampled from the iOS 26 chat-list screenshot. */
+  --wa-surface-avatar-group: #dffbd6;
+  --wa-text-avatar-group: #408559;
+  --wa-surface-avatar-person: #d6e7fb;
+  --wa-text-avatar-person: #2e67c5;
   --wa-border-cta-filters: #e4e4e4;
+  /* Liquid glass — the values the android app's AppleMaterial uses:
+     white at 0.85, a half-pixel black border at 0.08, elevation-12 shadow. */
+  --wa-glass-bg: rgba(255, 255, 255, 0.85);
+  --wa-glass-border: rgba(0, 0, 0, 0.08);
+  --wa-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --wa-glass-inner: rgba(0, 0, 0, 0.06);
   --wa-border-panel: rgba(0, 0, 0, 0.3);
   --wa-border-separator: rgba(0, 0, 0, 0.2);
   --wa-border-avatar: rgba(10, 10, 10, 0.1);
@@ -801,11 +808,15 @@ body {
   --wa-text-cta-filters-active: #aff2bf;
   --wa-text-tabbar: #8696a0;
   --wa-text-tabbar-selected: #e9edef;
-  --wa-surface-avatar-group: #3b3123;
-  --wa-text-avatar-group: #d3a76a;
+  --wa-surface-avatar-group: #1d3b26;
+  --wa-text-avatar-group: #7fd39c;
   --wa-surface-avatar-person: #1e3348;
   --wa-text-avatar-person: #7fb6e8;
   --wa-border-cta-filters: #2a3942;
+  --wa-glass-bg: rgba(32, 44, 51, 0.85);
+  --wa-glass-border: rgba(255, 255, 255, 0.15);
+  --wa-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --wa-glass-inner: rgba(255, 255, 255, 0.10);
   --wa-border-panel: rgba(255, 255, 255, 0.12);
   --wa-border-separator: rgba(134, 150, 160, 0.2);
   --wa-border-avatar: rgba(255, 255, 255, 0.08);

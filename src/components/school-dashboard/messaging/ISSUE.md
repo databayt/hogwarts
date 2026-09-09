@@ -287,6 +287,28 @@ banner, the Meta AI button, and an "Updates" tab — our tab bar carries four sl
 (Calls, Classes, Chats, You) against the reference's five. The `+` filter chip is
 visual only; there are no custom filter lists behind it.
 
+### Liquid glass — 2026-09-09
+
+Re-read against the iOS 26 chat list (`public/whatsapp/File.png`), where the
+header and tab bar stopped being bars.
+
+- [x] **Header buttons float.** The bar has no surface of its own; three 42px
+      glass discs sit over the list and it scrolls underneath them.
+- [x] **The tab bar is a floating capsule**, inset from the screen edges, with
+      the selected tab in its own recessed pill. Same scroll-under treatment.
+- [x] **Glass values come from the android app**, not invented:
+      `core/designsystem/.../apple/apple-materials.kt` → white at 0.85, a half-pixel
+      black border at 0.08, an elevation-12 shadow. Tokenised as `--wa-glass-bg`,
+      `--wa-glass-border`, `--wa-glass-shadow`, `--wa-glass-inner`, light and dark.
+- [x] **Group avatars are pale green**, not peach — the newer screenshot changed
+      them. Sampled: fill `#dffbd6`, glyph `#408559`. Search field grew 36 → 44.
+- [x] **The Groups filter matched only `type === "group"`** while the rows draw
+      every non-direct conversation with the group avatar, so it hid all five of the
+      demo admin's groups (they are seeded as `department`). It now excludes only
+      `direct`, which is the same rule the rows use.
+
+Still four tabs against the reference's five; "Updates" has nowhere to route yet.
+
 ### i18n debt (P2)
 
 Client UI is dictionary-keyed (dedicated `messaging` namespace, `dictionaries.ts:142`). Server-action error i18n is now done; two logic-layer items remain:

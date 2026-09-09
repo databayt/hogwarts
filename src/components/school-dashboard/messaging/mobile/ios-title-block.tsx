@@ -47,7 +47,7 @@ export function IosTitleBlock({
           {title}
         </h1>
 
-        <label className="flex w-full items-center gap-[6px] h-[36px] rounded-[10px] bg-[color:var(--wa-surface-search-chat)] px-[8px]">
+        <label className="flex w-full items-center gap-[6px] h-[44px] rounded-[12px] bg-[color:var(--wa-surface-search-chat)] px-[8px]">
           <WaIcon
             name="ic-wa-search-24"
             className="size-[16px] shrink-0 text-[color:var(--wa-text-secondary)]"
