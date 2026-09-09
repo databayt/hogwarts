@@ -185,6 +185,7 @@ export function LumosLessonContent({
   // instructor switch further down the page just swaps the source in place.
   const [openFullscreen, setOpenFullscreen] = useState(false)
   const heroRef = useRef<HTMLDivElement>(null)
+  const pendingProgressRef = useRef<Promise<void> | null>(null)
 
   // The page opens ON the hero, not above it.
   //
@@ -350,7 +351,10 @@ export function LumosLessonContent({
       // The server owns the completion rule (watched-through, see
       // lib/progress-core.ts) — reflect its verdict rather than waiting for
       // the <video> element's unreliable `ended`.
-      updateLessonProgress({
+      // Held so the fullscreen exit can wait for it: the poster's resume pill
+      // reads `lesson.progress` from the server, and refreshing while this
+      // write is still in flight paints the position from before the watch.
+      pendingProgressRef.current = updateLessonProgress({
         lessonId: lesson.id,
         watchedSeconds: Math.floor(progress.watchedSeconds),
         totalSeconds: Math.floor(progress.duration),
@@ -411,7 +415,12 @@ export function LumosLessonContent({
       setAutoPlay(false)
       setOpenFullscreen(false)
       setShowHero(true)
-      router.refresh()
+      // AFTER the position the player just flushed has landed — the player
+      // fires that write on its way out of fullscreen, and refreshing
+      // alongside it reads the row as it was before the watch.
+      const pending = pendingProgressRef.current
+      if (pending) void pending.finally(() => router.refresh())
+      else router.refresh()
     },
     [router]
   )

@@ -541,15 +541,24 @@ export function VideoPlayer({
   useEffect(() => {
     if (wasFullscreenRef.current === state.isFullscreen) return
     wasFullscreenRef.current = state.isFullscreen
-    // Pause on the way OUT, before the caller hears about it: the caller is
-    // likely to put its poster back and tear this player down, and the only
-    // thing that flushes the watched position to the server on that path is
-    // the <video>'s own `pause` event. Unmounting mid-play loses up to one
-    // save interval, which is the difference between the page reopening on a
-    // "continue watching" pill and reopening on a bare Play.
-    if (!state.isFullscreen) videoRef.current?.pause()
+    // Flush the watched position on the way OUT, before the caller hears
+    // about it: the caller is likely to put its poster back and tear this
+    // player down, and losing the last stretch is the difference between the
+    // page reopening on a "continue watching" pill and reopening on a bare
+    // Play.
+    //
+    // `onPause()` is called DIRECTLY rather than left to the pause handler.
+    // `.pause()` only queues the `pause` event as a media-element task, and
+    // the caller's unmount tears the listener off in the same tick — a race
+    // Chromium happens to lose gracefully, but not one worth standing on. A
+    // double flush is harmless (it clears its own debounce); a missed one is
+    // not.
+    if (!state.isFullscreen) {
+      videoRef.current?.pause()
+      onPause()
+    }
     onFullscreenChange?.(state.isFullscreen)
-  }, [state.isFullscreen, onFullscreenChange])
+  }, [state.isFullscreen, onFullscreenChange, onPause, videoRef])
 
   // Seek handlers
   const handleSeek = useCallback(

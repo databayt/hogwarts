@@ -45,15 +45,31 @@ last_audited: 2026-09-02
       what iOS Safari gets (no `requestFullscreen` on a `<div>`, and
       `webkitEnterFullscreen` on the bare `<video>` would drop the forensic
       watermark) and what a refused request falls back to.
-- [x] **The player pauses on the way out**, before telling the caller — the
-      `<video>`'s own `pause` event is the only thing that flushes the watched
-      position when the caller then unmounts it.
+- [x] **The player flushes the watched position on the way out**, before
+      telling the caller, and calls the flush DIRECTLY rather than leaving it
+      to the `pause` handler — `.pause()` only queues that event, and the
+      caller's unmount tears the listener off in the same tick. The lesson page
+      then holds the write and refreshes only once it lands, because the resume
+      pill reads `lesson.progress` from the server.
 - [x] Verified in the headed browser on `demo.localhost:3000` (Arabic lesson
       `cmtp5d31g042f8osfuasp2ul7`): Play →
       `document.fullscreenElement === container` and the video playing; Escape
       and `f` both → fullscreen null, hero back, same URL; a second Play
       re-enters, so nothing sticks. No fullscreen errors or unhandled
       rejections in the console.
+
+Open:
+
+- [ ] **The progress flush on exit is unverified against a real video.** Every
+      lesson in the local catalog plays the marketing fallback, where
+      `handleProgress` returns early by design, so the flush → refresh → resume
+      pill chain has only been reasoned about, not watched.
+- [ ] **Toasts fire behind the fullscreen element.** Sonner portals to `<body>`,
+      and fullscreen is now the default way a lesson is watched, so
+      "Lesson completed!" and any progress error are invisible while playing.
+- [ ] **The iOS Safari CSS-layer fallback is unverified** — it is the branch
+      that keeps the forensic watermark on the picture, and it has only been
+      exercised through the desktop refusal path.
 
 ---
 
