@@ -74,7 +74,7 @@ export function IosHeader({
           <HeaderCircularButton onClick={onOptions} ariaLabel="More options">
             <WaIcon
               name="ic-wa-meetball-24"
-              className="size-[22px] text-[color:var(--wa-text-primary)]"
+              className="size-[22px]"
             />
           </HeaderCircularButton>
           <div className="h-[26px] flex-1" />
@@ -85,7 +85,7 @@ export function IosHeader({
         <HeaderCircularButton onClick={onCamera} ariaLabel="Camera">
           <WaIcon
             name="ic-wa-camera-24"
-            className="size-[22px] text-[color:var(--wa-text-primary)]"
+            className="size-[22px]"
           />
         </HeaderCircularButton>
       )}
@@ -124,10 +124,11 @@ function HeaderCircularButton({
       aria-label={ariaLabel}
       className={cn(
         "pointer-events-auto flex size-[42px] shrink-0 items-center justify-center rounded-full",
-        "shadow-[var(--wa-glass-shadow)] backdrop-blur-[20px] active:opacity-70",
         variant === "product"
-          ? "bg-[color:var(--wa-surface-product)]"
-          : "border-[0.5px] border-[color:var(--wa-glass-border)] bg-[color:var(--wa-glass-bg)]"
+          ? // The compose button is a tinted control, not a clear one: it keeps
+            // the brand fill and only borrows the glass depth.
+            "bg-[color:var(--wa-surface-product)] shadow-[3px_6px_16px_rgba(0,0,0,0.18)] active:opacity-80"
+          : "wa-glass-control"
       )}
     >
       {children}

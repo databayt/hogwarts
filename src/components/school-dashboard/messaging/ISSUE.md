@@ -327,6 +327,24 @@ Still four tabs against the reference's five; "Updates" has nowhere to route yet
 - [x] **Footer labels removed**, four tabs kept, each label preserved as the
       button's `aria-label`. The fake home indicator went with them: standalone iOS
       draws the real one over that space, and a browser has none.
+- [x] **Header buttons carry the Figma node's Liquid Glass material**
+      (`iuYSGaRV8xkcEGnyIltPRg`, node `1:59`) as `.wa-glass-control` in
+      `globals.css`. The variables map straight across: Frost 7 → a 7px backdrop
+      blur, Depth 16 → the cast shadow's reach, Splay 6 → how far it is thrown,
+      Light Angle −45 → lit from the upper *start* corner (so the rule mirrors
+      under RTL), Refraction 100 → a bright inset rim where light enters and a
+      dim one where it leaves, Dispersion 0 → a neutral rim, Labels/Primary
+      `#1a1a1a` → the glyph. The compose button stays brand-filled and borrows
+      only the depth.
+
+      **Caveat: the node was never rendered.** `get_variable_defs` returned just
+      before the Figma MCP hit its Starter-plan call limit; `get_screenshot` and
+      `get_metadata` did not. The Keychain's `figma` item is the desktop app's
+      safe-storage key, not a REST token, so the API answered 403, and the
+      authenticated Playwright profile would not launch. The *material* is
+      therefore exact and the *geometry* unverified — the buttons keep the 42px
+      the screenshot measurements gave them. A PNG of the node, or a `figd_`
+      token, would settle it.
 
 ### i18n debt (P2)
 

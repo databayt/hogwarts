@@ -816,7 +816,7 @@ body {
   --wa-glass-bg: rgba(32, 44, 51, 0.85);
   --wa-glass-border: rgba(255, 255, 255, 0.15);
   --wa-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --wa-glass-inner: rgba(255, 255, 255, 0.10);
+  --wa-glass-inner: rgba(255, 255, 255, 0.1);
   --wa-border-panel: rgba(255, 255, 255, 0.12);
   --wa-border-separator: rgba(134, 150, 160, 0.2);
   --wa-border-avatar: rgba(255, 255, 255, 0.08);
@@ -825,6 +825,77 @@ body {
   --wa-text-quote-title: #f26196;
 }
 /* WA TOKENS END */
+
+/* ── Liquid Glass control ──────────────────────────────────────────────────
+   The header buttons, built from the Figma node's own Liquid Glass variables
+   rather than eyeballed:
+
+     Frost - Regular  7    → backdrop blur, in px
+     Depth - Regular  16   → how far the cast shadow reaches
+     Splay - Regular  6    → how far it is thrown from the control
+     Light Angle      -45  → lit from the upper start corner, so the shadow
+                             falls to the lower end corner and the specular
+                             rim sits opposite it
+     Refraction       100  → at full strength: a bright rim where the glass
+                             bends light, and a darker one where it leaves
+     Dispersion       0    → no chromatic fringing, so the rim stays neutral
+     Labels/Primary   #1a1a1a → the glyph
+
+   Written as a class because the specular rim, the refractive edge and the
+   cast shadow are three stacked shadows plus a saturating backdrop, which is
+   unreadable as a string of arbitrary utilities. Logical properties keep the
+   light angle mirrored under RTL. */
+.wa-glass-control {
+  color: #1a1a1a;
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(7px) saturate(180%);
+  backdrop-filter: blur(7px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    /* refraction: bright where the light enters, dim where it exits */
+    inset 1px 1px 1.5px rgba(255, 255, 255, 0.95),
+    inset -1px -1px 1.5px rgba(0, 0, 0, 0.07),
+    /* depth 16 thrown by splay 6 along the -45° light angle */ 3px 6px 16px
+      rgba(0, 0, 0, 0.14);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* The light comes from the upper *start* corner, so the whole treatment
+   mirrors with the writing direction. */
+[dir="rtl"] .wa-glass-control {
+  box-shadow:
+    inset -1px 1px 1.5px rgba(255, 255, 255, 0.95),
+    inset 1px -1px 1.5px rgba(0, 0, 0, 0.07),
+    -3px 6px 16px rgba(0, 0, 0, 0.14);
+}
+
+.wa-glass-control:active {
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    inset 1px 1px 1.5px rgba(255, 255, 255, 0.95),
+    inset -1px -1px 1.5px rgba(0, 0, 0, 0.07),
+    1px 2px 6px rgba(0, 0, 0, 0.16);
+}
+
+.dark .wa-glass-control {
+  color: #f2f2f2;
+  background: rgba(60, 70, 78, 0.55);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 1px 1px 1.5px rgba(255, 255, 255, 0.22),
+    inset -1px -1px 1.5px rgba(0, 0, 0, 0.35),
+    3px 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.dark [dir="rtl"] .wa-glass-control,
+[dir="rtl"] .dark .wa-glass-control {
+  box-shadow:
+    inset -1px 1px 1.5px rgba(255, 255, 255, 0.22),
+    inset 1px -1px 1.5px rgba(0, 0, 0, 0.35),
+    -3px 6px 16px rgba(0, 0, 0, 0.5);
+}
 
 /* ── shadcn-style code blocks ──────────────────────────────────────────────
    Docs render fenced code via fumadocs `DynamicCodeBlock` (runtime shiki —
