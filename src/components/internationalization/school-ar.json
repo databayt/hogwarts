@@ -8752,6 +8752,13 @@
       "pagesLabel": "عدد الصفحات",
       "read": "اقرأ",
       "borrow": "استعارة",
+      "gradeLevels": {
+        "GENERAL": "عام",
+        "KG": "روضة",
+        "PRIMARY": "ابتدائي",
+        "INTERMEDIATE": "متوسط",
+        "SECONDARY": "ثانوي"
+      },
       "returnShort": "إرجاع",
       "publisher": "الناشر",
       "language": "اللغة",

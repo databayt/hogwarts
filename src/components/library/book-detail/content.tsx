@@ -183,9 +183,21 @@ export default async function LibraryBookDetailContent({
   ])
   const shown = book ?? catalogBook
 
+  // The eyebrow's word. `BOOK_GRADE_LEVEL_LABELS` in `config.ts` is an
+  // English-only constant, so it rendered "Elementary" on an otherwise fully
+  // Arabic page — the one string on this hero that `localize()` cannot reach,
+  // because it never comes from the database. It reads the dictionary first
+  // and keeps the constant as the fallback for a level a locale has not named.
+  const gradeLevels = (
+    dictionary as
+      | { library?: { gradeLevels?: Record<string, string> } }
+      | undefined
+  )?.library?.gradeLevels
+
   const gradeLabel =
     shown.gradeLevel && shown.gradeLevel !== "GENERAL"
-      ? (BOOK_GRADE_LEVEL_LABELS[shown.gradeLevel as BookGradeLevel] ??
+      ? (gradeLevels?.[shown.gradeLevel] ??
+        BOOK_GRADE_LEVEL_LABELS[shown.gradeLevel as BookGradeLevel] ??
         shown.gradeLevel)
       : null
 

@@ -8744,6 +8744,13 @@
       "pagesLabel": "Pages",
       "read": "Read",
       "borrow": "Borrow",
+      "gradeLevels": {
+        "GENERAL": "General",
+        "KG": "KG",
+        "PRIMARY": "Elementary",
+        "INTERMEDIATE": "Middle",
+        "SECONDARY": "High"
+      },
       "returnShort": "Return",
       "publisher": "Publisher",
       "language": "Language",
