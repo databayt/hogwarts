@@ -6,7 +6,7 @@ import { ChevronRight, Star } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-import { BookCover } from "../book-cover"
+import { BookJacket } from "../book-jacket"
 import BorrowBook from "./borrow-book"
 
 interface Props {
@@ -23,6 +23,8 @@ interface Props {
   lang: string
   publicationYear?: number | null
   pageCount?: number | null
+  /** The digital copy, when the catalog row has one. Drives the Read pill. */
+  digitalFileUrl?: string | null
   availableCopies: number
   totalCopies: number
   /** Props forwarded to the borrow pill. */
@@ -60,6 +62,7 @@ export function BookHero({
   lang,
   publicationYear,
   pageCount,
+  digitalFileUrl,
   availableCopies,
   totalCopies,
   schoolBookId,
@@ -99,21 +102,17 @@ export function BookHero({
       <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/40 to-black/65" />
 
       <div className="relative mx-auto flex max-w-xl flex-col items-center px-6 pt-10 pb-9 text-center">
-        <div
-          className="aspect-[2/3] w-40 overflow-hidden rounded-lg shadow-[0_24px_50px_rgba(0,0,0,0.45)] sm:w-48"
-          style={{ backgroundColor: coverColor || "#1a1a2e" }}
-        >
-          <BookCover
-            coverUrl={coverUrl}
-            coverColor={coverColor}
-            title={title}
-            author={author}
-            width={192}
-            height={288}
-            priority
-            textSize="md"
-          />
-        </div>
+        <BookJacket
+          coverUrl={coverUrl}
+          coverColor={coverColor}
+          title={title}
+          author={author}
+          width={192}
+          height={288}
+          priority
+          textSize="md"
+          className="aspect-[2/3] w-40 shadow-[0_24px_50px_rgba(0,0,0,0.45)] sm:w-48"
+        />
 
         {/* The reference's "APPLE BOOKS CLASSICS" line — the shelf this book
             belongs to. Ours is the grade it is written for, and a book for
@@ -195,6 +194,7 @@ export function BookHero({
               availableCopies={availableCopies}
               hasBorrowedBook={hasBorrowedBook}
               borrowRecordId={borrowRecordId}
+              digitalFileUrl={digitalFileUrl}
               dictionary={lib}
             />
           </div>

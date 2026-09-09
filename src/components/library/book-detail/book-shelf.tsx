@@ -4,7 +4,7 @@
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 
-import { BookCover } from "../book-cover"
+import { BookJacket } from "../book-jacket"
 
 interface ShelfBook {
   id: string
@@ -47,20 +47,16 @@ export function BookShelf({ heading, books, lang }: Props) {
             href={`/${lang}/library/books/${book.id}`}
             className="group w-28 shrink-0 sm:w-32"
           >
-            <div
-              className="aspect-[2/3] overflow-hidden rounded-md shadow-md transition-shadow group-hover:shadow-lg"
-              style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
-            >
-              <BookCover
-                coverUrl={book.coverUrl}
-                coverColor={book.coverColor}
-                title={book.title}
-                author={book.author}
-                width={128}
-                height={192}
-                textSize="sm"
-              />
-            </div>
+            <BookJacket
+              coverUrl={book.coverUrl}
+              coverColor={book.coverColor}
+              title={book.title}
+              author={book.author}
+              width={128}
+              height={192}
+              textSize="sm"
+              className="aspect-[2/3] shadow-md transition-shadow group-hover:shadow-lg"
+            />
             <p className="mt-2 line-clamp-2 text-sm font-medium">
               {book.title}
             </p>
