@@ -4,6 +4,23 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## The shelf heading says what it holds — 2026-09-09
+
+- [x] **It printed the section name**, "الصف الثاني عشر - ب", on the reading
+      that the section is the series where the reference says "Season 2". But a
+      section name is an identifier, and the reader is already standing in that
+      section: it named the room they were in and said nothing about the tiles
+      under it, which are the four classes behind and the eight ahead. It now
+      reads "حصص أخرى" / "More classes" — one label covering both the
+      section-scoped shelf and the school-wide one, which held the same rows
+      and only ever differed in scope. `room.shelf.schoolWide` renamed to
+      `room.shelf.classes` in both dictionaries, since the key no longer names
+      only the school-wide case.
+- [x] **Foreground, not the reference's system blue.** Blue there is a control
+      colour, spent on links you might take; this heading names the shelf under
+      it and is read rather than clicked, and a blue one sat louder than the
+      section titles either side. The chevron still says it goes somewhere.
+
 ## The card's type, and the lesson hero drawing the same page — 2026-09-09
 
 - [x] **The title is set in Thmanyah SANS**, registered beside the serif text

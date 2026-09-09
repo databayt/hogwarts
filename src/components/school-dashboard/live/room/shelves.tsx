@@ -57,17 +57,20 @@ function ShelfHeading({
   href?: string
   /** The blue link at the far end. Rendered only with an `href` to give it. */
   seeAll?: string
+  /** The heading is ITSELF the link, with a chevron — the reference's
+   *  "Season 2 ⌄" rather than a title with a "See All" beside it. */
   accent?: boolean
 }) {
   if (accent && href) {
     return (
       <Link
         href={href}
-        // Apple's system blue, which brightens a step in dark mode
-        // (#007AFF → #0A84FF) — the reference heading is blue in both frames.
-        // Literal hex because it is a fixed accent, not a brand token; the
-        // `dark:` variant is what keeps it legible on either ground.
-        className={ACCENT_LINK + " gap-0.5 text-[17px] font-semibold"}
+        // Foreground, not the reference's system blue. Blue there is a control
+        // colour and the frame spends it on links you might take; a heading
+        // that names the shelf under it is read, not clicked, and a blue one
+        // sat louder than the section titles either side of it. The chevron
+        // still says it goes somewhere.
+        className="text-foreground inline-flex items-center gap-0.5 text-[17px] font-semibold transition-opacity hover:opacity-80"
       >
         {title}
         <ChevronRight className="size-5 rtl:-scale-x-100" aria-hidden />

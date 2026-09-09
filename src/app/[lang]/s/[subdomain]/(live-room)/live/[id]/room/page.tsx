@@ -484,11 +484,17 @@ export default async function Page({ params }: Props) {
             items={shelfItems}
             seeAllHref={`/${lang}/live`}
             labels={{
-              // The section IS the series — "Grade 10-A" where the reference
-              // says "Season 2". A school-wide assembly has no section, so it
-              // falls back to naming what the row actually holds.
-              heading:
-                card.section ?? t?.room?.shelf?.schoolWide ?? "More classes",
+              // What the shelf HOLDS, not which section it belongs to.
+              //
+              // It printed `Section.name` — "الصف الثاني عشر - ب" — on the
+              // reading that the section is the series, where the reference
+              // says "Season 2". But a section name is an identifier, and the
+              // reader is already inside their own section: it named the room
+              // they were standing in and said nothing about the tiles under
+              // it, which are the four classes behind and eight ahead. One
+              // label now covers the section-scoped shelf and the school-wide
+              // one, which held the same rows and only differed in scope.
+              heading: t?.room?.shelf?.classes ?? "More classes",
               live: t?.status?.live ?? "Live",
               recorded: t?.room?.shelf?.recording ?? "Recording",
             }}
