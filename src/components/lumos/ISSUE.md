@@ -20,6 +20,43 @@ last_audited: 2026-09-02
 
 ---
 
+## 2026-09-09 — Play opens fullscreen, and leaving it lands back on the lesson
+
+- [x] **Play now opens the player in fullscreen and starts playing.** Both
+      Play pills on the hero (fresh, and part-watched with its progress bar)
+      run one `handlePlay`; the player takes a new `startFullscreen` prop and
+      requests fullscreen on mount, which is still inside the click's user
+      activation.
+- [x] **Leaving fullscreen puts the poster back** — same URL, no navigation.
+      The player reports the change through a new `onFullscreenChange`, and
+      the lesson page answers by restoring the hero and calling
+      `router.refresh()`, because the "continue watching" pill reads
+      `lesson.progress` from the server and the position just watched was
+      written by a server action.
+- [x] **The fullscreen control was broken and is fixed.** `fullscreenchange`
+      called `toggleFullscreen`, so entering fullscreen immediately left it:
+      the request resolved, the event fired, and the toggle read the state
+      the browser had just applied and undid it. Escape then asked for
+      fullscreen back with no user gesture, the promise rejected, and
+      `isFullscreen` stuck at `true` over a CSS `fixed inset-0` layer. The
+      listener now SYNCS the mirror (`setFullscreen`), and the toggle branches
+      on `document.fullscreenElement` rather than on its own state.
+- [x] **The CSS layer is now a deliberate fallback**, not an accident: it is
+      what iOS Safari gets (no `requestFullscreen` on a `<div>`, and
+      `webkitEnterFullscreen` on the bare `<video>` would drop the forensic
+      watermark) and what a refused request falls back to.
+- [x] **The player pauses on the way out**, before telling the caller — the
+      `<video>`'s own `pause` event is the only thing that flushes the watched
+      position when the caller then unmounts it.
+- [x] Verified in the headed browser on `demo.localhost:3000` (Arabic lesson
+      `cmtp5d31g042f8osfuasp2ul7`): Play →
+      `document.fullscreenElement === container` and the video playing; Escape
+      and `f` both → fullscreen null, hero back, same URL; a second Play
+      re-enters, so nothing sticks. No fullscreen errors or unhandled
+      rejections in the console.
+
+---
+
 ## 2026-09-03 — the lesson's shelf tile becomes shared
 
 - [x] **"More from Course" moved to `shared/shelf-card/`** and the lesson page

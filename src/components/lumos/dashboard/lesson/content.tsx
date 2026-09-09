@@ -29,7 +29,6 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { asset } from "@/lib/asset-url"
 import { enqueue } from "@/lib/offline/outbox"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -107,7 +106,22 @@ interface LumosLessonContentProps {
 // marketing "story" video so the player surface is never empty. This is the
 // same clip shown on the public SaaS marketing page (saas-marketing/
 // story-section.tsx) and the docs story video.
-const FALLBACK_VIDEO_URL = asset("/media/story.mp4")
+//
+// Until real lesson videos are uploaded this is what EVERY lesson plays: the
+// catalog carries no approved video rows, so every lesson takes this branch.
+// The moment a real video lands for a lesson, that lesson plays it instead —
+// this is a fallback, not a hard-wire, which is why it stays here rather than
+// replacing the resolution above.
+//
+// A full CDN URL rather than `asset()`: that helper flattens any path to its
+// bare file name (`/media/story.mp4` → `hogwarts/story.mp4`), and the flat key
+// is served `application/octet-stream` while this one is served `video/mp4`.
+// Chromium plays either; a `<video>` source is exactly where a wrong MIME type
+// is worth not betting on. `asset()`'s own docs call out grouped assets moving
+// to a full URL like this.
+const FALLBACK_VIDEO_URL = `https://${
+  process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"
+}/hogwarts/media/story.mp4`
 
 export function LumosLessonContent({
   dictionary,
@@ -165,6 +179,11 @@ export function LumosLessonContent({
     minuteUnit: vp?.minuteUnit,
   }
   const [showHero, setShowHero] = useState(true)
+  // Play opens the player straight into fullscreen; leaving fullscreen brings
+  // the poster back, so the lesson page is what the viewer comes out onto
+  // rather than a stranded inline video. Only the Play pill sets this — an
+  // instructor switch further down the page just swaps the source in place.
+  const [openFullscreen, setOpenFullscreen] = useState(false)
   const heroRef = useRef<HTMLDivElement>(null)
 
   // The page opens ON the hero, not above it.
@@ -370,6 +389,32 @@ export function LumosLessonContent({
       }
     })
   }, [isCompleted, playingFallback, lesson.id, lesson.chapter.course.slug])
+
+  // Press Play → the poster gives way to the player, which opens fullscreen
+  // and starts playing. Both Play pills (fresh lesson, and part-watched with
+  // its progress bar) run this.
+  const handlePlay = useCallback(() => {
+    if (!currentVideoUrl) return
+    setAutoPlay(true)
+    setOpenFullscreen(true)
+    setShowHero(false)
+  }, [currentVideoUrl])
+
+  // Coming out of fullscreen lands back on the lesson page — the same URL,
+  // the poster and its "continue watching" pill. `router.refresh()` is what
+  // makes that pill honest: its bar reads `lesson.progress` from the server,
+  // and the position just watched was written by a server action the client
+  // tree knows nothing about.
+  const handleFullscreenChange = useCallback(
+    (isFullscreen: boolean) => {
+      if (isFullscreen) return
+      setAutoPlay(false)
+      setOpenFullscreen(false)
+      setShowHero(true)
+      router.refresh()
+    },
+    [router]
+  )
 
   // Handle auto-play next lesson
   const handleNextLesson = useCallback(() => {
@@ -585,12 +630,7 @@ export function LumosLessonContent({
                   lesson.progress.watchedSeconds > 0 &&
                   lesson.progress.totalSeconds ? (
                   <button
-                    onClick={() => {
-                      if (currentVideoUrl) {
-                        setAutoPlay(true)
-                        setShowHero(false)
-                      }
-                    }}
+                    onClick={handlePlay}
                     disabled={!currentVideoUrl}
                     className={cn(
                       titleCardPill,
@@ -616,12 +656,7 @@ export function LumosLessonContent({
                   </button>
                 ) : (
                   <button
-                    onClick={() => {
-                      if (currentVideoUrl) {
-                        setAutoPlay(true)
-                        setShowHero(false)
-                      }
-                    }}
+                    onClick={handlePlay}
                     disabled={!currentVideoUrl}
                     className={cn(
                       titleCardPill,
@@ -895,6 +930,8 @@ export function LumosLessonContent({
             onNextLesson={handleNextLesson}
             onSourceError={handleSourceError}
             autoPlay={autoPlay}
+            startFullscreen={openFullscreen}
+            onFullscreenChange={handleFullscreenChange}
             chapterNumber={lesson.chapter.position}
             lessonNumber={lesson.position}
             courseTitle={lesson.chapter.course.title}

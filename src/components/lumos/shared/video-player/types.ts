@@ -24,6 +24,20 @@ export interface VideoPlayerProps {
   onSourceError?: () => void
   className?: string
   autoPlay?: boolean
+  /**
+   * Open straight into fullscreen on mount. The caller renders this player in
+   * place of a poster the moment Play is pressed, so the mount still carries
+   * that click's user activation and the browser grants the request; where it
+   * does not (iOS Safari), the player falls back to its own CSS layer rather
+   * than promoting the bare <video> and losing the watermark.
+   */
+  startFullscreen?: boolean
+  /**
+   * Fires whenever the player enters or leaves fullscreen, by any route —
+   * the control, the `f` key, Escape, or the browser's own chrome. Lets the
+   * caller put the page back the way it was when the viewer comes out.
+   */
+  onFullscreenChange?: (isFullscreen: boolean) => void
   chapterNumber?: number
   lessonNumber?: number
   courseTitle?: string

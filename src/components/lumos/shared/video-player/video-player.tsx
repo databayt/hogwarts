@@ -205,6 +205,8 @@ export function VideoPlayer({
   onSourceError,
   className,
   autoPlay = false,
+  startFullscreen = false,
+  onFullscreenChange,
   chapterNumber,
   lessonNumber,
   courseTitle,
@@ -475,8 +477,12 @@ export function VideoPlayer({
         case "escape":
           if (state.showUpNext) {
             actions.cancelUpNext()
+          } else if (document.fullscreenElement) {
+            // The listener below writes the state once the browser is out.
+            void document.exitFullscreen().catch(() => {})
           } else if (state.isFullscreen) {
-            document.exitFullscreen()
+            // The CSS fallback layer — no native element, so no event.
+            actions.setFullscreen(false)
           }
           break
         case "seekTo0":
@@ -499,16 +505,51 @@ export function VideoPlayer({
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [actions, state.showUpNext, state.isFullscreen])
 
-  // Fullscreen change listener
+  // Fullscreen change listener — SYNC the mirror, never toggle it.
+  //
+  // This used to call `toggleFullscreen`, which turned every entry into an
+  // immediate exit: the request resolved, the browser fired this event, and
+  // the toggle read the fullscreen it had just been given and undid it. Esc
+  // then hit the other branch and asked for fullscreen back with no user
+  // gesture, so the promise rejected and the mirror stuck at `true`.
   useEffect(() => {
     const handleFullscreenChange = () => {
-      actions.toggleFullscreen(containerRef)
+      actions.setFullscreen(document.fullscreenElement === containerRef.current)
     }
 
     document.addEventListener("fullscreenchange", handleFullscreenChange)
     return () =>
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
   }, [actions])
+
+  // Open into fullscreen when the caller asked for it. The player mounts in
+  // response to the Play click, and React flushes this effect inside that
+  // discrete event, so the request still carries the activation the browser
+  // wants. `toggleFullscreen` owns the iOS/refusal fallback.
+  const hasAutoFullscreenedRef = useRef(false)
+  useEffect(() => {
+    if (!startFullscreen || hasAutoFullscreenedRef.current) return
+    hasAutoFullscreenedRef.current = true
+    actions.toggleFullscreen(containerRef)
+  }, [startFullscreen, actions])
+
+  // Tell the caller which side of fullscreen we are on — but only on a real
+  // change. Reporting the initial `false` would hand the lesson page a "the
+  // viewer left" it never entered, and it would tear this player down on the
+  // frame it mounted.
+  const wasFullscreenRef = useRef(state.isFullscreen)
+  useEffect(() => {
+    if (wasFullscreenRef.current === state.isFullscreen) return
+    wasFullscreenRef.current = state.isFullscreen
+    // Pause on the way OUT, before the caller hears about it: the caller is
+    // likely to put its poster back and tear this player down, and the only
+    // thing that flushes the watched position to the server on that path is
+    // the <video>'s own `pause` event. Unmounting mid-play loses up to one
+    // save interval, which is the difference between the page reopening on a
+    // "continue watching" pill and reopening on a bare Play.
+    if (!state.isFullscreen) videoRef.current?.pause()
+    onFullscreenChange?.(state.isFullscreen)
+  }, [state.isFullscreen, onFullscreenChange])
 
   // Seek handlers
   const handleSeek = useCallback(

@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useMemo, useReducer, type RefObject } from "react"
+import { useCallback, useMemo, useReducer, useRef, type RefObject } from "react"
 
 import {
   PLAYBACK_SPEEDS,
@@ -125,6 +125,12 @@ function videoPlayerReducer(
 export function useVideoPlayer(videoRef: RefObject<HTMLVideoElement | null>) {
   const [state, dispatch] = useReducer(videoPlayerReducer, initialState)
 
+  // Lets the fullscreen toggle read the current mirror without taking `state`
+  // as a dependency — the callback has to keep a stable identity, because
+  // consumers list `actions` in effect deps.
+  const isFullscreenRef = useRef(state.isFullscreen)
+  isFullscreenRef.current = state.isFullscreen
+
   // Playback controls
   const play = useCallback(() => {
     videoRef.current?.play()
@@ -219,17 +225,55 @@ export function useVideoPlayer(videoRef: RefObject<HTMLVideoElement | null>) {
   )
 
   // Fullscreen
+  //
+  // `isFullscreen` is a MIRROR of the browser, never the source of truth: the
+  // document is what decides, and `fullscreenchange` (bound in
+  // video-player.tsx) is what writes the mirror back. Dispatching optimistically
+  // here is what broke the control — the same listener then re-entered this
+  // toggle, read the state the browser had just applied, and undid it, so one
+  // click entered and immediately left native fullscreen while the mirror stuck
+  // at `true`.
+  //
+  // Written to `document.fullscreenElement` rather than the mirror so the two
+  // can never disagree about which branch to take.
+  const setFullscreen = useCallback(
+    (isFullscreen: boolean) =>
+      dispatch({ type: "SET_FULLSCREEN", isFullscreen }),
+    []
+  )
+
   const toggleFullscreen = useCallback(
     (containerRef: RefObject<HTMLDivElement | null>) => {
-      if (!containerRef.current) return
+      const el = containerRef.current
+      if (!el) return
 
-      if (!document.fullscreenElement) {
-        containerRef.current.requestFullscreen()
-        dispatch({ type: "SET_FULLSCREEN", isFullscreen: true })
-      } else {
-        document.exitFullscreen()
-        dispatch({ type: "SET_FULLSCREEN", isFullscreen: false })
+      if (document.fullscreenElement) {
+        // The listener writes `false` when the browser has actually left.
+        void document.exitFullscreen().catch(() => {})
+        return
       }
+
+      // Nothing native is open, yet the mirror says fullscreen — this is the
+      // CSS layer below, which fires no event, so drop it here.
+      if (isFullscreenRef.current) {
+        dispatch({ type: "SET_FULLSCREEN", isFullscreen: false })
+        return
+      }
+
+      // The CSS fallback, for the two cases where the real thing is not
+      // available: iOS Safari, which exposes no `requestFullscreen` on a
+      // <div> (its `webkitEnterFullscreen` promotes the bare <video>, which
+      // leaves the forensic watermark behind — the one thing this player must
+      // not drop), and a request the browser refuses for want of a user
+      // gesture.
+      const request = el.requestFullscreen?.bind(el)
+      if (!request) {
+        dispatch({ type: "SET_FULLSCREEN", isFullscreen: true })
+        return
+      }
+      void request().catch(() => {
+        dispatch({ type: "SET_FULLSCREEN", isFullscreen: true })
+      })
     },
     []
   )
@@ -316,6 +360,7 @@ export function useVideoPlayer(videoRef: RefObject<HTMLVideoElement | null>) {
       volumeDown,
       setPlaybackRate,
       toggleFullscreen,
+      setFullscreen,
       showControls,
       hideControls,
       toggleSettings,
@@ -349,6 +394,7 @@ export function useVideoPlayer(videoRef: RefObject<HTMLVideoElement | null>) {
       volumeDown,
       setPlaybackRate,
       toggleFullscreen,
+      setFullscreen,
       showControls,
       hideControls,
       toggleSettings,
