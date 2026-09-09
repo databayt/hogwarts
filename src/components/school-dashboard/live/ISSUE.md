@@ -4,6 +4,43 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## The card's type, and the lesson hero drawing the same page — 2026-09-09
+
+- [x] **The title is set in Thmanyah SANS**, registered beside the serif text
+      face the app already ships (same build script, no new asset). The serif
+      is the Arabic READING face and a title card's heading is display type —
+      the frame's own is drawn, not set. 44px on a phone, `text-6xl`/`7xl`
+      above.
+- [x] **The info line and the mark row are a size up.** The line sat 4px under
+      a title half this size and read as a caption stuck to it; the frame
+      leaves 13px. The marks are the one deliberate departure from the frame:
+      its boxes are LOGOS recognised by shape (`4K`, Dolby, `CC`) and ours are
+      Arabic words — "الدردشة", "السبورة", "استطلاع" have to be read, and at
+      11px they were a grey smear.
+- [x] **The lumos lesson hero draws the same page as the room.** It wrapped the
+      shared card in a fixed `aspect-[4/5] sm:aspect-video` box with
+      `overflow-hidden`, which is a different SHAPE from the card it holds:
+      the phone layout is a poster with a stack flowing under it, so the box
+      cut the stack off at the poster's foot — the Play button sliced in half,
+      the mark row gone. It now flows, takes the room's `85dvh` geometry, and
+      gains the frame's paragraph (which it kept behind a chip) and the
+      full-width button, with the wishlist moved over the artwork as the
+      frame's `+ ADD`.
+- [x] `TitleCardDescription` moved into the shared module so both callers draw
+      one; `titleCardMoreChip` and `titleCardRoundButton` went with the rows
+      they dressed. 565 live + 402 lumos tests green, tsc 0.
+
+### Found while here, NOT fixed
+
+- **The lesson hero cannot go edge to edge.** `dashboard-container` carries
+  `overflow-x-clip`, so a child may reclaim its own `px-2` (done) but nothing
+  beyond: escaping the root's `--container-px` leaves 8px on a phone and 32px
+  on a desktop clipped on one side only. The live room has no such gutter
+  because it is its own route group with no dashboard chrome. Closing the gap
+  means either relaxing that clip — which exists for the table-overflow
+  gotcha — or moving the lesson out of the dashboard the way `(live-room)`
+  did, which would take its sidebar with it. A decision, not a fix.
+
 ## The room card, closer to its frame — 2026-09-09
 
 Read against Figma `Hogwarts` node `574:31`, the Apple-TV show page the card
@@ -54,7 +91,7 @@ the frame is a phone frame. tsc 0.
 ### Found while here, NOT fixed
 
 - **The lumos lesson hero clips its own button on a phone.** `dashboard/lesson/
-  content.tsx` wraps the shared card in a fixed `aspect-[4/5]` box with
+content.tsx` wraps the shared card in a fixed `aspect-[4/5]` box with
   `overflow-hidden` and `absolute inset-0`, so the stack that is meant to FLOW
   under the poster is cut off at the poster's foot. Verified pre-existing by
   forcing the title back to 28px — identical clipping. Not this block, and not

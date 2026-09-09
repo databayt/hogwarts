@@ -1,6 +1,10 @@
+"use client"
+
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 
@@ -156,10 +160,17 @@ export function TitleCard({
               points — nine tenths of the width, and the single loudest thing
               on the page. 28px read as a heading rather than as that, which is
               what made the card look like a list row with a picture behind it.
-              40px is the same proportion in type, and `text-balance` keeps a
-              long subject from breaking one word onto its own line; two lines
-              are fine here, the band overflows upward into the fade. */}
-          <h1 className="text-[40px] leading-[44px] font-bold tracking-tight text-balance text-white sm:text-5xl sm:leading-none lg:text-6xl">
+              `text-balance` keeps a long subject from breaking one word onto
+              its own line; two lines are fine here, the band overflows upward
+              into the fade.
+
+              Thmanyah SANS, not the app's Arabic reading face. The serif text
+              family is right for running prose and this is display type — the
+              frame's own title is drawn, not set — and the sans is the same
+              family's UI face, already fetched by the build. The stack after
+              it is what a Latin title falls back to, since the room and the
+              lesson both carry English names. */}
+          <h1 className="font-[family-name:var(--font-thmanyah-sans),ui-sans-serif,system-ui,sans-serif] text-[44px] leading-[48px] font-bold tracking-tight text-balance text-white sm:text-6xl sm:leading-none lg:text-7xl">
             {title}
           </h1>
 
@@ -170,7 +181,11 @@ export function TitleCard({
           )}
 
           {meta && (
-            <div className="mt-1 flex items-center justify-center gap-2 text-[13px] text-[#8E8E93] sm:justify-start sm:text-sm sm:text-white">
+            /* The frame's info line, with room to breathe. It sat 4px under a
+               title half this size and read as a caption stuck to it; the
+               frame leaves 13px between the two and sets the line a step up
+               from the marks below it. */
+            <div className="mt-3 flex items-center justify-center gap-2 pb-1 text-[15px] text-[#8E8E93] sm:mt-2.5 sm:justify-start sm:text-base sm:text-white">
               {meta}
             </div>
           )}
@@ -250,27 +265,28 @@ export const titleCardBylineIcon = "rounded-sm brightness-0 invert"
 
 export const titleCardBylineName = "text-sm font-medium text-white"
 
-/** The soft chip that ends the meta line and opens the long version. */
-export const titleCardMoreChip =
-  "shrink-0 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium text-white/80 backdrop-blur-sm transition-colors hover:bg-white/25"
-
 /**
  * An outlined mark: CC, AD, free, and anything else that is a fact about the
  * thing rather than a claim about its quality.
  *
- * On a phone these are the reference's exactly — a 13px-tall box of 11px type
- * in systemGray (#8D8D93), 6px apart. Not white: the reference reserves white
- * for the title, the description and the buttons, and a row of white boxes
- * under a white paragraph flattens the whole block. Above `sm` they stay as
- * the wide card has always drawn them.
+ * systemGray (#8D8D93) on a phone, not white: the reference reserves white for
+ * the title, the description and the buttons, and a row of white boxes under a
+ * white paragraph flattens the whole block.
+ *
+ * The reference's own boxes are 13px tall around 11px type — right for its
+ * marks, which are logos a reader recognises by SHAPE (`4K`, the Dolby marks,
+ * `CC`). Ours are words, and Arabic words at that: "الدردشة", "السبورة",
+ * "استطلاع" have to be READ, and at 11px they were a grey smear under the
+ * paragraph. So this row is deliberately a size up from the frame — the one
+ * place the card departs from it on purpose.
  */
 export const titleCardChip =
-  "rounded-[3px] border border-[#8D8D93] px-1 text-[11px] leading-[13px] text-[#8D8D93] sm:rounded sm:border-white sm:px-1.5 sm:text-xs sm:leading-normal sm:text-white"
+  "rounded-[3px] border border-[#8D8D93] px-1.5 py-0.5 text-[13px] leading-[17px] text-[#8D8D93] sm:rounded sm:border-white sm:px-2 sm:text-sm sm:leading-normal sm:text-white"
 
 /** The one filled mark — `4K` on the reference. Filled in the same grey, with
  *  the type knocked out in black. */
 export const titleCardChipSolid =
-  "rounded-[3px] bg-[#8D8D93] px-1 text-[11px] leading-[13px] font-medium text-black sm:rounded sm:bg-white sm:px-1.5 sm:text-xs sm:leading-normal"
+  "rounded-[3px] bg-[#8D8D93] px-1.5 py-0.5 text-[13px] leading-[17px] font-medium text-black sm:rounded sm:bg-white sm:px-2 sm:text-sm sm:leading-normal"
 
 /**
  * The button. `px-6` when it carries a word, `px-5` when it also carries a
@@ -289,10 +305,6 @@ export const titleCardChipSolid =
 export const titleCardPill =
   "inline-flex h-[42px] items-center gap-2 rounded-[8px] bg-[#F2F2F7] px-6 font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40 sm:h-10 sm:rounded-full sm:bg-white"
 
-/** The round glass button beside the pill. */
-export const titleCardRoundButton =
-  "inline-flex size-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
-
 /** The feather, at the size both callers set it. */
 export function TitleCardFeather({ alt }: { alt: string }) {
   return (
@@ -303,5 +315,80 @@ export function TitleCardFeather({ alt }: { alt: string }) {
       height={16}
       className={titleCardBylineIcon}
     />
+  )
+}
+
+/**
+ * The frame's paragraph: three lines, then `… more` into the long version.
+ *
+ * The reference truncates mid-sentence and puts its one blue word right after
+ * the ellipsis — "amazing creatures and… more" — so the cut itself is the
+ * invitation. Both callers used to offer the long version from a chip up on
+ * the info line, where the frame has nothing at all.
+ *
+ * `line-clamp-3` does the cutting and draws its own ellipsis; the link is laid
+ * OVER the end of the third line on the same black the shelf is painted in,
+ * which is what lets it sit inline rather than on a fourth line of its own.
+ * That only works while the text actually overflows — otherwise it would cover
+ * the tail of a short paragraph — so it is measured rather than assumed, and a
+ * lesson whose blurb fits in three lines simply has no link. `end-0` and not
+ * `right-0`: under Arabic the third line ends on the left.
+ *
+ * Measured with a ResizeObserver rather than once on mount: the shelf is a
+ * flex child of a card whose poster is clamped against the viewport, so this
+ * paragraph's width settles after the first paint and changes again on every
+ * rotation.
+ *
+ * `href` navigates, `onMore` opens a sheet in place — the live room has a
+ * detail PAGE and the lesson has a dialog, and neither belongs in here.
+ */
+export function TitleCardDescription({
+  text,
+  more,
+  href,
+  onMore,
+}: {
+  text: string
+  more: string
+  href?: string
+  onMore?: () => void
+}) {
+  const ref = useRef<HTMLParagraphElement>(null)
+  const [clamped, setClamped] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    // A pixel of slack: sub-pixel line heights make an exactly-fitting
+    // paragraph report one scroll pixel more than it has.
+    const measure = () => setClamped(el.scrollHeight > el.clientHeight + 1)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [text])
+
+  /* Literal hex for the same reason the pill and the marks carry theirs: this
+     shelf is pinned dark, and a theme-aware token would invert the link and
+     its ground in light mode. */
+  const moreClass = "absolute end-0 bottom-0 bg-black ps-1 text-[#0A84FF]"
+  const label = <>&hellip;&nbsp;{more}</>
+
+  return (
+    <div className="relative">
+      <p ref={ref} className="line-clamp-3">
+        {text}
+      </p>
+      {clamped &&
+        (href ? (
+          <Link href={href} className={moreClass}>
+            {label}
+          </Link>
+        ) : (
+          <button type="button" onClick={onMore} className={moreClass}>
+            {label}
+          </button>
+        ))}
+    </div>
   )
 }

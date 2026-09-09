@@ -56,10 +56,10 @@ import {
   titleCardBylineName,
   titleCardChip,
   titleCardChipSolid,
+  TitleCardDescription,
   TitleCardFeather,
-  titleCardMoreChip,
   titleCardPill,
-  titleCardRoundButton,
+  titleCardTopPill,
 } from "@/components/lumos/shared/title-card"
 import {
   VideoPlayer,
@@ -363,19 +363,44 @@ export function LumosLessonContent({
       {/* Hero / Video Player */}
       <div
         className={cn(
-          "relative w-full overflow-hidden",
-          // The hero's phone layout stacks a title, a full-width button and a
-          // mark row under the artwork; 16:9 on a 390px screen is 219px tall
-          // and cannot hold them. The PLAYER keeps 16:9 at every width — a
-          // taller box would letterbox the video.
-          showHero ? "aspect-[4/5] sm:aspect-video" : "aspect-video"
+          "relative w-full",
+          // The HERO flows; the PLAYER is a 16:9 box.
+          //
+          // The hero used to be a box too — `aspect-[4/5] sm:aspect-video`
+          // with `overflow-hidden`, the card `absolute inset-0` inside it —
+          // and that is a different shape from the card it holds. The card's
+          // phone layout is a poster with a stack FLOWING under it, so a
+          // parent that fixes the height cuts the stack off at the poster's
+          // foot: on a 390px screen the Play button was sliced in half and
+          // the mark row was gone entirely. The live room, drawing the same
+          // card, never had this because it never wrapped it.
+          //
+          // So the hero takes the height its content needs, and only the
+          // player keeps a ratio — a taller box would letterbox the video.
+          //
+          // Full-bleed, the way the room's own layout does it: the artwork is
+          // the page here, and a card inset from the page ground reads as a
+          // picture in a frame. `px-2` is the dashboard container's phone
+          // gutter and is cancelled below `sm`, where it exists; the section's
+          // own 2px of top padding goes with it so the poster starts at the
+          // chrome.
+          showHero
+            ? "-mx-2 -mt-2 w-[calc(100%+1rem)] sm:mx-0 sm:mt-0 sm:w-full"
+            : "aspect-video overflow-hidden"
         )}
         style={{ backgroundColor: lesson.color || "#1a1a1a" }}
       >
         {showHero ? (
           <>
             <TitleCard
-              className="absolute inset-0"
+              // The room's own geometry, imported rather than guessed: four
+              // fifths of the viewport above `sm` so the shelf under it peeks
+              // and says the page continues, and a poster clamped against the
+              // same fraction on a phone, where its height would otherwise
+              // come from the card's WIDTH and run off a short screen.
+              className="sm:min-h-[85dvh]"
+              posterClassName="max-h-[calc(85dvh-10rem)] sm:max-h-none"
+              sizes="100vw"
               thumbnailUrl={lesson.thumbnailUrl}
               color={lesson.color}
               alt={lesson.title}
@@ -398,20 +423,31 @@ export function LumosLessonContent({
                 </>
               }
               meta={
-                <>
-                  <span>
-                    {d?.chapterShort || "C"}
-                    {lesson.chapter.position} {d?.lessonShort || "L"}
-                    {lesson.position} &middot; {lesson.chapter.course.title}{" "}
-                    &middot; {lesson.chapter.title}
-                  </span>
-                  <button
-                    onClick={() => setShowDescDialog(true)}
-                    className={titleCardMoreChip}
-                  >
-                    {d?.more || "MORE"}
-                  </button>
-                </>
+                /* The frame's info line is exactly one grey sentence. The chip
+                   that used to end it was the frame's "more" put in the wrong
+                   place — there it belongs at the end of the truncated
+                   PARAGRAPH, which is where `description` now carries it. */
+                <span>
+                  {d?.chapterShort || "C"}
+                  {lesson.chapter.position} {d?.lessonShort || "L"}
+                  {lesson.position} &middot; {lesson.chapter.course.title}{" "}
+                  &middot; {lesson.chapter.title}
+                </span>
+              }
+              description={
+                /* The frame's paragraph, which this hero never had: it kept
+                   the lesson's own words behind a chip. Three lines, then
+                   `… more` into the sheet that holds the rest. */
+                <TitleCardDescription
+                  text={
+                    lesson.description ||
+                    lesson.chapter.course.description ||
+                    d?.exploreLesson ||
+                    "Explore this lesson and discover new concepts."
+                  }
+                  more={d?.more || "MORE"}
+                  onMore={() => setShowDescDialog(true)}
+                />
               }
               chips={
                 <>
@@ -461,7 +497,10 @@ export function LumosLessonContent({
                   <button
                     onClick={() => handleUnlock(lockedVideo.id)}
                     disabled={isPurchasePending}
-                    className={titleCardPill}
+                    className={cn(
+                      titleCardPill,
+                      "w-full justify-center sm:w-auto"
+                    )}
                   >
                     {isPurchasePending ? (
                       <Loader2 className="size-4 animate-spin" />
@@ -488,7 +527,10 @@ export function LumosLessonContent({
                       }
                     }}
                     disabled={!currentVideoUrl}
-                    className={cn(titleCardPill, "px-5")}
+                    className={cn(
+                      titleCardPill,
+                      "w-full justify-center px-5 sm:w-auto"
+                    )}
                   >
                     <Play className="size-4 shrink-0 fill-current" />
                     <div className="h-1 w-12 overflow-hidden rounded-full bg-black/20">
@@ -515,14 +557,21 @@ export function LumosLessonContent({
                       }
                     }}
                     disabled={!currentVideoUrl}
-                    className={titleCardPill}
+                    className={cn(
+                      titleCardPill,
+                      "w-full justify-center sm:w-auto"
+                    )}
                   >
                     <Play className="size-4 fill-current" />
                     {d?.play || "Play"}
                   </button>
                 )
               }
-              secondary={
+              topEnd={
+                /* The frame's `+ ADD`, over the artwork rather than beside the
+                   button. That is what leaves the button the whole width on a
+                   phone, which is where the reference puts it and how the live
+                   room already draws the same card. */
                 <button
                   onClick={() => {
                     setIsInWishlist((prev) => {
@@ -530,13 +579,16 @@ export function LumosLessonContent({
                       return !prev
                     })
                   }}
-                  className={titleCardRoundButton}
+                  className={titleCardTopPill}
+                  title={d?.addToWatchlist || "Add to your watchlist"}
+                  aria-label={d?.addToWatchlist || "Add to your watchlist"}
                 >
                   {isInWishlist ? (
-                    <Check className="size-5" />
+                    <Check className="size-4" />
                   ) : (
-                    <Plus className="size-5" />
+                    <Plus className="size-4" />
                   )}
+                  {d?.add || "ADD"}
                 </button>
               }
             />

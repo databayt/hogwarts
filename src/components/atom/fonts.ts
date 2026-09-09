@@ -77,6 +77,46 @@ export const fontThmanyahText = localFont({
   preload: false,
 })
 
+/**
+ * Thmanyah SANS — the family's UI/display face, beside the serif text above.
+ *
+ * Registered separately rather than replacing it: the serif is the app's
+ * Arabic reading face and stays that, while a title-card heading is a piece of
+ * display type and the reference frame sets one there. Fetched by the same
+ * build script, so this adds no new asset.
+ *
+ * `preload: false` for the same reason its sibling carries it — next/font
+ * preloads every declared face merely because the root layout imports the
+ * module, and this one is asked for by a handful of headings, not by the page.
+ */
+export const fontThmanyahSans = localFont({
+  src: [
+    {
+      path: "../../../public/fonts/thmanyah/thmanyah-sans-300.woff2",
+      weight: "300",
+    },
+    {
+      path: "../../../public/fonts/thmanyah/thmanyah-sans-400.woff2",
+      weight: "400",
+    },
+    {
+      path: "../../../public/fonts/thmanyah/thmanyah-sans-500.woff2",
+      weight: "500",
+    },
+    {
+      path: "../../../public/fonts/thmanyah/thmanyah-sans-700.woff2",
+      weight: "700",
+    },
+    {
+      path: "../../../public/fonts/thmanyah/thmanyah-sans-900.woff2",
+      weight: "900",
+    },
+  ],
+  variable: "--font-thmanyah-sans",
+  display: "swap",
+  preload: false,
+})
+
 export const fontVariables = cn(
   fontSans.variable,
   fontMono.variable,

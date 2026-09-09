@@ -3,15 +3,14 @@
 
 export {
   TitleCard,
+  TitleCardDescription,
   TitleCardFeather,
   titleCardBadge,
   titleCardBylineIcon,
   titleCardBylineName,
   titleCardChip,
   titleCardChipSolid,
-  titleCardMoreChip,
   titleCardPill,
-  titleCardRoundButton,
   titleCardTopGlyph,
   titleCardTopPill,
 } from "./title-card"
