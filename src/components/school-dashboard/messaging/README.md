@@ -77,7 +77,12 @@ src/components/school-dashboard/messaging/
 │   ├── contacts-panel.tsx          # WhatsApp-style contacts sidebar
 │   ├── contact-card.tsx            # Individual contact card
 │   └── contact-search.tsx          # Contact search input
-├── mobile/                         # iOS/WhatsApp-style mobile UI (~28 files)
+├── mobile/                         # iOS/WhatsApp-style mobile UI (~29 files)
+│   ├── ios-chat-list.tsx           # Conversation list (<md)
+│   ├── wa-tokens.ts                # Generated icon/dimension/type tokens
+│   └── chat/                       # Conversation view (<md)
+│       ├── messages-view.tsx       # Composes the view; owns scroll + paging
+│       └── adapt.ts                # MessageDTO[] → ChatItem[] for that view
 ├── CLAUDE.md                       # Block context for Claude Code
 ├── ISSUE.md                        # Production-readiness tracker
 └── QUERY_OPTIMIZATION.md           # Performance optimization guide

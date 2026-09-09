@@ -75,7 +75,7 @@ type Props = {
   replyDraft?: ReplyDraft | null
   draftText?: string
   /** Fetches older messages when the reader reaches the top of the thread. */
-  onLoadMore?: () => void
+  onLoadMore?: () => void | Promise<void>
   hasMore?: boolean
   inputPlaceholder?: string
   encryptionNotice?: string
@@ -143,10 +143,18 @@ export function MessagesView({
     if (el) el.scrollTop = el.scrollHeight
   }, [])
 
+  // Scroll fires many times per flick; without this the same cursor would be
+  // requested repeatedly and the same page prepended more than once.
+  const loadingMore = useRef(false)
+
   const handleScroll = () => {
     const el = scrollRef.current
-    if (!el || !hasMore || !onLoadMore) return
-    if (el.scrollTop <= LOAD_MORE_THRESHOLD_PX) onLoadMore()
+    if (!el || !hasMore || !onLoadMore || loadingMore.current) return
+    if (el.scrollTop > LOAD_MORE_THRESHOLD_PX) return
+    loadingMore.current = true
+    Promise.resolve(onLoadMore()).finally(() => {
+      loadingMore.current = false
+    })
   }
 
   const renderedItems = useMemo(

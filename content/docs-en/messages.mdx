@@ -115,6 +115,21 @@ Test accounts (`pnpm db:seed:single messaging-phones`): `admin@balqalam.com` (00
 
 WhatsApp-style contact list grouped by role (`contacts/`). Click → `createConversation({ type: "direct", participantIds: [contactId] })`; existing direct conversations are reused via dedup (app check + a DB unique index on the direct pair, so concurrent creates can't race a duplicate). Names translate on demand via one batched `getNames()` call. The WhatsApp connect dialog (QR) is also embedded here, alongside the per-chat `W` toggle.
 
+## On a phone
+
+Below `md` the block drops its split-pane and becomes the iOS WhatsApp app: the
+conversation list (`mobile/ios-chat-list.tsx`), then the conversation itself
+(`mobile/chat/messages-view.tsx`) once a row is tapped. Bubbles carry the WhatsApp
+grammar — a tail on the last message of each same-sender run, the timestamp and
+ticks set into the bubble, a pill at each day boundary, sender names on incoming
+group messages — and the whole thing mirrors under Arabic. `mobile/chat/adapt.ts`
+is the one place that turns a `MessageDTO` into what the view draws.
+
+At `md` and above nothing changes: the desktop `ChatInterface` renders as before.
+
+The phone view reads and sends. Attachments, editing, deleting, reactions, replies,
+forwarding and voice recording remain desktop-only.
+
 ## Unread badge
 
 `MessageMailIcon` in the platform header fetches `/api/messages/unread-count` on mount and on tab focus, and increments live via the Socket.IO `message:new` event.

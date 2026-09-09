@@ -100,3 +100,6 @@ public/fonts/thmanyah/.manifest-version
 # Cloudflare Workers pilot (scripts/deploy-cloudflare.sh)
 .open-next/
 .dev.vars*
+
+# Playwright/browser MCP scratch screenshots
+/.claude/playwright-output

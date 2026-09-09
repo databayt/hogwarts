@@ -201,6 +201,39 @@ Secrets are pre-generated in `socket-server/.env` (gitignored). The 4 app-facing
 WHERE type='direct'` (live on Neon + migration record); `createConversation`
       catches the concurrent-duplicate P2002 and returns the existing conversation.
 
+### Mobile WhatsApp conversation view — wired 2026-09-09
+
+- [x] **The conversation view reached the phone.** `mobile/chat/*` was fully built
+      and exported but imported by nothing, so tapping a row on `<md` opened the
+      desktop `ChatInterface`. `MessagesView` now renders under `md:hidden` with
+      `ChatInterface` moved to `hidden md:flex` — the desktop split-pane is byte-for-byte
+      unchanged. New `mobile/chat/adapt.ts` maps `MessageDTO[]` → `ChatItem[]`
+      (day separators, tail on the last of each same-sender run, group sender labels,
+      ticks from `readCount`/`status`, reply/voice/location kinds).
+- [x] **Icons were entirely dead.** `WA_CDN_BASE` pointed at CloudFront; that origin
+      and `cdn.databayt.org` both answer **403**, so every icon in the mobile UI —
+      tab bar, ticks, search, avatars — rendered as a broken image. All 43 already sit
+      in `public/icons/whatsapp/`, so the base is now `/icons/whatsapp`. The generator's
+      source (`~/.claude/memory/whatsapp_tokens.json` → `icons._cdnBase`) moved with it.
+      The chat wallpaper came from the same dead origin. **Note:** that field also feeds
+      the Kotlin/Swift emitters in `scripts/generate-whatsapp-tokens.mjs`, where a
+      web-relative path is meaningless — give those an absolute base if native ever ships.
+- [x] **Scroll + paging.** The view had neither. It now opens at the newest message,
+      follows arrivals, holds position when older messages are prepended, and pages at
+      the top behind a re-entrancy guard (unguarded, a flick re-requested the same cursor
+      and duplicated messages).
+- [x] **Send appends locally.** Without it a sent message waited up to 10s for the
+      poller while the composer had already cleared; failures now toast instead of
+      becoming an unhandled rejection. Dedupes by id against the poller.
+- [x] **RTL.** The bubble tail was pinned to a physical edge while its bubble sits on
+      a logical one, so it detached under `dir=rtl`. Now logical.
+
+**Not wired on mobile (deliberate, desktop-only for now):** attachment upload, edit,
+delete, reactions add/remove, reply composition, forward, link previews, voice
+recording. `onTapInfo` opens `ConversationInfoPanel`, which is `hidden md:block`, so
+tapping the header does nothing on a phone. The composer's attach/sticker/camera/mic
+buttons render but are inert.
+
 ### i18n debt (P2)
 
 Client UI is dictionary-keyed (dedicated `messaging` namespace, `dictionaries.ts:142`). Server-action error i18n is now done; two logic-layer items remain:

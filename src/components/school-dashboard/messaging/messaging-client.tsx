@@ -657,29 +657,67 @@ export function MessagingClient({
   )
 
   // Labels the mobile WhatsApp conversation view needs to render a message.
-  const adaptLabels: AdaptLabels = {
-    today: m?.ui?.today ?? "Today",
-    yesterday: m?.ui?.yesterday ?? "Yesterday",
-    deleted: m?.ui?.this_message_deleted ?? "This message was deleted",
-    photo: m?.ui?.photo ?? "Photo",
-    video: m?.ui?.video ?? "Video",
-    voice: m?.ui?.voice_message ?? "Voice message",
-    location: m?.ui?.preview?.location ?? "Location",
-    document: m?.ui?.document ?? "Document",
-    attachment: m?.ui?.attachment ?? "Attachment",
-    userFallback: m?.ui?.user_fallback ?? "User",
-    groupFallback: m?.ui?.mobile?.group_fallback ?? "Group",
-  }
+  const adaptLabels: AdaptLabels = useMemo(
+    () => ({
+      today: m?.ui?.today ?? "Today",
+      yesterday: m?.ui?.yesterday ?? "Yesterday",
+      deleted: m?.ui?.this_message_deleted ?? "This message was deleted",
+      photo: m?.ui?.photo ?? "Photo",
+      video: m?.ui?.video ?? "Video",
+      voice: m?.ui?.voice_message ?? "Voice message",
+      location: m?.ui?.preview?.location ?? "Location",
+      document: m?.ui?.document ?? "Document",
+      attachment: m?.ui?.attachment ?? "Attachment",
+      userFallback: m?.ui?.user_fallback ?? "User",
+      groupFallback: m?.ui?.mobile?.group_fallback ?? "Group",
+    }),
+    [m]
+  )
 
-  const mobileChatItems = activeConversation
-    ? toChatItems(
-        messages,
-        currentUserId,
-        activeConversation.type !== "direct",
-        locale,
-        adaptLabels
-      )
-    : []
+  // The desktop ChatInterface stays mounted behind a CSS breakpoint and keeps
+  // re-rendering this client, so don't rebuild the mobile item list each time.
+  const mobileChatItems = useMemo(
+    () =>
+      activeConversation
+        ? toChatItems(
+            messages,
+            currentUserId,
+            activeConversation.type !== "direct",
+            locale,
+            adaptLabels
+          )
+        : [],
+    [activeConversation, messages, currentUserId, locale, adaptLabels]
+  )
+
+  /**
+   * Mobile send. Appends the saved message straight away — the WhatsApp view
+   * has no optimistic queue of its own, so without this a sent message would
+   * not appear until the next poll, and a failure would vanish silently.
+   */
+  const handleMobileSend = useCallback(
+    async (text: string) => {
+      const conv = activeConversationRef.current
+      if (!conv || !text.trim()) return
+      try {
+        const sent = await handleSendMessage(text)
+        if (!sent) return
+        updateCachedMessages(conv.id, (prev) =>
+          // The poller may have raced us to the same message.
+          prev.some((msg) => msg.id === sent.id) ? prev : [...prev, sent]
+        )
+      } catch (error) {
+        toast({
+          title: m?.notifications?.error ?? "Error",
+          description:
+            error instanceof Error
+              ? error.message
+              : (m?.errors?.send_failed ?? "Failed to send message"),
+        })
+      }
+    },
+    [handleSendMessage, updateCachedMessages, m]
+  )
 
   return (
     <div className="bg-msg-chat-bg relative flex h-full">
@@ -748,6 +786,9 @@ export function MessagingClient({
       {activeConversation && (
         <div className="flex h-full w-full flex-col md:hidden">
           <MessagesView
+            // Remount on conversation switch so the scroll anchor never reads
+            // a new thread's messages as older ones prepended to the old.
+            key={activeConversation.id}
             contactName={conversationTitle(
               activeConversation,
               currentUserId,
@@ -765,9 +806,7 @@ export function MessagingClient({
             onLoadMore={handleLoadMoreMessages}
             onBack={handleBack}
             onTapInfo={() => setShowInfoPanel(true)}
-            onSend={(text) => {
-              void handleSendMessage(text)
-            }}
+            onSend={handleMobileSend}
             inputPlaceholder={m?.ui?.mobile?.input_placeholder ?? "Message"}
             encryptionNotice={m?.ui?.encryption_notice}
           />
