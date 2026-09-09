@@ -289,6 +289,10 @@
   color: var(--book-muted);
   font-size: 0.85em;
   font-family: var(--font-sans), system-ui, sans-serif;
+  /* A folio is one number. Left shrinkable, a narrow row that wraps its
+     title breaks the digits across lines too (١٧٢ as ١٧ over ٢). */
+  flex: none;
+  white-space: nowrap;
 }
 .book-toc-title {
   flex: 0 1 auto;
@@ -304,6 +308,8 @@
   font-size: 0.85em;
   font-family: var(--font-sans), system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
+  flex: none;
+  white-space: nowrap;
 }
 .book-toc-chapter > .book-toc-row {
   font-weight: 700;
