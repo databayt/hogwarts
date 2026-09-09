@@ -2,7 +2,7 @@
 
 **Status:** PRODUCTION READY
 **Completion:** 95%
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-09-09
 
 ---
 
@@ -20,11 +20,11 @@
 ### Public Views
 
 - [x] Library home page (hero + book rows by category)
-- [x] Hero section with featured book
+- [x] Hero section: the green brand banner shared with /live
 - [x] Book list with horizontal scroll cards
 - [x] Book list toolbar (search/filter by genre, grade level)
 - [x] All books page with pagination
-- [x] Book detail page (cover, description, details, video, rating)
+- [x] Book detail page, laid out the way Apple Books lays out a book (2026-09-09)
 - [x] Borrow/return actions from detail page
 - [x] Collaborate section (dictionary-ized, no hardcoded strings)
 - [x] Related books: "More by Author" and "Similar Books" (from CatalogBook)
@@ -107,12 +107,15 @@
 ### P3 -- Low
 
 - [ ] **setupLibraryForSchool exists but unused**: The function in `catalog-setup.ts` is tested and working but not wired anywhere. Kept for potential future use (SaaS admin manual re-provisioning). Could be removed if global-first approach is permanent.
-- [ ] **Hero section uses generic featured book**: `hero.tsx` shows a static hero. Could dynamically feature the highest-rated or most-borrowed book from the catalog.
+- [ ] **Hero art is fixed**: `hero.tsx` shows one marginalia illustration for every school. Could vary by collection size or season, but it must stay a transparent line drawing on the green -- a photograph or a card would break the banner it shares with /live.
 
 ---
 
 ## Completed (Recent)
 
+- [x] Collaborate section reads a REAL book (2026-09-03): the single-book spotlight and its original photograph both stay -- `asset("/photos/harry-potter.png")`, a film still, kept at Abdout's request and decorative only. What changed is the text beside it. Correcting the entry below: the section's dictionary keys (`featuredBookTitle`, `featuredBookAuthor`, `featuredBookDescription`, `getBook`) never existed in `dictionary.school.library`, so the hardcoded English fallback rendered on every school in both languages the whole time. Title and author now come from the real `Book` row (`content.tsx` resolves it -- see `FEATURED_BOOK_TITLE`), the labels read the `by` and `viewBook` keys that do exist, and the CTA opens that book's own `/library/books/[id]` instead of the generic list. The component went back to being a server component with the remote cover.
+- [x] Hero rebuilt as the /live green brand banner (2026-09-03): same ground `#00bc6d`, geometry, thmanyah-sans headline with a weighted `{mark}` phrase, two pills and marginalia art on the green. Replaced a 7xl `Revelio` wordmark beside a CDN-fetched Lottie; the component is now a server component and `library-animation.tsx` is gone. Copy lives in `dictionaries/{ar,en}/library.json` under `hero` -- `title`, `titleMark`, `explore`, `favorites`.
+- [x] Headline rows width-matched (2026-09-03): measured in the browser at 1440px, Arabic renders 333px over 333px and English 320px over 312px, against /live's 331/333. The tatweels in the Arabic string are what does it. Re-measure both line boxes after any edit to the headline keys.
 - [x] Grade-level English labels standardized to US terms (2026-07-12): PRIMARY→Elementary, INTERMEDIATE→Middle, SECONDARY→High in contribute, all-books, and book-detail (raw enum badge now labeled via `BOOK_GRADE_LEVEL_LABELS` in `config.ts`). Enum values unchanged; Arabic labels unchanged.
 - [x] Fixed related book links in book-detail (relative → absolute `/${lang}/library/books/${id}`)
 - [x] Fixed my-profile links to use `catalogBookId` instead of school Book.id (was causing 404s)
@@ -126,7 +129,7 @@
 - [x] Refactored book detail to load CatalogBook + lazy-create school Book
 - [x] Added BookListItem type for lightweight list/card display
 - [x] Updated BookList and BookCard to accept BookListItem
-- [x] Dictionary-ized collaborate-section.tsx (removed hardcoded strings)
+- [x] ~~Dictionary-ized collaborate-section.tsx (removed hardcoded strings)~~ -- WRONG when this was first checked off: the keys it named never existed in the dictionary, so the hardcoded fallback was the only thing that ever rendered. See the 2026-09-03 entry above for the actual fix.
 - [x] Removed library provisioning from onboarding (not needed with global-first)
 - [x] Added comprehensive test suites (160 library tests total)
 - [x] Empty state with admin CTA to browse catalog
@@ -148,3 +151,36 @@
 ---
 
 **Last Review:** 2026-03-22
+
+---
+
+## Book detail, redrawn as Apple Books (2026-09-09)
+
+The page was a 192px cover beside a column of badges in a `max-w-2xl` box, with
+five headed sections stacked below it in one weight. It is now two halves: a
+full-bleed panel in the book's own `coverColor` holding cover, grade, title,
+author, rating and the borrow card, then an ordinary column of rule-divided
+sections — About, Information, shelves.
+
+- `content.tsx` keeps every query it had and now composes `hero`, `about`,
+  `info-list` and `book-shelf`. The lazy `schoolBook.create` is untouched.
+- The icon-tile grid became the Information list. Borrowing counts fold into it
+  instead of owning a section.
+- Description and summary are one clamped block with a `More` toggle. The clamp
+  is measured, so the button only appears when there is a fourth line.
+- `star-rating.tsx` deleted — the reference shows `★ 4.2 · Genre` on one line,
+  not five stars. `@/components/ui/star-rating` still serves the pages that
+  want a row of stars.
+- Full-bleed uses the lumos lesson's escape margins and `data-immersive`
+  verbatim. Above `sm` only the inline-end side reaches the edge; the sidebar
+  owns the other.
+
+### Left open
+
+- **The eyebrow and the genre render in English on `/ar`.**
+  `BOOK_GRADE_LEVEL_LABELS` in `config.ts` is an English-only map, and `genre`
+  is stored in English on the catalog row. Both predate this work and both need
+  either dictionary keys or `localize()`, not a layout fix.
+- **`[TENANT] Query without schoolId: Book.findFirst/findMany`** still logs on
+  every visit. `Book` is the global catalog and genuinely has no `schoolId`;
+  the warning is the tenant guard not knowing that. Pre-existing.

@@ -1,27 +1,17 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Link from "next/link"
 import { notFound } from "next/navigation"
-import {
-  BookOpen,
-  Building2,
-  Calendar,
-  FileText,
-  Globe,
-  Hash,
-} from "lucide-react"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 
-import { BookCover } from "../book-cover"
 import { BOOK_GRADE_LEVEL_LABELS, type BookGradeLevel } from "../config"
+import { BookAbout } from "./about"
+import { BookShelf } from "./book-shelf"
 import BookVideo from "./book-video"
-import BorrowBook from "./borrow-book"
-import { StarRating } from "./star-rating"
+import { BookHero } from "./hero"
+import { BookInfoList } from "./info-list"
 
 const DEFAULT_COPIES = 3
 
@@ -32,6 +22,20 @@ interface Props {
   dictionary?: Record<string, unknown>
 }
 
+/**
+ * A book, read the way Apple Books reads one.
+ *
+ * The page is in two halves. The top is the book's own colour, edge to edge,
+ * holding the cover and everything that identifies it, ending in the card that
+ * borrows it. Below that the page turns to the ordinary ground and becomes
+ * text: what the book is about, its facts as a list, then shelves of what to
+ * read next.
+ *
+ * The old layout put a 192px cover beside a column of badges inside a
+ * `max-w-2xl` box, with five headed sections stacked under it in the same
+ * weight — the summary reading as loud as the title. Splitting it in two gives
+ * the top half one job and lets the bottom half be quiet.
+ */
 export default async function LibraryBookDetailContent({
   bookId,
   userId,
@@ -160,281 +164,117 @@ export default async function LibraryBookDetailContent({
     }),
   ])
 
-  const hasDetails =
-    catalogBook.pageCount ||
-    catalogBook.language ||
-    catalogBook.publicationYear ||
-    catalogBook.isbn ||
-    catalogBook.publisher
+  const gradeLabel =
+    catalogBook.gradeLevel && catalogBook.gradeLevel !== "GENERAL"
+      ? (BOOK_GRADE_LEVEL_LABELS[catalogBook.gradeLevel as BookGradeLevel] ??
+        catalogBook.gradeLevel)
+      : null
+
+  // The reference's Information list. Every row is dropped when its field is
+  // empty, so a sparse catalog row shows a short list rather than a grid of
+  // blanks. Borrowing counts join the same list — they are two more facts
+  // about this book, and giving them a section of their own gave one sentence
+  // the same weight as the description.
+  const infoRows = [
+    catalogBook.publisher && {
+      label: lib?.publisher || "Publisher",
+      value: catalogBook.publisher,
+    },
+    catalogBook.language && {
+      label: lib?.language || "Language",
+      value: catalogBook.language,
+    },
+    catalogBook.pageCount && {
+      label: lib?.pagesLabel || "Pages",
+      value: String(catalogBook.pageCount),
+    },
+    catalogBook.publicationYear && {
+      label: lib?.published || "Published",
+      value: String(catalogBook.publicationYear),
+    },
+    catalogBook.isbn && { label: "ISBN", value: catalogBook.isbn },
+    totalBorrows > 0 && {
+      label: lib?.timesBorrowed || "Times borrowed",
+      value: String(totalBorrows),
+    },
+    totalBorrows > 0 && {
+      label: lib?.currentlyOut || "Currently out",
+      value: String(activeBorrows),
+    },
+  ].filter(Boolean) as { label: string; value: string }[]
+
+  // Description and summary are one block, not two headed sections a screen
+  // apart: the reference runs the short edition note straight into the long
+  // blurb under a single heading, and both of ours are prose about the book.
+  const aboutParagraphs = [catalogBook.description, catalogBook.summary].filter(
+    (text): text is string => Boolean(text?.trim())
+  )
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
-      {/* Hero: Cover + Info */}
-      <div className="flex gap-8">
-        <div className="shrink-0">
-          <div
-            className="aspect-[2/3] w-48 overflow-hidden rounded shadow-lg"
-            style={{ backgroundColor: catalogBook.coverColor || "#1a1a2e" }}
-          >
-            <BookCover
-              coverUrl={catalogBook.coverUrl}
-              coverColor={catalogBook.coverColor}
-              title={catalogBook.title}
-              author={catalogBook.author}
-              width={192}
-              height={288}
-              priority
-              textSize="md"
-            />
-          </div>
-        </div>
+    // `data-immersive` — read by the school-dashboard layout, which unpins the
+    // header and lets the container stop clipping so the hero can reach the
+    // page edges. On the page ROOT rather than on the hero, matching the lumos
+    // lesson: the colour owns the top of the screen and the bar comes back on
+    // the way up.
+    <div data-immersive className="pt-2 pb-10">
+      <BookHero
+        title={catalogBook.title}
+        author={catalogBook.author}
+        genre={catalogBook.genre}
+        rating={catalogBook.rating}
+        coverUrl={catalogBook.coverUrl}
+        coverColor={catalogBook.coverColor}
+        gradeLabel={gradeLabel}
+        publicationYear={catalogBook.publicationYear}
+        pageCount={catalogBook.pageCount}
+        availableCopies={schoolBook.availableCopies}
+        totalCopies={schoolBook.totalCopies}
+        schoolBookId={schoolBook.id}
+        userId={userId}
+        schoolId={schoolId}
+        hasBorrowedBook={!!activeBorrowRecord}
+        borrowRecordId={activeBorrowRecord?.id}
+        dictionary={lib}
+      />
 
-        <div className="flex-1 space-y-3">
-          <h1 className="text-foreground text-2xl font-bold">
-            {catalogBook.title}
-          </h1>
-          <p className="text-muted-foreground">
-            {lib?.by || "by"} {catalogBook.author}
-          </p>
-
-          <StarRating rating={Math.round(catalogBook.rating)} />
-
-          <div className="flex flex-wrap items-center gap-2">
-            {catalogBook.gradeLevel && catalogBook.gradeLevel !== "GENERAL" && (
-              <Badge variant="outline">
-                {BOOK_GRADE_LEVEL_LABELS[
-                  catalogBook.gradeLevel as BookGradeLevel
-                ] ?? catalogBook.gradeLevel}
-              </Badge>
-            )}
-            <Badge variant="secondary">{catalogBook.genre}</Badge>
-          </div>
-
-          <p
-            className={`text-sm ${schoolBook.availableCopies > 0 ? "text-green-600" : "text-red-600"}`}
-          >
-            {schoolBook.availableCopies} {lib?.of || "of"}{" "}
-            {schoolBook.totalCopies}{" "}
-            {lib?.copiesAvailable || "copies available"}
-          </p>
-
-          <div className="pt-2">
-            <BorrowBook
-              bookId={schoolBook.id}
-              userId={userId}
-              schoolId={schoolId}
-              availableCopies={schoolBook.availableCopies}
-              hasBorrowedBook={!!activeBorrowRecord}
-              borrowRecordId={activeBorrowRecord?.id}
-              dictionary={lib}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Description */}
-      {catalogBook.description && (
-        <div>
-          <h3 className="text-foreground mb-2 font-semibold">
-            {lib?.description || "Description"}
-          </h3>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {catalogBook.description}
-          </p>
-        </div>
-      )}
-
-      {/* Book Details Table */}
-      {hasDetails && (
-        <div>
-          <h3 className="text-foreground mb-3 font-semibold">
-            {lib?.bookDetails || "Book Details"}
-          </h3>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {catalogBook.pageCount && (
-              <div className="bg-muted/50 flex items-start gap-2 rounded-lg p-3">
-                <FileText className="text-muted-foreground mt-0.5 size-4 shrink-0" />
-                <div>
-                  <p className="text-muted-foreground text-xs">
-                    {lib?.pages || "Pages"}
-                  </p>
-                  <p className="text-foreground text-sm font-medium">
-                    {catalogBook.pageCount}
-                  </p>
-                </div>
-              </div>
-            )}
-            {catalogBook.language && (
-              <div className="bg-muted/50 flex items-start gap-2 rounded-lg p-3">
-                <Globe className="text-muted-foreground mt-0.5 size-4 shrink-0" />
-                <div>
-                  <p className="text-muted-foreground text-xs">
-                    {lib?.language || "Language"}
-                  </p>
-                  <p className="text-foreground text-sm font-medium">
-                    {catalogBook.language}
-                  </p>
-                </div>
-              </div>
-            )}
-            {catalogBook.publicationYear && (
-              <div className="bg-muted/50 flex items-start gap-2 rounded-lg p-3">
-                <Calendar className="text-muted-foreground mt-0.5 size-4 shrink-0" />
-                <div>
-                  <p className="text-muted-foreground text-xs">
-                    {lib?.year || "Year"}
-                  </p>
-                  <p className="text-foreground text-sm font-medium">
-                    {catalogBook.publicationYear}
-                  </p>
-                </div>
-              </div>
-            )}
-            {catalogBook.isbn && (
-              <div className="bg-muted/50 flex items-start gap-2 rounded-lg p-3">
-                <Hash className="text-muted-foreground mt-0.5 size-4 shrink-0" />
-                <div>
-                  <p className="text-muted-foreground text-xs">ISBN</p>
-                  <p className="text-foreground text-sm font-medium">
-                    {catalogBook.isbn}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-          {catalogBook.publisher && (
-            <div className="bg-muted/50 mt-3 flex items-center gap-2 rounded-lg p-3">
-              <Building2 className="text-muted-foreground size-4 shrink-0" />
-              <p className="text-muted-foreground text-xs">
-                {lib?.publisher || "Publisher"}:
-              </p>
-              <p className="text-foreground text-sm font-medium">
-                {catalogBook.publisher}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Borrowing Activity */}
-      {totalBorrows > 0 && (
-        <div>
-          <h3 className="text-foreground mb-2 font-semibold">
-            {lib?.borrowingActivity || "Borrowing Activity"}
-          </h3>
-          <div className="bg-muted/50 flex items-center gap-2 rounded-lg p-4">
-            <BookOpen className="text-muted-foreground size-5" />
-            <p className="text-muted-foreground text-sm">
-              {totalBorrows} {lib?.timesBorrowed || "times borrowed"} &middot;{" "}
-              {activeBorrows} {lib?.currentlyOut || "currently out"}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Summary */}
-      {catalogBook.summary && (
-        <div>
-          <h3 className="text-foreground mb-2 font-semibold">
-            {lib?.summary || "Summary"}
-          </h3>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {catalogBook.summary}
-          </p>
-        </div>
-      )}
-
-      {/* Video */}
-      {catalogBook.videoUrl && (
-        <div>
-          <BookVideo
-            videoUrl={catalogBook.videoUrl}
-            title={catalogBook.title}
+      {/* Below the colour the page is ordinary again — one narrow column, each
+          section divided from the next by a rule rather than by a gap. */}
+      <div className="mx-auto max-w-xl px-6 pt-8 [&>*+*]:mt-8 [&>*+*]:border-t [&>*+*]:pt-8">
+        {aboutParagraphs.length > 0 && (
+          <BookAbout
+            heading={lib?.aboutThisBook || "About This Book"}
+            paragraphs={aboutParagraphs}
+            moreLabel={lib?.more || "More"}
+            lessLabel={lib?.less || "Less"}
           />
-        </div>
-      )}
+        )}
 
-      {/* More by Author */}
-      {moreByAuthor.length > 0 && (
-        <>
-          <Separator />
-          <div>
-            <h3 className="text-foreground mb-4 font-semibold">
-              {lib?.moreBy || "More by"} {catalogBook.author}
-            </h3>
-            <div className="grid grid-cols-4 gap-3">
-              {moreByAuthor.map((related) => (
-                <Link
-                  key={related.id}
-                  href={`/${lang}/library/books/${related.id}`}
-                  className="group"
-                >
-                  <div
-                    className="aspect-[2/3] overflow-hidden rounded shadow-sm transition-shadow group-hover:shadow-md"
-                    style={{
-                      backgroundColor: related.coverColor || "#1a1a2e",
-                    }}
-                  >
-                    <BookCover
-                      coverUrl={related.coverUrl}
-                      coverColor={related.coverColor}
-                      title={related.title}
-                      author={related.author}
-                      width={120}
-                      height={180}
-                      textSize="sm"
-                    />
-                  </div>
-                  <p className="text-foreground mt-2 line-clamp-2 text-xs font-medium">
-                    {related.title}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+        <BookInfoList
+          heading={lib?.information || "Information"}
+          rows={infoRows}
+        />
 
-      {/* Similar Books */}
-      {similarBooks.length > 0 && (
-        <>
-          <Separator />
-          <div>
-            <h3 className="text-foreground mb-4 font-semibold">
-              {lib?.similarBooks || "Similar Books"}
-            </h3>
-            <div className="grid grid-cols-4 gap-3">
-              {similarBooks.map((related) => (
-                <Link
-                  key={related.id}
-                  href={`/${lang}/library/books/${related.id}`}
-                  className="group"
-                >
-                  <div
-                    className="aspect-[2/3] overflow-hidden rounded shadow-sm transition-shadow group-hover:shadow-md"
-                    style={{
-                      backgroundColor: related.coverColor || "#1a1a2e",
-                    }}
-                  >
-                    <BookCover
-                      coverUrl={related.coverUrl}
-                      coverColor={related.coverColor}
-                      title={related.title}
-                      author={related.author}
-                      width={120}
-                      height={180}
-                      textSize="sm"
-                    />
-                  </div>
-                  <p className="text-foreground mt-2 line-clamp-2 text-xs font-medium">
-                    {related.title}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+        {catalogBook.videoUrl && (
+          <section>
+            <BookVideo
+              videoUrl={catalogBook.videoUrl}
+              title={catalogBook.title}
+            />
+          </section>
+        )}
+
+        <BookShelf
+          heading={`${lib?.moreBy || "More by"} ${catalogBook.author}`}
+          books={moreByAuthor}
+          lang={lang}
+        />
+
+        <BookShelf
+          heading={lib?.similarBooks || "You Might Also Like"}
+          books={similarBooks}
+          lang={lang}
+        />
+      </div>
     </div>
   )
 }

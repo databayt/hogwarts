@@ -44,7 +44,8 @@ Student visits /library
   → click book card → /library/books/[id]
     loads CatalogBook by ID
     finds or creates school-scoped Book (lazy)
-    shows cover, description, video, rating, borrow status, "More by Author"
+    tinted hero: cover, grade, title, author, rating, borrow card
+    then About, Information, video, "More by Author", "You Might Also Like"
   → click "Borrow Book"
     borrowBook() creates BorrowRecord + decrements availableCopies
   → click "Return Book"

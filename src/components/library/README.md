@@ -43,9 +43,8 @@ library/
 ├── README.md                   # This file
 ├── ISSUE.md                    # Production readiness tracker
 ├── content.tsx                 # Library home: queries CatalogBook (global)
-├── hero.tsx                    # Hero section with featured book
-├── collaborate-section.tsx     # Featured book CTA (dictionary-ized)
-├── library-animation.tsx       # Decorative animation
+├── hero.tsx                    # Green brand banner -- the /live banner, same object
+├── collaborate-section.tsx     # One real book, spotlighted beside a fixed photo
 ├── book-cover.tsx              # Reusable cover with image/fallback
 ├── actions.ts                  # Server actions: CRUD, borrow, return, overdue
 ├── authorization.ts            # RBAC: 8 roles x 7 actions
@@ -60,11 +59,14 @@ library/
 │   ├── book-card.tsx           # Card component (accepts BookListItem)
 │   └── books-toolbar.tsx       # Search/filter toolbar (client)
 │
-├── book-detail/                # Single book view
+├── book-detail/                # Single book view -- Apple Books layout
 │   ├── content.tsx             # Loads CatalogBook + lazy-creates school Book for borrow
+│   ├── hero.tsx                # Full-bleed tinted panel: cover, title, meta, action card
+│   ├── about.tsx               # Description + summary, line-clamped with More (client)
+│   ├── info-list.tsx           # Label/value rows with hairline rules
+│   ├── book-shelf.tsx          # Horizontal-scroll cover row (related books)
 │   ├── book-video.tsx          # Embedded video player
-│   ├── star-rating.tsx         # Rating display (stars)
-│   └── borrow-book.tsx         # Borrow/return action button (client)
+│   └── borrow-book.tsx         # Borrow/return pill, drawn for the tint (client)
 │
 ├── catalog/                    # Global book catalog (admin)
 │   ├── content.tsx             # Catalog browser

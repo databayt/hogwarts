@@ -4,9 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { Check } from "lucide-react"
 import { toast } from "sonner"
-
-import { Button } from "@/components/ui/button"
 
 import { borrowBook, returnBook } from "../actions"
 
@@ -19,6 +18,19 @@ interface Props {
   borrowRecordId?: string
   dictionary?: Record<string, string>
 }
+
+/**
+ * The pill at the foot of the tinted card.
+ *
+ * Not a `<Button>`: every variant that component offers is themed against the
+ * page ground, and this one sits on the book's own colour. The reference's
+ * pills are the same shape in all three states — solid white to act, outlined
+ * to undo, dimmed when there is nothing to do — so they are written out here
+ * rather than bent out of a variant that assumes a light background.
+ */
+
+const PILL =
+  "inline-flex h-11 w-full items-center justify-center rounded-full px-6 font-semibold transition-opacity disabled:opacity-50"
 
 export default function BorrowBook({
   bookId,
@@ -46,10 +58,12 @@ export default function BorrowBook({
         toast.success(result.message)
         router.refresh()
       } else {
-        toast.error(result.message || "Failed to borrow book")
+        toast.error(
+          result.message || lib?.borrowFailed || "Failed to borrow book"
+        )
       }
     } catch {
-      toast.error("An unexpected error occurred")
+      toast.error(lib?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsLoading(false)
     }
@@ -70,10 +84,12 @@ export default function BorrowBook({
         toast.success(result.message)
         router.refresh()
       } else {
-        toast.error(result.message || "Failed to return book")
+        toast.error(
+          result.message || lib?.returnFailed || "Failed to return book"
+        )
       }
     } catch {
-      toast.error("An unexpected error occurred")
+      toast.error(lib?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsLoading(false)
     }
@@ -81,32 +97,47 @@ export default function BorrowBook({
 
   if (hasBorrowedBook) {
     return (
-      <div>
-        <p className="mb-2 text-sm text-emerald-600">
+      <div className="space-y-3">
+        <p className="inline-flex items-center gap-1.5 text-sm text-white">
+          <Check className="size-4" />
           {lib?.borrowedThisBook || "You have borrowed this book"}
         </p>
-        <Button onClick={handleReturn} disabled={isLoading} variant="outline">
+        <button
+          type="button"
+          onClick={handleReturn}
+          disabled={isLoading}
+          className={`${PILL} border border-white/70 text-white hover:bg-white/15`}
+        >
           {isLoading
             ? lib?.returning || "Returning..."
             : lib?.returnBook || "Return Book"}
-        </Button>
+        </button>
       </div>
     )
   }
 
   if (availableCopies === 0) {
     return (
-      <Button disabled variant="secondary">
+      <button
+        type="button"
+        disabled
+        className={`${PILL} bg-white/20 text-white`}
+      >
         {lib?.currentlyUnavailable || "Currently Unavailable"}
-      </Button>
+      </button>
     )
   }
 
   return (
-    <Button onClick={handleBorrow} disabled={isLoading}>
+    <button
+      type="button"
+      onClick={handleBorrow}
+      disabled={isLoading}
+      className={`${PILL} bg-white text-black hover:opacity-90`}
+    >
       {isLoading
         ? lib?.borrowing || "Borrowing..."
         : lib?.borrowBook || "Borrow Book"}
-    </Button>
+    </button>
   )
 }
