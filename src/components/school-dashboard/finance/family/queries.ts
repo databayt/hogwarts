@@ -14,6 +14,7 @@ import {
 import { resolveAvailableMethods } from "@/lib/payment/provider"
 import type { PaymentGateway } from "@/lib/payment/types"
 import { getTenantContext } from "@/lib/tenant-context"
+import { schoolCalendarDayOf, schoolWallTimeToUtc } from "@/lib/timezone"
 import type { Locale } from "@/components/internationalization/config"
 import { localize } from "@/components/translation/localize"
 import { getName, getNames } from "@/components/translation/person"
@@ -158,7 +159,21 @@ export async function getFamilyMoney(
     lang
   )
 
-  const now = Date.now()
+  // An instalment is late only once its DUE DAY is over in the SCHOOL's zone.
+  // Comparing against `Date.now()` marks an invoice due today as overdue from
+  // midnight UTC — 02:00 that same morning in Khartoum — so a parent paying on
+  // the due day would read red all day for a payment that is not yet late.
+  const timeZone = school?.timezone ?? "UTC"
+  const today = schoolCalendarDayOf(new Date(), timeZone)
+  const overdueAfter = schoolWallTimeToUtc(
+    timeZone,
+    today.year,
+    today.month,
+    today.day,
+    0,
+    0
+  ).getTime()
+
   const fees: FamilyFee[] = []
   const payments: FamilyPayment[] = []
 
@@ -183,7 +198,7 @@ export async function getFamilyMoney(
       invoices: a.invoices,
       total,
       paid,
-      now,
+      overdueAfter,
     })
 
     fees.push({
@@ -245,9 +260,12 @@ export async function getFamilyMoney(
       .reduce((sum, i) => sum + Math.max(i.amount - i.paidAmount, 0), 0),
   }
 
+  const names = studentIds.map((id) => studentNames[id]).filter(Boolean)
+
   return {
     role,
-    studentNames: studentIds.map((id) => studentNames[id]).filter(Boolean),
+    studentNames: names,
+    studentLabel: joinNames(names, lang),
     currency,
     schoolName: school?.name ?? undefined,
     methods,
@@ -276,7 +294,7 @@ function buildFamilyInstallments({
   invoices,
   total,
   paid,
-  now,
+  overdueAfter,
 }: {
   assignmentId: string
   feeName: string
@@ -294,7 +312,8 @@ function buildFamilyInstallments({
   }>
   total: number
   paid: number
-  now: number
+  /** Midnight today in the school's zone — anything due before it is late. */
+  overdueAfter: number
 }): FamilyInstallment[] {
   const base = {
     feeAssignmentId: assignmentId,
@@ -319,7 +338,13 @@ function buildFamilyInstallments({
         dueDate: inv.due_date.toISOString(),
         amount,
         paidAmount,
-        status: invoiceStatus(inv.status, amount, paidAmount, inv.due_date, now),
+        status: invoiceStatus(
+          inv.status,
+          amount,
+          paidAmount,
+          inv.due_date,
+          overdueAfter
+        ),
       }
     })
   }
@@ -354,12 +379,12 @@ function invoiceStatus(
   amount: number,
   paidAmount: number,
   dueDate: Date,
-  now: number
+  overdueAfter: number
 ): InstallmentStatus {
   if (stored === "PAID" || (amount > 0 && paidAmount >= amount)) return "PAID"
   if (stored === "CANCELLED") return "CANCELLED"
   if (paidAmount > 0) return "PARTIAL"
-  return dueDate.getTime() < now ? "OVERDUE" : "PENDING"
+  return dueDate.getTime() < overdueAfter ? "OVERDUE" : "PENDING"
 }
 
 /**
@@ -387,5 +412,24 @@ async function localizeFeeNames(
     return new Map(distinct.map((name, i) => [name, rows[i]?.name || name]))
   } catch {
     return new Map(distinct.map((name) => [name, name]))
+  }
+}
+
+/**
+ * The family's names as one line.
+ *
+ * `Intl.ListFormat` rather than a joined separator: the Arabic list conjunction
+ * is "و" attached to the last name, not a comma, and hardcoding "، " printed
+ * "Harry، Ron" to an English-reading guardian of two children.
+ */
+function joinNames(names: string[], lang: Locale): string {
+  if (names.length <= 1) return names[0] ?? ""
+  try {
+    return new Intl.ListFormat(lang, {
+      style: "long",
+      type: "conjunction",
+    }).format(names)
+  } catch {
+    return names.join(lang === "ar" ? "، " : ", ")
   }
 }

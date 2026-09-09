@@ -64,6 +64,8 @@ export interface FamilyFee {
 export interface FamilyMoney {
   role: "STUDENT" | "GUARDIAN"
   studentNames: string[]
+  /** Those names as one line, joined the way the reader's language joins a list. */
+  studentLabel: string
   currency: string
   schoolName?: string
   /** Rails the school actually offers, already filtered to the configured ones. */
@@ -87,9 +89,7 @@ export interface FamilyMoney {
 /** Copy for the family surface, read from `finance.family` in the dictionary. */
 export interface FamilyDictionary {
   title?: string
-  subtitle?: string
   allSettled?: string
-  allSettledBody?: string
   nothingBilled?: string
   nothingBilledBody?: string
   outstanding?: string
@@ -103,21 +103,11 @@ export interface FamilyDictionary {
   remaining?: string
   overdue?: string
   awaitingVerification?: string
-  installments?: string
   installmentOf?: string
-  schedule?: string
-  invoice?: string
-  invoices?: string
-  openInvoice?: string
   payWith?: string
-  payWithBody?: string
   fees?: string
   receipts?: string
-  noReceipts?: string
   viewReceipt?: string
-  download?: string
-  progress?: string
-  complete?: string
   fullBalanceNote?: string
   statusLabels?: Partial<Record<InstallmentStatus, string>>
   paymentStatusLabels?: Record<string, string>

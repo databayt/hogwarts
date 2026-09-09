@@ -5,6 +5,8 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { localize, localizeOne } from "@/components/translation/localize"
+import type { Lang } from "@/components/translation/types"
 
 import { BOOK_GRADE_LEVEL_LABELS, type BookGradeLevel } from "../config"
 import { BookAbout } from "./about"
@@ -164,10 +166,27 @@ export default async function LibraryBookDetailContent({
     }),
   ])
 
+  // Everything the reader sees, put into the reader's language. The listing
+  // has always done this and this page never did, so a book opened from an
+  // Arabic shelf changed language on the way in.
+  //
+  // AFTER the queries above, never before: `moreByAuthor` matches on
+  // `catalogBook.author` and `similarBooks` on `catalogBook.genre`, and a
+  // translated author matches no row. Same trap as `FEATURED_BOOK_TITLE` on
+  // the library home. `localize` leaves text alone when it is already in the
+  // display language, so an Arabic-authored book costs nothing here.
+  const displayLang = (lang || "ar") as Lang
+  const [book, relatedByAuthor, relatedSimilar] = await Promise.all([
+    localizeOne("Book", catalogBook, { schoolId, lang: displayLang }),
+    localize("Book", moreByAuthor, { schoolId, lang: displayLang }),
+    localize("Book", similarBooks, { schoolId, lang: displayLang }),
+  ])
+  const shown = book ?? catalogBook
+
   const gradeLabel =
-    catalogBook.gradeLevel && catalogBook.gradeLevel !== "GENERAL"
-      ? (BOOK_GRADE_LEVEL_LABELS[catalogBook.gradeLevel as BookGradeLevel] ??
-        catalogBook.gradeLevel)
+    shown.gradeLevel && shown.gradeLevel !== "GENERAL"
+      ? (BOOK_GRADE_LEVEL_LABELS[shown.gradeLevel as BookGradeLevel] ??
+        shown.gradeLevel)
       : null
 
   // The reference's Information list. Every row is dropped when its field is
@@ -176,23 +195,23 @@ export default async function LibraryBookDetailContent({
   // about this book, and giving them a section of their own gave one sentence
   // the same weight as the description.
   const infoRows = [
-    catalogBook.publisher && {
+    shown.publisher && {
       label: lib?.publisher || "Publisher",
-      value: catalogBook.publisher,
+      value: shown.publisher,
     },
-    catalogBook.language && {
+    shown.language && {
       label: lib?.language || "Language",
-      value: catalogBook.language,
+      value: shown.language,
     },
-    catalogBook.pageCount && {
+    shown.pageCount && {
       label: lib?.pagesLabel || "Pages",
-      value: String(catalogBook.pageCount),
+      value: String(shown.pageCount),
     },
-    catalogBook.publicationYear && {
+    shown.publicationYear && {
       label: lib?.published || "Published",
-      value: String(catalogBook.publicationYear),
+      value: String(shown.publicationYear),
     },
-    catalogBook.isbn && { label: "ISBN", value: catalogBook.isbn },
+    shown.isbn && { label: "ISBN", value: shown.isbn },
     totalBorrows > 0 && {
       label: lib?.timesBorrowed || "Times borrowed",
       value: String(totalBorrows),
@@ -206,7 +225,7 @@ export default async function LibraryBookDetailContent({
   // Description and summary are one block, not two headed sections a screen
   // apart: the reference runs the short edition note straight into the long
   // blurb under a single heading, and both of ours are prose about the book.
-  const aboutParagraphs = [catalogBook.description, catalogBook.summary].filter(
+  const aboutParagraphs = [shown.description, shown.summary].filter(
     (text): text is string => Boolean(text?.trim())
   )
 
@@ -218,17 +237,18 @@ export default async function LibraryBookDetailContent({
     // the way up.
     <div data-immersive className="pt-2 pb-10">
       <BookHero
-        title={catalogBook.title}
-        author={catalogBook.author}
-        genre={catalogBook.genre}
-        rating={catalogBook.rating}
-        coverUrl={catalogBook.coverUrl}
-        coverColor={catalogBook.coverColor}
+        title={shown.title}
+        author={shown.author}
+        genre={shown.genre}
+        rating={shown.rating}
+        coverUrl={shown.coverUrl}
+        coverColor={shown.coverColor}
         gradeLabel={gradeLabel}
-        gradeLevel={catalogBook.gradeLevel}
+        gradeLevel={shown.gradeLevel}
         lang={lang}
-        publicationYear={catalogBook.publicationYear}
-        pageCount={catalogBook.pageCount}
+        publicationYear={shown.publicationYear}
+        pageCount={shown.pageCount}
+        digitalFileUrl={shown.digitalFileUrl}
         availableCopies={schoolBook.availableCopies}
         totalCopies={schoolBook.totalCopies}
         schoolBookId={schoolBook.id}
@@ -256,24 +276,21 @@ export default async function LibraryBookDetailContent({
           rows={infoRows}
         />
 
-        {catalogBook.videoUrl && (
+        {shown.videoUrl && (
           <section>
-            <BookVideo
-              videoUrl={catalogBook.videoUrl}
-              title={catalogBook.title}
-            />
+            <BookVideo videoUrl={shown.videoUrl} title={shown.title} />
           </section>
         )}
 
         <BookShelf
-          heading={`${lib?.moreBy || "More by"} ${catalogBook.author}`}
-          books={moreByAuthor}
+          heading={`${lib?.moreBy || "More by"} ${shown.author}`}
+          books={relatedByAuthor}
           lang={lang}
         />
 
         <BookShelf
           heading={lib?.similarBooks || "You Might Also Like"}
-          books={similarBooks}
+          books={relatedSimilar}
           lang={lang}
         />
       </div>

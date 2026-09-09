@@ -119,7 +119,7 @@ export default async function MyFeesPage({ params, searchParams }: Props) {
     <div className="space-y-6">
       {banner}
       <MyFees
-        studentName={money.studentNames.join("، ")}
+        studentName={money.studentLabel}
         assignments={assignments}
         lang={lang}
         currency={money.currency}

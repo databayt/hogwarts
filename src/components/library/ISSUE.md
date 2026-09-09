@@ -184,3 +184,25 @@ sections — About, Information, shelves.
 - **`[TENANT] Query without schoolId: Book.findFirst/findMany`** still logs on
   every visit. `Book` is the global catalog and genuinely has no `schoolId`;
   the warning is the tenant guard not knowing that. Pre-existing.
+
+## The featured blurb, and translation on the detail page (2026-09-09)
+
+- **The library home's featured book had lost its description.** The pass that
+  deleted the invented `featuredBookDescription` key took the paragraph with
+  it, leaving a title, a byline and a button. It reads from the `Book` row now
+  and arrives translated. `description` stays out of the list `select`; the
+  featured row is fetched on its own so `localize()` does not translate a
+  paragraph for every book on the page.
+- **The detail page localized nothing.** The listing has always run
+  `localize("Book", …)` and this page never did, so a book opened from an
+  Arabic shelf changed language on the way in. It now localizes the book and
+  both shelves, after the related-book queries rather than before.
+
+### Blocked on the provider, not on code
+
+Neither is visibly Arabic on demo data right now. Google Translate answers
+`403 User Rate Limit Exceeded`, its circuit breaker is open (5 min cooldown),
+and the Groq fallback's breaker is open too. `localize()` falls back to the
+source language by design and logs `[translation] DEGRADED`. The `Translation`
+cache holds real en↔ar rows from earlier runs, so the read path is sound — the
+first render after the quota clears will populate it.

@@ -57,7 +57,10 @@ to a single dateless row — an unbilled fee that rendered as nothing is how a
 family misses a payment.
 
 Status is re-derived against the clock: an UNPAID invoice past its due date reads
-OVERDUE whether or not a cron has relabelled it yet.
+OVERDUE whether or not a cron has relabelled it yet. The boundary is **midnight
+today in `School.timezone`**, not `Date.now()` — due dates are stored at midnight
+UTC, so a plain comparison turns an invoice due today red at 02:00 that morning in
+Khartoum, and a parent paying on the due day would read late all day.
 
 ## Known limits
 

@@ -58,7 +58,7 @@ export function FamilyBalanceHero({
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <p className="text-muted-foreground text-sm">
-            {money.studentNames.join("، ") || d?.title}
+            {money.studentLabel || d?.title}
           </p>
 
           {/* The balance. `tabular-nums` because this number sits directly
