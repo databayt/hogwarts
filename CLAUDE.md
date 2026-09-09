@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+> **Deployment: Cloudflare, not Vercel** (since 2026-09-07). `balqalam.com` and every `*.balqalam.com`
+> school tenant are served by the `hogwarts` Worker in front of a container. Every Vercel hostname on
+> the databayt accounts answers HTTP 402. Runbook: `.claude/rules/cloudflare-deploy.md`, the
+> `cloudflare` skill, and `DEPLOYMENT.md`. Ship with `scripts/deploy-cloudflare.sh`.
+
 This file provides guidance to Claude Code when working with this repository.
 
 ## Quick Start
