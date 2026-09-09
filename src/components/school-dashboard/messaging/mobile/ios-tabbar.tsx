@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils"
 
+import { PersonGlyph } from "./ios-chat-row"
 import { IosHomeIndicator } from "./ios-home-indicator"
 import { WaIcon, type WaIconName } from "./wa-icon"
 
@@ -17,6 +18,8 @@ export type IosTab = {
   label: string
   icon: WaIconName
   badge?: number
+  /** "You" carries the signed-in person's photo instead of a glyph. */
+  avatarUrl?: string | null
 }
 
 type Props = {
@@ -54,11 +57,29 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
                 aria-current={isActive ? "page" : undefined}
                 className="flex w-full flex-col items-center"
               >
-                <WaIcon
-                  name={tab.icon}
-                  className={cn("size-[32px]", color)}
-                  tint={false}
-                />
+                {tab.id === "settings" ? (
+                  // The reference's "You" slot: the reader's own face, or a
+                  // tinted silhouette when they have no photo.
+                  <span className="flex size-[32px] items-center justify-center overflow-hidden rounded-full bg-[color:var(--wa-surface-avatar-person)]">
+                    {tab.avatarUrl ? (
+                      <img
+                        src={tab.avatarUrl}
+                        alt=""
+                        className="size-full object-cover"
+                        draggable={false}
+                      />
+                    ) : (
+                      <PersonGlyph className="size-[20px] text-[color:var(--wa-text-avatar-person)]" />
+                    )}
+                  </span>
+                ) : (
+                  // Masked, not a raw <img>: the icons have to take the
+                  // selected/unselected colour rather than render flat black.
+                  <WaIcon
+                    name={tab.icon}
+                    className={cn("size-[32px]", color)}
+                  />
+                )}
                 <span
                   className={cn(
                     "text-center text-[10px] leading-none font-medium tracking-[0.05px]",

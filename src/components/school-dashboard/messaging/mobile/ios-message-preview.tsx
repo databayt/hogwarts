@@ -77,7 +77,9 @@ export function IosMessagePreview({
       )}
       <p
         className={cn(
-          "min-w-0 flex-1 truncate text-[14px] leading-[19px] tracking-[-0.14px] text-[color:var(--wa-text-secondary)]",
+          // Two lines, as WhatsApp allows — the row's content box is tall
+          // enough for the name plus both of them.
+          "line-clamp-2 min-w-0 flex-1 text-[14px] leading-[19px] tracking-[-0.14px] text-[color:var(--wa-text-secondary)]",
           italic && "italic",
           indent
         )}

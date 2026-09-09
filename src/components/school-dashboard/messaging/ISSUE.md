@@ -234,6 +234,35 @@ recording. `onTapInfo` opens `ConversationInfoPanel`, which is `hidden md:block`
 tapping the header does nothing on a phone. The composer's attach/sticker/camera/mic
 buttons render but are inert.
 
+### Chat list read against a real screenshot — 2026-09-09
+
+Compared side by side with an iPhone WhatsApp chat-list capture at 393×852 @3x.
+
+- [x] **Tab icons were rendering flat black**, active or not. `IosTabbar` passed
+      `tint={false}`, which makes `WaIcon` emit a plain `<img>`, so the
+      selected/unselected colour classes had nothing to act on. Masked now.
+- [x] **Filter chips are outlined**, not grey-filled; only the active chip carries
+      the pale green fill (new `--wa-border-cta-filters`). The trailing `+` chip was
+      built but never rendered, and the row now scrolls — Arabic labels overflow 393px
+      where the English ones fit.
+- [x] **Avatar fallbacks are tinted**, per the reference: peach circle with a brown
+      pair for groups, pale blue with a blue silhouette for people, replacing a grey
+      gradient and an initial letter. Four new tokens, light and dark.
+- [x] **"You" replaces the gear** in the last tab slot, carrying the reader's own
+      photo, falling back to the silhouette. Same `onDashboard` action as before.
+- [x] **Group previews name the speaker** ("Name: message"), voice previews carry
+      their duration, and previews wrap to two lines inside the same row box.
+- [x] **Archived only appears when something is archived.** Title reads `ui.chats`,
+      matching the reference, not `ui.title` (which desktop still uses).
+
+Geometry was already right and was left alone: avatar 56, row 77.3, chip 34.
+
+**Deliberately not mirrored** (WhatsApp product surfaces with no school-app
+counterpart): the "Ask Meta AI" search affordance, the notification-permission
+banner, the Meta AI button, and an "Updates" tab — our tab bar carries four slots
+(Calls, Classes, Chats, You) against the reference's five. The `+` filter chip is
+visual only; there are no custom filter lists behind it.
+
 ### i18n debt (P2)
 
 Client UI is dictionary-keyed (dedicated `messaging` namespace, `dictionaries.ts:142`). Server-action error i18n is now done; two logic-layer items remain:

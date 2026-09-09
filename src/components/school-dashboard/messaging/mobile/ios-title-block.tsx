@@ -35,36 +35,42 @@ export function IosTitleBlock({
   return (
     <div
       className={cn(
-        "flex w-full flex-col items-start gap-[8px] overflow-clip px-[16px] pt-[5px] pb-[8px]",
+        "flex w-full flex-col items-start gap-[8px] pt-[5px] pb-[8px]",
         className
       )}
     >
-      <h1 className="w-full text-[33.33px] leading-none font-bold tracking-[-1.3332px] text-[color:var(--wa-text-primary)]">
-        {title}
-      </h1>
+      <div className="flex w-full flex-col items-start gap-[8px] px-[16px]">
+        <h1 className="w-full text-[33.33px] leading-none font-bold tracking-[-1.3332px] text-[color:var(--wa-text-primary)]">
+          {title}
+        </h1>
 
-      <label className="flex w-full items-center gap-[1px] rounded-[10px] bg-[color:var(--wa-surface-search-chat)] p-[5px]">
-        <WaIcon
-          name="ic-wa-search-24"
-          className="size-[24px] shrink-0 text-[color:var(--wa-text-secondary)]"
-          ariaLabel="Search"
-        />
-        <input
-          type="search"
-          placeholder={searchPlaceholder}
-          value={searchValue}
-          onChange={(e) => onSearchChange?.(e.target.value)}
-          onFocus={onSearchFocus}
-          className="min-w-0 flex-1 bg-transparent text-[16.4px] text-[color:var(--wa-text-primary)] placeholder:text-[color:var(--wa-text-secondary)] focus:outline-none"
-        />
-      </label>
+        <label className="flex w-full items-center gap-[6px] rounded-[10px] bg-[color:var(--wa-surface-search-chat)] p-[5px]">
+          <WaIcon
+            name="ic-wa-search-24"
+            className="size-[24px] shrink-0 text-[color:var(--wa-text-secondary)]"
+            ariaLabel="Search"
+          />
+          <input
+            type="search"
+            placeholder={searchPlaceholder}
+            value={searchValue}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            onFocus={onSearchFocus}
+            className="min-w-0 flex-1 bg-transparent text-[16.4px] text-[color:var(--wa-text-primary)] placeholder:text-[color:var(--wa-text-secondary)] focus:outline-none"
+          />
+        </label>
+      </div>
 
-      <IosFilterChips
-        filters={filters}
-        active={activeFilter}
-        onChange={onFilterChange}
-        onAdd={onAddFilter}
-      />
+      {/* Its own scroller: Arabic filter labels run longer than English and
+          would otherwise be clipped at the edge of the screen. */}
+      <div className="w-full overflow-x-auto px-[16px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <IosFilterChips
+          filters={filters}
+          active={activeFilter}
+          onChange={onFilterChange}
+          onAdd={onAddFilter}
+        />
+      </div>
     </div>
   )
 }

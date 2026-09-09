@@ -17,6 +17,17 @@
 
 @theme inline {
   --spacing-4_5: 1.125rem;
+  /* Traffic light for an online class: live / upcoming / missed. The green is
+     the saas-marketing hero's own (`thmanyah/block/HeroBlock.tsx` grounds the
+     hero in #00bc6d); the amber and red are its companions on the same dial.
+     Tokenised rather than repeated as `bg-[#00bc6d]` so the surfaces cannot
+     drift, and because an arbitrary hex in a className has no dark-mode story.
+     `--missed` is deliberately its own token rather than `--destructive`: a
+     class you did not join is a state, not an error, and should not inherit
+     whatever the destructive palette becomes. */
+  --color-live: var(--live);
+  --color-upcoming: var(--upcoming);
+  --color-missed: var(--missed);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -193,6 +204,9 @@
   --msg-typing-dot: oklch(0.559 0.025 233.7); /* #667781 */
   --msg-system-text: oklch(0.496 0.026 233.9); /* #54656f */
   --msg-link: oklch(0.563 0.124 237.9); /* #027eb5 */
+  --live: #00bc6d;
+  --upcoming: #f5a524;
+  --missed: #e5484d;
   --msg-timestamp: oklch(0.559 0.025 233.7); /* #667781 */
 }
 
@@ -751,6 +765,11 @@ body {
   --wa-text-cta-filters-active: #15603e;
   --wa-text-tabbar: #767779;
   --wa-text-tabbar-selected: #0a0a0a;
+  --wa-surface-avatar-group: #f5e3cd;
+  --wa-text-avatar-group: #9c6f38;
+  --wa-surface-avatar-person: #d7e7f8;
+  --wa-text-avatar-person: #2b7ac4;
+  --wa-border-cta-filters: #e4e4e4;
   --wa-border-panel: rgba(0, 0, 0, 0.3);
   --wa-border-separator: rgba(0, 0, 0, 0.2);
   --wa-border-avatar: rgba(10, 10, 10, 0.1);
@@ -782,6 +801,11 @@ body {
   --wa-text-cta-filters-active: #aff2bf;
   --wa-text-tabbar: #8696a0;
   --wa-text-tabbar-selected: #e9edef;
+  --wa-surface-avatar-group: #3b3123;
+  --wa-text-avatar-group: #d3a76a;
+  --wa-surface-avatar-person: #1e3348;
+  --wa-text-avatar-person: #7fb6e8;
+  --wa-border-cta-filters: #2a3942;
   --wa-border-panel: rgba(255, 255, 255, 0.12);
   --wa-border-separator: rgba(134, 150, 160, 0.2);
   --wa-border-avatar: rgba(255, 255, 255, 0.08);

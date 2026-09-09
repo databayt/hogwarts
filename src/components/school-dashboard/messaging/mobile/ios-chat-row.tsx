@@ -37,6 +37,21 @@ type Props = {
   className?: string
 }
 
+/** The person silhouette WhatsApp shows when a contact has no photo. */
+export function PersonGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="currentColor"
+      aria-hidden
+    >
+      <circle cx="12" cy="8" r="4.2" />
+      <path d="M12 13.6c-4.1 0-7.4 2.4-7.4 5.4v1h14.8v-1c0-3-3.3-5.4-7.4-5.4Z" />
+    </svg>
+  )
+}
+
 export function IosChatRow({ row, onClick, className }: Props) {
   const hasUnread = (row.unreadCount ?? 0) > 0
   const timestampColor = hasUnread
@@ -62,16 +77,15 @@ export function IosChatRow({ row, onClick, className }: Props) {
               draggable={false}
             />
           ) : row.isGroup ? (
-            <div className="flex size-full items-center justify-center bg-gradient-to-br from-neutral-400 to-neutral-500">
+            <div className="flex size-full items-center justify-center bg-[color:var(--wa-surface-avatar-group)]">
               <WaIcon
                 name="ic-wa-group-16"
-                className="size-[28px] text-white"
-                tint={false}
+                className="size-[30px] text-[color:var(--wa-text-avatar-group)]"
               />
             </div>
           ) : (
-            <div className="flex size-full items-center justify-center bg-[color:var(--wa-text-secondary)] text-[20px] font-semibold text-white">
-              {row.avatarFallback ?? row.name.charAt(0).toUpperCase()}
+            <div className="flex size-full items-center justify-center bg-[color:var(--wa-surface-avatar-person)]">
+              <PersonGlyph className="size-[30px] text-[color:var(--wa-text-avatar-person)]" />
             </div>
           )}
         </div>

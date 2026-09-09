@@ -25,7 +25,7 @@ export function IosFilterChips({
 }: Props) {
   return (
     <div
-      className={cn("flex w-full items-start gap-[8px]", className)}
+      className={cn("flex w-max items-start gap-[8px]", className)}
       role="tablist"
       aria-label="Chat filters"
     >
@@ -37,7 +37,9 @@ export function IosFilterChips({
           onClick={() => onChange(f.id)}
         />
       ))}
-      {onAdd && <IosFilterChip iconOnly onClick={onAdd} />}
+      {/* The trailing "+" closes the chip row in the reference, so it is part
+          of the grammar rather than something a handler opts into. */}
+      <IosFilterChip iconOnly onClick={onAdd} />
     </div>
   )
 }

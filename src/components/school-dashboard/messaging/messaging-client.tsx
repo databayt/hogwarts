@@ -656,6 +656,16 @@ export function MessagingClient({
     [activeConversation?.id]
   )
 
+  // The signed-in person's own photo, for the mobile "You" tab. Their
+  // participant row carries it, so no extra prop has to be threaded through.
+  const currentUserImage = useMemo(() => {
+    for (const c of conversations) {
+      const self = c.participants?.find((p) => p.userId === currentUserId)
+      if (self?.user.image) return self.user.image
+    }
+    return null
+  }, [conversations, currentUserId])
+
   // Labels the mobile WhatsApp conversation view needs to render a message.
   const adaptLabels: AdaptLabels = useMemo(
     () => ({
@@ -735,9 +745,10 @@ export function MessagingClient({
           typingConversations={typingConversations}
           onlineUserIds={onlineUserIds}
           onConversationClick={switchToConversation}
+          currentUserImage={currentUserImage}
           locale={locale}
           labels={{
-            titleChats: m?.ui?.title ?? "Chats",
+            titleChats: m?.ui?.chats ?? "Chats",
             searchPlaceholder: m?.ui?.search_placeholder ?? "Search messages",
             filterAll: m?.ui?.filter?.all ?? "All",
             filterUnread: m?.ui?.filter?.unread ?? "Unread",
@@ -748,6 +759,7 @@ export function MessagingClient({
             tabClasses: m?.ui?.tab?.classes ?? "Classes",
             tabChats: m?.ui?.tab?.chats ?? "Chats",
             tabBack: m?.ui?.tab?.back ?? "Back",
+            tabYou: m?.ui?.you ?? "You",
             encryptPrefix: m?.ui?.encrypt?.prefix ?? "Your personal",
             encryptTopic: m?.ui?.encrypt?.topic_messages ?? "messages",
             encryptSuffix: m?.ui?.encrypt?.suffix ?? "are",

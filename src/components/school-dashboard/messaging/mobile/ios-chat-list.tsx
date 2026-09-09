@@ -24,6 +24,7 @@ type L = {
   tabClasses: string
   tabChats: string
   tabBack: string
+  tabYou: string
   encryptPrefix: string
   encryptTopic: string
   encryptSuffix: string
@@ -50,6 +51,7 @@ const DEFAULT_L: L = {
   tabClasses: "Classes",
   tabChats: "Chats",
   tabBack: "Back",
+  tabYou: "You",
   encryptPrefix: "Your personal",
   encryptTopic: "messages",
   encryptSuffix: "are",
@@ -76,7 +78,10 @@ type Props = {
   onCamera?: () => void
   onOptions?: () => void
   onOpenArchived?: () => void
+  onAddFilter?: () => void
   onDashboard?: () => void
+  /** Shown in the "You" tab slot. */
+  currentUserImage?: string | null
   locale?: "ar" | "en"
   labels?: Partial<L>
 }
@@ -93,7 +98,9 @@ export function IosChatList({
   onCamera,
   onOptions,
   onOpenArchived,
+  onAddFilter,
   onDashboard,
+  currentUserImage,
   locale = "en",
   labels,
 }: Props) {
@@ -130,7 +137,12 @@ export function IosChatList({
       icon: "ic-wa-tab-chats-32",
       badge: totalUnread,
     },
-    { id: "settings", label: L.tabBack, icon: "ic-wa-tab-settings-32" },
+    {
+      id: "settings",
+      label: L.tabYou,
+      icon: "ic-wa-tab-settings-32",
+      avatarUrl: currentUserImage,
+    },
   ]
 
   const { active: activeConvs, archived: archivedCount } = useMemo(() => {
@@ -217,14 +229,17 @@ export function IosChatList({
           filters={filters}
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
+          onAddFilter={onAddFilter}
         />
 
         <div className="flex flex-col items-start">
-          <IosArchivedRow
-            label={L.archivedLabel}
-            count={archivedCount > 0 ? archivedCount : undefined}
-            onClick={onOpenArchived}
-          />
+          {archivedCount > 0 && (
+            <IosArchivedRow
+              label={L.archivedLabel}
+              count={archivedCount}
+              onClick={onOpenArchived}
+            />
+          )}
 
           {rowsData.map((row) => (
             <IosChatRow
@@ -305,6 +320,17 @@ function formatTimestamp(
   })
 }
 
+/** " (0:30)" when the voice note carries a duration, else nothing. */
+function voiceDuration(m: {
+  metadata: Record<string, unknown> | null
+}): string {
+  const raw = m.metadata?.duration ?? m.metadata?.durationSeconds
+  const seconds = typeof raw === "number" ? Math.round(raw) : 0
+  if (!seconds) return ""
+  const mins = Math.floor(seconds / 60)
+  return ` (${mins}:${String(seconds % 60).padStart(2, "0")})`
+}
+
 function toRowData(
   c: ConversationDTO,
   currentUserId: string,
@@ -340,7 +366,7 @@ function toRowData(
     const isMine = last.senderId === currentUserId
     if (last.contentType === "voice" || last.contentType === "audio") {
       previewLeading = "voice"
-      previewText = L.previewVoice
+      previewText = L.previewVoice + voiceDuration(last)
     } else if (last.contentType === "location") {
       previewLeading = "location"
       previewText = L.previewLocation
@@ -353,6 +379,11 @@ function toRowData(
     }
     if (isMine) {
       previewLeading = last.status === "read" ? "check-read" : "check-sent"
+    } else if (isGroup) {
+      // In a group the reference names who spoke: "Name: message".
+      const who =
+        last.sender?.username || last.sender?.email || L.directFallbackName
+      previewText = `${who}: ${previewText}`
     }
   }
 
