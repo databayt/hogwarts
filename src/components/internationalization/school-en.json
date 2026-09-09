@@ -8743,6 +8743,8 @@
       "pages": "pages",
       "pagesLabel": "Pages",
       "read": "Read",
+      "borrow": "Borrow",
+      "returnShort": "Return",
       "publisher": "Publisher",
       "language": "Language",
       "published": "Published",
