@@ -135,7 +135,9 @@
     "mobile": {
       "input_placeholder": "Message",
       "tap_for_info": "tap here for contact info",
-      "group_fallback": "Group"
+      "group_fallback": "Group",
+      "title": "Messages",
+      "search_placeholder": "Search messages"
     },
     "notice": {
       "title": "Get message notifications",

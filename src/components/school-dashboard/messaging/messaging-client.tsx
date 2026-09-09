@@ -748,8 +748,8 @@ export function MessagingClient({
           currentUserImage={currentUserImage}
           locale={locale}
           labels={{
-            titleChats: m?.ui?.chats ?? "Chats",
-            searchPlaceholder: m?.ui?.search_placeholder ?? "Search messages",
+            titleChats: m?.ui?.mobile?.title ?? "Messages",
+            searchPlaceholder: m?.ui?.mobile?.search_placeholder ?? "Messages",
             filterAll: m?.ui?.filter?.all ?? "All",
             filterUnread: m?.ui?.filter?.unread ?? "Unread",
             filterFavourites: m?.ui?.filter?.favourites ?? "Favourites",

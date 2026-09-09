@@ -25,12 +25,12 @@ export function IosFilterChip({
       onClick={onClick}
       aria-pressed={!iconOnly ? active : undefined}
       className={cn(
-        "shrink-0 overflow-clip rounded-[19px] transition-colors",
+        "overflow-clip rounded-[19px] transition-colors",
         // Unselected filters are outlined, not filled; only the active one
         // carries the pale green fill.
         iconOnly
-          ? "flex size-[32px] items-center justify-center border-[1px] border-[color:var(--wa-border-cta-filters)]"
-          : "flex h-[32px] items-center px-[14px]",
+          ? "flex size-[32px] shrink-0 items-center justify-center border-[1px] border-[color:var(--wa-border-cta-filters)]"
+          : "flex h-[32px] flex-1 items-center justify-center px-[9px]",
         !iconOnly &&
           active &&
           "bg-[color:var(--wa-surface-cta-filters-active)]",

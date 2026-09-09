@@ -135,7 +135,9 @@
     "mobile": {
       "input_placeholder": "رسالة",
       "tap_for_info": "اضغط هنا لمعلومات جهة الاتصال",
-      "group_fallback": "مجموعة"
+      "group_fallback": "مجموعة",
+      "title": "رسائل",
+      "search_placeholder": "البحث في الرسائل"
     },
     "notice": {
       "title": "تفعيل إشعارات الرسائل",

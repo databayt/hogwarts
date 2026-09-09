@@ -43,11 +43,11 @@ export function IosTitleBlock({
       )}
     >
       <div className="flex w-full flex-col items-start gap-[8px] px-[16px]">
-        <h1 className="w-full text-[33.33px] leading-none font-bold tracking-[-1.3332px] text-[color:var(--wa-text-primary)]">
+        <h1 className="w-full text-[28px] leading-none font-bold tracking-[-1.1px] text-[color:var(--wa-text-primary)]">
           {title}
         </h1>
 
-        <label className="flex w-full items-center gap-[6px] h-[44px] rounded-[12px] bg-[color:var(--wa-surface-search-chat)] px-[8px]">
+        <label className="flex w-full items-center gap-[6px] h-[44px] rounded-full bg-[color:var(--wa-surface-search-chat)] px-[12px]">
           <WaIcon
             name="ic-wa-search-24"
             className="size-[16px] shrink-0 text-[color:var(--wa-text-secondary)]"
@@ -68,7 +68,7 @@ export function IosTitleBlock({
 
       {/* Its own scroller: Arabic filter labels run longer than English and
           would otherwise be clipped at the edge of the screen. */}
-      <div className="w-full overflow-x-auto px-[16px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="w-full px-[16px]">
         <IosFilterChips
           filters={filters}
           active={activeFilter}
