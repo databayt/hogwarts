@@ -136,6 +136,12 @@
       "input_placeholder": "Message",
       "tap_for_info": "tap here for contact info",
       "group_fallback": "Group"
+    },
+    "notice": {
+      "title": "Get message notifications",
+      "body": "Make sure you know when you have new messages.",
+      "action": "Turn on",
+      "dismiss": "Dismiss"
     }
   },
   "info": {

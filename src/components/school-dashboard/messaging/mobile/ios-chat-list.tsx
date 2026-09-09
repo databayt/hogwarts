@@ -9,6 +9,7 @@ import { IosChatRow, type IosChatRowData } from "./ios-chat-row"
 import type { FilterId } from "./ios-filter-chips"
 import { IosHeader } from "./ios-header"
 import { IosInfoEncrypt } from "./ios-info-encrypt"
+import { IosNoticeCard } from "./ios-notice-card"
 import { IosTabbar, type IosTab, type IosTabId } from "./ios-tabbar"
 import { IosTitleBlock } from "./ios-title-block"
 
@@ -25,6 +26,10 @@ type L = {
   tabChats: string
   tabBack: string
   tabYou: string
+  noticeTitle: string
+  noticeBody: string
+  noticeAction: string
+  noticeDismiss: string
   encryptPrefix: string
   encryptTopic: string
   encryptSuffix: string
@@ -52,6 +57,10 @@ const DEFAULT_L: L = {
   tabChats: "Chats",
   tabBack: "Back",
   tabYou: "You",
+  noticeTitle: "Get message notifications",
+  noticeBody: "Make sure you know when you have new messages.",
+  noticeAction: "Turn on",
+  noticeDismiss: "Dismiss",
   encryptPrefix: "Your personal",
   encryptTopic: "messages",
   encryptSuffix: "are",
@@ -230,9 +239,17 @@ export function IosChatList({
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
           onAddFilter={onAddFilter}
+          notice={
+            <IosNoticeCard
+              title={L.noticeTitle}
+              body={L.noticeBody}
+              actionLabel={L.noticeAction}
+              dismissLabel={L.noticeDismiss}
+            />
+          }
         />
 
-        <div className="flex flex-col items-start">
+        <div className="flex flex-col items-start pt-[8px]">
           {archivedCount > 0 && (
             <IosArchivedRow
               label={L.archivedLabel}

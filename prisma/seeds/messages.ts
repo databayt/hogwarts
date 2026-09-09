@@ -380,6 +380,51 @@ export async function seedConversations(
     }
   }
 
+  // 1b. Give every admin their own direct threads. The 20 above pair random
+  // teachers and students, so the account a demo is actually driven from —
+  // admin@balqalam.com — would open Messages to a nearly empty list.
+  const adminCounterparts = [...teacherUserIds, ...studentUserIds]
+  for (const adminId of adminUserIds) {
+    for (const other of adminCounterparts.slice(0, 12)) {
+      if (other === adminId) continue
+      try {
+        const existing = await prisma.conversation.findFirst({
+          where: {
+            schoolId,
+            type: "direct",
+            OR: [
+              { directParticipant1Id: adminId, directParticipant2Id: other },
+              { directParticipant1Id: other, directParticipant2Id: adminId },
+            ],
+          },
+        })
+        if (existing) continue
+
+        const conversation = await prisma.conversation.create({
+          data: {
+            schoolId,
+            type: "direct",
+            directParticipant1Id: adminId,
+            directParticipant2Id: other,
+            createdById: adminId,
+            lastMessageAt: generateRecentDate(10),
+          },
+        })
+        await prisma.conversationParticipant.createMany({
+          data: [
+            { conversationId: conversation.id, userId: adminId, role: "owner" },
+            { conversationId: conversation.id, userId: other, role: "member" },
+          ],
+          skipDuplicates: true,
+        })
+        conversationIds.push(conversation.id)
+        userIdMap.set(conversation.id, [adminId, other])
+      } catch {
+        // Skip if conversation creation fails
+      }
+    }
+  }
+
   // 2. Create Group Conversations (15)
   const groupTitles = CONVERSATION_TITLES.group
   for (let i = 0; i < 15; i++) {

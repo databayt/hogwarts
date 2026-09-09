@@ -92,7 +92,7 @@ export function IosChatRow({ row, onClick, className }: Props) {
         <IosPresenceDot online={row.online} />
       </div>
 
-      <div className="flex h-[67.33px] min-w-0 flex-1 items-start gap-[8px] border-b-[0.33px] border-[color:var(--wa-border-separator)] pe-[15px]">
+      <div className="flex h-[76px] min-w-0 flex-1 items-start gap-[8px] border-b-[0.33px] border-[color:var(--wa-border-separator)]">
         <div className="flex min-w-0 flex-1 flex-col items-start gap-[1.5px]">
           <div className="flex w-full items-center gap-[3px]">
             <p className="max-w-[200px] truncate text-[16px] leading-tight font-semibold tracking-[-0.32px] text-[color:var(--wa-text-primary)]">
@@ -107,7 +107,7 @@ export function IosChatRow({ row, onClick, className }: Props) {
           />
         </div>
 
-        <div className="flex w-[60px] shrink-0 flex-col items-end gap-[3px] pt-px">
+        <div className="flex w-[60px] shrink-0 flex-col items-end gap-[3px] pe-[15px] pt-px">
           <time
             className={cn(
               "text-[14px] leading-[19px] tracking-[-0.14px] whitespace-nowrap",

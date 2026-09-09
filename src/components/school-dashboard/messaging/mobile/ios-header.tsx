@@ -36,8 +36,7 @@ export function IosHeader({
     <div
       className={cn(
         "relative flex h-[98px] w-full items-end justify-end gap-[16px] px-[16px] py-[8px]",
-        "border-b-[0.33px] border-[color:var(--wa-border-panel)]",
-        "bg-[color:var(--wa-surface-panel-blur)] backdrop-blur-[25px]",
+        "bg-[color:var(--wa-surface-primary)]",
         className
       )}
     >
@@ -73,7 +72,7 @@ export function IosHeader({
           <HeaderCircularButton onClick={onOptions} ariaLabel="More options">
             <WaIcon
               name="ic-wa-meetball-24"
-              className="size-[24px] text-[color:var(--wa-text-primary)]"
+              className="size-[18px] text-[color:var(--wa-text-primary)]"
             />
           </HeaderCircularButton>
           <div className="h-[26px] flex-1" />
@@ -84,7 +83,7 @@ export function IosHeader({
         <HeaderCircularButton onClick={onCamera} ariaLabel="Camera">
           <WaIcon
             name="ic-wa-camera-24"
-            className="size-[24px] text-[color:var(--wa-text-primary)]"
+            className="size-[18px] text-[color:var(--wa-text-primary)]"
           />
         </HeaderCircularButton>
       )}
@@ -97,7 +96,7 @@ export function IosHeader({
         >
           <WaIcon
             name="ic-wa-plus-add-24"
-            className="size-[24px] text-[color:var(--wa-text-invert)]"
+            className="size-[17px] text-[color:var(--wa-text-invert)]"
           />
         </HeaderCircularButton>
       )}

@@ -17,6 +17,8 @@ type Props = {
   activeFilter: FilterId
   onFilterChange: (id: FilterId) => void
   onAddFilter?: () => void
+  /** Rendered between the search field and the chip row, as in the reference. */
+  notice?: React.ReactNode
   className?: string
 }
 
@@ -30,6 +32,7 @@ export function IosTitleBlock({
   activeFilter,
   onFilterChange,
   onAddFilter,
+  notice,
   className,
 }: Props) {
   return (
@@ -44,10 +47,10 @@ export function IosTitleBlock({
           {title}
         </h1>
 
-        <label className="flex w-full items-center gap-[6px] rounded-[10px] bg-[color:var(--wa-surface-search-chat)] p-[5px]">
+        <label className="flex w-full items-center gap-[6px] h-[36px] rounded-[10px] bg-[color:var(--wa-surface-search-chat)] px-[8px]">
           <WaIcon
             name="ic-wa-search-24"
-            className="size-[24px] shrink-0 text-[color:var(--wa-text-secondary)]"
+            className="size-[16px] shrink-0 text-[color:var(--wa-text-secondary)]"
             ariaLabel="Search"
           />
           <input
@@ -60,6 +63,8 @@ export function IosTitleBlock({
           />
         </label>
       </div>
+
+      {notice}
 
       {/* Its own scroller: Arabic filter labels run longer than English and
           would otherwise be clipped at the edge of the screen. */}

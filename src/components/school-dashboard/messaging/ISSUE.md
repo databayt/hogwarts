@@ -255,7 +255,31 @@ Compared side by side with an iPhone WhatsApp chat-list capture at 393×852 @3x.
 - [x] **Archived only appears when something is archived.** Title reads `ui.chats`,
       matching the reference, not `ui.title` (which desktop still uses).
 
-Geometry was already right and was left alone: avatar 56, row 77.3, chip 34.
+Then measured pixel by pixel against the screenshot (PIL, edge-detected), which
+corrected the eyeballed pass above:
+
+|                         | reference         | was  | now       |
+| ----------------------- | ----------------- | ---- | --------- |
+| row pitch               | 85.7              | 77.3 | 86        |
+| separator trailing edge | 390 (screen edge) | 375  | 390       |
+| search field height     | 36                | 34.6 | 36        |
+| chip height             | 32                | 34   | 32        |
+| search magnifier        | 16                | 24   | 16        |
+| header glyphs           | 18                | 24   | 18        |
+| `+` chip glyph          | 12                | 24   | 12        |
+| avatar                  | 55.3              | 56   | 56 (kept) |
+
+The header carried a bottom divider the reference does not have, and its glyphs
+were large enough to swallow the grey circle behind them, which is why the
+camera read as a bare icon. Type sizes were checked by ink height and were
+already right, so they were not touched.
+
+Also added: the notification card between the search field and the chip row. It
+asks the browser for real permission (there is no web push in the app yet) and
+remembers a dismissal in `localStorage`. And the seed now gives every admin
+their own direct threads — the 20 it already made paired random teachers and
+students, so `admin@balqalam.com` opened Messages to 7 rows against the
+reference's full screen. That account now has 19.
 
 **Deliberately not mirrored** (WhatsApp product surfaces with no school-app
 counterpart): the "Ask Meta AI" search affordance, the notification-permission

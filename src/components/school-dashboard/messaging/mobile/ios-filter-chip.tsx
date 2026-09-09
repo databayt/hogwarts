@@ -29,8 +29,8 @@ export function IosFilterChip({
         // Unselected filters are outlined, not filled; only the active one
         // carries the pale green fill.
         iconOnly
-          ? "flex size-[34px] items-center justify-center border-[1px] border-[color:var(--wa-border-cta-filters)]"
-          : "flex h-[34px] items-center px-[14px]",
+          ? "flex size-[32px] items-center justify-center border-[1px] border-[color:var(--wa-border-cta-filters)]"
+          : "flex h-[32px] items-center px-[14px]",
         !iconOnly &&
           active &&
           "bg-[color:var(--wa-surface-cta-filters-active)]",
@@ -43,7 +43,7 @@ export function IosFilterChip({
       {iconOnly ? (
         <WaIcon
           name="ic-wa-plus-filter-24"
-          className="size-[24px] text-[color:var(--wa-text-cta-filters)]"
+          className="size-[12px] text-[color:var(--wa-text-cta-filters)]"
           ariaLabel="More filters"
         />
       ) : (

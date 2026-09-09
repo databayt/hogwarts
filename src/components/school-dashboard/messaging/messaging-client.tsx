@@ -760,6 +760,12 @@ export function MessagingClient({
             tabChats: m?.ui?.tab?.chats ?? "Chats",
             tabBack: m?.ui?.tab?.back ?? "Back",
             tabYou: m?.ui?.you ?? "You",
+            noticeTitle: m?.ui?.notice?.title ?? "Get message notifications",
+            noticeBody:
+              m?.ui?.notice?.body ??
+              "Make sure you know when you have new messages.",
+            noticeAction: m?.ui?.notice?.action ?? "Turn on",
+            noticeDismiss: m?.ui?.notice?.dismiss ?? "Dismiss",
             encryptPrefix: m?.ui?.encrypt?.prefix ?? "Your personal",
             encryptTopic: m?.ui?.encrypt?.topic_messages ?? "messages",
             encryptSuffix: m?.ui?.encrypt?.suffix ?? "are",
