@@ -25,7 +25,7 @@ export function IosFilterChips({
 }: Props) {
   return (
     <div
-      className={cn("flex w-full items-center gap-[6px]", className)}
+      className={cn("flex w-max items-center gap-[6px]", className)}
       role="tablist"
       aria-label="Chat filters"
     >

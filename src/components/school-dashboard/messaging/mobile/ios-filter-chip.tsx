@@ -26,17 +26,16 @@ export function IosFilterChip({
       aria-pressed={!iconOnly ? active : undefined}
       className={cn(
         "overflow-clip rounded-[19px] transition-colors",
-        // Unselected filters are outlined, not filled; only the active one
-        // carries the pale green fill.
+        // Each chip is only as wide as its own label, so the row reads as
+        // words rather than as four equal slots.
+        "border-[1px]",
         iconOnly
-          ? "flex size-[32px] shrink-0 items-center justify-center border-[1px] border-[color:var(--wa-border-cta-filters)]"
-          : "flex h-[32px] flex-1 items-center justify-center px-[9px]",
+          ? "flex size-[32px] shrink-0 items-center justify-center border-[color:var(--wa-border-cta-filters)]"
+          : "flex h-[32px] shrink-0 items-center px-[10px]",
         !iconOnly &&
           active &&
-          "bg-[color:var(--wa-surface-cta-filters-active)]",
-        !iconOnly &&
-          !active &&
-          "border-[1px] border-[color:var(--wa-border-cta-filters)]",
+          "border-[color:var(--wa-border-cta-filters-active)] bg-[color:var(--wa-surface-cta-filters-active)]",
+        !iconOnly && !active && "border-[color:var(--wa-border-cta-filters)]",
         className
       )}
     >

@@ -38,11 +38,11 @@ export function IosTitleBlock({
   return (
     <div
       className={cn(
-        "flex w-full flex-col items-start gap-[8px] pt-[5px] pb-[8px]",
+        "flex w-full flex-col items-start gap-[16px] pt-[18px] pb-[10px]",
         className
       )}
     >
-      <div className="flex w-full flex-col items-start gap-[8px] px-[16px]">
+      <div className="flex w-full flex-col items-start gap-[14px] px-[16px]">
         <h1 className="w-full text-[28px] leading-none font-bold tracking-[-1.1px] text-[color:var(--wa-text-primary)]">
           {title}
         </h1>
@@ -68,7 +68,7 @@ export function IosTitleBlock({
 
       {/* Its own scroller: Arabic filter labels run longer than English and
           would otherwise be clipped at the edge of the screen. */}
-      <div className="w-full px-[16px]">
+      <div className="w-full overflow-x-auto px-[16px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <IosFilterChips
           filters={filters}
           active={activeFilter}
