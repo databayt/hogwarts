@@ -7,8 +7,19 @@
  * Exists because a single dead provider must never again silently kill
  * translations platform-wide (Google's quota died 2026-06-14 and every page
  * fell back to source text for a month with no recovery path). Groq's free
- * tier (llama-3.1-8b-instant) translates short UI strings — names, subject
- * titles, labels — with more than acceptable quality.
+ * tier translates short UI strings — names, subject titles, labels — with
+ * more than acceptable quality.
+ *
+ * That is exactly what it failed to do on 2026-09-09, for the same reason in
+ * a different shape: Google was answering 403 "User Rate Limit Exceeded" and
+ * the fallback was pinned to `llama-3.1-8b-instant`, which the account no
+ * longer carries — Groq answered 404 `model_not_found`, so BOTH providers
+ * were down and every page across the platform rendered source text again.
+ * A dead default is a dead provider. Check the model still exists before
+ * trusting this path:
+ *
+ *     curl -s https://api.groq.com/openai/v1/models \
+ *       -H "Authorization: Bearer $GROQ_API_KEY"
  *
  * Contract mirrors google.ts exactly (same signatures, same empty-string
  * mapping, same transient/permanent error split) so engine.ts can treat the
@@ -18,7 +29,19 @@
  */
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-const DEFAULT_MODEL = "llama-3.1-8b-instant"
+/**
+ * Chosen by running the exact keyed-object prompt below against every chat
+ * model the account actually lists, and reading the Arabic:
+ *
+ *   openai/gpt-oss-20b   accurate, adds nothing, echoes keys exactly  ← this
+ *   groq/compound-mini   also accurate
+ *   allam-2-7b           DROPPED "Harry Potter" from a title it translated
+ *   qwen/qwen3.8-27b     invented "للسحر والعلوم السحرية", not in the source
+ *
+ * The last two are why this is not picked by size or by name. A translation
+ * engine that adds or loses words is worse than one that is merely slower.
+ */
+const DEFAULT_MODEL = "openai/gpt-oss-20b"
 
 // LLM batches are kept smaller than Google's (40/3000 vs 100/4000): the model
 // must echo every item back in order, and reliability drops as batches grow.
