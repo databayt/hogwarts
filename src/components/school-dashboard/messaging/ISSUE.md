@@ -438,6 +438,39 @@ bar is still icon-only with the labels living on as `aria-label`. And its
 selected tint is `#0088ff`, the kit's system-blue placeholder; the sampled
 `--wa-text-tabbar-selected` stays.
 
+### Header buttons re-read from node 1:59 — 2026-09-10
+
+The caveat above is now closed from the other end: the button node itself was
+read, and it corrected one thing the derivation got wrong.
+
+- [x] **The cast shadow was thrown in the wrong direction.** Depth 16 and Splay
+      6 along Light Angle −45 had been read as a diagonal `3px 6px 16px` at
+      14%, mirrored under RTL. The node's actual `DROP_SHADOW` is offset
+      **(0, 8), blur 40, black at 12%** — straight down, and identical to the
+      tab bar's. `.wa-glass-control` now takes `--wa-glass-shadow` like
+      everything else, so only the refractive rim still mirrors. The compose
+      button's borrowed depth follows, keeping its heavier 18%.
+- [x] **The surface is shared, not similar.** Node 1:59's BG and node 5:596's
+      are the same component, `1:20`. So the buttons take `--wa-glass-bg` and
+      `--wa-glass-border` rather than their own white at 0.55. Only the blur
+      still differs: 7px here, from this node's own Frost variable, against
+      20px on the bar, which predates any measurement and stays as it is.
+- [x] **42px → 44px, and the glyphs with it.** The button exists at two sizes
+      off that one component: **48** standing alone as "Button - Liquid Glass -
+      Symbol", and **44** every one of the six times the file's own
+      `Toolbar - Top` places it. This header is a top toolbar, so 44 is the
+      right instance — 48 fills the 56px band exactly and leaves nothing above,
+      which reads as clipped. The glyph box scales with the disc: 22 → 20, and
+      the compose plus 21 → 19, matching the toolbar's 17pt symbol in a 20.29px
+      line box against the standalone's 19pt in 22px.
+- [x] **Verified**, `/ar` and `/en` at 402px: 44×44, 4 above and 8 below inside
+      the 56px band, surface `rgba(241,241,241,0.85)`, cast `0 8px 40px` at
+      12% in both directions, rim mirrored.
+
+**Not reproducible in CSS:** the node's corners carry `cornerSmoothing 0.6`, an
+Apple squircle. `border-radius` is a circular arc and there is no property for
+this, so the discs stay true circles.
+
 ### i18n debt (P2)
 
 Client UI is dictionary-keyed (dedicated `messaging` namespace, `dictionaries.ts:142`). Server-action error i18n is now done; two logic-layer items remain:

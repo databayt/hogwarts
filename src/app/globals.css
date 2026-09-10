@@ -842,15 +842,24 @@ body {
    rather than eyeballed:
 
      Frost - Regular  7    → backdrop blur, in px
-     Depth - Regular  16   → how far the cast shadow reaches
-     Splay - Regular  6    → how far it is thrown from the control
-     Light Angle      -45  → lit from the upper start corner, so the shadow
-                             falls to the lower end corner and the specular
-                             rim sits opposite it
      Refraction       100  → at full strength: a bright rim where the glass
                              bends light, and a darker one where it leaves
      Dispersion       0    → no chromatic fringing, so the rim stays neutral
+     Light Angle      -45  → lit from the upper start corner, so the specular
+                             rim mirrors with the writing direction
      Labels/Primary   #1a1a1a → the glyph
+
+   Depth 16 and Splay 6 used to be read as a cast shadow thrown diagonally,
+   `3px 6px 16px`. That was a derivation, and it was wrong: with the node
+   itself finally readable (2026-09-10), its DROP_SHADOW is offset (0, 8),
+   blur 40, black at 12% — straight down, the same shadow the tab bar casts,
+   and now shared as `--wa-glass-shadow`. So the light angle still mirrors the
+   rim under RTL, but nothing mirrors the shadow.
+
+   The surface is shared too. This button's BG and the tab bar's are the same
+   instance: white at 0.65 under a #dddddd color-burn and a #f7f7f7 darken,
+   which renders #f1f1f1. Only the blur differs — 7px here from the node's own
+   Frost variable, 20px on the bar, which predates the measurement.
 
    Written as a class because the specular rim, the refractive edge and the
    cast shadow are three stacked shadows plus a saturating backdrop, which is
@@ -858,28 +867,28 @@ body {
    light angle mirrored under RTL. */
 .wa-glass-control {
   color: #1a1a1a;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--wa-glass-bg);
   -webkit-backdrop-filter: blur(7px) saturate(180%);
   backdrop-filter: blur(7px) saturate(180%);
-  border: 0.5px solid rgba(255, 255, 255, 0.65);
+  border: 0.5px solid var(--wa-glass-border);
   box-shadow:
     /* refraction: bright where the light enters, dim where it exits */
     inset 1px 1px 1.5px rgba(255, 255, 255, 0.95),
     inset -1px -1px 1.5px rgba(0, 0, 0, 0.07),
-    /* depth 16 thrown by splay 6 along the -45° light angle */ 3px 6px 16px
-      rgba(0, 0, 0, 0.14);
+    var(--wa-glass-shadow);
   transition:
     background 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-/* The light comes from the upper *start* corner, so the whole treatment
-   mirrors with the writing direction. */
+/* The light comes from the upper *start* corner, so the rim mirrors with the
+   writing direction. The cast shadow does not: the node throws it straight
+   down. */
 [dir="rtl"] .wa-glass-control {
   box-shadow:
     inset -1px 1px 1.5px rgba(255, 255, 255, 0.95),
     inset 1px -1px 1.5px rgba(0, 0, 0, 0.07),
-    -3px 6px 16px rgba(0, 0, 0, 0.14);
+    var(--wa-glass-shadow);
 }
 
 .wa-glass-control:active {
@@ -897,7 +906,7 @@ body {
   box-shadow:
     inset 1px 1px 1.5px rgba(255, 255, 255, 0.22),
     inset -1px -1px 1.5px rgba(0, 0, 0, 0.35),
-    3px 6px 16px rgba(0, 0, 0, 0.5);
+    var(--wa-glass-shadow);
 }
 
 .dark [dir="rtl"] .wa-glass-control,
@@ -905,7 +914,7 @@ body {
   box-shadow:
     inset -1px 1px 1.5px rgba(255, 255, 255, 0.22),
     inset 1px -1px 1.5px rgba(0, 0, 0, 0.35),
-    -3px 6px 16px rgba(0, 0, 0, 0.5);
+    var(--wa-glass-shadow);
 }
 
 /* The tab bar capsule wears the same material one size up. Node 5:596 casts

@@ -72,10 +72,7 @@ export function IosHeader({
       {showOptions && (
         <>
           <HeaderCircularButton onClick={onOptions} ariaLabel="More options">
-            <WaIcon
-              name="ic-wa-meetball-24"
-              className="size-[22px]"
-            />
+            <WaIcon name="ic-wa-meetball-24" className="size-[20px]" />
           </HeaderCircularButton>
           <div className="h-[26px] flex-1" />
         </>
@@ -83,10 +80,7 @@ export function IosHeader({
 
       {showCamera && (
         <HeaderCircularButton onClick={onCamera} ariaLabel="Camera">
-          <WaIcon
-            name="ic-wa-camera-24"
-            className="size-[22px]"
-          />
+          <WaIcon name="ic-wa-camera-24" className="size-[20px]" />
         </HeaderCircularButton>
       )}
 
@@ -98,7 +92,7 @@ export function IosHeader({
         >
           <WaIcon
             name="ic-wa-plus-add-24"
-            className="size-[21px] text-[color:var(--wa-text-invert)]"
+            className="size-[19px] text-[color:var(--wa-text-invert)]"
           />
         </HeaderCircularButton>
       )}
@@ -123,11 +117,16 @@ function HeaderCircularButton({
       onClick={onClick}
       aria-label={ariaLabel}
       className={cn(
-        "pointer-events-auto flex size-[42px] shrink-0 items-center justify-center rounded-full",
+        // The button exists at two sizes off one component: 48 standing alone
+        // as a symbol, 44 everywhere the file's own top toolbar places it, and
+        // a top toolbar is what this is. The 42 it carried until now came off
+        // a screenshot, back when the node could not be read at all.
+        "pointer-events-auto flex size-[44px] shrink-0 items-center justify-center rounded-full",
         variant === "product"
           ? // The compose button is a tinted control, not a clear one: it keeps
-            // the brand fill and only borrows the glass depth.
-            "bg-[color:var(--wa-surface-product)] shadow-[3px_6px_16px_rgba(0,0,0,0.18)] active:opacity-80"
+            // the brand fill and only borrows the glass depth — which the node
+            // casts straight down, so this does not mirror either.
+            "bg-[color:var(--wa-surface-product)] shadow-[0_8px_40px_rgba(0,0,0,0.18)] active:opacity-80"
           : "wa-glass-control"
       )}
     >
