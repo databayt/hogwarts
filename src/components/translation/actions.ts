@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { canonicalTranslation } from "./canonical"
 import { translateBatch, translateRaw } from "./engine"
 import { memoGet, memoSet } from "./memory-cache"
 import type {
@@ -32,6 +33,11 @@ export async function translate(
 ): Promise<string> {
   if (!text || text.trim() === "") return ""
   if (sourceLang === targetLang) return text
+
+  // Hand-written renderings outrank every cache tier — same ordering, and the
+  // same reason, as in `localize()`. See `canonical.ts`.
+  const pinned = canonicalTranslation(text, targetLang)
+  if (pinned !== undefined) return pinned
 
   const memo = memoGet(schoolId, sourceLang, targetLang, text)
   if (memo !== undefined) return memo
@@ -62,12 +68,6 @@ export async function translate(
 
     memoSet(schoolId, sourceLang, targetLang, text, cached.translatedText)
     return cached.translatedText
-  }
-
-  // Specific tenant overrides
-  if (text.trim() === "القبس" && targetLang === "en") {
-    memoSet(schoolId, sourceLang, targetLang, text, "Alqabs")
-    return "Alqabs"
   }
 
   // Translate via Google

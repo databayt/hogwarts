@@ -206,3 +206,34 @@ and the Groq fallback's breaker is open too. `localize()` falls back to the
 source language by design and logs `[translation] DEGRADED`. The `Translation`
 cache holds real en↔ar rows from earlier runs, so the read path is sound — the
 first render after the quota clears will populate it.
+
+## The featured book's own words, and a skeleton that had gone stale (2026-09-10)
+
+- **The featured title read as a mistranslation on `/ar`.** Google returns
+  "هاري بوتر والحجر الفلسفي" — a literal "philosophical stone" — where every
+  Arabic edition of the novel says "هاري بوتر وحجر الفيلسوف". The fix is not in
+  this block: `src/components/translation/canonical.ts` is a new map of
+  hand-written renderings, consulted BEFORE the LRU and before the per-school
+  `Translation` rows, because the machine's answer is already cached on
+  localhost and in production and a later lookup would keep losing to it. The
+  `القبس` tenant override that used to sit inline in `translate()` moved there
+  too, so there is one place to look.
+- **The blurb is the book's opening paragraph now**, not a one-line summary of
+  it, and `line-clamp-4` is gone from `collaborate-section.tsx` — the paragraph
+  is capped by the words, in the seed, rather than by CSS. Its Arabic is pinned
+  by hand in the same map: machine-translating literary prose is what produced
+  the title problem.
+- **`LibrarySkeleton` had been drawing the PREVIOUS hero** — a 7xl wordmark
+  beside a Lottie, in a two-column row — for as long as the green banner has
+  shipped. It draws the banner now: real ground, real geometry, only the ink is
+  a Skeleton. Its shimmer stops are tinted per surface (`ON_GREEN`, `ON_CREAM`)
+  because `Skeleton` paints a gradient, so a `bg-*` utility on it is covered
+  rather than applied, and the default near-white `accent` vanishes on cream.
+
+### Carried, not fixed
+
+- **Production still holds the old one-line description.** Deploys never seed
+  here, and localhost and prod are different databases — the `Book` row needs
+  the same update against prod before the paragraph appears there.
+- **`/live`'s loading skeleton is the same object as this one** and was not
+  checked in this pass. If it is equally stale, it is stale for the same reason.

@@ -40,6 +40,7 @@ Benefits: zero setup, no duplication, school autonomy (can hide), lazy efficienc
 Student visits /library
   → content.tsx queries CatalogBook directly (global)
     excludes books hidden by school (SchoolBookSelection.isActive = false)
+    green banner, then ONE spotlighted book, then the rows
     categorizes into rows: Latest, Featured, Literature, Science
   → click book card → /library/books/[id]
     loads CatalogBook by ID
@@ -51,6 +52,23 @@ Student visits /library
   → click "Return Book"
     returnBook() updates status to RETURNED + increments availableCopies
 ```
+
+### The spotlighted book
+
+Between the banner and the shelves, the home page gives one book the whole
+width: its cover photograph, its title, its author, and its own opening
+paragraph rather than a summary of it. The paragraph is not clamped — it is
+kept to one paragraph in the seed instead.
+
+The title is matched on the raw English string, because the catalog is authored
+centrally in English, and it is the one the section's photograph is of. Change
+the book and the picture stops matching the words.
+
+Its Arabic is hand-written, not machine-produced. A general translator returns
+a literal reading of the title where the published Arabic edition has a settled
+name, so both the title and the excerpt are pinned in
+`src/components/translation/canonical.ts`, which every translation path
+consults before its caches and before any provider.
 
 ### Admin manages library
 

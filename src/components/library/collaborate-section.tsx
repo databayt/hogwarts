@@ -80,9 +80,16 @@ export function CollaborateSection({
           </p>
           {/* The blurb comes from the Book row and arrives translated — see
               `content.tsx`, which reads and localizes it. A row with no
-              description renders no paragraph rather than a placeholder. */}
+              description renders no paragraph rather than a placeholder.
+
+              Unclamped, deliberately. It used to be `line-clamp-4`, sized for
+              the one-line summary the seed carried; the row now holds the
+              novel's own opening paragraph, and clipping a book's first
+              sentences mid-thought is worse than the extra centimetre of
+              column. The paragraph is capped by the WORDS, not by CSS — the
+              seed keeps it to one paragraph for exactly this reason. */}
           {description && (
-            <p className="text-muted-foreground mb-6 line-clamp-4 leading-relaxed">
+            <p className="text-muted-foreground mb-6 leading-relaxed">
               {description}
             </p>
           )}

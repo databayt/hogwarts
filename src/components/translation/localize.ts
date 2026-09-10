@@ -6,6 +6,7 @@ import "server-only"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { canonicalTranslation } from "./canonical"
 import { translateBatch } from "./engine"
 import { getDisplayLang } from "./locale"
 import { memoGet, memoSet } from "./memory-cache"
@@ -58,19 +59,30 @@ export async function localize<T extends Record<string, unknown>>(
 
   // 1. Collect the unique values that actually need translating
   //    (non-empty strings whose script is NOT the display language).
+  //
+  //    A value with a hand-written rendering in `canonical.ts` is settled
+  //    here and never enters `needed`, so it outranks the LRU, the per-school
+  //    cache rows and Google alike. Those caches already hold the machine's
+  //    answer for exactly these strings — a lookup placed after them would
+  //    never win.
+  const resolved = new Map<string, string>()
   const needed = new Set<string>()
   for (const row of rows) {
     for (const field of fields) {
       const v = row[field]
       if (typeof v !== "string" || v.trim() === "") continue
       if (detectScript(v) === displayLang) continue
+      const pinned = canonicalTranslation(v, displayLang)
+      if (pinned !== undefined) {
+        resolved.set(v, pinned)
+        continue
+      }
       needed.add(v)
     }
   }
-  if (needed.size === 0) return rows
+  if (needed.size === 0 && resolved.size === 0) return rows
 
-  // 2. Resolve: LRU → DB (one query) → Google (misses only).
-  const resolved = new Map<string, string>()
+  // 2. Resolve the rest: LRU → DB (one query) → Google (misses only).
   const dbWanted: string[] = []
   for (const src of needed) {
     const hit = memoGet(schoolId, sourceLang, displayLang, src)

@@ -150,3 +150,50 @@ describe("localize", () => {
     expect(findMany).not.toHaveBeenCalled()
   })
 })
+
+describe("localize — canonical renderings", () => {
+  const toAr = { schoolId: "s1", lang: "ar" as const }
+
+  it("uses the hand-written title even when the cache holds the machine's", async () => {
+    // The wrong string is exactly what production and localhost both have
+    // cached today, one row per school. If the map were consulted after the
+    // cache tier, this is the row that would win.
+    findMany.mockResolvedValue([
+      {
+        sourceText: "Harry Potter and the Philosopher's Stone",
+        translatedText: "هاري بوتر والحجر الفلسفي",
+      },
+    ])
+
+    const out = await localize(
+      "Book",
+      [{ id: 1, title: "Harry Potter and the Philosopher's Stone" }],
+      toAr
+    )
+
+    expect(out[0].title).toBe("هاري بوتر وحجر الفيلسوف")
+    expect(translateBatch).not.toHaveBeenCalled()
+  })
+
+  it("never asks a provider for a pinned string", async () => {
+    await localize(
+      "Book",
+      [{ id: 1, title: "Harry Potter and the Philosopher's Stone" }],
+      toAr
+    )
+
+    expect(findMany).not.toHaveBeenCalled()
+    expect(translateBatch).not.toHaveBeenCalled()
+  })
+
+  it("leaves ordinary content to the normal path", async () => {
+    findMany.mockResolvedValue([
+      { sourceText: "Ordinary title", translatedText: "عنوان عادي" },
+    ])
+
+    const out = await localize("Book", [{ id: 1, title: "Ordinary title" }], toAr)
+
+    expect(findMany).toHaveBeenCalledTimes(1)
+    expect(out[0].title).toBe("عنوان عادي")
+  })
+})

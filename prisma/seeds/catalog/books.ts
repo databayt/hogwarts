@@ -559,8 +559,17 @@ const BOOKS: BookSeed[] = [
     author: "J.K. Rowling",
     genre: "Fantasy",
     gradeLevel: "INTERMEDIATE",
+    // The novel's own opening paragraph rather than a summary of it -- this is
+    // the library's featured title, and the spotlight beside the cover is the
+    // one place on the page with room to let a book speak for itself. Kept to
+    // the first paragraph: a blurb-length excerpt, not an extract.
+    //
+    // Its Arabic rendering is pinned by hand in
+    // `src/components/translation/canonical.ts`, keyed on this exact string.
+    // Edit the sentences here and that entry stops matching, which drops the
+    // paragraph back to a machine pass over literary prose -- edit both.
     description:
-      "A young orphan discovers he is a wizard and begins his journey at Hogwarts School",
+      "Mr and Mrs Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much. They were the last people you'd expect to be involved in anything strange or mysterious, because they just didn't hold with such nonsense.",
     summary: "The beginning of Harry's magical journey",
     coverColor: "#7C3AED",
     copies: 5,

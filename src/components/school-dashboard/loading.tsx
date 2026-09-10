@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -116,44 +117,76 @@ export function TimetableByRoomSkeleton() {
 // LIBRARY — Hero + BookList rows (Netflix-style, space-y-12)
 // =============================================================================
 
+/**
+ * Shimmer stops for the two library surfaces that are NOT the page ground.
+ *
+ * `Skeleton` paints a gradient, so a `bg-*` utility on it is covered rather
+ * than applied — the tint has to replace the STOPS. And it has to be a tint:
+ * the default `accent` is a near-white grey that vanishes on the featured
+ * card's cream and reads as a pale smear on the banner's green.
+ */
+const ON_GREEN = "from-[#050505]/10 via-[#050505]/5 to-[#050505]/10"
+const ON_CREAM = "from-black/[0.07] via-black/[0.03] to-black/[0.07]"
+
 export function LibrarySkeleton() {
   return (
     <div className="w-full min-w-0 space-y-12 overflow-hidden">
-      {/* Hero — matches hero.tsx layout */}
-      <section className="relative">
-        <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-16">
-          {/* Text Content */}
-          <div className="flex flex-1 flex-col items-start space-y-6 text-start">
-            {/* h1 "Revelio" + subtitle "Unlock hidden." */}
-            <div className="space-y-2">
-              <Skeleton className="h-14 w-56 md:h-16 lg:h-20" />
-              <Skeleton className="h-8 w-44 md:h-10 lg:h-12" />
+      {/* Hero — the green banner in `library/hero.tsx`.
+
+          Drawn as the real card rather than as a grey block: the banner's
+          ground is a brand colour that does not fade in, so a placeholder
+          rectangle where it will be reads as a different page, and the swap
+          on load is a flash. The shell is the banner's own geometry —
+          `rounded-[36px]`, the same padding, the same 259px floor — and only
+          the ink inside it is a Skeleton.
+
+          This block was stale for as long as the banner has shipped: it still
+          drew the hero this page had BEFORE it, a 7xl wordmark beside a Lottie
+          in a two-column row, so the skeleton and the page disagreed on both
+          the shape and the column count. If the banner changes again, this
+          changes with it — and so does /live's, which is the same object. */}
+      <section>
+        <div className="relative flex flex-col justify-between gap-8 overflow-hidden rounded-[36px] bg-[#00bc6d] px-8 py-10 sm:px-12 lg:min-h-[259px] lg:flex-row lg:items-center lg:py-12">
+          <div className="min-w-0">
+            {/* Two headline lines inside the banner's own ~420px measure */}
+            <div className="space-y-3">
+              <Skeleton className={cn(ON_GREEN, "h-8 w-64 lg:h-10 lg:w-[420px]")} />
+              <Skeleton className={cn(ON_GREEN, "h-8 w-52 lg:h-10 lg:w-[380px]")} />
             </div>
-            {/* Two buttons */}
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Skeleton className="h-11 w-36 rounded-md" />
-              <Skeleton className="h-11 w-28 rounded-md" />
+            {/* The two pills — h-10, fully rounded, as in `pill()` */}
+            <div className="mt-7 flex flex-wrap items-center gap-2">
+              <Skeleton className={cn(ON_GREEN, "h-10 w-32 rounded-full")} />
+              <Skeleton className={cn(ON_GREEN, "h-10 w-28 rounded-full")} />
             </div>
           </div>
-          {/* Animation */}
-          <div className="flex flex-1 justify-center">
-            <Skeleton className="h-56 w-full max-w-md rounded-xl md:h-72" />
-          </div>
+          {/* The marginalia mark, hidden below md exactly as the banner hides it */}
+          <Skeleton className={cn(ON_GREEN, "hidden size-[150px] shrink-0 rounded-2xl md:block lg:size-[168px]")} />
         </div>
       </section>
 
-      {/* Collaborate — matches collaborate-section.tsx */}
-      <section className="w-full max-w-full overflow-hidden rounded-2xl">
+      {/* The one featured book — matches `library/collaborate-section.tsx`.
+          The text column is taller than it was: the blurb is the book's
+          opening paragraph now and is no longer clamped to four lines. */}
+      <section className="w-full max-w-full overflow-hidden rounded-2xl bg-[#F5F5F0] dark:bg-muted/50">
         <div className="flex flex-col lg:flex-row">
-          {/* Image left */}
-          <Skeleton className="aspect-[4/3] w-full lg:aspect-auto lg:h-80 lg:w-1/2" />
-          {/* Content right */}
+          {/* Cover photograph, left */}
+          <Skeleton
+            className={cn(
+              ON_CREAM,
+              "aspect-[4/3] w-full rounded-none lg:aspect-auto lg:w-1/2"
+            )}
+          />
+          {/* Title, byline, blurb, CTA — right */}
           <div className="flex flex-col justify-center gap-4 p-8 lg:w-1/2 lg:p-12">
-            <Skeleton className="h-9 w-3/4 lg:h-10" />
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="mt-2 h-11 w-28 rounded-md" />
+            <Skeleton className={cn(ON_CREAM, "h-9 w-3/4 lg:h-10")} />
+            <Skeleton className={cn(ON_CREAM, "h-5 w-40")} />
+            <div className="space-y-2">
+              <Skeleton className={cn(ON_CREAM, "h-4 w-full")} />
+              <Skeleton className={cn(ON_CREAM, "h-4 w-full")} />
+              <Skeleton className={cn(ON_CREAM, "h-4 w-11/12")} />
+              <Skeleton className={cn(ON_CREAM, "h-4 w-4/5")} />
+            </div>
+            <Skeleton className={cn(ON_CREAM, "mt-2 h-11 w-28 rounded-md")} />
           </div>
         </div>
       </section>
