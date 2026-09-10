@@ -97,13 +97,13 @@ export function SubjectsGrid({ subjects, lang, subdomain }: Props) {
 
   return (
     <div className="@container">
-      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 @sm:gap-3 @2xl:grid-cols-3 @5xl:grid-cols-4">
         {sorted.map((subject) => {
           return (
             <Link
               key={subject.id}
               href={`/${lang}/subjects/${subject.slug}`}
-              className="hover:bg-muted/50 flex items-center gap-3 overflow-hidden rounded-lg border transition-colors"
+              className="hover:bg-muted/50 flex items-center gap-2 overflow-hidden rounded-lg border transition-colors @sm:gap-3"
             >
               <SubjectThumb
                 imageUrl={subject.imageUrl}
@@ -112,11 +112,11 @@ export function SubjectsGrid({ subjects, lang, subdomain }: Props) {
               />
 
               {/* Name + Level + Rating */}
-              <div className="min-w-0 pe-3">
+              <div className="min-w-0 pe-2 @sm:pe-3">
                 <p className="line-clamp-2 text-sm leading-snug font-medium">
                   {subject.name}
                 </p>
-                <div className="mt-0.5 flex items-center gap-1.5">
+                <div className="mt-0.5 flex flex-wrap items-center gap-1">
                   <Badge
                     variant="secondary"
                     className="px-1.5 py-0 text-[10px]"
@@ -165,7 +165,7 @@ function SubjectThumb({
 
   return (
     <div
-      className="relative h-16 w-16 shrink-0 overflow-hidden rounded-s-lg"
+      className="relative h-14 w-14 shrink-0 overflow-hidden rounded-s-lg @sm:h-16 @sm:w-16"
       style={{ backgroundColor: color ?? "#6b7280" }}
     >
       {showImage && (
