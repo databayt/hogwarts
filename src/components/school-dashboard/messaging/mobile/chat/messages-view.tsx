@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import type { BubbleStatus } from "./bubble-timestamp"
 import { ChatWallpaper } from "./chat-wallpaper"
 import { DateSeparator } from "./date-separator"
+import { EncryptionNotice } from "./encryption-notice"
 import { InputBar, type ReplyDraft } from "./input-bar"
 import { LocationBubble } from "./location-bubble"
 import { MessageBubble } from "./message-bubble"
@@ -59,7 +60,6 @@ export type ChatItem =
 
 type Props = {
   contactName: string
-  contactSubtitle?: string
   contactAvatarUrl?: string | null
   unreadCount?: number
   items: ChatItem[]
@@ -79,6 +79,7 @@ type Props = {
   hasMore?: boolean
   inputPlaceholder?: string
   encryptionNotice?: string
+  encryptionLearnMore?: string
   className?: string
 }
 
@@ -87,7 +88,6 @@ const LOAD_MORE_THRESHOLD_PX = 120
 
 export function MessagesView({
   contactName,
-  contactSubtitle,
   contactAvatarUrl,
   unreadCount,
   items,
@@ -106,6 +106,7 @@ export function MessagesView({
   hasMore,
   inputPlaceholder,
   encryptionNotice,
+  encryptionLearnMore,
   className,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -222,7 +223,6 @@ export function MessagesView({
     <div className={cn("relative flex h-full w-full flex-col", className)}>
       <TopContactHeader
         name={contactName}
-        subtitle={contactSubtitle}
         avatarUrl={contactAvatarUrl}
         unreadCount={unreadCount}
         onBack={onBack}
@@ -237,13 +237,10 @@ export function MessagesView({
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto overscroll-contain pb-[8px]"
         >
-          {encryptionNotice && (
-            <div className="flex w-full justify-center px-[16px] pt-[12px] pb-[4px]">
-              <p className="max-w-[320px] rounded-[8px] bg-[color:var(--wa-surface-date)] px-[12px] py-[6px] text-center text-[12px] leading-[16px] text-[color:var(--wa-text-primary)]">
-                {encryptionNotice}
-              </p>
-            </div>
-          )}
+          <EncryptionNotice
+            text={encryptionNotice}
+            learnMoreLabel={encryptionLearnMore}
+          />
           {renderedItems}
         </div>
       </ChatWallpaper>

@@ -6,7 +6,6 @@ import { WaIcon } from "../wa-icon"
 
 type Props = {
   name: string
-  subtitle?: string
   avatarUrl?: string | null
   avatarFallback?: string
   unreadCount?: number
@@ -19,7 +18,6 @@ type Props = {
 
 export function TopContactHeader({
   name,
-  subtitle = "tap here for contact info",
   avatarUrl,
   avatarFallback,
   unreadCount,
@@ -34,7 +32,6 @@ export function TopContactHeader({
       className={cn(
         "relative flex h-[98px] w-full flex-col items-end justify-end py-[4px] pe-[22px]",
         "bg-[color:var(--wa-surface-panel)] backdrop-blur-[25px]",
-        "border-b-[0.33px] border-[color:var(--wa-border-panel)]",
         className
       )}
     >
@@ -44,19 +41,12 @@ export function TopContactHeader({
             type="button"
             onClick={onBack}
             aria-label="Back"
-            className="flex size-[32px] shrink-0 items-center justify-center text-[color:var(--wa-surface-product)] rtl:scale-x-[-1]"
+            className="flex size-[32px] shrink-0 items-center justify-center rtl:scale-x-[-1]"
           >
-            <svg
-              viewBox="0 0 11 18"
-              className="h-[16px] w-[11px]"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="9 2 2 9 9 16" />
-            </svg>
+            <WaIcon
+              name="ic-wa-chevron-lt-32"
+              className="size-[32px] text-[color:var(--wa-text-primary)]"
+            />
           </button>
 
           {typeof unreadCount === "number" && unreadCount > 0 && (
@@ -84,13 +74,8 @@ export function TopContactHeader({
                 </span>
               )}
             </span>
-            <span className="flex min-w-0 flex-col items-start pb-[0.5px]">
-              <span className="max-w-[145px] truncate text-[16px] font-semibold tracking-[-0.32px] text-[color:var(--wa-text-primary)]">
-                {name}
-              </span>
-              <span className="truncate text-[12px] tracking-[-0.12px] text-[color:var(--wa-text-secondary-alpha)]">
-                {subtitle}
-              </span>
+            <span className="max-w-[145px] truncate text-[16px] font-semibold tracking-[-0.32px] text-[color:var(--wa-text-primary)]">
+              {name}
             </span>
           </button>
         </div>
@@ -104,8 +89,7 @@ export function TopContactHeader({
           >
             <WaIcon
               name="ic-wa-video-32"
-              className="size-[32px] text-[color:var(--wa-surface-product)]"
-              tint={false}
+              className="size-[32px] text-[color:var(--wa-text-secondary)]"
             />
           </button>
           <button
@@ -116,8 +100,7 @@ export function TopContactHeader({
           >
             <WaIcon
               name="ic-wa-phone-32"
-              className="size-[32px] text-[color:var(--wa-surface-product)]"
-              tint={false}
+              className="size-[32px] text-[color:var(--wa-text-secondary)]"
             />
           </button>
         </div>

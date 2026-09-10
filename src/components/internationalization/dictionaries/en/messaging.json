@@ -103,7 +103,8 @@
     "search": "Search",
     "app_title": "School Messaging",
     "end_to_end_encrypted": "End-to-end encrypted",
-    "encryption_notice": "Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.",
+    "encryption_notice": "Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or share them.",
+    "encryption_learn_more": "Learn more",
     "forwarded": "Forwarded",
     "retry": "Retry",
     "mic_denied": "Microphone access is blocked. Click the lock icon in your browser's address bar and allow microphone.",
@@ -134,7 +135,6 @@
     },
     "mobile": {
       "input_placeholder": "Message",
-      "tap_for_info": "tap here for contact info",
       "group_fallback": "Group",
       "title": "Messages",
       "search_placeholder": "Search messages"

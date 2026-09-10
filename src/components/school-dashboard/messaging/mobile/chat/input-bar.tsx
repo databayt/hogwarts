@@ -90,16 +90,15 @@ export function InputBar({
           type="button"
           onClick={onAttach}
           aria-label="Attach"
-          className="size-[32px]"
+          className="size-[32px] shrink-0"
         >
           <WaIcon
             name="ic-wa-plus-input-32"
-            className="size-[32px] text-[color:var(--wa-surface-product)]"
-            tint={false}
+            className="size-[32px] text-[color:var(--wa-text-primary)]"
           />
         </button>
 
-        <div className="flex flex-1 items-end gap-[16px] overflow-clip rounded-[15px] border-[0.33px] border-[color:var(--wa-border-input-chat)] bg-[color:var(--wa-surface-input-chat)] ps-[10px] pe-[9px] pt-[3px] pb-[2px]">
+        <div className="flex min-w-0 flex-1 items-end gap-[16px] overflow-clip rounded-[15px] border-[0.33px] border-[color:var(--wa-border-input-chat)] bg-[color:var(--wa-surface-input-chat)] ps-[10px] pe-[9px] pt-[3px] pb-[2px]">
           <textarea
             value={value}
             onChange={(e) => setValue(e.target.value)}
@@ -125,12 +124,11 @@ export function InputBar({
             <WaIcon
               name="ic-wa-sticker-24"
               className="size-[24px] text-[color:var(--wa-text-secondary)]"
-              tint={false}
             />
           </button>
         </div>
 
-        <div className="flex items-start gap-[7px] ps-[6px]">
+        <div className="flex shrink-0 items-start gap-[7px] ps-[6px]">
           {hasText ? (
             <button
               type="button"
@@ -157,8 +155,7 @@ export function InputBar({
               >
                 <WaIcon
                   name="ic-wa-camera-small-32"
-                  className="size-[32px] text-[color:var(--wa-surface-product)]"
-                  tint={false}
+                  className="size-[32px] text-[color:var(--wa-text-primary)]"
                 />
               </button>
               <button
@@ -169,8 +166,7 @@ export function InputBar({
               >
                 <WaIcon
                   name="ic-wa-mic-32"
-                  className="size-[32px] text-[color:var(--wa-surface-product)]"
-                  tint={false}
+                  className="size-[32px] text-[color:var(--wa-text-primary)]"
                 />
               </button>
             </>

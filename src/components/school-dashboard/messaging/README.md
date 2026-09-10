@@ -77,16 +77,53 @@ src/components/school-dashboard/messaging/
 │   ├── contacts-panel.tsx          # WhatsApp-style contacts sidebar
 │   ├── contact-card.tsx            # Individual contact card
 │   └── contact-search.tsx          # Contact search input
-├── mobile/                         # iOS/WhatsApp-style mobile UI (~29 files)
+├── mobile/                         # WhatsApp design atoms — both widths share these
 │   ├── ios-chat-list.tsx           # Conversation list (<md)
 │   ├── wa-tokens.ts                # Generated icon/dimension/type tokens
-│   └── chat/                       # Conversation view (<md)
-│       ├── messages-view.tsx       # Composes the view; owns scroll + paging
-│       └── adapt.ts                # MessageDTO[] → ChatItem[] for that view
+│   └── chat/                       # Conversation view (<md) + shared chat atoms
+│       ├── messages-view.tsx       # Composes the phone view; owns scroll + paging
+│       ├── adapt.ts                # MessageDTO[] → ChatItem[] for that view
+│       ├── encryption-notice.tsx   # Cream E2E card — used by both widths
+│       ├── date-separator.tsx      # Day pill — used by both widths
+│       ├── bubble-tail.tsx         # Balloon tail — used by both widths
+│       └── chat-wallpaper.tsx      # Wallpaper + WA_CHAT_BG, used by both widths
 ├── CLAUDE.md                       # Block context for Claude Code
 ├── ISSUE.md                        # Production-readiness tracker
 └── QUERY_OPTIMIZATION.md           # Performance optimization guide
 ```
+
+### Chat surface fidelity (2026-09-10)
+
+The conversation view's skin is measured against a real WhatsApp capture
+(`public/whatsapp/IMG_2591.PNG`, a 3x iPhone screenshot) rather than eyeballed.
+Values that came out of that measurement, and should not drift:
+
+| Element | Value |
+| --- | --- |
+| Wallpaper tile | `432px` pitch, `/icons/whatsapp/wp-wa-chat-bg.svg` |
+| Outgoing balloon | `--wa-surface-baloon-me: #d8fdd2` |
+| Encryption card | `--wa-surface-notice: #fff0d3`, text `#0a0a0a`, 14.5px/20px |
+| Balloon body | 17px/24px, padding 8px top / 9px sides / 7px bottom |
+| Balloon clock | 12px |
+| Day pill | 13px/15px semibold, no border, 19px tall |
+| Composer field | 17px/21px, `min-h-[31px]`, `py-[5px]` |
+
+**The wallpaper is one seamless pattern tile.** The doodle art is a 540x981
+image that fills exactly one tile; the SVG's canvas is that tile and nothing
+else, so `background-repeat: repeat` at `432px auto` joins invisibly. It was
+previously a 393x852 canvas holding a 432-wide pattern, tiled at `412px` — two
+mismatched pitches, so every repeat chopped the doodles mid-stroke. If the
+wallpaper is ever regenerated, keep canvas == tile, and keep the four call
+sites (`chat-wallpaper.tsx`, three layers in `message-list.tsx`, and
+`.wa-doodle-bg` in `globals.css`) on the same pitch.
+
+Strokes look lighter here than in the capture. That is the capture being 3x,
+not a defect — rendered at the art's native resolution the stroke measures
+`#E9E3D9`, against the reference's `#EAE0D4`.
+
+Two deliberate departures from the capture, both standing decisions: balloon
+sides stay **logical** (Arabic mirrors the thread), and the desktop header
+carries **no call buttons** while there is no telephony backend.
 
 Tests live in `src/tests/school-dashboard/messaging/` (URL-mirror convention):
 `actions`, `authorization`, `multi-tenant`, `validation`, `whatsapp-bridge`,
@@ -137,3 +174,20 @@ Messages sent in-app are automatically dual-delivered to WhatsApp when the schoo
 - `agent:comment` — copy + i18n strings
 - `skill:/wire` — UI layer sweep
 - `skill:/check` — quality gate
+
+### Mobile chat chrome — the icons are the originals (2026-09-10)
+
+`public/icons/whatsapp/` now holds the seven originals Abdout captured (`public/whatsapp/ico-*.svg`):
+chevron-lt, phone, video, plus-input, mic, camera-small, sticker. The previous copies were
+tight-bbox crops — `ic-wa-chevron-lt-32.svg` in particular drew an L-corner, not a chevron, which
+is why `top-contact-header.tsx` carried a hand-drawn inline polyline. All seven now sit on the
+32x32 grid the reference uses (the video original ships on a 26x17 canvas and was re-homed).
+
+Rendered through `WaIcon`'s mask mode so the `--wa-*` tokens drive the colour and dark mode still
+works: chevron and the input-bar glyphs read primary, the call buttons read secondary. They were
+`tint={false}` before, which pinned them to whatever colour sat inside the file.
+
+The conversation header dropped its bottom hairline (the footer panel has none) and the
+"tap here for contact info" subtitle, whose dictionary key is gone from both languages.
+Swapping the sticker `<img>` for a mask `<span>` grew the message field's automatic minimum size
+and pushed the mic off-screen, so the field now carries `min-w-0`.

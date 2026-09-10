@@ -812,9 +812,6 @@ export function MessagingClient({
               currentUserId,
               adaptLabels
             )}
-            contactSubtitle={
-              m?.ui?.mobile?.tap_for_info ?? "tap here for contact info"
-            }
             contactAvatarUrl={conversationAvatar(
               activeConversation,
               currentUserId
@@ -827,6 +824,7 @@ export function MessagingClient({
             onSend={handleMobileSend}
             inputPlaceholder={m?.ui?.mobile?.input_placeholder ?? "Message"}
             encryptionNotice={m?.ui?.encryption_notice}
+            encryptionLearnMore={m?.ui?.encryption_learn_more}
           />
         </div>
       )}
