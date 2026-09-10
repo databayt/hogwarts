@@ -2,10 +2,7 @@
 // Source of truth: ~/.claude/memory/whatsapp_tokens.json
 // Regenerate with: pnpm tsx scripts/generate-whatsapp-tokens.mjs
 
-// Served from this app's own `public/icons/whatsapp/`. The former CloudFront and
-// cdn.databayt.org origins both answer HTTP 403, which rendered every icon in the
-// mobile WhatsApp UI as a broken image.
-export const WA_CDN_BASE = "/icons/whatsapp" as const
+export const WA_CDN_BASE = "/icons/whatsapp" as const;
 
 export const WA_ICONS = {
   "ic-wa-lock-12": `${WA_CDN_BASE}/ic-wa-lock-12.svg`,
@@ -24,10 +21,15 @@ export const WA_ICONS = {
   "ic-wa-location-16": `${WA_CDN_BASE}/ic-wa-location-16.svg`,
   "ic-wa-group-16": `${WA_CDN_BASE}/ic-wa-group-16.svg`,
   "ic-wa-tab-updates-32": `${WA_CDN_BASE}/ic-wa-tab-updates-32.svg`,
+  "ic-wa-tab-updates-fill-32": `${WA_CDN_BASE}/ic-wa-tab-updates-fill-32.svg`,
   "ic-wa-tab-calls-32": `${WA_CDN_BASE}/ic-wa-tab-calls-32.svg`,
+  "ic-wa-tab-calls-fill-32": `${WA_CDN_BASE}/ic-wa-tab-calls-fill-32.svg`,
   "ic-wa-tab-communities-32": `${WA_CDN_BASE}/ic-wa-tab-communities-32.svg`,
+  "ic-wa-tab-communities-fill-32": `${WA_CDN_BASE}/ic-wa-tab-communities-fill-32.svg`,
   "ic-wa-tab-chats-32": `${WA_CDN_BASE}/ic-wa-tab-chats-32.svg`,
+  "ic-wa-tab-chats-fill-32": `${WA_CDN_BASE}/ic-wa-tab-chats-fill-32.svg`,
   "ic-wa-tab-settings-32": `${WA_CDN_BASE}/ic-wa-tab-settings-32.svg`,
+  "ic-wa-tab-settings-fill-32": `${WA_CDN_BASE}/ic-wa-tab-settings-fill-32.svg`,
   "ic-wa-meta-ai-circle": `${WA_CDN_BASE}/ic-wa-meta-ai-circle.svg`,
   "ic-wa-updates-ring-full": `${WA_CDN_BASE}/ic-wa-updates-ring-full.svg`,
   "ic-wa-updates-ring-right": `${WA_CDN_BASE}/ic-wa-updates-ring-right.svg`,
@@ -50,104 +52,104 @@ export const WA_ICONS = {
   "ic-wa-bubble-tail-fill": `${WA_CDN_BASE}/ic-wa-bubble-tail-fill.svg`,
   "ic-wa-check-bubble-17": `${WA_CDN_BASE}/ic-wa-check-bubble-17.svg`,
   "ic-wa-close-circular-24": `${WA_CDN_BASE}/ic-wa-close-circular-24.svg`,
-  "ic-wa-send-24": `${WA_CDN_BASE}/ic-wa-send-24.svg`,
-} as const
+  "ic-wa-send-24": `${WA_CDN_BASE}/ic-wa-send-24.svg`
+} as const;
 
-export type WaIconName = keyof typeof WA_ICONS
+export type WaIconName = keyof typeof WA_ICONS;
 
 export function waIcon(name: WaIconName): string {
-  return WA_ICONS[name]
+  return WA_ICONS[name];
 }
 
 export const WA_DIMENSIONS = {
-  viewportWidth: 393,
-  viewportHeight: 1209,
-  statusBarHeight: 54,
-  headerHeight: 98,
-  titleBlockHeight: 146,
-  chatRowHeight: 77.33,
-  archivedRowHeight: 43.5,
-  tabbarHeight: 83,
-  homeIndicatorWidth: 140,
-  homeIndicatorHeight: 5,
-  avatarSize: 56,
-  avatarBorderRadius: 28,
-  circularCtaSize: 28,
-  filterChipHeight: 34,
-  filterChipRadius: 19,
-  filterChipPaddingX: 14,
-  searchInputRadius: 10,
-  unreadBadgeMinWidth: 16,
-  unreadBadgeHeight: 18,
-  unreadBadgeRadius: 9,
-  metaAiFabSize: 46,
-  metaAiFabRadius: 32,
-  rowPaddingLeft: 16,
-  rowPaddingTop: 10,
-  rowGap: 12.66,
-  rowPaddingRight: 15,
-  separatorWidth: 0.33,
-  backdropBlur: 25,
-} as const
+  "viewportWidth": 393,
+  "viewportHeight": 1209,
+  "statusBarHeight": 54,
+  "headerHeight": 98,
+  "titleBlockHeight": 146,
+  "chatRowHeight": 77.33,
+  "archivedRowHeight": 43.5,
+  "tabbarHeight": 83,
+  "homeIndicatorWidth": 140,
+  "homeIndicatorHeight": 5,
+  "avatarSize": 56,
+  "avatarBorderRadius": 28,
+  "circularCtaSize": 28,
+  "filterChipHeight": 34,
+  "filterChipRadius": 19,
+  "filterChipPaddingX": 14,
+  "searchInputRadius": 10,
+  "unreadBadgeMinWidth": 16,
+  "unreadBadgeHeight": 18,
+  "unreadBadgeRadius": 9,
+  "metaAiFabSize": 46,
+  "metaAiFabRadius": 32,
+  "rowPaddingLeft": 16,
+  "rowPaddingTop": 10,
+  "rowGap": 12.66,
+  "rowPaddingRight": 15,
+  "separatorWidth": 0.33,
+  "backdropBlur": 25
+} as const;
 
 export const WA_TYPOGRAPHY = {
-  family: "SF Pro Text",
-  styles: {
-    title1Bold: {
-      weight: 700,
-      size: 33.33,
-      lineHeight: "100%",
-      letterSpacing: -1.3332,
-      use: "Chats big title",
+  "family": "SF Pro Text",
+  "styles": {
+    "title1Bold": {
+      "weight": 700,
+      "size": 33.33,
+      "lineHeight": "100%",
+      "letterSpacing": -1.3332,
+      "use": "Chats big title"
     },
-    body1: {
-      weight: 400,
-      size: 16.4,
-      lineHeight: "100%",
-      letterSpacing: 0,
-      use: "search placeholder",
+    "body1": {
+      "weight": 400,
+      "size": 16.4,
+      "lineHeight": "100%",
+      "letterSpacing": 0,
+      "use": "search placeholder"
     },
-    body2Bold: {
-      weight: 600,
-      size: 16,
-      lineHeight: "100%",
-      letterSpacing: -0.32,
-      use: "row contact name",
+    "body2Bold": {
+      "weight": 600,
+      "size": 16,
+      "lineHeight": "100%",
+      "letterSpacing": -0.32,
+      "use": "row contact name"
     },
-    body4: {
-      weight: 400,
-      size: 14,
-      lineHeight: 19,
-      letterSpacing: -0.14,
-      use: "preview, timestamp",
+    "body4": {
+      "weight": 400,
+      "size": 14,
+      "lineHeight": 19,
+      "letterSpacing": -0.14,
+      "use": "preview, timestamp"
     },
-    body4Semibold: {
-      weight: 600,
-      size: 14,
-      lineHeight: 19,
-      letterSpacing: -0.14,
-      use: "filter chip label",
+    "body4Semibold": {
+      "weight": 600,
+      "size": 14,
+      "lineHeight": 19,
+      "letterSpacing": -0.14,
+      "use": "filter chip label"
     },
-    body6: {
-      weight: 400,
-      size: 12,
-      lineHeight: "100%",
-      letterSpacing: -0.12,
-      use: "unread badge count",
+    "body6": {
+      "weight": 400,
+      "size": 12,
+      "lineHeight": "100%",
+      "letterSpacing": -0.12,
+      "use": "unread badge count"
     },
-    body7: {
-      weight: 400,
-      size: 11,
-      lineHeight: "100%",
-      letterSpacing: 0,
-      use: "encrypt footer",
+    "body7": {
+      "weight": 400,
+      "size": 11,
+      "lineHeight": "100%",
+      "letterSpacing": 0,
+      "use": "encrypt footer"
     },
-    ctaTabbar: {
-      weight: 500,
-      size: 10,
-      lineHeight: "100%",
-      letterSpacing: 0.5,
-      use: "tab bar label",
-    },
-  },
-} as const
+    "ctaTabbar": {
+      "weight": 500,
+      "size": 10,
+      "lineHeight": "100%",
+      "letterSpacing": 0.5,
+      "use": "tab bar label"
+    }
+  }
+} as const;

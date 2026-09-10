@@ -123,9 +123,12 @@
       "groups": "المجموعات"
     },
     "tab": {
+      "updates": "التحديثات",
       "calls": "المكالمات",
       "classes": "الفصول",
       "chats": "الدردشات",
+      "communities": "المجتمعات",
+      "settings": "الإعدادات",
       "back": "العودة"
     },
     "encrypt": {

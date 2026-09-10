@@ -123,9 +123,12 @@
       "groups": "Groups"
     },
     "tab": {
+      "updates": "Updates",
       "calls": "Calls",
       "classes": "Classes",
       "chats": "Chats",
+      "communities": "Communities",
+      "settings": "Settings",
       "back": "Back"
     },
     "encrypt": {

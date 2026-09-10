@@ -21,10 +21,13 @@ type L = {
   filterFavourites: string
   filterGroups: string
   archivedLabel: string
+  tabUpdates: string
   tabCalls: string
   tabClasses: string
+  tabCommunities: string
   tabChats: string
   tabBack: string
+  tabSettings: string
   tabYou: string
   noticeTitle: string
   noticeBody: string
@@ -52,10 +55,13 @@ const DEFAULT_L: L = {
   filterFavourites: "Favourites",
   filterGroups: "Groups",
   archivedLabel: "Archived",
+  tabUpdates: "Updates",
   tabCalls: "Calls",
   tabClasses: "Classes",
+  tabCommunities: "Communities",
   tabChats: "Chats",
   tabBack: "Back",
+  tabSettings: "Settings",
   tabYou: "You",
   noticeTitle: "Get message notifications",
   noticeBody: "Make sure you know when you have new messages.",
@@ -89,7 +95,7 @@ type Props = {
   onOpenArchived?: () => void
   onAddFilter?: () => void
   onDashboard?: () => void
-  /** Shown in the "You" tab slot. */
+  /** Kept for callers that still pass it; the tab bar draws a gear now. */
   currentUserImage?: string | null
   locale?: "ar" | "en"
   labels?: Partial<L>
@@ -109,7 +115,6 @@ export function IosChatList({
   onOpenArchived,
   onAddFilter,
   onDashboard,
-  currentUserImage,
   locale = "en",
   labels,
 }: Props) {
@@ -134,23 +139,36 @@ export function IosChatList({
   )
 
   const tabs: IosTab[] = [
-    { id: "calls", label: L.tabCalls, icon: "ic-wa-tab-calls-32" },
+    {
+      id: "updates",
+      label: L.tabUpdates,
+      icon: "ic-wa-tab-updates-32",
+      iconActive: "ic-wa-tab-updates-fill-32",
+    },
+    {
+      id: "calls",
+      label: L.tabCalls,
+      icon: "ic-wa-tab-calls-32",
+      iconActive: "ic-wa-tab-calls-fill-32",
+    },
     {
       id: "communities",
-      label: L.tabClasses,
+      label: L.tabCommunities,
       icon: "ic-wa-tab-communities-32",
+      iconActive: "ic-wa-tab-communities-fill-32",
     },
     {
       id: "chats",
       label: L.tabChats,
       icon: "ic-wa-tab-chats-32",
+      iconActive: "ic-wa-tab-chats-fill-32",
       badge: totalUnread,
     },
     {
       id: "settings",
-      label: L.tabYou,
+      label: L.tabSettings,
       icon: "ic-wa-tab-settings-32",
-      avatarUrl: currentUserImage,
+      iconActive: "ic-wa-tab-settings-fill-32",
     },
   ]
 

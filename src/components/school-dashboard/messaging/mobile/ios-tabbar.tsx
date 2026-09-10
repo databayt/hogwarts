@@ -2,23 +2,23 @@
 
 import { cn } from "@/lib/utils"
 
-import { PersonGlyph } from "./ios-chat-row"
 import { WaIcon, type WaIconName } from "./wa-icon"
 
 export type IosTabId =
+  | "updates"
   | "calls"
   | "communities"
   | "chats"
   | "settings"
-  | "updates"
 
 export type IosTab = {
   id: IosTabId
   label: string
+  /** Outline glyph, drawn while the tab is not the current one. */
   icon: WaIconName
+  /** Solid glyph, drawn while the tab is current. */
+  iconActive: WaIconName
   badge?: number
-  /** "You" carries the signed-in person's photo instead of a glyph. */
-  avatarUrl?: string | null
 }
 
 type Props = {
@@ -60,45 +60,34 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
               <button
                 type="button"
                 onClick={() => onChange(tab.id)}
-                aria-label={tab.label}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   // The selected tab sits in its own recessed pill. In the
                   // node that pill is the whole 54px cell, capsule-cut like
                   // the bar around it — not a smaller rounded patch inside.
-                  "flex h-[54px] w-full items-center justify-center rounded-full",
+                  // Icon over word, the way a labelled iOS tab bar stacks.
+                  "flex h-[54px] w-full flex-col items-center justify-center gap-[1px] rounded-full",
+                  color,
                   isActive && "bg-[color:var(--wa-glass-inner)]"
                 )}
               >
-                {tab.id === "settings" ? (
-                  // The reference's "You" slot: the reader's own face, or a
-                  // tinted silhouette when they have no photo.
-                  <span className="flex size-[32px] items-center justify-center overflow-hidden rounded-full bg-[color:var(--wa-surface-avatar-person)]">
-                    {tab.avatarUrl ? (
-                      <img
-                        src={tab.avatarUrl}
-                        alt=""
-                        className="size-full object-cover"
-                        draggable={false}
-                      />
-                    ) : (
-                      <PersonGlyph className="size-[20px] text-[color:var(--wa-text-avatar-person)]" />
-                    )}
-                  </span>
-                ) : (
-                  // Masked, not a raw <img>: the icons have to take the
-                  // selected/unselected colour rather than render flat black.
+                <span className="relative flex items-center justify-center">
+                  {/* Masked, not a raw <img>: the icons have to take the
+                      selected/unselected colour rather than render flat black. */}
                   <WaIcon
-                    name={tab.icon}
-                    className={cn("size-[32px]", color)}
+                    name={isActive ? tab.iconActive : tab.icon}
+                    className="size-[26px]"
                   />
-                )}
-              </button>
-              {typeof tab.badge === "number" && tab.badge > 0 && (
-                <span className="absolute end-[2px] top-[-2px] flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[color:var(--wa-surface-product)] px-[6px] text-[12px] leading-none tracking-[-0.12px] text-[color:var(--wa-text-invert)]">
-                  {tab.badge}
+                  {typeof tab.badge === "number" && tab.badge > 0 && (
+                    <span className="absolute start-[15px] top-[-5px] flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[color:var(--wa-surface-product)] px-[4px] text-[11px] leading-none tracking-[-0.12px] text-[color:var(--wa-text-invert)]">
+                      {tab.badge}
+                    </span>
+                  )}
                 </span>
-              )}
+                <span className="max-w-full truncate px-[2px] text-[10px] leading-[13px] tracking-[-0.06px]">
+                  {tab.label}
+                </span>
+              </button>
             </li>
           )
         })}

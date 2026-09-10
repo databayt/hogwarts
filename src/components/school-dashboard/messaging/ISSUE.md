@@ -201,6 +201,51 @@ Secrets are pre-generated in `socket-server/.env` (gitignored). The 4 app-facing
 WHERE type='direct'` (live on Neon + migration record); `createConversation`
       catches the concurrent-duplicate P2002 and returns the existing conversation.
 
+### Chat surface measured against the capture — 2026-09-10
+
+The 09-09 pass put the desktop thread on the WhatsApp atoms; this one set their
+numbers from a real capture (`public/whatsapp/IMG_2591.PNG`, 3x iPhone) instead
+of by eye. Every value below was sampled off that file.
+
+- [x] **The wallpaper tiled at the wrong pitch, so every repeat chopped the
+      doodles.** The SVG canvas was 393x852 while the pattern inside it was
+      432x784.8 (the 540x981 doodle image at the phone's scale), and CSS tiled
+      the canvas at `412px` — three different pitches. Re-emitted
+      `wp-wa-chat-bg.svg` from the supplied `public/whatsapp/Background chat.svg`
+      as **one tile and nothing else** (`viewBox="0 0 432 784.8"`, cream rect,
+      the same embedded image at `opacity .1` / `mix-blend-mode: difference`),
+      and moved all four call sites to `432px auto`. Verified: sampled columns
+      now repeat at exactly 432px (mean delta 0.000) where the old 412px pitch
+      did not (mean 0.399). The doodle payload is byte-identical to what was
+      already served — only the frame around it changed.
+- [x] **`.wa-doodle-bg` still pointed at `cdn.databayt.org`,** which answers 403;
+      the loading skeleton therefore painted bare cream. Now on the local tile.
+- [x] **Three tokens were off the capture.** `--wa-surface-baloon-me`
+      `#d0fecf` → `#d8fdd2`; `--wa-surface-notice` `#fff3d5` → `#fff0d3`; and
+      `--wa-text-notice`, which was a `#54606a` grey where the capture is plain
+      `#0a0a0a` — the most visible of the three. Light block only, edited by
+      hand (the token generator has drifted behind `globals.css`).
+- [x] **Type and box metrics.** Encryption card 12.5px/17px → **14.5px/20px**
+      (the capture's line pitch is 20 exactly, its card 3 lines in 72px);
+      balloon body 14px → **17px/24px** with padding `8px 9px 7px`; balloon
+      clock 11px → **12px** (capture digits are 9pt tall, i.e. a 12px face);
+      day pill 12px → **13px/15px**, border and `min-w-[100px]` dropped — it now
+      measures 19px tall against the capture's 19.3.
+- [x] **Composer field** 14px in a 38px box → **17px/21px in `min-h-[31px]`**,
+      the capture's own 31pt. Note the base `Textarea` carries `md:text-sm`,
+      which outranks an unprefixed `text-[17px]` at >=768px — the override needs
+      `md:text-[17px]` alongside it or desktop silently stays at 14px.
+
+Deliberately **not** matched, both prior decisions restated: balloon sides stay
+logical so Arabic mirrors the thread (the capture is an English-UI phone), and
+the desktop header still carries no call buttons. The card's `max-w` is 420px,
+not the capture's 280px — the Arabic sentence is longer than the English one,
+and 420px keeps it to the same 2–3 lines the capture shows.
+
+Stroke colour still reads lighter on screen than in the capture. That is the
+capture being 3x: rendered at the art's native resolution the stroke measures
+`#E9E3D9` against the reference's `#EAE0D4`. Not a defect, do not "fix" it.
+
 ### Mobile WhatsApp conversation view — wired 2026-09-09
 
 - [x] **The conversation view reached the phone.** `mobile/chat/*` was fully built
@@ -470,6 +515,22 @@ read, and it corrected one thing the derivation got wrong.
 **Not reproducible in CSS:** the node's corners carry `cornerSmoothing 0.6`, an
 Apple squircle. `border-radius` is a circular arc and there is no property for
 this, so the discs stay true circles.
+
+### Five labelled tabs — 2026-09-10
+
+The floating capsule carries five cells instead of four: **updates · calls ·
+communities · chats · settings**, each an icon over its own word (26px glyph,
+10px label). The glyphs are the freshly captured WhatsApp pair per tab — the
+outline while the tab is idle, the solid one while it is current — copied into
+`public/icons/whatsapp/` as `ic-wa-tab-<id>-32.svg` and `…-fill-32.svg`, and
+declared in the token source so `WaIconName` still types them.
+
+The fifth cell used to draw the reader's own face as a "You" slot; it draws the
+gear now. `currentUserImage` is still accepted so existing callers keep
+compiling, and tapping the cell still routes to the dashboard. The unread badge
+moved off the cell corner onto the chats glyph, which is where it stays put once
+a word sits underneath. Nothing new renders when updates or communities is
+selected — the same list stays underneath, as it already did for calls.
 
 ### i18n debt (P2)
 
