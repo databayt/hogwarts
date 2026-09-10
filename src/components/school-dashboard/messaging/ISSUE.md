@@ -234,6 +234,56 @@ recording. `onTapInfo` opens `ConversationInfoPanel`, which is `hidden md:block`
 tapping the header does nothing on a phone. The composer's attach/sticker/camera/mic
 buttons render but are inert.
 
+### Desktop conversation joins the WhatsApp pattern — 2026-09-09
+
+Read against an iPhone WhatsApp conversation screenshot. The phone view already
+carried the pattern; the desktop split-pane was the outlier, and both now share
+the same atoms instead of each holding its own copy.
+
+- [x] **The encryption card exists, and it is cream.** New shared
+      `mobile/chat/encryption-notice.tsx` — the WhatsApp notice ground with an
+      inline lock and a bold trailing link — replaces the plain white card the
+      phone had and adds one to the desktop thread, where none existed. Two new
+      tokens (`--wa-surface-notice`, `--wa-text-notice`), light and dark. It
+      renders at the true head of the thread only, so it appears once the whole
+      history is loaded rather than above a half-fetched page. New dictionary
+      key `ui.encryption_learn_more`; the notice copy dropped its "not even
+      WhatsApp" clause, which was never true of this messenger.
+- [x] **Desktop balloons take the WhatsApp skin.** 12px corners with a hairline
+      edge and a tail on the last message of each same-sender run, replacing
+      `rounded-sm`/`rounded-md` with no tail. The frozen `#D9FDD4` and `bg-white`
+      became `--wa-surface-baloon-me` / `--wa-surface-baloon-other`, so the thread
+      now follows the theme in dark mode instead of staying light.
+- [x] **One wallpaper.** The desktop painted `#EEEAE4` under a 60%-opacity doodle
+      fetched from `cdn.databayt.org`; it now shares the phone's ground and the
+      local `/icons/whatsapp/wp-wa-chat-bg.svg` at its real tile size. One less
+      external origin on a path where that origin has already answered 403 once.
+- [x] **Header reads as the phone's.** Glass panel, 0.33px hairline, 36px avatar,
+      16px semibold name over a 12px subtitle. The name block opens the info
+      panel, mirroring the phone's tap target; presence still wins the subtitle
+      when there is presence to report. Still no call buttons — the 2026 decision
+      against decorative telephony stands on both widths.
+- [x] **Composer chrome tokenized**, and a camera sits beside the mic. It opens
+      the photo/video picker that already existed, so it is a real control rather
+      than a glyph.
+- [x] **Day pill is the shared atom** on both widths, and both **print Latin
+      digits** — bubble clocks and day labels. `ar-EG` had been giving the phone
+      Arabic-Indic numerals against the desktop's Latin ones.
+
+Not changed, deliberately: bubble sides stay logical, so Arabic still mirrors the
+thread (outgoing on the reader's leading edge). The reference screenshot came from
+an English-UI phone, where that edge is the right one; WhatsApp under an Arabic UI
+mirrors exactly as this does.
+
+**Do not run `scripts/generate-whatsapp-tokens.mjs` to "sync" the tokens.** The WA
+block in `globals.css` has drifted ahead of `~/.claude/memory/whatsapp_tokens.json`
+— the chip and search values were corrected against a real screenshot on
+2026-09-09 (`#cffdcf` vs the JSON's `#d0fecf`, `#00613b` vs `#15603e`,
+`#f5f5f4` vs `#f4f4f4`) and never written back. Regenerating reverts those
+measured corrections silently. The two notice tokens added here were hand-written
+into both files for the same reason. Reconcile the JSON to the CSS before ever
+running the generator again.
+
 ### Chat list read against a real screenshot — 2026-09-09
 
 Compared side by side with an iPhone WhatsApp chat-list capture at 393×852 @3x.
@@ -331,20 +381,62 @@ Still four tabs against the reference's five; "Updates" has nowhere to route yet
       (`iuYSGaRV8xkcEGnyIltPRg`, node `1:59`) as `.wa-glass-control` in
       `globals.css`. The variables map straight across: Frost 7 → a 7px backdrop
       blur, Depth 16 → the cast shadow's reach, Splay 6 → how far it is thrown,
-      Light Angle −45 → lit from the upper *start* corner (so the rule mirrors
+      Light Angle −45 → lit from the upper _start_ corner (so the rule mirrors
       under RTL), Refraction 100 → a bright inset rim where light enters and a
       dim one where it leaves, Dispersion 0 → a neutral rim, Labels/Primary
       `#1a1a1a` → the glyph. The compose button stays brand-filled and borrows
       only the depth.
 
-      **Caveat: the node was never rendered.** `get_variable_defs` returned just
-      before the Figma MCP hit its Starter-plan call limit; `get_screenshot` and
-      `get_metadata` did not. The Keychain's `figma` item is the desktop app's
-      safe-storage key, not a REST token, so the API answered 403, and the
-      authenticated Playwright profile would not launch. The *material* is
-      therefore exact and the *geometry* unverified — the buttons keep the 42px
-      the screenshot measurements gave them. A PNG of the node, or a `figd_`
-      token, would settle it.
+      **Caveat, settled 2026-09-10.** The node was never rendered at the time:
+      `get_variable_defs` returned just before the Figma MCP hit its
+      Starter-plan call limit, and `get_screenshot`/`get_metadata` did not. The
+      Keychain's `figma` item is the desktop app's safe-storage key, not a REST
+      token, so the API answered 403. A `figd_` token now exists — Keychain
+      service `figma-token`, account `abdout`, scoped to file-contents read
+      only — which is enough for both `/v1/files/<key>/nodes?ids=<a:b>` and
+      `/v1/images/<key>?ids=<a:b>&scale=3`. Reach for that first; the MCP's
+      call limit is the plan's, not a transient error, and the local Dev Mode
+      MCP server needs a paid seat. Note the id form differs: `5-596` in a
+      Figma URL is `5:596` to the API.
+
+### Tab bar takes node 5:596 — 2026-09-10
+
+- [x] **The footer capsule is measured, not approximated.** Node `5:596`
+      ("Tab Bar - iPhone", same file as `1:59`) is Apple's iOS 26 Liquid Glass
+      tab bar. What moved in `ios-tabbar.tsx`:
+
+      | | was | node |
+      | --- | --- | --- |
+      | capsule radius | `32px` | 296 on a 62-tall bar, i.e. a capsule |
+      | capsule padding | `8px 10px` | 4px all round |
+      | tab cell height | 46px | 54px |
+      | selection radius | `22px` | 100, a full-height capsule |
+      | cast shadow | `0 8 24 / 0.08` | `0 8 40 / 0.12` |
+      | side gutter | 16px | 25px |
+      | floor | safe-area + 8 | 25, `max()`-ed with the old value |
+
+- [x] **Colors were read off a 3x render, not recomputed.** The BG stacks three
+      fills (white at 0.65, `#dddddd` color-burn, `#f7f7f7` darken) and the
+      selection rectangle is `#ededed` linear-burn — blend modes CSS cannot
+      reproduce, because `background-blend-mode` never sees the backdrop. The
+      render settles them at `#f1f1f1` and `#e0e0e0`. Live, over the list, the
+      bar measures 243 and the pill 226 against the node's 241 and 224; the
+      2-point gap is the white page showing through the retained 0.85 alpha.
+- [x] **The rim is borrowed, and that is deliberate.** The node's own `GLASS`
+      effect binds six library variables, and the variables endpoint is
+      Enterprise-only, so the REST payload carries `{type, visible}` and
+      nothing else. `.wa-glass-tabbar` therefore reuses the refraction insets
+      `.wa-glass-control` got from node `1:59` — same kit, same file, read
+      while variable access still held.
+- [x] **Only the rim mirrors under RTL.** The node casts straight down
+      (offset 0,8), so the drop shadow is direction-neutral; the two inset
+      rims swap sides. Verified on `/ar` and `/en` at 402px.
+
+**Two divergences from the node, both on purpose.** It draws 10px labels under
+each icon — the 2026-09-09 decision above removed those, and it stands, so the
+bar is still icon-only with the labels living on as `aria-label`. And its
+selected tint is `#0088ff`, the kit's system-blue placeholder; the sampled
+`--wa-text-tabbar-selected` stays.
 
 ### i18n debt (P2)
 

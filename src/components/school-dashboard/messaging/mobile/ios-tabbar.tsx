@@ -34,17 +34,20 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
       aria-label="Main tabs"
       className={cn(
         // Liquid glass: a capsule floating clear of the screen edges, with the
-        // list scrolling beneath it rather than stopping at a bar.
-        "pointer-events-none relative flex w-full flex-col items-center px-[16px]",
-        "pb-[calc(env(safe-area-inset-bottom,0px)+8px)]",
+        // list scrolling beneath it rather than stopping at a bar. The 25px
+        // gutter and floor are node 5:596's own padding; the max() keeps the
+        // capsule off a real home indicator, which the node never sees.
+        "pointer-events-none relative flex w-full flex-col items-center px-[25px]",
+        "pb-[max(25px,calc(env(safe-area-inset-bottom,0px)+8px))]",
         className
       )}
     >
       <ul
         className={cn(
-          "pointer-events-auto flex w-full items-center justify-between rounded-[32px] px-[10px] py-[8px]",
-          "border-[0.5px] border-[color:var(--wa-glass-border)] bg-[color:var(--wa-glass-bg)]",
-          "shadow-[var(--wa-glass-shadow)] backdrop-blur-[20px]"
+          // 54px cells inside 4px of padding is the node's 62px bar, and a
+          // 296 radius on 62 is simply a capsule.
+          "pointer-events-auto flex w-full items-center justify-between rounded-full p-[4px]",
+          "wa-glass-tabbar"
         )}
       >
         {tabs.map((tab) => {
@@ -60,8 +63,10 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
                 aria-label={tab.label}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  // The selected tab sits in its own recessed pill.
-                  "flex items-center justify-center rounded-[22px] px-[18px] py-[7px]",
+                  // The selected tab sits in its own recessed pill. In the
+                  // node that pill is the whole 54px cell, capsule-cut like
+                  // the bar around it — not a smaller rounded patch inside.
+                  "flex h-[54px] w-full items-center justify-center rounded-full",
                   isActive && "bg-[color:var(--wa-glass-inner)]"
                 )}
               >

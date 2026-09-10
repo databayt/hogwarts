@@ -772,18 +772,27 @@ body {
   --wa-surface-avatar-person: #d6e7fb;
   --wa-text-avatar-person: #2e67c5;
   --wa-border-cta-filters: #cccccc;
-  /* Liquid glass — the values the android app's AppleMaterial uses:
-     white at 0.85, a half-pixel black border at 0.08, elevation-12 shadow. */
-  --wa-glass-bg: rgba(255, 255, 255, 0.85);
-  --wa-glass-border: rgba(0, 0, 0, 0.08);
-  --wa-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --wa-glass-inner: rgba(0, 0, 0, 0.06);
+  /* Liquid glass — measured off Figma node 5:596 "Tab Bar - iPhone" (file
+     iuYSGaRV8xkcEGnyIltPRg), the same Apple kit node 1:59 gave the header.
+     The BG's three stacked fills (white at 0.65, #dddddd color-burn, #f7f7f7
+     darken) render as #f1f1f1, and the selection rectangle's #ededed
+     linear-burn lands on #e0e0e0 — both read off a 3x render rather than
+     recomputed, because the blend modes cannot see a live backdrop. Alpha is
+     kept so the list still shows through. The node carries no stroke: its
+     edge is the cast shadow plus the refractive rim, so the border is the
+     kit's bright rim, not the old dark hairline. */
+  --wa-glass-bg: rgba(241, 241, 241, 0.85);
+  --wa-glass-border: rgba(255, 255, 255, 0.65);
+  --wa-glass-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+  --wa-glass-inner: rgba(0, 0, 0, 0.07);
   --wa-border-panel: rgba(0, 0, 0, 0.3);
   --wa-border-separator: rgba(0, 0, 0, 0.2);
   --wa-border-avatar: rgba(10, 10, 10, 0.1);
   --wa-border-input-chat: #b2b2b2;
   --wa-border-quote: #d42a66;
   --wa-text-quote-title: #d42a66;
+  --wa-surface-notice: #fff3d5;
+  --wa-text-notice: #54606a;
 }
 .dark {
   --wa-surface-primary: #0b141a;
@@ -897,6 +906,45 @@ body {
     inset -1px 1px 1.5px rgba(255, 255, 255, 0.22),
     inset 1px -1px 1.5px rgba(0, 0, 0, 0.35),
     -3px 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* The tab bar capsule wears the same material one size up. Node 5:596 casts
+   it straight down (offset 0,8 — blur 40, no spread), so only the refractive
+   rim mirrors under RTL, never the shadow. The node's own GLASS effect binds
+   six library variables the REST API will not serve on this plan, so the rim
+   is reused from .wa-glass-control above, which was read from node 1:59 of
+   the same file while variable access still held. */
+.wa-glass-tabbar {
+  background: var(--wa-glass-bg);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 0.5px solid var(--wa-glass-border);
+  box-shadow:
+    inset 1px 1px 1.5px rgba(255, 255, 255, 0.95),
+    inset -1px -1px 1.5px rgba(0, 0, 0, 0.07),
+    var(--wa-glass-shadow);
+}
+
+[dir="rtl"] .wa-glass-tabbar {
+  box-shadow:
+    inset -1px 1px 1.5px rgba(255, 255, 255, 0.95),
+    inset 1px -1px 1.5px rgba(0, 0, 0, 0.07),
+    var(--wa-glass-shadow);
+}
+
+.dark .wa-glass-tabbar {
+  box-shadow:
+    inset 1px 1px 1.5px rgba(255, 255, 255, 0.22),
+    inset -1px -1px 1.5px rgba(0, 0, 0, 0.35),
+    var(--wa-glass-shadow);
+}
+
+.dark [dir="rtl"] .wa-glass-tabbar,
+[dir="rtl"] .dark .wa-glass-tabbar {
+  box-shadow:
+    inset -1px 1px 1.5px rgba(255, 255, 255, 0.22),
+    inset 1px -1px 1.5px rgba(0, 0, 0, 0.35),
+    var(--wa-glass-shadow);
 }
 
 /* ── shadcn-style code blocks ──────────────────────────────────────────────
