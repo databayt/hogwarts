@@ -134,6 +134,24 @@ was built from, on the phone width the frame is drawn at.
       line. The student's slot is now picked from a subject whose curriculum
       has synopses, and the three rows anchor a described lesson where one
       exists rather than waiting for `attachCatalogLessons`' curriculum walk.
+- [x] **The whole strip reaches the student, and stays true.** Two separate
+      causes, both data. The three showcase rows were spread across DISTINCT
+      SECTIONS so the cards would not read as the same class — right for an
+      admin, who sees every section, and wrong for the student, whose page is
+      section-scoped and filtered two of the three away before they reached
+      it, leaving one lead and two empty halves. They now sit in the demo
+      student's own section, of three distinct SUBJECTS. And nothing ever
+      refreshed them: rows dated "now" go stale within the hour, the seed runs
+      at most once a deploy, and on production `end-stale-live-classes` then
+      sweeps a stranded `live` row to `ended` after thirty minutes, so the page
+      had no session at all. The refresh moved out of `prisma/seeds` into
+      `demo-clock.ts`, and the landing calls it on a demo tenant before it
+      reads — one indexed read of three rows by primary key, a rewrite only
+      when they no longer say what they were written to say, upsert on the
+      fixed ids so two concurrent loads cannot collide. A cron is a fair
+      backstop later but deliberately not the mechanism: a trigger fires on its
+      own schedule, a page that repairs what it is about to render is true the
+      first time anybody looks.
 
 Desktop is deliberately unchanged: above `sm` the card is the wide overlay
 (marks above the button, no paragraph), which is its own documented layout —
