@@ -12,6 +12,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getLiveLinkCoverage } from "@/components/school-dashboard/live/actions/settings"
 import { DEFAULT_SCHOOL_TZ } from "@/components/school-dashboard/live/day-window"
+import { ensureDemoClock } from "@/components/school-dashboard/live/demo-clock"
 import { LiveLandingContent } from "@/components/school-dashboard/live/landing/content"
 import type {
   LandingPolicy,
@@ -113,7 +114,7 @@ interface Props {
  * class" for them rather than being marketing they have to click through.
  */
 export default async function Page({ params }: Props) {
-  const [{ lang }, session] = await Promise.all([params, auth()])
+  const [{ lang, subdomain }, session] = await Promise.all([params, auth()])
   const role = session?.user?.role ?? ""
   if (!canOpenLanding(role)) {
     redirect(`/${lang}/dashboard`)
@@ -145,6 +146,20 @@ export default async function Page({ params }: Props) {
 
   if (schoolId) {
     const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+
+    // The demo tenant repairs its own clock before it reads.
+    //
+    // This page's whole subject is NOW, and the three sessions that
+    // demonstrate it are written relative to the moment they are seeded — so
+    // they go stale within the hour, and on production the seed has not run
+    // for days at a time. Awaited rather than deferred to `after()`: a repair
+    // that lands after the render would leave the reader looking at exactly
+    // the emptiness it exists to fix, and only the first load of a stale
+    // window pays for it. Demo only; it never invents a class for a real
+    // school. See `demo-clock.ts`.
+    if (subdomain === "demo") {
+      await ensureDemoClock(schoolId)
+    }
 
     // The strip and the counts are an accelerator, not the page — a failure
     // here must leave the landing standing rather than take the block down.
