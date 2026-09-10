@@ -74,6 +74,31 @@ view.
   bookmarks, search, the original-pages layer.
 - `sheets.tsx` — reading menu (Contents — %, Search Book, Themes & Settings,
   share / PDF / original pages / bookmark) and the bottom sheets (vaul Drawer).
+  The Contents pill is also the book's scrubber, as it is in the Books app: a
+  tap opens the contents, a drag turns the pages. The read part is a light
+  fill (`--book-scrub-fill`) growing from the reading edge — the right one in
+  an Arabic book, since the layers are placed with `inset-inline-start` — the
+  unread part stays dark (`--book-scrub-empty`), and a second copy of the
+  label, clipped to the fill, inverts the words the fill has reached. A drag
+  turns at most one page per frame.
+  Themes & Settings is built in the reference's two halves: a frosted band
+  carrying the title, the ✕, the size capsule (small A | large A), the
+  text/original-pages view switch and the line-spacing slider, over a solid
+  body holding the four theme cards — each wearing its own colours, the
+  chosen one ringed — and the face pill on the floor. `Sheet` takes a `band`
+  prop for this; Contents and Search keep the plain centred header. The band
+  head has to outrank the drawer's own centred, stacked header, hence the
+  three-class selector in `reader.css`. Its numbers are measured, not
+  guessed: the reference screenshot is a 390pt screen at 3x, so every value
+  in that CSS block is those pixels divided by three — a card inset 10 with
+  a 14 corner, a 20 gutter, a 172 band over a body a hair off white, a 48
+  header/capsule/pill rhythm, and two capsules at 190 and 130 with 10
+  between them. Ours departs from the reference in five places, each for a
+  reason: four theme cards in one row rather than six in two, the face pill
+  where Customize sits, the inactive view icon dimmed instead of the active
+  one raised (the reference's two icons are stateless actions), line spacing
+  on the slider because a page cannot set screen brightness, and line-density
+  marks in place of the two suns.
 - `cover.tsx`, `toc.tsx`, `ornament.tsx`, `prefs.ts`, `search.ts`,
   `format.ts`, `types.ts`, `structure.ts`, `reader.css` (themes
   original/paper/quiet/night, Thmanyah or Rubik, six sizes, three leadings).
@@ -140,6 +165,12 @@ src/components/school-dashboard/listings/subjects/
 ### Status
 
 **Completion:** 90% | **Blockers:** None
+
+The browse grid pairs subject cards from the narrowest width up. It used to
+open at one column and only pair past a 24rem container, which no phone
+reaches, so iOS read the catalog as a single tall column while desktop showed
+two. At half a phone the card gives up a little: a 56px thumb instead of 64,
+a tighter gutter, and a badge row that wraps.
 
 ### Reused by the public Community hub
 
