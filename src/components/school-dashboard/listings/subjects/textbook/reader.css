@@ -11,6 +11,10 @@
   --book-ui:
     -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
+  /* The reading face is declared here too, so the sheets — which portal to
+     <body>, outside .book — can set a specimen in the book's own type. */
+  --book-font:
+    var(--font-thmanyah-text), ui-serif, Georgia, "Times New Roman", serif;
 }
 
 .book {
@@ -28,35 +32,79 @@
   --book-pill-fg: #1c1c1e;
   --book-pill-dark: #36363a;
   --book-pill-dark-fg: #ffffff;
+  --book-scrub-empty: #343338;
+  --book-scrub-empty-fg: #ffffff;
+  --book-scrub-fill: #e6e5ea;
+  --book-scrub-fill-fg: #1c1c1e;
   --book-tint: #2b3a4a;
   --book-font:
     var(--font-thmanyah-text), ui-serif, Georgia, "Times New Roman", serif;
   --book-safe-bottom: env(safe-area-inset-bottom, 0px);
   --book-lh: 1.9;
+  --book-weight: 400;
   background: var(--book-bg);
   color: var(--book-fg);
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
 }
-.book[data-theme="paper"] {
-  --book-bg: #f6efe4;
-  --book-fg: #3d3026;
-  --book-muted: #9a8b7a;
-  --book-rule: rgba(61, 48, 38, 0.14);
-  --book-chrome-bg: rgba(246, 239, 228, 0.86);
-  --book-chrome-fg: #3d3026;
-  --book-pill: rgba(236, 227, 212, 0.95);
-  --book-pill-fg: #3d3026;
-  --book-pill-dark: #3d3026;
-}
 .book[data-theme="quiet"] {
-  --book-bg: #e9e9eb;
-  --book-fg: #1c1c1e;
+  --book-bg: #4a494e;
+  --book-fg: #acaab5;
+  --book-muted: #8b8a93;
+  --book-rule: rgba(255, 255, 255, 0.14);
+  --book-chrome-bg: rgba(74, 73, 78, 0.86);
+  --book-chrome-fg: #d6d5dc;
+  --book-pill: rgba(255, 255, 255, 0.12);
+  --book-pill-fg: #eceaf2;
+  --book-pill-dark: #eceaf2;
+  --book-pill-dark-fg: #2b2a2e;
+  --book-scrub-empty: #2f2e33;
+  --book-scrub-empty-fg: #f2f2f7;
+  --book-scrub-fill: #e6e5ea;
+  --book-scrub-fill-fg: #1c1c1e;
+}
+.book[data-theme="paper"] {
+  --book-bg: #ededed;
+  --book-fg: #1d1c1a;
   --book-muted: #7c7c82;
-  --book-chrome-bg: rgba(233, 233, 235, 0.86);
+  --book-chrome-bg: rgba(237, 237, 237, 0.86);
   --book-pill: rgba(255, 255, 255, 0.8);
 }
-.book[data-theme="night"] {
+/* Bold keeps the white page and sets the text heavier, nothing else. */
+.book[data-theme="bold"] {
+  --book-bg: #ffffff;
+  --book-fg: #1b1b1b;
+  --book-weight: 600;
+}
+.book[data-theme="calm"] {
+  --book-bg: #eee2ca;
+  --book-fg: #332a23;
+  --book-muted: #9a8b7a;
+  --book-rule: rgba(51, 42, 35, 0.14);
+  --book-chrome-bg: rgba(238, 226, 202, 0.86);
+  --book-chrome-fg: #332a23;
+  --book-pill: rgba(244, 236, 219, 0.95);
+  --book-pill-fg: #332a23;
+  --book-pill-dark: #332a23;
+  --book-scrub-empty: #332a23;
+  --book-scrub-fill: #f4ecdb;
+  --book-scrub-fill-fg: #332a23;
+}
+.book[data-theme="focus"] {
+  --book-bg: #fffcf5;
+  --book-fg: #1c1a12;
+  --book-muted: #8b8778;
+  --book-rule: rgba(28, 26, 18, 0.12);
+  --book-chrome-bg: rgba(255, 252, 245, 0.86);
+  --book-chrome-fg: #1c1a12;
+  --book-pill: #efeadd;
+  --book-pill-fg: #1c1a12;
+}
+/* Light or dark is chosen apart from the palette, so this block must stay
+   BELOW every theme block: they carry the same specificity and the last one
+   written wins. Move it up and the toggle dies on every theme but the
+   first. */
+.book[data-mode="dark"] {
   --book-bg: #000000;
   --book-fg: #d9d9de;
   --book-muted: #7a7a80;
@@ -67,6 +115,51 @@
   --book-pill-fg: #f2f2f7;
   --book-pill-dark: #f2f2f7;
   --book-pill-dark-fg: #1c1c1e;
+  --book-scrub-empty: #2c2c2e;
+  --book-scrub-empty-fg: #f2f2f7;
+  --book-scrub-fill: #e6e5ea;
+  --book-scrub-fill-fg: #1c1c1e;
+}
+.book[data-mode="dark"][data-theme="calm"] {
+  --book-fg: #ded0b4;
+}
+.book[data-mode="dark"][data-theme="focus"] {
+  --book-fg: #e3ddcb;
+}
+/* The line guide — a clear band at the reader's line with the rest of the
+   page held back. The band is three lines of the flow's own leading, so it
+   grows with the text size. It follows the pointer through --book-guide-y,
+   set straight on the node. */
+.book-guide {
+  position: absolute;
+  inset: 0;
+  z-index: 29;
+  --book-guide-y: 50%;
+  --book-guide-h: calc(1.125rem * var(--book-scale) * var(--book-lh) * 3);
+  --book-guide-ink: rgba(0, 0, 0, 0.42);
+  background: linear-gradient(
+    to bottom,
+    var(--book-guide-ink) 0,
+    var(--book-guide-ink) calc(var(--book-guide-y) - var(--book-guide-h) / 2),
+    transparent calc(var(--book-guide-y) - var(--book-guide-h) / 2),
+    transparent calc(var(--book-guide-y) + var(--book-guide-h) / 2),
+    var(--book-guide-ink) calc(var(--book-guide-y) + var(--book-guide-h) / 2)
+  );
+  pointer-events: none;
+}
+/* On a dark page the same veil barely reads, so it is drawn deeper. */
+.book[data-mode="dark"] .book-guide,
+.book[data-theme="quiet"] .book-guide {
+  --book-guide-ink: rgba(0, 0, 0, 0.55);
+}
+/* The brightness veil — the last thing over the page, never over a tap. */
+.book-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: #000;
+  opacity: var(--book-dim, 0);
+  pointer-events: none;
 }
 .book[data-font="sans"] {
   --book-font: var(--font-rubik), var(--font-sans), system-ui, sans-serif;
@@ -129,6 +222,7 @@
   column-fill: auto;
   font-family: var(--book-font);
   font-size: calc(1.125rem * var(--book-scale));
+  font-weight: var(--book-weight);
   line-height: var(--book-lh);
   overflow-wrap: anywhere;
   text-align: start;
@@ -462,6 +556,42 @@
   background: var(--book-pill-dark);
   color: var(--book-pill-dark-fg);
 }
+/* The Contents pill is also the scrubber. The unread book is the dark
+   ground; the read part is a light fill growing from the reading edge, with
+   the label inverted wherever the fill has reached it. */
+.book-pill-scrub {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  background: var(--book-scrub-empty);
+  color: var(--book-scrub-empty-fg);
+  touch-action: none;
+  user-select: none;
+}
+.book-scrub-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--book-scrub, 0%);
+  background: var(--book-scrub-fill);
+}
+.book-scrub-face {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-inline: 1rem 1.25rem;
+}
+.book-scrub-face-read {
+  position: absolute;
+  inset: 0;
+  color: var(--book-scrub-fill-fg);
+  clip-path: inset(
+    0 var(--book-scrub-clip-end, 100%) 0 var(--book-scrub-clip-start, 0%)
+  );
+}
 .book-aa {
   display: inline-flex;
   align-items: baseline;
@@ -489,6 +619,11 @@
 .book-menu-round-row .book-round svg {
   width: 1.5rem;
   height: 1.5rem;
+}
+/* A held action wears the dark pill, the way the bookmark fills when set. */
+.book-menu-round-row .book-round[aria-checked="true"] {
+  background: var(--book-pill-dark);
+  color: var(--book-pill-dark-fg);
 }
 
 /* ── Cover screen ──────────────────────────────────────────────────────── */
@@ -663,6 +798,183 @@
   font-size: 1.05rem;
   line-height: 1.7;
 }
+
+/* ── Contents sheet ────────────────────────────────────────────────────
+   The reference's table of contents: the book's own jacket, title and folio
+   at the head, then plain rows — title at the reading edge, printed folio at
+   the far one, a hairline between them and the chapter being read caught in
+   a filled capsule that runs the full width of the sheet. No leaders, no
+   numbering: the reference has neither. Colours are sampled off the capture;
+   they are declared here rather than read from `.book`, because the sheet
+   portals to <body> and never inherits the reader's theme variables. */
+.book-sheet.book-sheet-contents {
+  --toc-gutter: 1.125rem;
+  --toc-surface: #f5f5f5;
+  --toc-current: #dfdfdf;
+  --toc-rule: rgba(0, 0, 0, 0.13);
+  --toc-muted: #8e8e93;
+  --toc-close-fg: #88878c;
+  --toc-close-bg: #ffffff;
+  width: calc(100% - 1rem);
+  max-width: 34rem;
+  border: 0;
+  border-radius: 0.875rem 0.875rem 0 0;
+  background: var(--toc-surface);
+  color: #1c1c1e;
+  font-family: var(--book-ui);
+}
+.dark .book-sheet.book-sheet-contents {
+  --toc-surface: #1c1c1e;
+  --toc-current: #37373b;
+  --toc-rule: rgba(255, 255, 255, 0.14);
+  --toc-muted: #8b8a93;
+  --toc-close-fg: #d6d5dc;
+  --toc-close-bg: rgba(255, 255, 255, 0.12);
+  color: #f2f2f7;
+}
+/* No drag handle in the reference — the sheet is dismissed from its ✕. */
+.book-sheet-contents > .bg-muted:first-child {
+  display: none;
+}
+/* The page keeps showing through: #CCCCCC in the capture is black at a fifth
+   over a white page, and only a translucent veil survives a dark theme. */
+body:has(.book-sheet-contents) [data-slot="drawer-overlay"] {
+  background: rgb(0 0 0 / 0.2);
+}
+
+.book-contents-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem var(--toc-gutter) 0.875rem;
+}
+.book-contents-jacket {
+  flex: none;
+  width: 3.25rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: 0.25rem;
+  background: var(--toc-current);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.22);
+}
+.book-contents-plate {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.book-contents-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.book-contents-folio {
+  margin-top: 0.25rem;
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums;
+}
+/* Only the word is set back; the numbers carry the text colour. */
+.book-contents-folio-word {
+  color: var(--toc-muted);
+}
+.book-contents-close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--toc-close-bg);
+  color: var(--toc-close-fg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.book-contents-close:active {
+  transform: scale(0.94);
+}
+.book-contents-close svg {
+  width: 1.375rem;
+  height: 1.375rem;
+  stroke-width: 2.2;
+}
+
+.book-sheet-contents .book-sheet-body {
+  padding: 0 var(--toc-gutter) 2rem;
+}
+.book-sheet-contents .book-toc-list {
+  font-family: var(--book-ui);
+  font-size: 1.0625rem;
+  line-height: 1.35;
+}
+.book-sheet-contents .book-toc-num,
+.book-sheet-contents .book-toc-leader {
+  display: none;
+}
+.book-sheet-contents .book-toc-row {
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--toc-rule);
+  border-radius: 0;
+}
+.book-sheet-contents .book-toc-list > li:first-child > .book-toc-row {
+  border-top-color: transparent;
+}
+.book-sheet-contents .book-toc-title {
+  flex: 1 1 auto;
+}
+.book-sheet-contents .book-toc-page {
+  font-size: 1.0625rem;
+  color: var(--toc-muted);
+}
+.book-sheet-contents .book-toc-chapter > .book-toc-row {
+  font-weight: 700;
+}
+.book-sheet-contents .book-toc-row[aria-disabled] {
+  color: var(--toc-muted);
+}
+.book-sheet-contents .book-toc-lessons {
+  padding-inline-start: 1.25rem;
+  font-size: 1rem;
+}
+.book-sheet-contents .book-toc-lessons .book-toc-row {
+  min-height: 2.75rem;
+  padding-block: 0.4rem;
+}
+.book-sheet-contents .book-toc-row:hover {
+  background: color-mix(in srgb, var(--toc-current) 50%, transparent);
+  border-radius: 0.75rem;
+}
+/* The chapter being read: a capsule the width of the sheet, its own hairline
+   and its neighbour's given up so the fill is not cut by a rule. */
+.book-sheet-contents .book-toc-chapter[data-current] > .book-toc-row {
+  margin-inline: calc(var(--toc-gutter) * -1);
+  padding-inline: var(--toc-gutter);
+  background: var(--toc-current);
+  border-radius: 0.875rem;
+  border-top-color: transparent;
+}
+.book-sheet-contents
+  .book-toc-chapter[data-current]
+  > .book-toc-row
+  .book-toc-title {
+  text-decoration: none;
+}
+.book-sheet-contents .book-toc-chapter[data-current] + li > .book-toc-row,
+.book-sheet-contents
+  .book-toc-chapter[data-current]
+  > .book-toc-lessons
+  > li:first-child
+  > .book-toc-row {
+  border-top-color: transparent;
+}
 .book-search-results ol {
   list-style: none;
   margin: 0;
@@ -738,110 +1050,300 @@
   box-shadow: none;
   backdrop-filter: none;
 }
-.book-themes {
+/* ── Themes & Settings panel ───────────────────────────────────────────
+   Measured off the reference at 3x (a 390pt screen): the sheet is a card
+   inset 10 from every edge, a frosted band of 172 over a solid body, and
+   everything inside sits on a 20 gutter. The numbers below are that
+   screenshot divided by three. */
+.book-sheet-panel {
+  inset-inline: 0.625rem;
+  bottom: 0.625rem;
+  width: auto;
+  max-width: 34rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0.875rem;
+  background: transparent;
+}
+.book-sheet-panel > .bg-muted:first-child {
+  display: none;
+}
+.book-sheet-band {
+  /* A material, not a colour: the page keeps showing through the head. */
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+  backdrop-filter: blur(30px);
+  padding: 0.625rem 1.25rem 1rem;
+}
+/* Outranks the drawer's own centred, stacked header. */
+.book-sheet .book-sheet-band .book-sheet-band-head {
+  position: relative;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 3rem;
+  padding: 0;
+  text-align: start;
+}
+.book-sheet-band-head .book-sheet-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.book-sheet-band-head .book-sheet-close {
+  position: static;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  color: var(--muted-foreground);
+}
+.book-sheet-band-head .book-sheet-close svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+/* Two capsules on one line, 190 and 130 wide with 10 between them. */
+.book-capsule-row {
+  display: grid;
+  grid-template-columns: 19fr 13fr;
+  gap: 0.625rem;
+  margin-top: 0.6875rem;
+}
+.book-capsule {
+  display: flex;
+  align-items: stretch;
+  height: 3rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--foreground) 9%, transparent);
+}
+.book-capsule button {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
   justify-content: center;
-  gap: 1.25rem;
-  margin: 0.25rem 0 1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: none;
+  color: var(--foreground);
+  cursor: pointer;
+}
+.book-capsule button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.book-capsule svg {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+/* The hairline between the two size cells: 1 wide, 36 tall, dead centre. */
+.book-capsule-rule {
+  align-self: center;
+  width: 1px;
+  height: 2.25rem;
+  background: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+.book-capsule-a {
+  font-family: var(--book-ui);
+  font-size: 1.4375rem;
+  line-height: 1;
+}
+.book-capsule-a-small {
+  font-size: 1rem;
+}
+/* The reference lifts no cell out of this capsule, so the chosen view is
+   told by weight of ink instead. */
+.book-capsule-view button[aria-pressed="false"] {
+  opacity: 0.34;
+}
+.book-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5625rem;
+  height: 1.4375rem;
+  margin-top: 0.9375rem;
+}
+.book-slider-mark {
+  flex: none;
+  color: var(--foreground);
+}
+.book-slider {
+  position: relative;
+  display: block;
+  flex: 1;
+  height: 1.4375rem;
+}
+.book-slider-rail,
+.book-slider-done {
+  position: absolute;
+  top: 50%;
+  height: 0.34375rem;
+  border-radius: 9999px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.book-slider-rail {
+  inset-inline: 0;
+  background: color-mix(in srgb, var(--foreground) 14%, transparent);
+}
+.book-slider-done {
+  inset-inline-start: 0;
+  width: var(--book-slider-fill, 0%);
+  background: var(--foreground);
+}
+.book-slider-input {
+  position: relative;
+  width: 100%;
+  height: 1.4375rem;
+  margin: 0;
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+/* The knob is the band's own tone raised on a shadow, not a white dot. */
+.book-slider-input::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 2.25rem;
+  height: 1.4375rem;
+  border: 0;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--foreground) 9%, var(--background));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.book-slider-input::-moz-range-thumb {
+  width: 2.25rem;
+  height: 1.4375rem;
+  border: 0;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--foreground) 9%, var(--background));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.book-slider-input:focus-visible {
+  outline: none;
+}
+.book-slider-input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 45%, transparent);
+}
+.book-panel-body {
+  padding: 1rem 1.25rem;
+  padding-bottom: max(1.1875rem, env(safe-area-inset-bottom));
+  /* A hair off white, so the Original card can still read as white. */
+  background: color-mix(in srgb, var(--foreground) 4%, var(--background));
+}
+/* Each theme is a card wearing its own colours, the way a page would. */
+.book-themes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.625rem;
 }
 .book-theme {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0;
+  justify-content: center;
+  gap: 0.125rem;
+  aspect-ratio: 1 / 1;
+  padding: 0.25rem;
   border: 0;
-  background: none;
-  color: var(--foreground);
-  font-size: 0.8rem;
+  border-radius: 1.25rem;
   cursor: pointer;
 }
-.book-theme-swatch {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 9999px;
-  border: 2px solid var(--border);
+.book-theme-sample {
   font-family: var(--book-font);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
+  line-height: 1.15;
 }
-.book-theme[aria-checked="true"] .book-theme-swatch {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+.book-theme-name {
+  font-family: var(--book-ui);
+  font-size: 0.9375rem;
+  line-height: 1.2;
 }
-.book-theme-swatch[data-swatch="original"] {
+/* Arabic drops the specimen, so the name carries the card on its own. */
+.book-theme[data-specimen="off"] .book-theme-name {
+  font-family: var(--book-font);
+  font-size: 1.375rem;
+  line-height: 1.3;
+}
+/* The ring grows outward from the card's edge, as the reference's does. */
+.book-theme[aria-checked="true"] {
+  outline: 2.5px solid var(--foreground);
+  outline-offset: 0;
+}
+.book-theme[data-swatch="original"] {
   background: #ffffff;
   color: #1c1c1e;
 }
-.book-theme-swatch[data-swatch="paper"] {
-  background: #f6efe4;
-  color: #3d3026;
+.book-theme[data-swatch="quiet"] {
+  background: #4a494e;
+  color: #acaab5;
 }
-.book-theme-swatch[data-swatch="quiet"] {
-  background: #e9e9eb;
-  color: #1c1c1e;
+.book-theme[data-swatch="paper"] {
+  background: #ededed;
+  color: #1d1c1a;
 }
-.book-theme-swatch[data-swatch="night"] {
-  background: #000000;
-  color: #d9d9de;
+.book-theme[data-swatch="bold"] {
+  background: #ffffff;
+  color: #1b1b1b;
+  font-weight: 700;
 }
-.book-setting-row {
+.book-theme[data-swatch="calm"] {
+  background: #eee2ca;
+  color: #332a23;
+}
+.book-theme[data-swatch="focus"] {
+  background: #fffcf5;
+  color: #1c1a12;
+}
+/* Customize sits on the floor of the panel, one wide pill under the cards. */
+.book-customize {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 0;
-  border-top: 1px solid var(--border);
-}
-.book-segmented {
-  display: inline-flex;
-  padding: 0.2rem;
-  border-radius: 0.75rem;
-  background: var(--muted);
-}
-.book-segmented button {
-  padding: 0.4rem 0.9rem;
-  border: 0;
-  border-radius: 0.6rem;
-  background: transparent;
-  color: var(--foreground);
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-.book-segmented button[aria-pressed="true"] {
-  background: var(--background);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-}
-.book-stepper {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-.book-stepper button {
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.5rem;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3.25rem;
+  margin-top: 1.1875rem;
   border: 0;
-  border-radius: 0.75rem;
-  background: var(--muted);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
   color: var(--foreground);
+  font-family: var(--book-ui);
+  font-size: 1.0625rem;
+  font-weight: 600;
   cursor: pointer;
 }
-.book-stepper button:disabled {
-  opacity: 0.4;
-  cursor: default;
+/* The face pill, in the Customize sheet: each cell sets its own name in its
+   own type. */
+.book-font-pill {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 1.1875rem;
+  padding: 0.1875rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
 }
-.book-stepper .book-stepper-value {
-  width: auto;
-  min-width: 3.75rem;
-  background: transparent;
-  color: var(--muted-foreground);
-  font-size: 0.9rem;
-  font-variant-numeric: tabular-nums;
+.book-font-pill button {
+  flex: 1;
+  height: 2.625rem;
+  border: 0;
+  border-radius: 9999px;
+  background: none;
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  cursor: pointer;
+}
+.book-font-pill button[data-face="serif"] {
+  font-family: var(--font-thmanyah-text), ui-serif, Georgia, serif;
+}
+.book-font-pill button[data-face="sans"] {
+  font-family: var(--font-rubik), var(--font-sans), system-ui, sans-serif;
+}
+.book-font-pill button[aria-pressed="true"] {
+  background: var(--background);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
 }
 .book-about-rule {
   width: 3.5rem;

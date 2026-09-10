@@ -13,6 +13,7 @@ import {
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
+  type PointerEvent as ReactPointerEvent,
   type TouchEvent as ReactTouchEvent,
 } from "react"
 import Link from "next/link"
@@ -22,8 +23,11 @@ import { CoverScreen } from "./cover"
 import { BookEngine, type Anchor } from "./engine"
 import { fill, formatNumber } from "./format"
 import {
+  BRIGHTNESS_MAX,
+  BRIGHTNESS_MIN,
   FONTS,
   LEADINGS,
+  MODES,
   oneOf,
   PREF,
   readStorage,
@@ -42,6 +46,7 @@ import {
 } from "./search"
 import {
   ContentsSheet,
+  CustomizeSheet,
   MenuIcon,
   ReadingMenu,
   SearchSheet,
@@ -61,7 +66,7 @@ import type { BookMeta, CoverInfo, ReaderLabels, SectionMeta } from "./types"
  * or show the chrome, tap or swipe the edges to turn.
  */
 const GAP = 64
-type SheetName = null | "contents" | "search" | "settings"
+type SheetName = null | "contents" | "search" | "settings" | "customize"
 
 const posKey = (slug: string) => `hogwarts:textbook:${slug}:pos`
 const bookmarksKey = (slug: string) => `hogwarts:textbook:${slug}:bookmarks`
@@ -123,6 +128,7 @@ export function BookReader({
   children,
 }: BookReaderProps) {
   const rootRef = useRef<HTMLDivElement>(null)
+  const guideRef = useRef<HTMLDivElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
   const [engine] = useState(() => new BookEngine())
   const snap = useSyncExternalStore(
@@ -136,7 +142,21 @@ export function BookReader({
   const [scalePref, setScalePref] = usePreference(PREF.scale, "1")
   const [leadingPref, setLeadingPref] = usePreference(PREF.leading, "normal")
   const [facsimilePref, setFacsimilePref] = usePreference(PREF.facsimile, "off")
+  const [modePref, setModePref] = usePreference(PREF.mode, "light")
+  const [brightnessPref, setBrightnessPref] = usePreference(
+    PREF.brightness,
+    String(BRIGHTNESS_MAX)
+  )
+  const [rotationPref, setRotationPref] = usePreference(PREF.rotation, "off")
+  const [guidePref, setGuidePref] = usePreference(PREF.guide, "off")
+  const rotationLocked = rotationPref === "on"
   const theme = oneOf(themePref, THEMES, "original")
+  const mode = oneOf(modePref, MODES, "light")
+  const parsedBrightness = Number(brightnessPref)
+  // The slider dims the page; it never turns it off, so the floor holds.
+  const brightness = Number.isFinite(parsedBrightness)
+    ? Math.min(BRIGHTNESS_MAX, Math.max(BRIGHTNESS_MIN, parsedBrightness))
+    : BRIGHTNESS_MAX
   const font = oneOf(fontPref, FONTS, "serif")
   const leading = oneOf(leadingPref, LEADINGS, "normal")
   const parsedScale = Number(scalePref)
@@ -148,6 +168,8 @@ export function BookReader({
       : 1
   const scale = SCALES[scaleIdx]
   const facsimile = facsimilePref === "on" && meta.hasPageImages
+  // A band over a page image says nothing, so the guide stands down there.
+  const guide = guidePref === "on" && !facsimile
 
   const [size, setSize] = useState({ W: 360, H: 640, measured: false })
   const [chrome, setChrome] = useState(true)
@@ -379,6 +401,12 @@ export function BookReader({
     else engine.prev()
   }
 
+  const trackGuide = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const node = guideRef.current
+    if (!node) return
+    node.style.setProperty("--book-guide-y", `${e.clientY}px`)
+  }
+
   const share = async () => {
     setMenuOpen(false)
     const url = window.location.href.replace(/#.*$/, "")
@@ -393,6 +421,33 @@ export function BookReader({
     } catch {
       /* dismissed */
     }
+  }
+
+  /**
+   * Rotation lock. The web can only ask, and only from a browser that both
+   * implements the Screen Orientation API and is willing outside fullscreen
+   * — so the pref flips either way and a refusal is reported, not swallowed
+   * into a dead-looking button.
+   */
+  const toggleRotation = async () => {
+    setMenuOpen(false)
+    const next = !rotationLocked
+    setRotationPref(next ? "on" : "off")
+    const orientation = window.screen?.orientation as
+      | (ScreenOrientation & { lock?: (t: string) => Promise<void> })
+      | undefined
+    try {
+      if (!orientation?.lock) throw new Error("unsupported")
+      if (next) await orientation.lock(orientation.type)
+      else orientation.unlock()
+    } catch {
+      if (next) setToast(labels.rotationUnsupported)
+    }
+  }
+
+  const toggleGuide = () => {
+    setMenuOpen(false)
+    setGuidePref(guide ? "off" : "on")
   }
 
   const toggleBookmark = () => {
@@ -433,16 +488,21 @@ export function BookReader({
       className="book"
       dir={uiDir}
       data-theme={theme}
+      data-mode={mode}
       data-font={font}
       data-leading={leading}
       data-facsimile={facsimile ? "on" : undefined}
       data-chrome-visible={chrome ? "on" : "off"}
+      data-guide={guide ? "on" : undefined}
+      onPointerMove={guide ? trackGuide : undefined}
+      onPointerDown={guide ? trackGuide : undefined}
       style={
         {
           "--book-scale": scale,
           "--book-w": `${size.W}px`,
           "--book-h": `${size.H}px`,
           "--book-gap": `${GAP}px`,
+          "--book-dim": (BRIGHTNESS_MAX - brightness) / 100,
         } as CSSProperties
       }
     >
@@ -561,16 +621,20 @@ export function BookReader({
         <ReadingMenu
           labels={labels}
           lang={lang}
+          rtl={rtl}
           percent={percent}
-          pdfUrl={pdfUrl}
-          canFacsimile={meta.hasPageImages}
-          facsimile={facsimile}
+          rotationLocked={rotationLocked}
+          guide={guide}
           bookmarked={snap.page != null && bookmarks.includes(snap.page)}
           canBookmark={snap.page != null}
           onClose={() => setMenuOpen(false)}
           onContents={() => {
             setMenuOpen(false)
             setSheet("contents")
+          }}
+          onScrub={(ratio) => {
+            if (total > 0)
+              engine.goToGlobal(Math.round(ratio * (total - 1)) + 1)
           }}
           onSearch={() => {
             setMenuOpen(false)
@@ -581,14 +645,21 @@ export function BookReader({
             setSheet("settings")
           }}
           onShare={share}
-          onToggleFacsimile={() => {
-            setMenuOpen(false)
-            setFacsimilePref(facsimile ? "off" : "on")
-          }}
+          onToggleRotation={toggleRotation}
+          onToggleGuide={toggleGuide}
           onBookmark={toggleBookmark}
         />
       )}
       {toast && <div className="book-toast">{toast}</div>}
+      {/* The line guide: the band the reader follows, everything else dimmed
+          back. It tracks the pointer straight on the node — routing every
+          move through state would repaginate the book on a mouse twitch. */}
+      {guide && (
+        <div ref={guideRef} className="book-guide" aria-hidden="true" />
+      )}
+      {/* The brightness veil: it dims the reading screen the way the phone's
+          own slider does, and never intercepts a tap. */}
+      <div className="book-dim" aria-hidden="true" />
 
       <ContentsSheet
         open={sheet === "contents"}
@@ -599,6 +670,10 @@ export function BookReader({
         offset={meta.offset}
         currentPage={snap.page}
         bookmarks={bookmarks}
+        cover={cover}
+        bookTitle={meta.title}
+        globalPage={globalPage}
+        totalPages={total}
         onNavigate={(page) => {
           setSheet(null)
           engine.goToPage(page)
@@ -622,14 +697,25 @@ export function BookReader({
         lang={lang}
         theme={theme}
         onTheme={setThemePref}
-        font={font}
-        onFont={setFontPref}
+        mode={mode}
+        onMode={setModePref}
         scaleIdx={scaleIdx}
         onScaleIdx={(i) =>
           setScalePref(String(Math.min(SCALES.length - 1, Math.max(0, i))))
         }
+        brightness={brightness}
+        onBrightness={(value) => setBrightnessPref(String(value))}
+        onCustomize={() => setSheet("customize")}
+      />
+      <CustomizeSheet
+        open={sheet === "customize"}
+        onClose={() => setSheet(null)}
+        labels={labels}
+        font={font}
+        onFont={setFontPref}
         leading={leading}
         onLeading={setLeadingPref}
+        pdfUrl={pdfUrl}
         canFacsimile={meta.hasPageImages}
         facsimile={facsimile}
         onFacsimile={(on) => setFacsimilePref(on ? "on" : "off")}
