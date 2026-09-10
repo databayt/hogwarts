@@ -66,7 +66,10 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
                   // node that pill is the whole 54px cell, capsule-cut like
                   // the bar around it — not a smaller rounded patch inside.
                   // Icon over word, the way a labelled iOS tab bar stacks.
-                  "flex h-[54px] w-full flex-col items-center justify-center gap-[1px] rounded-full",
+                  // The node sets 5px between the glyph box and the label's
+                  // cap; the label's own half-leading already supplies ~3 of
+                  // them, so the flex gap carries the remaining 2.
+                  "flex h-[54px] w-full flex-col items-center justify-center gap-[2px] rounded-full",
                   color,
                   isActive && "bg-[color:var(--wa-glass-inner)]"
                 )}
@@ -84,7 +87,10 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
                     </span>
                   )}
                 </span>
-                <span className="max-w-full truncate px-[2px] text-[10px] leading-[13px] tracking-[-0.06px]">
+                {/* The node's own CTA/Tabbar style: 10px at weight 500. Its
+                    0.5px tracking is left off — Arabic is cursive, and letter
+                    spacing pulls the joins apart. */}
+                <span className="max-w-full truncate px-[2px] text-[10px] leading-[13px] font-medium tracking-[-0.06px]">
                   {tab.label}
                 </span>
               </button>
