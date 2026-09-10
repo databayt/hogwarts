@@ -702,13 +702,15 @@ body {
   background-color: hsl(var(--background));
 }
 
-/* WhatsApp doodle wallpaper pattern */
+/* WhatsApp doodle wallpaper pattern. One seamless pattern tile, tiled at the
+   phone's own 432px pitch, served from this app's public/ because the
+   CloudFront origin this used to point at answers HTTP 403. */
 .wa-doodle-bg {
-  background: url("https://cdn.databayt.org/hogwarts/whatsapp-bg.png") center /
-    cover no-repeat;
+  background: #f5f2eb url("/icons/whatsapp/wp-wa-chat-bg.svg") top left / 432px
+    auto repeat;
 }
 .dark .wa-doodle-bg {
-  background-image: url("https://cdn.databayt.org/hogwarts/whatsapp-bg.png");
+  background-color: #0b141a;
 }
 
 /* WhatsApp-style curved message bubble tails */
@@ -752,7 +754,7 @@ body {
   --wa-surface-panel: rgba(245, 242, 235, 0.8);
   --wa-surface-search-chat: #f5f5f4;
   --wa-surface-invert: #0a0a0a;
-  --wa-surface-baloon-me: #d0fecf;
+  --wa-surface-baloon-me: #d8fdd2;
   --wa-surface-baloon-other: #ffffff;
   --wa-surface-date: #ffffff;
   --wa-surface-input-chat: #ffffff;
@@ -791,8 +793,8 @@ body {
   --wa-border-input-chat: #b2b2b2;
   --wa-border-quote: #d42a66;
   --wa-text-quote-title: #d42a66;
-  --wa-surface-notice: #fff3d5;
-  --wa-text-notice: #54606a;
+  --wa-surface-notice: #fff0d3;
+  --wa-text-notice: #0a0a0a;
 }
 .dark {
   --wa-surface-primary: #0b141a;
@@ -834,6 +836,8 @@ body {
   --wa-border-input-chat: #323d44;
   --wa-border-quote: #f26196;
   --wa-text-quote-title: #f26196;
+  --wa-surface-notice: #182229;
+  --wa-text-notice: #ffd279;
 }
 /* WA TOKENS END */
 
@@ -1036,4 +1040,39 @@ figure.shiki figcaption {
     padding-inline: 0 !important;
     overflow: visible !important;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   WhatsApp-for-iOS typography, for the messaging block only.
+
+   WhatsApp on iPhone is a native UIKit app drawing in the system font, so
+   its Arabic is whatever iOS hands a system-font label. Since iOS 16 that
+   is SF Arabic — Apple's Human Interface Guidelines list it beside SF Pro:
+   "San Francisco (SF) is a sans serif typeface family that includes the
+   SF Pro, SF Compact, SF Arabic, SF Armenian, SF Georgian, SF Hebrew, and
+   SF Mono variants."
+
+   We cannot ship the file. Apple's SF Arabic license forbids embedding the
+   font in a product or using it to produce website content, and the family
+   is installed dot-prefixed (".SF Arabic"), so naming it in CSS resolves to
+   nothing — measured: `font-family: "SF Arabic"` falls through to Geeza Pro.
+
+   The stack below is the only legitimate route, and it lands exactly right.
+   Measured with CSS.getPlatformFontsForNode on macOS Chrome: Arabic text
+   under `-apple-system` renders in ".SF Arabic", Latin in ".SF NS" — the
+   real system faces, per-glyph, with no download. Off Apple hardware the
+   browser supplies its own system Arabic UI face, which is what WhatsApp
+   Web does too.
+
+   Applied as a class, not by overriding --font-sans alone: `body` computes
+   font-family once and descendants inherit the computed string, so a token
+   override on a wrapper does nothing unless that wrapper also declares
+   font-family. This sets both.
+   ───────────────────────────────────────────────────────────────────────── */
+.font-ios-system {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
+  --font-heading: var(--font-sans);
+  font-family: var(--font-sans);
 }

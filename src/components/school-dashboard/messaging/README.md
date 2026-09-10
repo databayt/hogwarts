@@ -191,3 +191,31 @@ The conversation header dropped its bottom hairline (the footer panel has none) 
 "tap here for contact info" subtitle, whose dictionary key is gone from both languages.
 Swapping the sticker `<img>` for a mask `<span>` grew the message field's automatic minimum size
 and pushed the mic off-screen, so the field now carries `min-w-0`.
+
+### The Arabic face is the phone's own system font (2026-09-10)
+
+WhatsApp on iPhone is a native UIKit app drawing in the system font, so its Arabic
+is whatever iOS hands a system-font label. Since iOS 16 that is **SF Arabic**, which
+Apple's Human Interface Guidelines list beside SF Pro: "San Francisco (SF) is a sans
+serif typeface family that includes the SF Pro, SF Compact, SF Arabic, SF Armenian,
+SF Georgian, SF Hebrew, and SF Mono variants." Apple describes it as "a contemporary
+interpretation of the Naskh style."
+
+We do not ship the file, and cannot: Apple's SF Arabic license forbids embedding the
+font in a product or using it to produce website content. The family is also installed
+dot-prefixed (`.SF Arabic`), so naming it in CSS reaches nothing — measured, a rule of
+`font-family: "SF Arabic"` falls through to Geeza Pro.
+
+So the block asks the platform for its system font and lets per-glyph fallback do the
+rest. `.font-ios-system` in `globals.css` sets the stack, and the `(school-messaging)`
+layout wrapper carries the class. Verified on the live `/ar/messages` page with
+`CSS.getPlatformFontsForNode`: Arabic renders in `.SF Arabic`, Latin in `.SF NS` —
+the real system faces, no download. The class sets `font-family` as well as the
+`--font-sans` token, because `body` computes its family once and descendants inherit
+the computed string, so a token override alone would have changed nothing.
+
+Off Apple hardware the browser supplies its own system Arabic UI face, which is what
+WhatsApp Web does too. Everywhere outside this route the app keeps Thmanyah for Arabic.
+
+Note `WA_TYPOGRAPHY.family` in `mobile/wa-tokens.ts` still reads `"SF Pro Text"` from
+the Figma extraction. Nothing consumes it; the CSS class is the live source.

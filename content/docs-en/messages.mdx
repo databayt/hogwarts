@@ -125,10 +125,42 @@ ticks set into the bubble, a pill at each day boundary, sender names on incoming
 group messages — and the whole thing mirrors under Arabic. `mobile/chat/adapt.ts`
 is the one place that turns a `MessageDTO` into what the view draws.
 
-At `md` and above nothing changes: the desktop `ChatInterface` renders as before.
-
 The phone view reads and sends. Attachments, editing, deleting, reactions, replies,
 forwarding and voice recording remain desktop-only.
+
+## One design, both widths
+
+The desktop conversation follows the same WhatsApp grammar as the phone, sharing
+the atoms rather than restating them. `ChatInterface` keeps every desktop-only
+capability — replies, edits, reactions, attachments, typing, the optimistic send
+queue — while its chrome now reads from the `--wa-*` tokens: a glass header with
+a hairline and a subtitle under the name, the cream end-to-end-encryption card at
+the head of the thread, 12px balloons with a hairline edge and a tail on the last
+message of each same-sender run, the shared day pill, and the same wallpaper the
+phone paints. Bubble clocks and day labels print Latin digits in both languages,
+as WhatsApp does.
+
+Sides stay logical, so Arabic mirrors the whole thread: outgoing balloons sit on
+the reader's leading edge, and the tail follows the balloon rather than a physical
+edge.
+
+The header carries no call buttons, on either width, because there is no telephony
+backend to answer them.
+
+## The type is the phone's own
+
+The messaging route asks the operating system for its interface font instead of the
+app's Arabic face. On an iPhone or a Mac that resolves to SF Arabic, the font iOS
+gives WhatsApp, which is why the block reads like the app rather than like the rest
+of the site. Apple lists SF Arabic beside SF Pro in its Human Interface Guidelines
+and calls it a contemporary interpretation of the Naskh style.
+
+Nothing is downloaded, and nothing is bundled. Apple's license does not allow the
+font to be shipped with a website, so the block names the system font and lets the
+browser pick the right face per character. On Android or Windows the browser supplies
+that platform's own Arabic interface font, the same way WhatsApp Web does.
+
+Every other page keeps Thmanyah for Arabic.
 
 ## Unread badge
 
