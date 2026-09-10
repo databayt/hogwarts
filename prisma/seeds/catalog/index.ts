@@ -53,6 +53,22 @@ const SOURCES = [
 
 /** Fast default: US + full Sudan, then link curriculumId. */
 export async function seedCatalog(prisma: PrismaClient): Promise<SubjectRef[]> {
+  // SEED_SKIP_CATALOG=1 reads the catalog instead of rewriting it.
+  //
+  // The catalog is GLOBAL — it belongs to no school — so re-seeding ONE
+  // tenant against a database whose catalog is already correct pays for tens
+  // of thousands of upserts that can only write back what is already there.
+  // Locally that is slow; against a remote database it is the whole job, and
+  // it is where a dropped connection costs the most, because every phase
+  // after it is the part you actually wanted.
+  //
+  // `publishedSubjects` is what the full walk returns anyway, so the caller
+  // cannot tell the difference. Only set this when the catalog is known good
+  // — a school seeded against a MISSING catalog gets no subjects at all.
+  if (process.env.SEED_SKIP_CATALOG === "1") {
+    return publishedSubjects(prisma)
+  }
+
   await seedUsCurriculum(prisma)
   await seedSdCurriculum(prisma)
   await seedSdContent(prisma)

@@ -51,6 +51,13 @@ nothing. This is enforced two ways:
    or early-returns on a `count > 0` check. Destructive `deleteMany`-then-recreate patterns
    were replaced with non-destructive count-guards (payroll, banking, stream, invoices).
 
+**`SEED_SKIP_CATALOG=1`** reads the global catalog instead of rewriting it. The catalog belongs
+to no school, so re-seeding ONE tenant against a database whose catalog is already correct pays
+for tens of thousands of upserts that write back what is already there — and against a remote
+database that walk is the whole runtime, and the place a dropped connection costs the most. Only
+set it when the catalog is known good: a school seeded against a MISSING catalog gets no
+subjects at all.
+
 > Verified on a Neon branch (2026-06-14): re-running the academic/catalog pipeline produced
 > 0 new rows across academic_grades, subject_selections, score_ranges, departments,
 > year_levels, academic_levels, academic_streams.
