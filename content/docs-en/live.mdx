@@ -574,8 +574,16 @@ teacherless slot — because a slot with no teacher has no host and never goes o
 Every session it writes is dated relative to the day it runs, so the seed rebuilds itself once its
 newest session has fallen behind today — in the school's own timezone. Re-running it keeps the demo
 current instead of leaving a student a page with nothing live, nothing upcoming and nothing recent.
-One of the running sessions it stages is always in the demo student's own section, because their
-page is scoped to it.
+
+Three of those sessions straddle the clock — one mid-lesson, one nearly over, one about to begin —
+so the landing strip's lead and its two-up all have something to show. All three sit in the demo
+student's own section, of three different subjects, because their page is scoped to that section
+and rows outside it are filtered away before they reach the strip.
+
+Rows dated "now" go stale within the hour, and the seed runs at most once a deploy, so the demo
+repairs its own clock at read time: on a demo tenant the landing checks those three rows before it
+reads and rewrites them only when they no longer say what they were written to say. That is why
+`/live` is never empty there, however long it has been since the last seed.
 
 What "hybrid" means in the product: online is **additive**. The session detail shows the physical
 room the class still meets in; the timetable card shows the room with an Online marker beside it;
