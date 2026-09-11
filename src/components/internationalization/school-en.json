@@ -8032,6 +8032,7 @@
       },
       "sidebar": {
         "editProfile": "Edit profile",
+        "setStatus": "Set status",
         "achievements": "Achievements",
         "organizations": "Organizations",
         "history": "History",
@@ -8050,6 +8051,8 @@
       },
       "overview": {
         "pinned": "Pinned",
+        "year": "Year",
+        "showMoreActivity": "Show more activity",
         "customizePins": "Customize your pins",
         "public": "Public",
         "private": "Private",

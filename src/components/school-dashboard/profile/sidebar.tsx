@@ -9,6 +9,7 @@ import {
   Mail,
   MapPin,
   Phone,
+  SmilePlus,
 } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
@@ -172,6 +173,10 @@ export default function ProfileSidebar({
   const p = dictionary
   const [isEditing, setIsEditing] = useState(false)
 
+  // GitHub's phone profile is a different composition, not a narrower one: a
+  // 64px avatar sits beside the name instead of a portrait above it.
+  const compact = isMobile
+
   const firstName = data.displayName.split(" ")[0] ?? data.displayName
   const restName = data.displayName.split(" ").slice(1).join(" ")
   const initials =
@@ -194,32 +199,76 @@ export default function ProfileSidebar({
     ? (p?.sidebar?.enrolled ?? "")
     : (p?.sidebar?.joined ?? "")
 
+  // Name + role, rendered beside the avatar on a phone and beneath it on the
+  // desktop column.
+  const nameBlock = (
+    <div className="min-w-0 space-y-1">
+      <h1 className="text-foreground text-2xl leading-tight font-bold">
+        {firstName}
+      </h1>
+      {restName && (
+        <p className="text-muted-foreground text-xl leading-tight font-light">
+          {restName}
+        </p>
+      )}
+      {(roleLabel || data.pronouns) && (
+        <p className="text-muted-foreground text-sm">
+          {roleLabel}
+          {data.pronouns && (
+            <span className="text-muted-foreground/80">
+              {roleLabel ? " · " : ""}
+              {data.pronouns}
+            </span>
+          )}
+        </p>
+      )}
+    </div>
+  )
+
   return (
     <TooltipProvider>
-      <div className={`space-y-4 ${isMobile ? "max-w-xs" : "w-full max-w-72"}`}>
-        {/* Avatar */}
-        <div className="group relative">
-          <Avatar className="border-border size-52 border shadow-lg lg:size-56 xl:size-64">
-            {data.photoUrl && (
-              <AvatarImage
-                src={data.photoUrl}
-                alt={data.displayName}
-                className="object-cover"
-              />
-            )}
-            <AvatarFallback className="from-primary/20 to-primary/40 bg-gradient-to-br text-4xl font-bold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          {data.statusEmoji && (
-            <div
-              className="bg-background border-border absolute end-2 bottom-2 flex size-8 items-center justify-center rounded-full border text-base shadow-md"
-              title={data.statusMessage ?? undefined}
-              aria-label={data.statusMessage ?? data.statusEmoji}
+      <div className={`space-y-4 ${compact ? "w-full" : "w-full max-w-72"}`}>
+        {/* Avatar — 64px beside the name on a phone, a portrait on desktop */}
+        <div className={compact ? "flex items-center gap-4" : ""}>
+          <div className="group relative shrink-0">
+            <Avatar
+              className={`border-border border ${
+                compact ? "size-16" : "size-52 shadow-lg lg:size-56 xl:size-64"
+              }`}
             >
-              {data.statusEmoji}
-            </div>
-          )}
+              {data.photoUrl && (
+                <AvatarImage
+                  src={data.photoUrl}
+                  alt={data.displayName}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback
+                className={`from-primary/20 to-primary/40 bg-gradient-to-br font-bold ${
+                  compact ? "text-lg" : "text-4xl"
+                }`}
+              >
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {/* The emoji rides the avatar only when no status row follows it —
+                at 64px the bubble would otherwise crowd the name and repeat
+                what the row below already says. */}
+            {data.statusEmoji && !(compact && data.canEdit) && (
+              <div
+                className={`bg-background border-border absolute flex items-center justify-center rounded-full border shadow-md ${
+                  compact
+                    ? "end-0 bottom-0 size-6 text-xs"
+                    : "end-2 bottom-2 size-8 text-base"
+                }`}
+                title={data.statusMessage ?? undefined}
+                aria-label={data.statusMessage ?? data.statusEmoji}
+              >
+                {data.statusEmoji}
+              </div>
+            )}
+          </div>
+          {compact && !isEditing && nameBlock}
         </div>
 
         {isEditing ? (
@@ -231,31 +280,41 @@ export default function ProfileSidebar({
           />
         ) : (
           <>
-            {/* Name + role */}
-            <div className="space-y-1">
-              <h1 className="text-foreground text-2xl leading-tight font-bold">
-                {firstName}
-              </h1>
-              {restName && (
-                <p className="text-muted-foreground text-xl font-light">
-                  {restName}
-                </p>
-              )}
-              {(roleLabel || data.pronouns) && (
-                <p className="text-muted-foreground text-sm">
-                  {roleLabel}
-                  {data.pronouns && (
-                    <span className="text-muted-foreground/80">
-                      {roleLabel ? " · " : ""}
-                      {data.pronouns}
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
+            {!compact && nameBlock}
+
+            {/* Status — GitHub's full-width row above the bio. Opens the edit
+                form, which owns the status field; only the owner sees it. */}
+            {data.canEdit && (
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="border-border hover:border-primary/50 flex h-11 w-full items-center gap-3 rounded-md border px-4 text-start text-sm transition-colors"
+              >
+                {data.statusEmoji ? (
+                  <span className="text-base leading-none">
+                    {data.statusEmoji}
+                  </span>
+                ) : (
+                  <SmilePlus className="text-muted-foreground size-4 shrink-0" />
+                )}
+                <span
+                  className={`truncate ${
+                    data.statusMessage
+                      ? "text-foreground"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {data.statusMessage || (p?.sidebar?.setStatus ?? "")}
+                </span>
+              </button>
+            )}
 
             {data.bio && (
-              <p className="text-sm leading-relaxed whitespace-pre-line">
+              <p
+                className={`leading-relaxed whitespace-pre-line ${
+                  compact ? "text-base" : "text-sm"
+                }`}
+              >
                 {data.bio}
               </p>
             )}
@@ -377,11 +436,11 @@ export default function ProfileSidebar({
 
         {/* Badges (real, earned) */}
         {data.badges.length > 0 && (
-          <div className="border-border border-t pt-4">
-            <h3 className="text-foreground mb-3 text-sm font-semibold">
+          <div className="border-border border-t pt-5 md:pt-4">
+            <h3 className="text-foreground mb-3 text-lg font-semibold md:text-sm">
               {p?.sidebar?.achievements ?? ""}
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1 md:gap-2">
               {data.badges.map((badge) => (
                 <BadgePopover
                   key={badge.id}
@@ -396,8 +455,8 @@ export default function ProfileSidebar({
 
         {/* Organizations (real memberships) */}
         {data.organizations.length > 0 && (
-          <div className="border-border border-t pt-4">
-            <h3 className="text-foreground mb-3 text-sm font-semibold">
+          <div className="border-border border-t pt-5 md:pt-4">
+            <h3 className="text-foreground mb-3 text-lg font-semibold md:text-sm">
               {p?.sidebar?.organizations ?? ""}
             </h3>
             <div className="flex flex-wrap gap-2">

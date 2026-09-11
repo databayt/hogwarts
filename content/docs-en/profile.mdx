@@ -14,6 +14,21 @@ feed). One **optional catch-all route** handles both own-profile and view-by-id.
 > "Chess Club" organizations. When a real source is missing, an honest empty
 > state is shown.
 
+## Two layouts, one page
+
+The page composes itself differently on a phone — it does not just narrow.
+Desktop keeps the profile column beside the content column, with a year rail of
+buttons next to the contribution graph. On a phone the order follows GitHub's
+own mobile profile: the tab rail comes first, then a 64px avatar beside the
+name, then the panel. The status row and the edit button go full width, section
+headings step up a size, and the year rail becomes a dropdown on the graph
+heading. The feed shows six entries with the rest behind **Show more activity**
+— the server caps it at ten, so nothing is promised that is not already loaded.
+
+The switch is `useSidebar().isMobile` (768px). Type-scale tweaks reset at `md`,
+the same 768px, so the layout and the type never disagree. The reference
+captures live in `public/profile-github/`.
+
 ## Routes
 
 | Route           | Page                         | Behaviour                           |

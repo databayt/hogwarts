@@ -2,9 +2,63 @@
 
 **Status:** READY
 **Completion:** ~98%
-**Last Updated:** 2026-07-19
+**Last Updated:** 2026-09-11
 
 ---
+
+## 2026-09-11 — the phone layout follows GitHub's own
+
+Measured against four iPhone captures of `github.com/abdout` in
+`public/profile-github/` (1170x2532, so CSS = px / 3). What the reference
+actually says, and what changed:
+
+- [x] **Tab rail first.** GitHub's phone profile leads with the tab row, then
+      the profile header, then the panel. `client.tsx` now wraps the whole
+      mobile tree in one `<Tabs>`: rail, header, panel. Tab labels no longer
+      hide under `sm:` — the phone shows icon + label + count, and the row
+      scrolls sideways instead of wrapping.
+- [x] **64px avatar beside the name**, not a 208px portrait above it
+      (measured: 61.3 CSS diameter, 16px gap, page padding 16px). `sidebar.tsx`
+      takes a `compact` branch off the same `useSidebar().isMobile` that picks
+      the layout. Name stays 24px bold / 20px light — the reference measures
+      within a pixel of that.
+- [x] **Status row.** Full-width, 44px, 6px radius (the reference box is a
+      rounded rectangle, not a pill). Owner-only, and it opens the edit form,
+      which is where the status field already lives — no new control, no dead
+      button. The emoji bubble is dropped from the avatar when this row renders:
+      at 64px it crowded the name and repeated the row.
+- [x] **Phone type scale.** Bio 16px, section headings (Achievements,
+      Organizations, Pinned, Activity) 18px semibold, pinned card title +
+      description 14px. All `md:`-reset to the desktop sizes, and `md` is 768 —
+      the same breakpoint `useIsMobile` uses, so the layouts can't disagree.
+- [x] **Year picker.** The desktop year rail is a column of buttons with no
+      room on a phone, so the phone gets a dropdown on the graph heading (the
+      thing it controls). The rail moved from `sm:flex` to `md:flex` so the two
+      never both show.
+- [x] **Show more activity.** The feed is server-capped at 10; the phone shows 6
+      and reveals the rest. The button never claims to fetch more than is there.
+- [x] `school.profile.sidebar.setStatus`, `overview.year`,
+      `overview.showMoreActivity` (en + ar, same edit).
+
+Fixed while in here:
+
+- [x] **`MainContent` was a component declared inside the render.** New identity
+      every render meant the whole subtree remounted on every state change —
+      invisible while the phone had no controls, and a reset of pinned-item
+      state the moment the year dropdown landed. It is plain JSX now.
+- [x] **Hydration mismatch on the pinned cards.** dnd-kit numbers
+      `aria-describedby` off a module-level counter that runs once on the server
+      and again in the browser; the tree only started hydrating (rather than
+      remounting) once `MainContent` was fixed, which exposed it. `DndContext`
+      now carries a fixed `id`.
+- [x] **Activity month headers** were formatted through `toLocaleDateString`
+      with `ar-SA` while the entries under them used `formatDate` — the two
+      disagreed about digit shapes on the Arabic page. Both go through
+      `formatDate` now, still in UTC.
+
+Not adopted from the reference: "Customize your pins" (pins are reordered and
+removed inline — there is no separate surface to link to) and the contribution
+banner.
 
 ## MVP Checklist
 

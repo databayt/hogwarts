@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import {
   Award,
   BookOpen,
@@ -43,6 +43,10 @@ function iconFor(type: string): React.ReactNode {
   return ACTIVITY_ICON[type] ?? <Receipt className="size-3.5" />
 }
 
+/** How many entries show before "Show more activity" — the server caps the
+ *  feed at 10, so the button reveals what is already loaded and nothing more. */
+const INITIAL_VISIBLE = 6
+
 export default function ContributionActivity({
   items,
   dictionary,
@@ -50,14 +54,18 @@ export default function ContributionActivity({
 }: ContributionActivityProps) {
   const ov = dictionary?.overview
   const locale: Locale = lang === "ar" ? "ar" : "en"
+  const [expanded, setExpanded] = useState(false)
+
+  const visible = expanded ? items : items.slice(0, INITIAL_VISIBLE)
+  const hasMore = items.length > visible.length
 
   const grouped = useMemo(() => {
     const map = new Map<string, ProfileActivityView[]>()
-    for (const item of items) {
+    for (const item of visible) {
       const d = new Date(item.createdAt)
       // UTC everywhere: near-midnight instants must group/format to the same
       // calendar date on server and client (SSR hydration).
-      const key = d.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
+      const key = formatDate(d, locale, {
         month: "long",
         year: "numeric",
         timeZone: "UTC",
@@ -67,11 +75,11 @@ export default function ContributionActivity({
       map.set(key, arr)
     }
     return Array.from(map.entries())
-  }, [items, locale])
+  }, [visible, locale])
 
   return (
     <div className="space-y-4">
-      <h3 className="text-foreground text-sm font-medium">
+      <h3 className="text-foreground text-lg font-semibold md:text-sm md:font-medium">
         {ov?.contributionActivity ?? ""}
       </h3>
 
@@ -125,6 +133,16 @@ export default function ContributionActivity({
               </div>
             </div>
           ))}
+
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="border-border text-primary hover:bg-accent w-full rounded-md border py-2 text-sm font-medium transition-colors"
+            >
+              {ov?.showMoreActivity ?? ""}
+            </button>
+          )}
         </div>
       )}
     </div>

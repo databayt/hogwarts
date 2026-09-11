@@ -8040,6 +8040,7 @@
       },
       "sidebar": {
         "editProfile": "تعديل الملف الشخصي",
+        "setStatus": "تعيين الحالة",
         "achievements": "الإنجازات",
         "organizations": "المنظمات",
         "history": "السجل",
@@ -8058,6 +8059,8 @@
       },
       "overview": {
         "pinned": "المثبتة",
+        "year": "السنة",
+        "showMoreActivity": "عرض المزيد من النشاط",
         "customizePins": "تخصيص المثبتات",
         "public": "عام",
         "private": "خاص",

@@ -39,10 +39,15 @@ src/components/school-dashboard/profile/
   badges.ts             # recomputeProfileBadges — earning engine (derives badges from real attendance/results/merit/activity/student-Achievement). Idempotent.
   validation.ts         # Zod schemas (updateGitHubProfile, pinnedItem, …)
   types.ts              # ProfileRole + contribution-graph types only (lean)
-  client.tsx            # Orchestrator: tabs (real counts), sidebar + overview layout
+  client.tsx            # Orchestrator: tabs (real counts), sidebar + overview layout.
+                        # Two compositions off one flag: desktop is sidebar | main,
+                        # phone is GitHub's order — tab rail, header, panel — plus
+                        # the year dropdown that replaces the desktop year rail.
   achievements.tsx      # Achievements tab: earned-badge grid (art, level chip, earn date)
   sidebar.tsx           # Avatar, name, real stats, earned badges, organizations, edit entry,
-                        # website + social links + joined/enrolled date (GitHub-style info rows)
+                        # website + social links + joined/enrolled date (GitHub-style info rows),
+                        # status row. `compact` (= isMobile) sets a 64px avatar beside the
+                        # name instead of the desktop portrait above it.
   form.tsx              # Edit form: avatar upload + GitHub-style fields (a11y-labelled)
   graph.tsx             # Contribution heatmap (SWR → getContributionData; empty grid when no data; keyboard-accessible cells)
   activity.tsx          # Real UserActivity feed grouped by month (no fabrication)
@@ -79,6 +84,13 @@ Migration-of-record: `prisma/migrations/20260615000000_add_profile_badges_organi
   a badge recompute. Idempotent; both run inside `seedMain`.
 - Badge artwork is served from the CDN (`hogwarts/<icon>.png`); source PNGs live in
   `/public/github`, re-upload with `npx tsx prisma/scripts/upload-badge-art.ts`.
+
+### Design Reference
+
+The phone layout is measured against four iPhone captures of a real GitHub
+profile in `public/profile-github/` (1170x2532 — divide by 3 for CSS pixels).
+Re-measure there before changing the mobile composition; `ISSUE.md` records
+what each capture actually says.
 
 ### Status
 

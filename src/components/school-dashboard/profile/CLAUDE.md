@@ -42,6 +42,13 @@ live backlog + what shipped this pass.
   `/public/github`; re-upload via `prisma/scripts/upload-badge-art.ts` — the
   CDN origin bucket is `databayt-cdn`, NOT the app's `AWS_S3_BUCKET`, and the
   bucket rejects ACLs).
+- **The phone gets a different composition, not a narrower one.** GitHub's
+  mobile profile leads with the tab rail, then a 64px avatar beside the name,
+  then the panel — `client.tsx` and `sidebar.tsx` both branch on
+  `useSidebar().isMobile` for this. Type-scale tweaks use `md:` to reset,
+  because `md` is 768px, exactly where `useIsMobile` flips; a `sm:` breakpoint
+  leaves a band where the layout and the type disagree. Measurements come from
+  `public/profile-github/` — measure, don't eyeball.
 - **Profile dates render in UTC** (`timeZone: "UTC"` in every Intl call:
   activity feed, graph tooltips, sidebar joined/badge dates). Instants near
   midnight otherwise format to different calendar dates on server vs browser →

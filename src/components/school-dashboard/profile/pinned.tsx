@@ -86,7 +86,7 @@ function PinnedCard({
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <OcticonRepo className="text-muted-foreground size-4 shrink-0" />
-            <CardTitle className="text-primary truncate text-xs font-semibold">
+            <CardTitle className="text-primary truncate text-sm font-semibold md:text-xs">
               {item.title}
             </CardTitle>
           </div>
@@ -115,7 +115,7 @@ function PinnedCard({
       </CardHeader>
       <CardContent className="px-4 pt-0 pb-3">
         {item.description && (
-          <CardDescription className="text-muted-foreground mb-3 line-clamp-2 text-xs">
+          <CardDescription className="text-muted-foreground mb-3 line-clamp-2 text-sm md:text-xs">
             {item.description}
           </CardDescription>
         )}
@@ -201,7 +201,7 @@ export default function PinnedItems({
     if (!isOwner) return null
     return (
       <div className="space-y-2">
-        <h2 className="text-foreground text-sm font-medium">
+        <h2 className="text-foreground text-lg font-semibold md:text-sm md:font-medium">
           {pinnedDict?.pinned ?? ""}
         </h2>
         <div className="border-border text-muted-foreground rounded-md border border-dashed p-6 text-center text-xs">
@@ -213,6 +213,10 @@ export default function PinnedItems({
 
   return (
     <DndContext
+      // A fixed id keeps dnd-kit's aria-describedby off its module-level
+      // counter, which numbers differently on the server than in the browser
+      // and trips a hydration mismatch.
+      id="profile-pinned"
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
@@ -220,7 +224,7 @@ export default function PinnedItems({
     >
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-foreground text-sm font-medium">
+          <h2 className="text-foreground text-lg font-semibold md:text-sm md:font-medium">
             {pinnedDict?.pinned ?? ""}
           </h2>
         </div>
