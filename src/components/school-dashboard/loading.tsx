@@ -126,7 +126,13 @@ export function TimetableByRoomSkeleton() {
  * card's cream and reads as a pale smear on the banner's green.
  */
 const ON_GREEN = "from-[#050505]/10 via-[#050505]/5 to-[#050505]/10"
-const ON_CREAM = "from-black/[0.07] via-black/[0.03] to-black/[0.07]"
+const ON_CREAM = cn(
+  "from-black/[0.07] via-black/[0.03] to-black/[0.07]",
+  // The featured card is cream in light and `muted/50` in dark, so this one
+  // needs both. `ON_GREEN` does not: the banner's ground is a pinned brand
+  // colour and never inverts, exactly as the real hero never does.
+  "dark:from-white/[0.07] dark:via-white/[0.03] dark:to-white/[0.07]"
+)
 
 export function LibrarySkeleton() {
   return (
