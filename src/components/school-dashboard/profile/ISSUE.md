@@ -46,11 +46,17 @@ Fixed while in here:
       every render meant the whole subtree remounted on every state change —
       invisible while the phone had no controls, and a reset of pinned-item
       state the moment the year dropdown landed. It is plain JSX now.
-- [x] **Hydration mismatch on the pinned cards.** dnd-kit numbers
-      `aria-describedby` off a module-level counter that runs once on the server
-      and again in the browser; the tree only started hydrating (rather than
-      remounting) once `MainContent` was fixed, which exposed it. `DndContext`
-      now carries a fixed `id`.
+- [x] **Intermittent hydration mismatch on the pinned cards** (pre-existing, not
+      introduced by this pass — it reproduces on loads that predate it).
+      dnd-kit's `useUniqueId` numbers `aria-describedby` off a module-level
+      counter. The module lives for the life of the server process, so the Nth
+      profile render since the last reload emits `DndDescribedBy-<N-1>` while
+      the browser starts from `-0` on every page load. It therefore matches only
+      on the first render after a reload, which is why it looks intermittent in
+      dev — and why it is not intermittent at all in the long-lived Cloudflare
+      container, where every load after the first ships a mismatched
+      `aria-describedby`. `DndContext` now carries a fixed `id`, which
+      `useUniqueId` returns verbatim instead of counting.
 - [x] **Activity month headers** were formatted through `toLocaleDateString`
       with `ar-SA` while the entries under them used `formatDate` — the two
       disagreed about digit shapes on the Arabic page. Both go through
