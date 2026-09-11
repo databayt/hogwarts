@@ -53,6 +53,7 @@
     },
     "dashboard": {
       "title": "Overview",
+      "heading": "Overview",
       "welcome": "Welcome to balqalam",
       "overview": "Overview",
       "quickStats": "Quick Statistics",
@@ -520,7 +521,42 @@
         "classrooms": "Classrooms",
         "lessons": "Lessons"
       },
-      "of": "of"
+      "of": "of",
+      "homeWidget": {
+        "today": "Today",
+        "eventsToday": "{count} events today",
+        "noEvents": "No events today",
+        "tiles": {
+          "messages": "Messages",
+          "notifications": "Notifications",
+          "lumos": "Lumos",
+          "subjects": "Subjects"
+        }
+      },
+      "todaySchedule": {
+        "next": "Next classes",
+        "title": "Today's classes",
+        "viewAll": "Full timetable"
+      },
+      "nextAction": {
+        "cta": "Open",
+        "acknowledge": "Acknowledge",
+        "kinds": {
+          "assignmentOverdue": "**{mark}** ran late, and today still counts",
+          "assignmentDue": "**{mark}** is due soon, you have time",
+          "nextClass": "**{mark}** is next, so get your book out",
+          "pendingGrading": "**{mark} submissions** are ready for your marking",
+          "attendanceDue": "**{mark} classes** still need their attendance today",
+          "childOverdue": "**{mark}** is late on work, a nudge helps",
+          "childPending": "**{mark}** has work coming, a nudge helps",
+          "pendingPayments": "**{mark} invoices** are unpaid, so send a nudge",
+          "overdueInvoices": "**{mark} invoices** are past due, so chase them",
+          "urgentTask": "**{mark}** is urgent, so clear it and relax",
+          "pendingRequests": "**{mark} staff requests** are waiting on your reply",
+          "activeIssues": "**{mark} issues** are open, so start with one now",
+          "pendingApprovals": "**{mark} approvals** need a minute of your time"
+        }
+      }
     },
     "schoolAdmin": {
       "title": "School",
@@ -3802,6 +3838,7 @@
         "exploreDescription": "Explore {name} material and videos",
         "videos": "Videos",
         "materials": "Materials",
+        "summary": "Summary",
         "exams": "Exams",
         "qbank": "QBank",
         "assignments": "Assignments",
@@ -3915,7 +3952,16 @@
           "themeOriginal": "Original",
           "themePaper": "Paper",
           "themeQuiet": "Quiet",
-          "themeNight": "Night",
+          "themeBold": "Bold",
+          "themeCalm": "Calm",
+          "themeFocus": "Focus",
+          "customize": "Customize",
+          "appearance": "Appearance",
+          "lightMode": "Light",
+          "darkMode": "Dark",
+          "brightness": "Brightness",
+          "sizeSmaller": "Smaller",
+          "sizeLarger": "Larger",
           "font": "Font",
           "fontSerif": "Thmanyah",
           "fontSans": "Rubik",
@@ -3930,6 +3976,11 @@
           "bookmarkAdded": "Bookmark added",
           "bookmarkRemoved": "Bookmark removed",
           "noBookmarks": "No bookmarks yet.",
+          "rotationLock": "Lock rotation",
+          "rotationUnlock": "Unlock rotation",
+          "rotationUnsupported": "This browser cannot lock the screen",
+          "lineGuide": "Line guide",
+          "lineGuideOff": "Hide line guide",
           "originalPages": "Original pages",
           "textPages": "Text",
           "resume": "Resume",
@@ -4023,7 +4074,8 @@
         "subjects": "subjects",
         "periodsPerWeek": "periods/week",
         "today": "Today",
-        "weekView": "Week View"
+        "weekView": "Week View",
+        "week": "Week"
       },
       "generate": {
         "title": "Generate Timetable",
@@ -4832,7 +4884,39 @@
         "Thursday",
         "Friday",
         "Saturday"
-      ]
+      ],
+      "slotDetail": {
+        "title": "Class details",
+        "teacher": "Teacher",
+        "section": "Section",
+        "room": "Room",
+        "myAttendance": "My attendance",
+        "attendance": "Attendance",
+        "notTaken": "Not taken yet",
+        "notRecorded": "No record",
+        "present": "Present",
+        "absent": "Absent",
+        "late": "Late",
+        "excused": "Excused",
+        "sick": "Sick",
+        "of": "of",
+        "close": "Close",
+        "startsIn": "Starts in {n} min",
+        "startsInHours": "Starts in {n} h",
+        "periods": [
+          "First period",
+          "Second period",
+          "Third period",
+          "Fourth period",
+          "Fifth period",
+          "Sixth period",
+          "Seventh period",
+          "Eighth period",
+          "Ninth period",
+          "Tenth period"
+        ],
+        "enter": "Enter"
+      }
     },
     "announcements": {
       "title": "Announcements",
@@ -8914,7 +8998,10 @@
         "pendingUnit": "pending",
         "totalUnit": "total",
         "na": "N/A",
-        "assignments": "Assignments"
+        "assignments": "Assignments",
+        "now": "Now",
+        "classesDone": "Classes are done for today",
+        "seeYouTomorrow": "See you tomorrow!"
       },
       "teachingOverview": "Teaching Overview",
       "classesToday": "Classes Today",
@@ -8995,7 +9082,10 @@
         "percentUnit": "%",
         "dueUnit": "due",
         "averageLabel": "Average",
-        "performanceDescription": "Current academic performance"
+        "performanceDescription": "Current academic performance",
+        "next": "Next",
+        "classesDone": "Classes are done for today",
+        "seeYouTomorrow": "See you tomorrow!"
       },
       "errors": {
         "unableToLoad": "Unable to Load Dashboard",

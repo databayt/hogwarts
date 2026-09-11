@@ -131,6 +131,8 @@ export default async function CommunitySubjectDetailPage({ params }: Props) {
         textbookCoverUrl={
           subject.cover ? getCloudFrontUrl(subject.cover) : null
         }
+        subjectLevel={subject.levels[0] ?? null}
+        subjectGrade={subject.grades[0] ?? null}
         // Public community deep links — override the school-dashboard defaults.
         // Videos have no public player, so they route to the chapters page
         // (where the lessons live). Exams have no public destination → "".

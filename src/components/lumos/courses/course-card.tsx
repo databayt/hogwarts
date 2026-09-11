@@ -7,6 +7,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Star } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { CatalogCourseType } from "@/components/lumos/data/catalog/get-all-courses"
 
@@ -25,38 +26,65 @@ const COURSE_TYPE_FALLBACKS: Record<string, string> = {
   shortCourse: "Short Course",
 }
 
-// Keyed by the SchoolLevel enum as stored on Subject.levels.
-const COURSE_LEVEL_FALLBACKS: Record<string, string> = {
-  ELEMENTARY: "Elementary",
-  MIDDLE: "Middle",
-  HIGH: "High",
-}
-
 interface CourseCardProps {
   course: CatalogCourseType
   lang: string
   dictionary?: Record<string, any>
+  /**
+   * Sizing for the context the card sits in. The grid lets it be fluid; a
+   * shelf gives it a fixed width and stops it shrinking.
+   */
+  className?: string
+  /**
+   * Show the grade instead of the school level in the eyebrow.
+   *
+   * The catalog holds one Subject row per subject PER GRADE, and the grade
+   * lives on the row rather than in its name — so any list spanning grades
+   * renders "Arabic, Arabic, Arabic" with nothing to tell them apart. A shelf
+   * that IS one grade carries it in the shelf title instead and leaves this
+   * off.
+   */
+  showGrade?: boolean
+  /** Denser type, for the grid where the cards sit three or more to a row. */
+  compact?: boolean
 }
 
-function CourseCardImpl({ course, lang, dictionary }: CourseCardProps) {
+function CourseCardImpl({
+  course,
+  lang,
+  dictionary,
+  className,
+  showGrade = false,
+  compact = false,
+}: CourseCardProps) {
   const [imageError, setImageError] = useState(false)
   const chaptersCount = course._count.chapters
   const courseTypeKey = getCourseTypeKey(chaptersCount)
   const ct = dictionary?.courseTypes as Record<string, string> | undefined
-  const cl = dictionary?.courseLevels as Record<string, string> | undefined
   const courseType = ct?.[courseTypeKey] ?? COURSE_TYPE_FALLBACKS[courseTypeKey]
   // `levels` holds raw SchoolLevel enum values; the department name arrives
   // pre-translated from the fetcher, so only the enum needs the dictionary.
-  const rawLevel = course._catalog?.levels?.[0]
-  const levelLabel = rawLevel
-    ? (cl?.[rawLevel] ?? COURSE_LEVEL_FALLBACKS[rawLevel] ?? rawLevel)
-    : course.category?.name || (ct?.course ?? COURSE_TYPE_FALLBACKS.course)
+  // The eyebrow is the GRADE or nothing. It used to fall back to the school
+  // level ("Elementary" / "ثانوي"), which on a page already scoped to one
+  // grade said the same thing on every card and cost the card a third line —
+  // so the card is now two lines, title and type, unless the grade is genuinely
+  // telling the reader something (a list that spans grades: see `showGrade`).
+  // `search.gradeLabel` is the existing "Grade {n}" template, in both
+  // dictionaries.
+  const grade = course._catalog?.grades?.[0]
+  const eyebrow =
+    showGrade && grade != null
+      ? (dictionary?.search?.gradeLabel as string | undefined)?.replace(
+          "{n}",
+          String(grade)
+        ) || `Grade ${grade}`
+      : null
   const catalogColor = course._catalog?.color
 
   return (
     <Link
       href={`/${lang}/lumos/courses/${course.slug}`}
-      className="group block"
+      className={cn("group block", className)}
     >
       {/* Card Image */}
       <div className="relative aspect-video overflow-hidden rounded-xl">
@@ -81,19 +109,38 @@ function CourseCardImpl({ course, lang, dictionary }: CourseCardProps) {
       </div>
 
       {/* Content */}
-      <div className="space-y-1.5 px-2 pt-3 text-start">
-        {/* Provider / Department */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground text-xs">{levelLabel}</span>
-        </div>
+      <div
+        className={cn(
+          "px-2 text-start",
+          compact ? "space-y-1 pt-2" : "space-y-1.5 pt-3"
+        )}
+      >
+        {/* Grade, on the lists that span several. */}
+        {eyebrow ? (
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground text-xs">{eyebrow}</span>
+          </div>
+        ) : null}
 
         {/* Title */}
-        <h3 className="group-hover:text-primary overflow-hidden text-sm leading-tight font-semibold whitespace-nowrap transition-colors">
+        <h3
+          className={cn(
+            "group-hover:text-primary overflow-hidden leading-tight font-semibold whitespace-nowrap transition-colors",
+            compact ? "text-xs" : "text-sm"
+          )}
+        >
           {course.title}
         </h3>
 
         {/* Type */}
-        <p className="text-muted-foreground text-xs">{courseType}</p>
+        <p
+          className={cn(
+            "text-muted-foreground",
+            compact ? "text-[11px]" : "text-xs"
+          )}
+        >
+          {courseType}
+        </p>
 
         {/* Rating */}
         {course._catalog?.averageRating != null &&

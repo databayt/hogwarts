@@ -5,6 +5,7 @@ import { Suspense } from "react"
 import { Metadata } from "next"
 import { auth } from "@/auth"
 
+import { getPolicyContext } from "@/lib/rbac/context"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -13,6 +14,9 @@ import {
   LumosCoursesLoadingSkeleton,
 } from "@/components/lumos/courses/content"
 import { getAllCatalogCourses } from "@/components/lumos/data/catalog/get-all-courses"
+import { getContinueWatching } from "@/components/lumos/data/catalog/get-continue-watching"
+import { getCourseShelves } from "@/components/lumos/data/catalog/get-course-shelves"
+import { getStartHereLesson } from "@/components/lumos/data/catalog/get-start-here"
 import { lumosCoursesSearchParams } from "@/components/lumos/list-params"
 
 export const dynamic = "force-dynamic"
@@ -103,15 +107,64 @@ async function CoursesRenderer({
     )
   }
 
-  const { rows, count } = await getAllCatalogCourses({
-    page: search.page,
-    perPage: search.perPage,
-    search: search.search || undefined,
-    title: search.title || undefined,
-    category: search.category || undefined,
-    grade: search.level ? parseInt(search.level) : undefined,
-    lang,
-  })
+  // Only a SEARCH leaves the browse view. A grade is not a different view of
+  // this page — it is which grade the browse view is showing, and the shelves
+  // read already holds every grade, so switching between them costs no query.
+  const isBrowsing = !search.search
+
+  const [{ rows, count }, shelfData, continueWatching, recommendedGrade] =
+    await Promise.all([
+      // Search only. The shelves already hold every course the school offers,
+      // so running the paginated query alongside them would read and translate
+      // the same rows twice for a grid nobody is looking at.
+      isBrowsing
+        ? Promise.resolve({ rows: [], count: 0 })
+        : getAllCatalogCourses({
+            page: search.page,
+            perPage: search.perPage,
+            search: search.search || undefined,
+            title: search.title || undefined,
+            category: search.category || undefined,
+            grade: search.level ? parseInt(search.level) : undefined,
+            lang,
+          }),
+      isBrowsing
+        ? getCourseShelves(lang)
+        : Promise.resolve({ shelves: [], total: 0 }),
+      isBrowsing && userId ? getContinueWatching() : Promise.resolve([]),
+      // The student's own grade. It is which grade the page OPENS on, and the
+      // one honest basis this catalog offers for ordering anything by a person
+      // — ratings are unset and usage counts are uniform across every row.
+      // Every other role opens on the lowest grade the school offers.
+      userRole === "STUDENT"
+        ? getPolicyContext().then((ctx) => ctx.academicGradeNumber ?? null)
+        : Promise.resolve(null),
+    ])
+
+  // Which grade the browse view is showing, resolved HERE rather than in the
+  // client so the start-here fallback below can pick a course from it.
+  const effectiveGrade =
+    (search.level ? Number(search.level) : null) ??
+    recommendedGrade ??
+    shelfData.shelves[0]?.grade ??
+    null
+
+  // The lead card must never be absent. With nothing in progress, it opens the
+  // first course of that grade instead — the same course the Recommended shelf
+  // leads with, so the card is a way IN to the page's own first suggestion.
+  const gradeCourses =
+    shelfData.shelves.find((sf) => sf.grade === effectiveGrade)?.courses ?? []
+  const startHere = continueWatching[0]
+    ? null
+    : await getStartHereLesson(
+        gradeCourses.map((c) => ({ id: c.id, slug: c.slug })),
+        lang
+      )
+  // Which course it landed on — not necessarily the first, since a course with
+  // no published or non-hidden lesson is skipped over.
+  const leadCourse = startHere
+    ? gradeCourses.find((c) => c.id === startHere.courseId)
+    : null
 
   return (
     <LumosCoursesContent
@@ -125,6 +178,21 @@ async function CoursesRenderer({
       search={search.search}
       userRole={userRole}
       userId={userId}
+      shelves={shelfData.shelves}
+      continueWatching={continueWatching}
+      recommendedGrade={recommendedGrade}
+      effectiveGrade={effectiveGrade}
+      startHere={
+        startHere && leadCourse
+          ? {
+              ...startHere,
+              courseId: leadCourse.id,
+              courseTitle: leadCourse.title,
+              grade: leadCourse._catalog.grades?.[0] ?? null,
+              totalLessons: leadCourse._catalog.totalLessons,
+            }
+          : null
+      }
     />
   )
 }

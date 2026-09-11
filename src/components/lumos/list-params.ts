@@ -15,7 +15,10 @@ export const lumosCoursesSearchParams = createSearchParamsCache({
   search: parseAsString.withDefault(""),
   title: parseAsString.withDefault(""),
   category: parseAsString.withDefault(""),
-  level: parseAsString.withDefault("1"),
+  // Empty, NOT "1". A bare /lumos/courses is the browse view — one shelf per
+  // grade — and any value here switches the page to the flat single-grade
+  // grid. Defaulting to a grade made that browse state unreachable.
+  level: parseAsString.withDefault(""),
   isPublished: parseAsString.withDefault(""),
   sort: getSortingStateParser().withDefault([]),
 })

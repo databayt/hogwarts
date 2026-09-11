@@ -13,30 +13,33 @@
  * Which database it hits is whatever DATABASE_URL resolves to — printed first,
  * because reporting dev data as production has happened before.
  */
-import { loadEnv, flag, dbHostTag } from './lib';
-loadEnv();
+import { dbHostTag, flag, loadEnv } from "./lib"
 
-const APPLY = flag('apply');
+loadEnv()
+
+const APPLY = flag("apply")
 
 async function main() {
-  console.log(`DB: ${dbHostTag(process.env.DATABASE_URL)}`);
-  const { applyInbox } = await import('@/lib/funnel/apply-inbox');
-  const report = await applyInbox({ dryRun: !APPLY });
+  console.log(`DB: ${dbHostTag(process.env.DATABASE_URL)}`)
+  const { applyInbox } = await import("@/lib/funnel/apply-inbox")
+  const report = await applyInbox({ dryRun: !APPLY })
 
-  console.log(`\n═══ Inbox applier — ${report.pending} pending ═══\n`);
+  console.log(`\n═══ Inbox applier — ${report.pending} pending ═══\n`)
   for (const a of report.actions)
-    console.log(`  [${a.status.toUpperCase().padEnd(7)}] ${a.eventName} ${a.recordId.slice(0, 8)} — ${a.note}`);
+    console.log(
+      `  [${a.status.toUpperCase().padEnd(7)}] ${a.eventName} ${a.recordId.slice(0, 8)} — ${a.note}`
+    )
   console.log(
-    `\n  ${APPLY ? 'applied' : 'would apply'} ${report.applied} · ignored ${report.ignored} · still pending ${report.left}` +
-      (APPLY ? '' : '   (dry — rows untouched; --apply to mark)') +
-      '\n'
-  );
+    `\n  ${APPLY ? "applied" : "would apply"} ${report.applied} · ignored ${report.ignored} · still pending ${report.left}` +
+      (APPLY ? "" : "   (dry — rows untouched; --apply to mark)") +
+      "\n"
+  )
 }
 
 main().then(
   () => process.exit(0),
   (e) => {
-    console.error(e);
-    process.exit(1);
+    console.error(e)
+    process.exit(1)
   }
-);
+)

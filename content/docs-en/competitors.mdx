@@ -5,7 +5,7 @@ description: Market landscape and competitor analysis — global SIS incumbents,
 
 Hogwarts is an open-source, multi-tenant K-12 platform shipping in production at [ed.databayt.org](https://ed.databayt.org). Where the established SIS vendors target large North-American districts with closed, English-first stacks, Hogwarts is Arabic-first, RTL-native, subdomain-isolated per school, and priced for emerging-market budgets.
 
-This page maps four distinct competitive sets — **global SIS incumbents** (the feature baseline), **MENA regional players** (who we actually meet in a deal), **British-curriculum MIS** (who the international schools shortlist), and **open-source peers** (the closest architectural analogues) — plus the assessment tools that shaped the exams module. The [battle-card section](#why-mena-schools-choose-hogwarts) is the prose for proposals and discovery calls.
+This page maps five distinct competitive sets — **global SIS incumbents** (the feature baseline), **MENA regional players** (who we actually meet in a deal), **British-curriculum MIS** (who the international schools shortlist), **open-source peers** (the closest architectural analogues), and **LMS & virtual classroom platforms** (the complementary e-learning stack) — plus the assessment tools that shaped the exams module. The [battle-card section](#why-mena-schools-choose-hogwarts) is the prose for proposals and discovery calls.
 
 Two companion pages go deeper:
 
@@ -120,6 +120,27 @@ Architecturally the closest set: schools can read the code, self-host, and leave
 - **Modern stack, not PHP/Rails/Odoo.** Next.js 16 + React 19 + Prisma + TypeScript is what a 2026 contributor already knows.
 - **Arabic-first rather than Arabic-translated.** No peer above treats RTL as the default rendering path.
 - **Where they are ahead:** install-base maturity, plugin ecosystems (Odoo/Frappe especially), and years of edge cases in state reporting. Do not claim parity on breadth of deployment history.
+
+## LMS & Virtual Classroom platforms
+
+Schools frequently operate a learning management system alongside their core SIS. In North American and international K-12 districts, specialized virtual classroom software like **[Class](https://www.class.com/k12/)** positions itself as "deeply integrated and complementary to your LMS" — syncing rosters and enrollments, launching live rooms directly from the LMS, and tracking student progress back to the central gradebook.
+
+Hogwarts bypasses this multi-vendor friction entirely: instead of requiring schools to buy, maintain, and glue together three separate systems (SIS + standalone LMS + video add-on), Hogwarts **integrates both a native LMS ([Lumos](/docs/lms)) and synchronized video conferencing ([Conference](/docs/live)) directly into the core platform**.
+
+| Platform                                                                                                             | Type                             | Reach / Market                                                   | Notable for us                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| [Schoology Learning](https://www.powerschool.com/classroom/schoology-learning/)                                      | K-12 LMS (PowerSchool)           | 20M+ students, 60,000+ schools across 130+ countries             | Acquired by PowerSchool for ~$180M (2019); social-media-style activity feed, parent portal, deep PowerSchool SIS tie-in             |
+| [Blackboard Learn](https://www.anthology.com/products/teaching-and-learning/learning-effectiveness/blackboard-learn) | Higher Ed & K-12 LMS (Anthology) | 150M+ users globally                                             | Merged with Anthology; Ultra responsive experience; Class acquired Blackboard Collaborate in 2022 to consolidate virtual classrooms |
+| [D2L Brightspace](https://www.d2l.com/k-12/)                                                                         | K-12 & Higher Ed LMS             | Millions of learners in 1,400+ institutions across 40+ countries | Competency-based education, personalized learning paths, strong accessibility standards and mobile UX                               |
+| [Open LMS](https://www.openlms.net/k-12/)                                                                            | Open-source Enterprise LMS       | 1,500+ clients across 100+ countries                             | World's largest commercial Moodle provider (LTG); open ecosystem without self-hosting overhead                                      |
+| [Canvas by Instructure](https://www.instructure.com/k-12/products/canvas/canvas-lms)                                 | Global #1 LMS                    | 30M+ educators and students across 100+ countries                | Market leader in Higher Ed and large K-12 districts; SpeedGrader, robust cloud architecture (acquired by KKR for $4.8B in 2024)     |
+| [Class](https://www.class.com/k12/)                                                                                  | Virtual Classroom Layer          | Hundreds of K-12 districts & universities                        | Founded by Blackboard co-founder Michael Chasen; virtual classroom overlay for Zoom & web with deep LMS roster/grade sync           |
+
+**What the LMS ecosystem tells us:**
+
+- **The multi-vendor tax is real.** A standard school deployment often pays for an SIS (PowerSchool / iSAMS), an LMS (Schoology / Canvas), and a virtual classroom tool (Class.com / Zoom licenses), plus the integration middleware (OneRoster / LTI 1.3). For emerging markets and independent private schools, this stack is cost-prohibitive.
+- **Roster & gradebook sync is the main friction point.** Class.com highlights LMS roster sync and launching live sessions from the LMS because bridging separate databases constantly causes data drift. Hogwarts eliminates this friction entirely: students, sections, timetable slots, Lumos course materials, and live conference sessions all share the exact same Prisma database scoped by `schoolId`.
+- **Where they lead:** Tens of thousands of pre-built publisher integrations, LTI 1.3 app marketplaces, and decade-long institutional familiarity.
 
 ## Assessment & exam-creation tools
 
@@ -339,6 +360,7 @@ Battle-card content for [Proposal](/docs/proposal) and [Sales](/docs/sales) disc
 - [WhichMIS? — Arbor takes No. 1 spot from ESS SIMS](https://www.whichmis.com/arbor-takes-no-1-spot-from-ess-sims/) and [Tes — ESS SIMS loses market dominance](https://www.tes.com/magazine/news/general/ess-sims-loses-market-dominance-school-information-systems-mis) — UK MIS share
 - [Classroom365 — Best MIS for independent schools](https://www.classroom365.co.uk/services/school-mis/independent-schools/) — iSAMS / Engage / HUBmis segmentation
 - [British Council Partner Schools](https://www.britishcouncil.org/exam/international/partner-schools) — 2,000+ schools delivering UK qualifications
+- [Class.com — K-12 Virtual Classroom & LMS Integrations](https://www.class.com/k12/) — virtual classroom overlay and LMS integrations (Schoology, Blackboard Learn, D2L Brightspace, Open LMS, Canvas)
 - Landing-page copy captured directly from each vendor homepage, August 2026 (see the [teardown](/docs/competitors/landing-page#sources) for the URLs)
 - [Gartner Peer Insights — K-12 Student Information Systems](https://www.gartner.com/reviews/market/k-12-education-student-information-systems) — buyer reviews, refresh before quoting
 

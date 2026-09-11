@@ -254,3 +254,35 @@ export function getViewTypeForRole(
       return "readonly"
   }
 }
+
+/**
+ * Whether a role lands on `StudentView` — the one surface that renders a single
+ * day column on a phone, and so the one whose loading placeholder has a
+ * different SHAPE from every other role's.
+ *
+ * Mirrors the `switch` in `getPersonalizedTimetable` (actions.ts), including its
+ * `default` arm: STUDENT is explicit, and USER / an unknown role fall through to
+ * the student view as the most restricted one. ACCOUNTANT and STAFF do NOT —
+ * they get the read-only admin grid. Deliberately not `getViewTypeForRole`,
+ * which answers a different question (it needs a resolved profile and returns
+ * "readonly" where this needs "which component mounts").
+ *
+ * Kept here rather than in actions.ts because every export from that file is a
+ * server action, i.e. an HTTP endpoint; this has to be readable from a client
+ * component and a page alike.
+ */
+export function rendersStudentTimetable(
+  role: TimetableRole | null | undefined
+): boolean {
+  switch (role) {
+    case "DEVELOPER":
+    case "ADMIN":
+    case "TEACHER":
+    case "GUARDIAN":
+    case "ACCOUNTANT":
+    case "STAFF":
+      return false
+    default:
+      return true
+  }
+}

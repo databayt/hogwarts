@@ -166,7 +166,9 @@
     "profile": "Loading profile..."
   },
   "hero": {
-    "title": "Revelio",
-    "subtitle": "Unlock hidden."
+    "title": "{mark} has your next read",
+    "titleMark": "The school library",
+    "explore": "Explore",
+    "favorites": "Favorites"
   }
 }

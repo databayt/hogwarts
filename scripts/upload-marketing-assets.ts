@@ -40,7 +40,11 @@ import "dotenv/config"
 import { createHash } from "crypto"
 import { readFileSync, statSync, writeFileSync } from "fs"
 import { join } from "path"
-import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import {
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3"
 import sharp from "sharp"
 
 // ---------------------------------------------------------------------------
@@ -99,8 +103,16 @@ const ASSETS: Record<string, Entry> = {
   "modern-08": { kind: "image", src: "modern-08.png", display: 572 },
   "modern-09": { kind: "image", src: "modern-09.png", display: 316 },
   "modern-10": { kind: "image", src: "modern-10.png", display: 904 },
-  "modern-08-phone": { kind: "image", src: "modern-08-phone.png", display: 314 },
-  "modern-10-phone": { kind: "image", src: "modern-10-phone.png", display: 415 },
+  "modern-08-phone": {
+    kind: "image",
+    src: "modern-08-phone.png",
+    display: 314,
+  },
+  "modern-10-phone": {
+    kind: "image",
+    src: "modern-10-phone.png",
+    display: 415,
+  },
 
   // StoryNarrativeBlock's letter comparison — also `unoptimized` until now,
   // and 3.1MB of raw PNG between the two. Displayed 50vw >=1200 and 100vw
@@ -110,7 +122,11 @@ const ASSETS: Record<string, Entry> = {
 
   // Posters: a single WebP each. <video poster> takes one URL and cannot
   // format-negotiate, so there is no AVIF fallback path to hand it.
-  "modern-01-poster": { kind: "poster", src: "modern-01-poster.png", display: 462 },
+  "modern-01-poster": {
+    kind: "poster",
+    src: "modern-01-poster.png",
+    display: 462,
+  },
   "balqalam-wordmarks-poster": {
     kind: "poster",
     src: "balqalam-wordmarks-poster.png",
@@ -122,7 +138,10 @@ const ASSETS: Record<string, Entry> = {
   // whole set is ~2.9MB — the win is the cache headers, not the bytes.
   "modern-01-webm": { kind: "passthrough", src: "modern-01.webm" },
   "modern-01-phone-mp4": { kind: "passthrough", src: "modern-01-phone.mp4" },
-  "balqalam-wordmarks-mp4": { kind: "passthrough", src: "balqalam-wordmarks.mp4" },
+  "balqalam-wordmarks-mp4": {
+    kind: "passthrough",
+    src: "balqalam-wordmarks.mp4",
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -133,7 +152,8 @@ const ONLY = args.find((a) => a.startsWith("--only="))?.slice("--only=".length)
 
 const s3 = new S3Client({ region: REGION })
 
-const hash8 = (b: Buffer) => createHash("sha256").update(b).digest("hex").slice(0, 8)
+const hash8 = (b: Buffer) =>
+  createHash("sha256").update(b).digest("hex").slice(0, 8)
 const kb = (n: number) => `${(n / 1024).toFixed(0)} KB`
 
 /** Encode one source into the formats its kind calls for. */
@@ -148,7 +168,10 @@ async function render(e: Entry): Promise<Array<{ ext: string; buf: Buffer }>> {
     return [{ ext: "webp", buf: await pipe().webp({ quality: 78 }).toBuffer() }]
   }
   return [
-    { ext: "avif", buf: await pipe().avif({ quality: 62, effort: 6 }).toBuffer() },
+    {
+      ext: "avif",
+      buf: await pipe().avif({ quality: 62, effort: 6 }).toBuffer(),
+    },
     { ext: "webp", buf: await pipe().webp({ quality: 76 }).toBuffer() },
   ]
 }
@@ -163,7 +186,10 @@ async function exists(key: string) {
 }
 
 async function main() {
-  const manifest: Record<string, { kind: Entry["kind"]; urls: Record<string, string> }> = {}
+  const manifest: Record<
+    string,
+    { kind: Entry["kind"]; urls: Record<string, string> }
+  > = {}
   let srcTotal = 0
   let outTotal = 0
 
@@ -185,7 +211,9 @@ async function main() {
 
       const pct = ((buf.length / srcSize) * 100).toFixed(1)
       if (!DO_UPLOAD) {
-        console.log(`  [dry] ${name}.${ext.padEnd(4)} ${kb(srcSize)} -> ${kb(buf.length)} (${pct}%)  ${key}`)
+        console.log(
+          `  [dry] ${name}.${ext.padEnd(4)} ${kb(srcSize)} -> ${kb(buf.length)} (${pct}%)  ${key}`
+        )
         continue
       }
       if (await exists(key)) {
@@ -201,7 +229,9 @@ async function main() {
           CacheControl: CACHE_CONTROL,
         })
       )
-      console.log(`  [put ] ${name}.${ext.padEnd(4)} ${kb(srcSize)} -> ${kb(buf.length)} (${pct}%)  ${key}`)
+      console.log(
+        `  [put ] ${name}.${ext.padEnd(4)} ${kb(srcSize)} -> ${kb(buf.length)} (${pct}%)  ${key}`
+      )
     }
   }
 
@@ -211,7 +241,9 @@ async function main() {
   )
 
   if (!DO_UPLOAD) {
-    console.log("\n  dry run — nothing uploaded, no manifest written. Re-run with --upload.")
+    console.log(
+      "\n  dry run — nothing uploaded, no manifest written. Re-run with --upload."
+    )
     return
   }
 
@@ -226,15 +258,22 @@ async function main() {
       const ct = res.headers.get("content-type")
       const ok = res.ok && ct === MIME[ext]
       if (!ok) bad++
-      console.log(`  ${ok ? "  ok  " : " FAIL "} ${name}.${ext} -> ${res.status} ${ct}`)
+      console.log(
+        `  ${ok ? "  ok  " : " FAIL "} ${name}.${ext} -> ${res.status} ${ct}`
+      )
     }
   }
   if (bad) {
-    console.error(`\n  ABORT: ${bad} URL(s) did not verify — manifest NOT written.`)
+    console.error(
+      `\n  ABORT: ${bad} URL(s) did not verify — manifest NOT written.`
+    )
     process.exit(1)
   }
 
-  const out = join(process.cwd(), "src/components/saas-marketing/thmanyah/lib/cdn-assets.ts")
+  const out = join(
+    process.cwd(),
+    "src/components/saas-marketing/thmanyah/lib/cdn-assets.ts"
+  )
   const pick = (k: Entry["kind"]) =>
     Object.fromEntries(Object.entries(manifest).filter(([, v]) => v.kind === k))
   const images = Object.fromEntries(
@@ -244,7 +283,10 @@ async function main() {
     Object.entries(pick("poster")).map(([n, v]) => [n, v.urls.webp])
   )
   const videos = Object.fromEntries(
-    Object.entries(pick("passthrough")).map(([n, v]) => [n, Object.values(v.urls)[0]])
+    Object.entries(pick("passthrough")).map(([n, v]) => [
+      n,
+      Object.values(v.urls)[0],
+    ])
   )
 
   writeFileSync(

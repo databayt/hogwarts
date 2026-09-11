@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, useState } from "react"
+import { Fragment, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -21,10 +21,14 @@ import {
   Video,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+
+import { elongate, gradeLine, stageLine } from "./textbook/format"
+import type { ReaderLabels } from "./textbook/types"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -103,6 +107,17 @@ interface Props {
   /** In-app reader route (`/${lang}/subjects/${slug}/textbook`); null when the subject has no PDF. */
   textbookReaderHref?: string | null
   textbookCoverUrl: string | null
+  /** School level + grade of the subject — the two lines the textbook's own
+   *  cover prints around its title. Omit and the tile shows the title alone. */
+  subjectLevel?: string | null
+  subjectGrade?: number | null
+  /** The book's own title, as printed on its board — the untranslated subject
+   *  name, so the tile and the reader's cover read alike. Defaults to `name`. */
+  textbookTitle?: string
+  /** Destination for the summary tile that sits beside the textbook. Empty
+   *  while the summaries are still being written — the tile then shows but
+   *  does not link. */
+  summaryHref?: string
   /**
    * Section "see all" / per-video deep links. Default to the school-dashboard
    * routes (live behind auth on a school subdomain); the public /community
@@ -220,6 +235,10 @@ export function CatalogContentSections({
   textbookPdfUrl,
   textbookReaderHref,
   textbookCoverUrl,
+  subjectLevel = null,
+  subjectGrade = null,
+  textbookTitle,
+  summaryHref = "",
   materialsHref = `/${lang}/subjects/${subjectSlug}/materials`,
   qbankHref = `/${lang}/exams/qbank?catalogSubjectId=${catalogSubjectId}`,
   examsHref = `/${lang}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`,
@@ -235,6 +254,7 @@ export function CatalogContentSections({
     () => ({
       videos: cat?.videos || "Videos",
       materials: cat?.materials || "Materials",
+      summary: cat?.summary || "Summary",
       exams: cat?.exams || "Exams",
       qbank: cat?.qbank || "QBank",
       assignments: cat?.assignments || "Assignments",
@@ -329,12 +349,40 @@ export function CatalogContentSections({
     [cat]
   )
 
+  const readerLabels = useMemo(
+    () => ((cat?.reader ?? {}) as ReaderLabels),
+    [cat]
+  )
+
   const hasVideos = data.videos.length > 0
 
   const accentColor = subjectColor ?? "#1e40af"
 
   return (
     <div className="mt-8 space-y-8">
+      <ContentSection
+        title={t.materials}
+        accentColor={accentColor}
+        actionHref={materialsHref}
+        actionLabel={t.seeAll}
+      >
+        <MaterialTypePipeline
+          materials={data.materials}
+          accentColor={accentColor}
+          t={t}
+          textbookPdfUrl={textbookPdfUrl}
+          textbookReaderHref={textbookReaderHref}
+          textbookCoverUrl={textbookCoverUrl}
+          textbookTitle={textbookTitle || name}
+          summaryHref={summaryHref}
+          qbankHref={qbankHref}
+          subjectLevel={subjectLevel}
+          subjectGrade={subjectGrade}
+          readerLabels={readerLabels}
+          lang={lang}
+        />
+      </ContentSection>
+
       {hasVideos && (
         <ContentSection
           title={t.videos}
@@ -369,28 +417,41 @@ export function CatalogContentSections({
                       unoptimized
                     />
                   )}
-                  {/* Title — centered on image */}
-                  <p className="absolute inset-0 line-clamp-2 flex items-center px-3 text-sm font-bold text-white drop-shadow-md">
-                    {video.title}
-                  </p>
-                  {/* Metadata — Apple liquid glass bar */}
+                  {/* Title + metadata — one Apple liquid glass foot. The
+                      cloud stays light; legibility comes from a whiter frost
+                      and dark ink on it, not from darkening the artwork. */}
                   <div
-                    className="absolute inset-x-0 bottom-0 z-10 px-2.5 pt-4 pb-1"
+                    className="absolute inset-x-0 bottom-0 z-10 px-3 pt-8 pb-2"
                     style={{
                       background:
-                        "linear-gradient(to top, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 40%, transparent 100%)",
-                      backdropFilter: "blur(8px) saturate(110%)",
-                      WebkitBackdropFilter: "blur(8px) saturate(110%)",
+                        "linear-gradient(to top, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.58) 50%, rgba(255,255,255,0.22) 80%, transparent 100%)",
+                      backdropFilter: "blur(14px) saturate(140%)",
+                      WebkitBackdropFilter: "blur(14px) saturate(140%)",
                       maskImage:
-                        "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
+                        "linear-gradient(to top, black 0%, black 70%, transparent 100%)",
                       WebkitMaskImage:
-                        "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
+                        "linear-gradient(to top, black 0%, black 70%, transparent 100%)",
                     }}
                   >
-                    <div className="flex items-center gap-1 text-xs text-white/80">
+                    <p
+                      className="line-clamp-2 text-sm leading-snug font-bold"
+                      style={{
+                        color: "#151517",
+                        textShadow: "0 1px 2px rgba(255,255,255,0.55)",
+                      }}
+                    >
+                      {video.title}
+                    </p>
+                    <div
+                      className="mt-1 flex items-center gap-1.5 text-xs font-semibold"
+                      style={{
+                        color: "#3a3a3e",
+                        textShadow: "0 1px 2px rgba(255,255,255,0.5)",
+                      }}
+                    >
                       <Play className="size-3 fill-current" />
                       <span>{formatDuration(video.durationSeconds)}</span>
-                      <span>&middot;</span>
+                      <span aria-hidden>&middot;</span>
                       <span>
                         {video.viewCount.toLocaleString()} {t.views}
                       </span>
@@ -402,22 +463,6 @@ export function CatalogContentSections({
           </div>
         </ContentSection>
       )}
-
-      <ContentSection
-        title={t.materials}
-        accentColor={accentColor}
-        actionHref={materialsHref}
-        actionLabel={t.seeAll}
-      >
-        <MaterialTypePipeline
-          materials={data.materials}
-          accentColor={accentColor}
-          t={t}
-          textbookPdfUrl={textbookPdfUrl}
-          textbookReaderHref={textbookReaderHref}
-          textbookCoverUrl={textbookCoverUrl}
-        />
-      </ContentSection>
 
       <ContentSection
         title={t.exams}
@@ -649,6 +694,13 @@ function MaterialTypePipeline({
   textbookPdfUrl,
   textbookReaderHref,
   textbookCoverUrl,
+  textbookTitle,
+  subjectLevel,
+  subjectGrade,
+  readerLabels,
+  lang,
+  summaryHref,
+  qbankHref,
 }: {
   materials: MaterialItem[]
   accentColor: string
@@ -657,9 +709,21 @@ function MaterialTypePipeline({
   /** In-app reader route (`/${lang}/subjects/${slug}/textbook`); null when the subject has no PDF. */
   textbookReaderHref?: string | null
   textbookCoverUrl: string | null
+  textbookTitle: string
+  subjectLevel: string | null
+  subjectGrade: number | null
+  readerLabels: ReaderLabels
+  lang: string
+  summaryHref: string
+  qbankHref: string
 }) {
   const [coverError, setCoverError] = useState(false)
   const hasTextbook = !!textbookPdfUrl || !!textbookCoverUrl
+
+  // The three lines a textbook prints on its board — the same words, from the
+  // same labels, as the book's own first screen in the reader.
+  const coverStage = stageLine(subjectLevel, readerLabels)
+  const coverGrade = gradeLine(subjectGrade, subjectLevel, readerLabels, lang)
 
   const typeGroups = useMemo(() => {
     const grouped: Record<
@@ -705,59 +769,37 @@ function MaterialTypePipeline({
           if (!hasTextbook && group.count === 0) return null
 
           if (hasTextbook) {
-            // The cover opens the in-app reader (native text of the book's
-            // Markdown twin); the raw PDF stays one click away inside it.
-            const tileClass = "group relative block shrink-0 overflow-hidden"
-            const tileStyle = { width: 180, height: 260 }
-            const cover =
-              textbookCoverUrl && !coverError ? (
-                <Image
-                  src={textbookCoverUrl}
-                  alt={t.textbook ?? group.label}
-                  fill
-                  className="object-cover"
-                  sizes="180px"
-                  unoptimized
-                  onError={() => setCoverError(true)}
-                />
-              ) : (
-                <div
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{ backgroundColor: accentColor }}
-                >
-                  <BookOpen className="size-20 text-white/10" />
-                </div>
-              )
-            if (textbookReaderHref) {
-              return (
-                <Link
-                  key={group.key}
-                  href={textbookReaderHref}
-                  className={tileClass}
-                  style={tileStyle}
-                >
-                  {cover}
-                </Link>
-              )
-            }
-            if (textbookPdfUrl) {
-              return (
-                <a
-                  key={group.key}
-                  href={textbookPdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={tileClass}
-                  style={tileStyle}
-                >
-                  {cover}
-                </a>
-              )
+            // Two books off the same board: the textbook itself, which opens
+            // the in-app reader (the raw PDF stays one click away inside it),
+            // and its summary, marked by a green disc in the corner.
+            const board = {
+              coverUrl: coverError ? null : textbookCoverUrl,
+              onCoverError: () => setCoverError(true),
+              accentColor,
+              alt: t.textbook ?? group.label,
+              stage: coverStage,
+              title: textbookTitle,
+              grade: coverGrade,
             }
             return (
-              <div key={group.key} className={tileClass} style={tileStyle}>
-                {cover}
-              </div>
+              <Fragment key={group.key}>
+                <BookCoverTile
+                  {...board}
+                  href={textbookReaderHref || textbookPdfUrl || null}
+                  external={!textbookReaderHref && !!textbookPdfUrl}
+                />
+                <BookCoverTile
+                  {...board}
+                  href={summaryHref || null}
+                  badge={t.summary}
+                />
+                <BookCoverTile
+                  {...board}
+                  href={qbankHref || null}
+                  badge={t.qbank}
+                  badgeClassName="bg-sky-600"
+                />
+              </Fragment>
             )
           }
         }
@@ -836,5 +878,125 @@ function ContentSection({
       </div>
       {children}
     </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Book cover tile — the textbook and its summary, off one board
+// ---------------------------------------------------------------------------
+
+/**
+ * A book as the reader's first screen prints it: the cover art, and over its
+ * free head the three lines a textbook sets there — stage, title, grade. A
+ * badge marks a tile that is not the book itself (the summary).
+ */
+function BookCoverTile({
+  coverUrl,
+  onCoverError,
+  accentColor,
+  alt,
+  stage,
+  title,
+  grade,
+  href,
+  external = false,
+  badge,
+  badgeClassName = "bg-emerald-500",
+}: {
+  coverUrl: string | null
+  onCoverError: () => void
+  accentColor: string
+  alt: string
+  stage: string | null
+  title: string
+  grade: string | null
+  href?: string | null
+  external?: boolean
+  badge?: string
+  /** Disc colour — one per kind, so two badged tiles never read alike. */
+  badgeClassName?: string
+}) {
+  const className = "group relative block shrink-0 overflow-hidden"
+  const style = { width: 180, height: 260 }
+
+  const inner = (
+    <>
+      {coverUrl ? (
+        <Image
+          src={coverUrl}
+          alt={alt}
+          fill
+          className="object-cover"
+          sizes="180px"
+          unoptimized
+          onError={onCoverError}
+        />
+      ) : (
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ backgroundColor: accentColor }}
+        >
+          <BookOpen className="size-20 text-white/10" />
+        </div>
+      )}
+      {/* The board's free head, the way the reader's cover sets it: stage,
+          title, grade centred in the upper half under a white veil. The ink is
+          fixed rather than tokenised — the veil is always white, so a dark-mode
+          foreground would vanish. */}
+      <div
+        className="absolute inset-x-0 top-0 flex h-1/2 flex-col items-center justify-center gap-0.5 px-2.5 pt-3 pb-2 text-center"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.95) 58%, rgba(255,255,255,0.72) 82%, rgba(255,255,255,0) 100%)",
+          color: "#1c1c1e",
+          fontFamily:
+            'var(--font-thmanyah-text), ui-serif, Georgia, "Times New Roman", serif',
+        }}
+      >
+        {stage && (
+          <p className="text-[11px] leading-tight font-semibold">{stage}</p>
+        )}
+        <p className="line-clamp-2 text-lg leading-tight font-bold text-balance">
+          {elongate(title)}
+        </p>
+        {grade && (
+          <p className="text-[11px] leading-tight font-semibold">{grade}</p>
+        )}
+      </div>
+      {badge && (
+        <span className={cn(
+            "absolute start-1.5 top-1.5 z-10 flex size-10 items-center justify-center rounded-full px-0.5 text-center text-[8px] leading-tight font-bold tracking-tight text-white shadow-sm",
+            badgeClassName
+          )}>
+          {badge}
+        </span>
+      )}
+    </>
+  )
+
+  if (href && external) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        style={style}
+      >
+        {inner}
+      </a>
+    )
+  }
+  if (href) {
+    return (
+      <Link href={href} className={className} style={style}>
+        {inner}
+      </Link>
+    )
+  }
+  return (
+    <div className={className} style={style}>
+      {inner}
+    </div>
   )
 }

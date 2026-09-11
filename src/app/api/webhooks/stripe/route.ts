@@ -228,6 +228,76 @@ async function revokeEnrollmentForCharge(
   }
 }
 
+/**
+ * Revoke a paid lesson-video unlock when its charge is reversed.
+ *
+ * The twin of `revokeEnrollmentForCharge`, and it was missing: a refunded or
+ * charged-back video kept `VideoPurchase.status = SUCCESS`, and
+ * `get-lesson-with-progress.ts` gates playback on exactly that — so the student
+ * kept the video forever after getting their money back.
+ *
+ * Resolution order mirrors the enrollment path: the charge's own metadata first
+ * (stamped via `payment_intent_data` in `purchaseVideo`, because refund and
+ * dispute events never see the checkout session), then a payment_intent →
+ * checkout session → `VideoPurchase.stripeSessionId` fallback for purchases
+ * made before that metadata existed.
+ */
+async function revokeVideoPurchaseForCharge(
+  charge: {
+    metadata?: { videoId?: string; userId?: string } | null
+    payment_intent?: string | null
+  },
+  reason: "refund" | "dispute"
+): Promise<void> {
+  try {
+    const videoId = charge.metadata?.videoId ?? null
+    const userId = charge.metadata?.userId ?? null
+
+    let where:
+      | { userId_videoId: { userId: string; videoId: string } }
+      | { stripeSessionId: string }
+      | null =
+      videoId && userId ? { userId_videoId: { userId, videoId } } : null
+
+    if (!where && charge.payment_intent && stripe) {
+      const sessions = await stripe.checkout.sessions.list({
+        payment_intent: charge.payment_intent,
+        limit: 1,
+      })
+      const checkoutSessionId = sessions.data[0]?.id
+      if (checkoutSessionId) where = { stripeSessionId: checkoutSessionId }
+    }
+
+    if (!where) {
+      // Not every reversed charge is a video purchase — enrollments and fees
+      // ride the same events, so this is a debug-level miss, not an error.
+      return
+    }
+
+    const purchase = await db.videoPurchase.findUnique({
+      where,
+      select: { id: true, status: true },
+    })
+
+    if (!purchase || purchase.status !== "SUCCESS") return
+
+    await db.videoPurchase.update({
+      where: { id: purchase.id },
+      data: {
+        status: reason === "refund" ? "REFUNDED" : "CANCELLED",
+        updatedAt: new Date(),
+      },
+    })
+
+    console.log(`[Webhook] VideoPurchase revoked (${reason}): ${purchase.id}`)
+  } catch (error) {
+    console.error(
+      `[Webhook] Failed to revoke video purchase on ${reason}:`,
+      error
+    )
+  }
+}
+
 export async function POST(req: Request) {
   if (!stripe) {
     return new Response("Stripe is not configured", { status: 500 })
@@ -956,6 +1026,8 @@ export async function POST(req: Request) {
             courseId?: string
             enrollmentId?: string
             schoolId?: string
+            videoId?: string
+            userId?: string
           }
           payment_intent?: string
         }
@@ -964,6 +1036,9 @@ export async function POST(req: Request) {
     const charge = eventData.data.object
 
     await revokeEnrollmentForCharge(charge, "refund")
+    // Same reversed charge may be a paid lesson video rather than an
+    // enrollment — both resolvers no-op when the charge is not theirs.
+    await revokeVideoPurchaseForCharge(charge, "refund")
   }
 
   // ============================================
@@ -979,6 +1054,8 @@ export async function POST(req: Request) {
             courseId?: string
             enrollmentId?: string
             schoolId?: string
+            videoId?: string
+            userId?: string
           }
         }
       }
@@ -986,6 +1063,7 @@ export async function POST(req: Request) {
     const dispute = eventData.data.object
 
     await revokeEnrollmentForCharge(dispute, "dispute")
+    await revokeVideoPurchaseForCharge(dispute, "dispute")
   }
 
   // ============================================

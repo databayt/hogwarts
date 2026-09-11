@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-08-28
+last_audited: 2026-09-02
 ---
 
 ## Lumos — Learning Management System (LMS)
@@ -32,7 +32,7 @@ The lumos block uses a catalog-based architecture where courses map to subjects 
 | Route                                                      | Page                                                                                   | Status |
 | ---------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------ |
 | `/{lang}/s/{subdomain}/lumos`                              | Home / landing page (no nav chrome)                                                    | Ready  |
-| `/{lang}/s/{subdomain}/lumos/courses`                      | Course catalog                                                                         | Ready  |
+| `/{lang}/s/{subdomain}/lumos/courses`                      | Course catalog — browse view (shelves) bare, flat grid on `?level=` / `?search=`       | Ready  |
 | `/{lang}/s/{subdomain}/lumos/courses/[slug]`               | Course detail                                                                          | Ready  |
 | `/{lang}/s/{subdomain}/lumos/courses/[slug]/[lessonId]`    | Lesson viewer                                                                          | Ready  |
 | `/{lang}/s/{subdomain}/lumos/dashboard`                    | Role dashboard (admin stats / teach overview / children's progress / enrolled courses) | Ready  |
@@ -111,8 +111,10 @@ src/components/lumos/
 │   ├── continue-watching-section.tsx # Resume watching
 │   └── education-animation.tsx     # Animated education graphic
 ├── courses/
-│   ├── content.tsx                 # Course catalog list
-│   ├── course-card.tsx             # Course card component
+│   ├── content.tsx                 # Course catalog — shelves while browsing, grid when filtered
+│   ├── course-card.tsx             # Course card (fluid in the grid, fixed-width in a shelf)
+│   ├── course-shelf.tsx            # One horizontally-scrolling row of courses
+│   ├── continue-learning-card.tsx  # The lead card: where the learner left off
 │   ├── [slug]/
 │   │   ├── content.tsx             # Course detail page
 │   │   ├── course-progress-bar.tsx # Progress indicator (+ certificate link at 100%)
@@ -310,3 +312,67 @@ preference → school default → `[isFeatured, viewCount]`.**
 - `agent:performance` — CDN asset migration + Core Web Vitals
 - `skill:/performance` — perf audit
 - `skill:/skeleton` — loading-state sweep
+
+### The lesson page is immersive (2026-09-09)
+
+`dashboard/lesson/content.tsx` marks its root `data-immersive`. The
+school-dashboard layout reads that marker and does two things for the page's
+whole length: it unpins `PlatformHeader` (`position: static`), and it lets
+`.dashboard-container` stop clipping horizontal overflow. Without the second,
+the hero's negative margins are cut off at the container edge and no amount of
+math reaches the page edge.
+
+With both in place the hero escapes BOTH gutters — the container's phone `px-2`
+and the root layout's `--container-px` (8px on a phone, 32px at `xl`) — the way
+the live room's own layout does. Above `sm` only the inline-END side escapes:
+the sidebar sits on the inline-start side of this container, so a negative
+start margin would run the poster under it.
+
+The page then lands scrolled to the hero's own top edge (measured on mount,
+skipped when the browser restored a position), so the artwork is the first
+thing on screen and the header is one short scroll up.
+
+### Lesson video fallback (2026-09-09)
+
+Until real lesson videos are uploaded, every lesson plays the marketing story
+clip from the CDN: `https://<NEXT_PUBLIC_CDN_DOMAIN>/hogwarts/media/story.mp4`.
+That is a FALLBACK, not a hard-wire — `dashboard/lesson/content.tsx` still
+resolves a lesson's own video first, so the day a real video row lands for a
+lesson, that lesson plays it and nothing here changes.
+
+Two details worth keeping:
+
+- The URL is written out in full rather than through `asset()`. That helper
+  flattens any path to its bare file name, and the flat key
+  (`hogwarts/story.mp4`) is served `application/octet-stream` while
+  `hogwarts/media/story.mp4` is served `video/mp4`. Same bytes, same etag.
+- The demo database has **zero** `Video` rows. The last one, "Offline test
+  clip" (a 10-second 240p sample left over from offline-download testing on
+  2026-08-29), was deleted from the LOCAL database on 2026-09-09 so that no
+  lesson is the odd one out. Its id was `cmtek2a6100018ova2zjrpvc1`; production
+  was not touched and may still hold it. No seed in the repo writes that row —
+  its id was a cuid, not the `seed-vid-*` the catalog video seed mints, and
+  that seed only writes when the object already exists in the bucket. It was
+  written by hand during the offline-download work.
+
+### The lesson hero reads like the live room's card (2026-09-09)
+
+Both surfaces draw `lumos/shared/title-card`. The lesson's stack now carries
+the same rows in the same order the room's does — title, one grey info line,
+the marks, the button, the paragraph — after the grade badge and the "بالقلم"
+byline came off.
+
+The two content rules worth keeping, both taken from the room's own notes:
+
+- **The info line is three facts, and never repeats the button.** The room
+  reads grade · start time · duration; a lesson has no clock, so its middle
+  fact is the year. It used to open with "C1 L2" — which the button already
+  says — and then name the course and the chapter, which is five items on a
+  line the reference keeps to one.
+- **The course and the chapter live in the paragraph.** That is where the room
+  puts its own chapter and lesson, and where the reference puts its narrator.
+
+The marks row is left holding only marks: one filled, the rest outlined, then
+the counts. The year and the runtime used to lead it as bare text among the
+boxes; they are facts you read before deciding, so they belong on the info
+line.

@@ -28,14 +28,14 @@ model School {
   country String?
 
   // Subscription/billing info (high-level; detailed state in Subscription)
-  planType    String  @default("basic") // basic, premium, enterprise
+  planType    String    @default("basic") // basic, premium, enterprise
   // The pilot/trial clock. Nullable because most schools never trial.
   // isTenantOnTrial()/getTrialDaysRemaining() consume it; before this field
   // existed they were passed undefined and the trial column was always blank.
   trialEndsAt DateTime?
-  maxStudents Int     @default(100)
-  maxTeachers Int     @default(10)
-  isActive    Boolean @default(true)
+  maxStudents Int       @default(100)
+  maxTeachers Int       @default(10)
+  isActive    Boolean   @default(true)
 
   // Pricing
   tuitionFee      Decimal? @db.Decimal(10, 2)

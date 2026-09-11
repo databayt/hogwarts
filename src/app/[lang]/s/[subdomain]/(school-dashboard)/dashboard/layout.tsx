@@ -17,7 +17,13 @@ export default async function DashboardLayout({ children, params }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter title={d?.title || "Overview"} />
+      {/* `heading` is the on-page h1 only — the tab title stays `title`.
+          It is hidden on phones: below `md` the dashboard opens with the home
+          block ported from the Android app, which carries no page title. */}
+      <PageHeadingSetter
+        title={d?.heading || d?.title || "Overview"}
+        hideOnMobile
+      />
       {children}
     </div>
   )

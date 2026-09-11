@@ -13,6 +13,12 @@ import React, {
 interface PageHeadingData {
   title: string
   description?: string
+  /**
+   * Drop the heading on phones while keeping it from `md` up. The dashboard
+   * uses it: below `md` the page opens with the home block ported from the
+   * Android app, which has no page title above it.
+   */
+  hideOnMobile?: boolean
 }
 
 interface PageHeadingContextValue {

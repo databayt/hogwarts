@@ -388,6 +388,33 @@ Lumos (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~93% complete a
   its person (`teacher:<userId>`), so key equality would make a `school:<id>`
   lock match nothing and silently degrade to open.
 
+## The lesson hero is a shared frame with a phone layout (2026-09-03)
+
+The hero moved out of `dashboard/lesson/content.tsx` into
+`shared/title-card/` — frame plus the class strings for badge, chips, pill and
+round button — because the live room needed the same card in front of a class.
+Verified by pixel-diffing this page before and after: identical at 1440.
+
+It then gained the reference app's PHONE layout, and this page gets it too.
+Below `sm` the title, byline and meta CENTRE over the artwork and a solid black
+shelf underneath carries the button with the mark row beneath it; above `sm`
+nothing changed. The old mobile hero was the wide overlay squashed into a
+219px-tall strip with five rows of text over the picture.
+
+**That is why the hero's box is `aspect-[4/5] sm:aspect-video` and the PLAYER's
+is plain `aspect-video`.** They are the same `<div>`, switched on `showHero`.
+The stacked layout does not fit in 16:9 on a 390px screen; a taller box would
+letterbox the video. Change one and check the other.
+
+The phone values are measured off the Figma frame (`Hogwarts`, node `574:30`),
+not eyeballed: 16px side padding, a 42px button at an 8px radius in `#F2F2F7`,
+13px mark boxes of 11px type 6px apart, and systemGray (`#8D8D93`) for both the
+marks and the meta line. Above `sm` every one of those reverts to what the wide
+card already had, so this page's desktop hero is untouched.
+
+Add geometry to the shared frame, never to a caller — the live block's records
+carry the case history of what happens otherwise.
+
 ## Related Blocks
 
 - **catalog** (`src/components/catalog/`) — owns `Subject`/`Chapter`/`Lesson`/

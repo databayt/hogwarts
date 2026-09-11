@@ -267,6 +267,25 @@ export class BookEngine {
     return true
   }
 
+  /**
+   * Jump to a screen by its place in the whole book (1-based). The reading
+   * menu's progress scrubber speaks in these numbers, not in printed pages.
+   */
+  goToGlobal(n: number, instant = true) {
+    const counts = this.snap.counts
+    const total = counts.reduce((a, b) => a + b, 0)
+    if (!total) return
+    let rest = clamp(Math.round(n), 1, total) - 1
+    for (let sec = 0; sec < counts.length; sec++) {
+      const c = counts[sec] ?? 1
+      if (rest < c) {
+        this.go(sec, rest, instant)
+        return
+      }
+      rest -= c
+    }
+  }
+
   /** Jump to the screen that holds an element of a flow section. */
   goToElement(sec: number, el: Element, instant = true) {
     const flow = this.flows[sec]

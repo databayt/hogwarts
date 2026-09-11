@@ -739,8 +739,12 @@ export function ChatInterface({
     <div className={cn("flex h-full flex-col", className)}>
       {/* Header */}
       <div
-        className="flex h-12 flex-shrink-0 items-center gap-3 px-3"
-        style={{ backgroundColor: "#F4F4F4" }}
+        className={cn(
+          "flex h-[60px] flex-shrink-0 items-center gap-[10px] px-3",
+          // Same glass panel and hairline the mobile conversation header uses.
+          "bg-[color:var(--wa-surface-panel)] backdrop-blur-[25px]",
+          "border-b-[0.33px] border-[color:var(--wa-border-panel)]"
+        )}
       >
         {/* Back arrow — mobile only */}
         <Button
@@ -757,7 +761,7 @@ export function ChatInterface({
         <Dialog>
           <DialogTrigger asChild>
             <button className="flex-shrink-0 rounded-full focus:outline-none">
-              <Avatar className="h-8 w-8 cursor-pointer">
+              <Avatar className="h-9 w-9 cursor-pointer">
                 <AvatarImage src={avatarUrl} alt={displayName} />
                 <AvatarFallback
                   className="flex items-center justify-center"
@@ -815,29 +819,29 @@ export function ChatInterface({
           </DialogContent>
         </Dialog>
 
-        {/* Name + presence */}
-        <div className="min-w-0 flex-1">
-          <h2 className="text-foreground truncate text-sm font-medium">
+        {/* Name + presence — opens the info panel, as tapping the name does
+            on the phone. Falls back to the same "tap for info" subtitle when
+            there is no presence to report. */}
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="flex min-w-0 flex-1 flex-col items-start text-start"
+        >
+          <span className="max-w-full truncate text-[16px] font-semibold tracking-[-0.32px] text-[color:var(--wa-text-primary)]">
             {displayName}
-          </h2>
-          {conversation.type === "direct" &&
-            otherPresence.state === "online" && (
-              <p className="text-xs text-emerald-500">
-                {m?.ui?.online || "online"}
-              </p>
-            )}
-          {conversation.type === "direct" &&
-            otherPresence.state === "offline" &&
-            otherPresence.lastSeenAt && (
-              <p className="text-muted-foreground text-xs">
-                {m?.ui?.last_seen || "last seen"}{" "}
-                {formatDistanceToNow(new Date(otherPresence.lastSeenAt), {
-                  addSuffix: true,
-                  locale: dateLocale,
-                })}
-              </p>
-            )}
-        </div>
+          </span>
+          <p className="max-w-full truncate text-[12px] tracking-[-0.12px] text-[color:var(--wa-text-secondary-alpha)]">
+            {conversation.type === "direct" && otherPresence.state === "online"
+              ? m?.ui?.online || "online"
+              : conversation.type === "direct" &&
+                  otherPresence.state === "offline"
+                ? `${m?.ui?.last_seen || "last seen"} ${formatDistanceToNow(
+                    new Date(otherPresence.lastSeenAt),
+                    { addSuffix: true, locale: dateLocale }
+                  )}`
+                : participantNames}
+          </p>
+        </button>
 
         {/* Action icons. Video/voice call buttons removed — no telephony
             backend exists; decorative no-op buttons don't ship to production. */}
@@ -885,6 +889,9 @@ export function ChatInterface({
           savedScrollPosition={savedScrollPosition}
           onSaveScrollPosition={onSaveScrollPosition}
           unreadCount={conversation.unreadCount ?? 0}
+          encryptionNotice={m?.ui?.encryption_notice}
+          encryptionLearnMore={m?.ui?.encryption_learn_more}
+          onEncryptionLearnMore={onViewDetails}
           className="h-full"
         />
 

@@ -8,6 +8,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { TimetableContent } from "@/components/school-dashboard/timetable/content"
 import {
   canModifyTimetable,
+  rendersStudentTimetable,
   type TimetableRole,
 } from "@/components/school-dashboard/timetable/permissions-config"
 
@@ -29,6 +30,12 @@ export default async function Page({ params }: Props) {
     <TimetableContent
       dictionary={dictionary.school}
       defaultTab={isAdmin ? undefined : "today"}
+      // The role is known here and nowhere else until two server actions have
+      // answered inside the client tree — which is the entire wait the loading
+      // placeholder covers. Handing it down lets that placeholder be the right
+      // shape from the server render on, rather than a week grid in front of a
+      // phone that is about to show one day.
+      studentShell={rendersStudentTimetable(role)}
     />
   )
 }

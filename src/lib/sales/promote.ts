@@ -90,7 +90,9 @@ const FIRST_TOUCH_DELAY_DAYS = 2
  * a lead with neither an email nor a phone cannot be worked, and creating one
  * would only inflate the pipeline.
  */
-export async function promoteToLead(prospectId: string): Promise<PromoteResult> {
+export async function promoteToLead(
+  prospectId: string
+): Promise<PromoteResult> {
   const prospect = await db.prospect.findUnique({ where: { id: prospectId } })
   if (!prospect) return { ok: false, reason: "prospect_not_found" }
 

@@ -16,6 +16,11 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { AutoScroller, useIsAtBottom } from "./auto-scroller"
 import { ChatEmpty } from "./empty-state"
 import { groupMessages, MessageGroup } from "./message-group"
+import {
+  DateSeparator,
+  EncryptionNotice,
+  WA_CHAT_BG as WA_CHAT_WALLPAPER,
+} from "./mobile"
 import type { ConversationType, MessageDTO } from "./types"
 
 export interface MessageListProps {
@@ -35,6 +40,10 @@ export interface MessageListProps {
   savedScrollPosition?: number
   onSaveScrollPosition?: (position: number) => void
   unreadCount?: number
+  /** End-to-end-encryption card shown above the first message of the thread. */
+  encryptionNotice?: string
+  encryptionLearnMore?: string
+  onEncryptionLearnMore?: () => void
   className?: string
   enableVirtualization?: boolean
 }
@@ -50,6 +59,7 @@ type VirtualListItem =
     }
   | { type: "loader"; position: "top" | "bottom" }
   | { type: "unread-divider"; count: number }
+  | { type: "encryption-notice" }
 
 export function MessageList({
   messages,
@@ -68,6 +78,9 @@ export function MessageList({
   savedScrollPosition = -1,
   onSaveScrollPosition,
   unreadCount = 0,
+  encryptionNotice,
+  encryptionLearnMore,
+  onEncryptionLearnMore,
   className,
   enableVirtualization = true,
 }: MessageListProps) {
@@ -161,6 +174,12 @@ export function MessageList({
       items.push({ type: "loader", position: "top" })
     }
 
+    // WhatsApp shows the encryption card at the very start of the thread, so
+    // it only belongs here once there is no older page left to fetch.
+    if (encryptionNotice && !hasMore) {
+      items.push({ type: "encryption-notice" })
+    }
+
     Object.entries(messagesByDate)
       .sort(([a], [b]) => a.localeCompare(b))
       .forEach(([dateKey, dayMessages]) => {
@@ -201,7 +220,14 @@ export function MessageList({
     }
 
     return items
-  }, [messagesByDate, isLoading, hasMore, getDateLabel, unreadCount])
+  }, [
+    messagesByDate,
+    isLoading,
+    hasMore,
+    getDateLabel,
+    unreadCount,
+    encryptionNotice,
+  ])
 
   // Virtual scrolling
   const virtualizer = useVirtualizer({
@@ -212,6 +238,7 @@ export function MessageList({
       if (item.type === "date-separator") return 40
       if (item.type === "loader") return 36
       if (item.type === "unread-divider") return 36
+      if (item.type === "encryption-notice") return 64
       // 80px per message: more realistic for media bubbles to reduce scroll jumps
       return item.messages.length * 80
     },
@@ -308,16 +335,22 @@ export function MessageList({
 
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className={cn("relative flex-1 bg-[#EEEAE4]", className)}>
+      <div className={cn("relative flex-1 bg-[#F5F2EB] dark:bg-[#0B141A]", className)}>
         <div
-          className="pointer-events-none absolute inset-0 opacity-60"
+          className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage:
-              "url('https://cdn.databayt.org/hogwarts/whatsapp-bg.png')",
-            backgroundSize: "60%",
+            backgroundImage: `url('${WA_CHAT_WALLPAPER}')`,
+            backgroundSize: "432px auto",
             backgroundRepeat: "repeat",
           }}
         />
+        <div className="relative">
+          <EncryptionNotice
+            text={encryptionNotice}
+            learnMoreLabel={encryptionLearnMore}
+            onLearnMore={onEncryptionLearnMore}
+          />
+        </div>
         <ChatEmpty locale={locale} />
       </div>
     )
@@ -326,13 +359,12 @@ export function MessageList({
   // Render virtualized list
   if (enableVirtualization) {
     return (
-      <div className={cn("relative flex-1 bg-[#EEEAE4]", className)}>
+      <div className={cn("relative flex-1 bg-[#F5F2EB] dark:bg-[#0B141A]", className)}>
         <div
-          className="pointer-events-none absolute inset-0 opacity-60"
+          className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage:
-              "url('https://cdn.databayt.org/hogwarts/whatsapp-bg.png')",
-            backgroundSize: "60%",
+            backgroundImage: `url('${WA_CHAT_WALLPAPER}')`,
+            backgroundSize: "432px auto",
             backgroundRepeat: "repeat",
           }}
         />
@@ -371,14 +403,15 @@ export function MessageList({
                   )}
 
                   {item.type === "date-separator" && (
-                    <div className="my-3 flex items-center justify-center">
-                      <span
-                        className="border-muted text-foreground/80 rounded-md border px-2.5 py-0.5 text-[11px] font-medium"
-                        style={{ backgroundColor: "#FEFDFC" }}
-                      >
-                        {item.label}
-                      </span>
-                    </div>
+                    <DateSeparator label={item.label} className="pt-3 pb-2" />
+                  )}
+
+                  {item.type === "encryption-notice" && (
+                    <EncryptionNotice
+                      text={encryptionNotice}
+                      learnMoreLabel={encryptionLearnMore}
+                      onLearnMore={onEncryptionLearnMore}
+                    />
                   )}
 
                   {item.type === "unread-divider" && (
@@ -449,13 +482,12 @@ export function MessageList({
 
   // Non-virtualized fallback
   return (
-    <div className={cn("relative flex-1 bg-[#EEEAE4]", className)}>
+    <div className={cn("relative flex-1 bg-[#F5F2EB] dark:bg-[#0B141A]", className)}>
       <div
-        className="pointer-events-none absolute inset-0 opacity-60"
+        className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage:
-            "url('https://cdn.databayt.org/hogwarts/whatsapp-bg.png')",
-          backgroundSize: "60%",
+          backgroundImage: `url('${WA_CHAT_WALLPAPER}')`,
+          backgroundSize: "432px auto",
           backgroundRepeat: "repeat",
         }}
       />
@@ -472,6 +504,14 @@ export function MessageList({
             </div>
           )}
 
+          {!hasMore && (
+            <EncryptionNotice
+              text={encryptionNotice}
+              learnMoreLabel={encryptionLearnMore}
+              onLearnMore={onEncryptionLearnMore}
+            />
+          )}
+
           {Object.entries(messagesByDate)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([dateKey, dayMessages]) => {
@@ -480,14 +520,10 @@ export function MessageList({
               return (
                 <div key={dateKey}>
                   {/* Date separator — WhatsApp pill */}
-                  <div className="my-3 flex items-center justify-center">
-                    <span
-                      className="border-muted text-foreground/80 rounded-md border px-2.5 py-0.5 text-[11px] font-medium"
-                      style={{ backgroundColor: "#FEFDFC" }}
-                    >
-                      {getDateLabel(dateKey)}
-                    </span>
-                  </div>
+                  <DateSeparator
+                    label={getDateLabel(dateKey)}
+                    className="pt-3 pb-2"
+                  />
 
                   {/* Message groups */}
                   <div className="space-y-1">

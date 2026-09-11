@@ -550,6 +550,15 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
           })
 
           token.id = user.id
+          // The credentials provider returns the raw Prisma user, which carries
+          // `username` and no `name`. NextAuth only propagates `name` to the
+          // session, so without this the UI has no display name at all: full
+          // names render blank and avatar initials collapse to the first letter
+          // of the email. Map it here, at the one place every provider passes
+          // through.
+          if (!token.name && "username" in user) {
+            token.name = (user as any).username
+          }
           // Only set role and schoolId if they exist on the user object
           if ("role" in user) {
             token.role = (user as any).role
@@ -663,6 +672,13 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
         if (token) {
           // Always ensure we have the latest token data
           session.user.id = token.id as string
+          // Carry the display name explicitly. NextAuth pre-fills it from the
+          // token, but this callback rebuilds enough of `session.user` that
+          // relying on that is fragile — and a missing name is invisible until
+          // somebody notices every avatar showing one letter of an email.
+          if (token.name) {
+            session.user.name = token.name as string
+          }
 
           // Check for preview role from cookies
           // Wrapped in try-catch because cookies() may not be available in all contexts

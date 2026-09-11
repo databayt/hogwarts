@@ -240,57 +240,54 @@ export function Weather({
   return (
     <div className={cn("flex w-full flex-col", className)}>
       <div>
+        {/* Time and Date - side by side, no gap */}
+        <div className="mb-2 flex items-baseline gap-1.5">
+          <p className="text-xl font-bold tracking-tight">{currentTime}</p>
+          <p className="text-muted-foreground text-xl font-bold tracking-tight">
+            {currentDate}
+          </p>
+        </div>
+
         {/* Header with condition */}
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="text-muted-foreground flex items-center gap-1">
-              <WeatherIcon
-                condition={currentWeather.condition}
-                className="size-5"
-              />
-              <span className="text-sm">{currentWeather.conditionLabel}</span>
-            </div>
-          </div>
-
           {location && (
             <p className="text-muted-foreground text-sm">{location}</p>
           )}
 
-          {/* Weather details */}
-          <div className="mt-2 space-y-1">
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          {/* Weather details - one row on mobile, stacked from sm up */}
+          <div className="grid grid-cols-4 gap-x-2 gap-y-1 sm:grid-cols-1 sm:gap-x-4">
+            <div className="text-muted-foreground flex items-center gap-1 text-xs whitespace-nowrap sm:text-sm">
+              <WeatherIcon
+                condition={currentWeather.condition}
+                className="size-4 shrink-0 sm:size-5"
+              />
+              <span className="truncate">{currentWeather.conditionLabel}</span>
+            </div>
+            <div className="text-muted-foreground hidden items-center gap-2 text-xs whitespace-nowrap sm:flex sm:text-sm">
               <Droplets className="size-4" />
               <span>
                 {dict?.humidity || "Humidity"}: {currentWeather.humidity}%
               </span>
             </div>
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
+            <div className="text-muted-foreground flex items-center gap-1 text-xs whitespace-nowrap sm:gap-2 sm:text-sm">
               <span className="text-primary">
                 {dict?.rain || "Rain"}: {currentWeather.rainChance}%
               </span>
             </div>
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
-              <Thermometer className="size-4" />
+            <div className="text-muted-foreground flex items-center gap-1 text-xs whitespace-nowrap sm:gap-2 sm:text-sm">
+              <Thermometer className="size-4 shrink-0" />
               <span>
                 {currentWeather.temperature}°{tempUnit} (
                 {currentWeather.tempLow}°{tempUnit})
               </span>
             </div>
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
-              <Wind className="size-4" />
+            <div className="text-muted-foreground flex items-center gap-1 text-xs whitespace-nowrap sm:gap-2 sm:text-sm">
+              <Wind className="size-4 shrink-0" />
               <span>
                 {currentWeather.windSpeed} {speedUnit}
               </span>
             </div>
           </div>
-        </div>
-
-        {/* Time and Date - matching sizes */}
-        <div className="mt-3 space-y-0">
-          <p className="text-xl font-bold tracking-tight">{currentTime}</p>
-          <p className="text-muted-foreground text-xl font-bold tracking-tight">
-            {currentDate}
-          </p>
         </div>
 
         {/* 6-day forecast strip */}

@@ -44,16 +44,17 @@
  *     --remote-debugging-port=9333 --remote-allow-origins='*' \
  *     --user-data-dir="$HOME/.claude/chrome-fbscrape-profile" &
  */
-import { createCdpSession, requireScrapePort } from './cdp-session';
+import { createCdpSession, requireScrapePort } from "./cdp-session"
 
-const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number): Promise<void> =>
+  new Promise((r) => setTimeout(r, ms))
 
 interface State {
-  url: string;
-  loggedIn: boolean;
-  hasLoginForm: boolean;
-  challenge: string;
-  who: string;
+  url: string
+  loggedIn: boolean
+  hasLoginForm: boolean
+  challenge: string
+  who: string
 }
 
 const PROBE = `(() => {
@@ -68,38 +69,44 @@ const PROBE = `(() => {
                ? t.split('\\n').filter(Boolean).slice(0, 6).join(' | ') : '',
     who: (document.querySelector('[aria-label="Your profile"]')?.getAttribute('aria-label')) || '',
   };
-})()`;
+})()`
 
 async function main(): Promise<void> {
-  const { port, profile } = requireScrapePort();
-  const email = process.env.FB_LOGIN_EMAIL ?? '';
-  const password = process.env.FB_LOGIN_PASSWORD ?? '';
+  const { port, profile } = requireScrapePort()
+  const email = process.env.FB_LOGIN_EMAIL ?? ""
+  const password = process.env.FB_LOGIN_PASSWORD ?? ""
   if (!email || !password) {
-    console.error('needs FB_LOGIN_EMAIL and FB_LOGIN_PASSWORD in the environment');
-    process.exit(1);
+    console.error(
+      "needs FB_LOGIN_EMAIL and FB_LOGIN_PASSWORD in the environment"
+    )
+    process.exit(1)
   }
-  console.log(`Signing in on port ${port}, profile ${profile}`);
-  console.log(`Account: ${email.replace(/(.{2}).*(@.*)/, '$1***$2')}\n`);
+  console.log(`Signing in on port ${port}, profile ${profile}`)
+  console.log(`Account: ${email.replace(/(.{2}).*(@.*)/, "$1***$2")}\n`)
 
-  const s = await createCdpSession(port, 'about:blank');
+  const s = await createCdpSession(port, "about:blank")
   try {
-    await s.navigate('https://www.facebook.com/');
-    await sleep(3000);
+    await s.navigate("https://www.facebook.com/")
+    await sleep(3000)
 
-    let st = await s.evaluate<State>(PROBE);
+    let st = await s.evaluate<State>(PROBE)
     if (st.loggedIn) {
-      console.log('✅ already signed in — the profile still holds a session. Nothing to do.');
-      return;
+      console.log(
+        "✅ already signed in — the profile still holds a session. Nothing to do."
+      )
+      return
     }
 
     if (!st.hasLoginForm) {
-      await s.navigate('https://www.facebook.com/login');
-      await sleep(3000);
-      st = await s.evaluate<State>(PROBE);
+      await s.navigate("https://www.facebook.com/login")
+      await sleep(3000)
+      st = await s.evaluate<State>(PROBE)
     }
     if (!st.hasLoginForm) {
-      console.log(`no login form found at ${st.url}${st.challenge ? ` — ${st.challenge}` : ''}`);
-      return;
+      console.log(
+        `no login form found at ${st.url}${st.challenge ? ` — ${st.challenge}` : ""}`
+      )
+      return
     }
 
     // Type into the real inputs and dispatch the events React listens for; a
@@ -118,42 +125,46 @@ async function main(): Promise<void> {
       set('input[name="email"]', ${JSON.stringify(email)});
       set('input[name="pass"]', ${JSON.stringify(password)});
       return true;
-    })()`);
-    await sleep(1200);
+    })()`)
+    await sleep(1200)
     await s.evaluate(`(() => {
       const btn = document.querySelector('button[name="login"], button[type="submit"]');
       if (btn) { btn.click(); return 'clicked'; }
       const f = document.querySelector('form');
       if (f) { f.submit(); return 'submitted'; }
       return 'no submit control';
-    })()`);
+    })()`)
 
     // Facebook navigates a few times after a successful sign-in.
     for (let i = 0; i < 10; i++) {
-      await sleep(3000);
-      st = await s.evaluate<State>(PROBE);
-      if (st.loggedIn || st.challenge) break;
+      await sleep(3000)
+      st = await s.evaluate<State>(PROBE)
+      if (st.loggedIn || st.challenge) break
     }
 
     if (st.loggedIn) {
-      console.log('✅ signed in. The session now persists in this profile.');
-      console.log('   Next: npx tsx scripts/crm/enrich-fb-about.ts --limit=5');
+      console.log("✅ signed in. The session now persists in this profile.")
+      console.log("   Next: npx tsx scripts/crm/enrich-fb-about.ts --limit=5")
     } else if (st.challenge) {
-      console.log('⚠️  Facebook is challenging this sign-in:\n');
-      console.log(`   ${st.challenge}\n`);
-      console.log(`   at ${st.url}`);
-      console.log('   A Chrome window is open on this profile — finish the challenge there by hand,');
-      console.log('   then re-run this to confirm. New accounts get challenged often; that is expected.');
+      console.log("⚠️  Facebook is challenging this sign-in:\n")
+      console.log(`   ${st.challenge}\n`)
+      console.log(`   at ${st.url}`)
+      console.log(
+        "   A Chrome window is open on this profile — finish the challenge there by hand,"
+      )
+      console.log(
+        "   then re-run this to confirm. New accounts get challenged often; that is expected."
+      )
     } else {
-      console.log(`not signed in yet — currently at ${st.url}`);
-      console.log('   The Chrome window on this profile is open; check it.');
+      console.log(`not signed in yet — currently at ${st.url}`)
+      console.log("   The Chrome window on this profile is open; check it.")
     }
   } finally {
-    await s.close();
+    await s.close()
   }
 }
 
 main().catch((e) => {
-  console.error(e instanceof Error ? e.message : e);
-  process.exit(1);
-});
+  console.error(e instanceof Error ? e.message : e)
+  process.exit(1)
+})

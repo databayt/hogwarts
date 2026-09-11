@@ -88,8 +88,9 @@ function getResourceTitleByRole(
 const defaultResourcesByRole: Record<DashboardRole, UsageResource[]> = {
   // Academic Progress - Student metrics that matter
   STUDENT: [
+    // No "Attendance Rate" row: attendance is hidden across the student
+    // dashboard, here and in `getStudentResourceUsage` that supersedes this.
     { name: "Assignment Progress", used: 18, limit: 22, unit: "completed" },
-    { name: "Attendance Rate", used: 92, limit: 100, unit: "%" },
     { name: "Current GPA", used: 3.2, limit: 4, unit: "" },
     { name: "Days Until Exams", used: 45, limit: 60, unit: "days" },
   ],

@@ -2443,6 +2443,22 @@ body:has(.thmanyah-shell) {
   text-align: right;
   color: #fff;
 }
+/* Two lines at 26px/1.5em — the height the reference measures here, because
+   its lede happens to wrap to two lines in every variant. Ours cycles between
+   one- and two-line ledes, and `.trials-head` is a fixed 204px box with
+   `place-content: center`, so an auto height would walk the eyebrow and the
+   headline up and down 19.5px on every swap.
+
+   A FLOOR, not a fixed height: below ~810px this column narrows to 341px and
+   then 236px while the lede stays 26px, so every line wraps to three — and
+   `.trials-title` is `overflow: clip`, which would eat the third line without
+   a word. `min-height` holds the shape where the ledes fit and lets the
+   squeezed range grow the way it did before, which is also how the reference
+   behaves there. The <600 block pins a real 60px because at 20px two lines
+   is the true ceiling. */
+.trials-lede-box {
+  min-height: 78px;
+}
 .trials-numbers {
   position: relative;
   display: flex;
@@ -2687,6 +2703,10 @@ body:has(.thmanyah-shell) {
   .trials-lede-box {
     order: 2;
     height: 60px;
+    /* Cancels the base 78px floor. `min-height` beats `height`, so without
+       this the phone box would render at the desktop's two-26px-lines
+       instead of the reference's two-20px-lines. */
+    min-height: 60px;
   }
   .trials-lede {
     font-size: 20px;

@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { ReaderLabels } from "./types"
+
 /** `{name}` placeholders → values; unknown names are left in place. */
 export function fill(
   template: string | undefined,
@@ -53,4 +55,53 @@ export function elongate(text: string, times = 2): string {
       out += stroke
   }
   return out
+}
+
+/** The stage a textbook names on its board, from the subject's school level. */
+const STAGE_LABEL: Record<string, string> = {
+  ELEMENTARY: "stageElementary",
+  MIDDLE: "stageMiddle",
+  HIGH: "stageHigh",
+}
+/** The grade a book prints is its place inside its stage, not its place in
+ *  the whole school: grade 12 is the third secondary year. */
+const STAGE_START: Record<string, number> = {
+  ELEMENTARY: 1,
+  MIDDLE: 7,
+  HIGH: 10,
+}
+const STAGE_SUFFIX: Record<string, string> = {
+  ELEMENTARY: "stageSuffixElementary",
+  MIDDLE: "stageSuffixMiddle",
+  HIGH: "stageSuffixHigh",
+}
+
+/** "المرحلة الثانوية" from HIGH; falls back to the generic textbook word. */
+export function stageLine(
+  level: string | null,
+  labels: ReaderLabels
+): string | null {
+  const key = level ? STAGE_LABEL[level] : null
+  return (key ? labels[key] : null) || labels.textbook || null
+}
+
+/** "الصف الثالث ثانوي" from grade 12 + HIGH; English keeps the plain number,
+ *  because its template reads `{n}` and ignores the ordinal. */
+export function gradeLine(
+  grade: number | null,
+  level: string | null,
+  labels: ReaderLabels,
+  lang: string
+): string | null {
+  if (grade == null) return null
+  const nth = grade - (level ? (STAGE_START[level] ?? 1) : 1) + 1
+  const template = labels.gradeOrdinal || labels.gradeN
+  if (!template) return null
+  return fill(template, {
+    ordinal: (nth >= 1 && nth <= 6 && labels[`ordinal${nth}`]) || "",
+    suffix: (level && labels[STAGE_SUFFIX[level]]) || "",
+    n: formatNumber(grade, lang),
+  })
+    .replace(/\s+/g, " ")
+    .trim()
 }

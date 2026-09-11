@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { Suspense } from "react"
 import { auth } from "@/auth"
 
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
@@ -12,8 +13,10 @@ import {
   canManageConflicts,
   canModifyTimetable,
   hasPermission,
+  rendersStudentTimetable,
   type TimetableRole,
 } from "@/components/school-dashboard/timetable/permissions-config"
+import { TimetableSurfaceSkeleton } from "@/components/school-dashboard/timetable/views/grid-skeleton"
 
 interface Props {
   children: React.ReactNode
@@ -32,6 +35,9 @@ export default async function TimetableLayout({ children, params }: Props) {
   // StudentView on this route. The Today/Full split is left in place for
   // TEACHER and GUARDIAN, whose views still switch on it.
   const isStudent = role === "STUDENT"
+  // Which SHAPE the loading placeholder takes — a wider question than the tab
+  // strip's `isStudent`, since USER falls through to the student view too.
+  const isStudentSurface = rendersStudentTimetable(role)
 
   const timetablePages: PageNavItem[] = [
     // Admin tabs
@@ -82,7 +88,21 @@ export default async function TimetableLayout({ children, params }: Props) {
     <div className="space-y-6">
       <PageHeadingSetter title={d?.title || "Timetable"} />
       {hasTabs && <PageNav pages={timetablePages} />}
-      {children}
+      {/* Replaces `loading.tsx`, which is the same boundary with two problems
+          this one does not have. It could not read the session — `loading.tsx`
+          must render instantly, so it cannot await `auth()` — and so it drew the
+          five-day week for everyone, including the phone that was two frames
+          away from showing one column. And it re-drew the page title and the tab
+          strip, which this layout has already painted directly above: a fake
+          toolbar under a real one.
+
+          Same nesting Next builds for a `loading.tsx` (layout > Suspense >
+          page), so the sub-routes that ship their own keep theirs. */}
+      <Suspense
+        fallback={<TimetableSurfaceSkeleton studentShell={isStudentSurface} />}
+      >
+        {children}
+      </Suspense>
     </div>
   )
 }

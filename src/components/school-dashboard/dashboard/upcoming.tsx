@@ -682,7 +682,7 @@ export function Upcoming({
   return (
     <div
       className={cn(
-        "group relative h-[320px] w-full max-w-[280px] [perspective:2000px] lg:max-w-[320px]",
+        "group relative h-[320px] w-full [perspective:2000px] sm:max-w-[280px] lg:max-w-[320px]",
         className
       )}
       onMouseEnter={() => setIsFlipped(true)}
@@ -747,12 +747,6 @@ export function Upcoming({
                 </p>
               </div>
               <div className="group/icon relative">
-                <div
-                  className={cn(
-                    "absolute inset-[-8px] rounded-lg transition-opacity duration-300",
-                    "from-primary/20 via-primary/10 bg-gradient-to-br to-transparent"
-                  )}
-                />
                 {cardConfig.badge ? (
                   <Badge
                     variant={cardConfig.badge.variant}

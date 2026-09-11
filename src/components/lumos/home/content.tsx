@@ -5,6 +5,7 @@
 import Link from "next/link"
 
 import { asset } from "@/lib/asset-url"
+import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -85,37 +86,79 @@ export function LumosHomeContent({
 
   const isRTL = lang === "ar"
 
+  // Rendered width of each headline line, per 100px of font size, measured in
+  // the browser against thmanyah sans at the weights the h1 actually uses:
+  // the brand line at 700, the tagline at 300. Dividing them gives the `em`
+  // size that makes the tagline exactly as wide as the brand above it.
+  const HEADLINE_WIDTHS: Record<string, { brand: number; tagline: number }> = {
+    ar: { brand: 310.4, tagline: 347.4 },
+    en: { brand: 314.4, tagline: 584.8 },
+  }
+  const widths = HEADLINE_WIDTHS[lang] ?? HEADLINE_WIDTHS.en
+  const headlineRatio = (widths.brand / widths.tagline).toFixed(4)
+
   return (
     <>
       {/* Hero Section with Animation */}
       <section className="relative">
-        <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-16">
+        <div className="flex flex-row items-center gap-4 sm:gap-8 lg:gap-16">
           {/* Text Content */}
-          <div className="flex flex-1 flex-col items-start space-y-6 text-start">
-            <h1 className="text-4xl leading-none font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
+          <div className="flex flex-1 flex-col items-start space-y-4 ps-3 text-start sm:space-y-6 sm:ps-0">
+            {/* The /live banner's headline, and its trick: two lines set to
+                the SAME WIDTH, so the type stacks into a tidy block rather
+                than a ragged one. That hero gets there by authoring copy of
+                equal length (a tatweel stretches its short word); ours can't
+                — "Lumos" and "Shine a light." are fixed names — so the second
+                line is sized as a fraction of the first instead. The ratio is
+                per language because the two scripts set at wildly different
+                widths, and both lines are then equal at EVERY breakpoint
+                without a second ladder, since the tagline's size is an `em` of
+                the h1's own.
+
+                The face is thmanyah sans, vendored in `public/fonts/` and
+                declared by `src/styles/thmanyah-clone.css` (imported by the
+                ROOT layout), so it costs this page nothing to use. Weights
+                700 and 300 are real faces in the family — the ratios below
+                were measured against those two, so changing either weight,
+                adding letter-spacing, or rewriting the strings breaks the
+                match. Re-measure with a canvas if you change any of them. */}
+            <h1
+              className="text-[2.5rem] leading-[1.05] font-bold sm:text-6xl md:text-7xl lg:text-8xl"
+              style={{ fontFamily: '"thmanyah sans", sans-serif' }}
+            >
               {dictionary?.home?.title || "Lumos"}
-              <br />
-              <span className="mt-2 block text-2xl font-semibold sm:text-3xl md:text-4xl lg:text-5xl">
+              <span
+                className="mt-2 block font-light"
+                style={{ fontSize: `${headlineRatio}em` }}
+              >
                 {dictionary?.home?.description || "Shine a light."}
               </span>
             </h1>
 
-            <div className="flex flex-col gap-4 sm:flex-row">
+            {/* Phones get the one-word labels from the header namespace: two
+                full-size buttons don't fit side by side in the hero's half. */}
+            <div className="flex flex-row gap-2 sm:gap-4">
               <Link
-                className={buttonVariants({
-                  size: "lg",
-                })}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "h-7 px-2.5 text-xs sm:h-10 sm:px-6 sm:text-sm"
+                )}
                 href={`/${lang}/lumos/courses`}
               >
-                {dictionary?.home?.exploreCourses || "Explore Courses"}
+                <span className="sm:hidden">
+                  {dictionary?.header?.courses || "Courses"}
+                </span>
+                <span className="hidden sm:inline">
+                  {dictionary?.home?.exploreCourses || "Explore Courses"}
+                </span>
               </Link>
 
               {isAdmin || isAuthenticated ? (
                 <Link
-                  className={buttonVariants({
-                    size: "lg",
-                    variant: "ghost",
-                  })}
+                  className={cn(
+                    buttonVariants({ size: "lg", variant: "ghost" }),
+                    "h-7 px-2.5 text-xs sm:h-10 sm:px-6 sm:text-sm"
+                  )}
                   href={`/${lang}/lumos/dashboard`}
                 >
                   {dictionary?.header?.dashboard ?? "Dashboard"}
@@ -126,12 +169,12 @@ export function LumosHomeContent({
 
           {/* Animation */}
           <div className="flex flex-1 justify-center">
-            <EducationAnimation className="h-58 w-full max-w-md md:h-70 rtl:[transform:scaleX(-1)]" />
+            <EducationAnimation className="h-32 w-full max-w-md sm:h-58 md:h-70 rtl:[transform:scaleX(-1)]" />
           </div>
         </div>
       </section>
 
-      <section className="mb-32 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="mt-10 mb-32 grid grid-cols-2 gap-3 sm:mt-0 sm:gap-6 lg:grid-cols-4">
         {features.map((feature, index) => {
           const iconUrl = featureIconUrls[index]
           return (
@@ -139,8 +182,8 @@ export function LumosHomeContent({
               key={index}
               className="hover:border-foreground border shadow-none transition-colors"
             >
-              <CardHeader>
-                <div className="text-foreground mb-4 h-12 w-12 text-start">
+              <CardHeader className="p-4 sm:p-6">
+                <div className="text-foreground mb-2 h-8 w-8 text-start sm:mb-4 sm:h-12 sm:w-12">
                   {iconUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -148,16 +191,18 @@ export function LumosHomeContent({
                       alt=""
                       width={48}
                       height={48}
-                      className="h-12 w-12"
+                      className="h-8 w-8 sm:h-12 sm:w-12"
                     />
                   ) : (
-                    <span className="text-4xl">{feature.icon}</span>
+                    <span className="text-2xl sm:text-4xl">{feature.icon}</span>
                   )}
                 </div>
-                <CardTitle className="text-start">{feature.title}</CardTitle>
+                <CardTitle className="text-start text-sm sm:text-base">
+                  {feature.title}
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-start">
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <p className="text-muted-foreground text-start text-xs sm:text-sm">
                   {feature.description}
                 </p>
               </CardContent>

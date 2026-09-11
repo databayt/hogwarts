@@ -485,6 +485,9 @@ export default async function SubjectDetailPage({ params }: Props) {
         textbookCoverUrl={
           subject.cover ? getCloudFrontUrl(subject.cover) : null
         }
+        subjectLevel={subject.levels[0] ?? null}
+        subjectGrade={subject.grades[0] ?? null}
+        textbookTitle={subject.name}
       />
     </>
   )

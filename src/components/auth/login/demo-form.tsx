@@ -101,36 +101,32 @@ export const DemoLoginForm = ({
 
   return (
     <div
-      className={cn(
-        "flex min-w-[280px] flex-col gap-6 md:min-w-[350px]",
-        className
-      )}
+      className={cn("flex w-full max-w-[400px] flex-col gap-6", className)}
       {...props}
     >
       <Card className="bg-background border-none shadow-none">
-        <CardHeader className="text-center">
-          <p id="demo-role-prompt" className="text-muted-foreground">
-            {dictionary?.auth?.demoRolePrompt ||
-              "Choose a role to explore the demo"}
+        <CardHeader className="px-0 text-center sm:px-6">
+          <p id="demo-role-prompt" className="text-muted-foreground text-base">
+            {dictionary?.auth?.demoRolePrompt || "Choose a role"}
           </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0 sm:px-6">
           <div className="grid gap-6">
             <div className="grid gap-4">
               <Select value={role} onValueChange={setRole} disabled={isPending}>
                 <SelectTrigger
                   id="demo-role"
                   aria-labelledby="demo-role-prompt"
-                  className="hover:border-foreground/50 h-12 w-full rounded-lg px-4 transition-colors"
+                  className="hover:border-foreground/50 w-full rounded-lg px-4 text-base transition-colors data-[size=default]:h-12 md:text-sm md:data-[size=default]:h-11"
                 >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded-lg p-1.5">
+                <SelectContent className="w-[var(--radix-select-trigger-width)] rounded-lg p-1.5 [&>[data-radix-select-viewport]]:min-w-0">
                   {roles.map((option) => (
                     <SelectItem
                       key={option.key}
                       value={option.key}
-                      className="data-[state=checked]:bg-accent h-10 rounded-md ps-3"
+                      className="data-[state=checked]:bg-accent h-11 rounded-md ps-3 text-base md:h-10 md:text-sm"
                     >
                       {option.label}
                     </SelectItem>
@@ -144,7 +140,7 @@ export const DemoLoginForm = ({
                 type="button"
                 disabled={isPending || !role}
                 onClick={onSubmit}
-                className="h-11 w-full"
+                className="h-12 w-full text-base md:h-11 md:text-sm"
               >
                 {dictionary?.auth?.signIn || "Login"}
               </Button>

@@ -426,7 +426,20 @@ export default function SimpleGrid({
                     <div
                       key={`${day}-${period.id}`}
                       className={cn(
-                        "relative flex min-h-14 flex-col items-center justify-center px-2 py-2 transition-all duration-200 sm:min-h-20 sm:px-4 sm:py-4",
+                        // 4.5rem, not `min-h-14`: at 56px this floor never bound
+                        // on a phone, because the PERIOD column next to it is
+                        // taller (py-3 + a 20px name over a 16px time = 64px) and
+                        // a grid row takes its tallest cell. So the mobile row
+                        // was 64px no matter what this said, and anything up to
+                        // `min-h-16` would have been a silent no-op. 72px is the
+                        // first value that actually moves the row, and it moves
+                        // it by the "a little bit" this was asked for.
+                        //
+                        // It also makes the row height a SINGLE number the
+                        // skeleton can mirror, instead of one measured off live
+                        // text — keep `grid-skeleton.tsx`'s teaching band at
+                        // 72/85 in step with this.
+                        "relative flex min-h-18 flex-col items-center justify-center px-2 py-2 transition-all duration-200 sm:min-h-20 sm:px-4 sm:py-4",
                         // Cells keep their subject colour, always. State is
                         // carried by the mark in the corner, never by the
                         // background — a grid where the background means two

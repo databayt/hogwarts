@@ -608,16 +608,31 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   today.setHours(0, 0, 0, 0)
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
-  const dayOfWeek = today.getDay()
+
+  // Today's periods — the same read the student dashboard does, for the same
+  // reasons. The weekday used to come off the server clock (UTC on the
+  // container), so for a school whose local day straddles the UTC boundary the
+  // card showed the wrong day; and with no term filter a slot from a finished
+  // term could still land in it.
+  const [teacherSchoolRow, { term: teacherTerm }] = await Promise.all([
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { timezone: true },
+    }),
+    resolveActiveTerm(schoolId),
+  ])
+  const teacherNow = new Date()
+  const dayOfWeek = schoolDayOfWeek(teacherSchoolRow?.timezone ?? "UTC", teacherNow)
 
   // Section-based slots carry `teacherId` on the row itself and have no
   // `class`; the old `class: { teacherId }` filter was an implicit inner join
   // that matched none of them, so the count read 0 for every teacher.
-  const todaysClasses = await db.timetable.findMany({
+  const todaysSlots = await db.timetable.findMany({
     where: {
       schoolId,
       dayOfWeek: dayOfWeek,
       weekOffset: 0,
+      ...(teacherTerm ? { termId: teacherTerm.id } : {}),
       OR: [
         { teacherId: teacher.id },
         { class: { is: { teacherId: teacher.id } } },
@@ -639,6 +654,25 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     },
     orderBy: { period: { startTime: "asc" } },
   })
+
+  // A class that is also online today gets its Join target — the same resolver
+  // the student card and the timetable today-cards use, so the teacher and the
+  // students in the room can never disagree about where the class meets.
+  const todaysClasses = teacherTerm
+    ? await attachLiveClasses(
+        schoolId,
+        teacherTerm.id,
+        teacherNow,
+        todaysSlots.map((slot) => ({
+          ...slot,
+          timetableId: slot.id,
+        }))
+      )
+    : todaysSlots.map((slot) => ({
+        ...slot,
+        timetableId: slot.id,
+        liveClass: null,
+      }))
 
   const teacherClasses = await db.class.findMany({
     where: { teacherId: teacher.id, schoolId },
@@ -742,20 +776,15 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
         entry.section && entry.subject
           ? `${entry.subject.name} · ${entry.section.name}`
           : entry.class?.name || entry.section?.name || "Unknown Class",
-      time: entry.period
-        ? `${new Date(entry.period.startTime).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })} - ${new Date(entry.period.endTime).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}`
-        : "TBA",
       room: entry.classroom?.roomName || "TBA",
       students:
         entry.section?._count.students ??
         entry.class?._count.studentClasses ??
         0,
+      startTime:
+        entry.period?.startTime?.toISOString() || new Date().toISOString(),
+      endTime: entry.period?.endTime?.toISOString() || new Date().toISOString(),
+      liveClass: entry.liveClass,
     })),
     pendingGrading: pendingGradingCount,
     attendanceDue: attendanceDueCount,
@@ -3338,42 +3367,29 @@ async function getStudentResourceUsage(
   if (!student) return []
 
   // Fetch real data in parallel
-  const [
-    totalAttendance,
-    presentDays,
-    completedAssignments,
-    totalAssignments,
-    examResults,
-    nextExam,
-  ] = await Promise.all([
-    db.attendance.count({ where: { studentId: student.id, schoolId } }),
-    db.attendance.count({
-      where: { studentId: student.id, schoolId, status: "PRESENT" },
-    }),
-    db.assignmentSubmission.count({
-      where: {
-        studentId: student.id,
-        schoolId,
-        status: { in: ["SUBMITTED", "GRADED"] },
-      },
-    }),
-    db.schoolAssignment.count({
-      where: { schoolId, status: { in: ["PUBLISHED", "IN_PROGRESS"] } },
-    }),
-    // Use ExamResult for grades instead of non-existent grade model
-    db.examResult.findMany({
-      where: { studentId: student.id, schoolId },
-      select: { percentage: true },
-    }),
-    db.schoolExam.findFirst({
-      where: { schoolId, examDate: { gte: new Date() } },
-      orderBy: { examDate: "asc" },
-      select: { examDate: true },
-    }),
-  ])
-
-  const attendanceRate =
-    totalAttendance > 0 ? (presentDays / totalAttendance) * 100 : 0
+  const [completedAssignments, totalAssignments, examResults, nextExam] =
+    await Promise.all([
+      db.assignmentSubmission.count({
+        where: {
+          studentId: student.id,
+          schoolId,
+          status: { in: ["SUBMITTED", "GRADED"] },
+        },
+      }),
+      db.schoolAssignment.count({
+        where: { schoolId, status: { in: ["PUBLISHED", "IN_PROGRESS"] } },
+      }),
+      // Use ExamResult for grades instead of non-existent grade model
+      db.examResult.findMany({
+        where: { studentId: student.id, schoolId },
+        select: { percentage: true },
+      }),
+      db.schoolExam.findFirst({
+        where: { schoolId, examDate: { gte: new Date() } },
+        orderBy: { examDate: "asc" },
+        select: { examDate: true },
+      }),
+    ])
 
   // Calculate GPA from exam results (simple average converted to 4.0 scale)
   let gpa = 0
@@ -3400,12 +3416,9 @@ async function getStudentResourceUsage(
       limit: totalAssignments || 20,
       unit: "completed",
     },
-    {
-      name: "Attendance Rate",
-      used: Math.round(attendanceRate),
-      limit: 100,
-      unit: "%",
-    },
+    // "Attendance Rate" stood here. Attendance is hidden across the student
+    // dashboard, so the row is gone and the counts behind it are no longer
+    // read — see `student-client.tsx` for the rest of the same removal.
     {
       name: "Current GPA",
       used: Math.round(gpa * 10) / 10,

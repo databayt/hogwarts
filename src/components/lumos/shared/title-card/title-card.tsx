@@ -211,8 +211,19 @@ export function TitleCard({
           {description && (
             /* The frame's paragraph, between the button and the marks. It is
                the only start-set copy in the block on a phone, which is what
-               the marks under it align to. */
-            <div className="order-2 text-[15px] leading-[20px] text-white sm:hidden">
+               the marks under it align to.
+
+               It used to be `sm:hidden` — the phone's row and nothing else —
+               so the wide card said what the thing IS nowhere at all, and the
+               lesson kept its own blurb behind a chip. Above `sm` it follows
+               the button instead (`order-5`, after the action's `order-3` —
+               `note` keeps `order-4` so a refusal stays next to the button it
+               explains), which is the frame's order on both layouts.
+               `max-w-[42ch]` is the `note` row's measure: the card runs the
+               full width of the page, and a paragraph set across 1900px is
+               one line that never reaches a third, so the clamp would never
+               fire and the `… more` link would never appear. */
+            <div className="order-2 text-[15px] leading-[20px] text-white sm:order-5 sm:mt-3 sm:max-w-[42ch]">
               {description}
             </div>
           )}
@@ -378,9 +389,28 @@ export function TitleCardDescription({
 
   /* Literal hex for the same reason the pill and the marks carry theirs: this
      shelf is pinned dark, and a theme-aware token would invert the link and
-     its ground in light mode. */
-  const moreClass = "absolute end-0 bottom-0 bg-black ps-1 text-[#0A84FF]"
-  const label = <>&hellip;&nbsp;{more}</>
+     its ground in light mode.
+
+     The overlay is a PHONE trick and stays one. It works there because the
+     shelf under the poster is painted solid black, so a black patch over the
+     tail of line three is invisible. Above `sm` the same rows sit on a
+     gradient that only reaches `black/90` at its foot, over artwork — the
+     patch would read as a black rectangle floating on the picture. So there
+     the link stops being an overlay and takes the line after the paragraph,
+     which is what a fourth line is for. */
+  const moreClass =
+    "absolute end-0 bottom-0 bg-black ps-1 text-[#0A84FF] sm:static sm:bg-transparent sm:ps-0"
+  /* The ellipsis belongs to the OVERLAY, not to the word. `line-clamp` draws
+     its own at the cut, and on a phone the black patch sits on top of it — so
+     the label has to supply one or the sentence would end bare. Above `sm`
+     nothing is covered, and printing a second one put `الرسم…` on line three
+     over `… المزيد` on line four. */
+  const label = (
+    <>
+      <span className="sm:hidden">&hellip;&nbsp;</span>
+      {more}
+    </>
+  )
 
   return (
     <div className="relative">

@@ -38,19 +38,22 @@
  *   TWENTY_API_KEY=$(security find-generic-password -s databayt-twenty -a hogwarts -w) \
  *     npx tsx scripts/crm/places-sample.ts [--n=50]
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from "node:fs"
 
-import { normalizePhone } from './normalize-contacts';
-import { twentyClient } from './twenty-rest';
+import { normalizePhone } from "./normalize-contacts"
+import { twentyClient } from "./twenty-rest"
 
-const arg = (n: string, d = ''): string => {
-  const hit = process.argv.find((a) => a.startsWith(`--${n}=`));
-  return hit ? hit.split('=').slice(1).join('=') : d;
-};
+const arg = (n: string, d = ""): string => {
+  const hit = process.argv.find((a) => a.startsWith(`--${n}=`))
+  return hit ? hit.split("=").slice(1).join("=") : d
+}
 
-const KEY = process.env.GOOGLE_PLACES_API_KEY ?? process.env.GOOGLE_TRANSLATE_API_KEY ?? '';
-const SEARCH = 'https://places.googleapis.com/v1/places:searchText';
-const DETAILS = 'https://places.googleapis.com/v1/places';
+const KEY =
+  process.env.GOOGLE_PLACES_API_KEY ??
+  process.env.GOOGLE_TRANSLATE_API_KEY ??
+  ""
+const SEARCH = "https://places.googleapis.com/v1/places:searchText"
+const DETAILS = "https://places.googleapis.com/v1/places"
 
 /**
  * TWO calls per school, and the split is the whole point of the cost model.
@@ -64,29 +67,30 @@ const DETAILS = 'https://places.googleapis.com/v1/places';
  * Two requests, half the price. Getting this backwards is a silent 2x on a bill
  * nobody re-reads.
  */
-const SEARCH_MASK = 'places.id';
-const DETAILS_MASK = 'displayName,nationalPhoneNumber,internationalPhoneNumber,websiteUri,businessStatus';
+const SEARCH_MASK = "places.id"
+const DETAILS_MASK =
+  "displayName,nationalPhoneNumber,internationalPhoneNumber,websiteUri,businessStatus"
 
 interface Company {
-  id: string;
-  name?: string | null;
-  country?: string | null;
-  schoolPhone?: string | null;
-  principalContact?: string | null;
-  domainName?: { primaryLinkUrl?: string | null } | null;
-  address?: { addressLat?: number | null; addressLng?: number | null } | null;
+  id: string
+  name?: string | null
+  country?: string | null
+  schoolPhone?: string | null
+  principalContact?: string | null
+  domainName?: { primaryLinkUrl?: string | null } | null
+  address?: { addressLat?: number | null; addressLng?: number | null } | null
 }
 
 interface Hit {
-  id: string;
-  name: string;
-  country: string;
-  matched: boolean;
-  matchedName?: string;
-  phone?: string;
-  phoneReach?: string;
-  website?: string;
-  businessStatus?: string;
+  id: string
+  name: string
+  country: string
+  matched: boolean
+  matchedName?: string
+  phone?: string
+  phoneReach?: string
+  website?: string
+  businessStatus?: string
 }
 
 /**
@@ -96,51 +100,56 @@ interface Hit {
  * every row can be biased, which is the main reason to run Lane 1 first.
  */
 async function lookup(c: Company): Promise<Hit> {
-  const lat = c.address?.addressLat;
-  const lng = c.address?.addressLng;
-  const body: Record<string, unknown> = { textQuery: c.name ?? '', maxResultCount: 1 };
+  const lat = c.address?.addressLat
+  const lng = c.address?.addressLng
+  const body: Record<string, unknown> = {
+    textQuery: c.name ?? "",
+    maxResultCount: 1,
+  }
   if (lat != null && lng != null) {
-    body.locationBias = { circle: { center: { latitude: lat, longitude: lng }, radius: 5000 } };
+    body.locationBias = {
+      circle: { center: { latitude: lat, longitude: lng }, radius: 5000 },
+    }
   }
 
   // 1. Find the place. IDs only, so this call is free.
   const res = await fetch(SEARCH, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': KEY,
-      'X-Goog-FieldMask': SEARCH_MASK,
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": KEY,
+      "X-Goog-FieldMask": SEARCH_MASK,
     },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(30_000),
-  });
+  })
   const json = (await res.json()) as {
-    places?: { id?: string }[];
-    error?: { message?: string; status?: string };
-  };
-  if (json.error) throw new Error(`${json.error.status}: ${json.error.message}`);
+    places?: { id?: string }[]
+    error?: { message?: string; status?: string }
+  }
+  if (json.error) throw new Error(`${json.error.status}: ${json.error.message}`)
 
-  const base = { id: c.id, name: c.name ?? '', country: c.country ?? '' };
-  const placeId = json.places?.[0]?.id;
-  if (!placeId) return { ...base, matched: false };
+  const base = { id: c.id, name: c.name ?? "", country: c.country ?? "" }
+  const placeId = json.places?.[0]?.id
+  if (!placeId) return { ...base, matched: false }
 
   // 2. Pay once for the payload -- this is the billable half.
   const dRes = await fetch(`${DETAILS}/${placeId}`, {
-    headers: { 'X-Goog-Api-Key': KEY, 'X-Goog-FieldMask': DETAILS_MASK },
+    headers: { "X-Goog-Api-Key": KEY, "X-Goog-FieldMask": DETAILS_MASK },
     signal: AbortSignal.timeout(30_000),
-  });
+  })
   const p = (await dRes.json()) as {
-    displayName?: { text?: string };
-    nationalPhoneNumber?: string;
-    internationalPhoneNumber?: string;
-    websiteUri?: string;
-    businessStatus?: string;
-    error?: { message?: string; status?: string };
-  };
-  if (p.error) throw new Error(`${p.error.status}: ${p.error.message}`);
+    displayName?: { text?: string }
+    nationalPhoneNumber?: string
+    internationalPhoneNumber?: string
+    websiteUri?: string
+    businessStatus?: string
+    error?: { message?: string; status?: string }
+  }
+  if (p.error) throw new Error(`${p.error.status}: ${p.error.message}`)
 
-  const raw = p.internationalPhoneNumber ?? p.nationalPhoneNumber ?? '';
-  const n = raw ? normalizePhone(raw, (c.country ?? '').toUpperCase()) : null;
+  const raw = p.internationalPhoneNumber ?? p.nationalPhoneNumber ?? ""
+  const n = raw ? normalizePhone(raw, (c.country ?? "").toUpperCase()) : null
   return {
     ...base,
     matched: true,
@@ -149,102 +158,132 @@ async function lookup(c: Company): Promise<Hit> {
     phoneReach: n?.reach,
     website: p.websiteUri,
     businessStatus: p.businessStatus,
-  };
+  }
 }
 
 async function main(): Promise<void> {
-  if (!KEY) throw new Error('needs GOOGLE_PLACES_API_KEY');
-  const n = Number(arg('n', '50'));
-  const { all } = twentyClient();
+  if (!KEY) throw new Error("needs GOOGLE_PLACES_API_KEY")
+  const n = Number(arg("n", "50"))
+  const { all } = twentyClient()
 
-  console.log('Reading schools from Twenty …');
-  const rows = (await all('companies')) as unknown as Company[];
+  console.log("Reading schools from Twenty …")
+  const rows = (await all("companies")) as unknown as Company[]
 
   // Sample only from schools we CANNOT already reach -- measuring Places against
   // rows that already have a phone would inflate the hit rate with answers we
   // did not need to buy.
   const unreachable = rows.filter(
-    (c) => !(c.schoolPhone ?? '').trim() && !(c.principalContact ?? '').trim()
-  );
+    (c) => !(c.schoolPhone ?? "").trim() && !(c.principalContact ?? "").trim()
+  )
 
   // Stratify across countries, proportionally, so one big market cannot hide a
   // market where Arabic name matching quietly fails.
-  const byCountry = new Map<string, Company[]>();
+  const byCountry = new Map<string, Company[]>()
   for (const c of unreachable) {
-    const k = (c.country ?? 'OTHER').toUpperCase();
-    byCountry.set(k, [...(byCountry.get(k) ?? []), c]);
+    const k = (c.country ?? "OTHER").toUpperCase()
+    byCountry.set(k, [...(byCountry.get(k) ?? []), c])
   }
-  const sample: Company[] = [];
+  const sample: Company[] = []
   for (const [country, list] of byCountry) {
-    const take = Math.max(1, Math.round((list.length / unreachable.length) * n));
+    const take = Math.max(1, Math.round((list.length / unreachable.length) * n))
     // Evenly spaced picks rather than the first N, which would all come from one
     // import batch and therefore one region.
-    const step = Math.max(1, Math.floor(list.length / take));
-    for (let i = 0; i < list.length && sample.filter((s) => s.country === country).length < take; i += step) {
-      sample.push(list[i]);
+    const step = Math.max(1, Math.floor(list.length / take))
+    for (
+      let i = 0;
+      i < list.length &&
+      sample.filter((s) => s.country === country).length < take;
+      i += step
+    ) {
+      sample.push(list[i])
     }
   }
 
-  console.log(`  ${unreachable.length} unreachable schools; sampling ${sample.length}`);
-  console.log(`  strata: ${[...byCountry].map(([k, v]) => `${k} ${v.length}`).join('  ')}\n`);
+  console.log(
+    `  ${unreachable.length} unreachable schools; sampling ${sample.length}`
+  )
+  console.log(
+    `  strata: ${[...byCountry].map(([k, v]) => `${k} ${v.length}`).join("  ")}\n`
+  )
 
-  const hits: Hit[] = [];
+  const hits: Hit[] = []
   for (const [i, c] of sample.entries()) {
     try {
-      const h = await lookup(c);
-      hits.push(h);
-      const mark = h.matched ? (h.phone ? 'PHONE' : h.website ? 'web  ' : 'match') : '  —  ';
-      console.log(`  ${String(i + 1).padStart(3)}/${sample.length} ${mark} ${(c.country ?? '').padEnd(3)} ${(c.name ?? '').slice(0, 46)}`);
+      const h = await lookup(c)
+      hits.push(h)
+      const mark = h.matched
+        ? h.phone
+          ? "PHONE"
+          : h.website
+            ? "web  "
+            : "match"
+        : "  —  "
+      console.log(
+        `  ${String(i + 1).padStart(3)}/${sample.length} ${mark} ${(c.country ?? "").padEnd(3)} ${(c.name ?? "").slice(0, 46)}`
+      )
     } catch (e) {
-      console.error(`  ! ${c.name}: ${e instanceof Error ? e.message : e}`);
+      console.error(`  ! ${c.name}: ${e instanceof Error ? e.message : e}`)
       // A key/permission error is fatal for the whole sample -- stop rather than
       // print 50 identical failures and call it a 0% hit rate.
       if (/PERMISSION_DENIED|API_KEY|BLOCKED/i.test(String(e))) {
-        console.error('\n  Places is not enabled on this key. Nothing was measured.\n');
-        process.exit(1);
+        console.error(
+          "\n  Places is not enabled on this key. Nothing was measured.\n"
+        )
+        process.exit(1)
       }
     }
-    await new Promise((r) => setTimeout(r, 120));
+    await new Promise((r) => setTimeout(r, 120))
   }
 
   // Per country AND overall, phone and website counted apart.
-  const countries = [...new Set(hits.map((h) => h.country))].sort();
-  console.log(`\n═══ Places sample — ${hits.length} schools ═══\n`);
-  console.log(`  ${'country'.padEnd(9)} ${'n'.padStart(4)} ${'matched'.padStart(8)} ${'phone'.padStart(7)} ${'website'.padStart(8)} ${'mobile'.padStart(7)}`);
+  const countries = [...new Set(hits.map((h) => h.country))].sort()
+  console.log(`\n═══ Places sample — ${hits.length} schools ═══\n`)
+  console.log(
+    `  ${"country".padEnd(9)} ${"n".padStart(4)} ${"matched".padStart(8)} ${"phone".padStart(7)} ${"website".padStart(8)} ${"mobile".padStart(7)}`
+  )
   const row = (label: string, set: Hit[]): void => {
-    const pc = (k: number): string => (set.length ? `${((k / set.length) * 100).toFixed(0)}%` : '—');
-    const ph = set.filter((h) => h.phone).length;
+    const pc = (k: number): string =>
+      set.length ? `${((k / set.length) * 100).toFixed(0)}%` : "—"
+    const ph = set.filter((h) => h.phone).length
     console.log(
       `  ${label.padEnd(9)} ${String(set.length).padStart(4)} ${pc(set.filter((h) => h.matched).length).padStart(8)} ` +
         `${pc(ph).padStart(7)} ${pc(set.filter((h) => h.website).length).padStart(8)} ` +
-        `${String(set.filter((h) => h.phoneReach === 'MOBILE').length).padStart(7)}`
-    );
-  };
-  for (const c of countries) row(c, hits.filter((h) => h.country === c));
-  console.log('  ' + '─'.repeat(48));
-  row('ALL', hits);
+        `${String(set.filter((h) => h.phoneReach === "MOBILE").length).padStart(7)}`
+    )
+  }
+  for (const c of countries)
+    row(
+      c,
+      hits.filter((h) => h.country === c)
+    )
+  console.log("  " + "─".repeat(48))
+  row("ALL", hits)
 
-  const phoneRate = hits.filter((h) => h.phone).length / (hits.length || 1);
+  const phoneRate = hits.filter((h) => h.phone).length / (hits.length || 1)
   // The MAP_ONLY + WEBSITE-only population as measured after the OSM re-fetch.
-  const remaining = 2_935;
-  const billable = Math.max(0, remaining - 1_000);
+  const remaining = 2_935
+  const billable = Math.max(0, remaining - 1_000)
   console.log(
     `\n  Projected over ${remaining} unreachable schools at this phone rate: ` +
       `~${Math.round(phoneRate * remaining)} phones`
-  );
-  console.log(`  Cost: lookup $0 (IDs-only is free) + details ${billable} × $20/1,000 = $${(billable * 0.02).toFixed(2)}`);
-  console.log(`  → $${(phoneRate * remaining ? (billable * 0.02) / (phoneRate * remaining) : 0).toFixed(3)} per phone acquired\n`);
+  )
+  console.log(
+    `  Cost: lookup $0 (IDs-only is free) + details ${billable} × $20/1,000 = $${(billable * 0.02).toFixed(2)}`
+  )
+  console.log(
+    `  → $${(phoneRate * remaining ? (billable * 0.02) / (phoneRate * remaining) : 0).toFixed(3)} per phone acquired\n`
+  )
 
-  mkdirSync('scripts/crm/.data', { recursive: true });
+  mkdirSync("scripts/crm/.data", { recursive: true })
   writeFileSync(
-    'scripts/crm/.data/places-sample.json',
+    "scripts/crm/.data/places-sample.json",
     JSON.stringify({ generatedAt: new Date().toISOString(), hits }, null, 2)
-  );
-  console.log('  → scripts/crm/.data/places-sample.json');
-  console.log('  Sample only. Nothing was written to Twenty.\n');
+  )
+  console.log("  → scripts/crm/.data/places-sample.json")
+  console.log("  Sample only. Nothing was written to Twenty.\n")
 }
 
 main().catch((e) => {
-  console.error(e instanceof Error ? e.message : e);
-  process.exit(1);
-});
+  console.error(e instanceof Error ? e.message : e)
+  process.exit(1)
+})

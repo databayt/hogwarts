@@ -64,6 +64,18 @@
     },
     "courses": {
       "title": "جميع الدورات",
+      "heroTitle": "استكشف الدورات",
+      "heroTagline": "لكل صف في المدرسة.",
+      "shelves": {
+        "recommended": "موصى به",
+        "continueLearning": "أكمل ما بدأته",
+        "resume": "تابع",
+        "progress": "{done} من {total} دقيقة",
+        "more": "المزيد",
+        "startHere": "ابدأ من هنا",
+        "start": "ابدأ",
+        "lessons": "{n} درساً"
+      },
       "description": "تصفح كتالوج الدورات الشامل",
       "searchPlaceholder": "ابحث عن الدورات...",
       "filterByCategory": "التصفية حسب الفئة",
@@ -74,7 +86,21 @@
       "free": "مجاني",
       "enrolled": "مسجل",
       "enroll": "سجل الآن",
-      "viewDetails": "عرض التفاصيل"
+      "viewDetails": "عرض التفاصيل",
+      "gradeOrdinals": [
+        "الأول",
+        "الثاني",
+        "الثالث",
+        "الرابع",
+        "الخامس",
+        "السادس",
+        "السابع",
+        "الثامن",
+        "التاسع",
+        "العاشر",
+        "الحادي عشر",
+        "الثاني عشر"
+      ]
     },
     "course": {
       "title": "تفاصيل الدورة",

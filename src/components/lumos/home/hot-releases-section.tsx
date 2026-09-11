@@ -86,7 +86,7 @@ export function HotReleasesSection({ dictionary, lang, courses }: Props) {
                       alt={course.title}
                       width={320}
                       height={180}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="h-full w-full object-cover"
                       unoptimized
                     />
                   ) : (

@@ -12,37 +12,44 @@
  * it manually — values are TRIMMED because Vercel-pulled env files carry
  * stray trailing newlines (that bug already broke kun's report-issue lane).
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
 
-export const argv = (n: string, d = ''): string => {
-  const h = process.argv.find((a) => a.startsWith(`--${n}=`));
-  return h ? h.split('=').slice(1).join('=') : d;
-};
-export const flag = (n: string): boolean => process.argv.includes(`--${n}`);
+export const argv = (n: string, d = ""): string => {
+  const h = process.argv.find((a) => a.startsWith(`--${n}=`))
+  return h ? h.split("=").slice(1).join("=") : d
+}
+export const flag = (n: string): boolean => process.argv.includes(`--${n}`)
 
 /** Parse `.env` into process.env for keys not already set. Values trimmed. */
 export function loadEnv(root = process.cwd()): void {
-  const p = join(root, '.env');
-  if (!existsSync(p)) return;
-  for (const line of readFileSync(p, 'utf8').split('\n')) {
-    const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
-    if (!m) continue;
-    const key = m[1];
-    let val = m[2].trim();
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'")))
-      val = val.slice(1, -1).trim();
-    if (!(key in process.env)) process.env[key] = val;
+  const p = join(root, ".env")
+  if (!existsSync(p)) return
+  for (const line of readFileSync(p, "utf8").split("\n")) {
+    const m = line.match(/^([A-Z0-9_]+)=(.*)$/)
+    if (!m) continue
+    const key = m[1]
+    let val = m[2].trim()
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    )
+      val = val.slice(1, -1).trim()
+    if (!(key in process.env)) process.env[key] = val
   }
 }
 
 /** Which database a DATABASE_URL points at — printed so a report can never
  * silently pass dev data off as production (that mistake has happened). */
 export function dbHostTag(url: string | undefined): string {
-  if (!url) return 'NO DATABASE_URL';
-  const host = url.match(/@([^/:?]+)/)?.[1] ?? '?';
-  const kind = /localhost|127\.0\.0\.1/.test(host) ? 'LOCAL DEV' : /neon\.tech/.test(host) ? 'NEON (prod-grade)' : 'remote';
-  return `${host} (${kind})`;
+  if (!url) return "NO DATABASE_URL"
+  const host = url.match(/@([^/:?]+)/)?.[1] ?? "?"
+  const kind = /localhost|127\.0\.0\.1/.test(host)
+    ? "LOCAL DEV"
+    : /neon\.tech/.test(host)
+      ? "NEON (prod-grade)"
+      : "remote"
+  return `${host} (${kind})`
 }
 
 // ── Phone + rail ─────────────────────────────────────────────────────────────
@@ -50,7 +57,12 @@ export function dbHostTag(url: string | undefined): string {
 // Identifier normalization is canonical in src — ONE implementation for the
 // chatbot capture, the applier core, and these scripts. Re-exported so every
 // funnel script keeps importing from './lib'.
-export { normalizeDigits, toE164, emailOf, extractIdentifiers } from '@/lib/funnel/identifiers';
+export {
+  normalizeDigits,
+  toE164,
+  emailOf,
+  extractIdentifiers,
+} from "@/lib/funnel/identifiers"
 
 /**
  * Mobile detection per country. Deliberately conservative: anything not
@@ -69,24 +81,30 @@ export { normalizeDigits, toE164, emailOf, extractIdentifiers } from '@/lib/funn
  * reads back as a school that ignored us.
  */
 export function isMobile(e164: string): boolean {
-  const n = e164.replace(/[^\d+]/g, '');
-  if (n.startsWith('+249')) return /^\+2499/.test(n);
-  if (n.startsWith('+20')) return /^\+20(10|11|12|15)/.test(n);
-  if (n.startsWith('+966')) return /^\+9665/.test(n);
-  if (n.startsWith('+971')) return /^\+9715/.test(n);
-  if (n.startsWith('+974')) return /^\+974[3567]/.test(n);
-  return false;
+  const n = e164.replace(/[^\d+]/g, "")
+  if (n.startsWith("+249")) return /^\+2499/.test(n)
+  if (n.startsWith("+20")) return /^\+20(10|11|12|15)/.test(n)
+  if (n.startsWith("+966")) return /^\+9665/.test(n)
+  if (n.startsWith("+971")) return /^\+9715/.test(n)
+  if (n.startsWith("+974")) return /^\+974[3567]/.test(n)
+  return false
 }
 
 /** Channel rail. sd → WhatsApp-first; gulf/eg → email-first (119 of 176
  * contactables carry an email, only 45 are mobile). */
-export function railOf(country: string | null | undefined, e164: string | null): 'sd' | 'gulf' | 'eg' | 'other' {
-  const c = (country ?? '').toUpperCase();
-  if (c === 'SD' || e164?.startsWith('+249')) return 'sd';
-  if (c === 'EG' || e164?.startsWith('+20')) return 'eg';
-  if (['SA', 'AE', 'QA', 'KW', 'BH', 'OM'].includes(c) || /^\+(966|971|974|965|973|968)/.test(e164 ?? ''))
-    return 'gulf';
-  return 'other';
+export function railOf(
+  country: string | null | undefined,
+  e164: string | null
+): "sd" | "gulf" | "eg" | "other" {
+  const c = (country ?? "").toUpperCase()
+  if (c === "SD" || e164?.startsWith("+249")) return "sd"
+  if (c === "EG" || e164?.startsWith("+20")) return "eg"
+  if (
+    ["SA", "AE", "QA", "KW", "BH", "OM"].includes(c) ||
+    /^\+(966|971|974|965|973|968)/.test(e164 ?? "")
+  )
+    return "gulf"
+  return "other"
 }
 
 // ── The opening message (moved verbatim from wave-one.ts) ────────────────────
@@ -106,48 +124,48 @@ export function railOf(country: string | null | undefined, e164: string | null):
  */
 export function openingMessage(schoolName: string): string {
   return [
-    'السلام عليكم ورحمة الله وبركاته',
-    '',
+    "السلام عليكم ورحمة الله وبركاته",
+    "",
     `أكتب لكم بخصوص ${schoolName}.`,
-    '',
-    'معكم فريق داتابيت. طوّرنا منصة «بالقلم» لإدارة المدارس — القبول والتسجيل، الرسوم والفواتير والرواتب، التواصل مع أولياء الأمور، وموقع إلكتروني خاص بالمدرسة.',
-    '',
-    'أرفقنا لكم تعريفاً مختصراً.',
-    '',
-    'نتيح ثلاثة أشهر تجربة مجانية كاملة، بدون رسوم وبدون التزام.',
-    '',
-    'هل ترغبون أن نجهّز نسخة تجريبية باسم مدرستكم لتجربتها؟',
-  ].join('\n');
+    "",
+    "معكم فريق داتابيت. طوّرنا منصة «بالقلم» لإدارة المدارس — القبول والتسجيل، الرسوم والفواتير والرواتب، التواصل مع أولياء الأمور، وموقع إلكتروني خاص بالمدرسة.",
+    "",
+    "أرفقنا لكم تعريفاً مختصراً.",
+    "",
+    "نتيح ثلاثة أشهر تجربة مجانية كاملة، بدون رسوم وبدون التزام.",
+    "",
+    "هل ترغبون أن نجهّز نسخة تجريبية باسم مدرستكم لتجربتها؟",
+  ].join("\n")
 }
 
 export function waLink(e164: string, text: string): string {
-  return `https://wa.me/${e164.replace(/[^\d]/g, '')}?text=${encodeURIComponent(text)}`;
+  return `https://wa.me/${e164.replace(/[^\d]/g, "")}?text=${encodeURIComponent(text)}`
 }
 
 /** The balqalam intro deck — sent AFTER a reply, linked in email touch 1. */
-export const DECK_URL = 'https://balqalam.com/decks/balqalam.pdf';
+export const DECK_URL = "https://balqalam.com/decks/balqalam.pdf"
 
 // ── The gates artifact ───────────────────────────────────────────────────────
 
 /** The ladder, in order, as it exists LIVE in the workspace (12 options —
  * SHORTLISTED + CONTACTED appended 2026-08-19). One list, one order. */
 export const LADDER = [
-  'COLD',
-  'PROSPECT',
-  'SHORTLISTED',
-  'CONTACTED',
-  'WARM',
-  'DISCOVERY',
-  'DEMO',
-  'TRIAL',
-  'PILOT',
-  'PAID',
-  'DORMANT',
-  'LOST',
-] as const;
-export type Gate = (typeof LADDER)[number];
+  "COLD",
+  "PROSPECT",
+  "SHORTLISTED",
+  "CONTACTED",
+  "WARM",
+  "DISCOVERY",
+  "DEMO",
+  "TRIAL",
+  "PILOT",
+  "PAID",
+  "DORMANT",
+  "LOST",
+] as const
+export type Gate = (typeof LADDER)[number]
 
-export const GATES_FILE = 'scripts/crm/.data/funnel-gates.json';
+export const GATES_FILE = "scripts/crm/.data/funnel-gates.json"
 
 /**
  * The contract kun's `funnel-yield` hook reads:
@@ -157,15 +175,18 @@ export const GATES_FILE = 'scripts/crm/.data/funnel-gates.json';
  * goes through here so the contract has exactly one author.
  */
 export function writeGatesArtifact(data: {
-  gates: Record<Gate, number>;
-  reach?: unknown;
-  prisma?: unknown;
-  biggestStallGate: string;
-  biggestStallCount: number;
-  source: unknown;
+  gates: Record<Gate, number>
+  reach?: unknown
+  prisma?: unknown
+  biggestStallGate: string
+  biggestStallCount: number
+  source: unknown
 }): string {
-  const out = join(process.cwd(), GATES_FILE);
-  mkdirSync(join(process.cwd(), 'scripts/crm/.data'), { recursive: true });
-  writeFileSync(out, JSON.stringify({ generatedAt: new Date().toISOString(), ...data }, null, 2));
-  return out;
+  const out = join(process.cwd(), GATES_FILE)
+  mkdirSync(join(process.cwd(), "scripts/crm/.data"), { recursive: true })
+  writeFileSync(
+    out,
+    JSON.stringify({ generatedAt: new Date().toISOString(), ...data }, null, 2)
+  )
+  return out
 }

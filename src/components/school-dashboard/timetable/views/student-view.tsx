@@ -63,7 +63,12 @@ export default function StudentView({
     (d as Record<string, any>)?.closedToday ?? "School is closed today"
   const isRTL = lang === "ar"
 
-  const [isLoadingData, setIsLoadingData] = useState(false)
+  // Starts TRUE: the fetch is kicked off from an effect, which React runs after
+  // the first paint, so seeding this `false` painted one frame of the real grid
+  // with no slots in it — a full week of "-" cells — before the skeleton
+  // replaced it. The component has nothing to show until `loadData` returns, so
+  // say so from the first render.
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Week / day view mode — the student's analogue of the admin toolbar's
@@ -235,9 +240,17 @@ export default function StudentView({
         </div>
 
         {isLoadingData || isLoading ? (
+          // Until the student picks a half, the mode follows the viewport — so
+          // the placeholder has to as well, and it cannot ask `matchMedia`: that
+          // is unreadable before mount, which is exactly when this renders. Hand
+          // the skeleton the whole week and let a media query collapse it to one
+          // column below `md`, the same 767px boundary `isNarrow` watches. An
+          // explicit pick is width-independent, so that case narrows the days
+          // themselves and leaves the media query out of it.
           <TimetableGridSkeleton
-            workingDays={visibleDays}
+            workingDays={picked === null ? workingDays : visibleDays}
             periods={periods}
+            collapseToDayOnMobile={picked === null}
             className="print:hidden"
           />
         ) : (

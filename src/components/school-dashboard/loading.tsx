@@ -6,9 +6,11 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { TimetableGridSkeleton } from "@/components/school-dashboard/timetable/views/grid-skeleton"
 
 // =============================================================================
 // TIMETABLE BY-CLASS — Card with filters + timetable grid
@@ -1700,170 +1702,563 @@ export function CommunicationTemplatesSkeleton() {
 }
 
 // =============================================================================
-// DASHBOARD — Hero + QuickLook + QuickActions + ResourceUsage + Charts + Attendance
+// DASHBOARD — the phone prefix every role gets, then that role's own sections
 // =============================================================================
 
-export function DashboardSkeleton() {
+/**
+ * `/dashboard` is not one page, it is six — `content.tsx` switches on the
+ * session's role and each branch renders a different set of sections in a
+ * different order. A single skeleton therefore cannot be right for more than
+ * one of them, and the one that stood here drew the ADMIN page for everybody:
+ * a teacher and a student both watched a weather hero, a Quick Look row and an
+ * attendance grid resolve into a page that has none of the three.
+ *
+ * So the shape is a prop. `page.tsx` reads the role off the session — a JWT
+ * cookie read, no database — and hands it to this component through its own
+ * `<Suspense>`, which is the only place on the route where the role is known
+ * before the dashboard's data lands. The route's `loading.tsx` still renders
+ * this component with NO role, and that is deliberate: until `auth()` resolves
+ * there is nothing to draw but the part of the page every role shares.
+ *
+ * Three shapes are drawn, because three were asked for:
+ *
+ *   ADMIN     — hero (Upcoming + Weather), Quick Look, Quick Actions, Resource
+ *               Usage, Invoice History, three charts, then the attendance grid.
+ *               PRINCIPAL shares the six and stops before the grid.
+ *   TEACHER   — Quick Actions, three charts, Resource Usage, Invoice History,
+ *               then the one metric tile and today's classes, both `md`-and-up.
+ *   STUDENT   — the teacher's shape with ONE chart: `chart-section.tsx` hides
+ *               the bar and the radial for STUDENT, so the area chart takes the
+ *               whole row and grows to `md:h-[320px]`.
+ *
+ * DEVELOPER is routed to `AdminDashboard` itself, so it takes that shape whole.
+ * GUARDIAN, ACCOUNTANT and STAFF are NOT drawn — their
+ * dashboards were not reviewed here, and a wrong skeleton is worse than none.
+ * They get the shared phone prefix and nothing else.
+ *
+ * Every measurement below is off the components themselves, not estimated:
+ * the 320px `Upcoming` card, the 40px Quick Look icon, the 250px bar-chart
+ * plot, the `p-2` table rows, the `h-14` action tile. Where a section hides
+ * itself at a breakpoint (`hidden md:block` on Quick Actions, `md:hidden` on
+ * the whole phone prefix) the placeholder carries the SAME query, so neither
+ * width paints a section the page is about to drop.
+ */
+
+type DashboardShape = "ADMIN" | "PRINCIPAL" | "TEACHER" | "STUDENT"
+
+function dashboardShape(role?: string | null): DashboardShape | null {
+  switch (role) {
+    // `content.tsx` sends DEVELOPER to `AdminDashboard` itself.
+    case "ADMIN":
+    case "DEVELOPER":
+      return "ADMIN"
+    // `principal.tsx` opens with the admin's six sections in the admin's
+    // order, then goes its own way — a four-tile metric row where the admin
+    // has the attendance grid. It shares the six and stops there.
+    case "PRINCIPAL":
+      return "PRINCIPAL"
+    case "TEACHER":
+      return "TEACHER"
+    case "STUDENT":
+      return "STUDENT"
+    default:
+      return null
+  }
+}
+
+export function DashboardSkeleton({ role }: { role?: string | null } = {}) {
+  const shape = dashboardShape(role)
+
   return (
-    <div className="space-y-8">
-      {/* Hero: Upcoming flip card + Weather */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-        <div className="h-[320px] w-full max-w-[280px] lg:max-w-[320px]">
-          <div className="bg-card h-full w-full overflow-hidden rounded-2xl border shadow-sm">
-            <div className="from-muted/50 to-background h-full bg-gradient-to-b p-5">
-              <div className="flex h-full flex-col justify-end">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="mt-2 h-4 w-48" />
-              </div>
+    // `content.tsx`'s own wrapper: the phone prefix and the role dashboard are
+    // siblings in a `space-y-6`, and the role dashboard opens its own
+    // `space-y-8` inside it.
+    <div className="space-y-6">
+      <PhonePrefixSkeleton />
+      {shape === "ADMIN" || shape === "PRINCIPAL" ? (
+        <AdminBodySkeleton attendance={shape === "ADMIN"} />
+      ) : shape === "TEACHER" || shape === "STUDENT" ? (
+        <LearnerBodySkeleton shape={shape} />
+      ) : (
+        <NeutralBodySkeleton />
+      )}
+    </div>
+  )
+}
+
+// -----------------------------------------------------------------------------
+// The four blocks every role gets above its own dashboard, all `md:hidden`
+// -----------------------------------------------------------------------------
+
+/**
+ * The home block, the next-action banner, today's classes and the phone
+ * quick-action row.
+ *
+ * The banner and the class grid can both legitimately render nothing — no
+ * ranked action, no school day — so on those days this over-draws by a block.
+ * Drawing them is still the better trade: they are present on an ordinary
+ * school day, and a skeleton that omits them makes the page jump DOWN when
+ * they land, which is the reflow this file exists to prevent.
+ */
+function PhonePrefixSkeleton() {
+  return (
+    <div className="space-y-6 md:hidden">
+      {/* Home block: calendar widget beside the 2x2 tile cluster, both bleeding
+          to the viewport edges and paying 16px back, exactly as
+          `home-block-client.tsx` does. The widget has no height of its own —
+          the cluster's two rows set the row height and the card fills it. */}
+      <div className="mx-[calc(50%-50vw)] grid grid-cols-2 gap-x-8 px-4">
+        <div className="flex flex-col gap-[5px]">
+          <Skeleton className="flex-1 rounded-[28px]" />
+          <Skeleton className="mx-auto h-4 w-12" />
+        </div>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-[5px]">
+              <Skeleton className="aspect-square w-full rounded-[29.2%]" />
+              <Skeleton className="h-4 w-12" />
             </div>
-          </div>
-        </div>
-        <div className="flex w-full flex-col lg:w-[280px] lg:self-end">
-          <div className="space-y-1">
-            <Skeleton className="h-5 w-20" />
-          </div>
-          <div className="mt-2 space-y-1">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-4 w-36" />
-            ))}
-          </div>
-          <div className="mt-3 space-y-0">
-            <Skeleton className="h-7 w-24" />
-            <Skeleton className="mt-1 h-7 w-32" />
-          </div>
-          <div className="bg-muted/50 mt-3 flex justify-between gap-4 rounded-lg p-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <Skeleton className="h-3 w-6" />
-                <Skeleton className="size-5 rounded" />
-                <Skeleton className="h-3 w-6" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Look: 4 stat cards (vertical layout) */}
-      <div>
-        <Skeleton className="mb-4 h-6 w-28" />
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-4">
-              <CardContent className="space-y-3 p-0">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-5 w-12" />
-                <Skeleton className="h-3 w-24" />
-              </CardContent>
-            </Card>
           ))}
         </div>
       </div>
 
-      {/* Quick Actions: 4 colored blocks (not Cards) */}
+      {/* Next-action banner. 245px is its own box: `py-12` either side of a
+          two-line `text-3xl/1.35` headline (81px) and the `mt-7` + `h-10`
+          pill row under it. */}
+      <Skeleton className="h-[245px] w-full rounded-[36px]" />
+
+      {/* Today's classes — the timetable's own day mode, so its own skeleton,
+          narrowed to the single day column that card renders. */}
       <div>
-        <Skeleton className="mb-4 h-6 w-28" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <Skeleton className="h-7 w-36" />
+          <Skeleton className="h-5 w-24" />
+        </div>
+        <TimetableGridSkeleton workingDays={[0]} />
+      </div>
+
+      {/* Phone quick actions: four Android tiles on the home block's grid. */}
+      <div className="mx-[calc(50%-50vw)] px-4">
+        <Skeleton className="mb-4 h-7 w-32" />
+        <div className="grid grid-cols-4 gap-x-8">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[60px] rounded-lg" />
+            <div key={i} className="flex flex-col items-center gap-[5px]">
+              <Skeleton className="aspect-square w-full rounded-[29.2%]" />
+              <Skeleton className="h-4 w-10" />
+            </div>
           ))}
         </div>
-      </div>
-
-      {/* Resource Usage table */}
-      <div>
-        <Skeleton className="mb-4 h-6 w-36" />
-        <div className="overflow-x-auto rounded-md border">
-          <div className="space-y-3 p-4">
-            <Skeleton className="h-4 w-full" />
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <Skeleton className="h-4 w-[180px]" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-2 w-[160px] rounded-full" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Invoice History table */}
-      <div>
-        <Skeleton className="mb-4 h-6 w-36" />
-        <div className="overflow-x-auto rounded-md border">
-          <div className="space-y-3 p-4">
-            <Skeleton className="h-4 w-full" />
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <Skeleton className="h-4 w-[120px]" />
-                <Skeleton className="h-4 w-[200px]" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-5 w-14 rounded-full" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Charts: 1 full-width bar + 2-col (radial + area) */}
-      <div>
-        <Skeleton className="mb-4 h-6 w-28" />
-        <div className="space-y-4">
-          <Card className="flex flex-col">
-            <CardHeader>
-              <Skeleton className="h-5 w-32" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-[200px] w-full" />
-            </CardContent>
-          </Card>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="flex flex-col">
-              <CardHeader>
-                <Skeleton className="h-5 w-28" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="mx-auto h-[200px] w-[200px] rounded-full" />
-              </CardContent>
-            </Card>
-            <Card className="flex flex-col">
-              <CardHeader>
-                <Skeleton className="h-5 w-28" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-[200px] w-full" />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      {/* Attendance: 3-col grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="bg-muted flex flex-col border-none shadow-none">
-          <CardContent className="flex-1 pb-0">
-            <Skeleton className="mx-auto aspect-square max-h-[250px] rounded-full" />
-          </CardContent>
-        </Card>
-        <Card className="bg-muted flex flex-col border-none shadow-none">
-          <CardContent className="flex-1 pb-0">
-            <Skeleton className="mx-auto aspect-square max-h-[250px] rounded-full" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-20" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Skeleton className="h-24 w-full rounded-lg" />
-            <Skeleton className="h-16 w-full rounded-lg" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-          </CardContent>
-        </Card>
       </div>
     </div>
+  )
+}
+
+// -----------------------------------------------------------------------------
+// Role bodies
+// -----------------------------------------------------------------------------
+
+/**
+ * The six sections the admin and the principal share, in their shared order.
+ *
+ * `attendance` is the admin's own last section. The principal's dashboard ends
+ * the six and then opens a four-tile metric row instead, which is not drawn:
+ * that tail was not measured, and this file's rule is that a section in the
+ * wrong place costs more than a section left out.
+ */
+function AdminBodySkeleton({ attendance }: { attendance: boolean }) {
+  return (
+    <div className="space-y-8">
+      <div className="space-y-6">
+        <HeroSkeleton />
+        <QuickLookSkeleton />
+        <QuickActionsSkeleton />
+        <UsageSectionSkeleton rows={4} />
+        <InvoiceSectionSkeleton />
+        <ChartsSectionSkeleton withBar withRadial />
+      </div>
+      {attendance ? <AttendanceSectionSkeleton /> : null}
+    </div>
+  )
+}
+
+/**
+ * Drawn when the role is not known yet — the route's `loading.tsx`, and any
+ * role whose dashboard has not been measured (GUARDIAN, ACCOUNTANT, STAFF).
+ *
+ * Only the three sections that appear in the SAME relative order on every role
+ * dashboard: the action tiles, the usage table, the invoice table. Admin puts
+ * two sections above them and the learners put the charts between them, so
+ * neither is drawn here — a section in the wrong place costs more than a
+ * section left out.
+ */
+function NeutralBodySkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="space-y-6">
+        <QuickActionsSkeleton />
+        <UsageSectionSkeleton rows={4} />
+        <InvoiceSectionSkeleton />
+      </div>
+    </div>
+  )
+}
+
+function LearnerBodySkeleton({ shape }: { shape: "TEACHER" | "STUDENT" }) {
+  // The student's chart section is the area chart alone — `chart-section.tsx`
+  // drops the bar and the radial for that role and lets the area chart take
+  // the row at a pinned 320px instead of a doubled `aspect-video`.
+  const full = shape !== "STUDENT"
+
+  return (
+    <div className="space-y-8">
+      <div className="space-y-6">
+        <QuickActionsSkeleton />
+        <ChartsSectionSkeleton withBar={full} withRadial={full} />
+        {/* The student's default resource table is three rows, the teacher's
+            four; both are replaced by a server read on mount, which keeps the
+            same row count for these two roles. */}
+        <UsageSectionSkeleton rows={shape === "STUDENT" ? 3 : 4} />
+        <InvoiceSectionSkeleton />
+      </div>
+
+      {/* One metric tile in a three-column row — the other two were removed,
+          the row was not. `md`-and-up, like the card below it. */}
+      <div className="hidden gap-4 md:grid md:grid-cols-3">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-9 w-10" />
+              </div>
+              <Skeleton className="size-10 rounded-lg" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Today's schedule. Four rows: a school day has more, but this card
+          lists only what is LEFT of it, so a full seven would over-draw by
+          more than four under-draws. */}
+      <Card className="hidden md:block">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-6 w-32 rounded-md" />
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-4 rounded-lg border p-3"
+            >
+              <Skeleton className="h-5 w-16 shrink-0" />
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-56" />
+              </div>
+              <Skeleton className="h-6 w-14 shrink-0 rounded-md" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// -----------------------------------------------------------------------------
+// Shared sections
+// -----------------------------------------------------------------------------
+
+/** `SectionHeading` — an 18px/28px h2 with a 16px skirt. */
+function SectionHeadingSkeleton({ className }: { className?: string }) {
+  return <Skeleton className={cn("mb-4 h-7", className)} />
+}
+
+/** Upcoming flip card + Weather, side by side from `lg`. */
+function HeroSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+      <Skeleton className="h-[320px] w-full rounded-2xl sm:max-w-[280px] lg:max-w-[320px]" />
+
+      {/* Weather reads top-down: clock and date on one baseline, then the
+          place, then its five detail lines — one row of four on a phone,
+          stacked from `sm` — and the six-day strip last. */}
+      <div className="flex w-full flex-col lg:w-auto lg:max-w-sm lg:min-w-[280px] lg:self-end">
+        <div className="mb-2 flex items-baseline gap-1.5">
+          <Skeleton className="h-7 w-20" />
+          <Skeleton className="h-7 w-28" />
+        </div>
+        <div className="space-y-1">
+          <Skeleton className="h-5 w-24" />
+          <div className="grid grid-cols-4 gap-x-2 gap-y-1 sm:grid-cols-1 sm:gap-x-4">
+            <Skeleton className="h-5 w-full sm:w-28" />
+            {/* Humidity is the one line a phone drops. */}
+            <Skeleton className="hidden h-5 w-32 sm:block" />
+            <Skeleton className="h-5 w-full sm:w-20" />
+            <Skeleton className="h-5 w-full sm:w-24" />
+            <Skeleton className="h-5 w-full sm:w-20" />
+          </div>
+        </div>
+        <div className="bg-muted/50 mt-3 flex justify-between gap-2 rounded-lg p-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex min-w-0 flex-1 flex-col items-center gap-1"
+            >
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="size-5 rounded" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Quick Look: four cards, each THREE rows deep — the icon beside its label and
+ * count, the most recent item under them, and a "view all" link last.
+ *
+ * It carries NO section heading of its own. The heading the old skeleton drew
+ * above it was one the page never renders.
+ */
+function QuickLookSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Card key={i} className="p-4">
+          <CardContent className="space-y-3 p-0">
+            <div className="flex items-center gap-3">
+              <Skeleton className="size-10 rounded-lg" />
+              <div className="min-w-0 flex-1 space-y-1">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-7 w-10" />
+              </div>
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-16" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Four action tiles. `hidden md:block`, matching the section itself — below
+ * `md` the phone row above stands in for it, and drawing both would be the
+ * same four destinations twice.
+ */
+function QuickActionsSkeleton() {
+  return (
+    <section className="hidden md:block">
+      <SectionHeadingSkeleton className="w-32" />
+      <div className="grid grid-cols-4 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 rounded-lg" />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Resource Usage. Measured on the live page: a 40px header row over 36px rows
+ * (`p-2` around a 20px line), and 44px from the top of the heading to the top
+ * of the table — the empty title block `DetailedUsageTable` still renders adds
+ * nothing, because its margin collapses with the heading's.
+ *
+ * The row count is knowable: this table paints its role's DEFAULT rows on the
+ * first frame and only later swaps in the server's, which for these roles is
+ * the same count.
+ */
+function UsageSectionSkeleton({ rows }: { rows: number }) {
+  return (
+    <section>
+      <SectionHeadingSkeleton className="w-40" />
+      <div className="overflow-x-auto rounded-md border">
+        <div className="grid h-10 grid-cols-[180px_1fr_1fr_160px] items-center gap-2 border-b px-6">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-10 justify-self-end" />
+          <Skeleton className="h-4 w-10 justify-self-end" />
+          <Skeleton className="h-4 w-12 justify-self-end" />
+        </div>
+        {Array.from({ length: rows }).map((_, i) => (
+          <div
+            key={i}
+            className="grid grid-cols-[180px_1fr_1fr_160px] items-center gap-2 border-b px-6 py-2 last:border-b-0"
+          >
+            <Skeleton className="h-5 w-28" />
+            <Skeleton className="h-5 w-14 justify-self-end" />
+            <Skeleton className="h-5 w-14 justify-self-end" />
+            <div className="flex min-w-[120px] items-center gap-2">
+              <Skeleton className="h-2 flex-1 rounded-full" />
+              <Skeleton className="h-4 w-10" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Invoice History: a five-column header over ONE 96px body cell.
+ *
+ * That single cell is not a shortcut — it is what the page paints when this
+ * skeleton hands over. `InvoiceHistorySection` starts with an empty list and
+ * fills it from a client-side read, so the frame that replaces this one is the
+ * table's own "no invoices yet" row (`h-24`), whatever the reader's invoice
+ * count turns out to be. Drawing a guessed number of rows would put a step
+ * into the ONE transition this component controls, to avoid a later step it
+ * cannot predict.
+ */
+function InvoiceSectionSkeleton() {
+  return (
+    <section>
+      <SectionHeadingSkeleton className="w-40" />
+      <div className="rounded-md border">
+        <div className="grid h-10 grid-cols-[120px_1fr_1fr_1fr_1fr] items-center gap-2 border-b px-6">
+          <Skeleton className="h-4 w-12" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-12 justify-self-end" />
+          <Skeleton className="h-4 w-12 justify-self-end" />
+          <Skeleton className="h-4 w-12 justify-self-end" />
+        </div>
+        <div className="flex h-24 items-center justify-center">
+          <Skeleton className="h-5 w-40" />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * The chart section, at its two shapes: full-width bar over a radial/area
+ * pair, or the area chart alone across the row.
+ */
+function ChartsSectionSkeleton({
+  withBar = false,
+  withRadial = false,
+}: {
+  withBar?: boolean
+  withRadial?: boolean
+}) {
+  return (
+    <section>
+      <SectionHeadingSkeleton className="w-44" />
+      <div className="space-y-4">
+        {withBar ? <BarChartCardSkeleton /> : null}
+        <div className={cn("grid gap-4", withRadial && "md:grid-cols-2")}>
+          {withRadial ? <RadialChartCardSkeleton /> : null}
+          <AreaChartCardSkeleton tall={!withRadial} />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/** `chart-interactive-bar.tsx`: split header over a 250px plot. */
+function BarChartCardSkeleton() {
+  return (
+    <Card className="bg-muted border-none shadow-none">
+      <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
+        <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-4 w-56" />
+        </div>
+        <div className="flex">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 even:border-s sm:border-s sm:border-t-0 sm:px-8 sm:py-6"
+            >
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-8 w-24" />
+            </div>
+          ))}
+        </div>
+      </CardHeader>
+      <CardContent className="px-2 sm:p-6">
+        <Skeleton className="h-[250px] w-full" />
+      </CardContent>
+    </Card>
+  )
+}
+
+/** `chart-radial-text.tsx`: a 250px dial over a two-line footer. */
+function RadialChartCardSkeleton() {
+  return (
+    <Card className="bg-muted flex flex-col border-none shadow-none">
+      <CardContent className="flex-1 pb-0">
+        <Skeleton className="mx-auto aspect-square w-full max-w-[250px] rounded-full" />
+      </CardContent>
+      <CardFooter className="flex-col gap-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-4 w-48" />
+      </CardFooter>
+    </Card>
+  )
+}
+
+/**
+ * `chart-area-stacked.tsx`: an empty `CardHeader` above the plot, then the
+ * same two-line footer. `tall` is the student's row-wide variant, which pins
+ * the plot at 320px instead of letting `aspect-video` double it.
+ */
+function AreaChartCardSkeleton({ tall = false }: { tall?: boolean }) {
+  return (
+    <Card className="bg-muted flex flex-col border-none shadow-none">
+      <CardHeader />
+      <CardContent className="flex-1">
+        <Skeleton
+          className={cn(
+            "w-full",
+            tall ? "aspect-video md:aspect-auto md:h-[320px]" : "aspect-video"
+          )}
+        />
+      </CardContent>
+      <CardFooter className="flex-col gap-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-4 w-48" />
+      </CardFooter>
+    </Card>
+  )
+}
+
+/** The admin's last section: two dials and a summary card, three across. */
+function AttendanceSectionSkeleton() {
+  return (
+    <section>
+      <SectionHeadingSkeleton className="w-48" />
+      <div className="grid gap-6 lg:grid-cols-3">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <Card
+            key={i}
+            className="bg-muted flex flex-col border-none shadow-none"
+          >
+            <CardContent className="flex-1 pb-0">
+              <Skeleton className="mx-auto aspect-square w-full max-w-[250px] rounded-full" />
+            </CardContent>
+          </Card>
+        ))}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-24" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* The 91% panel, the amber warning, then the two count rows. */}
+            <Skeleton className="h-[92px] w-full rounded-lg" />
+            <Skeleton className="h-[68px] w-full rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
   )
 }
 

@@ -31,36 +31,36 @@
  * re-stringified parse whose key order and spacing are not guaranteed to match.
  */
 
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from "node:crypto"
 
 /** Twenty's `DatabaseEventAction` values. `destroyed` is a hard delete; `deleted` is soft. */
 export type TwentyAction =
-  | 'created'
-  | 'updated'
-  | 'deleted'
-  | 'destroyed'
-  | 'restored'
-  | 'upserted';
+  | "created"
+  | "updated"
+  | "deleted"
+  | "destroyed"
+  | "restored"
+  | "upserted"
 
 export interface TwentyEvent {
   /** Object name, e.g. "home", "host", "opportunity", "company". */
-  object: string;
-  action: TwentyAction | string;
+  object: string
+  action: TwentyAction | string
   /** The full `object.action` string as Twenty sent it. */
-  eventName: string;
-  record: Record<string, any>;
+  eventName: string
+  record: Record<string, any>
   /** Present on update events — lets a handler react only to the fields it cares about. */
-  updatedFields: string[];
-  webhookId?: string;
-  eventDate?: string;
+  updatedFields: string[]
+  webhookId?: string
+  eventDate?: string
 }
 
 export type VerifyResult =
   | { ok: true; reason?: never }
-  | { ok: false; reason: string };
+  | { ok: false; reason: string }
 
 /** Deliveries older than this are rejected, so a captured request cannot be replayed later. */
-export const MAX_TIMESTAMP_SKEW_MS = 5 * 60 * 1000;
+export const MAX_TIMESTAMP_SKEW_MS = 5 * 60 * 1000
 
 /**
  * Verify a Twenty webhook delivery against the shared secret.
@@ -69,35 +69,39 @@ export const MAX_TIMESTAMP_SKEW_MS = 5 * 60 * 1000;
  * can reorder keys or change spacing, and the HMAC is over exact bytes.
  */
 export function verifyTwentySignature(args: {
-  rawBody: string;
-  signature: string | null;
-  timestamp: string | null;
-  secret: string | undefined;
-  now?: number;
+  rawBody: string
+  signature: string | null
+  timestamp: string | null
+  secret: string | undefined
+  now?: number
 }): VerifyResult {
-  const { rawBody, signature, timestamp, secret } = args;
-  const now = args.now ?? Date.now();
+  const { rawBody, signature, timestamp, secret } = args
+  const now = args.now ?? Date.now()
 
   // No secret configured is a deployment error, not a reason to accept. The old
   // behaviour — open endpoint when unset — is how an unauthenticated caller
   // could have driven listing publish state.
-  if (!secret) return { ok: false, reason: 'no_secret_configured' };
-  if (!signature || !timestamp) return { ok: false, reason: 'missing_signature_headers' };
+  if (!secret) return { ok: false, reason: "no_secret_configured" }
+  if (!signature || !timestamp)
+    return { ok: false, reason: "missing_signature_headers" }
 
-  const ts = Number(timestamp);
-  if (!Number.isFinite(ts)) return { ok: false, reason: 'bad_timestamp' };
-  if (Math.abs(now - ts) > MAX_TIMESTAMP_SKEW_MS) return { ok: false, reason: 'stale_timestamp' };
+  const ts = Number(timestamp)
+  if (!Number.isFinite(ts)) return { ok: false, reason: "bad_timestamp" }
+  if (Math.abs(now - ts) > MAX_TIMESTAMP_SKEW_MS)
+    return { ok: false, reason: "stale_timestamp" }
 
-  const expected = createHmac('sha256', secret).update(`${timestamp}:${rawBody}`).digest('hex');
+  const expected = createHmac("sha256", secret)
+    .update(`${timestamp}:${rawBody}`)
+    .digest("hex")
 
   // Compare in constant time. Length must match first — timingSafeEqual throws
   // on differing lengths, which would itself leak length through an exception.
-  const a = Buffer.from(expected, 'utf8');
-  const b = Buffer.from(signature, 'utf8');
-  if (a.length !== b.length) return { ok: false, reason: 'bad_signature' };
-  if (!timingSafeEqual(a, b)) return { ok: false, reason: 'bad_signature' };
+  const a = Buffer.from(expected, "utf8")
+  const b = Buffer.from(signature, "utf8")
+  if (a.length !== b.length) return { ok: false, reason: "bad_signature" }
+  if (!timingSafeEqual(a, b)) return { ok: false, reason: "bad_signature" }
 
-  return { ok: true };
+  return { ok: true }
 }
 
 /**
@@ -111,29 +115,29 @@ export function verifyTwentySignature(args: {
  * 400 instead of returning a cheerful 200 for something it did not understand.
  */
 export function parseTwentyEvent(body: any): TwentyEvent | null {
-  if (!body || typeof body !== 'object') return null;
+  if (!body || typeof body !== "object") return null
 
   const eventName: string | undefined =
-    typeof body.eventName === 'string' ? body.eventName : undefined;
+    typeof body.eventName === "string" ? body.eventName : undefined
 
   const fromMetadata: string | undefined =
-    typeof body.objectMetadata?.nameSingular === 'string'
+    typeof body.objectMetadata?.nameSingular === "string"
       ? body.objectMetadata.nameSingular
-      : undefined;
+      : undefined
 
-  let object = fromMetadata;
-  let action: string | undefined;
+  let object = fromMetadata
+  let action: string | undefined
 
   if (eventName) {
-    const dot = eventName.lastIndexOf('.');
+    const dot = eventName.lastIndexOf(".")
     if (dot > 0) {
-      object = object ?? eventName.slice(0, dot);
-      action = eventName.slice(dot + 1);
+      object = object ?? eventName.slice(0, dot)
+      action = eventName.slice(dot + 1)
     }
   }
 
-  if (!object || !action) return null;
-  if (!body.record || typeof body.record !== 'object') return null;
+  if (!object || !action) return null
+  if (!body.record || typeof body.record !== "object") return null
 
   return {
     object,
@@ -141,7 +145,7 @@ export function parseTwentyEvent(body: any): TwentyEvent | null {
     eventName: eventName ?? `${object}.${action}`,
     record: body.record,
     updatedFields: Array.isArray(body.updatedFields) ? body.updatedFields : [],
-    webhookId: typeof body.webhookId === 'string' ? body.webhookId : undefined,
-    eventDate: typeof body.eventDate === 'string' ? body.eventDate : undefined,
-  };
+    webhookId: typeof body.webhookId === "string" ? body.webhookId : undefined,
+    eventDate: typeof body.eventDate === "string" ? body.eventDate : undefined,
+  }
 }

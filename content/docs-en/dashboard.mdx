@@ -22,6 +22,157 @@ before the client view ever mounts.
 
 Parent, Principal, Accountant and Staff have not been split yet.
 
+## Phone home block
+
+On viewports below `md` the dashboard opens with a block ported from the Android
+app's home screen (`feature/dashboard` → `HomeGrid` → `TopBlockLayout`): a
+calendar widget beside a 2x2 cluster of four app icons, rendered above whatever
+the role's own dashboard draws. `HomeBlock` is the server half — one
+tenant-scoped count of the school's events dated today — and `HomeBlockClient`
+draws it.
+
+Android splits its top block into two equal slots separated by a 14dp gap, an
+measuring the icon column and sizing the widget to match. A CSS grid gets that
+for free: both halves are items in one row, so the widget stretches to the
+cluster's height. DOM order is widget-then-cluster — the calendar leads — which
+is why Arabic mirrors it the way Compose does in RTL without a single left/right
+class.
+
+The four tiles are Notifications, Messages, Lumos and Subjects, each drawn with
+its own Android artwork lifted from `drawable-nodpi` into `public/tiles/`.
+Notifications and Messages take the first row, where the Android cluster puts
+Grades and Fees.
+
+The page heading is hidden below `md` — the block leads the phone dashboard, and
+the Android home screen carries no title above its grid. `PageHeadingSetter`
+takes a `hideOnMobile` flag for this; the heading still renders from `md` up.
+
+The block has no ground of its own — it is the container's full width and the
+tiles sit straight on the page, the way they sit on a wallpaper. Android pins
+its icons at 64dp inside wider cells and centres them; rendering that literally
+left the tiles small and the gaps loose, because this container is wider than
+the padded Android grid, so each icon fills its cell instead. The only gap
+anywhere is then the grid's own, 14px between columns and 20px between rows, and
+the widget's card spans its half with nothing to inset it by. The card is the
+mint `#9fe5b1` the marketing homepage closes on.
+
+## Phone next-action banner
+
+Under the home block, and also below `md`, a banner states the single most
+important thing the signed-in role has to do and flips to the next after a ten
+second hold, looping. It is the third copy of the green hero object — the same
+ground, geometry, type and pill as `/live`'s status hero and `/library`'s hero,
+which both carry a note saying that when one changes the other must. All three
+are now in that set.
+
+Its height, though, is its own. The headline is pinned to a two-line box, which
+is the only piece of the card that could vary, so the banner measures the same
+245px whatever sentence is showing. The siblings state one sentence and may be as
+tall as it needs; a card that grew and shrank on a timer would shove the whole
+dashboard up and down under the reader. Each sentence opens with an emphasised
+phrase carrying the number or name the data fills, so the weight lands on the
+first words, and the two lines are balanced to near equal width rather than left
+as a long line over a short one.
+
+Every sentence opens with a two-word phrase set in bold, and the length of the
+copy is measured rather than guessed: all twenty-six of them, thirteen kinds in
+two languages, were rendered in a real browser and their two line widths
+compared, so each one sets as two lines of near-equal width the way the `/live`
+headline does. Rewording one means measuring it again; a word longer or shorter
+moves the break.
+
+Under them sits the siblings' pair of buttons. The first opens whatever the
+action points at. The second, "acknowledge", only takes the entry off the card
+for this visit and moves to the next — it hands nothing in, marks no register
+and approves nothing, because no such write exists behind these ranked rows, and
+the next reload asks the data again.
+
+`rankNextActions` is pure and reads the payload `getUpcomingDataByRole` already
+returns, so the banner costs the dashboard no query of its own. Ranking per
+role: a student sees overdue assignments, then merely due ones, then the next
+class; a teacher sees marking, then attendance, then the next class; a guardian
+sees each child; an accountant sees overdue then unpaid invoices; admin,
+developer and principal see active issues then pending approvals. Nothing to do
+renders nothing at all, never an empty banner.
+
+The change between sentences is two motions, both older than this card. Leaving,
+the sentence evaporates: the line lifts and goes out of focus while its letters
+fade one after another rather than together, which is what makes it read as
+smoke instead of a dissolve. Arriving, it sorts itself out of noise, every letter
+starting as a random one and settling left to right — the scramble written for
+the old site's "Take Sorting Quiz" link. The noise is Arabic letters on `/ar` and
+Latin on `/en`; Latin gibberish inside an Arabic line opens a left-to-right run
+inside a right-to-left one, and the bidi algorithm then slides it around the line
+as it flips. Reduced motion removes both but keeps the rotation on the same
+clock: freezing on entry one would hide every action behind it from exactly the
+readers who cannot swipe to find them.
+
+## Phone day timetable
+
+Under the banner, still below `md`, a student or a teacher gets the day's
+classes. It is the timetable page's own day view — the same grid, narrowed to a
+single day column beside the period column — rather than a second timetable
+drawn for the dashboard, so a break, a free period and a subject's colour all
+read exactly as they do on the timetable page. A heading links through to the
+full week.
+
+Only a student and a teacher see it, because only they have a personal day. The
+read behind it filters by the signed-in person for those two roles and returns
+the whole school's day for anyone else, of which one arbitrary class per period
+would survive; an administrator is shown nothing rather than a day that looks
+like a schedule and is not one. The timetable page draws the same line — its
+week/day switch exists only on the student's surface.
+
+Asked on a weekend or on a declared holiday, the card looks forward and shows
+the first day that has classes on it, and its heading says so: "Today's classes"
+when it landed on today, "Next classes" when it did not. The column names the
+day either way.
+
+The one thing the card leaves out is the timetable page's live-class lamp. That
+lamp lights whichever period the page believes is running, which it works out by
+comparing a local clock against times stored in UTC. On the timetable page that
+is harmless, because the grid is drawn in the browser and nowhere else. This card
+is drawn on the server first, and in production the server keeps UTC while the
+reader keeps Khartoum time, so the two would light different rows. Joining a live
+class stays on the timetable and live pages, where the clock is checked properly.
+
+Because the student and teacher dashboards already listed the day further down,
+those older cards now hide themselves on phones, along with the metric tile that
+counted the day's classes. The same day in two shapes, one of which can point at
+a different day on a weekend, teaches a reader to trust neither. From `md` up
+there is no grid, so both come back and remain the only schedule on the page.
+
+## Phone quick-actions row
+
+Below `md` the quick-actions section is lifted out of the role's own dashboard
+and rendered under the day timetable — or directly under the next-action banner
+on days with no classes. It carries no ground of its own: the muted band it used
+to sit on was a second tinted rectangle on a page that already has the green
+banner. It keeps the full bleed, because the bleed is what puts its four columns
+on the home block's grid — the same 16px payback, the same 32px column gap, and
+tiles sized by their cell rather than fixed at 64px, so two of its tiles land
+directly beneath the home block's cluster tiles at every width. That is the
+relationship the Android home screen has between its widget row and the 4-up
+rows below it. In the role's stack it sits fourth, under the charts, which on a phone is
+several screens down; the top of a phone dashboard is then
+what today is, the one thing to do, today's classes, and the four places this role goes most.
+Each role dashboard keeps its own copy from `md` up, where the stack is short
+enough to reach.
+
+There it renders its four actions as one row of Android app icons instead of two
+rows of coloured cards, matching the home block. The tile is chosen by the action's LABEL rather than its `iconName`,
+since the Android set is per-feature — "Grades" has a grades tile while its
+`iconName` is the generic `Sparkle`. A student's four (Assignments, My Grades,
+Schedule, Messages) each get their own tile. An action with no entry in the map
+falls back to a tinted cell carrying its own icon, so the row always shows four
+tiles; every action the seven roles list today has its own artwork. Only the Smart Stack's first page
+(Today) is ported; the Android widget is a three-page vertical pager, and a
+swipeable stack inside a page that already scrolls vertically would fight the
+page.
+
+Labels come from `school.dashboard.homeWidget`, which carries the Android
+strings rather than the sidebar's, so the two products read identically.
+
 ## Section order
 
 Every role renders these six sections in order. Section 2 is title-less.
@@ -34,6 +185,62 @@ Every role renders these six sections in order. Section 2 is title-less.
 | 4   | Resource Usage     | `ResourceUsageSection`     |
 | 5   | Invoice History    | `InvoiceHistorySection`    |
 | 6   | Financial Overview | `FinancialOverviewSection` |
+
+The student and teacher dashboards are the exception. Both hide sections 1 and
+2 and move the chart section up to sit directly under Quick Actions, so their
+order reads Quick Actions, charts, Resource Usage, Invoice History. Their
+server wrappers skip the matching fetches rather than throwing the data away.
+
+## Loading placeholder
+
+The placeholder is role-aware. `page.tsx` reads the role with `currentRole()` —
+a JWT cookie read, not a query — and hands it to `DashboardSkeleton` through
+its own `<Suspense>`. The route's `loading.tsx` covers only that read and draws
+a role-blind shell; everything slower suspends into the boundary that knows the
+role.
+
+Four bodies are drawn, matching the orders above: the admin's six sections
+plus the attendance grid, the principal's — the same six, stopping before that
+grid, because its own tail is a four-tile metric row instead — the teacher's
+four plus the metric tile and the day card, and the student's, which is the
+teacher's with the area chart alone across the row since the chart section
+hides the bar and the radial for that role. GUARDIAN, ACCOUNTANT and STAFF fall
+back to a neutral body of quick actions, usage and invoices; those three
+dashboards have not been measured, and a section in the wrong place costs more
+than a section left out.
+
+Above every body sits the phone prefix — the home block, the next-action
+banner, the day timetable and the phone quick-action row — carrying the same
+`md:hidden` its sections carry, so neither width paints a section the page is
+about to drop.
+
+One measurement is worth knowing: the invoice table's placeholder is a single
+96px empty cell, not a stack of rows. `InvoiceHistorySection` starts with an
+empty list and fills it from a client read, so the frame that replaces the
+skeleton is the table's own "no invoices yet" row whatever the reader's invoice
+count turns out to be.
+
+## The day card
+
+A student and a teacher each get a card listing what is left of today, and both
+read the same clock — `day-clock.ts`, imported by `student-client.tsx` and
+`teacher-client.tsx`.
+
+A period leaves the list the moment it ends, not when it starts, so a class in
+progress stays. The badge follows the clock: `Now` only while the clock is
+inside a period, `Next` on the first remaining row otherwise. When every period
+has passed the card says the day is done, which is a different message from the
+day off it offers when nothing was scheduled at all. A class that is also
+online carries an Online marker and, while it is running or about to start, a
+Join button pointing at the same room the timetable page would open.
+
+Two conventions make it work. Period bounds are stored as wall-clock UTC and
+must be read back as UTC; reading them locally shifts every class by the
+reader's offset. And the filtering may not start until after mount, because the
+card is server-rendered first and the server's clock is not the reader's — the
+whole day renders on the first paint and settles one tick later. The list
+re-reads every 30 seconds, which is what makes a period drop off a page left
+open.
 
 ## Role routing
 
@@ -89,6 +296,9 @@ Showcase components (`card-*.tsx`, `chart-*.tsx`, `stat-*.tsx`, `dashboard-showc
 ## Upcoming flip card
 
 Role-specific 3D flip card. Front shows primary content; back shows secondary.
+The student and teacher dashboards no longer render it — see the section-order
+note above — so the rows below describe what each of the others shows, and what
+those two would show again if section 1 were restored.
 
 | Role       | Primary                            | Secondary                       |
 | ---------- | ---------------------------------- | ------------------------------- |

@@ -13,8 +13,8 @@ export function DateSeparator({ label, className }: Props) {
         className
       )}
     >
-      <div className="flex min-w-[100px] items-center justify-center rounded-[8px] border-[0.66px] border-[color:var(--wa-surface-shadow-baloon)] bg-[color:var(--wa-surface-date)] px-[14px] py-[3px]">
-        <span className="text-[12px] font-semibold text-[color:var(--wa-text-primary)]">
+      <div className="flex items-center justify-center rounded-[8px] bg-[color:var(--wa-surface-date)] px-[12px] py-[2px]">
+        <span className="text-[13px] leading-[15px] font-semibold text-[color:var(--wa-text-primary)]">
           {label}
         </span>
       </div>

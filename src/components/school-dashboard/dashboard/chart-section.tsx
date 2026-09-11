@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 
+import { cn } from "@/lib/utils"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
@@ -487,28 +488,51 @@ function ChartSectionInner({ role, className }: ChartSectionProps) {
     cl
   )
 
+  // The student sees grades only. Their bar chart is Study Hours and their
+  // radial is Attendance — both hidden, so this section is the grades area
+  // chart alone and the two-column grid beside it would leave a hole. Every
+  // other role keeps all three. Restore by dropping these two flags.
+  const showBarChart = role !== "STUDENT"
+  const showRadialChart = role !== "STUDENT"
+
   return (
     <section className={className}>
       <SectionHeading title={sectionTitle} />
       <div className="space-y-4">
         {/* Full width bar chart (like finance page) */}
-        <InteractiveBarChart
-          data={data.barChart.data}
-          title={barTitle}
-          description={barDesc}
-          primaryLabel={barPrimary}
-          secondaryLabel={barSecondary}
-        />
+        {showBarChart && (
+          <InteractiveBarChart
+            data={data.barChart.data}
+            title={barTitle}
+            description={barDesc}
+            primaryLabel={barPrimary}
+            secondaryLabel={barSecondary}
+          />
+        )}
 
         {/* 2-column grid: Radial + Area (like finance page) */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <RadialTextChart
-            value={data.radialChart.value}
-            label={radialLabel}
-            trend={data.radialChart.trend}
-            trendLabel={radialTrend}
-            maxValue={data.radialChart.maxValue}
-          />
+        {/* Half the row each, unless the radial is hidden and the area chart
+            has the row to itself. `ChartContainer` is `aspect-video`, so a
+            chart that doubles in width doubles in height too — nearly 800px of
+            mostly empty plot. Pin it instead to the height it has beside the
+            radial. */}
+        <div
+          className={cn(
+            "grid gap-4",
+            showRadialChart
+              ? "md:grid-cols-2"
+              : "md:[&_[data-slot=chart]]:aspect-auto md:[&_[data-slot=chart]]:h-[320px]"
+          )}
+        >
+          {showRadialChart && (
+            <RadialTextChart
+              value={data.radialChart.value}
+              label={radialLabel}
+              trend={data.radialChart.trend}
+              trendLabel={radialTrend}
+              maxValue={data.radialChart.maxValue}
+            />
+          )}
           <AreaChartStacked
             data={translatedAreaData}
             primaryLabel={areaPrimary}

@@ -28,30 +28,30 @@
  */
 
 export type TwentyFieldType =
-  | 'TEXT'
-  | 'NUMBER'
-  | 'BOOLEAN'
-  | 'DATE'
-  | 'DATE_TIME'
-  | 'SELECT'
-  | 'MULTI_SELECT'
-  | 'CURRENCY'
-  | 'EMAILS'
-  | 'PHONES'
-  | 'LINKS'
-  | 'RAW_JSON';
+  | "TEXT"
+  | "NUMBER"
+  | "BOOLEAN"
+  | "DATE"
+  | "DATE_TIME"
+  | "SELECT"
+  | "MULTI_SELECT"
+  | "CURRENCY"
+  | "EMAILS"
+  | "PHONES"
+  | "LINKS"
+  | "RAW_JSON"
 
 export interface FieldDef {
   /** camelCase Twenty field name (the DB column derives from this). */
-  name: string;
-  label: string;
-  type: TwentyFieldType;
-  description?: string;
+  name: string
+  label: string
+  type: TwentyFieldType
+  description?: string
   /** Tabler icon name, e.g. "IconProgressCheck". */
-  icon?: string;
+  icon?: string
   /** SELECT / MULTI_SELECT choices; the seeder expands these to Twenty option objects. */
-  options?: string[];
-  defaultValue?: boolean;
+  options?: string[]
+  defaultValue?: boolean
 }
 
 // ── The gate ladder ──────────────────────────────────────────────────────────
@@ -81,76 +81,90 @@ export interface FieldDef {
 // added and nothing is renamed. That keeps one field carrying the whole ladder
 // instead of splitting outreach state across `stage` and `leadStatus`.
 export const GATES = [
-  'COLD',
-  'PROSPECT',
-  'SHORTLISTED',
-  'CONTACTED',
-  'WARM',
-  'DISCOVERY',
-  'DEMO',
-  'TRIAL',
-  'PILOT',
-  'PAID',
-  'DORMANT',
-  'LOST',
-] as const;
-export type Gate = (typeof GATES)[number];
+  "COLD",
+  "PROSPECT",
+  "SHORTLISTED",
+  "CONTACTED",
+  "WARM",
+  "DISCOVERY",
+  "DEMO",
+  "TRIAL",
+  "PILOT",
+  "PAID",
+  "DORMANT",
+  "LOST",
+] as const
+export type Gate = (typeof GATES)[number]
 
 /** Live on `company.stage` as of 2026-08-19. NEVER remove one of these. */
 export const STAGE_OPTIONS_EXISTING = [
-  'COLD', 'PROSPECT', 'WARM', 'DISCOVERY', 'DEMO', 'TRIAL', 'PILOT', 'PAID', 'DORMANT', 'LOST',
-] as const;
+  "COLD",
+  "PROSPECT",
+  "WARM",
+  "DISCOVERY",
+  "DEMO",
+  "TRIAL",
+  "PILOT",
+  "PAID",
+  "DORMANT",
+  "LOST",
+] as const
 
 /** Only what is genuinely new gets appended. Additive by construction. */
 export const STAGE_OPTIONS_TO_APPEND = GATES.filter(
-  (g) => !STAGE_OPTIONS_EXISTING.includes(g as (typeof STAGE_OPTIONS_EXISTING)[number]),
-);
+  (g) =>
+    !STAGE_OPTIONS_EXISTING.includes(
+      g as (typeof STAGE_OPTIONS_EXISTING)[number]
+    )
+)
 
 /** What each gate means, so no session has to re-infer it from the option name. */
 export const GATE_MEANING: Record<Gate, string> = {
-  COLD: 'never contacted — /scrape owns this, the funnel does not',
-  PROSPECT: 'tiered and worth working, but not yet picked for a wave',
-  SHORTLISTED: 'a human chose this school for outreach — THE TRIGGER',
-  CONTACTED: 'the opening message has gone out; awaiting a reply',
-  WARM: 'they replied — the conversation actually starts here',
-  DISCOVERY: 'the seven qualifying facts are known',
-  DEMO: 'a proposal or consult has been shown',
-  TRIAL: 'a self-serve sandbox is running in their own school name',
-  PILOT: 'the committed free 3-month pilot is running',
-  PAID: 'subscription active with real usage — the north-star state',
-  DORMANT: 'four touches, no reply; re-enters at its stalled gate after 90 days',
-  LOST: 'an explicit no',
-};
+  COLD: "never contacted — /scrape owns this, the funnel does not",
+  PROSPECT: "tiered and worth working, but not yet picked for a wave",
+  SHORTLISTED: "a human chose this school for outreach — THE TRIGGER",
+  CONTACTED: "the opening message has gone out; awaiting a reply",
+  WARM: "they replied — the conversation actually starts here",
+  DISCOVERY: "the seven qualifying facts are known",
+  DEMO: "a proposal or consult has been shown",
+  TRIAL: "a self-serve sandbox is running in their own school name",
+  PILOT: "the committed free 3-month pilot is running",
+  PAID: "subscription active with real usage — the north-star state",
+  DORMANT:
+    "four touches, no reply; re-enters at its stalled gate after 90 days",
+  LOST: "an explicit no",
+}
 
 /** Postgres is the source of truth for gate state; these mirror it onto the board. */
 export const GATE_FROM_LEAD_STATUS: Record<string, Gate> = {
-  NEW: 'WARM',
-  CONTACTED: 'WARM',
-  QUALIFIED: 'DISCOVERY',
-  PROPOSAL: 'DEMO',
-  NEGOTIATION: 'PILOT',
-  CLOSED_WON: 'PAID',
-  CLOSED_LOST: 'LOST',
-  ARCHIVED: 'DORMANT',
-};
+  NEW: "WARM",
+  CONTACTED: "WARM",
+  QUALIFIED: "DISCOVERY",
+  PROPOSAL: "DEMO",
+  NEGOTIATION: "PILOT",
+  CLOSED_WON: "PAID",
+  CLOSED_LOST: "LOST",
+  ARCHIVED: "DORMANT",
+}
 
 // ── Segmentation ─────────────────────────────────────────────────────────────
 // Bands come from `src/components/saas-marketing/pricing/config.ts`, not from taste:
 // 100 is the free-tier ceiling, 20 is the minimumMonthly 30 / $1.50 floor, and 1000 is
 // where enterprise is offered.
-export const AUTHORITY = ['owner', 'principal', 'admin', 'unknown'] as const;
-export const BAND = ['micro', 'small', 'mid', 'large'] as const;
-export const RAIL = ['sd', 'gulf', 'eg', 'other'] as const;
-export const TERM = ['now', 'next', 'far'] as const;
+export const AUTHORITY = ["owner", "principal", "admin", "unknown"] as const
+export const BAND = ["micro", "small", "mid", "large"] as const
+export const RAIL = ["sd", "gulf", "eg", "other"] as const
+export const TERM = ["now", "next", "far"] as const
 
 /** Rail decides the channel, and the measurement is not close: 119 of 176 contactables
  *  carry an email against only 45 mobiles, so everything outside Sudan is email-first. */
-export const RAIL_CHANNEL: Record<(typeof RAIL)[number], 'whatsapp' | 'email'> = {
-  sd: 'whatsapp',
-  gulf: 'email',
-  eg: 'email',
-  other: 'email',
-};
+export const RAIL_CHANNEL: Record<(typeof RAIL)[number], "whatsapp" | "email"> =
+  {
+    sd: "whatsapp",
+    gulf: "email",
+    eg: "email",
+    other: "email",
+  }
 
 // ── Fields ───────────────────────────────────────────────────────────────────
 
@@ -161,156 +175,165 @@ export const RAIL_CHANNEL: Record<(typeof RAIL)[number], 'whatsapp' | 'email'> =
  */
 export const OPPORTUNITY_FUNNEL_FIELDS: FieldDef[] = [
   {
-    name: 'hogwartsLeadId',
-    label: 'hogwarts Lead ID',
-    type: 'TEXT',
-    icon: 'IconLink',
+    name: "hogwartsLeadId",
+    label: "hogwarts Lead ID",
+    type: "TEXT",
+    icon: "IconLink",
     description:
-      'Join key back to hogwarts Postgres, which is the source of truth for gate state. Without this the board cannot be reconciled.',
+      "Join key back to hogwarts Postgres, which is the source of truth for gate state. Without this the board cannot be reconciled.",
   },
   {
-    name: 'funnelSegment',
-    label: 'Segment',
-    type: 'TEXT',
-    icon: 'IconCategory',
-    description: '<authority>-<band>-<rail>-<term>. Recomputed on read — never authored by hand.',
+    name: "funnelSegment",
+    label: "Segment",
+    type: "TEXT",
+    icon: "IconCategory",
+    description:
+      "<authority>-<band>-<rail>-<term>. Recomputed on read — never authored by hand.",
   },
   {
-    name: 'funnelSurface',
-    label: 'Surface',
-    type: 'SELECT',
-    icon: 'IconDeviceMobileMessage',
-    options: ['WEB_WIDGET', 'WHATSAPP', 'EMAIL', 'FORM', 'OUTBOUND'],
-    description: 'Which lane produced this deal.',
+    name: "funnelSurface",
+    label: "Surface",
+    type: "SELECT",
+    icon: "IconDeviceMobileMessage",
+    options: ["WEB_WIDGET", "WHATSAPP", "EMAIL", "FORM", "OUTBOUND"],
+    description: "Which lane produced this deal.",
   },
   {
-    name: 'nextActionAt',
-    label: 'Next action',
-    type: 'DATE_TIME',
-    icon: 'IconClockHour4',
-    description: 'The stall clock. This is the column the human board should sort by.',
+    name: "nextActionAt",
+    label: "Next action",
+    type: "DATE_TIME",
+    icon: "IconClockHour4",
+    description:
+      "The stall clock. This is the column the human board should sort by.",
   },
   {
-    name: 'lastTouchAt',
-    label: 'Last touch',
-    type: 'DATE_TIME',
-    icon: 'IconSend',
+    name: "lastTouchAt",
+    label: "Last touch",
+    type: "DATE_TIME",
+    icon: "IconSend",
   },
   {
-    name: 'touchNumber',
-    label: 'Touch number',
-    type: 'NUMBER',
-    icon: 'IconNumbers',
-    description: '1-4. Four touches then DORMANT — never infinite.',
+    name: "touchNumber",
+    label: "Touch number",
+    type: "NUMBER",
+    icon: "IconNumbers",
+    description: "1-4. Four touches then DORMANT — never infinite.",
   },
   {
-    name: 'stallDays',
-    label: 'Days silent',
-    type: 'NUMBER',
-    icon: 'IconZzz',
-    description: 'Written by the tick, so "who went quiet" is a sort rather than an investigation.',
+    name: "stallDays",
+    label: "Days silent",
+    type: "NUMBER",
+    icon: "IconZzz",
+    description:
+      'Written by the tick, so "who went quiet" is a sort rather than an investigation.',
   },
   {
-    name: 'assetsSent',
-    label: 'Assets sent',
-    type: 'MULTI_SELECT',
-    icon: 'IconGift',
+    name: "assetsSent",
+    label: "Assets sent",
+    type: "MULTI_SELECT",
+    icon: "IconGift",
     options: [
-      'ROI_ONEPAGER',
-      'FREE_TIER_SETUP',
-      'GUIDE_SINGLE',
-      'GUIDE_MULTIBRANCH',
-      'CASE_KING_FAHAD',
-      'CONSULT_20MIN',
-      'COMPLIANCE_CHECKLIST',
-      'PILOT_AGREEMENT',
-      'MIGRATION_PLAN',
-      'ONBOARDING_CHECKLIST',
-      'SANDBOX',
+      "ROI_ONEPAGER",
+      "FREE_TIER_SETUP",
+      "GUIDE_SINGLE",
+      "GUIDE_MULTIBRANCH",
+      "CASE_KING_FAHAD",
+      "CONSULT_20MIN",
+      "COMPLIANCE_CHECKLIST",
+      "PILOT_AGREEMENT",
+      "MIGRATION_PLAN",
+      "ONBOARDING_CHECKLIST",
+      "SANDBOX",
     ],
     description:
-      'Every touch must carry an asset this segment has NOT received. This field is what makes that enforceable rather than aspirational.',
+      "Every touch must carry an asset this segment has NOT received. This field is what makes that enforceable rather than aspirational.",
   },
   {
-    name: 'consentAt',
-    label: 'Consent at',
-    type: 'DATE_TIME',
-    icon: 'IconCheck',
-    description: 'A reply is consent. Nothing else counts, and nothing sends without it.',
+    name: "consentAt",
+    label: "Consent at",
+    type: "DATE_TIME",
+    icon: "IconCheck",
+    description:
+      "A reply is consent. Nothing else counts, and nothing sends without it.",
   },
   {
-    name: 'stallReason',
-    label: 'Stall reason',
-    type: 'TEXT',
-    icon: 'IconHelpCircle',
+    name: "stallReason",
+    label: "Stall reason",
+    type: "TEXT",
+    icon: "IconHelpCircle",
   },
-];
+]
 
 /** `company` — the school. Acquisition state stays here; the deal lives on opportunity. */
 export const COMPANY_FUNNEL_FIELDS: FieldDef[] = [
   {
-    name: 'studentCountBand',
-    label: 'Student band',
-    type: 'SELECT',
-    icon: 'IconUsers',
-    options: ['MICRO', 'SMALL', 'MID', 'LARGE'],
-    description: 'micro <100 (free tier) · small 100-299 · mid 300-999 · large 1000+ (enterprise).',
-  },
-  {
-    name: 'paymentRail',
-    label: 'Payment rail',
-    type: 'SELECT',
-    icon: 'IconCreditCard',
-    options: ['SD', 'GULF', 'EG', 'OTHER'],
-    description: 'SD → Bankak/Cashi in SDG. Everything else → card or wire in USD. Also sets the outreach channel.',
-  },
-  {
-    name: 'termStartsAt',
-    label: 'Term starts',
-    type: 'DATE',
-    icon: 'IconCalendarEvent',
-    description: 'Schools buy before a term, never during one — this is the urgency axis.',
-  },
-  {
-    name: 'currentSystem',
-    label: 'Current system',
-    type: 'SELECT',
-    icon: 'IconDatabase',
-    options: ['PAPER', 'EXCEL', 'COMPETITOR', 'NONE', 'UNKNOWN'],
-    description: 'The switching cost, and the pain the first touch should name.',
-  },
-  {
-    name: 'outreachStatus',
-    label: 'Outreach status',
-    type: 'SELECT',
-    icon: 'IconSend',
-    options: ['NOT_STARTED', 'QUEUED', 'SENT', 'FAILED', 'OPTED_OUT'],
+    name: "studentCountBand",
+    label: "Student band",
+    type: "SELECT",
+    icon: "IconUsers",
+    options: ["MICRO", "SMALL", "MID", "LARGE"],
     description:
-      'What happened to the message, which `stage` cannot express. QUEUED means the ' +
-      'request was accepted by the relay — NOT that a message reached anyone. Only a ' +
-      'human who actually sent it may set SENT. Claiming delivery we cannot observe is ' +
-      'how a funnel starts reporting success into a void.',
+      "micro <100 (free tier) · small 100-299 · mid 300-999 · large 1000+ (enterprise).",
   },
   {
-    name: 'lastOutreachAt',
-    label: 'Last outreach',
-    type: 'DATE_TIME',
-    icon: 'IconClockHour4',
+    name: "paymentRail",
+    label: "Payment rail",
+    type: "SELECT",
+    icon: "IconCreditCard",
+    options: ["SD", "GULF", "EG", "OTHER"],
+    description:
+      "SD → Bankak/Cashi in SDG. Everything else → card or wire in USD. Also sets the outreach channel.",
+  },
+  {
+    name: "termStartsAt",
+    label: "Term starts",
+    type: "DATE",
+    icon: "IconCalendarEvent",
+    description:
+      "Schools buy before a term, never during one — this is the urgency axis.",
+  },
+  {
+    name: "currentSystem",
+    label: "Current system",
+    type: "SELECT",
+    icon: "IconDatabase",
+    options: ["PAPER", "EXCEL", "COMPETITOR", "NONE", "UNKNOWN"],
+    description:
+      "The switching cost, and the pain the first touch should name.",
+  },
+  {
+    name: "outreachStatus",
+    label: "Outreach status",
+    type: "SELECT",
+    icon: "IconSend",
+    options: ["NOT_STARTED", "QUEUED", "SENT", "FAILED", "OPTED_OUT"],
+    description:
+      "What happened to the message, which `stage` cannot express. QUEUED means the " +
+      "request was accepted by the relay — NOT that a message reached anyone. Only a " +
+      "human who actually sent it may set SENT. Claiming delivery we cannot observe is " +
+      "how a funnel starts reporting success into a void.",
+  },
+  {
+    name: "lastOutreachAt",
+    label: "Last outreach",
+    type: "DATE_TIME",
+    icon: "IconClockHour4",
     description:
       'When we last reached out. Note `lastSeenAt` is NOT this — it means "last seen ' +
       'active" and is a false friend that has already cost one investigation.',
   },
   {
-    name: 'decisionAuthority',
-    label: 'Authority',
-    type: 'SELECT',
-    icon: 'IconUserCheck',
-    options: ['OWNER', 'PRINCIPAL', 'ADMIN', 'UNKNOWN'],
-    description: 'Only a signer can sign. An admin gets material built to be forwarded upward.',
+    name: "decisionAuthority",
+    label: "Authority",
+    type: "SELECT",
+    icon: "IconUserCheck",
+    options: ["OWNER", "PRINCIPAL", "ADMIN", "UNKNOWN"],
+    description:
+      "Only a signer can sign. An admin gets material built to be forwarded upward.",
   },
-];
+]
 
 export const FUNNEL_SCHEMA = {
   opportunity: OPPORTUNITY_FUNNEL_FIELDS,
   company: COMPANY_FUNNEL_FIELDS,
-} as const;
+} as const

@@ -203,7 +203,7 @@ async function buildBilingualNameMatch(
   return conditions
 }
 
-const subjectSelect = {
+export const subjectSelect = {
   id: true,
   name: true,
   slug: true,
@@ -224,7 +224,7 @@ const subjectSelect = {
 } as const
 
 /** Map Subject → PublicCourseType-compatible shape (values pre-translated) */
-function toCourseShape(
+export function toCourseShape(
   subject: {
     id: string
     name: string

@@ -50,7 +50,7 @@ export function ContinueWatchingSection({ items, lang, dictionary }: Props) {
                   src={item.thumbnailUrl}
                   alt={item.lessonTitle}
                   fill
-                  className="object-cover transition-transform group-hover:scale-105"
+                  className="object-cover"
                   sizes="256px"
                   unoptimized
                 />

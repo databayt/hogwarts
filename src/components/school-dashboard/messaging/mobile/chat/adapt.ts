@@ -23,10 +23,14 @@ export type AdaptLabels = {
   groupFallback: string
 }
 
-/** Clock time inside a bubble — always 24h, matching the iOS WhatsApp bubbles. */
-function bubbleTime(d: Date | string, locale: "ar" | "en"): string {
+/**
+ * Clock time inside a bubble — always 24h, and always Latin digits. WhatsApp
+ * prints bubble times in Latin digits under an Arabic UI, and `ar-EG` would
+ * render Arabic-Indic ones that no longer match the desktop thread.
+ */
+function bubbleTime(d: Date | string): string {
   const date = typeof d === "string" ? new Date(d) : d
-  return date.toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-US", {
+  return date.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -44,7 +48,9 @@ function daySeparatorLabel(
   const yesterday = new Date(now)
   yesterday.setDate(now.getDate() - 1)
   if (d.toDateString() === yesterday.toDateString()) return L.yesterday
-  return d.toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", {
+  // Latin digits under Arabic too — `ar-EG` numbers the day in Arabic-Indic,
+  // which no longer matches the desktop thread or the bubble clocks.
+  return d.toLocaleDateString(locale === "ar" ? "ar-u-nu-latn" : "en-US", {
     day: "numeric",
     month: "long",
     year: d.getFullYear() === now.getFullYear() ? undefined : "numeric",
@@ -117,7 +123,7 @@ export function toChatItems(
 
     const isMe = m.senderId === currentUserId
     const side = isMe ? "me" : "other"
-    const time = bubbleTime(created, locale)
+    const time = bubbleTime(created)
     const status = isMe ? bubbleStatus(m) : undefined
 
     // A tail closes each run: the next message is from someone else, is on a

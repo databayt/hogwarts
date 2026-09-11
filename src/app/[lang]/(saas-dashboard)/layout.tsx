@@ -16,6 +16,7 @@ import {
 } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { ReportIssue } from "@/components/report-issue"
+import { getCatalogPendingCounts } from "@/components/saas-dashboard/catalog/pending-counts"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import SaasHeader from "@/components/template/saas-header/content"
@@ -52,11 +53,15 @@ export default async function OperatorLayout({
   }
 
   // Only DEVELOPER role reaches this point.
-  // Subtree consumes core + sales + messages — the scoped loader sheds
-  // lumos + 17 unused feature namespaces from the RSC payload.
-  const [dictionary, isRTL] = await Promise.all([
+  // Subtree consumes core + sales + messages + notifications — the scoped
+  // loader still sheds lumos + 16 unused feature namespaces from the RSC
+  // payload. `notifications` is there for the operator bell in SaasHeader.
+  const [dictionary, isRTL, pendingCounts] = await Promise.all([
     getSaasDashboardDictionary(lang as Locale).then((d) => d as Dictionary),
     Promise.resolve(checkIsRTL(lang as Locale)),
+    // Shared with the (catalog) layout via React cache() — one set of queries
+    // per request, not two.
+    getCatalogPendingCounts(),
   ])
 
   // DEVELOPER role - allow access
@@ -71,7 +76,9 @@ export default async function OperatorLayout({
             >
               <SaasHeader />
               <div className="flex pt-6">
-                <SaasSidebar />
+                <SaasSidebar
+                  pendingApprovals={pendingCounts.totalApprovalsPending}
+                />
                 <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
                   <PageHeadingDisplay />
                   {children}

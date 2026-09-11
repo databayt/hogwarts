@@ -9,7 +9,7 @@ type Props = {
  * WhatsApp-style chat wallpaper. Served from this app's own `public/`, because
  * the CloudFront origin this used to point at answers HTTP 403.
  */
-const WA_CHAT_BG = "/icons/whatsapp/wp-wa-chat-bg.svg"
+export const WA_CHAT_BG = "/icons/whatsapp/wp-wa-chat-bg.svg"
 
 export function ChatWallpaper({ children, className }: Props) {
   return (
@@ -21,7 +21,7 @@ export function ChatWallpaper({ children, className }: Props) {
       style={{
         backgroundImage: `url('${WA_CHAT_BG}')`,
         backgroundRepeat: "repeat",
-        backgroundSize: "412px auto",
+        backgroundSize: "432px auto",
       }}
     >
       {children}

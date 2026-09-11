@@ -73,8 +73,15 @@ export default function PlatformHeader({
   }, [role, dictionary])
 
   return (
-    <div className="bg-background sticky top-0 z-40 -mx-2 print:hidden">
-      <header className="mx-2 flex h-12 shrink-0 items-center gap-2 border-b">
+    // `data-slot` so a page can ask for the header to STOP being pinned —
+    // the school-dashboard layout turns this static under an immersive page
+    // (`data-immersive`), where a hero owning the top of the screen and a bar
+    // floating over it are the same 48px.
+    <div
+      data-slot="platform-header"
+      className="bg-background sticky top-0 z-40 -mx-2 print:hidden"
+    >
+      <header className="mx-4 flex h-12 shrink-0 items-center gap-2 border-b sm:mx-2">
         <div className="flex items-center gap-2">
           {/* Desktop: Sidebar trigger */}
           <SidebarTrigger className="-ms-1.5 hidden size-7 lg:flex" />

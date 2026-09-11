@@ -244,7 +244,7 @@ model Trip {
   planGeneratedAt    DateTime?
   planSource         String? // mapbox_optimization | mapbox_matrix | haversine
 
-  lang            String         @default("ar")
+  lang String @default("ar")
 
   school    School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   route     Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)

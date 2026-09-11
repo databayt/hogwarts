@@ -103,12 +103,12 @@ model JournalEntry {
   walletTransactions WalletTransaction[]
 
   @@unique([schoolId, entryNumber])
-  @@index([schoolId, entryDate])
-  @@index([schoolId, fiscalYearId])
   // Idempotency for posting rules: one journal entry per source record. NULL
   // sourceRecordId rows (manual entries) stay distinct under Postgres NULL
   // semantics, so they are unaffected.
   @@unique([schoolId, sourceModule, sourceRecordId])
+  @@index([schoolId, entryDate])
+  @@index([schoolId, fiscalYearId])
   @@index([schoolId, isPosted])
 }
 

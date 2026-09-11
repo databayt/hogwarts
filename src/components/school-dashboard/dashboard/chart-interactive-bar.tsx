@@ -5,6 +5,7 @@
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Card,
   CardContent,
@@ -158,6 +159,7 @@ function InteractiveBarChartInner({
   timeZone,
 }: InteractiveBarChartProps) {
   const { locale } = useLocale()
+  const isMobile = useIsMobile()
   const tickOptions: Intl.DateTimeFormatOptions =
     granularity === "month"
       ? { month: "short", timeZone }
@@ -206,6 +208,14 @@ function InteractiveBarChartInner({
 
   const [activeChart, setActiveChart] = React.useState<"primary" | "secondary">(
     "primary"
+  )
+
+  // Phones only have room for a single date label — anchor it on the most
+  // recent point so the axis still says which period the bars cover.
+  const mobileTicks = React.useMemo(
+    () =>
+      chartData.length ? [chartData[chartData.length - 1]!.date] : undefined,
+    [chartData]
   )
 
   const total = React.useMemo(
@@ -263,6 +273,7 @@ function InteractiveBarChartInner({
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
+              ticks={isMobile ? mobileTicks : undefined}
               tickFormatter={(value) => {
                 const date = new Date(value)
                 return date.toLocaleDateString(locale, tickOptions)

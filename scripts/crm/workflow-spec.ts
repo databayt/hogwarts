@@ -70,53 +70,59 @@
  * AI-tool prompt suggests — does not resolve here.
  */
 
-import { twentyClient } from './twenty-rest'
+import { twentyClient } from "./twenty-rest"
 
-const VERIFY = process.argv.includes('--verify')
-const WORKFLOW_NAME = 'School shortlisted → outreach'
+const VERIFY = process.argv.includes("--verify")
+const WORKFLOW_NAME = "School shortlisted → outreach"
 const HERMES_URL =
-  process.env.HERMES_WEBHOOK_URL ?? 'http://host.docker.internal:8644/webhooks/school-shortlisted'
+  process.env.HERMES_WEBHOOK_URL ??
+  "http://host.docker.internal:8644/webhooks/school-shortlisted"
 
 /** What the workflow must do. The UI build is checked against this. */
 export const SPEC = {
   name: WORKFLOW_NAME,
   trigger: {
-    object: 'company',
-    event: 'Record is Updated',
-    watchedFields: ['stage'],
+    object: "company",
+    event: "Record is Updated",
+    watchedFields: ["stage"],
     filters: [
-      { field: 'stage', operand: 'IS', value: 'SHORTLISTED', on: 'after' },
-      { field: 'stage', operand: 'IS_NOT', value: 'SHORTLISTED', on: 'before' },
-      { field: 'outreachStatus', operand: 'IS', value: 'NOT_STARTED', on: 'after' },
-      { field: 'schoolPhone', operand: 'IS_NOT_EMPTY', value: '', on: 'after' },
+      { field: "stage", operand: "IS", value: "SHORTLISTED", on: "after" },
+      { field: "stage", operand: "IS_NOT", value: "SHORTLISTED", on: "before" },
+      {
+        field: "outreachStatus",
+        operand: "IS",
+        value: "NOT_STARTED",
+        on: "after",
+      },
+      { field: "schoolPhone", operand: "IS_NOT_EMPTY", value: "", on: "after" },
     ],
   },
   steps: [
     {
-      type: 'HTTP_REQUEST',
-      name: 'Notify Hermes',
+      type: "HTTP_REQUEST",
+      name: "Notify Hermes",
       url: HERMES_URL,
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-Gitlab-Token': '<HERMES_ROUTE_SECRET>',
+        "Content-Type": "application/json",
+        "X-Gitlab-Token": "<HERMES_ROUTE_SECRET>",
       },
       body: {
-        type: 'school_shortlisted',
+        type: "school_shortlisted",
         school: {
-          id: '{{trigger.properties.after.id}}',
-          name: '{{trigger.properties.after.name}}',
-          phone: '{{trigger.properties.after.schoolPhone}}',
-          stage: '{{trigger.properties.after.stage}}',
+          id: "{{trigger.properties.after.id}}",
+          name: "{{trigger.properties.after.name}}",
+          phone: "{{trigger.properties.after.schoolPhone}}",
+          stage: "{{trigger.properties.after.stage}}",
         },
       },
     },
     {
-      type: 'UPDATE_RECORD',
-      name: 'Mark contacted',
-      object: 'company',
-      recordId: '{{trigger.properties.after.id}}',
-      set: { stage: 'CONTACTED', outreachStatus: 'QUEUED' },
+      type: "UPDATE_RECORD",
+      name: "Mark contacted",
+      object: "company",
+      recordId: "{{trigger.properties.after.id}}",
+      set: { stage: "CONTACTED", outreachStatus: "QUEUED" },
     },
   ],
 } as const
@@ -173,54 +179,82 @@ Then press ACTIVATE, and verify with:
 
 async function verify() {
   const t = twentyClient()
-  const wfRes = await t.rest<any>('GET', 'workflows?limit=50')
+  const wfRes = await t.rest<any>("GET", "workflows?limit=50")
   const workflows = wfRes?.data?.workflows ?? wfRes?.data ?? wfRes
-  const wf = (Array.isArray(workflows) ? workflows : []).find((w: any) => w.name === WORKFLOW_NAME)
+  const wf = (Array.isArray(workflows) ? workflows : []).find(
+    (w: any) => w.name === WORKFLOW_NAME
+  )
   if (!wf) {
-    console.log(`❌ no workflow named "${WORKFLOW_NAME}" — build it in the UI first`)
+    console.log(
+      `❌ no workflow named "${WORKFLOW_NAME}" — build it in the UI first`
+    )
     process.exit(1)
   }
 
   const problems: string[] = []
-  if (!wf.lastPublishedVersionId) problems.push('never activated — no published version')
+  if (!wf.lastPublishedVersionId)
+    problems.push("never activated — no published version")
 
-  const vRes = await t.rest<any>('GET', `workflowVersions?filter=workflowId[eq]:${wf.id}&limit=10`)
+  const vRes = await t.rest<any>(
+    "GET",
+    `workflowVersions?filter=workflowId[eq]:${wf.id}&limit=10`
+  )
   const versions = vRes?.data?.workflowVersions ?? vRes?.data ?? vRes
-  const active = (Array.isArray(versions) ? versions : []).find((v: any) => v.status === 'ACTIVE')
-  if (!active) problems.push('no ACTIVE version')
+  const active = (Array.isArray(versions) ? versions : []).find(
+    (v: any) => v.status === "ACTIVE"
+  )
+  if (!active) problems.push("no ACTIVE version")
 
   if (active) {
     const trig = active.trigger ?? {}
     const s = trig.settings ?? {}
-    if (s.eventName !== 'company.updated') problems.push(`eventName is ${s.eventName}, expected company.updated`)
-    if (JSON.stringify(s.fields ?? []) !== '["stage"]') problems.push(`watched fields are ${JSON.stringify(s.fields)}, expected ["stage"]`)
+    if (s.eventName !== "company.updated")
+      problems.push(`eventName is ${s.eventName}, expected company.updated`)
+    if (JSON.stringify(s.fields ?? []) !== '["stage"]')
+      problems.push(
+        `watched fields are ${JSON.stringify(s.fields)}, expected ["stage"]`
+      )
     const nFilters = (s.filter?.stepFilters ?? []).length
-    if (nFilters < 4) problems.push(`${nFilters} trigger filters, expected 4 — the missing ones are what stop duplicate sends`)
+    if (nFilters < 4)
+      problems.push(
+        `${nFilters} trigger filters, expected 4 — the missing ones are what stop duplicate sends`
+      )
 
     const steps = active.steps ?? []
-    const http = steps.find((x: any) => x.type === 'HTTP_REQUEST')
-    const upd = steps.find((x: any) => x.type === 'UPDATE_RECORD')
-    if (!http) problems.push('no HTTP_REQUEST step')
-    if (!upd) problems.push('no UPDATE_RECORD step')
+    const http = steps.find((x: any) => x.type === "HTTP_REQUEST")
+    const upd = steps.find((x: any) => x.type === "UPDATE_RECORD")
+    if (!http) problems.push("no HTTP_REQUEST step")
+    if (!upd) problems.push("no UPDATE_RECORD step")
     if (http) {
       const inp = http.settings?.input ?? {}
-      if (!String(inp.url ?? '').includes('/webhooks/school-shortlisted')) problems.push(`HTTP url is ${inp.url}`)
-      if (!inp.headers?.['X-Gitlab-Token']) problems.push('HTTP step is missing the X-Gitlab-Token header — Hermes will 401 every call')
-      if (http.settings?.errorHandlingOptions?.retryOnFailure?.value) problems.push('retryOnFailure is ON — duplicate sends to real schools')
+      if (!String(inp.url ?? "").includes("/webhooks/school-shortlisted"))
+        problems.push(`HTTP url is ${inp.url}`)
+      if (!inp.headers?.["X-Gitlab-Token"])
+        problems.push(
+          "HTTP step is missing the X-Gitlab-Token header — Hermes will 401 every call"
+        )
+      if (http.settings?.errorHandlingOptions?.retryOnFailure?.value)
+        problems.push("retryOnFailure is ON — duplicate sends to real schools")
     }
     if (upd) {
       const rec = upd.settings?.input?.objectRecord ?? {}
-      if (rec.outreachStatus === 'SENT') problems.push('UPDATE_RECORD sets SENT — it can only honestly say QUEUED; only a human who sent it may set SENT')
-      if (rec.stage !== 'CONTACTED') problems.push(`UPDATE_RECORD sets stage=${rec.stage}, expected CONTACTED`)
+      if (rec.outreachStatus === "SENT")
+        problems.push(
+          "UPDATE_RECORD sets SENT — it can only honestly say QUEUED; only a human who sent it may set SENT"
+        )
+      if (rec.stage !== "CONTACTED")
+        problems.push(
+          `UPDATE_RECORD sets stage=${rec.stage}, expected CONTACTED`
+        )
     }
   }
 
   console.log(`\n workflow  ${wf.name}  (${wf.id})`)
-  console.log(` published ${wf.lastPublishedVersionId ?? '— NOT ACTIVATED'}`)
+  console.log(` published ${wf.lastPublishedVersionId ?? "— NOT ACTIVATED"}`)
   if (!problems.length) {
-    console.log('\n ✅ deployed workflow matches the spec\n')
+    console.log("\n ✅ deployed workflow matches the spec\n")
   } else {
-    console.log('\n ❌ drift from the spec:')
+    console.log("\n ❌ drift from the spec:")
     for (const p of problems) console.log(`   • ${p}`)
     console.log()
     process.exit(1)

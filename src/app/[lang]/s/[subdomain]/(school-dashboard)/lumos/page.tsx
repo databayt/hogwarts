@@ -5,7 +5,6 @@ import { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
-import { getPolicyContext } from "@/lib/rbac/context"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -35,17 +34,13 @@ export default async function LumosHomePage({ params }: Props) {
   const { schoolId } = await getTenantContext()
   const session = await auth()
 
-  // Students skip the marketing home and go straight to courses for their
-  // grade. Falling back to the unfiltered list when their grade isn't synced
-  // yet — they're a student, they want courses, not the prospect-facing page.
+  // Students skip the marketing home and go straight to the catalog. They land
+  // on the browse view rather than a `?level=` grid: that page now opens with
+  // what they were watching and a shelf for their own grade, and the grid is
+  // one tap away on a grade badge. Pinning them to `?level=` would put them
+  // straight into the drill-down and hide both shelves.
   if (session?.user?.role === "STUDENT") {
-    const ctx = await getPolicyContext()
-    const grade = ctx.academicGradeNumber
-    redirect(
-      grade != null
-        ? `/${lang}/lumos/courses?level=${grade}`
-        : `/${lang}/lumos/courses`
-    )
+    redirect(`/${lang}/lumos/courses`)
   }
 
   const isAdmin =

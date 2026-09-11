@@ -472,9 +472,52 @@ w-1/2` and slid by `translate-x-full rtl:-translate-x-full`. Copy its
   Its band heights are MEASURED off the live grid, not derived from padding. A
   real cell's height is driven by its text — a subject wrapping to two lines on
   a phone — which a placeholder cannot reproduce, so matching the classes alone
-  still left it 68px short. Header 41/65, teaching row 65/85, break row 68/84
+  still left it 68px short. Header 41/65, teaching row 72/85, break row 68/84
   (mobile/sm+), which brings the settle to ±8px at both breakpoints. Re-measure
   if the cell typography changes.
+
+  The MOBILE teaching band is the exception and no longer a measurement: since
+  2026-09-03 the day cell's own `min-h-18` floors the row at 72px, so that band
+  simply IS the cell's min-height and the two must move together.
+
+- **A phone renders ONE day, so the placeholder must too — in CSS**
+  (2026-09-03): `collapseToDayOnMobile` narrows `TimetableGridSkeleton` to
+  period + one day below `md`. Do NOT "simplify" it by narrowing `workingDays`
+  instead: day mode is decided by `matchMedia`, which cannot be read until after
+  mount, so a JS-narrowed skeleton paints the five-column week for its first
+  frame and then snaps. `StudentView` passes it while `picked === null` (the
+  default follows the viewport); an explicit week/day pick is width-independent
+  and narrows the days.
+
+- **A loading gate on `isPending` opens on the ERROR state** (2026-09-03):
+  `useTransition`'s flag only rises once the transition starts, and the effect
+  that starts it runs after the first paint. `RoleRouter` gated on it, so the
+  server render and the first client frame both had `isPending === false` and
+  `viewData === null` and shipped "no timetable data" as the opening frame of a
+  page that was merely loading. Gate on a `settled` flag set in the load's
+  `finally`, never on pending alone — and check the SSR HTML rather than
+  trusting a fast local load to reveal it. Same trap in reverse: a view whose
+  own `isLoading` starts `false` and is raised from an effect paints one frame
+  of empty content first (`StudentView` did).
+
+- **A `loading.tsx` cannot read the session, so it cannot be role-aware**
+  (2026-09-03): it has to render instantly, which rules out awaiting `auth()`.
+  This route's drew the five-day week for everyone (and redrew a title + tab
+  strip its own `layout.tsx` had already painted above it). Deleted in favour of
+  a `<Suspense>` in `layout.tsx` — the same nesting Next builds, but the layout
+  already awaits `auth()` for the tab strip, so the fallback can branch on the
+  role. Sub-routes with their own `loading.tsx` are unaffected. Both that
+  fallback and `RoleRouter`'s loading branch render `TimetableSurfaceSkeleton`:
+  they appear back to back within one load, so a difference between them is a
+  step the reader watches happen.
+
+- **`RoleRouter` cannot know the role it is about to render** (2026-09-03): it
+  arrives with `getPersonalizedTimetable`, which is the entire wait the
+  placeholder covers. The session knows it on the server, so `page.tsx` resolves
+  `rendersStudentTimetable(role)` (permissions-config.ts, mirroring the action's
+  switch — ACCOUNTANT/STAFF take the admin grid, USER falls through to the
+  student one) and passes `studentShell` down. Keep the two in step if that
+  switch ever changes.
 
 - **Reads that only `include: { class: ... }` are blind to real slots**
   (2026-07-16): section-based slots carry subject/section directly and have

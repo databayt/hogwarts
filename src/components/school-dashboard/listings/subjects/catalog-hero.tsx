@@ -66,31 +66,32 @@ export function CatalogHero({
   return (
     <>
       {/* Hero Banner */}
+      {/* min-h keeps the 5.4:1 strip readable on narrow screens: below ~864px
+          the min-height wins and the art crops, above it the ratio takes over. */}
       <div
-        className="relative overflow-hidden"
+        className="relative aspect-[5.4/1] min-h-40 overflow-hidden"
         style={{ backgroundColor: subject.color ?? "#1e40af" }}
       >
-        {subject.heroImageUrl && !heroFailed ? (
+        {subject.heroImageUrl && !heroFailed && (
           <Image
             src={subject.heroImageUrl}
             alt={subject.name}
-            width={2048}
-            height={378}
-            className="block h-auto w-full rtl:[transform:scaleX(-1)]"
+            fill
+            className="object-cover rtl:[transform:scaleX(-1)]"
             priority
             quality={100}
             sizes="100vw"
             onError={onHeroError}
             unoptimized
           />
-        ) : (
-          <div className="aspect-[5.4/1]" />
         )}
-        <div className="absolute inset-x-0 bottom-0 p-4 text-start sm:p-6">
-          <h1 className="text-xl font-bold text-white sm:text-2xl md:text-3xl">
+        {/* Scrim — the art is bright, white text needs a floor to sit on */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-4 text-start drop-shadow-md sm:p-6">
+          <h1 className="text-2xl font-bold text-white md:text-3xl">
             {subject.name}
           </h1>
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-white/80">
+          <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-white/90">
             <span>
               {subject.totalChapters} {t.chapters} &bull; {subject.totalLessons}{" "}
               {t.lessons}
@@ -101,7 +102,7 @@ export function CatalogHero({
                 size="sm"
                 showCount
                 count={subject.ratingCount}
-                className="[&_button]:text-yellow-300 [&_span]:text-white/70"
+                className="[&_button]:text-yellow-300 [&_span]:text-white/90"
               />
             )}
           </div>

@@ -318,6 +318,12 @@ export function getSecondaryQuickActions(
     case "STUDENT":
       return [
         {
+          iconName: "FileText",
+          label: "Subjects",
+          description: "View subjects",
+          href: "/subjects",
+        },
+        {
           iconName: "Book",
           label: "Library",
           description: "Browse library",

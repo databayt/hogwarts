@@ -1,6 +1,5 @@
 /**
  * Conversion funnel — inbound CRM events.
- *
  * See kun's `content/docs/funnel.mdx` for the lane this serves.
  */
 
@@ -27,22 +26,22 @@ model TwentyInboundEvent {
   id String @id @default(cuid())
 
   /// Which Twenty webhook produced this. Part of the idempotency key.
-  webhookId String
+  webhookId  String
   /// Full `object.action` string as Twenty sent it, e.g. "opportunity.updated".
-  eventName String
+  eventName  String
   /// `objectMetadata.nameSingular` — authoritative for the object type.
   objectName String
   /// `record.id` from the payload.
-  recordId String
+  recordId   String
   /// Twenty's own timestamp for the event, not our receipt time.
-  eventDate DateTime
+  eventDate  DateTime
 
   /// Present on update events. Lets a consumer react only to the fields it
   /// cares about instead of diffing the whole record.
   updatedFields String[] @default([])
   /// The verified delivery, kept whole. Storing only the fields we parse today
   /// would make tomorrow's consumer re-request data Twenty already sent.
-  payload Json
+  payload       Json
 
   /// pending → applied | ignored | failed. `pending` is the only state the
   /// applier picks up; `ignored` records a deliberate no-op so an unhandled
@@ -50,7 +49,7 @@ model TwentyInboundEvent {
   status      String    @default("pending")
   processedAt DateTime?
   /// Why it was ignored or how it failed — the thing a silent 200 never told us.
-  note String?
+  note        String?
 
   createdAt DateTime @default(now())
 

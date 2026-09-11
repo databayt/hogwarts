@@ -40,6 +40,33 @@
 
 ## Resolved
 
+- **2026-09-09 — A summary sits beside the textbook in Materials.** Both tiles
+  come off one board: the shared `BookCoverTile` renders the cover art plus the
+  reader's three cover lines, and a green disc in the top corner (logical
+  `start`, so it follows the reading direction) marks the summary. New
+  `catalog.summary` key in both dictionaries. **OPEN: the summary tile has no
+  destination** — no `SUMMARY` material type, no `/subjects/[slug]/summary`
+  route and no summary content on the CDN yet, so it renders as a plain tile.
+  Pass `summaryHref` to `CatalogContentSections` to make it a link, one line at
+  each of the two call sites. A third tile off the same board carries the
+  question bank, on a blue disc, and it *does* link — straight to the existing
+  `qbankHref`.
+
+- **2026-09-09 — The subject page's content sections re-ordered, and the
+  textbook tile carries the book's cover lines.** Materials now precede Videos;
+  a video tile's title moved off the middle of its thumbnail into the frosted
+  foot, on the line above duration and views. That foot keeps its light glass
+  cloud (a dark scrim was tried and rejected) and earns its legibility from a
+  whiter frost plus dark ink, rather than from darkening the artwork. The textbook tile prints the same
+  three lines the reader's first screen prints — stage, kashida-stretched title,
+  grade — under the same white veil, from the same `catalog.reader` labels. The
+  stage/grade helpers (`stageLine`, `gradeLine`) moved out of the reader's
+  server `content.tsx` into the pure `textbook/format.ts` so the client tile can
+  share them. The tile's title is the subject's **untranslated** name, as a
+  printed cover keeps its own language — on `/en` the translated name read
+  "neighborhoods" for الأحياء. Wired at both call sites (school `[slug]` and
+  community). tsc clean; verified on `demo.localhost:3000` in ar and en.
+
 - **2026-09-07 — Biology has its designed cover.** `curriculum/sd/g12/biology/cover.svg`
   (a Figma export: blue line-art of corals, algae and diatoms across the lower
   half of a white board, 2669×3691, one embedded 1000 px raster, no text)

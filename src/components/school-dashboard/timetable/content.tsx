@@ -15,9 +15,16 @@ import { RoleRouter } from "./views"
 interface Props {
   dictionary?: Dictionary["school"]
   defaultTab?: "today" | "full"
+  /** Session-derived: will this reader land on `StudentView`? Shapes the
+   *  loading placeholder, which renders before any role is knowable client-side. */
+  studentShell?: boolean
 }
 
-function TimetableContentInner({ dictionary, defaultTab }: Props) {
+function TimetableContentInner({
+  dictionary,
+  defaultTab,
+  studentShell,
+}: Props) {
   const params = useParams()
   const lang = (params?.lang as Locale) || "en"
 
@@ -28,16 +35,25 @@ function TimetableContentInner({ dictionary, defaultTab }: Props) {
           dictionary={dictionary}
           lang={lang}
           defaultTab={defaultTab}
+          studentShell={studentShell}
         />
       )}
     </div>
   )
 }
 
-export function TimetableContent({ dictionary, defaultTab }: Props) {
+export function TimetableContent({
+  dictionary,
+  defaultTab,
+  studentShell,
+}: Props) {
   return (
     <SessionProvider>
-      <TimetableContentInner dictionary={dictionary} defaultTab={defaultTab} />
+      <TimetableContentInner
+        dictionary={dictionary}
+        defaultTab={defaultTab}
+        studentShell={studentShell}
+      />
     </SessionProvider>
   )
 }

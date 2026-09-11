@@ -5,14 +5,9 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import {
-  getQuickLookData,
-  getTeacherDashboardData,
-  type QuickLookData,
-} from "./actions"
+import { getTeacherDashboardData } from "./actions"
 import { TeacherDashboardClient } from "./teacher-client"
 import type { TeacherDashboardData } from "./types"
-import { getWeatherData, type WeatherData } from "./weather-actions"
 
 interface TeacherDashboardProps {
   user: {
@@ -37,18 +32,11 @@ export async function TeacherDashboard({
   try {
     // Fetch real data from server actions with error handling
     let data: TeacherDashboardData
-    let quickLookData: QuickLookData | undefined
-    let weatherData: WeatherData | null = null
     try {
-      // Fetch dashboard, quick look and weather data in parallel
-      const [teacherData, qlData, weather] = await Promise.all([
-        getTeacherDashboardData(),
-        getQuickLookData(locale),
-        getWeatherData("metric", locale),
-      ])
-      data = teacherData
-      quickLookData = qlData
-      weatherData = weather
+      // The Upcoming/Weather hero and the Quick Look row are hidden on the
+      // teacher dashboard, so their fetches (getQuickLookData, getWeatherData)
+      // are not made here — restore both alongside the JSX in teacher-client.
+      data = await getTeacherDashboardData()
     } catch (error) {
       console.error("[TeacherDashboard] Error fetching data:", error)
       return (
@@ -98,8 +86,6 @@ export async function TeacherDashboard({
           locale={locale}
           subdomain={school?.domain || ""}
           data={data}
-          quickLookData={quickLookData}
-          weatherData={weatherData}
         />
       </div>
     )

@@ -17,9 +17,10 @@ import {
   User,
 } from "lucide-react"
 
+import { tenantOriginForHost } from "@/lib/root-domain"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,8 +33,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { DemoLink } from "@/components/saas-marketing/demo-link"
 
 import { useCurrentUser } from "./use-current-user"
+
+/* SSR/first-paint href for the SaaS marketing header's sign-in, which opens
+   the demo school's dashboard rather than the main site's login. Same
+   resolution the homepage hero CTA uses: NEXT_PUBLIC_DEMO_URL wins, else the
+   primary root's demo tenant, which DemoLink re-resolves to the visitor's own
+   root after mount. */
+const DEMO_DASHBOARD_FALLBACK_HREF = `${
+  process.env.NEXT_PUBLIC_DEMO_URL || tenantOriginForHost(null, "demo")
+}/ar/dashboard`
 
 type Variant = "marketing" | "site" | "saas" | "platform"
 
@@ -77,7 +88,28 @@ export const UserButton = ({
 
   const loginUrl = buildLoginUrl()
 
-  // Not logged in - show login button (matches other header icons)
+  // Not logged in - show login button (matches other header icons). On the
+  // SaaS marketing header it opens the demo school instead of the login form,
+  // matching the homepage hero CTA; every other surface keeps its own login.
+  if (!user && variant === "marketing" && !subdomain) {
+    return (
+      <DemoLink
+        fallbackHref={DEMO_DASHBOARD_FALLBACK_HREF}
+        lang="ar"
+        path="/dashboard"
+        newTab={false}
+        className={cn(
+          buttonVariants({ variant: "ghost", size: "icon" }),
+          "size-8",
+          className
+        )}
+      >
+        <LogIn className="size-4 rtl:-scale-x-100" />
+        <span className="sr-only">{t("login", "Login")}</span>
+      </DemoLink>
+    )
+  }
+
   if (!user) {
     return (
       <Button

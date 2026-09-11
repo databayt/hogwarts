@@ -4,7 +4,8 @@
 import { useCallback, useSyncExternalStore } from "react"
 
 /**
- * Reader preferences — theme, face, size, leading and the original-pages
+ * Reader preferences — theme, mode, face, size, leading, brightness and the
+ * original-pages
  * view — live in localStorage (best effort, never required) and hydrate
  * through useSyncExternalStore so the server snapshot is always the default
  * and no setState ever runs inside an effect.
@@ -15,11 +16,32 @@ export const PREF = {
   scale: "hogwarts:textbook:scale",
   leading: "hogwarts:textbook:leading",
   facsimile: "hogwarts:textbook:facsimile",
+  mode: "hogwarts:textbook:mode",
+  brightness: "hogwarts:textbook:brightness",
+  rotation: "hogwarts:textbook:rotation",
+  guide: "hogwarts:textbook:guide",
 } as const
 
 export const SCALES = [0.85, 1, 1.15, 1.3, 1.5, 1.75]
-export const THEMES = ["original", "paper", "quiet", "night"] as const
+/** The six reading palettes, in the order the reference lays its cards out. */
+export const THEMES = [
+  "original",
+  "quiet",
+  "paper",
+  "bold",
+  "calm",
+  "focus",
+] as const
 export type Theme = (typeof THEMES)[number]
+/** Light or dark is chosen apart from the palette, as the reference does. */
+export const MODES = ["light", "dark"] as const
+export type Mode = (typeof MODES)[number]
+/**
+ * Screen brightness, as a percentage. The floor is well clear of zero: the
+ * slider dims the page, it never turns it off.
+ */
+export const BRIGHTNESS_MIN = 30
+export const BRIGHTNESS_MAX = 100
 export const FONTS = ["serif", "sans"] as const
 export type Font = (typeof FONTS)[number]
 export const LEADINGS = ["tight", "normal", "loose"] as const

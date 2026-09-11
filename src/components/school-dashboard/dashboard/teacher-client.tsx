@@ -2,34 +2,29 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import Link from "next/link"
-import { format, isToday, isTomorrow } from "date-fns"
+import { format } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import {
-  Calendar,
-  ChevronRight,
-  Clock,
-  FileText,
-  GraduationCap,
-} from "lucide-react"
+import { Calendar } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { type Locale } from "@/components/internationalization/config"
+
 import type { QuickLookData } from "./actions"
-import { ActivityRings } from "./activity-rings"
 import { ChartSection } from "./chart-section"
+import { periodLabel, periodMinutes, useNowMinutes } from "./day-clock"
 import { EmptyState } from "./empty-state"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { MetricCard } from "./metric-card"
-import { ProgressCard } from "./progress-card"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { ScheduleItem } from "./schedule-item"
 import { SectionHeading } from "./section-heading"
+import { TodayLiveAction } from "./today-live-action"
 import type { TeacherDashboardData } from "./types"
 import { Upcoming } from "./upcoming"
 import { Weather } from "./weather"
@@ -50,14 +45,14 @@ export interface TeacherDashboardClientProps {
 /** Everything the teacher sections read out of `school.teacherDashboard`. */
 function useTeacherDict() {
   const { dictionary } = useDictionary()
-  const dict = dictionary?.school?.teacherDashboard
+  const school = dictionary?.school
+  const dict = school?.teacherDashboard
   return {
     stats: dict?.stats,
     sections: dict?.sections,
     labels: dict?.labels,
-    progressCards: dict?.progressCards,
     quickActionsTitle: dict?.quickActions?.title,
-    teachingProgress: dict?.teachingProgress,
+    liveClasses: school?.liveClasses,
   }
 }
 
@@ -102,7 +97,10 @@ function QuickActionsSection({
   const actions = getQuickActionsByRole("TEACHER", subdomain || undefined)
 
   return (
-    <section>
+    // From `md` up only — below it the phone dashboard shows this same
+    // section near the top instead (`phone-quick-actions.tsx`), where a
+    // thumb reaches it; two copies at once would be the same four tiles twice.
+    <section className="hidden md:block">
       <SectionHeading title={quickActionsTitle || "Quick Actions"} />
       <QuickActions actions={actions} locale={locale} />
     </section>
@@ -122,8 +120,16 @@ function MetricsSection({
 }) {
   const { stats } = useTeacherDict()
 
+  // One tile left, matching the student dashboard (2026-09-10). Total
+  // students, pending grading and attendance due were dropped with the rest of
+  // the teacher's sections; `data` still carries all three numbers, so each
+  // comes back by putting its `MetricCard` back. What remains counts today's
+  // classes, and only from `md` up: the phone dashboard opens with the real
+  // day grid (`today-timetable.tsx`), which shows those classes themselves,
+  // and on a weekend the grid falls forward to the next school day while this
+  // tile would still read 0 for today.
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="hidden gap-4 md:grid md:grid-cols-3">
       <MetricCard
         title={stats?.todaysClasses || "Today's Classes"}
         value={data.todaysClasses.length}
@@ -131,35 +137,12 @@ function MetricsSection({
         iconColor="text-blue-500"
         href={`/${locale}/subjects`}
       />
-      <MetricCard
-        title={stats?.totalStudents || "Total Students"}
-        value={data.totalStudents}
-        iconName="Users"
-        iconColor="text-purple-500"
-        href={`/${locale}/students`}
-      />
-      <MetricCard
-        title={stats?.pendingGrading || "Pending Grading"}
-        value={data.pendingGrading}
-        iconName="FileText"
-        iconColor={
-          data.pendingGrading > 5 ? "text-destructive" : "text-orange-500"
-        }
-        href={`/${locale}/assignments`}
-      />
-      <MetricCard
-        title={stats?.attendanceDue || "Attendance Due"}
-        value={data.attendanceDue}
-        iconName="CheckCircle"
-        iconColor={data.attendanceDue > 0 ? "text-amber-500" : "text-green-500"}
-        href={`/${locale}/attendance`}
-      />
     </div>
   )
 }
 
 // ============================================================================
-// SECTION: Today's Classes + Activity Rings
+// SECTION: Today's Classes
 // ============================================================================
 
 function TodaySection({
@@ -169,39 +152,41 @@ function TodaySection({
   locale: string
   data: TeacherDashboardData
 }) {
-  const { sections, labels, teachingProgress } = useTeacherDict()
+  const { sections, labels, liveClasses } = useTeacherDict()
   const dateLocale = locale === "ar" ? ar : enUS
+  const nowMin = useNowMinutes()
 
-  const activityData = [
-    {
-      label: labels?.classesLabel || "Classes",
-      value: Math.min(100, (data.todaysClasses.length / 8) * 100),
-      color: "#3b82f6",
-      current: data.todaysClasses.length,
-      target: 8,
-      unit: labels?.todayUnit || "today",
-    },
-    {
-      label: labels?.gradingLabel || "Grading",
-      value: Math.max(0, 100 - data.pendingGrading * 10),
-      color: data.pendingGrading > 5 ? "#ef4444" : "#22c55e",
-      current: data.pendingGrading,
-      target: 0,
-      unit: labels?.pendingUnit || "pending",
-    },
-    {
-      label: labels?.studentsLabel || "Students",
-      value: 100,
-      color: "#8b5cf6",
-      current: data.totalStudents,
-      target: data.totalStudents,
-      unit: labels?.totalUnit || "total",
-    },
-  ]
+  // What is LEFT of the day. A period drops off the moment it ENDS, not when
+  // it starts — a class in progress is the one row the teacher most needs.
+  // Before the clock is known (server render, first paint) the whole day
+  // stands: see `useNowMinutes`. The metric tile above still counts the FULL
+  // day, because that is the question it answers.
+  const remaining =
+    nowMin === null
+      ? data.todaysClasses
+      : data.todaysClasses.filter(
+          (entry) => periodMinutes(entry.endTime) > nowMin
+        )
 
+  // Told apart from a genuine day off, which is the same empty list with a
+  // very different meaning: "enjoy your day off" at 4pm after a full timetable
+  // reads as a bug.
+  const dayIsDone = data.todaysClasses.length > 0 && remaining.length === 0
+
+  // Hidden below `md`. The phone dashboard opens with the real day grid
+  // (`today-timetable.tsx`, the timetable page's own day mode), and this card
+  // lists the same periods a screen further down — the same day twice, in two
+  // different shapes, which teaches the reader to trust neither. From `md` up
+  // there is no grid, so this card is the teacher's only schedule and stays.
+  // It used to share a three-column row with the Teaching Progress rings,
+  // which are gone; the row went with them and the card now stands on its own.
+  //
+  // Since 2026-09-10 the card clears itself as the day passes, on the same
+  // clock as the student's — see `day-clock.ts`, which both import. The
+  // teacher and the students in the room now read one day: same
+  // school-timezone weekday, same active term, same Join target.
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <Card className="lg:col-span-2">
+    <Card className="hidden md:block">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
             <Calendar className="h-4 w-4" />
@@ -212,18 +197,63 @@ function TodaySection({
           </Badge>
         </CardHeader>
         <CardContent className="space-y-2">
-          {data.todaysClasses.length > 0 ? (
-            data.todaysClasses.map((cls, index) => (
-              <ScheduleItem
-                key={cls.id}
-                time={cls.time}
-                title={cls.name}
-                subtitle={`${labels?.room || "Room"} ${cls.room} • ${cls.students} ${labels?.students || "students"}`}
-                badge={index === 0 ? labels?.next || "Next" : undefined}
-                badgeVariant={index === 0 ? "default" : "secondary"}
-                isActive={index === 0}
-              />
-            ))
+          {remaining.length > 0 ? (
+            remaining.map((cls, index) => {
+              // "Now" is a claim about the clock, so only a period the clock
+              // is actually inside may make it. Everything else is at most
+              // "Next", and only the first row of what is left can be that.
+              // Index 0 used to claim "Next" unconditionally, which read as a
+              // class starting imminently at four in the afternoon.
+              const isNow =
+                nowMin !== null &&
+                nowMin >= periodMinutes(cls.startTime) &&
+                nowMin < periodMinutes(cls.endTime)
+              const isNext = !isNow && nowMin !== null && index === 0
+
+              return (
+                <ScheduleItem
+                  key={cls.id}
+                  time={periodLabel(cls.startTime)}
+                  title={cls.name}
+                  subtitle={`${labels?.room || "Room"} ${cls.room} • ${cls.students} ${labels?.students || "students"}`}
+                  badge={
+                    isNow
+                      ? labels?.now || "Now"
+                      : isNext
+                        ? labels?.next || "Next"
+                        : undefined
+                  }
+                  badgeVariant={isNow ? "default" : "secondary"}
+                  isActive={isNow}
+                  // Start the class from the home page too — the room is still
+                  // where it meets; online is additive, so the marker sits
+                  // beside it. Same resolver the students see, so neither side
+                  // can be looking at a link the other does not have.
+                  action={
+                    <TodayLiveAction
+                      liveClass={cls.liveClass}
+                      startTime={cls.startTime}
+                      endTime={cls.endTime}
+                      lang={locale as Locale}
+                      joinLabel={
+                        liveClasses?.join ??
+                        (locale === "ar" ? "انضمام" : "Join")
+                      }
+                      onlineLabel={
+                        liveClasses?.online ??
+                        (locale === "ar" ? "مباشر" : "Online")
+                      }
+                    />
+                  }
+                />
+              )
+            })
+          ) : dayIsDone ? (
+            <EmptyState
+              iconName="CheckCircle"
+              title={labels?.classesDone || "Classes are done for today"}
+              description={labels?.seeYouTomorrow || "See you tomorrow!"}
+            />
           ) : (
             <EmptyState
               iconName="Calendar"
@@ -232,253 +262,7 @@ function TodaySection({
             />
           )}
         </CardContent>
-      </Card>
-
-      <ActivityRings
-        activities={activityData}
-        title={teachingProgress || "Teaching Progress"}
-      />
-    </div>
-  )
-}
-
-// ============================================================================
-// SECTION: Assignments, Performance, Deadlines
-// ============================================================================
-
-function DetailSection({
-  locale,
-  data,
-}: {
-  locale: string
-  data: TeacherDashboardData
-}) {
-  const { sections, labels } = useTeacherDict()
-  const dateLocale = locale === "ar" ? ar : enUS
-
-  return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {/* Pending assignments */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FileText className="h-4 w-4" />
-            {sections?.pendingAssignments || "Pending Assignments"}
-          </CardTitle>
-          <Link
-            href={`/${locale}/assignments`}
-            className="text-primary flex items-center gap-1 text-sm hover:underline"
-          >
-            {labels?.viewAll || "View all"}{" "}
-            <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-          </Link>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {data.pendingAssignments.length > 0 ? (
-            data.pendingAssignments.slice(0, 4).map((assignment) => {
-              const dueDate = new Date(assignment.dueDate)
-              const isOverdue = dueDate < new Date()
-              const isDueToday = isToday(dueDate)
-              const isDueTomorrow = isTomorrow(dueDate)
-
-              return (
-                <div
-                  key={assignment.id}
-                  className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{assignment.title}</p>
-                    <p className="text-muted-foreground text-sm">
-                      {assignment.className} • {assignment.submissionsCount}{" "}
-                      {labels?.submissions || "submissions"}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      isOverdue
-                        ? "destructive"
-                        : isDueToday
-                          ? "default"
-                          : isDueTomorrow
-                            ? "secondary"
-                            : "outline"
-                    }
-                  >
-                    {isOverdue
-                      ? labels?.overdue || "Overdue"
-                      : isDueToday
-                        ? labels?.dueToday || "Due Today"
-                        : isDueTomorrow
-                          ? labels?.tomorrow || "Tomorrow"
-                          : format(dueDate, "MMM d", { locale: dateLocale })}
-                  </Badge>
-                </div>
-              )
-            })
-          ) : (
-            <EmptyState
-              iconName="FileText"
-              title={labels?.noPending || "No pending assignments"}
-              description={
-                labels?.allGraded || "All assignments have been graded"
-              }
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Class performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <GraduationCap className="h-4 w-4" />
-            {sections?.classPerformance || "Class Performance Summary"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {data.classPerformance.length > 0 ? (
-            data.classPerformance.slice(0, 4).map((cls, index) => (
-              <div
-                key={index}
-                className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
-              >
-                <div>
-                  <p className="font-medium">{cls.className}</p>
-                  <p className="text-muted-foreground text-sm">
-                    {labels?.average || "Average"}: {cls.average.toFixed(1)}%
-                  </p>
-                </div>
-                <Badge
-                  variant={
-                    cls.average >= 80
-                      ? "default"
-                      : cls.average >= 60
-                        ? "secondary"
-                        : "destructive"
-                  }
-                  className={
-                    cls.average >= 80
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-                      : ""
-                  }
-                >
-                  {cls.average >= 80
-                    ? labels?.excellent || "Excellent"
-                    : cls.average >= 60
-                      ? labels?.good || "Good"
-                      : labels?.needsAttention || "Needs Attention"}
-                </Badge>
-              </div>
-            ))
-          ) : (
-            <EmptyState
-              iconName="GraduationCap"
-              title={
-                labels?.noPerformanceData || "No performance data available"
-              }
-              description={
-                labels?.performanceAfterAssessments ||
-                "Performance data will appear after assessments"
-              }
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Upcoming deadlines */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Clock className="h-4 w-4" />
-            {sections?.upcomingDeadlines || "Upcoming Deadlines"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {data.upcomingDeadlines.length > 0 ? (
-            data.upcomingDeadlines.slice(0, 4).map((deadline) => {
-              const dueDate = new Date(deadline.dueDate)
-              const daysLeft = Math.ceil(
-                (dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-              )
-
-              return (
-                <div
-                  key={deadline.id}
-                  className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{deadline.task}</p>
-                    <p className="text-muted-foreground text-sm">
-                      {labels?.due || "Due"}:{" "}
-                      {format(dueDate, "MMM d, yyyy", { locale: dateLocale })}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      daysLeft <= 2
-                        ? "destructive"
-                        : daysLeft <= 7
-                          ? "secondary"
-                          : "outline"
-                    }
-                  >
-                    {daysLeft <= 0
-                      ? labels?.today || "Today"
-                      : daysLeft === 1
-                        ? labels?.oneDay || "1 day"
-                        : `${daysLeft} ${labels?.days || "days"}`}
-                  </Badge>
-                </div>
-              )
-            })
-          ) : (
-            <EmptyState
-              iconName="Clock"
-              title={labels?.noDeadlines || "No upcoming deadlines"}
-              description={
-                labels?.noDeadlinesWorry ||
-                "No upcoming deadlines to worry about"
-              }
-            />
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-// ============================================================================
-// SECTION: Progress
-// ============================================================================
-
-function ProgressSection({ data }: { data: TeacherDashboardData }) {
-  const { progressCards } = useTeacherDict()
-
-  return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <ProgressCard
-        title={progressCards?.gradingProgress || "Grading Progress"}
-        current={Math.max(
-          0,
-          data.pendingAssignments.length - data.pendingGrading
-        )}
-        total={Math.max(data.pendingAssignments.length, 1)}
-        unit={progressCards?.graded || "graded"}
-        iconName="CheckCircle"
-        showPercentage
-      />
-      <ProgressCard
-        title={progressCards?.attendanceTaken || "Attendance Taken"}
-        // `attendanceDue` can exceed today's slots (it counts every class still
-        // owing a register, not just today's), so floor it — a negative
-        // "taken" count rendered as -1 of 3.
-        current={Math.max(0, data.todaysClasses.length - data.attendanceDue)}
-        total={Math.max(data.todaysClasses.length, 1)}
-        unit={progressCards?.classes || "classes"}
-        iconName="Calendar"
-        showPercentage
-      />
-    </div>
+    </Card>
   )
 }
 
@@ -497,38 +281,48 @@ export function TeacherDashboardClient({
     <div className="space-y-8">
       {/* ============ TOP HERO SECTION (Unified Order) ============ */}
       <div className="space-y-6">
-        {/* Section 1: Upcoming + Weather */}
-        <HeroSection
+        {/* Sections 1 and 2 (Upcoming + Weather hero, and the Quick Look row
+            of announcements / events / notifications / messages) are hidden on
+            the teacher dashboard, matching the student's. Restore by
+            un-commenting here and passing `quickLookData` / `weatherData`
+            again from `teacher.tsx`. */}
+        {/* <HeroSection
           locale={locale}
           subdomain={subdomain}
           weatherData={weatherData}
         />
-
-        {/* Section 2: Quick Look (with real data) */}
         <QuickLookSection
           locale={locale}
           subdomain={subdomain}
           data={quickLookData}
-        />
+        /> */}
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <QuickActionsSection locale={locale} subdomain={subdomain} />
 
-        {/* Section 4: Resource Usage */}
+        {/* Section 4: Analytics Charts. Directly under the quick actions,
+            ahead of the two tables, as on the student dashboard. On phones
+            that row is the one `phone-quick-actions.tsx` renders further up,
+            so this is the first section of this file the teacher meets at
+            either width. */}
+        <ChartSection role="TEACHER" />
+
+        {/* Section 5: Resource Usage */}
         <ResourceUsageSection role="TEACHER" />
 
-        {/* Section 5: Invoice History (Expense Claims) */}
+        {/* Section 6: Invoice History (Expense Claims) */}
         <InvoiceHistorySection role="TEACHER" />
-
-        {/* Section 6: Analytics Charts */}
-        <ChartSection role="TEACHER" />
       </div>
 
       {/* ============ TEACHER-SPECIFIC SECTIONS ============ */}
+      {/* Both are `md`-and-up only, so below that the teacher dashboard is the
+          phone experience above plus the sections in the block ahead of it.
+          The Teaching Progress rings, pending assignments, class performance,
+          upcoming deadlines and the two progress bars that stood here were
+          removed 2026-09-10; `data` still carries every one of those lists and
+          counts, so restoring them is putting the JSX back. */}
       <MetricsSection locale={locale} data={data} />
       <TodaySection locale={locale} data={data} />
-      <DetailSection locale={locale} data={data} />
-      <ProgressSection data={data} />
     </div>
   )
 }

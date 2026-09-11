@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
+import Image from "next/image"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
@@ -25,6 +26,52 @@ export interface QuickAction {
   description?: string // Optional description shown on hover
   href?: string
   onClick?: () => void
+}
+
+/**
+ * Android tile art per action, keyed by the action's label.
+ *
+ * On phones the four actions render as one row of app icons rather than two
+ * rows of coloured cards, matching the home block above them: a cell-width tile
+ * at a 29.2% radius, a 13px label underneath, and the same artwork lifted from
+ * the Android app's `drawable-nodpi` into `public/tiles/`. A student's four —
+ * Assignments, My Grades, Schedule, Messages — each get their own Android tile.
+ *
+ * The radius is the home block's, not Android's 14dp-on-64dp (21.9%). Seven of
+ * the seventeen tiles carry a ~26% radius baked into their alpha and the other
+ * ten are hard squares, so a single CSS radius above both is what makes the set
+ * look like one set — and it has to be the radius the block above already uses.
+ *
+ * Keyed by label, not by `iconName`: the Android set is per-feature, so
+ * "Grades" has a grades tile while its `iconName` is the generic `Sparkle`.
+ * An action with no entry falls back to a tinted cell carrying its own icon.
+ */
+const tileByLabel: Record<string, string> = {
+  Assignments: "assignments",
+  Grades: "grades",
+  "My Grades": "grades",
+  Performance: "grades",
+  Schedule: "schedule",
+  Messages: "message",
+  "Contact Teacher": "message",
+  Attendance: "attendance",
+  Announcements: "announcements",
+  Announce: "announcements",
+  Events: "events",
+  Fees: "wallet",
+  Finance: "wallet",
+  Invoices: "wallet",
+  Receipts: "wallet",
+  Library: "library",
+  Notifications: "notifications",
+  School: "home",
+  Dashboard: "home",
+  Settings: "setting",
+  Staff: "students",
+  "My Children": "students",
+  Classrooms: "students",
+  Subjects: "subject",
+  Reports: "exams",
 }
 
 // Card background colors (matching Quick Look section)
@@ -114,9 +161,68 @@ export function QuickActions({
     | Record<string, string>
     | undefined
 
+  const visible = actions.slice(0, 4)
+  const labelOf = (action: QuickAction) =>
+    dict?.[toCamelCase(action.label)] || action.label
+
   return (
     <div className={cn("w-full", className)}>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Phones: one row of four tiles, sharing the home block's grid exactly —
+          32px columns, tiles that fill their cell rather than a fixed 64px. On
+          the Android home screen the 2x2 cluster beside the widget sits on the
+          same column rhythm as the 4-up rows below it (`home-grid.kt`: two
+          slots plus one gap equal two cells plus one gap), and that only holds
+          here if this row uses the block's gap and lets the cell set the size.
+          At a phone width the cell lands at ~65px, which is the Android tile's
+          64dp; on a wide phone both grids grow together. */}
+      <div className="grid grid-cols-4 gap-x-8 sm:hidden">
+        {visible.map((action, index) => {
+          const tile = tileByLabel[action.label]
+          const label = labelOf(action)
+          // No Android artwork for this action: tint the cell from the card
+          // palette and centre the action's own icon in it, so the row keeps
+          // four tiles. An empty cell would silently drop a destination the
+          // role's own dashboard still lists from `sm` up.
+          const Icon = iconMap[action.iconName] || AnthropicIcons.Notebook
+          const color = cardColors[index % cardColors.length]
+
+          return (
+            <Link
+              key={`${action.label}-${index}`}
+              href={`/${locale}${action.href ?? ""}`}
+              className="flex flex-col items-center gap-[5px] focus:outline-none"
+            >
+              {tile ? (
+                <Image
+                  src={`/tiles/${tile}.png`}
+                  alt=""
+                  width={64}
+                  height={64}
+                  sizes="25vw"
+                  className="aspect-square w-full rounded-[29.2%] object-cover shadow-md"
+                />
+              ) : (
+                <div
+                  className={cn(
+                    "flex aspect-square w-full items-center justify-center rounded-[29.2%] shadow-md",
+                    color.bg
+                  )}
+                >
+                  <Icon
+                    className={cn("size-1/2", color.text)}
+                    aria-hidden={true}
+                  />
+                </div>
+              )}
+              <span className="text-foreground max-w-full truncate text-[13px] leading-4 font-semibold">
+                {label}
+              </span>
+            </Link>
+          )
+        })}
+      </div>
+
+      <div className="hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-4">
         {actions.slice(0, 4).map((action, index) => {
           // Get icon component from map, fallback to Notebook if not found
           const Icon = iconMap[action.iconName] || AnthropicIcons.Notebook

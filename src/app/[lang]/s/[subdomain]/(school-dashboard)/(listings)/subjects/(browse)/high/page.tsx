@@ -9,11 +9,19 @@ export const metadata = { title: "Dashboard: High Subjects" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+  searchParams?: Promise<{ studentId?: string; teacherId?: string }>
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  const { studentId, teacherId } = (await searchParams) ?? {}
 
-  return <SubjectsContent lang={lang} level="HIGH" />
+  return (
+    <SubjectsContent
+      lang={lang}
+      level="HIGH"
+      studentId={studentId}
+      teacherId={teacherId}
+    />
+  )
 }

@@ -261,7 +261,10 @@ function QuickActionsSection({
   const actions = getQuickActionsByRole("ADMIN", subdomain)
 
   return (
-    <section>
+    // From `md` up only — below it the phone dashboard shows this same
+    // section near the top instead (`phone-quick-actions.tsx`), where a
+    // thumb reaches it; two copies at once would be the same four tiles twice.
+    <section className="hidden md:block">
       <SectionHeading title={dict?.title || "Quick Actions"} />
       <QuickActions actions={actions} locale={locale} />
     </section>

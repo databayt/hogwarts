@@ -53,6 +53,7 @@
     },
     "dashboard": {
       "title": "نظرة عامة",
+      "heading": "مرحبا",
       "welcome": "مرحباً بك في بالقلم",
       "overview": "نظرة عامة",
       "quickStats": "إحصائيات سريعة",
@@ -520,7 +521,42 @@
         "classrooms": "الفصول",
         "lessons": "الدروس"
       },
-      "of": "من"
+      "of": "من",
+      "homeWidget": {
+        "today": "اليوم",
+        "eventsToday": "{count} فعاليات اليوم",
+        "noEvents": "لا فعاليات اليوم",
+        "tiles": {
+          "messages": "الرسائل",
+          "notifications": "الإشعارات",
+          "lumos": "لوموس",
+          "subjects": "المواد"
+        }
+      },
+      "todaySchedule": {
+        "next": "الحصص القادمة",
+        "title": "حصص اليوم",
+        "viewAll": "الجدول كاملاً"
+      },
+      "nextAction": {
+        "cta": "افتح",
+        "acknowledge": "اطّلعت",
+        "kinds": {
+          "assignmentOverdue": "**{mark}** تأخّر قليلاً، وتسليمه اليوم يكفي",
+          "assignmentDue": "**{mark}** ينتظر تسليمك، ولديك وقت كافٍ",
+          "nextClass": "**{mark}** حصتك القادمة، استعد لها الآن",
+          "pendingGrading": "**{mark} تسليم** من طلابك ينتظر تصحيحك، ابدأ بواحد",
+          "attendanceDue": "**{mark} فصل** ينتظر تسجيل حضوره اليوم، ودقيقة تكفي",
+          "childOverdue": "**{mark}** تأخّر عن واجبه، وتذكير بسيط يكفي",
+          "childPending": "**{mark}** أمامه واجب قادم، وتشجيعك يصنع فرقاً",
+          "pendingPayments": "**{mark} فاتورة** ما تزال غير مدفوعة، تابعها اليوم",
+          "overdueInvoices": "**{mark} فاتورة** تجاوزت موعدها، ومتابعتها الآن أسهل",
+          "urgentTask": "**{mark}** مهمة عاجلة تنتظرك، أنجزها وارتح",
+          "pendingRequests": "**{mark} طلب** من الطاقم ينتظر ردّاً قصيراً منك اليوم",
+          "activeIssues": "**{mark} مشكلة** نشطة تنتظرك اليوم، ابدأ بواحدة الآن",
+          "pendingApprovals": "**{mark} موافقة** تنتظر اعتمادك، ودقيقة واحدة تكفي"
+        }
+      }
     },
     "schoolAdmin": {
       "title": "المدرسة",
@@ -3800,6 +3836,7 @@
         "exploreDescription": "استكشف مواد وفيديوهات {name}",
         "videos": "فيديوهات",
         "materials": "مواد تعليمية",
+        "summary": "ملخص",
         "exams": "اختبارات",
         "qbank": "بنك الأسئلة",
         "assignments": "واجبات",
@@ -3915,7 +3952,16 @@
           "themeOriginal": "الأصلي",
           "themePaper": "ورقي",
           "themeQuiet": "هادئ",
-          "themeNight": "ليلي",
+          "themeBold": "غامق",
+          "themeCalm": "دافئ",
+          "themeFocus": "تركيز",
+          "customize": "تخصيص",
+          "appearance": "المظهر",
+          "lightMode": "فاتح",
+          "darkMode": "داكن",
+          "brightness": "سطوع الشاشة",
+          "sizeSmaller": "أصغر",
+          "sizeLarger": "أكبر",
           "font": "الخط",
           "fontSerif": "ثمانية",
           "fontSans": "روبِك",
@@ -3930,6 +3976,11 @@
           "bookmarkAdded": "أُضيفت الإشارة",
           "bookmarkRemoved": "أُزيلت الإشارة",
           "noBookmarks": "لا إشارات بعد.",
+          "rotationLock": "قفل الاتجاه",
+          "rotationUnlock": "إلغاء قفل الاتجاه",
+          "rotationUnsupported": "لا يدعم هذا المتصفح قفل اتجاه الشاشة",
+          "lineGuide": "خط القراءة",
+          "lineGuideOff": "إخفاء خط القراءة",
           "originalPages": "الصفحات الأصلية",
           "textPages": "النص",
           "resume": "متابعة",
@@ -4023,7 +4074,8 @@
         "subjects": "مواد",
         "periodsPerWeek": "حصص/أسبوع",
         "today": "اليوم",
-        "weekView": "عرض الأسبوع"
+        "weekView": "عرض الأسبوع",
+        "week": "أسبوع"
       },
       "generate": {
         "title": "إنشاء الجدول",
@@ -4840,7 +4892,39 @@
         "الخميس",
         "الجمعة",
         "السبت"
-      ]
+      ],
+      "slotDetail": {
+        "title": "تفاصيل الحصة",
+        "teacher": "المعلم",
+        "section": "الفصل",
+        "room": "القاعة",
+        "myAttendance": "حضوري",
+        "attendance": "الحضور",
+        "notTaken": "لم يُسجَّل بعد",
+        "notRecorded": "لا يوجد تسجيل",
+        "present": "حاضر",
+        "absent": "غائب",
+        "late": "متأخر",
+        "excused": "بعذر",
+        "sick": "مريض",
+        "of": "من",
+        "close": "إغلاق",
+        "startsIn": "يبدأ بعد {n} دقيقة",
+        "startsInHours": "يبدأ بعد {n} ساعة",
+        "periods": [
+          "الحصة الأولى",
+          "الحصة الثانية",
+          "الحصة الثالثة",
+          "الحصة الرابعة",
+          "الحصة الخامسة",
+          "الحصة السادسة",
+          "الحصة السابعة",
+          "الحصة الثامنة",
+          "الحصة التاسعة",
+          "الحصة العاشرة"
+        ],
+        "enter": "ادخل"
+      }
     },
     "announcements": {
       "title": "الإعلانات",
@@ -8922,7 +9006,10 @@
         "pendingUnit": "معلق",
         "totalUnit": "الإجمالي",
         "na": "غ/م",
-        "assignments": "الواجبات"
+        "assignments": "الواجبات",
+        "now": "الآن",
+        "classesDone": "انتهت حصص اليوم",
+        "seeYouTomorrow": "نراك غداً!"
       },
       "teachingOverview": "نظرة عامة على التدريس",
       "classesToday": "فصول اليوم",
@@ -9003,7 +9090,10 @@
         "percentUnit": "٪",
         "dueUnit": "مستحق",
         "averageLabel": "المتوسط",
-        "performanceDescription": "الأداء الأكاديمي الحالي"
+        "performanceDescription": "الأداء الأكاديمي الحالي",
+        "next": "التالية",
+        "classesDone": "انتهت حصص اليوم",
+        "seeYouTomorrow": "نراك غداً!"
       },
       "errors": {
         "unableToLoad": "تعذر تحميل لوحة التحكم",

@@ -22,7 +22,7 @@ Roles map to actions through `PERMISSION_MATRIX` in `permissions-config.ts` (cli
 | TEACHER    | All + own       |   —    |     —     |    —     |     Y     |   Y    |
 | ACCOUNTANT | All (read-only) |   —    |     —     |    —     |     Y     |   Y    |
 | STAFF      | All (read-only) |   —    |     —     |    —     |     —     |   Y    |
-| STUDENT    | Own grade       |   —    |     —     |    —     |     —     |   Y    |
+| STUDENT    | Own section     |   —    |     —     |    —     |     —     |   Y    |
 | GUARDIAN   | Child           |   —    |     —     |    —     |     —     |   Y    |
 | USER       | None            |   —    |     —     |    —     |     —     |   —    |
 
@@ -30,9 +30,11 @@ Every role except `USER` can export. `manage_substitutions` is granted to ADMIN 
 
 ## Routes
 
-`layout.tsx` renders role-based tabs via `PageNav`, each tab individually permission-gated. Admins see **Overview, Analytics, Generate, Conflicts, Settings**. Non-admins see **Today** and **Full**; the **Analytics** tab additionally appears for any role with `view_analytics` (teacher, accountant).
+`layout.tsx` renders role-based tabs via `PageNav`, each tab individually permission-gated. Admins see **Overview, Analytics, Generate, Conflicts, Settings**. Teachers and guardians see **Today** and **Full**; the **Analytics** tab additionally appears for any role with `view_analytics` (teacher, accountant). **Students see no tabs at all** — a student has one schedule, so Today and Full were the same data twice; `/timetable` renders the week grid directly. The strip is skipped rather than rendered empty, because `PageNav` still paints its bottom border when every item is hidden.
 
-There is no separate `/my-timetable` route. Students and guardians use the same `/timetable` and `/timetable/full` routes — both render `TimetableContent`, differing only by `defaultTab` (`"today"` vs `"full"`), and `RoleRouter` dispatches to the correct view by role.
+There is no separate `/my-timetable` route — the name survives in the `roleRoutes` matrix with no page behind it. Guardians and teachers use `/timetable` and `/timetable/full`, which both render `TimetableContent` and differ only by `defaultTab` (`"today"` vs `"full"`); `RoleRouter` dispatches to the correct view by role. `StudentView` ignores `defaultTab` and always renders the grid, so `/timetable/full` is simply a duplicate for a student.
+
+Access is decided at the **edge**, in `src/routes.ts` — these pages carry no guard of their own. `/timetable` and `/timetable/full` are exact entries listing ADMIN / TEACHER / STUDENT / GUARDIAN / DEVELOPER, while the `/timetable/*` wildcard stays ADMIN / TEACHER / DEVELOPER so `generate`, `settings`, `conflicts` and `analytics` stay closed. `isRouteAllowedForRole` matches exact before wildcard, which is what lets the two coexist; widening the wildcard would open all four admin pages at once. Until 2026-09-01 the matrix omitted STUDENT entirely, so every student who followed the sidebar link landed on `/unauthorized`.
 
 | Route                  | Component                   | In nav?              |
 | ---------------------- | --------------------------- | -------------------- |
@@ -45,23 +47,74 @@ There is no separate `/my-timetable` route. Students and guardians use the same 
 
 Earlier builds carried standalone `by-class`, `by-teacher`, `by-room`, and `templates` routes that nothing linked to. They were removed: the admin already sees a single role-routed grid (`AdminView`) whose **classroom / teacher selection is a cookie-persistent filter** — one route serves every admin axis, and the choice survives refresh and navigation. (The template _actions_ remain in `actions.ts`; only the unreached UI was deleted.)
 
-Boundaries are uneven: there is a single top-level `error.tsx`, the remaining sub-routes ship a `loading.tsx`, and `full/` has neither. Sidebar entry: `key: "timetable"`, `href: "/timetable"`, icon `clock`, roles ADMIN / TEACHER / STUDENT.
+Boundaries are uneven: there is a single top-level `error.tsx`, the sub-routes ship a `loading.tsx`, and `full/` has neither — the top-level route's own `loading.tsx` was replaced by a role-aware `<Suspense>` in `layout.tsx` (see The loading frame). Sidebar entry: `key: "timetable"`, `href: "/timetable"`, icon `clock`, roles ADMIN / TEACHER / STUDENT.
 
 ## Role-based views
 
 `content.tsx` wraps `RoleRouter` in `SessionProvider`. On mount `RoleRouter` calls `getActiveTerm()` then `getPersonalizedTimetable()` to resolve `viewType` + `editable`, and renders the matching view, which fetches its own data.
 
-| Role       | View           | Data source                                       | Sees                                              |
-| ---------- | -------------- | ------------------------------------------------- | ------------------------------------------------- |
-| DEVELOPER  | `AdminView`    | `getTimetableByRoom` / `getTimetableByTeacher`    | Room / teacher grid, editable slots, slot editor  |
-| ADMIN      | `AdminView`    | Same as DEVELOPER                                 | Same as DEVELOPER                                 |
-| TEACHER    | `TeacherView`  | `getTimetableByTeacher` + `getTodaySchedule`      | Personal schedule, workload, current / next class |
-| STUDENT    | `StudentView`  | `getTimetableByStudentGrade` + `getTodaySchedule` | Enrolled subjects (grade-based), PDF export       |
-| GUARDIAN   | `GuardianView` | `getGuardianChildren` + `getChildTimetable`       | Child selector + each child's timetable           |
-| ACCOUNTANT | `AdminView`    | Same as ADMIN                                     | Full admin grid, read-only (`editable={false}`)   |
-| STAFF      | `AdminView`    | Same as ADMIN                                     | Full admin grid, read-only                        |
+| Role       | View           | Data source                                       | Sees                                                                                    |
+| ---------- | -------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| DEVELOPER  | `AdminView`    | `getTimetableByRoom` / `getTimetableByTeacher`    | Room / teacher grid, editable slots, slot editor                                        |
+| ADMIN      | `AdminView`    | Same as DEVELOPER                                 | Same as DEVELOPER                                                                       |
+| TEACHER    | `TeacherView`  | `getTimetableByTeacher` + `getTodaySchedule`      | Personal schedule, workload, current / next class                                       |
+| STUDENT    | `StudentView`  | `getTimetableByStudentGrade` + `getTodaySchedule` | Read-only week grid for own section + current/next card (no header card, no PDF export) |
+| GUARDIAN   | `GuardianView` | `getGuardianChildren` + `getChildTimetable`       | Child selector + each child's timetable                                                 |
+| ACCOUNTANT | `AdminView`    | Same as ADMIN                                     | Full admin grid, read-only (`editable={false}`)                                         |
+| STAFF      | `AdminView`    | Same as ADMIN                                     | Full admin grid, read-only                                                              |
 
-`getPersonalizedTimetable` sets `editable: false` for ACCOUNTANT / STAFF; `AdminView` forwards `editable` to `SimpleGrid` and disables `onSlotClick` when read-only. `AdminView`'s classroom / teacher selection is saved to a cookie (`tt_filter`), so the chosen axis and entity persist across refresh and navigation. The `classId` prop on `StudentView` is legacy and unused — student data is grade-resolved.
+`getPersonalizedTimetable` sets `editable: false` for ACCOUNTANT / STAFF; `AdminView` forwards `editable` to `SimpleGrid` and disables `onSlotClick` when read-only. `AdminView`'s classroom / teacher selection is saved to a cookie (`tt_filter`), so the chosen axis and entity persist across refresh and navigation. The `classId` prop on `StudentView` is legacy and unused — student data is grade-resolved. `StudentView` renders the same `SimpleGrid` the admin builds in, read-only and filtered to the student's own section; the Current/Next card above it is kept deliberately, because the grid shows live _indicators_ but carries no Join button. It still calls `getTodaySchedule`, which is what that card derives from. The header card (name + grade, term badge, subject and period counts, Download) was removed, so a student's page is the heading and the grid — note this took **PDF export and Print** with it, since both lived only in that card's dropdown; teacher and guardian keep theirs, and browser printing still works via `print.css`. `getTimetableByStudentGrade` still returns `studentInfo`, `schoolName` and `subjectCount`; this view no longer reads them. The grid renders **bare** — no `Card` wrapper — beneath an AdminView-shaped toolbar (`space-y-12` above the grid), so the student and admin surfaces are visually identical. The week/day control is the pricing page's billing toggle reused verbatim (`saas-marketing/pricing/billing-toggle.tsx`) — a two-column `ToggleGroup` with a `bg-muted` thumb slid by `translate-x-full rtl:-translate-x-full`. Its halves are rendered from an order array that the viewport chooses — `["day","week"]` under 768px, `["week","day"]` above — and the leading half is also the default, so a phone leads with and opens on the day while a laptop leads with and opens on the week. Keeping order and default as one value means they cannot drift apart, and the thumb slides on "is the active half the trailing one". The week label is its own short `studentView.week` key; `studentView.weekView` keeps its longer wording for the teacher/guardian tab. The halves are sized `min-w-[64px] px-3` rather than pricing's `min-w-[148px] px-6` — 130px of chrome instead of 298px, which on a phone was as wide as the one-column grid beneath it. It switches **week / day**: day mode narrows the same `SimpleGrid` to a single column rather than rendering a different component (`SimpleGrid` already supports a 1-length `workingDays`; and below the width where a full week would cramp, the grid scrolls rather than compresses — its inner wrapper carries a per-column floor of `totalCols x 128px` via `min-w-[var(--tt-grid-min-w)]`, which never binds where there is room and is reset by `print:min-w-0` so A4 output is unaffected. When it does scroll, the period column stays pinned (`sticky start-0 z-10` on the header, break and period cells) so a row never loses its time label — `start-0` rather than `left-0` because in RTL that column sits on the right), falling forward to the next working day when today is not one. **On viewports under 768px day mode is the default** — a five-day grid does not fit a phone. It is derived from `matchMedia` rather than seeded into state (the server has no viewport, so seeding would hydrate mismatched), which means the default keeps following rotation until the student picks a side; their pick then wins at every width, and nothing is persisted. Day mode also turns `highlightToday` off — `simple-grid.tsx` appends `bg-primary/5` in the same `cn()` as the subject colour, and tailwind-merge keeps only the last `bg-*`, so the highlight replaces the colour instead of tinting it (which is why today's column is grey in every week grid, admin's included). (The count, when it was shown, was fixed to tally **distinct subjects across the student's slots** — counting enrolled `Class` rows reported 36 subjects above a nine-subject grid, since a student holds one row per subject per section.)
+
+### The loading frame
+
+The role a reader gets decides the SHAPE of the grid, and on a phone that is a
+difference of five columns to one — so the placeholder cannot be role-blind.
+`views/grid-skeleton.tsx` mirrors `SimpleGrid`'s DOM (same container, same
+`grid-cols-N` header, same period rows, a break row in the right place) and
+takes the same `workingDays` / `periods` arrays the grid is about to receive.
+Its `collapseToDayOnMobile` flag narrows it to period + one day below `md`. That
+narrowing is done in CSS on purpose: day mode is decided by `matchMedia`, which
+cannot be read until after mount, so narrowing the day array in JavaScript is
+correct exactly one frame too late. `StudentView` passes the flag while the
+student has not picked a half — an explicit pick is width-independent and
+narrows the days instead.
+
+`RoleRouter` learns the role from `getPersonalizedTimetable`, which is the whole
+wait the placeholder covers, so `page.tsx` resolves it from the session first and
+passes `studentShell` (`rendersStudentTimetable`, mirroring that action's own
+switch — ACCOUNTANT and STAFF take the admin grid, USER falls through to the
+student one). That picks both the collapsed grid and a 130px toolbar chip in
+place of two 180px comboboxes.
+
+The route-level fallback needs the same answer and gets it the same way. A
+`loading.tsx` cannot: it has to render instantly, so it cannot await `auth()`,
+and this route's drew the five-day week for every role — plus a page title and a
+five-tab strip that its own `layout.tsx` had already painted directly above it.
+It is gone. `layout.tsx` already awaits `auth()` for the tab strip, so it now
+wraps `{children}` in the `<Suspense>` Next would have built anyway and branches
+the fallback on the role. Sub-routes that ship their own `loading.tsx` keep it.
+Both that fallback and `RoleRouter`'s loading branch render the shared
+`TimetableSurfaceSkeleton`, because they appear back to back inside a single
+load and any difference between them is a step the reader watches happen.
+
+Two gating rules came out of this and generalise past the timetable. A loading
+gate on `useTransition`'s pending flag opens on whatever branch follows it,
+because that flag only rises once the effect that starts the transition runs —
+which is after the first paint. `RoleRouter` gated on it and served
+"no timetable data" as the opening frame of a page that was merely loading, in
+the server HTML as well as the browser. Gate on a `settled` flag set in the
+load's `finally`. The mirror image is a view whose own `isLoading` starts
+`false` and is raised from an effect: it paints one frame of empty content
+before its skeleton, which is what `StudentView` did.
+
+Band heights are measured off the live grid rather than derived from padding,
+because a real cell's height comes from its text. Header 41/65 and break row
+68/84 (mobile/sm+) are measurements. The mobile teaching band is not: the day
+cell's `min-h-18` floors that row at 72px, so the band simply is the cell's
+min-height and the two must move together. Note that `min-h-14` there had never
+bound at all — the period column beside it is 64px tall from its own padding and
+a grid row takes its tallest cell, so any floor at or below 64px was a silent
+no-op.
 
 ## Student grade resolution
 
@@ -76,6 +129,35 @@ User (session)
 ```
 
 A student placed in a section but not yet enrolled in course classes still gets a full schedule. If no `StudentClass` rows match the term, the legacy axis falls back to **grade-name pattern matching** — `db.class.findMany` where `name` ends with `" - {gradeName}"` — for backward compatibility with older data. The grade label comes from `Student → StudentYearLevel → YearLevel.levelName` (with `lang` for the localized name).
+
+## Joining a live class from the grid
+
+Two resolvers feed the timetable from Conference. `getLiveClassIndicators` returns `timetableId → "live" | "scheduled"` — a dot, and nothing you can act on. `attachLiveClasses` returns a real target (`sessionId`, `provider`, `meetingUrl`, `status`), resolved most-specific-first: this slot's session today → today's session for the same (section, subject) → the subject's recurring `ConferenceLink` → the section's all-day open room.
+
+Until 2026-09-02 only the _Today cards_ received the second one, so the weekly grid was awareness-only by design. That held while every role had a day list; it stopped holding when the student view became a bare grid, leaving a student able to see that their third period was online with no route into it. `resolveTodayJoinTargets` now hands every weekly read a `timetableId → LiveClassJoinInfo` map, and `SimpleGrid` takes an optional `renderSlotAction(slot, period)` render prop that each role view supplies — students, guardians and admins render Join; teachers render Join, or `StartLiveClassButton` when the window is open and no session exists yet.
+
+**Whether a class is online at all is the school's configuration, not the timetable's.** The standing `ConferenceLink` tier is gated on `resolveOnlinePolicies` — `physical` never resolves one, `online` always does, and `hybrid` consults the school default, the per-section and per-grade overrides and the go-online window. Subject granularity needs no extra setting: it is already expressed by which (section, subject) pairs have links or sessions. Materialized sessions are deliberately _not_ gated — online is additive, and a room someone is already sitting in should not vanish because the school flipped mid-day.
+
+In the cell, the indicator and the join link share one slot rather than sitting side by side: a green a **corner mark**, never a background: cells always keep their subject colour, and an online class carries `LiveMark` (an inline ring-and-dot drawn with `currentColor`). Only the one cell worth acting on is coloured — `--live` green while it runs, `--upcoming` amber before it, `--missed` red after — and the rest sit muted in the cell's foreground. An earlier version coloured the whole background and blinked; it read as decoration, and it could not beat `getSubjectTailwind`'s `hover:bg-*` on hover anyway, since tailwind-merge does not collapse a hover variant against a base `bg-*`.
+
+Clicking a cell opens a dialog. On the admin grid that is the slot editor; on the read-only grids it is `views/slot-detail-dialog.tsx`, which shares the editor's chrome deliberately — the same gesture in a different verb. It is also where the per-person answer lives: `getSlotDetail` resolves the viewer from the session and returns their own attendance for that period (a guardian gets their child's, a teacher the roster split and whether it has been taken), and it carries the Join button.
+
+Three further things are deliberate. The map holds **today's slots only** — tiers 2 and 3 of the resolver are not day-aware, so passing a whole week would let a standing link stamp every weekday row of that subject — which also means no caller needs a day check, and a day-mode grid showing the next working day is correctly join-free. The day is the **school's**, via `schoolDayOfWeek`, never the server's `getDay()`. And a cell can show **Join with no dot**: the dot requires a materialized `sessionId`, while a tier-3 standing link joins with `sessionId: null` — the same asymmetry the Today rows have always had.
+
+## Whose timetable, and who may ask
+
+Identity is resolved **server-side from the session**, never from a value the caller sends. `getTimetableByStudentGrade` looks up `Student` by `session.user.id` and ORs the student's `sectionId` with their `StudentClass` classIds; `getPersonalizedTimetable` resolves `Teacher.id` (not `User.id`) the same way and hands it to `TeacherView`. Nothing on the web surface accepts an identity from the client.
+
+Where an id _is_ accepted, it names whose timetable is wanted and the caller still has to be entitled to it:
+
+| Surface                                 | Accepts               | Gate                                                                                                                                      |
+| --------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/mobile/timetable/:userId`     | a user id in the path | student target → `canAccessStudent` (self, linked guardian, or staff); teacher target → self, or DEVELOPER / ADMIN / STAFF. 403 otherwise |
+| `GET /api/mobile/teacher/schedule`      | nothing               | role gate, then resolves the teacher from `auth.userId`                                                                                   |
+| `getTimetableByTeacher` (server action) | `teacherId`           | `requirePermission("view_all")` — granted to DEVELOPER / ADMIN / TEACHER / ACCOUNTANT / STAFF, withheld from STUDENT / GUARDIAN           |
+| `getTimetableByRoom` (server action)    | `roomId`              | `requirePermission("view_all")` — same gate; tightened when the read began returning Join targets as well as slots                        |
+
+Two things to hold onto. Every export in a `"use server"` file is a public POST endpoint, so an action taking an id needs a permission that means _"may look at someone else's data"_ — `requireReadAccess()` only means "may see a timetable at all", which is why it was not enough for `getTimetableByTeacher`. And the mobile route must OR **both** slot axes exactly as the web read does: gating on `sectionId` alone returned an empty week for every student whose data predates the section-first migration.
 
 ## Onboarding schedule step
 

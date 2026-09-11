@@ -204,8 +204,11 @@ export async function ParentDashboard({
           data={quickLookData}
         />
 
-        {/* Section 3: Quick Actions (4 focused actions) */}
-        <section>
+        {/* Section 3: Quick Actions (4 focused actions) — from `md` up only.
+            Below it the phone dashboard shows this same section near the
+            top instead (`phone-quick-actions.tsx`), where a thumb reaches
+            it; two copies at once would be the same four tiles twice. */}
+        <section className="hidden md:block">
           <SectionHeading title={t?.quickActions?.title || "Quick Actions"} />
           <QuickActions
             actions={getQuickActionsByRole(

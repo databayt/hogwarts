@@ -25,6 +25,8 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { MicFilledIcon } from "@/components/atom/icons"
+
+import { WaIcon } from "./mobile/wa-icon"
 import { type UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -532,8 +534,11 @@ export function MessageInput({
         e.preventDefault()
         handleSend()
       }}
-      className={cn("border-border border-t", className)}
-      style={{ backgroundColor: "#F5F0EA" }}
+      className={cn(
+        "border-t-[0.33px] border-[color:var(--wa-border-panel)]",
+        "bg-[color:var(--wa-surface-panel)] backdrop-blur-[25px]",
+        className
+      )}
     >
       {/* Reply context — WhatsApp style with colored left border */}
       {replyTo && (
@@ -652,7 +657,7 @@ export function MessageInput({
               type="button"
               onClick={() => setShowAttachMenu(!showAttachMenu)}
               disabled={disabled}
-              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[#E0DEDA]"
+              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[color:var(--wa-surface-cta-circular)]"
             >
               <svg
                 className="h-7 w-7 transition-transform duration-200"
@@ -661,7 +666,7 @@ export function MessageInput({
                 }}
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#666462"
+                stroke="var(--wa-text-secondary)"
                 strokeWidth="1.2"
                 strokeLinecap="round"
               >
@@ -770,8 +775,9 @@ export function MessageInput({
               maxLength={maxLength}
               rows={1}
               className={cn(
-                "max-h-[120px] min-h-[38px] resize-none rounded-[21px] border border-[#DDD] bg-white py-2 ps-4 pe-12 text-sm",
-                "hover:border-[#DDD] focus-visible:border-[#DDD] focus-visible:ring-0 focus-visible:ring-offset-0",
+                "max-h-[120px] min-h-[31px] resize-none rounded-[21px] py-[5px] ps-4 pe-12 text-[17px] leading-[21px] md:text-[17px]",
+                "border-[0.33px] border-[color:var(--wa-border-input-chat)] bg-[color:var(--wa-surface-input-chat)] text-[color:var(--wa-text-primary)]",
+                "hover:border-[color:var(--wa-border-input-chat)] focus-visible:border-[color:var(--wa-border-input-chat)] focus-visible:ring-0 focus-visible:ring-offset-0",
                 "text-start"
               )}
               style={{ caretColor: "#1FA961" }}
@@ -793,14 +799,32 @@ export function MessageInput({
               isSending={isSending}
             />
           ) : (
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={startRecording}
-              className="mb-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full hover:bg-[#E0DEDA]"
-            >
-              <MicFilledIcon className="h-6 w-6" style={{ color: "#666462" }} />
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => photoInputRef.current?.click()}
+                aria-label={m?.ui?.photos_videos || "Photos and videos"}
+                className="mb-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full hover:bg-[color:var(--wa-surface-cta-circular)]"
+              >
+                <WaIcon
+                  name="ic-wa-camera-small-32"
+                  className="h-6 w-6 text-[color:var(--wa-text-secondary)]"
+                />
+              </button>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={startRecording}
+                aria-label={m?.actions?.record_voice || "Record voice message"}
+                className="mb-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full hover:bg-[color:var(--wa-surface-cta-circular)]"
+              >
+                <MicFilledIcon
+                  className="h-6 w-6"
+                  style={{ color: "var(--wa-text-secondary)" }}
+                />
+              </button>
+            </>
           )}
         </div>
       )}

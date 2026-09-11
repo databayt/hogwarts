@@ -103,7 +103,7 @@ model SchoolInstructorPolicy {
 
   // null = open. Set = serve only this instructor on the lessons they cover;
   // lessons they do not cover fall back to the remaining allowed instructors.
-  lockedKey String?
+  lockedKey  String?
   // null = the platform-first ordering. Set = float this instructor to the top.
   defaultKey String?
 

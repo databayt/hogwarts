@@ -1,12 +1,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { Suspense } from "react"
 import { Metadata } from "next"
 
 import { Card, CardContent } from "@/components/ui/card"
+import { currentRole } from "@/components/auth/auth"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import DashboardContent from "@/components/school-dashboard/dashboard/content"
+import { DashboardSkeleton } from "@/components/school-dashboard/loading"
 
 interface Props {
   params: Promise<{ subdomain: string; lang: Locale }>
@@ -45,9 +48,29 @@ export default async function DashboardPage({ params }: Props) {
       dictionary = undefined
     }
 
+    // The role is read here, ahead of the dashboard's own data, so the
+    // placeholder can be the shape of the page that is coming. `currentRole`
+    // is a JWT cookie read — no database — and `DashboardContent` reads the
+    // same session again for the user itself.
+    //
+    // The route's `loading.tsx` covers only this await; everything slower than
+    // it (six role dashboards, each with its own queries) suspends into the
+    // boundary below, where the role IS known. Without this the whole page
+    // sat behind one role-blind fallback.
+    let role: string | undefined
+    try {
+      role = await currentRole()
+    } catch (roleError) {
+      console.error("[DashboardPage] Role error:", roleError)
+    }
+
     // Note: School data is already provided by the layout via SchoolProvider
     // We don't need to fetch it again here - just pass the dictionary and locale
-    return <DashboardContent dictionary={dictionary?.school} locale={lang} />
+    return (
+      <Suspense fallback={<DashboardSkeleton role={role} />}>
+        <DashboardContent dictionary={dictionary?.school} locale={lang} />
+      </Suspense>
+    )
   } catch (error) {
     console.error("[DashboardPage] Page render error:", error)
     const errorMessage = error instanceof Error ? error.message : String(error)

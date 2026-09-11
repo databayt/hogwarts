@@ -163,8 +163,14 @@ export default async function PlatformLayout({
           <ModalProvider>
             <PageHeadingProvider>
               {/* Ensure the provider's flex wrapper has a single column child to preserve layout */}
+              {/* `has-[[data-immersive]]` — a page whose first block is a
+                  full-bleed hero (the lumos lesson, drawing the same title
+                  card the live room does) unpins the header for its whole
+                  length: the artwork owns the top of the screen, and the bar
+                  comes back the moment you scroll up. Every other dashboard
+                  page keeps the sticky header, because nothing marks itself. */}
               <div
-                className="flex min-h-svh w-full flex-col"
+                className="flex min-h-svh w-full flex-col has-[[data-immersive]]:[&_[data-slot=platform-header]]:static"
                 dir={isRTL ? "rtl" : "ltr"}
               >
                 <PlatformHeader
@@ -178,7 +184,7 @@ export default async function PlatformLayout({
                     lang={lang}
                     serverRole={serverRole}
                   />
-                  <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
+                  <div className="dashboard-container overflow-x-clip px-2 pb-10 transition-[margin] duration-200 ease-in-out has-[[data-immersive]]:overflow-x-visible sm:px-0">
                     <PageHeadingDisplay />
                     <OfflineSyncBanner
                       labels={

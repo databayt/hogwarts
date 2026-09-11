@@ -65,96 +65,116 @@
  *    filtered out for not being +249.
  */
 
-export type ContactKind = 'phone' | 'whatsapp' | 'email' | 'facebook' | 'instagram' | 'telegram';
-export type Confidence = 'HIGH' | 'MEDIUM' | 'LOW';
+export type ContactKind =
+  | "phone"
+  | "whatsapp"
+  | "email"
+  | "facebook"
+  | "instagram"
+  | "telegram"
+export type Confidence = "HIGH" | "MEDIUM" | "LOW"
 
 export interface ContactCandidate {
-  kind: ContactKind;
+  kind: ContactKind
   /** Normalized: E.164 for numbers, lowercased for emails, full URL for socials. */
-  value: string;
+  value: string
   /** The text as it appeared, for a human checking our work. */
-  raw: string;
+  raw: string
   /** Which field it came from, e.g. "description:ar". */
-  source: string;
-  confidence: Confidence;
+  source: string
+  confidence: Confidence
   /** ISO country for a non-Sudanese number — these hosts are diaspora. */
-  countryGuess?: string;
+  countryGuess?: string
 }
 
 /** Eastern Arabic-Indic and Persian digits → ASCII. */
 export function normalizeDigits(input: string): string {
   return input.replace(/[٠-٩۰-۹]/g, (d) => {
-    const code = d.charCodeAt(0);
-    const base = code >= 0x06f0 ? 0x06f0 : 0x0660;
-    return String(code - base);
-  });
+    const code = d.charCodeAt(0)
+    const base = code >= 0x06f0 ? 0x06f0 : 0x0660
+    return String(code - base)
+  })
 }
 
 /** Strip separators and the leading + people type inside numbers. */
-const compact = (s: string) => s.replace(/[\s\-().+]/g, '');
+const compact = (s: string) => s.replace(/[\s\-().+]/g, "")
 
 const DIASPORA: Array<[string, RegExp, number]> = [
   // country, dial-code pattern, national-number length
-  ['SA', /^966/, 9],
-  ['AE', /^971/, 9],
-  ['EG', /^20/, 10],
-  ['QA', /^974/, 8],
-  ['KW', /^965/, 8],
-  ['TR', /^90/, 10],
-  ['GB', /^44/, 10],
-  ['US', /^1/, 10],
-];
+  ["SA", /^966/, 9],
+  ["AE", /^971/, 9],
+  ["EG", /^20/, 10],
+  ["QA", /^974/, 8],
+  ["KW", /^965/, 8],
+  ["TR", /^90/, 10],
+  ["GB", /^44/, 10],
+  ["US", /^1/, 10],
+]
 
 /**
  * Sudanese mobile: +249 then 9 digits beginning 9 (Zain/MTN) or 1 (Sudani),
  * or the local 0-prefixed 10-digit form.
  */
 function normalizeSudanPhone(digits: string): string | null {
-  let d = digits;
-  if (d.startsWith('00')) d = d.slice(2);
-  if (d.startsWith('249')) d = d.slice(3);
-  else if (d.startsWith('0')) d = d.slice(1);
-  else if (d.length !== 9) return null;
-  if (!/^[19]\d{8}$/.test(d)) return null;
-  return `+249${d}`;
+  let d = digits
+  if (d.startsWith("00")) d = d.slice(2)
+  if (d.startsWith("249")) d = d.slice(3)
+  else if (d.startsWith("0")) d = d.slice(1)
+  else if (d.length !== 9) return null
+  if (!/^[19]\d{8}$/.test(d)) return null
+  return `+249${d}`
 }
 
-function normalizeForeignPhone(digits: string): { value: string; country: string } | null {
-  let d = digits;
-  if (d.startsWith('00')) d = d.slice(2);
-  if (!d.startsWith('+') && d.length < 8) return null;
-  d = d.replace(/^\+/, '');
+function normalizeForeignPhone(
+  digits: string
+): { value: string; country: string } | null {
+  let d = digits
+  if (d.startsWith("00")) d = d.slice(2)
+  if (!d.startsWith("+") && d.length < 8) return null
+  d = d.replace(/^\+/, "")
   for (const [country, prefix, len] of DIASPORA) {
-    const m = d.match(prefix);
-    if (m && d.length === m[0].length + len) return { value: `+${d}`, country };
+    const m = d.match(prefix)
+    if (m && d.length === m[0].length + len) return { value: `+${d}`, country }
   }
-  return null;
+  return null
 }
 
 // Candidate number runs: an optional +/00 then 7–15 digits with separators.
-const PHONE_RUN = /(?:\+|00)?[\d][\d\s\-().]{6,18}\d/g;
-const EMAIL = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
-const FACEBOOK = /(?:https?:\/\/)?(?:www\.|m\.|web\.)?(?:facebook\.com|fb\.me|m\.me)\/([A-Za-z0-9.\-_]+)/gi;
-const INSTAGRAM = /(?:https?:\/\/)?(?:www\.)?instagram\.com\/([A-Za-z0-9._]+)/gi;
-const TELEGRAM = /(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/([A-Za-z0-9_]+)/gi;
-const WA_LINK = /(?:https?:\/\/)?(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)(\+?\d{7,15})/gi;
+const PHONE_RUN = /(?:\+|00)?[\d][\d\s\-().]{6,18}\d/g
+const EMAIL = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi
+const FACEBOOK =
+  /(?:https?:\/\/)?(?:www\.|m\.|web\.)?(?:facebook\.com|fb\.me|m\.me)\/([A-Za-z0-9.\-_]+)/gi
+const INSTAGRAM = /(?:https?:\/\/)?(?:www\.)?instagram\.com\/([A-Za-z0-9._]+)/gi
+const TELEGRAM =
+  /(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/([A-Za-z0-9_]+)/gi
+const WA_LINK =
+  /(?:https?:\/\/)?(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)(\+?\d{7,15})/gi
 
 /** Words that, near a number, mean it is a WhatsApp line or a booking line. */
-const WHATSAPP_NEAR = /واتس\s*اب|واتساب|واتس|whats\s*app|whatsapp|wa\b/i;
-const CALL_NEAR = /للحجز|للتواصل|اتصل|اتصال|تواصل|هاتف|جوال|موبايل|رقم|call|contact|book(?:ing)?|reach/i;
+const WHATSAPP_NEAR = /واتس\s*اب|واتساب|واتس|whats\s*app|whatsapp|wa\b/i
+const CALL_NEAR =
+  /للحجز|للتواصل|اتصل|اتصال|تواصل|هاتف|جوال|موبايل|رقم|call|contact|book(?:ing)?|reach/i
 
 /** Things that look like phone numbers but are not. */
 function isNoise(compactDigits: string, context: string): boolean {
-  if (/^(?:19|20)\d{2}$/.test(compactDigits)) return true; // a year
-  if (/^\d{1,6}$/.test(compactDigits)) return true; // too short
-  if (/\d+\s*(?:sqm|m2|متر|كم|km)/i.test(context)) return true; // a measurement
-  if (/^0+$/.test(compactDigits)) return true;
-  return false;
+  if (/^(?:19|20)\d{2}$/.test(compactDigits)) return true // a year
+  if (/^\d{1,6}$/.test(compactDigits)) return true // too short
+  if (/\d+\s*(?:sqm|m2|متر|كم|km)/i.test(context)) return true // a measurement
+  if (/^0+$/.test(compactDigits)) return true
+  return false
 }
 
 /** Text within ±window characters of an index. */
-function around(text: string, index: number, length: number, window = 40): string {
-  return text.slice(Math.max(0, index - window), Math.min(text.length, index + length + window));
+function around(
+  text: string,
+  index: number,
+  length: number,
+  window = 40
+): string {
+  return text.slice(
+    Math.max(0, index - window),
+    Math.min(text.length, index + length + window)
+  )
 }
 
 /**
@@ -164,103 +184,145 @@ function around(text: string, index: number, length: number, window = 40): strin
  * can see whether it came from a description, a house rule or a host bio —
  * which is most of what decides whether to trust it.
  */
-export function extractContacts(text: string | null | undefined, source: string): ContactCandidate[] {
-  if (!text || !text.trim()) return [];
-  const t = normalizeDigits(String(text));
-  const out: ContactCandidate[] = [];
-  const seen = new Set<string>();
+export function extractContacts(
+  text: string | null | undefined,
+  source: string
+): ContactCandidate[] {
+  if (!text || !text.trim()) return []
+  const t = normalizeDigits(String(text))
+  const out: ContactCandidate[] = []
+  const seen = new Set<string>()
 
   const push = (c: ContactCandidate) => {
-    const key = `${c.kind}:${c.value}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    out.push(c);
-  };
+    const key = `${c.kind}:${c.value}`
+    if (seen.has(key)) return
+    seen.add(key)
+    out.push(c)
+  }
 
   // wa.me links are unambiguous — the host published a WhatsApp number.
   for (const m of t.matchAll(WA_LINK)) {
-    const digits = compact(m[1]);
-    const sd = normalizeSudanPhone(digits);
-    const fr = sd ? null : normalizeForeignPhone(digits);
-    const value = sd ?? fr?.value ?? `+${digits.replace(/^\+/, '')}`;
-    push({ kind: 'whatsapp', value, raw: m[0], source, confidence: 'HIGH', countryGuess: fr?.country });
+    const digits = compact(m[1])
+    const sd = normalizeSudanPhone(digits)
+    const fr = sd ? null : normalizeForeignPhone(digits)
+    const value = sd ?? fr?.value ?? `+${digits.replace(/^\+/, "")}`
+    push({
+      kind: "whatsapp",
+      value,
+      raw: m[0],
+      source,
+      confidence: "HIGH",
+      countryGuess: fr?.country,
+    })
   }
 
   for (const m of t.matchAll(EMAIL)) {
-    push({ kind: 'email', value: m[0].toLowerCase(), raw: m[0], source, confidence: 'MEDIUM' });
+    push({
+      kind: "email",
+      value: m[0].toLowerCase(),
+      raw: m[0],
+      source,
+      confidence: "MEDIUM",
+    })
   }
   for (const m of t.matchAll(FACEBOOK)) {
-    if (/^(?:sharer|tr|plugins|profile\.php)$/i.test(m[1])) continue;
-    push({ kind: 'facebook', value: `https://facebook.com/${m[1]}`, raw: m[0], source, confidence: 'MEDIUM' });
+    if (/^(?:sharer|tr|plugins|profile\.php)$/i.test(m[1])) continue
+    push({
+      kind: "facebook",
+      value: `https://facebook.com/${m[1]}`,
+      raw: m[0],
+      source,
+      confidence: "MEDIUM",
+    })
   }
   for (const m of t.matchAll(INSTAGRAM)) {
-    push({ kind: 'instagram', value: `https://instagram.com/${m[1]}`, raw: m[0], source, confidence: 'MEDIUM' });
+    push({
+      kind: "instagram",
+      value: `https://instagram.com/${m[1]}`,
+      raw: m[0],
+      source,
+      confidence: "MEDIUM",
+    })
   }
   for (const m of t.matchAll(TELEGRAM)) {
-    push({ kind: 'telegram', value: `https://t.me/${m[1]}`, raw: m[0], source, confidence: 'MEDIUM' });
+    push({
+      kind: "telegram",
+      value: `https://t.me/${m[1]}`,
+      raw: m[0],
+      source,
+      confidence: "MEDIUM",
+    })
   }
 
   for (const m of t.matchAll(PHONE_RUN)) {
-    const raw = m[0].trim();
-    const digits = compact(raw);
-    const context = around(t, m.index ?? 0, raw.length);
-    if (isNoise(digits, context)) continue;
+    const raw = m[0].trim()
+    const digits = compact(raw)
+    const context = around(t, m.index ?? 0, raw.length)
+    if (isNoise(digits, context)) continue
 
-    const sudan = normalizeSudanPhone(digits);
-    const foreign = sudan ? null : normalizeForeignPhone(digits);
-    if (!sudan && !foreign) continue;
+    const sudan = normalizeSudanPhone(digits)
+    const foreign = sudan ? null : normalizeForeignPhone(digits)
+    if (!sudan && !foreign) continue
 
-    const value = sudan ?? foreign!.value;
+    const value = sudan ?? foreign!.value
     // Adjacency to "واتساب" or "للحجز" is what separates a number the host
     // wants you to use from one that merely appears in the text.
-    const isWa = WHATSAPP_NEAR.test(context);
-    const invited = isWa || CALL_NEAR.test(context);
+    const isWa = WHATSAPP_NEAR.test(context)
+    const invited = isWa || CALL_NEAR.test(context)
     push({
-      kind: isWa ? 'whatsapp' : 'phone',
+      kind: isWa ? "whatsapp" : "phone",
       value,
       raw,
       source,
-      confidence: invited ? 'HIGH' : 'MEDIUM',
+      confidence: invited ? "HIGH" : "MEDIUM",
       countryGuess: foreign?.country,
-    });
+    })
   }
 
-  return out;
+  return out
 }
 
 /** Run the extractor over several labelled fields at once. */
-export function extractContactsFrom(fields: Array<[string, string | null | undefined]>): ContactCandidate[] {
-  const all = fields.flatMap(([source, text]) => extractContacts(text, source));
+export function extractContactsFrom(
+  fields: Array<[string, string | null | undefined]>
+): ContactCandidate[] {
+  const all = fields.flatMap(([source, text]) => extractContacts(text, source))
 
   // Dedupe by the number itself, not by kind. One number found bare in the
   // description and again beside "واتساب" in the house rules is one contact,
   // and the WhatsApp reading is the useful one — emitting both would put the
   // same host in the outbox twice on the weaker channel.
-  const rank: Record<Confidence, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
-  const kindRank = (k: ContactKind) => (k === 'whatsapp' ? 2 : 1);
-  const best = new Map<string, ContactCandidate>();
+  const rank: Record<Confidence, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 }
+  const kindRank = (k: ContactKind) => (k === "whatsapp" ? 2 : 1)
+  const best = new Map<string, ContactCandidate>()
   for (const c of all) {
-    const prev = best.get(c.value);
+    const prev = best.get(c.value)
     if (
       !prev ||
       kindRank(c.kind) > kindRank(prev.kind) ||
-      (kindRank(c.kind) === kindRank(prev.kind) && rank[c.confidence] > rank[prev.confidence])
+      (kindRank(c.kind) === kindRank(prev.kind) &&
+        rank[c.confidence] > rank[prev.confidence])
     ) {
       // Keep the best evidence for the channel, but never downgrade confidence
       // just because the stronger channel was found in a quieter context.
       best.set(c.value, {
         ...c,
-        confidence: prev && rank[prev.confidence] > rank[c.confidence] ? prev.confidence : c.confidence,
-      });
+        confidence:
+          prev && rank[prev.confidence] > rank[c.confidence]
+            ? prev.confidence
+            : c.confidence,
+      })
     }
   }
-  return [...best.values()];
+  return [...best.values()]
 }
 
 /** The strongest confidence present, for a per-host summary field. */
-export function overallConfidence(candidates: ContactCandidate[]): Confidence | 'NONE' {
-  if (candidates.some((c) => c.confidence === 'HIGH')) return 'HIGH';
-  if (candidates.some((c) => c.confidence === 'MEDIUM')) return 'MEDIUM';
-  if (candidates.length) return 'LOW';
-  return 'NONE';
+export function overallConfidence(
+  candidates: ContactCandidate[]
+): Confidence | "NONE" {
+  if (candidates.some((c) => c.confidence === "HIGH")) return "HIGH"
+  if (candidates.some((c) => c.confidence === "MEDIUM")) return "MEDIUM"
+  if (candidates.length) return "LOW"
+  return "NONE"
 }

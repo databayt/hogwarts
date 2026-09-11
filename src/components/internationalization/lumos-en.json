@@ -64,6 +64,18 @@
     },
     "courses": {
       "title": "All Courses",
+      "heroTitle": "Explore Courses",
+      "heroTagline": "One for every grade.",
+      "shelves": {
+        "recommended": "Recommended",
+        "continueLearning": "Continue learning",
+        "resume": "Resume",
+        "progress": "{done} of {total} min",
+        "more": "More",
+        "startHere": "Start here",
+        "start": "Start",
+        "lessons": "{n} lessons"
+      },
       "description": "Browse our comprehensive course catalog",
       "searchPlaceholder": "Search courses...",
       "filterByCategory": "Filter by category",
@@ -74,7 +86,21 @@
       "free": "Free",
       "enrolled": "Enrolled",
       "enroll": "Enroll Now",
-      "viewDetails": "View Details"
+      "viewDetails": "View Details",
+      "gradeOrdinals": [
+        "First",
+        "Second",
+        "Third",
+        "Fourth",
+        "Fifth",
+        "Sixth",
+        "Seventh",
+        "Eighth",
+        "Ninth",
+        "Tenth",
+        "Eleventh",
+        "Twelfth"
+      ]
     },
     "course": {
       "title": "Course Details",

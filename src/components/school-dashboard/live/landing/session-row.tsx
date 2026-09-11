@@ -22,9 +22,15 @@ import { rowContext } from "./viewer"
  * `margin-inline: -8px` with a 16px row-gap and NO column gap — the space
  * between art and copy is the two columns' own padding (12px + 8px) — 4px of
  * padding all round below md, and from md `padding-block: 8px` with the start
- * side flush and 3px (lead) / 2px (small) on the end. The lead row is
- * middle-aligned and drops to top below md; the small rows are top-aligned at
- * every width.
+ * side flush and 3px (lead) / 2px (brief) on the end.
+ *
+ * ALIGNMENT departs from the reference for the brief rows, deliberately. The
+ * lead is middle-aligned from md and drops to top below it, as theirs does —
+ * its five stacked rows are taller than the 120px art, so centring them would
+ * leave the picture floating in the middle of a tall column. A brief row is
+ * two text rows against that same square and is always the SHORTER of the two,
+ * so top-aligning it hung the copy off the picture's top edge with ~40px of
+ * air under it. Those rows are now centred at every width.
  *
  * The art column is 104px basis on mobile — an 80px square once its 12px
  * padding is off — and 144px from md, giving 120. One size for both weights;
@@ -71,7 +77,7 @@ export function LandingSessionRow({
         "group hover:bg-muted/50 -mx-2 flex flex-wrap gap-y-4 rounded-[8px] p-1 transition-colors md:py-2 md:ps-0",
         isLead
           ? "items-start md:items-center md:pe-[3px]"
-          : "items-start md:pe-[2px]"
+          : "items-center md:pe-[2px]"
       )}
     >
       {/* ONE art size for every row, lead included. The reference gives its
@@ -140,8 +146,16 @@ export function LandingSessionRow({
           />
         ) : (
           <>
+            {/* TWO lines for the chapter, one for the lesson. A Sudanese
+                chapter title is a whole sentence — "المجال التثاقلي والحركة
+                الدائرية وحركة الكواكب والأقمار الاصطناعية" — and clamped to a
+                single line it ended on an ellipsis before naming the second
+                of its four topics. The lesson under it is short by
+                construction, so it stays at one. */}
             {session.chapterName ? (
-              <p className="mb-1 line-clamp-1 text-sm">{session.chapterName}</p>
+              <p className="mb-1 line-clamp-2 text-sm md:max-w-[70%]">
+                {session.chapterName}
+              </p>
             ) : null}
 
             {session.lessonName ? (

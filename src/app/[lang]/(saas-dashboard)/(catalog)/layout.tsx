@@ -1,10 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { db } from "@/lib/db"
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getCatalogPendingCounts } from "@/components/saas-dashboard/catalog/pending-counts"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 interface Props {
@@ -17,28 +17,10 @@ export default async function CatalogLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const n = dictionary?.saas?.catalog?.navigation
 
-  // Get pending counts for badges
-  const [
-    questionPending,
-    bookPending,
-    materialPending,
-    assignmentPending,
-    videoPending,
-    proposalPending,
-  ] = await Promise.all([
-    db.question.count({ where: { approvalStatus: "PENDING" } }),
-    db.book.count({ where: { approvalStatus: "PENDING" } }),
-    db.material.count({ where: { approvalStatus: "PENDING" } }),
-    db.assignment.count({ where: { approvalStatus: "PENDING" } }),
-    db.video.count({ where: { approvalStatus: "PENDING" } }),
-    db.proposal.count({ where: { status: "SUBMITTED" } }),
-  ])
-  const pendingCount =
-    questionPending +
-    bookPending +
-    materialPending +
-    assignmentPending +
-    videoPending
+  // Pending counts for the tab badges. Shared with the outer dashboard layout
+  // (which badges the sidebar) — React cache() dedupes them per request.
+  const { totalApprovalsPending: pendingCount, proposalPending } =
+    await getCatalogPendingCounts()
 
   const approvalsLabel = n?.approvals || "Approvals"
   const proposalsLabel = n?.proposals || "Proposals"

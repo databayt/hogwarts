@@ -51,8 +51,10 @@ export function toE164(
     if (n.startsWith("0") && cc) n = `+${cc}${n.slice(1)}`
     else if (cc && n.length >= 8 && n.length <= 10) n = `+${cc}${n}`
     else if (/^(249|20|966|971|974)\d{7,}$/.test(n)) n = `+${n}`
-    else if (/^09\d{8}$/.test(n)) n = `+249${n.slice(1)}` // Sudanese local mobile form
-    else if (/^05\d{8}$/.test(n)) n = `+966${n.slice(1)}` // Saudi local mobile form
+    else if (/^09\d{8}$/.test(n))
+      n = `+249${n.slice(1)}` // Sudanese local mobile form
+    else if (/^05\d{8}$/.test(n))
+      n = `+966${n.slice(1)}` // Saudi local mobile form
     else return null
   }
   return n.length >= 11 && n.length <= 16 ? n : null

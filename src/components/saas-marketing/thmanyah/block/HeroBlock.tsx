@@ -78,7 +78,7 @@ const APPEAR_SUB = {
    visitor's own root after mount. */
 const DEMO_FALLBACK_HREF = `${
   process.env.NEXT_PUBLIC_DEMO_URL || tenantOriginForHost(null, "demo")
-}/ar`
+}/ar/dashboard`
 
 export function HeroBlock() {
   return (
@@ -174,6 +174,7 @@ export function HeroBlock() {
           <DemoLink
             fallbackHref={DEMO_FALLBACK_HREF}
             lang="ar"
+            path="/dashboard"
             className="inline-flex h-10 flex-row items-center justify-center gap-[10px] rounded-[20px] bg-black px-4 no-underline"
           >
             <p

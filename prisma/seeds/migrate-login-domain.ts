@@ -73,7 +73,9 @@ async function emailColumns(): Promise<Target[]> {
 }
 
 /** Rows that would collide with an address that already exists on the target domain. */
-async function userCollisions(): Promise<{ email: string; schoolId: string | null }[]> {
+async function userCollisions(): Promise<
+  { email: string; schoolId: string | null }[]
+> {
   return prisma.$queryRawUnsafe(`
     SELECT u.email, u."schoolId"
     FROM "User" u
@@ -95,8 +97,11 @@ async function main() {
 
   const collisions = await userCollisions()
   if (collisions.length > 0) {
-    console.error(`Refusing to run: ${collisions.length} User row(s) would collide on (email, schoolId):`)
-    for (const c of collisions) console.error(`  ${c.email}  school=${c.schoolId ?? "—"}`)
+    console.error(
+      `Refusing to run: ${collisions.length} User row(s) would collide on (email, schoolId):`
+    )
+    for (const c of collisions)
+      console.error(`  ${c.email}  school=${c.schoolId ?? "—"}`)
     process.exitCode = 1
     return
   }
@@ -122,7 +127,8 @@ async function main() {
   }
 
   console.log(`\n${total} row(s) ${APPLY ? "updated" : "would be updated"}.`)
-  if (!APPLY && total > 0) console.log("Re-run with --apply to write. Reverse with --apply --revert.")
+  if (!APPLY && total > 0)
+    console.log("Re-run with --apply to write. Reverse with --apply --revert.")
 }
 
 main()

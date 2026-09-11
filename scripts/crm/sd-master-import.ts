@@ -42,36 +42,58 @@
  *   TWENTY_API_KEY=$(security find-generic-password -s databayt-twenty -a hogwarts -w) \
  *     npx tsx scripts/crm/sd-master-import.ts [--apply]
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 
-import { normalizePhone } from './normalize-contacts';
-import { twentyClient } from './twenty-rest';
+import { normalizePhone } from "./normalize-contacts"
+import { twentyClient } from "./twenty-rest"
 
-const APPLY = process.argv.includes('--apply');
-const DATA = 'scripts/crm/.data';
-const MASTER = `${process.env.HOME}/twenty/scripts/sudan-schools-scraper/data/sudan_schools_master.json`;
+const APPLY = process.argv.includes("--apply")
+const DATA = "scripts/crm/.data"
+const MASTER = `${process.env.HOME}/twenty/scripts/sudan-schools-scraper/data/sudan_schools_master.json`
 
 interface Rec {
-  name?: string; nameAr?: string; nameEn?: string;
-  facebookUrl?: string; website?: string;
-  primaryPhone?: string; phoneNumbers?: string; whatsapp?: string;
-  primaryEmail?: string; emails?: string;
-  state?: string; locality?: string; category?: string; gender?: string;
-  lat?: number | null; lon?: number | null; followerCount?: number; source?: string;
+  name?: string
+  nameAr?: string
+  nameEn?: string
+  facebookUrl?: string
+  website?: string
+  primaryPhone?: string
+  phoneNumbers?: string
+  whatsapp?: string
+  primaryEmail?: string
+  emails?: string
+  state?: string
+  locality?: string
+  category?: string
+  gender?: string
+  lat?: number | null
+  lon?: number | null
+  followerCount?: number
+  source?: string
 }
 
-interface Link { primaryLinkUrl?: string | null }
+interface Link {
+  primaryLinkUrl?: string | null
+}
 interface Company {
-  id: string; name?: string | null; country?: string | null;
-  schoolPhone?: string | null; principalContact?: string | null;
-  gender?: string | null; operator?: string | null;
-  originCountry?: string | null; enrichmentNotes?: string | null;
-  contactVerified?: boolean | null;
-  facebook?: Link | null; sourceUrl?: Link | null; domainName?: Link | null;
+  id: string
+  name?: string | null
+  country?: string | null
+  schoolPhone?: string | null
+  principalContact?: string | null
+  gender?: string | null
+  operator?: string | null
+  originCountry?: string | null
+  enrichmentNotes?: string | null
+  contactVerified?: boolean | null
+  facebook?: Link | null
+  sourceUrl?: Link | null
+  domainName?: Link | null
 }
 
-const txt = (s: string | null | undefined): string => (s ?? '').trim();
-const linkUrl = (l: Link | null | undefined): string => (l?.primaryLinkUrl ?? '').trim();
+const txt = (s: string | null | undefined): string => (s ?? "").trim()
+const linkUrl = (l: Link | null | undefined): string =>
+  (l?.primaryLinkUrl ?? "").trim()
 
 /**
  * Pages that are not a Sudanese school. Matched on the page slug and the name,
@@ -79,10 +101,10 @@ const linkUrl = (l: Link | null | undefined): string => (l?.primaryLinkUrl ?? ''
  * keyword dork.
  */
 const NOT_A_SCHOOL =
-  /sudania|alhadath|unicef|unhcr|\bngo\b|news|akhbar|اخبار|أخبار|قناة|تلفزيون|صحيفة|وزارة|ministry|university|جامعة|\.iq\b|aljazeera|كلية/i;
+  /sudania|alhadath|unicef|unhcr|\bngo\b|news|akhbar|اخبار|أخبار|قناة|تلفزيون|صحيفة|وزارة|ministry|university|جامعة|\.iq\b|aljazeera|كلية/i
 
 const isUsablePage = (u: string): boolean =>
-  /facebook\.com/i.test(u) && !/facebook\.com\/groups\//i.test(u);
+  /facebook\.com/i.test(u) && !/facebook\.com\/groups\//i.test(u)
 
 /**
  * `https://www.facebook.com/p/Name-61552607841978` → a stable-ish slug.
@@ -96,60 +118,81 @@ const isUsablePage = (u: string): boolean =>
  * note on every run, which is how it was caught.
  */
 const pageSlug = (u: string): string => {
-  const clean = u.replace(/\/+$/, '');
-  const id = /facebook\.com\/profile\.php\?id=(\d+)/i.exec(clean);
-  if (id) return `profile-${id[1]}`;
-  const m = /facebook\.com\/(?:p\/|pg\/|people\/)?([^/?#]+)/i.exec(clean);
-  return m ? decodeURIComponent(m[1]).slice(0, 60) : '';
-};
+  const clean = u.replace(/\/+$/, "")
+  const id = /facebook\.com\/profile\.php\?id=(\d+)/i.exec(clean)
+  if (id) return `profile-${id[1]}`
+  const m = /facebook\.com\/(?:p\/|pg\/|people\/)?([^/?#]+)/i.exec(clean)
+  return m ? decodeURIComponent(m[1]).slice(0, 60) : ""
+}
 
-const OSM_RE = /(node|way|relation)[/_](\d+)/i;
+const OSM_RE = /(node|way|relation)[/_](\d+)/i
 
 async function main(): Promise<void> {
   if (!existsSync(MASTER)) {
-    console.error(`master dataset not found at ${MASTER}`);
-    process.exit(1);
+    console.error(`master dataset not found at ${MASTER}`)
+    process.exit(1)
   }
-  const recs = JSON.parse(readFileSync(MASTER, 'utf8')) as Rec[];
-  console.log(`Read ${recs.length} records from the old scraper's master dataset`);
+  const recs = JSON.parse(readFileSync(MASTER, "utf8")) as Rec[]
+  console.log(
+    `Read ${recs.length} records from the old scraper's master dataset`
+  )
 
-  const { rest, all } = twentyClient();
-  console.log('Reading companies from Twenty …');
-  const live = (await all('companies')) as unknown as Company[];
-  console.log(`  ${live.length} existing rows`);
+  const { rest, all } = twentyClient()
+  console.log("Reading companies from Twenty …")
+  const live = (await all("companies")) as unknown as Company[]
+  console.log(`  ${live.length} existing rows`)
 
   // Index the CRM by OSM element and by Facebook page, the two join keys.
-  const byOsm = new Map<string, Company>();
-  const byFb = new Map<string, Company>();
+  const byOsm = new Map<string, Company>()
+  const byFb = new Map<string, Company>()
   for (const c of live) {
-    const m = OSM_RE.exec(linkUrl(c.sourceUrl));
-    if (m) byOsm.set(`${m[1].toLowerCase()}/${m[2]}`, c);
-    const f = linkUrl(c.facebook);
-    if (f) byFb.set(pageSlug(f).toLowerCase(), c);
+    const m = OSM_RE.exec(linkUrl(c.sourceUrl))
+    if (m) byOsm.set(`${m[1].toLowerCase()}/${m[2]}`, c)
+    const f = linkUrl(c.facebook)
+    if (f) byFb.set(pageSlug(f).toLowerCase(), c)
   }
 
-  const updates: { id: string; name: string; patch: Record<string, unknown>; gained: string[] }[] = [];
-  const rejected: Record<string, number> = {};
-  const unmatched: string[] = [];
-  const newBySlug = new Map<string, Record<string, unknown>>();
-  const existingRefs = new Set(live.map((c) => txt((c as { sourceReference?: string }).sourceReference)));
-  const stats: Record<string, number> = {};
-  const bump = (k: string): void => { stats[k] = (stats[k] ?? 0) + 1; };
-  const reject = (k: string): void => { rejected[k] = (rejected[k] ?? 0) + 1; };
-  const today = new Date().toISOString().slice(0, 10);
+  const updates: {
+    id: string
+    name: string
+    patch: Record<string, unknown>
+    gained: string[]
+  }[] = []
+  const rejected: Record<string, number> = {}
+  const unmatched: string[] = []
+  const newBySlug = new Map<string, Record<string, unknown>>()
+  const existingRefs = new Set(
+    live.map((c) => txt((c as { sourceReference?: string }).sourceReference))
+  )
+  const stats: Record<string, number> = {}
+  const bump = (k: string): void => {
+    stats[k] = (stats[k] ?? 0) + 1
+  }
+  const reject = (k: string): void => {
+    rejected[k] = (rejected[k] ?? 0) + 1
+  }
+  const today = new Date().toISOString().slice(0, 10)
 
   for (const r of recs) {
-    const name = txt(r.name) || txt(r.nameAr) || txt(r.nameEn);
-    const fb = txt(r.facebookUrl);
+    const name = txt(r.name) || txt(r.nameAr) || txt(r.nameEn)
+    const fb = txt(r.facebookUrl)
 
-    if (NOT_A_SCHOOL.test(name) || (fb && NOT_A_SCHOOL.test(fb))) { reject('not a school'); continue; }
-    if (fb && !isUsablePage(fb)) { reject('facebook group, not a page'); continue; }
+    if (NOT_A_SCHOOL.test(name) || (fb && NOT_A_SCHOOL.test(fb))) {
+      reject("not a school")
+      continue
+    }
+    if (fb && !isUsablePage(fb)) {
+      reject("facebook group, not a page")
+      continue
+    }
 
     // Which CRM row is this?
-    let match: Company | undefined;
-    const osm = OSM_RE.exec(txt(r.source) + ' ' + txt((r as { id?: string }).id ?? ''));
-    if (osm) match = byOsm.get(`${osm[1].toLowerCase()}/${osm[2]}`);
-    if (!match && fb) match = byFb.get(pageSlug(fb).toLowerCase());
+    let match: Company | undefined
+    const osm = OSM_RE.exec(
+      txt(r.source) + " " + txt((r as { id?: string }).id ?? "")
+    )
+    if (osm) match = byOsm.get(`${osm[1].toLowerCase()}/${osm[2]}`)
+    if (!match && fb) match = byFb.get(pageSlug(fb).toLowerCase())
     if (!match) {
       /**
        * A Facebook-discovered school with no CRM row is not a failure -- it is a
@@ -162,139 +205,249 @@ async function main(): Promise<void> {
        * built from OSM, so a miss there means the element was filtered out at
        * import. Those are counted, not created.
        */
-      if (!fb) { reject('no CRM row and no Facebook page'); continue; }
-      const slug = pageSlug(fb).toLowerCase();
-      if (!slug || newBySlug.has(slug)) { reject('duplicate Facebook page'); continue; }
-      const raws2 = [txt(r.primaryPhone), ...txt(r.phoneNumbers).split(/[;,|]/)].map((x) => x.trim()).filter(Boolean);
-      let ph: { e164: string; reach: string } | null = null;
-      for (const raw of raws2) {
-        const n = normalizePhone(raw, 'SD');
-        if (!n.e164) { reject(`bad phone: ${n.why}`); continue; }
-        if (!ph || (ph.reach !== 'MOBILE' && n.reach === 'MOBILE')) ph = { e164: n.e164, reach: n.reach };
+      if (!fb) {
+        reject("no CRM row and no Facebook page")
+        continue
       }
-      const em = txt(r.primaryEmail) || txt(r.emails).split(/[;,|]/)[0]?.trim();
+      const slug = pageSlug(fb).toLowerCase()
+      if (!slug || newBySlug.has(slug)) {
+        reject("duplicate Facebook page")
+        continue
+      }
+      const raws2 = [txt(r.primaryPhone), ...txt(r.phoneNumbers).split(/[;,|]/)]
+        .map((x) => x.trim())
+        .filter(Boolean)
+      let ph: { e164: string; reach: string } | null = null
+      for (const raw of raws2) {
+        const n = normalizePhone(raw, "SD")
+        if (!n.e164) {
+          reject(`bad phone: ${n.why}`)
+          continue
+        }
+        if (!ph || (ph.reach !== "MOBILE" && n.reach === "MOBILE"))
+          ph = { e164: n.e164, reach: n.reach }
+      }
+      const em = txt(r.primaryEmail) || txt(r.emails).split(/[;,|]/)[0]?.trim()
       const body: Record<string, unknown> = {
         name,
-        country: 'SD',
-        originCountry: 'SD',
+        country: "SD",
+        originCountry: "SD",
         // A Facebook page proves the school existed when the page was made, not
         // that it is open now. Nothing here dates it, so it stays UNVERIFIED.
-        operationalStatus: 'UNVERIFIED',
-        source: 'SOCIAL',
-        stage: 'COLD',
-        leadStatus: 'UNREVIEWED',
-        tier: ph?.reach === 'MOBILE' ? 'B' : 'C',
+        operationalStatus: "UNVERIFIED",
+        source: "SOCIAL",
+        stage: "COLD",
+        leadStatus: "UNREVIEWED",
+        tier: ph?.reach === "MOBILE" ? "B" : "C",
         sourceReference: `fb:${slug}`,
-        sourceUrl: { primaryLinkUrl: fb, primaryLinkLabel: 'Facebook page (dork discovery)', secondaryLinks: [] },
-        facebook: { primaryLinkUrl: fb, primaryLinkLabel: '', secondaryLinks: [] },
-      };
-      if (ph) body.schoolPhone = ph.e164;
-      if (em && /@/.test(em)) body.principalContact = em;
-      const g2 = txt(r.gender);
-      if (g2 && !/غير محدد|unspecified/i.test(g2)) body.gender = g2;
-      if (r.lat != null && r.lon != null) body.address = { addressLat: r.lat, addressLng: r.lon, addressCountry: 'SD' };
-      newBySlug.set(slug, body);
-      unmatched.push(`${name.slice(0, 50)} ${fb.slice(0, 40)}`);
-      continue;
+        sourceUrl: {
+          primaryLinkUrl: fb,
+          primaryLinkLabel: "Facebook page (dork discovery)",
+          secondaryLinks: [],
+        },
+        facebook: {
+          primaryLinkUrl: fb,
+          primaryLinkLabel: "",
+          secondaryLinks: [],
+        },
+      }
+      if (ph) body.schoolPhone = ph.e164
+      if (em && /@/.test(em)) body.principalContact = em
+      const g2 = txt(r.gender)
+      if (g2 && !/غير محدد|unspecified/i.test(g2)) body.gender = g2
+      if (r.lat != null && r.lon != null)
+        body.address = {
+          addressLat: r.lat,
+          addressLng: r.lon,
+          addressCountry: "SD",
+        }
+      newBySlug.set(slug, body)
+      unmatched.push(`${name.slice(0, 50)} ${fb.slice(0, 40)}`)
+      continue
     }
 
-    const patch: Record<string, unknown> = {};
-    const gained: string[] = [];
-    const conflicts: string[] = [];
+    const patch: Record<string, unknown> = {}
+    const gained: string[] = []
+    const conflicts: string[] = []
 
-    const offer = (field: string, liveVal: string, value: string, write: () => void, isContact = false): void => {
-      if (!value) return;
-      if (isContact && match!.contactVerified) { bump(`skippedVerified.${field}`); return; }
-      if (!liveVal) { write(); gained.push(field); bump(`filled.${field}`); return; }
-      if (liveVal === value) { bump(`alreadyCorrect.${field}`); return; }
-      if ((match!.enrichmentNotes ?? '').includes(`sdmaster:${field}`)) { bump(`alreadyNoted.${field}`); return; }
-      conflicts.push(`${today} sdmaster:${field} — found "${value}", CRM has "${liveVal}", not overwritten`);
-      bump(`conflict.${field}`);
-    };
+    const offer = (
+      field: string,
+      liveVal: string,
+      value: string,
+      write: () => void,
+      isContact = false
+    ): void => {
+      if (!value) return
+      if (isContact && match!.contactVerified) {
+        bump(`skippedVerified.${field}`)
+        return
+      }
+      if (!liveVal) {
+        write()
+        gained.push(field)
+        bump(`filled.${field}`)
+        return
+      }
+      if (liveVal === value) {
+        bump(`alreadyCorrect.${field}`)
+        return
+      }
+      if ((match!.enrichmentNotes ?? "").includes(`sdmaster:${field}`)) {
+        bump(`alreadyNoted.${field}`)
+        return
+      }
+      conflicts.push(
+        `${today} sdmaster:${field} — found "${value}", CRM has "${liveVal}", not overwritten`
+      )
+      bump(`conflict.${field}`)
+    }
 
     // Phones: every candidate through normalizePhone, which is what rejects the
     // Facebook page IDs the scraper mistook for numbers.
-    const raws = [txt(r.primaryPhone), ...txt(r.phoneNumbers).split(/[;,|]/)].map((x) => x.trim()).filter(Boolean);
-    let best: { e164: string; reach: string } | null = null;
+    const raws = [txt(r.primaryPhone), ...txt(r.phoneNumbers).split(/[;,|]/)]
+      .map((x) => x.trim())
+      .filter(Boolean)
+    let best: { e164: string; reach: string } | null = null
     for (const raw of raws) {
-      const n = normalizePhone(raw, (match.country ?? 'SD').toUpperCase());
-      if (!n.e164) { reject(`bad phone: ${n.why}`); continue; }
-      if (!best || (best.reach !== 'MOBILE' && n.reach === 'MOBILE')) best = { e164: n.e164, reach: n.reach };
+      const n = normalizePhone(raw, (match.country ?? "SD").toUpperCase())
+      if (!n.e164) {
+        reject(`bad phone: ${n.why}`)
+        continue
+      }
+      if (!best || (best.reach !== "MOBILE" && n.reach === "MOBILE"))
+        best = { e164: n.e164, reach: n.reach }
     }
-    if (best) offer('phone', txt(match.schoolPhone), best.e164, () => { patch.schoolPhone = best!.e164; }, true);
+    if (best)
+      offer(
+        "phone",
+        txt(match.schoolPhone),
+        best.e164,
+        () => {
+          patch.schoolPhone = best!.e164
+        },
+        true
+      )
 
-    const email = txt(r.primaryEmail) || txt(r.emails).split(/[;,|]/)[0]?.trim();
+    const email = txt(r.primaryEmail) || txt(r.emails).split(/[;,|]/)[0]?.trim()
     if (email && /@/.test(email)) {
-      offer('email', txt(match.principalContact), email, () => { patch.principalContact = email; }, true);
+      offer(
+        "email",
+        txt(match.principalContact),
+        email,
+        () => {
+          patch.principalContact = email
+        },
+        true
+      )
     }
     if (fb) {
-      offer('facebook', linkUrl(match.facebook), fb, () => {
-        patch.facebook = { primaryLinkUrl: fb, primaryLinkLabel: '' };
-      });
+      offer("facebook", linkUrl(match.facebook), fb, () => {
+        patch.facebook = { primaryLinkUrl: fb, primaryLinkLabel: "" }
+      })
     }
-    const site = txt(r.website);
+    const site = txt(r.website)
     if (site) {
-      const url = /^https?:\/\//i.test(site) ? site : `https://${site}`;
-      offer('website', linkUrl(match.domainName), url, () => {
-        patch.domainName = { primaryLinkUrl: url, primaryLinkLabel: '' };
-      });
+      const url = /^https?:\/\//i.test(site) ? site : `https://${site}`
+      offer("website", linkUrl(match.domainName), url, () => {
+        patch.domainName = { primaryLinkUrl: url, primaryLinkLabel: "" }
+      })
     }
     // `gender` arrives bilingual ("بنين (Boys)") and "غير محدد" means unknown.
-    const g = txt(r.gender);
-    if (g && !/غير محدد|unspecified/i.test(g)) offer('gender', txt(match.gender), g, () => { patch.gender = g; });
+    const g = txt(r.gender)
+    if (g && !/غير محدد|unspecified/i.test(g))
+      offer("gender", txt(match.gender), g, () => {
+        patch.gender = g
+      })
 
-    if (conflicts.length) patch.enrichmentNotes = [txt(match.enrichmentNotes), ...conflicts].filter(Boolean).join('\n');
-    if (!Object.keys(patch).length) continue;
-    patch.enrichedAt = new Date().toISOString();
-    updates.push({ id: match.id, name, patch, gained });
+    if (conflicts.length)
+      patch.enrichmentNotes = [txt(match.enrichmentNotes), ...conflicts]
+        .filter(Boolean)
+        .join("\n")
+    if (!Object.keys(patch).length) continue
+    patch.enrichedAt = new Date().toISOString()
+    updates.push({ id: match.id, name, patch, gained })
   }
 
   // A page already imported on a previous run must not be created again.
   for (const k of [...newBySlug.keys()]) {
-    if (existingRefs.has(`fb:${k}`)) { newBySlug.delete(k); bump('alreadyImported'); }
+    if (existingRefs.has(`fb:${k}`)) {
+      newBySlug.delete(k)
+      bump("alreadyImported")
+    }
   }
-  const creates = [...newBySlug.values()];
+  const creates = [...newBySlug.values()]
 
-  console.log(`\n── plan — ${updates.length} row(s) updated · ${creates.length} new school(s) created\n`);
-  console.log(`  new rows with a phone : ${creates.filter((c) => c.schoolPhone).length}`);
-  console.log(`  new rows with a coord : ${creates.filter((c) => c.address).length}`);
-  for (const [k, v] of Object.entries(stats).filter(([k]) => k.startsWith('filled.')).sort((a, b) => b[1] - a[1])) {
-    console.log(`  +${String(v).padStart(4)}  ${k.replace('filled.', '')}`);
+  console.log(
+    `\n── plan — ${updates.length} row(s) updated · ${creates.length} new school(s) created\n`
+  )
+  console.log(
+    `  new rows with a phone : ${creates.filter((c) => c.schoolPhone).length}`
+  )
+  console.log(
+    `  new rows with a coord : ${creates.filter((c) => c.address).length}`
+  )
+  for (const [k, v] of Object.entries(stats)
+    .filter(([k]) => k.startsWith("filled."))
+    .sort((a, b) => b[1] - a[1])) {
+    console.log(`  +${String(v).padStart(4)}  ${k.replace("filled.", "")}`)
   }
-  const conflicts = Object.entries(stats).filter(([k]) => k.startsWith('conflict.'));
+  const conflicts = Object.entries(stats).filter(([k]) =>
+    k.startsWith("conflict.")
+  )
   if (conflicts.length) {
-    console.log(`\n  conflicts (noted, never overwritten):`);
-    for (const [k, v] of conflicts) console.log(`    ${String(v).padStart(4)}  ${k.replace('conflict.', '')}`);
+    console.log(`\n  conflicts (noted, never overwritten):`)
+    for (const [k, v] of conflicts)
+      console.log(`    ${String(v).padStart(4)}  ${k.replace("conflict.", "")}`)
   }
-  console.log(`\n  rejected / dropped (nothing silent):`);
+  console.log(`\n  rejected / dropped (nothing silent):`)
   for (const [k, v] of Object.entries(rejected).sort((a, b) => b[1] - a[1])) {
-    console.log(`    ${String(v).padStart(4)}  ${k}`);
+    console.log(`    ${String(v).padStart(4)}  ${k}`)
   }
-  console.log(`\n  ${unmatched.length} record(s) had no CRM row to attach to — sample:`);
-  for (const u of unmatched.slice(0, 8)) console.log(`      ${u}`);
+  console.log(
+    `\n  ${unmatched.length} record(s) had no CRM row to attach to — sample:`
+  )
+  for (const u of unmatched.slice(0, 8)) console.log(`      ${u}`)
 
-  mkdirSync(DATA, { recursive: true });
-  writeFileSync(`${DATA}/sd-master-plan.json`, JSON.stringify({ updates, creates, rejected, unmatched }, null, 2));
-  console.log(`\n  → ${DATA}/sd-master-plan.json`);
+  mkdirSync(DATA, { recursive: true })
+  writeFileSync(
+    `${DATA}/sd-master-plan.json`,
+    JSON.stringify({ updates, creates, rejected, unmatched }, null, 2)
+  )
+  console.log(`\n  → ${DATA}/sd-master-plan.json`)
 
-  if (!APPLY) { console.log(`\n  DRY RUN — nothing written. Re-run with --apply.\n`); return; }
+  if (!APPLY) {
+    console.log(`\n  DRY RUN — nothing written. Re-run with --apply.\n`)
+    return
+  }
 
-  let ok = 0;
-  const fails: string[] = [];
+  let ok = 0
+  const fails: string[] = []
   for (const c of creates) {
-    try { await rest('POST', 'companies', c); ok++; }
-    catch (e) { fails.push(`create ${String(c.name)}: ${e instanceof Error ? e.message : e}`); }
+    try {
+      await rest("POST", "companies", c)
+      ok++
+    } catch (e) {
+      fails.push(
+        `create ${String(c.name)}: ${e instanceof Error ? e.message : e}`
+      )
+    }
   }
   for (const u of updates) {
-    try { await rest('PATCH', `companies/${u.id}`, u.patch); ok++; }
-    catch (e) { fails.push(`${u.name}: ${e instanceof Error ? e.message : e}`); }
+    try {
+      await rest("PATCH", `companies/${u.id}`, u.patch)
+      ok++
+    } catch (e) {
+      fails.push(`${u.name}: ${e instanceof Error ? e.message : e}`)
+    }
   }
-  console.log(`\n  ${ok}/${creates.length + updates.length} written (creates + updates).`);
-  for (const f of fails.slice(0, 10)) console.log(`    ! ${f}`);
-  console.log(`\n  Re-run without --apply: the plan must be 0.\n`);
+  console.log(
+    `\n  ${ok}/${creates.length + updates.length} written (creates + updates).`
+  )
+  for (const f of fails.slice(0, 10)) console.log(`    ! ${f}`)
+  console.log(`\n  Re-run without --apply: the plan must be 0.\n`)
 }
 
 main().catch((e) => {
-  console.error(e instanceof Error ? e.message : e);
-  process.exit(1);
-});
+  console.error(e instanceof Error ? e.message : e)
+  process.exit(1)
+})

@@ -13,7 +13,7 @@ The acceptance script lives in [hogwarts#377](https://github.com/databayt/hogwar
 
 ### The full journey
 
-The **student journey** (browse → enroll → watch → complete) and the **contributor journey** (upload → review → live → owner control) connect where an approved video lands in a lesson.
+The **student journey** (browse → enroll → watch → complete) and the **contributor journey** (upload → platform review → live → owner control) connect where an approved video lands in a lesson. There is one review pipeline: a school uploads, the platform decides, and the school is notified when the video goes live.
 
 <Mermaid
   chart={`flowchart TD
@@ -30,13 +30,10 @@ The **student journey** (browse → enroll → watch → complete) and the **con
         G --> J["✅ Auto-complete + quiz → gradebook"]
     end
     subgraph CJ["👩‍🏫 Contributor journey"]
-        K["👩‍🏫 Teacher/Admin uploads a video<br/>(URL or file) + picks audience & price"] --> L["⏳ Pending review<br/>school admins notified"]
-        L --> M{"Audience?"}
-        M -->|"School / Private"| N["🏫 School admin approves"]
-        M -->|"Public / Paid"| O["🌍 Platform team approves"]
-        N --> P["🎉 Live in the lesson, credited to uploader"]
-        O --> P
-        P --> Q["Owner keeps control:<br/>visibility · revoke · replace · delete"]
+        K["👩‍🏫 Teacher/Admin uploads a video<br/>(URL or file) + picks audience & price"] --> L["⏳ Pending review<br/>🔔 platform team notified"]
+        L --> O["🌍 Platform team approves<br/>(any audience)"]
+        O --> P["🎉 Live in the lesson, credited to uploader"]
+        P --> Q["🔔 School notified · owner keeps control:<br/>visibility · revoke · replace · delete"]
     end
     P -.-> F`}
 />
@@ -45,7 +42,7 @@ Three invariants hold everywhere:
 
 1. **An unpaid-for video never has a playable link.** The lock icon is cosmetic; the real paywall is that the server emits no video URL until the purchase exists.
 2. **The player is never an empty black box.** No video → the marketing story clip plays — but the fallback never replaces a paid video's lock screen, and never writes lesson progress.
-3. **Schools never see each other's private data.** School-visibility videos stay inside their school; only content approved as Public/Paid — by the platform desk, not a school admin — crosses schools, always credited to the uploader.
+3. **Schools never see each other's private data.** School-visibility videos stay inside their school; only content approved as Public/Paid crosses schools, always credited to the uploader. Every video — whatever its audience — is approved by the platform desk, never by a school admin.
 
 ### Discover & enroll
 
@@ -62,6 +59,8 @@ Three invariants hold everywhere:
     Free --> Dash["Course appears in 'My learning' dashboard"]
     OK --> Dash`}
 />
+
+The catalog page opens as a browse view rather than a wall of cards. First, **where the learner left off** — a single card carrying the subject, its grade, the chapter, the lesson and the minutes watched, in the same shape the live-classes page gives the class that matters right now; it is simply absent for anyone who has started nothing. Then **Recommended for you**, a scrolling row of the student's own grade, minus whatever is already on that card. Then **More courses**, the rest of the catalog as a grid with the grades nearest the student's first, revealed a page at a time. Recommendations exist only for students, because a student's grade is the one thing this catalog knows about a person; every other role goes straight to the grid. Picking a grade badge, or searching, replaces all of it with the plain filtered grid.
 
 The catalog shows only published subjects the school has selected; content a school hid via override never appears for its students. Free courses enroll in one click with no payment UI; paid courses activate only after the Stripe webhook confirms. Free-course lessons are open even without enrolling — paid-course lessons are blocked for non-enrolled students, including by direct link.
 
@@ -83,6 +82,8 @@ Two ways in, on the same bar. **Explore** opens a shelf of six real courses with
     Prog --> Endd["Video ends → lesson auto-completes<br/>→ Up-next countdown to next lesson"]
     Endd --> Quiz["📝 Practice quiz → score lands in gradebook"]`}
 />
+
+Pressing Play opens the video fullscreen and starts it there, and leaving fullscreen — the control, the `f` key, Escape — puts the lesson page back exactly as it was, at the same address, with the poster and its resume pill. On a device that will not grant a real fullscreen (iOS Safari), the player fills the screen itself rather than handing the bare video to the system, so the forensic watermark stays on the picture.
 
 A lesson with no videos — or one whose file is dead or undecodable — plays the story fallback clip instead of a black screen. Fallback playback records no progress and never auto-completes (the manual "Mark as Complete" still works). Real videos resume where the student left off, auto-complete on finish, and offer up-next. With multiple instructors, chips switch the player; the school's preferred instructor plays by default, instructors the school has disabled never appear at all, and every video credits its uploader.
 
@@ -117,22 +118,18 @@ Questions live in the platform catalog and attach to a lesson. A school gets the
     S3 --> P["⏳ Pending review — school admins notified,<br/>visible in My Videos"]`}
 />
 
-Teachers, admins, and developers contribute through the same three-step dialog. Step one walks the catalog's own hierarchy rather than listing it flat, the same way the course catalog does: numbered grade buttons with that grade's subjects beneath them, then the chapters and lessons inside the subject you pick, with a search box for the last stretch. Grade comes first because a subject is defined per grade, so "Mathematics" means nothing on its own. Only what the school actually teaches is on offer — content the school has hidden from its LMS never appears — names read in your own language, picking a lesson moves you straight to the next step, and lessons come back a page at a time. Direct uploads go straight to storage with a progress bar — click to choose or drag the file in, and the file name becomes the title if you haven't typed one; a link that isn't a video is flagged right on the field; wrong types, oversized files, and a full storage quota are refused before any bytes move, and an uploaded-but-unsubmitted file cleans itself up when the dialog is abandoned. Quota counts the file's real size on storage, not what the client claims. Every submission lands as Pending — no role skips review — and the school's other admins are notified.
+Teachers, admins, and developers contribute through the same three-step dialog. Step one walks the catalog's own hierarchy rather than listing it flat, the same way the course catalog does: numbered grade buttons with that grade's subjects beneath them, then the chapters and lessons inside the subject you pick, with a search box for the last stretch. Grade comes first because a subject is defined per grade, so "Mathematics" means nothing on its own. Only what the school actually teaches is on offer — content the school has hidden from its LMS never appears — names read in your own language, picking a lesson moves you straight to the next step, and lessons come back a page at a time. Direct uploads go straight to storage with a progress bar — click to choose or drag the file in, and the file name becomes the title if you haven't typed one; a link that isn't a video is flagged right on the field; wrong types, oversized files, and a full storage quota are refused before any bytes move, and an uploaded-but-unsubmitted file cleans itself up when the dialog is abandoned. Quota counts the file's real size on storage, not what the client claims. Every submission lands as Pending — no role skips review — and the platform team is notified, with the requesting school named in the notification. The school's other admins get an informational copy.
 
 ### Review & publish
 
 <Mermaid
   chart={`flowchart TD
-    P["⏳ Pending video"] --> Where{"Audience?"}
-    Where -->|"School / Private"| SA["🏫 School admin — Review tab"]
-    Where -->|"Public / Paid"| PT["🌍 Platform team — /catalog/approvals<br/>(may tweak audience/price before approving)"]
-    SA --> D1{"Decision"}
-    PT --> D2{"Decision"}
-    D1 -->|"Approve"| Live["🎉 Live in the lesson, uploader credited"]
-    D1 -->|"Reject + reason"| Rej["Contributor notified, sees the reason"]
-    D2 -->|"Approve"| Live
-    D2 -->|"Reject + reason"| Rej
-    Live --> N["🔔 Contributor notified"]`}
+    P["⏳ Pending video<br/>(any audience)"] --> PT["🌍 Platform team — /catalog/approvals<br/>🔔 notified, sees which school asked<br/>(may tweak audience/price before approving)"]
+    PT --> D{"Decision"}
+    D -->|"Approve"| Live["🎉 Live in the lesson, uploader credited"]
+    D -->|"Reject + reason"| Rej["Uploader + school admins notified,<br/>reason shown on the school's Review page"]
+    Live --> N["🔔 Uploader + school admins notified"]
+    SA["🏫 School's Review page<br/>(read-only status feed)"] -.watches.-> P`}
 />
 
 Two desks. The school admin's Review tab approves content that stays inside the school; anything Public or Paid belongs to the platform catalog desk, because it surfaces in every school — a school admin sees Approve disabled with an explanation (and the server refuses regardless), while Reject stays available. Both desks notify the contributor, and a rejection carries its reason into My Videos.

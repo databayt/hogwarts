@@ -104,7 +104,11 @@ export async function POST(req: Request) {
       },
     })
 
-    return NextResponse.json({ received: true, id: row.id, event: evt.eventName })
+    return NextResponse.json({
+      received: true,
+      id: row.id,
+      event: evt.eventName,
+    })
   } catch (error) {
     // Fail loudly. A 500 tells the operator something is wrong; a 200 here
     // would drop the event and report success, which is the bug this file was

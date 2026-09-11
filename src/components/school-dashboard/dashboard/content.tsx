@@ -10,11 +10,15 @@ import type { School } from "@/components/school-marketing/types"
 
 import { AccountantDashboard } from "./accountant"
 import { AdminDashboard } from "./admin"
+import { HomeBlock } from "./home-block"
+import { NextAction } from "./next-action"
 import { ParentDashboard } from "./parent"
+import { PhoneQuickActions } from "./phone-quick-actions"
 import { PrincipalDashboard } from "./principal"
 import { StaffDashboard } from "./staff"
 import { StudentDashboard } from "./student"
 import { TeacherDashboard } from "./teacher"
+import { TodayTimetable } from "./today-timetable"
 
 // Extended user type that includes the properties added by our auth callbacks
 type ExtendedUser = {
@@ -141,7 +145,19 @@ export default async function DashboardContent({
       }
     }
 
-    return <div className="space-y-6">{renderDashboard()}</div>
+    // On phones the dashboard opens with the Android home screen's top block —
+    // the calendar widget and the four-app cluster — then the one thing to do,
+    // then today's classes, then the four places the role goes most, above
+    // whatever its own dashboard renders. All four hide themselves from md up.
+    return (
+      <div className="space-y-6">
+        <HomeBlock locale={locale} />
+        <NextAction locale={locale} />
+        <TodayTimetable locale={locale} dictionary={dictionary} />
+        <PhoneQuickActions role={user.role || "USER"} locale={locale} />
+        {renderDashboard()}
+      </div>
+    )
   } catch (error) {
     // Catch-all error handler for any unexpected errors
     console.error("[DashboardContent] Unexpected error:", error)

@@ -145,7 +145,7 @@ export const platformSearchConfig: SearchConfig = {
       type: "navigation",
       href: "/subjects",
       icon: BookOpen,
-      roles: ["ADMIN", "STAFF", "TEACHER"],
+      roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT"],
       keywords: ["courses", "curriculum", "classes"],
       breadcrumb: ["Platform"],
     },

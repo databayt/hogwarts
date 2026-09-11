@@ -9,7 +9,7 @@ import { isRTL, type Locale } from "@/components/internationalization/config"
 
 import { TextbookArticle, type Opener } from "./article"
 import { BookReader } from "./book"
-import { fill, formatNumber } from "./format"
+import { fill, formatNumber, gradeLine, stageLine } from "./format"
 import { anchorToc, parseTwin } from "./parse"
 import {
   groupSections,
@@ -44,46 +44,6 @@ export interface TextbookSubject {
   /** ELEMENTARY | MIDDLE | HIGH — prints the stage line on the cover. */
   level: string | null
   chapters: DbChapter[]
-}
-
-/** The stage a textbook names on its board, from the subject's school level. */
-const STAGE_LABEL: Record<string, string> = {
-  ELEMENTARY: "stageElementary",
-  MIDDLE: "stageMiddle",
-  HIGH: "stageHigh",
-}
-/** The grade a book prints is its place inside its stage, not its place in
- *  the whole school: grade 12 is the third secondary year. */
-const STAGE_START: Record<string, number> = {
-  ELEMENTARY: 1,
-  MIDDLE: 7,
-  HIGH: 10,
-}
-const STAGE_SUFFIX: Record<string, string> = {
-  ELEMENTARY: "stageSuffixElementary",
-  MIDDLE: "stageSuffixMiddle",
-  HIGH: "stageSuffixHigh",
-}
-
-/** "الصف الثالث ثانوي" from grade 12 + HIGH; English keeps the plain number,
- *  because its template reads `{n}` and ignores the ordinal. */
-function gradeLine(
-  grade: number | null,
-  level: string | null,
-  labels: ReaderLabels,
-  lang: string
-): string | null {
-  if (grade == null) return null
-  const nth = grade - (level ? (STAGE_START[level] ?? 1) : 1) + 1
-  const template = labels.gradeOrdinal || labels.gradeN
-  if (!template) return null
-  return fill(template, {
-    ordinal: (nth >= 1 && nth <= 6 && labels[`ordinal${nth}`]) || "",
-    suffix: (level && labels[STAGE_SUFFIX[level]]) || "",
-    n: formatNumber(grade, lang),
-  })
-    .replace(/\s+/g, " ")
-    .trim()
 }
 
 async function fetchTwin(url: string): Promise<string | null> {
@@ -238,10 +198,9 @@ export async function TextbookContent({
         : null,
     hasPageImages: parsed.hasPageMarkers,
   }
-  const stageKey = subject.level ? STAGE_LABEL[subject.level] : null
   const cover: CoverInfo = {
     url: coverUrl,
-    stage: (stageKey ? labels[stageKey] : null) || labels.textbook || null,
+    stage: stageLine(subject.level, labels),
     gradeLine: gradeLine(subject.grade, subject.level, labels, lang),
   }
 

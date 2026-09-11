@@ -8,7 +8,7 @@ maturity: Production-Ready
 completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-09-02
+last_audited: 2026-09-03
 ---
 
 # Timetable -- Production Readiness Tracker
@@ -125,6 +125,66 @@ last_audited: 2026-09-02
       school on `physical` no longer offers rooms from stale link rows, and a
       hybrid school's per-section overrides decide. Four tests cover
       physical / hybrid-per-section / online / materialized-session-survives.
+
+### Recently Fixed (2026-09-03 -- the phone's first frame)
+
+Driven by "on mobile, increase the cell height a little and make the skeleton a
+day-mode skeleton". The height was one line; the placeholder was four bugs.
+
+- [x] **`min-h-14` on a grid cell had never once bound.** The period column
+      beside it is taller (`py-3` over a 20px name and a 16px time = 64px) and a
+      grid row takes its tallest cell, so the mobile row was 64px whatever the
+      cell said — every value up to `min-h-16` was a silent no-op. Now
+      `min-h-18` (72px), the first value that actually moves the row. Side
+      benefit: the row height is now a single number the skeleton can mirror
+      instead of one measured off live text, and it holds in BOTH modes (a
+      128px week column wraps a long subject to three lines and still fits).
+- [x] **The page opened on "لا توجد بيانات جدول".** `RoleRouter` gated its
+      skeleton on `isPending`, which only goes true once the effect's transition
+      starts — and effects run after the first paint. So the server render and
+      the first client frame both had `isPending === false` with `viewData ===
+null` and fell through to the no-data alert. Confirmed in the SSR HTML, not
+      inferred. New `settled` flag; the skeleton owns every frame until the first
+      load returns.
+- [x] **`StudentView` painted one frame of an empty week** before its own
+      skeleton, because `isLoadingData` started `false` and was raised from an
+      effect. Starts `true`.
+- [x] **The skeleton was a five-day week in front of a one-day grid.**
+      `TimetableGridSkeleton` takes `collapseToDayOnMobile`, which narrows it to
+      period + one day below `md` **in CSS**. It has to be CSS: day mode is
+      decided by `matchMedia`, unreadable until after mount, so narrowing
+      `workingDays` in JS is right one frame too late. `StudentView` passes it
+      whenever the reader has not explicitly picked a half; an explicit pick is
+      width-independent and narrows the days instead.
+- [x] **`RoleRouter` could not know it was about to render a student.** The role
+      only arrives with `getPersonalizedTimetable`, which is the whole wait the
+      placeholder covers. `page.tsx` now resolves it from the session and passes
+      `studentShell` (new `rendersStudentTimetable` in `permissions-config.ts`,
+      mirroring the action's own switch — ACCOUNTANT/STAFF get the admin grid,
+      USER falls through to the student one). That also swaps the full-width
+      `h-12` filter bar for the 130px segmented control the student actually
+      gets, which was a further 20px step.
+
+- [x] **`loading.tsx` was still the first frame, and it was the week.** The
+      route's own Suspense fallback cannot read the session — it has to render
+      instantly, so it cannot await `auth()` — and so it drew five columns at
+      768px for everyone, plus a page title and a five-tab strip that this
+      segment's `layout.tsx` had already painted directly above it. Deleted;
+      `layout.tsx` (which already awaits `auth()` for the tab strip) now wraps
+      `{children}` in the same `<Suspense>` Next would have built, with a
+      role-aware fallback. Sub-routes that ship their own `loading.tsx` keep it.
+- [x] **Two placeholders, two shapes.** The route fallback and `RoleRouter`'s
+      loading branch render back to back inside one load, so any difference
+      between them is a step the reader watches. Both now render the shared
+      `TimetableSurfaceSkeleton`.
+
+Frame-by-frame on a 390px phone under Slow 3G, sampled every 100ms. Before:
+6 cols / 396px of overflow / top 224 -> 2 cols / top 156 -> 6 cols / 396px /
+top 288 -> 2 cols / top 220. After: 2 cols / no overflow / top 156 -> top 220 ->
+settled 220, height 622 -> 621. Desktop 216 / 752.2 -> 216 / 752.1. (The
+remaining 156 -> 220 step is the dashboard's own heading, which is set from a
+client context and so is absent from the streamed shell on every dashboard page
+— not this block's to fix.)
 
 ### Open follow-ups
 

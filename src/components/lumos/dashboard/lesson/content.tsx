@@ -58,12 +58,9 @@ import { MaterialViewerTrigger } from "@/components/lumos/shared/material-viewer
 import { ShelfCard, shelfScroller } from "@/components/lumos/shared/shelf-card"
 import {
   TitleCard,
-  titleCardBadge,
-  titleCardBylineName,
   titleCardChip,
   titleCardChipSolid,
   TitleCardDescription,
-  TitleCardFeather,
   titleCardPill,
   titleCardTopPill,
 } from "@/components/lumos/shared/title-card"
@@ -460,6 +457,48 @@ export function LumosLessonContent({
     .replace("{l}", d?.lessonShort || "L")
     .replace("{ln}", String(lesson.position))
 
+  // The info line, built the way the live room's card builds its own.
+  //
+  // THREE facts, like the frame's "Documentary · Jun 27, 2021 · 30 min TV+" —
+  // what kind of thing this is, when it is from, how long it runs. The room
+  // reads them as grade · start time · duration; a lesson has no clock, so its
+  // middle fact is the year.
+  //
+  // What is NOT here is the point. This line used to open with "C1 L2", which
+  // the button underneath already says, and then name the course and the
+  // chapter, which is three more items on a line the frame keeps to one. The
+  // room hit the same wall and moved its chapter and lesson into the
+  // PARAGRAPH, where the frame puts its narrator; the course and chapter go
+  // there for the same reason, in `heroBlurb` below.
+  const gradeLabel =
+    lesson.chapter.course.grades.length > 0
+      ? `${d?.grade || "Grade"} ${lesson.chapter.course.grades
+          .map((g) => gradeWord(g, lang))
+          .join(" / ")}`
+      : null
+  const heroMeta = [
+    gradeLabel,
+    lesson.year ? String(lesson.year) : null,
+    formatDuration(lesson.duration, lesson.videoDuration) || null,
+  ].filter((part): part is string => Boolean(part))
+
+  // The paragraph under the button, in the room's own shape: the facts that
+  // place the thing first, then what it is actually about. The room reads
+  // "Taught by X. <chapter> · <lesson> <synopsis>"; a lesson has no teacher of
+  // its own, so it opens on the course and chapter the meta line handed over.
+  // Joined by a plain space, exactly as the room joins its parts.
+  const heroBlurb = [
+    [lesson.chapter.course.title, lesson.chapter.title]
+      .filter(Boolean)
+      .join(" · ") || null,
+    lesson.description ||
+      lesson.chapter.course.description ||
+      d?.exploreLesson ||
+      "Explore this lesson and discover new concepts.",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
   return (
     /* `data-immersive` — read by the school-dashboard layout, which unpins the
        header and lets the container stop clipping so the hero below can reach
@@ -524,62 +563,50 @@ export function LumosLessonContent({
               color={lesson.color}
               alt={lesson.title}
               title={lesson.title}
-              badges={
-                lesson.chapter.course.grades.length > 0
-                  ? lesson.chapter.course.grades.map((grade) => (
-                      <span key={grade} className={titleCardBadge}>
-                        {d?.grade || "Grade"} {gradeWord(grade, lang)}
-                      </span>
-                    ))
-                  : undefined
-              }
-              byline={
-                <>
-                  <TitleCardFeather alt={d?.brandName || "balqalam"} />
-                  <span className={titleCardBylineName}>
-                    {d?.brandName || "balqalam"}
-                  </span>
-                </>
-              }
+              /* TWO rows of type above the button, which is what the live
+                 room's card has: the title, then one grey sentence. This card
+                 carried four — a grade badge over the title and a "بالقلم"
+                 byline under it — and the two callers drawing the same frame
+                 disagreed by 90px of stack before the reader reached the same
+                 button.
+
+                 Neither row was carrying its weight. The byline names the
+                 publisher of a catalog every lesson in this block belongs to,
+                 which is the one fact a reader on this page already has. The
+                 badge named the grade, and a student's whole catalog is their
+                 own grade — the room dropped the same chip for the same
+                 reason, and the grade is still on the course page above.
+
+                 The band this stack sits in is measured for exactly these two
+                 rows (see the card's own `-mt-[108px] h-20` note), so removing
+                 them puts the title where the room puts it rather than
+                 wherever four rows happened to end. */
               meta={
-                /* The frame's info line is exactly one grey sentence. The chip
-                   that used to end it was the frame's "more" put in the wrong
-                   place — there it belongs at the end of the truncated
-                   PARAGRAPH, which is where `description` now carries it. */
-                <span>
-                  {d?.chapterShort || "C"}
-                  {lesson.chapter.position} {d?.lessonShort || "L"}
-                  {lesson.position} &middot; {lesson.chapter.course.title}{" "}
-                  &middot; {lesson.chapter.title}
-                </span>
+                /* One grey sentence, built in `heroMeta` above. Undefined
+                   rather than an empty span when a lesson knows none of the
+                   three — the card drops the row instead of leaving a gap. */
+                heroMeta.length > 0 ? (
+                  <span>{heroMeta.join(" · ")}</span>
+                ) : undefined
               }
               description={
                 /* The frame's paragraph, which this hero never had: it kept
                    the lesson's own words behind a chip. Three lines, then
                    `… more` into the sheet that holds the rest. */
                 <TitleCardDescription
-                  text={
-                    lesson.description ||
-                    lesson.chapter.course.description ||
-                    d?.exploreLesson ||
-                    "Explore this lesson and discover new concepts."
-                  }
+                  text={heroBlurb}
                   more={d?.more || "MORE"}
                   onMore={() => setShowDescDialog(true)}
                 />
               }
               chips={
+                /* Marks, then counts — the room's row exactly. The year and
+                   the runtime used to open this row as bare text among the
+                   boxes; they are facts you read BEFORE deciding, so they sit
+                   on the info line now and the row is left holding only what
+                   the frame puts here: one filled mark, then outlined ones,
+                   then whatever the thing comes with. */
                 <>
-                  {lesson.year && <span>{lesson.year}</span>}
-                  {lesson.year &&
-                    formatDuration(lesson.duration, lesson.videoDuration) && (
-                      <span>&middot;</span>
-                    )}
-                  {formatDuration(lesson.duration, lesson.videoDuration) && (
-                    <span>
-                      {formatDuration(lesson.duration, lesson.videoDuration)}
-                    </span>
-                  )}
                   <span className={titleCardChipSolid}>4K</span>
                   {lesson.isFree && (
                     <span className={titleCardChip}>{d?.free || "Free"}</span>

@@ -89,18 +89,44 @@ SaaS /catalog/approvals → approve → APPROVED + PUBLISHED (visible to all)
 
 ## Routes
 
-| Route                      | Purpose                         | Auth                      |
-| -------------------------- | ------------------------------- | ------------------------- |
-| `/library`                 | Library home (hero + book rows) | All roles                 |
-| `/library/books`           | All books with search / filter  | All roles                 |
-| `/library/books/[id]`      | Book detail + borrow / return   | All roles                 |
-| `/library/catalog`         | Browse global catalog           | ADMIN, DEVELOPER          |
-| `/library/admin`           | Admin dashboard                 | ADMIN, DEVELOPER          |
-| `/library/admin/books`     | Manage books table              | ADMIN, DEVELOPER          |
-| `/library/admin/books/new` | Add book from catalog           | ADMIN, DEVELOPER          |
-| `/library/contribute`      | Submit book contribution        | ADMIN, TEACHER, DEVELOPER |
-| `/library/contributions`   | My contributions history        | ADMIN, TEACHER, DEVELOPER |
-| `/library/my-profile`      | Borrow history + stats          | All roles                 |
+| Route                      | Purpose                        | Auth                      |
+| -------------------------- | ------------------------------ | ------------------------- |
+| `/library`                 | Library home (banner + rows)   | All roles                 |
+| `/library/books`           | All books with search / filter | All roles                 |
+| `/library/books/[id]`      | Book detail + borrow / return  | All roles                 |
+| `/library/catalog`         | Browse global catalog          | ADMIN, DEVELOPER          |
+| `/library/admin`           | Admin dashboard                | ADMIN, DEVELOPER          |
+| `/library/admin/books`     | Manage books table             | ADMIN, DEVELOPER          |
+| `/library/admin/books/new` | Add book from catalog          | ADMIN, DEVELOPER          |
+| `/library/contribute`      | Submit book contribution       | ADMIN, TEACHER, DEVELOPER |
+| `/library/contributions`   | My contributions history       | ADMIN, TEACHER, DEVELOPER |
+| `/library/my-profile`      | Borrow history + stats         | All roles                 |
+
+## The home banner
+
+`/library` opens on the same green brand banner as `/live`. It is one object rendered
+from two places, not two lookalikes: `hero.tsx` here and `status-hero.tsx` under the live
+block share the ground, the geometry, the type and the pills. When one changes, change
+the other.
+
+- **Ground** `#00bc6d`, the saas-marketing green, with `#050505` ink. Both are pinned
+  literals. The banner does not follow the theme, because white on this green measures
+  about 2.5:1 and is unreadable.
+- **Headline** is thmanyah sans at ~38px, light, with one phrase carried in bold. That
+  phrase travels as its own dictionary key, `library.hero.titleMark`, so a translator
+  moves the words without carrying markup through a right-to-left string. A template
+  with no `{mark}` renders unmarked.
+- **Its two rows are width-matched**, and the tatweels inside the Arabic string are what
+  matches them: 333px over 333px in Arabic, 320px over 312px in English, against the live
+  banner's 331 over 333. They are not typos. Editing the headline means measuring the two
+  line boxes in a browser again, and it is why the two languages are transcreated rather
+  than translated word-for-word -- a literal mirror of either line wraps to three rows.
+- **Two pills**, never more: explore the shelves, then the reader's own favourites.
+- **Art** is `public/anthropic/category-04-alpha.svg`, a transparent line drawing sitting
+  straight on the green with no card of its own. It is derived from `category-04.svg` by
+  recolouring one shape to the mint `#9FE5B1`; regenerate it, never hand-edit it. Below
+  the `md` breakpoint the card stacks to one column and the art is dropped rather than
+  shrunk.
 
 ## Data flow
 

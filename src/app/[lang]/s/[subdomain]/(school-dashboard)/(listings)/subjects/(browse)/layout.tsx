@@ -21,7 +21,9 @@ export default async function SubjectsBrowseLayout({
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.subjects
 
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  const isStudent = role === "STUDENT"
+  const isAdmin = role === "ADMIN" || role === "DEVELOPER"
 
   // Query school's academic levels to determine which tabs to show
   let levelSet = new Set<string>()
@@ -46,33 +48,41 @@ export default async function SubjectsBrowseLayout({
     {
       name: n?.elementary || "Elementary",
       href: `/${lang}/subjects/elementary`,
-      hidden: !showLevelTabs || !levelSet.has("ELEMENTARY"),
+      hidden: isStudent || !showLevelTabs || !levelSet.has("ELEMENTARY"),
     },
     {
       name: n?.middle || "Middle",
       href: `/${lang}/subjects/middle`,
-      hidden: !showLevelTabs || !levelSet.has("MIDDLE"),
+      hidden: isStudent || !showLevelTabs || !levelSet.has("MIDDLE"),
     },
     {
       name: n?.high || "High",
       href: `/${lang}/subjects/high`,
-      hidden: !showLevelTabs || !levelSet.has("HIGH"),
+      hidden: isStudent || !showLevelTabs || !levelSet.has("HIGH"),
     },
-    { name: n?.catalog || "Catalog", href: `/${lang}/subjects/catalog` },
+    {
+      name: n?.catalog || "Catalog",
+      href: `/${lang}/subjects/catalog`,
+      hidden: !isAdmin,
+    },
     {
       name: n?.contribute || "Contribute",
       href: `/${lang}/subjects/contribute`,
+      hidden: isStudent,
     },
     {
       name: n?.myContributions || "My Contributions",
       href: `/${lang}/subjects/contributions`,
+      hidden: isStudent,
     },
   ]
+
+  const hasTabs = subjectsPages.filter((p) => !p.hidden).length > 1
 
   return (
     <div className="space-y-6">
       <PageHeadingSetter title={d?.title || "Subjects"} />
-      <PageNav pages={subjectsPages} />
+      {hasTabs && <PageNav pages={subjectsPages} />}
       {children}
     </div>
   )

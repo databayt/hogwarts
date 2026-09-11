@@ -14,7 +14,7 @@ describe("lumosCoursesSearchParams", () => {
       search: "",
       title: "",
       category: "",
-      level: "1",
+      level: "",
       isPublished: "",
       sort: [],
     })

@@ -38,6 +38,7 @@ import { toast } from "@/components/ui/use-toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { LinkPreview, type LinkPreviewData } from "./link-preview"
+import { BubbleTail } from "./mobile/chat/bubble-tail"
 import type { MessageDTO } from "./types"
 
 export interface MessageBubbleProps {
@@ -383,16 +384,23 @@ export const MessageBubble = memo(function MessageBubble({
             <div
               className={cn(
                 "relative break-words",
-                // Own messages use tighter corners (WhatsApp-style),
-                // received messages keep the softer rounding.
-                isOwnMessage ? "rounded-sm" : "rounded-md",
-                isMediaOnly ? "p-[3px]" : "px-2.5 py-1.5",
-                isOwnMessage ? "text-foreground" : "text-foreground bg-white",
+                // Same skin as the mobile WhatsApp bubble: 12px corners, a
+                // hairline edge, and the shared balloon tokens rather than a
+                // frozen hex — so light and dark both follow the theme.
+                "rounded-[12px] border-[0.66px] border-[color:var(--wa-surface-shadow-baloon)]",
+                isMediaOnly ? "p-[3px]" : "px-[9px] pt-[8px] pb-[7px]",
+                "text-[color:var(--wa-text-primary)]",
+                isOwnMessage
+                  ? "bg-[color:var(--wa-surface-baloon-me)]"
+                  : "bg-[color:var(--wa-surface-baloon-other)] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]",
                 isDeleted && "italic opacity-60",
                 isPending && ""
               )}
-              style={isOwnMessage ? { backgroundColor: "#D9FDD4" } : undefined}
             >
+              {/* The tail marks where a run of same-sender bubbles ends. */}
+              {isLastInGroup && (
+                <BubbleTail side={isOwnMessage ? "me" : "other"} />
+              )}
               {/* Forwarded label */}
               {message.forwardedFromId && !isDeleted && (
                 <div className="text-msg-timestamp flex items-center gap-1 px-2 pt-1.5 text-[11px] italic">
@@ -641,14 +649,14 @@ export const MessageBubble = memo(function MessageBubble({
                         )}
                       >
                         {message.content?.trim() && (
-                          <p className="min-w-0 flex-1 text-sm whitespace-pre-wrap">
+                          <p className="min-w-0 flex-1 text-[17px] leading-[24px] whitespace-pre-wrap">
                             {message.content}
                           </p>
                         )}
                         {timestampNode && (
                           <span
                             className={cn(
-                              "flex flex-shrink-0 items-center gap-0.5 self-end text-[11px]",
+                              "flex flex-shrink-0 items-center gap-0.5 self-end text-[12px]",
                               isOwnMessage
                                 ? "text-foreground/40"
                                 : "text-muted-foreground"

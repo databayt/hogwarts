@@ -170,11 +170,29 @@ export async function GET(
       ...(lessonIds.length > 0 ? [{ catalogLessonId: { in: lessonIds } }] : []),
     ]
 
+    // The canonical cross-school gate, mirroring the web page this route is a
+    // copy of (`(listings)/subjects/[slug]/page.tsx`). Filtering on `status`
+    // alone listed every OTHER school's SCHOOL/PRIVATE materials, exams and
+    // assignments to every mobile client — the Bearer JWT scopes the CALLER,
+    // not the content. It rides in `AND` because these queries already use `OR`
+    // for the subject/chapter/lesson scope, and a second bare `OR:` key on the
+    // same object silently overwrites the first.
+    const visibilityAnd = [
+      {
+        OR: [
+          { visibility: "PUBLIC" as const },
+          ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
+        ],
+      },
+    ]
+
     const [rawMaterials, rawExams, questionGroups, rawAssignments] =
       await Promise.all([
         db.material.findMany({
           where: {
             status: "PUBLISHED",
+            approvalStatus: "APPROVED",
+            AND: visibilityAnd,
             OR: contentOr,
           },
           orderBy: { downloadCount: "desc" },
@@ -190,7 +208,12 @@ export async function GET(
           },
         }),
         db.exam.findMany({
-          where: { subjectId: subject.id, status: "PUBLISHED" },
+          where: {
+            subjectId: subject.id,
+            status: "PUBLISHED",
+            approvalStatus: "APPROVED",
+            AND: visibilityAnd,
+          },
           orderBy: { usageCount: "desc" },
           select: {
             id: true,
@@ -206,13 +229,20 @@ export async function GET(
           by: ["questionType", "difficulty"],
           where: {
             approvalStatus: "APPROVED",
-            visibility: { in: ["PUBLIC", "SCHOOL"] },
+            // `visibility: { in: ["PUBLIC", "SCHOOL"] }` with no school scope
+            // counted every OTHER school's SCHOOL-only questions here.
+            AND: visibilityAnd,
             OR: contentOr,
           },
           _count: true,
         }),
         db.assignment.findMany({
-          where: { status: "PUBLISHED", OR: contentOr },
+          where: {
+            status: "PUBLISHED",
+            approvalStatus: "APPROVED",
+            AND: visibilityAnd,
+            OR: contentOr,
+          },
           orderBy: { usageCount: "desc" },
           take: 20,
           select: {

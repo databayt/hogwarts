@@ -49,7 +49,11 @@ export async function GET(request: NextRequest) {
     console.log(
       `[funnel-apply] ${dryRun ? "dry" : "applied"}: pending=${report.pending} applied=${report.applied} ignored=${report.ignored} left=${report.left} in ${Date.now() - startedAt}ms`
     )
-    return NextResponse.json({ ok: true, ms: Date.now() - startedAt, ...report })
+    return NextResponse.json({
+      ok: true,
+      ms: Date.now() - startedAt,
+      ...report,
+    })
   } catch (error) {
     console.error("[funnel-apply] failed", error)
     return NextResponse.json(

@@ -274,13 +274,36 @@ export interface DashboardSummary {
 // ROLE-SPECIFIC DASHBOARD TYPES
 // ============================================================================
 
+/**
+ * The class is ALSO online today — resolved by `attachLiveClasses`.
+ *
+ * Named once and shared, so the teacher's day and the student's day can never
+ * describe the same live session with two different shapes.
+ */
+export interface TodayLiveClass {
+  sessionId: string | null
+  provider: "livekit" | "external"
+  meetingUrl: string | null
+  status: string | null
+}
+
 export interface TeacherDashboardData {
+  /**
+   * Today's periods, on the SCHOOL's calendar day and active term.
+   *
+   * Bounds are raw ISO, never a pre-formatted string: they are stored as
+   * `Date.UTC(1970, 0, 1, h, m)` and only `day-clock.ts` knows to read them
+   * back with `getUTC*`. Formatting them on the server printed the server's
+   * timezone instead of the school's.
+   */
   todaysClasses: {
     id: string
     name: string
-    time: string
     room: string
     students: number
+    startTime: string
+    endTime: string
+    liveClass: TodayLiveClass | null
   }[]
   pendingGrading: number
   attendanceDue: number
@@ -313,13 +336,7 @@ export interface StudentDashboardData {
     room: string
     startTime: string
     endTime: string
-    /** The class is ALSO online today — resolved by `attachLiveClasses`. */
-    liveClass: {
-      sessionId: string | null
-      provider: "livekit" | "external"
-      meetingUrl: string | null
-      status: string | null
-    } | null
+    liveClass: TodayLiveClass | null
   }[]
   upcomingAssignments: {
     id: string

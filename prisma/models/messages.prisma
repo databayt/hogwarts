@@ -156,10 +156,10 @@ model Message {
   metadata Json? // { mentions: ["userId1"], links: ["url1"], etc. }
 
   // Relationships
-  conversation   Conversation         @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User                 @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
-  replies        Message[]            @relation("MessageReplies")
-  forwards       Message[]            @relation("MessageForwards")
+  conversation       Conversation              @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender             User                      @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  replies            Message[]                 @relation("MessageReplies")
+  forwards           Message[]                 @relation("MessageForwards")
   attachments        MessageAttachment[]
   reactions          MessageReaction[]
   readReceipts       MessageReadReceipt[]

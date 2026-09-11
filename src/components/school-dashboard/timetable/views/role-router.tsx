@@ -7,7 +7,6 @@ import { TriangleAlert } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -18,7 +17,7 @@ import {
 } from "../actions"
 import { DRAFT_TERM_ID } from "../config"
 import AdminView from "./admin-view"
-import { TimetableGridSkeleton } from "./grid-skeleton"
+import { TimetableSurfaceSkeleton } from "./grid-skeleton"
 import GuardianView from "./guardian-view"
 import StudentView from "./student-view"
 import TeacherView from "./teacher-view"
@@ -27,6 +26,15 @@ interface Props {
   dictionary: Dictionary["school"]
   lang: Locale
   defaultTab?: "today" | "full"
+  /**
+   * Whether this reader will land on `StudentView`, resolved from the session on
+   * the server (`rendersStudentTimetable`). The role is not knowable here until
+   * `getPersonalizedTimetable` answers, and that is the whole wait the loading
+   * state covers — so without the hint the placeholder is a five-column week for
+   * a phone that is about to render one column, plus a full-width toolbar bar
+   * for a 130px segmented control.
+   */
+  studentShell?: boolean
 }
 
 type ViewType = "admin" | "teacher" | "student" | "guardian"
@@ -62,12 +70,25 @@ interface PersonalizedData {
   canProvision?: boolean
 }
 
-export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
+export default function RoleRouter({
+  dictionary,
+  lang,
+  defaultTab,
+  studentShell = false,
+}: Props) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [termId, setTermId] = useState<string | null>(null)
   const [viewData, setViewData] = useState<PersonalizedData | null>(null)
   const [provisioning, setProvisioning] = useState(false)
+  // "The first load has come back", which is NOT the same as "not pending".
+  // `isPending` only goes true once the effect's transition starts, and effects
+  // run after the first paint — so on the server render and the first client
+  // frame this component had `isPending === false` and `viewData === null`, fell
+  // through to the no-data branch, and shipped "لا توجد بيانات جدول" as the
+  // opening state of a page that is merely still loading. Verified in the SSR
+  // HTML. The skeleton owns every frame until this flips.
+  const [settled, setSettled] = useState(false)
 
   // Load active term and personalized data on mount
   useEffect(() => {
@@ -102,6 +123,8 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
             ? err.message
             : dictionary.timetable.roleRouter.loadFailed
         )
+      } finally {
+        setSettled(true)
       }
     })
   }
@@ -127,14 +150,16 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
     }
   }
 
-  // Loading state
-  if (isPending && !viewData) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full rounded-lg" />
-        <TimetableGridSkeleton />
-      </div>
-    )
+  // Loading state — also the state before the first load has been ATTEMPTED,
+  // which is where the no-data alert used to leak through.
+  //
+  // The SAME component the route's Suspense fallback renders, deliberately: that
+  // one covers the streamed shell and this one covers the two server actions
+  // below it, back to back within one load, so any difference between them is a
+  // step the reader watches happen. The old shape here (a full-width `h-12` bar
+  // over `space-y-4`) was a step for every role.
+  if (!settled || (isPending && !viewData)) {
+    return <TimetableSurfaceSkeleton studentShell={studentShell} />
   }
 
   // Error state

@@ -231,6 +231,19 @@ async function buildResponse(
                   { visibility: "PUBLIC" },
                 ]
               : [{ visibility: "PUBLIC" }],
+            // Per-VIDEO hide, matching get-lesson-with-progress.ts. The
+            // chapter/lesson hides above are applied to `allLessonIds`, but a
+            // school that hid one specific video (wrong take, an instructor it
+            // no longer shows) while keeping the lesson still had that video
+            // selected here — and it could still win the instructor-policy pick
+            // below and be returned as the lesson's `content_url`.
+            ...(schoolId
+              ? {
+                  NOT: {
+                    overrides: { some: { schoolId, isHidden: true } },
+                  },
+                }
+              : {}),
           },
           orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
           select: {

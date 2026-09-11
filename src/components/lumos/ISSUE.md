@@ -116,6 +116,22 @@ Open:
       lose). The bar is 16px of 12px type inside a mask that fades out above
       it, so a second line rendered outside the glass and over bare artwork —
       which a catalog lesson name is long enough to cause.
+- [x] **The lesson hero dropped to the live room's two rows** — the grade
+      badge above the title and the "بالقلم" byline under it are gone, so the
+      stack above the button is the title and one grey sentence, exactly what
+      the room's card has. Two callers drawing one frame had disagreed by a
+      whole badge and a byline, and the band the stack sits in is measured for
+      the room's two rows. The grade is no longer anywhere on this hero; the
+      course page above still carries it.
+- [x] **The card's paragraph is no longer phone-only** — `description` was
+      `sm:hidden`, so the wide card said what the lesson IS nowhere at all.
+      Above `sm` it follows the button (`sm:order-4`) inside a `42ch` measure,
+      because a paragraph set across the full-bleed width never reaches a
+      third line and the `… more` link would never fire. The link's `bg-black`
+      patch is a PHONE trick — it hides the tail of line three on the solid
+      shelf — so above `sm` it goes `static` and takes its own line rather
+      than painting a black rectangle on the artwork. The live room's card
+      gains the same paragraph on desktop when a class has one; most do not.
 - [x] **Two class strings joined the shared title card** —
       `titleCardTopGlyph` and `titleCardTopPill` — for the reference's `‹ Back`
       / `+ ADD` / share row. The lesson hero does not use them yet; the live
