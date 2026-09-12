@@ -40,6 +40,18 @@
 
 ## Resolved
 
+- **2026-09-13 — The biology hero wears its own banner again.** The
+  2026-09-08 entry below is reverted: the cover-art crop read as a textbook
+  cover on the subject page. `banner.jpg` is back to the ClickView triptych
+  (bee, DNA, pedigree chart; 120,272 bytes, MD5 `0bee18ff…`), restored from
+  `databayt-cdn`'s own version history (id `oHoQo_at…`, 2026-09-05) to both
+  buckets and invalidated. Verified by a real admin login on
+  `demo.balqalam.com/ar/subjects/sd-g12-biology`. The local source
+  `curriculum/sd/g12/biology/banner.jpg` was restored too, so
+  `upload-textbooks-all.ts` cannot re-publish the crop; the crop is kept in
+  `_old/2026-09-08-cover-crop/`. Banners come from ClickView art, not the
+  cover. No DB or code change was needed.
+
 - **2026-09-12 — The search sheet mirrors IMG_2580.** `sheets.tsx`
   (`book-sheet-search`) + `reader.css`: top radius 38, ground `#fefeff`
   (`#1c1c1e` dark), edge at 47 (`calc(100svh - 47px)`), title 37 under the
