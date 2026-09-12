@@ -11,5 +11,5 @@ cd "$(dirname "$0")/.."
 SRC=${1:?dotenv file}
 OUT=$(mktemp -t cf-secrets.XXXXXX.json); trap 'rm -f "$OUT"' EXIT
 node cf/env-split.mjs "$SRC" secrets > "$OUT"
-echo "==> $(node -e 'console.log(Object.keys(require(process.argv[1])).length)' "$OUT") secrets → Worker (names: $(node cf/env-split.mjs "$SRC" names | awk '$1=="secret"{print $2}' | tr '\n' ' '))"
+echo "==> $(node -e 'console.log(Object.keys(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"))).length)' "$OUT") secrets → Worker (names: $(node cf/env-split.mjs "$SRC" names | awk '$1=="secret"{print $2}' | tr '\n' ' '))"
 pnpm exec wrangler secret bulk "$OUT"
