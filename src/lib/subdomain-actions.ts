@@ -265,6 +265,8 @@ const SCHOOL_SELECT = {
   branding: {
     select: {
       heroImageUrl: true,
+      // The installed app's theme_color (src/app/manifest.ts).
+      primaryColor: true,
     },
   },
 } as const

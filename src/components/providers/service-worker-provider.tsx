@@ -11,7 +11,11 @@ export function ServiceWorkerProvider() {
     if (
       typeof window !== "undefined" &&
       "serviceWorker" in navigator &&
-      process.env.NODE_ENV === "production"
+      // Production only — with an escape hatch so `next build && next start`
+      // can verify the worker locally (NEXT_PUBLIC_SW_DEV=1). `next dev`
+      // never registers it: HMR chunks would poison the static cache.
+      (process.env.NODE_ENV === "production" ||
+        process.env.NEXT_PUBLIC_SW_DEV === "1")
     ) {
       window.addEventListener("load", () => {
         navigator.serviceWorker

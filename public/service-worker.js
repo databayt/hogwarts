@@ -1,152 +1,119 @@
-// Service Worker for offline support and performance optimization
+// Service worker — offline shell, static-asset cache, push.
 //
-// v2: the v1 precache listed `/manifest.json`, which does not exist (Next
-// serves the app manifest at `/manifest.webmanifest`). `cache.addAll`
-// rejects on any 404, so v1's install failed on every device and no
-// offline behaviour ever activated in production. The version bump evicts
-// whatever v1 left behind.
-const STATIC_CACHE_NAME = "hogwarts-static-v2"
-const DYNAMIC_CACHE_NAME = "hogwarts-dynamic-v2"
+// v3 (2026-09-12) replaces two silent failures in v2:
+//   1. The precache listed `/` and `/offline`. Both are 307s to the locale
+//      prefix, so `cache.addAll` stored responses with `redirected: true`,
+//      which the browser refuses to serve for a navigation. The offline
+//      fallback therefore never worked. Only public, locale-explicit, 200
+//      URLs are precached now.
+//   2. Every navigation and every `/api/` GET was `cache.put` into a cache
+//      keyed by URL alone. On a shared school device the previous user's
+//      dashboard could come back from cache. HTML and API are network-only
+//      now; the only navigation fallback is the offline page.
+// v2 fixed v1's `/manifest.json` (does not exist → install failed on every
+// device). Bump the cache name on every change so `activate` evicts the old
+// behaviour.
+//
+// Rule: kun `.claude/rules/next-16/sw-no-authenticated-cache.md`.
+const STATIC_CACHE_NAME = "hogwarts-static-v3"
+const STATIC_CACHE_CAP = 150
 
-// Static resources to cache
-const STATIC_ASSETS = ["/", "/offline", "/manifest.webmanifest", "/favicon.ico"]
+// Public, locale-explicit, answer 200 without a session. `/offline` is in the
+// proxy's publicRoutes; the tenant rewrite is a rewrite, not a redirect.
+const OFFLINE_PAGES = { ar: "/ar/offline", en: "/en/offline" }
+const PRECACHE = [
+  OFFLINE_PAGES.ar,
+  OFFLINE_PAGES.en,
+  "/manifest.webmanifest",
+  "/favicon.ico",
+  "/icon-192.png",
+  "/icon-96.png",
+]
 
-// Never cached, never served from cache: the offline sync outbox and the
-// signed-media tickets. A cached ticket is an expired URL; a cached sync
-// response is a lie about what landed.
-const NEVER_CACHE = ["/api/offline/", "/api/lumos/video/", "/api/lumos/file/"]
+const STATIC_RE = /\.(js|css|jpg|jpeg|png|gif|svg|webp|avif|ico|woff|woff2|ttf|eot)$/
 
-// Install event - cache static assets
 self.addEventListener("install", (event) => {
-  console.log("[Service Worker] Installing...")
-
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME).then(async (cache) => {
-      console.log("[Service Worker] Caching static assets")
-      await cache.addAll(STATIC_ASSETS)
+      await cache.addAll(PRECACHE)
       // The offline page is a React tree: its HTML is useless without the
       // script chunks it references, and those are only cached once fetched.
       // Pull them now so the offline library renders on a device that has
       // never opened /offline while online.
-      try {
-        const html = await (await cache.match("/offline")).text()
-        const urls = new Set()
-        for (const m of html.matchAll(
-          /(?:src|href)="(\/_next\/static\/[^"]+)"/g
-        )) {
-          urls.add(m[1])
+      for (const path of Object.values(OFFLINE_PAGES)) {
+        try {
+          const res = await cache.match(path)
+          const html = res ? await res.text() : ""
+          const urls = new Set()
+          for (const m of html.matchAll(/(?:src|href)="(\/_next\/static\/[^"]+)"/g)) {
+            urls.add(m[1])
+          }
+          await Promise.allSettled([...urls].map((u) => cache.add(u)))
+        } catch (err) {
+          console.warn("[Service Worker] offline page assets not precached", path, err)
         }
-        await Promise.allSettled([...urls].map((u) => cache.add(u)))
-      } catch (err) {
-        console.warn("[Service Worker] offline page assets not precached", err)
       }
     })
   )
-
   self.skipWaiting()
 })
 
-// Activate event - clean up old caches
 self.addEventListener("activate", (event) => {
-  console.log("[Service Worker] Activating...")
-
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((cacheName) => {
-            return (
-              cacheName !== STATIC_CACHE_NAME &&
-              cacheName !== DYNAMIC_CACHE_NAME
-            )
-          })
-          .map((cacheName) => {
-            console.log("[Service Worker] Deleting old cache:", cacheName)
-            return caches.delete(cacheName)
-          })
+    caches
+      .keys()
+      .then((names) =>
+        Promise.all(names.filter((n) => n !== STATIC_CACHE_NAME).map((n) => caches.delete(n)))
       )
-    })
+      .then(() => trimStaticCache())
   )
-
   self.clients.claim()
 })
 
-// Fetch event - serve from cache or network
+// Keep the static cache bounded: hashed chunks accumulate across deploys and
+// teachers' phones do not have room for every build ever shipped. Precached
+// entries are protected; the oldest runtime entries go first.
+async function trimStaticCache() {
+  const cache = await caches.open(STATIC_CACHE_NAME)
+  const keys = await cache.keys()
+  const protectedPaths = new Set(PRECACHE)
+  const runtime = keys.filter((req) => !protectedPaths.has(new URL(req.url).pathname))
+  const excess = runtime.length - STATIC_CACHE_CAP
+  if (excess <= 0) return
+  await Promise.all(runtime.slice(0, excess).map((req) => cache.delete(req)))
+}
+
+function offlinePageFor(pathname) {
+  return pathname === "/en" || pathname.startsWith("/en/") ? OFFLINE_PAGES.en : OFFLINE_PAGES.ar
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event
+  if (request.method !== "GET") return
+
   const url = new URL(request.url)
-
-  // Skip non-GET requests
-  if (request.method !== "GET") {
-    return
-  }
-
-  // Skip Chrome extensions
-  if (url.protocol === "chrome-extension:") {
-    return
-  }
+  if (url.protocol === "chrome-extension:") return
 
   // Cross-origin (S3 media chunks, CDN) and Range requests go straight to the
   // network: partial responses must never be cached as whole ones.
-  if (url.origin !== self.location.origin || request.headers.has("range")) {
-    return
-  }
+  if (url.origin !== self.location.origin || request.headers.has("range")) return
 
-  if (NEVER_CACHE.some((prefix) => url.pathname.startsWith(prefix))) {
-    return
-  }
+  // API: network-only. The outbox reads IndexedDB, not the cache; a cached
+  // signed-media ticket is an expired URL and a cached sync response is a lie
+  // about what landed.
+  if (url.pathname.startsWith("/api/")) return
 
-  // API calls - Network First strategy
-  if (url.pathname.startsWith("/api/")) {
+  // Static assets: cache-first. Hashed under /_next/static, so a hit is
+  // always the right bytes.
+  if (url.pathname.startsWith("/_next/static/") || STATIC_RE.test(url.pathname)) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Only a good answer is worth keeping; a cached 401 would keep a
-          // signed-out state alive across a sign-in.
-          if (response.ok) {
-            const responseClone = response.clone()
-            caches.open(DYNAMIC_CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone)
-            })
-          }
-
-          return response
-        })
-        .catch(() => {
-          return caches.match(request)
-        })
-    )
-    return
-  }
-
-  // Static assets - Cache First strategy
-  if (
-    url.pathname.match(
-      /\.(js|css|jpg|jpeg|png|gif|svg|webp|woff|woff2|ttf|eot)$/
-    )
-  ) {
-    event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse
-        }
-
+      caches.match(request).then((hit) => {
+        if (hit) return hit
         return fetch(request).then((response) => {
-          // Don't cache non-successful responses
-          if (
-            !response ||
-            response.status !== 200 ||
-            response.type !== "basic"
-          ) {
-            return response
+          if (response && response.status === 200 && response.type === "basic") {
+            const copy = response.clone()
+            caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(request, copy))
           }
-
-          const responseClone = response.clone()
-
-          caches.open(STATIC_CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone)
-          })
-
           return response
         })
       })
@@ -154,37 +121,20 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  // HTML pages - Network First with offline fallback
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        // Clone the response before caching
-        const responseClone = response.clone()
-
-        caches.open(DYNAMIC_CACHE_NAME).then((cache) => {
-          cache.put(request, responseClone)
-        })
-
-        return response
-      })
-      .catch(() => {
-        return caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse
-          }
-
-          // Return offline page for navigation requests
-          if (request.mode === "navigate") {
-            return caches.match("/offline")
-          }
-
-          return new Response("Offline", {
-            status: 503,
-            statusText: "Service Unavailable",
-          })
-        })
-      })
-  )
+  // Navigations: network, and the locale's offline page when the network is
+  // gone. Never cached — the response belongs to whoever is signed in.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request).catch(() =>
+        caches.match(offlinePageFor(url.pathname)).then(
+          (page) =>
+            page ||
+            new Response("Offline", { status: 503, statusText: "Service Unavailable" })
+        )
+      )
+    )
+  }
+  // Everything else (RSC payloads, data requests) falls through to the network.
 })
 
 // Background sync: the outbox lives in the page's IndexedDB module
@@ -204,35 +154,48 @@ self.addEventListener("message", (event) => {
 })
 
 async function wakePagesToDrain() {
-  const clients = await self.clients.matchAll({
-    type: "window",
-    includeUncontrolled: true,
-  })
+  const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true })
   for (const client of clients) {
     client.postMessage({ type: "drain-outbox" })
   }
 }
 
-// Push notifications
+// Push: the payload is JSON from src/lib/notifications/push-web.ts —
+// { title, body, url, tag, icon? }. A plain-text payload still shows.
 self.addEventListener("push", (event) => {
-  const options = {
-    body: event.data ? event.data.text() : "New notification",
-    icon: "/icon-192x192.png",
-    badge: "/icon-72x72.png",
-    vibrate: [100, 50, 100],
-    data: {
-      timestamp: Date.now(),
-    },
+  let data = {}
+  if (event.data) {
+    try {
+      data = event.data.json()
+    } catch {
+      data = { body: event.data.text() }
+    }
   }
-
-  event.waitUntil(
-    self.registration.showNotification("Hogwarts School", options)
-  )
+  const options = {
+    body: data.body || "",
+    icon: data.icon || "/icon-192.png",
+    badge: "/icon-96.png",
+    tag: data.tag || undefined,
+    dir: data.dir || "auto",
+    lang: data.lang || undefined,
+    vibrate: [100, 50, 100],
+    data: { url: data.url || "/", timestamp: Date.now() },
+  }
+  event.waitUntil(self.registration.showNotification(data.title || "balqalam", options))
 })
 
-// Notification click handler
+// A tap lands on the notification's deep link — on the tenant origin and in
+// its locale — reusing an open window when there is one.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close()
-
-  event.waitUntil(clients.openWindow("/"))
+  const target = new URL(event.notification.data?.url || "/", self.location.origin).href
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      const open = clients.find((c) => c.url.startsWith(self.location.origin))
+      if (open) {
+        return open.focus().then((c) => (c && "navigate" in c ? c.navigate(target) : c))
+      }
+      return self.clients.openWindow(target)
+    })
+  )
 })

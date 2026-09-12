@@ -28,6 +28,11 @@ export const metadata: Metadata = {
     title: "balqalam",
     statusBarStyle: "default",
   },
+  // iOS takes the home-screen icon from this link, never from the manifest.
+  // Tenant layouts override `icons` with the school logo when one is set.
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
 }
 
 // `viewport-fit=cover` lets the page draw into the notch and the home-indicator
@@ -37,6 +42,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Tints the status bar of an installed app; must match manifest theme_color.
+  themeColor: "#3b82f6",
 }
 
 export default async function RootLayout({
