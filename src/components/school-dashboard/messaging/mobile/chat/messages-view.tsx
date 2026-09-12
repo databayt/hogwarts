@@ -222,22 +222,23 @@ export const MessagesView = memo(function MessagesView({
     }
     prependRef.current = null
 
-    const last = items[items.length - 1]
-    const prevLast = prev[prev.length - 1]
-    const appended =
-      !!last && (!prevLast || last.id !== prevLast.id || items.length > prev.length)
-    if (!appended) return
+    // Only a longer list is an arrival. A temp row becoming its persisted
+    // twin keeps the length, and must not move a reader who scrolled up in
+    // the second after sending.
+    if (items.length <= prev.length) return
+    const prevIds = new Set(prev.map((i) => i.id))
+    const fresh = items.filter((i) => !prevIds.has(i.id))
+    if (fresh.length === 0) return
 
     // Follow arrivals only when the reader is already at the bottom, or the
     // arrival is their own message. A reader scrolled up into history keeps
     // their place and gets the jump button with a count instead.
-    if (nearBottomRef.current || isOwn(last)) {
+    if (nearBottomRef.current || fresh.some(isOwn)) {
       scrollToBottom()
       return
     }
-    const prevIds = new Set(prev.map((i) => i.id))
-    const fresh = items.filter((i) => !prevIds.has(i.id) && isOther(i)).length
-    if (fresh > 0) setUnseen((n) => n + fresh)
+    const others = fresh.filter(isOther).length
+    if (others > 0) setUnseen((n) => n + others)
   }, [items, scrollToBottom])
 
   // Heights change after commit — images decode, the composer grows, the

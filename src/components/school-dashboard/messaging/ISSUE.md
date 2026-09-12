@@ -121,9 +121,12 @@ ar/en and desktop en passes clean on the route, two-party polling pass.
 - Reply, reactions, attachments, voice and long-press actions are still
   desktop-only on the phone; the info panel is desktop-only, so tapping the
   header name does nothing on a phone.
-- The local demo admin↔teacher direct thread carries 130 seeded
-  "رسالة تحميل رقم N" messages so paging has three pages to walk; the seed
-  is not part of `prisma/seeds`.
+- Paging was measured on a throwaway admin↔teacher direct thread seeded with
+  130 "رسالة تحميل رقم N" messages (three pages). The thread, its 9 test
+  sends and their 7 notifications were deleted once the pass was done — the
+  local demo is copied verbatim to prod, so nothing of it may linger. Re-seed
+  with `node scripts/messaging-seed-long-thread.cjs` (and `--remove` after);
+  it is deliberately not part of `prisma/seeds`.
 
 ## 2026-07-20 — legacy English demo data purge (seed self-heals)
 

@@ -68,10 +68,18 @@ export const InputBar = memo(function InputBar({
   labels,
   className,
 }: Props) {
-  const [local, setLocal] = useState(controlled ?? initialValue ?? "")
+  const [local, setLocal] = useState(controlled ?? "")
   const isControlled = controlled !== undefined
   const value = isControlled ? controlled : local
   const fieldRef = useRef<HTMLTextAreaElement>(null)
+
+  // A restored draft is applied after mount. The server rendered an empty
+  // field (it has no session storage to read), so seeding state with the
+  // draft would make the first client render disagree with the markup.
+  useEffect(() => {
+    if (!isControlled && initialValue) setLocal(initialValue)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const typingRef = useRef<{ active: boolean; timer: ReturnType<typeof setTimeout> | null }>({
     active: false,
     timer: null,

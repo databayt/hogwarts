@@ -702,18 +702,19 @@ export function MessagingClient({
    */
   const handleMessageConfirmed = useCallback(
     (nonce: string, messageId: string, serverMessage?: MessageDTO) => {
-      const conv = activeConversationRef.current
+      // The confirm can land after the reader switched threads, and the
+      // desktop composer sends no server row — so find the thread that
+      // actually holds the temp row before trusting the open one.
+      const tempId = tempIdFor(nonce)
       const convId =
-        serverMessage?.conversationId ??
-        conv?.id ??
-        // A confirm can land after the reader switched threads.
         Array.from(cacheRef.current.keys()).find((id) =>
-          cacheRef.current.get(id)?.messages.some((x) => x.id === tempIdFor(nonce))
-        )
+          cacheRef.current.get(id)?.messages.some((x) => x.id === tempId)
+        ) ??
+        serverMessage?.conversationId ??
+        activeConversationRef.current?.id
       if (!convId) return
       sendAttemptsRef.current.delete(nonce)
       updateCachedMessages(convId, (prev) => {
-        const tempId = tempIdFor(nonce)
         const idx = prev.findIndex((x) => x.id === tempId)
         if (idx < 0) return prev
         if (prev.some((x) => x.id === messageId)) {
