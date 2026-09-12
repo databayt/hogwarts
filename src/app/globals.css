@@ -828,8 +828,6 @@ body {
   --wa-text-avatar-person: #7fb6e8;
   --wa-border-cta-filters: #2a3942;
   --wa-glass-bg: rgba(32, 44, 51, 0.85);
-  /* Dark threads keep the list's fill — the dark wallpaper is already cool. */
-  --wa-glass-bg-chat: rgba(32, 44, 51, 0.85);
   --wa-glass-border: rgba(255, 255, 255, 0.15);
   --wa-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   --wa-glass-inner: rgba(255, 255, 255, 0.1);
@@ -904,7 +902,11 @@ body {
    open thread it is a warm white. Composited at the shared 0.85 alpha,
    rgba(255,253,247) reproduces the (254,251,246) measured off
    public/whatsapp/IMG_2634..2637. Everything else about the material — rim,
-   blur, cast shadow — is unchanged. */
+   blur, cast shadow — is unchanged.
+
+   Light only, deliberately: `.dark .wa-glass-control` below carries the same
+   specificity and comes later, so it wins, and a dark thread's wallpaper is
+   already cool enough to want the list's fill. */
 .wa-glass-chat .wa-glass-control {
   background: var(--wa-glass-bg-chat);
 }
