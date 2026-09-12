@@ -1,5 +1,8 @@
 export { IosArchivedRow } from "./ios-archived-row"
 export { IosChatList } from "./ios-chat-list"
+export { IosListRow } from "./ios-list-row"
+export { IosMobileShell, type IosShellLabels } from "./ios-shell"
+export { IosSectionHeading, IosTabEmpty, IosTabPage } from "./ios-tab-page"
 export { IosChatRow, type IosChatRowData } from "./ios-chat-row"
 export { IosFilterChip } from "./ios-filter-chip"
 export { IosFilterChips, type FilterId } from "./ios-filter-chips"

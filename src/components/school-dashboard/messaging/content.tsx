@@ -54,6 +54,16 @@ export async function MessagingContent({
   const schoolId = tenantContext.schoolId
   const userId = session.user.id
 
+  // The school is the one community on the mobile Communities tab, and the
+  // signed-in person's own name heads the Settings tab.
+  const [school, viewer] = await Promise.all([
+    db.school.findUnique({ where: { id: schoolId }, select: { name: true } }),
+    db.user.findUnique({
+      where: { id: userId },
+      select: { username: true, bio: true },
+    }),
+  ])
+
   // Fetch all data in parallel
   let conversationsData: any[] = []
   let activeConversationData: any = null
@@ -141,6 +151,9 @@ export async function MessagingContent({
       locale={locale}
       whatsappConnected={whatsappConnected}
       whatsappSession={whatsappSessionData}
+      schoolName={school?.name ?? ""}
+      currentUserName={viewer?.username ?? ""}
+      currentUserStatus={viewer?.bio ?? null}
     />
   )
 }

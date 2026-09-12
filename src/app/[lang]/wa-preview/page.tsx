@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { notFound } from "next/navigation"
 
-import { IosChatList } from "@/components/school-dashboard/messaging/mobile"
+import { IosMobileShell } from "@/components/school-dashboard/messaging/mobile"
 import type { ConversationDTO } from "@/components/school-dashboard/messaging/types"
 
 const CURRENT_USER_ID = "u-self"
@@ -99,7 +99,9 @@ export default function WaPreviewPage() {
   return (
     <div className="flex h-screen w-screen items-stretch justify-center bg-neutral-200">
       <div className="flex h-full w-[393px] max-w-full flex-col overflow-hidden shadow-xl">
-        <IosChatList
+        <IosMobileShell
+          schoolName="Hill Valley High"
+          currentUserName="Marty McFly"
           conversations={MOCK}
           currentUserId={CURRENT_USER_ID}
           activeConversationId={activeId}

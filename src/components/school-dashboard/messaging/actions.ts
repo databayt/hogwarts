@@ -79,6 +79,8 @@ import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import type { UserRole } from "@prisma/client"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import {
@@ -104,6 +106,12 @@ import {
   validateConversationType,
 } from "./authorization"
 import { DEFAULT_SETTINGS, MESSAGES_PATH } from "./config"
+import {
+  getMobileCalls,
+  getMobileUpdates,
+  type MobileCallRow,
+  type MobileUpdateRow,
+} from "./mobile-tabs-queries"
 import {
   extractMentions,
   notifyMentions,
@@ -2463,6 +2471,64 @@ export async function getStarredMessages(input: {
     }
   } catch (error) {
     console.error("[getStarredMessages] Error:", error)
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}
+
+// ============================================================================
+// MOBILE TAB PAGES (Updates / Calls)
+// ============================================================================
+
+/**
+ * The announcements the viewer is an audience for, for the mobile Updates tab.
+ * Fetched lazily on first open rather than with the conversation list — this
+ * is a secondary surface and should not slow the thread list down.
+ */
+export async function getMobileUpdatesFeed(): Promise<
+  ActionResponse<{ items: MobileUpdateRow[] }>
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const items = await getMobileUpdates(
+      schoolId,
+      authContext.userId,
+      session!.user.role as UserRole
+    )
+    return { success: true, data: { items } }
+  } catch (error) {
+    console.error("[getMobileUpdatesFeed] Error:", error)
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}
+
+/** The viewer's own live-class sessions, for the mobile Calls tab. */
+export async function getMobileCallsFeed(): Promise<
+  ActionResponse<{ items: MobileCallRow[] }>
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const items = await getMobileCalls(schoolId, authContext.userId)
+    return { success: true, data: { items } }
+  } catch (error) {
+    console.error("[getMobileCallsFeed] Error:", error)
     return actionError(
       ACTION_ERRORS.LOAD_FAILED,
       error instanceof Error ? error.message : undefined

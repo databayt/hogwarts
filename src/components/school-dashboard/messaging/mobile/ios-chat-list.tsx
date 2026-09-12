@@ -10,7 +10,6 @@ import type { FilterId } from "./ios-filter-chips"
 import { IosHeader } from "./ios-header"
 import { IosInfoEncrypt } from "./ios-info-encrypt"
 import { IosNoticeCard } from "./ios-notice-card"
-import { IosTabbar, type IosTab, type IosTabId } from "./ios-tabbar"
 import { IosTitleBlock } from "./ios-title-block"
 
 type L = {
@@ -94,8 +93,7 @@ type Props = {
   onOptions?: () => void
   onOpenArchived?: () => void
   onAddFilter?: () => void
-  onDashboard?: () => void
-  /** Kept for callers that still pass it; the tab bar draws a gear now. */
+  /** Drawn by the shell's Settings tab, passed through for callers. */
   currentUserImage?: string | null
   locale?: "ar" | "en"
   labels?: Partial<L>
@@ -114,14 +112,12 @@ export function IosChatList({
   onOptions,
   onOpenArchived,
   onAddFilter,
-  onDashboard,
   locale = "en",
   labels,
 }: Props) {
   const L = { ...DEFAULT_L, ...labels }
   const [search, setSearch] = useState("")
   const [activeFilter, setActiveFilter] = useState<FilterId>("all")
-  const [activeTab, setActiveTab] = useState<IosTabId>("chats")
 
   const filters = useMemo(
     () => [
@@ -132,45 +128,6 @@ export function IosChatList({
     ],
     [L.filterAll, L.filterUnread, L.filterFavourites, L.filterGroups]
   )
-
-  const totalUnread = useMemo(
-    () => conversations.reduce((n, c) => n + (c.unreadCount ?? 0), 0),
-    [conversations]
-  )
-
-  const tabs: IosTab[] = [
-    {
-      id: "updates",
-      label: L.tabUpdates,
-      icon: "ic-wa-tab-updates-32",
-      iconActive: "ic-wa-tab-updates-fill-32",
-    },
-    {
-      id: "calls",
-      label: L.tabCalls,
-      icon: "ic-wa-tab-calls-32",
-      iconActive: "ic-wa-tab-calls-fill-32",
-    },
-    {
-      id: "communities",
-      label: L.tabCommunities,
-      icon: "ic-wa-tab-communities-32",
-      iconActive: "ic-wa-tab-communities-fill-32",
-    },
-    {
-      id: "chats",
-      label: L.tabChats,
-      icon: "ic-wa-tab-chats-32",
-      iconActive: "ic-wa-tab-chats-fill-32",
-      badge: totalUnread,
-    },
-    {
-      id: "settings",
-      label: L.tabSettings,
-      icon: "ic-wa-tab-settings-32",
-      iconActive: "ic-wa-tab-settings-fill-32",
-    },
-  ]
 
   const { active: activeConvs, archived: archivedCount } = useMemo(() => {
     const active: ConversationDTO[] = []
@@ -230,14 +187,6 @@ export function IosChatList({
       locale,
     ]
   )
-
-  const handleTabChange = (id: IosTabId) => {
-    if (id === "settings") {
-      onDashboard?.()
-      return
-    }
-    setActiveTab(id)
-  }
 
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden bg-[color:var(--wa-surface-primary)]">
@@ -299,10 +248,6 @@ export function IosChatList({
             suffix={L.encryptSuffix}
           />
         </div>
-      </div>
-
-      <div className="absolute inset-x-0 bottom-0 z-20">
-        <IosTabbar tabs={tabs} active={activeTab} onChange={handleTabChange} />
       </div>
     </div>
   )

@@ -7,6 +7,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
 import { toast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
+
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { WhatsAppSessionDTO } from "../whatsapp/types"
@@ -29,7 +31,7 @@ import { ConversationInfoPanel } from "./conversation-info-panel"
 import { NoActiveConversation } from "./empty-state"
 import { resolveMessagingError } from "./errors"
 import { usePresence } from "./hooks"
-import { IosChatList, MessagesView } from "./mobile"
+import { IosMobileShell, MessagesView } from "./mobile"
 import {
   conversationAvatar,
   conversationTitle,
@@ -140,6 +142,10 @@ export interface MessagingClientProps {
   locale?: "ar" | "en"
   whatsappConnected?: boolean
   whatsappSession?: WhatsAppSessionDTO | null
+  /** The school, shown as the one community on the mobile Communities tab. */
+  schoolName?: string
+  currentUserName?: string
+  currentUserStatus?: string | null
 }
 
 export function MessagingClient({
@@ -151,7 +157,11 @@ export function MessagingClient({
   locale = "en",
   whatsappConnected = false,
   whatsappSession = null,
+  schoolName = "",
+  currentUserName = "",
+  currentUserStatus = null,
 }: MessagingClientProps) {
+  const router = useRouter()
   const { dictionary } = useDictionary()
   const m = dictionary?.messaging
   const [conversations, setConversations] =
@@ -756,7 +766,15 @@ export function MessagingClient({
           activeConversation ? "hidden" : "flex h-full w-full"
         )}
       >
-        <IosChatList
+        <IosMobileShell
+          schoolName={schoolName}
+          currentUserName={currentUserName}
+          currentUserStatus={currentUserStatus}
+          onOpenDashboard={() => router.push(`/${locale}/dashboard`)}
+          onOpenProfile={() => router.push(`/${locale}/profile`)}
+          onOpenNotifications={() => router.push(`/${locale}/notifications`)}
+          onOpenCall={(id) => router.push(`/${locale}/live/${id}`)}
+          onOpenUpdate={(id) => router.push(`/${locale}/announcements/${id}`)}
           conversations={conversations}
           currentUserId={currentUserId}
           activeConversationId={activeConversation?.id ?? null}
@@ -798,6 +816,27 @@ export function MessagingClient({
             previewDeleted:
               m?.ui?.preview?.deleted ?? "You deleted this message.",
             relativeYesterday: m?.ui?.relative_yesterday ?? "Yesterday",
+            updatesRecent: m?.ui?.mobile?.updates_recent,
+            updatesEmptyTitle: m?.ui?.mobile?.updates_empty_title,
+            updatesEmptyBody: m?.ui?.mobile?.updates_empty_body,
+            callsRecent: m?.ui?.mobile?.calls_recent,
+            callsJoined: m?.ui?.mobile?.calls_joined,
+            callsMissed: m?.ui?.mobile?.calls_missed,
+            callsUpcoming: m?.ui?.mobile?.calls_upcoming,
+            callsLive: m?.ui?.mobile?.calls_live,
+            callsEmptyTitle: m?.ui?.mobile?.calls_empty_title,
+            callsEmptyBody: m?.ui?.mobile?.calls_empty_body,
+            callsEncrypted: m?.ui?.mobile?.calls_encrypted,
+            communitiesRooms: m?.ui?.mobile?.communities_rooms,
+            communitiesEmptyTitle: m?.ui?.mobile?.communities_empty_title,
+            communitiesEmptyBody: m?.ui?.mobile?.communities_empty_body,
+            communitiesMembers: m?.ui?.mobile?.communities_members,
+            settingsDashboard: m?.ui?.mobile?.settings_dashboard,
+            settingsProfile: m?.ui?.mobile?.settings_profile,
+            settingsNotifications: m?.ui?.mobile?.settings_notifications,
+            settingsStarred: m?.ui?.mobile?.settings_starred,
+            loading: m?.ui?.mobile?.loading,
+            loadFailed: m?.ui?.mobile?.load_failed,
           }}
         />
       </div>
