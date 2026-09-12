@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { headers } from "next/headers"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
@@ -54,6 +55,20 @@ export async function MessagingContent({
   const schoolId = tenantContext.schoolId
   const userId = session.user.id
 
+  // Which of the two trees to render first. The server cannot measure the
+  // window, but the client hints say whether this is a phone; the client
+  // repeats the guess on its first render (so hydration matches) and then
+  // corrects it from `matchMedia`. Wrong guesses are cheap — a narrow desktop
+  // window swaps to the phone tree a frame after it mounts.
+  const requestHeaders = await headers()
+  const uaMobile = requestHeaders.get("sec-ch-ua-mobile")
+  const ua = requestHeaders.get("user-agent") ?? ""
+  const initialLayout =
+    uaMobile === "?1" ||
+    (uaMobile !== "?0" && /Mobi|Android|iPhone|iPod|Windows Phone/i.test(ua))
+      ? "mobile"
+      : "desktop"
+
   // The school is the one community on the mobile Communities tab, and the
   // signed-in person's own name heads the Settings tab.
   const [school, viewer] = await Promise.all([
@@ -63,6 +78,10 @@ export async function MessagingContent({
       select: { username: true, bio: true },
     }),
   ])
+
+  // The instant this snapshot was taken, so the client's first list poll
+  // can ask only for what changed after it instead of the whole list.
+  const initialServerTime = new Date().toISOString()
 
   // Fetch all data in parallel
   let conversationsData: any[] = []
@@ -148,6 +167,9 @@ export async function MessagingContent({
       initialMessages={messagesData}
       currentUserId={userId}
       currentUserRole={session.user.role}
+      schoolId={schoolId}
+      initialLayout={initialLayout}
+      initialServerTime={initialServerTime}
       locale={locale}
       whatsappConnected={whatsappConnected}
       whatsappSession={whatsappSessionData}

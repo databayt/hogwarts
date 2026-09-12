@@ -20,6 +20,7 @@ import {
 import { getAuthContext } from "@/components/school-dashboard/messaging/authorization"
 import {
   getConversation,
+  getConversationForSend,
   getConversationParticipant,
   getMessage,
   isConversationParticipant,
@@ -114,7 +115,9 @@ vi.mock("@/components/school-dashboard/messaging/queries", () => ({
   getConversationParticipant: vi.fn(),
   isConversationParticipant: vi.fn().mockResolvedValue(true),
   getConversation: vi.fn(),
+  getConversationForSend: vi.fn(),
   getMessage: vi.fn(),
+  messageListSelect: {},
 }))
 
 describe("Messaging Actions", () => {
@@ -205,10 +208,12 @@ describe("Messaging Actions", () => {
         createdAt: new Date(),
       }
 
-      vi.mocked(getConversation).mockResolvedValue({
+      vi.mocked(getConversationForSend).mockResolvedValue({
         id: "conv-1",
         schoolId: mockSchoolId,
         type: "direct",
+        isLocked: false,
+        whatsappEnabled: false,
         participants: [{ userId: mockUserId, role: "member" }],
       } as any)
       vi.mocked(getConversationParticipant).mockResolvedValue({
@@ -228,7 +233,7 @@ describe("Messaging Actions", () => {
     })
 
     it("returns error when conversation not found", async () => {
-      vi.mocked(getConversation).mockResolvedValue(null)
+      vi.mocked(getConversationForSend).mockResolvedValue(null)
 
       const result = await sendMessage({
         conversationId: "nonexistent",

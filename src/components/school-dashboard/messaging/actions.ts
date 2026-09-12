@@ -75,6 +75,7 @@
 "use server"
 
 import { revalidatePath, revalidateTag } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
@@ -120,9 +121,11 @@ import {
 } from "./notification-helpers"
 import {
   getConversation,
+  getConversationForSend,
   getConversationParticipant,
   getMessage,
   isConversationParticipant,
+  messageListSelect,
 } from "./queries"
 import {
   addParticipantSchema,
@@ -144,6 +147,21 @@ import {
   updateMessageSchema,
 } from "./validation"
 
+/**
+ * Run work after the response has been sent. `after` keeps the request
+ * scope alive for it — a detached promise had none, so the notification
+ * helper's revalidation threw on every send — and keeps a serverless host
+ * from freezing the function before the work is done. Outside a request
+ * (unit tests) there is no scope to keep, and the task simply runs.
+ */
+function afterResponse(task: () => Promise<unknown>): void {
+  try {
+    after(task)
+  } catch {
+    task().catch((err) => console.error("[afterResponse] Error:", err))
+  }
+}
+
 // Action response type
 export type ActionResponse<T = void> =
   | { success: true; data: T }
@@ -153,13 +171,24 @@ export type ActionResponse<T = void> =
  * Emit a Socket.IO event via the external socket server (best-effort, non-blocking).
  * Posts to the /api/emit endpoint on the Socket.IO server.
  */
+/**
+ * Where the socket server is, or null when none is configured. Outside
+ * development there is no localhost fallback: every send, read and reaction
+ * was paying for a connection attempt to a port nothing listens on.
+ */
+function socketServerUrl(): string | null {
+  const configured = process.env.NEXT_PUBLIC_SOCKET_URL
+  if (configured) return configured
+  return process.env.NODE_ENV === "development" ? "http://localhost:3001" : null
+}
+
 async function emitSocketEvent(
   conversationId: string,
   event: string,
   data: Record<string, unknown>
 ): Promise<void> {
-  const socketUrl =
-    process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001"
+  const socketUrl = socketServerUrl()
+  if (!socketUrl) return
   const emitSecret = process.env.EMIT_SECRET || process.env.SOCKET_SECRET || ""
   await fetch(`${socketUrl}/api/emit`, {
     method: "POST",
@@ -184,8 +213,8 @@ async function emitToUsers(
   event: string,
   data: Record<string, unknown>
 ): Promise<void> {
-  const socketUrl =
-    process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001"
+  const socketUrl = socketServerUrl()
+  if (!socketUrl) return
   const emitSecret = process.env.EMIT_SECRET || process.env.SOCKET_SECRET || ""
   await fetch(`${socketUrl}/api/emit-to-users`, {
     method: "POST",
@@ -581,15 +610,19 @@ export async function sendMessage(
       }
     }
 
-    // Get conversation (already includes the caller's participant record —
-    // no separate getConversationParticipant round-trip needed)
-    const conversation = await getConversation(
+    // The lean select: participants and settings, no message page. The
+    // caller's own participant row rides along, so there is no separate
+    // getConversationParticipant round-trip either.
+    const conversation = await getConversationForSend(
       schoolId,
       authContext.userId,
       parsed.conversationId
     )
     if (!conversation) {
       return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
+    }
+    if (conversation.isLocked) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const participant = conversation.participants.find(
@@ -620,7 +653,12 @@ export async function sendMessage(
       ? { ...(parsed.metadata || {}), clientNonce: parsed.clientNonce }
       : parsed.metadata
 
-    // Create message
+    const hasAttachments = Boolean(parsed.attachments?.length)
+
+    // Create the row already shaped for the client. A text send — nearly
+    // every send — returns from this one INSERT with its relations selected,
+    // so there is no second read of the row it just wrote. Only a send with
+    // attachments re-reads, because those rows are inserted afterwards.
     const message = await db.message.create({
       data: {
         conversationId: parsed.conversationId,
@@ -633,12 +671,13 @@ export async function sendMessage(
           : Prisma.DbNull,
         status: "sent",
       },
+      select: messageListSelect,
     })
 
     // Create attachments if provided (e.g. voice messages, file uploads)
-    if (parsed.attachments?.length) {
+    if (hasAttachments) {
       await db.messageAttachment.createMany({
-        data: parsed.attachments.map((a) => ({
+        data: parsed.attachments!.map((a) => ({
           messageId: message.id,
           fileUrl: a.fileUrl,
           fileName: a.fileName,
@@ -650,93 +689,113 @@ export async function sendMessage(
       })
     }
 
-    // Update lastMessageAt and re-fetch the full message (with relations, for
-    // the instant client-side update) in parallel — they're independent.
+    // Bump the list ordering and, only when attachments were added after the
+    // INSERT, re-read the message so the response carries them.
     const [, fullMessage] = await Promise.all([
       db.conversation.update({
         where: { id: parsed.conversationId },
         data: { lastMessageAt: new Date() },
       }),
-      getMessage(schoolId, message.id),
+      hasAttachments
+        ? getMessage(schoolId, message.id)
+        : Promise.resolve(message),
     ])
 
     // Sender is always a participant — name is already in memory, no
     // user.findUnique round-trip.
     const senderName = participant?.user?.username || "Someone"
 
-    // Trigger notifications (non-blocking)
+    // Everything below the response line runs after it has gone out.
     // 1. Notify all participants about the new message
-    notifyNewMessage(
-      schoolId,
-      parsed.conversationId,
-      authContext.userId,
-      senderName,
-      parsed.content,
-      conversation.title || undefined
-    ).catch((err) => console.error("[sendMessage] Notification error:", err))
-
-    // 2. Check for and notify mentioned users
-    const mentionedUserIds = await extractMentions(parsed.content)
-    if (mentionedUserIds.length > 0) {
-      notifyMentions(
+    afterResponse(() =>
+      notifyNewMessage(
         schoolId,
         parsed.conversationId,
         authContext.userId,
         senderName,
         parsed.content,
-        mentionedUserIds
+        conversation.title || undefined
       ).catch((err) =>
-        console.error("[sendMessage] Mention notification error:", err)
+        console.error("[sendMessage] Notification error:", err)
+      )
+    )
+
+    // 2. Check for and notify mentioned users
+    const mentionedUserIds = await extractMentions(parsed.content)
+    if (mentionedUserIds.length > 0) {
+      afterResponse(() =>
+        notifyMentions(
+          schoolId,
+          parsed.conversationId,
+          authContext.userId,
+          senderName,
+          parsed.content,
+          mentionedUserIds
+        ).catch((err) =>
+          console.error("[sendMessage] Mention notification error:", err)
+        )
       )
     }
 
-    // 3. WhatsApp dispatch (non-blocking)
+    // 3. WhatsApp dispatch
     if (conversation.whatsappEnabled) {
-      import("./whatsapp-bridge")
-        .then(({ dispatchMessageToWhatsApp }) =>
-          dispatchMessageToWhatsApp(
-            schoolId,
-            parsed.conversationId,
-            message.id,
-            parsed.content,
-            authContext.userId
+      afterResponse(() =>
+        import("./whatsapp-bridge")
+          .then(({ dispatchMessageToWhatsApp }) =>
+            dispatchMessageToWhatsApp(
+              schoolId,
+              parsed.conversationId,
+              message.id,
+              parsed.content,
+              authContext.userId
+            )
           )
-        )
-        .catch((err) =>
-          console.error("[sendMessage] WhatsApp dispatch error:", err)
-        )
+          .catch((err) =>
+            console.error("[sendMessage] WhatsApp dispatch error:", err)
+          )
+      )
     }
 
-    // 4. Link preview (non-blocking) — extract URL, unfurl OG metadata, store in metadata
-    import("./og-unfurl")
-      .then(async ({ unfurlUrl }) => {
-        const { extractFirstUrl } = await import("./link-preview")
-        const url = extractFirstUrl(parsed.content)
-        if (!url) return
-        const preview = await unfurlUrl(url)
-        if (!preview) return
-        await db.message.update({
-          where: { id: message.id },
-          data: {
-            metadata: {
-              linkPreview: preview,
-            } as unknown as Prisma.InputJsonValue,
-          },
-        })
-      })
-      .catch((err) => console.error("[sendMessage] Link preview error:", err))
+    // 4. Link preview — extract URL, unfurl OG metadata, store in metadata.
+    // Only scheduled when the text holds something that could be a link.
+    if (/https?:\/\/|www\./i.test(parsed.content)) {
+      afterResponse(() =>
+        import("./og-unfurl")
+          .then(async ({ unfurlUrl }) => {
+            const { extractFirstUrl } = await import("./link-preview")
+            const url = extractFirstUrl(parsed.content)
+            if (!url) return
+            const preview = await unfurlUrl(url)
+            if (!preview) return
+            await db.message.update({
+              where: { id: message.id },
+              data: {
+                metadata: {
+                  ...(mergedMetadata ?? {}),
+                  linkPreview: preview,
+                } as unknown as Prisma.InputJsonValue,
+              },
+            })
+          })
+          .catch((err) =>
+            console.error("[sendMessage] Link preview error:", err)
+          )
+      )
+    }
 
-    // 5. Audit log (non-blocking)
-    logMessageCreated(
-      { schoolId, userId: authContext.userId },
-      {
-        conversationId: parsed.conversationId,
-        messageId: message.id,
-        contentPreview: parsed.content,
-        contentLength: parsed.content.length,
-        replyToId: parsed.replyToId,
-      }
-    ).catch((err) => console.error("[sendMessage] Audit log error:", err))
+    // 5. Audit log
+    afterResponse(() =>
+      logMessageCreated(
+        { schoolId, userId: authContext.userId },
+        {
+          conversationId: parsed.conversationId,
+          messageId: message.id,
+          contentPreview: parsed.content,
+          contentLength: parsed.content.length,
+          replyToId: parsed.replyToId,
+        }
+      ).catch((err) => console.error("[sendMessage] Audit log error:", err))
+    )
 
     const { serializeMessage } = await import("./serialization")
     const serialized = serializeMessage(fullMessage)
@@ -2049,6 +2108,13 @@ export async function fetchConversationData(input: {
 export async function pollNewMessages(input: {
   conversationId: string
   afterMessageId?: string
+  /**
+   * ISO instant to poll from when the thread has no persisted message yet
+   * to cursor on. Without it an empty thread could never see its first
+   * reply arrive: the poll returned nothing until a cursor existed, and no
+   * cursor existed until something arrived.
+   */
+  since?: string
 }): Promise<ActionResponse<{ items: any[] }>> {
   try {
     const session = await auth()
@@ -2062,13 +2128,33 @@ export async function pollNewMessages(input: {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    // No cursor — return empty (initial load uses fetchConversationData)
-    if (!input.afterMessageId) {
+    const since = input.since ? new Date(input.since) : null
+    const hasSince = since !== null && !Number.isNaN(since.getTime())
+
+    // No cursor and no instant — return empty (initial load uses
+    // fetchConversationData)
+    if (!input.afterMessageId && !hasSince) {
       return { success: true, data: { items: [] } }
     }
 
-    const { messageListSelect } = await import("./queries")
     const { serializeMessages } = await import("./serialization")
+
+    if (!input.afterMessageId) {
+      const fresh = await db.message.findMany({
+        where: {
+          conversationId: input.conversationId,
+          createdAt: { gt: since! },
+          conversation: {
+            schoolId,
+            participants: { some: { userId: authContext.userId } },
+          },
+        },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        take: 50,
+        select: messageListSelect,
+      })
+      return { success: true, data: { items: serializeMessages(fresh) } }
+    }
 
     // Single query per poll tick (this runs every 10s for every open chat):
     // - participant scoping is folded into the where clause (was a separate
@@ -2104,9 +2190,29 @@ export async function pollNewMessages(input: {
 
 /**
  * Poll for conversation list updates (fallback when Socket.IO unavailable).
+ *
+ * With `since`, only the conversations that changed after that instant come
+ * back (a new message, an archive, a rename), plus a full unread map so the
+ * badges stay right when something was read elsewhere. The client merges the
+ * rows by id and applies the counts to every row it holds. Without `since`
+ * the whole list is returned — the first tick, and a periodic safety net for
+ * changes that move no conversation row (an edited or deleted last message).
+ *
+ * The full tick used to run on every interval: 50 conversations with their
+ * participants and four profile joins each, every 15 seconds, for a list
+ * that almost never changed between ticks.
  */
-export async function pollConversationUpdates(): Promise<
-  ActionResponse<{ conversations: any[] }>
+export async function pollConversationUpdates(input?: {
+  since?: string
+}): Promise<
+  ActionResponse<{
+    conversations: any[]
+    unreadCounts: Record<string, number>
+    /** When the server produced this snapshot — pass back as the next `since`. */
+    serverTime: string
+    /** True when `conversations` is the whole list, not a delta. */
+    full: boolean
+  }>
 > {
   try {
     const session = await auth()
@@ -2120,16 +2226,61 @@ export async function pollConversationUpdates(): Promise<
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    const { getConversationsForPoll } = await import("./queries")
+    const {
+      getConversationsChangedSince,
+      getConversationsForPoll,
+      getUnreadCountsPerConversation,
+    } = await import("./queries")
     const { serializeConversations } = await import("./serialization")
 
-    // Poll path skips the pagination COUNT query — the client replaces its
-    // list wholesale and never reads a total.
-    const rows = await getConversationsForPoll(schoolId, authContext.userId)
+    const since = input?.since ? new Date(input.since) : null
+    const full = !since || Number.isNaN(since.getTime())
+    // Read the clock before the queries so a message written while they run
+    // is still after the `since` the client sends back next time.
+    const serverTime = new Date().toISOString()
+
+    if (full) {
+      // Poll path skips the pagination COUNT query — the client replaces its
+      // list wholesale and never reads a total.
+      const rows = await getConversationsForPoll(schoolId, authContext.userId)
+      const unreadCounts: Record<string, number> = {}
+      for (const row of rows) unreadCounts[row.id] = row.unreadCount
+      return {
+        success: true,
+        data: {
+          conversations: serializeConversations(rows),
+          unreadCounts,
+          serverTime,
+          full: true,
+        },
+      }
+    }
+
+    // Overlap the window by a few seconds: clocks and transaction commit
+    // order are not the same thing, and a repeated row is harmless (the
+    // client merges by id) where a missed one is not.
+    const overlap = new Date(since!.getTime() - 5_000)
+    const [changed, counts] = await Promise.all([
+      getConversationsChangedSince(schoolId, authContext.userId, overlap),
+      getUnreadCountsPerConversation(schoolId, authContext.userId),
+    ])
+    const unreadCounts: Record<string, number> = {}
+    counts.forEach((n, id) => {
+      unreadCounts[id] = n
+    })
+    const rows = changed.map((row) => ({
+      ...row,
+      unreadCount: unreadCounts[row.id] ?? 0,
+    }))
 
     return {
       success: true,
-      data: { conversations: serializeConversations(rows) },
+      data: {
+        conversations: serializeConversations(rows),
+        unreadCounts,
+        serverTime,
+        full: false,
+      },
     }
   } catch (error) {
     console.error("[pollConversationUpdates] Error:", error)

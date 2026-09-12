@@ -13,6 +13,118 @@ last_audited: 2026-05-25
 
 # Messaging — Production Readiness Tracker
 
+## 2026-09-12 — performance, interaction and fidelity pass (phone first)
+
+Read the iPhone captures in `public/whatsapp/IMG_26*.PNG` as the single
+source of truth, then inspected the architecture before touching it. What was
+found and what changed, in the order the work was prioritised:
+
+**Performance / architecture**
+
+- [x] **Both width trees mounted at every width.** A phone ran the desktop
+      split-pane behind `display: none` — its contacts fetch, virtualizer and
+      scroll listeners — and the phone's thread only stayed live because the
+      hidden desktop `ChatInterface` held the socket room, the 10 s poller and
+      mark-as-read. Now one tree renders per width (`hooks/use-layout-mode.ts`,
+      server hint from client hints, `matchMedia` correction, both views as
+      `next/dynamic` chunks) and the thread sync lives in
+      `hooks/use-thread-sync.ts`, shared by both widths.
+- [x] **Nothing on this route ever opened the socket.** `connect()` was only
+      called by the dashboard header's bell, which this standalone layout does
+      not render. The messaging client connects itself when
+      `NEXT_PUBLIC_SOCKET_URL` is set.
+- [x] **The poller cursored on a temp id.** Right after an optimistic send the
+      desktop poller used `messages.at(-1).id` = `temp-…`; Prisma rejects that
+      cursor and polls failed silently until confirm. The cursor is now the
+      newest persisted id, and a cursorless poll can page by time so an empty
+      thread sees its first reply.
+- [x] **The list poll refetched 50 rows with participants and four profile
+      joins every 15 s.** Incremental now (`since` + unread map, merged by id,
+      full refresh every 8th tick).
+- [x] **Polling ignored visibility.** Both pollers now stop while the tab is
+      hidden, catch up immediately on focus / visibility / `online`, and the
+      thread poll adapts: 5 s while active, 12 s after two quiet minutes.
+- [x] **`sendMessage` loaded the newest 50 messages to check permission**
+      (`conversationDetailSelect`). Lean `conversationSendSelect`; a text send
+      is one `create({ select })` with no re-read; `isLocked` is honoured.
+- [x] **The send tail threw on every message.** `notifyNewMessage` ran as a
+      detached promise after the response, so `createNotification`'s
+      `revalidatePath` executed outside the request scope and threw after the
+      row was written, reporting a created notification as failed. The tail is
+      scheduled with `after()` now and revalidation there is non-fatal.
+- [x] **Every send / read / reaction emitted to `http://localhost:3001`**
+      when `NEXT_PUBLIC_SOCKET_URL` was unset — a connection attempt to a port
+      nothing listens on, in production. Skipped outside development.
+- [x] **Cursor pagination could skip or repeat at a page boundary** — ordered
+      by `createdAt` alone, and seeds share a millisecond. `[createdAt, id]`
+      now. `hasMore` counted deleted rows the cursor query excludes; filtered.
+- [x] **Render hygiene.** The chat list's label object was rebuilt every render
+      and invalidated every memo below it on every tick; labels are memoised
+      on both sides now. Rows, bubbles, the thread view and the header are
+      `memo`; avatars are `loading="lazy"`; the `<time>` hydration mismatch
+      (UTC server vs local browser) is `suppressHydrationWarning`, which React
+      patches; `hour12: false` (which prints midnight as 24:xx) is
+      `hourCycle: "h23"`; the list prints Latin digits under Arabic like the
+      thread.
+
+**Interaction / UX (iPhone WhatsApp patterns)**
+
+- [x] **Send feels instant on the phone.** The row appears before the request
+      leaves (24–29 ms measured), with a clock, then a single tick. One outbox
+      for both widths; the confirm no longer renames the temp row when the
+      poller already delivered the persisted one (that put two rows under one
+      id). Failed sends show the red mark, retry on tap, and auto-retry on
+      `online` / reconnect (3 attempts).
+- [x] **Scrolling.** An arrival no longer yanks a reader who scrolled up: the
+      thread follows only when near the bottom or the message is their own,
+      otherwise the round jump button appears with a count. Prepend anchoring
+      is measured (explicit pending flag, `scrollHeight` delta — iOS has no
+      `overflow-anchor`), older pages prefetch at 1.5 viewports with a spinner
+      pill, and a `ResizeObserver` keeps the bottom pinned through image
+      decodes, composer growth and keyboard resizes.
+- [x] **Composer.** Auto-grows to ~5 lines; the keyboard stays up across a
+      tap on send / camera / mic; green caret; drafts per conversation; typing
+      signals; `enterKeyHint="enter"`. Return on touch inserts a line (as the
+      iPhone app), Enter on a hardware keyboard sends (as WhatsApp Desktop).
+- [x] **Keyboard.** `100dvh` never follows the iOS keyboard; the phone view is
+      sized to `window.visualViewport` while it is up, and the document is
+      pinned back to the top when Safari pans it. The fake home indicator
+      under the composer is gone (`env(safe-area-inset-bottom)` instead).
+- [x] **Unread clears on open** (row badge and Chats tab), not on the next
+      poll; the desktop unread divider snapshots the count first.
+
+**Visual fidelity (deltas against the captures, both languages)**
+
+- [x] Header: a frosted scroll-edge band (`.wa-scroll-edge`) behind the
+      floating controls — a long thread drew the name over bubble text.
+- [x] Bubble text is `dir="auto"` (Arabic right-aligned inside the English UI
+      and the reverse, as IMG_2635–2637 show).
+- [x] Ticks: WhatsApp's "sent" is a single tick; all three captured icons are
+      double ticks, so the single one is drawn inline, plus the sending clock.
+- [x] The list footer's "end-to-end encrypted" tail was hard-coded English.
+
+**Verified** (`scripts/messaging-mirror-capture.mjs`, `scripts/messaging-two-party.mjs`;
+numbers in README → "One tree per width, one sync"): tsc 0, `next build`
+exit 0, vitest 540/540 across messaging + whatsapp + notifications, phone
+ar/en and desktop en passes clean on the route, two-party polling pass.
+
+**Open, deliberately**
+
+- Ticks can only reach "delivered" through the socket server's
+  `message:delivered`; polling cannot know delivery, so without the server a
+  sent message stays on a single tick until read (blue).
+- The keyboard behaviour is verified by construction only — Playwright cannot
+  raise a soft keyboard. Check on a real iPhone: composer on the keys, last
+  message just above it, header still at the top.
+- Turbopack dev occasionally 404s a vendor-chunk preload on the desktop route
+  (never on the phone, never in the production build); nothing fails to load.
+- Reply, reactions, attachments, voice and long-press actions are still
+  desktop-only on the phone; the info panel is desktop-only, so tapping the
+  header name does nothing on a phone.
+- The local demo admin↔teacher direct thread carries 130 seeded
+  "رسالة تحميل رقم N" messages so paging has three pages to walk; the seed
+  is not part of `prisma/seeds`.
+
 ## 2026-07-20 — legacy English demo data purge (seed self-heals)
 
 The pre-i18n messages seed left English conversations ("Sports Team Chat",
@@ -275,9 +387,10 @@ capture being 3x: rendered at the art's native resolution the stroke measures
 
 **Not wired on mobile (deliberate, desktop-only for now):** attachment upload, edit,
 delete, reactions add/remove, reply composition, forward, link previews, voice
-recording. `onTapInfo` opens `ConversationInfoPanel`, which is `hidden md:block`, so
+recording. `onTapInfo` opens `ConversationInfoPanel`, which is desktop-only, so
 tapping the header does nothing on a phone. The composer's attach/sticker/camera/mic
-buttons render but are inert.
+buttons render but are inert. (Typing signals, drafts, optimistic send with retry
+and the jump button were wired on 2026-09-12 — see the section at the top.)
 
 ### Desktop conversation joins the WhatsApp pattern — 2026-09-09
 
@@ -577,7 +690,7 @@ Priority-ordered candidate work once ops blockers clear:
 3. ~~Green the test suite~~ — ✅ **Done 2026-05-22** (211/211, see Test Suite Status below).
 4. ~~Resolve the 3 non-creatable conversation types~~ — ✅ **Decided 2026-06-12**: formally schema-only scaffolding (see P2).
 5. ~~DB-level 1:1 dedup constraint~~ — ✅ **Done 2026-06-12** (`conversations_direct_pair_key`).
-6. **Incremental list polling.** `pollConversationUpdates` still refetches the full 50-conversation list (now without the COUNT) every 15s per idle client; an `updatedSince` contract + client-side merge would make ticks near-free. Worth doing only if #262 stays blocked — the socket path makes polling a rare fallback.
+6. ~~Incremental list polling~~ — ✅ **Done 2026-09-12** (`since` + unread map, merged by id; full refresh every 8th tick).
 7. **Mobile API name localization.** `/api/mobile/conversations` + `/messages` return raw `username`s; the web path batches via `getNames` (content.tsx), mobile contacts already uses `getLabels` — extend the same one-call batch to the two remaining mobile routes.
 8. **Wire the modeled-but-actionless features** if needed: message pinning (`PinnedMessage`), drafts (`MessageDraft` — would also want a `schoolId` column to kill its 2-query lookup), invites (`ConversationInvite`) — models + a query exist, but no write actions.
 9. **Per-school student→teacher DM toggle** (net-new feature; the old `canStudentsDmTeachers` claim was stale — no such field exists).
@@ -646,4 +759,4 @@ normalized digits-only phone format and `actions.test.ts` to the batched
 
 ---
 
-**Last Review:** 2026-09-12
+**Last Review:** 2026-09-12 (performance / interaction / fidelity pass)

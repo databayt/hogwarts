@@ -907,6 +907,32 @@ body {
    Light only, deliberately: `.dark .wa-glass-control` below carries the same
    specificity and comes later, so it wins, and a dark thread's wallpaper is
    already cool enough to want the list's fill. */
+/* The frosted strip behind the floating chat header. Content scrolls under
+   the controls and fades out through it — the iOS 26 scroll-edge effect —
+   so the name stays legible over a long thread. The fill is the wallpaper's
+   cream at partial alpha, and the mask feathers the bottom so there is no
+   hard edge; the blur does the rest. */
+.wa-scroll-edge {
+  background: linear-gradient(
+    to bottom,
+    rgba(245, 242, 235, 0.92) 0%,
+    rgba(245, 242, 235, 0.72) 55%,
+    rgba(245, 242, 235, 0) 100%
+  );
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 100%);
+}
+.dark .wa-scroll-edge {
+  background: linear-gradient(
+    to bottom,
+    rgba(11, 20, 26, 0.92) 0%,
+    rgba(11, 20, 26, 0.72) 55%,
+    rgba(11, 20, 26, 0) 100%
+  );
+}
+
 .wa-glass-chat .wa-glass-control {
   background: var(--wa-glass-bg-chat);
 }

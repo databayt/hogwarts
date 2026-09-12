@@ -1,3 +1,5 @@
+import { memo } from "react"
+
 import { cn } from "@/lib/utils"
 
 import { BubbleTail } from "./bubble-tail"
@@ -11,7 +13,7 @@ type Props = {
   className?: string
 }
 
-export function LocationBubble({
+export const LocationBubble = memo(function LocationBubble({
   side,
   mapImageUrl,
   time,
@@ -70,4 +72,4 @@ export function LocationBubble({
       </div>
     </div>
   )
-}
+})

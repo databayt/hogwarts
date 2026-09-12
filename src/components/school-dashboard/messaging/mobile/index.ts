@@ -26,7 +26,11 @@ export { EncryptionNotice } from "./chat/encryption-notice"
 export { InputBar, type ReplyDraft } from "./chat/input-bar"
 export { LocationBubble } from "./chat/location-bubble"
 export { MessageBubble } from "./chat/message-bubble"
-export { MessagesView, type ChatItem } from "./chat/messages-view"
+export {
+  MessagesView,
+  type ChatItem,
+  type MessagesViewLabels,
+} from "./chat/messages-view"
 export { ReactionCluster } from "./chat/reaction-cluster"
 export { ReplyBubble } from "./chat/reply-bubble"
 export { TopContactHeader } from "./chat/top-contact-header"

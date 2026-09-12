@@ -163,7 +163,15 @@
       "settings_whatsapp": "واتساب",
       "settings_help": "المساعدة",
       "loading": "جارٍ التحميل…",
-      "load_failed": "تعذّر التحميل"
+      "load_failed": "تعذّر التحميل",
+      "not_sent": "لم تُرسل. اضغط لإعادة المحاولة",
+      "loading_older": "جارٍ تحميل الرسائل الأقدم",
+      "new_messages_below": "رسائل جديدة",
+      "attach": "إرفاق",
+      "stickers": "ملصقات",
+      "camera": "الكاميرا",
+      "send": "إرسال",
+      "cancel_reply": "إلغاء الرد"
     },
     "notice": {
       "title": "تفعيل إشعارات الرسائل",

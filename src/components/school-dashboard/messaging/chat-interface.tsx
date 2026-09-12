@@ -8,7 +8,6 @@ import { ar, enUS } from "date-fns/locale"
 import { ArrowLeft } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import socketService from "@/lib/websocket/socket-service"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,23 +23,13 @@ import { UserFilledIcon } from "@/components/atom/icons"
 import type { UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import {
-  markConversationAsRead,
-  pollNewMessages,
-  toggleConversationWhatsApp,
-} from "./actions"
+import { toggleConversationWhatsApp } from "./actions"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { resolveMessagingError } from "./errors"
 import { useUserPresence } from "./hooks/use-presence"
 import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
-import { buildMessageFromSocket } from "./messaging-client"
-import type {
-  ConversationDTO,
-  MessageAttachmentDTO,
-  MessageDTO,
-  TypingIndicatorDTO,
-} from "./types"
+import type { ConversationDTO, MessageAttachmentDTO, MessageDTO } from "./types"
 
 const AVATAR_COLORS = [
   { bg: "#CBF2EE", icon: "#028377" },
@@ -56,7 +45,6 @@ function getAvatarColor(id: string) {
   }
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
-
 export interface ChatInterfaceProps {
   conversation: ConversationDTO
   messages: MessageDTO[]
@@ -65,20 +53,33 @@ export interface ChatInterfaceProps {
   locale?: "ar" | "en"
   isConnected: boolean
   whatsappConnected?: boolean
-  onSendMessage: (
-    content: string,
-    replyToId?: string
-  ) => Promise<MessageDTO | void>
+  /** Someone else is typing in this thread. */
+  isTyping?: boolean
   onEditMessage: (messageId: string, content: string) => Promise<void>
   onDeleteMessage: (messageId: string) => Promise<void>
   onReactToMessage: (messageId: string, emoji: string) => Promise<void>
   onRemoveReaction: (reactionId: string) => Promise<void>
   onFileUpload?: (files: UploadedFileResult[]) => void
   onLoadMoreMessages?: () => Promise<void>
-  onMessagesUpdate: (
-    convId: string,
-    updater: (prev: MessageDTO[]) => MessageDTO[]
+  /**
+   * The outbox, owned by the orchestrator so both widths share one: an
+   * optimistic row goes in, is confirmed or failed by nonce, and a failed
+   * one can be retried from its bubble.
+   */
+  onOptimisticSend: (
+    content: string,
+    replyToId?: string,
+    attachments?: MessageAttachmentDTO[]
+  ) => string
+  onMessageConfirmed: (
+    nonce: string,
+    messageId: string,
+    serverMessage?: MessageDTO
   ) => void
+  onMessageFailed: (nonce: string) => void
+  onRetryMessage: (messageId: string) => void
+  onTypingStart?: () => void
+  onTypingStop?: () => void
   onViewParticipants?: () => void
   onViewDetails?: () => void
   onBack?: () => void
@@ -87,6 +88,13 @@ export interface ChatInterfaceProps {
   className?: string
 }
 
+/**
+ * The desktop thread: header, list, composer. A view — the socket room,
+ * the polling fallback and mark-as-read that used to run in here now run
+ * once in the orchestrator (`useThreadSync`), where the phone's thread can
+ * share them instead of depending on this component being mounted and
+ * hidden beside it.
+ */
 export function ChatInterface({
   conversation,
   messages,
@@ -95,14 +103,19 @@ export function ChatInterface({
   locale = "en",
   isConnected,
   whatsappConnected = false,
-  onSendMessage,
+  isTyping = false,
   onEditMessage,
   onDeleteMessage,
   onReactToMessage,
   onRemoveReaction,
   onFileUpload,
   onLoadMoreMessages,
-  onMessagesUpdate,
+  onOptimisticSend,
+  onMessageConfirmed,
+  onMessageFailed,
+  onRetryMessage,
+  onTypingStart,
+  onTypingStop,
   onViewParticipants,
   onViewDetails,
   onBack,
@@ -114,21 +127,14 @@ export function ChatInterface({
   const m = dictionary?.messaging
   const [replyTo, setReplyTo] = useState<MessageDTO | null>(null)
   const [editingMessage, setEditingMessage] = useState<MessageDTO | null>(null)
-  const [typingUsers, setTypingUsers] = useState<TypingIndicatorDTO[]>([])
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [whatsappEnabled, setWhatsappEnabled] = useState(
     conversation.whatsappEnabled ?? false
   )
-
-  // Offline message queue — retry on reconnect
-  type PendingMessage = {
-    nonce: string
-    content: string
-    replyToId?: string
-    conversationId: string
-    retryCount: number
-  }
-  const pendingQueueRef = useRef<PendingMessage[]>([])
+  // `isConnected` only informs the header today; the sync lives upstream.
+  void isConnected
+  void onEditMessage
+  void editingMessage
 
   // Track conversation changes without full remount
   const prevConvIdRef = useRef(conversation.id)
@@ -137,7 +143,6 @@ export function ChatInterface({
       // Conversation changed — reset local UI state
       setReplyTo(null)
       setEditingMessage(null)
-      setTypingUsers([])
       setWhatsappEnabled(conversation.whatsappEnabled ?? false)
       prevConvIdRef.current = conversation.id
     }
@@ -177,105 +182,6 @@ export function ChatInterface({
     }
   }, [whatsappEnabled, conversation.id, m])
 
-  // Keep a ref to messages so handleOptimisticSend can resolve replyTo
-  // without depending on the messages array in its useCallback deps.
-  const messagesRef = useRef(messages)
-  useEffect(() => {
-    messagesRef.current = messages
-  }, [messages])
-
-  // Direct cache optimistic send — no useOptimistic, no double render
-  const handleOptimisticSend = useCallback(
-    (
-      content: string,
-      replyToId?: string,
-      attachments?: MessageAttachmentDTO[]
-    ): string => {
-      const nonce = crypto.randomUUID()
-      const hasAttachments = attachments && attachments.length > 0
-      const contentType = hasAttachments
-        ? attachments[0].fileType.startsWith("image/")
-          ? "image"
-          : attachments[0].fileType.startsWith("video/")
-            ? "video"
-            : "text"
-        : "text"
-      const optimisticMessage: MessageDTO = {
-        id: `temp-${nonce}`,
-        conversationId: conversation.id,
-        senderId: currentUserId,
-        sender: {
-          id: currentUserId,
-          username: null,
-          email: null,
-          image: null,
-        },
-        content,
-        contentType,
-        status: "sending",
-        replyToId: replyToId || null,
-        replyTo: replyToId
-          ? messagesRef.current.find((msg) => msg.id === replyToId) || null
-          : null,
-        forwardedFromId: null,
-        isEdited: false,
-        editedAt: null,
-        isDeleted: false,
-        deletedAt: null,
-        isSystem: false,
-        metadata: { clientNonce: nonce },
-        whatsappStatus: null,
-        whatsappPhone: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        attachments: attachments || [],
-        reactions: [],
-        readReceipts: [],
-        readCount: 0,
-      }
-      // Add directly to cache — instant, single render
-      onMessagesUpdate(conversation.id, (prev) => [...prev, optimisticMessage])
-      return nonce
-    },
-    [conversation.id, currentUserId, onMessagesUpdate]
-  )
-
-  // Confirm: swap temp-{nonce} → real message in-place (only icon transitions).
-  // If the server returned the full message (with real attachment URLs), swap
-  // attachments too — the local blob URL is revoked by the caller.
-  const handleMessageConfirmed = useCallback(
-    (nonce: string, messageId: string, serverMessage?: MessageDTO) => {
-      onMessagesUpdate(conversation.id, (prev) =>
-        prev.map((msg) =>
-          msg.id === `temp-${nonce}`
-            ? {
-                ...msg,
-                id: messageId,
-                status: "sent" as MessageDTO["status"],
-                attachments: serverMessage?.attachments ?? msg.attachments,
-                metadata: serverMessage?.metadata ?? msg.metadata,
-              }
-            : msg
-        )
-      )
-    },
-    [conversation.id, onMessagesUpdate]
-  )
-
-  // Fail: mark temp message as failed
-  const handleMessageFailed = useCallback(
-    (nonce: string) => {
-      onMessagesUpdate(conversation.id, (prev) =>
-        prev.map((msg) =>
-          msg.id === `temp-${nonce}`
-            ? { ...msg, status: "failed" as MessageDTO["status"] }
-            : msg
-        )
-      )
-    },
-    [conversation.id, onMessagesUpdate]
-  )
-
   const config = CONVERSATION_TYPE_CONFIG[conversation.type]
 
   // Header display info
@@ -294,8 +200,6 @@ export function ChatInterface({
       ? otherUser.image || undefined
       : conversation.avatar || undefined
 
-  const avatarFallback = displayName?.[0]?.toUpperCase() || "C"
-
   // Participant names for subtitle
   const participantNames =
     conversation.type !== "direct"
@@ -305,379 +209,6 @@ export function ChatInterface({
           .map((p) => p.user.username || p.user.email?.split("@")[0])
           .join(", ")
       : null
-
-  // Debounced markConversationAsRead
-  const markAsReadTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const debouncedMarkAsRead = useCallback(() => {
-    if (markAsReadTimerRef.current) return
-    markAsReadTimerRef.current = setTimeout(() => {
-      markConversationAsRead({ conversationId: conversation.id }).catch(
-        () => {}
-      )
-      markAsReadTimerRef.current = null
-    }, 2000)
-  }, [conversation.id])
-
-  // Mark as read when opened or conversation changes
-  useEffect(() => {
-    debouncedMarkAsRead()
-    return () => {
-      if (markAsReadTimerRef.current) {
-        clearTimeout(markAsReadTimerRef.current)
-        markAsReadTimerRef.current = null
-      }
-    }
-  }, [conversation.id, debouncedMarkAsRead])
-
-  // --- Real-time updates via Socket.IO (reactive to connection state) ---
-  useEffect(() => {
-    if (!isConnected) return
-
-    socketService.subscribeToConversation(conversation.id)
-
-    // Flush pending message queue on reconnect
-    if (pendingQueueRef.current.length > 0) {
-      const queue = [...pendingQueueRef.current]
-      pendingQueueRef.current = []
-      for (const pending of queue) {
-        if (pending.conversationId !== conversation.id) {
-          pendingQueueRef.current.push(pending)
-          continue
-        }
-        // Update status to "sending"
-        onMessagesUpdate(conversation.id, (prev) =>
-          prev.map((msg) =>
-            msg.id === `temp-${pending.nonce}`
-              ? { ...msg, status: "sending" as MessageDTO["status"] }
-              : msg
-          )
-        )
-        onSendMessage(pending.content, pending.replyToId)
-          .then((sentMessage) => {
-            if (sentMessage) {
-              onMessagesUpdate(conversation.id, (prev) => {
-                const withoutTemp = prev.filter(
-                  (msg) => msg.id !== `temp-${pending.nonce}`
-                )
-                if (withoutTemp.some((msg) => msg.id === sentMessage.id))
-                  return withoutTemp
-                return [...withoutTemp, sentMessage]
-              })
-            }
-          })
-          .catch(() => {
-            pending.retryCount++
-            if (pending.retryCount < 3) {
-              pendingQueueRef.current.push(pending)
-            }
-            onMessagesUpdate(conversation.id, (prev) =>
-              prev.map((msg) =>
-                msg.id === `temp-${pending.nonce}`
-                  ? { ...msg, status: "failed" as MessageDTO["status"] }
-                  : msg
-              )
-            )
-          })
-      }
-    }
-
-    const unsubscribeNewMessage = socketService.on("message:new", (data) => {
-      if (data.conversationId !== conversation.id) return
-
-      const newMessage = buildMessageFromSocket(data)
-
-      onMessagesUpdate(conversation.id, (prev) => {
-        // Already exists by real ID (confirmed via form response or prior socket)
-        if (prev.some((msg) => msg.id === data.id)) return prev
-
-        if (data.senderId === currentUserId) {
-          // Own message — check if already confirmed (temp replaced with real ID)
-          const serverNonce = (data.metadata as Record<string, unknown>)
-            ?.clientNonce as string | undefined
-          if (serverNonce) {
-            // Temp still pending? Replace it. Already confirmed? Skip.
-            const tempIdx = prev.findIndex(
-              (msg) => msg.id === `temp-${serverNonce}`
-            )
-            if (tempIdx >= 0) {
-              return prev.map((msg) =>
-                msg.id === `temp-${serverNonce}` ? newMessage : msg
-              )
-            }
-            // No temp found = already confirmed via form response → skip
-            return prev
-          }
-        }
-        // Message from others or no nonce
-        return [...prev, newMessage]
-      })
-
-      if (data.senderId !== currentUserId) {
-        debouncedMarkAsRead()
-      }
-    })
-
-    const unsubscribeMessageUpdated = socketService.on(
-      "message:updated",
-      (data) => {
-        onMessagesUpdate(conversation.id, (prev) =>
-          prev.map((msg) =>
-            msg.id === data.messageId
-              ? {
-                  ...msg,
-                  content: data.content,
-                  isEdited: true,
-                  updatedAt: new Date(data.editedAt),
-                }
-              : msg
-          )
-        )
-      }
-    )
-
-    const unsubscribeMessageDeleted = socketService.on(
-      "message:deleted",
-      (data) => {
-        onMessagesUpdate(conversation.id, (prev) =>
-          prev.map((msg) =>
-            msg.id === data.messageId
-              ? { ...msg, isDeleted: true, deletedAt: new Date(data.deletedAt) }
-              : msg
-          )
-        )
-      }
-    )
-
-    const unsubscribeReaction = socketService.on("message:reaction", (data) => {
-      onMessagesUpdate(conversation.id, (prev) =>
-        prev.map((msg) => {
-          if (msg.id !== data.messageId) return msg
-          const existingReaction = msg.reactions.find(
-            (r) => r.userId === data.userId && r.emoji === data.emoji
-          )
-          if (existingReaction) {
-            return {
-              ...msg,
-              reactions: msg.reactions.filter(
-                (r) => r.id !== existingReaction.id
-              ),
-            }
-          }
-          return {
-            ...msg,
-            reactions: [
-              ...msg.reactions,
-              {
-                id: `${data.userId}-${data.emoji}`,
-                messageId: data.messageId,
-                userId: data.userId,
-                user: {
-                  id: data.userId,
-                  username: null,
-                  email: null,
-                  image: null,
-                  role: "",
-                },
-                emoji: data.emoji,
-                createdAt: new Date(),
-              },
-            ],
-          }
-        })
-      )
-    })
-
-    const unsubscribeTypingStart = socketService.on("typing:start", (data) => {
-      if (
-        data.conversationId === conversation.id &&
-        data.userId !== currentUserId
-      ) {
-        setTypingUsers((prev) => {
-          if (!prev.find((u) => u.userId === data.userId)) {
-            return [
-              ...prev,
-              {
-                conversationId: data.conversationId,
-                userId: data.userId,
-                user: {
-                  id: data.userId,
-                  username: data.username,
-                  image: null,
-                },
-                startedAt: new Date(),
-              },
-            ]
-          }
-          return prev
-        })
-      }
-    })
-
-    const unsubscribeTypingStop = socketService.on("typing:stop", (data) => {
-      if (data.conversationId === conversation.id) {
-        setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId))
-      }
-    })
-
-    // Real-time read receipts — update sent message ticks to "read"
-    const unsubscribeMessageRead = socketService.on("message:read", (data) => {
-      if (
-        data.userId !== currentUserId &&
-        data.conversationId === conversation.id
-      ) {
-        onMessagesUpdate(conversation.id, (prev) => {
-          // Bail out early if no message actually needs flipping (avoids re-render)
-          if (
-            !prev.some(
-              (msg) => msg.senderId === currentUserId && msg.status !== "read"
-            )
-          ) {
-            return prev
-          }
-          return prev.map((msg) =>
-            msg.senderId === currentUserId && msg.status !== "read"
-              ? { ...msg, status: "read" as MessageDTO["status"] }
-              : msg
-          )
-        })
-      }
-    })
-
-    return () => {
-      unsubscribeNewMessage()
-      unsubscribeMessageUpdated()
-      unsubscribeMessageDeleted()
-      unsubscribeReaction()
-      unsubscribeTypingStart()
-      unsubscribeTypingStop()
-      unsubscribeMessageRead()
-      socketService.unsubscribeFromConversation(conversation.id)
-    }
-  }, [
-    conversation.id,
-    currentUserId,
-    isConnected,
-    onMessagesUpdate,
-    debouncedMarkAsRead,
-  ])
-
-  // Keep a ref to typingUsers so the cleanup interval can read the latest
-  // value without needing to be torn down and recreated whenever the array
-  // changes length.
-  const typingUsersRef = useRef(typingUsers)
-  useEffect(() => {
-    typingUsersRef.current = typingUsers
-  }, [typingUsers])
-
-  // Auto-remove typing indicators after 5s. Single interval, mount-once.
-  // Uses typingUsersRef to avoid stale closure; only expiry logic runs.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (typingUsersRef.current.length === 0) return
-      const now = new Date().getTime()
-      setTypingUsers((prev) =>
-        prev.filter((u) => now - new Date(u.startedAt).getTime() < 5000)
-      )
-    }, 1000)
-    return () => clearInterval(interval)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Polling fallback — stable, ref-based cursor
-  const lastMessageIdRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (messages.length > 0) {
-      lastMessageIdRef.current = messages[messages.length - 1].id
-    }
-  }, [messages])
-
-  useEffect(() => {
-    if (isConnected) return
-
-    let active = true
-    const poll = async () => {
-      if (!active || !lastMessageIdRef.current) return
-      const result = await pollNewMessages({
-        conversationId: conversation.id,
-        afterMessageId: lastMessageIdRef.current,
-      })
-      if (result.success && result.data.items.length > 0) {
-        onMessagesUpdate(conversation.id, (prev) => {
-          const existingIds = new Set(prev.map((msg) => msg.id))
-          const newItems = result.data.items.filter(
-            (item: MessageDTO) => !existingIds.has(item.id)
-          )
-          return newItems.length > 0 ? [...prev, ...newItems] : prev
-        })
-        debouncedMarkAsRead()
-      }
-    }
-
-    // 10s: the single active-conversation poller (the list polls at 15s).
-    // Only runs while the socket is disconnected (fallback path).
-    const timer = setInterval(poll, 10000)
-    return () => {
-      active = false
-      clearInterval(timer)
-    }
-  }, [conversation.id, isConnected, onMessagesUpdate, debouncedMarkAsRead])
-
-  // Retry a failed message
-  const handleRetryMessage = useCallback(
-    async (messageId: string) => {
-      // Extract nonce from temp message ID
-      const nonce = messageId.startsWith("temp-")
-        ? messageId.slice(5)
-        : undefined
-      if (!nonce) return
-
-      const pending = pendingQueueRef.current.find((p) => p.nonce === nonce)
-      if (!pending) return
-
-      // Update status to "sending"
-      onMessagesUpdate(conversation.id, (prev) =>
-        prev.map((msg) =>
-          msg.id === messageId
-            ? { ...msg, status: "sending" as MessageDTO["status"] }
-            : msg
-        )
-      )
-
-      try {
-        const sentMessage = await onSendMessage(
-          pending.content,
-          pending.replyToId
-        )
-        pendingQueueRef.current = pendingQueueRef.current.filter(
-          (p) => p.nonce !== nonce
-        )
-        if (sentMessage) {
-          onMessagesUpdate(conversation.id, (prev) => {
-            const withoutTemp = prev.filter((msg) => msg.id !== messageId)
-            if (withoutTemp.some((msg) => msg.id === sentMessage.id)) {
-              return withoutTemp
-            }
-            return [...withoutTemp, sentMessage]
-          })
-        }
-      } catch {
-        pending.retryCount++
-        if (pending.retryCount >= 3) {
-          pendingQueueRef.current = pendingQueueRef.current.filter(
-            (p) => p.nonce !== nonce
-          )
-        }
-        onMessagesUpdate(conversation.id, (prev) =>
-          prev.map((msg) =>
-            msg.id === messageId
-              ? { ...msg, status: "failed" as MessageDTO["status"] }
-              : msg
-          )
-        )
-      }
-    },
-    [conversation.id, onSendMessage, onMessagesUpdate]
-  )
 
   const handleEditMessage = async (message: MessageDTO) => {
     setEditingMessage(message)
@@ -714,14 +245,6 @@ export function ChatInterface({
       setIsLoadingMessages(false)
     }
   }, [isLoadingMessages, hasMoreMessages, onLoadMoreMessages])
-
-  const handleTypingStart = useCallback(() => {
-    socketService.sendTypingStart(conversation.id)
-  }, [conversation.id])
-
-  const handleTypingStop = useCallback(() => {
-    socketService.sendTypingStop(conversation.id)
-  }, [conversation.id])
 
   const currentParticipant = conversation.participants?.find(
     (p) => p.userId === currentUserId
@@ -885,7 +408,7 @@ export function ChatInterface({
           onDelete={handleDeleteMessage}
           onReact={handleReactToMessage}
           onRemoveReaction={onRemoveReaction}
-          onRetry={handleRetryMessage}
+          onRetry={onRetryMessage}
           savedScrollPosition={savedScrollPosition}
           onSaveScrollPosition={onSaveScrollPosition}
           unreadCount={conversation.unreadCount ?? 0}
@@ -896,7 +419,7 @@ export function ChatInterface({
         />
 
         {/* Typing indicator — WhatsApp bouncing dots bubble */}
-        {typingUsers.length > 0 && (
+        {isTyping && (
           <div className="absolute start-4 bottom-2 z-10">
             <div
               className="flex items-center gap-2 rounded-lg rounded-ss-sm bg-white px-5 py-2.5 shadow-sm"
@@ -928,11 +451,11 @@ export function ChatInterface({
           whatsappEnabled={whatsappEnabled}
           onCancelReply={() => setReplyTo(null)}
           onFileUpload={onFileUpload}
-          onTypingStart={handleTypingStart}
-          onTypingStop={handleTypingStop}
-          onOptimisticSend={handleOptimisticSend}
-          onMessageConfirmed={handleMessageConfirmed}
-          onMessageFailed={handleMessageFailed}
+          onTypingStart={onTypingStart}
+          onTypingStop={onTypingStop}
+          onOptimisticSend={onOptimisticSend}
+          onMessageConfirmed={onMessageConfirmed}
+          onMessageFailed={onMessageFailed}
         />
       ) : (
         <div className="bg-msg-header-bg text-muted-foreground border-border border-t p-4 text-center text-sm">

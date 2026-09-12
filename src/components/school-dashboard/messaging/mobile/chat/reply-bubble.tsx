@@ -1,3 +1,5 @@
+import { memo } from "react"
+
 import { cn } from "@/lib/utils"
 
 import { BubbleTail } from "./bubble-tail"
@@ -11,10 +13,11 @@ type Props = {
   replySenderName: string
   replyText: string
   tail?: boolean
+  statusLabels?: Partial<Record<Exclude<BubbleStatus, null>, string>>
   className?: string
 }
 
-export function ReplyBubble({
+export const ReplyBubble = memo(function ReplyBubble({
   side,
   text,
   time,
@@ -22,6 +25,7 @@ export function ReplyBubble({
   replySenderName,
   replyText,
   tail = true,
+  statusLabels,
   className,
 }: Props) {
   const isMe = side === "me"
@@ -60,7 +64,10 @@ export function ReplyBubble({
           </div>
         </div>
 
-        <p className="px-[4px] text-[15.8px] leading-[21px] tracking-[-0.21px] text-[color:var(--wa-text-primary)]">
+        <p
+          dir="auto"
+          className="px-[4px] text-[15.8px] leading-[21px] tracking-[-0.21px] break-words whitespace-pre-wrap text-[color:var(--wa-text-primary)]"
+        >
           {text}
           <span
             aria-hidden
@@ -71,9 +78,10 @@ export function ReplyBubble({
         <BubbleTimestamp
           time={time}
           status={isMe ? (status ?? "sent") : null}
+          labels={statusLabels}
           className="absolute end-[8px] bottom-[3px]"
         />
       </div>
     </div>
   )
-}
+})

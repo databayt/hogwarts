@@ -123,10 +123,22 @@ export async function createNotification(
     // Warm the other-language cache off the response path
     after(() => prewarm("Notification", row, { schoolId }))
 
-    // Revalidate cache
-    revalidatePath(NOTIFICATIONS_PATH, "page")
-    revalidateTag(`notifications-${schoolId}`, "max")
-    revalidateTag(`notifications-${parsed.userId}`, "max")
+    // Revalidate cache. The row is already written; when this runs outside a
+    // request scope (a message send notifies after its response has gone
+    // out) Next refuses the revalidation, and that must not turn a created
+    // notification into a reported failure.
+    try {
+      revalidatePath(NOTIFICATIONS_PATH, "page")
+      revalidateTag(`notifications-${schoolId}`, "max")
+      revalidateTag(`notifications-${parsed.userId}`, "max")
+    } catch (revalidateError) {
+      console.warn(
+        "[createNotification] Revalidation skipped:",
+        revalidateError instanceof Error
+          ? revalidateError.message
+          : revalidateError
+      )
+    }
 
     return { success: true, data: { id: row.id } }
   } catch (error) {

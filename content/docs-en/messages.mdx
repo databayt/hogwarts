@@ -89,7 +89,20 @@ Drag-and-drop with previews and progress bars. S3 / Vercel Blob storage. Path: `
 
 Live updates use **Socket.IO** via a standalone server in `socket-server/` — 15 events (`message:new/updated/deleted/read/reaction`, `conversation:updated/new`, `conversation:participant_added/removed`, `typing:start/stop`). Presence is Redis-backed (green dots on cards, last-seen in header). Server→client pushes go through `POST /api/emit` and `/api/emit-to-users`, protected by an `x-emit-secret` header.
 
-> **Ops status:** the Socket.IO server is **not yet deployed** — tracked in [#262](https://github.com/databayt/hogwarts/issues/262) (migration to Oracle Cloud). Until it ships, the client falls back to **polling**: 15 s for the conversation list and 10 s for the active conversation (`messaging-client.tsx`). Realtime works end-to-end once the server is live and `NEXT_PUBLIC_SOCKET_URL` / `SOCKET_SECRET` / `EMIT_SECRET` are set on Vercel (currently `NEXT_PUBLIC_SOCKET_URL` still points at `localhost`).
+> **Ops status:** the Socket.IO server is **not yet deployed** — tracked in [#262](https://github.com/databayt/hogwarts/issues/262) (migration to Oracle Cloud). Until it ships, the client falls back to **polling**. Realtime works end-to-end once the server is live and `NEXT_PUBLIC_SOCKET_URL` / `SOCKET_SECRET` / `EMIT_SECRET` are set in production.
+
+The messaging page opens the socket itself when `NEXT_PUBLIC_SOCKET_URL` is set
+(the dashboard header that used to be the only caller is not rendered on this
+route). The open thread's sync — the socket room, the polling fallback and
+mark-as-read — lives in one hook, `hooks/use-thread-sync.ts`, and serves the
+phone and the desktop alike. Polling is deliberate about cost: the open thread
+is polled every 5 s while the tab is visible and the thread active, every 12 s
+after two quiet minutes, and not at all while the tab is hidden, with an
+immediate catch-up when it comes back or the network returns. The conversation
+list polls every 15 s for **what changed** since the last tick plus a fresh
+unread map, and refetches everything only on every eighth tick. Without a
+socket server a sent message shows a single tick until it is read; the double
+"delivered" tick can only come from the server's `message:delivered`.
 
 ## WhatsApp integration
 
@@ -125,15 +138,39 @@ ticks set into the bubble, a pill at each day boundary, sender names on incoming
 group messages — and the whole thing mirrors under Arabic. `mobile/chat/adapt.ts`
 is the one place that turns a `MessageDTO` into what the view draws.
 
+Sending feels the way it does in the app: the bubble is on screen before the
+request leaves (with a small clock, then a single tick), the field is already
+clear and still focused, and a message the server refused shows a red mark and
+resends on tap — or on its own when the connection returns. The composer grows
+to about five lines, keeps the keyboard up when send, camera or mic are tapped,
+remembers a draft per conversation, and sizes the whole view to the visual
+viewport while the keyboard is up so the composer sits on the keys and the last
+message stays just above them. Return on a touch keyboard inserts a line, as in
+the iPhone app; Enter on a hardware keyboard sends, as on WhatsApp Desktop.
+
+The thread scrolls like the app's. It opens at the newest message and stays
+pinned there through image decodes and keyboard resizes; a reader who has
+scrolled up into history is not pulled back down when something arrives —
+a round button appears with a count instead; older pages are requested about
+a screen and a half before the top, come in behind a spinner pill, and land
+without moving what the reader was looking at. Each message takes its own
+text direction, so an Arabic message is right-aligned inside the English UI
+and an English one left-aligned inside the Arabic UI.
+
 The phone view reads and sends. Attachments, editing, deleting, reactions, replies,
 forwarding and voice recording remain desktop-only.
 
-## One design, both widths
+## One design, both widths — one tree per width
 
 The desktop conversation follows the same WhatsApp grammar as the phone, sharing
-the atoms rather than restating them. `ChatInterface` keeps every desktop-only
-capability — replies, edits, reactions, attachments, typing, the optimistic send
-queue — while its chrome now reads from the `--wa-*` tokens: a glass header with
+the atoms rather than restating them. Only one of the two trees is ever mounted:
+the server guesses the width from the request's client hints, the client's first
+render repeats the guess so hydration matches, and `matchMedia` corrects it a
+frame later. Each tree is its own chunk, so a phone never downloads the
+split-pane and never runs its effects. `ChatInterface` keeps every desktop-only
+capability — replies, edits, reactions, attachments, typing — while the outbox
+(optimistic rows, confirmation by client nonce, retry) is shared with the phone
+in the orchestrator, and its chrome reads from the `--wa-*` tokens: a glass header with
 a hairline and a subtitle under the name, the cream end-to-end-encryption card at
 the head of the thread, 12px balloons with a hairline edge and a tail on the last
 message of each same-sender run, the shared day pill, and the same wallpaper the

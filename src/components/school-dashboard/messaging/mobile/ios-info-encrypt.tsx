@@ -6,6 +6,8 @@ type Props = {
   prefix?: string
   topic?: string
   suffix?: string
+  /** The green tail of the sentence — "end-to-end encrypted". */
+  tail?: string
   className?: string
 }
 
@@ -13,6 +15,7 @@ export function IosInfoEncrypt({
   prefix = "Your personal",
   topic = "messages",
   suffix = "are",
+  tail = "end-to-end encrypted",
   className,
 }: Props) {
   return (
@@ -30,9 +33,7 @@ export function IosInfoEncrypt({
         <span className="text-[color:var(--wa-text-secondary)]">{prefix}</span>
         <span className="text-[color:var(--wa-text-secondary)]">{topic}</span>
         <span className="text-[color:var(--wa-text-secondary)]">{suffix}</span>
-        <span className="text-[color:var(--wa-text-product)]">
-          end-to-end encrypted
-        </span>
+        <span className="text-[color:var(--wa-text-product)]">{tail}</span>
       </p>
     </div>
   )

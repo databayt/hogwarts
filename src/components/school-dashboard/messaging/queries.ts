@@ -197,6 +197,47 @@ export const conversationDetailSelect = {
     orderBy: { createdAt: "desc" as const },
     select: messageListSelect,
   },
+  // The count decides `hasMore` on the client. It has to count the same rows
+  // the cursor query pages through — that query excludes soft-deleted
+  // messages, so an unfiltered count could promise a page that never comes
+  // and keep the thread's opening card from ever rendering.
+  _count: {
+    select: {
+      participants: true,
+      messages: { where: { isDeleted: false } },
+    },
+  },
+} as const
+
+/**
+ * What `sendMessage` needs to authorise and describe a send, and nothing
+ * more. It used to take `conversationDetailSelect`, i.e. the newest 50
+ * messages with every relation, on every send — a permission check paying
+ * for a whole page of thread it never read.
+ */
+export const conversationSendSelect = {
+  id: true,
+  schoolId: true,
+  type: true,
+  title: true,
+  isLocked: true,
+  whatsappEnabled: true,
+  participants: {
+    select: {
+      userId: true,
+      role: true,
+      user: {
+        select: {
+          id: true,
+          username: true,
+          student: { select: { firstName: true, lastName: true } },
+          teacher: { select: { firstName: true, lastName: true } },
+          guardian: { select: { firstName: true, lastName: true } },
+          staffMember: { select: { firstName: true, lastName: true } },
+        },
+      },
+    },
+  },
 } as const
 
 // Query builders
@@ -421,6 +462,50 @@ export async function getConversation(
 }
 
 /**
+ * The lean conversation `sendMessage` authorises against. Participant-scoped
+ * like `getConversation`, minus the message page.
+ */
+export async function getConversationForSend(
+  schoolId: string,
+  userId: string,
+  conversationId: string
+) {
+  return db.conversation.findFirst({
+    where: {
+      id: conversationId,
+      schoolId,
+      participants: { some: { userId } },
+    },
+    select: conversationSendSelect,
+  })
+}
+
+/**
+ * Conversations that changed after `since`, for the incremental list poll.
+ * A new message moves `lastMessageAt`; archive, title and settings writes
+ * move `updatedAt`. Same row shape as the full list so the client can merge
+ * by id. Unread counts are not here — they change when the *reader* marks
+ * something read, which touches no conversation row — so the poll action
+ * ships a full unread map alongside.
+ */
+export async function getConversationsChangedSince(
+  schoolId: string,
+  userId: string,
+  since: Date
+) {
+  const base = buildConversationWhere(schoolId, userId)
+  return db.conversation.findMany({
+    where: {
+      ...base,
+      OR: [{ lastMessageAt: { gt: since } }, { updatedAt: { gt: since } }],
+    },
+    orderBy: buildConversationOrderBy(),
+    take: 50,
+    select: conversationListSelect,
+  })
+}
+
+/**
  * Get messages list with filters and pagination
  */
 export async function getMessagesList(
@@ -477,9 +562,13 @@ export async function getMessagesWithCursor(
       conversation: { schoolId },
       isDeleted: false, // Don't include deleted messages
     },
-    orderBy: {
-      createdAt: direction === "before" ? "desc" : "asc", // Oldest to newest for 'after', newest to oldest for 'before'
-    },
+    // `id` breaks ties: two messages can share a millisecond (seeded threads
+    // do), and a cursor over createdAt alone then skips or repeats one of
+    // them at the page boundary.
+    orderBy: [
+      { createdAt: direction === "before" ? "desc" : "asc" },
+      { id: direction === "before" ? "desc" : "asc" },
+    ],
     take: take + 1, // Fetch one extra to determine if there are more
     select: messageListSelect,
   }

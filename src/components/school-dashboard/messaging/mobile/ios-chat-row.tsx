@@ -1,5 +1,7 @@
 "use client"
 
+import { memo } from "react"
+
 import { cn } from "@/lib/utils"
 
 import { IosMessagePreview } from "./ios-message-preview"
@@ -33,7 +35,8 @@ export type IosChatRowData = {
 
 type Props = {
   row: IosChatRowData
-  onClick?: () => void
+  /** Receives the row's conversation id, so one handler serves every row. */
+  onClick?: (id: string) => void
   className?: string
 }
 
@@ -52,7 +55,15 @@ export function PersonGlyph({ className }: { className?: string }) {
   )
 }
 
-export function IosChatRow({ row, onClick, className }: Props) {
+/**
+ * One conversation row. Memoised: the list re-renders on every socket tick
+ * and every poll, and a row whose data did not change should not.
+ */
+export const IosChatRow = memo(function IosChatRow({
+  row,
+  onClick,
+  className,
+}: Props) {
   const hasUnread = (row.unreadCount ?? 0) > 0
   const timestampColor = hasUnread
     ? "text-[color:var(--wa-text-product)]"
@@ -61,7 +72,7 @@ export function IosChatRow({ row, onClick, className }: Props) {
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={() => onClick?.(row.id)}
       className={cn(
         "flex w-full items-start gap-[12.66px] ps-[16px] pt-[10px] text-start active:bg-black/5",
         className
@@ -73,6 +84,10 @@ export function IosChatRow({ row, onClick, className }: Props) {
             <img
               src={row.avatarUrl}
               alt=""
+              width={56}
+              height={56}
+              loading="lazy"
+              decoding="async"
               className="size-full object-cover"
               draggable={false}
             />
@@ -95,7 +110,10 @@ export function IosChatRow({ row, onClick, className }: Props) {
       <div className="flex h-[76px] min-w-0 flex-1 items-start gap-[8px] border-b-[0.33px] border-[color:var(--wa-border-separator)]">
         <div className="flex min-w-0 flex-1 flex-col items-start gap-[1.5px]">
           <div className="flex w-full items-center gap-[3px]">
-            <p className="max-w-[200px] truncate text-[16px] leading-tight font-semibold tracking-[-0.32px] text-[color:var(--wa-text-primary)]">
+            <p
+              dir="auto"
+              className="max-w-[200px] truncate text-[16px] leading-tight font-semibold tracking-[-0.32px] text-[color:var(--wa-text-primary)]"
+            >
               {row.name}
             </p>
           </div>
@@ -109,6 +127,9 @@ export function IosChatRow({ row, onClick, className }: Props) {
 
         <div className="flex w-[60px] shrink-0 flex-col items-end gap-[3px] pe-[15px] pt-px">
           <time
+            // Formatted in the browser's zone; the server rendered it in its
+            // own. React patches the text on hydrate instead of warning.
+            suppressHydrationWarning
             className={cn(
               "text-[14px] leading-[19px] tracking-[-0.14px] whitespace-nowrap",
               timestampColor
@@ -140,4 +161,4 @@ export function IosChatRow({ row, onClick, className }: Props) {
       </div>
     </button>
   )
-}
+})

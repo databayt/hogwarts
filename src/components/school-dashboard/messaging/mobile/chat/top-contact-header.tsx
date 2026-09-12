@@ -1,5 +1,7 @@
 "use client"
 
+import { memo } from "react"
+
 import { cn } from "@/lib/utils"
 
 import { WaIcon } from "../wa-icon"
@@ -32,7 +34,7 @@ type Props = {
  * carries, so the back disc lands at the same y as the chat list's buttons.
  * The capsule has no kit variant of its own; it is that material at one width.
  */
-export function TopContactHeader({
+export const TopContactHeader = memo(function TopContactHeader({
   name,
   subtitle,
   avatarUrl,
@@ -55,6 +57,15 @@ export function TopContactHeader({
         className
       )}
     >
+      {/* The scroll-edge effect: bubbles that scroll under the controls fade
+          out through a frosted strip instead of showing through the name.
+          IMG_2637 clips the top bubble at the band's edge the same way. The
+          strip is blur plus the wallpaper's own cream, feathered by a mask so
+          it has no hard edge, and it never takes a tap. */}
+      <div
+        aria-hidden
+        className="wa-scroll-edge pointer-events-none absolute inset-x-0 top-0 -z-10 h-[calc(env(safe-area-inset-top,0px)+72px)]"
+      />
       <button
         type="button"
         onClick={onBack}
@@ -77,6 +88,9 @@ export function TopContactHeader({
             <img
               src={avatarUrl}
               alt=""
+              width={40}
+              height={40}
+              decoding="async"
               className="size-full object-cover"
               draggable={false}
             />
@@ -88,7 +102,10 @@ export function TopContactHeader({
         </span>
 
         <span className="flex min-w-0 flex-col justify-center">
-          <span className="truncate text-[17px] leading-[22px] font-semibold tracking-[-0.34px] text-[color:var(--wa-text-primary)]">
+          <span
+            dir="auto"
+            className="truncate text-[17px] leading-[22px] font-semibold tracking-[-0.34px] text-[color:var(--wa-text-primary)]"
+          >
             {name}
           </span>
           {subtitle ? (
@@ -125,4 +142,4 @@ export function TopContactHeader({
       </div>
     </div>
   )
-}
+})

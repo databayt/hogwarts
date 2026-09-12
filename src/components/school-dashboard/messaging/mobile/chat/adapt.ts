@@ -28,12 +28,14 @@ export type AdaptLabels = {
  * prints bubble times in Latin digits under an Arabic UI, and `ar-EG` would
  * render Arabic-Indic ones that no longer match the desktop thread.
  */
-function bubbleTime(d: Date | string): string {
+export function bubbleTime(d: Date | string): string {
   const date = typeof d === "string" ? new Date(d) : d
+  // `hourCycle: "h23"`, not `hour12: false` — the latter lets en-US print
+  // midnight as "24:05".
   return date.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    hourCycle: "h23",
   })
 }
 
@@ -63,6 +65,8 @@ function daySeparatorLabel(
  * delivery status.
  */
 function bubbleStatus(m: MessageDTO): BubbleStatus {
+  if (m.status === "sending") return "sending"
+  if (m.status === "failed") return "failed"
   if (m.readCount > 0 || m.status === "read") return "read"
   if (m.status === "delivered") return "delivered"
   return "sent"

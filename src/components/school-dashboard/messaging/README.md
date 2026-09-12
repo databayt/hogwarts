@@ -46,10 +46,13 @@ src/components/school-dashboard/messaging/
 ├── serialization.ts                # Date serialization for client transfer
 ├── config.ts                       # Conversation types, roles, statuses, file limits, socket events, RBAC
 ├── types.ts                        # 20+ TypeScript DTOs and type definitions
-├── content.tsx                     # Server component (entry point, data fetching + translation)
-├── messaging-client.tsx            # Main client component (split-pane layout, Socket.IO wiring)
+├── content.tsx                     # Server component (entry point, data fetching, layout hint)
+├── messaging-client.tsx            # Orchestrator: list + thread cache, outbox, realtime, polling; renders ONE width
+├── desktop-view.tsx                # Split-pane (contacts + thread + info panel) — lazy chunk, md+ only
+├── mobile-view.tsx                 # Five-tab shell / open thread — lazy chunk, <md only, keyboard-aware height
+├── socket-message.ts               # Socket payload → MessageDTO, temp-id helpers, server-row merge (dedupe by id + nonce)
 ├── conversation-info-panel.tsx     # Conversation details panel (participants, media, actions)
-├── chat-interface.tsx              # Active chat view
+├── chat-interface.tsx              # Desktop thread view (pure: no socket, no poller, no queue)
 ├── message-list.tsx                # Scrollable message list
 ├── message-group.tsx               # Grouped messages by sender
 ├── message-bubble.tsx              # Individual message bubble (with WhatsApp status)
@@ -69,7 +72,10 @@ src/components/school-dashboard/messaging/
 ├── index.ts                        # Public barrel exports
 ├── hooks/
 │   ├── index.ts
-│   └── use-presence.ts             # Online/offline presence tracking hook (Socket.IO events)
+│   ├── use-presence.ts             # Online/offline presence tracking hook (Socket.IO events)
+│   ├── use-thread-sync.ts          # The open thread: socket room, adaptive polling, mark-as-read (both widths)
+│   ├── use-layout-mode.ts          # "mobile" | "desktop" from a server hint, corrected by matchMedia
+│   └── use-visual-viewport.ts      # Shell height while the on-screen keyboard is up
 ├── contacts/
 │   ├── config.ts                   # Role-based contact categories + sidebar filters
 │   ├── types.ts                    # ContactDTO, ContactCategory, SidebarFilter types
@@ -91,6 +97,66 @@ src/components/school-dashboard/messaging/
 ├── ISSUE.md                        # Production-readiness tracker
 └── QUERY_OPTIMIZATION.md           # Performance optimization guide
 ```
+
+### One tree per width, one sync — 2026-09-12
+
+Both width-specific trees used to mount at every width, one hidden by CSS. A
+phone therefore ran the desktop split-pane's effects behind `display: none`
+(its contacts fetch, virtualizer and scroll listeners), and the phone's thread
+only stayed live because the hidden desktop `ChatInterface` held the socket
+room, the poller and mark-as-read. Now:
+
+- `content.tsx` guesses the width from the request's client hints
+  (`sec-ch-ua-mobile`, user agent) and passes `initialLayout`; the client's
+  first render repeats the guess so hydration matches, then `matchMedia`
+  corrects it (`hooks/use-layout-mode.ts`). `desktop-view.tsx` and
+  `mobile-view.tsx` are `next/dynamic` chunks, so a phone never downloads the
+  split-pane.
+- `hooks/use-thread-sync.ts` owns the open thread's realtime on both widths:
+  the conversation-room listeners, the polling fallback (5 s while the thread
+  is active and the tab visible, 12 s after two quiet minutes, nothing while
+  hidden, an immediate catch-up on focus / visibility / `online`), and a
+  debounced mark-as-read. The poll cursor is the newest **persisted** id —
+  the old poller cursored on `temp-…` right after an optimistic send, which
+  Prisma rejects.
+- The messaging client opens the Socket.IO connection itself when
+  `NEXT_PUBLIC_SOCKET_URL` is set. Nothing on this route did before (the
+  dashboard header that connects is not rendered here), so the page always
+  polled even where a socket server existed.
+- The list poll is incremental: `pollConversationUpdates({ since })` returns
+  only rows whose `lastMessageAt`/`updatedAt` moved (with a 5 s overlap) plus
+  a full unread map; the client merges by id. Every 8th tick is a full
+  refresh, catching an edited or deleted last message that moves no row.
+- One outbox for both widths, in the orchestrator. An optimistic row carries
+  `metadata.clientNonce`; `mergeServerMessages` swaps it for the persisted
+  row whichever path delivers that first (send response, socket, poll), and a
+  confirm that finds the persisted id already present drops the temp instead
+  of renaming it — the rename put two rows under one id. Failed text sends
+  show a red mark, retry on tap, and retry on `online`/reconnect up to three
+  attempts.
+- Server: `sendMessage` authorises against `conversationSendSelect`
+  (participants + settings) instead of the detail select that loaded the
+  newest 50 messages per send; a text send returns from a single
+  `create({ select })` with no re-read; the post-response work (notify,
+  mention, WhatsApp, link preview, audit) is scheduled with `after()`; socket
+  emits are skipped outside development when no server is configured; the
+  cursor query orders by `[createdAt, id]`; `hasMore` counts only non-deleted
+  rows; a cursorless poll can page by time so an empty thread sees its first
+  reply.
+
+Measured on the demo tenant (`scripts/messaging-mirror-capture.mjs` and
+`scripts/messaging-two-party.mjs`, 390×844 @3x, no socket server):
+
+| Check | Result |
+| --- | --- |
+| DOM on the phone | 523 nodes on the list, 600 on a 51-message thread; no desktop composer mounted |
+| Send → bubble on screen | 24–29 ms (desktop 120 ms) |
+| Send → server confirm | ~980 ms; one copy after the next poll tick |
+| Composer after send | empty and still focused |
+| Older page prepended (51 → 101) | anchor drift 0 px, 0 duplicates, no long tasks |
+| Server actions in a 16 s window | 3 thread polls + 1 list poll (one poller per thread) |
+| Incoming while scrolled up | scrollTop unchanged, jump button badge 1, arrives within the 5 s poll |
+| Console on the route | none (the `ws://localhost:3001` attempts are the local `NEXT_PUBLIC_SOCKET_URL`) |
 
 ### Chat surface fidelity (2026-09-10)
 
@@ -269,6 +335,12 @@ out of flow and the scroller carries its height as `padding-top` — padding on
 the scroller keeps `scrollHeight` whole, which the prepend anchor in
 `messages-view.tsx` measures.
 
+Behind the controls sits `.wa-scroll-edge`, a frosted strip (blur, the
+wallpaper's cream at partial alpha, feathered by a mask) so bubbles that
+scroll under the header fade out instead of showing through the name —
+IMG_2637 clips its top bubble at that band the same way. Without it a long
+thread drew the contact's name over message text.
+
 The material and the 44px size are the toolbar instantiation of Figma node
 `1:59`, the same one `ios-header.tsx` carries, so the back disc lands at the
 same y as the chat list's buttons. The capsule has no kit variant of its own —
@@ -281,6 +353,20 @@ Two other things came off the same captures. The thread's opening date pill
 sits **above** the encryption card, and that card is 280px wide, not the full
 column. And the mic in the input bar is a filled product-green disc with a
 white glyph, not a bare one.
+
+The composer behaves like the app's (2026-09-12): the field grows to about
+five lines then scrolls inside, a tap on send / camera / mic cancels its
+pointer-down so the keyboard stays up, the caret is product green, a draft
+survives leaving the thread (per conversation, `sessionStorage`), typing
+start/stop go out while a socket is connected, and while the on-screen
+keyboard is up the whole view is sized to `window.visualViewport` so the
+composer sits on the keys and the last message stays just above them.
+Return on a touch keyboard inserts a line, as in the iPhone app; Enter on a
+hardware keyboard sends, as on WhatsApp Desktop. Bubble text is `dir="auto"`,
+so an Arabic message is right-aligned inside the English UI and an English one
+left-aligned inside the Arabic UI, exactly as the captures show. Ticks: clock
+while sending, a single tick once the server has it, the double tick only on
+`message:delivered` from the socket server, blue on read.
 
 **Do not sample a vivid colour straight out of those PNGs.** iOS writes Display
 P3, and a reader that ignores the profile turns the brand green into a muted

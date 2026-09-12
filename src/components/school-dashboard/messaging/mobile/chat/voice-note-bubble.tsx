@@ -1,3 +1,5 @@
+import { memo } from "react"
+
 import { cn } from "@/lib/utils"
 
 import { BubbleTail } from "./bubble-tail"
@@ -13,7 +15,7 @@ type Props = {
   className?: string
 }
 
-export function VoiceNoteBubble({
+export const VoiceNoteBubble = memo(function VoiceNoteBubble({
   side,
   avatarUrl,
   avatarFallback,
@@ -87,7 +89,7 @@ export function VoiceNoteBubble({
       </div>
     </div>
   )
-}
+})
 
 function Waveform() {
   const bars = [

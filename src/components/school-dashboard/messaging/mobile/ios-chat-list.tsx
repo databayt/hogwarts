@@ -35,6 +35,7 @@ type L = {
   encryptPrefix: string
   encryptTopic: string
   encryptSuffix: string
+  encryptTail: string
   typingPreview: string
   groupFallbackName: string
   directFallbackName: string
@@ -69,6 +70,7 @@ const DEFAULT_L: L = {
   encryptPrefix: "Your personal",
   encryptTopic: "messages",
   encryptSuffix: "are",
+  encryptTail: "end-to-end encrypted",
   typingPreview: "is typing...",
   groupFallbackName: "Group",
   directFallbackName: "Unknown",
@@ -115,7 +117,9 @@ export function IosChatList({
   locale = "en",
   labels,
 }: Props) {
-  const L = { ...DEFAULT_L, ...labels }
+  // Memoised on the caller's object: rebuilt every render, it invalidated
+  // every memo below on every tick of the orchestrator.
+  const L = useMemo(() => ({ ...DEFAULT_L, ...labels }), [labels])
   const [search, setSearch] = useState("")
   const [activeFilter, setActiveFilter] = useState<FilterId>("all")
 
@@ -233,11 +237,7 @@ export function IosChatList({
           )}
 
           {rowsData.map((row) => (
-            <IosChatRow
-              key={row.id}
-              row={row}
-              onClick={() => onConversationClick(row.id)}
-            />
+            <IosChatRow key={row.id} row={row} onClick={onConversationClick} />
           ))}
         </div>
 
@@ -246,6 +246,7 @@ export function IosChatList({
             prefix={L.encryptPrefix}
             topic={L.encryptTopic}
             suffix={L.encryptSuffix}
+            tail={L.encryptTail}
           />
         </div>
       </div>
@@ -291,11 +292,14 @@ function formatTimestamp(
   const date = typeof d === "string" ? new Date(d) : d
   const now = new Date()
   const sameDay = date.toDateString() === now.toDateString()
+  // Latin digits under Arabic too, matching the thread's clocks — `ar-EG`
+  // printed Arabic-Indic here against Latin in the bubbles. `hourCycle`
+  // rather than `hour12: false`, which can print midnight as 24:xx.
   if (sameDay) {
-    return date.toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-US", {
+    return date.toLocaleTimeString(locale === "ar" ? "ar-u-nu-latn" : "en-US", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false,
+      hourCycle: "h23",
     })
   }
   const yesterday = new Date(now)
@@ -303,7 +307,7 @@ function formatTimestamp(
   if (date.toDateString() === yesterday.toDateString()) {
     return yesterdayLabel
   }
-  return date.toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", {
+  return date.toLocaleDateString(locale === "ar" ? "ar-u-nu-latn" : "en-US", {
     day: "2-digit",
     month: "2-digit",
   })

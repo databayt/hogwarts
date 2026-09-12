@@ -163,7 +163,15 @@
       "settings_whatsapp": "WhatsApp",
       "settings_help": "Help",
       "loading": "Loading…",
-      "load_failed": "Could not load"
+      "load_failed": "Could not load",
+      "not_sent": "Not sent. Tap to retry",
+      "loading_older": "Loading older messages",
+      "new_messages_below": "New messages",
+      "attach": "Attach",
+      "stickers": "Stickers",
+      "camera": "Camera",
+      "send": "Send",
+      "cancel_reply": "Cancel reply"
     },
     "notice": {
       "title": "Get message notifications",
