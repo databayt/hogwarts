@@ -325,4 +325,6 @@ Three decisions worth keeping:
 
 Both data pages fetch lazily on first open through a server action rather than
 riding along with the conversation list. Two extra queries on every messages
-page load would slow the primary surface down for secondary ones.
+page load would slow the primary surface down for secondary ones. A page that
+has been opened once then stays mounted, hidden by `display`, so the fetch
+really does happen once and a page keeps its scroll position across switches.

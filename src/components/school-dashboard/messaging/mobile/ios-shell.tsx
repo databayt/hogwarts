@@ -78,6 +78,14 @@ export function IosMobileShell({
   ...chatList
 }: Props) {
   const [tab, setTab] = useState<IosTabId>("chats")
+  // A page is built the first time it is opened and then kept mounted, hidden.
+  // Unmounting on every switch would refire the Updates and Calls fetches on
+  // each visit; never mounting them until asked keeps them off the first load.
+  const [opened, setOpened] = useState<Set<IosTabId>>(new Set(["chats"]))
+  const show = (id: IosTabId) => {
+    setTab(id)
+    setOpened((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
+  }
   const L = labels ?? {}
 
   const totalUnread = useMemo(
@@ -124,9 +132,11 @@ export function IosMobileShell({
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden bg-[color:var(--wa-surface-primary)]">
       <div className="min-h-0 flex-1">
-        {tab === "chats" && <IosChatList {...chatList} labels={labels} />}
+        <Pane id="chats" tab={tab} opened={opened}>
+          <IosChatList {...chatList} labels={labels} />
+        </Pane>
 
-        {tab === "updates" && (
+        <Pane id="updates" tab={tab} opened={opened}>
           <UpdatesView
             title={L.tabUpdates ?? "Updates"}
             locale={locale}
@@ -141,9 +151,9 @@ export function IosMobileShell({
               loadFailed: L.loadFailed ?? "Could not load",
             }}
           />
-        )}
+        </Pane>
 
-        {tab === "calls" && (
+        <Pane id="calls" tab={tab} opened={opened}>
           <CallsView
             title={L.tabCalls ?? "Calls"}
             locale={locale}
@@ -161,9 +171,9 @@ export function IosMobileShell({
               loadFailed: L.loadFailed ?? "Could not load",
             }}
           />
-        )}
+        </Pane>
 
-        {tab === "communities" && (
+        <Pane id="communities" tab={tab} opened={opened}>
           <CommunitiesView
             title={L.tabCommunities ?? "Communities"}
             schoolName={schoolName ?? ""}
@@ -181,9 +191,9 @@ export function IosMobileShell({
               groupFallback: L.groupFallbackName ?? "Group",
             }}
           />
-        )}
+        </Pane>
 
-        {tab === "settings" && (
+        <Pane id="settings" tab={tab} opened={opened}>
           <SettingsView
             title={L.tabSettings ?? "Settings"}
             name={currentUserName ?? ""}
@@ -217,7 +227,7 @@ export function IosMobileShell({
                   icon: (
                     <MessageSquare className="size-[22px]" strokeWidth={1.6} />
                   ),
-                  onClick: () => setTab("chats"),
+                  onClick: () => show("chats"),
                 },
               ],
               [
@@ -235,12 +245,40 @@ export function IosMobileShell({
               ],
             ]}
           />
-        )}
+        </Pane>
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20">
-        <IosTabbar tabs={tabs} active={tab} onChange={setTab} />
+        <IosTabbar tabs={tabs} active={tab} onChange={show} />
       </div>
+    </div>
+  )
+}
+
+/**
+ * One tab's page. Nothing is mounted until its tab is first opened, and once
+ * mounted it stays — hidden by `display`, not unmounted, so a page keeps its
+ * scroll position and its fetched rows across switches.
+ *
+ * `display` is set inline rather than with a `hidden` class because each page
+ * root is a flex column: which of two display utilities wins depends on their
+ * order in the stylesheet, not in the class attribute.
+ */
+function Pane({
+  id,
+  tab,
+  opened,
+  children,
+}: {
+  id: IosTabId
+  tab: IosTabId
+  opened: Set<IosTabId>
+  children: React.ReactNode
+}) {
+  if (!opened.has(id)) return null
+  return (
+    <div className="h-full" style={{ display: tab === id ? undefined : "none" }}>
+      {children}
     </div>
   )
 }
