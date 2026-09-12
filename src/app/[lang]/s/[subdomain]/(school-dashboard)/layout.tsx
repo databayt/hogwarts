@@ -15,6 +15,7 @@ import {
 } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
+import { InstallCard } from "@/components/offline/install-card"
 import { OfflineSyncBanner } from "@/components/offline/sync-banner"
 import { ReportIssueFooter } from "@/components/report-issue-footer"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
@@ -187,6 +188,11 @@ export default async function PlatformLayout({
                   <div className="dashboard-container overflow-x-clip px-2 pb-10 transition-[margin] duration-200 ease-in-out has-[[data-immersive]]:overflow-x-visible sm:px-0">
                     <PageHeadingDisplay />
                     <OfflineSyncBanner
+                      labels={
+                        (dictionary as Record<string, any>)?.lumos?.offline
+                      }
+                    />
+                    <InstallCard
                       labels={
                         (dictionary as Record<string, any>)?.lumos?.offline
                       }

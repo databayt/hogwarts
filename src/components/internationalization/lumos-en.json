@@ -743,7 +743,14 @@
       "noResults": "No matching courses",
       "seeAllResults": "See all results",
       "gradeLabel": "Grade {n}",
-      "terms": ["Math", "Science", "English", "Arabic", "History", "Geography"]
+      "terms": [
+        "Math",
+        "Science",
+        "English",
+        "Arabic",
+        "History",
+        "Geography"
+      ]
     },
     "offline": {
       "offlineNow": "You're offline",
@@ -763,7 +770,12 @@
       "kindQuiz": "Quiz answers",
       "kindAssignment": "Assignment",
       "kindAttendance": "Attendance",
-      "pendingTitle": "Waiting to sync"
+      "pendingTitle": "Waiting to sync",
+      "installTitle": "Add balqalam to your Home Screen",
+      "installHint": "Opens like an app, works without a connection, and can send notifications.",
+      "installButton": "Install",
+      "installIosHint": "On iPhone: tap Share, then \"Add to Home Screen\".",
+      "installDismiss": "Not now"
     },
     "viewer": {
       "viewOnly": "View only — downloading is disabled by the school",

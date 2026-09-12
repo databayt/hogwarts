@@ -5,7 +5,7 @@ title: Offline
 file_type: issue
 owner: Abdout
 maturity: Production-Ready
-completion: 70
+completion: 85
 docs: https://ed.databayt.org/en/docs/offline
 last_audited: 2026-09-12
 ---
@@ -23,8 +23,8 @@ last_audited: 2026-09-12
 - [x] Worker no longer caches authenticated HTML or API bodies (2026-09-12)
 - [x] Per-tenant Arabic-first manifest, real icons, theme-color, apple-touch-icon (2026-09-12)
 - [x] Quick attendance queues offline and replays idempotently (2026-09-12)
-- [ ] Web Push lane (subscriptions, VAPID, processor on the push cron)
-- [ ] Install card (`beforeinstallprompt`, iOS hint)
+- [x] Web Push lane — `PushSubscription`, VAPID, processor on the push cron, preferences toggle (2026-09-12; device delivery verified after deploy)
+- [x] Install card — `install-card.tsx` in the dashboard layout: `beforeinstallprompt` on Android, Share hint on iOS, 14-day dismissal (2026-09-12)
 - [ ] Exam submission in the outbox
 - [ ] Transport boarding in the outbox
 

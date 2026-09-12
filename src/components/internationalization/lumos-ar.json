@@ -770,7 +770,12 @@
       "kindQuiz": "إجابات الاختبار",
       "kindAssignment": "الواجب",
       "kindAttendance": "التحضير",
-      "pendingTitle": "بانتظار المزامنة"
+      "pendingTitle": "بانتظار المزامنة",
+      "installTitle": "أضف بلقلم إلى الشاشة الرئيسية",
+      "installHint": "يفتح كتطبيق، ويعمل بلا اتصال، ويستقبل الإشعارات.",
+      "installButton": "تثبيت",
+      "installIosHint": "على iPhone: اضغط مشاركة ثم «إضافة إلى الشاشة الرئيسية».",
+      "installDismiss": "ليس الآن"
     },
     "viewer": {
       "viewOnly": "للعرض فقط — التنزيل معطّل من المدرسة",
