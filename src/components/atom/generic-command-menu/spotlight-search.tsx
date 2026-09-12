@@ -5,6 +5,7 @@
 import * as React from "react"
 import { Search } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 import type { SearchContext } from "./types"
@@ -30,6 +31,8 @@ const Lazy = {
 interface SpotlightSearchProps {
   surface: Surface
   context?: SearchContext
+  /** Size of the trigger's glyph, e.g. `size-6` on the phone menu's row. */
+  iconClassName?: string
 }
 
 /**
@@ -37,7 +40,7 @@ interface SpotlightSearchProps {
  * the real trigger inside `GenericCommandMenu` so there is no layout shift
  * — the chunk usually resolves on the first hover/Cmd+K and is cached.
  */
-function SpotlightTriggerStub() {
+function SpotlightTriggerStub({ iconClassName }: { iconClassName?: string }) {
   return (
     <Button
       variant="link"
@@ -46,16 +49,22 @@ function SpotlightTriggerStub() {
       disabled
       aria-hidden="true"
     >
-      <Search className="h-4 w-4" />
+      <Search className={cn("size-4", iconClassName)} />
     </Button>
   )
 }
 
-export function SpotlightSearch({ surface, context }: SpotlightSearchProps) {
+export function SpotlightSearch({
+  surface,
+  context,
+  iconClassName,
+}: SpotlightSearchProps) {
   const Surface = Lazy[surface]
   return (
-    <React.Suspense fallback={<SpotlightTriggerStub />}>
-      <Surface context={context} />
+    <React.Suspense
+      fallback={<SpotlightTriggerStub iconClassName={iconClassName} />}
+    >
+      <Surface context={context} iconClassName={iconClassName} />
     </React.Suspense>
   )
 }

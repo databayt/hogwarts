@@ -23,6 +23,13 @@ import { NotificationBellIconCompact } from "@/components/school-dashboard/notif
 import type { School } from "@/components/school-marketing/types"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 
+/**
+ * The glyph size shared by every icon in the phone menu's toolbar row — the
+ * search, the language toggle, the theme toggle, the bell, the mail and the
+ * avatar. Named once so the row cannot drift back into six sizes.
+ */
+const TOOLBAR_ICON = "size-6"
+
 export interface NavItem {
   href: string
   label: string
@@ -122,33 +129,50 @@ export function MobileNav({
         sideOffset={14}
       >
         <div className="flex flex-col gap-8 overflow-auto px-6 py-6">
-          {/* Quick Actions Row (Platform toolbar) */}
+          {/* The platform toolbar — one row, one size. The avatar used to sit
+              alone on the far side of a `justify-between`, which read as two
+              toolbars rather than one; it is the sixth icon here.
+
+              Every glyph is sized by its own prop rather than by a rule on the
+              row: `Button` sizes an unsized child svg itself, from a selector
+              specific enough to beat anything a parent says, so a descendant
+              override here silently did nothing. The buttons ARE sized from
+              here — that much a plain `size-10` wins — at the 40px a thumb
+              wants, which is bigger than the 28-32px these icons take in the
+              desktop header they were borrowed from. */}
           {showToolbar && (
-            <div className="flex items-center gap-1 border-b pb-4 [&_[data-slot=avatar-fallback]]:text-[10px] [&_[data-slot=avatar]]:size-6 [&_svg]:size-5 [&>a]:size-10 [&>button]:size-10">
+            <div className="flex items-center gap-2 border-b pb-4 [&>a]:size-10 [&>button]:size-10">
               <SpotlightSearch
                 surface="school-dashboard"
+                iconClassName={TOOLBAR_ICON}
                 context={{
                   currentRole: role,
                   currentPath: currentPath,
                   schoolId: school?.id,
                 }}
               />
-              <LanguageSwitcher variant="toggle" />
-              <ModeSwitcher />
+              <LanguageSwitcher variant="toggle" iconClassName={TOOLBAR_ICON} />
+              <ModeSwitcher iconClassName={TOOLBAR_ICON} />
               {notificationsUrl && dictionary?.notifications && (
                 <NotificationBellIconCompact
                   locale={locale as "ar" | "en"}
                   dictionary={dictionary.notifications}
+                  iconClassName={TOOLBAR_ICON}
                 />
               )}
               {messagesUrl && (
                 <MessageMailIcon
                   messagesUrl={messagesUrl}
                   label={dictionary?.platform?.messages || "Messages"}
+                  iconClassName={TOOLBAR_ICON}
                 />
               )}
               {subdomain && (
-                <UserButton variant="platform" subdomain={subdomain} />
+                <UserButton
+                  variant="platform"
+                  subdomain={subdomain}
+                  avatarClassName={TOOLBAR_ICON}
+                />
               )}
             </div>
           )}

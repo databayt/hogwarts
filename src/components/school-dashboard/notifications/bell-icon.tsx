@@ -4,17 +4,16 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
-import { AnimatePresence, motion } from "framer-motion"
 import { Bell } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { CountBadge } from "@/components/atom/count-badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { NotificationListScrollable } from "./list"
@@ -24,6 +23,8 @@ interface NotificationBellIconProps {
   locale?: "ar" | "en"
   dictionary: Dictionary["notifications"]
   className?: string
+  /** Size of the bell glyph itself, e.g. `size-6` on the phone menu's row. */
+  iconClassName?: string
   showConnectionStatus?: boolean
   /**
    * Footer link destination. Pass `null` on a surface with no notification
@@ -37,6 +38,7 @@ export function NotificationBellIcon({
   locale = "en",
   dictionary,
   className,
+  iconClassName,
   showConnectionStatus = false,
   viewAllHref,
 }: NotificationBellIconProps) {
@@ -97,27 +99,10 @@ export function NotificationBellIcon({
             aria-haspopup="dialog"
             aria-expanded={isOpen}
           >
-            <Bell className="h-5 w-5" />
-
-            {/* Unread count badge with animation */}
-            <AnimatePresence>
-              {unreadCount > 0 && (
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  className="absolute -top-0.5 ltr:-right-0.5 rtl:-left-0.5"
-                >
-                  <Badge
-                    variant="destructive"
-                    className="flex h-4 min-w-4 items-center justify-center px-0.5 text-[10px] font-semibold"
-                  >
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </Badge>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <span className="relative">
+              <Bell className={cn("size-4", iconClassName)} />
+              <CountBadge count={unreadCount} />
+            </span>
 
             {/* Connection status indicator */}
             {showConnectionStatus && (
@@ -167,6 +152,7 @@ export function NotificationBellIconCompact({
   locale = "en",
   dictionary,
   className,
+  iconClassName,
 }: Omit<NotificationBellIconProps, "showConnectionStatus">) {
   const router = useRouter()
   const { unreadCount } = useNotificationBell(locale)
@@ -193,27 +179,10 @@ export function NotificationBellIconCompact({
           : dictionary.accessibility.notificationsBell
       }
     >
-      <Bell className="h-5 w-5" />
-
-      {/* Unread count badge with animation */}
-      <AnimatePresence>
-        {unreadCount > 0 && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className="absolute -top-0.5 ltr:-right-0.5 rtl:-left-0.5"
-          >
-            <Badge
-              variant="destructive"
-              className="flex h-5 min-w-5 items-center justify-center px-1 text-xs font-semibold"
-            >
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </Badge>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <span className="relative">
+        <Bell className={cn("size-4", iconClassName)} />
+        <CountBadge count={unreadCount} />
+      </span>
     </Button>
   )
 }

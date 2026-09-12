@@ -14,6 +14,7 @@ import type { SearchConfig, SearchContext } from "../types"
 
 interface Props {
   context?: SearchContext
+  iconClassName?: string
 }
 
 /**
@@ -23,7 +24,10 @@ interface Props {
  * source of truth) so the two registries stay in sync. Quick `actions` come
  * from the existing hand-curated `platformSearchConfig`.
  */
-export default function SchoolDashboardSpotlight({ context }: Props) {
+export default function SchoolDashboardSpotlight({
+  context,
+  iconClassName,
+}: Props) {
   const { dictionary } = useDictionary()
   const sidebarDict = dictionary?.platform?.sidebar as
     | Record<string, string>
@@ -44,5 +48,11 @@ export default function SchoolDashboardSpotlight({ context }: Props) {
     [sidebarDict, breadcrumbDict]
   )
 
-  return <GenericCommandMenu config={config} context={context} />
+  return (
+    <GenericCommandMenu
+      config={config}
+      context={context}
+      iconClassName={iconClassName}
+    />
+  )
 }

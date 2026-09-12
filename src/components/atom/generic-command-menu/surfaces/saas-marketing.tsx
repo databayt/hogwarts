@@ -8,10 +8,18 @@ import type { SearchContext } from "../types"
 
 interface Props {
   context?: SearchContext
+  iconClassName?: string
 }
 
-export default function SaasMarketingSpotlight({ context }: Props) {
+export default function SaasMarketingSpotlight({
+  context,
+  iconClassName,
+}: Props) {
   return (
-    <GenericCommandMenu config={saasMarketingSearchConfig} context={context} />
+    <GenericCommandMenu
+      config={saasMarketingSearchConfig}
+      context={context}
+      iconClassName={iconClassName}
+    />
   )
 }

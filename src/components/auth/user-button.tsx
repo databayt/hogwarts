@@ -51,6 +51,8 @@ type Variant = "marketing" | "site" | "saas" | "platform"
 interface UserButtonProps {
   /** Context variant for different entry points */
   variant?: Variant
+  /** Size of the avatar itself, e.g. `size-6` on the phone menu's row. */
+  avatarClassName?: string
   /** Optional subdomain for school context */
   subdomain?: string
   /** Custom class name */
@@ -61,6 +63,7 @@ export const UserButton = ({
   variant = "platform",
   subdomain,
   className,
+  avatarClassName,
 }: UserButtonProps) => {
   const user = useCurrentUser()
   const params = useParams()
@@ -144,7 +147,7 @@ export const UserButton = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className={cn("size-8", className)}>
-          <Avatar className="size-4">
+          <Avatar className={cn("size-4", avatarClassName)}>
             <AvatarImage src={user.image || ""} alt={displayName} />
             <AvatarFallback className="bg-primary text-primary-foreground text-[8px] font-medium">
               {userInitials}

@@ -4,25 +4,27 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
-import { AnimatePresence, motion } from "framer-motion"
 import { Mail } from "lucide-react"
 import { useSession } from "next-auth/react"
 
 import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { CountBadge } from "@/components/atom/count-badge"
 
 interface MessageMailIconProps {
   messagesUrl: string
   label?: string
   className?: string
+  /** Size of the mail glyph itself, e.g. `size-6` on the phone menu's row. */
+  iconClassName?: string
 }
 
 export function MessageMailIcon({
   messagesUrl,
   label = "Messages",
   className,
+  iconClassName,
 }: MessageMailIconProps) {
   const { data: session } = useSession()
   const userId = session?.user?.id
@@ -76,27 +78,11 @@ export function MessageMailIcon({
       asChild
     >
       <Link href={messagesUrl}>
-        <Mail className="h-4 w-4" />
+        <span className="relative">
+          <Mail className={cn("size-4", iconClassName)} />
+          <CountBadge count={unreadCount} />
+        </span>
         <span className="sr-only">{label}</span>
-
-        <AnimatePresence>
-          {unreadCount > 0 && (
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              className="absolute -top-1 ltr:-right-1 rtl:-left-1"
-            >
-              <Badge
-                variant="destructive"
-                className="flex h-4 min-w-4 items-center justify-center px-0.5 text-[10px] font-semibold"
-              >
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </Badge>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </Link>
     </Button>
   )

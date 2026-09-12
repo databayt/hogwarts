@@ -43,11 +43,14 @@ import { filterByQuery, filterByRole } from "./utils"
 interface GenericCommandMenuProps extends DialogProps {
   config: SearchConfig
   context?: SearchContext
+  /** Size of the trigger's glyph, e.g. `size-6` on the phone menu's row. */
+  iconClassName?: string
 }
 
 export function GenericCommandMenu({
   config,
   context,
+  iconClassName,
   ...props
 }: GenericCommandMenuProps) {
   const router = useRouter()
@@ -331,7 +334,7 @@ export function GenericCommandMenu({
         onClick={() => setOpen(true)}
         {...props}
       >
-        <Search className="h-4 w-4" />
+        <Search className={cn("size-4", iconClassName)} />
         <span className="sr-only">{commandMenuDict?.search || "Search"}</span>
       </Button>
 
