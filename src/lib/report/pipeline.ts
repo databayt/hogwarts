@@ -13,13 +13,25 @@
  * The pipeline returns symmetric success (plan §10): the client UI shows the
  * same "Submitted, thank you" message whether we created an issue or silently
  * rejected. Only verified-bucket results expose an issueNumber.
+ *
+ * Order of operations (2026-09-13 — cheap before expensive, independent in
+ * parallel):
+ *
+ *   schema → reporter → PURE filters (HF1/2/5/6/7, zero I/O)
+ *     → rate limit (HF8)
+ *     → [captcha ‖ recent-self ‖ banned] → CONTEXT filters (HF10/4/3/9)
+ *     → [GitHub dedup search ‖ AI triage]
+ *     → corroboration count → score → create issue → [ack comment ‖ record]
+ *
+ * Junk now costs zero network calls, and a clean report waits on four
+ * round-trip stages instead of nine. Every event carries `durationMs`.
  */
 
 import { RateLimitError, type ReportAdapter } from "./adapters/adapter"
 import { checkCorroboration, upgradeExisting } from "./corroboration"
 import { findDuplicateOnGitHub } from "./dedup"
 import { createIssue, postComment } from "./github"
-import { hostMatches, runHardFilters } from "./hard-filters"
+import { hostMatches, runContextFilters, runPureFilters } from "./hard-filters"
 import { reportSchema, type ReportInputParsed } from "./schema"
 import { computeScore } from "./score"
 import { classifyWithHaiku } from "./triage"
@@ -35,12 +47,20 @@ import type {
 
 const RECENT_WINDOW_SEC = 60
 
+interface RunContext {
+  adapter: ReportAdapter
+  ip: string
+  startedAt: number
+}
+
 export async function runReportPipeline(
   raw: unknown,
   adapter: ReportAdapter,
   opts: { ip: string } = { ip: "0.0.0.0" }
 ): Promise<PipelineResult> {
-  const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN
+  const run: RunContext = { adapter, ip: opts.ip, startedAt: Date.now() }
+
+  const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN?.trim()
   if (!token) {
     console.error(
       "[report-pipeline] GITHUB_PERSONAL_ACCESS_TOKEN not configured"
@@ -51,119 +71,122 @@ export async function runReportPipeline(
   // 1. Schema parse — wrong shape → return ok:true (denies info to client probing)
   const parsed = reportSchema.safeParse(raw)
   if (!parsed.success) {
-    await record(
-      adapter,
-      parsed.data,
-      null,
-      "silent-reject",
-      "HF1_too_short",
-      "0.0.0.0"
-    )
+    await record(run, {
+      input: raw,
+      reporter: null,
+      outcome: "silent-reject",
+      rejectReason: "HF1_too_short",
+    })
     return { ok: true, bucket: "silent-reject" }
   }
   const input = parsed.data
 
-  // 2. Reporter context
+  // 2. Reporter context — a session read; needed before the pure filters
+  //    because the HF1/HF6 floors depend on anonymous vs signed-in.
   const reporter = await adapter.getReporter(input as ReportInput)
-  const identifier =
-    reporter.kind === "authenticated"
-      ? `user:${reporter.userId}`
-      : `ip:${reporter.ipHash}`
+  const identifier = dedupIdentifier(reporter)
 
-  // 3. Rate-limit (HF8). RateLimitError → silent-reject.
+  // 3. Pure filters — HF1/2/5/6/7 need only the payload. Junk stops here,
+  //    before rate-limit, captcha and Redis spend a round-trip on it.
+  const pureReject = runPureFilters(input, reporter, adapter.hostAllowlist)
+  if (pureReject) {
+    await record(run, {
+      input,
+      reporter,
+      outcome: "silent-reject",
+      rejectReason: pureReject.code,
+    })
+    return { ok: true, bucket: "silent-reject" }
+  }
+
+  // 4. Rate-limit (HF8). RateLimitError → silent-reject. Any other error is a
+  //    misconfiguration the adapter chose to fail closed on — let it surface.
   try {
     await adapter.checkRateLimit(identifier)
   } catch (err) {
     if (err instanceof RateLimitError) {
-      await record(
-        adapter,
+      await record(run, {
         input,
         reporter,
-        "silent-reject",
-        "HF8_rate_limited",
-        opts.ip
-      )
+        outcome: "silent-reject",
+        rejectReason: "HF8_rate_limited",
+      })
       return { ok: true, bucket: "silent-reject" }
     }
     throw err
   }
 
-  // 4. Captcha — enforced for anonymous ONLY when Turnstile is configured.
-  // Unconfigured → captchaValid stays null (HF3 won't reject) so reports still
-  // land (degraded trust). This stops a missing env var silently eating reports.
-  let captchaValid: boolean | null = null
-  if (reporter.kind === "anonymous" && isTurnstileConfigured()) {
-    captchaValid = await verifyTurnstile(input.captchaToken, opts.ip)
-  }
-
-  // 5. Recent self-submissions (for HF9) + banned check (HF10)
-  const [recent, banned] = await Promise.all([
+  // 5. Captcha verdict and the two Redis ledgers are independent — one wait.
+  const [captchaValid, recent, banned] = await Promise.all([
+    resolveCaptcha(reporter, input, adapter, opts.ip),
     adapter.getRecentSelfSubmissions(identifier, RECENT_WINDOW_SEC),
     adapter.isBanned(identifier),
   ])
 
-  // 6. Hard filters
-  const rejectReason = runHardFilters(input, reporter, {
-    hostAllowlist: adapter.hostAllowlist as string[],
-    recentSelfSubmissions: recent,
-    captchaValid,
-    isBanned: banned,
-  })
-  if (rejectReason) {
-    await record(
-      adapter,
+  // 6. Context filters — HF10/HF4 (identity) then HF3/HF9 (history)
+  const ctxReject = runContextFilters(
+    reporter,
+    {
+      captchaValid,
+      isBanned: banned,
+      recentSelfSubmissions: recent,
+      description: input.description,
+    },
+    "all"
+  )
+  if (ctxReject) {
+    await record(run, {
       input,
       reporter,
-      "silent-reject",
-      rejectReason.code,
-      opts.ip
-    )
+      outcome: "silent-reject",
+      rejectReason: ctxReject.code,
+    })
     return { ok: true, bucket: "silent-reject" }
   }
 
-  // 7. Dedup against existing GitHub issues — if confident, +1 the existing
-  const dup = await findDuplicateOnGitHub(input, {
-    repo: adapter.repo,
-    token,
-  }).catch(() => ({ found: false as const }))
+  // 7 + 8. GitHub dedup search and AI triage never depend on each other; run
+  //    them together. Triage is a no-op without ANTHROPIC_API_KEY (returns null).
+  const [dup, triage] = await Promise.all([
+    findDuplicateOnGitHub(input, { repo: adapter.repo, token }).catch(() => ({
+      found: false as const,
+    })),
+    classifyWithHaiku(input, { repo: adapter.repo, reporter }),
+  ])
+
   if (dup.found) {
-    await postComment({
-      repo: adapter.repo,
-      token,
-      issueNumber: dup.issueNumber,
-      body: corroborationComment(input, reporter),
-    }).catch(() => {})
-    // Trigger corroboration upgrade check on the existing issue
-    await maybeUpgradeOnCorroboration(input, adapter, token).catch(() => {})
-    await record(
-      adapter,
+    await Promise.all([
+      postComment({
+        repo: adapter.repo,
+        token,
+        issueNumber: dup.issueNumber,
+        body: corroborationComment(input, reporter),
+      }).catch(() => {}),
+      // Trigger corroboration upgrade check on the existing issue
+      maybeUpgradeOnCorroboration(input, adapter, token).catch(() => {}),
+    ])
+    await record(run, {
       input,
       reporter,
-      "duplicate-corroborated",
-      undefined,
-      opts.ip,
-      undefined,
-      dup.issueNumber
-    )
-    return { ok: true, bucket: "verified-report", issueNumber: dup.issueNumber }
+      outcome: "duplicate-corroborated",
+      issueNumber: dup.issueNumber,
+    })
+    return {
+      ok: true,
+      bucket: "verified-report",
+      issueNumber: dup.issueNumber,
+    }
   }
-
-  // 8. AI triage (Haiku)
-  const triage: AITriageResult | null = await classifyWithHaiku(input, {
-    repo: adapter.repo,
-    reporter,
-  })
 
   // 9. Pattern signal inputs
   const url = new URL(input.pageUrl)
   const hostIsProd = isProductionHost(
-    url.host,
+    url.hostname,
     adapter.hostAllowlist as string[]
   )
   const corroborationCount =
     triage?.classification === "bug"
       ? await adapter
-          .getCorroborationCount(url.host, url.pathname, 7)
+          .getCorroborationCount(url.hostname, url.pathname, 7)
           .catch(() => 0)
       : 0
   // ipDailyNoise is Phase 2; default to 0 in Phase 1.
@@ -180,15 +203,12 @@ export async function runReportPipeline(
 
   // 11. Silent-reject — no issue created
   if (result.bucket === "silent-reject") {
-    await record(
-      adapter,
+    await record(run, {
       input,
       reporter,
-      "silent-reject",
-      undefined,
-      opts.ip,
-      result.score
-    )
+      outcome: "silent-reject",
+      score: result.score,
+    })
     return { ok: true, bucket: "silent-reject" }
   }
 
@@ -208,29 +228,26 @@ export async function runReportPipeline(
     return { ok: false, error: "internal" }
   }
 
-  // 13. Optional auto-comment for verified-bucket — acknowledge to the user
-  if (result.bucket === "verified-report") {
-    await postComment({
-      repo: adapter.repo,
-      token,
+  // 13 + 14. The verified-bucket acknowledgement and the event write are
+  //    independent side effects — one wait, then return.
+  await Promise.all([
+    result.bucket === "verified-report"
+      ? postComment({
+          repo: adapter.repo,
+          token,
+          issueNumber: issue.issueNumber,
+          body: ackComment(),
+        }).catch(() => {})
+      : Promise.resolve(),
+    record(run, {
+      input,
+      reporter,
+      outcome: result.bucket,
+      score: result.score,
       issueNumber: issue.issueNumber,
-      body: ackComment(),
-    }).catch(() => {})
-  }
-
-  // 14. If corroborationCount was already at threshold, this newly-created
-  // verified-report stands on its own and the upgrade pass is a no-op.
-  await record(
-    adapter,
-    input,
-    reporter,
-    result.bucket,
-    undefined,
-    opts.ip,
-    result.score,
-    issue.issueNumber,
-    triage?.classification
-  )
+      classification: triage?.classification,
+    }),
+  ])
 
   return {
     ok: true,
@@ -241,6 +258,35 @@ export async function runReportPipeline(
 }
 
 // ─── helpers ───────────────────────────────────────────────────────────────
+
+/**
+ * Captcha verdict for this reporter:
+ *   authenticated → null (auth is the trust signal)
+ *   anonymous + Turnstile configured → verified true/false
+ *   anonymous + not configured, development → null (local bypass)
+ *   anonymous + not configured, adapter.captcha "optional" → null (degraded trust)
+ *   anonymous + not configured, adapter.captcha "required" → throw (fail closed)
+ *
+ * The last line is the 2026-07-26 decision for kun: treating "unconfigured"
+ * as "skip the captcha" turned the anonymous intake into an open endpoint
+ * while every dashboard still showed the pipeline as healthy.
+ */
+async function resolveCaptcha(
+  reporter: ReporterContext,
+  input: ReportInputParsed,
+  adapter: ReportAdapter,
+  ip: string
+): Promise<boolean | null> {
+  if (reporter.kind !== "anonymous") return null
+  if (isTurnstileConfigured()) {
+    return verifyTurnstile(input.captchaToken, ip)
+  }
+  if (process.env.NODE_ENV === "development") return null
+  if ((adapter.captcha ?? "required") === "optional") return null
+  throw new Error(
+    "Captcha is not configured (TURNSTILE_SECRET_KEY). Refusing anonymous reports rather than accepting them unverified."
+  )
+}
 
 function isProductionHost(host: string, allowlist: readonly string[]): boolean {
   // Prod = matches allowlist AND is not localhost/127.*/::1
@@ -291,35 +337,43 @@ function buildBody(
   }
 
   // needs-human bucket needs the rationale visible above the fold
-  if (result.bucket === "needs-human" && triage) {
+  if (result.bucket === "needs-human") {
     lines.push("", "---", "")
-    lines.push(`**Classification**: ${triage.classification}`)
-    if (triage.destructiveSignals.length > 0) {
+    if (triage) {
+      lines.push(`**Classification**: ${triage.classification}`)
+      if (triage.destructiveSignals.length > 0) {
+        lines.push(
+          `**Destructive signals**: ${triage.destructiveSignals.join(", ")}`
+        )
+      }
+      lines.push(`**AI rationale**: ${triage.rationale}`)
+    } else {
       lines.push(
-        `**Destructive signals**: ${triage.destructiveSignals.join(", ")}`
+        "**AI triage**: unavailable — scored on reporter, content and context signals only."
       )
     }
-    lines.push(`**AI rationale**: ${triage.rationale}`)
     lines.push("")
-    lines.push("> This issue requires human review before any automated fix.")
     lines.push(
-      "> Add the `verified-report` label to manually promote into the auto-fix queue."
+      "> Waiting for the human gate: `report` lists this with the other open reports; take it or reject it there."
     )
   }
 
   // Score block — machine-readable footer parsed by the /report agent
-  lines.push("", buildScoreBlock(result, triage))
+  lines.push("", buildScoreBlock(reporter, result, triage))
 
   return lines.join("\n")
 }
 
 function buildScoreBlock(
+  reporter: ReporterContext,
   result: ScoringResult,
   triage: AITriageResult | null
 ): string {
   const payload = {
     score: result.score,
     bucket: result.bucket,
+    team: isTeamReporter(reporter),
+    reporterKind: reporter.kind,
     classification: triage?.classification ?? "unknown",
     severity: triage?.severity ?? "medium",
     language: triage?.language ?? "other",
@@ -329,9 +383,14 @@ function buildScoreBlock(
   return `<!-- score-block\n${JSON.stringify(payload, null, 2)}\n-->`
 }
 
+function isTeamReporter(reporter: ReporterContext | null): boolean {
+  return reporter?.kind === "authenticated" && reporter.isTeam === true
+}
+
 function reporterLabel(reporter: ReporterContext): string {
   if (reporter.kind === "anonymous") return "Anonymous"
-  return `${reporter.role} (id:${reporter.userId.slice(0, 8)}…)`
+  const who = `${reporter.role} (id:${reporter.userId.slice(0, 8)}…)`
+  return reporter.isTeam ? `team · ${who}` : who
 }
 
 function corroborationComment(
@@ -368,42 +427,59 @@ async function maybeUpgradeOnCorroboration(
   }
 }
 
-async function record(
-  adapter: ReportAdapter,
-  input: ReportInputParsed | unknown,
-  reporter: ReporterContext | null,
-  outcome: PipelineEvent["outcome"],
-  rejectReason: PipelineEvent["rejectReason"],
-  ip: string,
-  score?: number,
-  issueNumber?: number,
+/**
+ * The identity a reporter is rate-limited and deduped against.
+ *
+ * The single definition on purpose — read and write paths derived this
+ * separately and disagreed, which silently disabled HF9 dedup for
+ * authenticated reporters.
+ */
+function dedupIdentifier(reporter: ReporterContext): string {
+  return reporter.kind === "authenticated"
+    ? `user:${reporter.userId}`
+    : `ip:${reporter.ipHash}`
+}
+
+interface RecordArgs {
+  input: unknown
+  reporter: ReporterContext | null
+  outcome: PipelineEvent["outcome"]
+  rejectReason?: PipelineEvent["rejectReason"]
+  score?: number
+  issueNumber?: number
   classification?: PipelineEvent["classification"]
-): Promise<void> {
+}
+
+async function record(run: RunContext, args: RecordArgs): Promise<void> {
   let host = ""
   let path = ""
   try {
-    const u = new URL((input as ReportInputParsed)?.pageUrl ?? "")
-    host = u.host
+    const u = new URL((args.input as ReportInputParsed)?.pageUrl ?? "")
+    host = u.hostname
     path = u.pathname
   } catch {
     /* ignore */
   }
+  const { reporter } = args
   const event: PipelineEvent = {
     at: new Date().toISOString(),
-    repo: adapter.repo,
-    outcome,
-    rejectReason,
-    score,
-    classification,
-    issueNumber,
+    repo: run.adapter.repo,
+    outcome: args.outcome,
+    rejectReason: args.rejectReason,
+    score: args.score,
+    classification: args.classification,
+    issueNumber: args.issueNumber,
     reporterKind: reporter?.kind ?? "anonymous",
     reporterRole:
       reporter?.kind === "authenticated" ? reporter.role : undefined,
+    isTeam: isTeamReporter(reporter),
     ipHash: reporter?.ipHash ?? "unknown",
     host,
     path,
+    dedupIdentifier: reporter ? dedupIdentifier(reporter) : undefined,
+    durationMs: Date.now() - run.startedAt,
   }
-  await adapter.recordPipelineEvent(event).catch((err) => {
+  await run.adapter.recordPipelineEvent(event).catch((err) => {
     console.warn("[report-pipeline] recordPipelineEvent failed:", err)
   })
 }

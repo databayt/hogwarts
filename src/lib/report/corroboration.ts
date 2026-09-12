@@ -36,7 +36,7 @@ export async function checkCorroboration(
   adapter: ReportAdapter
 ): Promise<CorroborationCheck> {
   const url = new URL(pageUrl)
-  const host = url.host
+  const host = url.hostname
   const path = url.pathname
 
   const [count, existingIssue] = await Promise.all([

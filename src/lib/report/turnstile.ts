@@ -16,6 +16,7 @@ const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
  * Is Turnstile configured for this deployment? When false, captcha is NOT
  * enforced — the pipeline leaves captchaValid=null so anonymous reports still
  * go through (degraded trust, lower score) instead of silently vanishing.
+ * Misconfig must never silently eat a legit report.
  */
 export function isTurnstileConfigured(): boolean {
   return Boolean(process.env.TURNSTILE_SECRET_KEY)

@@ -21,6 +21,24 @@ export interface ReportAdapter {
   readonly hostAllowlist: readonly string[]
 
   /**
+   * What an anonymous report means when Turnstile is NOT configured, outside
+   * development:
+   *
+   *   "required" (default) — refuse it. One missing env var must not turn the
+   *     anonymous intake into an open endpoint while every dashboard still
+   *     shows the pipeline healthy (kun, 2026-07-26 decision).
+   *   "optional" — accept it at degraded trust (captchaValid = null, low
+   *     reputation, lands as low-confidence for the human gate). For repos
+   *     whose reporters are signed-in users and which never wired Turnstile
+   *     (hogwarts, mkan) — a refusal there would only produce "Something went
+   *     wrong" for the rare anonymous visitor.
+   *
+   * When Turnstile IS configured the policy is irrelevant: the token is
+   * verified and HF3 rejects a failed check either way.
+   */
+  readonly captcha?: "required" | "optional"
+
+  /**
    * Resolve the current request's reporter. Anonymous result is acceptable
    * (will be subject to captcha + low base reputation).
    */
@@ -76,10 +94,4 @@ export class RateLimitError extends Error {
     super(message)
     this.name = "RateLimitError"
   }
-}
-
-// Helper to normalize URL paths consistently across adapters.
-export function normalizedReportPath(path: string): string {
-  const beforeQuery = path.split("?")[0] ?? path
-  return beforeQuery.replace(/\/$/, "") || "/"
 }

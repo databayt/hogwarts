@@ -9,6 +9,7 @@
 export { runReportPipeline } from "./pipeline"
 export { reportSchema, REPORT_CATEGORIES } from "./schema"
 export { computeScore, THRESHOLDS, bucketFor } from "./score"
+export { REPORT_LIMITS, limitsFor, type ReportLimits } from "./limits"
 export { RateLimitError } from "./adapters/adapter"
 export type { ReportAdapter } from "./adapters/adapter"
 export {

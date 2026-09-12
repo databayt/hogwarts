@@ -50,12 +50,28 @@ export async function findDuplicateOnGitHub(
 
   for (const hit of hits) {
     if (!hit.body.includes(path)) continue
-    const sim = jaccardSimilarity(input.description, hit.body)
+    const sim = jaccardSimilarity(input.description, descriptionOf(hit))
     if (sim >= SIM_THRESHOLD) {
       return { found: true, issueNumber: hit.number, similarity: sim }
     }
   }
   return { found: false }
+}
+
+/**
+ * The reporter's own words inside an issue the pipeline created: everything
+ * above the first `---` rule. Comparing against the WHOLE body never crossed
+ * the 0.8 threshold — the Page/Reporter/Time/Browser lines and the score
+ * block add ~60 tokens the new description can't share, so a verbatim
+ * re-submission scored ~0.2 and the corroboration path was unreachable.
+ * Falls back to the title (the description's first 80 chars) for issues not
+ * written by the pipeline.
+ */
+export function descriptionOf(
+  hit: Pick<IssueSearchHit, "title" | "body">
+): string {
+  const head = hit.body.split(/\r?\n-{3,}/)[0]?.trim() ?? ""
+  return head.length > 0 ? head : hit.title
 }
 
 /**

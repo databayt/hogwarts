@@ -46,6 +46,24 @@ export const REPORT_LABELS = {
     color: "5319e7",
     description: "Multiple independent reports on same page",
   },
+  /** Reporter is a databayt team member (see ReporterContext.isTeam). Sorted first in the queue. */
+  team: {
+    name: "team",
+    color: "0075ca",
+    description: "Reported by a databayt team member",
+  },
+  /** The human gate said yes — Abdout took this one; the report agent may fix it. */
+  accepted: {
+    name: "accepted",
+    color: "0e8a16",
+    description: "Accepted by a human for the auto-fix lane",
+  },
+  /** The report agent could not reproduce it from the description + URL. */
+  cannotReproduce: {
+    name: "cannot-reproduce",
+    color: "e4e669",
+    description: "Could not be reproduced from the report",
+  },
   severityCritical: {
     name: "severity/critical",
     color: "b60205",

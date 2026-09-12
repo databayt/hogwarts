@@ -130,7 +130,7 @@ export async function classifyWithHaiku(
   input: ReportInputParsed,
   ctx: TriageContext
 ): Promise<AITriageResult | null> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim()
   if (!apiKey) {
     console.warn("[report-triage] ANTHROPIC_API_KEY not set; skipping triage")
     return null

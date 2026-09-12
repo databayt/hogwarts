@@ -27,6 +27,13 @@
  *   classification = duplicate    → handled in pipeline before score
  *   severityHint = critical && score ≥ 60 → force verified
  *   AI failure → caller passes triage=null → A and P dropped → cap at needs-human
+ *   reporter.isTeam → R = 30, never below needs-human, `team` label
+ *
+ * The buckets are SIGNALS for the human gate, not verdicts. Since 2026-09-13
+ * the `report` skill lists every open report and Abdout takes or rejects each
+ * one; only `accepted` (or a genuine verified-report) enters the auto-fix lane.
+ * The scores still matter — they order the list and catch junk — but a
+ * low-confidence team report is a contradiction, hence the team floor.
  */
 
 import { languageLabel, REPORT_LABELS, severityLabel } from "./labels"
@@ -101,8 +108,23 @@ export function computeScore(
     }
   }
 
-  // AI failure cap
-  if (ctx.triage === null && bucket === "verified-report") {
+  // AI failure handling — when triage is unavailable (no/invalid ANTHROPIC key
+  // or API error) we can't auto-assess, so never silently drop a report that
+  // already cleared the hard filters: cap the top (no auto-fix without AI
+  // confirmation) AND floor the bottom (a human reviews it). Everything that
+  // passed HF lands as needs-human. Mirrors the captcha-degradation principle:
+  // missing infra must never silently eat a legit report.
+  if (ctx.triage === null) {
+    if (bucket === "verified-report") bucket = "needs-human"
+    if (bucket === "silent-reject") bucket = "needs-human"
+  }
+
+  // Team floor — a teammate's report is never junk-binned or agent-skipped.
+  // It still needs the human gate (needs-human), not a free pass to auto-fix:
+  // the team writes the shortest reports of all ("class list empty").
+  const isTeam =
+    ctx.reporter.kind === "authenticated" && ctx.reporter.isTeam === true
+  if (isTeam && (bucket === "silent-reject" || bucket === "low-confidence")) {
     bucket = "needs-human"
   }
 
@@ -121,7 +143,7 @@ export function computeScore(
     score: total,
     breakdown,
     bucket,
-    labels: labelsFor(bucket, ctx.triage),
+    labels: labelsFor(bucket, ctx.triage, isTeam),
   }
 }
 
@@ -129,6 +151,9 @@ function reputationScore(reporter: ReporterContext): number {
   if (reporter.kind === "anonymous") {
     return 4 // base, only present if captcha already validated
   }
+
+  // Team members are the reporters we trust most — full marks, no bonus math.
+  if (reporter.isTeam) return 30
 
   const base = ROLE_BASE[reporter.role.toUpperCase()] ?? ROLE_BASE.USER ?? 8
 
@@ -242,7 +267,11 @@ export function bucketFor(score: number): Bucket {
   return "silent-reject"
 }
 
-function labelsFor(bucket: Bucket, triage: AITriageResult | null): string[] {
+function labelsFor(
+  bucket: Bucket,
+  triage: AITriageResult | null,
+  isTeam = false
+): string[] {
   if (bucket === "silent-reject") return []
 
   const labels: string[] = [REPORT_LABELS.report.name]
@@ -250,6 +279,8 @@ function labelsFor(bucket: Bucket, triage: AITriageResult | null): string[] {
   else if (bucket === "needs-human") labels.push(REPORT_LABELS.needsHuman.name)
   else if (bucket === "low-confidence")
     labels.push(REPORT_LABELS.lowConfidence.name)
+
+  if (isTeam) labels.push(REPORT_LABELS.team.name)
 
   if (triage) {
     labels.push(severityLabel(triage.severity))
