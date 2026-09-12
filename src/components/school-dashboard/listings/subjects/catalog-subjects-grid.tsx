@@ -117,9 +117,11 @@ export function SubjectsGrid({ subjects, lang, subdomain }: Props) {
                   {subject.name}
                 </p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                  {/* Stage badge is desktop-only — the phone card is too
+                      narrow to carry both it and the grade. */}
                   <Badge
                     variant="secondary"
-                    className="px-1.5 py-0 text-[10px]"
+                    className="hidden px-1.5 py-0 text-[10px] sm:inline-flex"
                   >
                     {levelLabel(subject.level, lang)}
                   </Badge>
