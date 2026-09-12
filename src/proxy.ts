@@ -8,7 +8,13 @@ import {
   type Role,
 } from "@/routes"
 
-import { getSubdomainFromHost, isMainDomainHost } from "@/lib/root-domain"
+import { decode } from "next-auth/jwt"
+
+import {
+  cookieDomainForHost,
+  getSubdomainFromHost,
+  isMainDomainHost,
+} from "@/lib/root-domain"
 import { i18n, type Locale } from "@/components/internationalization/config"
 import {
   detectLocale,
@@ -140,9 +146,47 @@ function getLocale(request: NextRequest): Locale {
   })
 }
 
-// Check if user is authenticated via session cookie
-function isAuthenticated(request: NextRequest): boolean {
-  return !!request.cookies.get("authjs.session-token")?.value
+const SESSION_COOKIE = "authjs.session-token"
+const ROLE_COOKIE = "authjs.role"
+
+type SessionState = "none" | "valid" | "stale"
+
+/**
+ * Verify the session cookie instead of trusting its presence.
+ *
+ * A cookie signed with a previous AUTH_SECRET (rotated 2026-09-12) decodes to
+ * nothing. Treating it as "authenticated" sent /login to /dashboard, whose
+ * layout found no session and sent it back — a redirect loop that locked out
+ * every user who was signed in before the rotation. "stale" tells the caller
+ * to clear the cookie on the response so the next request starts clean.
+ */
+async function getSessionState(request: NextRequest): Promise<SessionState> {
+  const token = request.cookies.get(SESSION_COOKIE)?.value
+  if (!token) return "none"
+  const secret = process.env.AUTH_SECRET
+  if (!secret) return "valid" // cannot verify here; layouts still call auth()
+  try {
+    const payload = await decode({ token, secret, salt: SESSION_COOKIE })
+    return payload ? "valid" : "stale"
+  } catch {
+    return "stale"
+  }
+}
+
+/** Expire the session + role cookies with the same attributes auth.ts set them with. */
+function clearStaleSession(response: NextResponse, host: string): NextResponse {
+  const domain = cookieDomainForHost(host)
+  for (const name of [SESSION_COOKIE, ROLE_COOKIE]) {
+    response.cookies.set(name, "", {
+      path: "/",
+      domain,
+      maxAge: 0,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    })
+  }
+  return response
 }
 
 /**
@@ -158,6 +202,14 @@ function getRoleFromCookie(request: NextRequest): Role | null {
 }
 
 export async function proxy(req: NextRequest) {
+  const session = await getSessionState(req)
+  const response = await routeRequest(req, session === "valid")
+  return session === "stale"
+    ? clearStaleSession(response, req.headers.get("host") || "")
+    : response
+}
+
+async function routeRequest(req: NextRequest, authenticated: boolean) {
   const url = req.nextUrl.clone()
   const host = req.headers.get("host") || ""
 
@@ -247,7 +299,6 @@ export async function proxy(req: NextRequest) {
       ))
 
   const isAuth = authRoutes.includes(pathWithoutLocale)
-  const authenticated = isAuthenticated(req)
 
   // Redirect logged-in users away from auth pages
   if (isAuth && authenticated) {
