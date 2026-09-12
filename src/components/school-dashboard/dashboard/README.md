@@ -383,28 +383,66 @@ role-blind shell.
 
 `DashboardSkeleton` (in `school-dashboard/loading.tsx`) draws the phone prefix
 every role gets (`home-block`, `next-action`, `today-timetable`,
-`phone-quick-actions`, all `md:hidden`) and then one of three bodies:
+`phone-quick-actions`, all `md:hidden`), then the four sections every role now
+shares, then that role's tail:
 
-| Shape | Roles | Sections, in order |
-| --- | --- | --- |
-| ADMIN | ADMIN, DEVELOPER | hero, quick look, quick actions, usage, invoices, three charts, attendance |
-| PRINCIPAL | PRINCIPAL | the admin's first six, stopping before the attendance grid |
-| TEACHER | TEACHER | quick actions, three charts, usage, invoices, metric tile, today |
-| STUDENT | STUDENT | as TEACHER, with the area chart alone across the row |
-| neutral | everything else, and before the role is known | quick actions, usage, invoices |
+| Tail      | Roles                                                  | What it draws                                                            |
+| --------- | ------------------------------------------------------ | ------------------------------------------------------------------------ |
+| none      | ADMIN, DEVELOPER, and any role this file does not know | the four shared sections and nothing else                                |
+| LEARNER   | TEACHER, STUDENT                                       | one `md`-and-up metric tile in a three-column row, then the classes card |
+| STAFFROOM | GUARDIAN, STAFF, ACCOUNTANT                            | the four-tile metric row that opens all three tails, and no further      |
 
-Before it, ONE skeleton drew the admin page for every role — a teacher and a
-student both watched a weather hero, a Quick Look row and an attendance grid
-resolve into a page that has none of the three.
+Before the section order was unified (see the next entry) this file carried
+three bodies and a hedge, and the hedge — `NeutralBodySkeleton` — drew three
+sections in the wrong order for the guardian, the staff member and the
+accountant, because nobody had measured them.
 
-Measured against the live admin and student pages at 1440px: quick actions
-100px, usage table 44 + 40 + 36/row, invoice table 44 + 40 + a 96px empty cell
-(the invoice list is a client read, so the empty state IS the frame the
-skeleton hands over to), chart plot 250px, the student's row-wide area plot
-320px. Two are close rather than exact — the Quick Look card lands ~10px short
-of its 142px original and the chart section ~16px short of 863px. The teacher
-body was read off `teacher-client.tsx` rather than measured in the browser; it
-is the student's shape with the full chart trio and four usage rows.
+Measured at 1440px against every demo role on 2026-09-12: quick actions 100px;
+charts 884px for every role but the student's 498px, whose `chart-section.tsx`
+drops the bar and the radial; usage table 44 + 40 + 37/row, four rows for
+everyone but the student's three; the learner metric tile 114px and the classes
+card 312px empty. The admin's chart section measures 900px against the drawn
+884 — 16px, left alone.
+
+The invoice table is the one section whose height is data rather than layout:
+183px with no invoices, 429px for the student's seven rows, 576px for the
+accountant's ten. It drew the 96px empty band for everyone and was short by up
+to 394px; it draws five rows now, so the page settles by a few rows either way
+rather than by a whole table.
+
+### Every role took the student's order, and three stopped inventing data (2026-09-12)
+
+The student dashboard was the reference twice before — the teacher followed it
+on 2026-09-10 — and the remaining four followed it here. Admin, guardian, staff
+and accountant had kept the old "unified order": the Upcoming/Weather hero, the
+Quick Look row, then quick actions, the two tables, and the charts last. They
+now open on the quick actions with the charts directly under them, and each one
+stopped calling `getQuickLookData` and `getWeatherData` — two queries per load
+per role, for sections nothing renders. The hero and Quick Look JSX is commented
+rather than deleted, with the restore note the student file carries.
+
+`PRINCIPAL` is not in the Prisma `UserRole` enum, so `content.tsx`'s
+`case "PRINCIPAL"` is unreachable and `principal.tsx` is dead code. It was left
+untouched, including its mock alerts — deleting 800 lines was not this pass.
+
+Three dashboards were also showing invented numbers as real:
+
+- **accountant** — five of the six months in "Revenue vs Expenses", all five
+  days of "Weekly Collections", every deadline in "Financial Calendar", a fixed
+  seven-of-twelve fiscal year, two trend percentages, and, when the real query
+  came back empty, two named students with debts against them. All removed; the
+  sections backed by real rows stay and show their empty state when empty.
+- **admin** — the whole "Attendance Overview": 96/94/92/88/91/85 per grade, 91%
+  overall, 196 students, 178 present, and a warning naming Grade 10, identical
+  for every school. Removed; `dashboard.attendance` still holds its labels.
+- **staff** — the opposite problem. Its `mock`-prefixed names held real data
+  from `getStaffDashboardData`, and were renamed.
+
+Still open on these three: every string in `staff.tsx`, `accountant.tsx` and
+`admin-client.tsx` is hardcoded English (there is no `staffDashboard`,
+`accountantDashboard` or `adminDashboard` block in the dictionaries), and the
+accountant formats money as `$` with a hand-rolled `/1000` "K" instead of
+`formatCurrency` against `School.currency`.
 
 ### Integration Points
 
