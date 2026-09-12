@@ -152,7 +152,10 @@ async function triggerAbsenceNotification(
         userId: guardian.userId,
         type: "attendance_alert",
         priority: "high",
-        channels: ["in_app", ...extraChannels],
+        // Push rides along for guardians who turned it on in a browser or the
+        // installed app (Web Push lane, 2026-09-12); the dispatcher drops it for
+        // anyone who disabled the channel.
+        channels: Array.from(new Set(["in_app", "push", ...extraChannels])),
         title: `تنبيه غياب: ${studentName}`,
         body: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`,
         metadata: {
