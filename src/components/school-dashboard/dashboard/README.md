@@ -404,6 +404,12 @@ everyone but the student's three; the learner metric tile 114px and the classes
 card 312px empty. The admin's chart section measures 900px against the drawn
 884 — 16px, left alone.
 
+Re-checked at 390px the same day: quick actions 0 in both (the placeholder
+carries the same `hidden md:block`), charts 1136 drawn against 1122 real once
+the bar/radial/area stack, usage 233 against 234, the learner tail absent on
+both sides because it is `md`-and-up, and `document.scrollWidth` 390 throughout
+— neither table pushes the page sideways.
+
 The invoice table is the one section whose height is data rather than layout:
 183px with no invoices, 429px for the student's seven rows, 576px for the
 accountant's ten. It drew the 96px empty band for everyone and was short by up
@@ -418,8 +424,15 @@ and accountant had kept the old "unified order": the Upcoming/Weather hero, the
 Quick Look row, then quick actions, the two tables, and the charts last. They
 now open on the quick actions with the charts directly under them, and each one
 stopped calling `getQuickLookData` and `getWeatherData` — two queries per load
-per role, for sections nothing renders. The hero and Quick Look JSX is commented
-rather than deleted, with the restore note the student file carries.
+per role, for sections nothing renders.
+
+Restoring differs by file, and the difference matters if you go looking. In
+`admin-client.tsx` the hero and Quick Look JSX is COMMENTED, the way
+`student-client.tsx` and `teacher-client.tsx` carry theirs, and `HeroSection` is
+still defined. In `parent.tsx`, `staff.tsx` and `accountant.tsx` the JSX was
+DELETED and a comment left in its place naming what to re-import — those three
+build the hero inline rather than through a `HeroSection`, so there was nothing
+to keep. Take it back out of `f57396f7c` if you want it.
 
 `PRINCIPAL` is not in the Prisma `UserRole` enum, so `content.tsx`'s
 `case "PRINCIPAL"` is unreachable and `principal.tsx` is dead code. It was left
