@@ -1001,18 +1001,70 @@ body:has(.book-sheet-contents) [data-slot="drawer-overlay"] {
   font-size: 0.75rem;
   color: var(--muted-foreground);
 }
+/* ── Search sheet (IMG_2580) ────────────────────────────────────────────
+   A 38-pt sheet from y 47 with the title 37 pt under its edge; the field and
+   the ✕ are 48-pt white glass capsules on the sheet — a 1-px rim and a soft
+   shadow (strongest below) draw them, not a grey fill. Bar: 12-pt side
+   insets, 13 between field and disc, 17 above and below. */
+.book-sheet.book-sheet-search[data-vaul-drawer-direction] {
+  --search-surface: #fefeff;
+  --search-capsule: #fdfdfd;
+  --search-rim: #ffffff;
+  --search-ink: #000000;
+  --search-glyph: #191919;
+  --search-placeholder: #717171;
+  --search-shadow:
+    0 0 18px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.035);
+  /* The capture's sheet starts under the status bar, 47 pt down. */
+  height: calc(100svh - 2.9375rem);
+  max-height: calc(100svh - 2.9375rem);
+  border: 0;
+  border-radius: 2.375rem 2.375rem 0 0;
+  background: var(--search-surface);
+  color: var(--search-ink);
+}
+.dark .book-sheet.book-sheet-search[data-vaul-drawer-direction] {
+  --search-surface: #1c1c1e;
+  --search-capsule: #2c2c2e;
+  --search-rim: rgba(255, 255, 255, 0.08);
+  --search-ink: #f2f2f7;
+  --search-glyph: #f2f2f7;
+  --search-placeholder: #98989d;
+  --search-shadow:
+    0 1px 12px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+.book-sheet-search > [data-slot="drawer-header"] {
+  padding: 1.625rem 1.25rem 0.75rem;
+}
+.book-sheet-search .book-sheet-title {
+  line-height: 1.375rem;
+  color: var(--search-ink);
+}
 .book-search-bar {
   position: sticky;
   bottom: 0;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.75rem 0.8rem calc(0.75rem + env(safe-area-inset-bottom));
-  background: var(--background);
+  gap: 0.8125rem;
+  padding: 1.0625rem 0.75rem calc(1.0625rem + env(safe-area-inset-bottom));
+  background: var(--search-surface);
 }
-.book-search-bar .book-round {
-  width: 2.9375rem;
-  height: 2.9375rem;
+.book-sheet-search .book-search-bar .book-round {
+  width: 3rem;
+  height: 3rem;
+  background: var(--search-capsule);
+  color: var(--search-glyph);
+  box-shadow:
+    0 0 0 1px var(--search-rim),
+    var(--search-shadow);
+}
+/* Lucide draws inside a 24-unit box with margins: the ✕ spans 12 of 24, the
+   magnifier 18, the mic 20 tall — so the boxes are sized for the GLYPH to
+   come out at the capture's 17 / 16 / 18 pt. */
+.book-search-bar .book-round svg {
+  width: 1.875rem;
+  height: 1.875rem;
+  stroke-width: 1.75;
 }
 .book-search-field {
   position: relative;
@@ -1021,28 +1073,67 @@ body:has(.book-sheet-contents) [data-slot="drawer-overlay"] {
 .book-search-icon {
   position: absolute;
   top: 50%;
-  inset-inline-start: 1rem;
+  inset-inline-start: 1.125rem;
+  width: 1.1875rem;
+  height: 1.1875rem;
+  stroke-width: 2.25;
   transform: translateY(-50%);
-  color: var(--muted-foreground);
+  color: var(--search-ink);
   pointer-events: none;
 }
 .book-search-input {
   width: 100%;
-  height: 2.9375rem;
-  padding-inline: 2.8rem 1rem;
+  height: 3rem;
+  padding-inline: 3rem 2.75rem;
   font-family: var(--book-ui);
+  font-size: 1.0625rem;
   border: 0;
   border-radius: 9999px;
-  background: var(--muted);
-  color: var(--foreground);
-  font-size: 1rem;
+  background: var(--search-capsule);
+  color: var(--search-ink);
+  box-shadow:
+    0 0 0 1px var(--search-rim),
+    var(--search-shadow);
   outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
-.book-search-input:focus-visible {
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 40%, transparent);
+.book-search-input::placeholder {
+  color: var(--search-placeholder);
+  opacity: 1;
 }
-.book-search-input::-webkit-search-cancel-button {
+.book-search-input::-webkit-search-cancel-button,
+.book-search-input::-webkit-search-decoration {
   display: none;
+  -webkit-appearance: none;
+}
+.book-search-mic {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 0.6875rem;
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--search-ink);
+  cursor: pointer;
+}
+.book-search-mic svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.book-search-mic[aria-pressed="true"] {
+  color: #ff383c;
+}
+.book-search-mic:focus-visible,
+.book-search-bar .book-round:focus-visible {
+  outline: 2px solid var(--search-placeholder);
+  outline-offset: 2px;
 }
 .book-sheet .book-round {
   background: var(--muted);

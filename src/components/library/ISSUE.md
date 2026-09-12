@@ -237,3 +237,19 @@ first render after the quota clears will populate it.
   the same update against prod before the paragraph appears there.
 - **`/live`'s loading skeleton is the same object as this one** and was not
   checked in this pass. If it is equally stale, it is stale for the same reason.
+
+## Books mirror blueprint (2026-09-11)
+
+The book page is to become a measured mirror of the Apple Books store page; the
+twenty-three iPhone captures in `public/books-app/` are the single source of truth.
+The blueprint — every element's size, colour and type read off the 3x captures
+with provenance tags, the deltas against the current render, the reference →
+product action map, six decisions for Abdout (ground colour, tab bar, modal
+chrome, schema for favourites and twins) and a phased plan — is at
+`.claude/plans/books-app-mirror-blueprint.md`. Verify with
+`node scripts/books-mirror-capture.mjs` + `python3 scripts/books-mirror-crops.py`
+(renders at 390×844 @3x, crops both sides to the same rectangles).
+
+Found while measuring, not yet fixed: `book-video.tsx` prints a hardcoded
+"Book Preview" heading; the welcome dialog opens over the book page on a fresh
+session and eats the first tap.

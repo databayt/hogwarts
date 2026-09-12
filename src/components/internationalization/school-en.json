@@ -3944,6 +3944,7 @@
           "contentsProgress": "Contents • {percent}%",
           "searchBook": "Search Book",
           "searchInThisBook": "In this book",
+          "dictate": "Dictate",
           "searchHint": "Type a word to search the book's text.",
           "resultsCount": "{n} results",
           "noResults": "No results",

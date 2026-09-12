@@ -2,12 +2,21 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react"
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type ReactNode,
+} from "react"
 import {
   AlignJustify,
   Bookmark,
   FileText,
   List,
+  Mic,
   Moon,
   Search,
   Settings,
@@ -603,6 +612,96 @@ export function ContentsSheet({
   )
 }
 
+type Recognizer = {
+  lang: string
+  interimResults: boolean
+  continuous: boolean
+  onresult:
+    | ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void)
+    | null
+  onend: (() => void) | null
+  onerror: (() => void) | null
+  start: () => void
+  abort: () => void
+}
+type RecognizerCtor = new () => Recognizer
+
+/** The browser's dictation engine, where it has one (Safari, Chrome). */
+function recognizer(): RecognizerCtor | null {
+  if (typeof window === "undefined") return null
+  const w = window as unknown as {
+    SpeechRecognition?: RecognizerCtor
+    webkitSpeechRecognition?: RecognizerCtor
+  }
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
+}
+
+const never = () => () => {}
+
+/**
+ * The mic in the search field (IMG_2580). It is drawn only where the
+ * browser can dictate — a mic that does nothing is worse than none — and
+ * stops as soon as the sheet closes.
+ */
+function useDictation(
+  lang: string,
+  open: boolean,
+  onText: (t: string) => void
+) {
+  const supported = useSyncExternalStore(
+    never,
+    () => recognizer() !== null,
+    () => false
+  )
+  const [listening, setListening] = useState(false)
+  const recRef = useRef<Recognizer | null>(null)
+  const abort = useCallback(() => {
+    recRef.current?.abort()
+    recRef.current = null
+  }, [])
+  useEffect(() => {
+    if (!open) abort()
+  }, [open, abort])
+  useEffect(() => abort, [abort])
+  const toggle = () => {
+    if (listening) {
+      abort()
+      setListening(false)
+      return
+    }
+    const Ctor = recognizer()
+    if (!Ctor) return
+    const rec = new Ctor()
+    rec.lang = lang === "ar" ? "ar-SA" : "en-US"
+    rec.interimResults = true
+    rec.continuous = false
+    rec.onresult = (e) => {
+      let text = ""
+      for (let i = 0; i < e.results.length; i++)
+        text += e.results[i][0]?.transcript ?? ""
+      onText(text)
+    }
+    rec.onend = () => {
+      recRef.current = null
+      setListening(false)
+    }
+    rec.onerror = rec.onend
+    recRef.current = rec
+    setListening(true)
+    try {
+      rec.start()
+    } catch {
+      rec.onend()
+    }
+  }
+  const state = !supported
+    ? "unsupported"
+    : listening && open
+      ? "listening"
+      : "idle"
+  return { state, toggle }
+}
+
 export function SearchSheet({
   open,
   onClose,
@@ -630,6 +729,7 @@ export function SearchSheet({
     const t = setTimeout(() => inputRef.current?.focus(), 250)
     return () => clearTimeout(t)
   }, [open])
+  const dictation = useDictation(lang, open, onQuery)
   const printed = (page: number | null) =>
     page == null
       ? null
@@ -646,6 +746,7 @@ export function SearchSheet({
       description={labels.close}
       tall
       hideClose
+      className="book-sheet-search"
     >
       <div className="book-sheet-body book-search-results">
         {trimmed.length < 2 ? null : results.length === 0 ? (
@@ -703,6 +804,17 @@ export function SearchSheet({
             aria-label={labels.searchBook}
             autoComplete="off"
           />
+          {dictation.state !== "unsupported" && (
+            <button
+              type="button"
+              className="book-search-mic"
+              aria-label={labels.dictate}
+              aria-pressed={dictation.state === "listening"}
+              onClick={dictation.toggle}
+            >
+              <Mic aria-hidden="true" />
+            </button>
+          )}
         </div>
         <button
           type="button"

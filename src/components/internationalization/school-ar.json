@@ -3944,6 +3944,7 @@
           "contentsProgress": "المحتويات — {percent}٪",
           "searchBook": "البحث في الكتاب",
           "searchInThisBook": "في هذا الكتاب",
+          "dictate": "إملاء صوتي",
           "searchHint": "اكتب كلمة للبحث في نص الكتاب.",
           "resultsCount": "{n} نتيجة",
           "noResults": "لا نتائج",

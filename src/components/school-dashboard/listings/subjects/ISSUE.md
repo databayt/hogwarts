@@ -40,6 +40,29 @@
 
 ## Resolved
 
+- **2026-09-12 — The search sheet mirrors IMG_2580.** `sheets.tsx`
+  (`book-sheet-search`) + `reader.css`: top radius 38, ground `#fefeff`
+  (`#1c1c1e` dark), edge at 47 (`calc(100svh - 47px)`), title 37 under the
+  edge, 48-pt glass capsules (fill `#fdfdfd`, 1-px rim, soft shadow) on
+  12 / 13 / 17 insets, magnifier 16, placeholder 17 `#717171`, ✕ 17, and a
+  mic only where the browser can dictate (Web Speech; new `dictate` label in
+  both dictionaries). Re-measuring overturned blueprint §8 — the old
+  `#efeff0` 319×49 field was the keyboard band. **NOT verified on a real
+  iPhone with the keyboard up.** `scripts/books-mirror-capture.mjs` now takes
+  `BOOKS_TIMEOUT` (ms) for a cold dev server.
+
+- **2026-09-11 — Books mirror blueprint for the textbook reader.** The reader
+  was measured against its iPhone references (`public/books-app/`, 390×844 @3x)
+  element by element; the blueprint at `.claude/plans/books-app-mirror-blueprint.md`
+  carries the reference numbers with provenance tags, the deltas (opener 34→36,
+  ornament 153→105, menu pills 45→47, contents head 22/17→17/15, rows 17→15,
+  theme cards square→103:95, Customize 52→48, Arabic leading 1.9→1.7), the
+  motion table and a phased plan. **OPEN defect found there:** `cover.tsx` puts
+  `data-chrome` on `.book-cover-art`, so every tap on the cover screen is
+  ignored and a mouse user cannot leave the cover (keys and swipes work).
+  Verification harness: `scripts/books-mirror-capture.mjs` +
+  `scripts/books-mirror-crops.py`.
+
 - **2026-09-09 — A summary sits beside the textbook in Materials.** Both tiles
   come off one board: the shared `BookCoverTile` renders the cover art plus the
   reader's three cover lines, and a green disc in the top corner (logical
@@ -49,7 +72,7 @@
   route and no summary content on the CDN yet, so it renders as a plain tile.
   Pass `summaryHref` to `CatalogContentSections` to make it a link, one line at
   each of the two call sites. A third tile off the same board carries the
-  question bank, on a blue disc, and it *does* link — straight to the existing
+  question bank, on a blue disc, and it _does_ link — straight to the existing
   `qbankHref`.
 
 - **2026-09-09 — The subject page's content sections re-ordered, and the
