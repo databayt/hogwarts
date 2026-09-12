@@ -111,6 +111,7 @@ model User {
   notificationPreferences   NotificationPreference[]   @relation("UserNotificationPreferences")
   notificationBatches       NotificationBatch[]        @relation("NotificationBatchCreator")
   notificationSubscriptions NotificationSubscription[] @relation("UserNotificationSubscriptions")
+  pushSubscriptions         PushSubscription[]         @relation("UserPushSubscriptions")
   notificationSummaries     NotificationSummary[]      @relation("UserNotificationSummaries")
 
   // Conference relations

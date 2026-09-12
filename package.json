@@ -250,6 +250,7 @@
     "usehooks-ts": "^3.1.1",
     "uuid": "^11.1.0",
     "vaul": "^1.1.2",
+    "web-push": "^3.6.7",
     "ws": "^8.18.3",
     "xlsx": "^0.18.5",
     "zod": "^4.0.14"
@@ -274,6 +275,7 @@
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "@types/react-dropzone": "^5.1.0",
+    "@types/web-push": "^3.6.4",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^4.0.18",

@@ -56,6 +56,11 @@ export const env = createEnv({
     FIREBASE_CLIENT_EMAIL: z.string().min(1).optional(),
     FIREBASE_PRIVATE_KEY: z.string().min(1).optional(),
 
+    // Web Push (VAPID). Optional so the push cron no-ops when unset; the
+    // public key is also NEXT_PUBLIC_ for the browser's subscribe() call.
+    VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+    VAPID_SUBJECT: z.string().min(1).optional(),
+
     ENABLE_PRODUCTION_LOGS: z.string().optional(),
     SENTRY_DSN: z.string().optional(),
     SENTRY_ORG: z.string().optional(),
@@ -127,6 +132,7 @@ export const env = createEnv({
     NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID: z.string().min(1).optional(),
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
     NEXT_PUBLIC_CDN_DOMAIN: z.string().optional(),
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
   },
   runtimeEnv: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
@@ -210,6 +216,8 @@ export const env = createEnv({
     FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
     FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
     FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
+    VAPID_SUBJECT: process.env.VAPID_SUBJECT,
     NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID:
       process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID,
     NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID:
@@ -224,5 +232,6 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_CDN_DOMAIN: process.env.NEXT_PUBLIC_CDN_DOMAIN,
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
   },
 })

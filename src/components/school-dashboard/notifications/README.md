@@ -15,7 +15,7 @@ last_audited: 2026-05-25
 
 ### Overview
 
-Comprehensive notification center with in-app delivery, user preferences, and RBAC authorization. Supports **24 notification types** across 4 priority levels with real-time WebSocket updates and full Arabic/English internationalization. Email delivery via Resend is wired up; SMS, Push, and WhatsApp channels are reserved (config flag `enabled: false`).
+Comprehensive notification center with in-app delivery, user preferences, and RBAC authorization. Supports **24 notification types** across 4 priority levels with real-time WebSocket updates and full Arabic/English internationalization. Email delivery via Resend is wired up. **Web Push is live (2026-09-12)**: a browser (or installed PWA) subscribes from `/notifications/preferences` (`push-toggle.tsx` → `push-actions.ts` → `PushSubscription`), and `src/lib/notifications/push-web.ts` drains `channels has push` rows on the `process-push-notifications` cron with VAPID (`web-push`), pruning subscriptions the push service reports gone. The FCM scaffold (`push-fcm.ts`) stays a no-op until a native app exists. SMS and WhatsApp channels remain reserved.
 
 ### Routes
 

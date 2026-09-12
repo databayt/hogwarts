@@ -5,6 +5,7 @@ import { timingSafeEqual } from "node:crypto"
 import { NextResponse } from "next/server"
 
 import { processPendingPushNotifications } from "@/lib/notifications/push-fcm"
+import { processPendingWebPushes } from "@/lib/notifications/push-web"
 
 export const dynamic = "force-dynamic"
 
@@ -52,6 +53,19 @@ export async function GET(request: Request) {
   const startedAt = Date.now()
 
   try {
+    // Web Push first: it owns the queue rows today. The FCM scaffold below
+    // stays a no-op until a native app registers device tokens.
+    const web = await processPendingWebPushes(50)
+    if (web.skippedReason === "not_configured") {
+      console.warn(
+        "[Cron] process-push-notifications: Web Push not configured (set NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT)"
+      )
+    } else {
+      console.log(
+        `[Cron] process-push-notifications: web processed=${web.processed} succeeded=${web.succeeded} failed=${web.failed} pruned=${web.pruned}`
+      )
+    }
+
     const result = await processPendingPushNotifications(50)
 
     if (result.skippedReason === "not_configured") {
@@ -68,6 +82,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
+      web,
       ...result,
       durationMs: Date.now() - startedAt,
       timestamp: new Date().toISOString(),

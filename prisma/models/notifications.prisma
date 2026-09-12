@@ -333,3 +333,36 @@ model NotificationSummary {
   @@index([sent, sentAt])
   @@map("notification_summaries")
 }
+
+// ============================================================================
+// WEB PUSH SUBSCRIPTIONS
+// ============================================================================
+
+/// One browser (or installed PWA) that asked for push. W3C Push API
+/// subscription: endpoint + the two keys web-push encrypts against. A user has
+/// one row per device/browser; the processor deletes rows the push service
+/// reports gone (404/410). FCM device tokens for a native app live in
+/// NotificationSubscription(entityType: "fcm_device") instead.
+model PushSubscription {
+  id       String @id @default(cuid())
+  schoolId String // Multi-tenant scoping (CRITICAL)
+  userId   String
+
+  endpoint  String @unique @db.Text
+  p256dh    String @db.Text
+  auth      String @db.Text
+  userAgent String? @db.VarChar(512)
+
+  lastSeenAt DateTime  @default(now())
+  failedAt   DateTime?
+
+  user   User   @relation("UserPushSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, userId])
+  @@index([userId])
+  @@map("push_subscriptions")
+}

@@ -114,12 +114,16 @@ One hard-won gotcha: when no socket server is configured, `socketService.connect
 | -------- | :-----: | ---------- | --------------------------------------------------- |
 | `in_app` |   yes   | internal   | Bell, center, DB-backed                             |
 | `email`  |   yes   | Resend SDK | HTML with RTL (Rubik font), delivery logging        |
-| `push`   |   no    | Web Push   | Service worker exists; no VAPID keys                |
+| `push`   |   yes   | Web Push   | VAPID (`web-push`); subscribe on `/notifications/preferences`; iOS needs the installed app |
 | `sms`    |   no    | Twilio     | E.164 validation, +966 default; `SMS_ENABLED=false` |
 
 Default channels: every role gets `in_app`; STUDENT and STAFF default `email: false`; all other roles default `email: true`. `push` and `sms` are off by default for everyone (provider keys missing).
 
 Email delivery uses Resend, renders HTML + plain-text fallback, respects per-user quiet hours, batches via `cron/process-email-notifications`. Dev sends to `delivered@resend.dev`; production sends from `noreply@school.databayt.org`.
+
+### Web Push (2026-09-12)
+
+A browser — or the installed PWA — becomes a recipient from the preferences page: the toggle asks permission on a tap, subscribes with the public VAPID key, and stores the subscription tenant-scoped (`PushSubscription`). `process-push-notifications` drains `channels has push` rows through `src/lib/notifications/push-web.ts`; the worker (`public/service-worker.js`) shows `{title, body}` and a tap opens the absolute `url` on the school's own host. Subscriptions the push service reports gone (404/410) are deleted. On iPhone, Web Push reaches only an app added to the Home Screen, so the toggle says "install first" in Safari. See [Offline](/docs/offline) for the PWA shell.
 
 ## Preferences
 

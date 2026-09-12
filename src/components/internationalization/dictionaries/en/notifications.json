@@ -58,7 +58,18 @@
       "title": "Notification Types",
       "description": "Choose which notifications you want to receive"
     },
-    "actionRequired": "Action required"
+    "actionRequired": "Action required",
+    "webPush": {
+      "title": "Push notifications on this device",
+      "description": "Get absences, announcements and messages as notifications on this phone or computer, even when the app is closed.",
+      "enable": "Turn on",
+      "disable": "Turn off",
+      "enabled": "This device receives push notifications.",
+      "denied": "Notifications are blocked for this site in the browser settings.",
+      "unsupported": "This browser does not support push notifications.",
+      "iosInstallFirst": "On iPhone, add the app to your Home Screen first (Share → Add to Home Screen), then turn on notifications from the installed app.",
+      "failed": "Could not update push notifications"
+    }
   },
   "noNotifications": "No notifications yet",
   "noNotificationsDescription": "When you receive notifications, they will appear here",

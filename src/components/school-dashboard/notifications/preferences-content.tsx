@@ -20,6 +20,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
 
 import { NotificationPreferencesForm } from "./preferences-form"
+import { WebPushToggle } from "./push-toggle"
 import { getUserNotificationPreferences } from "./queries"
 
 interface NotificationPreferencesContentProps {
@@ -68,6 +69,9 @@ export async function NotificationPreferencesContent({
           {dict.notifications.preferences.description}
         </p>
       </div>
+
+      {/* This browser as a push recipient (Web Push) */}
+      <WebPushToggle labels={dict.notifications.preferences.webPush} />
 
       {/* Preferences Form */}
       <NotificationPreferencesForm

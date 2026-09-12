@@ -11,6 +11,16 @@ docs: https://ed.databayt.org/en/docs/messages
 last_audited: 2026-05-25
 ---
 
+## 2026-09-12 — Web Push lane (browser channel)
+
+- [x] `PushSubscription` model (`prisma/models/notifications.prisma`, migration `20260912140000_push_subscription`) — endpoint unique, tenant-scoped, pruned on 404/410.
+- [x] `src/lib/notifications/push-web.ts` — VAPID sender on the existing push cron beside the FCM scaffold; payload `{title, body, url, tag, lang, dir}` read by `public/service-worker.js`; deep link absolutified on the school host via `resolveActionUrl`.
+- [x] `push-actions.ts` + `push-toggle.tsx` on `/notifications/preferences`; iOS shows "install first" (Web Push reaches installed apps only).
+- [x] Env: `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (config), `VAPID_PRIVATE_KEY` (secret), `VAPID_SUBJECT` (config) — registered in `src/env.mjs`; the cron no-ops with a single warning when unset.
+- [x] Verified locally: processor probe (`scripts/push-web-probe.ts`) → a bogus subscription with a valid P-256 key is rejected by the push service, pruned, and the notification marked sent.
+- [ ] Real device delivery on the live tenant (needs a phone after deploy; headless Chrome cannot grant the permission).
+- [ ] Prod: add the three VAPID vars to the production env, apply the DDL behind a restore point (deploy skill step 4).
+
 ## 2026-08-14 — one post-provision dispatcher for every intake channel (LOCAL, not pushed)
 
 - [x] `src/lib/student-provisioning-notify.ts` — the account / `fee_due` /
