@@ -20,6 +20,30 @@ last_audited: 2026-09-02
 
 ---
 
+## 2026-09-12 — the lesson page's two lower sections restyled
+
+- [x] **Lesson info card takes the homepage's mint CTA card.** The `Card` with
+      the title, the chapter/course line and the
+      Mark-complete button is now the `#9fe5b1` 56px-radius card from
+      `saas-marketing/thmanyah/block/DownloadCtaBlock` (`.footer-card` in
+      `styles/thmanyah-clone.css`): centred serif-display pair running light
+      over black, one black pill beneath. The reference's grammar puts the
+      light line FIRST, so the chapter/course line now leads and the lesson
+      title lands under it. Ink is hardcoded black — one ground in both
+      themes, so no child may keep a theme token on mint. The free-preview
+      badge is dropped from the card — the hero's own chip row above already
+      carries `مجاني`.
+- [x] **"More from <course>" tiles moved the label under the artwork.** The
+      shelf now passes `titleBelow` + `eyebrow` instead of `meta`: the C/L +
+      duration line sits above the name, the name reads on the page's own
+      ground, and the glass bar over the picture is gone with it.
+- [x] **Courses "More" grid fills the phone width** — the mobile track was a
+      fixed `repeat(2,148px)`, now `grid-cols-2` (`courses/content.tsx`).
+- Verified at 1440 and at phone width on `demo.localhost` (admin session).
+      `pnpm tsc --noEmit` clean.
+
+---
+
 ## 2026-09-09 — the forensic watermark comes off the LESSON player
 
 - [x] **Both marks removed from the lesson video player** — the roaming

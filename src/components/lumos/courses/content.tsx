@@ -379,7 +379,7 @@ export function LumosCoursesContent({
           {visible.length > 0 ? (
             <section className="space-y-3">
               <h2 className="text-lg font-semibold">{sh?.more || "More"}</h2>
-              <div className="grid grid-cols-[repeat(2,148px)] justify-start gap-3 sm:grid-cols-4 sm:justify-normal sm:gap-4 md:grid-cols-5 lg:grid-cols-6">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 lg:grid-cols-6">
                 {visible.map((course) => (
                   <CourseCard
                     key={course.id}

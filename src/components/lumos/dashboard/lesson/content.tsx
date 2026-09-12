@@ -1000,8 +1000,15 @@ export function LumosLessonContent({
                 title={sibling.title}
                 thumbnailUrl={sibling.thumbnailUrl}
                 color={sibling.color}
-                meta={
-                  <>
+                /* Name UNDER the artwork, the numbers as the eyebrow above
+                   it — the tile's other supported placement, the one the
+                   reference app's own episode rows use. The glass bar over
+                   the picture is gone with it: `meta` only draws while the
+                   title sits on the artwork, so these same numbers move to
+                   `eyebrow` rather than being passed twice. */
+                titleBelow
+                eyebrow={
+                  <span className="inline-flex items-center gap-1 align-middle">
                     <Play className="size-3 fill-current" />
                     {sibling.watchedMinutes != null &&
                     sibling.watchedMinutes > 0 ? (
@@ -1022,7 +1029,7 @@ export function LumosLessonContent({
                         </span>
                       </>
                     )}
-                  </>
+                  </span>
                 }
               />
             ))}
@@ -1117,61 +1124,83 @@ export function LumosLessonContent({
         />
       )}
 
-      {/* Lesson Info */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-xl">{lesson.title}</CardTitle>
-                {lesson.isFree && (
-                  <Badge variant="secondary">
-                    {d?.freePreview || "Free Preview"}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-muted-foreground text-sm">
-                {lesson.chapter.title} &bull; {lesson.chapter.course.title}
-              </p>
-            </div>
-            <Button
-              onClick={handleToggleComplete}
-              disabled={isPending}
-              variant={isCompleted ? "secondary" : "default"}
-              className="shrink-0"
-            >
-              {isPending ? (
-                <Loader2 className="me-2 size-4 animate-spin" />
-              ) : isCompleted ? (
-                <CheckCircle2 className="me-2 size-4 text-green-500" />
-              ) : (
-                <Circle className="me-2 size-4" />
-              )}
-              {isCompleted
-                ? d?.completed || "Completed"
-                : d?.markAsComplete || "Mark as Complete"}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Description */}
-          {lesson.description && (
-            <div className="prose dark:prose-invert mb-6 max-w-none">
-              <p>{lesson.description}</p>
-            </div>
-          )}
+      {/* Lesson info — the homepage's mint CTA card (thmanyah clone:
+          `DownloadCtaBlock` over `.footer-card` in `styles/thmanyah-clone.css`):
+          a #9fe5b1 ground at a 56px radius, a centred pair of serif-display
+          lines running light over black, one black pill beneath them.
+          That grammar puts the LIGHT line first and lands on the BLACK one,
+          so the chapter/course line now leads and the lesson title sits
+          under it — the reverse of the header this replaces.
 
-          {/* Duration */}
-          {(lesson.videoDuration || lesson.duration) && (
-            <p className="text-muted-foreground mb-4 text-sm">
-              {d?.duration || "Duration"}:{" "}
-              {lesson.videoDuration
-                ? `${Math.floor(lesson.videoDuration / 60)}m ${Math.floor(lesson.videoDuration % 60)}s`
-                : `${lesson.duration} ${d?.minutes || "minutes"}`}
-            </p>
+          Ink is hardcoded black rather than tokenised, on purpose: the card
+          keeps one ground in both themes, so every child still reading a
+          theme token (`text-muted-foreground`, `Badge variant="secondary"`)
+          would turn unreadable on mint in dark mode. Same licence the
+          dream-section's `bg-[#FAE5CC]` card takes.
+
+          Type is the reference's ladder one rung down, and the radius one
+          rung down again below `sm`: the footer card is full-bleed at 76vh,
+          this one sits in a dashboard column on a 390px phone. */}
+      <section className="flex flex-col items-center gap-6 rounded-[2.5rem] bg-[#9fe5b1] px-6 py-14 text-center text-black sm:gap-9 sm:rounded-[56px] sm:px-12">
+        <div className="w-full">
+          <p
+            className="text-2xl leading-[1.5em] font-light text-balance sm:text-3xl"
+            style={{ fontFamily: '"thmanyah serif display", serif' }}
+          >
+            {lesson.chapter.title} &bull; {lesson.chapter.course.title}
+          </p>
+          <h2
+            className="text-3xl leading-[1.5em] font-black text-balance sm:text-4xl"
+            style={{ fontFamily: '"thmanyah serif display", serif' }}
+          >
+            {lesson.title}
+          </h2>
+        </div>
+
+        {lesson.description && (
+          <p className="max-w-prose text-sm text-black/70">
+            {lesson.description}
+          </p>
+        )}
+
+        {(lesson.videoDuration || lesson.duration) && (
+          <p className="text-sm text-black/70">
+            {d?.duration || "Duration"}:{" "}
+            {lesson.videoDuration
+              ? `${Math.floor(lesson.videoDuration / 60)}m ${Math.floor(lesson.videoDuration % 60)}s`
+              : `${lesson.duration} ${d?.minutes || "minutes"}`}
+          </p>
+        )}
+
+        {/* The reference's pill: 44px tall, 36px of side padding, sans
+            Medium 16, a 17px icon, hover darkening to black/85. Its
+            invisible width-helper copy is deliberately NOT carried — that
+            sized a Framer button component and is not design intent. The
+            completed state takes the reference's own white variant; a green
+            check on mint reads as an accident. */}
+        <button
+          type="button"
+          onClick={handleToggleComplete}
+          disabled={isPending}
+          className={`inline-flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full px-9 text-base font-medium transition-colors disabled:opacity-70 ${
+            isCompleted
+              ? "bg-white text-black hover:bg-white/85"
+              : "bg-black text-white hover:bg-black/85"
+          }`}
+          style={{ fontFamily: '"thmanyah sans", sans-serif' }}
+        >
+          {isPending ? (
+            <Loader2 className="size-[17px] animate-spin" />
+          ) : isCompleted ? (
+            <CheckCircle2 className="size-[17px]" />
+          ) : (
+            <Circle className="size-[17px]" />
           )}
-        </CardContent>
-      </Card>
+          {isCompleted
+            ? d?.completed || "Completed"
+            : d?.markAsComplete || "Mark as Complete"}
+        </button>
+      </section>
 
       {/* Resources — legacy attachments + catalog lesson materials */}
       {resourceCount > 0 && (
