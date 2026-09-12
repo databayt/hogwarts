@@ -20,6 +20,30 @@ last_audited: 2026-09-02
 
 ---
 
+## 2026-09-12 — the fullscreen player: no poster flash, and an RTL seek bar
+
+- [x] **Pressing Play no longer flashes the lesson thumbnail.** A `poster` is
+      the idle state's picture and the browser holds it until the first frame
+      decodes, so entering fullscreen painted the artwork over the whole
+      screen first. The poster is now drawn only when the player is NOT
+      starting itself, and an autoplaying one uses `preload="auto"`; the
+      overlay's spinner covers the buffer over black.
+- [x] **The seek bar was mirrored in Arabic.** The fill grows from `start-0`
+      (right edge under RTL) but the pointer offset was measured from
+      `rect.left`, so a click near the end of a clip jumped to its beginning.
+      `getPositionFromEvent` now measures from the inline start, reading the
+      direction off the element with `getComputedStyle` rather than taking a
+      locale prop — the bar has two callers. The thumb and the hover preview
+      moved from `left` to `insetInlineStart` with a mirrored half-width
+      shift, so they ride the fill's leading edge.
+      Verified in the fullscreen player: clicking 10% from the physical left
+      edge at `dir="rtl"` lands at 84.7s of a 94s clip, not 9.4s.
+- [x] **Same defect in the volume track**, one control away: its filled part
+      is a hard-stop gradient, and a gradient has no logical direction while a
+      native range input does mirror itself. The level now rides in a custom
+      property with `to right` / `rtl:to left` as two classes, correct on the
+      server render too.
+
 ## 2026-09-12 — the lesson page's two lower sections restyled
 
 - [x] **Lesson info card takes the homepage's mint CTA card.** The `Card` with

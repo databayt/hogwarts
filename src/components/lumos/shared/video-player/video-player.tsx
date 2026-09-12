@@ -635,8 +635,17 @@ export function VideoPlayer({
         ref={videoRef}
         src={playbackUrl}
         className="h-full w-full"
-        preload="metadata"
-        poster={posterUrl || undefined}
+        // A poster is the IDLE state's picture. Pressing Play is a request to
+        // watch, not to look at the artwork again: with one set, the browser
+        // holds the poster until the first frame is decoded, so opening
+        // fullscreen from the lesson's Play pill flashed the lesson thumbnail
+        // over the whole screen first. So the poster is drawn only when this
+        // player is NOT starting itself, and an autoplaying one preloads the
+        // media rather than just its metadata — the overlay's spinner covers
+        // the buffer over black, which is what a player looks like while it
+        // opens.
+        preload={autoPlay ? "auto" : "metadata"}
+        poster={autoPlay ? undefined : posterUrl || undefined}
         autoPlay={autoPlay}
         playsInline
         onClick={actions.togglePlay}
@@ -858,10 +867,19 @@ export function VideoPlayer({
                 step={1}
                 value={state.isMuted ? 0 : state.volume}
                 onChange={(e) => actions.setVolume(Number(e.target.value))}
-                className="h-[3px] w-20 cursor-pointer appearance-none rounded-full [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                style={{
-                  background: `linear-gradient(to right, rgba(255,255,255,0.9) ${state.isMuted ? 0 : state.volume}%, rgba(255,255,255,0.3) ${state.isMuted ? 0 : state.volume}%)`,
-                }}
+                // The filled part of the track is painted by a hard-stop
+                // gradient, and a gradient has no logical direction — while a
+                // native range input DOES mirror itself under `dir="rtl"`, so
+                // one written `to right` fills the end furthest from the thumb
+                // in Arabic. The level rides in a custom property and the two
+                // directions are two classes, which keeps it correct on the
+                // server render as well.
+                className="h-[3px] w-20 cursor-pointer appearance-none rounded-full bg-[linear-gradient(to_right,#ffffffe6_var(--volume-level),#ffffff4d_var(--volume-level))] rtl:bg-[linear-gradient(to_left,#ffffffe6_var(--volume-level),#ffffff4d_var(--volume-level))] [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                style={
+                  {
+                    "--volume-level": `${state.isMuted ? 0 : state.volume}%`,
+                  } as React.CSSProperties
+                }
                 aria-label={labels?.volume ?? "Volume"}
                 onClick={(e) => e.stopPropagation()}
               />

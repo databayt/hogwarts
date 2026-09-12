@@ -42,11 +42,24 @@ export function VideoProgressBar({
   const [hoverPosition, setHoverPosition] = useState(0)
   const [hoverTime, setHoverTime] = useState(0)
 
-  // Calculate position from mouse event
+  // Calculate position from mouse event.
+  //
+  // Measured from the bar's INLINE start, which is its right edge in Arabic.
+  // The fill grows from `start-0`, so a pointer offset taken from `rect.left`
+  // reads every seek mirrored under `dir="rtl"`: clicking near the end of a
+  // clip jumped to its beginning.
+  //
+  // The direction is read off the element itself rather than taken as a prop
+  // — this bar is mounted by the lesson player and the live room, and
+  // `getComputedStyle` gives the answer the layout is actually using without
+  // either caller having to pass a locale down.
   const getPositionFromEvent = useCallback((clientX: number) => {
-    if (!progressRef.current) return 0
-    const rect = progressRef.current.getBoundingClientRect()
-    const position = ((clientX - rect.left) / rect.width) * 100
+    const el = progressRef.current
+    if (!el) return 0
+    const rect = el.getBoundingClientRect()
+    const rtl = getComputedStyle(el).direction === "rtl"
+    const offset = rtl ? rect.right - clientX : clientX - rect.left
+    const position = (offset / rect.width) * 100
     return Math.max(0, Math.min(100, position))
   }, [])
 
@@ -113,9 +126,12 @@ export function VideoProgressBar({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="pointer-events-none absolute bottom-full mb-3 -translate-x-1/2"
+            /* `insetInlineStart` + a mirrored half-width shift, not `left`:
+               the position is a distance along the bar from its own start,
+               which is the right edge in Arabic. */
+            className="pointer-events-none absolute bottom-full mb-3 -translate-x-1/2 rtl:translate-x-1/2"
             style={{
-              left: `${isSeeking ? (seekPosition ?? hoverPosition) : hoverPosition}%`,
+              insetInlineStart: `${isSeeking ? (seekPosition ?? hoverPosition) : hoverPosition}%`,
             }}
           >
             <div className="overflow-hidden rounded-lg border border-white/20 shadow-xl">
@@ -176,10 +192,12 @@ export function VideoProgressBar({
         />
 
         {/* Scrubber thumb — always visible, grows on hover */}
+        {/* Same mirroring as the preview above — the thumb rides the fill's
+            leading edge, and the fill grows from the inline start. */}
         <div
-          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white rtl:translate-x-1/2"
           style={{
-            left: `${displayPosition}%`,
+            insetInlineStart: `${displayPosition}%`,
             width: PROGRESS_BAR.thumbWidth,
             height: PROGRESS_BAR.thumbHeight,
             boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
