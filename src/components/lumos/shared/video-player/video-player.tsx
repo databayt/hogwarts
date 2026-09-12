@@ -52,12 +52,30 @@ function formatClock(seconds: number): string {
  * The ground is the reference's own #121212 rather than the player's pills:
  * a list of text has to survive whatever frame is behind it, so the blur
  * here is cosmetic and the fill does the work. Rows are 42px with an 18px
- * icon 32px in, a 17px label, and the trailing mark 28px from the far edge.
+ * icon 32px in, a 17px label, and the trailing mark 24px from the far edge.
  */
 const phoneMenuCard =
   "w-[250px] rounded-[32px] bg-[#121212]/95 py-2.5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-[40px]"
 const phoneMenuRow =
-  "flex h-[42px] w-full items-center gap-4 ps-8 pe-7 text-start text-[17px] text-white"
+  "flex h-[42px] w-full shrink-0 items-center gap-4 ps-8 pe-6 text-start text-[17px] text-white"
+
+/**
+ * How tall the speed list may grow before it scrolls.
+ *
+ * The card is anchored 6px above the scrubber and grows UPWARD, so its height
+ * decides what it covers. Seven 42px rows plus the header put its top at
+ * y≈393 on a 390×844 screen — over the play button, which is the one control
+ * a viewer needs to see while a menu is open. 219px caps the list at five
+ * rows and a sliver of the sixth (which is also what tells the reader there
+ * is more), landing the card's top on the transport row's bottom edge (468)
+ * instead of through the middle of it.
+ *
+ * The reference's own card never has this problem: it is three drill-in rows
+ * (Playback Speed / Audio / Subtitles), and only the first has anything
+ * behind it here — a menu whose single live row opens a second card would
+ * cost a tap and hide nothing. So the list stays flat and scrolls instead.
+ */
+const PHONE_SPEED_LIST_MAX = 219
 
 // Format time as MM:SS or HH:MM:SS
 function formatTime(seconds: number): string {
@@ -1112,7 +1130,9 @@ export function VideoPlayer({
                       }
                     }}
                     className="flex h-11 w-[54px] items-center justify-center transition-opacity active:opacity-60"
-                    aria-label={labels?.pictureInPicture ?? "Picture in Picture"}
+                    aria-label={
+                      labels?.pictureInPicture ?? "Picture in Picture"
+                    }
                   >
                     <PipIcon className="size-5 text-white" />
                   </button>
@@ -1174,7 +1194,12 @@ export function VideoPlayer({
                   role="menu"
                   className={cn(
                     phoneMenuCard,
-                    "absolute start-2 top-3 z-20 overflow-hidden"
+                    "absolute start-2 z-20 overflow-hidden",
+                    // The same inset the row's own buttons take, not a flat
+                    // 12px: on a device that reports a safe area the buttons
+                    // drop below the notch and a hard-coded card would stay
+                    // under it. The reference's card top IS its row top.
+                    "top-[max(0.75rem,env(safe-area-inset-top))]"
                   )}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1198,8 +1223,16 @@ export function VideoPlayer({
                         "transition-colors active:bg-white/10"
                       )}
                     >
+                      {/* Leading, not trailing. The reference draws this card
+                          as `❯ Share Episode / ❯ Share Show`
+                          (`public/apple-tv/IMG_2640.PNG`) — the chevron opens
+                          the row rather than annotating its end, which is why
+                          it leads. It takes the icon slot `phoneMenuRow`
+                          already holds open, so both cards' labels start on
+                          the same line 65px in. It still points along the
+                          reading direction, hence the RTL flip. */}
+                      <ChevronRight className="size-[18px] shrink-0 rtl:rotate-180" />
                       <span className="flex-1 truncate">{item.label}</span>
-                      <ChevronRight className="size-[18px] shrink-0 text-white/40 rtl:rotate-180" />
                     </button>
                   ))}
                 </div>
@@ -1289,34 +1322,42 @@ export function VideoPlayer({
                           {labels?.speed ?? "Playback speed"}
                         </span>
                       </p>
-                      {PLAYBACK_SPEEDS.map((rate) => (
-                        <button
-                          key={rate}
-                          type="button"
-                          role="menuitemradio"
-                          aria-checked={state.playbackRate === rate}
-                          onClick={() => {
-                            actions.setPlaybackRate(rate)
-                            setShowSpeedMenu(false)
-                          }}
-                          className={cn(
-                            phoneMenuRow,
-                            "transition-colors active:bg-white/10",
-                            state.playbackRate === rate && "font-semibold"
-                          )}
-                        >
-                          {/* `dir="ltr"` for the same reason the clocks carry
-                              it: the × is a neutral character, so an Arabic
-                              row renders the pair as "×0.5" — a multiplier in
-                              front of a number rather than a rate after it. */}
-                          <span dir="ltr" className="flex-1 text-start">
-                            {rate}×
-                          </span>
-                          {state.playbackRate === rate && (
-                            <Check className="size-[18px] shrink-0" />
-                          )}
-                        </button>
-                      ))}
+                      {/* See PHONE_SPEED_LIST_MAX: the list scrolls rather
+                          than pushing the card up over the play button. */}
+                      <div
+                        className="overflow-y-auto overscroll-contain"
+                        style={{ maxHeight: PHONE_SPEED_LIST_MAX }}
+                      >
+                        {PLAYBACK_SPEEDS.map((rate) => (
+                          <button
+                            key={rate}
+                            type="button"
+                            role="menuitemradio"
+                            aria-checked={state.playbackRate === rate}
+                            onClick={() => {
+                              actions.setPlaybackRate(rate)
+                              setShowSpeedMenu(false)
+                            }}
+                            className={cn(
+                              phoneMenuRow,
+                              "transition-colors active:bg-white/10",
+                              state.playbackRate === rate && "font-semibold"
+                            )}
+                          >
+                            {/* `dir="ltr"` for the same reason the clocks
+                                carry it: the × is a neutral character, so an
+                                Arabic row renders the pair as "×0.5" — a
+                                multiplier in front of a number rather than a
+                                rate after it. */}
+                            <span dir="ltr" className="flex-1 text-start">
+                              {rate}×
+                            </span>
+                            {state.playbackRate === rate && (
+                              <Check className="size-[18px] shrink-0" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1327,7 +1368,11 @@ export function VideoPlayer({
                   reference's `0:00:57 … −1:01:40`. Both sit at the inline
                   start and end, so Arabic mirrors the pair without any work
                   here. */}
-              <div className="mt-[15px] flex items-center gap-[9px]">
+              {/* `leading-none` on a 12px clock makes this row 12px tall, so
+                  the 8px track centres 2px inside it and the reference's 15px
+                  gaps land on the TRACK rather than on a 16px line box that
+                  pads 4px of nothing above and below it. */}
+              <div className="mt-[13px] flex items-center gap-[9px]">
                 {/* `dir="ltr"` on the clocks themselves, not on the row: a
                     number keeps its own direction in any script, and the
                     minus in front of the remaining time is a neutral
@@ -1336,7 +1381,7 @@ export function VideoPlayer({
                     stays logical, so the pair still swaps ends. */}
                 <span
                   dir="ltr"
-                  className="shrink-0 text-xs text-white/55 tabular-nums"
+                  className="shrink-0 text-xs leading-none text-white/55 tabular-nums"
                 >
                   {formatClock(state.currentTime)}
                 </span>
@@ -1357,7 +1402,7 @@ export function VideoPlayer({
                 </div>
                 <span
                   dir="ltr"
-                  className="shrink-0 text-xs text-white/55 tabular-nums"
+                  className="shrink-0 text-xs leading-none text-white/55 tabular-nums"
                 >
                   {"−"}
                   {formatClock(

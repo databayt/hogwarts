@@ -117,8 +117,13 @@ export function VideoProgressBar({
   const displayTime =
     isSeeking && thumbnailTime !== null ? thumbnailTime : hoverTime
 
+  // No inline padding on a phone. The wide bar keeps 4px so its thumb has
+  // somewhere to sit at 0% and 100%; the phone bar has no thumb, and the
+  // reference app runs its track edge to edge between the two clocks
+  // (`public/apple-tv/File.png`: track 72 → 310 on a 390pt screen). The
+  // padding cost 4px at each end and pulled the track off both.
   return (
-    <div className="group/progress relative w-full px-1">
+    <div className="group/progress relative w-full px-0 sm:px-1">
       {/* Thumbnail preview */}
       <AnimatePresence>
         {(isHovering || isSeeking) && duration > 0 && (
@@ -165,7 +170,9 @@ export function VideoProgressBar({
         className={cn(
           "relative w-full cursor-pointer rounded-full",
           "h-2 sm:h-[5px]",
-          "bg-white/30"
+          // The reference's unplayed track samples rgb(88,88,87) on black —
+          // 35% white, not the 30% this carried.
+          "bg-white/35"
         )}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-09-02
+last_audited: 2026-09-12
 ---
 
 # Lumos (LMS) — Production Readiness Tracker
@@ -19,6 +19,61 @@ last_audited: 2026-09-02
 **QA guide:** [hogwarts#377](https://github.com/databayt/hogwarts/issues/377) — full flow, sub-flows & test cases (mermaid charts + walkable checklists + release gate)
 
 ---
+
+## 2026-09-12 — the phone player, re-measured against the captures
+
+The previous two passes were written from the captures but never checked
+against a render of the result. This one measures both sides: the reference
+band-profiled out of `public/apple-tv/` at 3x, and the running player captured
+at 390×844 with `deviceScaleFactor: 3` and its boxes read off the DOM. Every
+number below is a measured pair, not an intention.
+
+|                                     | reference                 | before               | after              |
+| ----------------------------------- | ------------------------- | -------------------- | ------------------ |
+| scrubber track, inline start → end  | 72 → 310.3                | 77.1 → 306.6         | 73.1 → 310.6       |
+| title row bottom → track top        | 15.0                      | 17                   | 15                 |
+| track bottom → capsule row top      | 14.7                      | 17                   | 15                 |
+| speed card                          | 250 × 146, top 591        | 250 × 356, top 393   | 250 × 281, top 474 |
+| speed card bottom → track top       | 6.0                       | 10                   | 6                  |
+| share card                          | 250 × 104 at (8, row top) | 250 × 104 at (8, 12) | unchanged          |
+| transport 64 / 92 / 64 on 22px gaps | 63 · 149 · 262.7          | exact                | exact              |
+
+- [x] **The track was 4px short at each end.** `VideoProgressBar` carries
+      `px-1` so the wide bar's thumb has somewhere to sit at 0% and 100%. The
+      phone bar has no thumb and the reference runs its track edge to edge
+      between the two clocks, so the padding is now `px-0 sm:px-1`.
+- [x] **The 15px gaps were landing on a line box, not on the track.** A 12px
+      clock at Tailwind's default leading makes a 16px row, and the 8px track
+      centres inside it — 4px of nothing above and below. `leading-none` on
+      the two clocks makes the row 12px, and the margins (13px each) then put
+      the reference's 15px on the track itself.
+- [x] **The speed card no longer covers the play button.** Seven 42px rows put
+      its top at 393, through the middle of a transport row that runs 376–468.
+      The list now scrolls at `PHONE_SPEED_LIST_MAX` (219px — five rows and a
+      sliver of the sixth), landing the card's top on 474. All seven speeds
+      survive; the card keeps the reference's 6px clearance over the scrubber.
+      This is the deliberate departure: the reference's card is three drill-in
+      rows and only Playback Speed has anything behind it here, so the list
+      stays flat and scrolls rather than costing a tap to reveal nothing.
+- [x] **Share rows draw the chevron LEADING**, as `IMG_2640.PNG` does
+      (`❯ Share Episode`). It takes the icon slot the row already holds open,
+      so both cards' labels start on the same 65px line; measured 37→44.7 for
+      the reference's chevron ink against the settings card's icon at 32→50.
+      `rtl:rotate-180` keeps it pointing along the reading direction.
+- [x] **The share card's top follows the row's safe-area inset** rather than a
+      flat 12px. The root layout exports `viewportFit: "cover"`, so on a
+      notched device the row's buttons drop below the notch — a hard-coded
+      card would have stayed under it. The reference's card top IS its row top.
+- [x] Small ones: menu rows' trailing inset 28px → 24px (measured 24 from the
+      card's far edge to the reference's chevron), and the unplayed track
+      30% → 35% white (the reference samples rgb(88,88,87) on black).
+
+**Known departure, not a fix:** the reference's top pill is 163px over three
+54px slots — PiP · AirPlay · Share. Ours is two slots on an external clip and
+one on protected school content, because AirPlay hands the bare `<video>` to
+the OS and strips the watermark, which is exactly why remote playback is
+disabled there. The pill keeps the slot geometry; it does not invent controls
+to fill the width.
 
 ## 2026-09-12 — the phone player's two menus
 
@@ -148,7 +203,7 @@ screen. New dictionary keys `videoPlayer.close` / `.more` in both languages.
 - [x] **Courses "More" grid fills the phone width** — the mobile track was a
       fixed `repeat(2,148px)`, now `grid-cols-2` (`courses/content.tsx`).
 - Verified at 1440 and at phone width on `demo.localhost` (admin session).
-      `pnpm tsc --noEmit` clean.
+  `pnpm tsc --noEmit` clean.
 
 ---
 
