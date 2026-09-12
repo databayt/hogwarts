@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 
-import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -40,7 +39,6 @@ interface Props {
 
 interface TabDef {
   id: string
-  count?: number
   icon: React.ReactNode
 }
 
@@ -52,43 +50,36 @@ function buildTabs(data: ProfileViewData): TabDef[] {
     case "student":
       tabs.push({
         id: "subjects",
-        count: data.roleDetail.subjects.length,
         icon: <OcticonRepo className="size-4" />,
       })
       tabs.push({
         id: "achievements",
-        count: data.badges.length,
         icon: <OcticonPackage className="size-4" />,
       })
       break
     case "teacher":
       tabs.push({
         id: "classes",
-        count: data.roleDetail.classes.length,
         icon: <OcticonTable className="size-4" />,
       })
       tabs.push({
         id: "achievements",
-        count: data.badges.length,
         icon: <OcticonPackage className="size-4" />,
       })
       break
     case "parent":
       tabs.push({
         id: "children",
-        count: data.roleDetail.children.length,
         icon: <OcticonTable className="size-4" />,
       })
       break
     case "staff":
       tabs.push({
         id: "organizations",
-        count: data.organizations.length,
         icon: <OcticonOrganization className="size-4" />,
       })
       tabs.push({
         id: "achievements",
-        count: data.badges.length,
         icon: <OcticonPackage className="size-4" />,
       })
       break
@@ -129,8 +120,8 @@ export default function ProfileContent({ data, dictionary, lang }: Props) {
     }
   }
 
-  // GitHub's tab rail: labels stay visible on a phone (the counts ride along),
-  // and the row scrolls sideways rather than wrapping.
+  // GitHub's tab rail: labels stay visible on a phone, and the row scrolls
+  // sideways rather than wrapping.
   const tabsNav = (
     <TabsList className="h-auto gap-6 bg-transparent p-0">
       {tabs.map((tab) => (
@@ -141,14 +132,6 @@ export default function ProfileContent({ data, dictionary, lang }: Props) {
         >
           {tab.icon}
           <span>{p?.tabs?.[tab.id] ?? tab.id}</span>
-          {tab.count !== undefined && (
-            <Badge
-              variant="secondary"
-              className="ms-0.5 h-4 px-1.5 py-0 text-[10px]"
-            >
-              {tab.count}
-            </Badge>
-          )}
         </TabsTrigger>
       ))}
     </TabsList>
@@ -251,10 +234,13 @@ export default function ProfileContent({ data, dictionary, lang }: Props) {
           onValueChange={setActiveTab}
           className="w-full gap-0"
         >
-          <div className="border-border overflow-x-auto border-b px-4">
+          {/* No padding of its own: the dashboard container already insets the
+              page to the header's 16px, and a second inset pushed the profile
+              out of line with the menu icon. */}
+          <div className="border-border overflow-x-auto border-b">
             {tabsNav}
           </div>
-          <div className="flex flex-col px-4 pt-6 pb-6">
+          <div className="flex flex-col pt-6 pb-6">
             <ProfileSidebar data={data} dictionary={p} lang={lang} />
             {overviewPanel}
             {rolePanels}

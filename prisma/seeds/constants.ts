@@ -145,9 +145,9 @@ export const HP_CHARACTERS = {
     personalEmail: "harry-potter@gmail.com",
     bloodGroup: "O+" as const,
     nationality: "GB",
-    address: "4 Privet Drive, Little Whinging",
+    address: "4 برايفت درايف، ليتل وينجينج",
     emergencyContactName: "جيمس بوتر",
-    medicalNotes: "Lightning bolt scar on forehead",
+    medicalNotes: "ندبة على شكل صاعقة في الجبهة",
   },
   // Guardian index 0 (father of Harry)
   guardian0: {

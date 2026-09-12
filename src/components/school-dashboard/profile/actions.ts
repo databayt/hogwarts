@@ -266,10 +266,30 @@ export async function updatePinnedItems(
 // Use UTC throughout the contribution map so the boundaries are stable
 // regardless of the server's local timezone (Vercel runs UTC, but devs
 // in MENA / Asia were getting Dec 31 -> Jan 1 drift).
+/**
+ * The grid runs to the end of the year, or to TODAY for the year in progress —
+ * nobody has contributions in the future, and rendering the remaining months as
+ * empty squares reads as a dead account and pushes the live weeks off a phone.
+ */
 function getYearDateRange(year: number): { startDate: Date; endDate: Date } {
   const startDate = new Date(Date.UTC(year, 0, 1))
-  const endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999))
-  return { startDate, endDate }
+  const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999))
+  const now = new Date()
+  const today = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      23,
+      59,
+      59,
+      999
+    )
+  )
+  // A year that has not started yet keeps its full (empty) grid, so the client's
+  // own empty-year shape and the server's agree.
+  if (today < startDate) return { startDate, endDate: yearEnd }
+  return { startDate, endDate: today < yearEnd ? today : yearEnd }
 }
 
 function formatDateKey(date: Date): string {
@@ -523,6 +543,8 @@ async function fetchParentActivities(
     .catch(() => [])
 
   messages.forEach((m) => addActivity(map, m.createdAt, "message_sent"))
+
+  await addLoggedActivity(guardianUserId, schoolId, startDate, endDate, map)
 }
 
 async function fetchStaffActivities(
@@ -549,6 +571,40 @@ async function fetchStaffActivities(
   expenses.forEach((e) => {
     if (e.approvedAt) addActivity(map, e.approvedAt, "task_completed")
   })
+
+  await addLoggedActivity(staffUserId, schoolId, startDate, endDate, map)
+}
+
+/**
+ * `UserActivity` rows the user logged themselves.
+ *
+ * Only staff and parents count these. A student's or teacher's day is already
+ * counted from the domain tables that recorded it — attendance, submissions,
+ * results — and their activity rows narrate those same events, so counting both
+ * would count each day twice. Staff have no equivalent domain table for most of
+ * what they do, and a parent's rows (meetings attended, a teacher contacted) are
+ * events no other table holds. This is also what puts the graph and the activity
+ * feed directly beneath it in agreement.
+ */
+async function addLoggedActivity(
+  userId: string,
+  schoolId: string,
+  startDate: Date,
+  endDate: Date,
+  map: Map<string, ContributionDataPoint>
+): Promise<void> {
+  const logged = await db.userActivity
+    .findMany({
+      where: {
+        schoolId,
+        userId,
+        createdAt: { gte: startDate, lte: endDate },
+      },
+      select: { createdAt: true },
+    })
+    .catch(() => [])
+
+  logged.forEach((a) => addActivity(map, a.createdAt, "task_completed"))
 }
 
 const getCachedContributionData = unstable_cache(

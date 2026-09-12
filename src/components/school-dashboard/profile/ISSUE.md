@@ -2,9 +2,65 @@
 
 **Status:** READY
 **Completion:** ~98%
-**Last Updated:** 2026-09-11
+**Last Updated:** 2026-09-12
 
 ---
+
+## 2026-09-12 — a demo year that looks lived-in
+
+The phone layout landed on a profile whose data was thin enough to look broken.
+Measured before touching anything (`admin@balqalam.com`, 2026):
+
+| account                    | what its graph could count                | active days |
+| -------------------------- | ----------------------------------------- | ----------- |
+| admin / staff / accountant | expense approvals only                    | 35-37       |
+| teacher                    | attendance marked, results graded         | **0**       |
+| student                    | attendance, submissions, results, borrows | 5           |
+| parent                     | messages sent                             | 12          |
+
+- [x] **`profile-activity` had never run against this year.** Running it filled
+      the teacher (176 days) and the student (181 days) from real attendance
+      rows. CLAUDE.md already says to run it when a profile looks empty; it now
+      also says to _measure_ first, because the seed's own guards hide which
+      half of the data is missing.
+- [x] **The demo accounts get a working year, not a recent month.** The feed
+      seeded ~30 rows across the last 150 days, which reads as an abandoned
+      account on a year-wide graph. Demo accounts now get rows on ~two thirds of
+      the school days of the year to date, 1-3 a day. The guard rises from 5
+      rows to 90 for them, so the upgrade happens once and then holds.
+- [x] **Staff and parents count their logged activity.** `fetchStaffActivities`
+      promised this in its own comment and never did it, so an admin's graph
+      counted expense approvals and nothing else while the feed directly beneath
+      listed a year of work. Students and teachers deliberately do NOT count
+      `UserActivity`: their rows narrate domain events already counted from
+      attendance/submissions/results, and counting both counts each day twice.
+      Admin went from 40 contributions to 314.
+- [x] **The year in progress stops at today.** The grid ran to December 31, so a
+      September visit showed a third of the wall permanently empty and pushed
+      the live weeks off a phone.
+- [x] **The graph opens on the most recent weeks.** A year of squares is wider
+      than a phone, and it was opening on January. Note the RTL branch: an RTL
+      scroller counts from the right, so the far end is a _negative_ scrollLeft.
+
+Asked for and removed (they are GitHub's, but not wanted here): the role label
+under the name, the status row (the emoji still rides the avatar), and the tab
+count badges.
+
+Also this pass:
+
+- [x] **The profile sat 16px further in than the app header.** The dashboard
+      container already insets the page; the mobile branch was adding a second
+      `px-4`, so the avatar did not line up with the menu icon. Measured, not
+      eyeballed: header 16→374, profile content 32→358.
+- [x] **The edit form drew a second avatar.** GitHub's edit mode keeps the one
+      portrait; ours added a 64px copy with a "change photo" button beside it.
+      The upload moved onto the single portrait, which carries a camera badge
+      while editing. Form labels read at 16px on a phone, as in the reference.
+- [x] **Harry Potter's home town rendered in English on the Arabic page.** The
+      seed stored "Little Whinging" (and an English address and medical note)
+      while the school's content language is Arabic, and `city` was the one
+      visible string `getProfileView` never put through the translation batch.
+      Both fixed; the existing rows were updated in place.
 
 ## 2026-09-11 — the phone layout follows GitHub's own
 
@@ -37,8 +93,8 @@ actually says, and what changed:
       never both show.
 - [x] **Show more activity.** The feed is server-capped at 10; the phone shows 6
       and reveals the rest. The button never claims to fetch more than is there.
-- [x] `school.profile.sidebar.setStatus`, `overview.year`,
-      `overview.showMoreActivity` (en + ar, same edit).
+- [x] `school.profile.overview.year`, `overview.showMoreActivity` (en + ar,
+      same edit). `sidebar.setStatus` came and went with the status row.
 
 Fixed while in here:
 

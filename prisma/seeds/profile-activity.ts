@@ -389,7 +389,7 @@ export async function seedProfileActivity(
     const existingCount = await prisma.userActivity.count({
       where: { schoolId, userId: user.id },
     })
-    if (existingCount >= 5) continue
+    if (existingCount >= (isDemo ? 90 : 5)) continue
 
     const subjects =
       user.student?.studentClasses
@@ -453,11 +453,8 @@ export async function seedProfileActivity(
     }
     if (!templates.length) continue
 
-    const count = isDemo ? randInt(26, 38) : randInt(5, 14)
-    const rows = Array.from({ length: count }, () => {
+    const row = (createdAt: Date) => {
       const tpl = pick(templates)
-      const daysAgo = randInt(0, 150)
-      const createdAt = new Date(now - daysAgo * DAY - randInt(0, 10) * 3600000)
       return {
         schoolId,
         userId: user.id,
@@ -466,7 +463,25 @@ export async function seedProfileActivity(
         description: tpl.description,
         createdAt,
       }
-    })
+    }
+
+    // Demo accounts get a WORKING YEAR, not a handful of recent rows. Staff and
+    // guardians have thin domain tables — their contribution graph is mostly
+    // these rows — so a month of activity leaves the graph looking abandoned.
+    // Most school days carry something, a third carry nothing, which is what a
+    // real person's year looks like.
+    const rows = isDemo
+      ? schoolDaysOfYearToDate().flatMap((day) => {
+          if (rand() > 0.68) return []
+          return Array.from({ length: randInt(1, 3) }, () => {
+            const at = new Date(day)
+            at.setUTCHours(randInt(7, 15), randInt(0, 59), 0, 0)
+            return row(at)
+          })
+        })
+      : Array.from({ length: randInt(5, 14) }, () =>
+          row(new Date(now - randInt(0, 150) * DAY - randInt(0, 10) * 3600000))
+        )
     await prisma.userActivity.createMany({ data: rows })
     activitiesCreated += rows.length
     touchedUserIds.add(user.id)

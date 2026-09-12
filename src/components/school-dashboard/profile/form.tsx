@@ -1,10 +1,9 @@
 "use client"
 
-import { useRef, useState, useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Link as LinkIcon, Mail, Upload } from "lucide-react"
+import { Link as LinkIcon, Mail } from "lucide-react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -19,7 +18,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { OcticonClock, OcticonOrganization } from "@/components/atom/icons"
 
-import { updateGitHubProfile, uploadProfileAvatar } from "./actions"
+import { updateGitHubProfile } from "./actions"
 import type { ProfileViewData } from "./queries"
 
 interface EditProfileFormProps {
@@ -76,7 +75,6 @@ export default function EditProfileForm({
 }: EditProfileFormProps) {
   const f = dictionary?.form
   const router = useRouter()
-  const fileRef = useRef<HTMLInputElement>(null)
 
   const existingSocial = data.socialLinks ?? {}
   const [name, setName] = useState(data.displayName || "")
@@ -92,37 +90,13 @@ export default function EditProfileForm({
     twitter: existingSocial.twitter || "",
     linkedin: existingSocial.linkedin || "",
   })
-  const [photoUrl, setPhotoUrl] = useState(data.photoUrl)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
-  const [isUploading, startUpload] = useTransition()
-
-  const initials =
-    `${data.firstName?.[0] ?? ""}${data.lastName?.[0] ?? ""}`.toUpperCase() ||
-    "?"
 
   function resolveError(code?: string): string {
     if (!code) return f?.failedToSave ?? ""
     const key = ERROR_MAP[code]
     return f?.errors?.[key] ?? f?.failedToSave ?? ""
-  }
-
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setError(null)
-    const fd = new FormData()
-    fd.append("avatar", file)
-    startUpload(async () => {
-      const result = await uploadProfileAvatar(fd)
-      if (!result.success) {
-        setError(resolveError(result.error))
-      } else if (result.data?.url) {
-        setPhotoUrl(result.data.url)
-        router.refresh()
-      }
-      if (fileRef.current) fileRef.current.value = ""
-    })
   }
 
   function handleSave() {
@@ -164,37 +138,12 @@ export default function EditProfileForm({
         </p>
       )}
 
-      {/* Avatar */}
-      <div className="flex items-center gap-3">
-        <Avatar className="border-border size-16 border">
-          {photoUrl && <AvatarImage src={photoUrl} alt={data.displayName} />}
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
-        <div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isUploading}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Upload className="me-2 size-3.5" />
-            {isUploading ? (f?.uploading ?? "") : (f?.changePhoto ?? "")}
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            className="hidden"
-            onChange={handleAvatarChange}
-            aria-label={f?.changePhoto ?? ""}
-          />
-        </div>
-      </div>
-
       {/* Name */}
       <div className="space-y-1.5">
-        <Label htmlFor="edit-name" className="text-xs font-semibold">
+        <Label
+          htmlFor="edit-name"
+          className="text-base font-semibold md:text-xs"
+        >
           {f?.name ?? ""}
         </Label>
         <Input
@@ -207,7 +156,10 @@ export default function EditProfileForm({
 
       {/* Bio */}
       <div className="space-y-1.5">
-        <Label htmlFor="edit-bio" className="text-xs font-semibold">
+        <Label
+          htmlFor="edit-bio"
+          className="text-base font-semibold md:text-xs"
+        >
           {f?.bio ?? ""}
         </Label>
         <Textarea
@@ -227,7 +179,10 @@ export default function EditProfileForm({
 
       {/* Pronouns */}
       <div className="space-y-1.5">
-        <Label htmlFor="edit-pronouns" className="text-xs font-semibold">
+        <Label
+          htmlFor="edit-pronouns"
+          className="text-base font-semibold md:text-xs"
+        >
           {f?.pronouns ?? ""}
         </Label>
         <Select value={pronouns} onValueChange={setPronouns}>
@@ -260,7 +215,10 @@ export default function EditProfileForm({
 
       {/* Company / status */}
       <div className="space-y-1.5">
-        <Label htmlFor="edit-company" className="text-xs font-semibold">
+        <Label
+          htmlFor="edit-company"
+          className="text-base font-semibold md:text-xs"
+        >
           {f?.company ?? ""}
         </Label>
         <div className="flex items-center gap-2">
@@ -283,7 +241,10 @@ export default function EditProfileForm({
             checked={showLocalTime}
             onCheckedChange={(checked) => setShowLocalTime(checked === true)}
           />
-          <Label htmlFor="edit-localtime" className="cursor-pointer text-xs">
+          <Label
+            htmlFor="edit-localtime"
+            className="cursor-pointer text-base md:text-xs"
+          >
             {f?.displayLocalTime ?? ""}
           </Label>
         </div>
@@ -310,7 +271,10 @@ export default function EditProfileForm({
 
       {/* Email (read-only) */}
       <div className="space-y-1.5">
-        <Label htmlFor="edit-email" className="text-xs font-semibold">
+        <Label
+          htmlFor="edit-email"
+          className="text-base font-semibold md:text-xs"
+        >
           {f?.email ?? ""}
         </Label>
         <div className="flex items-center gap-2">
@@ -326,7 +290,10 @@ export default function EditProfileForm({
 
       {/* Website */}
       <div className="space-y-1.5">
-        <Label htmlFor="edit-website" className="text-xs font-semibold">
+        <Label
+          htmlFor="edit-website"
+          className="text-base font-semibold md:text-xs"
+        >
           {f?.website ?? ""}
         </Label>
         <div className="flex items-center gap-2">
@@ -343,7 +310,9 @@ export default function EditProfileForm({
 
       {/* Social accounts */}
       <div className="space-y-1.5">
-        <span className="text-xs font-semibold">{f?.socialAccounts ?? ""}</span>
+        <span className="text-base font-semibold md:text-xs">
+          {f?.socialAccounts ?? ""}
+        </span>
         <div className="space-y-2">
           {SOCIAL_FIELDS.map((sf) => (
             <div key={sf.key} className="flex items-center gap-2">
@@ -371,7 +340,7 @@ export default function EditProfileForm({
           {isPending ? (f?.saving ?? "") : (f?.save ?? "")}
         </Button>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={onCancel}
           disabled={isPending}

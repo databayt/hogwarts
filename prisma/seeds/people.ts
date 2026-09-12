@@ -864,7 +864,7 @@ export async function seedStudents(
             dateOfBirth: birthDate,
             nationality: isHarry ? HP_CHARACTERS.student.nationality : "SD",
             currentAddress: neighborhoodName,
-            city: isHarry ? "Little Whinging" : "الخرطوم",
+            city: isHarry ? "ليتل وينجينج" : "الخرطوم",
             country: isHarry ? "GB" : "SD",
             mobileNumber: generatePhone(globalIndex),
             email: isHarry

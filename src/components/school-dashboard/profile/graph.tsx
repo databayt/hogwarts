@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import useSWR from "swr"
 
 import { Skeleton } from "@/components/ui/skeleton"
@@ -48,7 +48,10 @@ const ROLE_LABEL_KEYS: Record<ProfileRole, string> = {
 /** An empty (all-zero) year grid — shown honestly when there is no activity. */
 function emptyYearData(role: ProfileRole, year: number): ContributionGraphData {
   const startDate = new Date(year, 0, 1)
-  const endDate = new Date(year, 11, 31)
+  const now = new Date()
+  const yearEnd = new Date(year, 11, 31)
+  // Match the server's range: the year in progress stops at today.
+  const endDate = now < yearEnd ? now : yearEnd
   const contributions: ContributionDataPoint[] = []
   const current = new Date(startDate)
   current.setDate(current.getDate() - current.getDay())
@@ -183,6 +186,20 @@ export default function ActivityGraph({
     return positions
   }, [weeks, months])
 
+  // A year of squares is wider than a phone. Open on the most recent weeks —
+  // the months a visitor came to see — rather than on January.
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    // RTL scrollers count the inline start from the right, so the far end is a
+    // negative offset rather than a positive one.
+    el.scrollLeft =
+      getComputedStyle(el).direction === "rtl"
+        ? -(el.scrollWidth - el.clientWidth)
+        : el.scrollWidth - el.clientWidth
+  }, [graphData])
+
   if (isLoading && !fetchedData) {
     return (
       <div className="space-y-4">
@@ -211,7 +228,7 @@ export default function ActivityGraph({
               .replace("{year}", String(year))}
           </p>
         )}
-        <div className="overflow-x-auto pb-2">
+        <div ref={scrollerRef} className="overflow-x-auto pb-2">
           <div className="min-w-max">
             <div className="ms-10 mb-1 flex">
               {monthPositions.map(({ month, position }, idx) => (
@@ -232,7 +249,10 @@ export default function ActivityGraph({
             </div>
 
             <div className="flex">
-              <div className="text-muted-foreground me-2 flex flex-col gap-[3px] text-[10px]">
+              {/* Sticky: the grid opens scrolled to the current weeks, and a
+                  weekday column that scrolled away with January would leave the
+                  rows unlabelled. */}
+              <div className="text-muted-foreground bg-background sticky start-0 z-10 me-2 flex flex-col gap-[3px] pe-1 text-[10px]">
                 {weekdays.map((day: string, idx: number) => (
                   <span key={idx} className="h-[10px] leading-[10px]">
                     {day}

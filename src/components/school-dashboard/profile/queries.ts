@@ -674,6 +674,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   let statusMessage = args.statusMessage ?? null
   let sectionName = args.sectionName ?? null
   let departmentName = args.departmentName ?? null
+  let city = args.city ?? null
   const pinnedStatLabels = pinnedRows.flatMap((p: any) =>
     Array.isArray((p.metadata as any)?.stats)
       ? ((p.metadata as any).stats as Array<{ label?: string }>)
@@ -688,6 +689,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     args.statusMessage ?? "",
     args.sectionName ?? "",
     args.departmentName ?? "",
+    args.city ?? "",
     ...badgeRows.map((b: any) => b.title),
     ...badgeRows.map((b: any) => b.description ?? ""),
     ...organizations.map((o) => o.name),
@@ -709,6 +711,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     statusMessage = tr(args.statusMessage)
     sectionName = tr(sectionName)
     departmentName = tr(departmentName)
+    city = tr(city)
     badgeRows.forEach((b: any) => {
       b.title = tr(b.title) ?? b.title
       b.description = tr(b.description)
@@ -753,7 +756,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   if (departmentName) info.push({ icon: "org", value: departmentName })
   if (sectionName) info.push({ icon: "org", value: sectionName })
   if (args.email) info.push({ icon: "mail", value: args.email })
-  if (args.city) info.push({ icon: "location", value: args.city })
+  if (city) info.push({ icon: "location", value: city })
 
   return {
     id: args.entityId,
@@ -777,7 +780,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     socialLinks: args.socialLinks ?? null,
     createdAt: args.createdAt.toISOString(),
     email: args.email,
-    city: args.city ?? null,
+    city,
     sectionName,
     departmentName,
     enrollmentDate: args.enrollmentDate?.toISOString() ?? null,

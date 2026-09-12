@@ -42,6 +42,17 @@ live backlog + what shipped this pass.
   `/public/github`; re-upload via `prisma/scripts/upload-badge-art.ts` — the
   CDN origin bucket is `databayt-cdn`, NOT the app's `AWS_S3_BUCKET`, and the
   bucket rejects ACLs).
+- **The graph counts domain events, and `UserActivity` only where there are
+  none.** Staff and parents count their logged rows; students and teachers do
+  not, because their rows narrate attendance/submission/result rows that are
+  already counted, and counting both counts the day twice. If `logActivity`
+  ever gains callers for students or teachers, this is the rule to revisit.
+- **A demo profile that looks empty is usually data, not code.** Measure per
+  role before touching the query — the seed's guards happily leave one role at
+  zero while another looks fine. `pnpm db:seed:single profile-activity`, then
+  re-measure. Note the read is cached for 300s (`unstable_cache`,
+  `contribution-data`), so the first load after a data change still shows the
+  old number; load twice before concluding anything.
 - **The phone gets a different composition, not a narrower one.** GitHub's
   mobile profile leads with the tab rail, then a 64px avatar beside the name,
   then the panel — `client.tsx` and `sidebar.tsx` both branch on
@@ -53,7 +64,9 @@ live backlog + what shipped this pass.
   activity feed, graph tooltips, sidebar joined/badge dates). Instants near
   midnight otherwise format to different calendar dates on server vs browser →
   SSR hydration mismatch. Keep any new date rendering on this rule.
-- **Seed `profile-activity`** keeps the block demonstrable: current-year
+- **Seed `profile-activity`** gives the demo accounts a WORKING YEAR (rows on
+  ~two thirds of school days), not a recent handful — a year-wide graph makes
+  thin data look like an abandoned account. It keeps the block demonstrable: current-year
   attendance/feed/pins/messages/approvals + badge recompute, idempotent. If a
   demo profile looks empty, run `pnpm db:seed:single profile-activity`.
 - **Dictionary lives at `dictionary.school.profile`** — NOT `dictionary.profile`.

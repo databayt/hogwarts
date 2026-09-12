@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState, useTransition } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   Calendar,
+  Camera,
   FileText,
   Link as LinkIcon,
   Mail,
   MapPin,
   Phone,
-  SmilePlus,
 } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
@@ -37,6 +38,7 @@ import {
 } from "@/components/atom/icons"
 import type { Locale } from "@/components/internationalization/config"
 
+import { uploadProfileAvatar } from "./actions"
 import EditProfileForm from "./form"
 import type { ProfileBadgeView, ProfileViewData } from "./queries"
 
@@ -170,8 +172,43 @@ export default function ProfileSidebar({
   lang,
 }: ProfileSidebarProps) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
   const p = dictionary
   const [isEditing, setIsEditing] = useState(false)
+
+  // The portrait is the ONLY avatar on the page — GitHub's edit mode keeps the
+  // one image and hangs the change control off it, rather than drawing a second
+  // copy inside the form.
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [isUploading, startUpload] = useTransition()
+  const photoUrl = uploadedUrl ?? data.photoUrl
+
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadError(null)
+    const fd = new FormData()
+    fd.append("avatar", file)
+    startUpload(async () => {
+      const result = await uploadProfileAvatar(fd)
+      if (!result.success) {
+        const errors = p?.form?.errors as Record<string, string> | undefined
+        setUploadError(
+          (result.error === "INVALID_FILE_TYPE"
+            ? errors?.fileType
+            : errors?.upload) ??
+            p?.form?.failedToSave ??
+            ""
+        )
+      } else if (result.data?.url) {
+        setUploadedUrl(result.data.url)
+        router.refresh()
+      }
+      if (fileRef.current) fileRef.current.value = ""
+    })
+  }
 
   // GitHub's phone profile is a different composition, not a narrower one: a
   // 64px avatar sits beside the name instead of a portrait above it.
@@ -182,8 +219,6 @@ export default function ProfileSidebar({
   const initials =
     `${data.firstName?.[0] ?? ""}${data.lastName?.[0] ?? ""}`.toUpperCase() ||
     (data.displayName[0] ?? "?").toUpperCase()
-
-  const roleLabel = p?.roles?.[data.role] ?? ""
 
   // GitHub-style link rows: website + social accounts (already stored + edited
   // via the profile form, previously never displayed).
@@ -211,16 +246,8 @@ export default function ProfileSidebar({
           {restName}
         </p>
       )}
-      {(roleLabel || data.pronouns) && (
-        <p className="text-muted-foreground text-sm">
-          {roleLabel}
-          {data.pronouns && (
-            <span className="text-muted-foreground/80">
-              {roleLabel ? " · " : ""}
-              {data.pronouns}
-            </span>
-          )}
-        </p>
+      {data.pronouns && (
+        <p className="text-muted-foreground text-sm">{data.pronouns}</p>
       )}
     </div>
   )
@@ -236,9 +263,9 @@ export default function ProfileSidebar({
                 compact ? "size-16" : "size-52 shadow-lg lg:size-56 xl:size-64"
               }`}
             >
-              {data.photoUrl && (
+              {photoUrl && (
                 <AvatarImage
-                  src={data.photoUrl}
+                  src={photoUrl}
                   alt={data.displayName}
                   className="object-cover"
                 />
@@ -251,10 +278,30 @@ export default function ProfileSidebar({
                 {initials}
               </AvatarFallback>
             </Avatar>
-            {/* The emoji rides the avatar only when no status row follows it —
-                at 64px the bubble would otherwise crowd the name and repeat
-                what the row below already says. */}
-            {data.statusEmoji && !(compact && data.canEdit) && (
+            {isEditing && data.canEdit && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={isUploading}
+                  aria-label={p?.form?.changePhoto ?? ""}
+                  className={`bg-background border-border text-muted-foreground hover:text-foreground absolute flex items-center justify-center rounded-full border shadow-sm transition-colors disabled:opacity-60 ${
+                    compact ? "end-0 bottom-0 size-7" : "end-2 bottom-2 size-10"
+                  }`}
+                >
+                  <Camera className={compact ? "size-3.5" : "size-5"} />
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                  aria-label={p?.form?.changePhoto ?? ""}
+                />
+              </>
+            )}
+            {data.statusEmoji && !isEditing && (
               <div
                 className={`bg-background border-border absolute flex items-center justify-center rounded-full border shadow-md ${
                   compact
@@ -271,6 +318,12 @@ export default function ProfileSidebar({
           {compact && !isEditing && nameBlock}
         </div>
 
+        {uploadError && (
+          <p role="alert" className="text-destructive text-sm">
+            {uploadError}
+          </p>
+        )}
+
         {isEditing ? (
           <EditProfileForm
             data={data}
@@ -281,33 +334,6 @@ export default function ProfileSidebar({
         ) : (
           <>
             {!compact && nameBlock}
-
-            {/* Status — GitHub's full-width row above the bio. Opens the edit
-                form, which owns the status field; only the owner sees it. */}
-            {data.canEdit && (
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="border-border hover:border-primary/50 flex h-11 w-full items-center gap-3 rounded-md border px-4 text-start text-sm transition-colors"
-              >
-                {data.statusEmoji ? (
-                  <span className="text-base leading-none">
-                    {data.statusEmoji}
-                  </span>
-                ) : (
-                  <SmilePlus className="text-muted-foreground size-4 shrink-0" />
-                )}
-                <span
-                  className={`truncate ${
-                    data.statusMessage
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {data.statusMessage || (p?.sidebar?.setStatus ?? "")}
-                </span>
-              </button>
-            )}
 
             {data.bio && (
               <p
