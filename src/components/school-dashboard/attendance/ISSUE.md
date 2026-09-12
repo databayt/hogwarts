@@ -20,6 +20,10 @@ last_audited: 2026-07-18
 
 ---
 
+## Log
+
+- 2026-09-12 — Quick attendance queues offline (outbox kind `attendance`, `actions/quick-core.ts` shared with `/api/offline/sync`, "newer wins" stale rule). Manifest shortcut points at `/attendance`. Tests: `src/tests/school-dashboard/attendance/quick-core.test.ts`.
+
 ## MVP Checklist
 
 ### Core Features

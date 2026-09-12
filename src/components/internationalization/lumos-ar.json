@@ -769,6 +769,7 @@
       "kindComplete": "إكمال الدرس",
       "kindQuiz": "إجابات الاختبار",
       "kindAssignment": "الواجب",
+      "kindAttendance": "التحضير",
       "pendingTitle": "بانتظار المزامنة"
     },
     "viewer": {

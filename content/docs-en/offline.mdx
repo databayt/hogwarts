@@ -49,6 +49,10 @@ idempotent per item and answers a verdict per item; rejections park visibly on
 copied to a device, and IndexedDB v2 drops any media a device had stored. The
 service worker (`public/service-worker.js`, v2) now actually installs.
 
+### Shipped 2026-09-12 — installable, and attendance in the outbox
+
+The PWA layer was repaired after a live audit of `demo` and `kingfahd`: the manifest is now per-tenant (school name, Arabic RTL by default, the school's brand colour), the missing icons exist, and service worker v3 precaches `/ar/offline` and `/en/offline` instead of two redirects — so the offline fallback works for the first time — and no longer caches authenticated pages or API bodies. **Quick attendance is the first non-lesson outbox kind**: a mark made offline is saved on the phone and replayed through the same ownership check and `markAttendance` path when the connection returns; a newer mark already on the server wins. The "Teacher marking attendance offline" row above is now ✓. Verify any host with kun's `pwa-audit` script.
+
 ## Engineering principles (no compromise)
 
 These are non-negotiable. Each principle drives concrete choices in the architecture.

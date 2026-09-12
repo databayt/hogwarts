@@ -252,6 +252,10 @@ webhook system events can be recorded — calls pass `userId: null`.
 
 A new `NotificationType.absence_unreported_followup` covers the 2h SLA path.
 
+## Offline marking
+
+Quick attendance (`/attendance` for teachers) works without a connection. The mark goes to the device outbox (kind `attendance`, one pending item per section and day) and is replayed through `POST /api/offline/sync` → `actions/quick-core.ts`, the same code the online action runs. A newer mark already on the server wins and the replay is dropped as a duplicate. Guardian absence notifications fire when the replay lands. See [Offline](/docs/offline).
+
 ## See also
 
 - [Multi-tenancy](/docs/multi-tenancy) — RBAC + tenant scoping

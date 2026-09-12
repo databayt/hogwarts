@@ -6,6 +6,10 @@ The Attendance block provides a comprehensive student attendance management syst
 
 **Section-based roster:** Attendance is taken by section (Grade 1-A, Grade 7-B). The student roster comes from `Student.sectionId` — all students enrolled in a section appear in the attendance list. This replaces the previous class-based approach that used the `StudentClass` join table.
 
+### Offline marking (2026-09-12)
+
+Quick attendance survives a dropped connection. When the phone is offline (or the server-action call never reaches the server), `quick/content.tsx` writes the mark to the device outbox (`src/lib/offline/outbox.ts`, kind `attendance`, one pending item per section and day) and shows "saved on this device". `POST /api/offline/sync` replays it through `actions/quick-core.ts` — the same teacher-ownership check, roster intersection and `markAttendance` path the online action uses. A section already marked on the server *after* the offline mark wins (`stale` → the device drops it as a duplicate). A replayed absence fires the guardian notification at drain time; that is intended.
+
 ### Capabilities by Role
 
 - **Admin**: Mark attendance for any section, review excuses, manage interventions, view analytics, configure geofence zones, export reports

@@ -7,8 +7,13 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
-import { markAttendance, type ActionResponse } from "./core"
+import type { ActionResponse } from "./core"
 import { guardAttendance } from "./helpers"
+import {
+  quickSubmitSchema,
+  submitQuickAttendanceCore,
+  type QuickSubmitSummary,
+} from "./quick-core"
 
 // ============================================================================
 // QUICK ATTENDANCE — teacher-first, absent-oriented marking
@@ -219,27 +224,14 @@ export async function getQuickMarkingContext(): Promise<
   }
 }
 
-const quickSubmitSchema = z.object({
-  sectionId: z.string().min(1),
-  date: z.string().min(1),
-  absentStudentIds: z.array(z.string()).default([]),
-  lateStudentIds: z.array(z.string()).default([]),
-})
-
 /**
  * Absent-oriented submission: everyone in the section is PRESENT except the
- * listed absent/late students. Delegates to markAttendance (revive-on-update,
- * auto-excuse, guardian notifications) after enforcing teacher-section
- * ownership, and reports how many absent students have a notifiable guardian.
+ * listed absent/late students. The logic lives in quick-core.ts so the
+ * offline sync route can replay a mark made without a connection through the
+ * same ownership check, roster intersection and markAttendance path.
  */
 export async function submitQuickAttendance(input: unknown): Promise<
-  ActionResponse<{
-    total: number
-    present: number
-    absent: number
-    late: number
-    guardiansNotified: number
-  }>
+  ActionResponse<QuickSubmitSummary>
 > {
   try {
     const g = await guardAttendance("mark")
@@ -247,115 +239,27 @@ export async function submitQuickAttendance(input: unknown): Promise<
     const { schoolId, userId, role } = g
 
     const parsed = quickSubmitSchema.parse(input)
+    const out = await submitQuickAttendanceCore({
+      schoolId,
+      userId,
+      role,
+      input: parsed,
+    })
 
-    // SCOPE: a TEACHER may only quick-mark sections they own (homeroom or a
-    // timetable slot on any day) — markAttendance itself is role-gated only.
-    if (role === "TEACHER") {
-      const teacher = await db.teacher.findFirst({
-        where: { schoolId, userId },
-        select: { id: true },
-      })
-      const owned = teacher
-        ? await db.section.findFirst({
-            where: {
-              id: parsed.sectionId,
-              schoolId,
-              OR: [
-                { homeroomTeacherId: teacher.id },
-                {
-                  timetables: {
-                    some: { schoolId, teacherId: teacher.id },
-                  },
-                },
-              ],
-            },
-            select: { id: true },
-          })
-        : null
-      if (!owned) {
-        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    switch (out.status) {
+      case "marked": {
+        const { status: _status, ...data } = out
+        return { success: true, data }
       }
-    }
-
-    // Roster from the section (tenant-scoped); submitted ids are intersected
-    // against it so a foreign studentId can never ride along.
-    const roster = await db.student.findMany({
-      where: { schoolId, sectionId: parsed.sectionId },
-      select: { id: true },
-    })
-    if (roster.length === 0) {
-      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
-    }
-    const rosterIds = new Set(roster.map((s) => s.id))
-    const absentSet = new Set(
-      parsed.absentStudentIds.filter((id) => rosterIds.has(id))
-    )
-    const lateSet = new Set(
-      parsed.lateStudentIds.filter(
-        (id) => rosterIds.has(id) && !absentSet.has(id)
-      )
-    )
-
-    const records = roster.map((s) => ({
-      studentId: s.id,
-      status: absentSet.has(s.id)
-        ? ("absent" as const)
-        : lateSet.has(s.id)
-          ? ("late" as const)
-          : ("present" as const),
-    }))
-
-    const marked = await markAttendance({
-      sectionId: parsed.sectionId,
-      date: parsed.date,
-      records,
-    })
-    if (!marked.success) {
-      return { success: false, error: marked.error }
-    }
-
-    // How many of the absent students have at least one guardian with a user
-    // account (i.e. will actually receive the absence notification)? Excused
-    // students (approved intention) are not notified — mirror that here.
-    let guardiansNotified = 0
-    if (absentSet.size > 0) {
-      const attendanceDate = new Date(parsed.date)
-      const [excused, notifiable] = await Promise.all([
-        db.absenceIntention.findMany({
-          where: {
-            schoolId,
-            status: "APPROVED",
-            dateFrom: { lte: attendanceDate },
-            dateTo: { gte: attendanceDate },
-            studentId: { in: [...absentSet] },
-          },
-          select: { studentId: true },
-        }),
-        db.studentGuardian.findMany({
-          where: {
-            schoolId,
-            studentId: { in: [...absentSet] },
-            guardian: { userId: { not: null } },
-          },
-          select: { studentId: true },
-          distinct: ["studentId"],
-        }),
-      ])
-      const excusedSet = new Set(excused.map((e) => e.studentId))
-      guardiansNotified = notifiable.filter(
-        (n) => !excusedSet.has(n.studentId)
-      ).length
-    }
-
-    return {
-      success: true,
-      data: {
-        total: roster.length,
-        present: roster.length - absentSet.size - lateSet.size,
-        absent: absentSet.size,
-        late: lateSet.size,
-        guardiansNotified,
-      },
+      case "forbidden":
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      case "noStudents":
+        return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+      case "stale":
+        // Only an offline replay can be stale; the online path never sets `at`.
+        return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
+      case "failed":
+        return { success: false, error: out.error ?? "" }
     }
   } catch (error) {
     console.error("[submitQuickAttendance] Error:", error)

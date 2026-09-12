@@ -14,6 +14,11 @@ import {
   ATTEMPT_ID_PATTERN,
   submitLessonQuizCore,
 } from "@/components/lumos/lib/quiz-submission"
+import { guardAttendance } from "@/components/school-dashboard/attendance/actions/helpers"
+import {
+  quickSubmitSchema,
+  submitQuickAttendanceCore,
+} from "@/components/school-dashboard/attendance/actions/quick-core"
 import {
   submitAssignmentCore,
   submitAssignmentSchema,
@@ -69,10 +74,11 @@ const quizPayload = z.object({
 })
 
 const assignmentPayload = submitAssignmentSchema
+const attendancePayload = quickSubmitSchema
 
 const itemSchema = z.object({
   id: ID,
-  kind: z.enum(["progress", "complete", "quiz", "assignment"]),
+  kind: z.enum(["progress", "complete", "quiz", "assignment", "attendance"]),
   payload: z.unknown(),
   createdAt: z.string().datetime({ offset: true }),
 })
@@ -209,6 +215,27 @@ async function applyItem(
           result: "applied",
           data: { status: out.submissionStatus },
         }
+      }
+      if (out.status === "stale") return { id: item.id, result: "duplicate" }
+      return reject(item, codeFor(out.status))
+    }
+
+    case "attendance": {
+      const p = attendancePayload.safeParse(item.payload)
+      if (!p.success) return reject(item, "INVALID_PAYLOAD")
+      // Same gate as the online action: role may mark, tenant resolved.
+      const g = await guardAttendance("mark")
+      if (!g.ok) return reject(item, "FORBIDDEN")
+      const out = await submitQuickAttendanceCore({
+        schoolId: g.schoolId,
+        userId: g.userId,
+        role: g.role,
+        input: p.data,
+        at,
+      })
+      if (out.status === "marked") {
+        const { status: _status, ...summary } = out
+        return { id: item.id, result: "applied", data: summary }
       }
       if (out.status === "stale") return { id: item.id, result: "duplicate" }
       return reject(item, codeFor(out.status))

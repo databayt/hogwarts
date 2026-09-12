@@ -762,6 +762,7 @@
       "kindComplete": "Lesson completion",
       "kindQuiz": "Quiz answers",
       "kindAssignment": "Assignment",
+      "kindAttendance": "Attendance",
       "pendingTitle": "Waiting to sync"
     },
     "viewer": {

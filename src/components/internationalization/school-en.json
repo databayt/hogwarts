@@ -835,6 +835,9 @@
         "messageGuardian": "Message guardian",
         "markAnother": "Mark another section",
         "saveFailed": "Failed to save attendance",
+        "savedOffline": "No connection — saved on this phone and will sync when you are back online",
+        "queuedTitle": "Attendance saved on this device",
+        "queuedHint": "It will reach the school when the connection returns. Guardians are notified then.",
         "fullDashboard": "Full dashboard",
         "absentToday": "Absent today",
         "clock": {

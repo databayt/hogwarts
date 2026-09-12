@@ -26,6 +26,8 @@ import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getAttendanceList } from "../actions"
+import { enqueue } from "@/lib/offline/outbox"
+
 import { getQuickMarkingContext, submitQuickAttendance } from "../actions/quick"
 import { ClockCard } from "./clock-card"
 
@@ -57,6 +59,18 @@ interface SavedSummary {
   late: number
   guardiansNotified: number
   absentNames: string[]
+  /** Saved to the device outbox — no connection; syncs when it returns. */
+  queued?: boolean
+}
+
+/** A server-action call that never reached the server (offline, DNS, reset). */
+function isNetworkError(err: unknown): boolean {
+  if (typeof navigator !== "undefined" && !navigator.onLine) return true
+  if (!(err instanceof Error)) return false
+  return (
+    err.name === "TypeError" ||
+    /fetch|network|Failed to fetch|Load failed/i.test(err.message)
+  )
 }
 
 const CYCLE: Record<RowStatus, RowStatus> = {
@@ -161,12 +175,52 @@ export function QuickAttendanceContent({ locale }: { locale: Locale }) {
     startSave(async () => {
       const absent = roster.filter((r) => r.status === "absent")
       const late = roster.filter((r) => r.status === "late")
-      const res = await submitQuickAttendance({
+      const input = {
         sectionId,
         date: today.split("T")[0],
         absentStudentIds: absent.map((r) => r.studentId),
         lateStudentIds: late.map((r) => r.studentId),
-      })
+      }
+
+      // No connection: the mark goes to the device outbox and drains later
+      // through /api/offline/sync (same ownership check, same markAttendance).
+      // One pending item per section and day — a re-mark replaces it.
+      const queueOffline = async () => {
+        await enqueue({
+          kind: "attendance",
+          payload: input,
+          coalesceKey: `attendance:${input.sectionId}:${input.date}`,
+        })
+        setSaved({
+          total: roster.length,
+          present: roster.length - absent.length - late.length,
+          absent: absent.length,
+          late: late.length,
+          guardiansNotified: 0,
+          absentNames: absent.map((r) => r.name),
+          queued: true,
+        })
+        toast.message(
+          q.savedOffline ??
+            "No connection — saved on this phone and will sync when you are back online"
+        )
+      }
+
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await queueOffline()
+        return
+      }
+
+      let res: Awaited<ReturnType<typeof submitQuickAttendance>>
+      try {
+        res = await submitQuickAttendance(input)
+      } catch (err) {
+        if (isNetworkError(err)) {
+          await queueOffline()
+          return
+        }
+        throw err
+      }
       if (res.success && res.data) {
         setSaved({
           ...res.data,
@@ -289,9 +343,17 @@ export function QuickAttendanceContent({ locale }: { locale: Locale }) {
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               <p className="font-medium">
-                {q.savedTitle ?? "Attendance saved"}
+                {saved.queued
+                  ? (q.queuedTitle ?? "Attendance saved on this device")
+                  : (q.savedTitle ?? "Attendance saved")}
               </p>
             </div>
+            {saved.queued && (
+              <p className="text-muted-foreground text-xs">
+                {q.queuedHint ??
+                  "It will reach the school when the connection returns. Guardians are notified then."}
+              </p>
+            )}
             <p className="text-sm">
               {fmt(
                 q.savedSummary,
@@ -304,7 +366,9 @@ export function QuickAttendanceContent({ locale }: { locale: Locale }) {
               )}
             </p>
             <p className="text-muted-foreground text-xs">
-              {saved.guardiansNotified > 0
+              {saved.queued
+                ? null
+                : saved.guardiansNotified > 0
                 ? fmt(
                     q.guardiansNotified,
                     "{count} guardians notified about the absence",

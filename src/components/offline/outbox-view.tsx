@@ -73,7 +73,9 @@ export function OutboxView({
         ? t("kindComplete", "Lesson completion")
         : k === "quiz"
           ? t("kindQuiz", "Quiz answers")
-          : t("kindAssignment", "Assignment")
+          : k === "assignment"
+            ? t("kindAssignment", "Assignment")
+            : t("kindAttendance", "Attendance")
 
   return (
     <section className="space-y-3">

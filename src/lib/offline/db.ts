@@ -17,7 +17,13 @@
 export const OFFLINE_DB_NAME = "hogwarts-offline"
 export const OFFLINE_DB_VERSION = 2
 
-export type OutboxKind = "progress" | "complete" | "quiz" | "assignment"
+export type OutboxKind =
+  | "progress"
+  | "complete"
+  | "quiz"
+  | "assignment"
+  /** A teacher's quick attendance mark (section + day), coalesced per section. */
+  | "attendance"
 
 export interface OutboxItem {
   id: string
