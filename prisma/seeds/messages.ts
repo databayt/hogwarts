@@ -12,6 +12,10 @@
  * - 300+ messages with realistic content
  * - Mix of read/unread status
  * - Participant distribution across user types
+ *
+ * The demo-driving accounts (student@, teacher@, parent@) get their inboxes
+ * from ./messaging-demo.ts, which runs first so the random pairing here can
+ * never claim one of their threads.
  */
 
 import type { PrismaClient } from "@prisma/client"
@@ -696,7 +700,13 @@ export async function seedMessaging(
   students: StudentRef[],
   adminUsers: UserRef[]
 ): Promise<number> {
-  // 1. Create conversations
+  // 1. Authored inboxes for the accounts a demo is driven from, FIRST. The
+  // random pairing below would otherwise be free to draw student@ or teacher@
+  // as one half of a pair; the authored pass guards on the pair existing and
+  // would silently yield that thread to a handful of random one-liners.
+  const demoCount = await seedDemoInboxes(prisma, schoolId)
+
+  // 2. Create conversations
   const { conversationIds, userIdMap } = await seedConversations(
     prisma,
     schoolId,
@@ -705,12 +715,8 @@ export async function seedMessaging(
     adminUsers
   )
 
-  // 2. Seed messages
+  // 3. Seed messages
   const messageCount = await seedMessages(prisma, conversationIds, userIdMap)
-
-  // 3. Authored inboxes for the accounts a demo is driven from. The random
-  // pairing above leaves student@ / teacher@ / parent@ with almost nothing.
-  const demoCount = await seedDemoInboxes(prisma, schoolId)
 
   return messageCount + demoCount
 }
