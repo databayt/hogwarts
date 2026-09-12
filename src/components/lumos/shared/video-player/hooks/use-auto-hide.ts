@@ -11,6 +11,16 @@ interface UseAutoHideOptions {
   showControls: () => void
   hideControls: () => void
   delay?: number
+  /**
+   * Keep the controls up regardless of the timer — an open menu.
+   *
+   * The timer only runs while something is playing, and on a pointer device
+   * the reader's own mouse keeps resetting it, so nothing here mattered until
+   * the phone layout put a seven-row menu behind one of the controls: with no
+   * mouse to move, the card a reader was mid-way through vanished after three
+   * seconds. The live room's own `useAutoHide(pinned)` takes the same flag.
+   */
+  hold?: boolean
 }
 
 export function useAutoHide({
@@ -18,6 +28,7 @@ export function useAutoHide({
   showControls,
   hideControls,
   delay = CONTROLS_HIDE_DELAY,
+  hold = false,
 }: UseAutoHideOptions) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -28,12 +39,12 @@ export function useAutoHide({
 
     showControls()
 
-    if (isPlaying) {
+    if (isPlaying && !hold) {
       timeoutRef.current = setTimeout(() => {
         hideControls()
       }, delay)
     }
-  }, [isPlaying, showControls, hideControls, delay])
+  }, [isPlaying, hold, showControls, hideControls, delay])
 
   const handleMouseMove = useCallback(() => {
     resetTimer()
@@ -54,9 +65,10 @@ export function useAutoHide({
     }
   }, [])
 
-  // Reset timer when playing state changes
+  // Reset timer when playing state changes — or when a menu takes/releases
+  // the hold, which is what restarts the countdown after one closes.
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && !hold) {
       resetTimer()
     } else {
       showControls()
@@ -64,7 +76,7 @@ export function useAutoHide({
         clearTimeout(timeoutRef.current)
       }
     }
-  }, [isPlaying, resetTimer, showControls])
+  }, [isPlaying, hold, resetTimer, showControls])
 
   return {
     handleMouseMove,

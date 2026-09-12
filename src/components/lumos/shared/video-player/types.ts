@@ -39,6 +39,14 @@ export interface VideoPlayerProps {
   chapterNumber?: number
   lessonNumber?: number
   courseTitle?: string
+  /**
+   * The course page this lesson belongs to, as an app path. Only the share
+   * menu reads it, to offer the reference app's two scopes — this episode or
+   * the whole show. Taken as a prop rather than cut out of
+   * `location.pathname`: the route shape is the caller's business, and it
+   * already builds this path for its own links.
+   */
+  courseHref?: string
   // i18n — every field is optional with an English fallback at each call
   // site, so a missing key never blanks the UI. Built by the caller (today,
   // only dashboard/lesson/content.tsx) from the `lumos` dictionary subtree.
@@ -64,6 +72,10 @@ export interface VideoPlayerLabels {
   speed?: string
   /** The phone layout's X — leaves fullscreen. */
   close?: string
+  /** Share menu: this lesson's own URL. */
+  shareLesson?: string
+  /** Share menu: the whole course. */
+  shareCourse?: string
   /** The phone layout's "…" — opens the speed menu. */
   more?: string
   mute?: string

@@ -165,6 +165,8 @@ export function LumosLessonContent({
     speed: vp?.speed,
     close: vp?.close,
     more: vp?.more,
+    shareLesson: vp?.shareLesson,
+    shareCourse: vp?.shareCourse,
     mute: vp?.mute,
     unmute: vp?.unmute,
     chapterShort: d?.chapterShort,
@@ -973,6 +975,7 @@ export function LumosLessonContent({
             chapterNumber={lesson.chapter.position}
             lessonNumber={lesson.position}
             courseTitle={lesson.chapter.course.title}
+            courseHref={baseUrl}
             className="h-full w-full"
             labels={playerLabels}
           />

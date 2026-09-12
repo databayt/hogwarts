@@ -20,6 +20,49 @@ last_audited: 2026-09-02
 
 ---
 
+## 2026-09-12 — the phone player's two menus
+
+Both measured off the new captures in `public/apple-tv/` (1170×2532, so ÷ 3):
+`IMG_2639.PNG` for the settings card, `IMG_2640.PNG` for the share card,
+`IMG_2641/2642.PNG` for the OS sheet the share rows hand off to. Phone only —
+the wide player's own two menus are untouched.
+
+- [x] **One card shape for both**: 250px wide whichever menu it is, a 32px
+      radius (fitted against four samples of the reference's corner profile),
+      10px of vertical padding on #121212, rows 42px tall with an 18px icon
+      32px in, a 17px label, and the trailing mark 28px from the far edge.
+- [x] **Anchoring is the discriminating detail.** Both reference cards COVER
+      the control that opened them rather than floating clear of it. The
+      settings card stops 6px above the scrubber row (`-bottom-[9px]` off its
+      wrapper) and sits 13px from the screen edge (`-end-2`); the share card's
+      top IS the top row's own top, 8px in from the edge, over the pill and
+      the X. Verified: 250×356 ending at 749 with the scrubber row at 755, and
+      250×104 at top 12 with the pill top at 12.
+- [x] **The share button now opens the reference's two scopes** — this lesson
+      or the whole course (`IMG_2640`'s "Share Episode / Share Show") — and
+      each row hands its URL to the OS sheet. The course path arrives as a new
+      `courseHref` prop from the lesson page, which already builds it; the
+      player does not cut routes out of `location.pathname`.
+- [x] **The "…" card carries the speed control** under the reference's own
+      first row, demoted to a dimmed header with its gauge icon. Audio and
+      Subtitles, the reference's other two rows, have no tracks behind them
+      here, so they are not drawn. The card overlaps the transport row, which
+      the reference's 3-row card does not — a 7-speed list is 356px tall. It
+      reads as modal because of the backdrop below.
+- [x] **Two things a phone needed that the pointer layout hid:** an open menu
+      is dismissed by a tap anywhere else (without it the tap reached the
+      `<video>`, toggled playback, and left the card standing), and an open
+      menu HOLDS the chrome up — `useAutoHide` took a `hold` flag, the way the
+      live room's own copy takes `pinned`, because with no mouse to reset the
+      timer a card vanished three seconds into being read.
+- [x] Speed rows and the clocks carry `dir="ltr"`: the × and the − are neutral
+      characters, so Arabic rendered them as `×0.5` and `0:01:14−`.
+- New keys `videoPlayer.shareLesson` / `.shareCourse` in both languages.
+
+**Follow-up, not in this pass:** the WIDE player's share menu still lists five
+rows — AirDrop, Messages, Notes, Reminders — of which only "Copy link" has ever
+been wired to anything. Four dead rows, now that the phone has two real ones.
+
 ## 2026-09-12 — the player's PHONE chrome mirrors the reference app
 
 Below `sm` only; the wide player is untouched (verified 50/80/50 transport on

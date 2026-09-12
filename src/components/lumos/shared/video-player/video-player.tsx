@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
-import { MoreHorizontal, X } from "lucide-react"
+import { Check, ChevronRight, Gauge, MoreHorizontal, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -13,13 +13,7 @@ import {
   PLAYBACK_SPEEDS,
   UP_NEXT_TRIGGER_BEFORE_END,
 } from "./constants"
-import {
-  glassButton,
-  glassMenu,
-  glassPill,
-  glassScrim,
-  glassSurface,
-} from "./glass"
+import { glassButton, glassPill, glassScrim, glassSurface } from "./glass"
 import {
   useAutoHide,
   useMediaSession,
@@ -47,6 +41,23 @@ function formatClock(seconds: number): string {
   const secs = Math.floor(seconds % 60)
   return `${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
 }
+
+/**
+ * The phone menus' card and row, measured off the reference app's own
+ * (`public/apple-tv/IMG_2639.PNG` for the settings card,
+ * `IMG_2640.PNG` for the share card — both 1170×2532, so ÷ 3):
+ * 250px wide whichever menu it is, 10px of vertical padding, and a corner
+ * that fits a 32px radius across four samples of its profile.
+ *
+ * The ground is the reference's own #121212 rather than the player's pills:
+ * a list of text has to survive whatever frame is behind it, so the blur
+ * here is cosmetic and the fill does the work. Rows are 42px with an 18px
+ * icon 32px in, a 17px label, and the trailing mark 28px from the far edge.
+ */
+const phoneMenuCard =
+  "w-[250px] rounded-[32px] bg-[#121212]/95 py-2.5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-[40px]"
+const phoneMenuRow =
+  "flex h-[42px] w-full items-center gap-4 ps-8 pe-7 text-start text-[17px] text-white"
 
 // Format time as MM:SS or HH:MM:SS
 function formatTime(seconds: number): string {
@@ -229,6 +240,7 @@ export function VideoPlayer({
   chapterNumber,
   lessonNumber,
   courseTitle,
+  courseHref,
   labels,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -309,6 +321,10 @@ export function VideoPlayer({
     isPlaying: state.isPlaying,
     showControls: actions.showControls,
     hideControls: actions.hideControls,
+    // An open menu holds the chrome up. A phone has no mouse to keep
+    // resetting the timer, so a seven-row card used to disappear out from
+    // under whoever was reading it three seconds in.
+    hold: showSpeedMenu || showShareMenu,
   })
 
   // Stable adapter so the progress hook's syncToServer/flushProgress (which
@@ -606,6 +622,24 @@ export function VideoPlayer({
   const handleSeekEnd = useCallback(() => {
     actions.endSeeking()
   }, [actions])
+
+  /**
+   * Hand a URL to the OS share sheet — the reference app's own second step
+   * (`public/apple-tv/IMG_2641.PNG`), and the only share surface a phone
+   * actually has. Copying the link is the fallback where `navigator.share`
+   * is absent, which is most desktop browsers.
+   */
+  const shareUrl = useCallback(
+    (url: string) => {
+      setShowShareMenu(false)
+      if (navigator.share) {
+        void navigator.share({ title: title ?? "", url }).catch(() => {})
+      } else {
+        void navigator.clipboard?.writeText(url).catch(() => {})
+      }
+    },
+    [title]
+  )
 
   // Play next handler
   const handlePlayNext = useCallback(() => {
@@ -1010,6 +1044,22 @@ export function VideoPlayer({
             transition={{ duration: 0.3 }}
             className="pointer-events-none absolute inset-0 z-10 sm:hidden"
           >
+            {/* An open menu is modal: without this, a tap meant for "anywhere
+                else" lands on the <video> underneath, toggles playback, and
+                leaves the card standing. A phone has no Escape key and no
+                second click of a mouse. */}
+            {(showSpeedMenu || showShareMenu) && (
+              <div
+                role="presentation"
+                className="pointer-events-auto absolute inset-0"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowSpeedMenu(false)
+                  setShowShareMenu(false)
+                }}
+              />
+            )}
+
             {/* Top row: close · PiP/share pill · volume. The reference's 47px
                 top inset is the iOS status bar, which a fullscreen browser
                 hides — so the safe-area inset stands in for it where a device
@@ -1067,25 +1117,24 @@ export function VideoPlayer({
                     <PipIcon className="size-5 text-white" />
                   </button>
                 )}
-                {/* The OS share sheet, not the wide player's menu: on a phone
-                    that sheet IS the reference's behaviour, and of the menu's
-                    five rows only "Copy link" was ever wired to anything —
-                    which is the fallback here. */}
+                {/* Two scopes before the OS sheet, the way the reference's own
+                    share icon opens "Share Episode / Share Show"
+                    (`IMG_2640.PNG`): this lesson, or the course it belongs
+                    to. The sheet itself comes next (`IMG_2641.PNG`) — the
+                    wide player's five-row menu never had more than one live
+                    action in it. */}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation()
-                    const url = window.location.href
-                    if (navigator.share) {
-                      void navigator.share({ title: title ?? "", url }).catch(
-                        () => {}
-                      )
-                    } else {
-                      void navigator.clipboard?.writeText(url).catch(() => {})
-                    }
+                    setShowSpeedMenu(false)
+                    if (courseHref) setShowShareMenu((v) => !v)
+                    else shareUrl(window.location.href)
                   }}
                   className="flex h-11 w-[54px] items-center justify-center transition-opacity active:opacity-60"
                   aria-label={labels?.share ?? "Share"}
+                  aria-haspopup={courseHref ? "menu" : undefined}
+                  aria-expanded={courseHref ? showShareMenu : undefined}
                 >
                   <ShareIcon className="size-5 text-white" />
                 </button>
@@ -1114,6 +1163,47 @@ export function VideoPlayer({
               >
                 <VolumeIcon className="size-5 text-white" />
               </button>
+
+              {/* Anchored the way the reference anchors it: the card COVERS
+                  the pill and the X rather than dropping below them — its top
+                  is the row's own top and it sits 8px in from the screen edge
+                  (`IMG_2640.PNG`, card at x 8, y 47, where 47 is that
+                  capture's status bar and 12px is ours). */}
+              {showShareMenu && courseHref && (
+                <div
+                  role="menu"
+                  className={cn(
+                    phoneMenuCard,
+                    "absolute start-2 top-3 z-20 overflow-hidden"
+                  )}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {[
+                    {
+                      label: labels?.shareLesson ?? "Share lesson",
+                      url: window.location.href,
+                    },
+                    {
+                      label: labels?.shareCourse ?? "Share course",
+                      url: new URL(courseHref, window.location.origin).href,
+                    },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => shareUrl(item.url)}
+                      className={cn(
+                        phoneMenuRow,
+                        "transition-colors active:bg-white/10"
+                      )}
+                    >
+                      <span className="flex-1 truncate">{item.label}</span>
+                      <ChevronRight className="size-[18px] shrink-0 text-white/40 rtl:rotate-180" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Bottom block. The reference's own rhythm: the two title lines
@@ -1151,6 +1241,7 @@ export function VideoPlayer({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation()
+                      setShowShareMenu(false)
                       setShowSpeedMenu((v) => !v)
                     }}
                     className={cn(
@@ -1164,15 +1255,40 @@ export function VideoPlayer({
                   >
                     <MoreHorizontal className="size-5 text-white" />
                   </button>
+                  {/* Anchored the way the reference anchors it: the card
+                      COVERS the button and the title beside it, stopping 6px
+                      above the scrubber row rather than floating clear of the
+                      control that opened it (`IMG_2639.PNG`: card bottom 737,
+                      scrubber top 743). `-bottom-[9px]` is that 6px measured
+                      from this wrapper's own foot, and `-end-2` puts the card
+                      13px from the screen edge — 8 further out than the 21px
+                      the buttons keep. */}
                   {showSpeedMenu && (
                     <div
                       role="menu"
                       className={cn(
-                        glassMenu,
-                        "absolute end-0 bottom-full z-20 mb-2 min-w-[6rem] py-1"
+                        phoneMenuCard,
+                        "absolute -end-2 -bottom-[9px] z-20 overflow-hidden"
                       )}
                       onClick={(e) => e.stopPropagation()}
                     >
+                      {/* The reference's own row — icon, label, and the value
+                          where its chevron would be. Not a button: its
+                          submenu's contents are the rows directly below, so
+                          drilling in would cost a tap and hide nothing worth
+                          hiding. Audio and Subtitles, the reference's other
+                          two rows, have no tracks behind them here. */}
+                      <p
+                        className={cn(
+                          phoneMenuRow,
+                          "text-[15px] text-white/50"
+                        )}
+                      >
+                        <Gauge className="size-[18px] shrink-0" />
+                        <span className="flex-1 truncate">
+                          {labels?.speed ?? "Playback speed"}
+                        </span>
+                      </p>
                       {PLAYBACK_SPEEDS.map((rate) => (
                         <button
                           key={rate}
@@ -1184,13 +1300,20 @@ export function VideoPlayer({
                             setShowSpeedMenu(false)
                           }}
                           className={cn(
-                            "flex w-full items-center justify-between px-3 py-2 text-start text-sm text-white",
+                            phoneMenuRow,
+                            "transition-colors active:bg-white/10",
                             state.playbackRate === rate && "font-semibold"
                           )}
                         >
-                          <span>{rate}×</span>
+                          {/* `dir="ltr"` for the same reason the clocks carry
+                              it: the × is a neutral character, so an Arabic
+                              row renders the pair as "×0.5" — a multiplier in
+                              front of a number rather than a rate after it. */}
+                          <span dir="ltr" className="flex-1 text-start">
+                            {rate}×
+                          </span>
                           {state.playbackRate === rate && (
-                            <span aria-hidden>✓</span>
+                            <Check className="size-[18px] shrink-0" />
                           )}
                         </button>
                       ))}
