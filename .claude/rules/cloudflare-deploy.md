@@ -30,14 +30,26 @@ moves off Vercel's nameservers.
 
 ## Deploying
 
+The full order lives in the `deploy` skill; these are the commands, in the order they run:
+
 ```bash
-vercel env pull /tmp/prod.env --environment=production --scope databayt && rm -f .env.local
-scripts/deploy-cloudflare.sh /tmp/prod.env build     # ~12 min
-scripts/deploy-cloudflare.sh /tmp/prod.env deploy
+NODE_OPTIONS=--max-old-space-size=8192 pnpm exec tsc --noEmit        # the default heap SIGABRTs here
+git pull --rebase origin main && git push origin main                # main must equal what ships
+vercel env pull /tmp/prod.env --environment=production --scope databayt --yes && rm -f .env.local
+CF_SOURCE=worktree scripts/deploy-cloudflare.sh /tmp/prod.env build # ~12 min, kill next dev first
+scripts/deploy-cloudflare.sh /tmp/prod.env smoke                    # read the curl table, not the exit code
+scripts/deploy-cloudflare.sh /tmp/prod.env deploy                   # note "Current Version ID"
 ```
 
 `CF_SOURCE=worktree` ships uncommitted work — that is what "deploy everything" has meant in
-practice. Rollback is `wrangler rollback`.
+practice, which is why `main` is pushed first. Rollback is `wrangler rollback`.
+
+**The script never seeds.** Every commit under `prisma/seeds` or `prisma/scripts` since the last
+deploy is owed a run against the prod `DIRECT_URL` (`pnpm db:seed:single <module>`, exported on
+the command line so the local `.env` cannot win), behind a Neon restore point. Neon's free tier is
+10 branches / 1 snapshot: when `create_branch` hits the limit, **delete the oldest non-default
+branch and retry** (Abdout's standing rule, 2026-09-12), and prune `restore-point-*` branches
+older than 7 days once the deploy is verified. Prefer a `no_compute` branch over a snapshot.
 
 ## Rules
 
