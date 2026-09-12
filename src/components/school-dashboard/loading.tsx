@@ -158,8 +158,12 @@ export function LibrarySkeleton() {
           <div className="min-w-0">
             {/* Two headline lines inside the banner's own ~420px measure */}
             <div className="space-y-3">
-              <Skeleton className={cn(ON_GREEN, "h-8 w-64 lg:h-10 lg:w-[420px]")} />
-              <Skeleton className={cn(ON_GREEN, "h-8 w-52 lg:h-10 lg:w-[380px]")} />
+              <Skeleton
+                className={cn(ON_GREEN, "h-8 w-64 lg:h-10 lg:w-[420px]")}
+              />
+              <Skeleton
+                className={cn(ON_GREEN, "h-8 w-52 lg:h-10 lg:w-[380px]")}
+              />
             </div>
             {/* The two pills — h-10, fully rounded, as in `pill()` */}
             <div className="mt-7 flex flex-wrap items-center gap-2">
@@ -168,14 +172,19 @@ export function LibrarySkeleton() {
             </div>
           </div>
           {/* The marginalia mark, hidden below md exactly as the banner hides it */}
-          <Skeleton className={cn(ON_GREEN, "hidden size-[150px] shrink-0 rounded-2xl md:block lg:size-[168px]")} />
+          <Skeleton
+            className={cn(
+              ON_GREEN,
+              "hidden size-[150px] shrink-0 rounded-2xl md:block lg:size-[168px]"
+            )}
+          />
         </div>
       </section>
 
       {/* The one featured book — matches `library/collaborate-section.tsx`.
           The text column is taller than it was: the blurb is the book's
           opening paragraph now and is no longer clamped to four lines. */}
-      <section className="w-full max-w-full overflow-hidden rounded-2xl bg-[#F5F5F0] dark:bg-muted/50">
+      <section className="dark:bg-muted/50 w-full max-w-full overflow-hidden rounded-2xl bg-[#F5F5F0]">
         <div className="flex flex-col lg:flex-row">
           {/* Cover photograph, left */}
           <Skeleton
@@ -1706,61 +1715,67 @@ export function CommunicationTemplatesSkeleton() {
 // =============================================================================
 
 /**
- * `/dashboard` is not one page, it is six — `content.tsx` switches on the
- * session's role and each branch renders a different set of sections in a
- * different order. A single skeleton therefore cannot be right for more than
- * one of them, and the one that stood here drew the ADMIN page for everybody:
- * a teacher and a student both watched a weather hero, a Quick Look row and an
- * attendance grid resolve into a page that has none of the three.
+ * `/dashboard` is not one page, it is one page with a different tail per role —
+ * `content.tsx` switches on the session's role, and since 2026-09-12 every
+ * branch opens with the SAME four sections in the same order: Quick Actions,
+ * the charts, Resource Usage, Invoice History. That is what makes an accurate
+ * skeleton possible at all; before it, six orders meant a skeleton that was
+ * right for one role was actively wrong for the other five.
  *
- * So the shape is a prop. `page.tsx` reads the role off the session — a JWT
- * cookie read, no database — and hands it to this component through its own
- * `<Suspense>`, which is the only place on the route where the role is known
- * before the dashboard's data lands. The route's `loading.tsx` still renders
- * this component with NO role, and that is deliberate: until `auth()` resolves
- * there is nothing to draw but the part of the page every role shares.
+ * The shape is still a prop, because the four sections are shared but not
+ * identical and the tails differ. `page.tsx` reads the role off the session — a
+ * JWT cookie read, no database — and hands it in through its own `<Suspense>`,
+ * the only place on the route where the role is known before the data lands.
+ * The route's own `loading.tsx` renders this with NO role, which now costs
+ * almost nothing: it draws the four shared sections and stops before the tail.
  *
- * Three shapes are drawn, because three were asked for:
+ * What varies, measured in a browser at 1440 against every demo role:
  *
- *   ADMIN     — hero (Upcoming + Weather), Quick Look, Quick Actions, Resource
- *               Usage, Invoice History, three charts, then the attendance grid.
- *               PRINCIPAL shares the six and stops before the grid.
- *   TEACHER   — Quick Actions, three charts, Resource Usage, Invoice History,
- *               then the one metric tile and today's classes, both `md`-and-up.
- *   STUDENT   — the teacher's shape with ONE chart: `chart-section.tsx` hides
- *               the bar and the radial for STUDENT, so the area chart takes the
- *               whole row and grows to `md:h-[320px]`.
+ *   charts    884px for every role but the student, whose `chart-section.tsx`
+ *             hides the bar and the radial and lets the area chart take the row
+ *             alone — 498px.
+ *   usage     four rows (234px) for every role but the student's three (197px).
+ *   tail      ADMIN and DEVELOPER have none at all, since the attendance grid
+ *             that stood there was removed. STUDENT and TEACHER share one
+ *             `md`-and-up metric tile and the classes card. GUARDIAN, STAFF and
+ *             ACCOUNTANT each open their tail with the same four-tile metric
+ *             row (114px) and then go their own ways, which is where this file
+ *             stops drawing — the rest of those three tails is five to seven
+ *             grids of different heights per role, and a card drawn at the
+ *             wrong height is worse than a card left out.
  *
- * DEVELOPER is routed to `AdminDashboard` itself, so it takes that shape whole.
- * GUARDIAN, ACCOUNTANT and STAFF are NOT drawn — their
- * dashboards were not reviewed here, and a wrong skeleton is worse than none.
- * They get the shared phone prefix and nothing else.
+ * The invoice section is deliberately drawn at one size for everyone though the
+ * real one measures 183px empty and 576px with rows: which it will be depends
+ * on data this skeleton cannot see.
  *
- * Every measurement below is off the components themselves, not estimated:
- * the 320px `Upcoming` card, the 40px Quick Look icon, the 250px bar-chart
- * plot, the `p-2` table rows, the `h-14` action tile. Where a section hides
- * itself at a breakpoint (`hidden md:block` on Quick Actions, `md:hidden` on
- * the whole phone prefix) the placeholder carries the SAME query, so neither
- * width paints a section the page is about to drop.
+ * Every measurement below is off the components themselves, not estimated: the
+ * 250px bar-chart plot, the `p-2` table rows, the `h-14` action tile. Where a
+ * section hides itself at a breakpoint (`hidden md:block` on Quick Actions,
+ * `md:hidden` on the whole phone prefix) the placeholder carries the SAME
+ * query, so neither width paints a section the page is about to drop.
  */
 
-type DashboardShape = "ADMIN" | "PRINCIPAL" | "TEACHER" | "STUDENT"
+type DashboardShape = "ADMIN" | "LEARNER" | "STAFFROOM"
 
+/**
+ * Which of the three tails a role gets. The four sections above the tail are
+ * the same whatever this returns, so an unrecognised role is not a hole any
+ * more — it is the shared page without a tail.
+ */
 function dashboardShape(role?: string | null): DashboardShape | null {
   switch (role) {
-    // `content.tsx` sends DEVELOPER to `AdminDashboard` itself.
+    // `content.tsx` sends DEVELOPER to `AdminDashboard` itself, and that
+    // dashboard has no tail left.
     case "ADMIN":
     case "DEVELOPER":
       return "ADMIN"
-    // `principal.tsx` opens with the admin's six sections in the admin's
-    // order, then goes its own way — a four-tile metric row where the admin
-    // has the attendance grid. It shares the six and stops there.
-    case "PRINCIPAL":
-      return "PRINCIPAL"
     case "TEACHER":
-      return "TEACHER"
     case "STUDENT":
-      return "STUDENT"
+      return "LEARNER"
+    case "GUARDIAN":
+    case "STAFF":
+    case "ACCOUNTANT":
+      return "STAFFROOM"
     default:
       return null
   }
@@ -1768,6 +1783,9 @@ function dashboardShape(role?: string | null): DashboardShape | null {
 
 export function DashboardSkeleton({ role }: { role?: string | null } = {}) {
   const shape = dashboardShape(role)
+  // The student is the one role whose charts and usage table are shorter — see
+  // the note above. Every other role, and an unknown one, takes the full size.
+  const student = role === "STUDENT"
 
   return (
     // `content.tsx`'s own wrapper: the phone prefix and the role dashboard are
@@ -1775,13 +1793,16 @@ export function DashboardSkeleton({ role }: { role?: string | null } = {}) {
     // `space-y-8` inside it.
     <div className="space-y-6">
       <PhonePrefixSkeleton />
-      {shape === "ADMIN" || shape === "PRINCIPAL" ? (
-        <AdminBodySkeleton attendance={shape === "ADMIN"} />
-      ) : shape === "TEACHER" || shape === "STUDENT" ? (
-        <LearnerBodySkeleton shape={shape} />
-      ) : (
-        <NeutralBodySkeleton />
-      )}
+      <div className="space-y-8">
+        <div className="space-y-6">
+          <QuickActionsSkeleton />
+          <ChartsSectionSkeleton withBar={!student} withRadial={!student} />
+          <UsageSectionSkeleton rows={student ? 3 : 4} />
+          <InvoiceSectionSkeleton />
+        </div>
+        {shape === "LEARNER" ? <LearnerTailSkeleton /> : null}
+        {shape === "STAFFROOM" ? <MetricRowSkeleton /> : null}
+      </div>
     </div>
   )
 }
@@ -1854,75 +1875,47 @@ function PhonePrefixSkeleton() {
 }
 
 // -----------------------------------------------------------------------------
-// Role bodies
+// Role tails — what each role puts UNDER the four shared sections
 // -----------------------------------------------------------------------------
 
 /**
- * The six sections the admin and the principal share, in their shared order.
+ * The four-tile metric row that opens the guardian's, the staff member's and
+ * the accountant's tail. 114px in all three, measured: a `grid-cols-2`
+ * (`lg:grid-cols-4`) of `MetricCard`s, each a title over a value with an icon
+ * square on the far side.
  *
- * `attendance` is the admin's own last section. The principal's dashboard ends
- * the six and then opens a four-tile metric row instead, which is not drawn:
- * that tail was not measured, and this file's rule is that a section in the
- * wrong place costs more than a section left out.
+ * Their tails continue past it — five to seven more grids apiece, at heights
+ * that agree on nothing — and this file stops here rather than guess at them.
  */
-function AdminBodySkeleton({ attendance }: { attendance: boolean }) {
+function MetricRowSkeleton() {
   return (
-    <div className="space-y-8">
-      <div className="space-y-6">
-        <HeroSkeleton />
-        <QuickLookSkeleton />
-        <QuickActionsSkeleton />
-        <UsageSectionSkeleton rows={4} />
-        <InvoiceSectionSkeleton />
-        <ChartsSectionSkeleton withBar withRadial />
-      </div>
-      {attendance ? <AttendanceSectionSkeleton /> : null}
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Card key={i}>
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-9 w-16" />
+              </div>
+              <Skeleton className="size-10 rounded-lg" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }
 
 /**
- * Drawn when the role is not known yet — the route's `loading.tsx`, and any
- * role whose dashboard has not been measured (GUARDIAN, ACCOUNTANT, STAFF).
- *
- * Only the three sections that appear in the SAME relative order on every role
- * dashboard: the action tiles, the usage table, the invoice table. Admin puts
- * two sections above them and the learners put the charts between them, so
- * neither is drawn here — a section in the wrong place costs more than a
- * section left out.
+ * The student's and the teacher's tail: one metric tile in a three-column row
+ * (the other two were removed, the row was not) and the classes card. Both are
+ * `md`-and-up, so below that breakpoint this draws nothing — which is correct,
+ * because below it the phone prefix above already shows the same day as a grid.
  */
-function NeutralBodySkeleton() {
+function LearnerTailSkeleton() {
   return (
     <div className="space-y-8">
-      <div className="space-y-6">
-        <QuickActionsSkeleton />
-        <UsageSectionSkeleton rows={4} />
-        <InvoiceSectionSkeleton />
-      </div>
-    </div>
-  )
-}
-
-function LearnerBodySkeleton({ shape }: { shape: "TEACHER" | "STUDENT" }) {
-  // The student's chart section is the area chart alone — `chart-section.tsx`
-  // drops the bar and the radial for that role and lets the area chart take
-  // the row at a pinned 320px instead of a doubled `aspect-video`.
-  const full = shape !== "STUDENT"
-
-  return (
-    <div className="space-y-8">
-      <div className="space-y-6">
-        <QuickActionsSkeleton />
-        <ChartsSectionSkeleton withBar={full} withRadial={full} />
-        {/* The student's default resource table is three rows, the teacher's
-            four; both are replaced by a server read on mount, which keeps the
-            same row count for these two roles. */}
-        <UsageSectionSkeleton rows={shape === "STUDENT" ? 3 : 4} />
-        <InvoiceSectionSkeleton />
-      </div>
-
-      {/* One metric tile in a three-column row — the other two were removed,
-          the row was not. `md`-and-up, like the card below it. */}
       <div className="hidden gap-4 md:grid md:grid-cols-3">
         <Card>
           <CardContent className="p-6">
@@ -1974,76 +1967,10 @@ function SectionHeadingSkeleton({ className }: { className?: string }) {
   return <Skeleton className={cn("mb-4 h-7", className)} />
 }
 
-/** Upcoming flip card + Weather, side by side from `lg`. */
-function HeroSkeleton() {
-  return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-      <Skeleton className="h-[320px] w-full rounded-2xl sm:max-w-[280px] lg:max-w-[320px]" />
-
-      {/* Weather reads top-down: clock and date on one baseline, then the
-          place, then its five detail lines — one row of four on a phone,
-          stacked from `sm` — and the six-day strip last. */}
-      <div className="flex w-full flex-col lg:w-auto lg:max-w-sm lg:min-w-[280px] lg:self-end">
-        <div className="mb-2 flex items-baseline gap-1.5">
-          <Skeleton className="h-7 w-20" />
-          <Skeleton className="h-7 w-28" />
-        </div>
-        <div className="space-y-1">
-          <Skeleton className="h-5 w-24" />
-          <div className="grid grid-cols-4 gap-x-2 gap-y-1 sm:grid-cols-1 sm:gap-x-4">
-            <Skeleton className="h-5 w-full sm:w-28" />
-            {/* Humidity is the one line a phone drops. */}
-            <Skeleton className="hidden h-5 w-32 sm:block" />
-            <Skeleton className="h-5 w-full sm:w-20" />
-            <Skeleton className="h-5 w-full sm:w-24" />
-            <Skeleton className="h-5 w-full sm:w-20" />
-          </div>
-        </div>
-        <div className="bg-muted/50 mt-3 flex justify-between gap-2 rounded-lg p-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex min-w-0 flex-1 flex-col items-center gap-1"
-            >
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="size-5 rounded" />
-              <Skeleton className="h-4 w-full" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/**
- * Quick Look: four cards, each THREE rows deep — the icon beside its label and
- * count, the most recent item under them, and a "view all" link last.
- *
- * It carries NO section heading of its own. The heading the old skeleton drew
- * above it was one the page never renders.
- */
-function QuickLookSkeleton() {
-  return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i} className="p-4">
-          <CardContent className="space-y-3 p-0">
-            <div className="flex items-center gap-3">
-              <Skeleton className="size-10 rounded-lg" />
-              <div className="min-w-0 flex-1 space-y-1">
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-7 w-10" />
-              </div>
-            </div>
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-16" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-}
+// `HeroSkeleton` and `QuickLookSkeleton` stood here. The Upcoming/Weather hero
+// and the Quick Look row they drew are commented out on every role dashboard as
+// of 2026-09-12; both placeholders are in this file's history if either comes
+// back.
 
 /**
  * Four action tiles. `hidden md:block`, matching the section itself — below
@@ -2126,9 +2053,25 @@ function InvoiceSectionSkeleton() {
           <Skeleton className="h-4 w-12 justify-self-end" />
           <Skeleton className="h-4 w-12 justify-self-end" />
         </div>
-        <div className="flex h-24 items-center justify-center">
-          <Skeleton className="h-5 w-40" />
-        </div>
+        {/* Five 49px rows. This table is the one section whose real height is
+            decided by data the skeleton cannot see: measured at 1440 it is
+            183px with no invoices, 429px for the student's seven and 576px for
+            the accountant's ten. Five sits between them, so whichever way the
+            page lands it moves by a few rows rather than by a whole table —
+            the empty-state band that stood here was right only for a school
+            with nothing billed. */}
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="grid h-[49px] grid-cols-[120px_1fr_1fr_1fr_1fr] items-center gap-2 border-b px-6 last:border-b-0"
+          >
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-16 justify-self-end" />
+            <Skeleton className="h-4 w-14 justify-self-end" />
+            <Skeleton className="h-4 w-10 justify-self-end" />
+          </div>
+        ))}
       </div>
     </section>
   )
@@ -2227,40 +2170,9 @@ function AreaChartCardSkeleton({ tall = false }: { tall?: boolean }) {
   )
 }
 
-/** The admin's last section: two dials and a summary card, three across. */
-function AttendanceSectionSkeleton() {
-  return (
-    <section>
-      <SectionHeadingSkeleton className="w-48" />
-      <div className="grid gap-6 lg:grid-cols-3">
-        {Array.from({ length: 2 }).map((_, i) => (
-          <Card
-            key={i}
-            className="bg-muted flex flex-col border-none shadow-none"
-          >
-            <CardContent className="flex-1 pb-0">
-              <Skeleton className="mx-auto aspect-square w-full max-w-[250px] rounded-full" />
-            </CardContent>
-          </Card>
-        ))}
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-24" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* The 91% panel, the amber warning, then the two count rows. */}
-            <Skeleton className="h-[92px] w-full rounded-lg" />
-            <Skeleton className="h-[68px] w-full rounded-lg" />
-            <div className="space-y-2">
-              <Skeleton className="h-5 w-full" />
-              <Skeleton className="h-5 w-full" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
-  )
-}
+// `AttendanceSectionSkeleton` stood here, for the admin's attendance overview.
+// That section drew invented numbers and was deleted on 2026-09-12, so there is
+// nothing left for it to stand in for.
 
 // =============================================================================
 // EXAMS DASHBOARD — Hero + 4 progress + 3 features + results/actions + workflow
