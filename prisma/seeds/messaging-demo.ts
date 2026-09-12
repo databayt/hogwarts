@@ -1190,6 +1190,44 @@ async function seedGuardianInbox(
 // ============================================================================
 
 /**
+ * Catch the demo accounts up on threads this pass did not author.
+ *
+ * Other seeds leave `lastReadAt` null, which reads as "every message is
+ * unread" — the parent↔teacher thread from ./profile-activity.ts alone would
+ * draw a badge of twelve. Only null rows are touched, so the unread threads
+ * written above keep their state.
+ */
+async function markOlderThreadsRead(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<void> {
+  const accounts = await Promise.all([
+    findDemoUser(prisma, schoolId, "STUDENT"),
+    findDemoUser(prisma, schoolId, "TEACHER"),
+    findDemoUser(prisma, schoolId, "GUARDIAN"),
+  ])
+  const userIds = accounts.filter(Boolean).map((a) => a!.id)
+  if (userIds.length === 0) return
+
+  const stale = await prisma.conversationParticipant.findMany({
+    where: {
+      userId: { in: userIds },
+      lastReadAt: null,
+      conversation: { schoolId },
+    },
+    select: { id: true, conversation: { select: { lastMessageAt: true } } },
+  })
+
+  for (const row of stale) {
+    const last = row.conversation.lastMessageAt ?? new Date()
+    await prisma.conversationParticipant.update({
+      where: { id: row.id },
+      data: { lastReadAt: new Date(last.getTime() + 60_000), unreadCount: 0 },
+    })
+  }
+}
+
+/**
  * Give the demo-driving accounts (student@, teacher@, parent@) a populated
  * inbox. Safe to re-run: existing conversations are never rewritten.
  */
@@ -1202,6 +1240,8 @@ export async function seedDemoInboxes(
     await seedTeacherInbox(prisma, schoolId),
     await seedGuardianInbox(prisma, schoolId),
   ]
+
+  await markOlderThreadsRead(prisma, schoolId)
 
   const conversations =
     student.conversations + teacher.conversations + guardian.conversations
