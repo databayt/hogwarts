@@ -62,6 +62,10 @@ export interface VideoPlayerLabels {
   volume?: string
   /** Playback-speed menu button. */
   speed?: string
+  /** The phone layout's X — leaves fullscreen. */
+  close?: string
+  /** The phone layout's "…" — opens the speed menu. */
+  more?: string
   mute?: string
   unmute?: string
   // Reused from `lumos.lesson.chapterShort`/`lessonShort` — NOT duplicated

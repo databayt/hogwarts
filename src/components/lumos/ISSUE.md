@@ -20,6 +20,47 @@ last_audited: 2026-09-02
 
 ---
 
+## 2026-09-12 — the player's PHONE chrome mirrors the reference app
+
+Below `sm` only; the wide player is untouched (verified 50/80/50 transport on
+40px gaps and a 5px track with its thumb, identical to before).
+
+Every number is measured off `public/apple-tv/File.png` — a 1170×2532 (3x)
+capture, so the values are that file ÷ 3 against a 390px viewport. Committed
+with the change: the comments cite it, and a restyle that cannot be re-measured
+is a restyle nobody can check.
+
+- [x] **Top row** — a 44px round X 21px in from the inline start (exits
+      fullscreen, which is how the lesson page gets its poster back), a 12px
+      gap, then the 44px-tall pill of 54px slots, then the 44px speaker circle
+      pushed to the inline end.
+- [x] **Transport** — 64 / 92 / 64 on 22px gaps, centred (`VideoOverlay`,
+      mobile-first with `sm:` restoring 50/80/50 on 40px).
+- [x] **Bottom block** — the title pair (15px regular over 24px bold) in a
+      44px band with the "…" at the inline end, 15px down to the scrubber row,
+      13px down to the capsule row, then the home indicator's inset.
+- [x] **Scrubber** — an 8px track with no knob on a phone; 5px with the
+      18×14 thumb from `sm` up (the live room's class clock still matches the
+      `PROGRESS_BAR` constants). The clocks read `0:00:20` and `−0:01:14`,
+      hours always, and each carries `dir="ltr"` — the minus is a neutral
+      character and an Arabic paragraph put it on the far side of the digits.
+
+**Three slots the reference has that we do not, and why:**
+
+- **AirPlay** — nothing to bind to. Remote playback is disabled on protected
+  sources precisely because it hands the bare `<video>` to the OS.
+- **A volume slider** — the speaker circle is a mute toggle. iOS ignores
+  `video.volume` and leaves the level to the hardware buttons, so a slider
+  would be dead on the one device this layout is for.
+- **Info / InSight capsules** — no target inside this player. The capsule row
+  is the next lesson alone, and absent on the last lesson of a course.
+
+Two further departures, deliberate: the share icon opens the OS share sheet
+rather than the wide player's menu (of whose five rows only "Copy link" was
+ever wired to anything — it is the fallback), and the "…" carries the speed
+menu, opening UPWARD because the button sits ~100px off the bottom of the
+screen. New dictionary keys `videoPlayer.close` / `.more` in both languages.
+
 ## 2026-09-12 — the fullscreen player: no poster flash, and an RTL seek bar
 
 - [x] **Pressing Play no longer flashes the lesson thumbnail.** A `poster` is

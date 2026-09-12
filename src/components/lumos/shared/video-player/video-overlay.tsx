@@ -110,7 +110,10 @@ export function VideoOverlay({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="absolute inset-0 flex items-center justify-center gap-10"
+          /* 22px gaps and a 64/92/64 trio on a phone — the reference app's
+             own transport row (`public/apple-tv/File.png`); the wide
+             player's 40px gaps and 50/80 circles from `sm` up. */
+          className="absolute inset-0 flex items-center justify-center gap-[22px] sm:gap-10"
         >
           {/* Rewind 10s */}
           <motion.button
@@ -124,12 +127,12 @@ export function VideoOverlay({
             }}
             className={cn(
               glassClasses,
-              "flex h-[50px] w-[50px] items-center justify-center"
+              "flex size-16 items-center justify-center sm:size-[50px]"
             )}
             style={glassStyle}
             aria-label={labels?.rewind ?? "Rewind 10 seconds"}
           >
-            <SkipBackward className="h-[22px] w-[22px] text-white" />
+            <SkipBackward className="size-[34px] text-white sm:size-[22px]" />
           </motion.button>
 
           {/* Play/Pause */}
@@ -144,7 +147,7 @@ export function VideoOverlay({
             }}
             className={cn(
               glassClasses,
-              "flex h-20 w-20 items-center justify-center"
+              "flex size-[92px] items-center justify-center sm:size-20"
             )}
             style={glassStyle}
             aria-label={
@@ -152,9 +155,9 @@ export function VideoOverlay({
             }
           >
             {isPlaying ? (
-              <PauseIcon className="h-8 w-8 text-white" />
+              <PauseIcon className="size-[37px] text-white sm:size-8" />
             ) : (
-              <PlayIcon className="h-8 w-8 text-white" />
+              <PlayIcon className="size-[37px] text-white sm:size-8" />
             )}
           </motion.button>
 
@@ -170,12 +173,12 @@ export function VideoOverlay({
             }}
             className={cn(
               glassClasses,
-              "flex h-[50px] w-[50px] items-center justify-center"
+              "flex size-16 items-center justify-center sm:size-[50px]"
             )}
             style={glassStyle}
             aria-label={labels?.forward ?? "Forward 10 seconds"}
           >
-            <SkipForward className="h-[22px] w-[22px] text-white" />
+            <SkipForward className="size-[34px] text-white sm:size-[22px]" />
           </motion.button>
         </motion.div>
       )}

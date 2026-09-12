@@ -152,20 +152,21 @@ export function VideoProgressBar({
         )}
       </AnimatePresence>
 
-      {/* Progress bar container */}
+      {/* Progress bar container.
+          8px on a phone, 5px from `sm` up — the phone track is the reference
+          app's own (`public/apple-tv/File.png`, 24px in a 3x capture), and
+          the wide one keeps `PROGRESS_BAR.heightRest`, which the live room's
+          class clock still matches. The height used to be animated between
+          `heightRest` and `heightHover`; both are 5, so the animation had
+          nothing to do and an inline height would have beaten the
+          breakpoint. */}
       <motion.div
         ref={progressRef}
         className={cn(
           "relative w-full cursor-pointer rounded-full",
+          "h-2 sm:h-[5px]",
           "bg-white/30"
         )}
-        animate={{
-          height:
-            isHovering || isSeeking
-              ? PROGRESS_BAR.heightHover
-              : PROGRESS_BAR.heightRest,
-        }}
-        transition={{ duration: 0.2 }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
@@ -191,11 +192,13 @@ export function VideoProgressBar({
           style={{ width: `${displayPosition}%` }}
         />
 
-        {/* Scrubber thumb — always visible, grows on hover */}
-        {/* Same mirroring as the preview above — the thumb rides the fill's
+        {/* Scrubber thumb — always visible, grows on hover. Absent on a
+            phone: the reference shows a bare track whose filled end is the
+            position, and a knob is a pointer affordance anyway.
+            Same mirroring as the preview above — the thumb rides the fill's
             leading edge, and the fill grows from the inline start. */}
         <div
-          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white rtl:translate-x-1/2"
+          className="absolute top-1/2 hidden -translate-x-1/2 -translate-y-1/2 rounded-full bg-white sm:block rtl:translate-x-1/2"
           style={{
             insetInlineStart: `${displayPosition}%`,
             width: PROGRESS_BAR.thumbWidth,

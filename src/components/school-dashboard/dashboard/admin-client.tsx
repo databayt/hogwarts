@@ -2,22 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { BookOpen, GraduationCap, TriangleAlert, Users } from "lucide-react"
-import {
-  Label,
-  PolarGrid,
-  PolarRadiusAxis,
-  RadialBar,
-  RadialBarChart,
-} from "recharts"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { QuickLookData } from "./actions"
@@ -45,205 +29,19 @@ export interface AdminDashboardClientProps {
 }
 
 // ============================================================================
-// SECTION: Quick Stats (3 Cards with Icons)
+// SECTION: Attendance Overview — REMOVED 2026-09-12
 // ============================================================================
-
-const iconMap = {
-  Students: Users,
-  Teachers: GraduationCap,
-  Classes: BookOpen,
-}
-
-// ============================================================================
-// SECTION: Attendance Overview
-// ============================================================================
-
-// Radial grid chart data - attendance by grade
-const attendanceByGradeData = [
-  { grade: "G5", attendance: 96, fill: "var(--color-grade5)" },
-  { grade: "G6", attendance: 94, fill: "var(--color-grade6)" },
-  { grade: "G7", attendance: 92, fill: "var(--color-grade7)" },
-  { grade: "G8", attendance: 88, fill: "var(--color-grade8)" },
-  { grade: "G9", attendance: 91, fill: "var(--color-grade9)" },
-  { grade: "G10", attendance: 85, fill: "var(--color-grade10)" },
-]
-
-// Radial shape chart data - overall attendance percentage
-const overallAttendanceData = [{ attendance: 91, fill: "hsl(var(--chart-2))" }]
-
-function AttendanceSection() {
-  const { dictionary } = useDictionary()
-  const dict = dictionary?.school?.dashboard?.attendance
-
-  const radialGridConfig = {
-    attendance: {
-      label: dict?.attendancePercent || "Attendance %",
-    },
-    grade5: {
-      label: `${dict?.grade || "Grade"} 5`,
-      color: "hsl(var(--chart-1))",
-    },
-    grade6: {
-      label: `${dict?.grade || "Grade"} 6`,
-      color: "hsl(var(--chart-2))",
-    },
-    grade7: {
-      label: `${dict?.grade || "Grade"} 7`,
-      color: "hsl(var(--chart-3))",
-    },
-    grade8: {
-      label: `${dict?.grade || "Grade"} 8`,
-      color: "hsl(var(--chart-4))",
-    },
-    grade9: {
-      label: `${dict?.grade || "Grade"} 9`,
-      color: "hsl(var(--chart-5))",
-    },
-    grade10: {
-      label: `${dict?.grade || "Grade"} 10`,
-      color: "hsl(var(--chart-1))",
-    },
-  } satisfies ChartConfig
-
-  const radialShapeConfig = {
-    attendance: {
-      label: dict?.attendance || "Attendance",
-      color: "hsl(var(--chart-2))",
-    },
-  } satisfies ChartConfig
-
-  return (
-    <section>
-      <SectionHeading title={dict?.overview || "Attendance Overview"} />
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Radial Grid Chart - Attendance by Grade */}
-        <Card className="bg-muted flex flex-col border-none shadow-none">
-          <CardContent className="flex-1 pb-0">
-            <ChartContainer
-              config={radialGridConfig}
-              className="mx-auto aspect-square max-h-[250px]"
-            >
-              <RadialBarChart
-                data={attendanceByGradeData}
-                innerRadius={30}
-                outerRadius={100}
-              >
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel nameKey="grade" />}
-                />
-                <PolarGrid gridType="circle" />
-                <RadialBar dataKey="attendance" />
-              </RadialBarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        {/* Radial Shape Chart - Overall 91% */}
-        <Card className="bg-muted flex flex-col border-none shadow-none">
-          <CardContent className="flex-1 pb-0">
-            <ChartContainer
-              config={radialShapeConfig}
-              className="mx-auto aspect-square max-h-[250px]"
-            >
-              <RadialBarChart
-                data={overallAttendanceData}
-                startAngle={90}
-                endAngle={90 + (91 / 100) * 360}
-                innerRadius={80}
-                outerRadius={140}
-              >
-                <PolarGrid
-                  gridType="circle"
-                  radialLines={false}
-                  stroke="none"
-                  className="first:fill-muted last:fill-background"
-                  polarRadius={[86, 74]}
-                />
-                <RadialBar dataKey="attendance" background />
-                <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-                  <Label
-                    content={({ viewBox }) => {
-                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                        return (
-                          <text
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                          >
-                            <tspan
-                              x={viewBox.cx}
-                              y={viewBox.cy}
-                              className="fill-foreground text-4xl font-bold"
-                            >
-                              91%
-                            </tspan>
-                            <tspan
-                              x={viewBox.cx}
-                              y={(viewBox.cy || 0) + 24}
-                              className="fill-muted-foreground"
-                            >
-                              {dict?.attendance || "Attendance"}
-                            </tspan>
-                          </text>
-                        )
-                      }
-                    }}
-                  />
-                </PolarRadiusAxis>
-              </RadialBarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        {/* Summary Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {dict?.summary || "Summary"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-muted/30 rounded-lg p-4 text-center">
-              <p className="text-primary text-4xl font-bold">91%</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {dict?.averageAttendance || "Average Attendance"}
-              </p>
-            </div>
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
-              <div className="flex items-center gap-2">
-                <TriangleAlert className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                  {dict?.attentionNeeded || "Attention Needed"}
-                </span>
-              </div>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {dict?.gradeAttendance || "Grade 10 has 85% attendance"}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {dict?.totalStudents || "Total Students"}
-                </span>
-                <span className="font-medium">196</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {dict?.presentToday || "Present Today"}
-                </span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                  178
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
-  )
-}
+//
+// An "Attendance Overview" section stood here: a radial grid of attendance by
+// grade, a radial gauge of the school average, and a summary card. Every number
+// in all three was written into this file — 96/94/92/88/91/85 per grade, 91%
+// overall, 196 students, 178 present, "Grade 10 has 85% attendance" — so every
+// school that opened this dashboard saw the same invented register, including
+// schools whose real attendance was nothing like it.
+//
+// It is gone rather than wired because no query behind it exists yet. When one
+// does, `dashboard.attendance` still holds every label the section used, and
+// the charts it drew are plain Recharts radials.
 
 // ============================================================================
 // SECTION: Quick Actions (Using unified component)
@@ -338,10 +136,10 @@ export function AdminDashboardClient({
         <InvoiceHistorySection role="ADMIN" />
       </div>
 
-      {/* ============ ADMIN-SPECIFIC SECTIONS ============ */}
-
-      {/* Section 8: Attendance Overview */}
-      <AttendanceSection />
+      {/* The admin dashboard has no role-specific tail of its own: the
+          attendance overview that stood here drew invented numbers and was
+          removed (see above). What is left is the four shared sections, which
+          is the shape the student dashboard ended at too. */}
     </div>
   )
 }

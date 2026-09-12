@@ -163,6 +163,8 @@ export function LumosLessonContent({
     reminders: vp?.reminders,
     volume: vp?.volume,
     speed: vp?.speed,
+    close: vp?.close,
+    more: vp?.more,
     mute: vp?.mute,
     unmute: vp?.unmute,
     chapterShort: d?.chapterShort,

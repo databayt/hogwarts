@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
+import { MoreHorizontal, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -12,7 +13,13 @@ import {
   PLAYBACK_SPEEDS,
   UP_NEXT_TRIGGER_BEFORE_END,
 } from "./constants"
-import { glassSurface } from "./glass"
+import {
+  glassButton,
+  glassMenu,
+  glassPill,
+  glassScrim,
+  glassSurface,
+} from "./glass"
 import {
   useAutoHide,
   useMediaSession,
@@ -25,6 +32,21 @@ import type { VideoPlayerProps } from "./types"
 import { VideoOverlay } from "./video-overlay"
 import { VideoProgressBar } from "./video-progress-bar"
 import { VideoUpNext } from "./video-up-next"
+
+/**
+ * The phone layout's clock: hours always, minutes and seconds always two
+ * digits — `0:00:57`, the reference app's own format
+ * (`public/apple-tv/File.png`). The pair of them sits either side of the
+ * scrubber and counts while it plays, so a width that changes at the hour
+ * would shift the bar under the reader's thumb.
+ */
+function formatClock(seconds: number): string {
+  if (!isFinite(seconds) || seconds < 0) return "0:00:00"
+  const hours = Math.floor(seconds / 3600)
+  const mins = Math.floor((seconds % 3600) / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+}
 
 // Format time as MM:SS or HH:MM:SS
 function formatTime(seconds: number): string {
@@ -682,7 +704,8 @@ export function VideoPlayer({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="absolute start-4 top-4 z-10 flex items-center gap-1.5"
+            /* Wide layout only — the phone chrome below is its own block. */
+            className="absolute start-4 top-4 z-10 hidden items-center gap-1.5 sm:flex"
           >
             {/* PiP + Share — single pill */}
             <div
@@ -805,7 +828,7 @@ export function VideoPlayer({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="absolute end-4 top-4 z-10 flex items-center gap-1"
+            className="absolute end-4 top-4 z-10 hidden items-center gap-1 sm:flex"
           >
             {/* Playback speed — a real control: sets video.playbackRate. The
                 menu state existed for months with nothing rendering it. */}
@@ -911,7 +934,7 @@ export function VideoPlayer({
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
             className={cn(
-              "absolute inset-x-0 bottom-0",
+              "absolute inset-x-0 bottom-0 hidden sm:block",
               "bg-gradient-to-t from-black/80 to-transparent",
               "px-4 pt-16 pb-4"
             )}
@@ -955,6 +978,299 @@ export function VideoPlayer({
               <span className="min-w-[40px] shrink-0 text-end font-mono text-xs text-white/80 tabular-nums">
                 {formatTime(state.duration)}
               </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Phone chrome — the reference app's own phone player, measured off
+          `public/apple-tv/File.png`. That capture is 1170×2532 (a 3x iPhone
+          shot), so every number here is the capture ÷ 3 against a 390px
+          viewport: 44px round controls 21px in from each side, a 163px
+          three-slot pill between them, and a bottom block of title →
+          scrubber → capsules. The transport row in the middle is
+          `VideoOverlay`, which carries the same measurements at its own
+          breakpoint.
+
+          A separate block rather than `sm:` variants threaded through the
+          wide chrome above: the two layouts share almost no geometry, and
+          the wide player is what every other surface of this app is measured
+          against — it should read as untouched here.
+
+          `pointer-events-none` on the frame is load-bearing. This block is
+          `inset-0` and sits OVER the transport row, so without it the play
+          button would stop responding; each row turns pointer events back
+          on for itself. */}
+      <AnimatePresence>
+        {state.showControls && !state.showUpNext && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="pointer-events-none absolute inset-0 z-10 sm:hidden"
+          >
+            {/* Top row: close · PiP/share pill · volume. The reference's 47px
+                top inset is the iOS status bar, which a fullscreen browser
+                hides — so the safe-area inset stands in for it where a device
+                reports one, and 12px carries it where none exists. */}
+            <div className="pointer-events-auto absolute inset-x-0 top-0 flex items-center gap-3 px-[21px] pt-[max(0.75rem,env(safe-area-inset-top))]">
+              {/* Exits fullscreen, which is how the lesson page gets its
+                  poster back (`onFullscreenChange`). Only drawn IN
+                  fullscreen: inline in the page's 4:5 box — where an
+                  instructor switch leaves it — an X closes nothing. */}
+              {state.isFullscreen && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    actions.toggleFullscreen(containerRef)
+                  }}
+                  className={cn(
+                    glassButton,
+                    "flex size-11 shrink-0 items-center justify-center"
+                  )}
+                  style={glassSurface}
+                  aria-label={labels?.close ?? "Close"}
+                >
+                  <X className="size-4 text-white" strokeWidth={2.5} />
+                </button>
+              )}
+
+              {/* The reference's three 54px slots are PiP · AirPlay · Share.
+                  AirPlay has nothing to bind to here — remote playback is
+                  disabled on protected sources precisely because it hands the
+                  bare <video> to the OS, watermark and all — so the pill keeps
+                  the slot geometry and carries the controls that exist. */}
+              <div
+                className={cn(glassPill, "flex h-11 items-center")}
+                style={glassSurface}
+              >
+                {!isProtected && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (
+                        videoRef.current &&
+                        document.pictureInPictureEnabled &&
+                        !document.pictureInPictureElement
+                      ) {
+                        void videoRef.current.requestPictureInPicture()
+                      } else if (document.pictureInPictureElement) {
+                        void document.exitPictureInPicture()
+                      }
+                    }}
+                    className="flex h-11 w-[54px] items-center justify-center transition-opacity active:opacity-60"
+                    aria-label={labels?.pictureInPicture ?? "Picture in Picture"}
+                  >
+                    <PipIcon className="size-5 text-white" />
+                  </button>
+                )}
+                {/* The OS share sheet, not the wide player's menu: on a phone
+                    that sheet IS the reference's behaviour, and of the menu's
+                    five rows only "Copy link" was ever wired to anything —
+                    which is the fallback here. */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const url = window.location.href
+                    if (navigator.share) {
+                      void navigator.share({ title: title ?? "", url }).catch(
+                        () => {}
+                      )
+                    } else {
+                      void navigator.clipboard?.writeText(url).catch(() => {})
+                    }
+                  }}
+                  className="flex h-11 w-[54px] items-center justify-center transition-opacity active:opacity-60"
+                  aria-label={labels?.share ?? "Share"}
+                >
+                  <ShareIcon className="size-5 text-white" />
+                </button>
+              </div>
+
+              {/* The reference's speaker circle — a mute toggle, not a
+                  slider. iOS ignores `video.volume` outright and leaves the
+                  level to the hardware buttons, so a slider would be dead
+                  on the one device this layout is for. */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  actions.toggleMute()
+                }}
+                className={cn(
+                  glassButton,
+                  "ms-auto flex size-11 shrink-0 items-center justify-center"
+                )}
+                style={glassSurface}
+                aria-label={
+                  state.isMuted
+                    ? (labels?.unmute ?? "Unmute")
+                    : (labels?.mute ?? "Mute")
+                }
+              >
+                <VolumeIcon className="size-5 text-white" />
+              </button>
+            </div>
+
+            {/* Bottom block. The reference's own rhythm: the two title lines
+                and the "…" share one 44px band, 15px down to the scrubber
+                row, 13px down to the capsules, and the home indicator's
+                inset below that. */}
+            <div
+              className={cn(
+                "pointer-events-auto absolute inset-x-0 bottom-0",
+                glassScrim,
+                "px-[21px] pt-24 pb-[max(1rem,env(safe-area-inset-bottom))]"
+              )}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  {infoSubtitle && (
+                    <p className="truncate text-[15px] leading-none text-white/85">
+                      {infoSubtitle}
+                    </p>
+                  )}
+                  {infoTitle && (
+                    <p className="mt-1 truncate text-2xl leading-none font-bold text-white">
+                      {infoTitle}
+                    </p>
+                  )}
+                </div>
+
+                {/* The reference's "…". It carries the speed control, which
+                    has no room of its own here — and it opens UPWARD: the
+                    button sits a hundred-odd pixels off the bottom of the
+                    screen, where the wide player's downward menu would be
+                    cut in half. */}
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowSpeedMenu((v) => !v)
+                    }}
+                    className={cn(
+                      glassButton,
+                      "flex size-11 items-center justify-center"
+                    )}
+                    style={glassSurface}
+                    aria-haspopup="menu"
+                    aria-expanded={showSpeedMenu}
+                    aria-label={labels?.more ?? "More"}
+                  >
+                    <MoreHorizontal className="size-5 text-white" />
+                  </button>
+                  {showSpeedMenu && (
+                    <div
+                      role="menu"
+                      className={cn(
+                        glassMenu,
+                        "absolute end-0 bottom-full z-20 mb-2 min-w-[6rem] py-1"
+                      )}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {PLAYBACK_SPEEDS.map((rate) => (
+                        <button
+                          key={rate}
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={state.playbackRate === rate}
+                          onClick={() => {
+                            actions.setPlaybackRate(rate)
+                            setShowSpeedMenu(false)
+                          }}
+                          className={cn(
+                            "flex w-full items-center justify-between px-3 py-2 text-start text-sm text-white",
+                            state.playbackRate === rate && "font-semibold"
+                          )}
+                        >
+                          <span>{rate}×</span>
+                          {state.playbackRate === rate && (
+                            <span aria-hidden>✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Elapsed · scrubber · time remaining, and the right-hand
+                  clock counts DOWN with a minus in front of it — the
+                  reference's `0:00:57 … −1:01:40`. Both sit at the inline
+                  start and end, so Arabic mirrors the pair without any work
+                  here. */}
+              <div className="mt-[15px] flex items-center gap-[9px]">
+                {/* `dir="ltr"` on the clocks themselves, not on the row: a
+                    number keeps its own direction in any script, and the
+                    minus in front of the remaining time is a neutral
+                    character — left to an Arabic paragraph it lands on the
+                    far side of the digits and reads as "0:01:14−". The row
+                    stays logical, so the pair still swaps ends. */}
+                <span
+                  dir="ltr"
+                  className="shrink-0 text-xs text-white/55 tabular-nums"
+                >
+                  {formatClock(state.currentTime)}
+                </span>
+                <div className="flex-1">
+                  <VideoProgressBar
+                    currentTime={state.currentTime}
+                    duration={state.duration}
+                    bufferedEnd={state.bufferedEnd}
+                    isSeeking={state.isSeeking}
+                    seekPosition={state.seekPosition}
+                    thumbnailUrl={state.thumbnailUrl}
+                    thumbnailTime={state.thumbnailTime}
+                    onSeek={handleSeek}
+                    onSeekStart={handleSeekStart}
+                    onSeekMove={handleSeekMove}
+                    onSeekEnd={handleSeekEnd}
+                  />
+                </div>
+                <span
+                  dir="ltr"
+                  className="shrink-0 text-xs text-white/55 tabular-nums"
+                >
+                  {"−"}
+                  {formatClock(
+                    Math.max(0, (state.duration || 0) - state.currentTime)
+                  )}
+                </span>
+              </div>
+
+              {/* The reference's capsule row is Info · InSight · Continue
+                  Watching. Only the last has anything behind it here — the
+                  next lesson, which this player already knows about — and
+                  two dead capsules would be decoration. So the row is that
+                  one capsule, at the reference's 44px on its 16px padding,
+                  and no row at all on the last lesson of a course. */}
+              {nextLesson && (
+                <div className="mt-[13px] flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handlePlayNext()
+                    }}
+                    className={cn(
+                      glassButton,
+                      "flex h-11 min-w-0 items-center rounded-full px-4 text-[15px] font-semibold text-white"
+                    )}
+                    style={glassSurface}
+                  >
+                    <span className="truncate">
+                      {labels?.upNext ?? "Up Next"}
+                      {": "}
+                      {nextLesson.title}
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
