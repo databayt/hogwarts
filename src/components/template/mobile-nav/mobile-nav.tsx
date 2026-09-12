@@ -124,31 +124,29 @@ export function MobileNav({
         <div className="flex flex-col gap-8 overflow-auto px-6 py-6">
           {/* Quick Actions Row (Platform toolbar) */}
           {showToolbar && (
-            <div className="flex items-center justify-between gap-2 border-b pb-4">
-              <div className="flex items-center gap-1">
-                <SpotlightSearch
-                  surface="school-dashboard"
-                  context={{
-                    currentRole: role,
-                    currentPath: currentPath,
-                    schoolId: school?.id,
-                  }}
+            <div className="flex items-center gap-1 border-b pb-4 [&_[data-slot=avatar-fallback]]:text-[10px] [&_[data-slot=avatar]]:size-6 [&_svg]:size-5 [&>a]:size-10 [&>button]:size-10">
+              <SpotlightSearch
+                surface="school-dashboard"
+                context={{
+                  currentRole: role,
+                  currentPath: currentPath,
+                  schoolId: school?.id,
+                }}
+              />
+              <LanguageSwitcher variant="toggle" />
+              <ModeSwitcher />
+              {notificationsUrl && dictionary?.notifications && (
+                <NotificationBellIconCompact
+                  locale={locale as "ar" | "en"}
+                  dictionary={dictionary.notifications}
                 />
-                <LanguageSwitcher variant="toggle" />
-                <ModeSwitcher />
-                {notificationsUrl && dictionary?.notifications && (
-                  <NotificationBellIconCompact
-                    locale={locale as "ar" | "en"}
-                    dictionary={dictionary.notifications}
-                  />
-                )}
-                {messagesUrl && (
-                  <MessageMailIcon
-                    messagesUrl={messagesUrl}
-                    label={dictionary?.platform?.messages || "Messages"}
-                  />
-                )}
-              </div>
+              )}
+              {messagesUrl && (
+                <MessageMailIcon
+                  messagesUrl={messagesUrl}
+                  label={dictionary?.platform?.messages || "Messages"}
+                />
+              )}
               {subdomain && (
                 <UserButton variant="platform" subdomain={subdomain} />
               )}

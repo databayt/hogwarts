@@ -542,19 +542,19 @@
         "cta": "افتح",
         "acknowledge": "اطّلعت",
         "kinds": {
-          "assignmentOverdue": "**{mark}** تأخّر قليلاً، وتسليمه اليوم يكفي",
-          "assignmentDue": "**{mark}** ينتظر تسليمك، ولديك وقت كافٍ",
-          "nextClass": "**{mark}** حصتك القادمة، استعد لها الآن",
-          "pendingGrading": "**{mark} تسليم** من طلابك ينتظر تصحيحك، ابدأ بواحد",
-          "attendanceDue": "**{mark} فصل** ينتظر تسجيل حضوره اليوم، ودقيقة تكفي",
-          "childOverdue": "**{mark}** تأخّر عن واجبه، وتذكير بسيط يكفي",
-          "childPending": "**{mark}** أمامه واجب قادم، وتشجيعك يصنع فرقاً",
-          "pendingPayments": "**{mark} فاتورة** ما تزال غير مدفوعة، تابعها اليوم",
-          "overdueInvoices": "**{mark} فاتورة** تجاوزت موعدها، ومتابعتها الآن أسهل",
-          "urgentTask": "**{mark}** مهمة عاجلة تنتظرك، أنجزها وارتح",
-          "pendingRequests": "**{mark} طلب** من الطاقم ينتظر ردّاً قصيراً منك اليوم",
-          "activeIssues": "**{mark} مشكلة** نشطة تنتظرك اليوم، ابدأ بواحدة الآن",
-          "pendingApprovals": "**{mark} موافقة** تنتظر اعتمادك، ودقيقة واحدة تكفي"
+          "assignmentOverdue": "**تسليم {mark}** تأخّر عن موعده",
+          "assignmentDue": "**تسليم {mark}** ما زال ينتظرك",
+          "nextClass": "**حصة {mark}** هي القادمة",
+          "pendingGrading": "**{mark} تسليم** ينتظر تصحيحك اليوم",
+          "attendanceDue": "**{mark} فصل** ينتظر تسجيل حضوره اليوم",
+          "childOverdue": "**واجب {mark}** تأخّر عن موعده",
+          "childPending": "**واجب {mark}** القادم ينتظر تشجيعك",
+          "pendingPayments": "**{mark} فاتورة** ما تزال غير مدفوعة",
+          "overdueInvoices": "**{mark} فاتورة** تجاوزت موعد سدادها",
+          "urgentTask": "**{mark}** مهمة عاجلة تنتظر إنجازك",
+          "pendingRequests": "**{mark} طلب** من الطاقم ينتظر ردّك",
+          "activeIssues": "**{mark} مشكلة** نشطة تنتظر معالجتك",
+          "pendingApprovals": "**{mark} موافقة** تنتظر اعتمادك اليوم"
         }
       }
     },

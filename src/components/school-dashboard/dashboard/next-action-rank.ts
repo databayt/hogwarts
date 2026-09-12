@@ -46,33 +46,93 @@ const MAX_ACTIONS = 4
 type Unknown = Record<string, unknown>
 
 /**
- * The headline sets the mark in bold inside a ~16ch measure over two lines.
- * Real assignment titles carry the class and the grade ("مهمة مقالية - Islamic
- * - الصف الثاني عشر"), which pushes the line to three or four, so the mark is
- * capped at a phrase rather than a record name. It happens to cut seeded titles
- * about where the subject ends and the grade suffix begins.
+ * The headline sets the mark in bold inside a ~16ch measure over two lines, and
+ * the mark is a phrase INSIDE a sentence — so it may never trail off. An
+ * ellipsis in the middle of a line reads as broken data, not as brevity, and
+ * the reader is left guessing which assignment the card means.
+ *
+ * Two things get it short enough without one.
+ *
+ * First, the tail comes off. Real record titles are a phrase plus their filing
+ * ("مهمة مقالية - الحاسوب - الصف الثاني عشر"): the head is what a reader would
+ * actually say out loud, and everything after the first dash is the class and
+ * the grade, which the sentence around the mark does not need. Every seeded
+ * title's head is already inside the cap.
+ *
+ * Second, whatever is still too long is cut on a SPACE. A whole word short of
+ * the cap reads as a name; half a word reads as a bug. A first word longer than
+ * the cap on its own is kept whole rather than sliced — one long word setting
+ * a line wide is better than a fragment.
  *
  * The cap is load-bearing rather than cosmetic: the card's headline is a FIXED
  * two-line box, so a mark that overruns is not a taller card any more — it is a
- * sentence with its end cut off. Twelve is what came out of measuring every
- * template in a real browser at 420px against the /live headline it copies —
+ * sentence with its end cut off. Eighteen is what came out of measuring every
+ * template in a real browser at 390px against the /live headline it copies —
  * per-CHARACTER spans, the way the card actually renders, because span
- * boundaries shift Chrome's line breaking enough to flip a break. At twelve,
- * every sentence in both languages sets as at most two lines whose widths are
- * within about a tenth of each other, which is the balance /live's own headline
- * has. Fourteen pushed the two assignment templates onto a third line, and the
- * tail was lost.
+ * boundaries shift Chrome's line breaking enough to flip a break.
  */
-const MARK_MAX = 12
+const MARK_MAX = 18
+
+/**
+ * Where a title's own phrase ends and its filing begins. A spaced dash, so a
+ * hyphenated word inside the phrase survives.
+ */
+const TITLE_TAIL = /\s[-–—]\s/
 
 const num = (v: unknown): number => (typeof v === "number" ? v : 0)
 
 const str = (v: unknown): string => {
   if (typeof v !== "string") return ""
-  const trimmed = v.trim()
-  return trimmed.length > MARK_MAX
-    ? `${trimmed.slice(0, MARK_MAX - 1).trimEnd()}…`
-    : trimmed
+  const head = v.split(TITLE_TAIL)[0].trim()
+  if (head.length <= MARK_MAX) return head
+
+  const lastFit = head.lastIndexOf(" ", MARK_MAX)
+  if (lastFit > 0) return head.slice(0, lastFit)
+
+  const firstWord = head.indexOf(" ")
+  return firstWord > 0 ? head.slice(0, firstWord) : head
+}
+
+/**
+ * Names whose first word is not a name on its own.
+ *
+ * "عبد" is a word meaning servant, not somebody called Abd — the name is the
+ * whole construction, "عبد الرحمن". Same for the kunya and parentage prefixes,
+ * and for their Latin spellings. These are ordinary names here rather than edge
+ * cases, so a bare first-word split would misname a real child on a real card.
+ * Written with a space or without ("عبدالله") — the joined spelling is one word
+ * already and needs nothing.
+ */
+const BOUND_PREFIX = new Set([
+  "عبد",
+  "أبو",
+  "ابو",
+  "أم",
+  "ام",
+  "ابن",
+  "بنت",
+  "ذو",
+  "abdul",
+  "abd",
+  "abu",
+  "umm",
+  "bin",
+  "ibn",
+  "bint",
+])
+
+/**
+ * A person's given name, for the cards that address a parent about one child.
+ *
+ * A card that says "Khadija" where the register says "Khadija Alnoor" is how a
+ * parent talks about their own child, and it is also what keeps the sentence
+ * on two lines — a full name spends the whole mark budget and pushes the tail
+ * of the sentence out of the clipped box.
+ */
+const given = (v: unknown): string => {
+  const words = str(v).split(" ")
+  const bound = BOUND_PREFIX.has(words[0].toLowerCase())
+  return bound && words.length > 1 ? `${words[0]} ${words[1]}` : words[0]
 }
 
 /**
@@ -159,7 +219,7 @@ export function rankNextActions(
       for (const c of children.filter((c) => num(c.overdueAssignments) > 0)) {
         actions.push({
           kind: "childOverdue",
-          mark: str(c.name),
+          mark: given(c.name),
           href: "/parent",
         })
       }
@@ -168,7 +228,7 @@ export function rankNextActions(
       )) {
         actions.push({
           kind: "childPending",
-          mark: str(c.name),
+          mark: given(c.name),
           href: "/parent",
         })
       }

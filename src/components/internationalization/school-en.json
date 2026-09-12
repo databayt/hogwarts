@@ -542,19 +542,19 @@
         "cta": "Open",
         "acknowledge": "Acknowledge",
         "kinds": {
-          "assignmentOverdue": "**{mark}** ran late, and today still counts",
-          "assignmentDue": "**{mark}** is due soon, you have time",
-          "nextClass": "**{mark}** is next, so get your book out",
-          "pendingGrading": "**{mark} submissions** are ready for your marking",
+          "assignmentOverdue": "**{mark}** is past its due date",
+          "assignmentDue": "**{mark}** is still waiting on you",
+          "nextClass": "**{mark}** is your next class",
+          "pendingGrading": "**{mark} submissions** need your marking",
           "attendanceDue": "**{mark} classes** still need their attendance today",
-          "childOverdue": "**{mark}** is late on work, a nudge helps",
-          "childPending": "**{mark}** has work coming, a nudge helps",
-          "pendingPayments": "**{mark} invoices** are unpaid, so send a nudge",
-          "overdueInvoices": "**{mark} invoices** are past due, so chase them",
-          "urgentTask": "**{mark}** is urgent, so clear it and relax",
+          "childOverdue": "**{mark}'s homework** is overdue",
+          "childPending": "**{mark}** has homework coming up",
+          "pendingPayments": "**{mark} invoices** are still unpaid",
+          "overdueInvoices": "**{mark} invoices** are past their due date",
+          "urgentTask": "**{mark}** is an urgent task",
           "pendingRequests": "**{mark} staff requests** are waiting on your reply",
-          "activeIssues": "**{mark} issues** are open, so start with one now",
-          "pendingApprovals": "**{mark} approvals** need a minute of your time"
+          "activeIssues": "**{mark} issues** are open and waiting on you",
+          "pendingApprovals": "**{mark} approvals** need your sign-off"
         }
       }
     },
