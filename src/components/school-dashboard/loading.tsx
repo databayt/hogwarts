@@ -371,24 +371,60 @@ export function AttendanceSkeleton() {
 // SUBJECTS BROWSE — responsive card grid (shared by all, elementary, middle, high)
 // =============================================================================
 
+// Mirrors `SubjectsGrid` (listings/subjects/catalog-subjects-grid.tsx): two
+// cards per row on a phone, 56px thumb growing to 64px, stage badge hidden
+// below `sm` so only the grade pill remains.
 export function SubjectsBrowseSkeleton() {
   return (
     <div className="space-y-6">
       <div className="@container">
-        <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @2xl:grid-cols-3 @5xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 @sm:gap-3 @2xl:grid-cols-3 @5xl:grid-cols-4">
           {Array.from({ length: 24 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 overflow-hidden rounded-lg border"
+              className="flex items-center gap-2 overflow-hidden rounded-lg border @sm:gap-3"
             >
-              <Skeleton className="h-16 w-16 shrink-0 rounded-s-lg rounded-e-none" />
-              <div className="min-w-0 pe-3">
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="mt-1 h-3.5 w-14 rounded-full" />
+              <Skeleton className="h-14 w-14 shrink-0 rounded-s-lg rounded-e-none @sm:h-16 @sm:w-16" />
+              <div className="min-w-0 pe-2 @sm:pe-3">
+                <Skeleton className="h-4 w-20 @sm:w-24" />
+                <div className="mt-1 flex items-center gap-1">
+                  <Skeleton className="hidden h-4 w-10 rounded-full sm:block" />
+                  <Skeleton className="h-4 w-14 rounded-full" />
+                </div>
               </div>
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+// The whole /subjects browse view while `(browse)/layout.tsx` is still
+// resolving: `PageHeadingDisplay` renders nothing until the layout's
+// `PageHeadingSetter` mounts, so the heading and tab bar are drawn here too.
+// `(browse)/loading.tsx` sits inside that layout and must NOT use this one.
+export function SubjectsBrowsePageSkeleton() {
+  // All / Elementary / Middle / High / Catalog / Contribute / My contributions
+  // — the admin's seven tabs, sized to their short labels.
+  const tabWidths = ["w-8", "w-12", "w-12", "w-10", "w-14", "w-14", "w-16"]
+
+  return (
+    <div>
+      <div className="mb-6">
+        <Skeleton className="h-10 w-24 sm:h-9 xl:h-10" />
+      </div>
+      <div className="space-y-6">
+        <div className="border-b">
+          <nav className="flex items-center gap-6 overflow-hidden">
+            {tabWidths.map((w, i) => (
+              <div key={i} className="shrink-0 px-1 pb-3">
+                <Skeleton className={cn("h-5", w)} />
+              </div>
+            ))}
+          </nav>
+        </div>
+        <SubjectsBrowseSkeleton />
       </div>
     </div>
   )
