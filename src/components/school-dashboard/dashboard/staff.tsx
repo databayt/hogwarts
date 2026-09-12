@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { getQuickLookData, getStaffDashboardData } from "./actions"
+import { getStaffDashboardData } from "./actions"
 import { ActivityRings } from "./activity-rings"
 import { ChartSection } from "./chart-section"
 import { EmptyState } from "./empty-state"
@@ -20,12 +20,8 @@ import { PerformanceGauge } from "./performance-gauge"
 import { ProgressCard } from "./progress-card"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
-import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { SectionHeading } from "./section-heading"
-import { Upcoming } from "./upcoming"
-import { Weather } from "./weather"
-import { getWeatherData } from "./weather-actions"
 import { WeeklyActivityChart } from "./weekly-chart"
 
 interface StaffDashboardProps {
@@ -47,19 +43,9 @@ export async function StaffDashboard({
 }: StaffDashboardProps) {
   // Wrap entire component in try-catch for comprehensive error handling (like AdminDashboard)
   try {
-    // Fetch Quick Look and Weather data
-    let quickLookData
-    let weatherData
-    try {
-      const [qlData, weather] = await Promise.all([
-        getQuickLookData(locale),
-        getWeatherData("metric", locale),
-      ])
-      quickLookData = qlData
-      weatherData = weather
-    } catch (error) {
-      console.error("[StaffDashboard] Error fetching data:", error)
-    }
+    // The Upcoming/Weather hero and the Quick Look row are hidden on this
+    // dashboard, so their fetches (getQuickLookData, getWeatherData) are not
+    // made here — restore both alongside the JSX below.
 
     // Get tenant context for subdomain with error handling
     let schoolId: string | null = null
@@ -95,13 +81,13 @@ export async function StaffDashboard({
 
     // Destructure with defaults for error handling
     const {
-      tasks: mockTodayTasks = [],
-      requests: mockPendingRequests = [],
-      approvals: mockPendingApprovals = [],
-      maintenance: mockMaintenanceRequests = [],
-      inventory: mockInventoryAlerts = [],
-      visitors: mockVisitorLog = [],
-      workflow: mockWorkflowStatus = {
+      tasks: todayTasks = [],
+      requests: pendingRequests = [],
+      approvals: pendingApprovals = [],
+      maintenance: maintenanceRequests = [],
+      inventory: inventoryAlerts = [],
+      visitors: visitorLog = [],
+      workflow: workflowStatus = {
         inQueue: 0,
         completedToday: 0,
         overdue: 0,
@@ -115,113 +101,94 @@ export async function StaffDashboard({
       {
         label: "Tasks",
         value:
-          mockWorkflowStatus.totalTasks > 0
-            ? (mockWorkflowStatus.completedToday /
-                mockWorkflowStatus.totalTasks) *
-              100
+          workflowStatus.totalTasks > 0
+            ? (workflowStatus.completedToday / workflowStatus.totalTasks) * 100
             : 0,
         color: "#22c55e",
-        current: mockWorkflowStatus.completedToday,
-        target: mockWorkflowStatus.totalTasks,
+        current: workflowStatus.completedToday,
+        target: workflowStatus.totalTasks,
         unit: "completed",
       },
       {
         label: "Requests",
         value:
-          mockPendingRequests.length > 0
-            ? Math.max(0, 100 - mockPendingRequests.length * 10)
+          pendingRequests.length > 0
+            ? Math.max(0, 100 - pendingRequests.length * 10)
             : 100,
         color: "#3b82f6",
-        current: mockPendingRequests.filter((r) => r.urgency === "high").length,
-        target: mockPendingRequests.length,
+        current: pendingRequests.filter((r) => r.urgency === "high").length,
+        target: pendingRequests.length,
         unit: "urgent",
       },
       {
         label: "Queue",
         value:
-          mockWorkflowStatus.inQueue > 0
+          workflowStatus.inQueue > 0
             ? Math.max(
                 0,
-                100 -
-                  (mockWorkflowStatus.overdue / mockWorkflowStatus.inQueue) *
-                    100
+                100 - (workflowStatus.overdue / workflowStatus.inQueue) * 100
               )
             : 100,
-        color: mockWorkflowStatus.overdue > 2 ? "#ef4444" : "#f59e0b",
-        current: mockWorkflowStatus.overdue,
+        color: workflowStatus.overdue > 2 ? "#ef4444" : "#f59e0b",
+        current: workflowStatus.overdue,
         target: 0,
         unit: "overdue",
       },
     ]
 
-    const completedTasksToday = mockTodayTasks.filter(
+    const completedTasksToday = todayTasks.filter(
       (t) => t.status === "completed"
     ).length
 
     return (
-      <div className="space-y-6">
-        {/* ============ TOP HERO SECTION (Unified Order) ============ */}
-        {/* Section 1: Upcoming + Weather */}
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
-          <Upcoming
-            role="STAFF"
-            locale={locale}
-            subdomain={school?.domain || ""}
-          />
-          <Weather
-            current={weatherData?.current}
-            forecast={weatherData?.forecast}
-            location={weatherData?.location}
-          />
+      <div className="space-y-8">
+        {/* ============ SHARED SECTIONS (the student dashboard's order) ======
+            The Upcoming/Weather hero and the Quick Look row of announcements /
+            events / notifications / messages are hidden here, as they are on
+            the student and teacher dashboards. Restore by putting the JSX back
+            and re-importing `Upcoming`, `Weather`, `QuickLookSection`,
+            `getQuickLookData` and `getWeatherData`. */}
+        <div className="space-y-6">
+          {/* Quick Actions — from `md` up only. Below it the phone dashboard
+              shows this same section near the top instead
+              (`phone-quick-actions.tsx`), where a thumb reaches it; two copies
+              at once would be the same four tiles twice. */}
+          <section className="hidden md:block">
+            <SectionHeading title={"Quick Actions"} />
+            <QuickActions
+              actions={getQuickActionsByRole(
+                "STAFF",
+                school?.domain ?? undefined
+              )}
+              locale={locale}
+            />
+          </section>
+
+          {/* Analytics, directly under the quick actions rather than below the
+              two tables — the order the student dashboard settled on. */}
+          <ChartSection role="STAFF" />
+
+          <ResourceUsageSection role="STAFF" />
+
+          <InvoiceHistorySection role="STAFF" />
         </div>
-
-        {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection
-          locale={locale}
-          subdomain={school?.domain || ""}
-          data={quickLookData}
-        />
-
-        {/* Section 3: Quick Actions (4 focused actions) — from `md` up only.
-            Below it the phone dashboard shows this same section near the
-            top instead (`phone-quick-actions.tsx`), where a thumb reaches
-            it; two copies at once would be the same four tiles twice. */}
-        <section className="hidden md:block">
-          <SectionHeading title="Quick Actions" />
-          <QuickActions
-            actions={getQuickActionsByRole(
-              "STAFF",
-              school?.domain ?? undefined
-            )}
-            locale={locale}
-          />
-        </section>
-
-        {/* Section 4: Resource Usage */}
-        <ResourceUsageSection role="STAFF" />
-
-        {/* Section 5: Invoice History (Expense Reports) */}
-        <InvoiceHistorySection role="STAFF" />
-
-        {/* Section 6: Analytics Charts */}
-        <ChartSection role="STAFF" />
 
         {/* ============ STAFF-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <MetricCard
             title="Today's Tasks"
-            value={mockTodayTasks.length}
+            value={todayTasks.length}
             iconName="ClipboardList"
             iconColor="text-blue-500"
             href={`/${locale}/school`}
           />
           <MetricCard
             title="Pending Requests"
-            value={mockPendingRequests.length}
+            value={pendingRequests.length}
             iconName="FileText"
             iconColor={
-              mockPendingRequests.filter((r) => r.urgency === "high").length > 2
+              pendingRequests.filter((r) => r.urgency === "high").length > 2
                 ? "text-destructive"
                 : "text-amber-500"
             }
@@ -229,18 +196,15 @@ export async function StaffDashboard({
           />
           <MetricCard
             title="Visitors Today"
-            value={
-              mockVisitorLog.filter((v) => v.status === "checked-in").length
-            }
+            value={visitorLog.filter((v) => v.status === "checked-in").length}
             iconName="Users"
             iconColor="text-purple-500"
           />
           <MetricCard
             title="Alerts"
             value={
-              mockInventoryAlerts.length +
-              mockMaintenanceRequests.filter((m) => m.priority === "high")
-                .length
+              inventoryAlerts.length +
+              maintenanceRequests.filter((m) => m.priority === "high").length
             }
             iconName="Bell"
             iconColor="text-amber-500"
@@ -258,8 +222,8 @@ export async function StaffDashboard({
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockTodayTasks.length > 0 ? (
-                mockTodayTasks.map((task) => (
+              {todayTasks.length > 0 ? (
+                todayTasks.map((task) => (
                   <div
                     key={task.id}
                     className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
@@ -335,9 +299,7 @@ export async function StaffDashboard({
           {/* Workflow Efficiency Gauge */}
           <PerformanceGauge
             value={Math.round(
-              (mockWorkflowStatus.completedToday /
-                mockWorkflowStatus.totalTasks) *
-                100
+              (workflowStatus.completedToday / workflowStatus.totalTasks) * 100
             )}
             label="Efficiency"
             description="Daily task completion rate"
@@ -354,19 +316,18 @@ export async function StaffDashboard({
               <CardTitle className="text-base">Pending Requests</CardTitle>
               <Badge
                 variant={
-                  mockPendingRequests.filter((r) => r.urgency === "high")
-                    .length > 0
+                  pendingRequests.filter((r) => r.urgency === "high").length > 0
                     ? "destructive"
                     : "secondary"
                 }
               >
-                {mockPendingRequests.filter((r) => r.urgency === "high").length}{" "}
+                {pendingRequests.filter((r) => r.urgency === "high").length}{" "}
                 urgent
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockPendingRequests.length > 0 ? (
-                mockPendingRequests.slice(0, 4).map((request) => (
+              {pendingRequests.length > 0 ? (
+                pendingRequests.slice(0, 4).map((request) => (
                   <div
                     key={request.id}
                     className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
@@ -418,8 +379,8 @@ export async function StaffDashboard({
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockPendingApprovals.length > 0 ? (
-                mockPendingApprovals.map((approval) => (
+              {pendingApprovals.length > 0 ? (
+                pendingApprovals.map((approval) => (
                   <div
                     key={approval.id}
                     className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
@@ -465,22 +426,22 @@ export async function StaffDashboard({
               <CardTitle className="text-base">Maintenance</CardTitle>
               <Badge
                 variant={
-                  mockMaintenanceRequests.filter((m) => m.priority === "high")
+                  maintenanceRequests.filter((m) => m.priority === "high")
                     .length > 0
                     ? "destructive"
                     : "secondary"
                 }
               >
                 {
-                  mockMaintenanceRequests.filter((m) => m.priority === "high")
+                  maintenanceRequests.filter((m) => m.priority === "high")
                     .length
                 }{" "}
                 urgent
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockMaintenanceRequests.length > 0 ? (
-                mockMaintenanceRequests.map((request) => (
+              {maintenanceRequests.length > 0 ? (
+                maintenanceRequests.map((request) => (
                   <div
                     key={request.id}
                     className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
@@ -520,17 +481,17 @@ export async function StaffDashboard({
               <CardTitle className="text-base">Inventory Alerts</CardTitle>
               <Badge
                 variant={
-                  mockInventoryAlerts.filter((i) => i.quantity === 0).length > 0
+                  inventoryAlerts.filter((i) => i.quantity === 0).length > 0
                     ? "destructive"
                     : "secondary"
                 }
               >
-                {mockInventoryAlerts.length} alerts
+                {inventoryAlerts.length} alerts
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockInventoryAlerts.length > 0 ? (
-                mockInventoryAlerts.map((alert) => (
+              {inventoryAlerts.length > 0 ? (
+                inventoryAlerts.map((alert) => (
                   <div
                     key={alert.id}
                     className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
@@ -565,13 +526,13 @@ export async function StaffDashboard({
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Visitor Log</CardTitle>
               <Badge variant="outline">
-                {mockVisitorLog.filter((v) => v.status === "checked-in").length}{" "}
+                {visitorLog.filter((v) => v.status === "checked-in").length}{" "}
                 on-site
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockVisitorLog.length > 0 ? (
-                mockVisitorLog.map((visitor) => (
+              {visitorLog.length > 0 ? (
+                visitorLog.map((visitor) => (
                   <div
                     key={visitor.id}
                     className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
@@ -618,13 +579,13 @@ export async function StaffDashboard({
             <div className="grid gap-6 md:grid-cols-4">
               <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  {mockWorkflowStatus.inQueue}
+                  {workflowStatus.inQueue}
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">In Queue</p>
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                  {mockWorkflowStatus.completedToday}
+                  {workflowStatus.completedToday}
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
                   Completed Today
@@ -632,15 +593,15 @@ export async function StaffDashboard({
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-destructive text-3xl font-bold">
-                  {mockWorkflowStatus.overdue}
+                  {workflowStatus.overdue}
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">Overdue</p>
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-primary text-3xl font-bold">
                   {Math.round(
-                    (mockWorkflowStatus.completedToday /
-                      mockWorkflowStatus.totalTasks) *
+                    (workflowStatus.completedToday /
+                      workflowStatus.totalTasks) *
                       100
                   )}
                   %
@@ -657,8 +618,8 @@ export async function StaffDashboard({
         <div className="grid gap-6 md:grid-cols-3">
           <ProgressCard
             title="Daily Tasks"
-            current={mockWorkflowStatus.completedToday}
-            total={mockWorkflowStatus.totalTasks}
+            current={workflowStatus.completedToday}
+            total={workflowStatus.totalTasks}
             unit="tasks"
             iconName="CheckCircle"
             showPercentage
@@ -666,10 +627,10 @@ export async function StaffDashboard({
           <ProgressCard
             title="Request Processing"
             current={
-              mockPendingRequests.length -
-              mockPendingRequests.filter((r) => r.urgency === "high").length
+              pendingRequests.length -
+              pendingRequests.filter((r) => r.urgency === "high").length
             }
-            total={mockPendingRequests.length}
+            total={pendingRequests.length}
             unit="handled"
             iconName="FileText"
             showPercentage

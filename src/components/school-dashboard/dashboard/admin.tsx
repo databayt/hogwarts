@@ -5,9 +5,9 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { getQuickLookData, type QuickLookData } from "./actions"
+import { type QuickLookData } from "./actions"
 import { AdminDashboardClient } from "./admin-client"
-import { getWeatherData, type WeatherData } from "./weather-actions"
+import { type WeatherData } from "./weather-actions"
 
 interface Props {
   user: {
@@ -28,33 +28,11 @@ export async function AdminDashboard({
 }: Props) {
   // Wrap entire component in try-catch for comprehensive error handling
   try {
-    // Fetch real data from server actions with error handling
-    let quickLookData: QuickLookData | undefined
-    let weatherData: WeatherData | null = null
-    try {
-      // Fetch quick look and weather data in parallel
-      const [qlData, weather] = await Promise.all([
-        getQuickLookData(locale),
-        getWeatherData("metric", locale),
-      ])
-      quickLookData = qlData
-      weatherData = weather
-    } catch (error) {
-      console.error("[AdminDashboard] Error fetching data:", error)
-      return (
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="mb-4">Unable to Load Dashboard</h3>
-              <p className="text-muted-foreground">
-                There was an error loading the dashboard data. Please try
-                refreshing the page.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )
-    }
+    // The Upcoming/Weather hero and the Quick Look row are hidden on this
+    // dashboard, so their fetches (getQuickLookData, getWeatherData) are not
+    // made here — restore both alongside the JSX in `admin-client.tsx`.
+    const quickLookData: QuickLookData | undefined = undefined
+    const weatherData: WeatherData | null = null
 
     // Get tenant context for subdomain with error handling
     let schoolId: string | null = null

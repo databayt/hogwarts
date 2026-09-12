@@ -19,7 +19,7 @@ import { Progress } from "@/components/ui/progress"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { ParentDashboardStats } from "@/components/school-dashboard/shared/stats"
 
-import { getParentDashboardData, getQuickLookData } from "./actions"
+import { getParentDashboardData } from "./actions"
 import { ActivityRings } from "./activity-rings"
 import { AnnouncementCard } from "./announcement-card"
 import { ChartSection } from "./chart-section"
@@ -30,12 +30,8 @@ import { MetricCard } from "./metric-card"
 import { ProgressCard } from "./progress-card"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
-import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { SectionHeading } from "./section-heading"
-import { Upcoming } from "./upcoming"
-import { Weather } from "./weather"
-import { getWeatherData } from "./weather-actions"
 
 interface ParentDashboardProps {
   user: {
@@ -58,17 +54,11 @@ export async function ParentDashboard({
   try {
     // Fetch real data from server action with error handling
     let data
-    let quickLookData
-    let weatherData
     try {
-      const [parentData, qlData, weather] = await Promise.all([
-        getParentDashboardData(),
-        getQuickLookData(locale),
-        getWeatherData("metric", locale),
-      ])
-      data = parentData
-      quickLookData = qlData
-      weatherData = weather
+      // The Upcoming/Weather hero and the Quick Look row are hidden on this
+      // dashboard, so their fetches (getQuickLookData, getWeatherData) are not
+      // made here — restore both alongside the JSX below.
+      data = await getParentDashboardData()
     } catch (error) {
       console.error("[ParentDashboard] Error fetching data:", error)
       const err = dictionary?.parentDashboard?.errors as
@@ -181,52 +171,37 @@ export async function ParentDashboard({
     ).length
 
     return (
-      <div className="space-y-6">
-        {/* ============ TOP HERO SECTION (Unified Order) ============ */}
-        {/* Section 1: Upcoming + Weather */}
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
-          <Upcoming
-            role="GUARDIAN"
-            locale={locale}
-            subdomain={school?.domain || ""}
-          />
-          <Weather
-            current={weatherData?.current}
-            forecast={weatherData?.forecast}
-            location={weatherData?.location}
-          />
+      <div className="space-y-8">
+        {/* ============ SHARED SECTIONS (the student dashboard's order) ======
+            The Upcoming/Weather hero and the Quick Look row of announcements /
+            events / notifications / messages are hidden here, as they are on
+            the student and teacher dashboards. Restore by putting the JSX back
+            and re-importing `Upcoming`, `Weather`, `QuickLookSection`,
+            `getQuickLookData` and `getWeatherData`. */}
+        <div className="space-y-6">
+          {/* Quick Actions — from `md` up only. Below it the phone dashboard
+              shows this same section near the top instead
+              (`phone-quick-actions.tsx`), where a thumb reaches it; two copies
+              at once would be the same four tiles twice. */}
+          <section className="hidden md:block">
+            <SectionHeading title={t?.quickActions?.title || "Quick Actions"} />
+            <QuickActions
+              actions={getQuickActionsByRole(
+                "GUARDIAN",
+                school?.domain ?? undefined
+              )}
+              locale={locale}
+            />
+          </section>
+
+          {/* Analytics, directly under the quick actions rather than below the
+              two tables — the order the student dashboard settled on. */}
+          <ChartSection role="GUARDIAN" />
+
+          <ResourceUsageSection role="GUARDIAN" />
+
+          <InvoiceHistorySection role="GUARDIAN" />
         </div>
-
-        {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection
-          locale={locale}
-          subdomain={school?.domain || ""}
-          data={quickLookData}
-        />
-
-        {/* Section 3: Quick Actions (4 focused actions) — from `md` up only.
-            Below it the phone dashboard shows this same section near the
-            top instead (`phone-quick-actions.tsx`), where a thumb reaches
-            it; two copies at once would be the same four tiles twice. */}
-        <section className="hidden md:block">
-          <SectionHeading title={t?.quickActions?.title || "Quick Actions"} />
-          <QuickActions
-            actions={getQuickActionsByRole(
-              "GUARDIAN",
-              school?.domain ?? undefined
-            )}
-            locale={locale}
-          />
-        </section>
-
-        {/* Section 4: Resource Usage */}
-        <ResourceUsageSection role="GUARDIAN" />
-
-        {/* Section 5: Invoice History (Children's Fees) */}
-        <InvoiceHistorySection role="GUARDIAN" />
-
-        {/* Section 6: Analytics Charts */}
-        <ChartSection role="GUARDIAN" />
 
         {/* ============ PARENT-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}

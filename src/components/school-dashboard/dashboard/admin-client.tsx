@@ -309,33 +309,33 @@ export function AdminDashboardClient({
 }: AdminDashboardClientProps) {
   return (
     <div className="space-y-8">
-      {/* ============ TOP HERO SECTION (Unified Order) ============ */}
+      {/* ============ SHARED SECTIONS (the student dashboard's order) ========
+          The Upcoming/Weather hero and the Quick Look row of announcements /
+          events / notifications / messages are hidden here, as they are on the
+          student and teacher dashboards. `HeroSection` and `QuickLookSection`
+          are still in the file, and `admin.tsx` no longer fetches for them —
+          restore both together. */}
       <div className="space-y-6">
-        {/* Section 1: Upcoming + Weather */}
-        <HeroSection
+        {/* <HeroSection
           locale={locale}
           subdomain={subdomain}
           weatherData={weatherData}
         />
-
-        {/* Section 2: Quick Look (with real data) */}
         <QuickLookSection
           locale={locale}
           subdomain={subdomain}
           data={quickLookData}
-        />
+        /> */}
 
-        {/* Section 3: Quick Actions (4 focused actions) */}
         <QuickActionsSection locale={locale} subdomain={subdomain} />
 
-        {/* Section 4: Resource Usage */}
+        {/* Analytics, directly under the quick actions rather than below the
+            two tables — the order the student dashboard settled on. */}
+        <ChartSection role="ADMIN" />
+
         <ResourceUsageSection role="ADMIN" />
 
-        {/* Section 5: Invoice History */}
         <InvoiceHistorySection role="ADMIN" />
-
-        {/* Section 6: Analytics Charts */}
-        <ChartSection role="ADMIN" />
       </div>
 
       {/* ============ ADMIN-SPECIFIC SECTIONS ============ */}

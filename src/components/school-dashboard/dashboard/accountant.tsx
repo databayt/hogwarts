@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { getFinancialSummary, getQuickLookData } from "./actions"
+import { getFinancialSummary } from "./actions"
 import { ActivityRings } from "./activity-rings"
 import { ChartSection } from "./chart-section"
 import { EmptyState } from "./empty-state"
@@ -20,14 +20,8 @@ import { PerformanceGauge } from "./performance-gauge"
 import { ProgressCard } from "./progress-card"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
-import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
-import { RevenueChart } from "./revenue-chart"
 import { SectionHeading } from "./section-heading"
-import { Upcoming } from "./upcoming"
-import { Weather } from "./weather"
-import { getWeatherData } from "./weather-actions"
-import { WeeklyActivityChart } from "./weekly-chart"
 
 interface AccountantDashboardProps {
   user: {
@@ -48,19 +42,9 @@ export async function AccountantDashboard({
 }: AccountantDashboardProps) {
   // Wrap entire component in try-catch for comprehensive error handling (like AdminDashboard)
   try {
-    // Fetch Quick Look and Weather data
-    let quickLookData
-    let weatherData
-    try {
-      const [qlData, weather] = await Promise.all([
-        getQuickLookData(locale),
-        getWeatherData("metric", locale),
-      ])
-      quickLookData = qlData
-      weatherData = weather
-    } catch (error) {
-      console.error("[AccountantDashboard] Error fetching data:", error)
-    }
+    // The Upcoming/Weather hero and the Quick Look row are hidden on this
+    // dashboard, so their fetches (getQuickLookData, getWeatherData) are not
+    // made here — restore both alongside the JSX below.
 
     // Get tenant context for subdomain with error handling
     let schoolId: string | null = null
@@ -142,7 +126,7 @@ export async function AccountantDashboard({
     } = financialData || {}
 
     // Map real data to display format with fallback
-    const mockFeeCollectionStatus = {
+    const feeCollection = {
       totalFees: revenue.total + revenue.pending + revenue.overdue,
       collected: revenue.total,
       outstanding: revenue.pending,
@@ -150,30 +134,8 @@ export async function AccountantDashboard({
       overdue: revenue.overdue,
     }
 
-    // Monthly revenue chart data (still mock as we'd need historical data)
-    const mockMonthlyRevenue = [
-      { month: "Sep", revenue: 42000, expenses: 35000 },
-      { month: "Oct", revenue: 45000, expenses: 38000 },
-      { month: "Nov", revenue: 48000, expenses: 36000 },
-      { month: "Dec", revenue: 52000, expenses: 42000 },
-      { month: "Jan", revenue: 55000, expenses: 40000 },
-      {
-        month: "Feb",
-        revenue: Math.round(revenue.total / 1000) * 1000 || 58000,
-        expenses: Math.round(expenses.total / 1000) * 1000 || 44000,
-      },
-    ]
-
-    const weeklyCollections = [
-      { day: "Mon", value: 8500 },
-      { day: "Tue", value: 12000 },
-      { day: "Wed", value: 9500 },
-      { day: "Thu", value: 15000 },
-      { day: "Fri", value: 7000 },
-    ]
-
     // Map recent transactions from real data
-    const mockTodaysTransactions =
+    const todaysTransactions =
       recentTransactions.length > 0
         ? recentTransactions
             .slice(0, 4)
@@ -196,25 +158,10 @@ export async function AccountantDashboard({
                 time: format(t.date, "h:mm a"),
               })
             )
-        : [
-            {
-              type: "Payment",
-              amount: 2500,
-              description: "Student fee payment - Grade 10",
-              status: "completed",
-              time: "9:30 AM",
-            },
-            {
-              type: "Payment",
-              amount: 1800,
-              description: "Lab fee - Science Dept",
-              status: "completed",
-              time: "11:00 AM",
-            },
-          ]
+        : []
 
     // Map defaulters to pending payments format
-    const mockPendingPayments =
+    const pendingPaymentRows =
       defaulters.length > 0
         ? defaulters
             .slice(0, 4)
@@ -238,58 +185,16 @@ export async function AccountantDashboard({
                 status: d.monthsOverdue > 1 ? "overdue" : "due-soon",
               })
             )
-        : [
-            {
-              student: "Emma Johnson",
-              grade: "Grade 10",
-              amount: 2500,
-              dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-              status: "overdue",
-            },
-            {
-              student: "Michael Brown",
-              grade: "Grade 8",
-              amount: 1800,
-              dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-              status: "due-soon",
-            },
-          ]
-
-    const mockFinancialCalendar = [
-      {
-        event: "Monthly Report Due",
-        date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        type: "reporting",
-        priority: "high",
-      },
-      {
-        event: "Audit Preparation",
-        date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-        type: "audit",
-        priority: "high",
-      },
-      {
-        event: "Tax Filing Deadline",
-        date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
-        type: "tax",
-        priority: "critical",
-      },
-      {
-        event: "Budget Review",
-        date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        type: "budget",
-        priority: "medium",
-      },
-    ]
+        : []
 
     // Activity rings for financial health
     const financialRings = [
       {
         label: "Collection",
-        value: mockFeeCollectionStatus.collectionRate,
+        value: feeCollection.collectionRate,
         color: "#22c55e",
-        current: mockFeeCollectionStatus.collected,
-        target: mockFeeCollectionStatus.totalFees,
+        current: feeCollection.collected,
+        target: feeCollection.totalFees,
         unit: "collected",
       },
       {
@@ -304,91 +209,68 @@ export async function AccountantDashboard({
         label: "Outstanding",
         value: Math.max(
           0,
-          100 -
-            (mockFeeCollectionStatus.outstanding /
-              mockFeeCollectionStatus.totalFees) *
-              100
+          100 - (feeCollection.outstanding / feeCollection.totalFees) * 100
         ),
-        color:
-          mockFeeCollectionStatus.outstanding > 50000 ? "#ef4444" : "#f59e0b",
-        current: mockFeeCollectionStatus.outstanding,
+        color: feeCollection.outstanding > 50000 ? "#ef4444" : "#f59e0b",
+        current: feeCollection.outstanding,
         target: 0,
         unit: "pending",
       },
     ]
 
     // Calculate totals for today
-    const todayTotal = mockTodaysTransactions
+    const todayTotal = todaysTransactions
       .filter((t) => t.status === "completed")
       .reduce((sum, t) => sum + t.amount, 0)
 
     return (
-      <div className="space-y-6">
-        {/* ============ TOP HERO SECTION (Unified Order) ============ */}
-        {/* Section 1: Upcoming + Weather */}
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
-          <Upcoming
-            role="ACCOUNTANT"
-            locale={locale}
-            subdomain={school?.domain || ""}
-          />
-          <Weather
-            current={weatherData?.current}
-            forecast={weatherData?.forecast}
-            location={weatherData?.location}
-          />
+      <div className="space-y-8">
+        {/* ============ SHARED SECTIONS (the student dashboard's order) ======
+            The Upcoming/Weather hero and the Quick Look row of announcements /
+            events / notifications / messages are hidden here, as they are on
+            the student and teacher dashboards. Restore by putting the JSX back
+            and re-importing `Upcoming`, `Weather`, `QuickLookSection`,
+            `getQuickLookData` and `getWeatherData`. */}
+        <div className="space-y-6">
+          {/* Quick Actions — from `md` up only. Below it the phone dashboard
+              shows this same section near the top instead
+              (`phone-quick-actions.tsx`), where a thumb reaches it; two copies
+              at once would be the same four tiles twice. */}
+          <section className="hidden md:block">
+            <SectionHeading title="Quick Actions" />
+            <QuickActions
+              actions={getQuickActionsByRole(
+                "ACCOUNTANT",
+                school?.domain ?? undefined
+              )}
+              locale={locale}
+            />
+          </section>
+
+          {/* Analytics, directly under the quick actions rather than below the
+              two tables — the order the student dashboard settled on. */}
+          <ChartSection role="ACCOUNTANT" />
+
+          <ResourceUsageSection role="ACCOUNTANT" />
+
+          <InvoiceHistorySection role="ACCOUNTANT" />
         </div>
-
-        {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection
-          locale={locale}
-          subdomain={school?.domain || ""}
-          data={quickLookData}
-        />
-
-        {/* Section 3: Quick Actions (4 focused actions) — from `md` up only.
-            Below it the phone dashboard shows this same section near the
-            top instead (`phone-quick-actions.tsx`), where a thumb reaches
-            it; two copies at once would be the same four tiles twice. */}
-        <section className="hidden md:block">
-          <SectionHeading title="Quick Actions" />
-          <QuickActions
-            actions={getQuickActionsByRole(
-              "ACCOUNTANT",
-              school?.domain ?? undefined
-            )}
-            locale={locale}
-          />
-        </section>
-
-        {/* Section 4: Resource Usage */}
-        <ResourceUsageSection role="ACCOUNTANT" />
-
-        {/* Section 5: Invoice History */}
-        <InvoiceHistorySection role="ACCOUNTANT" />
-
-        {/* Section 6: Analytics Charts */}
-        <ChartSection role="ACCOUNTANT" />
 
         {/* ============ ACCOUNTANT-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <MetricCard
             title="Fees Collected"
-            value={`$${(mockFeeCollectionStatus.collected / 1000).toFixed(0)}K`}
+            value={`$${(feeCollection.collected / 1000).toFixed(0)}K`}
             iconName="DollarSign"
             iconColor="text-emerald-500"
-            change={8.5}
-            changeType="positive"
             href={`/${locale}/finance`}
           />
           <MetricCard
             title="Outstanding"
-            value={`$${(mockFeeCollectionStatus.outstanding / 1000).toFixed(0)}K`}
+            value={`$${(feeCollection.outstanding / 1000).toFixed(0)}K`}
             iconName="Clock"
             iconColor="text-amber-500"
-            change={-12}
-            changeType="negative"
             href={`/${locale}/finance`}
           />
           <MetricCard
@@ -400,42 +282,27 @@ export async function AccountantDashboard({
           />
           <MetricCard
             title="Overdue"
-            value={`$${(mockFeeCollectionStatus.overdue / 1000).toFixed(0)}K`}
+            value={`$${(feeCollection.overdue / 1000).toFixed(0)}K`}
             iconName="Bell"
             iconColor="text-destructive"
             href={`/${locale}/finance`}
           />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Revenue vs Expenses Chart */}
-          <div className="lg:col-span-2">
-            <RevenueChart
-              data={mockMonthlyRevenue}
-              title="Revenue vs Expenses"
-              description="Monthly financial comparison"
-              currency="$"
-            />
-          </div>
+        {/* The "Revenue vs Expenses" chart and the "Weekly Collections" chart
+            stood here and were removed 2026-09-12: five of the six months and
+            every one of the five days were written into this file by hand, and
+            a made-up number on a finance dashboard is worse than no number.
+            They come back when a query returns the real series — the charts
+            themselves (`revenue-chart.tsx`, `weekly-chart.tsx`) are untouched.
 
-          {/* Financial Health Rings */}
-          <ActivityRings activities={financialRings} title="Financial Health" />
-        </div>
-
-        {/* Secondary Content Grid */}
+            What is left of the two rows is real: the rings read the school's
+            own collection rate and invoice counts, the gauge the same rate. */}
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Weekly Collections */}
-          <WeeklyActivityChart
-            data={weeklyCollections}
-            title="Weekly Collections"
-            label="Amount"
-            color="hsl(var(--chart-1))"
-          />
+          <ActivityRings activities={financialRings} title="Financial Health" />
 
-          {/* Collection Rate Gauge */}
           <PerformanceGauge
-            value={Math.round(mockFeeCollectionStatus.collectionRate)}
+            value={Math.round(feeCollection.collectionRate)}
             label="Collection Rate"
             description="Target: 95%"
             maxValue={100}
@@ -454,8 +321,8 @@ export async function AccountantDashboard({
               <Badge variant="outline">{format(new Date(), "MMM d")}</Badge>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockTodaysTransactions.length > 0 ? (
-                mockTodaysTransactions.map((transaction, index) => (
+              {todaysTransactions.length > 0 ? (
+                todaysTransactions.map((transaction, index) => (
                   <div
                     key={index}
                     className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
@@ -527,8 +394,8 @@ export async function AccountantDashboard({
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockPendingPayments.length > 0 ? (
-                mockPendingPayments.map((payment, index) => {
+              {pendingPaymentRows.length > 0 ? (
+                pendingPaymentRows.map((payment, index) => {
                   const dueDate = new Date(payment.dueDate)
                   const isOverdue = dueDate < new Date()
                   const isDueToday = isToday(dueDate)
@@ -581,59 +448,10 @@ export async function AccountantDashboard({
           </Card>
         </div>
 
-        {/* Financial Calendar */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Financial Calendar</CardTitle>
-            <Badge variant="outline">
-              {mockFinancialCalendar.length} upcoming
-            </Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              {mockFinancialCalendar.map((event, index) => {
-                const eventDate = new Date(event.date)
-                const daysUntil = Math.ceil(
-                  (eventDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-                )
-
-                return (
-                  <div
-                    key={index}
-                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
-                  >
-                    <div>
-                      <p className="font-medium">{event.event}</p>
-                      <p className="text-muted-foreground text-sm capitalize">
-                        {event.type}
-                      </p>
-                    </div>
-                    <div className="text-end">
-                      <Badge
-                        variant={
-                          event.priority === "critical"
-                            ? "destructive"
-                            : event.priority === "high"
-                              ? "default"
-                              : "secondary"
-                        }
-                      >
-                        {daysUntil <= 0
-                          ? "Today"
-                          : daysUntil === 1
-                            ? "1 day"
-                            : `${daysUntil} days`}
-                      </Badge>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {format(eventDate, "MMM d, yyyy")}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        {/* A "Financial Calendar" card stood here and was removed
+            2026-09-12: its four deadlines — monthly report, audit prep, tax
+            filing, budget review — were written into this file at fixed
+            offsets from today, for every school. No model backs them yet. */}
 
         {/* Summary Stats */}
         <Card>
@@ -644,7 +462,7 @@ export async function AccountantDashboard({
             <div className="grid gap-6 md:grid-cols-4">
               <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                  ${(mockFeeCollectionStatus.collected / 1000).toFixed(0)}K
+                  ${(feeCollection.collected / 1000).toFixed(0)}K
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
                   Total Collected
@@ -652,7 +470,7 @@ export async function AccountantDashboard({
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
-                  ${(mockFeeCollectionStatus.outstanding / 1000).toFixed(0)}K
+                  ${(feeCollection.outstanding / 1000).toFixed(0)}K
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
                   Outstanding
@@ -666,7 +484,7 @@ export async function AccountantDashboard({
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-primary text-3xl font-bold">
-                  {mockFeeCollectionStatus.collectionRate.toFixed(0)}%
+                  {feeCollection.collectionRate.toFixed(0)}%
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
                   Collection Rate
@@ -677,11 +495,11 @@ export async function AccountantDashboard({
         </Card>
 
         {/* Progress Cards */}
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           <ProgressCard
             title="Fee Collection"
-            current={mockFeeCollectionStatus.collected}
-            total={mockFeeCollectionStatus.totalFees}
+            current={feeCollection.collected}
+            total={feeCollection.totalFees}
             unit="collected"
             iconName="DollarSign"
             showPercentage
@@ -692,14 +510,6 @@ export async function AccountantDashboard({
             total={Math.max(totalInvoices, 1)}
             unit="invoices"
             iconName="FileText"
-            showPercentage
-          />
-          <ProgressCard
-            title="Fiscal Year Progress"
-            current={7}
-            total={12}
-            unit="months"
-            iconName="Calendar"
             showPercentage
           />
         </div>
