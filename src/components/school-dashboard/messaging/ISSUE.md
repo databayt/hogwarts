@@ -636,6 +636,14 @@ normalized digits-only phone format and `actions.test.ts` to the batched
   disc. Header subtitle carries presence / typing / group size. README has the
   measurements.
 
+- Mobile tab bar's other four pages built: Updates (audience-scoped
+  announcements), Calls (the viewer's live classes), Communities (the school's
+  rooms) and Settings (profile card over links into existing pages). Tab state
+  moved out of `ios-chat-list.tsx` into `mobile/ios-shell.tsx` — the reason
+  those tabs were inert. Two lazy server actions, `getMobileUpdatesFeed` and
+  `getMobileCallsFeed`, over `mobile-tabs-queries.ts`. README carries the
+  structure and the three judgement calls.
+
 ---
 
 **Last Review:** 2026-09-12

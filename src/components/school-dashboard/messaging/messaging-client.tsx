@@ -774,7 +774,15 @@ export function MessagingClient({
           onOpenProfile={() => router.push(`/${locale}/profile`)}
           onOpenNotifications={() => router.push(`/${locale}/notifications`)}
           onOpenCall={(id) => router.push(`/${locale}/live/${id}`)}
-          onOpenUpdate={(id) => router.push(`/${locale}/announcements/${id}`)}
+          // Only staff can open an announcement's own page; the listings
+          // route sends everyone else to /unauthorized. For a student or a
+          // guardian the row is the announcement — title and opening line —
+          // and has no tap target at all.
+          onOpenUpdate={
+            currentUserRole === "ADMIN" || currentUserRole === "DEVELOPER"
+              ? (id) => router.push(`/${locale}/announcements/${id}`)
+              : undefined
+          }
           conversations={conversations}
           currentUserId={currentUserId}
           activeConversationId={activeConversation?.id ?? null}

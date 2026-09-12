@@ -286,3 +286,43 @@ white glyph, not a bare one.
 P3, and a reader that ignores the profile turns the brand green into a muted
 `#51A768`. Greys and near-whites survive the round trip; saturated colours do
 not.
+
+## The mobile shell has five tabs, not one
+
+`mobile/ios-shell.tsx` owns which tab is showing, draws the floating tab bar
+once, and swaps the body beneath it. Before this, `activeTab` lived inside
+`ios-chat-list.tsx` together with the bar, so Updates, Calls, Communities and
+Settings were drawn but inert — there was nowhere for another body to come
+from. The chat list is now the Chats body and nothing more.
+
+| Tab | Page | Data |
+| --- | --- | --- |
+| Chats | `ios-chat-list.tsx` | conversations (already in the client) |
+| Updates | `mobile/tabs/updates-view.tsx` | announcements, via `getMobileUpdatesFeed` |
+| Calls | `mobile/tabs/calls-view.tsx` | the viewer's live classes, via `getMobileCallsFeed` |
+| Communities | `mobile/tabs/communities-view.tsx` | the same conversations, read as rooms |
+| Settings | `mobile/tabs/settings-view.tsx` | the viewer's name, bio and avatar |
+
+Structure came from the WhatsApp community file's own `Updates`, `Calls`,
+`Communities` and `Settings` frames (file `EKXg4Ib9flIgtjIVgPXqxl`, page
+`13:1317`). That file is the **previous** WhatsApp design — solid bars and a
+labelled tab bar — so only the structure was taken. Every page wears the
+floating `IosHeader` and the liquid-glass tab bar this app already ships.
+
+Three decisions worth keeping:
+
+- **Nothing inert.** The reference's My status row, Channels section and Add
+  favourite row are all left out; each would be a control that does nothing in
+  a school.
+- **Updates is audience-scoped, and has to be.** `/api/mobile/announcements`
+  filters on `published` alone, which would show a student the staff-only
+  notices. `getMobileUpdates` narrows to school-wide, the viewer's role, and
+  the viewer's own classes — with ADMIN and DEVELOPER seeing everything.
+- **Calls does not pretend to be a phone log.** Incoming, outgoing and missed
+  have no meaning for a scheduled class, so the outcomes are attended, missed,
+  upcoming and live. Missed is drawn in red exactly as the reference draws a
+  missed call.
+
+Both data pages fetch lazily on first open through a server action rather than
+riding along with the conversation list. Two extra queries on every messages
+page load would slow the primary surface down for secondary ones.
