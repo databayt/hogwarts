@@ -219,3 +219,34 @@ WhatsApp Web does too. Everywhere outside this route the app keeps Thmanyah for 
 
 Note `WA_TYPOGRAPHY.family` in `mobile/wa-tokens.ts` still reads `"SF Pro Text"` from
 the Figma extraction. Nothing consumes it; the CSS class is the live source.
+
+## Demo inboxes (seed)
+
+`prisma/seeds/messaging-demo.ts` gives the accounts a demo is actually driven from
+a populated inbox. The generic `prisma/seeds/messages.ts` pairs teachers and
+students at random, which left `student@` with one thread and `teacher@` /
+`parent@` with one apiece.
+
+The pass resolves counterparts from the real graph — the student's own section
+teachers (by timetable slot, so the copy names the subject that teacher really
+teaches), their homeroom teacher, their classmates, the school admin — then
+writes authored multi-turn dialogues rather than disconnected one-liners. Threads
+land across today, yesterday, this week and last week; a few stay unread and one
+is pinned so the Unread and Favourites filters have content.
+
+Read state is expressed by moving `ConversationParticipant.lastReadAt`, never by
+`Message.status`: unread is derived as `message.createdAt > lastReadAt` in
+`getUnreadCountsPerConversation`. A dialogue that ends on the reader's own reply
+is always written as read.
+
+Run it alone with `pnpm db:seed:single messaging-demo`. It is idempotent —
+direct threads are guarded by participant pair, groups by title, and an existing
+conversation is never rewritten.
+
+### Unread counts reach the list
+
+`getConversationsList` (and the polling twin) now attach a per-row `unreadCount`
+for the reader via `getUnreadCountsPerConversation`. The list select carries
+participant rows but never carried an unread figure, so `conv.unreadCount` was
+`undefined` on the client: the mobile Unread filter matched nothing on load and
+no row drew a badge until a live socket event incremented a counter.

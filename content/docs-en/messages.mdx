@@ -238,8 +238,17 @@ Enums: `ConversationType` (5), `MessageStatus` (5), `ParticipantRole` (5).
 
 ```bash
 pnpm db:seed:single messages          # conversations, messages, reactions, receipts
+pnpm db:seed:single messaging-demo    # authored inboxes for the student/teacher/parent demo accounts
 pnpm db:seed:single messaging-phones  # StaffMember + phone numbers for WhatsApp testing
 ```
+
+`messages` pairs teachers and students at random, which leaves the accounts a
+demo is driven from nearly empty. `messaging-demo` fills them: it resolves
+counterparts from the real graph (the student's own section teachers, homeroom
+teacher and classmates) and writes multi-turn dialogues spread across the past
+fortnight, with a few threads left unread and one pinned. It runs as part of
+`messages`, and re-running it changes nothing — existing conversations are never
+rewritten.
 
 ## See also
 

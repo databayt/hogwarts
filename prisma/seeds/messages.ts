@@ -16,6 +16,7 @@
 
 import type { PrismaClient } from "@prisma/client"
 
+import { seedDemoInboxes } from "./messaging-demo"
 import type { StudentRef, TeacherRef, UserRef } from "./types"
 import {
   logPhase,
@@ -707,5 +708,9 @@ export async function seedMessaging(
   // 2. Seed messages
   const messageCount = await seedMessages(prisma, conversationIds, userIdMap)
 
-  return messageCount
+  // 3. Authored inboxes for the accounts a demo is driven from. The random
+  // pairing above leaves student@ / teacher@ / parent@ with almost nothing.
+  const demoCount = await seedDemoInboxes(prisma, schoolId)
+
+  return messageCount + demoCount
 }

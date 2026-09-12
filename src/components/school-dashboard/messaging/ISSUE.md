@@ -616,6 +616,19 @@ normalized digits-only phone format and `actions.test.ts` to the batched
 
 **Net:** 1:1 outbound WhatsApp works the moment a school scans the QR. Group outbound + retry works too (join table live). Inbound + realtime light up once the Vercel secrets are set and the VM stack is deployed (DEPLOY.md).
 
+## 2026-09-12 — demo inboxes seeded, list unread counts fixed
+
+- `prisma/seeds/messaging-demo.ts` (new) writes authored inboxes for `student@`,
+  `teacher@` and `parent@`: 32 conversations / 112 messages on the demo school,
+  counterparts resolved from the student's own section timetable, homeroom and
+  classmates. Idempotent; `pnpm db:seed:single messaging-demo`. Called from
+  `seedMessaging`, so the full seed picks it up too.
+- **Fixed:** `getConversationsList` / `getConversationsForPoll` never attached an
+  unread count, so every row arrived at the client with `unreadCount: undefined`.
+  The mobile Unread filter matched nothing on load and no row drew a badge until
+  a socket event bumped a counter. Both now attach it from
+  `getUnreadCountsPerConversation` (one aggregated query per page).
+
 ---
 
-**Last Review:** 2026-06-12
+**Last Review:** 2026-09-12

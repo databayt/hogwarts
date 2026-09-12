@@ -76,6 +76,7 @@ import { seedWellness } from "./health"
 import { seedInvoices } from "./invoices"
 import { seedLibrary } from "./library"
 import { seedMessaging } from "./messages"
+import { seedDemoInboxes } from "./messaging-demo"
 import { seedMessagingPhones } from "./messaging-phones"
 import { seedNotificationTemplates } from "./notification-templates"
 import { seedNotifications } from "./notifications"
@@ -785,6 +786,12 @@ const SEEDS: Record<string, SeedEntry> = {
       const students = await resolveStudents(prisma, schoolId)
       const { adminUsers } = await resolveUsers(prisma, schoolId)
       await seedMessaging(prisma, schoolId, teachers, students, adminUsers)
+    },
+  },
+  "messaging-demo": {
+    description: "Authored inboxes for the student/teacher/parent demo accounts",
+    run: async (prisma, schoolId) => {
+      await seedDemoInboxes(prisma, schoolId)
     },
   },
   "messaging-phones": {

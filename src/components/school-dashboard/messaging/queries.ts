@@ -351,7 +351,31 @@ export async function getConversationsList(
     db.conversation.count({ where }),
   ])
 
-  return { rows, count }
+  return { rows: await withUnreadCounts(schoolId, userId, rows), count }
+}
+
+/**
+ * Attach the reader's unread count to each row.
+ *
+ * The list select carries participant rows but no unread figure, so the
+ * client used to see `undefined` and every conversation read as read — the
+ * Unread filter matched nothing until a live socket event bumped a counter.
+ * One aggregated query fills it for the whole page.
+ */
+async function withUnreadCounts<T extends { id: string }>(
+  schoolId: string,
+  userId: string,
+  rows: T[]
+): Promise<(T & { unreadCount: number })[]> {
+  if (rows.length === 0) return []
+
+  const counts = await getUnreadCountsPerConversation(
+    schoolId,
+    userId,
+    rows.map((r) => r.id)
+  )
+
+  return rows.map((row) => ({ ...row, unreadCount: counts.get(row.id) ?? 0 }))
 }
 
 /**
@@ -364,12 +388,14 @@ export async function getConversationsForPoll(
   schoolId: string,
   userId: string
 ) {
-  return db.conversation.findMany({
+  const rows = await db.conversation.findMany({
     where: buildConversationWhere(schoolId, userId),
     orderBy: buildConversationOrderBy(),
     take: 50,
     select: conversationListSelect,
   })
+
+  return withUnreadCounts(schoolId, userId, rows)
 }
 
 /**
