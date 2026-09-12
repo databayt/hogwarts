@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/popover"
 import { SpotlightSearch } from "@/components/atom/generic-command-menu/spotlight-search"
 import type { Role } from "@/components/atom/generic-command-menu/types"
+import { TOOLBAR_BUTTON, TOOLBAR_ICON } from "@/components/atom/toolbar-size"
 import { UserButton } from "@/components/auth/user-button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { LanguageSwitcher } from "@/components/internationalization/language-switcher"
@@ -22,13 +23,6 @@ import { MessageMailIcon } from "@/components/school-dashboard/messaging/mail-ic
 import { NotificationBellIconCompact } from "@/components/school-dashboard/notifications/bell-icon"
 import type { School } from "@/components/school-marketing/types"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
-
-/**
- * The glyph size shared by every icon in the phone menu's toolbar row — the
- * search, the language toggle, the theme toggle, the bell, the mail and the
- * avatar. Named once so the row cannot drift back into six sizes.
- */
-const TOOLBAR_ICON = "size-6"
 
 export interface NavItem {
   href: string
@@ -141,7 +135,12 @@ export function MobileNav({
               wants, which is bigger than the 28-32px these icons take in the
               desktop header they were borrowed from. */}
           {showToolbar && (
-            <div className="flex items-center gap-2 border-b pb-4 [&>a]:size-10 [&>button]:size-10">
+            <div
+              className={cn(
+                "flex items-center gap-2 border-b pb-4",
+                TOOLBAR_BUTTON
+              )}
+            >
               <SpotlightSearch
                 surface="school-dashboard"
                 iconClassName={TOOLBAR_ICON}

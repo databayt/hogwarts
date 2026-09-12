@@ -15,9 +15,11 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface LangSwitcherProps {
   className?: string
+  /** Size of the glyph itself, e.g. `size-6` in the marketing nav's panel. */
+  iconClassName?: string
 }
 
-export function LangSwitcher({ className }: LangSwitcherProps) {
+export function LangSwitcher({ className, iconClassName }: LangSwitcherProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { dictionary } = useDictionary()
@@ -54,7 +56,7 @@ export function LangSwitcher({ className }: LangSwitcherProps) {
       )}
       onClick={switchLanguage}
     >
-      <Languages className="size-4" />
+      <Languages className={cn("size-4", iconClassName)} />
       <span className="sr-only">
         {switchLabel} — {targetName}
       </span>

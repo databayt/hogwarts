@@ -27,7 +27,7 @@ export function ModeSwitcher({ className, iconClassName }: ModeSwitcherProps) {
     <Button
       variant="ghost"
       size="icon"
-      className="group/toggle size-8"
+      className={cn("group/toggle size-8", className)}
       onClick={toggleTheme}
       title={themeLabel}
     >

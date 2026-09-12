@@ -22,6 +22,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { gsap } from "gsap"
 
+import { TOOLBAR_BUTTON, TOOLBAR_ICON } from "@/components/atom/toolbar-size"
 import { UserButton } from "@/components/auth/user-button"
 import { LangSwitcher } from "@/components/template/marketing-header/lang-switcher"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
@@ -310,12 +311,26 @@ export function ZendaNav({
           {/* Search, language, theme and account -- not part of the zenda clone,
               these came over from SiteHeader. They live in a panel the hamburger
               opens rather than sitting in the bar, so the bar keeps zenda's
-              logo-and-links proportions at every width. */}
-          <div className={`nav_utility-wrap ${isActive ? "is-active" : ""}`}>
-            <SearchMenu />
-            <LangSwitcher />
-            <ModeSwitcher />
-            <UserButton variant="site" subdomain={subdomain} />
+              logo-and-links proportions at every width.
+
+              One size for all four, from `atom/toolbar-size`, the same numbers
+              the dashboard's phone toolbar row takes: this panel is opened by a
+              hamburger and read with a thumb, and the four controls arrived here
+              from a header at four different sizes (28, 32, 32, 32 boxes around
+              16, 16, 18 and 16px glyphs). Each glyph takes the size through its
+              own prop rather than a rule on this row, because `Button` sizes an
+              unsized child svg from a selector no ancestor can outrank. */}
+          <div
+            className={`nav_utility-wrap ${isActive ? "is-active" : ""} ${TOOLBAR_BUTTON}`}
+          >
+            <SearchMenu iconClassName={TOOLBAR_ICON} />
+            <LangSwitcher iconClassName={TOOLBAR_ICON} />
+            <ModeSwitcher iconClassName={TOOLBAR_ICON} />
+            <UserButton
+              variant="site"
+              subdomain={subdomain}
+              avatarClassName={TOOLBAR_ICON}
+            />
           </div>
 
           {/* `hero-link` puts the hamburger into the homepage intro's staggered

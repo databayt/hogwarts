@@ -4,6 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { SpotlightSearch } from "@/components/atom/generic-command-menu/spotlight-search"
 
-export function SearchMenu() {
-  return <SpotlightSearch surface="school-marketing" />
+export function SearchMenu({ iconClassName }: { iconClassName?: string }) {
+  return (
+    <SpotlightSearch surface="school-marketing" iconClassName={iconClassName} />
+  )
 }

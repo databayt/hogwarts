@@ -321,8 +321,10 @@
   top: calc(100% + 0.5rem);
   inset-inline-end: 0;
   z-index: 9999999;
-  gap: 0.125rem;
-  padding: 0.375rem;
+  /* 8px, not 2px: the four controls inside are 40px thumb targets now (see
+     atom/toolbar-size), and at 2px their hit areas touched. */
+  gap: 0.5rem;
+  padding: 0.5rem;
   border-radius: 0.75rem;
   background-color: #fff;
   box-shadow:
