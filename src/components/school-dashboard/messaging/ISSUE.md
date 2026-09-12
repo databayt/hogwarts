@@ -629,6 +629,13 @@ normalized digits-only phone format and `actions.test.ts` to the batched
   a socket event bumped a counter. Both now attach it from
   `getUnreadCountsPerConversation` (one aggregated query per page).
 
+- Mobile chat view rebuilt to the iOS captures (`public/whatsapp/IMG_2634..2637`):
+  the header is now floating liquid glass over the wallpaper instead of a solid
+  band, the thread scrolls under it, the opening date pill precedes the
+  encryption card (now 280px wide), and the input bar's mic is a filled green
+  disc. Header subtitle carries presence / typing / group size. README has the
+  measurements.
+
 ---
 
 **Last Review:** 2026-09-12

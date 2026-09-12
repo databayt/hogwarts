@@ -6,104 +6,122 @@ import { WaIcon } from "../wa-icon"
 
 type Props = {
   name: string
+  /** Presence or hint line under the name. Omitted leaves the name centred. */
+  subtitle?: string | null
   avatarUrl?: string | null
   avatarFallback?: string
-  unreadCount?: number
   onBack?: () => void
   onVideo?: () => void
   onPhone?: () => void
   onTapInfo?: () => void
+  backLabel?: string
+  videoLabel?: string
+  phoneLabel?: string
   className?: string
 }
 
+/**
+ * The chat header carries no bar of its own — the wallpaper runs to the top of
+ * the screen and the controls float over it as liquid glass, the way the iOS
+ * app draws it (`public/whatsapp/IMG_2634..2637`).
+ *
+ * Measured off those captures at 3x: the back disc is 44px inset 16px, the
+ * call capsule 102x44 inset 16px on the other side, the avatar 40px, and the
+ * name sits on the same axis as both discs. The material and the 44px size are
+ * the toolbar instantiation of Figma node 1:59 — the same one `ios-header.tsx`
+ * carries, so the back disc lands at the same y as the chat list's buttons.
+ * The capsule has no kit variant of its own; it is that material at one width.
+ */
 export function TopContactHeader({
   name,
+  subtitle,
   avatarUrl,
   avatarFallback,
-  unreadCount,
   onBack,
   onVideo,
   onPhone,
   onTapInfo,
+  backLabel,
+  videoLabel,
+  phoneLabel,
   className,
 }: Props) {
   return (
     <div
       className={cn(
-        "relative flex h-[98px] w-full flex-col items-end justify-end py-[4px] pe-[22px]",
-        "bg-[color:var(--wa-surface-panel)] backdrop-blur-[25px]",
+        "wa-glass-chat pointer-events-none absolute inset-x-0 top-0 z-20",
+        "flex items-end gap-[9px] px-[16px] pb-[8px]",
+        "h-[calc(env(safe-area-inset-top,0px)+56px)]",
         className
       )}
     >
-      <div className="flex w-full items-center justify-between">
-        <div className="flex w-[272px] items-center pe-px">
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label="Back"
-            className="flex size-[32px] shrink-0 items-center justify-center rtl:scale-x-[-1]"
-          >
-            <WaIcon
-              name="ic-wa-chevron-lt-32"
-              className="size-[32px] text-[color:var(--wa-text-primary)]"
-            />
-          </button>
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label={backLabel ?? "Back"}
+        className="wa-glass-control pointer-events-auto flex size-[44px] shrink-0 items-center justify-center rounded-full"
+      >
+        <WaIcon
+          name="ic-wa-chevron-lt-32"
+          className="size-[34px] rtl:scale-x-[-1]"
+        />
+      </button>
 
-          {typeof unreadCount === "number" && unreadCount > 0 && (
-            <span className="flex h-full items-center pe-[4px] text-[16.8px] font-medium tracking-[-0.336px] text-[color:var(--wa-text-primary)]">
-              {unreadCount}
+      <button
+        type="button"
+        onClick={onTapInfo}
+        className="pointer-events-auto flex h-[44px] min-w-0 flex-1 items-center gap-[10px] text-start"
+      >
+        <span className="flex size-[40px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[0.212px] border-[color:var(--wa-border-avatar)] bg-neutral-300">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt=""
+              className="size-full object-cover"
+              draggable={false}
+            />
+          ) : (
+            <span className="text-[15px] font-semibold text-white">
+              {avatarFallback ?? name.charAt(0).toUpperCase()}
             </span>
           )}
+        </span>
 
-          <button
-            type="button"
-            onClick={onTapInfo}
-            className="flex min-w-0 flex-1 items-center gap-[10px] text-start"
-          >
-            <span className="flex size-[36px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[0.212px] border-[color:var(--wa-border-avatar)] bg-neutral-300">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt=""
-                  className="size-full object-cover"
-                  draggable={false}
-                />
-              ) : (
-                <span className="text-[14px] font-semibold text-white">
-                  {avatarFallback ?? name.charAt(0).toUpperCase()}
-                </span>
-              )}
+        <span className="flex min-w-0 flex-col justify-center">
+          <span className="truncate text-[17px] leading-[22px] font-semibold tracking-[-0.34px] text-[color:var(--wa-text-primary)]">
+            {name}
+          </span>
+          {subtitle ? (
+            <span className="truncate text-[13px] leading-[16px] text-[color:var(--wa-text-secondary)]">
+              {subtitle}
             </span>
-            <span className="max-w-[145px] truncate text-[16px] font-semibold tracking-[-0.32px] text-[color:var(--wa-text-primary)]">
-              {name}
-            </span>
-          </button>
-        </div>
+          ) : null}
+        </span>
+      </button>
 
-        <div className="flex items-start gap-[16px] pb-[2px]">
-          <button
-            type="button"
-            onClick={onVideo}
-            aria-label="Video call"
-            className="size-[32px]"
-          >
-            <WaIcon
-              name="ic-wa-video-32"
-              className="size-[32px] text-[color:var(--wa-text-secondary)]"
-            />
-          </button>
-          <button
-            type="button"
-            onClick={onPhone}
-            aria-label="Voice call"
-            className="size-[32px]"
-          >
-            <WaIcon
-              name="ic-wa-phone-32"
-              className="size-[32px] text-[color:var(--wa-text-secondary)]"
-            />
-          </button>
-        </div>
+      {/* The two glyphs are not symmetric inside the capsule: measured off the
+          captures the video ink starts 14px in, the phone ink ends 13px from
+          the far edge, and 27px of air sits between them. Our 32px icon boxes
+          carry their own transparent inset (video 3.2, phone 5.9), so the
+          padding and gap below are what put the *ink* where the capture has
+          it, not what centres the boxes. */}
+      <div className="wa-glass-control pointer-events-auto flex h-[44px] w-[102px] shrink-0 items-center justify-start gap-[17px] rounded-full ps-[10px]">
+        <button
+          type="button"
+          onClick={onVideo}
+          aria-label={videoLabel ?? "Video call"}
+          className="flex size-[32px] items-center justify-center"
+        >
+          <WaIcon name="ic-wa-video-32" className="size-[32px]" />
+        </button>
+        <button
+          type="button"
+          onClick={onPhone}
+          aria-label={phoneLabel ?? "Voice call"}
+          className="flex size-[32px] items-center justify-center"
+        >
+          <WaIcon name="ic-wa-phone-32" className="size-[32px]" />
+        </button>
       </div>
     </div>
   )

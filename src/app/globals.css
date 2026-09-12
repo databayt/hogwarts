@@ -784,6 +784,7 @@ body {
      edge is the cast shadow plus the refractive rim, so the border is the
      kit's bright rim, not the old dark hairline. */
   --wa-glass-bg: rgba(241, 241, 241, 0.85);
+  --wa-glass-bg-chat: rgba(255, 253, 247, 0.85);
   --wa-glass-border: rgba(255, 255, 255, 0.65);
   --wa-glass-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
   --wa-glass-inner: rgba(0, 0, 0, 0.07);
@@ -827,6 +828,8 @@ body {
   --wa-text-avatar-person: #7fb6e8;
   --wa-border-cta-filters: #2a3942;
   --wa-glass-bg: rgba(32, 44, 51, 0.85);
+  /* Dark threads keep the list's fill — the dark wallpaper is already cool. */
+  --wa-glass-bg-chat: rgba(32, 44, 51, 0.85);
   --wa-glass-border: rgba(255, 255, 255, 0.15);
   --wa-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   --wa-glass-inner: rgba(255, 255, 255, 0.1);
@@ -893,6 +896,17 @@ body {
     inset -1px 1px 1.5px rgba(255, 255, 255, 0.95),
     inset 1px -1px 1.5px rgba(0, 0, 0, 0.07),
     var(--wa-glass-shadow);
+}
+
+/* The same control, over a chat thread's wallpaper. WhatsApp's glass is
+   adaptive and one flat token cannot be both surfaces: sampled over the
+   near-white chat list the fill is #f1f1f1, but over the warm wallpaper of an
+   open thread it is a warm white. Composited at the shared 0.85 alpha,
+   rgba(255,253,247) reproduces the (254,251,246) measured off
+   public/whatsapp/IMG_2634..2637. Everything else about the material — rim,
+   blur, cast shadow — is unchanged. */
+.wa-glass-chat .wa-glass-control {
+  background: var(--wa-glass-bg-chat);
 }
 
 .wa-glass-control:active {

@@ -159,7 +159,6 @@ export default function ChatPreviewPage() {
       <div className="flex h-full w-[393px] max-w-full flex-col overflow-hidden shadow-xl">
         <MessagesView
           contactName={'Emmett "Doc" Br'}
-          unreadCount={1}
           items={ITEMS}
           onBack={() => window.history.back()}
           onSend={(t) => console.log("send:", t)}

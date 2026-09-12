@@ -60,8 +60,10 @@ export type ChatItem =
 
 type Props = {
   contactName: string
+  /** Presence or hint line under the name in the header. */
+  contactSubtitle?: string | null
   contactAvatarUrl?: string | null
-  unreadCount?: number
+  backLabel?: string
   items: ChatItem[]
   onBack?: () => void
   onVideo?: () => void
@@ -88,8 +90,9 @@ const LOAD_MORE_THRESHOLD_PX = 120
 
 export function MessagesView({
   contactName,
+  contactSubtitle,
   contactAvatarUrl,
-  unreadCount,
+  backLabel,
   items,
   onBack,
   onVideo,
@@ -158,6 +161,9 @@ export function MessagesView({
     })
   }
 
+  // The card follows the opening date pill when the thread has one.
+  const noticeIndex = items[0]?.kind === "date" ? 1 : 0
+
   const renderedItems = useMemo(
     () =>
       items.map((item) => {
@@ -221,29 +227,38 @@ export function MessagesView({
 
   return (
     <div className={cn("relative flex h-full w-full flex-col", className)}>
-      <TopContactHeader
-        name={contactName}
-        avatarUrl={contactAvatarUrl}
-        unreadCount={unreadCount}
-        onBack={onBack}
-        onVideo={onVideo}
-        onPhone={onPhone}
-        onTapInfo={onTapInfo}
-      />
-
+      {/* The wallpaper runs to the top of the screen and the thread scrolls
+          under the floating header, which is why the header is out of flow and
+          the scroller carries its height as padding. Padding on the scroller
+          itself keeps scrollHeight whole, so the prepend anchor above still
+          measures a real delta. */}
       <ChatWallpaper className="min-h-0 flex-1 overflow-hidden">
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto overscroll-contain pb-[8px]"
+          className="flex-1 overflow-y-auto overscroll-contain pt-[calc(env(safe-area-inset-top,0px)+56px)] pb-[8px]"
         >
+          {/* The thread's first date pill sits ABOVE the encryption card —
+              see the captures. Everything after the card is the thread. */}
+          {renderedItems.slice(0, noticeIndex)}
           <EncryptionNotice
             text={encryptionNotice}
             learnMoreLabel={encryptionLearnMore}
           />
-          {renderedItems}
+          {renderedItems.slice(noticeIndex)}
         </div>
       </ChatWallpaper>
+
+      <TopContactHeader
+        name={contactName}
+        subtitle={contactSubtitle}
+        avatarUrl={contactAvatarUrl}
+        onBack={onBack}
+        onVideo={onVideo}
+        onPhone={onPhone}
+        onTapInfo={onTapInfo}
+        backLabel={backLabel}
+      />
 
       <InputBar
         value={draftText}

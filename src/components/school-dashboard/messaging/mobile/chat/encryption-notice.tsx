@@ -32,7 +32,10 @@ export function EncryptionNotice({
         className
       )}
     >
-      <p className="max-w-[420px] rounded-[8px] bg-[color:var(--wa-surface-notice)] px-[14px] py-[6px] text-center text-[14.5px] leading-[20px] text-[color:var(--wa-text-notice)]">
+      {/* 280px wide, not the full column: measured off
+          public/whatsapp/IMG_2634..2637, where the card leaves ~55px of
+          wallpaper on each side of a 390pt screen. */}
+      <p className="max-w-[280px] rounded-[8px] bg-[color:var(--wa-surface-notice)] px-[14px] py-[6px] text-center text-[14.5px] leading-[20px] text-[color:var(--wa-text-notice)]">
         <LockGlyph />
         {text}
         {learnMoreLabel && (

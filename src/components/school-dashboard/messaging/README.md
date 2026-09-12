@@ -250,3 +250,39 @@ for the reader via `getUnreadCountsPerConversation`. The list select carries
 participant rows but never carried an unread figure, so `conv.unreadCount` was
 `undefined` on the client: the mobile Unread filter matched nothing on load and
 no row drew a badge until a live socket event incremented a counter.
+
+## The mobile chat header is liquid glass over the wallpaper
+
+Measured off `public/whatsapp/IMG_2634..2637` (iOS, 3x, 390pt wide):
+
+| Element | Geometry |
+| --- | --- |
+| Back disc | 44px circle, 16px from the leading edge |
+| Avatar | 40px, 9px after the disc, name 10px after that |
+| Name / subtitle | 17px semibold over 13px secondary |
+| Call capsule | 102 x 44, 16px from the trailing edge |
+| Capsule glyphs | video ink 27 x 21, phone ink 21 x 21, 27px of air between |
+
+The header has no bar of its own. The wallpaper runs to the top of the screen
+and the thread scrolls under the controls, so `TopContactHeader` is positioned
+out of flow and the scroller carries its height as `padding-top` — padding on
+the scroller keeps `scrollHeight` whole, which the prepend anchor in
+`messages-view.tsx` measures.
+
+The material and the 44px size are the toolbar instantiation of Figma node
+`1:59`, the same one `ios-header.tsx` carries, so the back disc lands at the
+same y as the chat list's buttons. The capsule has no kit variant of its own —
+it is that material at one width. The one addition is `.wa-glass-chat`, which
+swaps the fill for `--wa-glass-bg-chat`: WhatsApp's glass is adaptive and a
+flat token cannot be both surfaces, reading `#f1f1f1` over the near-white chat
+list but a warm white over a thread's wallpaper.
+
+Two other things came off the same captures. The thread's opening date pill
+sits **above** the encryption card, and that card is 280px wide, not the full
+column. And the mic in the input bar is a filled product-green disc with a
+white glyph, not a bare one.
+
+**Do not sample a vivid colour straight out of those PNGs.** iOS writes Display
+P3, and a reader that ignores the profile turns the brand green into a muted
+`#51A768`. Greys and near-whites survive the round trip; saturated colours do
+not.

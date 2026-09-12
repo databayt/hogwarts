@@ -158,15 +158,20 @@ export function InputBar({
                   className="size-[32px] text-[color:var(--wa-text-primary)]"
                 />
               </button>
+              {/* The mic is a filled product-green disc, not a bare glyph —
+                  32px with a ~17px white mic inside, measured off
+                  public/whatsapp/IMG_2634..2637. The capture's own pixels read
+                  as a muted green because iOS writes Display P3; the brand
+                  token is the right sRGB value for it. */}
               <button
                 type="button"
                 onClick={onMic}
                 aria-label="Voice message"
-                className="size-[32px]"
+                className="flex size-[32px] items-center justify-center rounded-full bg-[color:var(--wa-surface-product)]"
               >
                 <WaIcon
                   name="ic-wa-mic-32"
-                  className="size-[32px] text-[color:var(--wa-text-primary)]"
+                  className="size-[23px] text-[color:var(--wa-text-invert)]"
                 />
               </button>
             </>

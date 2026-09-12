@@ -269,6 +269,24 @@ export function MessagingClient({
     return online
   }, [presenceMap])
 
+  // The line under the name in the mobile chat header: what the other side is
+  // doing on a 1:1, how many people are in the room on a group.
+  const mobileHeaderSubtitle = (() => {
+    if (!activeConversation) return null
+    if (typingConversations.get(activeConversation.id)) {
+      return m?.ui?.is_typing ?? null
+    }
+    if (activeConversation.type === "direct") {
+      return activeContactUserId && onlineUserIds.has(activeContactUserId)
+        ? (m?.ui?.online ?? null)
+        : null
+    }
+    const count = activeConversation.participants?.length ?? 0
+    if (count === 0) return null
+    if (count === 1) return m?.ui?.member ?? null
+    return m?.ui?.members?.replace("{count}", String(count)) ?? null
+  })()
+
   // --- Socket.IO connection (reactive) ---
   useEffect(() => {
     setIsConnected(socketService.isConnected())
@@ -815,6 +833,7 @@ export function MessagingClient({
               currentUserId,
               adaptLabels
             )}
+            contactSubtitle={mobileHeaderSubtitle}
             contactAvatarUrl={conversationAvatar(
               activeConversation,
               currentUserId
