@@ -45,8 +45,11 @@ live backlog + what shipped this pass.
 - **The graph counts domain events, and `UserActivity` only where there are
   none.** Staff and parents count their logged rows; students and teachers do
   not, because their rows narrate attendance/submission/result rows that are
-  already counted, and counting both counts the day twice. If `logActivity`
-  ever gains callers for students or teachers, this is the rule to revisit.
+  already counted, and counting both counts the day twice. Two things would
+  break the rule and need revisiting: `logActivity` gaining callers for students
+  or teachers, and a `logActivity` call on expense approval — the seed already
+  narrates approvals as `UserActivity` while the graph counts the `Expense` rows
+  themselves, so staff would double-count too.
 - **A demo profile that looks empty is usually data, not code.** Measure per
   role before touching the query — the seed's guards happily leave one role at
   zero while another looks fine. `pnpm db:seed:single profile-activity`, then

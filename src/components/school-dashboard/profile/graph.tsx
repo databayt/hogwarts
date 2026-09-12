@@ -50,8 +50,9 @@ function emptyYearData(role: ProfileRole, year: number): ContributionGraphData {
   const startDate = new Date(year, 0, 1)
   const now = new Date()
   const yearEnd = new Date(year, 11, 31)
-  // Match the server's range: the year in progress stops at today.
-  const endDate = now < yearEnd ? now : yearEnd
+  // Match the server's range: the year in progress stops at today, and a year
+  // that has not started yet keeps its full (empty) grid.
+  const endDate = now < startDate ? yearEnd : now < yearEnd ? now : yearEnd
   const contributions: ContributionDataPoint[] = []
   const current = new Date(startDate)
   current.setDate(current.getDate() - current.getDay())

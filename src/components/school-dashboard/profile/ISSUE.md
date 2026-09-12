@@ -46,6 +46,22 @@ Asked for and removed (they are GitHub's, but not wanted here): the role label
 under the name, the status row (the emoji still rides the avatar), and the tab
 count badges.
 
+### Production needs two runs after the next deploy
+
+Neither happens on its own. `ensure-demo.ts` short-circuits once the demo is
+seeded and `deploy-cloudflare.sh` never seeds, so prod's demo accounts still
+carry ~30 activity rows each and its teacher graph is still empty. Against the
+prod `DIRECT_URL`:
+
+```bash
+pnpm db:seed:single profile-activity                          # the working year
+npx tsx -r dotenv/config prisma/scripts/translate-seeded-english.ts
+```
+
+The second rewrites the demo student's English city/address/medical note into
+Arabic; `prisma/seeds/` now writes them that way, but a seed only runs against a
+fresh database. Both are idempotent and safe to re-run.
+
 Also this pass:
 
 - [x] **The profile sat 16px further in than the app header.** The dashboard
