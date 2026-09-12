@@ -55,7 +55,7 @@ older than 7 days once the deploy is verified. Prefer a `no_compute` branch over
 
 1. **Check the schema gap before every deploy.** `prisma migrate diff --from-url <prod>
    --to-schema-datamodel prisma`. This repo's migration history is empty by design; DDL is applied
-   out-of-band, snapshot first, additive statements only. Shipping code ahead of its columns puts
+   out-of-band, restore point first (a `no_compute` Neon branch; the snapshot slot is one), additive statements only. Shipping code ahead of its columns puts
    "column does not exist" 500s on live pages. This actually happened and was caught pre-deploy.
 2. **Never remove `"triggers"` from `wrangler.jsonc` to disable crons.** Omitting the key leaves
    existing schedules in place. Set the array explicitly.
