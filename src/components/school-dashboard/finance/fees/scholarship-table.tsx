@@ -5,11 +5,14 @@
 import * as React from "react"
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { Users } from "lucide-react"
 
+import { formatCurrency } from "@/lib/i18n-format"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -17,7 +20,13 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { PlatformToolbar } from "@/components/school-dashboard/shared"
+import {
+  ItemCard,
+  ListingViews,
+  PlatformToolbar,
+  RowActions,
+  TableGrid,
+} from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
   createDeleteAction,
@@ -28,6 +37,7 @@ import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteScholarship, fetchScholarshipRows } from "./actions"
+import { STATUS_COLORS } from "./config"
 import {
   getScholarshipColumns,
   type ScholarshipRow,
@@ -38,6 +48,8 @@ interface ScholarshipsTableProps {
   total: number
   lang: Locale
   perPage?: number
+  /** The school's currency — `School.currency`, never a default. */
+  currency?: string
 }
 
 function ScholarshipsTableInner({
@@ -45,11 +57,15 @@ function ScholarshipsTableInner({
   total,
   lang,
   perPage = 20,
+  currency,
 }: ScholarshipsTableProps) {
   const router = useRouter()
   const { dictionary } = useDictionary()
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  const { view, phoneView, toggleView } = usePlatformView({
+    defaultView: "table",
+    phoneView: "grid",
+  })
 
   const col = (dictionary as any)?.finance?.columns as
     | Record<string, string>
@@ -57,6 +73,17 @@ function ScholarshipsTableInner({
   const fc = (dictionary as any)?.finance?.common as
     | Record<string, string>
     | undefined
+  const sf = (dictionary as any)?.finance?.scholarshipForm as
+    | Record<string, string>
+    | undefined
+  // `coverageAmount` is a percentage for PERCENTAGE awards and money only for
+  // FIXED_AMOUNT ones; a FULL award covers everything and has no figure.
+  const coverage = (s: ScholarshipRow) =>
+    s.coverageType === "PERCENTAGE"
+      ? `${new Intl.NumberFormat(lang).format(s.coverageAmount)}%`
+      : s.coverageType === "FULL"
+        ? sf?.full
+        : formatCurrency(s.coverageAmount, lang, currency || "USD")
 
   const { data, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
     usePlatformData<ScholarshipRow, Record<string, unknown>>({
@@ -97,9 +124,14 @@ function ScholarshipsTableInner({
   const columns = useMemo(
     () => [
       getSelectColumn<ScholarshipRow>(),
-      ...getScholarshipColumns(lang, col, { onDelete: handleSingleDelete }),
+      ...getScholarshipColumns(
+        lang,
+        col,
+        { onDelete: handleSingleDelete },
+        currency
+      ),
     ],
-    [lang, col, handleSingleDelete]
+    [lang, col, handleSingleDelete, currency]
   )
 
   const { table } = useDataTable<ScholarshipRow>({
@@ -195,6 +227,7 @@ function ScholarshipsTableInner({
       <PlatformToolbar
         table={table}
         view={view}
+        phoneView={phoneView}
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
@@ -205,12 +238,60 @@ function ScholarshipsTableInner({
         onCreate={handleCreate}
         entityName="scholarships"
       />
-      <DataTable
-        table={table}
-        paginationMode="load-more"
-        hasMore={hasMore}
-        isLoading={isLoading}
-        onLoadMore={loadMore}
+      <ListingViews
+        view={view}
+        phoneView={phoneView}
+        table={
+          <DataTable
+            table={table}
+            paginationMode="load-more"
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          />
+        }
+        grid={
+          <TableGrid
+            table={table}
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          >
+            {(row) => {
+              const scholarship = row.original
+              return (
+                <ItemCard
+                  key={row.id}
+                  href={`/${lang}/finance/fees/scholarships/${scholarship.id}`}
+                  eyebrow={scholarship.academicYear}
+                  title={scholarship.name}
+                  value={coverage(scholarship)}
+                  badges={
+                    <Badge
+                      variant="outline"
+                      className={
+                        scholarship.isActive
+                          ? STATUS_COLORS.ACTIVE
+                          : STATUS_COLORS.INACTIVE
+                      }
+                    >
+                      {scholarship.isActive ? col?.active : col?.inactive}
+                    </Badge>
+                  }
+                  meta={
+                    <span className="inline-flex items-center gap-1">
+                      <Users className="size-3" aria-hidden="true" />
+                      {scholarship.maxBeneficiaries !== null
+                        ? `${scholarship.currentBeneficiaries} / ${scholarship.maxBeneficiaries}`
+                        : scholarship.currentBeneficiaries}
+                    </span>
+                  }
+                  actions={<RowActions row={row} />}
+                />
+              )
+            }}
+          </TableGrid>
+        }
       />
       <BulkActionsToolbar table={table} actions={bulkActions} lang={lang} />
     </>

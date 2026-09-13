@@ -5,11 +5,14 @@
 import * as React from "react"
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { Users } from "lucide-react"
 
+import { formatCurrency } from "@/lib/i18n-format"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -17,7 +20,13 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { PlatformToolbar } from "@/components/school-dashboard/shared"
+import {
+  ItemCard,
+  ListingViews,
+  PlatformToolbar,
+  RowActions,
+  TableGrid,
+} from "@/components/school-dashboard/shared"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -28,6 +37,7 @@ import {
   toggleFeeStructureLocked,
 } from "./actions"
 import { getFeeStructureColumns, type FeeStructureRow } from "./columns"
+import { STATUS_COLORS } from "./config"
 import { SyncFeesButton } from "./sync-fees-button"
 
 interface FeeStructuresTableProps {
@@ -35,6 +45,8 @@ interface FeeStructuresTableProps {
   total: number
   lang: Locale
   perPage?: number
+  /** The school's currency — `School.currency`, never a default. */
+  currency?: string
 }
 
 function FeeStructuresTableInner({
@@ -42,6 +54,7 @@ function FeeStructuresTableInner({
   total,
   lang,
   perPage = 20,
+  currency,
 }: FeeStructuresTableProps) {
   const router = useRouter()
   const { dictionary } = useDictionary()
@@ -53,8 +66,11 @@ function FeeStructuresTableInner({
     | undefined
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
-  // View mode (table/grid)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  // View mode (table/grid) — cards by default on a phone
+  const { view, phoneView, toggleView } = usePlatformView({
+    defaultView: "table",
+    phoneView: "grid",
+  })
 
   // Data management with optimistic updates
   const {
@@ -160,14 +176,20 @@ function FeeStructuresTableInner({
   // Generate columns on the client side with lang
   const columns = useMemo(
     () =>
-      getFeeStructureColumns(lang, structureCol, {
-        onToggleActive: handleToggleActive,
-        onToggleLocked: handleToggleLocked,
-        onDelete: handleSingleDelete,
-      }),
+      getFeeStructureColumns(
+        lang,
+        structureCol,
+        {
+          onToggleActive: handleToggleActive,
+          onToggleLocked: handleToggleLocked,
+          onDelete: handleSingleDelete,
+        },
+        currency
+      ),
     [
       lang,
       structureCol,
+      currency,
       handleToggleActive,
       handleToggleLocked,
       handleSingleDelete,
@@ -211,6 +233,7 @@ function FeeStructuresTableInner({
       <PlatformToolbar
         table={table}
         view={view}
+        phoneView={phoneView}
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
@@ -220,12 +243,76 @@ function FeeStructuresTableInner({
         additionalActions={<SyncFeesButton />}
       />
 
-      <DataTable
-        table={table}
-        paginationMode="load-more"
-        hasMore={hasMore}
-        isLoading={isLoading}
-        onLoadMore={loadMore}
+      <ListingViews
+        view={view}
+        phoneView={phoneView}
+        table={
+          <DataTable
+            table={table}
+            paginationMode="load-more"
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          />
+        }
+        grid={
+          <TableGrid
+            table={table}
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          >
+            {(row) => {
+              const fee = row.original
+              return (
+                <ItemCard
+                  key={row.id}
+                  href={`/${lang}/finance/fees/structures/${fee.id}`}
+                  eyebrow={fee.academicYear}
+                  title={fee.name}
+                  value={formatCurrency(
+                    fee.totalAmount,
+                    lang,
+                    currency || "USD"
+                  )}
+                  badges={
+                    <>
+                      <Badge
+                        variant="outline"
+                        className={
+                          fee.isActive
+                            ? STATUS_COLORS.ACTIVE
+                            : STATUS_COLORS.INACTIVE
+                        }
+                      >
+                        {fee.isActive
+                          ? structureCol?.active
+                          : structureCol?.inactive}
+                      </Badge>
+                      {fee.isAutoGenerated ? (
+                        <Badge variant="outline" className="bg-background">
+                          {structureCol?.auto}
+                        </Badge>
+                      ) : null}
+                      {fee.isLocked ? (
+                        <Badge variant="outline" className="bg-background">
+                          {structureCol?.locked}
+                        </Badge>
+                      ) : null}
+                    </>
+                  }
+                  meta={
+                    <span className="inline-flex items-center gap-1">
+                      <Users className="size-3" aria-hidden="true" />
+                      {fee.assignmentCount}
+                    </span>
+                  }
+                  actions={<RowActions row={row} />}
+                />
+              )
+            }}
+          </TableGrid>
+        }
       />
     </>
   )

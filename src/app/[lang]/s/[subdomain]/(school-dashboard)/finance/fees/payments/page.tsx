@@ -7,7 +7,10 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { PaymentsTable } from "@/components/school-dashboard/finance/fees/payment-table"
-import { getPaymentList } from "@/components/school-dashboard/finance/fees/queries"
+import {
+  getFeeCurrency,
+  getPaymentList,
+} from "@/components/school-dashboard/finance/fees/queries"
 import { toPaymentRows } from "@/components/school-dashboard/finance/fees/rows"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
@@ -41,12 +44,22 @@ export default async function PaymentsPage({ params }: Props) {
     return <FinanceAccessDenied dictionary={dictionary} module="fees" />
   }
 
-  const { rows, count } = await getPaymentList(schoolId, {
-    page: 1,
-    perPage: 20,
-  })
+  const [{ rows, count }, currency] = await Promise.all([
+    getPaymentList(schoolId, {
+      page: 1,
+      perPage: 20,
+    }),
+    getFeeCurrency(schoolId),
+  ])
 
   const data = await toPaymentRows(rows, lang, schoolId)
 
-  return <PaymentsTable initialData={data} total={count} lang={lang} />
+  return (
+    <PaymentsTable
+      initialData={data}
+      total={count}
+      lang={lang}
+      currency={currency}
+    />
+  )
 }

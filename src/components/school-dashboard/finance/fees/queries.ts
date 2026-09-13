@@ -485,6 +485,19 @@ export function buildPagination(page: number, perPage: number) {
 /**
  * Get fee structures list with filtering, sorting, pagination
  */
+/**
+ * The school's currency, for the money on the fee lists. The column builders
+ * took a `currency` argument from the start, but no list page passed one, so
+ * an SDG school read every structure, payment, fine and scholarship in US$.
+ */
+export async function getFeeCurrency(schoolId: string): Promise<string> {
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { currency: true },
+  })
+  return school?.currency || "USD"
+}
+
 export async function getFeeStructureList(
   schoolId: string,
   params: Partial<FeeQueryParams> = {}

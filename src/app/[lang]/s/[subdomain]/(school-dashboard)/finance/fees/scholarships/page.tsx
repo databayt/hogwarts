@@ -6,7 +6,10 @@ import type { Metadata } from "next"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
-import { getScholarshipList } from "@/components/school-dashboard/finance/fees/queries"
+import {
+  getFeeCurrency,
+  getScholarshipList,
+} from "@/components/school-dashboard/finance/fees/queries"
 import { toScholarshipRows } from "@/components/school-dashboard/finance/fees/rows"
 import { ScholarshipsTable } from "@/components/school-dashboard/finance/fees/scholarship-table"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
@@ -41,12 +44,22 @@ export default async function ScholarshipsPage({ params }: Props) {
     return <FinanceAccessDenied dictionary={dictionary} module="fees" />
   }
 
-  const { rows, count } = await getScholarshipList(schoolId, {
-    page: 1,
-    perPage: 20,
-  })
+  const [{ rows, count }, currency] = await Promise.all([
+    getScholarshipList(schoolId, {
+      page: 1,
+      perPage: 20,
+    }),
+    getFeeCurrency(schoolId),
+  ])
 
   const data = await toScholarshipRows(rows, lang, schoolId)
 
-  return <ScholarshipsTable initialData={data} total={count} lang={lang} />
+  return (
+    <ScholarshipsTable
+      initialData={data}
+      total={count}
+      lang={lang}
+      currency={currency}
+    />
+  )
 }

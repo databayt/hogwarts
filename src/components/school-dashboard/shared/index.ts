@@ -24,6 +24,7 @@ export { ListRow, ListRows } from "./list-row"
 export { InfoRows, type InfoRow } from "./info-rows"
 export { ItemCard, ItemGrid, ItemGridMore } from "./item-card"
 export { ListingViews } from "./listing-views"
+export { RowActions, TableGrid } from "./table-grid"
 export {
   BrandBanner,
   BrandPill,

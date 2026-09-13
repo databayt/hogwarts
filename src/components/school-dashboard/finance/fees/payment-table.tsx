@@ -6,10 +6,12 @@ import * as React from "react"
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -17,7 +19,13 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { PlatformToolbar } from "@/components/school-dashboard/shared"
+import {
+  ItemCard,
+  ListingViews,
+  PlatformToolbar,
+  RowActions,
+  TableGrid,
+} from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
   createDeleteAction,
@@ -28,6 +36,7 @@ import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { deletePayment, fetchPaymentRows } from "./actions"
+import { STATUS_COLORS } from "./config"
 import { getPaymentColumns, type PaymentRow } from "./payment-columns"
 
 interface PaymentsTableProps {
@@ -35,6 +44,8 @@ interface PaymentsTableProps {
   total: number
   lang: Locale
   perPage?: number
+  /** The school's currency — `School.currency`, never a default. */
+  currency?: string
 }
 
 function PaymentsTableInner({
@@ -42,10 +53,14 @@ function PaymentsTableInner({
   total,
   lang,
   perPage = 20,
+  currency,
 }: PaymentsTableProps) {
   const router = useRouter()
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  const { view, phoneView, toggleView } = usePlatformView({
+    defaultView: "table",
+    phoneView: "grid",
+  })
   const { dictionary } = useDictionary()
   const col = (dictionary as any)?.finance?.columns as
     | Record<string, string>
@@ -53,6 +68,26 @@ function PaymentsTableInner({
   const csvH = (dictionary as any)?.finance?.fees?.csvHeaders as
     | Record<string, string>
     | undefined
+  const statusLabel = (status: string) =>
+    ({
+      PENDING: col?.pending,
+      SUCCESS: col?.success,
+      FAILED: col?.failed,
+      CANCELLED: col?.cancelled,
+      REFUNDED: col?.refunded,
+    })[status] || status
+  const methodLabel = (method: string) =>
+    ({
+      CASH: col?.cash,
+      CHEQUE: col?.cheque,
+      BANK_TRANSFER: col?.bankTransfer,
+      CREDIT_CARD: col?.creditCard,
+      DEBIT_CARD: col?.debitCard,
+      UPI: col?.upi,
+      NET_BANKING: col?.netBanking,
+      WALLET: col?.wallet,
+      OTHER: col?.other,
+    })[method] || method.replace(/_/g, " ")
 
   const { data, isLoading, hasMore, loadMore } = usePlatformData<
     PaymentRow,
@@ -66,8 +101,11 @@ function PaymentsTableInner({
   })
 
   const columns = useMemo(
-    () => [getSelectColumn<PaymentRow>(), ...getPaymentColumns(lang, col)],
-    [lang, col]
+    () => [
+      getSelectColumn<PaymentRow>(),
+      ...getPaymentColumns(lang, col, currency),
+    ],
+    [lang, col, currency]
   )
 
   const { table } = useDataTable<PaymentRow>({
@@ -163,6 +201,7 @@ function PaymentsTableInner({
       <PlatformToolbar
         table={table}
         view={view}
+        phoneView={phoneView}
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
@@ -173,12 +212,66 @@ function PaymentsTableInner({
         onCreate={handleCreate}
         entityName="payments"
       />
-      <DataTable
-        table={table}
-        paginationMode="load-more"
-        hasMore={hasMore}
-        isLoading={isLoading}
-        onLoadMore={loadMore}
+      <ListingViews
+        view={view}
+        phoneView={phoneView}
+        table={
+          <DataTable
+            table={table}
+            paginationMode="load-more"
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          />
+        }
+        grid={
+          <TableGrid
+            table={table}
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          >
+            {(row) => {
+              const payment = row.original
+              return (
+                <ItemCard
+                  key={row.id}
+                  href={`/${lang}/finance/fees/payments/${payment.id}`}
+                  eyebrow={payment.feeStructureName}
+                  title={payment.studentName}
+                  value={formatCurrency(
+                    payment.amount,
+                    lang,
+                    currency || "USD"
+                  )}
+                  badges={
+                    <>
+                      <Badge
+                        variant="outline"
+                        className={
+                          STATUS_COLORS[
+                            payment.status as keyof typeof STATUS_COLORS
+                          ]
+                        }
+                      >
+                        {statusLabel(payment.status)}
+                      </Badge>
+                      <Badge variant="outline" className="bg-background">
+                        {methodLabel(payment.paymentMethod)}
+                      </Badge>
+                    </>
+                  }
+                  meta={formatDate(payment.paymentDate, lang, {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                  actions={<RowActions row={row} />}
+                />
+              )
+            }}
+          </TableGrid>
+        }
       />
       <BulkActionsToolbar table={table} actions={bulkActions} lang={lang} />
     </>

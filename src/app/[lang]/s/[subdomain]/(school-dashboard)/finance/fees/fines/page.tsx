@@ -7,7 +7,10 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { FinesTable } from "@/components/school-dashboard/finance/fees/fine-table"
-import { getFineList } from "@/components/school-dashboard/finance/fees/queries"
+import {
+  getFeeCurrency,
+  getFineList,
+} from "@/components/school-dashboard/finance/fees/queries"
 import { toFineRows } from "@/components/school-dashboard/finance/fees/rows"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
@@ -41,12 +44,22 @@ export default async function FinesPage({ params }: Props) {
     return <FinanceAccessDenied dictionary={dictionary} module="fees" />
   }
 
-  const { rows, count } = await getFineList(schoolId, {
-    page: 1,
-    perPage: 20,
-  })
+  const [{ rows, count }, currency] = await Promise.all([
+    getFineList(schoolId, {
+      page: 1,
+      perPage: 20,
+    }),
+    getFeeCurrency(schoolId),
+  ])
 
   const data = await toFineRows(rows, lang, schoolId)
 
-  return <FinesTable initialData={data} total={count} lang={lang} />
+  return (
+    <FinesTable
+      initialData={data}
+      total={count}
+      lang={lang}
+      currency={currency}
+    />
+  )
 }

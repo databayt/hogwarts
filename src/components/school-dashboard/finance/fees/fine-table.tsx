@@ -6,10 +6,12 @@ import * as React from "react"
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -17,7 +19,13 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { PlatformToolbar } from "@/components/school-dashboard/shared"
+import {
+  ItemCard,
+  ListingViews,
+  PlatformToolbar,
+  RowActions,
+  TableGrid,
+} from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
   createDeleteAction,
@@ -28,6 +36,7 @@ import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteFine, fetchFineRows } from "./actions"
+import { STATUS_COLORS } from "./config"
 import { getFineColumns, type FineRow } from "./fine-columns"
 
 interface FinesTableProps {
@@ -35,6 +44,8 @@ interface FinesTableProps {
   total: number
   lang: Locale
   perPage?: number
+  /** The school's currency — `School.currency`, never a default. */
+  currency?: string
 }
 
 function FinesTableInner({
@@ -42,11 +53,15 @@ function FinesTableInner({
   total,
   lang,
   perPage = 20,
+  currency,
 }: FinesTableProps) {
   const router = useRouter()
   const { dictionary } = useDictionary()
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  const { view, phoneView, toggleView } = usePlatformView({
+    defaultView: "table",
+    phoneView: "grid",
+  })
 
   const col = (dictionary as any)?.finance?.columns as
     | Record<string, string>
@@ -54,6 +69,26 @@ function FinesTableInner({
   const fc = (dictionary as any)?.finance?.common as
     | Record<string, string>
     | undefined
+  const ff = (dictionary as any)?.finance?.fineForm as
+    | Record<string, string>
+    | undefined
+  const fineTypeLabel = (type: string) =>
+    ({
+      LATE_FEE: ff?.lateFee,
+      LIBRARY_FINE: ff?.libraryFine,
+      DISCIPLINE_FINE: ff?.disciplineFine,
+      DAMAGE_FINE: ff?.damageFine,
+      OTHER: ff?.other,
+    })[type] || type.replace(/_/g, " ")
+  // The column's rule: waived beats paid beats overdue.
+  const fineStatus = (fine: FineRow) =>
+    fine.isWaived
+      ? { tone: STATUS_COLORS.CANCELLED, label: col?.waived }
+      : fine.isPaid
+        ? { tone: STATUS_COLORS.PAID, label: col?.paid }
+        : fine.dueDate && new Date(fine.dueDate) < new Date()
+          ? { tone: STATUS_COLORS.OVERDUE, label: col?.overdue }
+          : { tone: STATUS_COLORS.PENDING, label: col?.pending }
 
   const { data, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
     usePlatformData<FineRow, { search?: string }>({
@@ -94,9 +129,9 @@ function FinesTableInner({
   const columns = useMemo(
     () => [
       getSelectColumn<FineRow>(),
-      ...getFineColumns(lang, col, { onDelete: handleSingleDelete }),
+      ...getFineColumns(lang, col, { onDelete: handleSingleDelete }, currency),
     ],
-    [lang, col, handleSingleDelete]
+    [lang, col, handleSingleDelete, currency]
   )
 
   const { table } = useDataTable<FineRow>({
@@ -193,6 +228,7 @@ function FinesTableInner({
       <PlatformToolbar
         table={table}
         view={view}
+        phoneView={phoneView}
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
@@ -202,12 +238,55 @@ function FinesTableInner({
         onCreate={handleCreate}
         entityName="fines"
       />
-      <DataTable
-        table={table}
-        paginationMode="load-more"
-        hasMore={hasMore}
-        isLoading={isLoading}
-        onLoadMore={loadMore}
+      <ListingViews
+        view={view}
+        phoneView={phoneView}
+        table={
+          <DataTable
+            table={table}
+            paginationMode="load-more"
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          />
+        }
+        grid={
+          <TableGrid
+            table={table}
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          >
+            {(row) => {
+              const fine = row.original
+              const status = fineStatus(fine)
+              return (
+                <ItemCard
+                  key={row.id}
+                  href={`/${lang}/finance/fees/fines/${fine.id}`}
+                  eyebrow={fineTypeLabel(fine.fineType)}
+                  title={fine.studentName}
+                  value={formatCurrency(fine.amount, lang, currency || "USD")}
+                  badges={
+                    <Badge variant="outline" className={status.tone}>
+                      {status.label}
+                    </Badge>
+                  }
+                  meta={
+                    fine.dueDate
+                      ? formatDate(fine.dueDate, lang, {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : undefined
+                  }
+                  actions={<RowActions row={row} />}
+                />
+              )
+            }}
+          </TableGrid>
+        }
       />
       <BulkActionsToolbar table={table} actions={bulkActions} lang={lang} />
     </>

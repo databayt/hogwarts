@@ -6,12 +6,20 @@ import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
 import { confirmDeleteDialog, DeleteToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
-import { PlatformToolbar } from "@/components/school-dashboard/shared"
+import {
+  ItemCard,
+  ListingViews,
+  PlatformToolbar,
+  RowActions,
+  TableGrid,
+} from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
   createDeleteAction,
@@ -67,8 +75,11 @@ function SalaryStructuresTableInner({
   const router = useRouter()
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
-  // View mode (table/grid)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  // View mode (table/grid) — cards by default on a phone
+  const { view, phoneView, toggleView } = usePlatformView({
+    defaultView: "table",
+    phoneView: "grid",
+  })
 
   // Data management with optimistic updates
   const {
@@ -218,6 +229,7 @@ function SalaryStructuresTableInner({
       <PlatformToolbar
         table={table}
         view={view}
+        phoneView={phoneView}
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
@@ -228,12 +240,70 @@ function SalaryStructuresTableInner({
         entityName="salary-structures"
       />
 
-      <DataTable
-        table={table}
-        paginationMode="load-more"
-        hasMore={hasMore}
-        isLoading={isLoading}
-        onLoadMore={loadMore}
+      <ListingViews
+        view={view}
+        phoneView={phoneView}
+        table={
+          <DataTable
+            table={table}
+            paginationMode="load-more"
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          />
+        }
+        grid={
+          <TableGrid
+            table={table}
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={loadMore}
+          >
+            {(row) => {
+              const salary = row.original
+              return (
+                <ItemCard
+                  key={row.id}
+                  href={`/${lang}/finance/salary/structures/${salary.id}`}
+                  eyebrow={salary.employeeId || undefined}
+                  title={salary.teacherName}
+                  value={formatCurrency(
+                    salary.baseSalary,
+                    lang,
+                    salary.currency
+                  )}
+                  badges={
+                    <>
+                      <Badge
+                        variant="outline"
+                        className={
+                          salary.isActive
+                            ? "bg-green-500/10 text-green-500"
+                            : "bg-gray-500/10 text-gray-500"
+                        }
+                      >
+                        {salary.isActive
+                          ? columnsDict?.active
+                          : columnsDict?.inactive}
+                      </Badge>
+                      <Badge variant="outline" className="bg-background">
+                        {columnsDict?.payFrequencyOptions?.[
+                          salary.payFrequency
+                        ] ?? salary.payFrequency}
+                      </Badge>
+                    </>
+                  }
+                  meta={formatDate(salary.effectiveFrom, lang, {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                  actions={<RowActions row={row} />}
+                />
+              )
+            }}
+          </TableGrid>
+        }
       />
 
       <BulkActionsToolbar table={table} actions={bulkActions} lang={lang} />

@@ -7,7 +7,10 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { FeeAssignmentsTable } from "@/components/school-dashboard/finance/fees/assignment-table"
-import { getFeeAssignmentList } from "@/components/school-dashboard/finance/fees/queries"
+import {
+  getFeeAssignmentList,
+  getFeeCurrency,
+} from "@/components/school-dashboard/finance/fees/queries"
 import { toAssignmentRows } from "@/components/school-dashboard/finance/fees/rows"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
@@ -42,12 +45,22 @@ export default async function FeeAssignmentsPage({ params }: Props) {
     return <FinanceAccessDenied dictionary={dictionary} module="fees" />
   }
 
-  const { rows, count } = await getFeeAssignmentList(schoolId, {
-    page: 1,
-    perPage: 20,
-  })
+  const [{ rows, count }, currency] = await Promise.all([
+    getFeeAssignmentList(schoolId, {
+      page: 1,
+      perPage: 20,
+    }),
+    getFeeCurrency(schoolId),
+  ])
 
   const data = await toAssignmentRows(rows, lang, schoolId)
 
-  return <FeeAssignmentsTable initialData={data} total={count} lang={lang} />
+  return (
+    <FeeAssignmentsTable
+      initialData={data}
+      total={count}
+      lang={lang}
+      currency={currency}
+    />
+  )
 }

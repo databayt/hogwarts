@@ -9,7 +9,10 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { type FeeStructureRow } from "@/components/school-dashboard/finance/fees/columns"
 import { FeeDriftBanner } from "@/components/school-dashboard/finance/fees/drift-banner"
-import { getFeeStructureList } from "@/components/school-dashboard/finance/fees/queries"
+import {
+  getFeeCurrency,
+  getFeeStructureList,
+} from "@/components/school-dashboard/finance/fees/queries"
 import { FeeStructuresTable } from "@/components/school-dashboard/finance/fees/table"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 import { getLabels } from "@/components/translation/person"
@@ -45,9 +48,10 @@ export default async function FeeStructuresPage({ params }: Props) {
     return <FinanceAccessDenied dictionary={dictionary} module="fees" />
   }
 
-  const [{ rows, count }, drift] = await Promise.all([
+  const [{ rows, count }, drift, currency] = await Promise.all([
     getFeeStructureList(schoolId, { page: 1, perPage: 20 }),
     detectFeeProvisioningDrift(schoolId),
+    getFeeCurrency(schoolId),
   ])
 
   // Map to serializable row type with translation — one batched, deduped
@@ -83,7 +87,12 @@ export default async function FeeStructuresPage({ params }: Props) {
           schoolId={schoolId}
         />
       )}
-      <FeeStructuresTable initialData={data} total={count} lang={lang} />
+      <FeeStructuresTable
+        initialData={data}
+        total={count}
+        lang={lang}
+        currency={currency}
+      />
     </>
   )
 }
