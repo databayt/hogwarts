@@ -38,10 +38,10 @@ Policy (2026-08-30): nothing from the server is copied to a device. No lessons, 
 
 ## Install card (2026-09-13)
 
-`install-card.tsx` is a full-screen welcome sheet in the Apple Podcasts "What's new in …" style
-(Abdout's reference): an orange eyebrow over the app name, three feature rows with orange icons
-(Home Screen, offline, notifications), a footnote and one big **Continue** button, with **Not
-now** under it. Continue replays the captured `beforeinstallprompt` on Android; on iPhone it
+`install-card.tsx` is the Apple Podcasts "What's new in …" layout (orange eyebrow over the app
+name, three feature rows with orange icons, a footnote, one big **Continue**) presented as an
+iOS sheet like the Activity View (Figma `iuYSGaRV8xkcEGnyIltPRg` 34:3042): the project `Drawer`
+— rounded top over the dimmed page, grabber, round close button, swipe or X to dismiss. Continue replays the captured `beforeinstallprompt` on Android; on iPhone it
 opens the native share sheet through Web Share (Add to Home Screen is one of its actions) and the
 footnote becomes the two-step guide; Android without the event gets the browser-menu guide. Platform detection is
 a `useSyncExternalStore` snapshot (no state set inside effects); hidden when installed, on

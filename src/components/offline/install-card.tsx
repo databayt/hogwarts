@@ -10,9 +10,16 @@ import {
   Smartphone,
   SquarePlus,
   WifiOff,
+  X,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 
 import type { OfflineLabels } from "./outbox-view"
 
@@ -54,11 +61,12 @@ const subscribeNoop = () => () => {}
 const serverSnapshot = () => null
 
 /**
- * The install welcome sheet — a full-screen "What's new in …" page in the
- * Apple Podcasts style (Abdout's reference, 2026-09-13): an accent eyebrow
- * over the app name, three feature rows with accent icons, a footnote and one
- * big Continue button. Shown on phones that have not installed the app, once
- * per 14 days after "Not now".
+ * The install welcome sheet — the "What's new in …" layout from Apple
+ * Podcasts (accent eyebrow over the app name, three feature rows with accent
+ * icons, a footnote, one big Continue) presented as an iOS sheet like the
+ * Activity View (Figma iuYSGaRV8xkcEGnyIltPRg 34:3042): rounded top over the
+ * dimmed page, a grabber, a round close button, swipe to dismiss. Shown on
+ * phones that have not installed the app, once per 14 days after a dismissal.
  *
  * Continue does the right thing per platform: replays the captured
  * `beforeinstallprompt` on Android; on iPhone opens the native share sheet
@@ -158,88 +166,88 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
         ]
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={t("installTitle", "Add balqalam to your Home Screen")}
-      className="bg-background text-foreground fixed inset-0 z-[100] flex flex-col overflow-y-auto overscroll-contain px-6 pt-[calc(env(safe-area-inset-top)+64px)] pb-[calc(env(safe-area-inset-bottom)+16px)] md:hidden"
+    <Drawer
+      open
+      onOpenChange={(open) => {
+        if (!open) dismiss()
+      }}
     >
-      <h1 className="text-[34px] leading-[1.15] font-bold tracking-tight">
-        <span className="block" style={{ color: ACCENT }}>
-          {t("installEyebrow", "Get the app")}
-        </span>
-        <span className="block">{t("installAppName", "balqalam")}</span>
-      </h1>
+      <DrawerContent
+        aria-label={t("installTitle", "Add balqalam to your Home Screen")}
+        className="max-h-[92vh] rounded-t-[36px]! border-0 px-6 pb-[calc(env(safe-area-inset-bottom)+16px)] [&>div:first-child]:mt-2 [&>div:first-child]:h-[5px] [&>div:first-child]:w-9 [&>div:first-child]:bg-black/30"
+      >
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label={t("installDismiss", "Not now")}
+          className="text-foreground/70 absolute end-4 top-4 grid size-[30px] place-items-center rounded-full bg-black/[0.06] dark:bg-white/10"
+        >
+          <X className="size-4" strokeWidth={2.5} />
+        </button>
 
-      <ul className="mt-10 space-y-7">
-        {features.map(({ icon: Icon, title, body }) => (
-          <li key={title} className="flex items-start gap-4">
-            <Icon
-              className="mt-0.5 size-10 shrink-0"
-              strokeWidth={1.75}
-              style={{ color: ACCENT }}
-              aria-hidden
-            />
-            <div className="min-w-0">
-              <p className="text-[17px] leading-snug font-semibold">{title}</p>
-              <p className="text-muted-foreground text-[17px] leading-snug">{body}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
+        <div className="overflow-y-auto overscroll-contain pt-8">
+          <DrawerTitle className="text-[34px] leading-[1.15] font-bold tracking-tight">
+            <span className="block" style={{ color: ACCENT }}>
+              {t("installEyebrow", "Get the app")}
+            </span>
+            <span className="block">{t("installAppName", "balqalam")}</span>
+          </DrawerTitle>
+          <DrawerDescription className="sr-only">
+            {t("installFootnoteIos", "After Continue, pick “Add to Home Screen” in the share sheet.")}
+          </DrawerDescription>
 
-      <div className="mt-auto pt-10">
-        {guide ? (
-          <ol className="mb-5 space-y-3">
-            {steps.map(({ icon: Icon, text }, i) => (
-              <li key={i} className="flex items-center gap-3">
-                <span
-                  className="grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold text-white"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  {i + 1}
-                </span>
-                <span className="bg-muted text-foreground grid size-9 shrink-0 place-items-center rounded-xl">
-                  <Icon className="size-5" aria-hidden />
-                </span>
-                <span className="text-[15px]">{text}</span>
+          <ul className="mt-8 space-y-6">
+            {features.map(({ icon: Icon, title, body }) => (
+              <li key={title} className="flex items-start gap-4">
+                <Icon
+                  className="mt-0.5 size-10 shrink-0"
+                  strokeWidth={1.75}
+                  style={{ color: ACCENT }}
+                  aria-hidden
+                />
+                <div className="min-w-0">
+                  <p className="text-[17px] leading-snug font-semibold">{title}</p>
+                  <p className="text-muted-foreground text-[17px] leading-snug">{body}</p>
+                </div>
               </li>
             ))}
-          </ol>
-        ) : (
-          <p className="text-muted-foreground mb-5 text-[13px] leading-snug">
-            {platform === "ios"
-              ? t("installFootnoteIos", "After Continue, pick “Add to Home Screen” in the share sheet.")
-              : t("installFootnoteAndroid", "After Continue, tap Install.")}
-          </p>
-        )}
-        {guide ? (
-          <Button
-            onClick={dismiss}
-            className="h-14 w-full rounded-full text-[17px] font-semibold text-white hover:opacity-90"
-            style={{ backgroundColor: ACCENT }}
-          >
-            {t("installGotIt", "Got it")}
-          </Button>
-        ) : (
-          <Button
-            onClick={proceed}
-            className="h-14 w-full rounded-full text-[17px] font-semibold text-white hover:opacity-90"
-            style={{ backgroundColor: ACCENT }}
-          >
-            {t("installContinue", "Continue")}
-          </Button>
-        )}
-        {!guide && (
-          <button
-            type="button"
-            onClick={dismiss}
-            className="text-muted-foreground mt-3 w-full py-2 text-[15px]"
-          >
-            {t("installDismiss", "Not now")}
-          </button>
-        )}
-      </div>
-    </div>
+          </ul>
+
+          <div className="pt-8">
+            {guide ? (
+              <ol className="mb-5 space-y-3">
+                {steps.map(({ icon: Icon, text }, i) => (
+                  <li key={i} className="flex items-center gap-3">
+                    <span
+                      className="grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold text-white"
+                      style={{ backgroundColor: ACCENT }}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="bg-muted text-foreground grid size-9 shrink-0 place-items-center rounded-xl">
+                      <Icon className="size-5" aria-hidden />
+                    </span>
+                    <span className="text-[15px]">{text}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-muted-foreground mb-5 text-[13px] leading-snug">
+                {platform === "ios"
+                  ? t("installFootnoteIos", "After Continue, pick “Add to Home Screen” in the share sheet.")
+                  : t("installFootnoteAndroid", "After Continue, tap Install.")}
+              </p>
+            )}
+            <Button
+              onClick={guide ? dismiss : proceed}
+              className="h-14 w-full rounded-full text-[17px] font-semibold text-white hover:opacity-90"
+              style={{ backgroundColor: ACCENT }}
+            >
+              {guide ? t("installGotIt", "Got it") : t("installContinue", "Continue")}
+            </Button>
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
   )
 }
