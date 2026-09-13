@@ -12,7 +12,18 @@
   scope, published/draft and high/urgent chips, date, and `AnnouncementRowActions` (extracted
   from `columns.tsx`, so the card and the row share one permission-aware menu). Desktop keeps
   the table; `?view=` wins at every width.
-- Nested pages (archived, templates, config, settings, detail): see the entry below once landed.
+- Nested pages (`13b151711`): config/settings as grey sections with white fields and a pill
+  save; templates two across; the reading page `[id]` follows the library book page (back pill,
+  meta line, 28px title, body at reading size, details as label/value rows). Every width: the
+  target role showed the raw code, dates used `ar-SA`, urgent fell through to "Normal", template
+  type chips showed raw codes — all fixed.
+- Open: `templates/page.tsx` "System" badge is a `lang === "ar"` literal (needs
+  `templates.system`); `config-form.tsx` builds "{count} templates" from fragments (needs
+  `config.templatesAvailable`); `navConfig` and `navSettings` are both "الإعدادات" in Arabic;
+  the breadcrumb says English "Config" on /ar; config/settings print the raw `configResult.error`
+  code on load failure; `/announcements/config` and `/announcements/settings` render the same
+  form; the archived tab never queries anything; detail priority labels (`d.high` = عالية) differ
+  from the listing's (`priority.high.label` = مرتفع).
 
 ## MVP Checklist
 
