@@ -178,6 +178,7 @@
     "unmuteAudio": "Unmute class audio",
     "shareClass": "Share class",
     "back": "Back",
+    "aloneInRoom": "You're alone in this room",
     "card": {
       "joinLesson": "Join C{c}, L{l}",
       "joining": "Joining…",

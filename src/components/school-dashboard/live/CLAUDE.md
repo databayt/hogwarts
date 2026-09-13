@@ -1443,3 +1443,33 @@ the section above. The room and the lumos player now draw the same frame.
   mic toggles the mic — which is why a capture script tapping the screen
   centre silently muted the teacher.
 - An OBSERVER gets no transport (nothing to publish), keeps ⋯ for quality.
+
+## One row of controls, no stamps, an "alone" stage (2026-09-13, later still)
+
+Abdout: camera, mic, hand, board "and the rest" in ONE row at the bottom, all
+the same size, instead of the Discussion capsule; no time or date stamps; and
+"you are alone in this room" instead of the avatar fallback. This supersedes
+the centre trio and the capsule row recorded just above.
+
+- **`control-bar.tsx` exports `ClassControls` + `ClassMoreMenu`.**
+  `ClassTransport` and `ClassCapsules` are gone. The row sits under the clock:
+  camera · mic · hand · board (host) · share (host, or a student the school
+  lets share) · discussion. Every disc is 48px on a phone and 40px from `sm`,
+  every glyph 22pt — measured 48x48 for all four of a student's discs at 390px.
+  The mic keeps its red disc when muted; the camera tints its slash.
+- **The host's hand disc opens the hands tab** and carries the hands count, so
+  the discussion badge counts unanswered questions only (plus hands when the
+  hands tool is off). The discussion glyph is
+  `bubble.left.and.bubble.right.fill`, added to `scripts/sf-icons/manifest.json`.
+- **The board and student share left the ⋯ card** (they are in the row now);
+  the card keeps quality, microphone, camera and slides, so it no longer takes
+  `tools`. An `on` disc sets its background INLINE — `glassSurface` is inline,
+  and a `bg-white/25` class under it never showed.
+- **The room's watermark prints no timestamp** — `VideoWatermark` grew
+  `showTimestamp` (default `true`), and only the room passes `false`. The
+  identity fragment stays; the recording player and material viewer are
+  unchanged.
+- **The stage says `aloneInRoom`** when the only camera track is the local
+  participant's AND `localParticipant.isCameraEnabled` is false. A reader who
+  turns their camera on while alone still sees themselves. Others in the room
+  with cameras off still get LiveKit's placeholders.

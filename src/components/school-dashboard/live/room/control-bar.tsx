@@ -14,6 +14,7 @@ import {
   phoneMenuRow,
 } from "@/components/lumos/shared/video-player/glass"
 import {
+  bubbleLeftAndBubbleRightFill,
   cellularbars,
   checkmark,
   chevronLeft,
@@ -45,47 +46,88 @@ import type { AdaptiveDelivery } from "./use-adaptive-delivery"
 import type { ClassChannel } from "./use-class-channel"
 
 /**
- * The class's controls, laid out the way the reference app lays out a film's
- * (`public/apple-tv/File.png`, Abdout 2026-09-13 — "match File.png fully"):
+ * The class's controls: ONE row of equal glass discs along the bottom of the
+ * call (Abdout, 2026-09-13 — "camera, mic, hand, blackboard and the rest, in
+ * a row at the bottom, all the same size", in place of the Discussion capsule
+ * and the centre trio that sat over the picture).
  *
- *   File.png                        the class
- *   ⟲10 · ▶ · ⟳10  (centre discs)   camera · MICROPHONE · hand (host: share)
- *   Info · InSight · …  (capsules)  Discussion · Raised hands (host)
- *   ⋯  beside the title             quality · microphone · camera · board …
+ *   camera · mic · hand · board (host) · share · discussion
  *
- * The discs carry the three things a class does with itself; the capsules
- * open the side panel, which is where a class talks; the card holds what is
- * rarer. It replaces the row of five chosen on 2026-09-03.
+ * The rarer things — quality, device selects, slides — stay in the ⋯ card
+ * beside the title.
  */
 
-/** A glass disc of the transport row — the lumos overlay's own classes. */
-const disc = cn(glassButton, "flex items-center justify-center text-white")
+/** Every disc in the row: 48px on a phone, 40px from `sm`. */
+const disc = cn(
+  glassButton,
+  "relative flex size-12 shrink-0 items-center justify-center text-white disabled:opacity-40 sm:size-10"
+)
+/** Every glyph in the row, at one point size. */
+const GLYPH_PT = 22
+const glyphClass = "sm:size-[18px]"
+/** A disc that is switched on — inline, because `glassSurface` sets the
+ *  background inline and would beat a `bg-*` class. */
+const onSurface = { ...glassSurface, background: "rgba(255, 255, 255, 0.25)" }
 
-interface TransportProps {
+/** The count in a disc's corner. Always `aria-hidden` — the disc's label
+ *  carries the same number for a screen reader. */
+function CountBadge({ count }: { count: number }) {
+  return (
+    <span
+      className="absolute -end-1 -top-1 min-w-5 rounded-full bg-amber-400 px-1.5 text-center text-[12px] leading-5 font-semibold text-black"
+      aria-hidden
+    >
+      {count}
+    </span>
+  )
+}
+
+interface ControlsProps {
   role: ConferenceParticipantRole
   labels: RoomLabels
   channel: ClassChannel
+  panel: PanelTab | null
+  onPanel: (tab: PanelTab | null) => void
+  tools: RoomTools
 }
 
 /**
- * The centre trio, at the overlay's geometry: 64 · 92 · 64 with 22px gaps on
- * a phone, 50 · 80 · 50 with 40px from `sm`. An OBSERVER publishes nothing,
- * so their screen has no transport at all — the reference shows none either
- * when there is nothing to play.
+ * An OBSERVER publishes nothing, so their row is the discussion disc alone —
+ * and mounts no LiveKit track hook.
  */
-export function ClassTransport({ role, labels, channel }: TransportProps) {
-  if (role === "OBSERVER") return null
+export function ClassControls({
+  role,
+  labels,
+  channel,
+  panel,
+  onPanel,
+  tools,
+}: ControlsProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
+  const canPublish = role !== "OBSERVER"
+  const unanswered = channel.state.questions.filter((q) => !q.answered).length
+  const hands = channel.hands.length
+  // The host's hands have their own disc when the tool is on; otherwise they
+  // still count on the discussion disc, whose panel lists them.
+  const badge = unanswered + (isHost && !tools.hands ? hands : 0)
+  const pollOpen = Boolean(channel.state.poll?.open)
+  const defaultTab: PanelTab = tools.chat ? "chat" : "questions"
+  const discussionOpen = Boolean(panel) && panel !== "hands"
+  const discussionLabel =
+    badge > 0
+      ? `${labels.discussion} (${badge})`
+      : pollOpen
+        ? `${labels.discussion} — ${labels.pollOpenAnnounce}`
+        : labels.discussion
+
   return (
-    <div className="flex items-center justify-center gap-[22px] sm:gap-10">
-      <CameraDisc labels={labels} />
-      <MicDisc labels={labels} />
-      {isHost ? (
-        <ShareDisc labels={labels} />
-      ) : (
+    <div className="flex items-center justify-center gap-2.5 sm:gap-2">
+      {canPublish && <CameraDisc labels={labels} />}
+      {canPublish && <MicDisc labels={labels} />}
+      {canPublish && !isHost && (
         <button
           type="button"
-          className={cn(disc, "size-16 sm:size-[50px]")}
+          className={disc}
           style={
             channel.handUp
               ? { ...glassSurface, background: "rgb(251 191 36 / 0.9)" }
@@ -97,11 +139,75 @@ export function ClassTransport({ role, labels, channel }: TransportProps) {
         >
           <SfSymbol
             glyph={handRaisedFill}
-            pt={29}
-            className={cn(channel.handUp && "text-black", "sm:size-[22px]")}
+            pt={GLYPH_PT}
+            className={cn(glyphClass, channel.handUp && "text-black")}
           />
         </button>
       )}
+      {isHost && tools.hands && (
+        <button
+          type="button"
+          className={disc}
+          style={panel === "hands" ? onSurface : glassSurface}
+          aria-pressed={panel === "hands"}
+          aria-label={
+            hands > 0 ? `${labels.handsRaised} (${hands})` : labels.handsRaised
+          }
+          onClick={() => onPanel(panel === "hands" ? null : "hands")}
+        >
+          <SfSymbol
+            glyph={handRaisedFill}
+            pt={GLYPH_PT}
+            className={glyphClass}
+          />
+          {hands > 0 && <CountBadge count={hands} />}
+        </button>
+      )}
+      {isHost && tools.whiteboard && (
+        <button
+          type="button"
+          className={disc}
+          style={channel.state.whiteboard ? onSurface : glassSurface}
+          aria-pressed={channel.state.whiteboard}
+          aria-label={
+            channel.state.whiteboard ? labels.hideWhiteboard : labels.whiteboard
+          }
+          onClick={() =>
+            void channel.send({ t: "wb.show", on: !channel.state.whiteboard })
+          }
+        >
+          <SfSymbol
+            glyph={pencilAndScribble}
+            pt={GLYPH_PT}
+            className={glyphClass}
+          />
+        </button>
+      )}
+      {(isHost || (role === "PARTICIPANT" && tools.studentShare)) && (
+        <ShareDisc labels={labels} />
+      )}
+      <button
+        type="button"
+        className={disc}
+        style={discussionOpen ? onSurface : glassSurface}
+        aria-pressed={discussionOpen}
+        aria-label={discussionLabel}
+        onClick={() => onPanel(discussionOpen ? null : defaultTab)}
+      >
+        <SfSymbol
+          glyph={bubbleLeftAndBubbleRightFill}
+          pt={GLYPH_PT}
+          className={glyphClass}
+        />
+        {badge > 0 ? (
+          <CountBadge count={badge} />
+        ) : pollOpen ? (
+          <span
+            className="absolute end-0.5 top-0.5 size-2.5 rounded-full bg-emerald-400"
+            aria-hidden
+          />
+        ) : null}
+      </button>
     </div>
   )
 }
@@ -113,8 +219,8 @@ function MicDisc({ labels }: { labels: RoomLabels }) {
   return (
     <button
       type="button"
-      className={cn(disc, "size-[92px] disabled:opacity-40 sm:size-20")}
-      // Muted keeps the red disc it always had: the one alarm on the frame.
+      className={disc}
+      // Muted keeps the red disc it always had: the one alarm in the row.
       style={
         enabled
           ? glassSurface
@@ -127,8 +233,8 @@ function MicDisc({ labels }: { labels: RoomLabels }) {
     >
       <SfSymbol
         glyph={enabled ? micFill : micSlashFill}
-        pt={35}
-        className="sm:size-8"
+        pt={GLYPH_PT}
+        className={glyphClass}
       />
     </button>
   )
@@ -143,11 +249,7 @@ function CameraDisc({ labels }: { labels: RoomLabels }) {
       type="button"
       // The camera tints its glyph when off rather than lighting a second
       // red disc beside the microphone's.
-      className={cn(
-        disc,
-        "size-16 disabled:opacity-40 sm:size-[50px]",
-        !enabled && "text-red-400"
-      )}
+      className={cn(disc, !enabled && "text-red-400")}
       style={glassSurface}
       aria-pressed={enabled}
       aria-label={enabled ? labels.camera : labels.cameraOff}
@@ -156,8 +258,8 @@ function CameraDisc({ labels }: { labels: RoomLabels }) {
     >
       <SfSymbol
         glyph={enabled ? videoFill : videoSlashFill}
-        pt={26}
-        className="sm:size-[22px]"
+        pt={GLYPH_PT}
+        className={glyphClass}
       />
     </button>
   )
@@ -170,7 +272,7 @@ function ShareDisc({ labels }: { labels: RoomLabels }) {
   return (
     <button
       type="button"
-      className={cn(disc, "size-16 disabled:opacity-40 sm:size-[50px]")}
+      className={disc}
       style={
         enabled
           ? { ...glassSurface, background: "rgb(2 132 199 / 0.9)" }
@@ -183,99 +285,10 @@ function ShareDisc({ labels }: { labels: RoomLabels }) {
     >
       <SfSymbol
         glyph={rectangleInsetFilledAndPersonFilled}
-        pt={24}
-        className="sm:size-[22px]"
+        pt={GLYPH_PT}
+        className={glyphClass}
       />
     </button>
-  )
-}
-
-interface CapsulesProps {
-  role: ConferenceParticipantRole
-  labels: RoomLabels
-  channel: ClassChannel
-  panel: PanelTab | null
-  onPanel: (tab: PanelTab | null) => void
-  tools: RoomTools
-}
-
-/** The reference's capsule: 44px, 16px of padding, 15px semibold. */
-const capsule = cn(
-  glassButton,
-  "relative flex h-11 shrink-0 items-center gap-2 rounded-full px-4 text-[15px] font-semibold text-white"
-)
-
-/**
- * The capsule row, in File.png's Info · InSight · Continue Watching place.
- * Discussion opens the side panel — chat, questions, poll and hands are its
- * tabs — and carries what is waiting there; the host gets a second capsule
- * for raised hands while any are up, because calling on a student is the one
- * panel errand a teacher runs mid-sentence.
- */
-export function ClassCapsules({
-  role,
-  labels,
-  channel,
-  panel,
-  onPanel,
-  tools,
-}: CapsulesProps) {
-  const isHost = role === "HOST" || role === "CO_HOST"
-  const unanswered = channel.state.questions.filter((q) => !q.answered).length
-  const badge = unanswered + (isHost ? channel.hands.length : 0)
-  const pollOpen = Boolean(channel.state.poll?.open)
-  const defaultTab: PanelTab = tools.chat ? "chat" : "questions"
-  // The badge beside the word is `aria-hidden` — this is the count and state
-  // a screen reader gets instead.
-  const panelLabel =
-    badge > 0
-      ? `${labels.discussion} (${badge})`
-      : pollOpen
-        ? `${labels.discussion} — ${labels.pollOpenAnnounce}`
-        : labels.discussion
-  const hands = channel.hands.length
-
-  return (
-    <div className="no-scrollbar -mx-[21px] flex items-center gap-2 overflow-x-auto px-[21px] sm:mx-0 sm:px-0">
-      <button
-        type="button"
-        className={cn(capsule, panel && panel !== "hands" && "bg-white/25")}
-        style={glassSurface}
-        aria-pressed={Boolean(panel) && panel !== "hands"}
-        aria-label={panelLabel}
-        onClick={() => onPanel(panel && panel !== "hands" ? null : defaultTab)}
-      >
-        {labels.discussion}
-        {badge > 0 ? (
-          <span
-            className="min-w-5 rounded-full bg-amber-400 px-1.5 text-center text-[12px] leading-5 font-semibold text-black"
-            aria-hidden
-          >
-            {badge}
-          </span>
-        ) : pollOpen ? (
-          <span className="size-2 rounded-full bg-emerald-400" aria-hidden />
-        ) : null}
-      </button>
-      {isHost && tools.hands && hands > 0 && (
-        <button
-          type="button"
-          className={cn(capsule, panel === "hands" && "bg-white/25")}
-          style={glassSurface}
-          aria-pressed={panel === "hands"}
-          aria-label={`${labels.handsRaised} (${hands})`}
-          onClick={() => onPanel(panel === "hands" ? null : "hands")}
-        >
-          {labels.handsRaised}
-          <span
-            className="min-w-5 rounded-full bg-amber-400 px-1.5 text-center text-[12px] leading-5 font-semibold text-black"
-            aria-hidden
-          >
-            {hands}
-          </span>
-        </button>
-      )}
-    </div>
   )
 }
 
@@ -286,7 +299,6 @@ interface MoreMenuProps {
   labels: RoomLabels
   channel: ClassChannel
   slides: SlideOption[]
-  tools: RoomTools
   adaptive: AdaptiveDelivery
   /** Whether the card is open — the chrome must not auto-hide under it. */
   onPinned?: (pinned: boolean) => void
@@ -300,7 +312,7 @@ const LIST_MAX = 219
  * The reference's "…" beside the title, and its card (`IMG_2639.PNG`):
  * drill-in rows of symbol · label · chevron, where the film's Playback Speed
  * · Audio · Subtitles become the class's Quality · Microphone · Camera, then
- * the host's board and slides. A drill-in swaps the card's rows for the list
+ * the host's slides (the board and screen share live in the row). A drill-in swaps the card's rows for the list
  * behind it, with a back row on top, rather than stacking a second card.
  *
  * It opens UPWARD over the title and stops above the clock, exactly where the
@@ -311,7 +323,6 @@ export function ClassMoreMenu({
   labels,
   channel,
   slides,
-  tools,
   adaptive,
   onPinned,
 }: MoreMenuProps) {
@@ -343,7 +354,6 @@ export function ClassMoreMenu({
 
   const canPublish = role !== "OBSERVER"
   const isHost = role === "HOST" || role === "CO_HOST"
-  const isStudent = role === "PARTICIPANT"
   const close = () => setOpen(false)
   const q = adaptive.quality
   const qualityText =
@@ -404,29 +414,12 @@ export function ClassMoreMenu({
                   onClick={() => setView("camera")}
                 />
               )}
-              {isHost && tools.whiteboard && (
-                <ChoiceRow
-                  glyph={pencilAndScribble}
-                  label={labels.whiteboard}
-                  selected={channel.state.whiteboard}
-                  onClick={() => {
-                    close()
-                    void channel.send({
-                      t: "wb.show",
-                      on: !channel.state.whiteboard,
-                    })
-                  }}
-                />
-              )}
               {isHost && (
                 <DrillRow
                   glyph={docRichtext}
                   label={labels.slides}
                   onClick={() => setView("slides")}
                 />
-              )}
-              {isStudent && tools.studentShare && (
-                <StudentShareRow labels={labels} onDone={close} />
               )}
               <p className="px-8 pt-1 pb-1.5 text-[13px] leading-snug text-white/50">
                 {labels.attendanceAuto}
@@ -623,29 +616,5 @@ function DeviceRows({
         />
       ))}
     </>
-  )
-}
-
-function StudentShareRow({
-  labels,
-  onDone,
-}: {
-  labels: RoomLabels
-  onDone: () => void
-}) {
-  const { toggle, enabled, pending } = useTrackToggle({
-    source: Track.Source.ScreenShare,
-  })
-  return (
-    <ChoiceRow
-      glyph={rectangleInsetFilledAndPersonFilled}
-      label={enabled ? labels.stopShare : labels.screenShare}
-      selected={enabled}
-      disabled={pending}
-      onClick={() => {
-        onDone()
-        void toggle()
-      }}
-    />
   )
 }

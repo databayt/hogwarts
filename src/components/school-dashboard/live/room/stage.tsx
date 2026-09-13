@@ -8,6 +8,7 @@ import {
   GridLayout,
   isTrackReference,
   ParticipantTile,
+  useLocalParticipant,
   useTracks,
 } from "@livekit/components-react"
 import { Track } from "livekit-client"
@@ -38,6 +39,7 @@ export function Stage({ channel, labels }: StageProps) {
     ],
     { onlySubscribed: false }
   )
+  const { localParticipant } = useLocalParticipant()
   const share = tracks.find(
     (t) => t.source === Track.Source.ScreenShare && isTrackReference(t)
   )
@@ -70,6 +72,23 @@ export function Stage({ channel, labels }: StageProps) {
   ) : null
 
   if (!focus) {
+    // Nobody else here and the reader's own camera off: say so, rather than
+    // drawing the SDK's grey silhouette across the whole stage (Abdout,
+    // 2026-09-13). A camera that is on still shows the reader to themselves.
+    if (
+      cameras.length === 1 &&
+      cameras[0].participant.isLocal &&
+      !localParticipant.isCameraEnabled
+    ) {
+      return (
+        <div className="flex h-full w-full items-center justify-center px-6">
+          <p className="text-center text-lg font-medium text-white/70">
+            {labels.aloneInRoom}
+          </p>
+        </div>
+      )
+    }
+
     // One camera is the frame's picture, not a grid: it runs edge to edge
     // with no tile radius, gap, name badge or per-tile focus toggle (the
     // reader knows who they are, and the top pill already holds

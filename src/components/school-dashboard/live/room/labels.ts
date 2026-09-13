@@ -108,6 +108,8 @@ export const DEFAULT_ROOM_LABELS = {
   shareClass: "Share class",
   /** The ⋯ card's back row, out of a drill-in list. */
   back: "Back",
+  /** The stage when no one else is in the call and the reader's camera is off. */
+  aloneInRoom: "You're alone in this room",
 } as const
 
 export type RoomLabelKey = keyof typeof DEFAULT_ROOM_LABELS

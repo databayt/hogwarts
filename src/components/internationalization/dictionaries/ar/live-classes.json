@@ -178,6 +178,7 @@
     "unmuteAudio": "تشغيل صوت الحصة",
     "shareClass": "مشاركة الحصة",
     "back": "رجوع",
+    "aloneInRoom": "أنت وحدك في هذه الغرفة",
     "card": {
       "joinLesson": "انضمام ف{c}، د{l}",
       "joining": "جارٍ الانضمام…",

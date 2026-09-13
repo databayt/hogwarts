@@ -38,6 +38,9 @@ interface VideoWatermarkProps {
   enabled?: boolean
   /** Rotation interval in ms (default: 30000 = 30s) */
   rotationInterval?: number
+  /** Print when viewing started beside the identity (default: true). The
+   *  live room turns it off; the mark still names the viewer. */
+  showTimestamp?: boolean
 }
 
 // 9 possible positions (3x3 grid) for watermark placement
@@ -58,6 +61,7 @@ export function VideoWatermark({
   userEmail,
   enabled = true,
   rotationInterval = 30000,
+  showTimestamp = true,
 }: VideoWatermarkProps) {
   const [positionIndex, setPositionIndex] = useState(() =>
     Math.floor(Math.random() * POSITIONS.length)
@@ -119,8 +123,12 @@ export function VideoWatermark({
         }}
       >
         {displayId}
-        <br />
-        {timestamp}
+        {showTimestamp && (
+          <>
+            <br />
+            {timestamp}
+          </>
+        )}
       </div>
 
       {/* Fixed diagonal mark — cannot be cropped out without losing the frame */}
@@ -132,7 +140,7 @@ export function VideoWatermark({
           WebkitUserSelect: "none",
         }}
       >
-        {displayId} · {timestamp}
+        {showTimestamp ? `${displayId} · ${timestamp}` : displayId}
       </div>
     </div>
   )

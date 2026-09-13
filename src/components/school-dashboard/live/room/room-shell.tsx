@@ -39,7 +39,7 @@ import type {
 
 import type { Poll } from "./class-channel"
 import { ClassProgress } from "./class-progress"
-import { ClassCapsules, ClassMoreMenu, ClassTransport } from "./control-bar"
+import { ClassControls, ClassMoreMenu } from "./control-bar"
 import type { RoomLabels } from "./labels"
 import { AudioOnlyBanner, ReconnectingOverlay } from "./overlays"
 import { SidePanel, type PanelTab } from "./side-panel"
@@ -82,15 +82,14 @@ const gone = "pointer-events-none opacity-0"
  *   of three 54px slots (people · fill/fit · share the class), and the speaker
  *   as a lone circle at the far end — here it silences the class on this
  *   device. 21px in, under the safe-area inset.
- * - Centre: the transport trio at the lumos overlay's geometry — camera ·
- *   MICROPHONE · hand (host: screen share).
  * - Bottom block: the player's scrim; the two-line info label with the ⋯
- *   circle beside it, the one-line `clock · track · clock` row, and the
- *   capsule row (Discussion, and the host's raised hands).
+ *   circle beside it, the one-line `clock · track · clock` row, and ONE row
+ *   of equal discs — camera · mic · hand · board · share · discussion. Nothing
+ *   floats over the middle of the picture.
  *
  * ONE block with `sm:` variants, not the player's two sibling chromes: the
- * transport runs track toggles and the clock owns a one-second ticker, so
- * mounting either twice would double the hooks.
+ * row runs track toggles and the clock owns a one-second ticker, so mounting
+ * either twice would double the hooks.
  *
  * It fades three seconds after the last touch and comes back on a tap of the
  * stage, and the stage runs edge to edge UNDER it rather than shrinking.
@@ -258,11 +257,13 @@ export function RoomShell({
             <Stage channel={channel} labels={labels} />
           </div>
           {/* Forensic mark over the whole stage: a recording or screenshot
-              of the class carries who was watching. */}
+              of the class carries who was watching. No time or date stamp
+              on a live call (Abdout, 2026-09-13). */}
           <VideoWatermark
             userId={localParticipant.identity}
             userEmail={localParticipant.name ?? undefined}
             rotationInterval={20000}
+            showTimestamp={false}
           />
 
           {/* Top row — File.png's: ✕ on the reading edge (the right under
@@ -393,32 +394,9 @@ export function RoomShell({
             )}
           </div>
 
-          {/* Centre — File.png's transport trio, on the class. Its frame is
-              click-through so a tap beside the discs still reaches the stage
-              and toggles the chrome, the way a tap beside the player's does. */}
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-0 z-20 flex items-center justify-center transition-opacity duration-300 motion-reduce:transition-none",
-              hidden && "opacity-0"
-            )}
-          >
-            <div
-              className={cn(
-                "pointer-events-auto",
-                hidden && "pointer-events-none"
-              )}
-              onClick={swallow}
-              onPointerDown={hide.poke}
-              onFocusCapture={onFocusCapture}
-              onBlurCapture={onBlurCapture}
-            >
-              <ClassTransport role={role} labels={labels} channel={channel} />
-            </div>
-          </div>
-
           {/* Bottom block — the player's, phone and wide in one: its scrim
               across the full width, the info label with the ⋯ beside it,
-              13px to the clock row, 13px to the capsules, the home
+              13px to the clock row, 13px to the row of controls, the home
               indicator's inset below. */}
           <div
             className={cn(
@@ -459,7 +437,6 @@ export function RoomShell({
                 labels={labels}
                 channel={channel}
                 slides={slides}
-                tools={config.tools}
                 adaptive={adaptive}
                 onPinned={setMorePinned}
               />
@@ -471,7 +448,7 @@ export function RoomShell({
               className="mt-[13px] sm:mt-2"
             />
             <div className="mt-[13px] sm:mt-3">
-              <ClassCapsules
+              <ClassControls
                 role={role}
                 labels={labels}
                 channel={channel}
