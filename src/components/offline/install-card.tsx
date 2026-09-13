@@ -4,12 +4,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useSyncExternalStore } from "react"
 import {
-  Bell,
+  Copy,
   EllipsisVertical,
+  Pointer,
   Share,
-  Smartphone,
   SquarePlus,
-  WifiOff,
+  Star,
   X,
 } from "lucide-react"
 
@@ -26,6 +26,7 @@ import type { OfflineLabels } from "./outbox-view"
 const DISMISS_KEY = "pwa-install-dismissed-at"
 const DISMISS_DAYS = 14
 const ACCENT = "#e8704e" // the app icon's orange
+const GREEN = "#00bc6d" // the dashboard's green (dark text on it, as the hero card does)
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -61,24 +62,18 @@ const subscribeNoop = () => () => {}
 const serverSnapshot = () => null
 
 /**
- * The install welcome sheet — the "What's new in …" layout from Apple
- * Podcasts (accent eyebrow over the app name, three feature rows with accent
- * icons, a footnote, one big Continue) presented as an iOS sheet like the
- * Activity View (Figma iuYSGaRV8xkcEGnyIltPRg 34:3042): rounded top over the
- * dimmed page, a grabber, a round close button, swipe to dismiss. Shown on
- * phones that have not installed the app, once per 14 days after a dismissal.
- *
- * Continue does the right thing per platform: replays the captured
- * `beforeinstallprompt` on Android; on iPhone opens the native share sheet
- * through Web Share (Add to Home Screen is one of its actions) and turns the
- * footnote into the two-step guide underneath; Android without the event
- * gets the browser-menu guide. Installed is the prerequisite for Web Push on
- * iOS.
+ * The install welcome sheet — an iOS sheet like the Activity View (Figma
+ * iuYSGaRV8xkcEGnyIltPRg 34:3042): rounded top over the dimmed page, grabber,
+ * round close, swipe to dismiss. Inside: the accent eyebrow over the app
+ * name, ONE picture of the share list with "Add to Home Screen" highlighted,
+ * and a green Continue. Continue does nothing but the native thing — the
+ * captured install prompt on Android, the native share sheet on iPhone
+ * (Add to Home Screen is one of its actions). Shown on phones that have not
+ * installed the app, once per 14 days after a dismissal.
  */
 export function InstallCard({ labels }: { labels?: OfflineLabels }) {
   const detected = useSyncExternalStore(subscribeNoop, detectPlatform, serverSnapshot)
   const [hidden, setHidden] = useState(false)
-  const [guide, setGuide] = useState(false)
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null)
   const platform = hidden ? null : detected
 
@@ -118,52 +113,25 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
       if (outcome === "accepted") setHidden(true)
       return
     }
-    setGuide(true)
-    // iPhone: the native share sheet straight from the tap (Web Share needs
-    // the gesture); "Add to Home Screen" is one of its actions.
-    if (platform === "ios" && typeof navigator.share === "function") {
+    // The native share sheet straight from the tap (Web Share needs the
+    // gesture); on iPhone "Add to Home Screen" is one of its actions.
+    if (typeof navigator.share === "function") {
       try {
         await navigator.share({
           title: t("installAppName", "balqalam"),
           url: window.location.href.split("#")[0],
         })
       } catch {
-        // cancelled or unsupported payload — the guide is already showing
+        // cancelled — nothing else to say
       }
     }
   }
 
-  const features = [
-    {
-      icon: Smartphone,
-      title: t("installFeature1Title", "On your Home Screen"),
-      body: t("installFeature1Body", "Opens full-screen like any app, with no browser."),
-    },
-    {
-      icon: WifiOff,
-      title: t("installFeature2Title", "Works offline"),
-      body: t(
-        "installFeature2Body",
-        "Mark attendance with no signal; it syncs when the network is back."
-      ),
-    },
-    {
-      icon: Bell,
-      title: t("installFeature3Title", "Notifications on your phone"),
-      body: t("installFeature3Body", "Absences, exams and live classes reach you instantly."),
-    },
+  const MenuIcon = platform === "ios" ? Share : EllipsisVertical
+  const rows = [
+    { icon: Copy, label: t("installPicCopy", "Copy") },
+    { icon: Star, label: t("installPicFavorites", "Add to Favorites") },
   ]
-
-  const steps =
-    platform === "ios"
-      ? [
-          { icon: Share, text: t("installIosStep1", "In the share sheet that opened, scroll down.") },
-          { icon: SquarePlus, text: t("installIosStep2", "Choose “Add to Home Screen”, then tap Add.") },
-        ]
-      : [
-          { icon: EllipsisVertical, text: t("installAndroidStep1", "Open the browser menu (⋮) at the top.") },
-          { icon: SquarePlus, text: t("installAndroidStep2", "Choose “Add to Home screen” or “Install app”.") },
-        ]
 
   return (
     <Drawer
@@ -193,59 +161,52 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
             <span className="block">{t("installAppName", "balqalam")}</span>
           </DrawerTitle>
           <DrawerDescription className="sr-only">
-            {t("installFootnoteIos", "After Continue, pick “Add to Home Screen” in the share sheet.")}
+            {t("installPicHome", "Add to Home Screen")}
           </DrawerDescription>
 
-          <ul className="mt-8 space-y-6">
-            {features.map(({ icon: Icon, title, body }) => (
-              <li key={title} className="flex items-start gap-4">
-                <Icon
-                  className="mt-0.5 size-10 shrink-0"
+          {/* The one picture: the share list with "Add to Home Screen" lit up. */}
+          <figure
+            aria-hidden
+            className="mt-8 rounded-[22px] bg-[#F2F2F7] p-2 dark:bg-white/5"
+          >
+            <div className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-[13px]">
+              <span className="grid size-7 place-items-center rounded-full bg-white shadow-sm dark:bg-white/10">
+                <MenuIcon className="size-4" strokeWidth={2} />
+              </span>
+              <span className="h-1.5 flex-1 rounded-full bg-black/10 dark:bg-white/15" />
+            </div>
+            <ul className="space-y-1">
+              {rows.map(({ icon: Icon, label }) => (
+                <li
+                  key={label}
+                  className="text-muted-foreground flex items-center gap-3 px-3 py-2.5 text-[15px]"
+                >
+                  <Icon className="size-5 shrink-0" strokeWidth={1.75} />
+                  <span>{label}</span>
+                </li>
+              ))}
+              <li
+                className="text-foreground relative flex items-center gap-3 rounded-2xl bg-white px-3 py-3 text-[16px] font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.08)] ring-2 dark:bg-white/10"
+                style={{ ["--tw-ring-color" as string]: GREEN }}
+              >
+                <SquarePlus className="size-5 shrink-0" strokeWidth={2} style={{ color: GREEN }} />
+                <span>{t("installPicHome", "Add to Home Screen")}</span>
+                <Pointer
+                  className="absolute end-4 -bottom-3 size-7 rotate-[-15deg] rtl:rotate-[15deg]"
                   strokeWidth={1.75}
-                  style={{ color: ACCENT }}
-                  aria-hidden
+                  style={{ color: GREEN }}
                 />
-                <div className="min-w-0">
-                  <p className="text-[17px] leading-snug font-semibold">{title}</p>
-                  <p className="text-muted-foreground text-[17px] leading-snug">{body}</p>
-                </div>
               </li>
-            ))}
-          </ul>
+            </ul>
+          </figure>
 
-          <div className="pt-8">
-            {guide ? (
-              <ol className="mb-5 space-y-3">
-                {steps.map(({ icon: Icon, text }, i) => (
-                  <li key={i} className="flex items-center gap-3">
-                    <span
-                      className="grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold text-white"
-                      style={{ backgroundColor: ACCENT }}
-                    >
-                      {i + 1}
-                    </span>
-                    <span className="bg-muted text-foreground grid size-9 shrink-0 place-items-center rounded-xl">
-                      <Icon className="size-5" aria-hidden />
-                    </span>
-                    <span className="text-[15px]">{text}</span>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="text-muted-foreground mb-5 text-[13px] leading-snug">
-                {platform === "ios"
-                  ? t("installFootnoteIos", "After Continue, pick “Add to Home Screen” in the share sheet.")
-                  : t("installFootnoteAndroid", "After Continue, tap Install.")}
-              </p>
-            )}
-            <Button
-              onClick={guide ? dismiss : proceed}
-              className="h-14 w-full rounded-full text-[17px] font-semibold text-white hover:opacity-90"
-              style={{ backgroundColor: ACCENT }}
-            >
-              {guide ? t("installGotIt", "Got it") : t("installContinue", "Continue")}
-            </Button>
-          </div>
+          <Button
+            onClick={proceed}
+            className="mt-8 h-14 w-full rounded-full text-[17px] font-semibold text-[#050505] hover:opacity-90"
+            style={{ backgroundColor: GREEN }}
+          >
+            {t("installContinue", "Continue")}
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>

@@ -38,12 +38,12 @@ Policy (2026-08-30): nothing from the server is copied to a device. No lessons, 
 
 ## Install card (2026-09-13)
 
-`install-card.tsx` is the Apple Podcasts "What's new in …" layout (orange eyebrow over the app
-name, three feature rows with orange icons, a footnote, one big **Continue**) presented as an
-iOS sheet like the Activity View (Figma `iuYSGaRV8xkcEGnyIltPRg` 34:3042): the project `Drawer`
-— rounded top over the dimmed page, grabber, round close button, swipe or X to dismiss. Continue replays the captured `beforeinstallprompt` on Android; on iPhone it
-opens the native share sheet through Web Share (Add to Home Screen is one of its actions) and the
-footnote becomes the two-step guide; Android without the event gets the browser-menu guide. Platform detection is
+`install-card.tsx` is an iOS sheet like the Activity View (Figma `iuYSGaRV8xkcEGnyIltPRg` 34:3042): the project `Drawer`
+— rounded top over the dimmed page, grabber, round close button, swipe or X to dismiss. Inside:
+the orange eyebrow over the app name, ONE picture (a mock of the share list with "Add to Home
+Screen" lit up in the dashboard green), and a green **Continue**. Continue does only the native
+thing: the captured `beforeinstallprompt` on Android, otherwise `navigator.share()` from the tap
+(on iPhone Add to Home Screen is one of the sheet's actions). No footnote, no guide, no Not now. Platform detection is
 a `useSyncExternalStore` snapshot (no state set inside effects); hidden when installed, on
 desktop, or for 14 days after dismissal. Strings live under `lumos.offline.install*` in both
 dictionaries. The app icon is a Claude-orange box (`#e8704e`) with the white feather at 56 % of
