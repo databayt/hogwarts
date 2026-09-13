@@ -89,7 +89,7 @@ Drag-and-drop with previews and progress bars. S3 / Vercel Blob storage. Path: `
 
 Live updates use **Socket.IO** via a standalone server in `socket-server/` — 15 events (`message:new/updated/deleted/read/reaction`, `conversation:updated/new`, `conversation:participant_added/removed`, `typing:start/stop`). Presence is Redis-backed (green dots on cards, last-seen in header). Server→client pushes go through `POST /api/emit` and `/api/emit-to-users`, protected by an `x-emit-secret` header.
 
-> **Ops status:** the Socket.IO server is **not yet deployed** — tracked in [#262](https://github.com/databayt/hogwarts/issues/262) (migration to Oracle Cloud). Until it ships, the client falls back to **polling**. Realtime works end-to-end once the server is live and `NEXT_PUBLIC_SOCKET_URL` / `SOCKET_SECRET` / `EMIT_SECRET` are set in production.
+> **Ops status:** the Socket.IO server is **not yet deployed** — the Oracle Cloud plan in [#262](https://github.com/databayt/hogwarts/issues/262) was never provisioned and has no successor yet. Until it ships, the client falls back to **polling**. Realtime works end-to-end once the server is live and `NEXT_PUBLIC_SOCKET_URL` / `SOCKET_SECRET` / `EMIT_SECRET` are set in production.
 
 The messaging page opens the socket itself when `NEXT_PUBLIC_SOCKET_URL` is set
 (the dashboard header that used to be the only caller is not rendered on this
@@ -107,6 +107,8 @@ socket server a sent message shows a single tick until it is read; the double
 ## WhatsApp integration
 
 When the school has an active WhatsApp session, in-app messages auto-dispatch via Evolution API. Bidirectional — incoming replies bridge back via webhook.
+
+> **Ops status (2026-09-13):** Evolution API runs **inside the balqalam Cloudflare container** as a second process (loopback `127.0.0.1:8080`, never exposed, supervised by `cf/entry.cjs`, state in the Neon database `evolution`). It costs nothing on top of the container already paid for. Every hogwarts deploy restarts the bridge, which reconnects from its saved session. The previous Railway instance died with its trial, so each school must pair its phone again: Dashboard → WhatsApp → Connect → scan the QR.
 
 Phone resolution: `Guardian.guardianPhoneNumbers` → `Teacher.teacherPhoneNumbers` → `StaffMember.staffPhoneNumbers`. Users without a domain record send in-app only.
 
