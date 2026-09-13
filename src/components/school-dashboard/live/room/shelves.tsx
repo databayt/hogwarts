@@ -14,6 +14,10 @@ import {
 } from "lucide-react"
 
 import { ShelfCard, shelfScroller } from "@/components/lumos/shared/shelf-card"
+import {
+  getAvatarColor,
+  PersonGlyph,
+} from "@/components/school-dashboard/messaging/avatar"
 
 /** The reference's blue links — Apple's system blue, a step brighter in dark. */
 const ACCENT_LINK =
@@ -351,35 +355,41 @@ export function RoomPeopleShelf({
 
   return (
     <Shelf title={labels.heading}>
-      {people.map((person) => (
-        <div key={person.id} className="w-24 shrink-0 text-center">
-          <div className="bg-muted relative mx-auto size-20 overflow-hidden rounded-full">
-            {person.photoUrl ? (
-              <Image
-                src={person.photoUrl}
-                alt={person.name}
-                fill
-                className="object-cover"
-                sizes="80px"
-                unoptimized
-              />
-            ) : (
-              <span className="text-muted-foreground flex h-full items-center justify-center text-lg font-semibold">
-                {/* The first letter of the name AS WRITTEN — never a Latin
-                    transliteration, which is what an initials helper keyed on
-                    ASCII would produce for an Arabic roster. */}
-                {Array.from(person.name)[0] ?? ""}
-              </span>
-            )}
+      {people.map((person) => {
+        // Messaging's photo-less avatar: a tinted disc and a silhouette, the
+        // colour hashed off the person's id so a roster of missing photos
+        // reads as distinct people, not one grey disc repeated.
+        const color = getAvatarColor(person.id)
+        return (
+          <div key={person.id} className="w-24 shrink-0 text-center">
+            <div className="bg-muted relative mx-auto size-20 overflow-hidden rounded-full">
+              {person.photoUrl ? (
+                <Image
+                  src={person.photoUrl}
+                  alt={person.name}
+                  fill
+                  className="object-cover"
+                  sizes="80px"
+                  unoptimized
+                />
+              ) : (
+                <span
+                  className="flex h-full items-center justify-center"
+                  style={{ backgroundColor: color.bg, color: color.icon }}
+                >
+                  <PersonGlyph className="size-11" />
+                </span>
+              )}
+            </div>
+            <p className="text-foreground mt-2 line-clamp-2 text-[13px] leading-tight font-medium">
+              {person.name}
+            </p>
+            <p className="text-muted-foreground mt-0.5 line-clamp-1 text-[12px]">
+              {person.role}
+            </p>
           </div>
-          <p className="text-foreground mt-2 line-clamp-2 text-[13px] leading-tight font-medium">
-            {person.name}
-          </p>
-          <p className="text-muted-foreground mt-0.5 line-clamp-1 text-[12px]">
-            {person.role}
-          </p>
-        </div>
-      ))}
+        )
+      })}
     </Shelf>
   )
 }

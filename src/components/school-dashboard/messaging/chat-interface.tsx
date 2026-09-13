@@ -24,6 +24,7 @@ import type { UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { toggleConversationWhatsApp } from "./actions"
+import { getAvatarColor } from "./avatar"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { resolveMessagingError } from "./errors"
 import { useUserPresence } from "./hooks/use-presence"
@@ -31,20 +32,6 @@ import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
 import type { ConversationDTO, MessageAttachmentDTO, MessageDTO } from "./types"
 
-const AVATAR_COLORS = [
-  { bg: "#CBF2EE", icon: "#028377" },
-  { bg: "#E9E0FF", icon: "#5D47DE" },
-  { bg: "#FEF1D4", icon: "#9D6C2C" },
-  { bg: "#FBD8DC", icon: "#D10335" },
-]
-
-function getAvatarColor(id: string) {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
 export interface ChatInterfaceProps {
   conversation: ConversationDTO
   messages: MessageDTO[]

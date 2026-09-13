@@ -38,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { UserFilledIcon } from "@/components/atom/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { getAvatarColor } from "../avatar"
 import type { ContactDTO } from "./types"
 
 export interface ContactCardProps {
@@ -46,21 +47,6 @@ export interface ContactCardProps {
   isActive?: boolean
   onClick?: (userId: string) => void
   className?: string
-}
-
-const AVATAR_COLORS = [
-  { bg: "#CBF2EE", icon: "#028377" },
-  { bg: "#E9E0FF", icon: "#5D47DE" },
-  { bg: "#FEF1D4", icon: "#9D6C2C" },
-  { bg: "#FBD8DC", icon: "#D10335" },
-]
-
-function getAvatarColor(id: string) {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
 const ROLE_COLORS: Record<string, string> = {
