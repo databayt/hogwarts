@@ -59,6 +59,14 @@ interface StatCardProps {
   trendLabel?: string
 }
 
+/**
+ * Below md a row of stat cards is ONE grey panel, two across, the cells split
+ * by 1px hairlines (the gap shows the border colour through); a lone last
+ * cell spans the row. md and up keep each grid's own classes.
+ */
+const PHONE_PANEL =
+  "max-md:bg-border max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl max-md:[&>*:last-child:nth-child(odd)]:col-span-2"
+
 function StatCard({
   title,
   value,
@@ -75,15 +83,26 @@ function StatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="transition-shadow hover:shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          <div className={cn("rounded-lg p-2", color || "bg-secondary")}>
+      {/* Phone: one cell of the grey panel `PHONE_PANEL` draws — label small
+          and muted, figure bold, no icon chip, no card chrome. */}
+      <Card className="max-md:bg-muted transition-shadow hover:shadow-lg max-md:h-full max-md:rounded-none max-md:border-0 max-md:hover:shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+          <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
+            {title}
+          </CardTitle>
+          <div
+            className={cn(
+              "rounded-lg p-2 max-md:hidden",
+              color || "bg-secondary"
+            )}
+          >
             {icon}
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{value}</div>
+        <CardContent className="max-md:px-4 max-md:pb-4">
+          <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+            {value}
+          </div>
           {description && (
             <p className="text-muted-foreground mt-1 text-xs">{description}</p>
           )}
@@ -179,7 +198,9 @@ export function AttendanceStats({
   return (
     <div className={cn("space-y-6", className)}>
       {/* Main Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div
+        className={cn("grid gap-4 md:grid-cols-2 lg:grid-cols-4", PHONE_PANEL)}
+      >
         <StatCard
           title={statsDict?.totalStudents || "Total Students"}
           value={stats.total}
@@ -215,7 +236,7 @@ export function AttendanceStats({
       {showDetails && (
         <>
           {/* Secondary Stats */}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className={cn("grid gap-4 md:grid-cols-3", PHONE_PANEL)}>
             <StatCard
               title={statusDict?.EXCUSED || "Excused"}
               value={stats.excused}
@@ -242,7 +263,7 @@ export function AttendanceStats({
           </div>
 
           {/* Overall Attendance Rate */}
-          <Card>
+          <Card className="max-md:bg-muted max-md:border-0">
             <CardHeader>
               <CardTitle>
                 {statsDict?.overallAttendanceRate || "Overall Attendance Rate"}
@@ -287,7 +308,7 @@ export function AttendanceStats({
 
           {/* Method Distribution */}
           {Object.keys(methodDistribution).length > 0 && (
-            <Card>
+            <Card className="max-md:bg-muted max-md:border-0">
               <CardHeader>
                 <CardTitle>
                   {statsDict?.trackingMethodDistribution ||
@@ -326,7 +347,7 @@ export function AttendanceStats({
           {(timeStats.early > 0 ||
             timeStats.onTime > 0 ||
             timeStats.late > 0) && (
-            <Card>
+            <Card className="max-md:bg-muted max-md:border-0">
               <CardHeader>
                 <CardTitle>
                   {statsDict?.arrivalTimeDistribution ||
@@ -369,7 +390,7 @@ export function AttendanceStats({
           )}
 
           {/* Status Breakdown Chart */}
-          <Card>
+          <Card className="max-md:bg-muted max-md:border-0">
             <CardHeader>
               <CardTitle>
                 {statsDict?.statusBreakdown || "Status Breakdown"}
