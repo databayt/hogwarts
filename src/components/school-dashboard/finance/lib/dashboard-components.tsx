@@ -11,6 +11,7 @@
 import type { ElementType, ReactNode } from "react"
 import Link from "next/link"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -40,18 +41,36 @@ export function StatsCard({
   icon: Icon,
   trend,
 }: StatsCardProps) {
+  // Phone: one cell of the grey stat panel `DashboardGrid type="stats"` draws —
+  // label small and muted, figure bold, no icon, no card chrome. The same
+  // vocabulary as the phone dashboard's analytics card and `StatPanel`.
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle>
-          <h6>{title}</h6>
+    <Card className="max-md:bg-muted max-md:rounded-none max-md:border-0">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-5 max-md:pt-4 max-md:pb-1">
+        <CardTitle className="max-md:min-w-0">
+          <h6 className="max-md:text-muted-foreground max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
+            {title}
+          </h6>
         </CardTitle>
-        {Icon && <Icon className="text-muted-foreground h-4 w-4" />}
+        {Icon && (
+          <Icon className="text-muted-foreground h-4 w-4 max-md:hidden" />
+        )}
       </CardHeader>
-      <CardContent>
-        <h2>{value}</h2>
+      <CardContent className="max-md:px-5 max-md:pb-4">
+        <h2
+          className={cn(
+            "max-md:font-bold max-md:tabular-nums",
+            // Money runs to "550,000.00 SDG"; at 18px it overflows a half-width
+            // cell and the symbol breaks across lines, so long figures step down.
+            String(value).length > 10
+              ? "max-md:text-base max-md:leading-6"
+              : "max-md:text-lg max-md:leading-7"
+          )}
+        >
+          {value}
+        </h2>
         {description && (
-          <p className="muted">
+          <p className="muted max-md:line-clamp-2 max-md:leading-4">
             <small>{description}</small>
           </p>
         )}
@@ -132,10 +151,18 @@ export function FeatureCard({
     )
   }
 
+  // Phone: the dashboard's grey card with the reference's pill buttons, side
+  // by side — the stacked full-width black bars read as a form's submit, not
+  // as doors into a section.
   return (
-    <Card className={isPrimary ? "border-primary/20" : ""}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card
+      className={cn(
+        isPrimary ? "border-primary/20" : "",
+        "max-md:bg-muted max-md:border-0"
+      )}
+    >
+      <CardHeader className="max-md:p-5 max-md:pb-3">
+        <CardTitle className="flex items-center gap-2 max-md:text-base">
           {Icon && (
             <Icon className={`h-5 w-5 ${isPrimary ? "text-primary" : ""}`} />
           )}
@@ -143,7 +170,7 @@ export function FeatureCard({
         </CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
         {renderAction(primaryAction, { primary: true })}
         {secondaryAction && renderAction(secondaryAction, { primary: false })}
       </CardContent>
@@ -161,10 +188,14 @@ interface DashboardGridProps {
 }
 
 export function DashboardGrid({ children, type }: DashboardGridProps) {
+  // Phone: stats become ONE grey panel, two across, the cells split by 1px
+  // hairlines (the gap shows the border colour through) — four stacked
+  // bordered cards took a whole screen to say four numbers. A lone last cell
+  // spans the row so no empty square is left in the panel.
   const gridClass =
     type === "stats"
-      ? "grid gap-4 md:grid-cols-4"
-      : "grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+      ? "grid gap-4 md:grid-cols-4 max-md:bg-border max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl max-md:[&>*:last-child:nth-child(odd)]:col-span-2"
+      : "grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-md:gap-3"
 
   return <div className={gridClass}>{children}</div>
 }
@@ -240,9 +271,12 @@ export function formatCurrency(
   locale: string = "en-US",
   currency: string = "USD"
 ): string {
+  // Latin digits, as every other finance figure renders them: `ar-SA` alone
+  // gives Arabic-Indic money beside Latin counts in the same row of cards.
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
+    numberingSystem: "latn",
   }).format(amount)
 }
 
