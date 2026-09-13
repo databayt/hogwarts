@@ -142,7 +142,7 @@ export async function updateBook(
 // Borrow a book
 export async function borrowBook(
   data: Omit<BorrowBookSchema, "dueDate"> & { schoolId: string }
-): Promise<ActionResponse> {
+): Promise<ActionResponse<{ dueDate: string }>> {
   try {
     const session = await auth()
     const authCtx = getAuthContext(session)
@@ -256,6 +256,10 @@ export async function borrowBook(
     return {
       success: true,
       message: `Book borrowed successfully. Due date: ${formatDate(dueDate, "ar")}`,
+      // The confirmation dialog words its own sentence from the dictionary and
+      // formats this in the reader's locale; `message` is English with an
+      // Arabic date baked in, fit for a log and nothing on screen.
+      data: { dueDate: dueDate.toISOString() },
     }
   } catch (error) {
     console.error("Borrow book error:", error)

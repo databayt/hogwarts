@@ -8858,6 +8858,11 @@
       "returnFailed": "Failed to return book",
       "unexpectedError": "An unexpected error occurred",
       "hero": {
+      "borrowedTitle": "Borrowed",
+      "borrowedBody": "This book was added to your borrowed books. Please return it by {date}.",
+      "returnedTitle": "Returned",
+      "returnedBody": "Thank you for returning this book. It is back on the shelf for the next reader.",
+      "gotIt": "Got it",
         "title": "Revelio",
         "subtitle": "Unlock hidden."
       }

@@ -253,3 +253,30 @@ chrome, schema for favourites and twins) and a phased plan — is at
 Found while measuring, not yet fixed: `book-video.tsx` prints a hardcoded
 "Book Preview" heading; the welcome dialog opens over the book page on a fresh
 session and eats the first tap.
+
+## Borrow confirmation as an alert, and the detail skeleton re-measured (2026-09-13)
+
+- **Borrow and return confirm in a dialog, not a sonner toast.**
+  `book-detail/borrow-alert.tsx` is blueprint §4, built off `IMG_2575.png`: a
+  250-wide glass card (§4's "300 wide" was a misread; the card spans x 71→319pt),
+  radius 28, the `text.badge.checkmark` glyph traced at 61×57, title, body,
+  a bare GOT IT. No dimming, because the page behind the capture measures pure
+  white. The Figma frame named for it (`iuYSGaRV8xkcEGnyIltPRg` node `32:1950`)
+  could not be read: REST was rate-limited for ~32 h, the MCP is at its Starter
+  cap, and the web app refuses headless browsers. Check the card against that
+  frame when REST comes back.
+- **The due date is formatted on the client.** `borrowBook` returns
+  `data.dueDate` (ISO); the dialog words its sentence from `borrowedBody` and
+  formats the date in the page locale. `message` stays as it was (a test reads
+  it), but is never put on screen.
+- **`loading.tsx` for the book page matches the page to within a pixel** at 390
+  and 1440 (hero 684/740). The panel was `bg-muted` and flashed grey before the
+  green; bars were glyph-height and the hero came out 24px short.
+
+### Left open
+
+- Failure bodies are still the server's English `message` under a translated
+  title ("No copies available", "Borrow limit reached…"). The fix is error codes
+  in `actions.ts`, not more strings here.
+- The skeleton draws 6 information rows. A book that has been borrowed shows 8,
+  so its lower sections land 90px later than the skeleton.

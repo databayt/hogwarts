@@ -5,11 +5,13 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { BookOpen, Check } from "lucide-react"
-import { toast } from "sonner"
 
+import { formatDate } from "@/lib/i18n-format"
 import { cn } from "@/lib/utils"
+import type { Locale } from "@/components/internationalization/config"
 
 import { borrowBook, returnBook } from "../actions"
+import { BorrowAlert, type BorrowNotice } from "./borrow-alert"
 
 interface Props {
   bookId: string
@@ -20,6 +22,8 @@ interface Props {
   borrowRecordId?: string
   /** The digital copy. Absent on most catalog rows, which disables Read. */
   digitalFileUrl?: string | null
+  /** Page locale — the due date in the confirmation is formatted in it. */
+  lang: string
   dictionary?: Record<string, string>
 }
 
@@ -66,10 +70,30 @@ export default function BorrowBook({
   hasBorrowedBook,
   borrowRecordId,
   digitalFileUrl,
+  lang,
   dictionary: lib,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false)
+  // The notice outlives `alertOpen` so the card keeps its words while it fades.
+  const [notice, setNotice] = useState<BorrowNotice | null>(null)
+  const [alertOpen, setAlertOpen] = useState(false)
   const router = useRouter()
+
+  const show = (next: BorrowNotice) => {
+    setNotice(next)
+    setAlertOpen(true)
+  }
+
+  // Server `message`s are English on every locale, so a success never shows
+  // one: the sentence comes from the dictionary. A failure still does — it is
+  // the only thing that says WHY (limit reached, no copies) — under a
+  // translated title.
+  const fail = (title: string, message?: string) =>
+    show({
+      tone: "error",
+      title,
+      body: message || lib?.unexpectedError || "An unexpected error occurred",
+    })
 
   const handleBorrow = async () => {
     setIsLoading(true)
@@ -82,15 +106,24 @@ export default function BorrowBook({
       })
 
       if (result.success) {
-        toast.success(result.message)
+        const date = formatDate(result.data?.dueDate, lang as Locale, {
+          day: "numeric",
+          month: "long",
+        })
+        show({
+          tone: "success",
+          title: lib?.borrowedTitle || "Borrowed",
+          body: (
+            lib?.borrowedBody ||
+            "This book was added to your borrowed books. Please return it by {date}."
+          ).replace("{date}", date),
+        })
         router.refresh()
       } else {
-        toast.error(
-          result.message || lib?.borrowFailed || "Failed to borrow book"
-        )
+        fail(lib?.borrowFailed || "Failed to borrow book", result.message)
       }
     } catch {
-      toast.error(lib?.unexpectedError || "An unexpected error occurred")
+      fail(lib?.borrowFailed || "Failed to borrow book")
     } finally {
       setIsLoading(false)
     }
@@ -108,15 +141,19 @@ export default function BorrowBook({
       })
 
       if (result.success) {
-        toast.success(result.message)
+        show({
+          tone: "success",
+          title: lib?.returnedTitle || "Returned",
+          body:
+            lib?.returnedBody ||
+            "Thank you for returning this book. It is back on the shelf for the next reader.",
+        })
         router.refresh()
       } else {
-        toast.error(
-          result.message || lib?.returnFailed || "Failed to return book"
-        )
+        fail(lib?.returnFailed || "Failed to return book", result.message)
       }
     } catch {
-      toast.error(lib?.unexpectedError || "An unexpected error occurred")
+      fail(lib?.returnFailed || "Failed to return book")
     } finally {
       setIsLoading(false)
     }
@@ -155,9 +192,22 @@ export default function BorrowBook({
     </button>
   )
 
+  // ONE alert outside both branches: `router.refresh()` flips
+  // `hasBorrowedBook` while the alert is up, and an alert inside either branch
+  // would unmount with it the instant the data lands.
+  const alert = (
+    <BorrowAlert
+      open={alertOpen}
+      onOpenChange={setAlertOpen}
+      notice={notice}
+      confirmLabel={lib?.gotIt || "Got it"}
+    />
+  )
+
   if (hasBorrowedBook) {
     return (
       <div className="space-y-3">
+        {alert}
         <p className="inline-flex items-center gap-1.5 text-sm text-[#050505]/80">
           <Check className="size-4" />
           {lib?.borrowedThisBook || "You have borrowed this book"}
@@ -181,6 +231,7 @@ export default function BorrowBook({
 
   return (
     <div className="flex gap-3">
+      {alert}
       {readPill}
       {availableCopies === 0 ? (
         // The SECONDARY palette, not PRIMARY dimmed: this pill is disabled for

@@ -208,6 +208,7 @@ export function BookHero({
               hasBorrowedBook={hasBorrowedBook}
               borrowRecordId={borrowRecordId}
               digitalFileUrl={digitalFileUrl}
+              lang={lang}
               dictionary={lib}
             />
           </div>
