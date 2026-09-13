@@ -141,7 +141,7 @@ export default async function GenerateContent({
                 "Reusable blueprints for exam generation"}
             </p>
           </div>
-          <Button asChild>
+          <Button asChild className="max-md:rounded-full">
             <Link href={`/${lang}/exams/generate/catalog`}>
               <Wand2 className="me-2 h-4 w-4" />
               {gc?.newTemplate ?? "New Template"}
@@ -150,7 +150,7 @@ export default async function GenerateContent({
         </div>
 
         {templates.length === 0 ? (
-          <Card className="border-dashed">
+          <Card className="max-md:bg-muted border-dashed max-md:border-0">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="text-muted-foreground mb-4 h-10 w-10" />
               <p className="text-muted-foreground mb-4 text-sm">
@@ -166,26 +166,31 @@ export default async function GenerateContent({
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {templates.map((t) => (
               <Link
                 key={t.id}
                 href={`/${lang}/exams/generate/templates/${t.id}`}
                 className="group"
               >
-                <Card className="group-hover:border-primary/50 h-full transition-colors">
-                  <CardHeader className="pb-3">
+                <Card className="group-hover:border-primary/50 max-md:bg-muted h-full transition-colors max-md:border-0">
+                  <CardHeader className="pb-3 max-md:p-4 max-md:pb-2">
                     <div className="flex items-start justify-between">
-                      <CardTitle className="line-clamp-1 text-base">
+                      <CardTitle className="line-clamp-1 text-base max-md:line-clamp-2 max-md:text-sm max-md:leading-5">
                         {t.name}
                       </CardTitle>
-                      <Badge variant="secondary" className="shrink-0 text-xs">
+                      {/* The badge repeats the name; two across there is no
+                          room for the same words twice. */}
+                      <Badge
+                        variant="secondary"
+                        className="shrink-0 text-xs max-md:hidden"
+                      >
                         {t.name}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
+                  <CardContent className="space-y-3 max-md:space-y-2 max-md:px-4 max-md:pb-4">
+                    <div className="text-muted-foreground flex flex-wrap gap-3 text-sm max-md:gap-x-2 max-md:gap-y-1 max-md:text-xs">
                       <span className="flex items-center gap-1">
                         <Hash className="h-3.5 w-3.5" />
                         {t.totalQuestions} {gc?.questions ?? "Q"}
@@ -213,79 +218,90 @@ export default async function GenerateContent({
 
         {templates.length > 0 && (
           <div className="flex justify-center">
-            <Button variant="ghost" size="sm" asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="max-md:bg-muted max-md:h-10 max-md:rounded-full max-md:px-5"
+            >
               <Link href={`/${lang}/exams/generate/templates`}>
-                {isAr ? "عرض الكل" : "View All Templates"}
+                {gc?.viewAllTemplates ?? "View All Templates"}
               </Link>
             </Button>
           </div>
         )}
       </section>
 
-      <Separator />
+      <Separator className="max-md:hidden" />
 
       {/* Section 2: Generated Exams Grid */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold tracking-tight">
-              {isAr ? "الاختبارات المُنشأة" : "Generated Exams"}
+              {gc?.generatedExams ?? "Generated Exams"}
             </h2>
             <p className="text-muted-foreground text-sm">
-              {isAr
-                ? "اختبارات جاهزة للطباعة أو الاستخدام كاختبار تجريبي"
-                : "Exams ready to print or use as mock exams"}
+              {gc?.examsReadyToPrint ??
+                "Exams ready to print or use as mock exams"}
             </p>
           </div>
-          <Button asChild variant="secondary">
+          <Button asChild variant="secondary" className="max-md:rounded-full">
             <Link href={`/${lang}/exams/generate/add`}>
               <Sparkles className="me-2 h-4 w-4" />
-              {isAr ? "إنشاء اختبار" : "Generate Exam"}
+              {gc?.generateExam ?? "Generate Exam"}
             </Link>
           </Button>
         </div>
 
         {generatedExams.length === 0 ? (
-          <Card className="border-dashed">
+          <Card className="max-md:bg-muted border-dashed max-md:border-0">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Sparkles className="text-muted-foreground mb-4 h-10 w-10" />
               <p className="text-muted-foreground mb-4 text-sm">
-                {isAr
-                  ? "لا توجد اختبارات مُنشأة. أنشئ قالبًا أولاً ثم ولّد اختبارًا."
-                  : "No generated exams yet. Create a template first, then generate an exam."}
+                {gc?.noGeneratedExams ??
+                  "No generated exams yet. Create a template first, then generate an exam."}
               </p>
               <Button asChild variant="outline">
                 <Link href={`/${lang}/exams/generate/add`}>
                   <Sparkles className="me-2 h-4 w-4" />
-                  {isAr ? "إنشاء اختبار" : "Generate Exam"}
+                  {gc?.generateExam ?? "Generate Exam"}
                 </Link>
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {generatedExams.map((g) => (
-              <Card key={g.id} className="h-full">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="line-clamp-1 text-base">
+              <Card
+                key={g.id}
+                className="max-md:bg-muted h-full max-md:flex max-md:flex-col max-md:border-0"
+              >
+                <CardHeader className="pb-3 max-md:space-y-1 max-md:p-4 max-md:pb-2">
+                  {/* Two across, the subject chip goes under the title
+                      instead of squeezing it to one word. */}
+                  <div className="flex items-start justify-between max-md:flex-col max-md:gap-1.5">
+                    <CardTitle className="line-clamp-1 text-base max-md:line-clamp-2 max-md:text-sm max-md:leading-5">
                       {g.examTitle}
                     </CardTitle>
-                    <Badge variant="outline" className="shrink-0 text-xs">
+                    <Badge
+                      variant="outline"
+                      className="max-md:bg-background shrink-0 text-xs max-md:max-w-full max-md:truncate"
+                    >
                       {g.name}
                     </Badge>
                   </div>
                   {g.templateName && (
-                    <CardDescription className="text-xs">
-                      {isAr ? "من قالب:" : "Template:"} {g.templateName}
+                    <CardDescription className="text-xs max-md:line-clamp-1">
+                      {gc?.template ?? "Template:"} {g.templateName}
                     </CardDescription>
                   )}
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
+                <CardContent className="space-y-3 max-md:mt-auto max-md:space-y-2 max-md:px-4 max-md:pb-4">
+                  <div className="text-muted-foreground flex flex-wrap gap-3 text-sm max-md:gap-x-2 max-md:gap-y-1 max-md:text-xs">
                     <span className="flex items-center gap-1">
                       <Hash className="h-3.5 w-3.5" />
-                      {g.totalQuestions} {isAr ? "سؤال" : "Q"}
+                      {g.totalQuestions} {gc?.questions ?? "Q"}
                     </span>
                     <span className="text-xs">
                       {new Date(g.createdAt).toLocaleDateString(
@@ -294,26 +310,26 @@ export default async function GenerateContent({
                       )}
                     </span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 max-md:gap-1.5">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 flex-1 text-xs"
+                      className="max-md:bg-background h-7 flex-1 text-xs max-md:h-8 max-md:rounded-full max-md:border-0 max-md:px-2"
                       asChild
                     >
                       <Link href={`/${lang}/exams/paper/${g.id}/preview`}>
                         <Printer className="me-1 h-3 w-3" />
-                        {isAr ? "طباعة" : "Print"}
+                        {gc?.print ?? "Print"}
                       </Link>
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 flex-1 text-xs"
+                      className="h-7 flex-1 text-xs max-md:h-8 max-md:rounded-full max-md:px-2"
                       asChild
                     >
                       <Link href={`/${lang}/exams/${g.examId}`}>
-                        {isAr ? "التفاصيل" : "Details"}
+                        {gc?.details ?? "Details"}
                       </Link>
                     </Button>
                   </div>
@@ -325,9 +341,14 @@ export default async function GenerateContent({
 
         {generatedExams.length > 0 && (
           <div className="flex justify-center">
-            <Button variant="ghost" size="sm" asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="max-md:bg-muted max-md:h-10 max-md:rounded-full max-md:px-5"
+            >
               <Link href={`/${lang}/exams/generate/list`}>
-                {isAr ? "عرض الكل" : "View All Generated Exams"}
+                {gc?.viewAllGenerated ?? "View All Generated Exams"}
               </Link>
             </Button>
           </div>

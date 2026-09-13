@@ -53,6 +53,22 @@ export function CatalogBrowseTab() {
   const t = dictionary?.school?.exams?.qbankUi?.catalog as
     | Record<string, any>
     | undefined
+  const exams = dictionary?.school?.exams
+  const difficultyLabel = (level: string) =>
+    ({
+      EASY: t?.difficultyEasy,
+      MEDIUM: t?.difficultyMedium,
+      HARD: t?.difficultyHard,
+    })[level] ?? level
+  const typeLabel = (type: string) =>
+    ({
+      MULTIPLE_CHOICE: t?.typeMCQ,
+      TRUE_FALSE: t?.typeTrueFalse,
+      SHORT_ANSWER: t?.typeShortAnswer,
+      ESSAY: t?.typeEssay,
+    })[type] ??
+    TYPE_LABELS[type] ??
+    type
   const [questions, setQuestions] = useState<QuestionRow[]>([])
   const [total, setTotal] = useState(0)
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
@@ -97,7 +113,7 @@ export function CatalogBrowseTab() {
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="relative min-w-[200px] flex-1">
+        <div className="relative min-w-[200px] flex-1 max-md:basis-full">
           <Search className="text-muted-foreground absolute start-3 top-2.5 size-4" />
           <Input
             placeholder={t?.searchPlaceholder ?? "Search catalog questions..."}
@@ -118,7 +134,7 @@ export function CatalogBrowseTab() {
             }))
           }}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] max-md:w-[calc(50%-0.375rem)]">
             <SelectValue placeholder={t?.allSubjects ?? "All subjects"} />
           </SelectTrigger>
           <SelectContent>
@@ -142,7 +158,7 @@ export function CatalogBrowseTab() {
             }))
           }}
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[140px] max-md:w-[calc(50%-0.375rem)]">
             <SelectValue placeholder={t?.difficulty ?? "Difficulty"} />
           </SelectTrigger>
           <SelectContent>
@@ -164,7 +180,7 @@ export function CatalogBrowseTab() {
             }))
           }}
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[140px] max-md:w-[calc(50%-0.375rem)]">
             <SelectValue placeholder={t?.type ?? "Type"} />
           </SelectTrigger>
           <SelectContent>
@@ -242,14 +258,14 @@ export function CatalogBrowseTab() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="text-xs">
-                      {TYPE_LABELS[q.questionType] ?? q.questionType}
+                      {typeLabel(q.questionType)}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge
                       className={`text-xs ${DIFFICULTY_COLORS[q.difficulty] ?? ""}`}
                     >
-                      {q.difficulty}
+                      {difficultyLabel(q.difficulty)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-center text-sm">
@@ -297,7 +313,7 @@ export function CatalogBrowseTab() {
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
             >
-              Previous
+              {exams?.previous ?? "Previous"}
             </Button>
             <Button
               size="sm"
@@ -305,7 +321,7 @@ export function CatalogBrowseTab() {
               disabled={page >= totalPages - 1}
               onClick={() => setPage((p) => p + 1)}
             >
-              Next
+              {exams?.next ?? "Next"}
             </Button>
           </div>
         </div>

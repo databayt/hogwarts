@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { auth } from "@/auth"
-import { differenceInDays, format } from "date-fns"
+import { differenceInDays } from "date-fns"
 import {
   BookOpen,
   Calendar,
@@ -175,15 +175,18 @@ export default async function GuardianExamsContent({
   )
   const subjectOf = (name?: string | null) =>
     name ? (phoneLabels.get(name) ?? name) : ""
+  // The guardian's exams home copy lives in `results.examsHome`.
+  const h = dictionary?.results?.examsHome
   const t = {
-    children: lang === "ar" ? "الأبناء" : "Children",
-    upcoming: lang === "ar" ? "امتحانات قادمة" : "Upcoming Exams",
-    results: lang === "ar" ? "نتائج حديثة" : "Recent Results",
-    viewAll: lang === "ar" ? "عرض الكل" : "View All",
-    today: lang === "ar" ? "اليوم" : "Today",
-    days: lang === "ar" ? "أيام" : "days",
-    avg: lang === "ar" ? "المعدل" : "Avg",
+    children: h?.children ?? "",
+    upcoming: h?.upcoming ?? "",
+    results: h?.recentResults ?? "",
+    viewAll: h?.viewAll ?? "",
+    today: h?.today ?? "",
+    avg: h?.average ?? "",
   }
+  const daysOf = (count: number) =>
+    (h?.daysCount ?? "{count}").replace("{count}", String(count))
   const averageOf = (childId: string) => {
     const rows = recentResults.filter((r) => r.studentId === childId)
     return rows.length > 0
@@ -293,7 +296,7 @@ export default async function GuardianExamsContent({
                         variant={daysUntil === 0 ? "destructive" : "secondary"}
                         className="font-normal"
                       >
-                        {daysUntil === 0 ? t.today : `${daysUntil} ${t.days}`}
+                        {daysUntil === 0 ? t.today : daysOf(daysUntil)}
                       </Badge>
                     }
                     description={subjectOf(exam.subject?.name) || undefined}
@@ -378,9 +381,7 @@ export default async function GuardianExamsContent({
                   <Users className="h-5 w-5 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-sm">
-                    {lang === "ar" ? "الأبناء" : "Children"}
-                  </p>
+                  <p className="text-muted-foreground text-sm">{t.children}</p>
                   <p className="text-2xl font-bold">{children.length}</p>
                 </div>
               </div>
@@ -449,9 +450,7 @@ export default async function GuardianExamsContent({
 
         {/* Children Cards */}
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold">
-            {lang === "ar" ? "أبنائي" : "My Children"}
-          </h2>
+          <h2 className="text-lg font-semibold">{h?.myChildren}</h2>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {children.map((child) => {
               const childResults = recentResults.filter(
@@ -472,8 +471,10 @@ export default async function GuardianExamsContent({
                           {child.firstName} {child.lastName}
                         </p>
                         <p className="text-muted-foreground text-sm">
-                          {childResults.length}{" "}
-                          {lang === "ar" ? "نتيجة" : "results"}
+                          {(h?.resultsCount ?? "{count}").replace(
+                            "{count}",
+                            String(childResults.length)
+                          )}
                         </p>
                       </div>
                       {avgScore !== null && (
@@ -486,8 +487,7 @@ export default async function GuardianExamsContent({
                                 : "destructive"
                           }
                         >
-                          {lang === "ar" ? "المعدل" : "Avg"}{" "}
-                          {avgScore.toFixed(0)}%
+                          {t.avg} {avgScore.toFixed(0)}%
                         </Badge>
                       )}
                     </div>
@@ -501,12 +501,10 @@ export default async function GuardianExamsContent({
         {/* Upcoming Exams */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              {lang === "ar" ? "امتحانات قادمة" : "Upcoming Exams"}
-            </h2>
+            <h2 className="text-lg font-semibold">{t.upcoming}</h2>
             <Button variant="ghost" size="sm" asChild>
               <Link href={`/${lang}/exams/upcoming`}>
-                {lang === "ar" ? "عرض الكل" : "View All"}
+                {t.viewAll}
                 <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
@@ -556,11 +554,7 @@ export default async function GuardianExamsContent({
                                   : "outline"
                             }
                           >
-                            {daysUntil === 0
-                              ? lang === "ar"
-                                ? "اليوم"
-                                : "Today"
-                              : `${daysUntil} ${lang === "ar" ? "أيام" : "days"}`}
+                            {daysUntil === 0 ? t.today : daysOf(daysUntil)}
                           </Badge>
                         </div>
                         <CardDescription>{name}</CardDescription>
@@ -569,7 +563,10 @@ export default async function GuardianExamsContent({
                         <div className="flex items-center gap-4 text-sm">
                           <div className="text-muted-foreground flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
-                            {format(exam.examDate, "MMM d")}
+                            {formatDate(exam.examDate, lang, {
+                              month: "short",
+                              day: "numeric",
+                            })}
                           </div>
                           <div className="text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
@@ -588,12 +585,10 @@ export default async function GuardianExamsContent({
         {/* Recent Results */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              {lang === "ar" ? "نتائج حديثة" : "Recent Results"}
-            </h2>
+            <h2 className="text-lg font-semibold">{t.results}</h2>
             <Button variant="ghost" size="sm" asChild>
               <Link href={`/${lang}/exams/result`}>
-                {lang === "ar" ? "عرض الكل" : "View All"}
+                {t.viewAll}
                 <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
@@ -631,7 +626,11 @@ export default async function GuardianExamsContent({
                           <p className="text-muted-foreground text-sm">
                             {result.student.firstName} {result.student.lastName}{" "}
                             - {name} -{" "}
-                            {format(result.exam.examDate, "MMM d, yyyy")}
+                            {formatDate(result.exam.examDate, lang, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">

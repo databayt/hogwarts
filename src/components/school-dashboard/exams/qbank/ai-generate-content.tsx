@@ -77,6 +77,33 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
   const router = useRouter()
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.qbankUi?.aiGenerate
+  // The question bank's own labels for the enums this form offers; the
+  // English constants above stay as the fallback.
+  const cfg = dictionary?.school?.exams?.qbankUi?.config
+  const typeLabels: Record<string, string> = {
+    MULTIPLE_CHOICE:
+      cfg?.questionTypes?.mcq ?? QUESTION_TYPE_LABELS.MULTIPLE_CHOICE,
+    TRUE_FALSE:
+      cfg?.questionTypes?.trueFalse ?? QUESTION_TYPE_LABELS.TRUE_FALSE,
+    SHORT_ANSWER:
+      cfg?.questionTypes?.shortAnswer ?? QUESTION_TYPE_LABELS.SHORT_ANSWER,
+    ESSAY: cfg?.questionTypes?.essay ?? QUESTION_TYPE_LABELS.ESSAY,
+    FILL_BLANK:
+      cfg?.questionTypes?.fillBlank ?? QUESTION_TYPE_LABELS.FILL_BLANK,
+  }
+  const difficultyLabels: Record<string, string> = {
+    EASY: cfg?.difficulty?.easy ?? DIFFICULTY_LABELS.EASY,
+    MEDIUM: cfg?.difficulty?.medium ?? DIFFICULTY_LABELS.MEDIUM,
+    HARD: cfg?.difficulty?.hard ?? DIFFICULTY_LABELS.HARD,
+  }
+  const bloomLabels: Record<string, string> = {
+    REMEMBER: cfg?.bloomLevels?.remember ?? BLOOM_LABELS.REMEMBER,
+    UNDERSTAND: cfg?.bloomLevels?.understand ?? BLOOM_LABELS.UNDERSTAND,
+    APPLY: cfg?.bloomLevels?.apply ?? BLOOM_LABELS.APPLY,
+    ANALYZE: cfg?.bloomLevels?.analyze ?? BLOOM_LABELS.ANALYZE,
+    EVALUATE: cfg?.bloomLevels?.evaluate ?? BLOOM_LABELS.EVALUATE,
+    CREATE: cfg?.bloomLevels?.create ?? BLOOM_LABELS.CREATE,
+  }
 
   // Form state
   const [subjectId, setSubjectId] = useState("")
@@ -172,20 +199,21 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
 
   return (
     <div className="space-y-6">
-      {/* Generation Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      {/* Generation Form — phone: the grey card, white fields on it */}
+      <Card className="max-md:bg-muted max-md:border-0">
+        <CardHeader className="max-md:p-5 max-md:pb-3">
+          <CardTitle className="flex items-center gap-2 max-md:text-base">
             <Sparkles className="h-5 w-5" />
-            Generate Questions with AI
+            {dictionary?.school?.exams?.qbank?.aiGenerate ??
+              "Generate Questions with AI"}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 max-md:px-5 max-md:pb-5">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>{t?.subject ?? "Subject"}</Label>
               <Select value={subjectId} onValueChange={setSubjectId}>
-                <SelectTrigger>
+                <SelectTrigger className="max-md:bg-background">
                   <SelectValue
                     placeholder={t?.selectSubject ?? "Select subject"}
                   />
@@ -203,6 +231,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             <div className="space-y-2">
               <Label>{t?.topic ?? "Topic"}</Label>
               <Input
+                className="max-md:bg-background"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g., Photosynthesis, Quadratic Equations"
@@ -212,17 +241,15 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             <div className="space-y-2">
               <Label>{t?.questionType ?? "Question Type"}</Label>
               <Select value={questionType} onValueChange={setQuestionType}>
-                <SelectTrigger>
+                <SelectTrigger className="max-md:bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(QUESTION_TYPE_LABELS).map(
-                    ([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  )}
+                  {Object.entries(typeLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -230,11 +257,11 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             <div className="space-y-2">
               <Label>{t?.difficulty ?? "Difficulty"}</Label>
               <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger>
+                <SelectTrigger className="max-md:bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(DIFFICULTY_LABELS).map(([value, label]) => (
+                  {Object.entries(difficultyLabels).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
                     </SelectItem>
@@ -246,11 +273,11 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             <div className="space-y-2">
               <Label>{t?.bloomLevel ?? "Bloom\u2019s Level"}</Label>
               <Select value={bloomLevel} onValueChange={setBloomLevel}>
-                <SelectTrigger>
+                <SelectTrigger className="max-md:bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(BLOOM_LABELS).map(([value, label]) => (
+                  {Object.entries(bloomLabels).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
                     </SelectItem>
@@ -262,6 +289,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             <div className="space-y-2">
               <Label>{t?.numQuestions ?? "Number of Questions"}</Label>
               <Input
+                className="max-md:bg-background"
                 type="number"
                 min={1}
                 max={20}
@@ -281,6 +309,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
                 "Additional Instructions (optional)"}
             </Label>
             <Textarea
+              className="max-md:bg-background"
               value={additionalInstructions}
               onChange={(e) => setAdditionalInstructions(e.target.value)}
               placeholder="e.g., Focus on practical applications, include diagrams description..."
@@ -292,7 +321,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
           <Button
             onClick={handleGenerate}
             disabled={!canGenerate}
-            className="gap-2"
+            className="gap-2 max-md:h-10 max-md:w-full max-md:rounded-full"
           >
             {isGenerating ? (
               <>
@@ -321,7 +350,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
       {/* Success */}
       {savedCount !== null && (
         <Card className="border-green-500">
-          <CardContent className="flex items-center gap-2 pt-4">
+          <CardContent className="flex items-center gap-2 pt-4 max-md:flex-wrap">
             <CheckCircle className="h-5 w-5 text-green-500" />
             <p className="text-sm font-medium">
               {savedCount} question{savedCount !== 1 ? "s" : ""} saved to
@@ -342,7 +371,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
       {/* Generated Questions Review */}
       {generatedQuestions.length > 0 && savedCount === null && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between max-md:flex-wrap max-md:gap-3">
             <h3 className="text-lg font-semibold">
               Review Generated Questions ({selectedIndices.size}/
               {generatedQuestions.length} selected)
@@ -350,7 +379,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             <Button
               onClick={handleSave}
               disabled={selectedIndices.size === 0 || isSaving}
-              className="gap-2"
+              className="gap-2 max-md:h-10 max-md:rounded-full max-md:px-5"
             >
               {isSaving ? (
                 <>
@@ -371,7 +400,9 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             <Card
               key={idx}
               className={
-                selectedIndices.has(idx) ? "border-primary" : "opacity-60"
+                selectedIndices.has(idx)
+                  ? "border-primary max-md:bg-muted"
+                  : "max-md:bg-muted opacity-60 max-md:border-transparent"
               }
             >
               <CardContent className="pt-4">
@@ -390,15 +421,15 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
 
                   <div className="flex-1 space-y-2">
                     {/* Question header */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 max-md:flex-wrap">
                       <span className="text-muted-foreground text-sm font-medium">
                         Q{idx + 1}
                       </span>
                       <Badge variant="secondary">
-                        {QUESTION_TYPE_LABELS[q.questionType] ?? q.questionType}
+                        {typeLabels[q.questionType] ?? q.questionType}
                       </Badge>
                       <Badge variant="outline">
-                        {DIFFICULTY_LABELS[q.difficulty] ?? q.difficulty}
+                        {difficultyLabels[q.difficulty] ?? q.difficulty}
                       </Badge>
                       <Badge variant="outline">
                         {q.points} pt{q.points !== 1 ? "s" : ""}

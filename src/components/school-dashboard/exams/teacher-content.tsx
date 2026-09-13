@@ -139,6 +139,12 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
   ])
 
   const d = dictionary?.school?.exams
+  // The teacher's exams home copy lives in `results.examsHome`.
+  const h = dictionary?.results?.examsHome
+  const acrossClasses = (h?.acrossClasses ?? "{count}").replace(
+    "{count}",
+    String(teacherClasses.length)
+  )
 
   const completionRate =
     myExamsCount > 0
@@ -156,7 +162,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
               key: "exams",
               label: d?.dashboard?.stats?.totalExams || "My Exams",
               value: myExamsCount,
-              hint: lang === "ar" ? "في فصولي" : "In my classes",
+              hint: h?.inMyClasses,
             },
             {
               key: "upcoming",
@@ -174,10 +180,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
               key: "students",
               label: d?.dashboard?.stats?.students || "Students",
               value: myStudentsCount,
-              hint:
-                lang === "ar"
-                  ? `في ${teacherClasses.length} فصول`
-                  : `Across ${teacherClasses.length} classes`,
+              hint: acrossClasses,
             },
             {
               key: "completed",
@@ -253,7 +256,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
               </div>
               <p className="mt-2 text-3xl font-bold">{myExamsCount}</p>
               <p className="text-muted-foreground mt-1 text-xs">
-                {lang === "ar" ? "في فصولي" : "In my classes"}
+                {h?.inMyClasses}
               </p>
             </CardContent>
           </Card>
@@ -268,7 +271,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
               </div>
               <p className="mt-2 text-3xl font-bold">{upcomingExamsCount}</p>
               <p className="text-muted-foreground mt-1 text-xs">
-                {lang === "ar" ? "اختبارات قادمة" : "Scheduled ahead"}
+                {h?.scheduledAhead}
               </p>
             </CardContent>
           </Card>
@@ -283,7 +286,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
               </div>
               <p className="mt-2 text-3xl font-bold">{myQuestionsCount}</p>
               <p className="text-muted-foreground mt-1 text-xs">
-                {lang === "ar" ? "أسئلتي في البنك" : "In question bank"}
+                {h?.inQuestionBank}
               </p>
             </CardContent>
           </Card>
@@ -298,9 +301,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
               </div>
               <p className="mt-2 text-3xl font-bold">{myStudentsCount}</p>
               <p className="text-muted-foreground mt-1 text-xs">
-                {lang === "ar"
-                  ? `في ${teacherClasses.length} فصول`
-                  : `Across ${teacherClasses.length} classes`}
+                {acrossClasses}
               </p>
             </CardContent>
           </Card>
@@ -344,7 +345,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
                 {pendingMarkingCount}
               </p>
               <p className="text-muted-foreground mt-4 text-sm">
-                {lang === "ar" ? "بانتظار التصحيح" : "Awaiting grading"}
+                {h?.awaitingGrading}
               </p>
             </CardContent>
           </Card>
@@ -378,11 +379,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
                 <CardTitle>
                   {d?.dashboard?.quickActions?.title || "Quick Actions"}
                 </CardTitle>
-                <CardDescription>
-                  {lang === "ar"
-                    ? "إجراءات سريعة لفصولك"
-                    : "Common tasks for your classes"}
-                </CardDescription>
+                <CardDescription>{h?.quickActionsDescription}</CardDescription>
               </div>
             </div>
           </CardHeader>

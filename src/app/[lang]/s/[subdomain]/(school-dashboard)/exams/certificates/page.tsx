@@ -23,5 +23,5 @@ export default async function CertificatesPage({
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <CertificateContent />
+  return <CertificateContent lang={lang} />
 }

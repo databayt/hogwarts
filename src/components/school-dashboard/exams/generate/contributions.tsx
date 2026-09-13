@@ -48,6 +48,9 @@ function statusLabel(d: ContributionsDict, status: string): string {
 // Stats Cards
 // ============================================================================
 
+const STAT_CELL =
+  "max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none"
+
 function StatsCards({
   stats,
   d,
@@ -55,49 +58,61 @@ function StatsCards({
   stats: ContributionStats
   d: ContributionsDict
 }) {
+  // Phone: one grey panel, two across, hairlines between the cells — the
+  // phone dashboard's analytics card, not four bordered boxes.
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{d?.total}</CardTitle>
-          <FileText className="text-muted-foreground h-4 w-4" />
+    <div className="max-md:bg-border grid grid-cols-2 gap-4 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4">
+      <Card className={STAT_CELL}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+          <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:text-xs max-md:font-normal">
+            {d?.total}
+          </CardTitle>
+          <FileText className="text-muted-foreground h-4 w-4 max-md:hidden" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.total}</div>
+        <CardContent className="max-md:px-4 max-md:pb-4">
+          <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+            {stats.total}
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{d?.approved}</CardTitle>
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
+      <Card className={STAT_CELL}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+          <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:text-xs max-md:font-normal">
+            {d?.approved}
+          </CardTitle>
+          <CheckCircle2 className="h-4 w-4 text-green-600 max-md:hidden" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-green-600">
+        <CardContent className="max-md:px-4 max-md:pb-4">
+          <div className="text-2xl font-bold text-green-600 max-md:text-lg max-md:leading-7 max-md:tabular-nums">
             {stats.approved}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{d?.pending}</CardTitle>
-          <Clock className="h-4 w-4 text-yellow-600" />
+      <Card className={STAT_CELL}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+          <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:text-xs max-md:font-normal">
+            {d?.pending}
+          </CardTitle>
+          <Clock className="h-4 w-4 text-yellow-600 max-md:hidden" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-yellow-600">
+        <CardContent className="max-md:px-4 max-md:pb-4">
+          <div className="text-2xl font-bold text-yellow-600 max-md:text-lg max-md:leading-7 max-md:tabular-nums">
             {stats.pending}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{d?.rejected}</CardTitle>
-          <XCircle className="h-4 w-4 text-red-600" />
+      <Card className={STAT_CELL}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+          <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:text-xs max-md:font-normal">
+            {d?.rejected}
+          </CardTitle>
+          <XCircle className="h-4 w-4 text-red-600 max-md:hidden" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-red-600">
+        <CardContent className="max-md:px-4 max-md:pb-4">
+          <div className="text-2xl font-bold text-red-600 max-md:text-lg max-md:leading-7 max-md:tabular-nums">
             {stats.rejected}
           </div>
         </CardContent>
@@ -130,12 +145,15 @@ function ExamContributionList({
   return (
     <div className="space-y-3">
       {items.map((item) => (
-        <Card key={item.id}>
-          <CardContent className="flex items-start justify-between gap-4 pt-6">
+        <Card key={item.id} className="max-md:bg-muted max-md:border-0">
+          <CardContent className="flex items-start justify-between gap-4 pt-6 max-md:gap-3 max-md:p-4">
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2">
                 <h4 className="truncate font-medium">{item.title}</h4>
-                <Badge variant="outline" className="shrink-0">
+                <Badge
+                  variant="outline"
+                  className="max-md:bg-background shrink-0"
+                >
                   {item.examType}
                 </Badge>
               </div>
@@ -202,12 +220,15 @@ function TemplateContributionList({
   return (
     <div className="space-y-3">
       {items.map((item) => (
-        <Card key={item.id}>
-          <CardContent className="flex items-start justify-between gap-4 pt-6">
+        <Card key={item.id} className="max-md:bg-muted max-md:border-0">
+          <CardContent className="flex items-start justify-between gap-4 pt-6 max-md:gap-3 max-md:p-4">
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2">
                 <h4 className="truncate font-medium">{item.name}</h4>
-                <Badge variant="outline" className="shrink-0">
+                <Badge
+                  variant="outline"
+                  className="max-md:bg-background shrink-0"
+                >
                   {item.examType}
                 </Badge>
               </div>
@@ -257,9 +278,9 @@ function TemplateContributionList({
 function ContributionsSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="max-md:bg-border grid grid-cols-2 gap-4 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i}>
+          <Card key={i} className={STAT_CELL}>
             <CardHeader className="pb-2">
               <Skeleton className="h-4 w-16" />
             </CardHeader>
@@ -349,7 +370,9 @@ export default function ExamContributionsContent() {
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* The page already heads itself with this title and description; on a
+          phone the second copy is a screen's worth of repetition. */}
+      <div className="max-md:hidden">
         <h2 className="text-lg font-semibold">{d?.title}</h2>
         <p className="text-muted-foreground text-sm">{d?.description}</p>
       </div>

@@ -71,6 +71,20 @@ export function ExamBrowseTab() {
   const t = dictionary?.school?.exams?.generateUi?.catalog as
     | Record<string, any>
     | undefined
+  const exams_ = dictionary?.school?.exams
+  const gc = exams_?.generateContent
+  // Catalog exam types as the dictionary names them (`chapter`, not the
+  // stored `chapter_test`); unknown types fall back to the English label.
+  const typeLabel = (type: string) =>
+    ({
+      final: t?.types?.final,
+      midterm: t?.types?.midterm,
+      chapter_test: t?.types?.chapter,
+      quiz: t?.types?.quiz,
+      practice: t?.types?.practice,
+    })[type] ??
+    EXAM_TYPE_LABELS[type] ??
+    type
   const [exams, setExams] = useState<ExamRow[]>([])
   const [total, setTotal] = useState(0)
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
@@ -122,7 +136,7 @@ export function ExamBrowseTab() {
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="relative min-w-[200px] flex-1">
+        <div className="relative min-w-[200px] flex-1 max-md:basis-full">
           <Search className="text-muted-foreground absolute start-3 top-2.5 size-4" />
           <Input
             placeholder={t?.searchPlaceholder ?? "Search catalog exams..."}
@@ -143,7 +157,7 @@ export function ExamBrowseTab() {
             }))
           }}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] max-md:w-[calc(50%-0.375rem)]">
             <SelectValue placeholder={t?.allSubjects ?? "All subjects"} />
           </SelectTrigger>
           <SelectContent>
@@ -167,7 +181,7 @@ export function ExamBrowseTab() {
             }))
           }}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[160px] max-md:w-[calc(50%-0.375rem)]">
             <SelectValue placeholder={t?.examType ?? "Exam type"} />
           </SelectTrigger>
           <SelectContent>
@@ -177,7 +191,7 @@ export function ExamBrowseTab() {
               {t?.types?.midterm ?? "Midterm"}
             </SelectItem>
             <SelectItem value="chapter_test">
-              {t?.types?.chapterTest ?? "Chapter Test"}
+              {t?.types?.chapter ?? "Chapter Test"}
             </SelectItem>
             <SelectItem value="quiz">{t?.types?.quiz ?? "Quiz"}</SelectItem>
             <SelectItem value="practice">
@@ -199,7 +213,10 @@ export function ExamBrowseTab() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {exams.map((exam) => (
-            <Card key={exam.id} className="relative">
+            <Card
+              key={exam.id}
+              className="max-md:bg-muted relative max-md:border-0"
+            >
               {exam.isAdopted && (
                 <div className="absolute end-3 top-3">
                   <Badge
@@ -211,8 +228,8 @@ export function ExamBrowseTab() {
                   </Badge>
                 </div>
               )}
-              <CardHeader className="pb-3">
-                <CardTitle className="line-clamp-2 text-base">
+              <CardHeader className="pb-3 max-md:p-4 max-md:pb-2">
+                <CardTitle className="line-clamp-2 text-base max-md:leading-6">
                   {exam.title}
                 </CardTitle>
                 <CardDescription className="line-clamp-1">
@@ -220,48 +237,52 @@ export function ExamBrowseTab() {
                   {exam.catalogChapterName && ` / ${exam.catalogChapterName}`}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 max-md:px-4 max-md:pb-4">
                 <div className="flex flex-wrap gap-2">
                   <Badge
                     className={`text-xs ${EXAM_TYPE_COLORS[exam.examType] ?? ""}`}
                   >
-                    {EXAM_TYPE_LABELS[exam.examType] ?? exam.examType}
+                    {typeLabel(exam.examType)}
                   </Badge>
                   {exam.variantLabel && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge
+                      variant="outline"
+                      className="max-md:bg-background text-xs"
+                    >
                       {exam.variantLabel}
                     </Badge>
                   )}
                 </div>
 
-                <div className="text-muted-foreground flex items-center gap-4 text-xs">
+                <div className="text-muted-foreground flex items-center gap-4 text-xs max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-1">
                   {exam.durationMinutes && (
                     <span className="flex items-center gap-1">
                       <Clock className="size-3" />
-                      {exam.durationMinutes}min
+                      {exam.durationMinutes} {gc?.min ?? "min"}
                     </span>
                   )}
                   <span className="flex items-center gap-1">
                     <FileText className="size-3" />
-                    {exam.questionCount} Q
+                    {exam.questionCount} {gc?.questions ?? "Q"}
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="size-3" />
-                    {exam.usageCount} used
+                    {gc?.used ?? "Used"} {exam.usageCount}
                   </span>
                 </div>
 
                 {exam.totalMarks && (
                   <p className="text-muted-foreground text-xs">
-                    {exam.totalMarks} marks
+                    {exam.totalMarks} {gc?.marks ?? "marks"}
                   </p>
                 )}
 
-                <div className="flex gap-2">
+                {/* Phone: the reference's pills, sized to their words. */}
+                <div className="flex gap-2 max-md:flex-wrap">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1"
+                    className="max-md:bg-background flex-1 max-md:h-9 max-md:flex-none max-md:rounded-full max-md:border-0 max-md:px-4"
                     onClick={() => handlePreview(exam.id)}
                   >
                     <Eye className="me-1 size-4" />
@@ -270,7 +291,7 @@ export function ExamBrowseTab() {
                   {!exam.isAdopted && (
                     <Button
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 max-md:h-9 max-md:flex-none max-md:rounded-full max-md:px-4"
                       onClick={() => openAdopt(exam.id)}
                     >
                       <Download className="me-1 size-4" />
@@ -297,7 +318,7 @@ export function ExamBrowseTab() {
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
             >
-              {t?.previous ?? "Previous"}
+              {t?.previous ?? exams_?.previous ?? "Previous"}
             </Button>
             <Button
               size="sm"
@@ -305,7 +326,7 @@ export function ExamBrowseTab() {
               disabled={page >= totalPages - 1}
               onClick={() => setPage((p) => p + 1)}
             >
-              {t?.next ?? "Next"}
+              {t?.next ?? exams_?.next ?? "Next"}
             </Button>
           </div>
         </div>
@@ -337,27 +358,26 @@ export function ExamBrowseTab() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">
-                    {t?.detailType ?? "Type"}
+                    {t?.detail?.type ?? "Type"}
                   </p>
                   <Badge
                     className={EXAM_TYPE_COLORS[previewExam.examType] ?? ""}
                   >
-                    {EXAM_TYPE_LABELS[previewExam.examType] ??
-                      previewExam.examType}
+                    {typeLabel(previewExam.examType)}
                   </Badge>
                 </div>
                 <div>
                   <p className="text-muted-foreground">
-                    {t?.detailDuration ?? "Duration"}
+                    {t?.detail?.duration ?? "Duration"}
                   </p>
                   <p>
                     {previewExam.durationMinutes ?? "-"}{" "}
-                    {t?.minutes ?? "minutes"}
+                    {t?.minutes ?? exams_?.minutes ?? "minutes"}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">
-                    {t?.detailTotalMarks ?? "Total Marks"}
+                    {t?.detail?.totalMarks ?? "Total Marks"}
                   </p>
                   <p>
                     {previewExam.totalMarks ?? "-"} ({t?.pass ?? "pass"}:{" "}
@@ -366,13 +386,13 @@ export function ExamBrowseTab() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">
-                    {t?.detailQuestions ?? "Questions"}
+                    {t?.detail?.questions ?? "Questions"}
                   </p>
                   <p>{previewExam.totalQuestions ?? "-"}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">
-                    {t?.detailUsage ?? "Usage"}
+                    {t?.detail?.usage ?? "Usage"}
                   </p>
                   <p>
                     {previewExam.usageCount} {t?.schools ?? "schools"}
@@ -380,7 +400,7 @@ export function ExamBrowseTab() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">
-                    {t?.detailAvgScore ?? "Avg Score"}
+                    {t?.detail?.avgScore ?? "Avg Score"}
                   </p>
                   <p>{previewExam.averageScore}%</p>
                 </div>

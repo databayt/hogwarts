@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { auth } from "@/auth"
-import { addDays, differenceInDays, format } from "date-fns"
+import { addDays, differenceInDays } from "date-fns"
 import {
   Award,
   BookOpen,
@@ -160,25 +160,22 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.school?.exams
 
-  // Phone copy that used to be inline `lang === "ar"` ternaries. Kept as the
-  // same two literals for now, in ONE place, until the keys exist.
+  // The student's exams home copy lives in `results.examsHome`.
+  const h = dictionary?.results?.examsHome
   const t = {
-    myUpcoming: lang === "ar" ? "امتحاناتي القادمة" : "My Upcoming Exams",
-    myResults: lang === "ar" ? "نتائجي الأخيرة" : "My Recent Results",
-    viewAll: lang === "ar" ? "عرض الكل" : "View All",
-    today: lang === "ar" ? "اليوم" : "Today",
-    tomorrow: lang === "ar" ? "غداً" : "Tomorrow",
-    days: lang === "ar" ? "أيام" : "days",
-    minutes: d?.minutes || (lang === "ar" ? "د" : "min"),
+    myUpcoming: h?.myUpcoming ?? "",
+    myResults: h?.myResults ?? "",
+    viewAll: h?.viewAll ?? "",
+    today: h?.today ?? "",
+    tomorrow: h?.tomorrow ?? "",
+    minutes: d?.minutes || h?.minutesShort || "",
   }
+  const daysOf = (count: number) =>
+    (h?.daysCount ?? "{count}").replace("{count}", String(count))
   const weekdayOf = (date: Date) => formatDate(date, lang, { weekday: "short" })
   const dayOf = (date: Date) => formatDate(date, lang, { day: "numeric" })
   const whenOf = (daysUntil: number) =>
-    daysUntil === 0
-      ? t.today
-      : daysUntil === 1
-        ? t.tomorrow
-        : `${daysUntil} ${t.days}`
+    daysUntil === 0 ? t.today : daysUntil === 1 ? t.tomorrow : daysOf(daysUntil)
   const next = localizedUpcoming[0]
   const nextDays = next ? differenceInDays(next.examDate, today) : 0
   const nextSubject = next?.subject?.name
@@ -452,7 +449,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
                 <div>
                   <p className="font-medium">{d?.nav?.quiz || "Quiz"}</p>
                   <p className="text-muted-foreground text-sm">
-                    {lang === "ar" ? "تدريب سريع" : "Quick practice"}
+                    {h?.quickPractice}
                   </p>
                 </div>
               </Link>
@@ -463,12 +460,10 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
         {/* Upcoming Exams */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              {lang === "ar" ? "امتحاناتي القادمة" : "My Upcoming Exams"}
-            </h2>
+            <h2 className="text-lg font-semibold">{t.myUpcoming}</h2>
             <Button variant="ghost" size="sm" asChild>
               <Link href={`/${lang}/exams/upcoming`}>
-                {lang === "ar" ? "عرض الكل" : "View All"}
+                {t.viewAll}
                 <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
@@ -514,15 +509,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
                                 : "outline"
                           }
                         >
-                          {daysUntil === 0
-                            ? lang === "ar"
-                              ? "اليوم"
-                              : "Today"
-                            : daysUntil === 1
-                              ? lang === "ar"
-                                ? "غداً"
-                                : "Tomorrow"
-                              : `${daysUntil} ${lang === "ar" ? "أيام" : "days"}`}
+                          {whenOf(daysUntil)}
                         </Badge>
                       </div>
                       <CardDescription>
@@ -533,7 +520,10 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
                       <div className="flex items-center gap-4 text-sm">
                         <div className="text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5" />
-                          {format(exam.examDate, "MMM d")}
+                          {formatDate(exam.examDate, lang, {
+                            month: "short",
+                            day: "numeric",
+                          })}
                         </div>
                         <div className="text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" />
@@ -551,12 +541,10 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
         {/* Recent Results */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              {lang === "ar" ? "نتائجي الأخيرة" : "My Recent Results"}
-            </h2>
+            <h2 className="text-lg font-semibold">{t.myResults}</h2>
             <Button variant="ghost" size="sm" asChild>
               <Link href={`/${lang}/exams/result`}>
-                {lang === "ar" ? "عرض الكل" : "View All"}
+                {t.viewAll}
                 <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
@@ -585,7 +573,12 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
                       <div>
                         <p className="font-medium">{result.exam.title}</p>
                         <p className="text-muted-foreground text-sm">
-                          {name} - {format(result.exam.examDate, "MMM d, yyyy")}
+                          {name} -{" "}
+                          {formatDate(result.exam.examDate, lang, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">

@@ -34,13 +34,13 @@ export default async function ConfigsPage({ params }: ConfigsPageProps) {
   }
 
   const schoolId = session?.user?.schoolId
-  const isRtl = lang === "ar"
+  const cfg = dictionary?.school?.exams?.certificates?.config
 
   if (!schoolId) {
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">
-          {isRtl ? "غير مصرح" : "Unauthorized"}
+          {cfg?.unauthorized ?? "Unauthorized"}
         </p>
       </div>
     )
@@ -65,18 +65,17 @@ export default async function ConfigsPage({ params }: ConfigsPageProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">
-            {isRtl ? "إعدادات الشهادات" : "Certificate Configurations"}
+            {cfg?.pageTitle ?? "Certificate Configurations"}
           </h1>
           <p className="text-muted-foreground">
-            {isRtl
-              ? "إدارة قوالب وإعدادات الشهادات"
-              : "Manage certificate templates and settings"}
+            {cfg?.pageDescription ??
+              "Manage certificate templates and settings"}
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="max-md:rounded-full">
           <Link href={`/${lang}/exams/certificates/configs/new`}>
             <Plus className="me-2 h-4 w-4" />
-            {isRtl ? "إعداد جديد" : "New Configuration"}
+            {cfg?.newConfiguration ?? "New Configuration"}
           </Link>
         </Button>
       </div>

@@ -303,5 +303,27 @@
     "empty": "لا توجد كشوف درجات. أدخل رقم الطالب ثم انقر على \"إنشاء كشف الدرجات\".",
     "download": "تحميل",
     "pending": "قيد الانتظار"
+  },
+  "examsHome": {
+    "myUpcoming": "امتحاناتي القادمة",
+    "myResults": "نتائجي الأخيرة",
+    "upcoming": "امتحانات قادمة",
+    "recentResults": "نتائج حديثة",
+    "viewAll": "عرض الكل",
+    "today": "اليوم",
+    "tomorrow": "غداً",
+    "daysCount": "{count} أيام",
+    "minutesShort": "د",
+    "quickPractice": "تدريب سريع",
+    "children": "الأبناء",
+    "myChildren": "أبنائي",
+    "resultsCount": "{count} نتيجة",
+    "average": "المعدل",
+    "inMyClasses": "في فصولي",
+    "acrossClasses": "في {count} فصول",
+    "scheduledAhead": "اختبارات قادمة",
+    "inQuestionBank": "أسئلتي في البنك",
+    "awaitingGrading": "بانتظار التصحيح",
+    "quickActionsDescription": "إجراءات سريعة لفصولك"
   }
 }

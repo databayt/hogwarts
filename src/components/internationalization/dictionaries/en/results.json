@@ -303,5 +303,27 @@
     "empty": "No transcripts found. Enter a student ID and click \"Generate Transcript\".",
     "download": "Download",
     "pending": "Pending"
+  },
+  "examsHome": {
+    "myUpcoming": "My Upcoming Exams",
+    "myResults": "My Recent Results",
+    "upcoming": "Upcoming Exams",
+    "recentResults": "Recent Results",
+    "viewAll": "View All",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "daysCount": "{count} days",
+    "minutesShort": "min",
+    "quickPractice": "Quick practice",
+    "children": "Children",
+    "myChildren": "My Children",
+    "resultsCount": "{count} results",
+    "average": "Avg",
+    "inMyClasses": "In my classes",
+    "acrossClasses": "Across {count} classes",
+    "scheduledAhead": "Scheduled ahead",
+    "inQuestionBank": "In question bank",
+    "awaitingGrading": "Awaiting grading",
+    "quickActionsDescription": "Common tasks for your classes"
   }
 }

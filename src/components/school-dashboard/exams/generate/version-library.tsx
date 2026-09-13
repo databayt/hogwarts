@@ -152,7 +152,12 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
             generated
           </p>
         </div>
-        <Button onClick={handleCreate} disabled={isCreating} size="sm">
+        <Button
+          onClick={handleCreate}
+          disabled={isCreating}
+          size="sm"
+          className="max-md:h-9 max-md:rounded-full max-md:px-4"
+        >
           {isCreating ? (
             <>
               <Loader2 className="me-2 h-4 w-4 animate-spin" />
@@ -177,8 +182,11 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
       {/* Version cards grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {versions.map((version) => (
-          <Card key={version.id} className="relative">
-            <CardHeader className="pb-3">
+          <Card
+            key={version.id}
+            className="max-md:bg-muted relative max-md:border-0"
+          >
+            <CardHeader className="pb-3 max-md:p-4 max-md:pb-2">
               <div className="flex items-start justify-between">
                 <CardTitle className="text-base">{version.title}</CardTitle>
                 {version.isActive && (
@@ -191,7 +199,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
                 {formatDate(version.createdAt)}
               </p>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 max-md:px-4 max-md:pb-4">
               {/* Stats */}
               <div className="flex items-center gap-4 text-sm">
                 <div>
@@ -216,7 +224,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
+                    className="max-md:bg-background flex-1 max-md:h-9 max-md:rounded-full max-md:border-0"
                     asChild
                   >
                     <a
@@ -232,7 +240,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
+                    className="max-md:bg-background flex-1 max-md:h-9 max-md:rounded-full max-md:border-0"
                     disabled
                   >
                     <FileText className="me-2 h-3.5 w-3.5" />
