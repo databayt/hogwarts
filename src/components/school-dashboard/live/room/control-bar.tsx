@@ -236,8 +236,8 @@ export function ControlBar({
 }
 
 /**
- * The top-end pill's one glyph — where the reference keeps volume, which a
- * phone has a rocker for. The connection is what a class actually needs to
+ * The top row's lone end circle — where the player keeps its speaker, which a
+ * class has no use for. The connection is what a class actually needs to
  * see at a glance: the signal tinted by the last sample, and the delivery
  * tiers under it.
  */
@@ -245,10 +245,15 @@ export function QualityMenuButton({
   adaptive,
   labels,
   onPinned,
+  className,
+  style,
 }: {
   adaptive: AdaptiveDelivery
   labels: RoomLabels
   onPinned?: (pinned: boolean) => void
+  /** The shell draws this glyph as the player's lone glass circle. */
+  className?: string
+  style?: React.CSSProperties
 }) {
   const [open, setOpen] = useState(false)
   useEffect(() => {
@@ -269,7 +274,8 @@ export function QualityMenuButton({
     <div className="relative" data-menu-root>
       <button
         type="button"
-        className={cn(glyph, adaptive.manual && "bg-white/25")}
+        className={cn(glyph, className, adaptive.manual && "bg-white/25")}
+        style={style}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`${labels.connection}: ${text} · ${labels.quality}`}

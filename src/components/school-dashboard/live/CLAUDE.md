@@ -1368,3 +1368,32 @@ the top edge and the bar is one scroll up. Measured identical to the lesson at
   `lumos/shared/title-card/`, used by the lesson and the room. It measures the
   offset, so it does nothing where the header is hidden. The room only passes
   `header` in the pre-join branch; the call and the ended screen never see it.
+
+## The in-call chrome follows the lumos player AS BUILT (2026-09-13)
+
+Abdout named `lumos/shared/video-player/video-player.tsx` as the reference.
+That supersedes the Figma 605-7 card recorded above: **there is no bottom card
+any more, and a timed class DOES print its title.**
+
+- **Top row** — the player's phone row: ✕ as its own 44px glass circle on the
+  reading edge, a glass pill of 54px slots (people · fit) beside it, and the
+  connection as a lone circle at the far end, in the speaker's slot. 21px in,
+  12px down (safe-area inset where larger); from `sm` the controls are 36px at
+  16px insets. Measured: ✕ 21px from the right under RTL, 44px tall.
+- **Bottom block** — `glassScrim` across the full width (measured 390 / 1440),
+  `pt-24` on a phone and `pt-16` from `sm`. On it, the player's two-line info
+  label — `● live · subtitle` small, the subject bold (24px phone, 16px wide) —
+  then `ClassProgress` as ONE line, `clock · track · clock`: elapsed on the
+  start side, `−remaining` on a phone and the class's full length from `sm`,
+  exactly as the player splits them. The live marker moved from between the
+  clocks into the label. `subtitle` is `grade/section · lesson`, built in
+  `room.tsx` from the card data.
+- **The row of five stays a row**, under the clock, held to `max-w-sm` from
+  `sm` so five glyphs don't scatter across a desktop. The player's centre
+  transport (a big disc flanked by two) was NOT copied: a class has no
+  transport, and the row was chosen over the alternatives on 2026-09-03.
+- **One block with `sm:` variants**, not the player's two sibling chromes: the
+  row runs track toggles and device selects and the clock owns a 1s ticker, so
+  mounting either twice would double the hooks.
+- `QualityMenuButton` takes `className`/`style` so the shell can draw it as a
+  glass circle. `glassPanel` is no longer used here; it stays in `glass.ts`.

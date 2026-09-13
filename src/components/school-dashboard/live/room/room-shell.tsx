@@ -8,8 +8,9 @@ import { Maximize, Minimize, Video, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
-  glassPanel,
+  glassButton,
   glassPill,
+  glassScrim,
   glassSurface,
 } from "@/components/lumos/shared/video-player/glass"
 import { VideoWatermark } from "@/components/lumos/shared/video-player/video-watermark"
@@ -26,7 +27,6 @@ import type {
 import type { Poll } from "./class-channel"
 import { ClassProgress } from "./class-progress"
 import { ControlBar, QualityMenuButton } from "./control-bar"
-import { glyph } from "./glyph"
 import type { RoomLabels } from "./labels"
 import { AudioOnlyBanner, ReconnectingOverlay } from "./overlays"
 import { SidePanel, type PanelTab } from "./side-panel"
@@ -41,6 +41,9 @@ interface RoomShellProps {
   /** The localized subject — the fallback line printed above the clock when
    *  the in-call chrome carries no other name for the class (see below). */
   title: string
+  /** The info label's small first line after the live marker — where the
+   *  player prints `C1 L1 course`. Null drops it to the marker alone. */
+  subtitle?: string | null
   role: ConferenceParticipantRole
   hostIdentity: string | null
   labels: RoomLabels
@@ -58,17 +61,23 @@ const layer =
 const gone = "pointer-events-none opacity-0"
 
 /**
- * Everything inside the connected room: the stage, and the player's chrome
- * floating over it.
+ * Everything inside the connected room: the stage, and the lumos player's
+ * chrome floating over it — `video-player.tsx` as BUILT is the reference
+ * (Abdout, 2026-09-13), which supersedes the Figma card this used to be.
  *
- * The chrome is the lesson player's phone layout — the frame's own three
- * groups. A pill at the top start (leave · people · fit), a pill at the top
- * end (the connection), and one glass card along the bottom holding the
- * class's clock and its row of controls. The title PILL is gone — the class
- * name is what the reader just chose — but the player's own `infoTitle` line
- * survives as a fallback inside the bottom card, above the clock: an open
- * room has no clock at all (`ClassProgress` renders nothing for one), and
- * without that line the card named the class to no one.
+ * - Top row: the player's phone row. ✕ as its own 44px glass circle on the
+ *   reading edge, a glass pill of 54px slots beside it (people · fit), and a
+ *   lone circle pushed to the far end (the connection, in the speaker's slot).
+ *   21px in from the sides, under the safe-area inset.
+ * - Bottom block: no card. The player's scrim runs the full width, and on it
+ *   the two-line info label (● live · subtitle, then the subject in bold),
+ *   the one-line `clock · track · clock` row, then the class's row of five —
+ *   which stays a row rather than the player's centre transport, because a
+ *   class has no transport and the row was chosen over that (2026-09-03).
+ *
+ * ONE block with `sm:` variants, not the player's two sibling chromes: the
+ * row of five runs track toggles and device selects, and the clock owns a
+ * one-second ticker — mounting them twice would double both.
  *
  * It behaves like the player's too. It fades three seconds after the last
  * touch and comes back on a tap of the stage, and the stage runs edge to edge
@@ -80,6 +89,7 @@ const gone = "pointer-events-none opacity-0"
 export function RoomShell({
   sessionId,
   title,
+  subtitle,
   role,
   hostIdentity,
   labels,
@@ -231,14 +241,15 @@ export function RoomShell({
             rotationInterval={20000}
           />
 
-          {/* Top chrome: the frame's two pills. Start side — leave, people,
-              fit; end side — the connection. `justify-between` puts the first
-              on the reading edge, which is the right one under RTL. */}
+          {/* Top row — the player's phone row (`video-player.tsx`, "Top row:
+              close · PiP/share pill · volume"). The ✕ leads on the reading
+              edge, which is the right one under RTL; `ms-auto` sends the
+              connection to the far end. From `sm` the controls shrink to the
+              wide player's scale. */}
           <div
             className={cn(
               layer,
-              // The frame sets its pills 24px in from the sides.
-              "top-0 flex items-start justify-between px-6 pt-4",
+              "top-0 flex items-center gap-3 px-[21px] pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4 sm:pt-4",
               hidden && cn(gone, "-translate-y-2")
             )}
             onClick={swallow}
@@ -246,22 +257,26 @@ export function RoomShell({
             onFocusCapture={onFocusCapture}
             onBlurCapture={onBlurCapture}
           >
+            {/* The player's ✕ closes it; ours leaves the class. The SDK's own
+                button brings its own styles, so this is the same call on the
+                room without them. `CLIENT_INITIATED` on the way out sends the
+                reader back to the class page. */}
+            <button
+              type="button"
+              className={cn(
+                glassButton,
+                "flex size-11 shrink-0 items-center justify-center text-white sm:size-9"
+              )}
+              style={glassSurface}
+              aria-label={labels.leave}
+              onClick={() => void room.disconnect()}
+            >
+              <X className="size-4" strokeWidth={2.5} aria-hidden />
+            </button>
             <div
-              className={cn(glassPill, "flex items-center gap-0.5 p-1")}
+              className={cn(glassPill, "flex h-11 items-center sm:h-9")}
               style={glassSurface}
             >
-              {/* The frame's ✕ closes the player; ours leaves the class. The
-                  SDK's own button brings its own styles, so this is the same
-                  call on the room without them. `CLIENT_INITIATED` on the
-                  way out sends the reader back to the class page. */}
-              <button
-                type="button"
-                className={glyph}
-                aria-label={labels.leave}
-                onClick={() => void room.disconnect()}
-              >
-                <X className="size-5" aria-hidden />
-              </button>
               <ParticipantsPanel
                 variant="glyph"
                 sessionId={sessionId}
@@ -271,7 +286,10 @@ export function RoomShell({
               />
               <button
                 type="button"
-                className={cn(glyph, aspectOn && "bg-white/25")}
+                className={cn(
+                  "flex h-11 w-[54px] items-center justify-center rounded-full text-white transition-opacity active:opacity-60 sm:h-9 sm:w-11",
+                  aspectOn && "bg-white/25"
+                )}
                 aria-pressed={aspectOn}
                 aria-label={aspectLabel}
                 title={aspectLabel}
@@ -284,14 +302,13 @@ export function RoomShell({
                 )}
               </button>
             </div>
-            <div
-              className={cn(glassPill, "flex items-center p-1")}
-              style={glassSurface}
-            >
+            <div className="ms-auto">
               <QualityMenuButton
                 adaptive={adaptive}
                 labels={labels}
                 onPinned={setQualityPinned}
+                className={cn(glassButton, "size-11 sm:size-9")}
+                style={glassSurface}
               />
             </div>
           </div>
@@ -328,14 +345,16 @@ export function RoomShell({
             )}
           </div>
 
-          {/* The card. Its own glass is its ground — the frame runs no scrim
-              under it. Clears the home indicator on a phone. */}
+          {/* Bottom block — the player's, phone and wide in one: its scrim
+              across the full width (no card), 96px of fade above the text on
+              a phone and 64px from `sm`, 21px / 16px side insets, the home
+              indicator's inset below. */}
           <div
             className={cn(
               layer,
-              // The frame's card sits 24px in from the sides and 24px above
-              // the home indicator; the safe-area inset wins where larger.
-              "bottom-0 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]",
+              "bottom-0",
+              glassScrim,
+              "px-[21px] pt-24 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 sm:pt-16 sm:pb-4",
               hidden && cn(gone, "translate-y-2")
             )}
             onClick={swallow}
@@ -343,31 +362,38 @@ export function RoomShell({
             onFocusCapture={onFocusCapture}
             onBlurCapture={onBlurCapture}
           >
-            <div
-              className={cn(
-                glassPanel,
-                // A whisper of white over the glass so the card still reads
-                // as a card on a black stage (a camera off, a dark room).
-                "mx-auto flex w-full max-w-lg flex-col gap-2.5 bg-white/[0.06] p-3.5"
-              )}
-              style={glassSurface}
-            >
-              {/* The player's `infoTitle` line, one above the scrubber
-                  (video-player.tsx). The frame's card opens on the scrubber
-                  and carries no title, so a timed class prints none — the
-                  reader just chose it. An OPEN room has no clock at all
-                  (`ClassProgress` renders nothing for one), and without this
-                  line its card would name the class to no one. */}
-              {title && clock.startsAtMs == null && (
-                <p className="truncate text-sm font-medium text-white">
+            {/* The player's info label. Its small first line carries the live
+                marker (it used to sit between the clocks, where the player has
+                no slot) and the subtitle; the second is the subject — 24px bold
+                on a phone, 16px semibold wide, as the player sets its title.
+                Printed on EVERY room now, timed or open. */}
+            <div className="min-w-0">
+              <p className="flex min-w-0 items-center gap-1.5 text-[15px] leading-none text-white/85 sm:text-xs sm:text-white">
+                <span
+                  className="size-1.5 shrink-0 rounded-full bg-red-500"
+                  aria-hidden
+                />
+                <span className="truncate">
+                  {labels.live}
+                  {subtitle ? ` · ${subtitle}` : ""}
+                </span>
+              </p>
+              {title && (
+                <p className="mt-1 truncate text-2xl leading-none font-bold text-white sm:mt-1 sm:text-base sm:leading-snug sm:font-semibold">
                   {title}
                 </p>
               )}
-              <ClassProgress
-                startsAtMs={clock.startsAtMs}
-                endsAtMs={clock.endsAtMs}
-                labels={labels}
-              />
+            </div>
+            <ClassProgress
+              startsAtMs={clock.startsAtMs}
+              endsAtMs={clock.endsAtMs}
+              labels={labels}
+              className="mt-[13px] sm:mt-2"
+            />
+            {/* The row of five, in the capsule row's place: 13px under the
+                clock, spread across a phone, held to a phone's width from
+                `sm` so five glyphs do not scatter across a desktop. */}
+            <div className="mx-auto mt-[13px] w-full sm:mt-3 sm:max-w-sm">
               <ControlBar
                 role={role}
                 tools={config.tools}

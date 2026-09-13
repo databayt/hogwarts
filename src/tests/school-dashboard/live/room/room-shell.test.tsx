@@ -7,7 +7,8 @@
  * On an OPEN room (`clock` null) `ClassProgress` renders nothing at all, so
  * without a fallback line the bottom card named the class to no one. The
  * fix prints `title` — the player's own `infoTitle` pattern — above the
- * clock inside the glass card.
+ * clock. Since 2026-09-13 the chrome follows the lumos player as built, so
+ * the label prints on every room, timed or open.
  *
  * Heavy LiveKit children (`Stage`, adaptive delivery, the class channel) are
  * stubbed: this test is only about the fallback title line, not the whole
@@ -100,15 +101,15 @@ const baseProps = {
   config,
 }
 
-describe("RoomShell fallback title line (lr-01)", () => {
-  it("prints the title above the clock on an OPEN room (no clock)", () => {
+describe("RoomShell info label (lr-01)", () => {
+  it("prints the title on an OPEN room (no clock)", () => {
     render(
       <RoomShell {...baseProps} clock={{ startsAtMs: null, endsAtMs: null }} />
     )
     expect(screen.getByText("Mathematics")).toBeInTheDocument()
   })
 
-  it("prints NO title when the room has a clock — the frame's card opens on the scrubber", () => {
+  it("prints the title on a TIMED room too — the lumos player's info label", () => {
     const now = Date.now()
     render(
       <RoomShell
@@ -116,6 +117,6 @@ describe("RoomShell fallback title line (lr-01)", () => {
         clock={{ startsAtMs: now - 60_000, endsAtMs: now + 60_000 }}
       />
     )
-    expect(screen.queryByText("Mathematics")).not.toBeInTheDocument()
+    expect(screen.getByText("Mathematics")).toBeInTheDocument()
   })
 })

@@ -348,6 +348,12 @@ export function RoomClient({
           <RoomShell
             sessionId={sessionId}
             title={title}
+            // The player's small line: where the class is, then which lesson.
+            subtitle={
+              [card.grade ?? card.section, card.lesson]
+                .filter(Boolean)
+                .join(" · ") || null
+            }
             role={ticket.role}
             hostIdentity={ticket.hostIdentity}
             labels={labels.room}

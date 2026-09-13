@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 
+import { cn } from "@/lib/utils"
 import { PROGRESS_BAR } from "@/components/lumos/shared/video-player/constants"
 
 import type { RoomLabels } from "./labels"
@@ -20,15 +21,20 @@ function formatClock(totalSeconds: number): string {
 interface ClassProgressProps {
   startsAtMs: number | null
   endsAtMs: number | null
-  labels: Pick<RoomLabels, "live" | "classProgress" | "elapsed" | "remaining">
+  labels: Pick<RoomLabels, "classProgress" | "elapsed" | "remaining">
+  className?: string
 }
 
 /**
- * The player's scrubber row, on a class: the same 5px track and white thumb,
- * elapsed on the start side and time left on the end side — and no seeking,
- * because a class has no timeline to drag through. The thumb is the
- * reference's shape kept for the eye; the row is a progress bar, not a
- * slider, and says so to assistive tech.
+ * The player's scrubber row, on a class — ONE line, `clock · track · clock`,
+ * the way `video-player.tsx` draws it: elapsed on the start side, and on the
+ * end side the time left with a minus in front (the phone player) or the whole
+ * run (the wide player). The same 5px track and white thumb, and no seeking,
+ * because a class has no timeline to drag through: the row is a progress bar,
+ * not a slider, and says so to assistive tech.
+ *
+ * The live marker that sat between the clocks moved up into the info label,
+ * where the player keeps its small first line.
  *
  * Ticks once a second in its OWN state so the second hand never re-renders
  * the room around it — the LiveKit tree above this is the expensive part of
@@ -43,6 +49,7 @@ export function ClassProgress({
   startsAtMs,
   endsAtMs,
   labels,
+  className,
 }: ClassProgressProps) {
   // Mounted only after the join, on the client, so a clock in the initial
   // state cannot disagree with a server render — there is none.
@@ -65,9 +72,21 @@ export function ClassProgress({
   const percent = Math.min(100, (elapsedMs / span) * 100)
   const elapsed = formatClock(elapsedMs / 1000)
   const remaining = formatClock(remainingMs / 1000)
+  const total = formatClock(span / 1000)
+
+  // The player's clock styles, phone then wide: `text-white/55` with
+  // `leading-none` so the row is exactly the track's height, and from `sm` the
+  // wide bar's 40px mono clocks at `text-white/80`. `dir="ltr"` on each clock,
+  // not on the row: the row stays logical so Arabic swaps the ends, while a
+  // `−07:22` never comes out as `07:22−`.
+  const clock =
+    "shrink-0 text-xs leading-none text-white/55 tabular-nums sm:min-w-[40px] sm:font-mono sm:text-white/80"
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={cn("flex items-center gap-[9px] sm:gap-3", className)}>
+      <span dir="ltr" className={cn(clock, "sm:text-start")}>
+        {elapsed}
+      </span>
       <div
         role="progressbar"
         aria-label={labels.classProgress}
@@ -75,7 +94,7 @@ export function ClassProgress({
         aria-valuemax={100}
         aria-valuenow={Math.round(percent)}
         aria-valuetext={`${labels.elapsed} ${elapsed} · ${labels.remaining} ${remaining}`}
-        className="relative w-full rounded-full bg-white/30"
+        className="relative min-w-0 flex-1 rounded-full bg-white/30"
         style={{ height: PROGRESS_BAR.heightRest }}
       >
         <div
@@ -93,17 +112,12 @@ export function ClassProgress({
           }}
         />
       </div>
-      {/* Latin figures, kept LTR inside the RTL row: `−07:22` must never come
-          out as `07:22−`. Elapsed on the START side and time left on the END,
-          the way the reference's own Arabic player lays them. */}
-      <div className="flex items-center justify-between text-[11px] text-white/70 tabular-nums">
-        <span dir="ltr">{elapsed}</span>
-        <span className="flex items-center gap-1 font-medium text-white">
-          <span className="size-1.5 rounded-full bg-red-500" aria-hidden />
-          {labels.live}
-        </span>
-        <span dir="ltr">−{remaining}</span>
-      </div>
+      <span dir="ltr" className={cn(clock, "sm:hidden")}>
+        −{remaining}
+      </span>
+      <span dir="ltr" className={cn(clock, "hidden sm:inline sm:text-end")}>
+        {total}
+      </span>
     </div>
   )
 }
