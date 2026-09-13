@@ -256,6 +256,8 @@ A new `NotificationType.absence_unreported_followup` covers the 2h SLA path.
 
 Quick attendance (`/attendance` for teachers) works without a connection. The mark goes to the device outbox (kind `attendance`, one pending item per section and day) and is replayed through `POST /api/offline/sync` → `actions/quick-core.ts`, the same code the online action runs. A newer mark already on the server wins and the replay is dropped as a duplicate. Guardian absence notifications fire when the replay lands. See [Offline](/docs/offline).
 
+Try it on a phone: open *Attendance → Quick*, switch on airplane mode, mark a section and save — the panel confirms the marks are saved on the device and the sync banner shows one pending item. Switch the network back on and the banner drains; the marks are on the server within seconds. Marking the same section again replays as a duplicate and the newer mark wins. Installing the app first (the card at the top of the dashboard, or Share → Add to Home Screen on iPhone) is not required for offline marking, but it is required on iPhone for push notifications.
+
 ## See also
 
 - [Multi-tenancy](/docs/multi-tenancy) — RBAC + tenant scoping

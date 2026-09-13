@@ -125,6 +125,8 @@ Email delivery uses Resend, renders HTML + plain-text fallback, respects per-use
 
 A browser — or the installed PWA — becomes a recipient from the preferences page: the toggle asks permission on a tap, subscribes with the public VAPID key, and stores the subscription tenant-scoped (`PushSubscription`). `process-push-notifications` drains `channels has push` rows through `src/lib/notifications/push-web.ts`; the worker (`public/service-worker.js`) shows `{title, body}` and a tap opens the absolute `url` on the school's own host. Subscriptions the push service reports gone (404/410) are deleted. On iPhone, Web Push reaches only an app added to the Home Screen, so the toggle says "install first" in Safari. See [Offline](/docs/offline) for the PWA shell.
 
+Try it: on a phone (Android Chrome, or the installed app on iPhone) open *Notifications → Preferences*, tap the **Push** toggle and allow the browser's permission prompt — the row switches to "on" and a subscription row appears for this device. Have a teacher mark a child absent in quick attendance: within the next cron tick (every 15 minutes) the guardian's phone shows the absence as a system notification, and tapping it opens the notification in the school's app. Exam and live-class notices use the same channel.
+
 ## Preferences
 
 `NotificationPreference` is unique on `[userId, type, channel]`. Fields: `enabled`, `quietHoursStart`/`quietHoursEnd` (0–23), `digestEnabled`, `digestFrequency` (`daily` | `weekly`).

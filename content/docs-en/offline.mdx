@@ -53,6 +53,17 @@ service worker (`public/service-worker.js`, v2) now actually installs.
 
 The PWA layer was repaired after a live audit of `demo` and `kingfahd`: the manifest is now per-tenant (school name, Arabic RTL by default, the school's brand colour), the missing icons exist, and service worker v3 precaches `/ar/offline` and `/en/offline` instead of two redirects — so the offline fallback works for the first time — and no longer caches authenticated pages or API bodies. **Quick attendance is the first non-lesson outbox kind**: a mark made offline is saved on the phone and replayed through the same ownership check and `markAttendance` path when the connection returns; a newer mark already on the server wins. The "Teacher marking attendance offline" row above is now ✓. Verify any host with kun's `pwa-audit` script.
 
+Two more pieces landed the same day: **Web Push** (a browser or the installed app subscribes from the notification preferences page; absence, exam and live-class notices arrive as system notifications and a tap opens the school's own route) and an **install card** on phone-sized dashboards that offers "Add to Home Screen" (Android shows the real install prompt; iPhone gets the Share → Add to Home Screen hint).
+
+#### How to experience it (any school, today)
+
+1. **Install.** On Android Chrome open `https://<school>.balqalam.com`, sign in, and tap **Install** on the card at the top of the dashboard (or the browser menu → *Add to Home screen*). On iPhone use Safari: Share → *Add to Home Screen*. The icon carries the school's name in Arabic, opens right-to-left in the school's colour, and has no browser chrome.
+2. **Mark attendance offline.** Open *Attendance → Quick* for a section, put the phone in airplane mode, mark the absentees and save. The panel says the marks were saved on the device and the sync banner shows one pending item. Turn the network back on: the banner drains within seconds and the marks appear on the server; save the same section again and the server keeps whichever mark is newer. Guardians get the absence notice when the replay lands, not before.
+3. **Turn on push.** *Notifications → Preferences → Push* asks the browser's permission on the tap and subscribes this device. From then on an absence, exam or live-class notice also arrives as a system notification; tapping it opens that page in the installed app. On iPhone the toggle only works from the installed app (Safari cannot receive Web Push).
+4. **Lose the connection anywhere.** In airplane mode, opening any app route shows the school's offline page in the right language — with the outbox view listing what is queued — instead of the browser's error screen.
+
+What is verified by tooling: the install audit passes on `demo` and `kingfahd` (0 FAIL), the worker controls the page after one reload, the outbox replay returns `applied` then `duplicate`, and the push cron reports the channel configured. What only a phone can verify: that a push actually shows on a device and that the offline page appears under a real disconnect — both tracked in [hogwarts#408](https://github.com/databayt/hogwarts/issues/408).
+
 ## Engineering principles (no compromise)
 
 These are non-negotiable. Each principle drives concrete choices in the architecture.

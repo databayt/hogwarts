@@ -110,6 +110,13 @@ When the school has an active WhatsApp session, in-app messages auto-dispatch vi
 
 > **Ops status (2026-09-13):** Evolution API runs **inside the balqalam Cloudflare container** as a second process (loopback `127.0.0.1:8080`, never exposed, supervised by `cf/entry.cjs`, state in the Neon database `evolution`). It costs nothing on top of the container already paid for. Every hogwarts deploy restarts the bridge, which reconnects from its saved session. The previous Railway instance died with its trial, so each school must pair its phone again: Dashboard → WhatsApp → Connect → scan the QR.
 
+### Pairing and using it
+
+1. **Pair the school's number** (admin): *Dashboard → WhatsApp → Connect WhatsApp*. A QR appears within seconds; on the school's phone open WhatsApp → Settings → Linked Devices → Link a Device and scan it. The status card flips to **Connected** and stays paired across app deploys and restarts (the session is stored server-side). The bridge was rebuilt on 2026-09-13, so every school that was paired before must pair again once.
+2. **Send from a chat.** Open any conversation whose participant has a phone on file, switch the **W** toggle in the chat header on, and send as usual. The bubble shows the WhatsApp delivery ticks; the recipient sees the message from the school's number.
+3. **Replies come back.** A reply on WhatsApp lands in the same conversation in the app within a few seconds (the Evolution webhook), attributed to the sender's phone.
+4. **Groups** work the same way from the Groups tab: create a WhatsApp group from a class or section and broadcast to it.
+
 Phone resolution: `Guardian.guardianPhoneNumbers` → `Teacher.teacherPhoneNumbers` → `StaffMember.staffPhoneNumbers`. Users without a domain record send in-app only.
 
 | Element     | Location          | Purpose                                                     |
@@ -120,7 +127,7 @@ Phone resolution: `Guardian.guardianPhoneNumbers` → `Teacher.teacherPhoneNumbe
 
 Rate limits: 1 msg / sec / school, 500 direct / day / school. Failed dispatches retry with exponential backoff (max 5 attempts) via `cron/process-whatsapp-notifications` (every 5 minutes).
 
-> **Ops caveats:** the retry cron **refuses to run in production until `CRON_SECRET` is set**, and the webhook fails closed until `WHATSAPP_WEBHOOK_SECRET` is set (the per-instance webhook URL carries `?secret=` automatically as of 2026-06-12 — schools connected before the secret existed must reconnect once). Group WhatsApp is fully supported: the scalar `whatsapp*` columns on `Message` mirror **1:1** state, while groups write one `MessageWhatsappDelivery` row per recipient — retried independently with backoff, and advanced to delivered/read by webhook status events. Phones are normalized to a single digits-only form (strips `+`/`00`) across outbound, storage, and inbound sender lookup.
+> **Ops caveats:** the retry cron requires `CRON_SECRET` (set in production since the Cloudflare cutover), and the webhook fails closed unless `WHATSAPP_WEBHOOK_SECRET` is set — the per-instance webhook URL carries `?secret=` automatically, built from `WHATSAPP_WEBHOOK_BASE_URL` (balqalam.com) since 2026-09-13, so a school connected before that date must reconnect once for the new URL and secret to be registered on its instance. Group WhatsApp is fully supported: the scalar `whatsapp*` columns on `Message` mirror **1:1** state, while groups write one `MessageWhatsappDelivery` row per recipient — retried independently with backoff, and advanced to delivered/read by webhook status events. Phones are normalized to a single digits-only form (strips `+`/`00`) across outbound, storage, and inbound sender lookup.
 
 Key files: `whatsapp-bridge.ts`, `src/lib/whatsapp/evolution-client.ts`, `src/app/api/webhooks/whatsapp/route.ts`, `src/app/api/cron/process-whatsapp-notifications/route.ts`, `src/components/school-dashboard/whatsapp/`.
 
