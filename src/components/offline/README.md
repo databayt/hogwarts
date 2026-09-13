@@ -38,10 +38,12 @@ Policy (2026-08-30): nothing from the server is copied to a device. No lessons, 
 
 ## Install card (2026-09-13)
 
-`install-card.tsx` is an App Store-style row (Abdout's reference: icon, bold app name, grey
-blurb, an arrow pill) — one tap. Android replays the captured `beforeinstallprompt`; iPhone opens
-the native share sheet through Web Share (Add to Home Screen is one of its actions) with the
-two-step `Drawer` guide underneath; Android without the event gets the browser-menu guide. Platform detection is
+`install-card.tsx` is a full-screen welcome sheet in the Apple Podcasts "What's new in …" style
+(Abdout's reference): an orange eyebrow over the app name, three feature rows with orange icons
+(Home Screen, offline, notifications), a footnote and one big **Continue** button, with **Not
+now** under it. Continue replays the captured `beforeinstallprompt` on Android; on iPhone it
+opens the native share sheet through Web Share (Add to Home Screen is one of its actions) and the
+footnote becomes the two-step guide; Android without the event gets the browser-menu guide. Platform detection is
 a `useSyncExternalStore` snapshot (no state set inside effects); hidden when installed, on
 desktop, or for 14 days after dismissal. Strings live under `lumos.offline.install*` in both
 dictionaries. The app icon is a Claude-orange box (`#e8704e`) with the white feather at 56 % of
