@@ -82,7 +82,9 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     description: copy.description,
     lang,
     dir: lang === "ar" ? "rtl" : "ltr",
-    start_url: "/",
+    // The installed app opens on the school dashboard (signed-out users are
+    // bounced to login and land there after), never on the tenant marketing page.
+    start_url: `/${lang}/dashboard`,
     scope: "/",
     display: "standalone",
     orientation: "portrait-primary",
