@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import type { ComponentType } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { ExitIcon, GearIcon, PersonIcon } from "@radix-ui/react-icons"
@@ -69,7 +70,7 @@ export const UserButton = ({
   const params = useParams()
   const locale = (params?.lang as string) || "ar"
   const { dictionary } = useDictionary()
-  const t = (key: string, fallback: string) =>
+  const t: Translate = (key, fallback) =>
     (dictionary?.userMenu as Record<string, string> | undefined)?.[key] ||
     fallback
 
@@ -129,18 +130,13 @@ export const UserButton = ({
     )
   }
 
-  // Get user display info
-  const userInitials = user.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : user.email?.charAt(0).toUpperCase() || "U"
-
-  const displayName = user.name || user.email?.split("@")[0] || "User"
-  const displayEmail = user.email || ""
+  const { initials: userInitials, displayName, displayEmail } = identity(user)
+  const items = getUserMenuItems(variant, {
+    locale,
+    role: user.role,
+    schoolId: user.schoolId,
+    t,
+  })
 
   // Render menu based on variant
   return (
@@ -169,28 +165,19 @@ export const UserButton = ({
         <DropdownMenuSeparator />
 
         {/* Variant-specific menu items */}
-        {variant === "marketing" && (
-          <MarketingMenu
-            locale={locale}
-            role={user.role}
-            schoolId={user.schoolId}
-            t={t}
-          />
-        )}
-        {variant === "site" && (
-          <SiteMenu locale={locale} subdomain={subdomain} t={t} />
-        )}
-        {variant === "saas" && (
-          <SaasMenu locale={locale} role={user.role} t={t} />
-        )}
-        {variant === "platform" && (
-          <PlatformMenu
-            locale={locale}
-            subdomain={subdomain}
-            role={user.role}
-            t={t}
-          />
-        )}
+        <DropdownMenuGroup>
+          {items.map(({ href, label, Icon, shortcut }) => (
+            <DropdownMenuItem key={href} asChild className="cursor-pointer">
+              <Link href={href}>
+                <Icon />
+                {label}
+                {shortcut && (
+                  <DropdownMenuShortcut>{shortcut}</DropdownMenuShortcut>
+                )}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
 
         {/* Logout - common to all variants */}
         <DropdownMenuSeparator />
@@ -207,191 +194,258 @@ export const UserButton = ({
 }
 
 // ============================================================================
-// Variant-specific Menu Components
+// Variant-specific menu items
 // ============================================================================
 
-interface MenuProps {
+type Translate = (key: string, fallback: string) => string
+
+interface UserMenuItem {
+  href: string
+  label: string
+  Icon: ComponentType<{ className?: string }>
+  shortcut?: string
+}
+
+interface MenuContext {
   locale: string
-  subdomain?: string
   role?: string
   schoolId?: string
-  t: (key: string, fallback: string) => string
+  t: Translate
 }
 
 /**
- * Marketing Menu (SaaS saas-marketing school-marketing - ed.databayt.org)
- * Role-based menu items:
- * - DEVELOPER: Dashboard (saas-dashboard), Tenants
- * - Users with schoolId: My School (go to school dashboard)
- * - Users without schoolId: Get Started (onboarding)
+ * The account links each entry point offers, as data rather than JSX, so the
+ * avatar's dropdown and the phone menu that lists them inline (`UserMenuInline`)
+ * cannot drift apart.
+ *
+ * - marketing (ed.databayt.org): DEVELOPER → Dashboard + Tenants; with a school
+ *   → My School; without → Get Started; then Settings
+ * - site ({school}.databayt.org): Go to Platform, Profile
+ * - saas (operator dashboard): Profile, Billing, Tenants (DEVELOPER), Settings
+ * - platform (school dashboard): Profile, My Account, School Settings (ADMIN /
+ *   DEVELOPER), Help & Support
  */
-function MarketingMenu({ locale, role, schoolId, t }: MenuProps) {
-  const isDeveloper = role === "DEVELOPER"
-  const hasSchool = !!schoolId
-
-  return (
-    <DropdownMenuGroup>
-      {/* DEVELOPER: Operator Dashboard */}
-      {isDeveloper && (
-        <>
-          <DropdownMenuItem asChild className="cursor-pointer">
-            <Link href={`/${locale}/dashboard`}>
-              <LayoutDashboard />
-              {t("dashboard", "Dashboard")}
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild className="cursor-pointer">
-            <Link href={`/${locale}/tenants`}>
-              <Building2 />
-              {t("tenants", "Tenants")}
-            </Link>
-          </DropdownMenuItem>
-        </>
-      )}
-
-      {/* Users with schoolId: Go to their school */}
-      {!isDeveloper && hasSchool && (
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`/${locale}/my-school`}>
-            <School />
-            {t("mySchool", "My School")}
-          </Link>
-        </DropdownMenuItem>
-      )}
-
-      {/* Users without schoolId (not DEVELOPER): Start onboarding */}
-      {!isDeveloper && !hasSchool && (
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`/${locale}/newcomers`}>
-            <Rocket />
-            {t("getStarted", "Get Started")}
-          </Link>
-        </DropdownMenuItem>
-      )}
-
-      {/* Settings - common to all */}
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/settings`}>
-          <Settings />
-          {t("settings", "Settings")}
-        </Link>
-      </DropdownMenuItem>
-    </DropdownMenuGroup>
-  )
-}
-
-/**
- * Site Menu (School saas-marketing school-marketing - school.databayt.org)
- * - Go to Platform (enter school dashboard)
- * - Profile
- */
-function SiteMenu({ locale, subdomain, t }: MenuProps) {
-  // For school sites, school-dashboard URL uses the subdomain routing
-  const platformUrl = `/${locale}/dashboard`
-
-  return (
-    <DropdownMenuGroup>
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={platformUrl}>
-          <School />
-          {t("goToPlatform", "Go to Platform")}
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/profile`}>
-          <User />
-          {t("profile", "Profile")}
-        </Link>
-      </DropdownMenuItem>
-    </DropdownMenuGroup>
-  )
-}
-
-/**
- * SaaS Menu (Operator dashboard - /(saas-dashboard)/*)
- * - Profile
- * - Account/Billing
- * - Tenants (DEVELOPER only)
- * - Settings
- */
-function SaasMenu({ locale, role, t }: MenuProps) {
+function getUserMenuItems(
+  variant: Variant,
+  { locale, role, schoolId, t }: MenuContext
+): UserMenuItem[] {
+  const base = `/${locale}`
   const isDeveloper = role === "DEVELOPER"
 
-  return (
-    <DropdownMenuGroup>
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/profile`}>
-          <User />
-          {t("profile", "Profile")}
-          <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/billing`}>
-          <CreditCard />
-          {t("billing", "Billing")}
-        </Link>
-      </DropdownMenuItem>
-      {isDeveloper && (
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`/${locale}/tenants`}>
-            <Building2 />
-            {t("tenants", "Tenants")}
-          </Link>
-        </DropdownMenuItem>
-      )}
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/settings`}>
-          <Settings />
-          {t("settings", "Settings")}
-          <DropdownMenuShortcut>⌘,</DropdownMenuShortcut>
-        </Link>
-      </DropdownMenuItem>
-    </DropdownMenuGroup>
-  )
+  switch (variant) {
+    case "marketing":
+      return [
+        ...(isDeveloper
+          ? [
+              {
+                href: `${base}/dashboard`,
+                label: t("dashboard", "Dashboard"),
+                Icon: LayoutDashboard,
+              },
+              {
+                href: `${base}/tenants`,
+                label: t("tenants", "Tenants"),
+                Icon: Building2,
+              },
+            ]
+          : schoolId
+            ? [
+                {
+                  href: `${base}/my-school`,
+                  label: t("mySchool", "My School"),
+                  Icon: School,
+                },
+              ]
+            : [
+                {
+                  href: `${base}/newcomers`,
+                  label: t("getStarted", "Get Started"),
+                  Icon: Rocket,
+                },
+              ]),
+        {
+          href: `${base}/settings`,
+          label: t("settings", "Settings"),
+          Icon: Settings,
+        },
+      ]
+    case "site":
+      // School sites reach the dashboard through the subdomain rewrite.
+      return [
+        {
+          href: `${base}/dashboard`,
+          label: t("goToPlatform", "Go to Platform"),
+          Icon: School,
+        },
+        { href: `${base}/profile`, label: t("profile", "Profile"), Icon: User },
+      ]
+    case "saas":
+      return [
+        {
+          href: `${base}/profile`,
+          label: t("profile", "Profile"),
+          Icon: User,
+          shortcut: "⇧⌘P",
+        },
+        {
+          href: `${base}/billing`,
+          label: t("billing", "Billing"),
+          Icon: CreditCard,
+        },
+        ...(isDeveloper
+          ? [
+              {
+                href: `${base}/tenants`,
+                label: t("tenants", "Tenants"),
+                Icon: Building2,
+              },
+            ]
+          : []),
+        {
+          href: `${base}/settings`,
+          label: t("settings", "Settings"),
+          Icon: Settings,
+          shortcut: "⌘,",
+        },
+      ]
+    case "platform":
+      return [
+        {
+          href: `${base}/profile`,
+          label: t("profile", "Profile"),
+          Icon: User,
+          shortcut: "⇧⌘P",
+        },
+        {
+          href: `${base}/account`,
+          label: t("myAccount", "My Account"),
+          Icon: PersonIcon,
+        },
+        ...(role === "ADMIN" || isDeveloper
+          ? [
+              {
+                href: `${base}/admin/settings`,
+                label: t("schoolSettings", "School Settings"),
+                Icon: GearIcon,
+              },
+            ]
+          : []),
+        {
+          href: `${base}/help`,
+          label: t("helpSupport", "Help & Support"),
+          Icon: HelpCircle,
+        },
+      ]
+  }
+}
+
+// ============================================================================
+// Inline menu
+// ============================================================================
+
+interface UserMenuInlineProps {
+  variant?: Variant
+  subdomain?: string
+  className?: string
+  /** Fired when a link is followed, for a sheet that should close behind it. */
+  onNavigate?: () => void
 }
 
 /**
- * Platform Menu (School school-dashboard - /s/[subdomain]/*)
- * - Profile
- * - My Account
- * - Switch School (if has multiple)
- * - Help & Support
+ * The avatar's dropdown, laid out flat — for a phone menu sheet, where a menu
+ * that opens a second menu is one tap too many. Same identity header, same
+ * items (`getUserMenuItems`), same logout; a signed-out visitor gets the login
+ * link the avatar button would have been.
  */
-function PlatformMenu({ locale, subdomain, role, t }: MenuProps) {
-  // Build URLs with subdomain context
-  const baseUrl = `/${locale}`
-  const isAdmin = role === "ADMIN" || role === "DEVELOPER"
+export function UserMenuInline({
+  variant = "platform",
+  subdomain,
+  className,
+  onNavigate,
+}: UserMenuInlineProps) {
+  const user = useCurrentUser()
+  const params = useParams()
+  const locale = (params?.lang as string) || "ar"
+  const { dictionary } = useDictionary()
+  const t: Translate = (key, fallback) =>
+    (dictionary?.userMenu as Record<string, string> | undefined)?.[key] ||
+    fallback
+
+  const row =
+    "flex items-center gap-3 py-2 text-lg font-medium [&_svg]:size-5 [&_svg]:shrink-0"
+
+  if (!user) {
+    const loginUrl = subdomain
+      ? `/${locale}/login?context=school&subdomain=${subdomain}`
+      : `/${locale}/login?context=saas`
+    return (
+      <div
+        data-slot="user-menu-inline"
+        className={cn("flex flex-col", className)}
+      >
+        <Link href={loginUrl} onClick={onNavigate} className={row}>
+          <LogIn className="rtl:-scale-x-100" />
+          {t("login", "Login")}
+        </Link>
+      </div>
+    )
+  }
+
+  const { initials, displayName, displayEmail } = identity(user)
+  const items = getUserMenuItems(variant, {
+    locale,
+    role: user.role,
+    schoolId: user.schoolId,
+    t,
+  })
 
   return (
-    <DropdownMenuGroup>
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`${baseUrl}/profile`}>
-          <User />
-          {t("profile", "Profile")}
-          <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+    <div
+      data-slot="user-menu-inline"
+      className={cn("flex flex-col", className)}
+    >
+      <div className="flex items-center gap-3 pb-3">
+        <Avatar className="size-10">
+          <AvatarImage src={user.image || ""} alt={displayName} />
+          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <p className="truncate text-base leading-tight font-medium">
+            {displayName}
+          </p>
+          <p className="text-muted-foreground truncate text-sm leading-tight">
+            {displayEmail}
+          </p>
+        </div>
+      </div>
+      {items.map(({ href, label, Icon }) => (
+        <Link key={href} href={href} onClick={onNavigate} className={row}>
+          <Icon />
+          {label}
         </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`${baseUrl}/account`}>
-          <PersonIcon />
-          {t("myAccount", "My Account")}
-        </Link>
-      </DropdownMenuItem>
-      {isAdmin && (
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`${baseUrl}/admin/settings`}>
-            <GearIcon />
-            {t("schoolSettings", "School Settings")}
-          </Link>
-        </DropdownMenuItem>
-      )}
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`${baseUrl}/help`}>
-          <HelpCircle />
-          {t("helpSupport", "Help & Support")}
-        </Link>
-      </DropdownMenuItem>
-    </DropdownMenuGroup>
+      ))}
+      <LogoutButton className={cn(row, "text-destructive cursor-pointer")}>
+        <ExitIcon />
+        {t("logout", "Logout")}
+      </LogoutButton>
+    </div>
   )
+}
+
+function identity(user: { name?: string | null; email?: string | null }) {
+  const initials = user.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : user.email?.charAt(0).toUpperCase() || "U"
+  return {
+    initials,
+    displayName: user.name || user.email?.split("@")[0] || "User",
+    displayEmail: user.email || "",
+  }
 }

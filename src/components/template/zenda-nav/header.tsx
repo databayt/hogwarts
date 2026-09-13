@@ -22,8 +22,10 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { gsap } from "gsap"
 
+import { cn } from "@/lib/utils"
+import { useMediaQuery } from "@/hooks/use-media-query"
 import { TOOLBAR_BUTTON, TOOLBAR_ICON } from "@/components/atom/toolbar-size"
-import { UserButton } from "@/components/auth/user-button"
+import { UserButton, UserMenuInline } from "@/components/auth/user-button"
 import { LangSwitcher } from "@/components/template/marketing-header/lang-switcher"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 import { marketingConfig } from "@/components/template/site-header/config"
@@ -134,6 +136,9 @@ export function ZendaNav({
 }: ZendaNavProps) {
   const [isActive, setIsActive] = useState(false)
   const pathname = usePathname() || ""
+  // Zenda's own breakpoint: at 991px and below the links leave the bar for the
+  // full-screen sheet, and the controls follow them in (see the sheet below).
+  const isSheet = useMediaQuery("(max-width: 991px)")
 
   const navLinks = marketingConfig.mainNav.map((item) => ({
     // `path` is the unprefixed route the active check compares against; `href`
@@ -294,6 +299,23 @@ export function ZendaNav({
           >
             <div nav-menu-layer-3="" className="nav_menu_layer_1">
               <div className="nav_menu">
+                {/* Phone: the dashboard's menu row (template/mobile-nav) — one
+                    row of thumb-sized controls under the bar, ruled off from
+                    the links. The avatar is not in it: its dropdown is laid
+                    out flat after the links instead, since a sheet that opens
+                    a second menu is one tap too many. */}
+                {isSheet && (
+                  <div
+                    className={cn(
+                      "mb-4 flex w-full items-center gap-2 border-b pb-4",
+                      TOOLBAR_BUTTON
+                    )}
+                  >
+                    <SearchMenu iconClassName={TOOLBAR_ICON} />
+                    <LangSwitcher iconClassName={TOOLBAR_ICON} />
+                    <ModeSwitcher iconClassName={TOOLBAR_ICON} />
+                  </div>
+                )}
                 {navLinks.map(({ path, href, label }) => (
                   <NavDrawLink
                     key={href}
@@ -303,6 +325,14 @@ export function ZendaNav({
                     onClick={() => setIsActive(false)}
                   />
                 ))}
+                {isSheet && (
+                  <UserMenuInline
+                    variant="site"
+                    subdomain={subdomain}
+                    onNavigate={() => setIsActive(false)}
+                    className="mt-6 w-full border-t pt-6"
+                  />
+                )}
               </div>
             </div>
             <div nav-menu-layer-2="" className="nav_menu_layer_2"></div>
@@ -319,19 +349,26 @@ export function ZendaNav({
               from a header at four different sizes (28, 32, 32, 32 boxes around
               16, 16, 18 and 16px glyphs). Each glyph takes the size through its
               own prop rather than a rule on this row, because `Button` sizes an
-              unsized child svg from a selector no ancestor can outrank. */}
-          <div
-            className={`nav_utility-wrap ${isActive ? "is-active" : ""} ${TOOLBAR_BUTTON}`}
-          >
-            <SearchMenu iconClassName={TOOLBAR_ICON} />
-            <LangSwitcher iconClassName={TOOLBAR_ICON} />
-            <ModeSwitcher iconClassName={TOOLBAR_ICON} />
-            <UserButton
-              variant="site"
-              subdomain={subdomain}
-              avatarClassName={TOOLBAR_ICON}
-            />
-          </div>
+              unsized child svg from a selector no ancestor can outrank.
+
+              Desktop only. On a phone the same controls render inside the
+              sheet instead — never both, or the search hotkey registers
+              twice. SSR paints this branch; both are hidden until the
+              hamburger opens, so the swap after hydration is never seen. */}
+          {!isSheet && (
+            <div
+              className={`nav_utility-wrap ${isActive ? "is-active" : ""} ${TOOLBAR_BUTTON}`}
+            >
+              <SearchMenu iconClassName={TOOLBAR_ICON} />
+              <LangSwitcher iconClassName={TOOLBAR_ICON} />
+              <ModeSwitcher iconClassName={TOOLBAR_ICON} />
+              <UserButton
+                variant="site"
+                subdomain={subdomain}
+                avatarClassName={TOOLBAR_ICON}
+              />
+            </div>
+          )}
 
           {/* `hero-link` puts the hamburger into the homepage intro's staggered
               nav fade-in. Without it the bar is empty during the centred splash

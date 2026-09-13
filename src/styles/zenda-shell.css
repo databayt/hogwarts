@@ -336,3 +336,22 @@
   display: flex;
   align-items: center;
 }
+
+/* The phone sheet now carries the control row and the account menu as well as
+ * the links, which outgrows a short screen -- and the base rule's
+ * `overflow: clip` would cut the logout off without a trace. */
+@media screen and (max-width: 991px) {
+  .zenda-clone .nav_menu {
+    overflow-y: auto;
+  }
+}
+
+/* The account menu the phone sheet lays out flat (`UserMenuInline`). Its links
+ * are the first bare <a>s in the nav that are not `.nav_link` -- the dropdown
+ * they replace was portaled out of this scope -- so the unlayered
+ * `.zenda-clone a { color: var(--light-coral) }` reached them and painted them
+ * pink, over any Tailwind colour. Black, like the links above them; logout
+ * keeps its destructive red. */
+.zenda-clone [data-slot="user-menu-inline"] a {
+  color: #000;
+}
