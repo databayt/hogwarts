@@ -16,11 +16,30 @@ type LeadingKind =
   | "deleted"
   | null
 
+// The desktop list's palette (contacts/contact-card.tsx, chat-interface.tsx).
+// One flat blue for every photo-less row read as a wall of identical discs.
+const AVATAR_COLORS = [
+  { bg: "#CBF2EE", icon: "#028377" },
+  { bg: "#E9E0FF", icon: "#5D47DE" },
+  { bg: "#FEF1D4", icon: "#9D6C2C" },
+  { bg: "#FBD8DC", icon: "#D10335" },
+]
+
+function getAvatarColor(id: string) {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
+
 export type IosChatRowData = {
   id: string
   name: string
   avatarUrl?: string | null
   avatarFallback?: string
+  /** Hashed to pick the fallback avatar's colour. */
+  avatarKey?: string
   isGroup?: boolean
   online?: boolean
   preview: string
@@ -64,6 +83,7 @@ export const IosChatRow = memo(function IosChatRow({
   onClick,
   className,
 }: Props) {
+  const avatarColor = getAvatarColor(row.avatarKey ?? row.id)
   const hasUnread = (row.unreadCount ?? 0) > 0
   const timestampColor = hasUnread
     ? "text-[color:var(--wa-text-product)]"
@@ -92,15 +112,24 @@ export const IosChatRow = memo(function IosChatRow({
               draggable={false}
             />
           ) : row.isGroup ? (
-            <div className="flex size-full items-center justify-center bg-[color:var(--wa-surface-avatar-group)]">
-              <WaIcon
-                name="ic-wa-group-16"
-                className="size-[30px] text-[color:var(--wa-text-avatar-group)]"
-              />
+            <div
+              className="flex size-full items-center justify-center"
+              style={{
+                backgroundColor: avatarColor.bg,
+                color: avatarColor.icon,
+              }}
+            >
+              <WaIcon name="ic-wa-group-16" className="size-[30px]" />
             </div>
           ) : (
-            <div className="flex size-full items-center justify-center bg-[color:var(--wa-surface-avatar-person)]">
-              <PersonGlyph className="size-[30px] text-[color:var(--wa-text-avatar-person)]" />
+            <div
+              className="flex size-full items-center justify-center"
+              style={{
+                backgroundColor: avatarColor.bg,
+                color: avatarColor.icon,
+              }}
+            >
+              <PersonGlyph className="size-[30px]" />
             </div>
           )}
         </div>

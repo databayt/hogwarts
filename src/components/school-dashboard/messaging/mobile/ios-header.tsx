@@ -15,6 +15,10 @@ type Props = {
   onAdd?: () => void
   onBack?: () => void
   backLabel?: string
+  /** Title as the large-title collapse draws it: hidden until `collapsed`. */
+  collapsingTitle?: string
+  /** The page's big title has scrolled under the header. */
+  collapsed?: boolean
   className?: string
 }
 
@@ -29,6 +33,8 @@ export function IosHeader({
   onAdd,
   onBack,
   backLabel,
+  collapsingTitle,
+  collapsed = false,
   className,
 }: Props) {
   const hasTitle = Boolean(title)
@@ -42,6 +48,28 @@ export function IosHeader({
         className
       )}
     >
+      {collapsingTitle !== undefined && (
+        <>
+          {/* The cloud: runs 28px past the header so the fade finishes below
+              the buttons, and only appears once there is content under it. */}
+          <div
+            aria-hidden
+            className={cn(
+              "wa-scroll-edge-list pointer-events-none absolute inset-x-0 top-0 -z-10 h-[calc(100%+28px)] transition-opacity duration-200",
+              collapsed ? "opacity-100" : "opacity-0"
+            )}
+          />
+          <p
+            aria-hidden={!collapsed}
+            className={cn(
+              "pointer-events-none absolute start-1/2 bottom-[21px] -translate-x-1/2 text-center text-[17px] leading-none font-semibold tracking-[-0.34px] text-[color:var(--wa-text-primary)] transition-[opacity,transform] duration-200 rtl:translate-x-1/2",
+              collapsed ? "opacity-100" : "translate-y-[6px] opacity-0"
+            )}
+          >
+            {collapsingTitle}
+          </p>
+        </>
+      )}
       {showBack && (
         <button
           type="button"

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import type { ConversationDTO } from "@/components/school-dashboard/messaging/types"
 
@@ -122,6 +122,13 @@ export function IosChatList({
   const L = useMemo(() => ({ ...DEFAULT_L, ...labels }), [labels])
   const [search, setSearch] = useState("")
   const [activeFilter, setActiveFilter] = useState<FilterId>("all")
+  // Large-title collapse: once the 28px "Chats" (18px below the header) has
+  // slid under the header, the header takes a small centred title and the
+  // frosted edge. Only the boolean flip re-renders.
+  const [collapsed, setCollapsed] = useState(false)
+  const onScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setCollapsed(e.currentTarget.scrollTop > 34)
+  }, [])
 
   const filters = useMemo(
     () => [
@@ -204,10 +211,15 @@ export function IosChatList({
           onOptions={onOptions}
           onCamera={onCamera}
           onAdd={onNewChat}
+          collapsingTitle={L.titleChats}
+          collapsed={collapsed}
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain pt-[calc(env(safe-area-inset-top,0px)+56px)] pb-[calc(env(safe-area-inset-bottom,0px)+96px)]">
+      <div
+        onScroll={onScroll}
+        className="flex-1 overflow-y-auto overscroll-contain pt-[calc(env(safe-area-inset-top,0px)+56px)] pb-[calc(env(safe-area-inset-bottom,0px)+96px)]"
+      >
         <IosTitleBlock
           title={L.titleChats}
           searchPlaceholder={L.searchPlaceholder}
@@ -384,6 +396,9 @@ function toRowData(
     id: c.id,
     name: getConversationName(c, currentUserId, L),
     avatarUrl: getAvatarUrl(c, currentUserId),
+    // Same key the desktop thread header hashes, so a person keeps one
+    // colour at both widths.
+    avatarKey: otherUser?.userId ?? c.id,
     isGroup,
     online: isOnline,
     preview: previewText,
