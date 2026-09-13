@@ -155,7 +155,7 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
           className="size-11 shrink-0 rounded-[12px] shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
         />
         <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="truncate text-sm leading-tight font-semibold">
+          <p className="line-clamp-2 text-sm leading-tight font-semibold">
             {t("installTitle", "Add balqalam to your Home Screen")}
           </p>
           <p className="text-muted-foreground line-clamp-2 text-xs leading-snug">
