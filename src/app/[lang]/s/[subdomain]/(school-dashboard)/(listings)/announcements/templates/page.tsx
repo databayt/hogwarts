@@ -59,6 +59,19 @@ export default async function AnnouncementsTemplatesPage({ params }: Props) {
     role: d?.roleSpecific || "Role",
   }
 
+  // Template types read the wizard's own labels; `custom` is the default and
+  // says nothing, so it gets no chip rather than a raw enum.
+  const ts = d?.templatesStep
+  const typeLabels: Record<string, string | undefined> = {
+    holiday: ts?.holiday,
+    exam: ts?.examSchedule,
+    event: ts?.event,
+    meeting: ts?.meeting,
+    policy: ts?.policyUpdate,
+    emergency: ts?.emergency,
+    general: ts?.general,
+  }
+
   // Priority labels
   const priorityLabels: Record<string, string> = {
     low: d?.low || "Low",
@@ -68,16 +81,19 @@ export default async function AnnouncementsTemplatesPage({ params }: Props) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {templates.map((template) => (
         <div
           key={template.id}
-          className="bg-background space-y-3 rounded-lg border p-4"
+          className="bg-background max-md:bg-muted space-y-3 rounded-lg border p-4 max-md:min-w-0 max-md:rounded-xl max-md:border-0"
         >
           <div className="flex items-start justify-between gap-2">
             <h4 className="truncate font-medium">{template.name}</h4>
             {template.isSystem && (
-              <Badge variant="secondary" className="shrink-0">
+              <Badge
+                variant="secondary"
+                className="max-md:bg-background shrink-0"
+              >
                 {lang === "ar" ? "نظام" : "System"}
               </Badge>
             )}
@@ -94,13 +110,17 @@ export default async function AnnouncementsTemplatesPage({ params }: Props) {
           )}
 
           <div className="flex flex-wrap gap-1.5">
-            <Badge variant="outline">
+            <Badge variant="outline" className="max-md:bg-background">
               {scopeLabels[template.scope] || template.scope}
             </Badge>
-            <Badge variant="outline">
+            <Badge variant="outline" className="max-md:bg-background">
               {priorityLabels[template.priority] || template.priority}
             </Badge>
-            <Badge variant="outline">{template.type}</Badge>
+            {typeLabels[template.type] ? (
+              <Badge variant="outline" className="max-md:bg-background">
+                {typeLabels[template.type]}
+              </Badge>
+            ) : null}
           </div>
 
           <p className="text-muted-foreground text-xs">

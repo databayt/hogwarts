@@ -54,13 +54,13 @@ export default async function AnnouncementsConfigPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header — on a phone, the section-title line: no glyph chip, 18px */}
       <div className="flex items-center gap-4">
-        <div className="bg-muted rounded-lg p-3">
+        <div className="bg-muted rounded-lg p-3 max-md:hidden">
           <AnthropicIcons.Gear className="text-muted-foreground h-6 w-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
+          <h2 className="text-2xl font-semibold tracking-tight max-md:text-lg max-md:leading-7">
             {d?.config?.title}
           </h2>
           <p className="text-muted-foreground text-sm">

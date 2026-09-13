@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { InfoRows } from "@/components/school-dashboard/shared"
 
 // Type for announcement detail - matches the select result from actions.ts
 interface AnnouncementDetailResult {
@@ -52,7 +54,6 @@ export function AnnouncementDetailContent({
   lang,
 }: AnnouncementDetailContentProps) {
   const router = useRouter()
-  const isRTL = lang === "ar"
   const d = dictionary?.school?.announcements
 
   const t = {
@@ -77,8 +78,20 @@ export function AnnouncementDetailContent({
     medium: d?.medium || "Medium",
     low: d?.low || "Low",
     normal: d?.normal || "Normal",
+    urgent: d?.priority?.urgent?.label || "Urgent",
     all: d?.all || "All",
   }
+
+  // Target roles are stored as the enum; the dictionary has a label for each.
+  const roleLabels: Record<string, string | undefined> = {
+    ADMIN: d?.roleAdmin,
+    TEACHER: d?.roleTeacher,
+    STUDENT: d?.roleStudent,
+    GUARDIAN: d?.roleGuardian,
+    STAFF: d?.roleStaff,
+    ACCOUNTANT: d?.roleAccountant,
+  }
+  const roleLabel = (role: string) => roleLabels[role] || role
 
   // Error state
   if (error || !data) {
@@ -118,6 +131,8 @@ export function AnnouncementDetailContent({
   // Get priority label and variant
   const getPriorityInfo = (priority: string) => {
     switch (priority.toLowerCase()) {
+      case "urgent":
+        return { label: t.urgent, variant: "destructive" as const }
       case "high":
         return { label: t.high, variant: "destructive" as const }
       case "medium":
@@ -130,122 +145,195 @@ export function AnnouncementDetailContent({
   }
 
   const priorityInfo = getPriorityInfo(data.priority)
+  const longDate = (date: Date) =>
+    formatDate(date, lang, { year: "numeric", month: "long", day: "numeric" })
+  const isNotablePriority = ["high", "urgent"].includes(
+    data.priority.toLowerCase()
+  )
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+    <>
+      {/* Phone: read like the library's book page — the meta line small over a
+          large title, the body at reading size, the facts as label/value rows
+          instead of four stacked stat cards. */}
+      <article className="space-y-8 md:hidden">
+        <header>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+            className="text-muted-foreground -ms-3 mb-3 h-9 rounded-full px-3"
+          >
+            <ArrowLeft className="me-1 h-4 w-4 rtl:rotate-180" />
+            {t.back}
           </Button>
-          <div>
-            <h1 className="text-2xl font-semibold">{title}</h1>
-            <p className="text-muted-foreground text-sm">
-              {new Date(data.createdAt).toLocaleDateString(
-                isRTL ? "ar-SA" : "en-US",
-                {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                }
-              )}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={data.published ? "default" : "secondary"}>
-            {data.published ? t.published : t.draft}
-          </Badge>
-          <Badge variant={priorityInfo.variant}>{priorityInfo.label}</Badge>
-        </div>
-      </div>
-
-      {/* Content Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Megaphone className="h-5 w-5" />
-            {t.content}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            {body ? (
-              <p className="whitespace-pre-wrap">{body}</p>
-            ) : (
-              <p className="text-muted-foreground italic">
-                {d?.noContent || t.content}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Details Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Scope Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t.scope}</CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-semibold">
-              {getScopeLabel(data.scope)}
+          <p className="text-muted-foreground text-sm">
+            {getScopeLabel(data.scope)} · {longDate(data.createdAt)}
+          </p>
+          <h1 className="mt-1 text-[28px] leading-tight font-bold text-balance">
+            {title}
+          </h1>
+          {!data.published || isNotablePriority ? (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {!data.published ? (
+                <Badge variant="outline">{t.draft}</Badge>
+              ) : null}
+              {isNotablePriority ? (
+                <Badge variant={priorityInfo.variant}>
+                  {priorityInfo.label}
+                </Badge>
+              ) : null}
             </div>
-            {data.role && (
-              <p className="text-muted-foreground text-xs">
-                {t.targetRole}: {data.role}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+          ) : null}
+        </header>
 
-        {/* Priority Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t.priority}</CardTitle>
-            <Eye className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <Badge variant={priorityInfo.variant} className="text-lg">
-              {priorityInfo.label}
+        {body ? (
+          <p className="text-[17px] leading-8 whitespace-pre-wrap">{body}</p>
+        ) : (
+          <p className="text-muted-foreground italic">
+            {d?.noContent || t.content}
+          </p>
+        )}
+
+        <InfoRows
+          heading={t.details}
+          rows={[
+            { key: "scope", label: t.scope, value: getScopeLabel(data.scope) },
+            {
+              key: "role",
+              label: t.targetRole,
+              value: data.role ? roleLabel(data.role) : null,
+            },
+            { key: "priority", label: t.priority, value: priorityInfo.label },
+            {
+              key: "status",
+              label: t.status,
+              value: data.published ? t.published : t.draft,
+            },
+            {
+              key: "created",
+              label: t.createdAt,
+              value: formatDate(data.createdAt, lang),
+            },
+            {
+              key: "updated",
+              label: t.updatedAt,
+              value: formatDate(data.updatedAt, lang),
+            },
+          ]}
+        />
+      </article>
+
+      <div className="hidden space-y-6 md:block">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => router.back()}>
+              <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-semibold">{title}</h1>
+              <p className="text-muted-foreground text-sm">
+                {longDate(data.createdAt)}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={data.published ? "default" : "secondary"}>
+              {data.published ? t.published : t.draft}
             </Badge>
-          </CardContent>
-        </Card>
+            <Badge variant={priorityInfo.variant}>{priorityInfo.label}</Badge>
+          </div>
+        </div>
 
-        {/* Created At Card */}
+        {/* Content Card */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t.createdAt}</CardTitle>
-            <Calendar className="text-muted-foreground h-4 w-4" />
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5" />
+              {t.content}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-semibold">
-              {new Date(data.createdAt).toLocaleDateString(
-                isRTL ? "ar-SA" : "en-US"
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              {body ? (
+                <p className="whitespace-pre-wrap">{body}</p>
+              ) : (
+                <p className="text-muted-foreground italic">
+                  {d?.noContent || t.content}
+                </p>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Updated At Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t.updatedAt}</CardTitle>
-            <Calendar className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-semibold">
-              {new Date(data.updatedAt).toLocaleDateString(
-                isRTL ? "ar-SA" : "en-US"
+        {/* Details Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* Scope Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{t.scope}</CardTitle>
+              <Users className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold">
+                {getScopeLabel(data.scope)}
+              </div>
+              {data.role && (
+                <p className="text-muted-foreground text-xs">
+                  {t.targetRole}: {roleLabel(data.role)}
+                </p>
               )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Priority Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t.priority}
+              </CardTitle>
+              <Eye className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <Badge variant={priorityInfo.variant} className="text-lg">
+                {priorityInfo.label}
+              </Badge>
+            </CardContent>
+          </Card>
+
+          {/* Created At Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t.createdAt}
+              </CardTitle>
+              <Calendar className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold">
+                {formatDate(data.createdAt, lang)}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Updated At Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t.updatedAt}
+              </CardTitle>
+              <Calendar className="text-muted-foreground h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-semibold">
+                {formatDate(data.updatedAt, lang)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 

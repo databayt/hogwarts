@@ -166,9 +166,13 @@ export function AnnouncementConfigForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Save Button Header */}
+        {/* Save Button Header — a full-width pill on phones */}
         <div className="flex justify-end">
-          <Button type="submit" disabled={isPending}>
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="max-md:h-10 max-md:w-full max-md:rounded-full"
+          >
             {isPending ? (
               <>
                 <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
@@ -184,14 +188,18 @@ export function AnnouncementConfigForm({
         </div>
 
         {/* 4 Colorful Cards in 2x2 Grid */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 max-md:gap-4 md:grid-cols-2">
           {/* Card 1: Publishing Defaults (Oat) */}
-          <div className={`${CARD_COLORS.oat} rounded-lg p-6`}>
-            <div className="mb-6 flex items-center gap-3">
-              <AnthropicIcons.Announcement className="h-8 w-8" />
-              <h3 className="text-xl font-medium">{d.publishingDefaults}</h3>
+          <div
+            className={`${CARD_COLORS.oat} max-md:bg-muted rounded-lg p-6 max-md:rounded-xl max-md:p-5`}
+          >
+            <div className="mb-6 flex items-center gap-3 max-md:mb-2">
+              <AnthropicIcons.Announcement className="h-8 w-8 max-md:hidden" />
+              <h3 className="text-xl font-medium max-md:text-lg max-md:font-semibold">
+                {d.publishingDefaults}
+              </h3>
             </div>
-            <div className="space-y-5">
+            <div className="max-md:divide-border space-y-5 max-md:space-y-0 max-md:divide-y max-md:[&>*]:py-3.5 max-md:[&>*:first-child]:pt-0 max-md:[&>*:last-child]:pb-0">
               {/* Default Scope */}
               <FormField
                 control={form.control}
@@ -254,7 +262,7 @@ export function AnnouncementConfigForm({
                 control={form.control}
                 name="autoPublish"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
+                  <FormItem className="flex items-center justify-between max-md:gap-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-sm font-medium">
                         {d.autoPublish}
@@ -301,18 +309,22 @@ export function AnnouncementConfigForm({
           </div>
 
           {/* Card 2: Notifications (Cactus) */}
-          <div className={`${CARD_COLORS.cactus} rounded-lg p-6`}>
-            <div className="mb-6 flex items-center gap-3">
-              <AnthropicIcons.Lightning className="h-8 w-8" />
-              <h3 className="text-xl font-medium">{d.notifications}</h3>
+          <div
+            className={`${CARD_COLORS.cactus} max-md:bg-muted rounded-lg p-6 max-md:rounded-xl max-md:p-5`}
+          >
+            <div className="mb-6 flex items-center gap-3 max-md:mb-2">
+              <AnthropicIcons.Lightning className="h-8 w-8 max-md:hidden" />
+              <h3 className="text-xl font-medium max-md:text-lg max-md:font-semibold">
+                {d.notifications}
+              </h3>
             </div>
-            <div className="space-y-5">
+            <div className="max-md:divide-border space-y-5 max-md:space-y-0 max-md:divide-y max-md:[&>*]:py-3.5 max-md:[&>*:first-child]:pt-0 max-md:[&>*:last-child]:pb-0">
               {/* Email on Publish */}
               <FormField
                 control={form.control}
                 name="emailOnPublish"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
+                  <FormItem className="flex items-center justify-between max-md:gap-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-sm font-medium">
                         {d.emailOnPublish}
@@ -336,11 +348,14 @@ export function AnnouncementConfigForm({
                 control={form.control}
                 name="pushNotifications"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between opacity-60">
+                  <FormItem className="flex items-center justify-between opacity-60 max-md:gap-4">
                     <div className="space-y-0.5">
                       <FormLabel className="flex items-center gap-2 text-sm font-medium">
                         {d.pushNotifications}
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge
+                          variant="secondary"
+                          className="max-md:bg-background text-xs"
+                        >
                           {d.comingSoon}
                         </Badge>
                       </FormLabel>
@@ -432,15 +447,19 @@ export function AnnouncementConfigForm({
           </div>
 
           {/* Card 3: Templates (Heather) */}
-          <div className={`${CARD_COLORS.heather} rounded-lg p-6`}>
-            <div className="mb-6 flex items-center gap-3">
-              <AnthropicIcons.Copy className="h-8 w-8" />
-              <h3 className="text-xl font-medium">{d.templates}</h3>
-              <Badge variant="secondary">
+          <div
+            className={`${CARD_COLORS.heather} max-md:bg-muted rounded-lg p-6 max-md:rounded-xl max-md:p-5`}
+          >
+            <div className="mb-6 flex items-center gap-3 max-md:mb-2">
+              <AnthropicIcons.Copy className="h-8 w-8 max-md:hidden" />
+              <h3 className="text-xl font-medium max-md:text-lg max-md:font-semibold">
+                {d.templates}
+              </h3>
+              <Badge variant="secondary" className="max-md:bg-background">
                 {templates.length} {d.templatesCount}
               </Badge>
             </div>
-            <div className="space-y-5">
+            <div className="max-md:divide-border space-y-5 max-md:space-y-0 max-md:divide-y max-md:[&>*]:py-3.5 max-md:[&>*:first-child]:pt-0 max-md:[&>*:last-child]:pb-0">
               {/* Default Template */}
               <FormField
                 control={form.control}
@@ -479,7 +498,7 @@ export function AnnouncementConfigForm({
                 control={form.control}
                 name="allowCustomTemplates"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
+                  <FormItem className="flex items-center justify-between max-md:gap-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-sm font-medium">
                         {d.allowCustomTemplates}
@@ -501,18 +520,22 @@ export function AnnouncementConfigForm({
           </div>
 
           {/* Card 4: Tracking & Retention (Coral) */}
-          <div className={`${CARD_COLORS.coral} rounded-lg p-6`}>
-            <div className="mb-6 flex items-center gap-3">
-              <AnthropicIcons.ShieldCheck className="h-8 w-8" />
-              <h3 className="text-xl font-medium">{d.trackingRetention}</h3>
+          <div
+            className={`${CARD_COLORS.coral} max-md:bg-muted rounded-lg p-6 max-md:rounded-xl max-md:p-5`}
+          >
+            <div className="mb-6 flex items-center gap-3 max-md:mb-2">
+              <AnthropicIcons.ShieldCheck className="h-8 w-8 max-md:hidden" />
+              <h3 className="text-xl font-medium max-md:text-lg max-md:font-semibold">
+                {d.trackingRetention}
+              </h3>
             </div>
-            <div className="space-y-5">
+            <div className="max-md:divide-border space-y-5 max-md:space-y-0 max-md:divide-y max-md:[&>*]:py-3.5 max-md:[&>*:first-child]:pt-0 max-md:[&>*:last-child]:pb-0">
               {/* Read Tracking */}
               <FormField
                 control={form.control}
                 name="readTracking"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
+                  <FormItem className="flex items-center justify-between max-md:gap-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-sm font-medium">
                         {d.readTracking}
@@ -561,7 +584,7 @@ export function AnnouncementConfigForm({
                 control={form.control}
                 name="autoArchive"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
+                  <FormItem className="flex items-center justify-between max-md:gap-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-sm font-medium">
                         {d.autoArchive}
