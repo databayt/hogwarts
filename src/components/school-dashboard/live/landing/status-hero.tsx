@@ -29,6 +29,10 @@ interface HeroProps extends LandingSectionProps {
  * The one state it still branches on is whether the school teaches online at
  * all, because that changes what the page IS, not merely what is on today.
  *
+ * Siblings: `library/hero.tsx` draws the same banner, and so does the shared
+ * `BrandBanner` (`school-dashboard/shared/brand-banner.tsx`) on the exams and
+ * family-finance phone pages — ground, ink and pills change in all three.
+ *
  * The COMPOSITION is the reference's: type on one side, a photograph filling
  * the other, its inner edge cut on a diagonal so the picture drives into the
  * ground rather than sitting in a box. The PICTURE is not — that banner is a

@@ -22,7 +22,9 @@ interface LibraryHeroProps {
  * pills, same marginalia art sitting straight on the green. The two landing
  * pages are siblings in the school dashboard and were drifting apart: /live
  * had the brand banner while /library still had a 7xl wordmark beside a
- * CDN-fetched Lottie. When one of these changes, change both.
+ * CDN-fetched Lottie. When one of these changes, change both — and the
+ * shared `BrandBanner` (`school-dashboard/shared/brand-banner.tsx`) that the
+ * exams and family-finance phone pages draw the same banner with.
  *
  * The ground is the saas-marketing green `#00bc6d` — the one the marketing
  * hero is built on. Literal hexes on purpose. This is a brand ground, not a
