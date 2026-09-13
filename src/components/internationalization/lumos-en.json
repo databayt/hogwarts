@@ -772,20 +772,19 @@
       "kindAttendance": "Attendance",
       "pendingTitle": "Waiting to sync",
       "installTitle": "Add balqalam to your Home Screen",
-      "installHint": "Opens like an app, works without a connection, and can send notifications.",
+      "installHint": "For a better experience, use the app.",
       "installButton": "Install",
       "installIosHint": "On iPhone: tap Share, then \"Add to Home Screen\".",
       "installDismiss": "Not now",
       "installDownload": "Download app",
       "installSheetTitle": "Get balqalam on your Home Screen",
       "installSheetHint": "It takes two taps. The app opens full-screen, works without a connection, and can send you notifications.",
-      "installIosStep1": "Tap the Share button at the bottom of Safari.",
+      "installIosStep1": "In the share sheet that opened, scroll down.",
       "installIosStep2": "Choose “Add to Home Screen”, then tap Add.",
       "installAndroidStep1": "Open the browser menu (⋮) at the top.",
       "installAndroidStep2": "Choose “Add to Home screen” or “Install app”.",
       "installGotIt": "Got it",
-      "installAppName": "balqalam",
-      "installCaption": "Free"
+      "installAppName": "balqalam"
     },
     "viewer": {
       "viewOnly": "View only — downloading is disabled by the school",

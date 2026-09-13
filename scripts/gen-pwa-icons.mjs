@@ -1,7 +1,7 @@
 // Generate every PWA icon the manifest and the service worker name.
 //
 // Design (2026-09-13, Abdout): a Claude-orange box with the white feather
-// sitting small inside it, clear of the edges — the feather spans ~46% of the
+// sitting small inside it, clear of the edges — the feather spans ~56% of the
 // box, well inside the maskable safe zone, so one artwork serves iOS (which
 // rounds the corners itself), Android maskable icons and the browser tab.
 // Source of the glyph: public/feather.png (black on transparent, 512²).
@@ -11,7 +11,7 @@ import sharp from "sharp"
 const ORANGE = "#e8704e" // measured off the reference swatch
 const GLYPH = "public/feather.png"
 const BOX = 512
-const GLYPH_SIZE = Math.round(BOX * 0.46)
+const GLYPH_SIZE = Math.round(BOX * 0.56)
 
 // White feather: keep the glyph's alpha, paint every opaque pixel white.
 const alpha = await sharp(GLYPH)

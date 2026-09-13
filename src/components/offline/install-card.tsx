@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useSyncExternalStore } from "react"
 import Image from "next/image"
-import { EllipsisVertical, Share, SquarePlus, X } from "lucide-react"
+import { ArrowRight, EllipsisVertical, Share, SquarePlus, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -34,10 +34,10 @@ type Platform = "ios" | "android"
  *
  * - Android Chrome hands us a `beforeinstallprompt` we replay from the tap,
  *   so the real install sheet opens.
- * - iOS has no event and no API (install is Share → Add to Home Screen), and
- *   Android without the event (already dismissed, unmet heuristics) has only
- *   the browser menu. Both get a two-step instruction sheet from the same
- *   button instead of a decorative icon nobody can press.
+ * - iOS has no install API: the tap opens the native share sheet through Web
+ *   Share (Add to Home Screen is one of its actions) with the two-step guide
+ *   underneath. Android without the event (already dismissed, unmet
+ *   heuristics) gets the browser-menu guide.
  *
  * Hidden when already installed (standalone), on desktop, or for two weeks
  * after a dismissal. The row is styled like an App Store search result (icon,
@@ -114,7 +114,21 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
       if (outcome === "accepted") setHidden(true)
       return
     }
+    // iPhone: open the native share sheet straight from the tap (Web Share
+    // needs the user gesture) — "Add to Home Screen" is one of its actions —
+    // with the two-step guide underneath so the sheet's dismissal lands on
+    // the instruction, not on nothing.
     setSheetOpen(true)
+    if (platform === "ios" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: t("installAppName", "balqalam"),
+          url: window.location.href.split("#")[0],
+        })
+      } catch {
+        // cancelled or unsupported payload — the guide is already showing
+      }
+    }
   }
 
   const steps =
@@ -145,7 +159,7 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
       <div
         role="region"
         aria-label={t("installTitle", "Add balqalam to your Home Screen")}
-        className="bg-card text-card-foreground border-border/50 relative mb-4 flex items-center gap-3 rounded-2xl border p-3 pe-8 shadow-sm md:hidden"
+        className="bg-card text-card-foreground border-border/50 relative mb-4 flex items-center gap-3 rounded-2xl border p-3 shadow-sm md:hidden"
       >
         <Image
           src="/icon-192.png"
@@ -158,31 +172,24 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
           <p className="truncate text-[17px] leading-tight font-bold">
             {t("installAppName", "balqalam")}
           </p>
-          <p className="text-muted-foreground line-clamp-2 text-[15px] leading-snug">
-            {t(
-              "installHint",
-              "Opens like an app, works without a connection, and can send notifications."
-            )}
+          <p className="text-muted-foreground truncate text-[15px] leading-snug">
+            {t("installHint", "For a better experience, use the app.")}
           </p>
         </div>
-        <div className="flex shrink-0 flex-col items-center gap-1">
-          <Button
-            onClick={download}
-            className="h-8 rounded-full bg-[#EFEFF4] px-5 text-[15px] font-bold text-[#007AFF] hover:bg-[#E5E5EA] dark:bg-[#2C2C2E] dark:text-[#0A84FF] dark:hover:bg-[#3A3A3C]"
-          >
-            {t("installDownload", "Download app")}
-          </Button>
-          <span className="text-muted-foreground text-[11px] leading-none">
-            {t("installCaption", "Free")}
-          </span>
-        </div>
+        <Button
+          onClick={download}
+          aria-label={t("installDownload", "Download app")}
+          className="h-8 w-14 shrink-0 rounded-full bg-[#EFEFF4] text-[#007AFF] hover:bg-[#E5E5EA] dark:bg-[#2C2C2E] dark:text-[#0A84FF] dark:hover:bg-[#3A3A3C]"
+        >
+          <ArrowRight className="size-5 rtl:rotate-180" strokeWidth={2.5} />
+        </Button>
         <button
           type="button"
           onClick={dismiss}
           aria-label={t("installDismiss", "Not now")}
-          className="text-muted-foreground hover:text-foreground absolute end-2 top-2 rounded-full p-1"
+          className="text-muted-foreground hover:text-foreground absolute -end-1 -top-1 rounded-full p-1"
         >
-          <X className="size-4" />
+          <X className="size-3.5" />
         </button>
       </div>
 
