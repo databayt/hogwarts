@@ -9,6 +9,10 @@
 
 import { cn } from "@/lib/utils"
 
+// The scope's stylesheet travels with the sections that need it — the root
+// layout no longer ships it to every page.
+import "@/styles/zenda-clone.css"
+
 import { StoreHero } from "./apple/store"
 import { MacWhyApple } from "./apple/why-apple-mac"
 import { HowItWorks } from "./zenda/how-it-works"

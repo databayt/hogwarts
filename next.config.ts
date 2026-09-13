@@ -31,6 +31,17 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
+    // Client router cache. `dynamic` was 0: every tap on a page visited a
+    // moment ago was a fresh server round-trip, back included. Thirty seconds
+    // is a page re-shown from memory while a teacher flips between two
+    // screens; `static` (5 min) also covers the loading boundaries the
+    // sidebar links prefetch, so a click draws its skeleton at once.
+    staleTimes: { dynamic: 30, static: 300 },
+    // A navigation, prefetch or Server Action that fails for lack of network
+    // no longer throws — it waits and retries when the connection returns,
+    // and `useOffline()` (next/offline) reports the state to the offline
+    // strip in the dashboard.
+    useOffline: true,
     optimizePackageImports: [
       "@assistant-ui/react",
       "@radix-ui/react-icons",
@@ -49,7 +60,9 @@ const nextConfig: NextConfig = {
   // conditions and copies just the stub; OpenNext then bundles for workerd
   // and cannot resolve dist/index.js. Include the whole package. A few KB.
   outputFileTracingIncludes: {
-    "*": ["./node_modules/.pnpm/pg-cloudflare@*/node_modules/pg-cloudflare/**/*"],
+    "*": [
+      "./node_modules/.pnpm/pg-cloudflare@*/node_modules/pg-cloudflare/**/*",
+    ],
   },
 
   // Exclude heavy packages from serverless function tracing
@@ -137,6 +150,15 @@ const nextConfig: NextConfig = {
             value: "public, max-age=31536000, immutable",
           },
         ],
+      },
+      {
+        // PWA icons: fetched on every manifest check and every push. Next
+        // serves public/ files `max-age=0`, which the Cloudflare Worker will
+        // not freeze at the edge; a day lets it, and a redesign lands by the
+        // next morning.
+        source:
+          "/:icon(icon-72|icon-96|icon-192|icon-512|apple-touch-icon).png",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400" }],
       },
       {
         // Lottie is NOT immutable — these filenames get replaced in place, the

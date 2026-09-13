@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import Link, { LinkProps } from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -186,6 +186,7 @@ export function MobileNav({
                 href={homeHref}
                 onOpenChange={setOpen}
                 locale={locale}
+                inDashboard={showToolbar}
               >
                 {dictionary?.common?.home || "Home"}
               </MobileLink>
@@ -196,6 +197,7 @@ export function MobileNav({
                   onOpenChange={setOpen}
                   locale={locale}
                   disabled={item.disabled}
+                  inDashboard={showToolbar}
                 >
                   {item.label}
                 </MobileLink>
@@ -217,6 +219,7 @@ export function MobileNav({
                     onOpenChange={setOpen}
                     locale={locale}
                     disabled={item.disabled}
+                    inDashboard={showToolbar}
                   >
                     {item.title}
                   </MobileLink>
@@ -245,6 +248,7 @@ function MobileLink({
   children,
   locale,
   disabled,
+  inDashboard,
   ...props
 }: LinkProps & {
   onOpenChange?: (open: boolean) => void
@@ -252,8 +256,9 @@ function MobileLink({
   className?: string
   locale?: string
   disabled?: boolean
+  /** Rendered inside the school dashboard, where every item is a sibling route. */
+  inDashboard?: boolean
 }) {
-  const router = useRouter()
   const fullHref = locale ? `/${locale}${href}` : href
 
   if (disabled) {
@@ -269,9 +274,12 @@ function MobileLink({
     )
   }
 
-  // Links that cross route groups (marketing → dashboard) need
-  // full page navigation so the proxy rewrite runs correctly
-  if (href.toString() === "/dashboard") {
+  // From the school SITE (marketing → dashboard) the link crosses route
+  // groups, and a full navigation lets the proxy rewrite run from scratch.
+  // Inside the dashboard the same href is a sibling route: the full reload
+  // it used to get here was the slowest link in the menu — the whole shell,
+  // the dictionary and every chunk again, for the most-tapped item.
+  if (!inDashboard && href.toString() === "/dashboard") {
     return (
       <a
         href={fullHref.toString()}
@@ -283,13 +291,12 @@ function MobileLink({
     )
   }
 
+  // `Link` navigates on its own; the `router.push` that used to sit in this
+  // handler started a second navigation to the same URL on every tap.
   return (
     <Link
       href={fullHref}
-      onClick={() => {
-        router.push(fullHref.toString())
-        onOpenChange?.(false)
-      }}
+      onClick={() => onOpenChange?.(false)}
       className={cn("text-2xl font-medium", className)}
       {...props}
     >

@@ -15,6 +15,12 @@ import { fontDmSans, fontPoppins } from "@/components/template/zenda-fonts"
 import { Footer as ZendaFooter } from "@/components/template/zenda-footer/footer"
 import { ZendaNav } from "@/components/template/zenda-nav/header"
 
+// The `.zenda-clone` scope (nav, footer, the ported pages below) and the shell
+// rules it cannot carry. Imported here, not in the root layout, so the
+// dashboard never downloads them.
+import "@/styles/zenda-clone.css"
+import "@/styles/zenda-shell.css"
+
 // import { SiteFooter } from "@/components/school-marketing-footer";
 
 // Tenant marketing pages depend on subdomain + DB lookup - always dynamic

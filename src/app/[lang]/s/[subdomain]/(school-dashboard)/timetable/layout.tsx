@@ -1,7 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { Suspense } from "react"
 import { auth } from "@/auth"
 
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
@@ -16,7 +15,7 @@ import {
   rendersStudentTimetable,
   type TimetableRole,
 } from "@/components/school-dashboard/timetable/permissions-config"
-import { TimetableSurfaceSkeleton } from "@/components/school-dashboard/timetable/views/grid-skeleton"
+import { TimetableShellProvider } from "@/components/school-dashboard/timetable/shell-context"
 
 interface Props {
   children: React.ReactNode
@@ -88,21 +87,18 @@ export default async function TimetableLayout({ children, params }: Props) {
     <div className="space-y-6">
       <PageHeadingSetter title={d?.title || "Timetable"} />
       {hasTabs && <PageNav pages={timetablePages} />}
-      {/* Replaces `loading.tsx`, which is the same boundary with two problems
-          this one does not have. It could not read the session — `loading.tsx`
-          must render instantly, so it cannot await `auth()` — and so it drew the
-          five-day week for everyone, including the phone that was two frames
-          away from showing one column. And it re-drew the page title and the tab
-          strip, which this layout has already painted directly above: a fake
-          toolbar under a real one.
-
-          Same nesting Next builds for a `loading.tsx` (layout > Suspense >
-          page), so the sub-routes that ship their own keep theirs. */}
-      <Suspense
-        fallback={<TimetableSurfaceSkeleton studentShell={isStudentSurface} />}
-      >
+      {/* The route's `loading.tsx` is the boundary here (Next nests it as
+          layout > Suspense > page, so sub-routes with their own keep theirs).
+          It exists again because a dynamic route WITHOUT one is never
+          prefetched — the sidebar's Timetable tap showed nothing until the
+          whole server response landed. What the manual boundary that sat
+          here had over it was the role: `loading.tsx` cannot await the
+          session, so it drew the five-day week for a phone about to show one
+          column. The provider hands that answer down instead, and the
+          fallback reads it. */}
+      <TimetableShellProvider studentShell={isStudentSurface}>
         {children}
-      </Suspense>
+      </TimetableShellProvider>
     </div>
   )
 }

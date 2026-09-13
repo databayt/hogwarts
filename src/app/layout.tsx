@@ -13,8 +13,13 @@ import {
 } from "@/components/internationalization/config"
 
 import "./globals.css"
-import "@/styles/zenda-clone.css"
-import "@/styles/zenda-shell.css"
+// zenda-clone.css (648 KB of Webflow rules scoped under `.zenda-clone`) and
+// zenda-shell.css are NOT imported here any more. Loaded from the root they
+// rode along on every dashboard page — half of the ~1 MB of CSS a phone
+// parsed before drawing the first screen — for a scope only the school
+// marketing site and the /features clones ever render. They are imported
+// where the scope is used: the (school-marketing) layout, the features
+// showcase and the imported zenda sections.
 import "@/styles/apple-clone.css"
 import "@/styles/thmanyah-clone.css"
 

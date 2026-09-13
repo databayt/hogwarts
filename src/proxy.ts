@@ -152,6 +152,27 @@ const ROLE_COOKIE = "authjs.role"
 type SessionState = "none" | "valid" | "stale"
 
 /**
+ * The locale cookie used to be written on EVERY response. Cookies set by the
+ * proxy are merged into the request store's mutable cookies, and a Server
+ * Action whose request store shows a modified cookie is answered with a full
+ * re-render of the page (`x-action-revalidated`) — 1.1 MB per action on the
+ * dashboard, twice on mount, plus a purge of the router cache that re-fired
+ * every prefetch. Write the cookie only when it actually changes.
+ */
+function setLocaleCookie(
+  response: NextResponse,
+  req: NextRequest,
+  locale: Locale
+): void {
+  if (req.cookies.get("NEXT_LOCALE")?.value === locale) return
+  response.cookies.set("NEXT_LOCALE", locale, {
+    maxAge: 31536000,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  })
+}
+
+/**
  * Verify the session cookie instead of trusting its presence.
  *
  * A cookie signed with a previous AUTH_SECRET (rotated 2026-09-12) decodes to
@@ -160,17 +181,48 @@ type SessionState = "none" | "valid" | "stale"
  * every user who was signed in before the rotation. "stale" tells the caller
  * to clear the cookie on the response so the next request starts clean.
  */
-async function getSessionState(request: NextRequest): Promise<SessionState> {
+async function getSessionState(
+  request: NextRequest
+): Promise<{ state: SessionState; userId: string | null }> {
   const token = request.cookies.get(SESSION_COOKIE)?.value
-  if (!token) return "none"
+  if (!token) return { state: "none", userId: null }
   const secret = process.env.AUTH_SECRET
-  if (!secret) return "valid" // cannot verify here; layouts still call auth()
+  // Cannot verify here; layouts still call auth().
+  if (!secret) return { state: "valid", userId: null }
   try {
     const payload = await decode({ token, secret, salt: SESSION_COOKIE })
-    return payload ? "valid" : "stale"
+    if (!payload) return { state: "stale", userId: null }
+    const id = (payload as { id?: unknown; sub?: unknown }).id ?? payload.sub
+    return { state: "valid", userId: typeof id === "string" ? id : null }
   } catch {
-    return "stale"
+    return { state: "stale", userId: null }
   }
+}
+
+/**
+ * A short, non-reversible key for the signed-in user, sent as
+ * `x-session-key` on every response. The service worker namespaces its
+ * page cache by it: a different key (another account on the same device)
+ * or no key (signed out) drops the previous person's saved pages, so an
+ * offline replay can only ever show the user their own screens. The key is
+ * a truncated SHA-256 of the user id and AUTH_SECRET — it identifies a
+ * session to the worker and nothing else.
+ */
+const sessionKeyCache = new Map<string, string>()
+
+async function sessionKeyFor(userId: string): Promise<string | null> {
+  const secret = process.env.AUTH_SECRET
+  if (!secret) return null
+  const cached = sessionKeyCache.get(userId)
+  if (cached) return cached
+  const bytes = new TextEncoder().encode(`${userId}:${secret}`)
+  const digest = await crypto.subtle.digest("SHA-256", bytes)
+  const key = Array.from(new Uint8Array(digest).slice(0, 8), (b) =>
+    b.toString(16).padStart(2, "0")
+  ).join("")
+  if (sessionKeyCache.size > 5000) sessionKeyCache.clear()
+  sessionKeyCache.set(userId, key)
+  return key
 }
 
 /** Expire the session + role cookies with the same attributes auth.ts set them with. */
@@ -203,10 +255,15 @@ function getRoleFromCookie(request: NextRequest): Role | null {
 
 export async function proxy(req: NextRequest) {
   const session = await getSessionState(req)
-  const response = await routeRequest(req, session === "valid")
-  return session === "stale"
-    ? clearStaleSession(response, req.headers.get("host") || "")
-    : response
+  const response = await routeRequest(req, session.state === "valid")
+  if (session.state === "stale") {
+    return clearStaleSession(response, req.headers.get("host") || "")
+  }
+  if (session.state === "valid" && session.userId) {
+    const key = await sessionKeyFor(session.userId)
+    if (key) response.headers.set("x-session-key", key)
+  }
+  return response
 }
 
 async function routeRequest(req: NextRequest, authenticated: boolean) {
@@ -385,11 +442,7 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
     if (!hasLocale) {
       url.pathname = `/${locale}${url.pathname}`
       const response = NextResponse.redirect(url)
-      response.cookies.set("NEXT_LOCALE", locale, {
-        maxAge: 31536000,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-      })
+      setLocaleCookie(response, req, locale)
       return response
     }
     return NextResponse.next()
@@ -400,11 +453,7 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
     if (!hasLocale) {
       url.pathname = `/${locale}${url.pathname}`
       const response = NextResponse.redirect(url)
-      response.cookies.set("NEXT_LOCALE", locale, {
-        maxAge: 31536000,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-      })
+      setLocaleCookie(response, req, locale)
       return response
     }
 
@@ -421,11 +470,7 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
       const response = NextResponse.next({
         request: { headers: requestHeaders },
       })
-      response.cookies.set("NEXT_LOCALE", locale, {
-        maxAge: 31536000,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-      })
+      setLocaleCookie(response, req, locale)
       return response
     }
 
@@ -451,11 +496,7 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
     // Pass subdomain to downstream components via header
     // Consumed by: src/lib/tenant-context.ts getTenantContext()
     response.headers.set("x-subdomain", subdomain)
-    response.cookies.set("NEXT_LOCALE", locale, {
-      maxAge: 31536000,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    })
+    setLocaleCookie(response, req, locale)
     return response
   }
 
@@ -463,11 +504,7 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
   if (!hasLocale) {
     url.pathname = `/${locale}${url.pathname}`
     const response = NextResponse.redirect(url)
-    response.cookies.set("NEXT_LOCALE", locale, {
-      maxAge: 31536000,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    })
+    setLocaleCookie(response, req, locale)
     return response
   }
 
@@ -477,11 +514,7 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   })
-  response.cookies.set("NEXT_LOCALE", locale, {
-    maxAge: 31536000,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  })
+  setLocaleCookie(response, req, locale)
   return response
 }
 

@@ -20,6 +20,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 import { getIconComponent } from "../icon-map"
 import type { ShowcaseData } from "../types"
+// The deck renders under `.zenda-clone`; the scope's stylesheet is loaded by
+// the components that use it, not by the root layout.
+import "@/styles/zenda-clone.css"
 
 // zenda sets the whole deck in DM Sans (`--font-heading` → `--font-dm-sans`).
 // Only the tenant school-marketing layout registers that face; this deck also
