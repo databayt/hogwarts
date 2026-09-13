@@ -44,6 +44,8 @@ import {
   type AttendanceRiskLevel,
 } from "@/components/school-dashboard/attendance/actions"
 
+import { phone } from "../shared/phone"
+
 // Risk level color configuration. The i18n text (label/description/threshold)
 // is merged in from the dictionary inside the component (see RISK_LEVELS there);
 // the Arabic values below act as fallbacks when a key is missing.
@@ -253,10 +255,23 @@ export function EarlyWarningContent({
   return (
     <div className="space-y-6" dir={isArabic ? "rtl" : "ltr"}>
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className={cn(RISK_LEVELS.SATISFACTORY.borderColor, "border-2")}>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+      <div
+        className={cn("grid gap-4 md:grid-cols-2 lg:grid-cols-4", phone.panel)}
+      >
+        <Card
+          className={cn(
+            RISK_LEVELS.SATISFACTORY.borderColor,
+            "border-2",
+            phone.cell
+          )}
+        >
+          <CardHeader className={cn("pb-2", phone.cellHead)}>
+            <CardTitle
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium",
+                phone.cellLabel
+              )}
+            >
               <CheckCircle className="h-4 w-4 text-green-500" />
               {isArabic ? "مرضي" : "Satisfactory"}
             </CardTitle>
@@ -264,35 +279,59 @@ export function EarlyWarningContent({
               {RISK_LEVELS.SATISFACTORY.threshold}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <h2 className="text-green-700">{summary?.satisfactory || 0}</h2>
-            <p className="text-muted-foreground mt-1 text-xs">
+          <CardContent className={phone.cellBody}>
+            <h2 className={cn("text-green-700", phone.cellValue)}>
+              {summary?.satisfactory || 0}
+            </h2>
+            <p className="text-muted-foreground mt-1 text-xs max-md:line-clamp-2">
               {RISK_LEVELS.SATISFACTORY.description}
             </p>
           </CardContent>
         </Card>
 
-        <Card className={cn(RISK_LEVELS.AT_RISK.borderColor, "border-2")}>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+        <Card
+          className={cn(
+            RISK_LEVELS.AT_RISK.borderColor,
+            "border-2",
+            phone.cell
+          )}
+        >
+          <CardHeader className={cn("pb-2", phone.cellHead)}>
+            <CardTitle
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium",
+                phone.cellLabel
+              )}
+            >
               <CircleAlert className="h-4 w-4 text-yellow-500" />
               {isArabic ? "معرض للخطر" : "At Risk"}
             </CardTitle>
             <CardDescription>{RISK_LEVELS.AT_RISK.threshold}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <h2 className="text-yellow-700">{summary?.atRisk || 0}</h2>
-            <p className="text-muted-foreground mt-1 text-xs">
+          <CardContent className={phone.cellBody}>
+            <h2 className={cn("text-yellow-700", phone.cellValue)}>
+              {summary?.atRisk || 0}
+            </h2>
+            <p className="text-muted-foreground mt-1 text-xs max-md:line-clamp-2">
               {RISK_LEVELS.AT_RISK.description}
             </p>
           </CardContent>
         </Card>
 
         <Card
-          className={cn(RISK_LEVELS.MODERATELY_CHRONIC.borderColor, "border-2")}
+          className={cn(
+            RISK_LEVELS.MODERATELY_CHRONIC.borderColor,
+            "border-2",
+            phone.cell
+          )}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardHeader className={cn("pb-2", phone.cellHead)}>
+            <CardTitle
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium",
+                phone.cellLabel
+              )}
+            >
               <AlertTriangle className="h-4 w-4 text-orange-500" />
               {isArabic ? "غياب متوسط" : "Moderately Chronic"}
             </CardTitle>
@@ -300,21 +339,30 @@ export function EarlyWarningContent({
               {RISK_LEVELS.MODERATELY_CHRONIC.threshold}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <h2 className="text-orange-700">
+          <CardContent className={phone.cellBody}>
+            <h2 className={cn("text-orange-700", phone.cellValue)}>
               {summary?.moderatelyChronic || 0}
             </h2>
-            <p className="text-muted-foreground mt-1 text-xs">
+            <p className="text-muted-foreground mt-1 text-xs max-md:line-clamp-2">
               {RISK_LEVELS.MODERATELY_CHRONIC.description}
             </p>
           </CardContent>
         </Card>
 
         <Card
-          className={cn(RISK_LEVELS.SEVERELY_CHRONIC.borderColor, "border-2")}
+          className={cn(
+            RISK_LEVELS.SEVERELY_CHRONIC.borderColor,
+            "border-2",
+            phone.cell
+          )}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardHeader className={cn("pb-2", phone.cellHead)}>
+            <CardTitle
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium",
+                phone.cellLabel
+              )}
+            >
               <AlertTriangle className="h-4 w-4 text-red-500" />
               {isArabic ? "غياب شديد" : "Severely Chronic"}
             </CardTitle>
@@ -322,9 +370,11 @@ export function EarlyWarningContent({
               {RISK_LEVELS.SEVERELY_CHRONIC.threshold}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <h2 className="text-red-700">{summary?.severelyChronic || 0}</h2>
-            <p className="text-muted-foreground mt-1 text-xs">
+          <CardContent className={phone.cellBody}>
+            <h2 className={cn("text-red-700", phone.cellValue)}>
+              {summary?.severelyChronic || 0}
+            </h2>
+            <p className="text-muted-foreground mt-1 text-xs max-md:line-clamp-2">
               {RISK_LEVELS.SEVERELY_CHRONIC.description}
             </p>
           </CardContent>
@@ -332,19 +382,21 @@ export function EarlyWarningContent({
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader className="pb-4">
           <CardTitle>{isArabic ? "الفلاتر" : "Filters"}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4 max-md:gap-3">
             <Select
               value={selectedRiskLevel}
               onValueChange={(v) =>
                 setSelectedRiskLevel(v as AttendanceRiskLevel | "all")
               }
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger
+                className={cn("w-[200px] max-md:w-full", phone.field)}
+              >
                 <SelectValue
                   placeholder={isArabic ? "مستوى الخطر" : "Risk Level"}
                 />
@@ -372,7 +424,9 @@ export function EarlyWarningContent({
               value={selectedSectionId}
               onValueChange={setSelectedSectionId}
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger
+                className={cn("w-[200px] max-md:w-full", phone.field)}
+              >
                 <SelectValue placeholder={isArabic ? "الشعبة" : "Section"} />
               </SelectTrigger>
               <SelectContent>
@@ -388,7 +442,9 @@ export function EarlyWarningContent({
             </Select>
 
             <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger
+                className={cn("w-[200px] max-md:w-full", phone.field)}
+              >
                 <SelectValue placeholder={isArabic ? "الفصل" : "Class"} />
               </SelectTrigger>
               <SelectContent>
@@ -407,7 +463,7 @@ export function EarlyWarningContent({
       </Card>
 
       {/* Students List */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -435,18 +491,18 @@ export function EarlyWarningContent({
                 <div
                   key={student.studentId}
                   className={cn(
-                    "hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors",
+                    "hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors max-md:gap-2 max-md:p-3",
                     RISK_LEVELS[student.riskLevel].bgColor,
                     RISK_LEVELS[student.riskLevel].borderColor
                   )}
                 >
-                  <div className="flex-1">
-                    <div className="mb-2 flex items-center gap-3">
+                  <div className="flex-1 max-md:min-w-0">
+                    <div className="mb-2 flex items-center gap-3 max-md:flex-wrap max-md:gap-2">
                       <h4 className="font-medium">{student.studentName}</h4>
                       {getRiskBadge(student.riskLevel)}
                       {getTrendIcon(student.trend)}
                     </div>
-                    <div className="text-muted-foreground flex items-center gap-4 text-sm">
+                    <div className="text-muted-foreground flex items-center gap-4 text-sm max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-1 max-md:text-xs">
                       {student.className && <span>{student.className}</span>}
                       <span>
                         {isArabic ? "معدل الحضور:" : "Attendance:"}{" "}
@@ -479,7 +535,7 @@ export function EarlyWarningContent({
       </Card>
 
       {/* Risk Level Legend */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle>
             {isArabic ? "دليل مستويات الخطر" : "Risk Level Guide"}
@@ -491,7 +547,7 @@ export function EarlyWarningContent({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-2 md:grid-cols-2 lg:grid-cols-4">
             {Object.entries(RISK_LEVELS).map(([key, config]) => (
               <div
                 key={key}

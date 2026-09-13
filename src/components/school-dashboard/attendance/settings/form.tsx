@@ -6,6 +6,7 @@ import { useState, useTransition } from "react"
 import { Bell, Clock, Save, Settings } from "lucide-react"
 import { toast } from "sonner"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -20,6 +21,7 @@ import { Switch } from "@/components/ui/switch"
 
 import type { AttendanceSettings } from "../actions/policy"
 import { updateAttendanceSettings } from "../actions/policy"
+import { phone } from "../shared/phone"
 
 const PICKABLE_METHODS = [
   "MANUAL",
@@ -100,9 +102,9 @@ export function AttendanceSettingsForm({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:gap-3">
         <div className="flex items-center gap-3">
-          <div className="bg-muted rounded-lg p-3">
+          <div className="bg-muted rounded-lg p-3 max-md:hidden">
             <Settings className="text-muted-foreground h-6 w-6" />
           </div>
           <div>
@@ -112,7 +114,11 @@ export function AttendanceSettingsForm({
             </p>
           </div>
         </div>
-        <Button onClick={onSave} disabled={isPending || methods.length === 0}>
+        <Button
+          onClick={onSave}
+          disabled={isPending || methods.length === 0}
+          className={cn("max-md:shrink-0", phone.pill)}
+        >
           <Save className="me-2 h-4 w-4" />
           {isPending ? (t.saving ?? "Saving...") : (t.save ?? "Save Changes")}
         </Button>
@@ -120,7 +126,7 @@ export function AttendanceSettingsForm({
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* General */}
-        <Card>
+        <Card className={phone.card}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
@@ -211,7 +217,7 @@ export function AttendanceSettingsForm({
         </Card>
 
         {/* Methods */}
-        <Card>
+        <Card className={phone.card}>
           <CardHeader>
             <CardTitle>{t.methods ?? "Method availability"}</CardTitle>
             <CardDescription>
@@ -239,7 +245,7 @@ export function AttendanceSettingsForm({
       </div>
 
       {/* Alerts */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />

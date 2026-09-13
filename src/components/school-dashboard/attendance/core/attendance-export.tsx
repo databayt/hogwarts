@@ -348,10 +348,7 @@ export function AttendanceExport({
                   "HOLIDAY",
                 ] as const
               ).map((status) => (
-                <div
-                  key={status}
-                  className="flex items-center gap-2 rtl:flex-row-reverse"
-                >
+                <div key={status} className="flex items-center gap-2">
                   <Checkbox
                     id={status}
                     checked={selectedStatuses.includes(status)}
@@ -388,10 +385,7 @@ export function AttendanceExport({
                   "KIOSK",
                 ] as const
               ).map((methodKey) => (
-                <div
-                  key={methodKey}
-                  className="flex items-center gap-2 rtl:flex-row-reverse"
-                >
+                <div key={methodKey} className="flex items-center gap-2">
                   <Checkbox
                     id={methodKey}
                     checked={selectedMethods.includes(methodKey)}
@@ -437,7 +431,7 @@ export function AttendanceExport({
 
           {/* Additional Options */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2 rtl:flex-row-reverse">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="include-stats"
                 checked={includeStats}

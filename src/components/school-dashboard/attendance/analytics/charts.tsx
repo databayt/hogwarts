@@ -39,6 +39,8 @@ import {
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
+import { phone } from "../shared/phone"
+
 // Define colors for charts
 const COLORS = {
   primary: "#6366f1",
@@ -82,7 +84,7 @@ export function AttendanceTrendsChart({
 
   if (!data || data.length === 0) {
     return (
-      <Card className={className}>
+      <Card className={cn(phone.card, className)}>
         <CardHeader>
           <CardTitle>{ct?.attendanceTrends || "Attendance Trends"}</CardTitle>
           <CardDescription>
@@ -91,7 +93,8 @@ export function AttendanceTrendsChart({
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground flex h-[350px] items-center justify-center">
-            No attendance data available for the selected period
+            {ct?.noDataAvailable ||
+              "No attendance data available for the selected period"}
           </div>
         </CardContent>
       </Card>
@@ -99,7 +102,7 @@ export function AttendanceTrendsChart({
   }
 
   return (
-    <Card className={className}>
+    <Card className={cn(phone.card, className)}>
       <CardHeader>
         <CardTitle>{ct?.attendanceTrends || "Attendance Trends"}</CardTitle>
         <CardDescription>
@@ -197,7 +200,7 @@ export function MethodUsagePieChart({
 
   if (!data || data.length === 0) {
     return (
-      <Card className={className}>
+      <Card className={cn(phone.card, className)}>
         <CardHeader>
           <CardTitle>
             {ct?.methodDistribution || "Method Distribution"}
@@ -208,7 +211,8 @@ export function MethodUsagePieChart({
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground flex h-[350px] items-center justify-center">
-            No tracking methods used in selected period
+            {ct?.noDataAvailable ||
+              "No tracking methods used in selected period"}
           </div>
         </CardContent>
       </Card>
@@ -216,7 +220,7 @@ export function MethodUsagePieChart({
   }
 
   return (
-    <Card className={className}>
+    <Card className={cn(phone.card, className)}>
       <CardHeader>
         <CardTitle>{ct?.methodDistribution || "Method Distribution"}</CardTitle>
         <CardDescription>
@@ -273,7 +277,7 @@ export function DayWisePatternChart({
     | undefined
   if (!data || data.length === 0) {
     return (
-      <Card className={className}>
+      <Card className={cn(phone.card, className)}>
         <CardHeader>
           <CardTitle>
             {ct?.weeklyPattern || "Weekly Pattern Analysis"}
@@ -284,7 +288,7 @@ export function DayWisePatternChart({
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground flex h-[300px] items-center justify-center">
-            No pattern data available
+            {ct?.noDataAvailable || "No pattern data available"}
           </div>
         </CardContent>
       </Card>
@@ -292,7 +296,7 @@ export function DayWisePatternChart({
   }
 
   return (
-    <Card className={className}>
+    <Card className={cn(phone.card, className)}>
       <CardHeader>
         <CardTitle>{ct?.weeklyPattern || "Weekly Pattern Analysis"}</CardTitle>
         <CardDescription>
@@ -353,7 +357,7 @@ export function TimeDistributionChart({
 
   if (!hasData) {
     return (
-      <Card className={className}>
+      <Card className={cn(phone.card, className)}>
         <CardHeader>
           <CardTitle>
             {ct?.checkInTime || "Check-in Time Distribution"}
@@ -364,7 +368,7 @@ export function TimeDistributionChart({
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground flex h-[300px] items-center justify-center">
-            No check-in time data available
+            {ct?.noDataAvailable || "No check-in time data available"}
           </div>
         </CardContent>
       </Card>
@@ -372,7 +376,7 @@ export function TimeDistributionChart({
   }
 
   return (
-    <Card className={className}>
+    <Card className={cn(phone.card, className)}>
       <CardHeader>
         <CardTitle>{ct?.checkInTime || "Check-in Time Distribution"}</CardTitle>
         <CardDescription>
@@ -438,7 +442,7 @@ export function ClassComparisonChart({
     | undefined
   if (!data || data.length === 0) {
     return (
-      <Card className={className}>
+      <Card className={cn(phone.card, className)}>
         <CardHeader>
           <CardTitle>
             {ct?.classPerformance || "Class Performance Comparison"}
@@ -449,7 +453,7 @@ export function ClassComparisonChart({
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground flex h-[350px] items-center justify-center">
-            No class comparison data available
+            {ct?.noDataAvailable || "No class comparison data available"}
           </div>
         </CardContent>
       </Card>
@@ -457,7 +461,7 @@ export function ClassComparisonChart({
   }
 
   return (
-    <Card className={className}>
+    <Card className={cn(phone.card, className)}>
       <CardHeader>
         <CardTitle>
           {ct?.classPerformance || "Class Performance Comparison"}
@@ -542,7 +546,7 @@ export function StudentAttendanceHeatmap({
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
 
   return (
-    <Card className={className}>
+    <Card className={cn(phone.card, className)}>
       <CardHeader>
         <CardTitle>
           {ct?.studentHeatmap || "Student Attendance Heatmap"}
@@ -618,7 +622,7 @@ export function MonthlyComparisonChart({
     | Record<string, string>
     | undefined
   return (
-    <Card className={className}>
+    <Card className={cn(phone.card, className)}>
       <CardHeader>
         <CardTitle>
           {ct?.yearComparison || "Year-over-Year Comparison"}
@@ -690,7 +694,7 @@ export function AbsenceReasonsChart({
     | Record<string, string>
     | undefined
   return (
-    <Card className={className}>
+    <Card className={cn(phone.card, className)}>
       <CardHeader>
         <CardTitle>
           {ct?.absenceReasons || "Absence Reasons Breakdown"}

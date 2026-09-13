@@ -33,6 +33,7 @@ import { toast } from "@/components/ui/use-toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { useCamera, useGeolocation } from "../shared/hooks"
+import { phone } from "../shared/phone"
 import type { QRCodeScanPayload } from "../shared/types"
 import { validateQRPayload } from "../shared/utils"
 import { processQRScan } from "./actions"
@@ -335,6 +336,7 @@ export function QRScanner({
         ref={scannerContainerRef}
         className={cn(
           "transition-all duration-300",
+          !isFullscreen && phone.card,
           isFullscreen && "fixed inset-0 z-50 rounded-none border-0"
         )}
       >
@@ -587,7 +589,7 @@ export function QRScanner({
 
       {/* Instructions Card - Hidden in fullscreen */}
       {!isFullscreen && (
-        <Card>
+        <Card className={phone.card}>
           <CardHeader>
             <CardTitle>
               {t?.instructionsTitle || "Scanning Instructions"}

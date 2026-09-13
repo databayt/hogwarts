@@ -44,6 +44,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { phone } from "../shared/phone"
 import { deleteGeofence, updateGeofenceStatus } from "./actions"
 
 interface Geofence {
@@ -156,7 +157,7 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
 
   if (geofences.length === 0) {
     return (
-      <Card>
+      <Card className={phone.card}>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <MapPin className="text-muted-foreground mb-4 h-12 w-12" />
           <h3 className="mb-2 text-lg font-semibold">
@@ -173,7 +174,7 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
         {geofences.map((geofence) => {
           const config = typeConfig[geofence.type] || {
             label: geofence.type,
@@ -185,7 +186,7 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
           return (
             <Card
               key={geofence.id}
-              className={`transition-opacity ${!geofence.isActive ? "opacity-60" : ""}`}
+              className={`transition-opacity ${!geofence.isActive ? "opacity-60" : ""} ${phone.card}`}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">

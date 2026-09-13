@@ -52,6 +52,7 @@ import {
   getClassesForSelection,
   getSectionsForSelection,
 } from "../actions"
+import { phone } from "../shared/phone"
 import { AttendanceReportExportButton } from "./export-button"
 
 interface ReportRecord {
@@ -235,9 +236,9 @@ export function ReportsContent({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-purple-100 p-3 dark:bg-purple-900/30">
+          <div className="rounded-lg bg-purple-100 p-3 max-md:hidden dark:bg-purple-900/30">
             <FileSpreadsheet className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
@@ -250,7 +251,7 @@ export function ReportsContent({
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 max-md:[&_button]:h-10 max-md:[&_button]:rounded-full max-md:[&_button]:px-5">
           <Button
             variant="outline"
             onClick={handleRefresh}
@@ -276,56 +277,117 @@ export function ReportsContent({
 
       {/* Summary Cards */}
       {stats && (
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+        <div className={cn("grid gap-4 md:grid-cols-4", phone.panel)}>
+          <Card className={phone.cell}>
+            <CardHeader
+              className={cn(
+                "flex flex-row items-center justify-between space-y-0 pb-2",
+                phone.cellHead
+              )}
+            >
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.reports?.summary ?? "Total Records"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
+            <CardContent className={phone.cellBody}>
+              <div className={cn("text-2xl font-bold", phone.cellValue)}>
+                {stats.total}
+              </div>
               <p className="text-muted-foreground text-xs">
                 {stats.attendanceRate}%{" "}
                 {t?.stats?.attendanceRate ?? "attendance rate"}
               </p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className={phone.cell}>
+            <CardHeader
+              className={cn(
+                "flex flex-row items-center justify-between space-y-0 pb-2",
+                phone.cellHead
+              )}
+            >
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.status?.PRESENT ?? "Present"}
               </CardTitle>
-              <CircleCheck className="h-4 w-4 text-green-500" />
+              <CircleCheck className="h-4 w-4 text-green-500 max-md:hidden" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className={phone.cellBody}>
+              <div
+                className={cn(
+                  "text-2xl font-bold text-green-600",
+                  phone.cellValue
+                )}
+              >
                 {stats.present}
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className={phone.cell}>
+            <CardHeader
+              className={cn(
+                "flex flex-row items-center justify-between space-y-0 pb-2",
+                phone.cellHead
+              )}
+            >
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.status?.LATE ?? "Late"}
               </CardTitle>
-              <Clock className="h-4 w-4 text-yellow-500" />
+              <Clock className="h-4 w-4 text-yellow-500 max-md:hidden" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
+            <CardContent className={phone.cellBody}>
+              <div
+                className={cn(
+                  "text-2xl font-bold text-yellow-600",
+                  phone.cellValue
+                )}
+              >
                 {stats.late}
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className={phone.cell}>
+            <CardHeader
+              className={cn(
+                "flex flex-row items-center justify-between space-y-0 pb-2",
+                phone.cellHead
+              )}
+            >
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.status?.ABSENT ?? "Absent"}
               </CardTitle>
-              <CircleX className="h-4 w-4 text-red-500" />
+              <CircleX className="h-4 w-4 text-red-500 max-md:hidden" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+            <CardContent className={phone.cellBody}>
+              <div
+                className={cn(
+                  "text-2xl font-bold text-red-600",
+                  phone.cellValue
+                )}
+              >
                 {stats.absent}
               </div>
             </CardContent>
@@ -334,7 +396,7 @@ export function ReportsContent({
       )}
 
       {/* Filters */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <ListFilter className="h-4 w-4" />
@@ -342,8 +404,8 @@ export function ReportsContent({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap gap-4 max-md:gap-3">
+            <div className="flex items-center gap-2 max-md:w-full max-md:flex-wrap">
               <label className="text-sm font-medium">
                 {t?.export?.dateRange ?? "Date Range"}:
               </label>
@@ -369,7 +431,9 @@ export function ReportsContent({
                 setPage(1)
               }}
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger
+                className={cn("w-[200px] max-md:w-full", phone.field)}
+              >
                 <SelectValue
                   placeholder={
                     t?.reportsFilter?.selectSection ?? "Select section"
@@ -394,7 +458,9 @@ export function ReportsContent({
                 setPage(1)
               }}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger
+                className={cn("w-[180px] max-md:w-full", phone.field)}
+              >
                 <SelectValue
                   placeholder={t?.reportsFilter?.selectClass ?? "Select class"}
                 />
@@ -417,7 +483,9 @@ export function ReportsContent({
                 setPage(1)
               }}
             >
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger
+                className={cn("w-[150px] max-md:w-full", phone.field)}
+              >
                 <SelectValue
                   placeholder={t?.form?.selectStatus ?? "Select status"}
                 />
@@ -443,7 +511,7 @@ export function ReportsContent({
                 </SelectItem>
               </SelectContent>
             </Select>
-            <div className="relative min-w-[200px] flex-1">
+            <div className="relative min-w-[200px] flex-1 max-md:w-full max-md:min-w-0">
               <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
               <Input
                 placeholder={
@@ -451,7 +519,7 @@ export function ReportsContent({
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="ps-9"
+                className={cn("ps-9", phone.field)}
               />
             </div>
           </div>
@@ -459,9 +527,9 @@ export function ReportsContent({
       </Card>
 
       {/* Data Table */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
             <div>
               <CardTitle>{t?.title ?? "Attendance Records"}</CardTitle>
               <CardDescription>
@@ -533,7 +601,9 @@ export function ReportsContent({
                           className={cn("gap-1", STATUS_COLORS[record.status])}
                         >
                           {STATUS_ICONS[record.status]}
-                          {record.status}
+                          {(t?.status as Record<string, string> | undefined)?.[
+                            record.status
+                          ] ?? record.status}
                         </Badge>
                       </TableCell>
                       <TableCell>

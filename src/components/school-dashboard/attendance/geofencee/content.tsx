@@ -73,7 +73,7 @@ export async function GeofenceContent({ lang = "en" }: GeofenceContentProps) {
       {isStudent && (
         <div className="space-y-4">
           <GeoTracker />
-          <div className="text-muted-foreground rounded-lg border p-4 text-sm">
+          <div className="text-muted-foreground max-md:bg-muted rounded-lg border p-4 text-sm max-md:border-0">
             <p className="mb-2 font-medium">
               {t?.howItWorks || "How it works:"}
             </p>
@@ -117,7 +117,7 @@ export async function GeofenceContent({ lang = "en" }: GeofenceContentProps) {
           </TabsContent>
 
           <TabsContent value="geofences" className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between max-md:flex-wrap max-md:gap-3">
               <div>
                 <h3>{t?.geofences || "Geofences"}</h3>
                 <p className="text-muted-foreground">

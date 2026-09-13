@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { phone } from "../shared/phone"
 import {
   getActiveCompetitions,
   getLeaderboard,
@@ -159,7 +160,7 @@ function LeaderboardSection({
   }
 
   return (
-    <Card>
+    <Card className={phone.card}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <span className="text-2xl">🏆</span>
@@ -177,11 +178,13 @@ function LeaderboardSection({
               <div
                 key={entry.studentId}
                 className={cn(
-                  "flex items-center justify-between rounded-lg p-3 transition-colors",
-                  entry.rank <= 3 ? "bg-accent" : "hover:bg-accent"
+                  "flex items-center justify-between rounded-lg p-3 transition-colors max-md:gap-3",
+                  entry.rank <= 3
+                    ? "bg-accent max-md:bg-background"
+                    : "hover:bg-accent"
                 )}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 max-md:min-w-0 max-md:gap-3">
                   {/* Rank */}
                   <div
                     className={cn(
@@ -193,7 +196,7 @@ function LeaderboardSection({
                   </div>
 
                   {/* Photo */}
-                  <div className="bg-muted h-12 w-12 overflow-hidden rounded-full">
+                  <div className="bg-muted max-md:bg-background h-12 w-12 overflow-hidden rounded-full max-md:shrink-0">
                     {entry.profilePhotoUrl ? (
                       <Image
                         src={entry.profilePhotoUrl}
@@ -271,19 +274,19 @@ function CompetitionsSection({
   return (
     <div className="space-y-4">
       {competitions.length === 0 ? (
-        <Card>
+        <Card className={phone.card}>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
               {t?.no_active_competitions || "No active competitions"}
             </p>
-            <Button variant="outline" className="mt-4">
+            <Button variant="outline" className={cn("mt-4", phone.pill)}>
               {t?.create_competition || "Create Competition"}
             </Button>
           </CardContent>
         </Card>
       ) : (
         competitions.map((competition) => (
-          <Card key={competition.id}>
+          <Card key={competition.id} className={phone.card}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{competition.name}</span>
@@ -410,11 +413,11 @@ function BadgesSection({ t }: { t: Record<string, string> | undefined }) {
   ]
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
       {badges.map((badge) => (
         <Card
           key={badge.code}
-          className="hover:border-primary transition-colors"
+          className={cn("hover:border-primary transition-colors", phone.card)}
         >
           <CardContent className="pt-6">
             <div className="mb-4 flex items-center gap-4">

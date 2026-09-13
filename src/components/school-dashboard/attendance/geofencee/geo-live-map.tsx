@@ -29,6 +29,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+import { phone } from "../shared/phone"
+
 // Dynamically import Leaflet components (SSR compatibility)
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -363,9 +365,9 @@ export function GeoLiveMap({
   // ============================================================================
 
   return (
-    <Card>
+    <Card className={phone.card}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between max-md:flex-wrap max-md:gap-2">
           <div>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />

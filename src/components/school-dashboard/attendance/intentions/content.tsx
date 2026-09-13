@@ -43,6 +43,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { phone } from "../shared/phone"
 import { getAbsenceIntentions, reviewAbsenceIntention } from "./actions"
 import { intentionStatusValues } from "./validation"
 
@@ -205,7 +206,7 @@ export default function IntentionsContent({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-purple-100 p-3 dark:bg-purple-900/30">
+          <div className="rounded-lg bg-purple-100 p-3 max-md:hidden dark:bg-purple-900/30">
             <CalendarClock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
@@ -221,16 +222,32 @@ export default function IntentionsContent({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className={cn("grid gap-4 md:grid-cols-3", phone.panel)}>
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {t?.pending || "Pending"}
             </CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+            <Clock className="h-4 w-4 text-yellow-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn(
+                "text-2xl font-bold text-yellow-600",
+                phone.cellValue
+              )}
+            >
               {pendingCount}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -238,15 +255,31 @@ export default function IntentionsContent({
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {t?.approved || "Approved"}
             </CardTitle>
-            <Check className="h-4 w-4 text-green-500" />
+            <Check className="h-4 w-4 text-green-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn(
+                "text-2xl font-bold text-green-600",
+                phone.cellValue
+              )}
+            >
               {approvedCount}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -254,15 +287,28 @@ export default function IntentionsContent({
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {t?.rejected || "Rejected"}
             </CardTitle>
-            <X className="h-4 w-4 text-red-500" />
+            <X className="h-4 w-4 text-red-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn("text-2xl font-bold text-red-600", phone.cellValue)}
+            >
               {rejectedCount}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -273,7 +319,7 @@ export default function IntentionsContent({
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Filter className="h-4 w-4" />
@@ -283,7 +329,9 @@ export default function IntentionsContent({
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger
+                className={cn("w-[180px] max-md:w-full", phone.field)}
+              >
                 <SelectValue placeholder={t?.allStatuses || "All Statuses"} />
               </SelectTrigger>
               <SelectContent>
@@ -306,7 +354,7 @@ export default function IntentionsContent({
       </Card>
 
       {/* Intentions List */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle>{t?.intentionsLabel || "Intentions"}</CardTitle>
           <CardDescription>
@@ -330,8 +378,9 @@ export default function IntentionsContent({
                   key={intention.id}
                   className={cn(
                     "flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between",
-                    intention.status === "PENDING" &&
-                      "border-yellow-200 bg-yellow-50/50 dark:border-yellow-900 dark:bg-yellow-900/10"
+                    intention.status === "PENDING"
+                      ? "border-yellow-200 bg-yellow-50/50 dark:border-yellow-900 dark:bg-yellow-900/10"
+                      : "max-md:bg-background max-md:border-0"
                   )}
                 >
                   <div className="space-y-1">
@@ -340,7 +389,13 @@ export default function IntentionsContent({
                         {intention.studentName}
                       </span>
                       <Badge variant={getStatusVariant(intention.status)}>
-                        {intention.status}
+                        {(
+                          {
+                            PENDING: t?.statusPending,
+                            APPROVED: t?.statusApproved,
+                            REJECTED: t?.statusRejected,
+                          } as Record<string, string | undefined>
+                        )[intention.status] || intention.status}
                       </Badge>
                       <Badge variant="outline">
                         {getReasonLabel(intention.reason)}
@@ -368,7 +423,7 @@ export default function IntentionsContent({
                   </div>
 
                   {intention.status === "PENDING" && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 max-md:[&_button]:h-9 max-md:[&_button]:rounded-full max-md:[&_button]:px-4">
                       <Button
                         size="sm"
                         variant="outline"

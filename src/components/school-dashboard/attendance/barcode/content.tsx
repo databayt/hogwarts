@@ -28,6 +28,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useAttendanceContext } from "../core/attendance-context"
 import { AttendanceStats } from "../core/attendance-stats"
+import { phone } from "../shared/phone"
 import { BarcodeScanner } from "./barcode-scanner"
 import { StudentCards } from "./student-cards"
 
@@ -44,6 +45,11 @@ export default function BarcodeAttendanceContent({
 }: BarcodeAttendanceContentProps) {
   const { dictionary: dict } = useDictionary()
   const t = (dict?.school?.attendance as any)?.barcode as
+    | Record<string, string>
+    | undefined
+  // Labels for the raw status enum, from the attendance namespace the stats
+  // panel reads as well.
+  const statusLabels = (dictionary ?? dict)?.attendance?.status as
     | Record<string, string>
     | undefined
 
@@ -77,9 +83,9 @@ export default function BarcodeAttendanceContent({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-orange-100 p-3">
+          <div className="rounded-lg bg-orange-100 p-3 max-md:hidden">
             <Barcode className="h-6 w-6 text-orange-600" />
           </div>
           <div>
@@ -103,6 +109,7 @@ export default function BarcodeAttendanceContent({
           stats={stats}
           records={attendance}
           showDetails={false}
+          dictionary={(dictionary ?? dict) as unknown as Dictionary["school"]}
         />
       )}
 
@@ -126,7 +133,7 @@ export default function BarcodeAttendanceContent({
         {/* Scan Tab */}
         <TabsContent value="scan" className="space-y-4">
           {!selectedClass ? (
-            <Card>
+            <Card className={phone.card}>
               <CardHeader>
                 <CardTitle>
                   {t?.noClassSelected || "No Class Selected"}
@@ -170,7 +177,7 @@ export default function BarcodeAttendanceContent({
 
         {/* Recent Scans Tab */}
         <TabsContent value="manage" className="space-y-4">
-          <Card>
+          <Card className={phone.card}>
             <CardHeader>
               <CardTitle>{t?.recentScans || "Recent Barcode Scans"}</CardTitle>
               <CardDescription>
@@ -193,7 +200,7 @@ export default function BarcodeAttendanceContent({
                     .map((record) => (
                       <div
                         key={record.id}
-                        className="bg-secondary flex items-center justify-between rounded-lg px-3 py-2"
+                        className="bg-secondary max-md:bg-background flex items-center justify-between rounded-lg px-3 py-2"
                       >
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
@@ -218,7 +225,7 @@ export default function BarcodeAttendanceContent({
                                 : "secondary"
                             }
                           >
-                            {record.status}
+                            {statusLabels?.[record.status] ?? record.status}
                           </Badge>
                           <p className="text-muted-foreground mt-1 text-xs">
                             {record.checkInTime
@@ -236,19 +243,19 @@ export default function BarcodeAttendanceContent({
           </Card>
 
           {/* Scanning Statistics */}
-          <Card>
+          <Card className={phone.card}>
             <CardHeader>
               <CardTitle>{t?.scanningStats || "Scanning Statistics"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-secondary rounded-lg p-4 text-center">
+                <div className="bg-secondary max-md:bg-background rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold">0</p>
                   <p className="text-muted-foreground text-sm">
                     {t?.totalScans || "Total Scans"}
                   </p>
                 </div>
-                <div className="bg-secondary rounded-lg p-4 text-center">
+                <div className="bg-secondary max-md:bg-background rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold">0</p>
                   <p className="text-muted-foreground text-sm">
                     {t?.failedScans || "Failed Scans"}

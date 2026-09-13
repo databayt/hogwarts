@@ -39,6 +39,8 @@ import {
 } from "@/components/ui/tooltip"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { phone } from "../shared/phone"
+
 // Types
 export interface DayAttendance {
   date: string // ISO date string
@@ -187,7 +189,7 @@ export function AttendanceCalendarView({
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className={phone.card}>
         <CardContent className="flex min-h-[400px] items-center justify-center">
           <div className="text-muted-foreground animate-pulse">
             {t?.loading_calendar || "Loading calendar..."}
@@ -200,7 +202,7 @@ export function AttendanceCalendarView({
   return (
     <div className="space-y-4">
       {/* Calendar Card */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -380,7 +382,7 @@ export function AttendanceCalendarView({
 
       {/* Weekly Stats Card */}
       {data?.weeklyStats && data.weeklyStats.length > 0 && (
-        <Card>
+        <Card className={phone.card}>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">
               {t?.weekly_breakdown || "Weekly Breakdown"}
@@ -442,7 +444,7 @@ export function AttendanceCalendarView({
 
       {/* Selected Date Detail */}
       {selectedDate && (
-        <Card>
+        <Card className={phone.card}>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">
               {selectedDate.toLocaleDateString(isRTL ? "ar-SA" : "en-US", {

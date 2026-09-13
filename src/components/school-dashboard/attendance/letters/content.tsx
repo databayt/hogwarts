@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { phone } from "../shared/phone"
 import {
   bulkGenerateLetters,
   getStudentsNeedingLetters,
@@ -196,7 +197,7 @@ export function LettersContent({ locale }: LettersContentProps) {
       </div>
 
       {/* Letter Type Selection */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle className="text-base">
             {t?.select_letter_type || "Select Letter Type"}
@@ -207,7 +208,7 @@ export function LettersContent({ locale }: LettersContentProps) {
             value={selectedLetterType}
             onValueChange={(v) => setSelectedLetterType(v as LetterType)}
           >
-            <SelectTrigger>
+            <SelectTrigger className={phone.field}>
               <SelectValue
                 placeholder={t?.choose_letter_type || "Choose letter type..."}
               />
@@ -248,8 +249,8 @@ export function LettersContent({ locale }: LettersContentProps) {
 
       {/* Students List */}
       {selectedLetterType && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className={phone.card}>
+          <CardHeader className="flex flex-row items-center justify-between max-md:flex-wrap max-md:gap-3">
             <CardTitle className="text-base">
               {t?.eligible_students || "Eligible Students"}
               <Badge variant="secondary" className="ms-2">
@@ -261,7 +262,7 @@ export function LettersContent({ locale }: LettersContentProps) {
                 value={deliveryMethod}
                 onValueChange={(v) => setDeliveryMethod(v as DeliveryMethod)}
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className={cn("w-32", phone.field)}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,6 +276,7 @@ export function LettersContent({ locale }: LettersContentProps) {
               <Button
                 onClick={handleSendLetters}
                 disabled={selectedStudents.size === 0 || isSending}
+                className="max-md:rounded-full max-md:px-5"
               >
                 {isSending
                   ? t?.sending || "Sending..."
@@ -312,11 +314,12 @@ export function LettersContent({ locale }: LettersContentProps) {
                   <div
                     key={student.id}
                     className={cn(
-                      "hover:bg-accent flex items-center justify-between rounded-lg p-3 transition-colors",
-                      selectedStudents.has(student.id) && "bg-accent"
+                      "hover:bg-accent flex items-center justify-between rounded-lg p-3 transition-colors max-md:gap-2 max-md:px-2",
+                      selectedStudents.has(student.id) &&
+                        "bg-accent max-md:bg-background"
                     )}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 max-md:min-w-0">
                       <Checkbox
                         checked={selectedStudents.has(student.id)}
                         onCheckedChange={() => toggleStudent(student.id)}
@@ -333,7 +336,7 @@ export function LettersContent({ locale }: LettersContentProps) {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 max-md:gap-1">
                       <div className="text-end">
                         <p className="font-bold text-red-600">
                           {student.absenceRate}%
@@ -360,7 +363,7 @@ export function LettersContent({ locale }: LettersContentProps) {
 
       {/* Send Result */}
       {sendResult && (
-        <Card className="border-green-500">
+        <Card className="max-md:bg-muted border-green-500">
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <p>

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { phone } from "../shared/phone"
 import { cancelHallPass, getActiveHallPasses, returnHallPass } from "./actions"
 import { IssuePassDialog } from "./issue-dialog"
 import type { HallPassDestination } from "./validation"
@@ -143,7 +144,7 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t?.title || "Hall Passes"}</h1>
           <p className="text-muted-foreground">
@@ -153,16 +154,19 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
             )}
           </p>
         </div>
-        <Button onClick={() => setIsIssueDialogOpen(true)}>
+        <Button
+          onClick={() => setIsIssueDialogOpen(true)}
+          className={phone.pill}
+        >
           {t?.issue_new_pass || "Issue New Pass"}
         </Button>
       </div>
 
       {/* Active passes grid */}
       {passes.length === 0 ? (
-        <Card>
+        <Card className={phone.card}>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="bg-muted mb-4 flex h-16 w-16 items-center justify-center rounded-full text-3xl">
+            <div className="bg-muted max-md:bg-background mb-4 flex h-16 w-16 items-center justify-center rounded-full text-3xl">
               ✓
             </div>
             <h3 className="mb-2 text-lg font-medium">
@@ -174,7 +178,7 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
           {passes.map((pass) => {
             const timeStatus = getTimeStatus(pass.minutesRemaining)
             return (
@@ -182,6 +186,7 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                 key={pass.id}
                 className={cn(
                   "relative overflow-hidden",
+                  phone.card,
                   timeStatus === "expired" && "border-destructive",
                   timeStatus === "warning" && "border-yellow-500",
                   pass.hasConflict && "ring-2 ring-orange-500"
@@ -201,7 +206,7 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       {/* Student photo */}
-                      <div className="bg-muted h-10 w-10 overflow-hidden rounded-full">
+                      <div className="bg-muted max-md:bg-background h-10 w-10 overflow-hidden rounded-full">
                         {pass.student.photoUrl ? (
                           <Image
                             src={pass.student.photoUrl}
@@ -274,7 +279,7 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                         "bg-destructive/10 text-destructive",
                       timeStatus === "warning" &&
                         "bg-yellow-100 text-yellow-700",
-                      timeStatus === "normal" && "bg-muted"
+                      timeStatus === "normal" && "bg-muted max-md:bg-background"
                     )}
                   >
                     {timeStatus === "expired" ? (
@@ -298,7 +303,7 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                   )}
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-2 max-md:[&_button]:h-9 max-md:[&_button]:rounded-full">
                     <Button
                       variant="outline"
                       size="sm"

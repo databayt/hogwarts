@@ -5,6 +5,7 @@
 import { useEffect, useState, useTransition } from "react"
 import { AlertCircle, Calendar, FileText } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,6 +29,8 @@ import {
   ExcuseStatusBadge,
   UnexcusedAbsenceCard,
 } from "@/components/school-dashboard/parent-portal/attendance/excuse-form"
+
+import { phone } from "../shared/phone"
 
 interface Props {
   locale: Locale
@@ -193,7 +196,7 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
     <div className="space-y-6">
       {/* Unexcused Absences */}
       {absences.length > 0 && (
-        <Card className="border-red-200">
+        <Card className={cn("border-red-200", phone.card)}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
               <AlertCircle className="h-5 w-5" />
@@ -225,7 +228,7 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
       )}
 
       {absences.length === 0 && (
-        <Card>
+        <Card className={phone.card}>
           <CardContent className="py-8 text-center">
             <FileText className="text-muted-foreground mx-auto mb-3 h-12 w-12 opacity-50" />
             <p className="text-muted-foreground">
@@ -237,7 +240,7 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
 
       {/* Excuse History */}
       {excuseHistory.length > 0 && (
-        <Card>
+        <Card className={phone.card}>
           <CardHeader>
             <CardTitle>{ex?.excuseHistory || "Excuse History"}</CardTitle>
             <CardDescription>

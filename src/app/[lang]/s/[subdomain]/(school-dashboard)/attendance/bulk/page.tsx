@@ -80,27 +80,28 @@ export default async function Page({ params }: Props) {
   const basePath = `/${lang}/attendance`
 
   // Define method metadata
+  const methodLabels = dictionary?.attendance?.method
   const methodMeta = {
     manual: {
-      title: "Manual Entry",
+      title: methodLabels?.MANUAL || "Manual Entry",
       description:
         "Mark attendance manually for a class by selecting students and their status",
     },
     qr: {
-      title: "QR Code",
+      title: methodLabels?.QR_CODE || "QR Code",
       description:
         "Generate QR codes for students to scan and check-in automatically",
     },
     barcode: {
-      title: "Barcode Scanner",
+      title: methodLabels?.BARCODE || "Barcode Scanner",
       description: "Scan student ID barcodes for quick check-in",
     },
     upload: {
-      title: "Bulk Upload",
+      title: methodLabels?.BULK_UPLOAD || "Bulk Upload",
       description: "Import attendance records from CSV or Excel files",
     },
     geo: {
-      title: "Geofence",
+      title: methodLabels?.GEOFENCE || "Geofence",
       description: "Automatic check-in when students enter school premises",
     },
   }
@@ -116,7 +117,7 @@ export default async function Page({ params }: Props) {
       </div>
 
       {/* Method Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {methods.map((method) => {
           const meta = methodMeta[method.id as keyof typeof methodMeta]
           const Icon = method.icon
@@ -124,7 +125,7 @@ export default async function Page({ params }: Props) {
           return (
             <Card
               key={method.id}
-              className="relative overflow-hidden transition-shadow hover:shadow-md"
+              className="max-md:bg-muted relative overflow-hidden transition-shadow hover:shadow-md max-md:border-0 max-md:hover:shadow-none"
             >
               {method.recommended && (
                 <div className="absolute end-3 top-3">
@@ -133,9 +134,9 @@ export default async function Page({ params }: Props) {
                   </span>
                 </div>
               )}
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-3 max-md:p-5 max-md:pb-2">
                 <div
-                  className={`h-12 w-12 rounded-lg ${method.color} mb-3 flex items-center justify-center`}
+                  className={`h-12 w-12 rounded-lg ${method.color} mb-3 flex items-center justify-center max-md:mb-2 max-md:h-10 max-md:w-10`}
                 >
                   <Icon className="h-6 w-6" />
                 </div>
@@ -144,8 +145,11 @@ export default async function Page({ params }: Props) {
                   {meta.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full">
+              <CardContent className="max-md:px-5 max-md:pb-5">
+                <Button
+                  asChild
+                  className="w-full max-md:h-10 max-md:w-auto max-md:rounded-full max-md:px-5"
+                >
                   <Link href={`${basePath}/${method.href}`}>Start</Link>
                 </Button>
               </CardContent>
@@ -155,7 +159,7 @@ export default async function Page({ params }: Props) {
       </div>
 
       {/* Quick Tips */}
-      <Card className="bg-muted/50">
+      <Card className="bg-muted/50 max-md:bg-muted max-md:border-0">
         <CardHeader>
           <CardTitle className="text-base">Quick Tips</CardTitle>
         </CardHeader>

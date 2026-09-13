@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import QRCode from "qrcode"
 
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -40,6 +41,7 @@ import { toast } from "@/components/ui/use-toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { useCountdown } from "../shared/hooks"
+import { phone } from "../shared/phone"
 import type { QRCodeConfig } from "../shared/types"
 import { generateAttendanceQR } from "./actions"
 
@@ -212,7 +214,7 @@ export function QRGenerator({
     <>
       <div className="grid gap-4 lg:grid-cols-2">
         {/* QR Code Display */}
-        <Card className="relative overflow-hidden">
+        <Card className={cn("relative overflow-hidden", phone.card)}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>{t?.activeQRCode || "Active QR Code"}</CardTitle>
@@ -287,7 +289,7 @@ export function QRGenerator({
               </Badge>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex justify-between max-md:flex-wrap max-md:gap-2">
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -318,7 +320,7 @@ export function QRGenerator({
         </Card>
 
         {/* Configuration Panel */}
-        <Card>
+        <Card className={phone.card}>
           <CardHeader>
             <CardTitle>{t?.configTitle || "QR Code Configuration"}</CardTitle>
             <CardDescription>
@@ -441,7 +443,10 @@ export function QRGenerator({
             </div>
 
             {/* Apply Button */}
-            <Button className="w-full" onClick={generateNewQR}>
+            <Button
+              className="w-full max-md:h-10 max-md:rounded-full"
+              onClick={generateNewQR}
+            >
               <Settings className="me-2 h-4 w-4" />
               {t?.applyAndGenerate || "Apply Changes & Generate New QR"}
             </Button>

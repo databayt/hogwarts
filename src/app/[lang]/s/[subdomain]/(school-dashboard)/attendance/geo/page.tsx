@@ -32,7 +32,7 @@ export default async function GeofencePage({ params }: Props) {
     return <AttendanceAccessDenied lang={lang} />
   }
 
-  return <GeofenceContent />
+  return <GeofenceContent lang={lang} />
 }
 
 export const metadata = {

@@ -50,6 +50,8 @@ import {
   reviewExcuse,
 } from "@/components/school-dashboard/attendance/actions"
 
+import { phone } from "../shared/phone"
+
 // Fallback labels when dictionary is not loaded
 const EXCUSE_REASON_FALLBACK: Record<string, string> = {
   MEDICAL: "Medical",
@@ -166,7 +168,7 @@ export function ExcuseReviewList({
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <Skeleton className="h-6 w-48" />
           <Skeleton className="mt-2 h-4 w-64" />
@@ -182,9 +184,9 @@ export function ExcuseReviewList({
 
   return (
     <>
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between max-md:gap-3">
             <div>
               <CardTitle>
                 {t?.pendingRequests || "Pending Excuse Requests"}
@@ -212,11 +214,11 @@ export function ExcuseReviewList({
               {excuses.map((excuse) => (
                 <div
                   key={excuse.id}
-                  className="hover:bg-muted/50 rounded-lg border p-4 transition-colors"
+                  className="hover:bg-muted/50 max-md:bg-background rounded-lg border p-4 transition-colors max-md:border-0 max-md:p-3"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                  <div className="flex items-start justify-between max-md:gap-3">
+                    <div className="space-y-1 max-md:min-w-0">
+                      <div className="flex items-center gap-2 max-md:flex-wrap">
                         <User className="text-muted-foreground h-4 w-4" />
                         <span className="font-medium">
                           {excuse.studentName}
@@ -256,7 +258,11 @@ export function ExcuseReviewList({
                         </div>
                       )}
                     </div>
-                    <Button onClick={() => handleReview(excuse)} size="sm">
+                    <Button
+                      onClick={() => handleReview(excuse)}
+                      size="sm"
+                      className="max-md:rounded-full max-md:px-4"
+                    >
                       {t?.review || "Review"}
                     </Button>
                   </div>

@@ -17,6 +17,7 @@ import {
   Upload,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -49,6 +50,7 @@ import { toast } from "@/components/ui/use-toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { useAttendanceContext } from "../core/attendance-context"
+import { phone } from "../shared/phone"
 import type { StudentIdentifier } from "../shared/types"
 
 interface StudentCardsProps {
@@ -198,9 +200,9 @@ export function StudentCards({
   return (
     <div className="space-y-4">
       {/* Header Card */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
             <div>
               <CardTitle>{t?.title ?? "Student ID Cards"}</CardTitle>
               <CardDescription>
@@ -312,19 +314,19 @@ export function StudentCards({
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-sm"
+              className={cn("max-w-sm", phone.field)}
             />
           </div>
 
           {/* Statistics */}
-          <div className="mb-4 grid grid-cols-4 gap-4">
-            <div className="bg-secondary rounded-lg p-3 text-center">
+          <div className="mb-4 grid grid-cols-4 gap-4 max-md:grid-cols-2 max-md:gap-2">
+            <div className="bg-secondary max-md:bg-background rounded-lg p-3 text-center">
               <p className="text-2xl font-bold">{cards.length}</p>
               <p className="text-muted-foreground text-xs">
                 {t?.totalCards ?? "Total Cards"}
               </p>
             </div>
-            <div className="bg-secondary rounded-lg p-3 text-center">
+            <div className="bg-secondary max-md:bg-background rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-green-600">
                 {cards.filter((c) => c.isActive).length}
               </p>
@@ -332,7 +334,7 @@ export function StudentCards({
                 {t?.active ?? "Active"}
               </p>
             </div>
-            <div className="bg-secondary rounded-lg p-3 text-center">
+            <div className="bg-secondary max-md:bg-background rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-red-600">
                 {cards.filter((c) => !c.isActive).length}
               </p>
@@ -340,7 +342,7 @@ export function StudentCards({
                 {t?.inactive ?? "Inactive"}
               </p>
             </div>
-            <div className="bg-secondary rounded-lg p-3 text-center">
+            <div className="bg-secondary max-md:bg-background rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-orange-600">
                 {
                   cards.filter(
@@ -370,12 +372,12 @@ export function StudentCards({
               )}
             </div>
           ) : (
-            <div className="rounded-lg border">
+            <div className="max-md:bg-background rounded-lg border">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Student</TableHead>
-                    <TableHead>Barcode</TableHead>
+                    <TableHead>{t?.barcodeLabel ?? "Barcode"}</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Issued</TableHead>
                     <TableHead>Expires</TableHead>
@@ -407,17 +409,17 @@ export function StudentCards({
                           {isExpired ? (
                             <Badge variant="destructive">
                               <CircleX className="me-1 h-3 w-3" />
-                              Expired
+                              {t?.expired ?? "Expired"}
                             </Badge>
                           ) : card.isActive ? (
                             <Badge variant="default">
                               <CircleCheck className="me-1 h-3 w-3" />
-                              Active
+                              {t?.active ?? "Active"}
                             </Badge>
                           ) : (
                             <Badge variant="secondary">
                               <CircleAlert className="me-1 h-3 w-3" />
-                              Inactive
+                              {t?.inactive ?? "Inactive"}
                             </Badge>
                           )}
                         </TableCell>
@@ -465,7 +467,7 @@ export function StudentCards({
       </Card>
 
       {/* Bulk Import Card */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle>Bulk Import</CardTitle>
           <CardDescription>

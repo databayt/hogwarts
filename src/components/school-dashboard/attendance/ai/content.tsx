@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { phone } from "../shared/phone"
 import {
   createInterventionFromRecommendation,
   getAtRiskStudents,
@@ -145,14 +146,18 @@ export function AIContent({ locale }: AIContentProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t?.title || "AI Analytics"}</h1>
           <p className="text-muted-foreground">
             {t?.subtitle || "Risk predictions and auto-translation"}
           </p>
         </div>
-        <Button onClick={handleRunPredictions} disabled={isRunningPredictions}>
+        <Button
+          onClick={handleRunPredictions}
+          disabled={isRunningPredictions}
+          className={phone.pill}
+        >
           {isRunningPredictions
             ? t?.analyzing || "Analyzing..."
             : t?.run_predictions || "Run Predictions"}
@@ -161,65 +166,109 @@ export function AIContent({ locale }: AIContentProps) {
 
       {/* Summary Cards */}
       {summary && (
-        <div className="grid gap-4 md:grid-cols-5">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+        <div className={cn("grid gap-4 md:grid-cols-5", phone.panel)}>
+          <Card className={phone.cell}>
+            <CardHeader className={cn("pb-2", phone.cellHead)}>
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.total_at_risk || "Total At-Risk"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.total}</div>
+            <CardContent className={phone.cellBody}>
+              <div className={cn("text-2xl font-bold", phone.cellValue)}>
+                {summary.total}
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="border-red-200 bg-red-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-red-700">
+          <Card className={cn("border-red-200 bg-red-50", phone.cell)}>
+            <CardHeader className={cn("pb-2", phone.cellHead)}>
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium text-red-700",
+                  phone.cellLabel
+                )}
+              >
                 {RISK_LEVELS.CRITICAL.label[isRTL ? "ar" : "en"]}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-700">
+            <CardContent className={phone.cellBody}>
+              <div
+                className={cn(
+                  "text-2xl font-bold text-red-700",
+                  phone.cellValue
+                )}
+              >
                 {summary.critical}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-orange-200 bg-orange-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700">
+          <Card className={cn("border-orange-200 bg-orange-50", phone.cell)}>
+            <CardHeader className={cn("pb-2", phone.cellHead)}>
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium text-orange-700",
+                  phone.cellLabel
+                )}
+              >
                 {RISK_LEVELS.HIGH.label[isRTL ? "ar" : "en"]}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-700">
+            <CardContent className={phone.cellBody}>
+              <div
+                className={cn(
+                  "text-2xl font-bold text-orange-700",
+                  phone.cellValue
+                )}
+              >
                 {summary.high}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-yellow-200 bg-yellow-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-yellow-700">
+          <Card className={cn("border-yellow-200 bg-yellow-50", phone.cell)}>
+            <CardHeader className={cn("pb-2", phone.cellHead)}>
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium text-yellow-700",
+                  phone.cellLabel
+                )}
+              >
                 {RISK_LEVELS.MODERATE.label[isRTL ? "ar" : "en"]}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-700">
+            <CardContent className={phone.cellBody}>
+              <div
+                className={cn(
+                  "text-2xl font-bold text-yellow-700",
+                  phone.cellValue
+                )}
+              >
                 {summary.moderate}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className={phone.cell}>
+            <CardHeader className={cn("pb-2", phone.cellHead)}>
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.avg_risk_score || "Avg. Risk Score"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+            <CardContent className={phone.cellBody}>
+              <div className={cn("text-2xl font-bold", phone.cellValue)}>
                 {summary.averageRiskScore.toFixed(0)}
               </div>
             </CardContent>
@@ -241,14 +290,14 @@ export function AIContent({ locale }: AIContentProps) {
         {/* Predictions Tab */}
         <TabsContent value="predictions" className="mt-4">
           {students.length === 0 ? (
-            <Card>
+            <Card className={phone.card}>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">
                   {t?.no_at_risk_students || "No at-risk students currently"}
                 </p>
                 <Button
                   variant="outline"
-                  className="mt-4"
+                  className={cn("mt-4", phone.pill)}
                   onClick={handleRunPredictions}
                 >
                   {t?.run_predictions || "Run Predictions"}
@@ -262,6 +311,7 @@ export function AIContent({ locale }: AIContentProps) {
                   key={student.id}
                   className={cn(
                     "cursor-pointer transition-colors",
+                    phone.card,
                     selectedStudent?.id === student.id && "ring-primary ring-2"
                   )}
                   onClick={() =>
@@ -271,10 +321,10 @@ export function AIContent({ locale }: AIContentProps) {
                   }
                 >
                   <CardContent className="py-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-between max-md:flex-col max-md:items-stretch max-md:gap-3">
+                      <div className="flex items-center gap-4 max-md:min-w-0 max-md:gap-3">
                         {/* Photo */}
-                        <div className="bg-muted h-12 w-12 overflow-hidden rounded-full">
+                        <div className="bg-muted max-md:bg-background h-12 w-12 overflow-hidden rounded-full max-md:shrink-0">
                           {student.profilePhotoUrl ? (
                             <Image
                               src={student.profilePhotoUrl}
@@ -291,7 +341,7 @@ export function AIContent({ locale }: AIContentProps) {
                         </div>
 
                         {/* Info */}
-                        <div>
+                        <div className="max-md:min-w-0">
                           <p className="font-medium">{student.name}</p>
                           <p className="text-muted-foreground text-sm">
                             {student.grNumber} • {student.yearLevel}
@@ -300,8 +350,8 @@ export function AIContent({ locale }: AIContentProps) {
                       </div>
 
                       {/* Risk score and level */}
-                      <div className="flex items-center gap-4">
-                        <div className="w-32">
+                      <div className="flex items-center gap-4 max-md:gap-3">
+                        <div className="w-32 max-md:w-auto max-md:flex-1">
                           <div className="mb-1 flex justify-between text-sm">
                             <span>{t?.risk || "Risk"}</span>
                             <span className="font-bold">
@@ -342,17 +392,17 @@ export function AIContent({ locale }: AIContentProps) {
                     {selectedStudent?.id === student.id && (
                       <div className="mt-4 space-y-4 border-t pt-4">
                         {/* Stats */}
-                        <div className="grid gap-4 md:grid-cols-3">
-                          <div className="bg-muted rounded-lg p-3">
-                            <p className="text-muted-foreground text-sm">
+                        <div className="grid gap-4 max-md:grid-cols-3 max-md:gap-2 md:grid-cols-3">
+                          <div className="bg-muted max-md:bg-background rounded-lg p-3 max-md:p-2.5">
+                            <p className="text-muted-foreground text-sm max-md:text-xs">
                               {t?.absence_rate || "Absence Rate"}
                             </p>
                             <p className="text-lg font-bold">
                               {student.absenceRate}%
                             </p>
                           </div>
-                          <div className="bg-muted rounded-lg p-3">
-                            <p className="text-muted-foreground text-sm">
+                          <div className="bg-muted max-md:bg-background rounded-lg p-3 max-md:p-2.5">
+                            <p className="text-muted-foreground text-sm max-md:text-xs">
                               {t?.predicted_30d || "Predicted (30d)"}
                             </p>
                             <p className="text-lg font-bold">
@@ -360,8 +410,8 @@ export function AIContent({ locale }: AIContentProps) {
                               {dictionary?.attendance?.mtss?.days || "days"}
                             </p>
                           </div>
-                          <div className="bg-muted rounded-lg p-3">
-                            <p className="text-muted-foreground text-sm">
+                          <div className="bg-muted max-md:bg-background rounded-lg p-3 max-md:p-2.5">
+                            <p className="text-muted-foreground text-sm max-md:text-xs">
                               {t?.confidence || "Confidence"}
                             </p>
                             <p className="text-lg font-bold">
@@ -433,7 +483,7 @@ export function AIContent({ locale }: AIContentProps) {
 
         {/* Translation Tab */}
         <TabsContent value="translator" className="mt-4">
-          <Card>
+          <Card className={phone.card}>
             <CardHeader>
               <CardTitle>
                 {t?.message_translation || "Message Translation"}
@@ -451,22 +501,28 @@ export function AIContent({ locale }: AIContentProps) {
                     t?.enter_text_to_translate || "Enter text to translate..."
                   }
                   rows={4}
+                  className={phone.field}
                 />
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 max-md:flex-wrap max-md:gap-2">
                 <Button
                   onClick={() =>
                     setTargetLang(targetLang === "ar" ? "en" : "ar")
                   }
                   variant="outline"
+                  className={phone.pill}
                 >
                   {(t?.translate_to || "Translate to: ") +
                     (targetLang === "ar"
                       ? t?.arabic || "Arabic"
                       : t?.english || "English")}
                 </Button>
-                <Button onClick={handleTranslate} disabled={isTranslating}>
+                <Button
+                  onClick={handleTranslate}
+                  disabled={isTranslating}
+                  className={phone.pill}
+                >
                   {isTranslating
                     ? t?.translating || "Translating..."
                     : t?.translate || "Translate"}
@@ -482,7 +538,7 @@ export function AIContent({ locale }: AIContentProps) {
                     value={translateOutput}
                     readOnly
                     rows={4}
-                    className="bg-muted"
+                    className="bg-muted max-md:bg-background"
                     dir={targetLang === "ar" ? "rtl" : "ltr"}
                   />
                 </div>

@@ -60,6 +60,8 @@ import {
   getInterventionStats,
 } from "@/components/school-dashboard/attendance/actions"
 
+import { phone } from "../shared/phone"
+
 // Icon and color config (labels come from dictionary)
 const INTERVENTION_TYPE_ICONS: Record<
   string,
@@ -346,17 +348,27 @@ export function InterventionsContent({
     <div className="space-y-6">
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>{t?.total || "Total"}</CardDescription>
-              <CardTitle className="text-2xl">{total}</CardTitle>
+        <div
+          className={cn("grid grid-cols-2 gap-4 md:grid-cols-4", phone.panel)}
+        >
+          <Card className={phone.cell}>
+            <CardHeader className="pb-2 max-md:px-4 max-md:py-4">
+              <CardDescription className={phone.cellLabel}>
+                {t?.total || "Total"}
+              </CardDescription>
+              <CardTitle className={cn("text-2xl", phone.cellValue)}>
+                {total}
+              </CardTitle>
             </CardHeader>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>{t?.active || "Active"}</CardDescription>
-              <CardTitle className="text-2xl text-yellow-600">
+          <Card className={phone.cell}>
+            <CardHeader className="pb-2 max-md:px-4 max-md:py-4">
+              <CardDescription className={phone.cellLabel}>
+                {t?.active || "Active"}
+              </CardDescription>
+              <CardTitle
+                className={cn("text-2xl text-yellow-600", phone.cellValue)}
+              >
                 {stats.byStatus
                   .filter(
                     (s) =>
@@ -366,22 +378,24 @@ export function InterventionsContent({
               </CardTitle>
             </CardHeader>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>
+          <Card className={phone.cell}>
+            <CardHeader className="pb-2 max-md:px-4 max-md:py-4">
+              <CardDescription className={phone.cellLabel}>
                 {t?.successRate || "Success Rate"}
               </CardDescription>
-              <CardTitle className="text-2xl text-green-600">
+              <CardTitle
+                className={cn("text-2xl text-green-600", phone.cellValue)}
+              >
                 {stats.successRate.toFixed(1)}%
               </CardTitle>
             </CardHeader>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>
+          <Card className={phone.cell}>
+            <CardHeader className="pb-2 max-md:px-4 max-md:py-4">
+              <CardDescription className={phone.cellLabel}>
                 {t?.avgDaysComplete || "Avg. Days to Complete"}
               </CardDescription>
-              <CardTitle className="text-2xl">
+              <CardTitle className={cn("text-2xl", phone.cellValue)}>
                 {stats.averageDaysToComplete.toFixed(1)}
               </CardTitle>
             </CardHeader>
@@ -390,7 +404,7 @@ export function InterventionsContent({
       )}
 
       {/* Filters */}
-      <Card>
+      <Card className={phone.card}>
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
@@ -401,11 +415,11 @@ export function InterventionsContent({
                 }
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="ps-10"
+                className={cn("ps-10", phone.field)}
               />
             </div>
             <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className={cn("w-full md:w-[180px]", phone.field)}>
                 <SelectValue placeholder={t?.statusFilter || "Status"} />
               </SelectTrigger>
               <SelectContent>
@@ -422,7 +436,7 @@ export function InterventionsContent({
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={handleTypeChange}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className={cn("w-full md:w-[180px]", phone.field)}>
                 <SelectValue placeholder={t?.typeFilter || "Type"} />
               </SelectTrigger>
               <SelectContent>
@@ -454,7 +468,7 @@ export function InterventionsContent({
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />

@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,6 +37,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { getClassesForSelection } from "../actions"
 import { useAttendanceContext } from "../core/attendance-context"
 import { AttendanceStats } from "../core/attendance-stats"
+import { phone } from "../shared/phone"
 import { QRGenerator } from "./qr-generator"
 import { QRScanner } from "./qr-scanner"
 
@@ -121,7 +123,7 @@ export default function QRCodeAttendanceContent({
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-purple-100 p-3">
+          <div className="rounded-lg bg-purple-100 p-3 max-md:hidden">
             <QrCode className="h-6 w-6 text-purple-600" />
           </div>
           <div>
@@ -194,7 +196,7 @@ export default function QRCodeAttendanceContent({
         {/* Generate Tab - For Teachers */}
         <TabsContent value="generate" className="space-y-4">
           {!selectedClass ? (
-            <Card>
+            <Card className={phone.card}>
               <CardHeader>
                 <CardTitle>
                   {t?.noClassSelected || "No Class Selected"}
@@ -212,7 +214,7 @@ export default function QRCodeAttendanceContent({
                       value={selectedClass || ""}
                       onValueChange={(val) => setSelectedClass(val)}
                     >
-                      <SelectTrigger className="w-[240px]">
+                      <SelectTrigger className={cn("w-[240px]", phone.field)}>
                         <SelectValue
                           placeholder={t?.selectClass || "اختر الفصل"}
                         />
@@ -261,7 +263,7 @@ export default function QRCodeAttendanceContent({
 
         {/* Manage Tab - For Teachers */}
         <TabsContent value="manage" className="space-y-4">
-          <Card>
+          <Card className={phone.card}>
             <CardHeader>
               <CardTitle>{t?.recentScans || "Recent QR Scans"}</CardTitle>
               <CardDescription>
@@ -284,7 +286,7 @@ export default function QRCodeAttendanceContent({
                     .map((record) => (
                       <div
                         key={record.id}
-                        className="bg-secondary flex items-center justify-between rounded-lg px-3 py-2"
+                        className="bg-secondary max-md:bg-background flex items-center justify-between rounded-lg px-3 py-2"
                       >
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
@@ -327,7 +329,7 @@ export default function QRCodeAttendanceContent({
           </Card>
 
           {/* QR Settings */}
-          <Card>
+          <Card className={phone.card}>
             <CardHeader>
               <CardTitle>{t?.settings || "QR Code Settings"}</CardTitle>
             </CardHeader>

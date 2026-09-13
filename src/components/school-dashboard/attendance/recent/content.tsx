@@ -42,6 +42,7 @@ import {
   getRecentAttendance,
   getSectionsForSelection,
 } from "../actions"
+import { phone } from "../shared/phone"
 
 interface Props {
   dictionary?: Dictionary["school"]
@@ -270,6 +271,28 @@ export function RecentActivityContent({
     via: "via",
   }
 
+  // Labels for the raw status / method enums on each record.
+  const recentLabels = dictionary?.attendance as
+    | {
+        present?: string
+        absent?: string
+        late?: string
+        excused?: string
+        sick?: string
+        holiday?: string
+        recentTable?: { methodLabels?: Record<string, string> }
+      }
+    | undefined
+  const statusLabel = (status: string) =>
+    ({
+      PRESENT: recentLabels?.present,
+      ABSENT: recentLabels?.absent,
+      LATE: recentLabels?.late,
+      EXCUSED: recentLabels?.excused,
+      SICK: recentLabels?.sick,
+      HOLIDAY: recentLabels?.holiday,
+    })[status] || status
+
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -286,7 +309,7 @@ export function RecentActivityContent({
   return (
     <div className="space-y-6">
       {/* Header with Refresh */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:gap-3">
         <div>
           <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
             {dict.recentActivity}
@@ -300,6 +323,7 @@ export function RecentActivityContent({
           size="sm"
           onClick={handleRefresh}
           disabled={refreshing}
+          className={phone.pill}
         >
           <RefreshCw
             className={cn("me-2 h-4 w-4", refreshing && "animate-spin")}
@@ -309,31 +333,60 @@ export function RecentActivityContent({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className={cn("grid gap-4 md:grid-cols-4", phone.panel)}>
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {(dict as any)?.totalRecords ?? "Total Records"}
             </CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
+            <Users className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total || 0}</div>
+          <CardContent className={phone.cellBody}>
+            <div className={cn("text-2xl font-bold", phone.cellValue)}>
+              {stats?.total || 0}
+            </div>
             <p className="text-muted-foreground text-xs">
               {stats?.attendanceRate || 0}% attendance rate
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {dict.present}
             </CardTitle>
-            <CircleCheck className="h-4 w-4 text-green-500" />
+            <CircleCheck className="h-4 w-4 text-green-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn(
+                "text-2xl font-bold text-green-600",
+                phone.cellValue
+              )}
+            >
               {stats?.present || 0}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -345,13 +398,31 @@ export function RecentActivityContent({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dict.late}</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
+              {dict.late}
+            </CardTitle>
+            <Clock className="h-4 w-4 text-yellow-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn(
+                "text-2xl font-bold text-yellow-600",
+                phone.cellValue
+              )}
+            >
               {stats?.late || 0}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -361,13 +432,28 @@ export function RecentActivityContent({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dict.absent}</CardTitle>
-            <CircleX className="h-4 w-4 text-red-500" />
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
+              {dict.absent}
+            </CardTitle>
+            <CircleX className="h-4 w-4 text-red-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn("text-2xl font-bold text-red-600", phone.cellValue)}
+            >
               {stats?.absent || 0}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -381,7 +467,7 @@ export function RecentActivityContent({
       </div>
 
       {/* Recent Records */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -390,12 +476,14 @@ export function RecentActivityContent({
                 {dict.recentActivityDescription}
               </CardDescription>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 max-md:w-full">
               <Select
                 value={selectedSection}
                 onValueChange={setSelectedSection}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger
+                  className={cn("w-[180px] max-md:w-full", phone.field)}
+                >
                   <SelectValue
                     placeholder={
                       (dict as any)?.selectSection ?? "Select section"
@@ -414,7 +502,9 @@ export function RecentActivityContent({
                 </SelectContent>
               </Select>
               <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger
+                  className={cn("w-[150px] max-md:w-full", phone.field)}
+                >
                   <SelectValue
                     placeholder={(dict as any)?.selectClass ?? "Select class"}
                   />
@@ -430,7 +520,7 @@ export function RecentActivityContent({
                   ))}
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 max-md:flex-wrap max-md:[&_button]:rounded-full max-md:[&_button]:px-4">
                 <Button
                   variant={filter === "all" ? "default" : "outline"}
                   size="sm"
@@ -470,35 +560,38 @@ export function RecentActivityContent({
               <p>{dict.noRecentRecords}</p>
             </div>
           ) : (
-            <ScrollArea className="h-[600px]">
+            <ScrollArea className="h-[600px] max-md:h-auto">
               <div className="space-y-2">
                 {filteredRecords.map((record) => (
                   <div
                     key={record.id}
                     className={cn(
                       "hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors",
-                      "rtl:flex-row-reverse"
+                      "max-md:bg-background max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:border-0 max-md:p-3"
                     )}
                   >
-                    <div className="flex items-center gap-4 rtl:flex-row-reverse">
-                      <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-full">
+                    <div className="flex items-center gap-4 max-md:gap-3">
+                      <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-full max-md:shrink-0">
                         {getStatusIcon(record.status)}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2 rtl:flex-row-reverse">
+                        <div className="flex items-center gap-2 max-md:flex-wrap">
                           <h4 className="font-semibold">
                             {record.studentName}
                           </h4>
                           <Badge variant={getStatusBadgeVariant(record.status)}>
-                            {record.status}
+                            {statusLabel(record.status)}
                           </Badge>
                         </div>
                         <p className="text-muted-foreground text-sm">
                           {record.className}
                         </p>
-                        <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs rtl:flex-row-reverse">
+                        <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs max-md:flex-wrap">
                           <span>
-                            {dict.via} {getMethodDisplayName(record.method)}
+                            {dict.via}{" "}
+                            {recentLabels?.recentTable?.methodLabels?.[
+                              record.method
+                            ] ?? getMethodDisplayName(record.method)}
                           </span>
                           {record.checkInTime && (
                             <>
@@ -512,7 +605,7 @@ export function RecentActivityContent({
                         </div>
                       </div>
                     </div>
-                    <div className="text-muted-foreground text-end text-sm">
+                    <div className="text-muted-foreground text-end text-sm max-md:flex max-md:gap-2 max-md:ps-[52px] max-md:text-start max-md:text-xs">
                       <p>{safeFormatDate(record.date, locale)}</p>
                       <p className="text-xs">
                         {safeFormatDistanceToNow(record.markedAt)}

@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { phone } from "../../shared/phone"
 import {
   createTieredIntervention,
   getMTSSStats,
@@ -208,51 +209,93 @@ export function MTSSContent({ locale }: MTSSContentProps) {
 
       {/* Stats Overview */}
       {stats && (
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+        <div className={cn("grid gap-4 md:grid-cols-4", phone.panel)}>
+          <Card className={phone.cell}>
+            <CardHeader className={cn("pb-2", phone.cellHead)}>
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.pending || "Pending"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pending}</div>
+            <CardContent className={phone.cellBody}>
+              <div className={cn("text-2xl font-bold", phone.cellValue)}>
+                {stats.pending}
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className={phone.cell}>
+            <CardHeader className={cn("pb-2", phone.cellHead)}>
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.completed_this_month || "Completed This Month"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className={phone.cellBody}>
+              <div
+                className={cn(
+                  "text-2xl font-bold text-green-600",
+                  phone.cellValue
+                )}
+              >
                 {stats.completedThisMonth}
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className={phone.cell}>
+            <CardHeader className={cn("pb-2", phone.cellHead)}>
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.escalations || "Escalations"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
+            <CardContent className={phone.cellBody}>
+              <div
+                className={cn(
+                  "text-2xl font-bold text-yellow-600",
+                  phone.cellValue
+                )}
+              >
                 {stats.escalatedThisMonth}
               </div>
             </CardContent>
           </Card>
-          <Card className={stats.overdue > 0 ? "border-destructive" : ""}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card
+            className={cn(
+              stats.overdue > 0 ? "border-destructive" : "",
+              phone.cell
+            )}
+          >
+            <CardHeader className={cn("pb-2", phone.cellHead)}>
+              <CardTitle
+                className={cn(
+                  "text-sm font-medium",
+                  phone.cellLabel,
+                  "max-md:text-muted-foreground"
+                )}
+              >
                 {t?.overdue || "Overdue"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className={phone.cellBody}>
               <div
                 className={cn(
                   "text-2xl font-bold",
+                  phone.cellValue,
                   stats.overdue > 0 && "text-destructive"
                 )}
               >
@@ -268,7 +311,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
         value={selectedTier}
         onValueChange={(v) => setSelectedTier(v as TierLevel)}
       >
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="no-scrollbar grid w-full grid-cols-3 max-md:flex max-md:justify-start max-md:overflow-x-auto">
           {(["TIER_1", "TIER_2", "TIER_3"] as TierLevel[]).map((tier) => (
             <TabsTrigger
               key={tier}
@@ -291,7 +334,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
             {/* Tier description */}
             <div
               className={cn(
-                "mb-4 rounded-lg p-4",
+                "mb-4 rounded-lg p-4 max-md:p-3 max-md:text-sm",
                 tierConfig[tier].bgColor,
                 tierConfig[tier].color
               )}
@@ -311,7 +354,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
 
             {/* Student list */}
             {tierData[tier].students.length === 0 ? (
-              <Card>
+              <Card className={phone.card}>
                 <CardContent className="py-12 text-center">
                   <p className="text-muted-foreground">
                     {t?.no_students_in_tier || "No students in this tier"}
@@ -325,6 +368,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
                     key={student.id}
                     className={cn(
                       "hover:bg-accent cursor-pointer transition-colors",
+                      phone.card,
                       selectedStudent?.id === student.id &&
                         "ring-primary ring-2"
                     )}
@@ -334,10 +378,10 @@ export function MTSSContent({ locale }: MTSSContentProps) {
                       )
                     }
                   >
-                    <CardContent className="flex items-center justify-between py-4">
-                      <div className="flex items-center gap-4">
+                    <CardContent className="flex items-center justify-between py-4 max-md:gap-3 max-md:px-4">
+                      <div className="flex items-center gap-4 max-md:min-w-0 max-md:gap-3">
                         {/* Photo */}
-                        <div className="bg-muted h-12 w-12 overflow-hidden rounded-full">
+                        <div className="bg-muted max-md:bg-background h-12 w-12 overflow-hidden rounded-full max-md:shrink-0">
                           {student.profilePhotoUrl ? (
                             <Image
                               src={student.profilePhotoUrl}
@@ -353,7 +397,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
                           )}
                         </div>
                         {/* Info */}
-                        <div>
+                        <div className="max-md:min-w-0">
                           <p className="font-medium">
                             {student.firstName} {student.lastName}
                           </p>

@@ -81,6 +81,7 @@ import {
   getSectionsForSelection,
 } from "../actions"
 import { useAttendanceContext } from "../core/attendance-context"
+import { phone } from "../shared/phone"
 
 interface BulkUploadContentProps {
   dictionary?: any
@@ -392,7 +393,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
   return (
     <div className="space-y-6">
       {/* Instructions Card */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -429,7 +430,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
       </Card>
 
       {/* Template Download */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Download className="h-5 w-5" />
@@ -441,7 +442,11 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={downloadTemplate} variant="outline">
+          <Button
+            onClick={downloadTemplate}
+            variant="outline"
+            className={phone.pill}
+          >
             <FileSpreadsheet className="me-2 h-4 w-4" />
             {d?.template?.download || "Download CSV Template"}
           </Button>
@@ -449,7 +454,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
       </Card>
 
       {/* Upload Section */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
@@ -471,7 +476,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 value={selectedSection}
                 onValueChange={setSelectedSection}
               >
-                <SelectTrigger id="section-select">
+                <SelectTrigger id="section-select" className={phone.field}>
                   <SelectValue
                     placeholder={
                       d?.upload?.selectSectionPlaceholder ||
@@ -503,7 +508,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 {d?.upload?.selectClass || "Select Class"}
               </Label>
               <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger id="class-select">
+                <SelectTrigger id="class-select" className={phone.field}>
                   <SelectValue
                     placeholder={
                       d?.upload?.selectClassPlaceholder || "Choose a class..."
@@ -538,6 +543,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
+                className={phone.field}
               />
             </div>
           </div>
@@ -591,7 +597,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 disabled={
                   isUploading || parsedRecords.length === 0 || !selectedClass
                 }
-                className="w-full"
+                className="w-full max-md:h-10 max-md:rounded-full"
               >
                 {isUploading ? (
                   <>
@@ -619,6 +625,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 variant="outline"
                 onClick={() => setShowUploader(true)}
                 disabled={isUploading}
+                className={phone.pill}
               >
                 <Upload className="me-2 h-4 w-4" />
                 {d?.upload?.selectButton || "Select File"}
@@ -692,7 +699,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
       </Card>
 
       {/* Recent Uploads */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -742,7 +749,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 return (
                   <div
                     key={index}
-                    className="bg-muted flex items-center justify-between rounded-lg p-3"
+                    className="bg-muted max-md:bg-background flex items-center justify-between rounded-lg p-3"
                   >
                     <div className="flex items-center gap-3">
                       <FileSpreadsheet className="text-muted-foreground h-4 w-4" />
@@ -773,7 +780,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
 
       {/* Stats Summary */}
       {stats && (
-        <Card>
+        <Card className={phone.card}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -785,19 +792,21 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-4">
               <div>
                 <p className="text-muted-foreground text-sm">
                   {dictionary?.school?.attendance?.stats?.totalStudents ||
                     "Total Students"}
                 </p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-2xl font-bold max-md:text-lg max-md:tabular-nums">
+                  {stats.total}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">
                   {dictionary?.school?.attendance?.present || "Present Today"}
                 </p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-green-600 max-md:text-lg max-md:tabular-nums">
                   {stats.present}
                 </p>
               </div>
@@ -805,7 +814,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 <p className="text-muted-foreground text-sm">
                   {dictionary?.school?.attendance?.absent || "Absent Today"}
                 </p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-2xl font-bold text-red-600 max-md:text-lg max-md:tabular-nums">
                   {stats.absent}
                 </p>
               </div>
@@ -813,7 +822,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 <p className="text-muted-foreground text-sm">
                   {dictionary?.school?.attendance?.late || "Late Today"}
                 </p>
-                <p className="text-2xl font-bold text-yellow-600">
+                <p className="text-2xl font-bold text-yellow-600 max-md:text-lg max-md:tabular-nums">
                   {stats.late}
                 </p>
               </div>

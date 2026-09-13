@@ -77,6 +77,7 @@ import {
   getStudentsAtRisk,
 } from "../actions"
 import { AttendanceExport } from "../core/attendance-export"
+import { phone } from "../shared/phone"
 import { AttendanceCalendarView, type CalendarData } from "./calendar-view"
 import {
   AbsenceReasonsChart,
@@ -434,9 +435,9 @@ export default function AnalyticsContent({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-indigo-100 p-3 dark:bg-indigo-900/30">
+          <div className="rounded-lg bg-indigo-100 p-3 max-md:hidden dark:bg-indigo-900/30">
             <BarChart3 className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
@@ -449,8 +450,11 @@ export default function AnalyticsContent({
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <AttendanceExport records={[]} />
+        <div className="flex gap-2 max-md:[&_button]:h-10 max-md:[&_button]:rounded-full max-md:[&_button]:px-5">
+          <AttendanceExport
+            records={[]}
+            dictionary={dictionary as unknown as Dictionary["school"]}
+          />
           <Button
             variant="outline"
             onClick={handleRefresh}
@@ -465,15 +469,15 @@ export default function AnalyticsContent({
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className={phone.card}>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">
             {t?.export?.dateRange ?? "Filters"}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap gap-4 max-md:gap-3">
+            <div className="flex items-center gap-2 max-md:w-full max-md:flex-wrap">
               <label className="text-sm font-medium">
                 {t?.export?.dateRange ?? "Date Range"}:
               </label>
@@ -492,7 +496,9 @@ export default function AnalyticsContent({
               />
             </div>
             <Select value={selectedSection} onValueChange={setSelectedSection}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger
+                className={cn("w-[200px] max-md:w-full", phone.field)}
+              >
                 <SelectValue
                   placeholder={
                     t?.reportsFilter?.selectSection ?? "Select section"
@@ -511,7 +517,9 @@ export default function AnalyticsContent({
               </SelectContent>
             </Select>
             <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger
+                className={cn("w-[180px] max-md:w-full", phone.field)}
+              >
                 <SelectValue
                   placeholder={t?.reportsFilter?.selectClass ?? "Select class"}
                 />
@@ -532,16 +540,27 @@ export default function AnalyticsContent({
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className={cn("grid gap-4 md:grid-cols-5", phone.panel)}>
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {t?.stats?.overallAttendanceRate ?? "Overall Rate"}
             </CardTitle>
-            <TrendingUp className="text-muted-foreground h-4 w-4" />
+            <TrendingUp className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className={phone.cellBody}>
+            <div className={cn("text-2xl font-bold", phone.cellValue)}>
               {stats?.attendanceRate || 0}%
             </div>
             <p className="text-muted-foreground text-xs">
@@ -549,15 +568,31 @@ export default function AnalyticsContent({
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {t?.status?.PRESENT ?? "Present"}
             </CardTitle>
-            <Users className="h-4 w-4 text-green-500" />
+            <Users className="h-4 w-4 text-green-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn(
+                "text-2xl font-bold text-green-600",
+                phone.cellValue
+              )}
+            >
               {stats?.present || 0}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -568,15 +603,31 @@ export default function AnalyticsContent({
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {t?.status?.LATE ?? "Late"}
             </CardTitle>
-            <Calendar className="h-4 w-4 text-yellow-500" />
+            <Calendar className="h-4 w-4 text-yellow-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn(
+                "text-2xl font-bold text-yellow-600",
+                phone.cellValue
+              )}
+            >
               {stats?.late || 0}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -585,15 +636,28 @@ export default function AnalyticsContent({
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {t?.status?.ABSENT ?? "Absent"}
             </CardTitle>
-            <Activity className="h-4 w-4 text-red-500" />
+            <Activity className="h-4 w-4 text-red-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn("text-2xl font-bold text-red-600", phone.cellValue)}
+            >
               {stats?.absent || 0}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -604,15 +668,31 @@ export default function AnalyticsContent({
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className={phone.cell}>
+          <CardHeader
+            className={cn(
+              "flex flex-row items-center justify-between space-y-0 pb-2",
+              phone.cellHead
+            )}
+          >
+            <CardTitle
+              className={cn(
+                "text-sm font-medium",
+                phone.cellLabel,
+                "max-md:text-muted-foreground"
+              )}
+            >
               {t?.earlyWarning?.atRisk ?? "At Risk"}
             </CardTitle>
-            <TriangleAlert className="h-4 w-4 text-orange-500" />
+            <TriangleAlert className="h-4 w-4 text-orange-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+          <CardContent className={phone.cellBody}>
+            <div
+              className={cn(
+                "text-2xl font-bold text-orange-600",
+                phone.cellValue
+              )}
+            >
               {atRiskStudents.length}
             </div>
             <p className="text-muted-foreground text-xs">
@@ -624,7 +704,7 @@ export default function AnalyticsContent({
 
       {/* Charts */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="no-scrollbar grid w-full grid-cols-7 max-md:flex max-md:justify-start max-md:overflow-x-auto">
           <TabsTrigger value="overview">
             {t?.analyticsTab?.overview ?? "Overview"}
           </TabsTrigger>
@@ -699,7 +779,7 @@ export default function AnalyticsContent({
         <TabsContent value="methods" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <MethodUsagePieChart data={methodChartData} />
-            <Card>
+            <Card className={phone.card}>
               <CardHeader>
                 <CardTitle>
                   {t?.analyticsTab?.methods ?? "Method Details"}
@@ -735,7 +815,7 @@ export default function AnalyticsContent({
 
         <TabsContent value="classes" className="space-y-4">
           <ClassComparisonChart data={classChartData} />
-          <Card>
+          <Card className={phone.card}>
             <CardHeader>
               <CardTitle>
                 {t?.analyticsTab?.classes ?? "Class Rankings"}
@@ -749,7 +829,7 @@ export default function AnalyticsContent({
                 {classStats.map((cls, idx) => (
                   <div
                     key={cls.classId}
-                    className="flex items-center justify-between rounded-lg border p-3"
+                    className="max-md:bg-background flex items-center justify-between rounded-lg border p-3 max-md:border-0"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-muted-foreground text-sm font-medium">
@@ -786,7 +866,7 @@ export default function AnalyticsContent({
         </TabsContent>
 
         <TabsContent value="students" className="space-y-4">
-          <Card>
+          <Card className={phone.card}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TriangleAlert className="h-5 w-5 text-orange-500" />
