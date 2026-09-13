@@ -3,15 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useSyncExternalStore } from "react"
-import {
-  Copy,
-  EllipsisVertical,
-  Pointer,
-  Share,
-  SquarePlus,
-  Star,
-  X,
-} from "lucide-react"
+import Image from "next/image"
+import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -25,8 +18,6 @@ import type { OfflineLabels } from "./outbox-view"
 
 const DISMISS_KEY = "pwa-install-dismissed-at"
 const DISMISS_DAYS = 14
-const ACCENT = "#e8704e" // the app icon's orange
-const GREEN = "#00bc6d" // the dashboard's green (dark text on it, as the hero card does)
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -64,17 +55,24 @@ const serverSnapshot = () => null
 /**
  * The install welcome sheet — an iOS sheet like the Activity View (Figma
  * iuYSGaRV8xkcEGnyIltPRg 34:3042): rounded top over the dimmed page, grabber,
- * round close, swipe to dismiss. Inside: the accent eyebrow over the app
- * name, ONE picture of the share list with "Add to Home Screen" highlighted,
- * and a green Continue. Continue does nothing but the native thing — the
- * captured install prompt on Android, the native share sheet on iPhone
- * (Add to Home Screen is one of its actions). Shown on phones that have not
- * installed the app, once per 14 days after a dismissal.
+ * round close, swipe to dismiss. Inside: the app icon, the one instruction
+ * ("tap Continue, then choose Add to Home Screen"), a real capture of Safari's
+ * share menu with that row highlighted, and a foreground Continue. Continue
+ * does nothing but the native thing — the captured install prompt on Android,
+ * the native share sheet on iPhone (Add to Home Screen is one of its actions).
+ * Shown on phones that have not installed the app, once per 14 days after a
+ * dismissal.
  */
 export function InstallCard({ labels }: { labels?: OfflineLabels }) {
-  const detected = useSyncExternalStore(subscribeNoop, detectPlatform, serverSnapshot)
+  const detected = useSyncExternalStore(
+    subscribeNoop,
+    detectPlatform,
+    serverSnapshot
+  )
   const [hidden, setHidden] = useState(false)
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null)
+  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
+    null
+  )
   const platform = hidden ? null : detected
 
   const t = (k: string, fallback: string) => labels?.[k] ?? fallback
@@ -127,12 +125,6 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
     }
   }
 
-  const MenuIcon = platform === "ios" ? Share : EllipsisVertical
-  const rows = [
-    { icon: Copy, label: t("installPicCopy", "Copy") },
-    { icon: Star, label: t("installPicFavorites", "Add to Favorites") },
-  ]
-
   return (
     <Drawer
       open
@@ -153,57 +145,38 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
           <X className="size-4" strokeWidth={2.5} />
         </button>
 
-        <div className="overflow-y-auto overscroll-contain pt-8">
-          <DrawerTitle className="text-[34px] leading-[1.15] font-bold tracking-tight">
-            <span className="block" style={{ color: ACCENT }}>
-              {t("installEyebrow", "Get the app")}
-            </span>
-            <span className="block">{t("installAppName", "balqalam")}</span>
+        <div className="overflow-y-auto overscroll-contain pt-4">
+          <Image
+            src="/apple-touch-icon.png"
+            alt=""
+            width={180}
+            height={180}
+            className="mx-auto size-[60px] rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
+            priority
+          />
+          <DrawerTitle className="mt-3 text-center text-[24px] leading-tight font-bold tracking-tight">
+            {t("installAppName", "balqalam")}
           </DrawerTitle>
-          <DrawerDescription className="sr-only">
-            {t("installPicHome", "Add to Home Screen")}
+          <DrawerDescription className="text-muted-foreground mt-1 text-center text-[15px] leading-snug">
+            {t(
+              "installStep",
+              'Tap Continue, then choose "Add to Home Screen".'
+            )}
           </DrawerDescription>
 
-          {/* The one picture: the share list with "Add to Home Screen" lit up. */}
-          <figure
-            aria-hidden
-            className="mt-8 rounded-[22px] bg-[#F2F2F7] p-2 dark:bg-white/5"
-          >
-            <div className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-[13px]">
-              <span className="grid size-7 place-items-center rounded-full bg-white shadow-sm dark:bg-white/10">
-                <MenuIcon className="size-4" strokeWidth={2} />
-              </span>
-              <span className="h-1.5 flex-1 rounded-full bg-black/10 dark:bg-white/15" />
-            </div>
-            <ul className="space-y-1">
-              {rows.map(({ icon: Icon, label }) => (
-                <li
-                  key={label}
-                  className="text-muted-foreground flex items-center gap-3 px-3 py-2.5 text-[15px]"
-                >
-                  <Icon className="size-5 shrink-0" strokeWidth={1.75} />
-                  <span>{label}</span>
-                </li>
-              ))}
-              <li
-                className="text-foreground relative flex items-center gap-3 rounded-2xl bg-white px-3 py-3 text-[16px] font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.08)] ring-2 dark:bg-white/10"
-                style={{ ["--tw-ring-color" as string]: GREEN }}
-              >
-                <SquarePlus className="size-5 shrink-0" strokeWidth={2} style={{ color: GREEN }} />
-                <span>{t("installPicHome", "Add to Home Screen")}</span>
-                <Pointer
-                  className="absolute end-4 -bottom-3 size-7 rotate-[-15deg] rtl:rotate-[15deg]"
-                  strokeWidth={1.75}
-                  style={{ color: GREEN }}
-                />
-              </li>
-            </ul>
-          </figure>
+          {/* Safari's share menu with "Add to Home Screen" highlighted. */}
+          <Image
+            src="/install/add-to-home-screen.jpg"
+            alt=""
+            width={1170}
+            height={1219}
+            sizes="(max-width: 480px) 100vw, 480px"
+            className="mt-5 h-auto w-full rounded-[22px]"
+          />
 
           <Button
             onClick={proceed}
-            className="mt-8 h-14 w-full rounded-full text-[17px] font-semibold text-[#050505] hover:opacity-90"
-            style={{ backgroundColor: GREEN }}
+            className="bg-foreground text-background hover:bg-foreground/90 mt-5 h-14 w-full rounded-full text-[17px] font-semibold"
           >
             {t("installContinue", "Continue")}
           </Button>

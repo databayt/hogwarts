@@ -12,7 +12,6 @@ import {
   MessageSquare,
   Settings,
   Users,
-  X,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -23,14 +22,8 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerTitle,
-} from "@/components/ui/drawer"
 
-// Phones take the sheet, from `md` up the dialog — the sidebar's breakpoint.
+// Below `md` (the sidebar's breakpoint) the quick guide is not shown.
 const PHONE_QUERY = "(max-width: 767px)"
 
 function subscribePhone(onChange: () => void) {
@@ -215,66 +208,8 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
     </AnimatePresence>
   )
 
-  if (isPhone) {
-    // An iOS sheet like the install sheet (Figma iuYSGaRV8xkcEGnyIltPRg,
-    // Activity View): rounded top over the dimmed page, grabber, round close,
-    // swipe down to dismiss. The step's colour band carries the illustration
-    // the dialog hides below `sm`, and the controls are full-width pills.
-    return (
-      <Drawer open={open} onOpenChange={(v) => !v && dismiss()}>
-        <DrawerContent className="max-h-[92vh] rounded-t-[36px]! border-0 px-6 pb-[calc(env(safe-area-inset-bottom)+16px)] [&>div:first-child]:mt-2 [&>div:first-child]:h-[5px] [&>div:first-child]:w-9 [&>div:first-child]:bg-black/30">
-          <DrawerTitle className="sr-only">{d.step1Title}</DrawerTitle>
-          <DrawerDescription className="sr-only">
-            {d.step1Description}
-          </DrawerDescription>
-
-          <button
-            type="button"
-            onClick={dismiss}
-            aria-label={d.getStarted}
-            className="text-foreground/70 absolute end-4 top-4 z-10 grid size-[30px] place-items-center rounded-full bg-black/[0.06] dark:bg-white/10"
-          >
-            <X className="size-4" strokeWidth={2.5} />
-          </button>
-
-          <div className="overflow-y-auto overscroll-contain pt-8">
-            <motion.div
-              aria-hidden
-              className="flex h-44 items-center justify-center rounded-[22px]"
-              animate={{ backgroundColor: STEPS_CONFIG[step].bg }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-            >
-              {illustration(128)}
-            </motion.div>
-
-            <div className="mt-6 flex justify-center">
-              <DotIndicator total={TOTAL_STEPS} current={step} />
-            </div>
-
-            <div className="mt-5 min-h-[248px] overflow-hidden">{stepBody}</div>
-
-            <div className="mt-6 flex items-center gap-3">
-              {step > 0 && (
-                <Button
-                  variant="secondary"
-                  onClick={back}
-                  className="h-14 flex-1 rounded-full text-[17px] font-semibold"
-                >
-                  {d.back}
-                </Button>
-              )}
-              <Button
-                onClick={isLast ? dismiss : next}
-                className="h-14 flex-1 rounded-full text-[17px] font-semibold"
-              >
-                {isLast ? d.getStarted : d.next}
-              </Button>
-            </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
-    )
-  }
+  // The quick guide is a desktop affordance; phones never see it.
+  if (isPhone) return null
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && dismiss()}>

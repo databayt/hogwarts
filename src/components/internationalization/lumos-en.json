@@ -776,6 +776,7 @@
       "installIosHint": "On iPhone: tap Share, then \"Add to Home Screen\".",
       "installDismiss": "Not now",
       "installEyebrow": "Get the app",
+      "installStep": "Tap Continue, then choose \"Add to Home Screen\".",
       "installContinue": "Continue",
       "installPicCopy": "Copy",
       "installPicFavorites": "Add to Favorites",
