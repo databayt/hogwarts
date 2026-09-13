@@ -4,18 +4,20 @@
 "use client"
 
 /**
- * Canonical Report Issue dialog — the one file every databayt repo ships
- * (kun is the source; hogwarts and mkan copy it verbatim and wire their own
- * wrapper in ./index.tsx).
+ * Report Issue dialog. kun holds the canonical copy; this hogwarts copy has
+ * DIVERGED since 2026-09-13 (mobile sheet below) and must not be overwritten
+ * by a plain re-sync from kun until the sheet is ported back.
  *
  * Two surfaces, one state machine:
  *
  *   ≥ 768px  — a centred Dialog: title, textarea, hint, captcha, Submit.
- *   < 768px  — a full-height bottom sheet shaped like the iOS "Search Book"
- *              sheet: title on top, a quiet state area in the middle, and a
- *              pill composer pinned right above the on-screen keyboard with a
- *              round send button inside it and a round ✕ beside it. The pill
- *              follows the keyboard through `window.visualViewport`, which is
+ *   < 768px  — a full-height bottom sheet with the iOS share-sheet chrome
+ *              (Figma iuYSGaRV8xkcEGnyIltPRg, node 34:3037): grabber, title
+ *              and subtitle at the start, a round ✕ at the end of the header,
+ *              a quiet state area, and a pill composer pinned right above the
+ *              on-screen keyboard. No hint label above the pill: the
+ *              keyboard's Send key submits, and the arrow button mirrors it.
+ *              The pill follows the keyboard through `window.visualViewport`,
  *              the only signal iOS Safari gives for the keyboard's height.
  *
  * Symmetric success: every accepted submission shows the same success toast
@@ -232,6 +234,15 @@ export function ReportIssueDialog({
     }
   }
 
+  // Mobile: the keyboard's Send key submits. Enter never inserts a newline
+  // there (a key labelled Send must not), and a draft below the floor simply
+  // stays put — the dimmed arrow is the signal, there is no hint label.
+  const onMobileKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return
+    e.preventDefault()
+    if (canSubmit) void submit()
+  }
+
   const successMessage = issueNumber
     ? t.successWithId.replace("{id}", String(issueNumber))
     : t.success
@@ -254,6 +265,7 @@ export function ReportIssueDialog({
     description,
     setDescription,
     onComposerKeyDown,
+    onMobileKeyDown,
     submit,
     canSubmit,
     status,
@@ -303,6 +315,7 @@ interface SurfaceProps {
   description: string
   setDescription: (v: string) => void
   onComposerKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
+  onMobileKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   submit: () => Promise<void>
   canSubmit: boolean
   status: Status
@@ -390,13 +403,12 @@ function MobileSheet({
   dir,
   description,
   setDescription,
-  onComposerKeyDown,
+  onMobileKeyDown,
   submit,
   canSubmit,
   status,
   cooldownActive,
   successMessage,
-  hint,
   captcha,
 }: SurfaceProps & OpenProps) {
   const keyboardInset = useKeyboardInset(open)
@@ -408,23 +420,41 @@ function MobileSheet({
       <SheetContent
         side="bottom"
         dir={dir}
-        className="h-[calc(100dvh-2.5rem)] gap-0 rounded-t-2xl border-0 p-0 [&>button]:hidden"
+        className="bg-background h-[calc(100dvh-2.5rem)] gap-0 rounded-t-[2rem] border-0 p-0 [&>button]:hidden"
         style={{ paddingBottom: keyboardInset }}
       >
         <div className="flex h-full flex-col">
-          {/* Title — centred like the reference, no close control up here. */}
-          <div className="shrink-0 px-4 pt-5 pb-3 text-center">
-            <SheetTitle className="text-base font-semibold">
-              {t.title}
-            </SheetTitle>
-            <SheetDescription className="sr-only">
-              {t.description}
-            </SheetDescription>
+          {/* Grabber + header, laid out like the iOS share sheet: title and
+              subtitle at the start, a round close control at the end. */}
+          <div className="shrink-0 px-4 pt-2">
+            <div
+              className="bg-muted-foreground/30 mx-auto mb-3 h-1.5 w-9 rounded-full"
+              aria-hidden
+            />
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1 pt-1.5 text-start">
+                <SheetTitle className="text-[17px] leading-6 font-semibold">
+                  {t.title}
+                </SheetTitle>
+                <SheetDescription className="text-muted-foreground mt-0.5 text-[15px] leading-5">
+                  {t.description}
+                </SheetDescription>
+              </div>
+              <SheetClose asChild>
+                <button
+                  type="button"
+                  aria-label={t.close}
+                  className="bg-muted text-foreground flex size-11 shrink-0 items-center justify-center rounded-full"
+                >
+                  <X className="size-5" strokeWidth={2.25} />
+                </button>
+              </SheetClose>
+            </div>
           </div>
 
-          {/* State area — quiet until there is something to say. */}
+          {/* State area — silent unless something happened. */}
           <div
-            className="text-muted-foreground flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-y-auto px-5 pb-4 text-sm"
+            className="text-muted-foreground flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-y-auto px-5 pt-4 pb-4 text-sm"
             aria-live="polite"
           >
             {status === "success" ? (
@@ -441,61 +471,44 @@ function MobileSheet({
                   </p>
                 )}
                 {cooldownActive && <p className="text-xs">{t.cooldown}</p>}
-                <p className="text-xs">
-                  {status === "loading"
-                    ? t.submitting
-                    : description.trim().length === 0
-                      ? t.emptyState
-                      : hint}
-                </p>
               </>
             )}
           </div>
 
-          {/* Composer — the pill sits right above the keyboard. */}
-          <div className="shrink-0 px-3 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <div className="flex items-end gap-2">
-              <div className="bg-muted flex min-w-0 flex-1 items-end gap-2 rounded-[1.5rem] px-3.5 py-2 shadow-xs">
-                <Bug
-                  className="text-muted-foreground mb-1.5 size-5 shrink-0"
-                  aria-hidden
-                />
-                <textarea
-                  ref={textareaRef}
-                  rows={1}
-                  className="text-foreground placeholder:text-muted-foreground max-h-40 min-h-7 w-full resize-none bg-transparent py-1 text-base leading-6 outline-none"
-                  placeholder={t.composerPlaceholder}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  onKeyDown={onComposerKeyDown}
-                  maxLength={REPORT_LIMITS.maxChars}
-                  autoFocus
-                  aria-label={t.title}
-                  enterKeyHint="enter"
-                />
-                <button
-                  type="button"
-                  onClick={() => void submit()}
-                  disabled={!canSubmit}
-                  aria-label={t.send}
-                  className={cn(
-                    "mb-0.5 flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-                    "bg-primary text-primary-foreground",
-                    "disabled:bg-muted-foreground/25 disabled:text-background"
-                  )}
-                >
-                  <ArrowUp className="size-4" strokeWidth={2.5} />
-                </button>
-              </div>
-              <SheetClose asChild>
-                <button
-                  type="button"
-                  aria-label={t.close}
-                  className="bg-muted text-foreground flex size-12 shrink-0 items-center justify-center rounded-full shadow-xs"
-                >
-                  <X className="size-5" />
-                </button>
-              </SheetClose>
+          {/* Composer — the pill sits right above the keyboard; the keyboard's
+              Send key and the arrow both submit. */}
+          <div className="shrink-0 px-4 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="bg-muted flex min-w-0 items-end gap-2 rounded-[1.5rem] px-3.5 py-2 shadow-xs">
+              <Bug
+                className="text-muted-foreground mb-1.5 size-5 shrink-0"
+                aria-hidden
+              />
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                className="text-foreground placeholder:text-muted-foreground max-h-40 min-h-7 w-full resize-none bg-transparent py-1 text-base leading-6 outline-none"
+                placeholder={t.composerPlaceholder}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                onKeyDown={onMobileKeyDown}
+                maxLength={REPORT_LIMITS.maxChars}
+                autoFocus
+                aria-label={t.title}
+                enterKeyHint="send"
+              />
+              <button
+                type="button"
+                onClick={() => void submit()}
+                disabled={!canSubmit}
+                aria-label={t.send}
+                className={cn(
+                  "mb-0.5 flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
+                  "bg-primary text-primary-foreground",
+                  "disabled:bg-muted-foreground/25 disabled:text-background"
+                )}
+              >
+                <ArrowUp className="size-4" strokeWidth={2.5} />
+              </button>
             </div>
           </div>
         </div>
