@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 import Image from "next/image"
 import { AnimatePresence, motion } from "framer-motion"
 import {
@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Settings,
   Users,
+  X,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -22,6 +23,23 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer"
+
+// Phones take the sheet, from `md` up the dialog — the sidebar's breakpoint.
+const PHONE_QUERY = "(max-width: 767px)"
+
+function subscribePhone(onChange: () => void) {
+  const mql = window.matchMedia(PHONE_QUERY)
+  mql.addEventListener("change", onChange)
+  return () => mql.removeEventListener("change", onChange)
+}
+const phoneSnapshot = () => window.matchMedia(PHONE_QUERY).matches
+const phoneServerSnapshot = () => false
 
 const TOTAL_STEPS = 3
 
@@ -115,6 +133,11 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState(1)
+  const isPhone = useSyncExternalStore(
+    subscribePhone,
+    phoneSnapshot,
+    phoneServerSnapshot
+  )
   useEffect(() => {
     const seen = localStorage.getItem(getStorageKey(userId))
     if (!seen) {
@@ -149,6 +172,110 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
     exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0 }),
   }
 
+  const isLast = step === TOTAL_STEPS - 1
+
+  const stepBody = (
+    <AnimatePresence mode="wait" custom={direction}>
+      <motion.div
+        key={step}
+        custom={direction}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.2, ease: "easeInOut" }}
+      >
+        {step === 0 && <StepWelcome dictionary={d} />}
+        {step === 1 && <StepFeatures dictionary={d} />}
+        {step === 2 && <StepFirstSteps dictionary={d} />}
+      </motion.div>
+    </AnimatePresence>
+  )
+
+  const illustration = (size: number) => (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={step}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
+        <Image
+          src={STEPS_CONFIG[step].illustration}
+          alt=""
+          width={size}
+          height={size}
+          style={{ width: size }}
+          className="h-auto object-contain"
+          priority
+          unoptimized
+        />
+      </motion.div>
+    </AnimatePresence>
+  )
+
+  if (isPhone) {
+    // An iOS sheet like the install sheet (Figma iuYSGaRV8xkcEGnyIltPRg,
+    // Activity View): rounded top over the dimmed page, grabber, round close,
+    // swipe down to dismiss. The step's colour band carries the illustration
+    // the dialog hides below `sm`, and the controls are full-width pills.
+    return (
+      <Drawer open={open} onOpenChange={(v) => !v && dismiss()}>
+        <DrawerContent className="max-h-[92vh] rounded-t-[36px]! border-0 px-6 pb-[calc(env(safe-area-inset-bottom)+16px)] [&>div:first-child]:mt-2 [&>div:first-child]:h-[5px] [&>div:first-child]:w-9 [&>div:first-child]:bg-black/30">
+          <DrawerTitle className="sr-only">{d.step1Title}</DrawerTitle>
+          <DrawerDescription className="sr-only">
+            {d.step1Description}
+          </DrawerDescription>
+
+          <button
+            type="button"
+            onClick={dismiss}
+            aria-label={d.getStarted}
+            className="text-foreground/70 absolute end-4 top-4 z-10 grid size-[30px] place-items-center rounded-full bg-black/[0.06] dark:bg-white/10"
+          >
+            <X className="size-4" strokeWidth={2.5} />
+          </button>
+
+          <div className="overflow-y-auto overscroll-contain pt-8">
+            <motion.div
+              aria-hidden
+              className="flex h-44 items-center justify-center rounded-[22px]"
+              animate={{ backgroundColor: STEPS_CONFIG[step].bg }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              {illustration(128)}
+            </motion.div>
+
+            <div className="mt-6 flex justify-center">
+              <DotIndicator total={TOTAL_STEPS} current={step} />
+            </div>
+
+            <div className="mt-5 min-h-[248px] overflow-hidden">{stepBody}</div>
+
+            <div className="mt-6 flex items-center gap-3">
+              {step > 0 && (
+                <Button
+                  variant="secondary"
+                  onClick={back}
+                  className="h-14 flex-1 rounded-full text-[17px] font-semibold"
+                >
+                  {d.back}
+                </Button>
+              )}
+              <Button
+                onClick={isLast ? dismiss : next}
+                className="h-14 flex-1 rounded-full text-[17px] font-semibold"
+              >
+                {isLast ? d.getStarted : d.next}
+              </Button>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && dismiss()}>
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-2xl">
@@ -163,21 +290,7 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
             <DotIndicator total={TOTAL_STEPS} current={step} />
 
             <div className="mt-5 min-h-0 flex-1 overflow-hidden">
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                  key={step}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
-                >
-                  {step === 0 && <StepWelcome dictionary={d} />}
-                  {step === 1 && <StepFeatures dictionary={d} />}
-                  {step === 2 && <StepFirstSteps dictionary={d} />}
-                </motion.div>
-              </AnimatePresence>
+              {stepBody}
             </div>
 
             <div className="mt-auto flex items-center gap-3 pt-4">
@@ -186,15 +299,9 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
                   {d.back}
                 </Button>
               )}
-              {step < TOTAL_STEPS - 1 ? (
-                <Button size="sm" onClick={next}>
-                  {d.next}
-                </Button>
-              ) : (
-                <Button size="sm" onClick={dismiss}>
-                  {d.getStarted}
-                </Button>
-              )}
+              <Button size="sm" onClick={isLast ? dismiss : next}>
+                {isLast ? d.getStarted : d.next}
+              </Button>
             </div>
           </div>
 
@@ -204,25 +311,7 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
             animate={{ backgroundColor: STEPS_CONFIG[step].bg }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-              >
-                <Image
-                  src={STEPS_CONFIG[step].illustration}
-                  alt=""
-                  width={180}
-                  height={180}
-                  className="h-auto w-[180px] object-contain"
-                  priority
-                  unoptimized
-                />
-              </motion.div>
-            </AnimatePresence>
+            {illustration(180)}
           </motion.div>
         </div>
       </DialogContent>
