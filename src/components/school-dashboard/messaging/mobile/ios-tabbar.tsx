@@ -35,10 +35,11 @@ export function IosTabbar({ tabs, active, onChange, className }: Props) {
       className={cn(
         // Liquid glass: a capsule floating clear of the screen edges, with the
         // list scrolling beneath it rather than stopping at a bar. The 25px
-        // gutter and floor are node 5:596's own padding; the max() keeps the
-        // capsule off a real home indicator, which the node never sees.
+        // gutter is node 5:596's own padding; the floor sits lower than the
+        // node's, closer to the screen edge, and on a real home indicator the
+        // capsule tucks into the inset rather than riding above it.
         "pointer-events-none relative flex w-full flex-col items-center px-[25px]",
-        "pb-[max(25px,calc(env(safe-area-inset-bottom,0px)+8px))]",
+        "pb-[max(10px,calc(env(safe-area-inset-bottom,0px)-8px))]",
         className
       )}
     >
