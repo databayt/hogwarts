@@ -65,18 +65,17 @@ import {
   type ReportLang,
 } from "./dictionary"
 
-const REPORT_CATEGORIES = [
-  "visual",
-  "broken",
-  "data",
-  "slow",
-  "confusing",
-  "auth",
-  "i18n",
-  "other",
-] as const
+type ReportCategory =
+  | "visual"
+  | "broken"
+  | "data"
+  | "slow"
+  | "confusing"
+  | "auth"
+  | "i18n"
+  | "other"
 
-const SEVERITIES = ["low", "medium", "high", "critical"] as const
+type SeverityHint = "low" | "medium" | "high" | "critical"
 
 const COOLDOWN_MS = 60_000
 const SUCCESS_CLOSE_MS = 1_500
@@ -87,11 +86,11 @@ type Status = "idle" | "loading" | "success" | "error"
 export interface ReportIssueSubmitInput {
   description: string
   pageUrl: string
-  category: (typeof REPORT_CATEGORIES)[number]
+  category: ReportCategory
   reproSteps?: string
   expected?: string
   actual?: string
-  severityHint?: (typeof SEVERITIES)[number]
+  severityHint?: SeverityHint
   viewport: string
   direction: "ltr" | "rtl"
   browser: string
@@ -560,6 +559,16 @@ interface TurnstileSlotProps {
   linkHref: string
 }
 
+/**
+ * Lazy at module scope: a component created inside render is a new type on
+ * every render and remounts the widget. The captcha bundle still loads only
+ * the first time an anonymous reporter opens the dialog.
+ */
+const Turnstile = React.lazy(async () => {
+  const mod = await import("@marsidev/react-turnstile")
+  return { default: mod.Turnstile }
+})
+
 function TurnstileSlot({
   siteKey,
   onSuccess,
@@ -567,14 +576,6 @@ function TurnstileSlot({
   linkText,
   linkHref,
 }: TurnstileSlotProps) {
-  const Turnstile = React.useMemo(
-    () =>
-      React.lazy(async () => {
-        const mod = await import("@marsidev/react-turnstile")
-        return { default: mod.Turnstile }
-      }),
-    []
-  )
   return (
     <div className="space-y-2">
       <React.Suspense fallback={<div className="h-16" />}>
@@ -609,17 +610,20 @@ function countMeaningfulTokens(text: string): number {
   ).size
 }
 
-/** Re-renders once the cooldown lapses so the submit button comes back on its own. */
+/**
+ * True while the cooldown `until` (epoch ms) is still running. The render
+ * stays pure: no clock read, only "which cooldown has already lapsed", which
+ * the timer records so the submit button comes back on its own.
+ */
 function useCooldown(until: number | null): boolean {
-  const [, tick] = React.useReducer((n: number) => n + 1, 0)
+  const [lapsed, setLapsed] = React.useState<number | null>(null)
   React.useEffect(() => {
     if (until === null) return
-    const remaining = until - Date.now()
-    if (remaining <= 0) return
-    const id = setTimeout(tick, remaining + 50)
+    const remaining = Math.max(0, until - Date.now())
+    const id = setTimeout(() => setLapsed(until), remaining + 50)
     return () => clearTimeout(id)
   }, [until])
-  return until !== null && Date.now() < until
+  return until !== null && lapsed !== until
 }
 
 /**
