@@ -36,10 +36,12 @@ const CANONICAL: Record<string, Partial<Record<Lang, string>>> = {
     ar: "هاري بوتر وحجر الفيلسوف",
   },
 
-  // Its opening paragraph, kept in step with `prisma/seeds/catalog/books.ts`.
+  // Keyed on its opening paragraph in `prisma/seeds/catalog/books.ts`. The
+  // Arabic is NOT a rendering of that paragraph: it is the cat-reading-a-map
+  // passage a few lines later, the blurb chosen for /ar by hand.
   "Mr and Mrs Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much. They were the last people you'd expect to be involved in anything strange or mysterious, because they just didn't hold with such nonsense.":
     {
-      ar: "كان السيد والسيدة درسلي، من المنزل رقم أربعة في شارع بريفت، يفخران بأنهما طبيعيان تمامًا، شكرًا جزيلًا لك. كانا آخر من تتوقع أن يكون له شأن بأي أمر غريب أو غامض، لأنهما ببساطة لم يكونا يطيقان مثل هذا الهراء.",
+      ar: "وعند ناصية الشارع لاحظ الشيء الغريب الأول في ذلك اليوم رأي قطة تقرأ في خريطة ! لم يستوعب ما يراه من الوهلة الأولى ، فأدار رأسه لينظر مرة أخرى ، ورأى فعلا قطة رمادية تقف على ناصية الشارع ، ولكنها لا تقرأ شيئا .. عاتب نفسه هل هذا معقول ؟! لابد أنه خداع الضوء !",
     },
 
   // Tenant name — the school writes it as one word in English.
