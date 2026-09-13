@@ -43,6 +43,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import v8 from "node:v8"
 
 import { dbCircuitBreaker } from "@/lib/circuit-breaker"
 import { db } from "@/lib/db"
@@ -104,7 +105,11 @@ function checkMemory(): HealthCheckResult {
     const memory = process.memoryUsage()
     const heapUsedMB = Math.round(memory.heapUsed / 1024 / 1024)
     const heapTotalMB = Math.round(memory.heapTotal / 1024 / 1024)
-    const memoryUsagePercent = (memory.heapUsed / memory.heapTotal) * 100
+    // Measure against the real ceiling (--max-old-space-size), not heapTotal:
+    // V8 grows heapTotal to fit heapUsed, so that ratio hovers near 90% on a
+    // perfectly healthy process and flipped this endpoint to 503 at random.
+    const heapLimit = v8.getHeapStatistics().heap_size_limit
+    const memoryUsagePercent = (memory.heapUsed / heapLimit) * 100
 
     return {
       status:
@@ -116,6 +121,7 @@ function checkMemory(): HealthCheckResult {
       details: {
         heapUsedMB,
         heapTotalMB,
+        heapLimitMB: Math.round(heapLimit / 1024 / 1024),
         heapUsagePercent: Math.round(memoryUsagePercent),
         rss: Math.round(memory.rss / 1024 / 1024),
         external: Math.round(memory.external / 1024 / 1024),
