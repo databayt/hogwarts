@@ -75,6 +75,9 @@ smoke() {
   local DENV; DENV=$(mktemp -t hogwarts-smoke.XXXXXX); trap 'rm -f "$DENV"' RETURN
   node cf/env-split.mjs "$ENV_FILE" docker > "$DENV"
   [[ -n "${SMOKE_DATABASE_URL:-}" ]] && printf 'DATABASE_URL=%s\nDIRECT_URL=%s\n' "$SMOKE_DATABASE_URL" "$SMOKE_DATABASE_URL" >> "$DENV"
+  # Never start the embedded WhatsApp bridge in the smoke run: a second live
+  # Evolution on the same database would fight production for the session.
+  printf 'EVOLUTION_EMBEDDED=0\n' >> "$DENV"
   docker rm -f hogwarts-cf-smoke >/dev/null 2>&1 || true
   echo "==> docker run :3300 (DATABASE_URL host: $(grep -E '^DATABASE_URL=' "$DENV" | tail -1 | sed -E 's#.*@([^/:]+).*#\1#'))"
   docker run -d --rm --name hogwarts-cf-smoke --platform linux/amd64 -p 3300:3000 --env-file "$DENV" "$IMAGE" >/dev/null

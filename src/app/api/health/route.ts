@@ -59,6 +59,7 @@ interface HealthCheck {
     memory: HealthCheckResult
     dependencies: HealthCheckResult
     circuitBreaker: HealthCheckResult
+    whatsappBridge: HealthCheckResult
   }
 }
 
@@ -167,17 +168,51 @@ function checkDependencies(): HealthCheckResult {
   }
 }
 
+/**
+ * The embedded WhatsApp bridge (Evolution API, supervised by cf/entry.cjs on
+ * 127.0.0.1:8080). Probed only when EVOLUTION_API_URL points at loopback —
+ * that is, when the bridge is expected inside this container. It never fails
+ * the app: a silent bridge is "warn".
+ */
+async function checkWhatsAppBridge(): Promise<HealthCheckResult> {
+  const url = process.env.EVOLUTION_API_URL || ""
+  if (!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/.test(url)) {
+    return { status: "pass", details: { embedded: false } }
+  }
+  const startTime = Date.now()
+  try {
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(1500),
+      cache: "no-store",
+    })
+    return {
+      status: res.ok ? "pass" : "warn",
+      responseTime: Date.now() - startTime,
+      details: { embedded: true, httpStatus: res.status },
+    }
+  } catch (error) {
+    return {
+      status: "warn",
+      responseTime: Date.now() - startTime,
+      details: { embedded: true },
+      error: error instanceof Error ? error.message : "unreachable",
+    }
+  }
+}
+
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
   const requestId = request.headers.get("x-request-id") || "health-check"
 
   try {
     // Perform health checks
-    const [databaseCheck, memoryCheck, dependenciesCheck] = await Promise.all([
-      checkDatabase(),
-      Promise.resolve(checkMemory()),
-      Promise.resolve(checkDependencies()),
-    ])
+    const [databaseCheck, memoryCheck, dependenciesCheck, whatsappBridgeCheck] =
+      await Promise.all([
+        checkDatabase(),
+        Promise.resolve(checkMemory()),
+        Promise.resolve(checkDependencies()),
+        checkWhatsAppBridge(),
+      ])
 
     // Determine overall status
     const checks = {
@@ -185,6 +220,7 @@ export async function GET(request: NextRequest) {
       memory: memoryCheck,
       dependencies: dependenciesCheck,
       circuitBreaker: checkCircuitBreaker(),
+      whatsappBridge: whatsappBridgeCheck,
     }
 
     const hasFailures = Object.values(checks).some(
@@ -274,6 +310,7 @@ export async function GET(request: NextRequest) {
         memory: { status: "fail", error: "Health check failed" },
         dependencies: { status: "fail", error: "Health check failed" },
         circuitBreaker: checkCircuitBreaker(),
+        whatsappBridge: { status: "warn", error: "Health check failed" },
       },
     }
 

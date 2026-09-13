@@ -72,8 +72,13 @@ export async function connectWhatsApp(): Promise<
     // custom auth headers) — without it every inbound webhook 401s in
     // production and the WA→app bridge stays dark.
     const webhookSecret = process.env.WHATSAPP_WEBHOOK_SECRET
+    // WHATSAPP_WEBHOOK_BASE_URL is the public origin Evolution can reach
+    // (balqalam.com); NEXT_PUBLIC_APP_URL is the fallback for environments
+    // that never set it.
+    const webhookBase =
+      process.env.WHATSAPP_WEBHOOK_BASE_URL || process.env.NEXT_PUBLIC_APP_URL
     const webhookUrl =
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/whatsapp` +
+      `${webhookBase}/api/webhooks/whatsapp` +
       (webhookSecret ? `?secret=${encodeURIComponent(webhookSecret)}` : "")
 
     // Check if session already exists
