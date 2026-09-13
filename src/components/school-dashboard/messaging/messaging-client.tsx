@@ -32,13 +32,13 @@ import {
   type LayoutMode,
 } from "./hooks"
 import type { MessagesViewLabels } from "./mobile"
+import type { MobileViewProps } from "./mobile-view"
 import {
   conversationAvatar,
   conversationTitle,
   toChatItems,
   type AdaptLabels,
 } from "./mobile/chat/adapt"
-import type { MobileViewProps } from "./mobile-view"
 import {
   buildMessageFromSocket,
   isTempId,
@@ -109,7 +109,10 @@ function readDrafts(): Map<string, string> {
 
 function writeDrafts(drafts: Map<string, string>) {
   try {
-    sessionStorage.setItem(DRAFTS_KEY, JSON.stringify(Object.fromEntries(drafts)))
+    sessionStorage.setItem(
+      DRAFTS_KEY,
+      JSON.stringify(Object.fromEntries(drafts))
+    )
   } catch {
     // Storage may be unavailable; drafts then live for the session only.
   }
@@ -432,7 +435,9 @@ export function MessagingClient({
                   c.id === activeId
                     ? 0
                     : (unreadCounts[c.id] ?? c.unreadCount ?? 0)
-                return unread === c.unreadCount ? c : { ...c, unreadCount: unread }
+                return unread === c.unreadCount
+                  ? c
+                  : { ...c, unreadCount: unread }
               })
               return next.sort(byNewestFirst)
             })
@@ -528,7 +533,10 @@ export function MessagingClient({
     // Typing indicators — listen globally, expire locally
     const unsubscribeTypingStart = socketService.on("typing:start", (data) => {
       if (data.userId === currentUserId) return
-      typingExpiryRef.current.set(data.conversationId, Date.now() + TYPING_TTL_MS)
+      typingExpiryRef.current.set(
+        data.conversationId,
+        Date.now() + TYPING_TTL_MS
+      )
       setTypingConversations((prev) => {
         if (prev.get(data.conversationId)) return prev
         const next = new Map(prev)
@@ -692,7 +700,13 @@ export function MessagingClient({
       touch()
       return nonce
     },
-    [currentUserId, currentUserName, updateCachedMessages, bumpListWithMessage, touch]
+    [
+      currentUserId,
+      currentUserName,
+      updateCachedMessages,
+      bumpListWithMessage,
+      touch,
+    ]
   )
 
   /**
@@ -731,7 +745,10 @@ export function MessagingClient({
                 serverMessage.attachments?.length > 0
                   ? serverMessage.attachments
                   : temp.attachments,
-              status: serverMessage.status === "sending" ? "sent" : serverMessage.status,
+              status:
+                serverMessage.status === "sending"
+                  ? "sent"
+                  : serverMessage.status,
             }
           : { ...temp, id: messageId, status: "sent" }
         const next = prev.slice()
@@ -749,7 +766,9 @@ export function MessagingClient({
         if (!state.messages.some((x) => x.id === tempId)) continue
         updateCachedMessages(convId, (prev) =>
           prev.map((x) =>
-            x.id === tempId ? { ...x, status: "failed" as MessageDTO["status"] } : x
+            x.id === tempId
+              ? { ...x, status: "failed" as MessageDTO["status"] }
+              : x
           )
         )
         return
@@ -812,7 +831,8 @@ export function MessagingClient({
         // from the picker.
         toast({
           title: mRef.current?.notifications?.error ?? "Error",
-          description: mRef.current?.errors?.send_failed ?? "Failed to send message",
+          description:
+            mRef.current?.errors?.send_failed ?? "Failed to send message",
         })
         return
       }
@@ -820,7 +840,9 @@ export function MessagingClient({
       sendAttemptsRef.current.set(nonce, attempts + 1)
       updateCachedMessages(convId, (prev) =>
         prev.map((x) =>
-          x.id === messageId ? { ...x, status: "sending" as MessageDTO["status"] } : x
+          x.id === messageId
+            ? { ...x, status: "sending" as MessageDTO["status"] }
+            : x
         )
       )
       performSend(convId, nonce).catch(() => {})
@@ -1182,7 +1204,13 @@ export function MessagingClient({
     if (count === 0) return null
     if (count === 1) return m?.ui?.member ?? null
     return m?.ui?.members?.replace("{count}", String(count)) ?? null
-  }, [activeConversation, typingConversations, activeContactUserId, onlineUserIds, m])
+  }, [
+    activeConversation,
+    typingConversations,
+    activeContactUserId,
+    onlineUserIds,
+    m,
+  ])
 
   // The desktop ChatInterface re-renders this client, so don't rebuild the
   // mobile item list each time.
@@ -1216,12 +1244,6 @@ export function MessagingClient({
     (id: string) => router.push(`/${locale}/live/${id}`),
     [router, locale]
   )
-  // Only staff can open an announcement's own page; the listings route
-  // sends everyone else to /unauthorized. For a student or a guardian the
-  // row is the announcement — title and opening line — and has no tap
-  // target at all.
-  const canOpenUpdates =
-    currentUserRole === "ADMIN" || currentUserRole === "DEVELOPER"
   const goUpdate = useCallback(
     (id: string) => router.push(`/${locale}/announcements/${id}`),
     [router, locale]
@@ -1280,7 +1302,7 @@ export function MessagingClient({
     onOpenProfile: goProfile,
     onOpenNotifications: goNotifications,
     onOpenCall: goCall,
-    onOpenUpdate: canOpenUpdates ? goUpdate : undefined,
+    onOpenUpdate: goUpdate,
     conversations,
     currentUserId,
     activeConversationId: activeConversation?.id ?? null,

@@ -96,6 +96,10 @@ import {
   getAuthContext,
   validateAnnouncementScope,
 } from "@/components/school-dashboard/listings/announcements/authorization"
+import {
+  buildViewerAudienceWhere,
+  isAudienceOnlyRole,
+} from "@/components/school-dashboard/listings/announcements/queries"
 // ============================================================================
 // Announcement Config Actions
 // ============================================================================
@@ -597,9 +601,19 @@ export async function getAnnouncement(input: {
     // Parse and validate input
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
+    // A student or guardian may only open a notice they are an audience for;
+    // anything else (drafts, staff notices, other classes) reads as not found.
+    const audience = isAudienceOnlyRole(authContext.role)
+      ? await buildViewerAudienceWhere(
+          schoolId,
+          authContext.userId,
+          authContext.role
+        )
+      : undefined
+
     // Fetch announcement with proper select - single-language fields
     const announcement = await db.announcement.findFirst({
-      where: { id, schoolId },
+      where: { id, schoolId, ...(audience ? { AND: [audience] } : {}) },
       select: {
         id: true,
         schoolId: true,

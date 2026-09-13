@@ -10,9 +10,10 @@
  * additionally narrowed to what this viewer is allowed to see.
  */
 
-import type { UserRole } from "@prisma/client"
+import type { Prisma, UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { buildViewerAudienceWhere } from "@/components/school-dashboard/listings/announcements/queries"
 
 export type MobileUpdateRow = {
   id: string
@@ -37,47 +38,6 @@ export type MobileCallRow = {
 }
 
 /**
- * Every class the viewer belongs to, whichever way they belong to one.
- * Class-scoped announcements are matched against this set.
- */
-async function viewerClassIds(
-  schoolId: string,
-  userId: string,
-  role: UserRole
-): Promise<string[]> {
-  if (role === "STUDENT") {
-    const rows = await db.studentClass.findMany({
-      where: { schoolId, student: { userId } },
-      select: { classId: true },
-    })
-    return rows.map((r) => r.classId)
-  }
-
-  if (role === "TEACHER") {
-    const rows = await db.class.findMany({
-      where: { schoolId, teacher: { userId } },
-      select: { id: true },
-    })
-    return rows.map((r) => r.id)
-  }
-
-  if (role === "GUARDIAN") {
-    const rows = await db.studentClass.findMany({
-      where: {
-        schoolId,
-        student: {
-          studentGuardians: { some: { guardian: { userId } } },
-        },
-      },
-      select: { classId: true },
-    })
-    return rows.map((r) => r.classId)
-  }
-
-  return []
-}
-
-/**
  * Announcements this viewer is an audience for: school-wide, addressed to
  * their role, or attached to one of their classes. An ADMIN or DEVELOPER runs
  * the school, so they see every published notice.
@@ -91,30 +51,18 @@ export async function getMobileUpdates(
   role: UserRole,
   take = 20
 ): Promise<MobileUpdateRow[]> {
-  const now = new Date()
   const seesEverything = role === "ADMIN" || role === "DEVELOPER"
 
-  const audience = seesEverything
-    ? undefined
-    : {
-        OR: [
-          { scope: "school" as const },
-          { scope: "role" as const, role },
-          {
-            scope: "class" as const,
-            classId: { in: await viewerClassIds(schoolId, userId, role) },
-          },
-        ],
+  const visible: Prisma.AnnouncementWhereInput = seesEverything
+    ? {
+        published: true,
+        wizardStep: null,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       }
+    : await buildViewerAudienceWhere(schoolId, userId, role)
 
   const rows = await db.announcement.findMany({
-    where: {
-      schoolId,
-      published: true,
-      wizardStep: null,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      ...(audience ?? {}),
-    },
+    where: { schoolId, ...visible },
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
     take,
     select: {

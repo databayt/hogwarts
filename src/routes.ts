@@ -87,6 +87,15 @@ export type Role =
   | "STAFF" // General school staff
   | "USER" // General user
 
+// Announcement authoring surfaces (wizard, templates, archive, settings, config).
+const STAFF_ANNOUNCEMENT_ROLES: Role[] = [
+  "ADMIN",
+  "TEACHER",
+  "STAFF",
+  "ACCOUNTANT",
+  "DEVELOPER",
+]
+
 /**
  * Role-based route access matrix
  * Maps route patterns to allowed roles
@@ -381,8 +390,32 @@ export const roleRoutes: Record<string, Role[]> = {
   // ============================================================================
   // Communication (all staff roles)
   // ============================================================================
-  "/announcements": ["ADMIN", "TEACHER", "STAFF", "ACCOUNTANT", "DEVELOPER"],
-  "/announcements/*": ["ADMIN", "TEACHER", "STAFF", "ACCOUNTANT", "DEVELOPER"],
+  // Every school role reads announcements (the list and a single notice);
+  // students and guardians get only the ones addressed to them — see
+  // buildViewerAudienceWhere. Authoring surfaces stay staff-only.
+  "/announcements": [
+    "ADMIN",
+    "TEACHER",
+    "STAFF",
+    "ACCOUNTANT",
+    "STUDENT",
+    "GUARDIAN",
+    "DEVELOPER",
+  ],
+  "/announcements/*": [
+    "ADMIN",
+    "TEACHER",
+    "STAFF",
+    "ACCOUNTANT",
+    "STUDENT",
+    "GUARDIAN",
+    "DEVELOPER",
+  ],
+  "/announcements/add/*": STAFF_ANNOUNCEMENT_ROLES,
+  "/announcements/templates/*": STAFF_ANNOUNCEMENT_ROLES,
+  "/announcements/archived/*": STAFF_ANNOUNCEMENT_ROLES,
+  "/announcements/settings/*": STAFF_ANNOUNCEMENT_ROLES,
+  "/announcements/config/*": STAFF_ANNOUNCEMENT_ROLES,
   "/messaging": ["ADMIN", "TEACHER", "STAFF", "ACCOUNTANT", "DEVELOPER"],
   "/messaging/*": ["ADMIN", "TEACHER", "STAFF", "ACCOUNTANT", "DEVELOPER"],
   "/whatsapp": ["ADMIN", "DEVELOPER"],

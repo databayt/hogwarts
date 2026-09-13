@@ -10,7 +10,7 @@
  * - Content stored in one language with a `lang` indicator
  */
 
-import { Prisma } from "@prisma/client"
+import { Prisma, type UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
@@ -155,6 +155,87 @@ export function buildPagination(page: number, perPage: number) {
 }
 
 // ============================================================================
+// Audience
+// ============================================================================
+
+/**
+ * Roles that only ever read the notices addressed to them. Staff roles keep
+ * the full school list; a student or guardian must never see drafts, expired
+ * notices, staff-only role notices, or another class's announcements.
+ */
+export function isAudienceOnlyRole(role: UserRole | null | undefined): boolean {
+  return role === "STUDENT" || role === "GUARDIAN" || role === "USER"
+}
+
+/**
+ * Every class the viewer belongs to, whichever way they belong to one.
+ * Class-scoped announcements are matched against this set.
+ */
+export async function viewerClassIds(
+  schoolId: string,
+  userId: string,
+  role: UserRole
+): Promise<string[]> {
+  if (role === "STUDENT") {
+    const rows = await db.studentClass.findMany({
+      where: { schoolId, student: { userId } },
+      select: { classId: true },
+    })
+    return rows.map((r) => r.classId)
+  }
+
+  if (role === "TEACHER") {
+    const rows = await db.class.findMany({
+      where: { schoolId, teacher: { userId } },
+      select: { id: true },
+    })
+    return rows.map((r) => r.id)
+  }
+
+  if (role === "GUARDIAN") {
+    const rows = await db.studentClass.findMany({
+      where: {
+        schoolId,
+        student: {
+          studentGuardians: { some: { guardian: { userId } } },
+        },
+      },
+      select: { classId: true },
+    })
+    return rows.map((r) => r.classId)
+  }
+
+  return []
+}
+
+/**
+ * Announcements this viewer is an audience for: published, complete, not
+ * expired, and school-wide, addressed to their role, or attached to one of
+ * their classes. Both OR groups sit under AND so neither overwrites the other.
+ */
+export async function buildViewerAudienceWhere(
+  schoolId: string,
+  userId: string,
+  role: UserRole
+): Promise<Prisma.AnnouncementWhereInput> {
+  const classIds = await viewerClassIds(schoolId, userId, role)
+  return {
+    published: true,
+    wizardStep: null,
+    AND: [
+      { OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+      {
+        OR: [
+          { scope: "school" },
+          { scope: "role", role },
+          { scope: "class", classId: { in: classIds } },
+        ],
+      },
+    ],
+  }
+}
+
+// ============================================================================
 // Query Functions
 // ============================================================================
 
@@ -162,13 +243,18 @@ export function buildPagination(page: number, perPage: number) {
  * Get announcements list with filtering, sorting, and pagination
  * @param schoolId - School ID for multi-tenant filtering
  * @param params - Query parameters
+ * @param audience - Viewer audience narrowing (students and guardians)
  * @returns Promise with announcements and total count
  */
 export async function getAnnouncementsList(
   schoolId: string,
-  params: Partial<AnnouncementQueryParams> = {}
+  params: Partial<AnnouncementQueryParams> = {},
+  audience?: Prisma.AnnouncementWhereInput
 ) {
-  const where = buildAnnouncementWhere(schoolId, params)
+  const base = buildAnnouncementWhere(schoolId, params)
+  const where: Prisma.AnnouncementWhereInput = audience
+    ? { ...base, AND: [audience] }
+    : base
   const orderBy = buildAnnouncementOrderBy(params.sort)
   const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 10)
 

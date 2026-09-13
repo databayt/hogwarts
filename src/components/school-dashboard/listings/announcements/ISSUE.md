@@ -219,3 +219,19 @@ title _and_ body, footer label switched to "تحديث", auto-closed in 300ms wi
 ---
 
 **Last Review:** 2026-07-20
+
+## 2026-09-13 — students and guardians could not open /announcements
+
+The sidebar lists Announcements for every role, but `src/routes.ts` allowed
+only staff, so a STUDENT or GUARDIAN tapping it (or an announcement row) landed
+on `/unauthorized`.
+
+Fix: `/announcements` and `/announcements/[id]` are open to every school role;
+`add`, `templates`, `archived`, `settings` and `config` keep the staff list.
+Opening the route meant narrowing the data: `buildViewerAudienceWhere` in
+`queries.ts` (published, complete, not expired, and school-wide / their role /
+their classes) now scopes the list in `content.tsx` and the single read in
+`getAnnouncement` for audience-only roles — a draft or a staff notice reads as
+not found. The mobile Updates tab uses the same predicate (its old spread let
+the audience `OR` overwrite the expiry `OR`), and its rows now open the detail
+page for every role. The layout's tabs come from `getTabsForRole`.
