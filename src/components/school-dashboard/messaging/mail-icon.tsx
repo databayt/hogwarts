@@ -29,6 +29,8 @@ export function MessageMailIcon({
   const { data: session } = useSession()
   const userId = session?.user?.id
   const [unreadCount, setUnreadCount] = useState(0)
+  // Set on hover / touch / focus: the moment the link's prefetch is wanted.
+  const [intent, setIntent] = useState(false)
 
   const fetchUnreadCount = useCallback(async () => {
     try {
@@ -77,7 +79,18 @@ export function MessageMailIcon({
       )}
       asChild
     >
-      <Link href={messagesUrl}>
+      {/* Prefetch on intent, not on sight. This icon is in the header of every
+          dashboard page, and /messages lives in its own route group with its
+          own dictionary provider — so the automatic viewport prefetch pulled
+          that layout's whole dictionary, 684 KB, on every dashboard open. A
+          hover or a touch is the signal that the prefetch is worth it. */}
+      <Link
+        href={messagesUrl}
+        prefetch={intent ? null : false}
+        onMouseEnter={() => setIntent(true)}
+        onTouchStart={() => setIntent(true)}
+        onFocus={() => setIntent(true)}
+      >
         <span className="relative">
           <Mail className={cn("size-4", iconClassName)} />
           <CountBadge count={unreadCount} />
