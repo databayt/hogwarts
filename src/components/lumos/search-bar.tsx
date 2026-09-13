@@ -10,7 +10,14 @@ import { AnimatePresence, motion } from "framer-motion"
 import { ArrowRight, ChevronDown, Search as SearchIcon, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { CatalogCourseType } from "@/components/lumos/data/catalog/get-all-courses"
 import { fetchCatalogCourses } from "@/components/lumos/lib/course-search-client"
@@ -88,6 +95,13 @@ export function SearchBar({
   const [isFocused, setIsFocused] = React.useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
   const [yOffset, setYOffset] = React.useState(0)
+  // Phones get the panel as an iOS sheet instead of the floating dropdown. The
+  // page bar turns into a trigger there, so the only live input is the sheet's
+  // own — a focused input under the sheet would raise the keyboard behind it.
+  const isMobile = useIsMobile()
+  const isSheetOpen = isMobile && isDropdownOpen
+  // Explore opens the sheet to browse; tapping the box opens it to type.
+  const [sheetFocusInput, setSheetFocusInput] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
   const isRTL = lang === "ar"
@@ -195,9 +209,10 @@ export function SearchBar({
     setActiveIndex(-1)
   }, [term])
 
-  // Calculate Y offset to center the search bar + dropdown
+  // Calculate Y offset to center the search bar + dropdown. Desktop only — the
+  // phone sheet rises from the bottom and leaves the bar where it is.
   React.useEffect(() => {
-    if (isDropdownOpen && containerRef.current) {
+    if (isDropdownOpen && !isMobile && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect()
       const viewportHeight = window.innerHeight
       const elementTop = rect.top
@@ -207,10 +222,12 @@ export function SearchBar({
     } else {
       setYOffset(0)
     }
-  }, [isDropdownOpen])
+  }, [isDropdownOpen, isMobile])
 
-  // Handle escape key to close dropdown
+  // Handle escape key to close dropdown. The sheet is vaul's: it owns Escape
+  // and the body scroll lock, and a second lock here would fight its restore.
   React.useEffect(() => {
+    if (isMobile) return
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsDropdownOpen(false)
@@ -225,7 +242,12 @@ export function SearchBar({
 
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [isDropdownOpen])
+  }, [isDropdownOpen, isMobile])
+
+  const openSheet = (focusInput: boolean) => {
+    setSheetFocusInput(focusInput)
+    setIsDropdownOpen(true)
+  }
 
   // Restore page scrolling if the bar unmounts while the dropdown is open
   // (navigating to a suggestion does exactly that).
@@ -309,11 +331,118 @@ export function SearchBar({
     }
   }
 
+  // The panel's body — typeahead results while typing, the shelf + popular
+  // terms on an empty box. ONE copy, rendered in the desktop dropdown or the
+  // phone sheet, so the two can never drift apart.
+  const panelBody = isSuggesting ? (
+    <SuggestionList
+      dictionary={d}
+      suggestions={suggestions}
+      isLoading={isLoadingSuggestions}
+      activeIndex={activeIndex}
+      onHover={setActiveIndex}
+      href={courseHref}
+      onNavigate={() => setIsDropdownOpen(false)}
+      onSeeAll={() => navigateToSearch(term)}
+      lang={lang}
+      dictionaryRoot={dictionary}
+    />
+  ) : (
+    <>
+      {/* Featured courses — real thumbnails off the CDN */}
+      {featured.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+          className="mb-6"
+        >
+          <SectionLabel>{d.featured || "Featured courses"}</SectionLabel>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {featured.map((course, index) => (
+              <motion.div
+                key={course.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: 0.12 + index * 0.04,
+                  duration: 0.2,
+                }}
+              >
+                <Link
+                  href={courseHref(course)}
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="group block"
+                >
+                  <CourseThumb
+                    course={course}
+                    className="aspect-video w-full rounded-lg"
+                    sizes="(max-width: 640px) 45vw, 200px"
+                  />
+                  <p className="group-hover:text-primary mt-2 truncate text-xs font-medium transition-colors">
+                    {course.title}
+                  </p>
+                  <p className="text-muted-foreground truncate text-[11px]">
+                    {courseMeta(course, dictionary)}
+                  </p>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Popular Searches with staggered pill animation */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.15, duration: 0.3 }}
+      >
+        <SectionLabel>{d.popular || "Popular"}</SectionLabel>
+        <div className="flex flex-wrap gap-2">
+          {popularTerms.map((popularTerm, index) => (
+            <motion.button
+              key={popularTerm}
+              type="button"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                delay: 0.2 + index * 0.04,
+                duration: 0.2,
+              }}
+              onClick={() => handleQuickSearch(popularTerm)}
+              className="bg-muted/50 hover:bg-muted text-foreground/80 hover:text-foreground rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+            >
+              {popularTerm}
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Browse all courses */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.35, duration: 0.3 }}
+        className="mt-6"
+      >
+        <Link
+          href={`/${lang}/lumos/courses`}
+          onClick={() => setIsDropdownOpen(false)}
+          className="text-primary inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
+        >
+          {d.browseAll || "Browse all courses"}
+          <ArrowRight className="size-3.5 rtl:rotate-180" />
+        </Link>
+      </motion.div>
+    </>
+  )
+
   return (
     <>
       {/* Backdrop overlay with blur */}
       <AnimatePresence>
-        {isDropdownOpen && (
+        {isDropdownOpen && !isMobile && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -338,7 +467,7 @@ export function SearchBar({
         }}
         className={cn(
           "relative mx-auto w-full max-w-2xl",
-          isDropdownOpen ? "z-50" : "z-0",
+          isDropdownOpen && !isMobile ? "z-50" : "z-0",
           className
         )}
       >
@@ -357,7 +486,9 @@ export function SearchBar({
             <motion.button
               layout
               type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              onClick={() =>
+                isMobile ? openSheet(false) : setIsDropdownOpen(!isDropdownOpen)
+              }
               aria-expanded={isDropdownOpen}
               className={cn(
                 "flex h-11 shrink-0 items-center gap-1 rounded-none px-4 transition-colors",
@@ -389,23 +520,39 @@ export function SearchBar({
                 isRTL && "order-1"
               )}
             >
-              <input
-                ref={inputRef}
-                type="search"
-                value={query}
-                onChange={handleInputChange}
-                onKeyDown={handleInputKeyDown}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                placeholder={d.placeholder || "What do you want to learn?"}
-                className={cn(
-                  "h-11 w-full border-0 bg-transparent text-sm outline-none",
-                  "placeholder:text-muted-foreground",
-                  "ps-4 pe-12 text-start"
-                )}
-                aria-label={d.ariaLabel || "Search courses"}
-                autoComplete="off"
-              />
+              {isMobile ? (
+                <button
+                  type="button"
+                  onClick={() => openSheet(true)}
+                  aria-haspopup="dialog"
+                  aria-expanded={isDropdownOpen}
+                  className={cn(
+                    "h-11 w-full truncate text-start text-sm",
+                    "ps-4 pe-12",
+                    !query && "text-muted-foreground"
+                  )}
+                >
+                  {query || d.placeholder || "What do you want to learn?"}
+                </button>
+              ) : (
+                <input
+                  ref={inputRef}
+                  type="search"
+                  value={query}
+                  onChange={handleInputChange}
+                  onKeyDown={handleInputKeyDown}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder={d.placeholder || "What do you want to learn?"}
+                  className={cn(
+                    "h-11 w-full border-0 bg-transparent text-sm outline-none",
+                    "placeholder:text-muted-foreground",
+                    "ps-4 pe-12 text-start"
+                  )}
+                  aria-label={d.ariaLabel || "Search courses"}
+                  autoComplete="off"
+                />
+              )}
 
               {/* Clear button */}
               {query && (
@@ -422,7 +569,8 @@ export function SearchBar({
 
             {/* Search Button */}
             <Button
-              type="submit"
+              type={isMobile ? "button" : "submit"}
+              onClick={isMobile ? () => openSheet(true) : undefined}
               size="icon"
               className={cn(
                 "bg-primary hover:bg-primary/90 size-9 shrink-0 rounded-full",
@@ -442,7 +590,7 @@ export function SearchBar({
             images and category links that matched no real department, which is
             what the old "no cards here" note was guarding against. */}
         <AnimatePresence>
-          {isDropdownOpen && (
+          {isDropdownOpen && !isMobile && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{
@@ -483,117 +631,78 @@ export function SearchBar({
                 </motion.button>
 
                 <div className="max-h-[70vh] overflow-y-auto p-6">
-                  {isSuggesting ? (
-                    <SuggestionList
-                      dictionary={d}
-                      suggestions={suggestions}
-                      isLoading={isLoadingSuggestions}
-                      activeIndex={activeIndex}
-                      onHover={setActiveIndex}
-                      href={courseHref}
-                      onNavigate={() => setIsDropdownOpen(false)}
-                      onSeeAll={() => navigateToSearch(term)}
-                      lang={lang}
-                      dictionaryRoot={dictionary}
-                    />
-                  ) : (
-                    <>
-                      {/* Featured courses — real thumbnails off the CDN */}
-                      {featured.length > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.1, duration: 0.3 }}
-                          className="mb-6"
-                        >
-                          <SectionLabel>
-                            {d.featured || "Featured courses"}
-                          </SectionLabel>
-                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                            {featured.map((course, index) => (
-                              <motion.div
-                                key={course.id}
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                  delay: 0.12 + index * 0.04,
-                                  duration: 0.2,
-                                }}
-                              >
-                                <Link
-                                  href={courseHref(course)}
-                                  onClick={() => setIsDropdownOpen(false)}
-                                  className="group block"
-                                >
-                                  <CourseThumb
-                                    course={course}
-                                    className="aspect-video w-full rounded-lg"
-                                    sizes="(max-width: 640px) 45vw, 200px"
-                                  />
-                                  <p className="group-hover:text-primary mt-2 truncate text-xs font-medium transition-colors">
-                                    {course.title}
-                                  </p>
-                                  <p className="text-muted-foreground truncate text-[11px]">
-                                    {courseMeta(course, dictionary)}
-                                  </p>
-                                </Link>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-
-                      {/* Popular Searches with staggered pill animation */}
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.15, duration: 0.3 }}
-                      >
-                        <SectionLabel>{d.popular || "Popular"}</SectionLabel>
-                        <div className="flex flex-wrap gap-2">
-                          {popularTerms.map((popularTerm, index) => (
-                            <motion.button
-                              key={popularTerm}
-                              type="button"
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{
-                                delay: 0.2 + index * 0.04,
-                                duration: 0.2,
-                              }}
-                              onClick={() => handleQuickSearch(popularTerm)}
-                              className="bg-muted/50 hover:bg-muted text-foreground/80 hover:text-foreground rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
-                            >
-                              {popularTerm}
-                            </motion.button>
-                          ))}
-                        </div>
-                      </motion.div>
-
-                      {/* Browse all courses */}
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.35, duration: 0.3 }}
-                        className="mt-6"
-                      >
-                        <Link
-                          href={`/${lang}/lumos/courses`}
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="text-primary inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
-                        >
-                          {d.browseAll || "Browse all courses"}
-                          <ArrowRight className="size-3.5 rtl:rotate-180" />
-                        </Link>
-                      </motion.div>
-                    </>
-                  )}
+                  {panelBody}
                 </div>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Phones: the same panel as an iOS sheet — the Activity View shape
+          (Figma iuYSGaRV8xkcEGnyIltPRg 34:3042, as the install sheet in
+          offline/install-card.tsx): rounded top over the dimmed page,
+          grabber, round close, swipe to dismiss. The sheet carries the one
+          live input, so typing, suggestions and submit all happen in it. */}
+      {isMobile && (
+        <Drawer open={isSheetOpen} onOpenChange={setIsDropdownOpen}>
+          <DrawerContent
+            aria-label={d.ariaLabel || "Search courses"}
+            className="h-[92svh] max-h-[92svh]! rounded-t-[36px]! border-0 pb-[env(safe-area-inset-bottom)] [&>div:first-child]:mt-2 [&>div:first-child]:h-[5px] [&>div:first-child]:w-9 [&>div:first-child]:bg-black/30 dark:[&>div:first-child]:bg-white/30"
+          >
+            <DrawerTitle className="px-6 pe-16 pt-5 text-[17px] leading-[30px] font-semibold">
+              {d.explore || "Explore"}
+            </DrawerTitle>
+            <DrawerDescription className="sr-only">
+              {d.placeholder || "What do you want to learn?"}
+            </DrawerDescription>
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(false)}
+              aria-label={d.close || "Close"}
+              className="text-foreground/70 absolute end-4 top-4 grid size-[30px] place-items-center rounded-full bg-black/[0.06] dark:bg-white/10"
+            >
+              <X className="size-4" strokeWidth={2.5} />
+            </button>
+
+            <form onSubmit={handleSubmit} className="px-6 pt-3 pb-4">
+              <div className="bg-muted relative flex h-11 items-center rounded-full">
+                <SearchIcon
+                  aria-hidden
+                  className="text-muted-foreground pointer-events-none absolute start-3.5 size-4"
+                />
+                <input
+                  ref={inputRef}
+                  type="search"
+                  enterKeyHint="search"
+                  value={query}
+                  onChange={handleInputChange}
+                  onKeyDown={handleInputKeyDown}
+                  autoFocus={sheetFocusInput}
+                  placeholder={d.placeholder || "What do you want to learn?"}
+                  aria-label={d.ariaLabel || "Search courses"}
+                  autoComplete="off"
+                  className="placeholder:text-muted-foreground h-full w-full border-0 bg-transparent ps-10 pe-11 text-start text-base outline-none [&::-webkit-search-cancel-button]:hidden"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    aria-label={d.clear || "Clear search"}
+                    className="bg-muted-foreground/30 absolute end-3 grid size-5 place-items-center rounded-full"
+                  >
+                    <X className="text-background size-3" strokeWidth={3} />
+                  </button>
+                )}
+              </div>
+            </form>
+
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6">
+              {panelBody}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
     </>
   )
 }

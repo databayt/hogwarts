@@ -217,6 +217,13 @@ Lumos (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~93% complete a
   old "recently viewed / recommended / category" cards were fabricated
   placeholder content (external Coursera images, departments that don't
   exist); don't reintroduce them without real data.
+  **Below `md` (768px) the panel is an iOS sheet, not the dropdown
+  (2026-09-13).** The page bar becomes a trigger (Explore → browse, the box or
+  the search disc → type) and the vaul `Drawer` holds the ONE live input; the
+  panel body is a single `panelBody` rendered in either host. Sheet chrome
+  copies `offline/install-card.tsx` (Figma `iuYSGaRV8xkcEGnyIltPRg` 34:3042).
+  The desktop scroll lock / Escape / y-offset effects are gated on
+  `!isMobile` — vaul owns those on phones and a second lock fights its restore.
 - **Money fields are `Float`** (`Video.price`, `VideoPurchase.amount`); go
   through `Number()` before arithmetic. Float→Decimal is deferred (ripples into
   ~13 read sites + a shared-DB table rewrite).
