@@ -118,16 +118,16 @@ export function getQuickActionsByRole(
           href: "/grades",
         },
         {
-          iconName: "Calendar",
-          label: "Schedule",
-          description: "View class schedule",
-          href: "/timetable",
+          iconName: "Users",
+          label: "Profile",
+          description: "View your profile",
+          href: "/profile",
         },
         {
-          iconName: "Chat",
-          label: "Messages",
-          description: "Send a message",
-          href: "/messages",
+          iconName: "Gear",
+          label: "Settings",
+          description: "Account settings",
+          href: "/settings",
         },
       ]
 

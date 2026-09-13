@@ -519,7 +519,8 @@
         "library": "Library",
         "notifications": "Notifications",
         "classrooms": "Classrooms",
-        "lessons": "Lessons"
+        "lessons": "Lessons",
+        "profile": "My Profile"
       },
       "of": "of",
       "homeWidget": {

@@ -99,6 +99,20 @@ export const roleRoutes: Record<string, Role[]> = {
   // ============================================================================
   "/admin": ["ADMIN", "DEVELOPER"],
   "/admin/*": ["ADMIN", "DEVELOPER"],
+  // The bare /settings page is personal (appearance, notifications, password,
+  // language) and every role's sidebar links it. Without this exact entry the
+  // "/settings/*" wildcard below also matches "/settings" itself and sends
+  // every non-admin to /unauthorized.
+  "/settings": [
+    "ADMIN",
+    "TEACHER",
+    "STUDENT",
+    "GUARDIAN",
+    "ACCOUNTANT",
+    "STAFF",
+    "USER",
+    "DEVELOPER",
+  ],
   "/settings/school": ["ADMIN", "DEVELOPER"],
   "/settings/branding": ["ADMIN", "DEVELOPER"],
   "/settings/academic": ["ADMIN", "DEVELOPER"],
