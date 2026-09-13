@@ -21,7 +21,7 @@ import {
   ContinueLearningCard,
   type LeadCardItem,
 } from "./continue-learning-card"
-import { CourseCard, CourseCardSkeleton } from "./course-card"
+import { CourseCard } from "./course-card"
 import { CourseShelf } from "./course-shelf"
 
 const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
@@ -460,37 +460,6 @@ export function LumosCoursesContent({
           />
         </>
       )}
-    </div>
-  )
-}
-
-export function LumosCoursesLoadingSkeleton() {
-  return (
-    <div className="space-y-10 py-6">
-      {/* Hero section */}
-      <section className="py-8">
-        <div className="mx-auto flex max-w-2xl flex-row items-center justify-center gap-4 md:gap-6">
-          <div className="bg-muted size-20 shrink-0 animate-pulse rounded-xl md:size-32" />
-          <div className="space-y-2 text-start">
-            <div className="bg-muted h-9 w-44 animate-pulse rounded md:h-12 md:w-64" />
-            <div className="bg-muted h-8 w-44 animate-pulse rounded md:h-10 md:w-64" />
-          </div>
-        </div>
-      </section>
-
-      {/* Search bar */}
-      <section>
-        <div className="bg-muted mx-auto h-11 w-full max-w-2xl animate-pulse rounded-full" />
-      </section>
-
-      {/* Course cards grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <div key={index} className="p-2">
-            <CourseCardSkeleton />
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

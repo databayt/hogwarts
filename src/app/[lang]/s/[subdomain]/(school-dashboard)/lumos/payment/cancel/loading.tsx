@@ -4,5 +4,5 @@
 import { LumosPaymentSkeleton } from "@/components/lumos/loading"
 
 export default function Loading() {
-  return <LumosPaymentSkeleton />
+  return <LumosPaymentSkeleton variant="cancel" />
 }

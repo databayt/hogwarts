@@ -20,6 +20,35 @@ last_audited: 2026-09-12
 
 ---
 
+## 2026-09-13 — every route's loading state mirrors its page
+
+The skeletons were written for pages that no longer exist, and half the routes
+borrowed a parent's. Fixed:
+
+- **One server-only module, `loading.tsx`.** `/lumos/courses` pulled its
+  fallback out of `courses/content.tsx`, a `"use client"` file, so the skeleton
+  could not paint before that bundle arrived. Its card skeleton drew five rows
+  the real card does not have, and used `animate-pulse`.
+- **Missing `loading.tsx` added** for `courses/[slug]`, `courses/[slug]/[lessonId]`,
+  `courses/[slug]/certificate` (all three were showing the catalog grid) and
+  `(app)/{enrollments,instructors,review,videos}`, which fell through to the root
+  spinner ABOVE the `(app)` layout — the tab strip vanished on every tab switch
+  (measured CLS 0.064 phone / 0.033 desktop on those four).
+- `/lumos` shows the landing skeleton instead of a spinner; `teach` and
+  `teach/videos` (pure redirects) no longer render a teach-overview skeleton
+  imported from `school-dashboard/loading.tsx` (both removed there).
+- Eight dead exports deleted (admin courses, course/lesson edit, not-admin…).
+- **Dashboard skeleton is the STAFF shape** (stats + recent courses): the only
+  way in is the Dashboard tab, and `getTabsForRole` shows tabs to video roles only.
+
+Verified by rendering each skeleton inside its real layout next to the loaded
+page at 390 and 1440 (ar, admin login): lesson, course detail, catalog, dashboard,
+enrollments, videos, review and payment cancel line up to within a few px above
+the fold. Data-conditional gambles, documented per skeleton: the catalog lead card
+assumes no instructor row (no lesson videos are seeded), instructors/review mirror
+their EMPTY states for the same reason, the certificate was not compared (404s
+for a viewer without one).
+
 ## 2026-09-12 — the phone player, re-measured against the captures
 
 The previous two passes were written from the captures but never checked

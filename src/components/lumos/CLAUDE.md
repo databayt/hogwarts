@@ -300,6 +300,16 @@ Lumos (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~93% complete a
   school arm would leak other schools' SCHOOL/PRIVATE materials. `Attachment`
   has no writer anywhere (P2: delete or adopt).
 
+- **Every loading state lives in `lumos/loading.tsx`, and that module stays
+  server-only (2026-09-13).** No `"use client"`, no hooks, no import from a
+  client component: a `loading.tsx` (or Suspense fallback) that reaches into a
+  client file cannot paint until that JS arrives. Each skeleton copies its
+  page's container/grid/aspect/breakpoint classes and names the source lines —
+  when a page's layout changes, change its skeleton in the same commit. Every
+  route under `(app)` needs its OWN `loading.tsx`: without one it falls through
+  to `lumos/loading.tsx`, which sits above the `(app)` layout and blanks the tab
+  strip mid-navigation.
+
 ## Danger Zones
 
 - **The legacy `streamEnrollment`/`streamCourse` models still exist** and
@@ -408,10 +418,13 @@ shelf underneath carries the button with the mark row beneath it; above `sm`
 nothing changed. The old mobile hero was the wide overlay squashed into a
 219px-tall strip with five rows of text over the picture.
 
-**That is why the hero's box is `aspect-[4/5] sm:aspect-video` and the PLAYER's
-is plain `aspect-video`.** They are the same `<div>`, switched on `showHero`.
-The stacked layout does not fit in 16:9 on a 390px screen; a taller box would
-letterbox the video. Change one and check the other.
+**The hero no longer has an aspect box; only the PLAYER is `aspect-video`.**
+(It was `aspect-[4/5] sm:aspect-video` until the frame learned to flow.) The
+hero's height now comes from the title card itself plus the caller's
+`sm:min-h-[85dvh]` and the poster's `max-h-[calc(85dvh-10rem)]`
+(`dashboard/lesson/content.tsx` ~543). The stacked layout does not fit in 16:9
+on a 390px screen; a 16:9 box would letterbox the video. Change one and check
+the other — and `LumosLessonPlayerSkeleton`, which copies these classes.
 
 The phone values are measured off the Figma frame (`Hogwarts`, node `574:30`),
 not eyeballed: 16px side padding, a 42px button at an 8px radius in `#F2F2F7`,

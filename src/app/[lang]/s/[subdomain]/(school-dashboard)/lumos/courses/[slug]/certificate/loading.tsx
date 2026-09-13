@@ -1,8 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { LumosHomeSkeleton } from "@/components/lumos/loading"
+import { LumosCertificateSkeleton } from "@/components/lumos/loading"
 
 export default function Loading() {
-  return <LumosHomeSkeleton />
+  return <LumosCertificateSkeleton />
 }

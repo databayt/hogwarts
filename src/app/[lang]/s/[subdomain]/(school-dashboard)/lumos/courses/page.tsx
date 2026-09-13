@@ -9,15 +9,13 @@ import { getPolicyContext } from "@/lib/rbac/context"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import {
-  LumosCoursesContent,
-  LumosCoursesLoadingSkeleton,
-} from "@/components/lumos/courses/content"
+import { LumosCoursesContent } from "@/components/lumos/courses/content"
 import { getAllCatalogCourses } from "@/components/lumos/data/catalog/get-all-courses"
 import { getContinueWatching } from "@/components/lumos/data/catalog/get-continue-watching"
 import { getCourseShelves } from "@/components/lumos/data/catalog/get-course-shelves"
 import { getStartHereLesson } from "@/components/lumos/data/catalog/get-start-here"
 import { lumosCoursesSearchParams } from "@/components/lumos/list-params"
+import { LumosCoursesSkeleton } from "@/components/lumos/loading"
 
 export const dynamic = "force-dynamic"
 
@@ -54,7 +52,7 @@ export default async function LumosCoursesPage({
   const userId = session?.user?.id || null
 
   return (
-    <Suspense fallback={<LumosCoursesLoadingSkeleton />}>
+    <Suspense fallback={<LumosCoursesSkeleton />}>
       <CoursesRenderer
         lang={lang}
         schoolId={schoolId}

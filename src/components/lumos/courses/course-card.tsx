@@ -8,7 +8,6 @@ import Link from "next/link"
 import { Star } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Skeleton } from "@/components/ui/skeleton"
 import type { CatalogCourseType } from "@/components/lumos/data/catalog/get-all-courses"
 
 // Course type key based on chapter count
@@ -164,20 +163,3 @@ function CourseCardImpl({
 // memo, only the hovered wrapper re-renders, not all N cards. Props are stable
 // per item (course/lang/dictionary).
 export const CourseCard = memo(CourseCardImpl)
-
-export function CourseCardSkeleton() {
-  return (
-    <div>
-      <Skeleton className="aspect-video w-full rounded-xl" />
-      <div className="space-y-1 pt-3">
-        <div className="flex items-center gap-1.5">
-          <Skeleton className="h-4 w-4 rounded" />
-          <Skeleton className="h-3 w-16" />
-        </div>
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-20" />
-      </div>
-    </div>
-  )
-}
