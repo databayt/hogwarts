@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,6 +27,14 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  AppTileGrid,
+  DateTile,
+  ListRow,
+  ListRows,
+  SectionHeader,
+  StatPanel,
+} from "@/components/school-dashboard/shared"
 import { localize } from "@/components/translation/localize"
 import { getLabels } from "@/components/translation/person"
 
@@ -154,302 +163,509 @@ export default async function GuardianExamsContent({
 
   const d = dictionary?.school?.exams
 
+  // Phone: one batched label pass for both lists (the desktop below runs its
+  // own inline passes, left as they were).
+  const phoneLabels = await getLabels(
+    [
+      ...upcomingExams.map((e) => e.subject?.name),
+      ...recentResults.map((r) => r.exam.subject?.name),
+    ],
+    lang,
+    schoolId!
+  )
+  const subjectOf = (name?: string | null) =>
+    name ? (phoneLabels.get(name) ?? name) : ""
+  const t = {
+    children: lang === "ar" ? "الأبناء" : "Children",
+    upcoming: lang === "ar" ? "امتحانات قادمة" : "Upcoming Exams",
+    results: lang === "ar" ? "نتائج حديثة" : "Recent Results",
+    viewAll: lang === "ar" ? "عرض الكل" : "View All",
+    today: lang === "ar" ? "اليوم" : "Today",
+    days: lang === "ar" ? "أيام" : "days",
+    avg: lang === "ar" ? "المعدل" : "Avg",
+  }
+  const averageOf = (childId: string) => {
+    const rows = recentResults.filter((r) => r.studentId === childId)
+    return rows.length > 0
+      ? Math.round(rows.reduce((sum, r) => sum + r.percentage, 0) / rows.length)
+      : null
+  }
+
   return (
-    <div className="space-y-8">
-      {/* Children Overview */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-blue-500/10 p-2">
-                <Users className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {lang === "ar" ? "الأبناء" : "Children"}
-                </p>
-                <p className="text-2xl font-bold">{children.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <>
+      {/* Phone: the family's figures as one grey panel with each child's
+          average in it, the doors as tiles, then the dated lists as rows. */}
+      <div className="space-y-8 md:hidden">
+        <StatPanel
+          items={[
+            {
+              key: "upcoming",
+              label: d?.dashboard?.stats?.upcoming || "Upcoming",
+              value: upcomingExams.length,
+              href: `/${lang}/exams/upcoming`,
+            },
+            {
+              key: "results",
+              label: d?.dashboard?.blocks?.results?.title || "Results",
+              value: recentResults.length,
+              href: `/${lang}/exams/result`,
+            },
+            ...children.map((child) => {
+              const avg = averageOf(child.id)
+              return {
+                key: child.id,
+                label: `${child.firstName} ${child.lastName}`,
+                value: avg === null ? "—" : `${avg}%`,
+                hint: t.avg,
+                tone:
+                  avg === null
+                    ? ("default" as const)
+                    : avg >= 80
+                      ? ("positive" as const)
+                      : avg >= 50
+                        ? ("default" as const)
+                        : ("negative" as const),
+              }
+            }),
+          ]}
+        />
 
-        <Card>
-          <CardContent className="p-4">
-            <Link
-              href={`/${lang}/exams/upcoming`}
-              className="flex items-center gap-3"
-            >
-              <div className="rounded-lg bg-orange-500/10 p-2">
-                <Calendar className="h-5 w-5 text-orange-500" />
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {d?.dashboard?.stats?.upcoming || "Upcoming"}
-                </p>
-                <p className="text-2xl font-bold">{upcomingExams.length}</p>
-              </div>
-            </Link>
-          </CardContent>
-        </Card>
+        <AppTileGrid
+          items={[
+            {
+              key: "upcoming",
+              label: d?.dashboard?.stats?.upcoming || "Upcoming",
+              href: `/${lang}/exams/upcoming`,
+              face: (
+                <DateTile
+                  weekday={formatDate(new Date(), lang, { weekday: "short" })}
+                  day={formatDate(new Date(), lang, { day: "numeric" })}
+                />
+              ),
+              badge: upcomingExams.length,
+            },
+            {
+              key: "results",
+              label: d?.dashboard?.blocks?.results?.title || "Results",
+              href: `/${lang}/exams/result`,
+              art: "grades",
+            },
+            {
+              key: "qbank",
+              label: d?.dashboard?.blocks?.qbank?.title || "Question Bank",
+              href: `/${lang}/exams/qbank`,
+              icon: BookOpen,
+              tint: "indigo",
+            },
+          ]}
+        />
 
-        <Card>
-          <CardContent className="p-4">
-            <Link
-              href={`/${lang}/exams/result`}
-              className="flex items-center gap-3"
-            >
-              <div className="rounded-lg bg-emerald-500/10 p-2">
-                <FileBarChart className="h-5 w-5 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {d?.dashboard?.blocks?.results?.title || "Results"}
-                </p>
-                <p className="text-2xl font-bold">{recentResults.length}</p>
-              </div>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <Link
-              href={`/${lang}/exams/qbank`}
-              className="flex items-center gap-3"
-            >
-              <div className="rounded-lg bg-purple-500/10 p-2">
-                <BookOpen className="h-5 w-5 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {d?.dashboard?.blocks?.qbank?.title || "Question Bank"}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {d?.dashboard?.blocks?.qbank?.browse || "Browse"}
-                </p>
-              </div>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Children Cards */}
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold">
-          {lang === "ar" ? "أبنائي" : "My Children"}
-        </h2>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {children.map((child) => {
-            const childResults = recentResults.filter(
-              (r) => r.studentId === child.id
-            )
-            const avgScore =
-              childResults.length > 0
-                ? childResults.reduce((sum, r) => sum + r.percentage, 0) /
-                  childResults.length
-                : null
-
-            return (
-              <Card key={child.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">
-                        {child.firstName} {child.lastName}
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        {childResults.length}{" "}
-                        {lang === "ar" ? "نتيجة" : "results"}
-                      </p>
-                    </div>
-                    {avgScore !== null && (
-                      <Badge
-                        variant={
-                          avgScore >= 80
-                            ? "default"
-                            : avgScore >= 50
-                              ? "secondary"
-                              : "destructive"
-                        }
-                      >
-                        {lang === "ar" ? "المعدل" : "Avg"} {avgScore.toFixed(0)}
-                        %
-                      </Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Upcoming Exams */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            {lang === "ar" ? "امتحانات قادمة" : "Upcoming Exams"}
-          </h2>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href={`/${lang}/exams/upcoming`}>
-              {lang === "ar" ? "عرض الكل" : "View All"}
-              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
-            </Link>
-          </Button>
-        </div>
-
-        {upcomingExams.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              <Calendar className="text-muted-foreground mb-3 h-10 w-10" />
-              <p className="text-muted-foreground text-sm">
-                {d?.guardianContent?.noUpcoming ?? "No upcoming exams"}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {await (async () => {
-              // Batched, deduped subject-name translation (no per-row N+1).
-              const subjectLabels = await getLabels(
-                upcomingExams.map((e) => e.subject?.name),
-                lang,
-                schoolId!
-              )
-              return upcomingExams.map((exam) => {
+        <section>
+          <SectionHeader
+            title={t.upcoming}
+            href={`/${lang}/exams/upcoming`}
+            linkLabel={t.viewAll}
+          />
+          {upcomingExams.length === 0 ? (
+            <p className="text-muted-foreground py-6 text-center text-sm">
+              {d?.guardianContent?.noUpcoming ?? "No upcoming exams"}
+            </p>
+          ) : (
+            <ListRows>
+              {upcomingExams.map((exam) => {
                 const daysUntil = differenceInDays(exam.examDate, today)
-                const name = exam.subject?.name
-                  ? (subjectLabels.get(exam.subject.name) ?? exam.subject.name)
-                  : ""
-
                 return (
-                  <Card
+                  <ListRow
                     key={exam.id}
-                    className="transition-shadow hover:shadow-md"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <CardTitle className="text-base">
-                          {exam.title}
-                        </CardTitle>
-                        <Badge
-                          variant={
-                            daysUntil === 0
-                              ? "destructive"
-                              : daysUntil <= 2
-                                ? "secondary"
-                                : "outline"
-                          }
-                        >
-                          {daysUntil === 0
-                            ? lang === "ar"
-                              ? "اليوم"
-                              : "Today"
-                            : `${daysUntil} ${lang === "ar" ? "أيام" : "days"}`}
-                        </Badge>
-                      </div>
-                      <CardDescription>{name}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {format(exam.examDate, "MMM d")}
-                        </div>
-                        <div className="text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {exam.startTime} ({exam.duration} min)
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    art={
+                      <DateTile
+                        weekday={formatDate(exam.examDate, lang, {
+                          weekday: "short",
+                        })}
+                        day={formatDate(exam.examDate, lang, {
+                          day: "numeric",
+                        })}
+                      />
+                    }
+                    title={exam.title}
+                    badge={
+                      <Badge
+                        variant={daysUntil === 0 ? "destructive" : "secondary"}
+                        className="font-normal"
+                      >
+                        {daysUntil === 0 ? t.today : `${daysUntil} ${t.days}`}
+                      </Badge>
+                    }
+                    description={subjectOf(exam.subject?.name) || undefined}
+                    meta={
+                      exam.startTime ? (
+                        <span className="tabular-nums">{exam.startTime}</span>
+                      ) : undefined
+                    }
+                  />
                 )
-              })
-            })()}
-          </div>
-        )}
-      </div>
+              })}
+            </ListRows>
+          )}
+        </section>
 
-      {/* Recent Results */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            {lang === "ar" ? "نتائج حديثة" : "Recent Results"}
-          </h2>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href={`/${lang}/exams/result`}>
-              {lang === "ar" ? "عرض الكل" : "View All"}
-              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
-            </Link>
-          </Button>
-        </div>
-
-        {recentResults.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              <FileBarChart className="text-muted-foreground mb-3 h-10 w-10" />
-              <p className="text-muted-foreground text-sm">
-                {d?.guardianContent?.noResults ?? "No results yet"}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3">
-            {await (async () => {
-              // Batched, deduped subject-name translation (no per-row N+1).
-              const resultLabels = await getLabels(
-                recentResults.map((r) => r.exam.subject?.name),
-                lang,
-                schoolId!
-              )
-              return recentResults.map((result) => {
-                const name = result.exam.subject?.name
-                  ? (resultLabels.get(result.exam.subject.name) ??
-                    result.exam.subject.name)
-                  : ""
-
-                return (
-                  <Card key={result.id}>
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium">{result.exam.title}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {result.student.firstName} {result.student.lastName} -{" "}
-                          {name} - {format(result.exam.examDate, "MMM d, yyyy")}
+        <section>
+          <SectionHeader
+            title={t.results}
+            href={`/${lang}/exams/result`}
+            linkLabel={t.viewAll}
+          />
+          {recentResults.length === 0 ? (
+            <p className="text-muted-foreground py-6 text-center text-sm">
+              {d?.guardianContent?.noResults ?? "No results yet"}
+            </p>
+          ) : (
+            <ListRows divided>
+              {recentResults.map((result) => (
+                <ListRow
+                  key={result.id}
+                  title={result.exam.title}
+                  description={[
+                    `${result.student.firstName} ${result.student.lastName}`,
+                    subjectOf(result.exam.subject?.name),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  meta={formatDate(result.exam.examDate, lang, {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                  trailing={
+                    <div className="flex items-center gap-2">
+                      <div className="text-end">
+                        <p className="text-lg leading-6 font-bold">
+                          {result.percentage.toFixed(0)}%
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {result.marksObtained}/{result.exam.totalMarks}
                         </p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="text-end">
-                          <p className="text-2xl font-bold">
-                            {result.percentage.toFixed(0)}%
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {result.marksObtained}/{result.exam.totalMarks}
-                          </p>
-                        </div>
-                        {result.grade && (
+                      {result.grade ? (
+                        <Badge
+                          variant={
+                            result.percentage >= 80
+                              ? "default"
+                              : result.percentage >= 50
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {result.grade}
+                        </Badge>
+                      ) : null}
+                    </div>
+                  }
+                />
+              ))}
+            </ListRows>
+          )}
+        </section>
+      </div>
+
+      <div className="hidden space-y-8 md:block">
+        {/* Children Overview */}
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-blue-500/10 p-2">
+                  <Users className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {lang === "ar" ? "الأبناء" : "Children"}
+                  </p>
+                  <p className="text-2xl font-bold">{children.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <Link
+                href={`/${lang}/exams/upcoming`}
+                className="flex items-center gap-3"
+              >
+                <div className="rounded-lg bg-orange-500/10 p-2">
+                  <Calendar className="h-5 w-5 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {d?.dashboard?.stats?.upcoming || "Upcoming"}
+                  </p>
+                  <p className="text-2xl font-bold">{upcomingExams.length}</p>
+                </div>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <Link
+                href={`/${lang}/exams/result`}
+                className="flex items-center gap-3"
+              >
+                <div className="rounded-lg bg-emerald-500/10 p-2">
+                  <FileBarChart className="h-5 w-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {d?.dashboard?.blocks?.results?.title || "Results"}
+                  </p>
+                  <p className="text-2xl font-bold">{recentResults.length}</p>
+                </div>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <Link
+                href={`/${lang}/exams/qbank`}
+                className="flex items-center gap-3"
+              >
+                <div className="rounded-lg bg-purple-500/10 p-2">
+                  <BookOpen className="h-5 w-5 text-purple-500" />
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {d?.dashboard?.blocks?.qbank?.title || "Question Bank"}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {d?.dashboard?.blocks?.qbank?.browse || "Browse"}
+                  </p>
+                </div>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Children Cards */}
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">
+            {lang === "ar" ? "أبنائي" : "My Children"}
+          </h2>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {children.map((child) => {
+              const childResults = recentResults.filter(
+                (r) => r.studentId === child.id
+              )
+              const avgScore =
+                childResults.length > 0
+                  ? childResults.reduce((sum, r) => sum + r.percentage, 0) /
+                    childResults.length
+                  : null
+
+              return (
+                <Card key={child.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">
+                          {child.firstName} {child.lastName}
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          {childResults.length}{" "}
+                          {lang === "ar" ? "نتيجة" : "results"}
+                        </p>
+                      </div>
+                      {avgScore !== null && (
+                        <Badge
+                          variant={
+                            avgScore >= 80
+                              ? "default"
+                              : avgScore >= 50
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {lang === "ar" ? "المعدل" : "Avg"}{" "}
+                          {avgScore.toFixed(0)}%
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Upcoming Exams */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">
+              {lang === "ar" ? "امتحانات قادمة" : "Upcoming Exams"}
+            </h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/${lang}/exams/upcoming`}>
+                {lang === "ar" ? "عرض الكل" : "View All"}
+                <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+              </Link>
+            </Button>
+          </div>
+
+          {upcomingExams.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-8">
+                <Calendar className="text-muted-foreground mb-3 h-10 w-10" />
+                <p className="text-muted-foreground text-sm">
+                  {d?.guardianContent?.noUpcoming ?? "No upcoming exams"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {await (async () => {
+                // Batched, deduped subject-name translation (no per-row N+1).
+                const subjectLabels = await getLabels(
+                  upcomingExams.map((e) => e.subject?.name),
+                  lang,
+                  schoolId!
+                )
+                return upcomingExams.map((exam) => {
+                  const daysUntil = differenceInDays(exam.examDate, today)
+                  const name = exam.subject?.name
+                    ? (subjectLabels.get(exam.subject.name) ??
+                      exam.subject.name)
+                    : ""
+
+                  return (
+                    <Card
+                      key={exam.id}
+                      className="transition-shadow hover:shadow-md"
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <CardTitle className="text-base">
+                            {exam.title}
+                          </CardTitle>
                           <Badge
                             variant={
-                              result.percentage >= 80
-                                ? "default"
-                                : result.percentage >= 50
+                              daysUntil === 0
+                                ? "destructive"
+                                : daysUntil <= 2
                                   ? "secondary"
-                                  : "destructive"
+                                  : "outline"
                             }
                           >
-                            {result.grade}
+                            {daysUntil === 0
+                              ? lang === "ar"
+                                ? "اليوم"
+                                : "Today"
+                              : `${daysUntil} ${lang === "ar" ? "أيام" : "days"}`}
                           </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })
-            })()}
+                        </div>
+                        <CardDescription>{name}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {format(exam.examDate, "MMM d")}
+                          </div>
+                          <div className="text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            {exam.startTime} ({exam.duration} min)
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })
+              })()}
+            </div>
+          )}
+        </div>
+
+        {/* Recent Results */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">
+              {lang === "ar" ? "نتائج حديثة" : "Recent Results"}
+            </h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/${lang}/exams/result`}>
+                {lang === "ar" ? "عرض الكل" : "View All"}
+                <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+              </Link>
+            </Button>
           </div>
-        )}
+
+          {recentResults.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-8">
+                <FileBarChart className="text-muted-foreground mb-3 h-10 w-10" />
+                <p className="text-muted-foreground text-sm">
+                  {d?.guardianContent?.noResults ?? "No results yet"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-3">
+              {await (async () => {
+                // Batched, deduped subject-name translation (no per-row N+1).
+                const resultLabels = await getLabels(
+                  recentResults.map((r) => r.exam.subject?.name),
+                  lang,
+                  schoolId!
+                )
+                return recentResults.map((result) => {
+                  const name = result.exam.subject?.name
+                    ? (resultLabels.get(result.exam.subject.name) ??
+                      result.exam.subject.name)
+                    : ""
+
+                  return (
+                    <Card key={result.id}>
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div>
+                          <p className="font-medium">{result.exam.title}</p>
+                          <p className="text-muted-foreground text-sm">
+                            {result.student.firstName} {result.student.lastName}{" "}
+                            - {name} -{" "}
+                            {format(result.exam.examDate, "MMM d, yyyy")}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="text-end">
+                            <p className="text-2xl font-bold">
+                              {result.percentage.toFixed(0)}%
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {result.marksObtained}/{result.exam.totalMarks}
+                            </p>
+                          </div>
+                          {result.grade && (
+                            <Badge
+                              variant={
+                                result.percentage >= 80
+                                  ? "default"
+                                  : result.percentage >= 50
+                                    ? "secondary"
+                                    : "destructive"
+                              }
+                            >
+                              {result.grade}
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })
+              })()}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
