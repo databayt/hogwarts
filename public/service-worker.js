@@ -15,7 +15,7 @@
 // behaviour.
 //
 // Rule: kun `.claude/rules/next-16/sw-no-authenticated-cache.md`.
-const STATIC_CACHE_NAME = "hogwarts-static-v3"
+const STATIC_CACHE_NAME = "hogwarts-static-v4"
 const STATIC_CACHE_CAP = 150
 
 // Public, locale-explicit, answer 200 without a session. `/offline` is in the
