@@ -11,9 +11,9 @@ import {
   useTransition,
 } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
 
 import { asset } from "@/lib/asset-url"
+import { formatDate } from "@/lib/i18n-format"
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
@@ -29,8 +29,11 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
-  GridContainer,
   GridEmptyState,
+  ItemCard,
+  ItemGrid,
+  ItemGridMore,
+  ListingViews,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
 import { DataTable } from "@/components/table/data-table"
@@ -41,8 +44,8 @@ import {
   getAnnouncements,
   toggleAnnouncementPublish,
 } from "./actions"
-import type { AnnouncementRow } from "./columns"
-import { getAnnouncementColumns } from "./columns"
+import type { AnnouncementRow, ColumnCallbacks } from "./columns"
+import { AnnouncementRowActions, getAnnouncementColumns } from "./columns"
 import {
   AnnouncementWizardModal,
   type AnnouncementSaveResult,
@@ -116,11 +119,13 @@ function AnnouncementsTableInner({
   permissions = FULL_UI_PERMISSIONS,
 }: AnnouncementsTableProps) {
   const t = dictionary
-  const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  // View mode (table/grid)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  // View mode (table/grid). A phone opens on the grid until the reader picks.
+  const { view, phoneView, toggleView } = usePlatformView({
+    defaultView: "table",
+    phoneView: "grid",
+  })
 
   // Search state with debouncing
   const [searchInput, setSearchInput] = useState("")
@@ -255,16 +260,22 @@ function AnnouncementsTableInner({
     [refresh, optimisticUpdate]
   )
 
+  // One set of row callbacks for both views: the table's actions cell and the
+  // grid card's menu call exactly the same handlers.
+  const rowCallbacks = useMemo<ColumnCallbacks>(
+    () => ({
+      onDelete: handleDelete,
+      onTogglePublish: handleTogglePublish,
+      onEdit: (announcement) => handleEdit(announcement.id),
+      permissions,
+    }),
+    [handleDelete, handleTogglePublish, handleEdit, permissions]
+  )
+
   // Generate columns with dictionary, locale, and optimistic callbacks
   const columns = useMemo(
-    () =>
-      getAnnouncementColumns(t, lang, {
-        onDelete: handleDelete,
-        onTogglePublish: handleTogglePublish,
-        onEdit: (announcement) => handleEdit(announcement.id),
-        permissions,
-      }),
-    [t, lang, handleDelete, handleTogglePublish, handleEdit, permissions]
+    () => getAnnouncementColumns(t, lang, rowCallbacks),
+    [t, lang, rowCallbacks]
   )
 
   // Table instance (for table view)
@@ -292,26 +303,21 @@ function AnnouncementsTableInner({
     setSearchInput(value)
   }, [])
 
-  // Handle view
-  const handleView = useCallback(
-    (id: string) => {
-      router.push(`/${lang}/announcements/${id}`)
-    },
-    [router, lang]
-  )
+  const scopeLabel = (scope: string) =>
+    scope === "school"
+      ? t.schoolWide
+      : scope === "class"
+        ? t.classSpecific
+        : scope === "role"
+          ? t.roleSpecific
+          : scope
 
-  // Get scope badge variant
-  const getScopeBadge = (scope: string) => {
-    switch (scope) {
-      case "school":
-        return { label: t.schoolWide, variant: "default" as const }
-      case "class":
-        return { label: t.classSpecific, variant: "secondary" as const }
-      case "role":
-        return { label: t.roleSpecific, variant: "outline" as const }
-      default:
-        return { label: scope, variant: "outline" as const }
-    }
+  const priorityLabel = (priority: string) => {
+    const levels = t.priority as
+      | Record<string, { label?: string } | string>
+      | undefined
+    const level = levels?.[priority]
+    return typeof level === "object" && level?.label ? level.label : priority
   }
 
   // Create locale-aware CSV export function
@@ -357,6 +363,7 @@ function AnnouncementsTableInner({
       <PlatformToolbar
         table={table}
         view={view}
+        phoneView={phoneView}
         onToggleView={toggleView}
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
@@ -368,102 +375,100 @@ function AnnouncementsTableInner({
         translations={toolbarTranslations}
       />
 
-      {view === "table" ? (
-        <DataTable
-          table={table}
-          paginationMode="load-more"
-          hasMore={hasMore}
-          isLoading={isLoading || isPending}
-          onLoadMore={loadMore}
-          translations={tableTranslations}
-        />
-      ) : (
-        <>
-          {data.length === 0 ? (
-            <GridEmptyState
-              title={t.allAnnouncements}
-              description={t.createNewAnnouncement}
-              icon={
-                <Image
-                  src={asset("/icons/news.svg")}
-                  alt=""
-                  width={48}
-                  height={48}
-                />
-              }
-            />
-          ) : (
-            <GridContainer columns={4} className="mt-4">
-              {data.map((announcement) => {
-                const displayTitle = getTitle(announcement)
-                const scopeBadge = getScopeBadge(announcement.scope)
-                return (
-                  <div
+      <ListingViews
+        view={view}
+        phoneView={phoneView}
+        table={
+          <DataTable
+            table={table}
+            paginationMode="load-more"
+            hasMore={hasMore}
+            isLoading={isLoading || isPending}
+            onLoadMore={loadMore}
+            translations={tableTranslations}
+          />
+        }
+        grid={
+          <>
+            {data.length === 0 ? (
+              <GridEmptyState
+                title={t.allAnnouncements}
+                description={t.createNewAnnouncement}
+                icon={
+                  <Image
+                    src={asset("/icons/news.svg")}
+                    alt=""
+                    width={48}
+                    height={48}
+                  />
+                }
+              />
+            ) : (
+              <ItemGrid className="mt-2">
+                {data.map((announcement) => (
+                  <ItemCard
                     key={announcement.id}
-                    className="bg-background hover:border-primary cursor-pointer rounded-lg border p-4 transition-[border-color] duration-200"
-                    onClick={() => handleView(announcement.id)}
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="text-foreground line-clamp-2 font-medium">
-                          {displayTitle}
-                        </h4>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
+                    href={`/${lang}/announcements/${announcement.id}`}
+                    eyebrow={scopeLabel(announcement.scope)}
+                    title={getTitle(announcement)}
+                    badges={
+                      <>
+                        {/* On a grey card a `secondary` chip is grey on grey,
+                            so the quiet chips sit on the page's own white. */}
                         <Badge
                           variant={
                             announcement.published ? "default" : "outline"
                           }
+                          className={
+                            announcement.published ? undefined : "bg-background"
+                          }
                         >
                           {announcement.published ? t.published : t.draft}
                         </Badge>
-                        <Badge variant={scopeBadge.variant}>
-                          {scopeBadge.label}
-                        </Badge>
-                        {announcement.priority !== "normal" && (
+                        {announcement.priority === "urgent" ||
+                        announcement.priority === "high" ? (
                           <Badge
                             variant={
                               announcement.priority === "urgent"
                                 ? "destructive"
-                                : "secondary"
+                                : "outline"
+                            }
+                            className={
+                              announcement.priority === "urgent"
+                                ? undefined
+                                : "bg-background"
                             }
                           >
-                            {announcement.priority === "high"
-                              ? t.high
-                              : announcement.priority === "urgent"
-                                ? t.priority?.urgent?.label || "Urgent"
-                                : announcement.priority === "low"
-                                  ? t.low
-                                  : announcement.priority}
+                            {priorityLabel(announcement.priority)}
                           </Badge>
-                        )}
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        {new Date(announcement.createdAt).toLocaleDateString(
-                          lang === "ar" ? "ar-SA" : "en-US"
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </GridContainer>
-          )}
+                        ) : null}
+                      </>
+                    }
+                    meta={formatDate(announcement.createdAt, lang)}
+                    actions={
+                      <AnnouncementRowActions
+                        announcement={announcement}
+                        dictionary={t}
+                        locale={lang}
+                        callbacks={rowCallbacks}
+                      />
+                    }
+                  />
+                ))}
+              </ItemGrid>
+            )}
 
-          {/* Load more for grid view */}
-          {hasMore && (
-            <div className="mt-4 flex justify-center">
-              <button
+            {hasMore && (
+              <ItemGridMore
                 onClick={loadMore}
-                disabled={isLoading}
-                className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
-              >
-                {isLoading ? t.loading : t.loadMore}
-              </button>
-            </div>
-          )}
-        </>
-      )}
+                loading={isLoading}
+                label={t.loadMore}
+                loadingLabel={t.loading}
+              />
+            )}
+          </>
+        }
+      />
     </>
   )
 }

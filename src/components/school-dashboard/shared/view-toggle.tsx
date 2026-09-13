@@ -17,6 +17,12 @@ import {
 
 interface ViewToggleProps {
   view: ViewMode
+  /**
+   * The view a phone is showing on its own default (see `usePlatformView`).
+   * When it differs from `view`, the icon is swapped by breakpoint so each
+   * width offers the view it is NOT showing.
+   */
+  phoneView?: ViewMode | null
   onToggle: () => void
   translations?: {
     tableView?: string
@@ -31,6 +37,7 @@ interface ViewToggleProps {
 
 function ViewToggleInner({
   view,
+  phoneView,
   onToggle,
   translations = {},
   size = "icon",
@@ -46,6 +53,7 @@ function ViewToggleInner({
 
   const isTable = view === "table"
   const tooltipText = isTable ? t.switchToGrid : t.switchToTable
+  const split = Boolean(phoneView && phoneView !== view)
 
   return (
     <TooltipProvider>
@@ -58,7 +66,21 @@ function ViewToggleInner({
             className={cn(size === "icon" && "h-9 w-9 p-0", className)}
             aria-label={tooltipText}
           >
-            {isTable ? (
+            {split ? (
+              <>
+                {/* Phone: showing `phoneView`, so offer the other one. */}
+                {phoneView === "grid" ? (
+                  <List className="h-4 w-4 md:hidden" />
+                ) : (
+                  <LayoutGrid className="h-4 w-4 md:hidden" />
+                )}
+                {isTable ? (
+                  <LayoutGrid className="hidden h-4 w-4 md:block" />
+                ) : (
+                  <List className="hidden h-4 w-4 md:block" />
+                )}
+              </>
+            ) : isTable ? (
               <LayoutGrid className="h-4 w-4" />
             ) : (
               <List className="h-4 w-4" />

@@ -52,6 +52,8 @@ interface PlatformToolbarProps<TData> {
   table?: Table<TData>
   /** Current view mode */
   view: ViewMode
+  /** The view a phone shows on its own default — `usePlatformView().phoneView` */
+  phoneView?: ViewMode | null
   /** Toggle view callback */
   onToggleView: () => void
   /** Search value */
@@ -202,6 +204,7 @@ function useToolbarTranslations(
 function PlatformToolbarInner<TData>({
   table,
   view,
+  phoneView,
   onToggleView,
   searchValue = "",
   onSearchChange,
@@ -325,6 +328,8 @@ function PlatformToolbarInner<TData>({
 
       {/* Actions — same side as the filters, never pushed to the far edge */}
       <ToolbarGroup>
+        {/* Already `hidden lg:flex` inside, so a phone on its grid default
+            never sees a column picker for a table it is not showing. */}
         {view === "table" && table && showColumnToggle && (
           <DataTableViewOptions
             table={table}
@@ -335,6 +340,7 @@ function PlatformToolbarInner<TData>({
         {showViewToggle && (
           <ViewToggle
             view={view}
+            phoneView={phoneView}
             onToggle={onToggleView}
             translations={viewToggleTranslations}
           />

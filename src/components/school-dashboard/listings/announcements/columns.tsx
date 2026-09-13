@@ -57,7 +57,6 @@ export const getAnnouncementColumns = (
   callbacks?: ColumnCallbacks
 ): ColumnDef<AnnouncementRow>[] => {
   const t = dictionary
-  const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
 
   // Map dictionary keys to column structure for easier access
   const columns = {
@@ -151,48 +150,68 @@ export const getAnnouncementColumns = (
     {
       id: "actions",
       header: () => <span className="sr-only">{columns.actions}</span>,
-      cell: ({ row }) => {
-        const announcement = row.original
-
-        // Was `useModal().openModal(id)`, which both broke the rules of hooks
-        // (a cell renderer is not a component) and opened nothing — no modal
-        // was ever mounted for announcements. Edit is a plain callback now.
-        const onEdit = () => {
-          callbacks?.onEdit?.(announcement)
-        }
-        const onToggle = () => {
-          // Use callback for instant optimistic update
-          callbacks?.onTogglePublish?.(announcement)
-        }
-        const onDelete = () => {
-          // Use callback for instant optimistic removal
-          callbacks?.onDelete?.(announcement)
-        }
-        return (
-          <ActionMenu srLabel={t.openMenu}>
-            <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <ActionMenuItem
-              label={t.view}
-              href={`/${locale}/announcements/${announcement.id}`}
-            />
-            {permissions.showEditAction && (
-              <ActionMenuItem label={t.edit} onClick={onEdit} />
-            )}
-            {permissions.showToggleStatus && (
-              <ActionMenuItem
-                label={announcement.published ? t.unpublish : t.publish}
-                onClick={onToggle}
-              />
-            )}
-            {permissions.showDeleteAction && (
-              <ActionMenuItem label={t.delete} onClick={onDelete} />
-            )}
-          </ActionMenu>
-        )
-      },
+      cell: ({ row }) => (
+        <AnnouncementRowActions
+          announcement={row.original}
+          dictionary={t}
+          locale={locale}
+          callbacks={callbacks}
+        />
+      ),
       enableSorting: false,
       enableColumnFilter: false,
     },
   ]
+}
+
+/**
+ * The row's menu — view, edit, publish, delete — shared by the table's actions
+ * cell and the grid's cards, so a phone reading the grid can do everything the
+ * table allows.
+ *
+ * Edit was once `useModal().openModal(id)`, which both broke the rules of hooks
+ * (a cell renderer is not a component) and opened nothing — no modal was ever
+ * mounted for announcements. It is a plain callback now.
+ */
+export function AnnouncementRowActions({
+  announcement,
+  dictionary: t,
+  locale,
+  callbacks,
+}: {
+  announcement: AnnouncementRow
+  dictionary: Dictionary["school"]["announcements"]
+  locale: Locale
+  callbacks?: ColumnCallbacks
+}) {
+  const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
+
+  return (
+    <ActionMenu srLabel={t.openMenu}>
+      <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      <ActionMenuItem
+        label={t.view}
+        href={`/${locale}/announcements/${announcement.id}`}
+      />
+      {permissions.showEditAction && (
+        <ActionMenuItem
+          label={t.edit}
+          onClick={() => callbacks?.onEdit?.(announcement)}
+        />
+      )}
+      {permissions.showToggleStatus && (
+        <ActionMenuItem
+          label={announcement.published ? t.unpublish : t.publish}
+          onClick={() => callbacks?.onTogglePublish?.(announcement)}
+        />
+      )}
+      {permissions.showDeleteAction && (
+        <ActionMenuItem
+          label={t.delete}
+          onClick={() => callbacks?.onDelete?.(announcement)}
+        />
+      )}
+    </ActionMenu>
+  )
 }
