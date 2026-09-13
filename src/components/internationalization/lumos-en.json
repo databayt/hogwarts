@@ -744,14 +744,7 @@
       "noResults": "No matching courses",
       "seeAllResults": "See all results",
       "gradeLabel": "Grade {n}",
-      "terms": [
-        "Math",
-        "Science",
-        "English",
-        "Arabic",
-        "History",
-        "Geography"
-      ]
+      "terms": ["Math", "Science", "English", "Arabic", "History", "Geography"]
     },
     "offline": {
       "offlineNow": "You're offline",
@@ -782,7 +775,9 @@
       "installPicCopy": "Copy",
       "installPicFavorites": "Add to Favorites",
       "installPicHome": "Add to Home Screen",
-      "installAppName": "balqalam"
+      "installAppName": "balqalam",
+      "offlineBrowsing": "You're offline. Pages you've opened before still work, and anything you do is saved and synced later.",
+      "staleCopy": "Slow connection — showing the last saved copy of this page."
     },
     "viewer": {
       "viewOnly": "View only — downloading is disabled by the school",

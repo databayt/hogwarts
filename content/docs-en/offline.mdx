@@ -64,6 +64,19 @@ Two more pieces landed the same day: **Web Push** (a browser or the installed ap
 
 What is verified by tooling: the install audit passes on `demo` and `kingfahd` (0 FAIL), the worker controls the page after one reload, the outbox replay returns `applied` then `duplicate`, and the push cron reports the channel configured. What only a phone can verify: that a push actually shows on a device and that the offline page appears under a real disconnect — both tracked in [hogwarts#408](https://github.com/databayt/hogwarts/issues/408).
 
+### Shipped 2026-09-13 — explorable offline, and fast on thin networks
+
+A live measurement of `kingfahd` on 4G explained the slow menu: every dashboard open shipped 1.38 MB of HTML (935 KB of it the dictionary), 63 script chunks, 1 MB of CSS from marketing-site clones, 36 prefetch requests and **two 1.1 MB Server Action responses** — because the proxy wrote the locale cookie on every response, and Next answers any Server Action whose request carries a proxy-set cookie with a full re-render of the page. And no static file was cached at Cloudflare's edge: each chunk round-tripped to the single container, ~0.5 s apiece from Europe. All of it is fixed: the cookie is written only when it changes, the Worker serves hashed chunks, fonts and optimised images from the edge, the clone stylesheets load only on the pages that use them, every sidebar route has a loading boundary so its link is prefetched and a tap draws the skeleton at once, and pages visited in the last 30 s come back from memory.
+
+**Offline is no longer a dead end.** Service worker v6 keeps every screen a signed-in user opens — the HTML of a full load and the payload of a client-side navigation — in a cache named by a per-user session key the server sends with each response. A different key, or none, empties the previous person's pages, so a shared device can only ever replay the last signed-in person's own screens. With no connection, an opened page renders as last seen and the blue strip says so; an unopened page shows the offline page. When the network is merely slow (no answer within four seconds), the saved copy appears with a "slow connection — saved copy" strip and a Retry. The installed app also saves the whole sidebar in the background — once a day, on 4G, with data saver off, after the screen is idle — so the menu can be explored at a bus stop.
+
+#### How to experience it
+
+1. Open the installed app on a good connection, sign in, and leave the dashboard on screen for a minute.
+2. Airplane mode. Tap through the sidebar: the pages you opened — and, from the installed app, the rest of the menu — render as they last were, under the strip "You're offline. Pages you've opened before still work…". Anything you mark is queued as before.
+3. Throttle instead of cutting (a weak-signal room): a page that takes longer than four seconds to answer shows its saved copy at once with the slow-connection strip; Retry asks the server again.
+4. Sign out and sign in as another account on the same phone: the first account's saved pages are gone before the second dashboard renders.
+
 ## Engineering principles (no compromise)
 
 These are non-negotiable. Each principle drives concrete choices in the architecture.

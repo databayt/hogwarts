@@ -17,6 +17,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { InstallCard } from "@/components/offline/install-card"
 import { OfflineSyncBanner } from "@/components/offline/sync-banner"
+import { OfflineWarmup } from "@/components/offline/warmup"
 import { ReportIssueFooter } from "@/components/report-issue-footer"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
@@ -25,6 +26,10 @@ import { ForceChangePasswordModal } from "@/components/school-dashboard/force-ch
 import { WelcomeDialog } from "@/components/school-dashboard/welcome/welcome-dialog"
 import PlatformHeader from "@/components/template/platform-header/content"
 import PlatformSidebar from "@/components/template/platform-sidebar/content"
+import {
+  platformNav,
+  type Role as PlatformRole,
+} from "@/components/template/platform-sidebar/config"
 import { getText } from "@/components/translation/display"
 import { detectLang } from "@/components/translation/util"
 
@@ -150,6 +155,17 @@ export default async function PlatformLayout({
   const serverRole = session.user.role
   const isRTL = checkIsRTL(lang as Locale)
 
+  // The sidebar this role will see, as URLs, for the service worker to save
+  // ahead of the first disconnection (same filter as the sidebar itself).
+  const enabledModules = school.enabledModules as string[] | null | undefined
+  const warmUrls = platformNav
+    .filter((item) => item.roles.includes(serverRole as PlatformRole))
+    .filter(
+      (item) =>
+        item.alwaysVisible || !enabledModules || enabledModules.includes(item.key)
+    )
+    .map((item) => `/${lang}${item.href}`)
+
   // Check if user must change their password (e.g., admin-forced reset)
   const currentUser = await db.user.findUnique({
     where: { id: session.user.id },
@@ -197,6 +213,7 @@ export default async function PlatformLayout({
                         (dictionary as Record<string, any>)?.lumos?.offline
                       }
                     />
+                    <OfflineWarmup urls={warmUrls} />
                     {children}
                     <ReportIssueFooter />
                   </div>
