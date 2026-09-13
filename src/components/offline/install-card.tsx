@@ -40,10 +40,10 @@ type Platform = "ios" | "android"
  *   button instead of a decorative icon nobody can press.
  *
  * Hidden when already installed (standalone), on desktop, or for two weeks
- * after a dismissal. The surface is the house liquid glass — the same tokens
- * the messaging tab bar was measured to from Apple's kit (Figma
- * iuYSGaRV8xkcEGnyIltPRg, "Liquid Glass – Regular – Large"). Installed is the
- * prerequisite for Web Push on iOS.
+ * after a dismissal. The row is styled like an App Store search result (icon,
+ * bold app name, grey blurb, a "Get"-style pill with a caption under it), per
+ * Abdout's reference of 2026-09-13. Installed is the prerequisite for Web
+ * Push on iOS.
  */
 /** Platform detection as an external snapshot: null on the server and on
  *  desktop, "ios" / "android" on phones that are not installed and not
@@ -145,33 +145,37 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
       <div
         role="region"
         aria-label={t("installTitle", "Add balqalam to your Home Screen")}
-        className="wa-glass-tabbar text-foreground relative mb-4 flex items-center gap-3 rounded-[22px] p-3 pe-10 md:hidden"
+        className="bg-card text-card-foreground border-border/50 relative mb-4 flex items-center gap-3 rounded-2xl border p-3 pe-8 shadow-sm md:hidden"
       >
         <Image
           src="/icon-192.png"
           alt=""
-          width={44}
-          height={44}
-          className="size-11 shrink-0 rounded-[12px] shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+          width={64}
+          height={64}
+          className="size-16 shrink-0 rounded-[14px]"
         />
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="line-clamp-2 text-sm leading-tight font-semibold">
-            {t("installTitle", "Add balqalam to your Home Screen")}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[17px] leading-tight font-bold">
+            {t("installAppName", "balqalam")}
           </p>
-          <p className="text-muted-foreground line-clamp-2 text-xs leading-snug">
+          <p className="text-muted-foreground line-clamp-2 text-[15px] leading-snug">
             {t(
               "installHint",
               "Opens like an app, works without a connection, and can send notifications."
             )}
           </p>
         </div>
-        <Button
-          size="sm"
-          className="h-8 shrink-0 rounded-full px-4 font-semibold"
-          onClick={download}
-        >
-          {t("installDownload", "Download app")}
-        </Button>
+        <div className="flex shrink-0 flex-col items-center gap-1">
+          <Button
+            onClick={download}
+            className="h-8 rounded-full bg-[#EFEFF4] px-5 text-[15px] font-bold text-[#007AFF] hover:bg-[#E5E5EA] dark:bg-[#2C2C2E] dark:text-[#0A84FF] dark:hover:bg-[#3A3A3C]"
+          >
+            {t("installDownload", "Download app")}
+          </Button>
+          <span className="text-muted-foreground text-[11px] leading-none">
+            {t("installCaption", "Free")}
+          </span>
+        </div>
         <button
           type="button"
           onClick={dismiss}

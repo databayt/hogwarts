@@ -783,7 +783,9 @@
       "installIosStep2": "Choose “Add to Home Screen”, then tap Add.",
       "installAndroidStep1": "Open the browser menu (⋮) at the top.",
       "installAndroidStep2": "Choose “Add to Home screen” or “Install app”.",
-      "installGotIt": "Got it"
+      "installGotIt": "Got it",
+      "installAppName": "balqalam",
+      "installCaption": "Free"
     },
     "viewer": {
       "viewOnly": "View only — downloading is disabled by the school",

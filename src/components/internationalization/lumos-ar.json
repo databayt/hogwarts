@@ -783,7 +783,9 @@
       "installIosStep2": "اختر «إضافة إلى الشاشة الرئيسية» ثم اضغط إضافة.",
       "installAndroidStep1": "افتح قائمة المتصفح (⋮) في الأعلى.",
       "installAndroidStep2": "اختر «إضافة إلى الشاشة الرئيسية» أو «تثبيت التطبيق».",
-      "installGotIt": "فهمت"
+      "installGotIt": "فهمت",
+      "installAppName": "بلقلم",
+      "installCaption": "مجاني"
     },
     "viewer": {
       "viewOnly": "للعرض فقط — التنزيل معطّل من المدرسة",
