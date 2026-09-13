@@ -17,6 +17,14 @@ last_audited: 2026-08-28
 
 The Exams block provides a comprehensive examination platform covering the full lifecycle from question authoring through exam generation, administration, automated marking, and results analytics. Organized into 5 core sub-blocks plus additional modules (paper, wizard, grading, progress, mock). Routes are wired (the earlier "not yet wired" claim was stale — corrected 2026-08-14).
 
+### Phone layout (2026-09-13)
+
+Below `md` the landing (per role) and the authoring sub-pages follow the school-dashboard
+phone pattern (`../shared/README.md`): banner + stat panel + tile doors on the landing, grey
+two-across cards and pill buttons on generate/qbank/certificates. `md` and up render as before;
+the exams DataTables (generate, manage, qbank, mark) have no view toggle and stay table-only.
+Landing copy for student/guardian/teacher lives in `results.examsHome`.
+
 ### Capabilities by Role
 
 - **Admin**: Full CRUD on exams, question bank, templates, results; configure grade boundaries; generate PDF reports; view analytics

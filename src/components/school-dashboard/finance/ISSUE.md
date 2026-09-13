@@ -11,6 +11,40 @@ docs: https://ed.databayt.org/en/docs/fees
 last_audited: 2026-09-09
 ---
 
+## 2026-09-13 — phone pass (LOCAL, not pushed)
+
+Below `md` only; `md` and up keep their classes unless noted. Kit: `../shared/README.md`.
+
+- **Landing** `b0b506ade`: stat panel, tile doors, module rows; the family surface opens on the
+  green `FamilyBalanceBanner` with pill actions.
+- **Listings** `454c66dea`: fee structures, assignments, payments, fines, scholarships and salary
+  structures had a table/grid toggle that switched to nothing. Each renders `TableGrid` cards
+  now, and a phone opens on the grid. **Every width:** the fee list pages never passed a
+  currency, so an SDG school read all fee amounts as US$ — pages pass `School.currency`
+  (`getFeeCurrency`) now.
+- **Sub-landings** `76b37604e` via `lib/dashboard-components.tsx` (accounts, budget, expenses,
+  payroll, timesheet, wallet): one grey stat panel, grey feature cards with pills.
+  **Every width:** its `formatCurrency` pins Latin digits (was Arabic-Indic money beside Latin
+  counts).
+- **accounts / banking / budget / dashboard / expenses / invoice / receipt** `0da0f53b9`: grouped
+  grey lists with figures under the title, scrolling ledger/reconciliation tables, stat panels,
+  grey forms with pill submits. invoice/analysis no longer clips (phantom grid column from
+  `col-span-2` with no columns; fixed below md only — still overflows 768–1023px).
+- **Open — strings:** `finance.reconciliation` is missing from `finance.json` entirely (the whole
+  page is English on /ar); `budget/content.tsx:129` "utilization"; `banking.justNow/minsAgo/
+  hoursAgo/daysAgo` don't exist; `bank-list.tsx` "Never"/"Just now"/"{h}h ago" + raw
+  "depository"; transaction-history column toggle shows raw keys; invoice dashboard status badge
+  shows raw codes; stored English (journal descriptions, dashboard transactions, budget
+  categories, expense-category descriptions) needs a `getLabels` pass.
+- **Open — bugs:** my-banks hardcodes USD (`content.tsx:146`, `bank-list.tsx:168`);
+  `budget/all/page.tsx:100` hardcodes "$" and the server locale; banking `formatAmount` and the
+  dashboard KPIs use `ar-SA` (Arabic-Indic digits); payment-transfer's currency prefix overlaps
+  the amount (`ps-8` too narrow for "ج.س."); invoice onboarding currency select renders empty
+  (wired through `register()`); hydration mismatch at `invoice/dashboard/card.tsx:40`
+  (digits differ server vs client).
+- **Tests:** `i18n-audit.test.ts` stays at 31 > baseline 29 — pre-existing
+  (`manual-payment-rail.tsx`, `pay-fee-dialog.tsx`, invoice wizard forms), not from this pass.
+
 ## 2026-09-09 — /finance is now a family money surface for students and guardians (LOCAL, not pushed)
 
 A student or guardian opening `/finance` got **"access denied"** — the hub gates on

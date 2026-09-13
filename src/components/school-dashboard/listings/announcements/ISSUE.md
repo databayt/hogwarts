@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-09-13 — phone pass (local, not pushed)
+
+- The listing opens on a card grid on phones (`4691844fd`): grey `ItemCard`s two across with
+  scope, published/draft and high/urgent chips, date, and `AnnouncementRowActions` (extracted
+  from `columns.tsx`, so the card and the row share one permission-aware menu). Desktop keeps
+  the table; `?view=` wins at every width.
+- Nested pages (archived, templates, config, settings, detail): see the entry below once landed.
+
 ## MVP Checklist
 
 - [x] Announcement CRUD operations with Zod validation

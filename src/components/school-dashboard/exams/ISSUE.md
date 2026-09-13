@@ -11,6 +11,39 @@ docs: https://ed.databayt.org/en/docs/exams
 last_audited: 2026-08-29
 ---
 
+## 2026-09-13 — phone pass (LOCAL, not pushed)
+
+Below `md` only; `md` and up keep their classes. Kit: `../shared/README.md` ("Phone pattern").
+
+- **Landing** `6d898fc6d`: admin gets the green next-exam banner, a stat panel, tile doors and
+  feature rows; student, guardian and teacher get their own compositions (DateTile rows for
+  upcoming exams, results rows with percentage + grade). `6f728bc59` moved their
+  `lang === "ar"` literals to `results.examsHome` and stopped date-fns printing English
+  months on /ar.
+- **Authoring sub-pages** `6f728bc59`: generate hub, catalog, contributions, versions, qbank
+  catalog, AI generate, certificates and configs — cards two across and grey, stats as one
+  panel, pill buttons, search on its own row. Fixed: `/exams/certificates` rendered without
+  `lang` (English showed the Arabic dictionary); the catalog looked up keys that do not exist
+  (`types.chapterTest`, the preview dialog's `detail.*`).
+- **Open — strings with no key:** `generate/catalog-tab.tsx` (Adopted, Preview, Adopt, "No
+  catalog exams found", "exams total", the preview dialog's pass/schools/variants/Sample
+  Questions/pts/Close/Adopt This Exam); `generate/contributions.tsx` (questions, adopted,
+  "Reason:", dates hard-coded `en-US`); `generate/version-library.tsx` (every lookup names a
+  missing key, and `questions:`/`marks:` get a second colon); `qbank/ai-generate-content.tsx`
+  (placeholders, Generating…/Generate Questions, "saved to Question Bank", Review/Save
+  labels, Select/Deselect); `qbank/catalog-tab.tsx` (No catalog questions found, Adopted,
+  Adopt, questions total); `qbank/tabbed-layout.tsx` "My Questions"; `"Unknown"` in
+  `generate/templates-content.tsx` and `qbank/content.tsx`; `generate/content.tsx:308`
+  still formats with `ar-SA`.
+- **Open — bugs seen, not fixed:** generate hub's template badge repeats the template name
+  (should be the subject); `/generate/contributions` prints its title and description twice on
+  desktop; "View All Generated" → `/exams/generate/list` (no such route);
+  `certificates/config-list.tsx:138` relative href breaks from `/exams/certificates/configs`;
+  `certificate-list.tsx:224` verify link has no locale prefix, formats dates with a hard-coded
+  `"ar"`, shows raw `status`/`config.type` enums and toasts English "Share URL:"; revoke
+  stores English "Revoked by administrator"; `version-library.tsx` and
+  `ai-generate-content.tsx` toast raw `result.error` codes.
+
 ## P0 — fixed 2026-08-29
 
 - **Saving an exam blueprint had been broken since the Zod 3 → 4 upgrade.** Zod 4 made

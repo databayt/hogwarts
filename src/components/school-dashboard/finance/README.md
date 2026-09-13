@@ -112,6 +112,14 @@ salary/payroll report are **unbuilt** — there is no component for any of them,
 
 Each sub-module has its own `ISSUE.md` with MVP checklist, known issues (P1/P2/P3), and test gaps. Root `ISSUE.md` is the verified gap register across the block.
 
+### Phone layout (2026-09-13)
+
+Below `md` the hub, the family surface, the sub-landings and the accounts/banking/dashboard/
+invoice/receipt pages follow the school-dashboard phone pattern (`../shared/README.md`). The six
+fee and salary listings open on a card grid on phones (`TableGrid` + `RowActions`; an explicit
+`?view=` wins). Shared stat/feature cards live in `lib/dashboard-components.tsx`; change them
+there, not per page.
+
 ### Capabilities by Role
 
 - **Admin**: Full access to all 14 finance sub-modules, permission management, reports, accounting configuration

@@ -6,6 +6,14 @@
 **Tests:** **331/331 unit tests green across 19 files** — added `optimize.test.ts` (ETA + Haversine tiers), `absence.test.ts` (absentee union), `polyline.test.ts` (decoder); updated `settings`/`trips-state-machine` for new fields.
 **Plans:** advanced upgrade `~/.claude/plans/let-s-boost-the-transportation-happy-papert.md`; base plans below.
 
+## Resolution Log — 2026-09-13 (`/transportation/me` phone layout)
+
+- `/transportation/me` (guardian/student) follows the school-dashboard phone pattern below `md`
+  (`4ccf0b63a`): no card chrome, assignments as rows with a yellow bus tile, the skip control on
+  a grey panel with a white field and pill button, the empty state grey. Desktop unchanged.
+- The `(app)` staff pages (dashboard, routes, vehicles, drivers, trips, assignments, fees,
+  reports, settings) were not part of this pass.
+
 ## Resolution Log — 2026-08-16 (landing page + nested-page split)
 
 Structural only — no schema, no server-action, no RBAC change.

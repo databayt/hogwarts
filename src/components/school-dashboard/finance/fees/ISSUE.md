@@ -5,6 +5,19 @@
 > Last updated: 2026-06-13
 > Aldar UAE source of truth: [hogwarts#356](https://github.com/databayt/hogwarts/issues/356)
 
+## 2026-09-13 — phone grid + school currency (local, not pushed)
+
+- Structures, assignments, payments, fines and scholarships had a table/grid toggle that switched
+  to nothing. Each now renders `TableGrid` cards (`../../shared/table-grid.tsx`): the grid reads
+  the table instance, so a toolbar status filter narrows cards the same way, and each card's
+  menu is the row's own actions cell (`RowActions`). A phone opens on the grid; `?view=` wins.
+- **Every width:** no list page passed a currency, so the columns defaulted to USD and an SDG
+  school read every fee amount as US$. Pages call `getFeeCurrency(schoolId)` (queries.ts).
+- Scholarship cards show a PERCENTAGE award as a percentage. The desktop column still formats
+  `coverageAmount` as money for every type, and its type filter offers FULL/PARTIAL/MERIT_BASED
+  … while the enum is PERCENTAGE/FIXED_AMOUNT/FULL — open.
+- Columns still format dates with `ar-SA` (Hijri) — open.
+
 ## 2026-08-15 — family payment journey (local, not deployed)
 
 Traced from the admission side ("family pays → is told → sees receipt"). See

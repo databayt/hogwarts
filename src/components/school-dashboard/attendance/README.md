@@ -10,6 +10,15 @@ The Attendance block provides a comprehensive student attendance management syst
 
 Quick attendance survives a dropped connection. When the phone is offline (or the server-action call never reaches the server), `quick/content.tsx` writes the mark to the device outbox (`src/lib/offline/outbox.ts`, kind `attendance`, one pending item per section and day) and shows "saved on this device". `POST /api/offline/sync` replays it through `actions/quick-core.ts` — the same teacher-ownership check, roster intersection and `markAttendance` path the online action uses. A section already marked on the server *after* the offline mark wins (`stale` → the device drops it as a duplicate). A replayed absence fires the guardian notification at drain time; that is intended.
 
+### Phone layout (2026-09-13)
+
+Below `md` the landing and the sub-routes follow the school-dashboard phone pattern
+(`../shared/README.md`, "Phone pattern"): one grey two-across stat panel instead of
+stacked bordered cards, grey borderless cards with white fields and pill buttons, doors as
+iOS tiles on the landing. Sub-routes compose the class strings in `shared/phone.ts`; every
+class there is `max-md:`, so `md` and up render exactly as before. Manual marking, the
+kiosk and the DataTables are unchanged at every width.
+
 ### Capabilities by Role
 
 - **Admin**: Mark attendance for any section, review excuses, manage interventions, view analytics, configure geofence zones, export reports

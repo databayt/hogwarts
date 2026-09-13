@@ -26,6 +26,10 @@ The attendance module tracks student attendance across multiple capture methods,
 | ADEK eSIS daily submission                                             | Production | Generic connector at `/compliance`, DRY_RUN default            |
 | 2-hour guardian SLA cron                                               | Production | `/api/cron/absence-followup`, every 30 min, UTC                |
 
+## On a phone
+
+Below the `md` breakpoint the overview and every sub-page follow the school dashboard's phone pattern — the same vocabulary as the phone dashboard, library and live pages: figures as one grey two-across panel, grey borderless cards with pill buttons, section doors as app tiles, rows whose details wrap under the title instead of crushing it. Tablets and desktops are unchanged. Manual marking, the kiosk and the data tables look the same at every width.
+
 ## Routes
 
 The attendance root is role-aware: TEACHER lands on **Quick Attendance** (mobile-first, absent-oriented — everyone defaults present, taps cycle absent → late → present, one save submits the roster and notifies guardians of absentees), ADMIN/STAFF land on the overview, students/guardians on their self-view. All under `src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/`. Tabs: `/`, `/manual`, `/qr-code`, `/records`, `/excuses`, `/early-warning`, `/interventions`, `/analytics`, `/reports`, `/settings`. The staff overview's **Quick-access grid** links `/recent`, `/bulk-upload`, `/barcode`, `/hall-pass`, `/interventions/tiers`, `/gamification`, `/ai` (+ `/kiosk`, `/letters` for admins). Deep-link only: `/geo`, `/intentions`, `/bulk`. `/analysis` permanently redirects to `/analytics`; `/parent/attendance` redirects to `/attendance/records`. See the Capture methods table below for per-route purpose; see RBAC for per-role access.

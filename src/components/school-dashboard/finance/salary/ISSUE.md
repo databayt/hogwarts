@@ -2,6 +2,13 @@
 
 > 75% ready · Salary structures, allowances, deductions, bands
 
+## 2026-09-13 — phone grid (local, not pushed)
+
+- Salary structures' table/grid toggle switched to nothing; it renders `TableGrid` cards now
+  (teacher, base salary in the row's currency, active + pay-frequency chips, effective date,
+  the row's own actions menu) and a phone opens on them. `columns.tsx` still formats
+  `effectiveFrom` with `ar-SA` (Hijri) — open.
+
 ## 2026-08-14 — performance pass (local, not deployed)
 
 - [x] Overview gate collapsed from four serialized `checkCurrentUserPermission`

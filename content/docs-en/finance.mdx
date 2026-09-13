@@ -17,6 +17,10 @@ Fourteen sub-modules grouped around a shared double-entry accounting engine. Mon
 | Ledger & banking | [Accounts](/docs/finance-accounts), [Banking](/docs/finance-banking), [Reports](/docs/finance-reports) |
 | Platform         | [Dashboard](/docs/finance-dashboard), [Permissions](/docs/finance-permissions)                         |
 
+## On a phone
+
+Below the `md` breakpoint the finance hub, the family view and the sub-pages follow the school dashboard's phone pattern: figures as one grey two-across panel, grey cards with pill buttons, lists whose amounts sit under the title. Fee structures, assignments, payments, fines, scholarships and salary structures open on a card grid on phones (the toggle switches to the table; `?view=table` in the URL wins at any width). Tablets and desktops are unchanged.
+
 ## Double-entry model
 
 The engine lives at `finance/lib/accounting/`. `posting-rules.ts` translates a domain event into balanced journal lines; `actions.ts` writes them.

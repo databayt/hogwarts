@@ -22,6 +22,7 @@ last_audited: 2026-07-18
 
 ## Log
 
+- 2026-09-13 — Phone pass (below `md` only; desktop unchanged): landing `020bba64b` (StatPanel, unmarked-classes shelf, needs-attention rows, AppTileGrid doors), QR/barcode stats panel `0700172d0`, the 22 sub-routes `07362c477` (grey two-across stat panels, grey cards + pill buttons, scrolling tab strips, rows that wrap; recipe in `shared/phone.ts`). Fixed on the way: `rtl:flex-row-reverse` double-flip (recent, export dialog), raw status/method codes, `/attendance/geo` rendered without `lang`. Open strings below (P2 #phone-strings).
 - 2026-09-12 — Quick attendance queues offline (outbox kind `attendance`, `actions/quick-core.ts` shared with `/api/offline/sync`, "newer wins" stale rule). Manifest shortcut points at `/attendance`. Tests: `src/tests/school-dashboard/attendance/quick-core.test.ts`.
 
 ## MVP Checklist
@@ -113,6 +114,21 @@ bulk-upload soft-delete batch-rollback bug — see Recently Fixed below.)_
 
 ### P2 -- Medium (deferred polish — not blocking)
 
+0. **i18n — strings with no key, found in the 2026-09-13 phone pass (#phone-strings)** --
+   `recent/content.tsx` ("Refresh", "% attendance rate", "% of total", "Check-in:",
+   `safeFormatDistanceToNow` prints English "days ago"); `reports/content.tsx`
+   ("Showing {n} of {total} records", "Page {page} of {total}", and Previous/Next read
+   `form.cancel`/`form.submit` — they say "إلغاء"/"تسجيل الحضور"); `analytics/content.tsx`
+   ("total records", "records", "students"); `bulk/page.tsx` (title, subtitle, method
+   descriptions, "Recommended", "Start", "Quick Tips"); `bulk-upload/content.tsx` (eleven
+   `upload.*` keys referenced but missing, "Loading...", "No sections/classes found",
+   "records parsed"); `barcode/student-cards.tsx` (empty state, table headers, "Never",
+   Bulk Import card); `geofencee/geo-live-map.tsx` (panel copy, "Polling", "Last update:",
+   "Battery:"); `gamification` "pts"; `intentions` "day(s)"; `interventions` raw risk level
+   + date-fns "PP" English months; `early-warning/content.tsx` is all `isArabic ? … : …`
+   pairs. `analytics/calendar-view.tsx` + `hall-pass` format with `ar-SA` (Hijri month over a
+   Gregorian grid). Unpaginated: `/attendance/early-warning` ≈ 118,700px (979 students),
+   `/attendance/recent` ≈ 10,800px.
 1. **i18n — server-action error strings (partial)** -- core/periods/bulk and most
    sub-feature read guards now return `actionError(ACTION_ERRORS.*)` codes, but a
    long tail of English `error:` literals remains across

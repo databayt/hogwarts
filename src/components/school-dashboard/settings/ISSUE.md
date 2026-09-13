@@ -8,6 +8,17 @@
 
 ---
 
+## 2026-09-13 — phone pass (local, not pushed)
+
+- `/settings` below `md` (`4ccf0b63a`): Appearance presets two across with names under the
+  swatch (they truncated), language options as one grey grouped list, Notifications cards grey
+  with white selects/time fields and a full-width pill save.
+- **Every width:** 24 `rtl:flex-row-reverse` in `notification-settings.tsx` double-flipped every
+  switch row under the RTL root — removed; the save button's `rtl:justify-start` too.
+- **Every width:** `theme/preset-button.tsx` drew its border as `hsl(var(--border))`, invalid
+  under the OKLCH tokens, so every inactive preset chip fell back to a black border — now
+  `var(--border)`.
+
 ## MVP Checklist
 
 - [x] School profile management (name, logo, contact)
