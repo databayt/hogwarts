@@ -26,14 +26,20 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <Card
-      className={`bg-muted grid gap-3 border-none shadow-none ${className ?? ""}`}
+      className={`bg-muted grid gap-3 border-none shadow-none max-md:gap-1 ${className ?? ""}`}
     >
-      <CardHeader>
-        <CardTitle className="text-xl">{title}</CardTitle>
+      {/* Phone: label small and muted over a bold figure, as every other
+          stat cell on a phone reads. */}
+      <CardHeader className="max-md:px-4 max-md:pt-4 max-md:pb-0">
+        <CardTitle className="max-md:text-muted-foreground text-xl max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
+          {title}
+        </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-md:px-4 max-md:pb-4">
         <div>
-          <p className="text-lg">{value}</p>
+          <p className="text-lg max-md:font-bold max-md:tabular-nums">
+            {value}
+          </p>
           <span className="text-muted-foreground text-xs">{subtitle}</span>
         </div>
       </CardContent>

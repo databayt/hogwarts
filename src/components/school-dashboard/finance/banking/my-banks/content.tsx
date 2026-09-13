@@ -56,7 +56,7 @@ export default async function MyBanksContent(props: Props) {
 
       {/* Banks List or Empty State */}
       {accounts.length === 0 ? (
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Building2 className="text-muted-foreground mb-4 h-16 w-16" />
             <h2 className="mb-2 text-xl font-semibold">
@@ -76,30 +76,33 @@ export default async function MyBanksContent(props: Props) {
         </Card>
       ) : (
         <>
-          {/* Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">
+          {/* Summary Cards — phone: one grey panel two across, hairlines
+              between cells; the third spans the row */}
+          <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-3 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+            <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+              <CardHeader className="pb-3 max-md:px-4 max-md:pt-4 max-md:pb-1">
+                <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                   {props.dictionary.accounts}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{accounts.length}</div>
-                <p className="text-muted-foreground text-xs">
+              <CardContent className="max-md:px-4 max-md:pb-4">
+                <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+                  {accounts.length}
+                </div>
+                <p className="text-muted-foreground text-xs max-md:line-clamp-1">
                   {props.dictionary.connectBank}
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">
+            <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+              <CardHeader className="pb-3 max-md:px-4 max-md:pt-4 max-md:pb-1">
+                <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                   {props.dictionary.totalBalance}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent className="max-md:px-4 max-md:pb-4">
+                <div className="text-2xl font-bold max-md:text-base max-md:leading-6 max-md:tabular-nums">
                   {formatCurrency(
                     accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
                   )}
@@ -107,14 +110,14 @@ export default async function MyBanksContent(props: Props) {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">
+            <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+              <CardHeader className="pb-3 max-md:px-4 max-md:pt-4 max-md:pb-1">
+                <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                   {props.dictionary.lastSynced}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent className="max-md:px-4 max-md:pb-4">
+                <div className="text-2xl font-bold max-md:text-lg max-md:leading-7">
                   {formatTimeAgo(
                     accounts[0]?.lastUpdated || new Date(),
                     props.dictionary

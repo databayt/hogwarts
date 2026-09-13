@@ -75,16 +75,18 @@ export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
   const StatusIcon = status.icon
 
   return (
-    <Card className="transition-shadow hover:shadow-md">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="text-muted-foreground h-5 w-5" />
-            <CardTitle className="text-lg">
+    // Phone: the grey card, tighter padding; the status chip keeps its own
+    // width beside a long merchant title.
+    <Card className="max-md:bg-muted transition-shadow hover:shadow-md max-md:border-0 max-md:shadow-none max-md:hover:shadow-none">
+      <CardHeader className="max-md:p-4 max-md:pb-2">
+        <div className="flex items-start justify-between max-md:gap-2">
+          <div className="flex items-center gap-2 max-md:min-w-0">
+            <FileText className="text-muted-foreground h-5 w-5 max-md:shrink-0" />
+            <CardTitle className="text-lg max-md:text-base max-md:leading-6">
               {receipt.fileDisplayName || receipt.fileName}
             </CardTitle>
           </div>
-          <Badge variant={status.variant} className="gap-1">
+          <Badge variant={status.variant} className="gap-1 max-md:shrink-0">
             <StatusIcon
               className={`h-3 w-3 ${receipt.status === "processing" ? "animate-spin" : ""}`}
             />
@@ -93,7 +95,7 @@ export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 max-md:space-y-2 max-md:px-4 max-md:pb-2">
         {receipt.merchantName && (
           <div className="flex items-start gap-2 text-sm">
             <MapPin className="text-muted-foreground mt-0.5 h-4 w-4" />
@@ -149,7 +151,7 @@ export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
         )}
       </CardContent>
 
-      <CardFooter className="text-muted-foreground flex items-center justify-between text-xs">
+      <CardFooter className="text-muted-foreground flex items-center justify-between text-xs max-md:px-4 max-md:pb-3">
         <span>
           {rp?.uploaded || "Uploaded"}{" "}
           {format(new Date(receipt.uploadedAt), "PP", {

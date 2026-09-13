@@ -186,7 +186,7 @@ export async function FinanceDashboardContent({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight max-md:text-2xl">
           {dp?.financialDashboard || "Financial Dashboard"}
         </h1>
         <p className="text-muted-foreground">
@@ -204,8 +204,8 @@ export async function FinanceDashboardContent({
         </div>
       )}
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* KPI Cards — phone: one grey panel two across, hairlines between */}
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-2 lg:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
         {kpis.map((kpi) => (
           <KPICard key={kpi.id} kpi={kpi} currency={currency} />
         ))}
@@ -215,12 +215,14 @@ export async function FinanceDashboardContent({
       {hasFullAccess && (
         <div className="grid gap-6 md:grid-cols-2">
           <RevenueChart
+            className="max-md:bg-muted max-md:border-0 max-md:shadow-none"
             revenueData={stats.revenuesTrend}
             expenseData={stats.expensesTrend}
             profitData={stats.profitTrend}
             currency={currency}
           />
           <ExpenseChart
+            className="max-md:bg-muted max-md:border-0 max-md:shadow-none"
             expenseCategories={stats.expenseCategories}
             currency={currency}
           />
@@ -231,20 +233,31 @@ export async function FinanceDashboardContent({
       {hasFullAccess && (
         <div className="grid gap-6 md:grid-cols-2">
           <CashFlowChart
+            className="max-md:bg-muted max-md:border-0 max-md:shadow-none"
             inflowData={[stats.cashInflow]}
             outflowData={[stats.cashOutflow]}
             balanceData={[stats.cashBalance]}
             currency={currency}
           />
-          <BankAccountsSummary accounts={stats.bankAccounts} />
+          <BankAccountsSummary
+            className="max-md:bg-muted max-md:border-0 max-md:shadow-none"
+            accounts={stats.bankAccounts}
+          />
         </div>
       )}
 
       {/* Quick Actions and Recent Transactions */}
       <div className="grid gap-6 md:grid-cols-2">
-        <QuickActions actions={quickActions} />
+        <QuickActions
+          className="max-md:bg-muted max-md:border-0 max-md:shadow-none"
+          actions={quickActions}
+        />
         {(hasFullAccess || hasLimitedAccess) && (
-          <TransactionList transactions={transactions} currency={currency} />
+          <TransactionList
+            className="max-md:bg-muted max-md:border-0 max-md:shadow-none"
+            transactions={transactions}
+            currency={currency}
+          />
         )}
       </div>
 
@@ -259,7 +272,8 @@ export async function FinanceDashboardContent({
       )}
 
       {/* Footer Stats */}
-      <div className="grid gap-4 border-t pt-6 md:grid-cols-4">
+      {/* Phone: the same grey two-across panel as the KPIs */}
+      <div className="max-md:bg-border grid gap-4 border-t pt-6 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl max-md:border-t-0 max-md:pt-0 md:grid-cols-4">
         <StatCard
           title={dp?.invoiceCollection || "Invoice Collection"}
           value={`${stats.paidInvoices}/${stats.totalInvoices}`}
@@ -302,12 +316,18 @@ function StatCard({
   icon: React.ReactNode
 }) {
   return (
-    <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-4">
-      <div className="bg-background rounded-md p-2">{icon}</div>
-      <div>
-        <p className="text-muted-foreground text-sm">{title}</p>
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-muted-foreground text-xs">{description}</p>
+    <div className="bg-muted/50 max-md:bg-muted flex items-center gap-3 rounded-lg p-4 max-md:items-start max-md:rounded-none">
+      <div className="bg-background rounded-md p-2 max-md:hidden">{icon}</div>
+      <div className="max-md:min-w-0">
+        <p className="text-muted-foreground text-sm max-md:line-clamp-1 max-md:text-xs">
+          {title}
+        </p>
+        <p className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+          {value}
+        </p>
+        <p className="text-muted-foreground text-xs max-md:line-clamp-1">
+          {description}
+        </p>
       </div>
     </div>
   )
@@ -331,7 +351,7 @@ function BudgetOverview({
   dict?: Record<string, string>
 }) {
   return (
-    <div className="rounded-lg border p-6">
+    <div className="max-md:bg-muted rounded-lg border p-6 max-md:rounded-xl max-md:border-0 max-md:p-4">
       <h3 className="mb-4 text-lg font-semibold">
         {dict?.budgetOverview || "Budget Overview"}
       </h3>

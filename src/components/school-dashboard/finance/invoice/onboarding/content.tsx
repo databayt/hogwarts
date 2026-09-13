@@ -79,14 +79,15 @@ export function OnboardingContent() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    // Phone: grey card, white fields, pill submit.
+    <Card className="max-md:bg-muted max-md:[&_button[role=combobox]]:bg-background max-md:[&_input]:bg-background w-full max-md:border-0 max-md:shadow-none">
+      <CardHeader className="max-md:p-4">
         <CardTitle>{io?.almostFinished || "You are almost finished"}</CardTitle>
         <CardDescription>
           {io?.enterInfo || "Enter your information to create an account."}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-md:px-4 max-md:pb-4">
         <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-2">
             <Label>{io?.firstName || "First Name"}</Label>
@@ -129,7 +130,10 @@ export function OnboardingContent() {
               </SelectContent>
             </Select>
           </div>
-          <Button disabled={isLoading}>
+          <Button
+            disabled={isLoading}
+            className="max-md:h-10 max-md:rounded-full"
+          >
             {isLoading
               ? io?.pleaseWait || "Please wait..."
               : io?.finishOnboarding || "Finish onboarding"}

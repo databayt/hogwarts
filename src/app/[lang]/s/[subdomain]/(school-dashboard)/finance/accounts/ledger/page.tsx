@@ -85,13 +85,16 @@ export default async function GeneralLedgerPage({ params }: Props) {
           {d?.noLedgerEntriesYet || "No ledger entries yet."}
         </p>
       ) : (
-        <Card>
-          <CardHeader>
+        // Phone: grey card, and the table keeps its columns at a readable
+        // width and scrolls sideways instead of wrapping "JE-2025-00040"
+        // onto three lines.
+        <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+          <CardHeader className="max-md:px-4 max-md:pt-4 max-md:pb-2">
             <CardTitle>{d?.ledgerEntries || "Ledger Entries"}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-md:px-4 max-md:pb-4">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm max-md:min-w-[40rem] max-md:whitespace-nowrap">
                 <thead>
                   <tr className="border-b">
                     <th className="py-2 pe-4 text-start font-medium">

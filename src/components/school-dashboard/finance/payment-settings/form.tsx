@@ -90,8 +90,8 @@ export function PaymentSettingsForm({ initial, dictionary }: Props) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Bankak */}
-        <Card>
-          <CardHeader>
+        <Card className="max-md:bg-muted max-md:[&_input]:bg-background max-md:[&_textarea]:bg-background max-md:border-0 max-md:shadow-none">
+          <CardHeader className="max-md:p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <CardTitle>{d?.bankakTitle || "Bankak (بنكك)"}</CardTitle>
@@ -118,7 +118,7 @@ export function PaymentSettingsForm({ initial, dictionary }: Props) {
             </div>
           </CardHeader>
           {bankakEnabled && (
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 max-md:px-4 max-md:pb-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -191,8 +191,8 @@ export function PaymentSettingsForm({ initial, dictionary }: Props) {
         </Card>
 
         {/* Cashi */}
-        <Card>
-          <CardHeader>
+        <Card className="max-md:bg-muted max-md:[&_input]:bg-background max-md:[&_textarea]:bg-background max-md:border-0 max-md:shadow-none">
+          <CardHeader className="max-md:p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <CardTitle>{d?.cashiTitle || "Cashi (كاشي)"}</CardTitle>
@@ -219,7 +219,7 @@ export function PaymentSettingsForm({ initial, dictionary }: Props) {
             </div>
           </CardHeader>
           {cashiEnabled && (
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 max-md:px-4 max-md:pb-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -288,15 +288,15 @@ export function PaymentSettingsForm({ initial, dictionary }: Props) {
         </Card>
 
         {/* Reminder ladder */}
-        <Card>
-          <CardHeader>
+        <Card className="max-md:bg-muted max-md:[&_input]:bg-background max-md:[&_textarea]:bg-background max-md:border-0 max-md:shadow-none">
+          <CardHeader className="max-md:p-4">
             <CardTitle>{d?.remindersTitle || "Payment reminders"}</CardTitle>
             <CardDescription>
               {d?.remindersDescription ||
                 "When to chase an unpaid fee. Reminders go out in-app, by email, and over WhatsApp."}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 max-md:px-4 max-md:pb-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <DaysField
                 name="reminderLadderDays"
@@ -344,7 +344,11 @@ export function PaymentSettingsForm({ initial, dictionary }: Props) {
           </CardContent>
         </Card>
 
-        <Button type="submit" disabled={isPending}>
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="max-md:h-10 max-md:w-full max-md:rounded-full"
+        >
           {isPending && <Loader2 className="me-2 size-4 animate-spin" />}
           {dictionary.common?.save || "Save"}
         </Button>

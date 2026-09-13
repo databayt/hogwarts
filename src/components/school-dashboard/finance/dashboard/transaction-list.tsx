@@ -130,22 +130,24 @@ export function TransactionList({
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[400px]">
+        {/* Phone: no scroll box inside the page's own scroll, and Radix's
+            display:table wrapper released so rows can shrink to the card. */}
+        <ScrollArea className="h-[400px] max-md:h-auto max-md:[&_[data-radix-scroll-area-viewport]>div]:block!">
           <div className="space-y-3">
             {transactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
+                className="hover:bg-muted/50 max-md:bg-background flex items-center justify-between rounded-lg border p-3 transition-colors max-md:flex-wrap max-md:gap-2 max-md:border-0"
               >
-                <div className="flex items-center gap-3">
-                  <div className="bg-muted rounded-full p-2">
+                <div className="flex items-center gap-3 max-md:min-w-0 max-md:flex-1 max-md:basis-full">
+                  <div className="bg-muted rounded-full p-2 max-md:shrink-0">
                     {getIcon(transaction.type)}
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm leading-none font-medium">
+                  <div className="space-y-1 max-md:min-w-0">
+                    <p className="text-sm leading-none font-medium max-md:line-clamp-2 max-md:leading-5">
                       {transaction.description}
                     </p>
-                    <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                    <div className="text-muted-foreground flex items-center gap-2 text-xs max-md:flex-wrap max-md:gap-x-1.5 max-md:gap-y-0">
                       <span>
                         {format(new Date(transaction.date), "PP", {
                           locale: dateFnsLocale,
@@ -168,7 +170,7 @@ export function TransactionList({
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 max-md:w-full max-md:justify-between max-md:ps-11">
                   {formatAmount(transaction.amount, transaction.type)}
                   {getStatusBadge(transaction.status)}
                 </div>

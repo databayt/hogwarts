@@ -24,7 +24,7 @@ const ChartInvoice = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="bg-card col-span-2 h-80 rounded-xl border lg:h-96" />
+      <div className="bg-card max-md:bg-muted col-span-2 h-80 rounded-xl border max-md:border-0 lg:h-96" />
     ),
   }
 )
@@ -96,7 +96,10 @@ export function DashboardContent({ dictionary, lang, initialData }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-4">
+      {/* Phone: an explicit two-column grid. With no columns set, the chart's
+          col-span-2 conjured an implicit second track and pushed the whole
+          grid past the screen's edge. The four stats sit two across. */}
+      <div className="grid gap-6 max-md:grid-cols-2 max-md:gap-3 lg:grid-cols-4">
         <StatsCards
           stats={{
             // Summary tile — abbreviate (SDG 2.4m) so a seven-figure total
@@ -115,7 +118,7 @@ export function DashboardContent({ dictionary, lang, initialData }: Props) {
         />
 
         <RecentInvoicesCard
-          className="lg:col-span-2"
+          className="max-md:bg-muted max-md:col-span-2 max-md:border-0 max-md:shadow-none lg:col-span-2"
           data={data.recentInvoice as unknown as UserInvoice[]}
           columns={columns}
           emptyText={ip?.noInvoiceFound}

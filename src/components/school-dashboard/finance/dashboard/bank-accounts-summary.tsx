@@ -127,7 +127,7 @@ export function BankAccountsSummary({
       <CardContent>
         <div className="space-y-4">
           {/* Total Balance */}
-          <div className="bg-muted/50 rounded-lg p-4">
+          <div className="bg-muted/50 max-md:bg-background rounded-lg p-4">
             <p className="text-muted-foreground text-sm">
               {dp?.totalBalance || "Total Balance"}
             </p>

@@ -6,6 +6,7 @@ import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -72,7 +73,7 @@ export default async function JournalEntriesPage({ params }: Props) {
         </h3>
         <Link
           href={`/${lang}/finance/accounts/journal/new`}
-          className={buttonVariants()}
+          className={cn(buttonVariants(), "max-md:rounded-full")}
         >
           {ap?.newJournalEntry || "New Journal Entry"}
         </Link>
@@ -82,7 +83,9 @@ export default async function JournalEntriesPage({ params }: Props) {
           {ap?.noJournalEntriesYet || "No journal entries yet."}
         </p>
       ) : (
-        <div className="space-y-3">
+        // Phone: one grey grouped list; each entry's amount and status drop
+        // under its description instead of squeezing it to a word per line.
+        <div className="max-md:bg-muted space-y-3 max-md:space-y-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl">
           {entries.map((entry) => {
             const totalDebits = entry.ledgerEntries.reduce(
               (sum, le) => sum + Number(le.debit),
@@ -92,23 +95,23 @@ export default async function JournalEntriesPage({ params }: Props) {
             return (
               <Card
                 key={entry.id}
-                className="hover:bg-muted/50 transition-colors"
+                className="hover:bg-muted/50 transition-colors max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none"
               >
-                <CardContent className="flex items-center justify-between py-4">
-                  <div>
-                    <p className="font-medium">
+                <CardContent className="flex items-center justify-between py-4 max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3">
+                  <div className="max-md:min-w-0">
+                    <p className="font-medium max-md:line-clamp-2">
                       #{entry.entryNumber} &mdash;{" "}
                       {entry.description ||
                         ap?.noDescription ||
                         "No description"}
                     </p>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-sm max-md:text-xs">
                       {formatDate(entry.entryDate, lang)} &middot;{" "}
                       {entry.fiscalYear.name}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <p className="font-medium">
+                  <div className="flex items-center gap-3 max-md:justify-between">
+                    <p className="font-medium max-md:tabular-nums">
                       {formatCurrency(totalDebits, lang, currency)}
                     </p>
                     <Badge variant={entry.isPosted ? "default" : "secondary"}>

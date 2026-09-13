@@ -58,7 +58,7 @@ export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
   })
 
   return (
-    <Card className="col-span-2 p-0">
+    <Card className="max-md:bg-muted col-span-2 p-0 max-md:border-0 max-md:shadow-none">
       {/* <CardHeader>
 
         </CardHeader> */}

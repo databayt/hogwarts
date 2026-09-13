@@ -288,8 +288,15 @@ function TransactionsTableImprovedInner({
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
+    // Phone: no card around the list — the page is the ground, and the
+    // table gets the card's 48px of padding back.
+    <Card
+      className={cn(
+        className,
+        "max-md:border-0 max-md:bg-transparent max-md:shadow-none"
+      )}
+    >
+      <CardHeader className="max-md:px-0 max-md:pt-0">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <CardTitle>{dictionary?.transactions || "Transactions"}</CardTitle>
 
@@ -345,7 +352,7 @@ function TransactionsTableImprovedInner({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 max-md:px-0">
         {/* Filters */}
         <div className="flex flex-col gap-4 lg:flex-row">
           <div className="relative flex-1">

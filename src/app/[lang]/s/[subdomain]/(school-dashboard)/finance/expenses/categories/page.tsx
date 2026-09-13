@@ -83,21 +83,26 @@ export default async function ExpenseCategoriesPage({ params }: Props) {
           {d?.noCategoriesYet || "No expense categories yet."}
         </p>
       ) : (
-        <div className="space-y-3">
+        // Phone: one grey grouped list; each category's counts and badges
+        // drop under its name and description.
+        <div className="max-md:bg-muted space-y-3 max-md:space-y-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl">
           {categories.map((category) => (
-            <Card key={category.id}>
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div>
+            <Card
+              key={category.id}
+              className="max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none"
+            >
+              <CardContent className="py-4 max-md:px-4 max-md:py-3">
+                <div className="flex items-center justify-between max-md:flex-col max-md:items-stretch max-md:gap-2">
+                  <div className="max-md:min-w-0">
                     <p className="font-medium">{labelOf(category.name)}</p>
                     {category.description && (
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-muted-foreground text-sm max-md:line-clamp-2">
                         {category.description}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-muted-foreground text-sm">
+                  <div className="flex items-center gap-3 max-md:flex-wrap max-md:gap-2">
+                    <span className="text-muted-foreground text-sm max-md:me-auto max-md:text-xs">
                       {category._count.expenses} {c?.expenses || "expenses"}
                     </span>
                     <Badge
@@ -116,7 +121,7 @@ export default async function ExpenseCategoriesPage({ params }: Props) {
                 </div>
                 {/* Sub-categories */}
                 {category.children.length > 0 && (
-                  <div className="ms-6 mt-3 space-y-2">
+                  <div className="ms-6 mt-3 space-y-2 max-md:ms-3">
                     {category.children.map((child) => (
                       <div
                         key={child.id}

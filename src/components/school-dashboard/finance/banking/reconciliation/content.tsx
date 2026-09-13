@@ -289,8 +289,10 @@ export async function ReconciliationContent({ lang, days = 30 }: Props) {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
+      {/* Phone: grey card; the seven-column diff keeps readable columns and
+          scrolls sideways rather than wrapping every figure. */}
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+        <CardHeader className="max-md:p-4">
           <CardTitle>
             {r?.diffTitle || "Payment vs Gateway vs Ledger"}
           </CardTitle>
@@ -299,13 +301,13 @@ export async function ReconciliationContent({ lang, days = 30 }: Props) {
               "Discrepancies between what the admin recorded, what the gateway claimed, and what posted to the ledger."}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="max-md:px-4 max-md:pb-4">
           {rows.length === 0 ? (
             <p className="text-muted-foreground text-sm">
               {r?.noActivity || "No payment activity in this window."}
             </p>
           ) : (
-            <Table>
+            <Table className="max-md:min-w-[36rem] max-md:whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>{r?.source || "Source"}</TableHead>

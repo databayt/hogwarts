@@ -214,7 +214,8 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
     <div className="space-y-4">
       {/* Category Filters */}
       {categories.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
+        // Phone: one scrolling shelf of chips instead of three wrapped rows.
+        <div className="no-scrollbar flex flex-wrap items-center gap-2 max-md:-mx-4 max-md:flex-nowrap max-md:overflow-x-auto max-md:px-4 max-md:[&>*]:shrink-0">
           <CategoryChip
             active={selectedCategory === null}
             disabled={isPending}

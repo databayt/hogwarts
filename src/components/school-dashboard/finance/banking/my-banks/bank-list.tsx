@@ -63,8 +63,11 @@ export default function BankList(props: Props) {
   return (
     <div className="space-y-6">
       {Object.entries(accountsByBank).map(([bankKey, bankData]) => (
-        <Card key={bankKey}>
-          <CardHeader>
+        <Card
+          key={bankKey}
+          className="max-md:bg-muted max-md:border-0 max-md:shadow-none"
+        >
+          <CardHeader className="max-md:p-4 max-md:pb-2">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>{bankData.name}</CardTitle>
@@ -74,7 +77,7 @@ export default function BankList(props: Props) {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 max-md:space-y-2 max-md:px-4 max-md:pb-4">
             {bankData.accounts.map((account) => (
               <BankAccountRow
                 key={account.id}
@@ -110,19 +113,21 @@ function BankAccountRow({
     accountTypeColors.checking
 
   return (
-    <div className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors">
-      <div className="flex items-center gap-4">
-        <div className="from-primary/20 to-primary/10 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br">
-          <CreditCard className="text-primary h-6 w-6" />
+    // Phone: a white row on the grey bank card; the balance and actions drop
+    // to their own line instead of pushing the account name off-screen.
+    <div className="hover:bg-muted/50 max-md:bg-background flex items-center justify-between rounded-lg border p-4 transition-colors max-md:flex-wrap max-md:gap-3 max-md:border-0 max-md:p-3">
+      <div className="flex items-center gap-4 max-md:min-w-0 max-md:flex-1 max-md:gap-3">
+        <div className="from-primary/20 to-primary/10 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br max-md:size-10 max-md:shrink-0">
+          <CreditCard className="text-primary h-6 w-6 max-md:size-5" />
         </div>
-        <div>
-          <div className="flex items-center gap-2">
+        <div className="max-md:min-w-0">
+          <div className="flex items-center gap-2 max-md:flex-wrap">
             <p className="font-medium">{account.name}</p>
             <Badge variant="secondary" className={cn("text-xs", typeColor)}>
               {account.type}
             </Badge>
           </div>
-          <div className="mt-1 flex items-center gap-4">
+          <div className="mt-1 flex items-center gap-4 max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-0.5">
             <span className="text-muted-foreground text-sm">
               ****{account.mask || "0000"}
             </span>
@@ -135,12 +140,12 @@ function BankAccountRow({
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
-        <div className="text-end">
+      <div className="flex items-center gap-6 max-md:w-full max-md:justify-between max-md:gap-3">
+        <div className="text-end max-md:text-start">
           <p className="text-muted-foreground text-sm">
             {dictionary.currentBalance}
           </p>
-          <p className="text-lg font-semibold">
+          <p className="text-lg font-semibold max-md:text-base max-md:tabular-nums">
             {formatCurrency(account.currentBalance)}
           </p>
         </div>

@@ -13,9 +13,17 @@ interface StatCardProps {
 
 function StatCard({ label, value, className }: StatCardProps) {
   return (
-    <div className="bg-muted/40 rounded-xl p-5">
-      <p className="text-muted-foreground text-sm font-medium">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${className || ""}`}>{value}</p>
+    // Phone: one cell of the grey panel below — solid muted, square corners,
+    // label small, figure a size down.
+    <div className="bg-muted/40 max-md:bg-muted rounded-xl p-5 max-md:rounded-none max-md:px-4 max-md:py-4">
+      <p className="text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
+        {label}
+      </p>
+      <p
+        className={`mt-1 text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums ${className || ""}`}
+      >
+        {value}
+      </p>
     </div>
   )
 }
@@ -58,7 +66,7 @@ export function DashboardHeader({
   return (
     <header className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-3xl font-bold max-md:text-2xl">
           {dictionary?.welcome || "Welcome back"}
           {comma} {greetingName}
         </h1>
@@ -68,7 +76,8 @@ export function DashboardHeader({
         </p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+      {/* Phone: one grey panel two across, hairlines between cells */}
+      <div className="max-md:bg-border grid gap-3 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label={dictionary?.totalBalance || "Total Balance"}
           value={

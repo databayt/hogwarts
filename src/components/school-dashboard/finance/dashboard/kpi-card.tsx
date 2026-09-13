@@ -155,28 +155,43 @@ export const KPICard = React.memo(function KPICard({
     <Card
       className={cn(
         "relative overflow-hidden transition-all hover:shadow-md",
+        // Phone: one cell of the grey KPI panel — no chrome, no hover lift.
+        "max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none max-md:hover:shadow-none",
         onClick && "cursor-pointer hover:scale-[1.02]",
         className
       )}
       onClick={onClick}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-muted-foreground text-sm font-medium">
+          <CardTitle className="text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
             {kpi.title}
           </CardTitle>
           {kpi.icon && (
-            <div className={cn("rounded-lg p-2", getColorClass(kpi.color))}>
+            <div
+              className={cn(
+                "rounded-lg p-2 max-md:hidden",
+                getColorClass(kpi.color)
+              )}
+            >
               <span className="text-lg">{kpi.icon}</span>
             </div>
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-md:px-4 max-md:pb-4">
         <div className="flex items-baseline justify-between">
-          <div className="flex items-baseline gap-2">
-            <div className="text-2xl font-bold">{formatValue(kpi.value)}</div>
-            {kpi.trend && <Sparkline data={kpi.trend} />}
+          <div className="flex items-baseline gap-2 max-md:min-w-0">
+            <div className="text-2xl font-bold max-md:text-base max-md:leading-6 max-md:tabular-nums">
+              {formatValue(kpi.value)}
+            </div>
+            {/* An 80px sparkline does not fit beside the figure in a
+                half-width phone cell. */}
+            {kpi.trend && (
+              <span className="max-md:hidden">
+                <Sparkline data={kpi.trend} />
+              </span>
+            )}
           </div>
           {kpi.change !== undefined && (
             <div
@@ -188,7 +203,7 @@ export const KPICard = React.memo(function KPICard({
           )}
         </div>
         {kpi.description && (
-          <CardDescription className="mt-1 text-xs">
+          <CardDescription className="mt-1 text-xs max-md:line-clamp-2">
             {kpi.description}
           </CardDescription>
         )}
@@ -197,7 +212,7 @@ export const KPICard = React.memo(function KPICard({
       {/* Background decoration */}
       <div
         className={cn(
-          "absolute end-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 transform opacity-5 rtl:-translate-x-8",
+          "absolute end-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 transform opacity-5 max-md:hidden rtl:-translate-x-8",
           getColorClass(kpi.color)
         )}
         style={{

@@ -87,45 +87,48 @@ export default async function PaymentTransferContent(props: Props) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight max-md:text-2xl">
           {props.dictionary.paymentTransfer}
         </h1>
       </div>
 
-      {/* Balance Overview */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">
+      {/* Balance Overview — phone: one grey panel, two across, hairline
+          between the cells */}
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-3 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {props.dictionary.availableBalance}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-base max-md:leading-6 max-md:tabular-nums">
               {formatAmount(totalAvailable, props.lang, currency)}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-3 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {props.dictionary.accounts}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{accounts.length}</div>
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {accounts.length}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Transfer Form */}
-      <Card>
-        <CardHeader>
+      {/* Transfer Form — phone: grey card, white fields, pill submit */}
+      <Card className="max-md:bg-muted max-md:[&_button[role=combobox]]:bg-background max-md:[&_input]:bg-background max-md:[&_textarea]:bg-background max-md:border-0 max-md:shadow-none max-md:[&_button[type=submit]]:h-10 max-md:[&_button[type=submit]]:rounded-full">
+        <CardHeader className="max-md:p-4">
           <CardTitle>{props.dictionary.transfer}</CardTitle>
           <CardDescription>{props.dictionary.sendMoney}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="max-md:px-4 max-md:pb-4">
           <Suspense fallback={<FormSkeleton />}>
             <PaymentTransferForm
               accounts={accounts}

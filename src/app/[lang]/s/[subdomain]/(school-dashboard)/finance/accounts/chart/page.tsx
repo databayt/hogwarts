@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 import { db } from "@/lib/db"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -73,7 +74,7 @@ export default async function ChartOfAccountsPage({ params }: Props) {
         </h3>
         <Link
           href={`/${lang}/finance/accounts/chart/new`}
-          className={buttonVariants()}
+          className={cn(buttonVariants(), "max-md:rounded-full max-md:px-4")}
         >
           {ap?.createAccount || "Create Account"}
         </Link>
@@ -83,7 +84,9 @@ export default async function ChartOfAccountsPage({ params }: Props) {
           {ap?.noAccountsYet || "No accounts yet."}
         </p>
       ) : (
-        <div className="space-y-3">
+        // Phone: one grey grouped list with hairlines between accounts,
+        // instead of a bordered card per account.
+        <div className="max-md:bg-muted space-y-3 max-md:space-y-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl">
           {accounts.map((account) => {
             const balanceLabel =
               account.normalBalance === "DEBIT"
@@ -93,10 +96,10 @@ export default async function ChartOfAccountsPage({ params }: Props) {
             return (
               <Card
                 key={account.id}
-                className="hover:bg-muted/50 transition-colors"
+                className="hover:bg-muted/50 transition-colors max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none"
               >
-                <CardContent className="flex items-center justify-between py-4">
-                  <div>
+                <CardContent className="flex items-center justify-between py-4 max-md:gap-3 max-md:px-4 max-md:py-3">
+                  <div className="max-md:min-w-0">
                     <p className="font-medium">
                       {account.code} &mdash;{" "}
                       {labels.get(account.name) ?? account.name}
@@ -108,7 +111,10 @@ export default async function ChartOfAccountsPage({ params }: Props) {
                       {ap?.ledgerEntries || "ledger entries"}
                     </p>
                   </div>
-                  <Badge variant={account.isActive ? "default" : "secondary"}>
+                  <Badge
+                    variant={account.isActive ? "default" : "secondary"}
+                    className="max-md:shrink-0"
+                  >
                     {account.isActive
                       ? c?.active || "Active"
                       : c?.inactive || "Inactive"}
