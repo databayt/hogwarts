@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { enqueue } from "@/lib/offline/outbox"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,8 +27,6 @@ import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getAttendanceList } from "../actions"
-import { enqueue } from "@/lib/offline/outbox"
-
 import { getQuickMarkingContext, submitQuickAttendance } from "../actions/quick"
 import { ClockCard } from "./clock-card"
 
@@ -369,12 +368,12 @@ export function QuickAttendanceContent({ locale }: { locale: Locale }) {
               {saved.queued
                 ? null
                 : saved.guardiansNotified > 0
-                ? fmt(
-                    q.guardiansNotified,
-                    "{count} guardians notified about the absence",
-                    { count: saved.guardiansNotified }
-                  )
-                : (q.noGuardiansNotified ?? "No guardian notifications sent")}
+                  ? fmt(
+                      q.guardiansNotified,
+                      "{count} guardians notified about the absence",
+                      { count: saved.guardiansNotified }
+                    )
+                  : (q.noGuardiansNotified ?? "No guardian notifications sent")}
             </p>
             {saved.absentNames.length > 0 && (
               <div className="space-y-1.5">
@@ -426,7 +425,7 @@ export function QuickAttendanceContent({ locale }: { locale: Locale }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={q.searchPlaceholder ?? "Find a student..."}
-              className="h-11 ps-9"
+              className="max-md:bg-muted h-11 ps-9 max-md:rounded-full max-md:border-0 max-md:shadow-none"
             />
           </div>
 
@@ -444,14 +443,17 @@ export function QuickAttendanceContent({ locale }: { locale: Locale }) {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-1.5">
+            // Phone: a plain list with hairlines, like the phone's own
+            // contacts — the coloured avatar and the chip already say who is
+            // absent, so the tinted, bordered row box goes.
+            <div className="max-md:divide-border space-y-1.5 max-md:space-y-0 max-md:divide-y">
               {filtered.map((r) => (
                 <button
                   key={r.studentId}
                   type="button"
                   onClick={() => cycleStudent(r.studentId)}
                   className={cn(
-                    "flex min-h-13 w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-start transition-colors",
+                    "max-md:active:bg-muted/60 flex min-h-13 w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-start transition-colors max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:px-1 max-md:py-3",
                     r.status === "absent"
                       ? "border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950/30"
                       : r.status === "late"

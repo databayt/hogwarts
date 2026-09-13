@@ -64,10 +64,10 @@ export function ClockCard({ locale, dictionary }: ClockCardProps) {
   }
 
   return (
-    <Card>
+    <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
       <CardContent className="flex items-center justify-between gap-3 p-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="bg-muted rounded-full p-2.5">
+          <div className="bg-muted max-md:bg-background rounded-full p-2.5">
             <Timer className="text-muted-foreground h-5 w-5" />
           </div>
           <div className="min-w-0">

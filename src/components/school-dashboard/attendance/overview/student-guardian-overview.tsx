@@ -29,6 +29,12 @@ import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { getParentAttendanceSummary } from "@/components/school-dashboard/attendance/actions/dashboard"
 import { getStudentOwnAttendance } from "@/components/school-dashboard/attendance/actions/records"
+import {
+  ListRow,
+  ListRows,
+  SectionHeader,
+  StatPanel,
+} from "@/components/school-dashboard/shared"
 
 interface Props {
   locale: Locale
@@ -69,6 +75,9 @@ type Dict = Record<string, any>
 export function StudentGuardianOverview({ locale, subdomain }: Props) {
   const { dictionary } = useDictionary()
   const d = dictionary?.school?.attendance as Dict | undefined
+  // The feature namespace carries the localized status names ("PRESENT" →
+  // "حاضر") the records used to print raw.
+  const fa = (dictionary as Dict | undefined)?.attendance as Dict | undefined
   const [isPending, startTransition] = useTransition()
 
   // Guardian state
@@ -132,7 +141,15 @@ export function StudentGuardianOverview({ locale, subdomain }: Props) {
   }
 
   if (isGuardian && children) {
-    return <GuardianOverview children={children} basePath={basePath} d={d} />
+    return (
+      <GuardianOverview
+        children={children}
+        basePath={basePath}
+        d={d}
+        fa={fa}
+        locale={locale}
+      />
+    )
   }
 
   if (!isGuardian && studentStats) {
@@ -142,6 +159,8 @@ export function StudentGuardianOverview({ locale, subdomain }: Props) {
         records={studentRecords ?? []}
         basePath={basePath}
         d={d}
+        fa={fa}
+        locale={locale}
       />
     )
   }
@@ -156,16 +175,120 @@ export function StudentGuardianOverview({ locale, subdomain }: Props) {
   )
 }
 
+// --- Shared helpers ---
+type Stats = {
+  totalDays: number
+  present: number
+  absent: number
+  late: number
+  excused: number
+  attendanceRate: number
+}
+
+/** The status's own name in the reader's language, never the enum. */
+function statusName(fa: Dict | undefined, status: string): string {
+  return (fa?.status?.[status] as string | undefined) ?? status
+}
+
+function statusVariant(status: string) {
+  return status === "PRESENT"
+    ? ("default" as const)
+    : status === "ABSENT"
+      ? ("destructive" as const)
+      : ("secondary" as const)
+}
+
+function useDateFormat(locale: Locale) {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  })
+}
+
+/**
+ * One student's figures as the phone's grey panel: the rate across the top
+ * with its bar and "out of N days", then present · absent · late · excused.
+ */
+function PhoneStats({
+  stats,
+  d,
+  fa,
+}: {
+  stats: Stats
+  d: Dict | undefined
+  fa: Dict | undefined
+}) {
+  const outOf = (d?.stats?.outOfDays as string | undefined)?.replace(
+    "{total}",
+    String(stats.totalDays)
+  )
+  return (
+    <StatPanel
+      items={[
+        {
+          key: "rate",
+          label: d?.stats?.attendanceRate || "Attendance Rate",
+          value: `${stats.attendanceRate}%`,
+          hint: outOf,
+          wide: true,
+          extra: (
+            <Progress
+              value={stats.attendanceRate}
+              className="bg-background h-1.5"
+            />
+          ),
+        },
+        {
+          key: "present",
+          label: d?.present || "Present",
+          value: stats.present,
+          tone: "positive",
+        },
+        {
+          key: "absent",
+          label: d?.absent || "Absent",
+          value: stats.absent,
+          tone: stats.absent > 0 ? "negative" : "default",
+        },
+        {
+          key: "late",
+          label: d?.late || "Late",
+          value: stats.late,
+          tone: stats.late > 0 ? "warning" : "default",
+        },
+        {
+          key: "excused",
+          label: fa?.stats?.excused || d?.excused || "Excused",
+          value: stats.excused,
+        },
+      ]}
+    />
+  )
+}
+
 // --- Guardian Overview ---
 function GuardianOverview({
   children,
   basePath,
   d,
+  fa,
+  locale,
 }: {
   children: ChildSummary[]
   basePath: string
   d: Dict | undefined
+  fa: Dict | undefined
+  locale: Locale
 }) {
+  const dateFormat = useDateFormat(locale)
+  const avgRate =
+    children.length > 0
+      ? `${Math.round(children.reduce((sum, c) => sum + c.stats.attendanceRate, 0) / children.length)}%`
+      : "—"
+  const totalAbsent = children.reduce((sum, c) => sum + c.stats.absent, 0)
+  const totalLate = children.reduce((sum, c) => sum + c.stats.late, 0)
+
   return (
     <div className="space-y-6">
       <div>
@@ -178,8 +301,73 @@ function GuardianOverview({
         </p>
       </div>
 
+      {/* Phone: the family's figures as one panel, then each child as a
+          section — their panel and the absences worth a parent's attention.
+          Records and excuses are already the tabs above, so no link row. */}
+      <div className="space-y-8 md:hidden">
+        {children.length > 1 ? (
+          <StatPanel
+            items={[
+              {
+                key: "children",
+                label: fa?.stats?.children || d?.childrenOverview || "Children",
+                value: children.length,
+              },
+              {
+                key: "rate",
+                label: d?.stats?.attendanceRate || "Avg. Rate",
+                value: avgRate,
+              },
+              {
+                key: "absent",
+                label: d?.absent || "Absent",
+                value: totalAbsent,
+                tone: totalAbsent > 0 ? "negative" : "default",
+              },
+              {
+                key: "late",
+                label: d?.late || "Late",
+                value: totalLate,
+                tone: totalLate > 0 ? "warning" : "default",
+              },
+            ]}
+          />
+        ) : null}
+
+        {children.map((child) => (
+          <section key={child.studentId}>
+            <SectionHeader
+              title={child.studentName}
+              description={child.className}
+            />
+            <PhoneStats stats={child.stats} d={d} fa={fa} />
+            {child.recentAbsences.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-muted-foreground mb-1 text-xs font-medium">
+                  {fa?.stats?.recentAbsences || d?.absent}
+                </h3>
+                <ListRows divided>
+                  {child.recentAbsences.slice(0, 3).map((absence, i) => (
+                    <ListRow
+                      key={i}
+                      title={dateFormat.format(new Date(absence.date))}
+                      description={absence.className}
+                      trailing={
+                        <Badge variant={statusVariant(absence.status)}>
+                          {statusName(fa, absence.status)}
+                        </Badge>
+                      }
+                    />
+                  ))}
+                </ListRows>
+              </div>
+            )}
+          </section>
+        ))}
+      </div>
+
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="hidden gap-4 sm:grid-cols-2 md:grid lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -199,11 +387,7 @@ function GuardianOverview({
             <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {children.length > 0
-                ? `${Math.round(children.reduce((sum, c) => sum + c.stats.attendanceRate, 0) / children.length)}%`
-                : "—"}
-            </div>
+            <div className="text-2xl font-bold">{avgRate}</div>
           </CardContent>
         </Card>
         <Card>
@@ -214,9 +398,7 @@ function GuardianOverview({
             <XCircle className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {children.reduce((sum, c) => sum + c.stats.absent, 0)}
-            </div>
+            <div className="text-2xl font-bold">{totalAbsent}</div>
           </CardContent>
         </Card>
         <Card>
@@ -227,15 +409,13 @@ function GuardianOverview({
             <Clock className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {children.reduce((sum, c) => sum + c.stats.late, 0)}
-            </div>
+            <div className="text-2xl font-bold">{totalLate}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Per-child cards */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="hidden gap-4 sm:grid-cols-2 md:grid">
         {children.map((child) => (
           <Card key={child.studentId}>
             <CardHeader>
@@ -290,23 +470,19 @@ function GuardianOverview({
 
               {child.recentAbsences.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Recent Absences</p>
+                  <p className="text-sm font-medium">
+                    {fa?.stats?.recentAbsences || d?.absent}
+                  </p>
                   {child.recentAbsences.slice(0, 3).map((absence, i) => (
                     <div
                       key={i}
                       className="flex items-center justify-between text-sm"
                     >
                       <span className="text-muted-foreground">
-                        {new Date(absence.date).toLocaleDateString()}
+                        {dateFormat.format(new Date(absence.date))}
                       </span>
-                      <Badge
-                        variant={
-                          absence.status === "ABSENT"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {absence.status}
+                      <Badge variant={statusVariant(absence.status)}>
+                        {statusName(fa, absence.status)}
                       </Badge>
                     </div>
                   ))}
@@ -318,7 +494,7 @@ function GuardianOverview({
       </div>
 
       {/* Quick Links */}
-      <div className="flex gap-3">
+      <div className="hidden gap-3 md:flex">
         <Button asChild variant="outline">
           <Link href={`${basePath}/records`}>
             <Calendar className="me-2 h-4 w-4" />
@@ -342,19 +518,22 @@ function StudentOverview({
   records,
   basePath,
   d,
+  fa,
+  locale,
 }: {
-  stats: {
-    totalDays: number
-    present: number
-    absent: number
-    late: number
-    excused: number
-    attendanceRate: number
-  }
+  stats: Stats
   records: StudentRecord[]
   basePath: string
   d: Dict | undefined
+  fa: Dict | undefined
+  locale: Locale
 }) {
+  const dateFormat = useDateFormat(locale)
+  const outOf = (d?.stats?.outOfDays as string | undefined)?.replace(
+    "{total}",
+    String(stats.totalDays)
+  )
+
   return (
     <div className="space-y-6">
       <div>
@@ -365,8 +544,42 @@ function StudentOverview({
         </p>
       </div>
 
+      {/* Phone: one grey panel for the five figures, then the records as rows.
+          Records and excuses are already the tabs above, so no link row. */}
+      <div className="space-y-8 md:hidden">
+        <PhoneStats stats={stats} d={d} fa={fa} />
+
+        <section>
+          <SectionHeader
+            title={d?.recentActivity || "Recent Activity"}
+            href={`${basePath}/records`}
+            linkLabel={d?.allRecords || "All Records"}
+          />
+          {records.length === 0 ? (
+            <p className="text-muted-foreground py-6 text-center text-sm">
+              {d?.noRecentRecords || "No recent attendance records"}
+            </p>
+          ) : (
+            <ListRows divided>
+              {records.slice(0, 10).map((record) => (
+                <ListRow
+                  key={record.id}
+                  title={dateFormat.format(new Date(record.date))}
+                  description={record.className ?? undefined}
+                  trailing={
+                    <Badge variant={statusVariant(record.status)}>
+                      {statusName(fa, record.status)}
+                    </Badge>
+                  }
+                />
+              ))}
+            </ListRows>
+          )}
+        </section>
+      </div>
+
       {/* Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="hidden gap-4 sm:grid-cols-2 md:grid lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -388,9 +601,9 @@ function StudentOverview({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.present}</div>
-            <p className="text-muted-foreground text-xs">
-              of {stats.totalDays} days
-            </p>
+            {outOf ? (
+              <p className="text-muted-foreground text-xs">{outOf}</p>
+            ) : null}
           </CardContent>
         </Card>
         <Card>
@@ -429,7 +642,7 @@ function StudentOverview({
       </div>
 
       {/* Recent Records */}
-      <Card>
+      <Card className="hidden md:block">
         <CardHeader>
           <CardTitle>{d?.recentActivity || "Recent Activity"}</CardTitle>
           <CardDescription>
@@ -450,7 +663,7 @@ function StudentOverview({
                 >
                   <div>
                     <p className="text-sm font-medium">
-                      {new Date(record.date).toLocaleDateString()}
+                      {dateFormat.format(new Date(record.date))}
                     </p>
                     {record.className && (
                       <p className="text-muted-foreground text-xs">
@@ -458,16 +671,8 @@ function StudentOverview({
                       </p>
                     )}
                   </div>
-                  <Badge
-                    variant={
-                      record.status === "PRESENT"
-                        ? "default"
-                        : record.status === "ABSENT"
-                          ? "destructive"
-                          : "secondary"
-                    }
-                  >
-                    {record.status}
+                  <Badge variant={statusVariant(record.status)}>
+                    {statusName(fa, record.status)}
                   </Badge>
                 </div>
               ))}
@@ -477,7 +682,7 @@ function StudentOverview({
       </Card>
 
       {/* Quick Links */}
-      <div className="flex gap-3">
+      <div className="hidden gap-3 md:flex">
         <Button asChild variant="outline">
           <Link href={`${basePath}/records`}>
             <Calendar className="me-2 h-4 w-4" />

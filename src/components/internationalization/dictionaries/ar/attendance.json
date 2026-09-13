@@ -332,6 +332,9 @@
     "settings": "الإعدادات"
   },
   "stats": {
+    "recentAbsences": "آخر الغيابات",
+    "excused": "بعذر",
+    "children": "الأبناء",
     "presentToday": "الحاضرون اليوم",
     "absentToday": "الغائبون اليوم",
     "lateToday": "المتأخرون اليوم",

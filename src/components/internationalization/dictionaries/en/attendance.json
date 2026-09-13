@@ -332,6 +332,9 @@
     "settings": "Settings"
   },
   "stats": {
+    "recentAbsences": "Recent absences",
+    "excused": "Excused",
+    "children": "Children",
     "presentToday": "Present Today",
     "absentToday": "Absent Today",
     "lateToday": "Late Today",

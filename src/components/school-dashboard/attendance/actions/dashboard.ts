@@ -1430,7 +1430,9 @@ export async function getParentAttendanceSummary(): Promise<
 
     const children = studentGuardians.map((sg) => {
       const student = sg.student
-      const className = student.studentClasses[0]?.class.name || "Unassigned"
+      // Empty, not "Unassigned": a server action cannot know the reader's
+      // language, and the overview hides the line when there is no class.
+      const className = student.studentClasses[0]?.class.name || ""
       return {
         studentId: student.id,
         studentName: `${student.firstName} ${student.lastName}`,
