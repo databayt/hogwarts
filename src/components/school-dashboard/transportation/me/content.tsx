@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { Bus } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -13,6 +15,11 @@ import {
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  ListRow,
+  ListRows,
+  TileFace,
+} from "@/components/school-dashboard/shared"
 
 import {
   getMyTransportationView,
@@ -49,7 +56,7 @@ export async function MyTransportationContent({
 
   if (!result.success || result.data.length === 0) {
     return (
-      <div className="flex flex-col gap-6 p-6">
+      <div className="flex flex-col gap-6 p-6 max-md:px-0 max-md:pt-0">
         <header>
           <h2 className="text-2xl font-semibold">{t.me.title}</h2>
           <p className="text-muted-foreground text-sm">
@@ -59,6 +66,7 @@ export async function MyTransportationContent({
         <TransportationEmptyState
           title={t.me.noAssignments}
           description={t.overview.noData}
+          className="max-md:bg-muted max-md:border-0 max-md:shadow-none"
         />
       </div>
     )
@@ -70,7 +78,7 @@ export async function MyTransportationContent({
   )
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6 max-md:px-0 max-md:pt-0">
       <header>
         <h2 className="text-2xl font-semibold">{t.me.title}</h2>
         <p className="text-muted-foreground text-sm">
@@ -80,13 +88,19 @@ export async function MyTransportationContent({
 
       <div className="flex flex-col gap-6">
         {result.data.map((child) => (
-          <Card key={child.studentId}>
-            <CardHeader>
-              <CardTitle className="text-base">
+          // Phone: no card around each child — the child's name is the
+          // section's heading and the parts under it sit on the page, the
+          // way the phone dashboard stacks its sections.
+          <Card
+            key={child.studentId}
+            className="max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none"
+          >
+            <CardHeader className="max-md:px-0 max-md:pt-0">
+              <CardTitle className="text-base max-md:text-lg max-md:font-semibold">
                 {child.firstName} {child.lastName}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 max-md:space-y-8 max-md:px-0">
               <section>
                 <h3 className="mb-3 text-sm font-medium">
                   {t.me.assignmentsHeading}
@@ -95,8 +109,46 @@ export async function MyTransportationContent({
                   <p className="text-muted-foreground text-sm">
                     {t.me.noAssignments}
                   </p>
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-2">
+                ) : null}
+                {child.assignments.length > 0 ? (
+                  <ListRows divided className="md:hidden">
+                    {child.assignments.map((a) => (
+                      <ListRow
+                        key={a.id}
+                        art={<TileFace icon={Bus} tint="yellow" />}
+                        title={a.routeName}
+                        badge={
+                          <Badge variant="secondary" className="font-normal">
+                            {directionLabel(a.direction, t.me)}
+                          </Badge>
+                        }
+                        description={`#${a.stopOrder} · ${a.stopName}`}
+                        meta={
+                          a.vehicle || a.driver ? (
+                            <>
+                              {a.vehicle ? (
+                                <span>{a.vehicle.plateNumber}</span>
+                              ) : null}
+                              {a.vehicle && a.driver ? (
+                                <span aria-hidden="true">·</span>
+                              ) : null}
+                              {a.driver ? (
+                                <span>
+                                  {a.driver.firstName} {a.driver.lastName} ·{" "}
+                                  <bdi className="tabular-nums">
+                                    {a.driver.phone}
+                                  </bdi>
+                                </span>
+                              ) : null}
+                            </>
+                          ) : undefined
+                        }
+                      />
+                    ))}
+                  </ListRows>
+                ) : null}
+                {child.assignments.length === 0 ? null : (
+                  <div className="hidden gap-3 sm:grid-cols-2 md:grid">
                     {child.assignments.map((a) => (
                       <Card key={a.id} className="bg-muted/30">
                         <CardContent className="space-y-2 p-4">

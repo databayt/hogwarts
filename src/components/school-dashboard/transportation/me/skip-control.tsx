@@ -72,8 +72,12 @@ export function TransportSkipControl({
   }
 
   return (
-    <section>
-      <h3 className="mb-1 text-sm font-medium">{t.heading}</h3>
+    // Phone: the request is a form, so it gets the grey ground the phone
+    // dashboard gives a panel — the field white inside it, the button a pill.
+    <section className="max-md:bg-muted max-md:rounded-xl max-md:p-5">
+      <h3 className="mb-1 text-sm font-medium max-md:text-base max-md:font-semibold">
+        {t.heading}
+      </h3>
       <p className="text-muted-foreground mb-3 text-xs">{t.description}</p>
 
       <div className="flex items-end gap-2">
@@ -81,7 +85,7 @@ export function TransportSkipControl({
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="max-w-[12rem]"
+          className="max-md:bg-background max-w-[12rem] max-md:h-10 max-md:max-w-none max-md:flex-1 max-md:rounded-full max-md:border-0"
           aria-label={t.dateLabel}
         />
         <Button
@@ -89,6 +93,7 @@ export function TransportSkipControl({
           type="button"
           onClick={handleRequest}
           disabled={pending || !date}
+          className="max-md:h-10 max-md:rounded-full max-md:px-5"
         >
           {t.request}
         </Button>

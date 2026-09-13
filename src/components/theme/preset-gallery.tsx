@@ -64,8 +64,10 @@ export function PresetGallery() {
     )
   }
 
+  // Phone: two equal columns instead of a ragged cloud of pills — every
+  // theme the same width, so the list reads as a list.
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-3 max-md:grid max-md:grid-cols-2 max-md:gap-2">
       {presetsArray.map((preset) => {
         const isActive = themeState.preset === preset.name
         return (

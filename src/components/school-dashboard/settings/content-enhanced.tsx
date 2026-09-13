@@ -154,13 +154,15 @@ function LanguagePreference({
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      {/* Phone: one grouped list, like the phone's own Language settings —
+          two rows on a grey panel, the current one marked. */}
+      <div className="max-md:bg-muted max-md:divide-border grid gap-3 max-md:gap-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl sm:grid-cols-2">
         <a
           href={`/ar${typeof window !== "undefined" ? window.location.pathname.replace(/^\/(ar|en)/, "") : ""}`}
           className={cn(
-            "flex items-center gap-3 rounded-lg border p-4 transition-colors",
+            "flex items-center gap-3 rounded-lg border p-4 transition-colors max-md:rounded-none max-md:border-0",
             lang === "ar"
-              ? "border-primary bg-primary/5"
+              ? "border-primary bg-primary/5 max-md:bg-transparent"
               : "hover:border-primary/50"
           )}
         >
@@ -179,9 +181,9 @@ function LanguagePreference({
         <a
           href={`/en${typeof window !== "undefined" ? window.location.pathname.replace(/^\/(ar|en)/, "") : ""}`}
           className={cn(
-            "flex items-center gap-3 rounded-lg border p-4 transition-colors",
+            "flex items-center gap-3 rounded-lg border p-4 transition-colors max-md:rounded-none max-md:border-0",
             lang === "en"
-              ? "border-primary bg-primary/5"
+              ? "border-primary bg-primary/5 max-md:bg-transparent"
               : "hover:border-primary/50"
           )}
         >

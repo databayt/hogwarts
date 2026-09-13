@@ -190,9 +190,9 @@ export function NotificationSettings({ dictionary }: Props) {
   return (
     <div className="space-y-6">
       {/* Email Notifications */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
+          <CardTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
             {dictionary?.settings?.notificationSettings?.emailNotifications ||
               "Email Notifications"}
@@ -203,7 +203,7 @@ export function NotificationSettings({ dictionary }: Props) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rtl:flex-row-reverse">
+          <div className="flex items-center justify-between">
             <Label htmlFor="email-enabled">
               {dictionary?.settings?.notificationSettings?.enableEmail ||
                 "Enable Email Notifications"}
@@ -236,7 +236,10 @@ export function NotificationSettings({ dictionary }: Props) {
                     }))
                   }
                 >
-                  <SelectTrigger id="email-digest">
+                  <SelectTrigger
+                    id="email-digest"
+                    className="max-md:bg-background"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -266,7 +269,7 @@ export function NotificationSettings({ dictionary }: Props) {
                     ([type, enabled]) => (
                       <div
                         key={type}
-                        className="flex items-center justify-between py-1 rtl:flex-row-reverse"
+                        className="flex items-center justify-between py-1"
                       >
                         <Label
                           htmlFor={`email-${type}`}
@@ -297,9 +300,9 @@ export function NotificationSettings({ dictionary }: Props) {
       </Card>
 
       {/* Push Notifications */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
+          <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
             {dictionary?.settings?.notificationSettings?.pushNotifications ||
               "Push Notifications"}
@@ -310,7 +313,7 @@ export function NotificationSettings({ dictionary }: Props) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rtl:flex-row-reverse">
+          <div className="flex items-center justify-between">
             <Label htmlFor="push-enabled">
               {dictionary?.settings?.notificationSettings?.enablePush ||
                 "Enable Push Notifications"}
@@ -329,11 +332,8 @@ export function NotificationSettings({ dictionary }: Props) {
 
           {settings.push.enabled && (
             <>
-              <div className="flex items-center justify-between rtl:flex-row-reverse">
-                <Label
-                  htmlFor="push-sound"
-                  className="flex items-center gap-2 rtl:flex-row-reverse"
-                >
+              <div className="flex items-center justify-between">
+                <Label htmlFor="push-sound" className="flex items-center gap-2">
                   {settings.push.sound ? (
                     <Volume2 className="h-4 w-4" />
                   ) : (
@@ -364,7 +364,7 @@ export function NotificationSettings({ dictionary }: Props) {
                     ([type, enabled]) => (
                       <div
                         key={type}
-                        className="flex items-center justify-between py-1 rtl:flex-row-reverse"
+                        className="flex items-center justify-between py-1"
                       >
                         <Label
                           htmlFor={`push-${type}`}
@@ -395,9 +395,9 @@ export function NotificationSettings({ dictionary }: Props) {
       </Card>
 
       {/* SMS Notifications */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
+          <CardTitle className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
             {dictionary?.settings?.notificationSettings?.smsNotifications ||
               "SMS Notifications"}
@@ -408,7 +408,7 @@ export function NotificationSettings({ dictionary }: Props) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rtl:flex-row-reverse">
+          <div className="flex items-center justify-between">
             <div className="space-y-1">
               <Label htmlFor="sms-enabled">
                 {dictionary?.settings?.notificationSettings?.enableSms ||
@@ -441,9 +441,9 @@ export function NotificationSettings({ dictionary }: Props) {
                 {Object.entries(settings.sms.types).map(([type, enabled]) => (
                   <div
                     key={type}
-                    className="flex items-center justify-between py-1 rtl:flex-row-reverse"
+                    className="flex items-center justify-between py-1"
                   >
-                    <div className="flex items-center gap-2 rtl:flex-row-reverse">
+                    <div className="flex items-center gap-2">
                       {type === "emergencies" && (
                         <TriangleAlert className="h-4 w-4 text-red-500" />
                       )}
@@ -475,9 +475,9 @@ export function NotificationSettings({ dictionary }: Props) {
       </Card>
 
       {/* Quiet Hours */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
+          <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
             {dictionary?.settings?.notificationSettings?.quietHours ||
               "Quiet Hours"}
@@ -488,7 +488,7 @@ export function NotificationSettings({ dictionary }: Props) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rtl:flex-row-reverse">
+          <div className="flex items-center justify-between">
             <Label htmlFor="quiet-enabled">
               {dictionary?.settings?.notificationSettings?.enableQuietHours ||
                 "Enable Quiet Hours"}
@@ -526,7 +526,7 @@ export function NotificationSettings({ dictionary }: Props) {
                         },
                       }))
                     }
-                    className="w-full rounded-md border px-3 py-2"
+                    className="max-md:bg-background w-full rounded-md border px-3 py-2 max-md:rounded-lg max-md:border-0"
                   />
                 </div>
                 <div className="space-y-2">
@@ -544,16 +544,16 @@ export function NotificationSettings({ dictionary }: Props) {
                         quietHours: { ...prev.quietHours, end: e.target.value },
                       }))
                     }
-                    className="w-full rounded-md border px-3 py-2"
+                    className="max-md:bg-background w-full rounded-md border px-3 py-2 max-md:rounded-lg max-md:border-0"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rtl:flex-row-reverse">
+              <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label
                     htmlFor="allow-emergencies"
-                    className="flex items-center gap-2 rtl:flex-row-reverse"
+                    className="flex items-center gap-2"
                   >
                     <TriangleAlert className="h-4 w-4 text-red-500" />
                     {dictionary?.settings?.notificationSettings
@@ -585,7 +585,7 @@ export function NotificationSettings({ dictionary }: Props) {
       </Card>
 
       {/* Notification Summary */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle>
             {dictionary?.settings?.notificationSettings?.notificationSummary ||
@@ -598,8 +598,8 @@ export function NotificationSettings({ dictionary }: Props) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="bg-background flex items-center justify-between rounded-xl p-3 rtl:flex-row-reverse">
-              <div className="flex items-center gap-2 rtl:flex-row-reverse">
+            <div className="bg-background flex items-center justify-between rounded-xl p-3">
+              <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
                 <span>
                   {dictionary?.settings?.notificationSettings?.email || "Email"}
@@ -613,8 +613,8 @@ export function NotificationSettings({ dictionary }: Props) {
                     "Disabled"}
               </Badge>
             </div>
-            <div className="bg-background flex items-center justify-between rounded-xl p-3 rtl:flex-row-reverse">
-              <div className="flex items-center gap-2 rtl:flex-row-reverse">
+            <div className="bg-background flex items-center justify-between rounded-xl p-3">
+              <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
                 <span>
                   {dictionary?.settings?.notificationSettings?.push || "Push"}
@@ -628,8 +628,8 @@ export function NotificationSettings({ dictionary }: Props) {
                     "Disabled"}
               </Badge>
             </div>
-            <div className="bg-background flex items-center justify-between rounded-xl p-3 rtl:flex-row-reverse">
-              <div className="flex items-center gap-2 rtl:flex-row-reverse">
+            <div className="bg-background flex items-center justify-between rounded-xl p-3">
+              <div className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4" />
                 <span>
                   {dictionary?.settings?.notificationSettings?.sms || "SMS"}
@@ -643,8 +643,8 @@ export function NotificationSettings({ dictionary }: Props) {
                     "Disabled"}
               </Badge>
             </div>
-            <div className="bg-background flex items-center justify-between rounded-xl p-3 rtl:flex-row-reverse">
-              <div className="flex items-center gap-2 rtl:flex-row-reverse">
+            <div className="bg-background flex items-center justify-between rounded-xl p-3">
+              <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>
                   {dictionary?.settings?.notificationSettings?.quietHours ||
@@ -665,7 +665,7 @@ export function NotificationSettings({ dictionary }: Props) {
       </Card>
 
       {/* Save Button */}
-      <div className="flex justify-end rtl:justify-start">
+      <div className="flex justify-end max-md:[&_button]:w-full max-md:[&_button]:rounded-full">
         <Button onClick={handleSave} disabled={isSaving} size="lg">
           {isSaving
             ? dictionary?.settings?.notificationSettings?.saving || "Saving..."

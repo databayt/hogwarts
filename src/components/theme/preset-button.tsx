@@ -65,10 +65,13 @@ export function PresetButton({
       onClick={onApply}
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
-      className="group relative flex flex-row items-center gap-2.5 rounded-lg border px-4 py-2.5 transition-shadow hover:shadow-md"
+      className="group relative flex flex-row items-center gap-2.5 rounded-lg border px-4 py-2.5 transition-shadow hover:shadow-md max-md:w-full max-md:min-w-0 max-md:flex-col-reverse max-md:items-start max-md:gap-2 max-md:rounded-xl max-md:px-3.5 max-md:py-3"
       style={{
         backgroundColor,
-        borderColor: isActive ? primaryColor : "hsl(var(--border))",
+        // `var(--border)`, not `hsl(var(--border))`: the token is OKLCH, so
+        // the hsl() wrapper was invalid and every chip fell back to a black
+        // currentColor border.
+        borderColor: isActive ? primaryColor : "var(--border)",
         borderWidth: isActive ? "2px" : "1px",
       }}
     >
@@ -80,7 +83,7 @@ export function PresetButton({
       </div>
 
       {/* Theme name */}
-      <span className="text-foreground/80 group-hover:text-foreground text-xs font-medium">
+      <span className="text-foreground/80 group-hover:text-foreground truncate text-xs font-medium">
         {formattedLabel}
       </span>
 
