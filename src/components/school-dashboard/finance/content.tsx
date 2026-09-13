@@ -28,6 +28,14 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { AreaChartStacked } from "@/components/school-dashboard/dashboard/chart-area-stacked"
 import { InteractiveBarChart } from "@/components/school-dashboard/dashboard/chart-interactive-bar"
 import { RadialTextChart } from "@/components/school-dashboard/dashboard/chart-radial-text"
+import {
+  AppTileGrid,
+  ListRow,
+  ListRows,
+  SectionHeader,
+  StatPanel,
+  TileFace,
+} from "@/components/school-dashboard/shared"
 
 import { FinanceAccessDenied } from "./access-denied"
 import { resolveFinanceAccess } from "./guard"
@@ -182,9 +190,89 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   const charts = summarizeMonthly(monthly)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 md:space-y-6">
+      {/* Phone: the four money figures as the dashboard's grey panel. The
+          card PNG beside them on desktop is 400px of decoration on a phone,
+          so it stays a desktop thing. */}
+      <StatPanel
+        className="md:hidden"
+        items={[
+          {
+            key: "revenue",
+            label: d?.stats?.totalRevenue || "Total Revenue",
+            value: formatCompactMoney(totalRevenue, currency, lang),
+            hint: d?.stats?.fromCompletedPayments || "Completed",
+            tone: "positive",
+          },
+          {
+            key: "expenses",
+            label: d?.stats?.totalExpenses || "Total Expenses",
+            value: formatCompactMoney(totalExpenses, currency, lang),
+            hint: d?.stats?.approvedExpenses || "Approved",
+          },
+          {
+            key: "pending",
+            label: d?.stats?.pendingPayments || "Pending",
+            value: formatCompactMoney(pendingPayments, currency, lang),
+            hint: d?.stats?.awaitingProcessing || "Awaiting",
+            tone: pendingPayments > 0 ? "warning" : "default",
+          },
+          {
+            key: "unpaid",
+            label: d?.stats?.unpaidInvoices || "Unpaid",
+            value: unpaidInvoices,
+            hint: d?.stats?.invoicesOutstanding || "Invoices",
+            tone: unpaidInvoices > 0 ? "negative" : "default",
+            href: `/${lang}/finance/invoice`,
+          },
+        ]}
+      />
+
+      {/* Phone: the four jobs a finance officer opens this page for, as the
+          dashboard's app tiles — right under the figures, in thumb reach. */}
+      <section className="md:hidden">
+        <SectionHeader
+          title={
+            dictionary?.school?.dashboard?.quickActionsSection?.title ||
+            "Quick Actions"
+          }
+        />
+        <AppTileGrid
+          items={[
+            {
+              key: "invoice",
+              label: d?.cards?.invoicing?.create || "Create Invoice",
+              href: `/${lang}/finance/invoice`,
+              icon: FileText,
+              tint: "blue",
+            },
+            {
+              key: "payroll",
+              label: d?.cards?.payroll?.process || "Process Payroll",
+              href: `/${lang}/finance/payroll`,
+              icon: Users,
+              tint: "orange",
+            },
+            {
+              key: "expenses",
+              label: d?.cards?.expenses?.title || "Track Expenses",
+              href: `/${lang}/finance/expenses`,
+              icon: TrendingUp,
+              tint: "yellow",
+            },
+            {
+              key: "reports",
+              label: d?.cards?.reports?.generate || "Generate Report",
+              href: `/${lang}/finance/reports`,
+              icon: FileBarChart,
+              tint: "indigo",
+            },
+          ]}
+        />
+      </section>
+
       {/* Overview Stats - Financial Health */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="hidden gap-4 md:grid md:grid-cols-2">
         {/* Bank Card with Image */}
         <div className="flex items-center justify-center">
           <Image
@@ -310,8 +398,60 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         </div>
       </div>
 
+      {/* Phone: the modules as rows — its tile, its name, what is waiting in
+          it, and its count — instead of four bordered cards of icon chips. */}
+      <section className="md:hidden">
+        <SectionHeader title={fd?.moduleActivity || "Modules"} />
+        <ListRows divided>
+          <ListRow
+            href={`/${lang}/finance/invoice`}
+            art={<TileFace icon={FileText} tint="blue" />}
+            title={d?.cards?.invoicing?.title || "Invoicing"}
+            description={
+              unpaidInvoices > 0
+                ? `${unpaidInvoices} ${mp?.unpaid || "unpaid"}`
+                : undefined
+            }
+            trailing={
+              <span className="text-base font-semibold">{invoicesCount}</span>
+            }
+            chevron
+          />
+          <ListRow
+            href={`/${lang}/finance/fees`}
+            art={<TileFace art="wallet" />}
+            title={d?.cards?.fees?.title || "Fee Collection"}
+            description={`${studentsWithFeesCount} ${mp?.students || "students"}`}
+            chevron
+          />
+          <ListRow
+            href={`/${lang}/finance/payroll`}
+            art={<TileFace icon={Users} tint="orange" />}
+            title={d?.cards?.payroll?.title || "Payroll"}
+            description={
+              pendingPayrollCount > 0
+                ? `${pendingPayrollCount} ${mp?.pendingLabel || "pending"}`
+                : undefined
+            }
+            trailing={
+              <span className="text-base font-semibold">
+                {teachersWithSalaryCount}
+              </span>
+            }
+            chevron
+          />
+          <ListRow
+            href={`/${lang}/finance/reports`}
+            art={<TileFace icon={FileBarChart} tint="indigo" />}
+            title={d?.cards?.reports?.title || "Reports"}
+            description={`${reportsCount} ${mp?.generated || "generated"}`}
+            chevron
+          />
+        </ListRows>
+      </section>
+
       {/* Finance Quick Look */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="hidden grid-cols-2 gap-4 md:grid lg:grid-cols-4">
         {/* Invoicing */}
         <Card className="p-4">
           <CardContent className="space-y-3 p-0">
@@ -437,8 +577,8 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Quick Actions — the phone's tiles above cover these */}
+      <div className="hidden gap-4 sm:grid-cols-2 md:grid lg:grid-cols-4">
         <Link href={`/${lang}/finance/invoice`}>
           <Card className="group hover:border-primary/30 cursor-pointer p-4 transition-all duration-300 hover:shadow-md">
             <CardContent className="p-0">

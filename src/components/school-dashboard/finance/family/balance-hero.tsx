@@ -8,6 +8,11 @@ import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { cn } from "@/lib/utils"
 import { Progress } from "@/components/ui/progress"
 
+import {
+  BrandBanner,
+  BrandProgress,
+} from "@/components/school-dashboard/shared"
+
 import { PayFeeDialog } from "../fees/pay-fee-dialog"
 import type { FamilySectionProps } from "./types"
 
@@ -35,7 +40,8 @@ export function FamilyBalanceHero({
   d,
   gatewayDictionary,
   manualRailDictionary,
-}: Props) {
+  className,
+}: Props & { className?: string }) {
   const { totals, nextDue, currency } = money
   const settled = totals.remaining <= 0
   const isOverdue = totals.overdue > 0
@@ -52,7 +58,8 @@ export function FamilyBalanceHero({
           ? "border-destructive/30 bg-destructive/5"
           : settled
             ? "border-emerald-500/30 bg-emerald-500/5"
-            : "bg-muted/40"
+            : "bg-muted/40",
+        className
       )}
     >
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
@@ -156,5 +163,112 @@ export function FamilyBalanceHero({
         </p>
       ) : null}
     </section>
+  )
+}
+
+/**
+ * The same answer on a phone, as the green banner /library and /live open on.
+ *
+ * The balance IS this page's headline, so it takes the banner's place: whose
+ * money in small type, the amount at the banner's size in bold, the state in
+ * the light weight under it, then Pay as the white pill. Overdue is said in
+ * words with a warning glyph, in the banner's dark ink — the brand ground does
+ * not turn red, the same way the dashboard's next-action stays green for a
+ * late assignment.
+ */
+export function FamilyBalanceBanner({
+  money,
+  lang,
+  d,
+  gatewayDictionary,
+  manualRailDictionary,
+  className,
+}: Props & { className?: string }) {
+  const { totals, nextDue, currency } = money
+  const settled = totals.remaining <= 0
+  const isOverdue = totals.overdue > 0
+  const progress =
+    totals.billed > 0
+      ? Math.min(Math.round((totals.paid / totals.billed) * 100), 100)
+      : 0
+
+  const state = settled
+    ? d?.allSettled || "You're all paid up"
+    : isOverdue
+      ? `${d?.overdue || "Overdue"} · ${formatCurrency(totals.overdue, lang, currency)}`
+      : nextDue?.dueDate
+        ? (d?.dueOn || "Due {date}").replace(
+            "{date}",
+            formatDate(nextDue.dueDate, lang, {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          )
+        : d?.outstanding || "Outstanding"
+
+  return (
+    <BrandBanner
+      className={className}
+      eyebrow={money.studentLabel || d?.title}
+      actions={
+        nextDue ? (
+          // The dialog brings its own trigger; give it the banner's white pill.
+          <div className="[&_button]:h-10 [&_button]:rounded-full [&_button]:bg-white [&_button]:px-5 [&_button]:text-[#050505] [&_button]:hover:bg-white/90">
+            <PayFeeDialog
+              feeAssignmentId={nextDue.feeAssignmentId}
+              lang={lang}
+              remaining={
+                money.fees.find((f) => f.id === nextDue.feeAssignmentId)
+                  ?.remaining ?? 0
+              }
+              methods={money.methods}
+              label={`${nextDue.feeName} · ${nextDue.academicYear}`}
+              dictionary={{
+                ...(gatewayDictionary as object),
+                pay: d?.payNow,
+              }}
+              manualRailDictionary={manualRailDictionary as never}
+            />
+          </div>
+        ) : null
+      }
+      footer={
+        totals.billed > 0 ? (
+          <div className="space-y-2">
+            <BrandProgress value={progress} />
+            <div className="flex justify-between text-xs text-[#050505]/70 tabular-nums">
+              <span>
+                {formatCurrency(totals.paid, lang, currency)}{" "}
+                {d?.paid || "paid"}
+              </span>
+              <span>
+                {formatCurrency(totals.billed, lang, currency)}{" "}
+                {d?.billed || "billed"}
+              </span>
+            </div>
+            {totals.pendingVerification > 0 ? (
+              <p className="pt-1 text-xs text-[#050505]/70">
+                {(d?.awaitingVerification || "Awaiting verification") +
+                  " · " +
+                  formatCurrency(totals.pendingVerification, lang, currency)}
+              </p>
+            ) : null}
+          </div>
+        ) : null
+      }
+    >
+      <strong className="block font-bold tabular-nums">
+        {formatCurrency(totals.remaining, lang, currency)}
+      </strong>
+      <span className="mt-1 flex items-center gap-2 text-lg">
+        {isOverdue ? (
+          <TriangleAlert className="size-5 shrink-0" aria-hidden="true" />
+        ) : settled ? (
+          <CircleCheck className="size-5 shrink-0" aria-hidden="true" />
+        ) : null}
+        {state}
+      </span>
+    </BrandBanner>
   )
 }

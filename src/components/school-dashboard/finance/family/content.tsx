@@ -6,7 +6,7 @@ import { Wallet } from "lucide-react"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { FamilyBalanceHero } from "./balance-hero"
+import { FamilyBalanceBanner, FamilyBalanceHero } from "./balance-hero"
 import { FamilyDueList } from "./due-list"
 import { FamilyFeeCards } from "./fee-cards"
 import { FamilyPayOptions } from "./pay-options"
@@ -54,8 +54,19 @@ export default async function FamilyFinanceContent({
     | undefined
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10 md:space-y-8">
+      {/* Phone opens on the green banner, like /library and /live; the
+          tinted card stays the desktop's answer. */}
+      <FamilyBalanceBanner
+        className="md:hidden"
+        money={money}
+        lang={lang}
+        d={d}
+        gatewayDictionary={gatewayDictionary}
+        manualRailDictionary={manualRailDictionary}
+      />
       <FamilyBalanceHero
+        className="hidden md:block"
         money={money}
         lang={lang}
         d={d}
@@ -94,7 +105,7 @@ export default async function FamilyFinanceContent({
  */
 function EmptyBilling({ d }: { d?: FamilyDictionary }) {
   return (
-    <section className="text-muted-foreground flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-14 text-center">
+    <section className="text-muted-foreground max-md:bg-muted flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-14 text-center max-md:border-0">
       <Wallet className="h-8 w-8" />
       <p className="text-foreground font-medium">
         {d?.nothingBilled || "No fees have been issued yet"}

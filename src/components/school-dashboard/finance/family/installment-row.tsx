@@ -68,7 +68,9 @@ export function FamilyInstallmentRow({
   return (
     <li
       className={cn(
-        "bg-card flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6",
+        // Phone: the dashboard's grey card — no border, the status circle
+        // and the chip carry the state.
+        "bg-card max-md:bg-muted flex flex-col gap-3 rounded-2xl border p-4 max-md:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6",
         className
       )}
     >
@@ -132,7 +134,12 @@ export function FamilyInstallmentRow({
             {d?.statusLabels?.[i.status] || i.status}
           </Badge>
         </div>
-        {action}
+        {/* The reference's buttons are pills; the dialog brings its own. */}
+        {action ? (
+          <div className="max-md:[&_button]:rounded-full max-md:[&_button]:px-4">
+            {action}
+          </div>
+        ) : null}
       </div>
     </li>
   )

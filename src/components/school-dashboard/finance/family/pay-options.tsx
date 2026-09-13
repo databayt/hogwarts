@@ -51,9 +51,9 @@ export function FamilyPayOptions({ money, lang, d }: FamilySectionProps) {
           return (
             <li
               key={gateway}
-              className="bg-card flex items-center gap-4 rounded-2xl border p-4"
+              className="bg-card max-md:bg-muted flex items-center gap-4 rounded-2xl border p-4 max-md:border-0"
             >
-              <span className="bg-primary/10 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+              <span className="bg-primary/10 max-md:bg-background flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
                 <Icon className="text-primary h-5 w-5" />
               </span>
               <div className="min-w-0">

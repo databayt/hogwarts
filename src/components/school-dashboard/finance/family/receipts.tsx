@@ -34,7 +34,7 @@ export function FamilyReceipts({ money, lang, d }: FamilySectionProps) {
         {money.payments.slice(0, 20).map((p) => (
           <li
             key={p.id}
-            className="bg-card flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+            className="bg-card max-md:bg-muted flex flex-col gap-3 rounded-2xl border p-4 max-md:border-0 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
               <p className="truncate font-medium">{p.feeName}</p>
@@ -71,7 +71,12 @@ export function FamilyReceipts({ money, lang, d }: FamilySectionProps) {
                   @react-pdf/renderer to a phone and labels itself in English
                   unless the whole dictionary is threaded into it. */}
               {p.status === "SUCCESS" ? (
-                <Button variant="outline" size="sm" asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="max-md:bg-background max-md:rounded-full max-md:border-0"
+                >
                   <Link
                     href={`/api/payment/${p.id}/receipt`}
                     target="_blank"

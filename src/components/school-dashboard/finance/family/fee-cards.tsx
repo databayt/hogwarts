@@ -35,7 +35,10 @@ export function FamilyFeeCards({ money, lang, d }: FamilySectionProps) {
               : 0
 
           return (
-            <article key={fee.id} className="bg-card rounded-2xl border p-5">
+            <article
+              key={fee.id}
+              className="bg-card max-md:bg-muted rounded-2xl border p-5 max-md:border-0"
+            >
               <header className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <h3 className="truncate font-medium">{fee.feeName}</h3>
@@ -50,7 +53,10 @@ export function FamilyFeeCards({ money, lang, d }: FamilySectionProps) {
               </header>
 
               <div className="mt-4 space-y-2">
-                <Progress value={progress} className="h-1.5" />
+                <Progress
+                  value={progress}
+                  className="max-md:bg-background h-1.5"
+                />
                 <div className="text-muted-foreground flex justify-between text-xs tabular-nums">
                   <span>
                     {formatCurrency(fee.paid, lang, money.currency)}{" "}
@@ -75,7 +81,7 @@ export function FamilyFeeCards({ money, lang, d }: FamilySectionProps) {
                       lang={lang}
                       currency={money.currency}
                       d={d}
-                      className="bg-muted/40 rounded-xl border-none p-3"
+                      className="bg-muted/40 max-md:bg-background rounded-xl border-none p-3"
                     />
                   ))}
                 </ul>
