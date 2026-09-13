@@ -2,13 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
-
-import {
-  AlertDialog,
-  AlertDialogOverlay,
-  AlertDialogPortal,
-} from "@/components/ui/alert-dialog"
+import { useEffect } from "react"
+import { Dialog as DialogPrimitive } from "radix-ui"
 
 export type BorrowNotice = {
   tone: "success" | "error"
@@ -16,12 +11,14 @@ export type BorrowNotice = {
   body: string
 }
 
+/** How long the confirmation stays up before it dismisses itself. */
+const AUTO_DISMISS_MS = 5000
+
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Kept by the caller after close, so the card doesn't empty mid-fade. */
   notice: BorrowNotice | null
-  confirmLabel: string
 }
 
 /**
@@ -30,52 +27,52 @@ interface Props {
  * to fire: a toast in the corner of a phone screen is gone before it is read,
  * and borrowing is a promise with a date on it.
  *
+ * No button: the card dismisses itself after `AUTO_DISMISS_MS`, on a click
+ * outside it, or on Escape. That is why this is a Radix `Dialog`, not an
+ * `AlertDialog` — an alert dialog refuses outside clicks by design.
+ *
  * Every size here was measured off the 3x capture at 390pt, not taken from
  * blueprint §4 — its 300 wide is wrong, the card spans x 71→319, so 248:
  *   card 250 wide, radius 28, fill #f7f7f7 glass (`bg-muted/85` + blur 30)
- *   41 top → 57 icon → 33 → title → 11 → 24px body lines → 10 → 44 button → 13
+ *   41 top → 57 icon → 33 → title → 11 → 24px body lines → 41 bottom
  *
  * The page behind the capture measures pure white, so there is NO dimming
  * overlay — the card's shadow is what lifts it. The overlay still renders,
- * transparent, because it is what blocks clicks on the page behind.
+ * transparent, because it is what catches the outside click.
  *
  * No `font-serif` on the title even though the reference is serif: under `ar`
  * that hands Arabic Georgia, which has no Arabic glyphs (see library/CLAUDE.md).
  */
-export function BorrowAlert({
-  open,
-  onOpenChange,
-  notice,
-  confirmLabel,
-}: Props) {
+export function BorrowAlert({ open, onOpenChange, notice }: Props) {
+  // Re-armed per notice, so a second confirmation gets its full time.
+  useEffect(() => {
+    if (!open) return
+    const timer = setTimeout(() => onOpenChange(false), AUTO_DISMISS_MS)
+    return () => clearTimeout(timer)
+  }, [open, notice, onOpenChange])
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogPortal>
-        <AlertDialogOverlay className="bg-transparent" />
-        <AlertDialogPrimitive.Content
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-transparent" />
+        <DialogPrimitive.Content
           // `inset-0 m-auto h-fit` centres without a translate, so the
           // zoom-in keyframes own `transform` outright and nothing needs an
           // RTL counter-translate.
-          className="bg-muted/85 text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-90 data-[state=closed]:zoom-out-95 fixed inset-0 z-50 m-auto flex h-fit w-[250px] max-w-[calc(100%-2rem)] flex-col items-center rounded-[28px] px-6 pt-[41px] pb-[13px] text-center shadow-[0_8px_48px_rgba(0,0,0,0.25),0_0_0_0.5px_rgba(0,0,0,0.12)] backdrop-blur-[30px] duration-200 outline-none"
+          className="bg-muted/85 text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-90 data-[state=closed]:zoom-out-95 fixed inset-0 z-50 m-auto flex h-fit w-[250px] max-w-[calc(100%-2rem)] flex-col items-center rounded-[28px] px-6 pt-[41px] pb-[41px] text-center shadow-[0_8px_48px_rgba(0,0,0,0.25),0_0_0_0.5px_rgba(0,0,0,0.12)] backdrop-blur-[30px] duration-200 outline-none"
         >
           {notice?.tone === "error" ? <ErrorGlyph /> : <CheckListGlyph />}
 
-          <AlertDialogPrimitive.Title className="mt-[33px] text-[24px] leading-[30px] font-bold">
+          <DialogPrimitive.Title className="mt-[33px] text-[24px] leading-[30px] font-bold">
             {notice?.title}
-          </AlertDialogPrimitive.Title>
+          </DialogPrimitive.Title>
 
-          <AlertDialogPrimitive.Description className="mt-[11px] text-[17px] leading-6">
+          <DialogPrimitive.Description className="mt-[11px] text-[17px] leading-6">
             {notice?.body}
-          </AlertDialogPrimitive.Description>
-
-          {/* A bare word, no separator and no fill — the reference's GOT IT.
-              Radix's Action is unstyled and closes the dialog on its own. */}
-          <AlertDialogPrimitive.Action className="hover:bg-foreground/5 focus-visible:bg-foreground/5 mt-[10px] h-11 w-full rounded-full text-[17px] font-semibold tracking-[0.04em] uppercase transition-colors outline-none">
-            {confirmLabel}
-          </AlertDialogPrimitive.Action>
-        </AlertDialogPrimitive.Content>
-      </AlertDialogPortal>
-    </AlertDialog>
+          </DialogPrimitive.Description>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   )
 }
 

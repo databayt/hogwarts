@@ -200,7 +200,6 @@ export default function BorrowBook({
       open={alertOpen}
       onOpenChange={setAlertOpen}
       notice={notice}
-      confirmLabel={lib?.gotIt || "Got it"}
     />
   )
 
