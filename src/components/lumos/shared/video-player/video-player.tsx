@@ -3,7 +3,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Check, ChevronRight, Gauge, MoreHorizontal, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -13,7 +12,14 @@ import {
   PLAYBACK_SPEEDS,
   UP_NEXT_TRIGGER_BEFORE_END,
 } from "./constants"
-import { glassButton, glassPill, glassScrim, glassSurface } from "./glass"
+import {
+  glassButton,
+  glassPill,
+  glassScrim,
+  glassSurface,
+  phoneMenuCard,
+  phoneMenuRow,
+} from "./glass"
 import {
   useAutoHide,
   useMediaSession,
@@ -22,6 +28,21 @@ import {
   useVideoProgress,
   useVideoProtection,
 } from "./hooks"
+import {
+  airplayvideo,
+  checkmark,
+  chevronRight,
+  ellipsis,
+  gaugeWithDotsNeedle67percent,
+  pipEnter,
+  SfSymbol,
+  speakerSlashFill,
+  speakerWave1Fill,
+  speakerWave2Fill,
+  speakerWave3Fill,
+  squareAndArrowUp,
+  xmark,
+} from "./sf-symbols"
 import type { VideoPlayerProps } from "./types"
 import { VideoOverlay } from "./video-overlay"
 import { VideoProgressBar } from "./video-progress-bar"
@@ -41,23 +62,6 @@ function formatClock(seconds: number): string {
   const secs = Math.floor(seconds % 60)
   return `${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
 }
-
-/**
- * The phone menus' card and row, measured off the reference app's own
- * (`public/apple-tv/IMG_2639.PNG` for the settings card,
- * `IMG_2640.PNG` for the share card — both 1170×2532, so ÷ 3):
- * 250px wide whichever menu it is, 10px of vertical padding, and a corner
- * that fits a 32px radius across four samples of its profile.
- *
- * The ground is the reference's own #121212 rather than the player's pills:
- * a list of text has to survive whatever frame is behind it, so the blur
- * here is cosmetic and the fill does the work. Rows are 42px with an 18px
- * icon 32px in, a 17px label, and the trailing mark 24px from the far edge.
- */
-const phoneMenuCard =
-  "w-[250px] rounded-[32px] bg-[#121212]/95 py-2.5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-[40px]"
-const phoneMenuRow =
-  "flex h-[42px] w-full shrink-0 items-center gap-4 ps-8 pe-6 text-start text-[17px] text-white"
 
 /**
  * How tall the speed list may grow before it scrolls.
@@ -91,114 +95,34 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`
 }
 
-// Apple TV volume icons
-function VolumeHighIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M2,16H5.889l5.295,4.332A.5.5,0,0,0,12,19.945V4.055a.5.5,0,0,0-.817-.387L5.889,8H2A1,1,0,0,0,1,9v6A1,1,0,0,0,2,16Z" />
-      <path d="M18,12a5.989,5.989,0,0,0-2.287-4.713L14.284,8.716a4,4,0,0,1,0,6.568l1.429,1.429A5.989,5.989,0,0,0,18,12Z" />
-      <path d="M23,12a10.974,10.974,0,0,1-3.738,8.262l-1.418-1.418a9,9,0,0,0,0-13.689l1.418-1.418A10.974,10.974,0,0,1,23,12Z" />
-    </svg>
-  )
+// The reference app's own glyphs — SF Symbols as macOS draws them
+// (`sf-symbols.tsx`, generated). Each takes the 20pt the phone row measures
+// (`public/apple-tv/File.png`) unless a caller sizes it with a class, which
+// the wide chrome still does.
+type IconProps = { className?: string; pt?: number }
+
+function VolumeHighIcon({ className, pt = 20 }: IconProps) {
+  return <SfSymbol glyph={speakerWave3Fill} pt={pt} className={className} />
 }
 
-function VolumeMidIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M2,16H5.889l5.295,4.332A.5.5,0,0,0,12,19.945V4.055a.5.5,0,0,0-.817-.387L5.889,8H2A1,1,0,0,0,1,9v6A1,1,0,0,0,2,16Z" />
-      <path d="M18,12a5.989,5.989,0,0,0-2.287-4.713L14.284,8.716a4,4,0,0,1,0,6.568l1.429,1.429A5.989,5.989,0,0,0,18,12Z" />
-      <path
-        opacity="0.3"
-        d="M23,12a10.974,10.974,0,0,1-3.738,8.262l-1.418-1.418a9,9,0,0,0,0-13.689l1.418-1.418A10.974,10.974,0,0,1,23,12Z"
-      />
-    </svg>
-  )
+function VolumeMidIcon({ className, pt = 20 }: IconProps) {
+  return <SfSymbol glyph={speakerWave2Fill} pt={pt} className={className} />
 }
 
-function VolumeLowIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M2,16H5.889l5.295,4.332A.5.5,0,0,0,12,19.945V4.055a.5.5,0,0,0-.817-.387L5.889,8H2A1,1,0,0,0,1,9v6A1,1,0,0,0,2,16Z" />
-      <path
-        opacity="0.3"
-        d="M18,12a5.989,5.989,0,0,0-2.287-4.713L14.284,8.716a4,4,0,0,1,0,6.568l1.429,1.429A5.989,5.989,0,0,0,18,12Z"
-      />
-      <path
-        opacity="0.3"
-        d="M23,12a10.974,10.974,0,0,1-3.738,8.262l-1.418-1.418a9,9,0,0,0,0-13.689l1.418-1.418A10.974,10.974,0,0,1,23,12Z"
-      />
-    </svg>
-  )
+function VolumeLowIcon({ className, pt = 20 }: IconProps) {
+  return <SfSymbol glyph={speakerWave1Fill} pt={pt} className={className} />
 }
 
-function VolumeMutedIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M5.88889 16.0001H2C1.44772 16.0001 1 15.5524 1 15.0001V9.00007C1 8.44778 1.44772 8.00007 2 8.00007H5.88889L11.1834 3.66821C11.3971 3.49335 11.7121 3.52485 11.887 3.73857C11.9601 3.8279 12 3.93977 12 4.05519V19.9449C12 20.2211 11.7761 20.4449 11.5 20.4449C11.3846 20.4449 11.2727 20.405 11.1834 20.3319L5.88889 16.0001ZM20.4142 12.0001L23.9497 15.5356L22.5355 16.9498L19 13.4143L15.4645 16.9498L14.0503 15.5356L17.5858 12.0001L14.0503 8.46454L15.4645 7.05032L19 10.5859L22.5355 7.05032L23.9497 8.46454L20.4142 12.0001Z" />
-    </svg>
-  )
+function VolumeMutedIcon({ className, pt = 20 }: IconProps) {
+  return <SfSymbol glyph={speakerSlashFill} pt={pt} className={className} />
 }
 
-// Apple TV PiP icon — rounded outer frame with filled mini-player
-function PipIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <rect x="12.5" y="12" width="7" height="5" rx="1" fill="currentColor" />
-    </svg>
-  )
+function PipIcon({ className, pt = 20 }: IconProps) {
+  return <SfSymbol glyph={pipEnter} pt={pt} className={className} />
 }
 
-// Apple TV Share icon — square with upward arrow (SF Symbols style)
-function ShareIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path
-        d="M12 2.5l4 4-1.4 1.4L13 6.3V15h-2V6.3L9.4 7.9 8 6.5l4-4z"
-        fill="currentColor"
-      />
-      <path
-        d="M6 10h3v2H6.5a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.5-.5H15v-2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"
-        fill="currentColor"
-      />
-    </svg>
-  )
+function ShareIcon({ className, pt = 20 }: IconProps) {
+  return <SfSymbol glyph={squareAndArrowUp} pt={pt} className={className} />
 }
 
 function FullscreenIcon({ className }: { className?: string }) {
@@ -330,6 +254,53 @@ export function VideoPlayer({
 
   // Share menu state
   const [showShareMenu, setShowShareMenu] = useState(false)
+
+  // The reference's middle slot is AirPlay. It is offered only where there is
+  // somewhere to send the picture: Safari reports a nearby target through
+  // `webkitplaybacktargetavailabilitychanged`, other browsers through the
+  // Remote Playback API. Protected sources never get it — remote playback
+  // hands the bare <video> to the OS, watermark and all.
+  const [canCast, setCanCast] = useState(false)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || isProtected) return
+    const webkit = (e: Event) =>
+      setCanCast(
+        (e as Event & { availability?: string }).availability === "available"
+      )
+    video.addEventListener("webkitplaybacktargetavailabilitychanged", webkit)
+    let watchId: number | null = null
+    const remote = (video as HTMLVideoElement & { remote?: RemotePlayback })
+      .remote
+    remote
+      ?.watchAvailability((available) => setCanCast(available))
+      .then((id) => {
+        watchId = id
+      })
+      .catch(() => {})
+    return () => {
+      video.removeEventListener(
+        "webkitplaybacktargetavailabilitychanged",
+        webkit
+      )
+      if (watchId !== null) void remote?.cancelWatchAvailability(watchId)
+    }
+  }, [isProtected, playbackUrl])
+
+  const castVideo = useCallback(() => {
+    const video = videoRef.current as
+      | (HTMLVideoElement & {
+          webkitShowPlaybackTargetPicker?: () => void
+          remote?: RemotePlayback
+        })
+      | null
+    if (!video) return
+    if (video.webkitShowPlaybackTargetPicker) {
+      video.webkitShowPlaybackTargetPicker()
+    } else {
+      void video.remote?.prompt().catch(() => {})
+    }
+  }, [])
 
   // Initialize player state and actions
   const { state, actions } = useVideoPlayer(videoRef)
@@ -1101,7 +1072,7 @@ export function VideoPlayer({
                   style={glassSurface}
                   aria-label={labels?.close ?? "Close"}
                 >
-                  <X className="size-4 text-white" strokeWidth={2.5} />
+                  <SfSymbol glyph={xmark} pt={20} className="text-white" />
                 </button>
               )}
 
@@ -1134,7 +1105,24 @@ export function VideoPlayer({
                       labels?.pictureInPicture ?? "Picture in Picture"
                     }
                   >
-                    <PipIcon className="size-5 text-white" />
+                    <PipIcon className="text-white" />
+                  </button>
+                )}
+                {canCast && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      castVideo()
+                    }}
+                    className="flex h-11 w-[54px] items-center justify-center transition-opacity active:opacity-60"
+                    aria-label={labels?.airplay ?? "AirPlay"}
+                  >
+                    <SfSymbol
+                      glyph={airplayvideo}
+                      pt={20}
+                      className="text-white"
+                    />
                   </button>
                 )}
                 {/* Two scopes before the OS sheet, the way the reference's own
@@ -1156,7 +1144,7 @@ export function VideoPlayer({
                   aria-haspopup={courseHref ? "menu" : undefined}
                   aria-expanded={courseHref ? showShareMenu : undefined}
                 >
-                  <ShareIcon className="size-5 text-white" />
+                  <ShareIcon className="text-white" />
                 </button>
               </div>
 
@@ -1181,7 +1169,7 @@ export function VideoPlayer({
                     : (labels?.mute ?? "Mute")
                 }
               >
-                <VolumeIcon className="size-5 text-white" />
+                <VolumeIcon className="text-white" />
               </button>
 
               {/* Anchored the way the reference anchors it: the card COVERS
@@ -1231,7 +1219,11 @@ export function VideoPlayer({
                           already holds open, so both cards' labels start on
                           the same line 65px in. It still points along the
                           reading direction, hence the RTL flip. */}
-                      <ChevronRight className="size-[18px] shrink-0 rtl:rotate-180" />
+                      <SfSymbol
+                        glyph={chevronRight}
+                        pt={12}
+                        className="w-[17px] rtl:rotate-180"
+                      />
                       <span className="flex-1 truncate">{item.label}</span>
                     </button>
                   ))}
@@ -1286,7 +1278,7 @@ export function VideoPlayer({
                     aria-expanded={showSpeedMenu}
                     aria-label={labels?.more ?? "More"}
                   >
-                    <MoreHorizontal className="size-5 text-white" />
+                    <SfSymbol glyph={ellipsis} pt={18} className="text-white" />
                   </button>
                   {/* Anchored the way the reference anchors it: the card
                       COVERS the button and the title beside it, stopping 6px
@@ -1317,7 +1309,10 @@ export function VideoPlayer({
                           "text-[15px] text-white/50"
                         )}
                       >
-                        <Gauge className="size-[18px] shrink-0" />
+                        <SfSymbol
+                          glyph={gaugeWithDotsNeedle67percent}
+                          pt={17}
+                        />
                         <span className="flex-1 truncate">
                           {labels?.speed ?? "Playback speed"}
                         </span>
@@ -1353,7 +1348,7 @@ export function VideoPlayer({
                               {rate}×
                             </span>
                             {state.playbackRate === rate && (
-                              <Check className="size-[18px] shrink-0" />
+                              <SfSymbol glyph={checkmark} pt={15} />
                             )}
                           </button>
                         ))}

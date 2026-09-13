@@ -3,8 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useLocalParticipant, useRoomContext } from "@livekit/components-react"
-import { Maximize, Minimize, Video, X } from "lucide-react"
+import {
+  RoomAudioRenderer,
+  useLocalParticipant,
+  useRoomContext,
+} from "@livekit/components-react"
+import { Video, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -13,6 +17,15 @@ import {
   glassScrim,
   glassSurface,
 } from "@/components/lumos/shared/video-player/glass"
+import {
+  arrowDownRightAndArrowUpLeft,
+  arrowUpLeftAndArrowDownRight,
+  SfSymbol,
+  speakerSlashFill,
+  speakerWave3Fill,
+  squareAndArrowUp,
+  xmark,
+} from "@/components/lumos/shared/video-player/sf-symbols"
 import { VideoWatermark } from "@/components/lumos/shared/video-player/video-watermark"
 import { recordClassEvent } from "@/components/school-dashboard/live/actions/room-events"
 import {
@@ -26,7 +39,7 @@ import type {
 
 import type { Poll } from "./class-channel"
 import { ClassProgress } from "./class-progress"
-import { ControlBar, QualityMenuButton } from "./control-bar"
+import { ClassCapsules, ClassMoreMenu, ClassTransport } from "./control-bar"
 import type { RoomLabels } from "./labels"
 import { AudioOnlyBanner, ReconnectingOverlay } from "./overlays"
 import { SidePanel, type PanelTab } from "./side-panel"
@@ -61,30 +74,26 @@ const layer =
 const gone = "pointer-events-none opacity-0"
 
 /**
- * Everything inside the connected room: the stage, and the lumos player's
- * chrome floating over it — `video-player.tsx` as BUILT is the reference
- * (Abdout, 2026-09-13), which supersedes the Figma card this used to be.
+ * Everything inside the connected room: the stage, and the reference app's
+ * phone player chrome floating over it — `public/apple-tv/File.png`, the same
+ * frame the lumos player mirrors (Abdout, 2026-09-13: "match File.png fully").
  *
- * - Top row: the player's phone row. ✕ as its own 44px glass circle on the
- *   reading edge, a glass pill of 54px slots beside it (people · fit), and a
- *   lone circle pushed to the far end (the connection, in the speaker's slot).
- *   21px in from the sides, under the safe-area inset.
- * - Bottom block: no card. The player's scrim runs the full width, and on it
- *   the two-line info label (● live · subtitle, then the subject in bold),
- *   the one-line `clock · track · clock` row, then the class's row of five —
- *   which stays a row rather than the player's centre transport, because a
- *   class has no transport and the row was chosen over that (2026-09-03).
+ * - Top row: ✕ as its own 44px glass circle on the reading edge, a glass pill
+ *   of three 54px slots (people · fill/fit · share the class), and the speaker
+ *   as a lone circle at the far end — here it silences the class on this
+ *   device. 21px in, under the safe-area inset.
+ * - Centre: the transport trio at the lumos overlay's geometry — camera ·
+ *   MICROPHONE · hand (host: screen share).
+ * - Bottom block: the player's scrim; the two-line info label with the ⋯
+ *   circle beside it, the one-line `clock · track · clock` row, and the
+ *   capsule row (Discussion, and the host's raised hands).
  *
  * ONE block with `sm:` variants, not the player's two sibling chromes: the
- * row of five runs track toggles and device selects, and the clock owns a
- * one-second ticker — mounting them twice would double both.
+ * transport runs track toggles and the clock owns a one-second ticker, so
+ * mounting either twice would double the hooks.
  *
- * It behaves like the player's too. It fades three seconds after the last
- * touch and comes back on a tap of the stage, and the stage runs edge to edge
- * UNDER it rather than shrinking to make room — on a phone the teacher's 16:9
- * picture sits in a letterbox, and the card lands on the black band below
- * it. A grid of faces can have its bottom row under the card for the three
- * seconds the card is up, which is the reference's trade too.
+ * It fades three seconds after the last touch and comes back on a tap of the
+ * stage, and the stage runs edge to edge UNDER it rather than shrinking.
  */
 export function RoomShell({
   sessionId,
@@ -110,12 +119,11 @@ export function RoomShell({
 
   // What holds the chrome up: the side panel, any open menu, a control with
   // keyboard focus. Each owner reports its own state; the hook takes the OR.
-  const [barPinned, setBarPinned] = useState(false)
-  const [qualityPinned, setQualityPinned] = useState(false)
+  const [morePinned, setMorePinned] = useState(false)
   const [peoplePinned, setPeoplePinned] = useState(false)
   const [focusPinned, setFocusPinned] = useState(false)
   const hide = useAutoHide(
-    Boolean(panel) || barPinned || qualityPinned || peoplePinned || focusPinned
+    Boolean(panel) || morePinned || peoplePinned || focusPinned
   )
   const hidden = !hide.visible
   const onFocusCapture = useCallback(() => setFocusPinned(true), [])
@@ -160,6 +168,22 @@ export function RoomShell({
       ? labels.fillScreen
       : labels.fitScreen
   const aspectOn = fullscreenSupported ? fullscreen : fit
+
+  // The reference's speaker circle. A phone's volume is its rocker, so the
+  // control is a mute — of the class's audio on THIS device, which
+  // `RoomAudioRenderer` also stops the SFU from sending while it is on.
+  const [audioMuted, setAudioMuted] = useState(false)
+
+  // The pill's third slot: the class page (not this room) to the OS share
+  // sheet, or the clipboard where there is no sheet.
+  const onShare = () => {
+    const url = window.location.href.replace(/\/room\/?(?=[?#]|$)/, "")
+    if (navigator.share) {
+      void navigator.share({ title, url }).catch(() => {})
+    } else {
+      void navigator.clipboard?.writeText(url).catch(() => {})
+    }
+  }
 
   // The host's client is the room's memory: closed polls and questions
   // become ConferenceEvent rows. Best-effort — a failed write never
@@ -241,11 +265,10 @@ export function RoomShell({
             rotationInterval={20000}
           />
 
-          {/* Top row — the player's phone row (`video-player.tsx`, "Top row:
-              close · PiP/share pill · volume"). The ✕ leads on the reading
-              edge, which is the right one under RTL; `ms-auto` sends the
-              connection to the far end. From `sm` the controls shrink to the
-              wide player's scale. */}
+          {/* Top row — File.png's: ✕ on the reading edge (the right under
+              RTL), a pill of three 54px slots, and the speaker circle pushed
+              to the far end. From `sm` the controls take the wide player's
+              36px scale. */}
           <div
             className={cn(
               layer,
@@ -271,7 +294,7 @@ export function RoomShell({
               aria-label={labels.leave}
               onClick={() => void room.disconnect()}
             >
-              <X className="size-4" strokeWidth={2.5} aria-hidden />
+              <SfSymbol glyph={xmark} pt={20} className="sm:size-3.5" />
             </button>
             <div
               className={cn(glassPill, "flex h-11 items-center sm:h-9")}
@@ -295,22 +318,47 @@ export function RoomShell({
                 title={aspectLabel}
                 onClick={onAspect}
               >
-                {aspectOn ? (
-                  <Minimize className="size-5" aria-hidden />
-                ) : (
-                  <Maximize className="size-5" aria-hidden />
-                )}
+                <SfSymbol
+                  glyph={
+                    aspectOn
+                      ? arrowDownRightAndArrowUpLeft
+                      : arrowUpLeftAndArrowDownRight
+                  }
+                  pt={20}
+                  className="sm:size-4"
+                />
+              </button>
+              <button
+                type="button"
+                className="flex h-11 w-[54px] items-center justify-center rounded-full text-white transition-opacity active:opacity-60 sm:h-9 sm:w-11"
+                aria-label={labels.shareClass}
+                title={labels.shareClass}
+                onClick={onShare}
+              >
+                <SfSymbol
+                  glyph={squareAndArrowUp}
+                  pt={20}
+                  className="sm:size-4"
+                />
               </button>
             </div>
-            <div className="ms-auto">
-              <QualityMenuButton
-                adaptive={adaptive}
-                labels={labels}
-                onPinned={setQualityPinned}
-                className={cn(glassButton, "size-11 sm:size-9")}
-                style={glassSurface}
+            <button
+              type="button"
+              className={cn(
+                glassButton,
+                "ms-auto flex size-11 shrink-0 items-center justify-center text-white sm:size-9"
+              )}
+              style={glassSurface}
+              aria-pressed={audioMuted}
+              aria-label={audioMuted ? labels.unmuteAudio : labels.muteAudio}
+              onClick={() => setAudioMuted((m) => !m)}
+            >
+              <SfSymbol
+                glyph={audioMuted ? speakerSlashFill : speakerWave3Fill}
+                pt={20}
+                className="sm:size-4"
               />
-            </div>
+            </button>
           </div>
 
           {/* Status, centred under the top pills — a floating notice rather
@@ -345,9 +393,32 @@ export function RoomShell({
             )}
           </div>
 
+          {/* Centre — File.png's transport trio, on the class. Its frame is
+              click-through so a tap beside the discs still reaches the stage
+              and toggles the chrome, the way a tap beside the player's does. */}
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-0 z-20 flex items-center justify-center transition-opacity duration-300 motion-reduce:transition-none",
+              hidden && "opacity-0"
+            )}
+          >
+            <div
+              className={cn(
+                "pointer-events-auto",
+                hidden && "pointer-events-none"
+              )}
+              onClick={swallow}
+              onPointerDown={hide.poke}
+              onFocusCapture={onFocusCapture}
+              onBlurCapture={onBlurCapture}
+            >
+              <ClassTransport role={role} labels={labels} channel={channel} />
+            </div>
+          </div>
+
           {/* Bottom block — the player's, phone and wide in one: its scrim
-              across the full width (no card), 96px of fade above the text on
-              a phone and 64px from `sm`, 21px / 16px side insets, the home
+              across the full width, the info label with the ⋯ beside it,
+              13px to the clock row, 13px to the capsules, the home
               indicator's inset below. */}
           <div
             className={cn(
@@ -362,27 +433,36 @@ export function RoomShell({
             onFocusCapture={onFocusCapture}
             onBlurCapture={onBlurCapture}
           >
-            {/* The player's info label. Its small first line carries the live
-                marker (it used to sit between the clocks, where the player has
-                no slot) and the subtitle; the second is the subject — 24px bold
-                on a phone, 16px semibold wide, as the player sets its title.
-                Printed on EVERY room now, timed or open. */}
-            <div className="min-w-0">
-              <p className="flex min-w-0 items-center gap-1.5 text-[15px] leading-none text-white/85 sm:text-xs sm:text-white">
-                <span
-                  className="size-1.5 shrink-0 rounded-full bg-red-500"
-                  aria-hidden
-                />
-                <span className="truncate">
-                  {labels.live}
-                  {subtitle ? ` · ${subtitle}` : ""}
-                </span>
-              </p>
-              {title && (
-                <p className="mt-1 truncate text-2xl leading-none font-bold text-white sm:mt-1 sm:text-base sm:leading-snug sm:font-semibold">
-                  {title}
+            <div className="flex items-center justify-between gap-3">
+              {/* The player's info label. Its small first line carries the
+                  live marker and the subtitle; the second is the subject —
+                  24px bold on a phone, 16px semibold wide. */}
+              <div className="min-w-0">
+                <p className="flex min-w-0 items-center gap-1.5 text-[15px] leading-none text-white/85 sm:text-xs sm:text-white">
+                  <span
+                    className="size-1.5 shrink-0 rounded-full bg-red-500"
+                    aria-hidden
+                  />
+                  <span className="truncate">
+                    {labels.live}
+                    {subtitle ? ` · ${subtitle}` : ""}
+                  </span>
                 </p>
-              )}
+                {title && (
+                  <p className="mt-1 truncate text-2xl leading-none font-bold text-white sm:mt-1 sm:text-base sm:leading-snug sm:font-semibold">
+                    {title}
+                  </p>
+                )}
+              </div>
+              <ClassMoreMenu
+                role={role}
+                labels={labels}
+                channel={channel}
+                slides={slides}
+                tools={config.tools}
+                adaptive={adaptive}
+                onPinned={setMorePinned}
+              />
             </div>
             <ClassProgress
               startsAtMs={clock.startsAtMs}
@@ -390,19 +470,14 @@ export function RoomShell({
               labels={labels}
               className="mt-[13px] sm:mt-2"
             />
-            {/* The row of five, in the capsule row's place: 13px under the
-                clock, spread across a phone, held to a phone's width from
-                `sm` so five glyphs do not scatter across a desktop. */}
-            <div className="mx-auto mt-[13px] w-full sm:mt-3 sm:max-w-sm">
-              <ControlBar
+            <div className="mt-[13px] sm:mt-3">
+              <ClassCapsules
                 role={role}
-                tools={config.tools}
                 labels={labels}
                 channel={channel}
                 panel={panel}
                 onPanel={setPanel}
-                slides={slides}
-                onPinned={setBarPinned}
+                tools={config.tools}
               />
             </div>
           </div>
@@ -426,6 +501,7 @@ export function RoomShell({
           </div>
         )}
       </div>
+      <RoomAudioRenderer muted={audioMuted} />
     </div>
   )
 }

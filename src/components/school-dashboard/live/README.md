@@ -47,10 +47,10 @@ conference/
 │   ├── title-card.tsx     the pre-join card, on the shared lumos frame (`sm:min-h-[80dvh]`,
 │   │                      so the shelf under it shows and the page reads as a page)
 │   ├── shelves.tsx       everything under it — the section's classes, bonus content, related, cast & crew
-│   ├── room-shell.tsx     the call itself: the player's phone chrome over an edge-to-edge stage —
-│   │                      top-start pill (✕ · people · fit), top-end pill (connection), bottom card
-│   ├── control-bar.tsx    the card's row of five (discussion · camera · MIC · hand|share · ⋯) + menus
-│   ├── class-progress.tsx the card's clock: read-only class progress, elapsed · −left, ticks alone
+│   ├── room-shell.tsx     the call itself: File.png's phone chrome over an edge-to-edge stage —
+│   │                      ✕ · pill (people · fit · share) · speaker, centre discs, bottom block
+│   ├── control-bar.tsx    ClassTransport (camera · MIC · hand|share) · ClassCapsules · ClassMoreMenu (⋯ card)
+│   ├── class-progress.tsx the clock row: read-only class progress, elapsed · −left, ticks alone
 │   ├── use-auto-hide.ts   fades 3s after the last touch; a stage tap toggles; menus/panel/focus pin
 │   ├── glyph.ts           the bare-glyph control class the pills and the card share
 │   └── calendar-file.ts   the header's `+ ADD`: the class as an `.ics`, built in the browser

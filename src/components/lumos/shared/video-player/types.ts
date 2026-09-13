@@ -64,6 +64,8 @@ export interface VideoPlayerLabels {
   share?: string
   copyLink?: string
   airdrop?: string
+  /** The phone pill's middle slot — sends the picture to a nearby screen. */
+  airplay?: string
   messages?: string
   notes?: string
   reminders?: string

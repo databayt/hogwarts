@@ -156,6 +156,7 @@ export function LumosLessonContent({
     rewind: vp?.rewind,
     forward: vp?.forward,
     pictureInPicture: vp?.pictureInPicture,
+    airplay: vp?.airplay,
     share: vp?.share,
     copyLink: vp?.copyLink,
     airdrop: vp?.airdrop,

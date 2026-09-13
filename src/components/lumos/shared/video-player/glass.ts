@@ -38,6 +38,24 @@ export const glassMenu =
   "rounded-xl border border-white/10 bg-black/80 backdrop-blur-[40px]"
 
 /**
+ * The phone menus' card and row, measured off the reference app's own
+ * (`public/apple-tv/IMG_2639.PNG` for the settings card, `IMG_2640.PNG` for
+ * the share card — both 1170×2532, so ÷ 3): 250px wide whichever menu it is,
+ * 10px of vertical padding, and a corner that fits a 32px radius across four
+ * samples of its profile.
+ *
+ * The ground is the reference's own #121212 rather than the pills' glass: a
+ * list of text has to survive whatever frame is behind it, so the blur here is
+ * cosmetic and the fill does the work. Rows are 42px with a 17pt symbol 32px
+ * in, a 17px label, and the trailing mark 24px from the far edge. The lumos
+ * player and the live room both open their menus as this card.
+ */
+export const phoneMenuCard =
+  "w-[250px] rounded-[32px] bg-[#121212]/95 py-2.5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-[40px]"
+export const phoneMenuRow =
+  "flex h-[42px] w-full shrink-0 items-center gap-4 ps-8 pe-6 text-start text-[17px] text-white"
+
+/**
  * The band under the bottom chrome. Controls sit on video, and a white slide
  * or a bright classroom would swallow them; the scrim buys contrast without
  * a hard edge across the frame.

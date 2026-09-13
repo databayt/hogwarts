@@ -1970,3 +1970,16 @@ Page height roughly halved. tsc 0 · 601 block tests green (+21).
   the session detail, so it degrades rather than breaks. Narrowing the strip's
   CTA for STAFF would need a per-row visibility check the landing does not
   currently select.
+
+## Room: the in-call chrome matches File.png fully 2026-09-13 — closed
+
+- [x] Centre transport trio (camera · MIC · hand|share) at the lumos overlay's
+      64/92/64 geometry; measured on the reference's centres at 390px.
+- [x] Top pill gains a share slot; the end circle is a device-local speaker
+      mute (`RoomAudioRenderer muted`); connection quality moved into ⋯.
+- [x] ⋯ beside the title opens the lumos `phoneMenuCard` with drill-in rows
+      (quality · microphone · camera · whiteboard · slides).
+- [x] Capsule row: Discussion (count) and the host's Raised hands.
+- [x] Every glyph is a traced SF Symbol (`sf-symbols.tsx`, generated).
+- [ ] Not verified on a real iPhone: `RoomAudioRenderer`'s `muted` is `@alpha`
+      in `@livekit/components-react` 2.9.21.

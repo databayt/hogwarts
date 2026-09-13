@@ -4,11 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import {
-  LayoutContextProvider,
-  LiveKitRoom,
-  RoomAudioRenderer,
-} from "@livekit/components-react"
+import { LayoutContextProvider, LiveKitRoom } from "@livekit/components-react"
 import {
   DisconnectReason,
   ScreenSharePresets,
@@ -363,7 +359,6 @@ export function RoomClient({
             clock={{ startsAtMs: card.startsAtMs, endsAtMs: card.endsAtMs }}
           />
         </LayoutContextProvider>
-        <RoomAudioRenderer />
       </LiveKitRoom>
     </div>
   )

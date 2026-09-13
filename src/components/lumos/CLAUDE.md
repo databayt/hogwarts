@@ -435,6 +435,29 @@ card already had, so this page's desktop hero is untouched.
 Add geometry to the shared frame, never to a caller — the live block's records
 carry the case history of what happens otherwise.
 
+## The player's glyphs are SF Symbols traced from macOS (2026-09-13)
+
+`shared/video-player/sf-symbols.tsx` is GENERATED — `python3
+scripts/sf-icons/extract.py` draws each symbol in `scripts/sf-icons/manifest.json`
+through AppKit at 1000pt, traces it with potrace and writes it in hundredths
+of the point size. Drawing rather than reading the glyph's `CGPath` is
+load-bearing: `square.and.arrow.up`, every `.slash`, `pip.enter` and
+`person.2.fill` are built from ERASE layers that the raw path paints as ink.
+
+- `<SfSymbol glyph={…} pt={20} />` sizes by point size; a class like
+  `sm:size-8` still overrides it for the wide chrome.
+- Weights and sizes were matched to `public/apple-tv/` by ink coverage, then
+  by overlay: top row 20pt regular, skips 31pt medium, `play.fill` 44pt and
+  `pause.fill` 51pt medium (the capture draws them at different sizes), ⋯ 18pt,
+  menu rows 17pt regular, chevron 12pt semibold.
+- The phone pill gained the reference's middle AirPlay slot, shown only when
+  the browser reports a target (`webkitplaybacktargetavailabilitychanged` /
+  Remote Playback `watchAvailability`) and never on a protected source.
+- `phoneMenuCard` / `phoneMenuRow` moved to `glass.ts`; the live room's ⋯
+  card uses them too.
+- Apple's SF Symbols licence limits the symbols to Apple-platform interfaces;
+  this was extracted at Abdout's explicit request.
+
 ## Related Blocks
 
 - **catalog** (`src/components/catalog/`) — owns `Subject`/`Chapter`/`Lesson`/

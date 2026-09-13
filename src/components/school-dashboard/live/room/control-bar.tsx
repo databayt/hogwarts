@@ -5,27 +5,38 @@
 import { useEffect, useRef, useState } from "react"
 import { useMediaDeviceSelect, useTrackToggle } from "@livekit/components-react"
 import { Track } from "livekit-client"
-import {
-  Hand,
-  MessageSquare,
-  Mic,
-  MicOff,
-  MonitorUp,
-  MoreHorizontal,
-  SignalHigh,
-  Video,
-  VideoOff,
-} from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { glassMenu } from "@/components/lumos/shared/video-player/glass"
+import {
+  glassButton,
+  glassSurface,
+  phoneMenuCard,
+  phoneMenuRow,
+} from "@/components/lumos/shared/video-player/glass"
+import {
+  cellularbars,
+  checkmark,
+  chevronLeft,
+  chevronRight,
+  docRichtext,
+  ellipsis,
+  handRaisedFill,
+  micFill,
+  micSlashFill,
+  pencilAndScribble,
+  rectangleInsetFilledAndPersonFilled,
+  SfSymbol,
+  video,
+  videoFill,
+  videoSlashFill,
+  waveform,
+} from "@/components/lumos/shared/video-player/sf-symbols"
 import type {
   ConferenceParticipantRole,
   RoomTools,
 } from "@/components/school-dashboard/live/types"
 
 import { DELIVERY_TIERS, type DeliveryTier } from "./adaptive-delivery"
-import { glyph, glyphLarge } from "./glyph"
 import type { RoomLabels } from "./labels"
 import { QUALITY_TONE } from "./overlays"
 import type { PanelTab } from "./side-panel"
@@ -33,234 +44,309 @@ import type { SlideOption } from "./slide-options"
 import type { AdaptiveDelivery } from "./use-adaptive-delivery"
 import type { ClassChannel } from "./use-class-channel"
 
-interface ControlBarProps {
+/**
+ * The class's controls, laid out the way the reference app lays out a film's
+ * (`public/apple-tv/File.png`, Abdout 2026-09-13 — "match File.png fully"):
+ *
+ *   File.png                        the class
+ *   ⟲10 · ▶ · ⟳10  (centre discs)   camera · MICROPHONE · hand (host: share)
+ *   Info · InSight · …  (capsules)  Discussion · Raised hands (host)
+ *   ⋯  beside the title             quality · microphone · camera · board …
+ *
+ * The discs carry the three things a class does with itself; the capsules
+ * open the side panel, which is where a class talks; the card holds what is
+ * rarer. It replaces the row of five chosen on 2026-09-03.
+ */
+
+/** A glass disc of the transport row — the lumos overlay's own classes. */
+const disc = cn(glassButton, "flex items-center justify-center text-white")
+
+interface TransportProps {
+  role: ConferenceParticipantRole
+  labels: RoomLabels
+  channel: ClassChannel
+}
+
+/**
+ * The centre trio, at the overlay's geometry: 64 · 92 · 64 with 22px gaps on
+ * a phone, 50 · 80 · 50 with 40px from `sm`. An OBSERVER publishes nothing,
+ * so their screen has no transport at all — the reference shows none either
+ * when there is nothing to play.
+ */
+export function ClassTransport({ role, labels, channel }: TransportProps) {
+  if (role === "OBSERVER") return null
+  const isHost = role === "HOST" || role === "CO_HOST"
+  return (
+    <div className="flex items-center justify-center gap-[22px] sm:gap-10">
+      <CameraDisc labels={labels} />
+      <MicDisc labels={labels} />
+      {isHost ? (
+        <ShareDisc labels={labels} />
+      ) : (
+        <button
+          type="button"
+          className={cn(disc, "size-16 sm:size-[50px]")}
+          style={
+            channel.handUp
+              ? { ...glassSurface, background: "rgb(251 191 36 / 0.9)" }
+              : glassSurface
+          }
+          aria-pressed={channel.handUp}
+          aria-label={channel.handUp ? labels.lowerHand : labels.raiseHand}
+          onClick={() => void channel.setHand(!channel.handUp)}
+        >
+          <SfSymbol
+            glyph={handRaisedFill}
+            pt={29}
+            className={cn(channel.handUp && "text-black", "sm:size-[22px]")}
+          />
+        </button>
+      )}
+    </div>
+  )
+}
+
+function MicDisc({ labels }: { labels: RoomLabels }) {
+  const { toggle, enabled, pending } = useTrackToggle({
+    source: Track.Source.Microphone,
+  })
+  return (
+    <button
+      type="button"
+      className={cn(disc, "size-[92px] disabled:opacity-40 sm:size-20")}
+      // Muted keeps the red disc it always had: the one alarm on the frame.
+      style={
+        enabled
+          ? glassSurface
+          : { ...glassSurface, background: "rgb(220 38 38 / 0.85)" }
+      }
+      aria-pressed={enabled}
+      aria-label={enabled ? labels.mic : labels.micMuted}
+      disabled={pending}
+      onClick={() => void toggle()}
+    >
+      <SfSymbol
+        glyph={enabled ? micFill : micSlashFill}
+        pt={35}
+        className="sm:size-8"
+      />
+    </button>
+  )
+}
+
+function CameraDisc({ labels }: { labels: RoomLabels }) {
+  const { toggle, enabled, pending } = useTrackToggle({
+    source: Track.Source.Camera,
+  })
+  return (
+    <button
+      type="button"
+      // The camera tints its glyph when off rather than lighting a second
+      // red disc beside the microphone's.
+      className={cn(
+        disc,
+        "size-16 disabled:opacity-40 sm:size-[50px]",
+        !enabled && "text-red-400"
+      )}
+      style={glassSurface}
+      aria-pressed={enabled}
+      aria-label={enabled ? labels.camera : labels.cameraOff}
+      disabled={pending}
+      onClick={() => void toggle()}
+    >
+      <SfSymbol
+        glyph={enabled ? videoFill : videoSlashFill}
+        pt={26}
+        className="sm:size-[22px]"
+      />
+    </button>
+  )
+}
+
+function ShareDisc({ labels }: { labels: RoomLabels }) {
+  const { toggle, enabled, pending } = useTrackToggle({
+    source: Track.Source.ScreenShare,
+  })
+  return (
+    <button
+      type="button"
+      className={cn(disc, "size-16 disabled:opacity-40 sm:size-[50px]")}
+      style={
+        enabled
+          ? { ...glassSurface, background: "rgb(2 132 199 / 0.9)" }
+          : glassSurface
+      }
+      aria-pressed={enabled}
+      aria-label={enabled ? labels.stopShare : labels.screenShare}
+      disabled={pending}
+      onClick={() => void toggle()}
+    >
+      <SfSymbol
+        glyph={rectangleInsetFilledAndPersonFilled}
+        pt={24}
+        className="sm:size-[22px]"
+      />
+    </button>
+  )
+}
+
+interface CapsulesProps {
   role: ConferenceParticipantRole
   labels: RoomLabels
   channel: ClassChannel
   panel: PanelTab | null
   onPanel: (tab: PanelTab | null) => void
-  slides: SlideOption[]
   tools: RoomTools
-  /** Whether a menu of ours is open — the chrome must not auto-hide under
-   *  a list the reader is choosing from. */
-  onPinned?: (pinned: boolean) => void
 }
 
+/** The reference's capsule: 44px, 16px of padding, 15px semibold. */
+const capsule = cn(
+  glassButton,
+  "relative flex h-11 shrink-0 items-center gap-2 rounded-full px-4 text-[15px] font-semibold text-white"
+)
+
 /**
- * The player's row of five, on a class. The reference draws AirPlay, back
- * fifteen, pause, forward fifteen and captions; none of those means anything
- * in a room, so the row keeps the SHAPE — five bare glyphs, the middle one
- * larger — and takes the class's own actions:
- *
- *   discussion · camera · MICROPHONE · hand (host: share) · more
- *
- * The microphone is the centre because it is the control a class reaches for
- * most, the way pause is in a film. Chat, questions, poll and raised hands are
- * four tabs of ONE side panel, so one button opens it and carries the count —
- * that is what lets the row fit a phone in a single line, where the old two
- * clusters wrapped onto two. Everything rarer lives under `⋯`.
- *
- * Every string is from the dictionary and every control is wired to a real
- * capability; the SDK's prebuilt bar (hardcoded English, forced LTR) stays
- * retired.
+ * The capsule row, in File.png's Info · InSight · Continue Watching place.
+ * Discussion opens the side panel — chat, questions, poll and hands are its
+ * tabs — and carries what is waiting there; the host gets a second capsule
+ * for raised hands while any are up, because calling on a student is the one
+ * panel errand a teacher runs mid-sentence.
  */
-export function ControlBar({
+export function ClassCapsules({
   role,
   labels,
   channel,
   panel,
   onPanel,
-  slides,
   tools,
-  onPinned,
-}: ControlBarProps) {
-  const canPublish = role !== "OBSERVER"
+}: CapsulesProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
-  const isStudent = role === "PARTICIPANT"
-  const [more, setMore] = useState(false)
-  useEffect(() => {
-    onPinned?.(more)
-  }, [more, onPinned])
-
-  // What the panel button has to say before it is opened: questions nobody
-  // has answered, plus — for the host, who is the one to call on them — the
-  // hands that are up. An open poll with nothing else pending shows as a dot.
   const unanswered = channel.state.questions.filter((q) => !q.answered).length
   const badge = unanswered + (isHost ? channel.hands.length : 0)
   const pollOpen = Boolean(channel.state.poll?.open)
   const defaultTab: PanelTab = tools.chat ? "chat" : "questions"
-  // The visual badge/dot beside the icon is `aria-hidden` — this is the
-  // count and state a screen reader gets instead, since the button's own
-  // label never otherwise changes with what is pending.
+  // The badge beside the word is `aria-hidden` — this is the count and state
+  // a screen reader gets instead.
   const panelLabel =
     badge > 0
       ? `${labels.discussion} (${badge})`
       : pollOpen
         ? `${labels.discussion} — ${labels.pollOpenAnnounce}`
         : labels.discussion
+  const hands = channel.hands.length
 
   return (
-    // Five slots spread across the card. An OBSERVER publishes nothing and
-    // has nothing under `⋯`, so their row is the one button, centred.
-    <div
-      className={cn(
-        "flex items-center",
-        canPublish ? "justify-between" : "justify-center"
-      )}
-    >
+    <div className="no-scrollbar -mx-[21px] flex items-center gap-2 overflow-x-auto px-[21px] sm:mx-0 sm:px-0">
       <button
         type="button"
-        className={cn(glyph, "relative", panel && "bg-white/25")}
-        aria-pressed={Boolean(panel)}
+        className={cn(capsule, panel && panel !== "hands" && "bg-white/25")}
+        style={glassSurface}
+        aria-pressed={Boolean(panel) && panel !== "hands"}
         aria-label={panelLabel}
-        onClick={() => onPanel(panel ? null : defaultTab)}
+        onClick={() => onPanel(panel && panel !== "hands" ? null : defaultTab)}
       >
-        <MessageSquare className="size-6" aria-hidden />
+        {labels.discussion}
         {badge > 0 ? (
           <span
-            className="absolute -end-0.5 -top-0.5 min-w-4 rounded-full bg-amber-400 px-1 text-center text-[10px] leading-4 font-semibold text-black"
+            className="min-w-5 rounded-full bg-amber-400 px-1.5 text-center text-[12px] leading-5 font-semibold text-black"
             aria-hidden
           >
             {badge}
           </span>
         ) : pollOpen ? (
-          <span
-            className="absolute end-1 top-1 size-2 rounded-full bg-emerald-400"
-            aria-hidden
-          />
+          <span className="size-2 rounded-full bg-emerald-400" aria-hidden />
         ) : null}
       </button>
-
-      {canPublish && <CameraButton labels={labels} />}
-      {canPublish && <MicButton labels={labels} large />}
-      {canPublish &&
-        (isHost ? (
-          <ShareButton labels={labels} />
-        ) : (
-          <button
-            type="button"
-            className={cn(
-              glyph,
-              channel.handUp && "bg-amber-400 text-black hover:bg-amber-300"
-            )}
-            aria-pressed={channel.handUp}
-            aria-label={channel.handUp ? labels.lowerHand : labels.raiseHand}
-            onClick={() => void channel.setHand(!channel.handUp)}
+      {isHost && tools.hands && hands > 0 && (
+        <button
+          type="button"
+          className={cn(capsule, panel === "hands" && "bg-white/25")}
+          style={glassSurface}
+          aria-pressed={panel === "hands"}
+          aria-label={`${labels.handsRaised} (${hands})`}
+          onClick={() => onPanel(panel === "hands" ? null : "hands")}
+        >
+          {labels.handsRaised}
+          <span
+            className="min-w-5 rounded-full bg-amber-400 px-1.5 text-center text-[12px] leading-5 font-semibold text-black"
+            aria-hidden
           >
-            <Hand className="size-6" aria-hidden />
-          </button>
-        ))}
-
-      {canPublish && (
-        <div className="relative" data-menu-root>
-          <button
-            type="button"
-            className={cn(glyph, more && "bg-white/25")}
-            aria-haspopup="menu"
-            aria-expanded={more}
-            aria-label={labels.more}
-            onClick={() => setMore((m) => !m)}
-          >
-            <MoreHorizontal className="size-6" aria-hidden />
-          </button>
-          {more && (
-            <Menu
-              onClose={() => setMore(false)}
-              placement="up"
-              align="end"
-              wide
-            >
-              {isHost && tools.whiteboard && (
-                <MenuItem
-                  selected={channel.state.whiteboard}
-                  onClick={() => {
-                    setMore(false)
-                    void channel.send({
-                      t: "wb.show",
-                      on: !channel.state.whiteboard,
-                    })
-                  }}
-                >
-                  {channel.state.whiteboard
-                    ? labels.hideWhiteboard
-                    : labels.whiteboard}
-                </MenuItem>
-              )}
-              {isHost && (
-                <>
-                  <MenuNote>{labels.pickSlides}</MenuNote>
-                  {slides.length === 0 && (
-                    <MenuNote>{labels.noSlides}</MenuNote>
-                  )}
-                  {slides.map((s) => (
-                    <MenuItem
-                      key={s.id}
-                      onClick={() => {
-                        setMore(false)
-                        void channel.send({
-                          t: "slides",
-                          slides: { url: s.url, title: s.title, page: 1 },
-                        })
-                      }}
-                    >
-                      {s.title}
-                    </MenuItem>
-                  ))}
-                  {channel.state.slides && (
-                    <MenuItem
-                      onClick={() => {
-                        setMore(false)
-                        void channel.send({ t: "slides", slides: null })
-                      }}
-                    >
-                      {labels.stopSlides}
-                    </MenuItem>
-                  )}
-                </>
-              )}
-              {/* A student the school lets share reaches it here: the row's
-                  fourth slot is their hand, which they need more often. */}
-              {isStudent && tools.studentShare && (
-                <ShareMenuItem labels={labels} onDone={() => setMore(false)} />
-              )}
-              <MenuNote>{labels.settings}</MenuNote>
-              <DeviceSelect kind="audioinput" label={labels.mic} />
-              <DeviceSelect kind="videoinput" label={labels.camera} />
-              <MenuNote>{labels.attendanceAuto}</MenuNote>
-            </Menu>
-          )}
-        </div>
+            {hands}
+          </span>
+        </button>
       )}
     </div>
   )
 }
 
-/**
- * The top row's lone end circle — where the player keeps its speaker, which a
- * class has no use for. The connection is what a class actually needs to
- * see at a glance: the signal tinted by the last sample, and the delivery
- * tiers under it.
- */
-export function QualityMenuButton({
-  adaptive,
-  labels,
-  onPinned,
-  className,
-  style,
-}: {
-  adaptive: AdaptiveDelivery
+type MoreView = "root" | "quality" | "mic" | "camera" | "slides"
+
+interface MoreMenuProps {
+  role: ConferenceParticipantRole
   labels: RoomLabels
+  channel: ClassChannel
+  slides: SlideOption[]
+  tools: RoomTools
+  adaptive: AdaptiveDelivery
+  /** Whether the card is open — the chrome must not auto-hide under it. */
   onPinned?: (pinned: boolean) => void
-  /** The shell draws this glyph as the player's lone glass circle. */
-  className?: string
-  style?: React.CSSProperties
-}) {
+}
+
+/** How tall a drill-in list may grow before it scrolls — the lumos player's
+ *  five rows and a sliver, so the card stops at the transport row. */
+const LIST_MAX = 219
+
+/**
+ * The reference's "…" beside the title, and its card (`IMG_2639.PNG`):
+ * drill-in rows of symbol · label · chevron, where the film's Playback Speed
+ * · Audio · Subtitles become the class's Quality · Microphone · Camera, then
+ * the host's board and slides. A drill-in swaps the card's rows for the list
+ * behind it, with a back row on top, rather than stacking a second card.
+ *
+ * It opens UPWARD over the title and stops above the clock, exactly where the
+ * lumos player's card stops.
+ */
+export function ClassMoreMenu({
+  role,
+  labels,
+  channel,
+  slides,
+  tools,
+  adaptive,
+  onPinned,
+}: MoreMenuProps) {
   const [open, setOpen] = useState(false)
+  const [view, setView] = useState<MoreView>("root")
+  const rootRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     onPinned?.(open)
   }, [open, onPinned])
+
+  // Closed by a press outside the button+card or by Escape — a document
+  // listener, not a fixed catcher: glass has a `backdrop-filter`, which makes
+  // it the containing block of anything `fixed` inside it.
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("pointerdown", onDown)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("pointerdown", onDown)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
+  const canPublish = role !== "OBSERVER"
+  const isHost = role === "HOST" || role === "CO_HOST"
+  const isStudent = role === "PARTICIPANT"
+  const close = () => setOpen(false)
   const q = adaptive.quality
-  const text =
+  const qualityText =
     q === "excellent"
       ? labels.excellent
       : q === "good"
@@ -270,44 +356,168 @@ export function QualityMenuButton({
           : q === "lost"
             ? labels.lost
             : "—"
+
   return (
-    <div className="relative" data-menu-root>
+    <div ref={rootRef} className="relative shrink-0">
       <button
         type="button"
-        className={cn(glyph, className, adaptive.manual && "bg-white/25")}
-        style={style}
+        className={cn(glassButton, "flex size-11 items-center justify-center")}
+        style={glassSurface}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`${labels.connection}: ${text} · ${labels.quality}`}
-        title={`${labels.connection}: ${text}`}
-        onClick={() => setOpen((o) => !o)}
+        aria-label={labels.more}
+        onClick={() => {
+          setView("root")
+          setOpen((o) => !o)
+        }}
       >
-        <SignalHigh className={cn("size-5", QUALITY_TONE[q])} aria-hidden />
+        <SfSymbol glyph={ellipsis} pt={18} className="text-white" />
       </button>
       {open && (
-        <Menu onClose={() => setOpen(false)} placement="down" align="end">
-          <MenuItem
-            selected={adaptive.manual === null}
-            onClick={() => {
-              adaptive.setManual(null)
-              setOpen(false)
-            }}
-          >
-            {labels.qualityAuto} ({tierLabel(adaptive.tier, labels)})
-          </MenuItem>
-          {DELIVERY_TIERS.map((t) => (
-            <MenuItem
-              key={t}
-              selected={adaptive.manual === t}
-              onClick={() => {
-                adaptive.setManual(t)
-                setOpen(false)
-              }}
-            >
-              {tierLabel(t, labels)}
-            </MenuItem>
-          ))}
-        </Menu>
+        <div
+          role="menu"
+          className={cn(
+            phoneMenuCard,
+            "absolute -end-2 -bottom-[9px] z-30 overflow-hidden"
+          )}
+        >
+          {view === "root" ? (
+            <>
+              <DrillRow
+                glyph={cellularbars}
+                glyphClass={QUALITY_TONE[q]}
+                label={labels.quality}
+                value={qualityText}
+                onClick={() => setView("quality")}
+              />
+              {canPublish && (
+                <DrillRow
+                  glyph={waveform}
+                  label={labels.mic}
+                  onClick={() => setView("mic")}
+                />
+              )}
+              {canPublish && (
+                <DrillRow
+                  glyph={video}
+                  label={labels.camera}
+                  onClick={() => setView("camera")}
+                />
+              )}
+              {isHost && tools.whiteboard && (
+                <ChoiceRow
+                  glyph={pencilAndScribble}
+                  label={labels.whiteboard}
+                  selected={channel.state.whiteboard}
+                  onClick={() => {
+                    close()
+                    void channel.send({
+                      t: "wb.show",
+                      on: !channel.state.whiteboard,
+                    })
+                  }}
+                />
+              )}
+              {isHost && (
+                <DrillRow
+                  glyph={docRichtext}
+                  label={labels.slides}
+                  onClick={() => setView("slides")}
+                />
+              )}
+              {isStudent && tools.studentShare && (
+                <StudentShareRow labels={labels} onDone={close} />
+              )}
+              <p className="px-8 pt-1 pb-1.5 text-[13px] leading-snug text-white/50">
+                {labels.attendanceAuto}
+              </p>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className={cn(
+                  phoneMenuRow,
+                  "text-[15px] text-white/60 active:bg-white/10"
+                )}
+                onClick={() => setView("root")}
+              >
+                <SfSymbol
+                  glyph={chevronLeft}
+                  pt={12}
+                  className="w-[17px] rtl:rotate-180"
+                />
+                <span className="flex-1 truncate">{labels.back}</span>
+              </button>
+              <div
+                className="overflow-y-auto overscroll-contain"
+                style={{ maxHeight: LIST_MAX }}
+              >
+                {view === "quality" && (
+                  <>
+                    <ChoiceRow
+                      label={`${labels.qualityAuto} (${tierLabel(adaptive.tier, labels)})`}
+                      selected={adaptive.manual === null}
+                      onClick={() => {
+                        adaptive.setManual(null)
+                        close()
+                      }}
+                    />
+                    {DELIVERY_TIERS.map((t) => (
+                      <ChoiceRow
+                        key={t}
+                        label={tierLabel(t, labels)}
+                        selected={adaptive.manual === t}
+                        onClick={() => {
+                          adaptive.setManual(t)
+                          close()
+                        }}
+                      />
+                    ))}
+                  </>
+                )}
+                {view === "mic" && (
+                  <DeviceRows kind="audioinput" onDone={close} />
+                )}
+                {view === "camera" && (
+                  <DeviceRows kind="videoinput" onDone={close} />
+                )}
+                {view === "slides" && (
+                  <>
+                    {slides.length === 0 && (
+                      <p className="px-8 py-2 text-[15px] text-white/50">
+                        {labels.noSlides}
+                      </p>
+                    )}
+                    {slides.map((s) => (
+                      <ChoiceRow
+                        key={s.id}
+                        label={s.title}
+                        selected={channel.state.slides?.url === s.url}
+                        onClick={() => {
+                          close()
+                          void channel.send({
+                            t: "slides",
+                            slides: { url: s.url, title: s.title, page: 1 },
+                          })
+                        }}
+                      />
+                    ))}
+                    {channel.state.slides && (
+                      <ChoiceRow
+                        label={labels.stopSlides}
+                        onClick={() => {
+                          close()
+                          void channel.send({ t: "slides", slides: null })
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       )}
     </div>
   )
@@ -323,75 +533,100 @@ export function tierLabel(t: DeliveryTier, labels: RoomLabels): string {
         : labels.qualityAudio
 }
 
-function MicButton({ labels, large }: { labels: RoomLabels; large?: boolean }) {
-  const { toggle, enabled, pending } = useTrackToggle({
-    source: Track.Source.Microphone,
-  })
+/** A row that opens a list: symbol · label · (value) · chevron. */
+function DrillRow({
+  glyph,
+  glyphClass,
+  label,
+  value,
+  onClick,
+}: {
+  glyph: typeof waveform
+  glyphClass?: string
+  label: string
+  value?: string
+  onClick: () => void
+}) {
   return (
     <button
       type="button"
+      role="menuitem"
+      className={cn(phoneMenuRow, "active:bg-white/10")}
+      onClick={onClick}
+    >
+      <SfSymbol glyph={glyph} pt={17} className={cn("w-[17px]", glyphClass)} />
+      <span className="flex-1 truncate">{label}</span>
+      {value && <span className="text-[15px] text-white/50">{value}</span>}
+      <SfSymbol
+        glyph={chevronRight}
+        pt={12}
+        className="text-white/60 rtl:rotate-180"
+      />
+    </button>
+  )
+}
+
+/** A row that does something, with the reference's checkmark when on. */
+function ChoiceRow({
+  glyph,
+  label,
+  selected,
+  disabled,
+  onClick,
+}: {
+  glyph?: typeof waveform
+  label: string
+  selected?: boolean
+  disabled?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      role={selected === undefined ? "menuitem" : "menuitemradio"}
+      aria-checked={selected}
+      disabled={disabled}
       className={cn(
-        glyph,
-        large && glyphLarge,
-        !enabled && "bg-red-600/80 hover:bg-red-500"
+        phoneMenuRow,
+        "active:bg-white/10 disabled:opacity-40",
+        selected && "font-semibold"
       )}
-      aria-pressed={enabled}
-      aria-label={enabled ? labels.mic : labels.micMuted}
-      disabled={pending}
-      onClick={() => void toggle()}
+      onClick={onClick}
     >
-      {enabled ? (
-        <Mic className={large ? "size-7" : "size-6"} aria-hidden />
-      ) : (
-        <MicOff className={large ? "size-7" : "size-6"} aria-hidden />
-      )}
+      {glyph && <SfSymbol glyph={glyph} pt={17} className="w-[17px]" />}
+      <span className="flex-1 truncate">{label}</span>
+      {selected && <SfSymbol glyph={checkmark} pt={15} />}
     </button>
   )
 }
 
-function CameraButton({ labels }: { labels: RoomLabels }) {
-  const { toggle, enabled, pending } = useTrackToggle({
-    source: Track.Source.Camera,
-  })
+function DeviceRows({
+  kind,
+  onDone,
+}: {
+  kind: "audioinput" | "videoinput"
+  onDone: () => void
+}) {
+  const { devices, activeDeviceId, setActiveMediaDevice } =
+    useMediaDeviceSelect({ kind })
   return (
-    <button
-      type="button"
-      // A bare glyph, like every control on the frame but the centre one:
-      // the muted MIC keeps its red disc, the camera only tints its slash.
-      className={cn(glyph, !enabled && "text-red-400")}
-      aria-pressed={enabled}
-      aria-label={enabled ? labels.camera : labels.cameraOff}
-      disabled={pending}
-      onClick={() => void toggle()}
-    >
-      {enabled ? (
-        <Video className="size-6" aria-hidden />
-      ) : (
-        <VideoOff className="size-6" aria-hidden />
-      )}
-    </button>
+    <>
+      {devices.map((d) => (
+        <ChoiceRow
+          key={d.deviceId}
+          label={d.label || d.deviceId}
+          selected={d.deviceId === activeDeviceId}
+          onClick={() => {
+            void setActiveMediaDevice(d.deviceId)
+            onDone()
+          }}
+        />
+      ))}
+    </>
   )
 }
 
-function ShareButton({ labels }: { labels: RoomLabels }) {
-  const { toggle, enabled, pending } = useTrackToggle({
-    source: Track.Source.ScreenShare,
-  })
-  return (
-    <button
-      type="button"
-      className={cn(glyph, enabled && "bg-sky-600 hover:bg-sky-500")}
-      aria-pressed={enabled}
-      aria-label={enabled ? labels.stopShare : labels.screenShare}
-      disabled={pending}
-      onClick={() => void toggle()}
-    >
-      <MonitorUp className="size-6" aria-hidden />
-    </button>
-  )
-}
-
-function ShareMenuItem({
+function StudentShareRow({
   labels,
   onDone,
 }: {
@@ -402,130 +637,15 @@ function ShareMenuItem({
     source: Track.Source.ScreenShare,
   })
   return (
-    <MenuItem
+    <ChoiceRow
+      glyph={rectangleInsetFilledAndPersonFilled}
+      label={enabled ? labels.stopShare : labels.screenShare}
       selected={enabled}
       disabled={pending}
       onClick={() => {
         onDone()
         void toggle()
       }}
-    >
-      {enabled ? labels.stopShare : labels.screenShare}
-    </MenuItem>
+    />
   )
-}
-
-function DeviceSelect({
-  kind,
-  label,
-}: {
-  kind: "audioinput" | "videoinput"
-  label: string
-}) {
-  const { devices, activeDeviceId, setActiveMediaDevice } =
-    useMediaDeviceSelect({ kind })
-  return (
-    <label className="block px-3 py-1 text-xs">
-      <span className="mb-1 block text-white/60">{label}</span>
-      <select
-        className="w-full rounded-md border border-white/20 bg-black/60 px-2 py-1 text-white"
-        value={activeDeviceId}
-        onChange={(e) => void setActiveMediaDevice(e.target.value)}
-      >
-        {devices.map((d) => (
-          <option key={d.deviceId} value={d.deviceId}>
-            {d.label || d.deviceId}
-          </option>
-        ))}
-      </select>
-    </label>
-  )
-}
-
-/**
- * A list floating off one of the glyphs. Closed by a press anywhere outside
- * its own `data-menu-root` (the glyph and the list together, so the glyph's
- * own press toggles rather than fighting the close) or by Escape — a document
- * listener, NOT a fixed full-screen catcher: the glass this sits on has a
- * `backdrop-filter`, which makes it the containing block of anything `fixed`
- * inside it, and a catcher the size of the card catches nothing.
- */
-function Menu({
-  children,
-  onClose,
-  placement,
-  align,
-  wide,
-}: {
-  children: React.ReactNode
-  onClose: () => void
-  placement: "up" | "down"
-  align: "start" | "end"
-  wide?: boolean
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const onDown = (e: PointerEvent) => {
-      const root = ref.current?.closest("[data-menu-root]")
-      const target = e.target as Element | null
-      if (root && target && !root.contains(target)) onClose()
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    document.addEventListener("pointerdown", onDown)
-    document.addEventListener("keydown", onKey)
-    return () => {
-      document.removeEventListener("pointerdown", onDown)
-      document.removeEventListener("keydown", onKey)
-    }
-  }, [onClose])
-  return (
-    <div
-      ref={ref}
-      role="menu"
-      className={cn(
-        glassMenu,
-        "absolute z-30 max-h-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto py-1 shadow-xl",
-        placement === "up" ? "bottom-full mb-2" : "top-full mt-2",
-        wide ? "w-64" : "min-w-44"
-      )}
-      style={align === "end" ? { insetInlineEnd: 0 } : { insetInlineStart: 0 }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function MenuItem({
-  children,
-  onClick,
-  selected,
-  disabled,
-}: {
-  children: React.ReactNode
-  onClick: () => void
-  selected?: boolean
-  disabled?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      role={selected === undefined ? "menuitem" : "menuitemradio"}
-      aria-checked={selected === undefined ? undefined : selected}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        "block w-full truncate px-3 py-1.5 text-start text-sm text-white hover:bg-white/10 disabled:opacity-40",
-        selected && "font-semibold"
-      )}
-    >
-      {children}
-    </button>
-  )
-}
-
-/** A line in a menu that is read, not pressed — a heading or a footnote. */
-function MenuNote({ children }: { children: React.ReactNode }) {
-  return <div className="px-3 py-1 text-xs text-white/60">{children}</div>
 }

@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useRemoteParticipants } from "@livekit/components-react"
-import { Users } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,6 +13,10 @@ import {
   glassPill,
   glassSurface,
 } from "@/components/lumos/shared/video-player/glass"
+import {
+  person2Fill,
+  SfSymbol,
+} from "@/components/lumos/shared/video-player/sf-symbols"
 import { kickParticipant } from "@/components/school-dashboard/live/actions/moderation"
 
 import { glyph } from "./room/glyph"
@@ -150,17 +153,25 @@ export function ParticipantsPanel({
         <button
           ref={toggleRef}
           type="button"
-          className={cn(glyph, "h-11 w-auto min-w-11 gap-1 px-2")}
+          // One 54px slot of the top pill (File.png: 163 = 3 × 54), the
+          // reference's symbol, and the head count as a corner badge rather
+          // than a word that would widen the slot.
+          className={cn(glyph, "relative h-11 w-[54px] sm:h-9 sm:w-11")}
           aria-expanded={open}
           aria-controls="conference-participants-panel"
           aria-label={`${labels.title} (${visible.length})`}
           title={labels.title}
           onClick={() => setOpen((o) => !o)}
         >
-          <Users className="size-5" aria-hidden />
-          <span className="text-[11px] tabular-nums" aria-hidden>
-            {visible.length}
-          </span>
+          <SfSymbol glyph={person2Fill} pt={20} />
+          {visible.length > 0 && (
+            <span
+              className="absolute end-1.5 top-1 min-w-4 rounded-full bg-white px-1 text-center text-[10px] leading-4 font-semibold text-black tabular-nums"
+              aria-hidden
+            >
+              {visible.length}
+            </span>
+          )}
         </button>
       ) : (
         <Button

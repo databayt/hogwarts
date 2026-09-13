@@ -101,6 +101,13 @@ export const DEFAULT_ROOM_LABELS = {
   /** The pre-join card's outlined mark for the raise-hand tool — the other
    *  three tool marks reuse `chat` / `poll` / `whiteboard` above. */
   hands: "Hands",
+  /** The top row's speaker circle — silences the class on this device only. */
+  muteAudio: "Mute class audio",
+  unmuteAudio: "Unmute class audio",
+  /** The top pill's third slot — hands the class page to the OS share sheet. */
+  shareClass: "Share class",
+  /** The ⋯ card's back row, out of a drill-in list. */
+  back: "Back",
 } as const
 
 export type RoomLabelKey = keyof typeof DEFAULT_ROOM_LABELS

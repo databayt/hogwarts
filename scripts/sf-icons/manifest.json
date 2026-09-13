@@ -1,0 +1,203 @@
+{
+  "$comment": "SF Symbols drawn by the lumos player and the live room. `weight` is matched against public/apple-tv/*.PNG (ink coverage, then an overlay); `pt` is the point size each is drawn at, recorded here for reference only — callers pass it. Regenerate: python3 scripts/sf-icons/extract.py",
+  "symbols": [
+    {
+      "name": "xmark",
+      "weight": "regular",
+      "pt": 20,
+      "use": "top row close (File.png)"
+    },
+    {
+      "name": "pip.enter",
+      "weight": "regular",
+      "pt": 20,
+      "use": "top pill slot 1 (File.png)"
+    },
+    {
+      "name": "airplayvideo",
+      "weight": "regular",
+      "pt": 20,
+      "use": "top pill slot 2 (File.png)"
+    },
+    {
+      "name": "square.and.arrow.up",
+      "weight": "regular",
+      "pt": 20,
+      "use": "top pill slot 3 (File.png)"
+    },
+    {
+      "name": "speaker.wave.3.fill",
+      "weight": "regular",
+      "pt": 20,
+      "use": "top end circle (File.png)"
+    },
+    {
+      "name": "speaker.wave.2.fill",
+      "weight": "regular",
+      "pt": 20,
+      "use": "volume, mid"
+    },
+    {
+      "name": "speaker.wave.1.fill",
+      "weight": "regular",
+      "pt": 20,
+      "use": "volume, low"
+    },
+    {
+      "name": "speaker.slash.fill",
+      "weight": "regular",
+      "pt": 20,
+      "use": "muted"
+    },
+    {
+      "name": "person.2.fill",
+      "weight": "regular",
+      "pt": 20,
+      "use": "live: participants slot"
+    },
+    {
+      "name": "arrow.up.left.and.arrow.down.right",
+      "weight": "regular",
+      "pt": 20,
+      "use": "live: fill / full screen slot"
+    },
+    {
+      "name": "arrow.down.right.and.arrow.up.left",
+      "weight": "regular",
+      "pt": 20,
+      "use": "live: fit / exit full screen"
+    },
+    {
+      "name": "gobackward.10",
+      "weight": "medium",
+      "pt": 31,
+      "use": "transport (File.png)"
+    },
+    {
+      "name": "goforward.10",
+      "weight": "medium",
+      "pt": 31,
+      "use": "transport (File.png)"
+    },
+    {
+      "name": "play.fill",
+      "weight": "medium",
+      "pt": 44,
+      "use": "transport centre (File.png)"
+    },
+    {
+      "name": "pause.fill",
+      "weight": "medium",
+      "pt": 51,
+      "use": "transport centre (IMG_2639.PNG)"
+    },
+    {
+      "name": "video.fill",
+      "weight": "medium",
+      "pt": 26,
+      "use": "live: transport camera"
+    },
+    {
+      "name": "video.slash.fill",
+      "weight": "medium",
+      "pt": 26,
+      "use": "live: transport camera off"
+    },
+    {
+      "name": "mic.fill",
+      "weight": "medium",
+      "pt": 35,
+      "use": "live: transport centre"
+    },
+    {
+      "name": "mic.slash.fill",
+      "weight": "medium",
+      "pt": 35,
+      "use": "live: transport centre, muted"
+    },
+    {
+      "name": "hand.raised.fill",
+      "weight": "medium",
+      "pt": 29,
+      "use": "live: transport hand"
+    },
+    {
+      "name": "rectangle.inset.filled.and.person.filled",
+      "weight": "medium",
+      "pt": 24,
+      "use": "live: transport screen share (host)"
+    },
+    {
+      "name": "ellipsis",
+      "weight": "regular",
+      "pt": 18,
+      "use": "more circle (File.png)"
+    },
+    {
+      "name": "gauge.with.dots.needle.67percent",
+      "weight": "regular",
+      "pt": 17,
+      "use": "menu row: playback speed (IMG_2639.PNG)"
+    },
+    {
+      "name": "waveform",
+      "weight": "regular",
+      "pt": 17,
+      "use": "menu row: audio (IMG_2639.PNG) / live microphone"
+    },
+    {
+      "name": "captions.bubble",
+      "weight": "regular",
+      "pt": 17,
+      "use": "menu row: subtitles (IMG_2639.PNG)"
+    },
+    {
+      "name": "cellularbars",
+      "weight": "regular",
+      "pt": 17,
+      "use": "live menu row: connection quality"
+    },
+    {
+      "name": "video",
+      "weight": "regular",
+      "pt": 17,
+      "use": "live menu row: camera"
+    },
+    {
+      "name": "pencil.and.scribble",
+      "weight": "regular",
+      "pt": 17,
+      "use": "live menu row: whiteboard"
+    },
+    {
+      "name": "doc.richtext",
+      "weight": "regular",
+      "pt": 17,
+      "use": "live menu row: slides"
+    },
+    {
+      "name": "chevron.right",
+      "weight": "semibold",
+      "pt": 12,
+      "use": "menu row trailing (IMG_2639.PNG)"
+    },
+    {
+      "name": "chevron.left",
+      "weight": "semibold",
+      "pt": 12,
+      "use": "menu back row"
+    },
+    {
+      "name": "checkmark",
+      "weight": "semibold",
+      "pt": 15,
+      "use": "menu selected row"
+    },
+    {
+      "name": "bubble.left.and.bubble.right.fill",
+      "weight": "regular",
+      "pt": 22,
+      "use": "live control row: discussion"
+    }
+  ]
+}

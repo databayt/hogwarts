@@ -7,16 +7,15 @@
  * heard only "Discussion, button" no matter how much was waiting. The fix
  * folds the same count into the button's `aria-label`.
  *
- * Rendered with `role="OBSERVER"` — the one role for which `ControlBar`
- * mounts no other control (camera/mic/share/more all gate on `canPublish`),
- * so the discussion button is exercised without needing to mock any LiveKit
- * track/device hook.
+ * Since 2026-09-13 the toggle is the Discussion CAPSULE (File.png's capsule
+ * row); `ClassCapsules` mounts no LiveKit track or device hook, so it renders
+ * without mocking any.
  */
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
 import { initialClassState } from "@/components/school-dashboard/live/room/class-channel"
-import { ControlBar } from "@/components/school-dashboard/live/room/control-bar"
+import { ClassCapsules } from "@/components/school-dashboard/live/room/control-bar"
 import { resolveRoomLabels } from "@/components/school-dashboard/live/room/labels"
 import type { ClassChannel } from "@/components/school-dashboard/live/room/use-class-channel"
 
@@ -51,9 +50,9 @@ const baseProps = {
   },
 }
 
-describe("ControlBar discussion button aria-label (lr-03)", () => {
+describe("ClassCapsules discussion button aria-label (lr-03)", () => {
   it("carries only the label when nothing is pending", () => {
-    render(<ControlBar {...baseProps} channel={makeChannel()} />)
+    render(<ClassCapsules {...baseProps} channel={makeChannel()} />)
     expect(
       screen.getByRole("button", { name: labels.discussion })
     ).toBeInTheDocument()
@@ -66,7 +65,7 @@ describe("ControlBar discussion button aria-label (lr-03)", () => {
         { id: "q2", from: "u2", name: "B", text: "?", at: 0, answered: true },
       ],
     })
-    render(<ControlBar {...baseProps} channel={channel} />)
+    render(<ClassCapsules {...baseProps} channel={channel} />)
     expect(
       screen.getByRole("button", { name: `${labels.discussion} (1)` })
     ).toBeInTheDocument()
@@ -83,7 +82,7 @@ describe("ControlBar discussion button aria-label (lr-03)", () => {
         open: true,
       },
     })
-    render(<ControlBar {...baseProps} channel={channel} />)
+    render(<ClassCapsules {...baseProps} channel={channel} />)
     expect(
       screen.getByRole("button", {
         name: `${labels.discussion} — ${labels.pollOpenAnnounce}`,
@@ -97,7 +96,7 @@ describe("ControlBar discussion button aria-label (lr-03)", () => {
         { id: "q1", from: "u1", name: "A", text: "?", at: 0, answered: false },
       ],
     })
-    render(<ControlBar {...baseProps} channel={channel} />)
+    render(<ClassCapsules {...baseProps} channel={channel} />)
     const badge = screen.getByText("1")
     expect(badge).toHaveAttribute("aria-hidden")
   })

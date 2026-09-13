@@ -18,6 +18,16 @@ function formatClock(totalSeconds: number): string {
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
 }
 
+/** `0:07:22` — the lumos phone player's clock: hours always, so the pair
+ *  either side of the track keeps one width for the whole class. */
+function formatPhoneClock(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds))
+  const h = Math.floor(s / 3600)
+  const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0")
+  const ss = String(s % 60).padStart(2, "0")
+  return `${h}:${mm}:${ss}`
+}
+
 interface ClassProgressProps {
   startsAtMs: number | null
   endsAtMs: number | null
@@ -74,19 +84,27 @@ export function ClassProgress({
   const remaining = formatClock(remainingMs / 1000)
   const total = formatClock(span / 1000)
 
-  // The player's clock styles, phone then wide: `text-white/55` with
-  // `leading-none` so the row is exactly the track's height, and from `sm` the
-  // wide bar's 40px mono clocks at `text-white/80`. `dir="ltr"` on each clock,
-  // not on the row: the row stays logical so Arabic swaps the ends, while a
-  // `−07:22` never comes out as `07:22−`.
+  // The player's clocks, phone then wide. On a phone both are the reference
+  // app's `0:00:57` — hours always, so the pair never changes width under the
+  // track — at `text-white/55` with `leading-none`, so the row is exactly the
+  // track's height and the 13px gaps above and below land on the track. From
+  // `sm` the wide bar's 40px mono clocks at `text-white/80`. `dir="ltr"` on
+  // each clock, not on the row: the row stays logical so Arabic swaps the
+  // ends, while a `−0:07:22` never comes out as `0:07:22−`.
   const clock =
     "shrink-0 text-xs leading-none text-white/55 tabular-nums sm:min-w-[40px] sm:font-mono sm:text-white/80"
 
   return (
     <div className={cn("flex items-center gap-[9px] sm:gap-3", className)}>
-      <span dir="ltr" className={cn(clock, "sm:text-start")}>
+      <span dir="ltr" className={cn(clock, "sm:hidden")}>
+        {formatPhoneClock(elapsedMs / 1000)}
+      </span>
+      <span dir="ltr" className={cn(clock, "hidden sm:inline sm:text-start")}>
         {elapsed}
       </span>
+      {/* 8px and bare on a phone — the reference's track has no knob, and
+          its unplayed part samples 35% white — the 5px track and thumb of
+          the wide bar from `sm`, as `VideoProgressBar` splits them. */}
       <div
         role="progressbar"
         aria-label={labels.classProgress}
@@ -94,8 +112,7 @@ export function ClassProgress({
         aria-valuemax={100}
         aria-valuenow={Math.round(percent)}
         aria-valuetext={`${labels.elapsed} ${elapsed} · ${labels.remaining} ${remaining}`}
-        className="relative min-w-0 flex-1 rounded-full bg-white/30"
-        style={{ height: PROGRESS_BAR.heightRest }}
+        className="relative h-2 min-w-0 flex-1 rounded-full bg-white/35 sm:h-[5px] sm:bg-white/30"
       >
         <div
           className="absolute inset-y-0 start-0 rounded-full bg-white"
@@ -103,7 +120,7 @@ export function ClassProgress({
         />
         <div
           aria-hidden
-          className="absolute top-1/2 -translate-y-1/2 rounded-full bg-white"
+          className="absolute top-1/2 hidden -translate-y-1/2 rounded-full bg-white sm:block"
           style={{
             insetInlineStart: `calc(${percent}% - ${PROGRESS_BAR.thumbWidth / 2}px)`,
             width: PROGRESS_BAR.thumbWidth,
@@ -113,7 +130,7 @@ export function ClassProgress({
         />
       </div>
       <span dir="ltr" className={cn(clock, "sm:hidden")}>
-        −{remaining}
+        −{formatPhoneClock(remainingMs / 1000)}
       </span>
       <span dir="ltr" className={cn(clock, "hidden sm:inline sm:text-end")}>
         {total}

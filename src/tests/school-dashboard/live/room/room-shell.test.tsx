@@ -29,6 +29,7 @@ vi.mock("@livekit/components-react", () => ({
   useRoomContext: () => ({ disconnect: async () => {} }),
   useConnectionState: () => "connected",
   useRemoteParticipants: () => [],
+  RoomAudioRenderer: () => null,
 }))
 vi.mock("@/components/school-dashboard/live/room/stage", () => ({
   Stage: () => null,
