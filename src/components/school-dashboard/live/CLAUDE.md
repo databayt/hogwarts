@@ -1348,3 +1348,23 @@ Required env vars (set in `.env`):
    in-block `__tests__/` folder in the URL-mirror reorg) — should stay green
 5. **Before any Prisma changes**: create a Neon branch via
    `mcp__Neon__create_branch`, test on the branch, then promote
+
+## The phone room page opens like the lumos lesson (2026-09-13)
+
+Below `md` the pre-join page carries the dashboard header ABOVE the title card,
+with 24px of ground under it, and opens scrolled past both — the artwork owns
+the top edge and the bar is one scroll up. Measured identical to the lesson at
+390px: `scrollY` 72, header top −72, poster top 0, no sideways scroll.
+
+- `room/page-header.tsx` renders `PlatformHeader` with its OWN providers
+  (dictionary, school, sidebar with `className="contents"`), because
+  `(live-room)` stays bare for the call. Don't move the route under
+  `(school-dashboard)` to get the header.
+- The header is forced `static` (it is `sticky` everywhere else) and wrapped in
+  `px-2` to absorb its `-mx-2` — this layout already cancelled the root gutter.
+- `md:hidden`: the wide card is unchanged, and the desktop half of the header
+  would offer a sidebar trigger for a sidebar this layout never renders.
+- The open-on-hero scroll is ONE hook, `useOpenOnHero` in
+  `lumos/shared/title-card/`, used by the lesson and the room. It measures the
+  offset, so it does nothing where the header is hidden. The room only passes
+  `header` in the pre-join branch; the call and the ended screen never see it.

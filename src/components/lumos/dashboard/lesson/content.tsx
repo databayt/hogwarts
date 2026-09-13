@@ -63,6 +63,7 @@ import {
   TitleCardDescription,
   titleCardPill,
   titleCardTopPill,
+  useOpenOnHero,
 } from "@/components/lumos/shared/title-card"
 import {
   VideoPlayer,
@@ -188,30 +189,9 @@ export function LumosLessonContent({
   const heroRef = useRef<HTMLDivElement>(null)
   const pendingProgressRef = useRef<Promise<void> | null>(null)
 
-  // The page opens ON the hero, not above it.
-  //
-  // The lesson is what the reader came for, and the chrome over it — the
-  // header, the row's own `pt-6` — is about 72px of app furniture between them
-  // on arrival. So the page lands scrolled to the poster's own top edge, which
-  // is the reference app's opening frame; the header is one short scroll up,
-  // where anyone looking for it already scrolls.
-  //
-  // MEASURED, not computed: the offset above the hero is the header plus the
-  // layout's padding plus whatever the live strip and the offline banner
-  // decided to render today, and any constant here would be wrong the first
-  // time one of them appears.
-  useEffect(() => {
-    if (!showHero) return
-    const el = heroRef.current
-    if (!el) return
-    // A restored position — back/forward, a reload part-way down — is the
-    // reader's own and outranks this.
-    if (window.scrollY !== 0) return
-    const top = el.getBoundingClientRect().top + window.scrollY
-    if (top <= 0) return
-    // `instant`: this is where the page STARTS, not somewhere it travels to.
-    window.scrollTo({ top, behavior: "instant" })
-  }, [lesson.id, showHero])
+  // The page opens ON the hero, with the header one short scroll up — see
+  // `useOpenOnHero`, which the live room's title card shares.
+  useOpenOnHero(heroRef, showHero, lesson.id)
   const [isCompleted, setIsCompleted] = useState(
     lesson.progress?.isCompleted ?? false
   )

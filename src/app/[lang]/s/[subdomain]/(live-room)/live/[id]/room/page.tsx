@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { type Locale } from "@/components/internationalization/config"
@@ -24,6 +25,7 @@ import {
 import { RoomClient } from "@/components/school-dashboard/live/room"
 import { JOIN_ERROR_CODES } from "@/components/school-dashboard/live/room/join-errors"
 import { resolveRoomLabels } from "@/components/school-dashboard/live/room/labels"
+import { RoomPageHeader } from "@/components/school-dashboard/live/room/page-header"
 import {
   RoomBonusShelf,
   RoomClassShelf,
@@ -48,7 +50,10 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  const [{ lang, id }, session] = await Promise.all([params, auth()])
+  const [{ lang, subdomain, id }, session] = await Promise.all([
+    params,
+    auth(),
+  ])
   if (!session?.user?.id) {
     redirect(`/${lang}/login`)
   }
@@ -98,7 +103,11 @@ export default async function Page({ params }: Props) {
     )
   }
 
-  const { schoolId } = await getTenantContext()
+  const [{ schoolId }, schoolLookup] = await Promise.all([
+    getTenantContext(),
+    // The header's school — the same cached lookup the dashboard layout reads.
+    getSchoolBySubdomain(subdomain),
+  ])
   const now = new Date()
   const [slides, row, school, shelfRows, relatedRows, rosterRows] =
     await Promise.all([
@@ -481,6 +490,16 @@ export default async function Page({ params }: Props) {
       locale={lang}
       slides={slides}
       card={card}
+      header={
+        schoolLookup.success ? (
+          <RoomPageHeader
+            school={schoolLookup.data}
+            lang={lang}
+            role={session.user.role}
+            dictionary={dictionary}
+          />
+        ) : undefined
+      }
       shelf={
         <RoomPageSections>
           <RoomClassShelf

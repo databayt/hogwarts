@@ -14,3 +14,4 @@ export {
   titleCardTopGlyph,
   titleCardTopPill,
 } from "./title-card"
+export { useOpenOnHero } from "./use-open-on-hero"

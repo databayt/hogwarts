@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   LayoutContextProvider,
@@ -18,6 +18,7 @@ import {
 
 import "@livekit/components-styles"
 
+import { useOpenOnHero } from "@/components/lumos/shared/title-card"
 import type { ParticipantsPanelLabels } from "@/components/school-dashboard/live/participants-panel"
 import type {
   ConferenceParticipantRole,
@@ -47,6 +48,11 @@ interface Props {
    *  client bundle entirely. Rendered only before the join, so it disappears
    *  the moment the room takes the screen. */
   shelf?: React.ReactNode
+  /** The dashboard header, rendered on the server with its providers. It sits
+   *  ABOVE the card on a phone — the lumos lesson's arrangement — and the page
+   *  opens scrolled past it, so the artwork owns the top edge and the bar is
+   *  one scroll up. Pre-join only: the call takes the whole screen. */
+  header?: React.ReactNode
   labels: {
     error: string
     /** Code → translated sentence, for every refusal Join can produce.
@@ -135,6 +141,7 @@ export function RoomClient({
   locale,
   card,
   shelf,
+  header,
   labels,
   slides,
 }: Props) {
@@ -226,6 +233,12 @@ export function RoomClient({
 
   const detailHref = `/${locale}/live/${sessionId}`
 
+  // On a phone the header renders above the card; the page opens past it, on
+  // the artwork's top edge, exactly as the lumos lesson does. Wider screens
+  // hide the header, measure 0 and stay put.
+  const cardRef = useRef<HTMLDivElement>(null)
+  useOpenOnHero(cardRef, !ticket && !error && !ended, sessionId)
+
   if (error || ended) {
     const message = error
       ? error
@@ -275,15 +288,18 @@ export function RoomClient({
   if (!ticket) {
     return (
       <>
-        <RoomTitleCard
-          data={card}
-          labels={labels.card}
-          sessionId={sessionId}
-          detailHref={detailHref}
-          pending={joining}
-          error={joinError}
-          onJoin={() => void join()}
-        />
+        {header}
+        <div ref={cardRef}>
+          <RoomTitleCard
+            data={card}
+            labels={labels.card}
+            sessionId={sessionId}
+            detailHref={detailHref}
+            pending={joining}
+            error={joinError}
+            onJoin={() => void join()}
+          />
+        </div>
         {shelf}
       </>
     )
