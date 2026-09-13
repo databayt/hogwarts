@@ -2,10 +2,20 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
-import { Download, Share, X } from "lucide-react"
+import { useEffect, useState, useSyncExternalStore } from "react"
+import Image from "next/image"
+import { EllipsisVertical, Share, SquarePlus, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 
 import type { OfflineLabels } from "./outbox-view"
 
@@ -17,54 +27,75 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
+type Platform = "ios" | "android"
+
 /**
- * "Add to Home Screen" for phones. Chrome/Android hand us a
- * `beforeinstallprompt` we can replay from a tap; iOS has no event and no
- * API, so Safari gets the Share → Add to Home Screen hint instead. Hidden
- * when already installed (standalone), on desktop, or for two weeks after
- * a dismissal. Installed is the prerequisite for Web Push on iOS.
+ * "Download app" for phones. One button, always actionable:
+ *
+ * - Android Chrome hands us a `beforeinstallprompt` we replay from the tap,
+ *   so the real install sheet opens.
+ * - iOS has no event and no API (install is Share → Add to Home Screen), and
+ *   Android without the event (already dismissed, unmet heuristics) has only
+ *   the browser menu. Both get a two-step instruction sheet from the same
+ *   button instead of a decorative icon nobody can press.
+ *
+ * Hidden when already installed (standalone), on desktop, or for two weeks
+ * after a dismissal. The surface is the house liquid glass — the same tokens
+ * the messaging tab bar was measured to from Apple's kit (Figma
+ * iuYSGaRV8xkcEGnyIltPRg, "Liquid Glass – Regular – Large"). Installed is the
+ * prerequisite for Web Push on iOS.
  */
+/** Platform detection as an external snapshot: null on the server and on
+ *  desktop, "ios" / "android" on phones that are not installed and not
+ *  recently dismissed. Read once per render, no state set inside effects. */
+function detectPlatform(): Platform | null {
+  if (typeof window === "undefined") return null
+  const standalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (navigator as unknown as { standalone?: boolean }).standalone === true
+  if (standalone) return null
+  const ua = navigator.userAgent
+  const ios =
+    /iPhone|iPad|iPod/i.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) // iPadOS
+  const android = /Android/i.test(ua)
+  if (!ios && !android) return null
+  try {
+    const at = Number(localStorage.getItem(DISMISS_KEY) ?? 0)
+    if (at && Date.now() - at < DISMISS_DAYS * 86400_000) return null
+  } catch {
+    // storage blocked — show the card anyway
+  }
+  return ios ? "ios" : "android"
+}
+const subscribeNoop = () => () => {}
+const serverSnapshot = () => null
+
 export function InstallCard({ labels }: { labels?: OfflineLabels }) {
-  const [mode, setMode] = useState<"hidden" | "prompt" | "ios">("hidden")
+  const detected = useSyncExternalStore(subscribeNoop, detectPlatform, serverSnapshot)
+  const [hidden, setHidden] = useState(false)
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const platform = hidden ? null : detected
 
   const t = (k: string, fallback: string) => labels?.[k] ?? fallback
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as unknown as { standalone?: boolean }).standalone === true
-    if (standalone) return
-    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-    if (!mobile) return
-    try {
-      const at = Number(localStorage.getItem(DISMISS_KEY) ?? 0)
-      if (at && Date.now() - at < DISMISS_DAYS * 86400_000) return
-    } catch {
-      // storage blocked — show the card anyway
-    }
-
-    const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent)
-    if (isIos) {
-      setMode("ios")
-      return
-    }
+    if (detected !== "android") return
     const onPrompt = (e: Event) => {
       e.preventDefault()
       setDeferred(e as BeforeInstallPromptEvent)
-      setMode("prompt")
     }
+    const onInstalled = () => setHidden(true)
     window.addEventListener("beforeinstallprompt", onPrompt)
-    const onInstalled = () => setMode("hidden")
     window.addEventListener("appinstalled", onInstalled)
     return () => {
       window.removeEventListener("beforeinstallprompt", onPrompt)
       window.removeEventListener("appinstalled", onInstalled)
     }
-  }, [])
+  }, [detected])
 
-  if (mode === "hidden") return null
+  if (!platform) return null
 
   const dismiss = () => {
     try {
@@ -72,54 +103,118 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
     } catch {
       // ignore
     }
-    setMode("hidden")
+    setHidden(true)
   }
 
-  const install = async () => {
-    if (!deferred) return
-    await deferred.prompt()
-    const { outcome } = await deferred.userChoice
-    setDeferred(null)
-    if (outcome === "accepted") setMode("hidden")
-    else dismiss()
+  const download = async () => {
+    if (deferred) {
+      await deferred.prompt()
+      const { outcome } = await deferred.userChoice
+      setDeferred(null)
+      if (outcome === "accepted") setHidden(true)
+      return
+    }
+    setSheetOpen(true)
   }
+
+  const steps =
+    platform === "ios"
+      ? [
+          {
+            icon: <Share className="size-5" aria-hidden />,
+            text: t("installIosStep1", "Tap the Share button at the bottom of Safari."),
+          },
+          {
+            icon: <SquarePlus className="size-5" aria-hidden />,
+            text: t("installIosStep2", "Choose “Add to Home Screen”, then tap Add."),
+          },
+        ]
+      : [
+          {
+            icon: <EllipsisVertical className="size-5" aria-hidden />,
+            text: t("installAndroidStep1", "Open the browser menu (⋮) at the top."),
+          },
+          {
+            icon: <SquarePlus className="size-5" aria-hidden />,
+            text: t("installAndroidStep2", "Choose “Add to Home screen” or “Install app”."),
+          },
+        ]
 
   return (
-    <div className="bg-card text-card-foreground mb-4 flex items-start gap-3 rounded-lg border p-3 shadow-sm md:hidden">
-      <div className="bg-primary/10 text-primary rounded-md p-2">
-        {mode === "ios" ? <Share className="h-5 w-5" /> : <Download className="h-5 w-5" />}
-      </div>
-      <div className="min-w-0 flex-1 space-y-1">
-        <p className="text-sm font-medium">
-          {t("installTitle", "Add balqalam to your Home Screen")}
-        </p>
-        <p className="text-muted-foreground text-xs">
-          {mode === "ios"
-            ? t("installIosHint", 'On iPhone: tap Share, then "Add to Home Screen".')
-            : t(
-                "installHint",
-                "Opens like an app, works without a connection, and can send notifications."
-              )}
-        </p>
-        {mode === "prompt" && (
-          <div className="flex gap-2 pt-1">
-            <Button size="sm" onClick={install}>
-              {t("installButton", "Install")}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={dismiss}>
-              {t("installDismiss", "Not now")}
-            </Button>
-          </div>
-        )}
-      </div>
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label={t("installDismiss", "Not now")}
-        className="text-muted-foreground hover:text-foreground rounded p-1"
+    <>
+      <div
+        role="region"
+        aria-label={t("installTitle", "Add balqalam to your Home Screen")}
+        className="wa-glass-tabbar text-foreground relative mb-4 flex items-center gap-3 rounded-[22px] p-3 pe-10 md:hidden"
       >
-        <X className="h-4 w-4" />
-      </button>
-    </div>
+        <Image
+          src="/icon-192.png"
+          alt=""
+          width={44}
+          height={44}
+          className="size-11 shrink-0 rounded-[12px] shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+        />
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <p className="truncate text-sm leading-tight font-semibold">
+            {t("installTitle", "Add balqalam to your Home Screen")}
+          </p>
+          <p className="text-muted-foreground line-clamp-2 text-xs leading-snug">
+            {t(
+              "installHint",
+              "Opens like an app, works without a connection, and can send notifications."
+            )}
+          </p>
+        </div>
+        <Button
+          size="sm"
+          className="h-8 shrink-0 rounded-full px-4 font-semibold"
+          onClick={download}
+        >
+          {t("installDownload", "Download app")}
+        </Button>
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label={t("installDismiss", "Not now")}
+          className="text-muted-foreground hover:text-foreground absolute end-2 top-2 rounded-full p-1"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+
+      <Drawer open={sheetOpen} onOpenChange={setSheetOpen}>
+        <DrawerContent>
+          <DrawerHeader className="text-start">
+            <DrawerTitle>
+              {t("installSheetTitle", "Get balqalam on your Home Screen")}
+            </DrawerTitle>
+            <DrawerDescription>
+              {t(
+                "installSheetHint",
+                "It takes two taps. The app opens full-screen, works without a connection, and can send you notifications."
+              )}
+            </DrawerDescription>
+          </DrawerHeader>
+          <ol className="space-y-3 px-4">
+            {steps.map((step, i) => (
+              <li key={i} className="flex items-center gap-3">
+                <span className="bg-primary text-primary-foreground grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold">
+                  {i + 1}
+                </span>
+                <span className="bg-muted text-foreground grid size-9 shrink-0 place-items-center rounded-xl">
+                  {step.icon}
+                </span>
+                <span className="text-sm">{step.text}</span>
+              </li>
+            ))}
+          </ol>
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <Button className="rounded-full">{t("installGotIt", "Got it")}</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
   )
 }
