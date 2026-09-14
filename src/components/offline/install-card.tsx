@@ -134,7 +134,7 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
     >
       <DrawerContent
         aria-label={t("installTitle", "Add balqalam to your Home Screen")}
-        className="max-h-[92vh] rounded-t-[36px]! border-0 px-6 pb-[calc(env(safe-area-inset-bottom)+16px)] [&>div:first-child]:mt-2 [&>div:first-child]:h-[5px] [&>div:first-child]:w-9 [&>div:first-child]:bg-black/30"
+        className="h-[90vh]! max-h-[92vh]! rounded-t-[36px]! border-0 px-6 pb-[calc(env(safe-area-inset-bottom)+16px)] [&>div:first-child]:mt-2 [&>div:first-child]:h-[5px] [&>div:first-child]:w-9 [&>div:first-child]:bg-black/30"
       >
         <button
           type="button"
@@ -145,19 +145,30 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
           <X className="size-4" strokeWidth={2.5} />
         </button>
 
-        <div className="overflow-y-auto overscroll-contain pt-4">
-          <Image
-            src="/apple-touch-icon.png"
-            alt=""
-            width={180}
-            height={180}
-            className="mx-auto size-[60px] rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
-            priority
-          />
-          <DrawerTitle className="mt-3 text-center text-[24px] leading-tight font-bold tracking-tight">
-            {t("installAppName", "balqalam")}
-          </DrawerTitle>
-          <DrawerDescription className="text-muted-foreground mt-1 text-center text-[15px] leading-snug">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pt-8">
+          {/* App identity: icon beside name + short description, at start. */}
+          <div className="flex items-center gap-3 pe-10">
+            <Image
+              src="/apple-touch-icon.png"
+              alt=""
+              width={180}
+              height={180}
+              className="size-[60px] shrink-0 rounded-[14px] shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
+              priority
+            />
+            <div className="min-w-0 text-start">
+              <DrawerTitle className="text-[24px] leading-tight font-bold tracking-tight">
+                {t("installAppName", "balqalam")}
+              </DrawerTitle>
+              <p className="text-muted-foreground mt-0.5 text-[14px] leading-snug">
+                {t(
+                  "installAppDesc",
+                  "Feels native, opens full screen, and works offline."
+                )}
+              </p>
+            </div>
+          </div>
+          <DrawerDescription className="text-muted-foreground mt-5 text-start text-[15px] leading-snug">
             {t(
               "installStep",
               'Tap Continue, then choose "Add to Home Screen".'
@@ -174,9 +185,10 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
             className="mt-5 h-auto w-full rounded-[22px]"
           />
 
+          <div className="min-h-5 flex-1" />
           <Button
             onClick={proceed}
-            className="bg-foreground text-background hover:bg-foreground/90 mt-5 h-14 w-full rounded-full text-[17px] font-semibold"
+            className="bg-foreground text-background hover:bg-foreground/90 h-14 w-full shrink-0 rounded-full text-[17px] font-semibold"
           >
             {t("installContinue", "Continue")}
           </Button>

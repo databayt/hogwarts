@@ -776,6 +776,7 @@
       "installPicFavorites": "Add to Favorites",
       "installPicHome": "Add to Home Screen",
       "installAppName": "balqalam",
+      "installAppDesc": "Feels native, opens full screen, and works offline.",
       "offlineBrowsing": "You're offline. Pages you've opened before still work, and anything you do is saved and synced later.",
       "staleCopy": "Slow connection — showing the last saved copy of this page.",
       "notSavedTitle": "This page isn't on this device yet",
