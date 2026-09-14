@@ -116,6 +116,47 @@ describe("POST /api/mobile/offline/sync", () => {
     ).toBe(400)
   })
 
+  it("accepts keys with ':' (attendance:{section}:{date}) and still refuses path-like keys", async () => {
+    await authAs("TEACHER")
+    vi.mocked(submitQuickAttendanceCore).mockResolvedValue({ status: "stale" })
+    const { POST } = await import("@/app/api/mobile/offline/sync/route")
+    const payload = {
+      section_id: "sec1",
+      date: "2026-09-14",
+      absent_student_ids: [],
+      late_student_ids: [],
+    }
+
+    const ok = await POST(
+      post({
+        items: [item("attendance:sec1:2026-09-14", "attendance", payload)],
+      })
+    )
+    expect(ok.status).toBe(200)
+    expect((await ok.json()).results).toEqual([
+      { idempotency_key: "attendance:sec1:2026-09-14", result: "duplicate" },
+    ])
+
+    for (const bad of [
+      "attendance/sec1/2026-09-14",
+      "attendance sec1 2026",
+      "attendance.sec1.2026",
+      "a".repeat(129),
+    ]) {
+      const res = await POST(
+        post({ items: [item(bad, "attendance", payload)] })
+      )
+      expect(res.status).toBe(400)
+    }
+    expect(
+      (
+        await POST(
+          post({ items: [item("a".repeat(128), "attendance", payload)] })
+        )
+      ).status
+    ).toBe(200)
+  })
+
   it("applies snake_case payloads in order, keyed by idempotency_key", async () => {
     await authAs("STUDENT")
     vi.mocked(applyLessonProgress).mockResolvedValue({

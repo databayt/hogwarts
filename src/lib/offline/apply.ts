@@ -8,10 +8,7 @@ import {
   applyLessonProgress,
   completeLessonCore,
 } from "@/components/lumos/lib/progress-core"
-import {
-  ATTEMPT_ID_PATTERN,
-  submitLessonQuizCore,
-} from "@/components/lumos/lib/quiz-submission"
+import { submitLessonQuizCore } from "@/components/lumos/lib/quiz-submission"
 import {
   quickSubmitSchema,
   submitQuickAttendanceCore,
@@ -39,7 +36,15 @@ import {
 
 export const OFFLINE_SYNC_MAX_ITEMS = 50
 
-export const OFFLINE_ITEM_ID = z.string().regex(ATTEMPT_ID_PATTERN)
+/**
+ * The device's idempotency key. Wider than the quiz action's
+ * `ATTEMPT_ID_PATTERN` on purpose: the app keys some kinds by what they are
+ * (`attendance:{section}:{date}`), so `:` is allowed. Still no `/`, `.` or
+ * whitespace, so a key can never read as a path.
+ */
+export const OFFLINE_ITEM_ID_PATTERN = /^[A-Za-z0-9:_-]{8,128}$/
+
+export const OFFLINE_ITEM_ID = z.string().regex(OFFLINE_ITEM_ID_PATTERN)
 
 const progressPayload = z.object({
   lessonId: z.string().min(1).max(64),

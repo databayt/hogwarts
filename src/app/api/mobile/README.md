@@ -195,6 +195,8 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 | POST   | `/api/mobile/offline/sync`   | Outbox drain `{ items: [{ idempotency_key, kind, payload, created_at }] }` → `{ results: [{ idempotency_key, result, code?, data? }], server_time }` |
 | POST   | `/api/mobile/upload/presign` | `{ purpose: attachment\|payment_proof\|video, filename, content_type, size }` → `{ upload_url, file_url, key, expires_in, method, headers }`         |
 
+`idempotency_key` matches `[A-Za-z0-9:_-]{8,128}`, so a key can name what it is (`attendance:{section_id}:{date}`); anything else is a 400 for the whole batch.
+
 ### Announcements (new)
 
 | Method | Path                        | Description             |
