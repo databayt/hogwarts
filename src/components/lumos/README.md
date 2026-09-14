@@ -172,8 +172,10 @@ src/components/lumos/
 │       ├── video-progress-bar.tsx  # Seek bar
 │       ├── video-overlay.tsx       # Loading/pause overlay
 │       ├── video-up-next.tsx       # Auto-play next lesson
-│       ├── video-watermark.tsx     # Forensic per-viewer watermark (traceability, not DRM)
-│       └── hooks/                  # Player hooks (progress save, auto-hide, media session)
+│       ├── video-watermark.tsx     # Two-layer watermark: 1% forensic code always, visible mark on capture signals
+│       ├── capture-signal.ts       # useCaptureSuspected — ⌘⇧/Win⇧, PrintScreen, blur, hidden tab, PiP
+│       ├── protected-video.tsx     # In-page protected player (recordings, previews) — never open a video in a tab
+│       └── hooks/                  # Player hooks (progress save, auto-hide, media session, use-capture-deterrents)
 ├── data/catalog/                   # Data fetchers with React cache()
 │   ├── get-all-courses.ts          # Published courses, paginated + bilingual search
 │                                   # (server-only; the browser goes via the API route)

@@ -123,8 +123,8 @@ Three things are worth reading twice:
    breaks, and finally to audio with the slides. If you drop out, you are
    offered _Rejoin_ rather than being thrown out.
 5. **If you missed it and the class was recorded**, it shows up as the lesson's
-   video. It plays in the app; it cannot be downloaded, and it carries a faint
-   watermark with your name.
+   video. It plays in the app, it cannot be downloaded, and every frame carries
+   an invisible mark tied to your account.
 
 ### If you are a parent
 
@@ -529,8 +529,13 @@ says plainly that the recording failed.
 Recordings, lesson videos and materials are watched inside the app and never
 downloaded: there is no download control, no picture-in-picture or casting,
 and materials open in an in-app viewer rather than as files. Every one of
-those surfaces carries a faint, moving watermark with the viewer's identity,
-so a screenshot or a phone recording can be traced. A student's own work —
+those surfaces — the class room included — carries a watermark in two layers:
+the viewer's account code at 1% opacity, always on and unnoticeable, which a
+screenshot or screen recording keeps; and the viewer's masked email, which
+appears only when a capture may be starting (the screenshot keys, PrintScreen,
+switching away from the window). A browser can neither block nor detect a
+capture, so this makes a leak traceable rather than impossible; a camera
+pointed at the screen is not covered. A student's own work —
 playback position, quiz answers, an assignment hand-in — still queues offline
 and syncs when the connection returns; `/offline` shows what is waiting.
 

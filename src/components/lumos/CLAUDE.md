@@ -101,8 +101,29 @@ Lumos (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~93% complete a
   protected content (both render the bare `<video>` without the overlay) and
   why the lesson pages MUST pass `viewer`. `VideoWatermark` renders nothing
   without it, which is how it silently did nothing for months. True
-  screenshot blocking needs EME/DRM (Widevine/FairPlay) — i.e. packaged
-  HLS/DASH and a license server, not a plain `<video src>`.
+  screenshot blocking needs EME/DRM (Widevine/FairPlay) or a native shell
+  (Android `FLAG_SECURE`) — not a plain `<video src>`, and not a PWA.
+- **The watermark is TWO layers (Abdout, 2026-09-14: "appear at recording /
+  screenshot times").** A browser is never told a capture is happening, so:
+  (1) a FORENSIC tile of `watermarkCode(userId)` (last 8 chars of the id) at
+  `FORENSIC_ALPHA` 1%, always on — measured unnoticeable over content and
+  recoverable from a VP8 screen recording with `scripts/watermark/reveal.py`;
+  (2) a VISIBLE masked-email mark shown only while `useCaptureSuspected`
+  (`shared/video-player/capture-signal.ts`) is true — ⌘⇧/Win⇧ keydown,
+  PrintScreen, window blur (not into our own iframe), hidden tab, PiP. Do not
+  raise the alpha or change font/weight/blur without re-running
+  `scripts/watermark/capture.mjs`: 4.5% was plainly visible, 0.7% stops
+  recovering. `maskEmail` refuses a non-address — a display name masked to
+  "Ahm***d" once. The lesson player carries it again on protected sources.
+- **PRIVATE is owner + DEVELOPER, never the school ADMIN (2026-09-14).**
+  `resolveVideoAccess`'s reviewer arm excludes PRIVATE for ADMIN (the ADMIN
+  approves nothing since 08-28), and `getSubmittedVideos` sends `videoUrl:
+  null` for PRIVATE rows. **`/api/lumos/video/[id]` refuses any
+  `Sec-Fetch-Dest` but `video`/`audio`** (absent header allowed for native
+  players): a tab is the browser's bare player with a Download button. So a
+  protected video is NEVER an `<a href>` — play it in place with
+  `shared/video-player/protected-video.tsx`. `adminGetLesson` (dead, returned
+  raw URLs) is deleted; don't resurrect it.
 - **No-video AND broken-source lessons fall back to the marketing "story"
   clip.** When a lesson has zero videos (`lesson.availableVideos.length === 0`)
   — or the selected video's source fails to load (`VideoPlayer.onSourceError`

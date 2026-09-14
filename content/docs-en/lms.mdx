@@ -198,21 +198,41 @@ What that buys, concretely:
 - Videos from other schools, unapproved uploads, and unpurchased paid content
   are not merely hidden in the UI; the server refuses to produce a link at all.
 
+- A **PRIVATE** video is the owner's alone — the school's administrators
+  cannot play it either; only the platform team, which approves every upload,
+  can.
+- The video address works only inside the player. Opened in its own tab, it
+  is refused, because a tab is the browser's bare player with a Download
+  button.
+
 Inside the player, downloading is discouraged the ordinary ways — no download
 control, no right-click save, no drag-to-desktop — and every frame carries a
-faint watermark identifying who is watching and when. Picture-in-Picture and
-casting are switched off for school video specifically because they would
-strip that watermark.
+watermark in two layers:
+
+- **Always on, below notice.** The viewer's account code is tiled across the
+  picture at 1% opacity. You will not see it while watching; a screenshot or a
+  screen recording keeps it, and raising the contrast of a leaked frame brings
+  the code back (`scripts/watermark/reveal.py`).
+- **Visible when a capture may be starting.** The viewer's own masked email
+  and code appear on the signals a browser does give: the screenshot keys'
+  modifiers (⌘⇧ / Win⇧), PrintScreen, switching to another window or tab, a
+  picture-in-picture attempt.
+
+Picture-in-Picture and casting are switched off for school video specifically
+because they would strip that watermark.
 
 <Callout type="warn">
   **Screen recording cannot be prevented in a web browser** — by us or by
   anyone. No web page can stop a phone camera, a screen recorder, or the
-  operating system's own screenshot key. The watermark is the answer to that
-  case: it does not stop a recording, it makes a leaked one traceable back to
-  the account that made it. Blocking capture outright requires studio DRM
-  (Widevine/FairPlay), which means moving video to a DRM-packaged streaming
-  provider. Tell schools what is true: casual copying is closed off, and
-  determined recording is attributable, not impossible.
+  operating system's own screenshot key, and no web page is even told a capture
+  is happening — which is why the visible mark rides on signals and the
+  invisible one is always on. The watermark does not stop a recording; it makes
+  a leaked screenshot or screen recording traceable to the account that made
+  it. A second phone filming the screen defeats the invisible layer. Blocking
+  capture outright takes a native app shell (Android `FLAG_SECURE`; iOS can
+  blank the screen while it is recorded) or studio DRM (Widevine/FairPlay).
+  Tell schools what is true: casual copying is closed off, and determined
+  recording is attributable, not impossible.
 </Callout>
 
 ## Structure

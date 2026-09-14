@@ -700,6 +700,19 @@ Screenshots cannot be prevented on the web; the watermark makes them
 attributable, PrintScreen blanks the frame and clears the clipboard, and a
 hidden tab pauses playback.
 
+**Since 2026-09-14 the watermark is two layers** — a 1% forensic tile of the
+viewer's code, always on, and a visible masked-email mark only while a capture
+may be starting (see lumos CLAUDE.md and `capture-signal.ts`). Two rules for
+this block:
+
+- The room passes `viewerEmail` (from the page's session) down to
+  `RoomShell`. Never feed the watermark `localParticipant.name` — it is a
+  display name, and masked as an address it printed "Ahm***d".
+- The room mounts `useCaptureDeterrents` on the stage `<main>`, NOT
+  `useVideoProtection`: there is no single `<video>`, and pausing on a hidden
+  tab would drop a student out of their own class. The recording player is
+  `ProtectedVideo`, which has the full hook.
+
 ## The room opens on a title card (2026-09-03)
 
 `room/title-card.tsx` + `lumos/shared/title-card/`. A class is now a CARD

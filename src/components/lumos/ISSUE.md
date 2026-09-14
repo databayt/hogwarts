@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-09-12
+last_audited: 2026-09-14
 ---
 
 # Lumos (LMS) — Production Readiness Tracker
@@ -17,6 +17,52 @@ last_audited: 2026-09-12
 **Completion:** 90%
 **Last Updated:** 2026-08-11
 **QA guide:** [hogwarts#377](https://github.com/databayt/hogwarts/issues/377) — full flow, sub-flows & test cases (mermaid charts + walkable checklists + release gate)
+
+---
+
+## 2026-09-14 — private videos stay private; captures carry the viewer
+
+Asked for directly: protect lessons whose owners set them PRIVATE, and act on
+screenshots and recording. `87d62ee9e`.
+
+- [x] **A school ADMIN could play a teacher's PRIVATE video** —
+      `resolveVideoAccess` rule 2 granted own-school videos at any visibility.
+      Narrowed: PRIVATE is owner + DEVELOPER. The status feed keeps PRIVATE
+      rows but sends no preview URL. Tests pin both directions.
+- [x] **The video route served a page navigation.** A pasted link or the
+      review feed's "Preview video" anchor opened the bare browser player
+      (Download, no watermark, signed S3 URL in the address bar). It now
+      refuses `Sec-Fetch-Dest` other than `video`/`audio`; previews play in
+      place through `ProtectedVideo`. `video-route.test.ts`.
+- [x] **`adminGetLesson` deleted** — `"use server"`, zero callers, returned raw
+      storage URLs for own-school PRIVATE rows.
+- [x] **The watermark is back on the lesson player, in two layers** — the
+      form Abdout chose over "always visible" (09-09 removed that) and "off":
+      a 1% forensic tile, always on, plus a visible mark on capture signals
+      only. Opacity measured with `scripts/watermark/` (table in
+      `video-watermark.tsx`); the code reads back from a compressed recording
+      at 1280 and 1920.
+- [x] **`useCaptureDeterrents`** split out of `useVideoProtection` (container
+      half: save/print/view-source keys, PrintScreen blank + clipboard clear,
+      context menu, drag). The blank rule moved to `globals.css`.
+- [x] tsc 0; lumos + live suites 977/977.
+
+Open:
+
+- [ ] **Not verified against a real protected lesson in the app.** Every local
+      lesson plays the marketing fallback (unprotected → no mark). The harness
+      renders the real component over a real clip; an in-app pass needs a
+      self-hosted video on the demo.
+- [ ] **A camera filming the screen defeats the forensic layer**, and the
+      capture signal misses hardware phone screenshots, `⌘⇧3` faster than a
+      frame, and recordings already running. Stated in the docs.
+- [ ] **Material viewer / slides iframe not fetch-dest gated** —
+      `/api/lumos/file` serves PDFs to an iframe; Chrome's PDF viewer has its
+      own download button. Separate decision.
+- [ ] **Signed S3 URLs are 2h bearer links** once redirected; shortening needs
+      `MAX_SOURCE_RETRIES` to reset after good playback first.
+- [ ] **Real capture blocking** = native shell (Android `FLAG_SECURE`, iOS
+      capture blanking) or DRM — filed as an idea issue, not built.
 
 ---
 
@@ -256,7 +302,8 @@ screen. New dictionary keys `videoPlayer.close` / `.more` in both languages.
 
 Open:
 
-- [ ] **Lesson video now carries no viewer attribution.** A capture of a
+- [x] **Lesson video now carries no viewer attribution.** CLOSED 2026-09-14 —
+      the two-layer watermark restored it. Original note: A capture of a
       lesson can no longer be traced to who was watching. This was the only
       layer that did anything about screen recording — prevention was never
       possible in a browser, and the records say so at length. Deliberate, on

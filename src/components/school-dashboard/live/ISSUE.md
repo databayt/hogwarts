@@ -4,6 +4,29 @@
 > Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
 > via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
+## Capture protection in the room and on recordings — 2026-09-14
+
+With the lumos pass (`87d62ee9e`; details in `lumos/ISSUE.md`).
+
+- [x] **The room's watermark identified nobody** — it masked the participant's
+      display name as an email. `viewerEmail` now comes from the page session.
+- [x] **Two-layer watermark** on the stage and recordings: 1% forensic code,
+      always on; visible mark on capture signals only.
+- [x] **The recording player had none of the capture guards** (keys,
+      PrintScreen blank, hidden-tab pause). It is `ProtectedVideo` now.
+- [x] **The stage gets `useCaptureDeterrents`** — keys + PrintScreen blank over
+      every tile, no pause.
+
+Open:
+
+- [ ] **A live class cannot be DRM'd** (WebRTC). Real blocking in the room is
+      only possible from a native shell (Android `FLAG_SECURE`).
+- [ ] **Not verified in a live room** — no SFU locally; the watermark is
+      verified in the harness (`scripts/watermark/`) and by unit tests.
+- [ ] Clicking the slides iframe is ignored by the capture signal (focus moved
+      INTO the page), but a cross-origin `window.open` from slides would show
+      the mark — acceptable.
+
 ## The title at display size, and a button that names the lesson — 2026-09-09
 
 Read against Figma `Hogwarts` node `574:37` — the frame's button, `▶ Play S2, E1`.
