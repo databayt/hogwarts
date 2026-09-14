@@ -64,6 +64,23 @@ export async function GET(request: NextRequest) {
         }),
       ])
 
+    // The calendar card's bottom line — the same count as the web home block.
+    // Best-effort: a failure must not take the dashboard down.
+    const eventsToday = await (async () => {
+      try {
+        return await db.event.count({
+          where: {
+            schoolId,
+            eventDate: { gte: today, lt: tomorrow },
+            status: { not: "CANCELLED" },
+          },
+        })
+      } catch (error) {
+        console.error("Mobile dashboard events today error:", error)
+        return 0
+      }
+    })()
+
     const upcoming = await loadUpcomingData(userId, schoolId, role).catch(
       (error) => {
         console.error("Mobile dashboard upcoming data error:", error)
@@ -297,6 +314,7 @@ export async function GET(request: NextRequest) {
         enabled_modules: parseEnabledModules(school?.enabledModules),
       },
       unread_messages: unreadMessages._sum.unreadCount ?? 0,
+      events_today: eventsToday,
       next_actions: nextActions,
       quick_actions: quickActions,
       today_timetable: todayTimetable,

@@ -110,9 +110,17 @@ describe("GET /api/mobile/dashboard", () => {
     await authAs("GUARDIAN")
     vi.mocked(db.guardian.findFirst).mockResolvedValue({ id: "g1" } as never)
     vi.mocked(db.studentGuardian.count).mockResolvedValue(2)
+    vi.mocked(db.event.count).mockResolvedValue(4)
     const { GET } = await import("@/app/api/mobile/dashboard/route")
     const body = await (await GET(get())).json()
 
+    expect(body.events_today).toBe(4)
+    expect(db.event.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        schoolId: SCHOOL,
+        status: { not: "CANCELLED" },
+      }),
+    })
     expect(body).toMatchObject({
       user_name: "Test",
       role: "GUARDIAN",
