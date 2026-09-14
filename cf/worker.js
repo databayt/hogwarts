@@ -44,14 +44,52 @@ const EDGE_CACHEABLE = [
 // Shared across tenants: the same build serves every host.
 const CACHE_HOST = "https://balqalam.com"
 
-function edgeCacheKey(url) {
-  return new Request(CACHE_HOST + url.pathname + url.search, { method: "GET" })
+// The image optimiser picks the format from the client's Accept header, and
+// Workers' Cache API ignores Vary at match time, so the format is part of the
+// key — or a browser without avif would be handed another browser's avif.
+// Next's rule, run against real headers: `image/avif` listed → avif, else
+// `image/webp` listed → webp, else the original (a bare `image/*` is not
+// enough).
+function edgeCacheKey(url, request) {
+  let extra = ""
+  if (url.pathname === "/_next/image") {
+    const accept = request.headers.get("accept") || ""
+    const fmt = accept.includes("image/avif")
+      ? "avif"
+      : accept.includes("image/webp")
+        ? "webp"
+        : "orig"
+    extra = (url.search ? "&" : "?") + "__fmt=" + fmt
+  }
+  return new Request(CACHE_HOST + url.pathname + url.search + extra, {
+    method: "GET",
+  })
+}
+
+// The container is asked for the raw bytes, so the edge stores exactly one
+// representation and never a gzip body whose header could part from it.
+// Nothing ships raw: Cloudflare compresses JS, CSS, RSC payloads and fonts
+// for each visitor on the way out (gzip, or brotli on this Pro zone), and the
+// half-vCPU container no longer spends CPU gzipping files the edge keeps.
+function identityRequest(request) {
+  const headers = new Headers(request.headers)
+  headers.set("accept-encoding", "identity")
+  return new Request(request, { headers })
+}
+
+// `x-edge-cache: hit | miss | bypass` — what the edge did, so a deploy can
+// be checked with two curls instead of guessing from cf-cache-status.
+function stamped(response, state) {
+  const out = new Response(response.body, response)
+  out.headers.set("x-edge-cache", state)
+  return out
 }
 
 // Only what the origin explicitly allows the public to keep.
 function freezable(response) {
   if (!response.ok) return false
   if (response.headers.has("set-cookie")) return false
+  if (response.headers.has("content-encoding")) return false
   const cc = response.headers.get("cache-control") || ""
   if (!/\bpublic\b/.test(cc)) return false
   if (/no-store|no-cache|private/.test(cc)) return false
@@ -68,15 +106,18 @@ export default {
     if (!cacheable) return getContainer(env.HOGWARTS, "main").fetch(request)
 
     const cache = caches.default
-    const key = edgeCacheKey(url)
+    const key = edgeCacheKey(url, request)
     const hit = await cache.match(key)
-    if (hit) return hit
+    if (hit) return stamped(hit, "hit")
 
-    const response = await getContainer(env.HOGWARTS, "main").fetch(request)
+    const response = await getContainer(env.HOGWARTS, "main").fetch(
+      identityRequest(request)
+    )
     if (freezable(response)) {
       ctx.waitUntil(cache.put(key, response.clone()))
+      return stamped(response, "miss")
     }
-    return response
+    return stamped(response, "bypass")
   },
 
   async scheduled(controller, env, ctx) {
