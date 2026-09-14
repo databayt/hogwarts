@@ -11,14 +11,13 @@
  * Two surfaces, one state machine:
  *
  *   ≥ 768px  — a centred Dialog: title, textarea, hint, captcha, Submit.
- *   < 768px  — a full-height bottom sheet with the iOS share-sheet chrome
- *              (Figma iuYSGaRV8xkcEGnyIltPRg, node 34:3037): grabber, title
- *              and subtitle at the start, a round ✕ at the end of the header,
- *              a quiet state area, and a pill composer pinned right above the
- *              on-screen keyboard. No hint label above the pill: the
- *              keyboard's Send key submits, and the arrow button mirrors it.
- *              The pill follows the keyboard through `window.visualViewport`,
- *              the only signal iOS Safari gives for the keyboard's height.
+ *   < 768px  — a full-height bottom sheet that is a blank page, like iPhone
+ *              Notes: no title, no close button, no composer chrome — one
+ *              borderless textarea that starts at the top and fills down.
+ *              The keyboard's Send key submits. Captcha, error, cooldown and
+ *              success lines appear under the text only when they apply.
+ *              The sheet pads itself by the keyboard's height, read from
+ *              `window.visualViewport` (the only signal iOS Safari gives).
  *
  * Symmetric success: every accepted submission shows the same success toast
  * regardless of which bucket it landed in. Only verified-bucket results
@@ -40,10 +39,9 @@
  */
 import * as React from "react"
 import { useParams } from "next/navigation"
-import { ArrowUp, Bug, Check, X } from "lucide-react"
+import { Bug } from "lucide-react"
 
 import { REPORT_LIMITS } from "@/lib/report/limits"
-import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import {
@@ -55,7 +53,6 @@ import {
 } from "@/components/ui/dialog"
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetTitle,
@@ -81,7 +78,6 @@ type SeverityHint = "low" | "medium" | "high" | "critical"
 
 const COOLDOWN_MS = 60_000
 const SUCCESS_CLOSE_MS = 1_500
-const COMPOSER_MAX_HEIGHT_PX = 160
 
 type Status = "idle" | "loading" | "success" | "error"
 
@@ -404,16 +400,33 @@ function MobileSheet({
   description,
   setDescription,
   onMobileKeyDown,
-  submit,
-  canSubmit,
   status,
   cooldownActive,
   successMessage,
   captcha,
 }: SurfaceProps & OpenProps) {
   const keyboardInset = useKeyboardInset(open)
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
-  useAutogrow(textareaRef, description, open)
+  const notice =
+    status === "success" ? (
+      <p className="text-green-600" role="status">
+        {successMessage}
+      </p>
+    ) : (
+      <>
+        {captcha}
+        {status === "error" && (
+          <p className="text-destructive" role="alert">
+            {t.error}
+          </p>
+        )}
+        {cooldownActive && <p>{t.cooldown}</p>}
+      </>
+    )
+  const hasNotice =
+    status === "success" ||
+    status === "error" ||
+    cooldownActive ||
+    Boolean(captcha)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -423,94 +436,31 @@ function MobileSheet({
         className="bg-background h-[calc(100dvh-2.5rem)] gap-0 rounded-t-[2rem] border-0 p-0 [&>button]:hidden"
         style={{ paddingBottom: keyboardInset }}
       >
+        <SheetTitle className="sr-only">{t.title}</SheetTitle>
+        <SheetDescription className="sr-only">{t.description}</SheetDescription>
+
+        {/* A blank page, like Notes: no chrome, the text starts at the top and
+            flows down; the keyboard's Send key submits. */}
         <div className="flex h-full flex-col">
-          {/* Grabber + header, laid out like the iOS share sheet: title and
-              subtitle at the start, a round close control at the end. */}
-          <div className="shrink-0 px-4 pt-2">
+          <textarea
+            className="text-foreground placeholder:text-muted-foreground min-h-0 w-full flex-1 resize-none border-0 bg-transparent px-5 pt-6 pb-4 text-[17px] leading-6 outline-none"
+            placeholder={t.composerPlaceholder}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={onMobileKeyDown}
+            maxLength={REPORT_LIMITS.maxChars}
+            autoFocus
+            aria-label={t.title}
+            enterKeyHint="send"
+          />
+          {hasNotice && (
             <div
-              className="bg-muted-foreground/30 mx-auto mb-3 h-1.5 w-9 rounded-full"
-              aria-hidden
-            />
-            <div className="flex items-start gap-3">
-              <div className="min-w-0 flex-1 pt-1.5 text-start">
-                <SheetTitle className="text-[17px] leading-6 font-semibold">
-                  {t.title}
-                </SheetTitle>
-                <SheetDescription className="text-muted-foreground mt-0.5 text-[15px] leading-5">
-                  {t.description}
-                </SheetDescription>
-              </div>
-              <SheetClose asChild>
-                <button
-                  type="button"
-                  aria-label={t.close}
-                  className="bg-muted text-foreground flex size-11 shrink-0 items-center justify-center rounded-full"
-                >
-                  <X className="size-5" strokeWidth={2.25} />
-                </button>
-              </SheetClose>
+              className="text-muted-foreground shrink-0 space-y-2 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-sm"
+              aria-live="polite"
+            >
+              {notice}
             </div>
-          </div>
-
-          {/* State area — silent unless something happened. */}
-          <div
-            className="text-muted-foreground flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-y-auto px-5 pt-4 pb-4 text-sm"
-            aria-live="polite"
-          >
-            {status === "success" ? (
-              <div className="flex items-center gap-2 text-green-600">
-                <Check className="size-4 shrink-0" />
-                <span>{successMessage}</span>
-              </div>
-            ) : (
-              <>
-                {captcha}
-                {status === "error" && (
-                  <p className="text-destructive" role="alert">
-                    {t.error}
-                  </p>
-                )}
-                {cooldownActive && <p className="text-xs">{t.cooldown}</p>}
-              </>
-            )}
-          </div>
-
-          {/* Composer — the pill sits right above the keyboard; the keyboard's
-              Send key and the arrow both submit. */}
-          <div className="shrink-0 px-4 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <div className="bg-muted flex min-w-0 items-end gap-2 rounded-[1.5rem] px-3.5 py-2 shadow-xs">
-              <Bug
-                className="text-muted-foreground mb-1.5 size-5 shrink-0"
-                aria-hidden
-              />
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                className="text-foreground placeholder:text-muted-foreground max-h-40 min-h-7 w-full resize-none bg-transparent py-1 text-base leading-6 outline-none"
-                placeholder={t.composerPlaceholder}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                onKeyDown={onMobileKeyDown}
-                maxLength={REPORT_LIMITS.maxChars}
-                autoFocus
-                aria-label={t.title}
-                enterKeyHint="send"
-              />
-              <button
-                type="button"
-                onClick={() => void submit()}
-                disabled={!canSubmit}
-                aria-label={t.send}
-                className={cn(
-                  "mb-0.5 flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-                  "bg-primary text-primary-foreground",
-                  "disabled:bg-muted-foreground/25 disabled:text-background"
-                )}
-              >
-                <ArrowUp className="size-4" strokeWidth={2.5} />
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
@@ -666,18 +616,4 @@ function useKeyboardInset(active: boolean): number {
     }
   }, [active])
   return active ? inset : 0
-}
-
-/** Grows the composer with its content up to a cap; `field-sizing` is not in Safari yet. */
-function useAutogrow(
-  ref: React.RefObject<HTMLTextAreaElement | null>,
-  value: string,
-  enabled: boolean
-) {
-  React.useLayoutEffect(() => {
-    const el = ref.current
-    if (!el || !enabled) return
-    el.style.height = "auto"
-    el.style.height = `${Math.min(el.scrollHeight, COMPOSER_MAX_HEIGHT_PX)}px`
-  }, [ref, value, enabled])
 }
