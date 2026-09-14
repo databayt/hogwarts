@@ -34,6 +34,9 @@ export type IosShellLabels = ChatListProps["labels"] & {
   communitiesEmptyTitle?: string
   communitiesEmptyBody?: string
   communitiesMembers?: string
+  communitiesAnnouncements?: string
+  communitiesAnnouncementsBody?: string
+  communitiesViewAll?: string
   settingsDashboard?: string
   settingsProfile?: string
   settingsNotifications?: string
@@ -179,9 +182,11 @@ export function IosMobileShell({
             schoolName={schoolName ?? ""}
             conversations={chatList.conversations}
             currentUserId={chatList.currentUserId}
+            locale={locale}
             onOpen={chatList.onConversationClick}
+            onOpenAnnouncements={() => show("updates")}
+            rowLabels={labels}
             labels={{
-              rooms: L.communitiesRooms ?? "School rooms",
               emptyTitle:
                 L.communitiesEmptyTitle ?? "Stay connected with a community",
               emptyBody:
@@ -189,6 +194,10 @@ export function IosMobileShell({
                 "Any room you are added to will appear here.",
               members: L.communitiesMembers ?? "{count} members",
               groupFallback: L.groupFallbackName ?? "Group",
+              announcements: L.communitiesAnnouncements ?? "Announcements",
+              announcementsBody:
+                L.communitiesAnnouncementsBody ?? "Notices from your school",
+              viewAll: L.communitiesViewAll ?? "View all",
             }}
           />
         </Pane>

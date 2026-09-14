@@ -391,6 +391,20 @@ function ReadAllGlyph() {
   )
 }
 
+/**
+ * One conversation as a list row, outside the chat list — the Communities tab
+ * draws its rooms with the same preview and clock the Chats rows carry.
+ */
+export function buildChatRow(
+  c: ConversationDTO,
+  currentUserId: string,
+  labels: Partial<L> | undefined,
+  locale: "ar" | "en"
+): IosChatRowData {
+  const L = { ...DEFAULT_L, ...labels }
+  return toRowData(c, currentUserId, undefined, undefined, undefined, L, locale)
+}
+
 function getConversationName(
   c: ConversationDTO,
   currentUserId: string,

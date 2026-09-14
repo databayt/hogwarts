@@ -1184,6 +1184,10 @@ export function MessagingClient({
       communitiesEmptyTitle: m?.ui?.mobile?.communities_empty_title,
       communitiesEmptyBody: m?.ui?.mobile?.communities_empty_body,
       communitiesMembers: m?.ui?.mobile?.communities_members,
+      communitiesAnnouncements: m?.ui?.mobile?.communities_announcements,
+      communitiesAnnouncementsBody:
+        m?.ui?.mobile?.communities_announcements_body,
+      communitiesViewAll: m?.ui?.mobile?.communities_view_all,
       settingsDashboard: m?.ui?.mobile?.settings_dashboard,
       settingsProfile: m?.ui?.mobile?.settings_profile,
       settingsNotifications: m?.ui?.mobile?.settings_notifications,
