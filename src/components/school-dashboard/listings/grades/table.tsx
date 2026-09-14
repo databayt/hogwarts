@@ -271,10 +271,18 @@ function ResultsTableInner({
                 <GridCard
                   key={result.id}
                   icon={asset("/icons/graduation-cap.svg")}
-                  title={result.studentName}
+                  title={
+                    permissions.readOnlyMode
+                      ? result.assignmentTitle
+                      : result.studentName
+                  }
                   description={`${result.score}/${result.maxScore} (${result.percentage.toFixed(0)}%)`}
                   subtitle={result.grade}
-                  onClick={() => handleView(result.id)}
+                  onClick={
+                    permissions.readOnlyMode
+                      ? undefined
+                      : () => handleView(result.id)
+                  }
                 />
               ))}
             </GridContainer>

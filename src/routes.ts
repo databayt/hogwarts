@@ -335,7 +335,10 @@ export const roleRoutes: Record<string, Role[]> = {
   "/timetable/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/exams": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
   "/exams/*": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
-  "/grades": ["ADMIN", "TEACHER", "DEVELOPER"],
+  // The listing itself is a read-only view for students and guardians — the
+  // sidebar links it for both, and GradesContent scopes the rows to the
+  // viewer's own student record / linked children. Sub-pages stay staff-only.
+  "/grades": ["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "DEVELOPER"],
   "/grades/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/assignments": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/assignments/*": ["ADMIN", "TEACHER", "DEVELOPER"],

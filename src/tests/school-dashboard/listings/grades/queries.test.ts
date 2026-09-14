@@ -90,13 +90,26 @@ describe("buildResultWhere", () => {
     expect(where.studentId).toEqual({ in: [] })
   })
 
-  it("prefers an explicit single studentId over the studentIds set", () => {
+  it("a single studentId outside the studentIds scope matches nothing", () => {
     const where = buildResultWhere("s1", {
-      studentId: "stu-priority",
-      studentIds: ["other-1", "other-2"],
+      studentId: "stu-other",
+      studentIds: ["own-1", "own-2"],
     })
-    // The single-id filter wins; the set is ignored.
-    expect(where.studentId).toBe("stu-priority")
+    // `?studentId=` must never widen a student/guardian scope (#412).
+    expect(where.studentId).toEqual({ in: [] })
+  })
+
+  it("a single studentId inside the studentIds scope narrows to it", () => {
+    const where = buildResultWhere("s1", {
+      studentId: "own-2",
+      studentIds: ["own-1", "own-2"],
+    })
+    expect(where.studentId).toBe("own-2")
+  })
+
+  it("a single studentId without a scope filters directly (staff)", () => {
+    const where = buildResultWhere("s1", { studentId: "stu-any" })
+    expect(where.studentId).toBe("stu-any")
   })
 })
 

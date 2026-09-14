@@ -2,9 +2,13 @@
 
 **Status:** 🟡 IN PROGRESS
 **Completion:** 75%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-09-14
 
 ---
+
+## Recently Fixed
+
+- **Student/guardian self-view on `/grades` (#412, 2026-09-14)** — the sidebar linked Grades for STUDENT and GUARDIAN, but `routes.ts` allowed only ADMIN/TEACHER, so they landed on `/unauthorized`. `/grades` (exact) now admits both; `GradesContent` scopes the SSR rows to the viewer's own student record / linked children (the `getResults` action already did). `buildResultWhere` no longer lets `studentId` override a `studentIds` scope — `?studentId=<other>` returned another student's grades. Self-view hides the staff tab row and the row "View" link (`/grades/*` stays staff-only). Open: students still have no own detail / transcript / report-card view.
 
 ## MVP Checklist
 

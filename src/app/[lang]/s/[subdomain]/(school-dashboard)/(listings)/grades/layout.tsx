@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -15,6 +16,10 @@ export default async function GradesLayout({ children, params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.grades
+  const { role } = await getTenantContext()
+  // Students and guardians reach only the listing — every sub-page is
+  // staff-only in routes.ts, so the tab row would be all dead links.
+  const selfView = role === "STUDENT" || role === "GUARDIAN"
 
   // Grades page navigation (7 links)
   const gradesPages: PageNavItem[] = [
@@ -39,7 +44,7 @@ export default async function GradesLayout({ children, params }: Props) {
   return (
     <div className="space-y-6">
       <PageHeadingSetter title={d?.title || "Grades"} />
-      <PageNav pages={gradesPages} />
+      {!selfView && <PageNav pages={gradesPages} />}
       {children}
     </div>
   )

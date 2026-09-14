@@ -189,12 +189,20 @@ export function buildResultWhere(
   }
 
   // ID filters
-  if (filters.studentId) {
+  if (filters.studentIds) {
+    // STUDENT/GUARDIAN auto-scoping: restrict to a set of students. Empty array
+    // → no rows (Prisma treats `in: []` as match-nothing, the safe default).
+    // A `studentId` filter may only narrow inside the scope, never widen it —
+    // `?studentId=<someone else>` matches nothing.
+    if (filters.studentId) {
+      where.studentId = filters.studentIds.includes(filters.studentId)
+        ? filters.studentId
+        : { in: [] }
+    } else {
+      where.studentId = { in: filters.studentIds }
+    }
+  } else if (filters.studentId) {
     where.studentId = filters.studentId
-  } else if (filters.studentIds) {
-    // GUARDIAN auto-scoping: restrict to a set of children. Empty array → no rows
-    // (Prisma treats `in: []` as match-nothing, which is the safe default).
-    where.studentId = { in: filters.studentIds }
   }
 
   if (filters.classId) {

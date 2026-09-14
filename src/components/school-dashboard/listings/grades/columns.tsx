@@ -232,6 +232,9 @@ export const resultColumns = (
         const onDelete = () => {
           callbacks?.onDelete?.(result)
         }
+        // Read-only viewers (students, guardians) cannot open /grades/[id],
+        // which is staff-only and shows class-wide stats.
+        if (permissions.readOnlyMode) return null
         return (
           <ActionMenu srLabel={t.openMenu}>
             <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>

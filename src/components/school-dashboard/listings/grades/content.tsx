@@ -3,6 +3,8 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { auth } from "@/auth"
+import { db } from "@/lib/db"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -12,6 +14,7 @@ import { resultsSearchParams } from "@/components/school-dashboard/listings/grad
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/grades/permissions"
 import {
   formatResultRow,
+  getChildrenIdsForGuardian,
   getResultsList,
 } from "@/components/school-dashboard/listings/grades/queries"
 import { ResultsTable } from "@/components/school-dashboard/listings/grades/table"
@@ -36,11 +39,30 @@ export default async function GradesContent({
   let data: ResultRow[] = []
   let total = 0
 
-  if (schoolId) {
+  // Students see only their own results; guardians only their children's.
+  // Mirrors the auto-scope in the getResults action (client load-more/search).
+  let studentIds: string[] | undefined
+  if (schoolId && (role === "STUDENT" || role === "GUARDIAN")) {
+    const userId = (await auth())?.user?.id
+    if (!userId) {
+      studentIds = []
+    } else if (role === "GUARDIAN") {
+      studentIds = await getChildrenIdsForGuardian(userId, schoolId)
+    } else {
+      const student = await db.student.findFirst({
+        where: { userId, schoolId },
+        select: { id: true },
+      })
+      studentIds = student ? [student.id] : []
+    }
+  }
+
+  if (schoolId && studentIds?.length !== 0) {
     try {
       // Use centralized query builder from queries.ts
       const { rows, count } = await getResultsList(schoolId, {
         studentId: sp.studentId || undefined,
+        studentIds,
         assignmentId: sp.assignmentId || undefined,
         classId: sp.classId || undefined,
         grade: sp.grade || undefined,
