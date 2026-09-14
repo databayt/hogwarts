@@ -142,6 +142,8 @@ Clock rules are the web clock card's (`attendance/actions/clock-core.ts`): TEACH
 | POST   | `/api/mobile/conversations/:id/messages` | Send (with nonce dedup)                 |
 | POST   | `/api/mobile/conversations/:id/read`     | Mark read                               |
 
+The conversations list is camelCase (kept as shipped): `{ data: [{ id, type, title, avatarUrl, unreadCount, isPinned, isMuted, whatsappEnabled, participantCount, otherParticipant { id, name, image } | null, updatedAt, lastMessage { id, content, senderId, senderName, contentType: text|image|file|system, status, sentAt } | null }], total }`. `participantCount` counts active participants; `otherParticipant` is set for direct chats only. Additive (2026-09): `participantCount`, `otherParticipant`, `lastMessage.senderId`, `lastMessage.contentType`.
+
 ### Notifications (new)
 
 | Method | Path                                 | Description                                                                |

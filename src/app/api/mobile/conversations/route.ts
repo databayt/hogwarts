@@ -12,6 +12,9 @@ import { authenticate, isAuthError } from "../lib/authenticate"
  * Mobile Conversations API
  *
  * GET  /api/mobile/conversations         — list conversations
+ *   Rows are camelCase (kept as shipped). Each carries `participantCount`
+ *   (active participants), `otherParticipant { id, name, image }` for a
+ *   direct chat (else null), and `lastMessage.senderId` / `contentType`.
  * POST /api/mobile/conversations         — create a conversation
  */
 export async function GET(request: NextRequest) {
@@ -62,6 +65,7 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             content: true,
+            contentType: true,
             senderId: true,
             status: true,
             createdAt: true,
@@ -82,13 +86,12 @@ export async function GET(request: NextRequest) {
       const lastMsg = c.messages[0]
 
       // For direct conversations, show the other participant's name
+      const other =
+        c.type === "direct"
+          ? c.participants.find((p) => p.user.id !== auth.userId)
+          : undefined
       let title = c.title
       if (c.type === "direct" && !title) {
-        const other = c.participants.find(
-          (p: {
-            user: { id: string; username: string | null; image: string | null }
-          }) => p.user.id !== auth.userId
-        )
         title = other?.user.username || "Unknown"
       }
 
@@ -101,13 +104,23 @@ export async function GET(request: NextRequest) {
         isPinned: myParticipant?.isPinned || false,
         isMuted: myParticipant?.isMuted || false,
         whatsappEnabled: c.whatsappEnabled,
+        participantCount: c.participants.length,
+        otherParticipant: other
+          ? {
+              id: other.user.id,
+              name: other.user.username || "",
+              image: other.user.image,
+            }
+          : null,
         updatedAt:
           (c.lastMessageAt || c.messages[0]?.createdAt)?.toISOString() || "",
         lastMessage: lastMsg
           ? {
               id: lastMsg.id,
               content: lastMsg.content,
+              senderId: lastMsg.senderId,
               senderName: lastMsg.sender.username || "",
+              contentType: lastMsg.contentType,
               status: lastMsg.status,
               sentAt: lastMsg.createdAt.toISOString(),
             }
