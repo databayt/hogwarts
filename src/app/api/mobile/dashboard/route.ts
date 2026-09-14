@@ -4,8 +4,15 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { parseEnabledModules } from "@/lib/enabled-modules"
+import { resolveActiveTerm } from "@/lib/term-resolver"
+import { rankNextActions } from "@/components/school-dashboard/dashboard/next-action-rank"
+import { getQuickActionsByRole } from "@/components/school-dashboard/dashboard/quick-actions-config"
+import { loadUpcomingData } from "@/components/school-dashboard/dashboard/upcoming-queries"
+import { loadTodaySchedule } from "@/components/school-dashboard/timetable/today-schedule"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
+import { hasRole } from "../lib/roles"
 
 /**
  * Mobile Dashboard API
@@ -13,6 +20,9 @@ import { authenticate, isAuthError } from "../lib/authenticate"
  * Returns role-based dashboard summary stats for the authenticated user.
  *
  * GET /api/mobile/dashboard
+ *
+ * Every field below `announcements_count` + the flat role stats is ADDITIVE —
+ * the iOS app reads the original flat shape and must keep working.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -21,28 +31,45 @@ export async function GET(request: NextRequest) {
 
     const { schoolId, userId, role } = auth
 
-    const school = await db.school.findUnique({
-      where: { id: schoolId },
-      select: { name: true, nameEn: true },
-    })
-
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { username: true, image: true },
-    })
-
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    // Common stats (all roles)
-    const [unreadNotifications, announcements] = await Promise.all([
-      db.notification.count({ where: { schoolId, userId, read: false } }),
-      db.announcement.count({
-        where: { schoolId, published: true },
-      }),
-    ])
+    // Common reads (all roles). The upcoming payload is the one the web's
+    // Upcoming card and next-action banner rank — shared, not ported.
+    const [school, user, unreadNotifications, announcements, unreadMessages] =
+      await Promise.all([
+        db.school.findUnique({
+          where: { id: schoolId },
+          select: {
+            id: true,
+            name: true,
+            nameEn: true,
+            logoUrl: true,
+            enabledModules: true,
+          },
+        }),
+        db.user.findUnique({
+          where: { id: userId },
+          select: { username: true, image: true },
+        }),
+        db.notification.count({ where: { schoolId, userId, read: false } }),
+        db.announcement.count({
+          where: { schoolId, published: true },
+        }),
+        db.conversationParticipant.aggregate({
+          where: { userId, isActive: true, conversation: { schoolId } },
+          _sum: { unreadCount: true },
+        }),
+      ])
+
+    const upcoming = await loadUpcomingData(userId, schoolId, role).catch(
+      (error) => {
+        console.error("Mobile dashboard upcoming data error:", error)
+        return null
+      }
+    )
 
     let roleStats = {}
 
@@ -134,7 +161,7 @@ export async function GET(request: NextRequest) {
         })
         roleStats = { children_count: children }
       }
-    } else if (role === "ADMIN" || role === "DEVELOPER") {
+    } else if (hasRole(auth, "ADMIN", "DEVELOPER")) {
       const [totalStudents, totalTeachers, totalClasses] = await Promise.all([
         db.student.count({ where: { schoolId, status: "ACTIVE" } }),
         db.teacher.count({ where: { schoolId, employmentStatus: "ACTIVE" } }),
@@ -146,7 +173,111 @@ export async function GET(request: NextRequest) {
         total_teachers: totalTeachers,
         total_classes: totalClasses,
       }
+    } else if (role === "ACCOUNTANT") {
+      // Same invoice counts the accountant's Upcoming card shows.
+      const money = (upcoming ?? {}) as {
+        pendingPayments?: { count?: number; totalAmount?: unknown }
+        overdueInvoices?: { count?: number; totalAmount?: unknown }
+      }
+      const collectedToday = await db.payment.aggregate({
+        where: {
+          schoolId,
+          status: "SUCCESS",
+          paymentDate: { gte: today, lt: tomorrow },
+        },
+        _sum: { amount: true },
+      })
+      roleStats = {
+        pending_invoices: money.pendingPayments?.count ?? 0,
+        pending_amount: Number(money.pendingPayments?.totalAmount ?? 0),
+        overdue_invoices: money.overdueInvoices?.count ?? 0,
+        overdue_amount: Number(money.overdueInvoices?.totalAmount ?? 0),
+        collected_today: Number(collectedToday._sum.amount ?? 0),
+      }
+    } else if (role === "STAFF") {
+      const [totalStudents, presentToday, upcomingEvents] = await Promise.all([
+        db.student.count({ where: { schoolId, status: "ACTIVE" } }),
+        db.attendance.count({
+          where: {
+            schoolId,
+            date: { gte: today, lt: tomorrow },
+            status: { in: ["PRESENT", "LATE"] },
+            deletedAt: null,
+          },
+        }),
+        db.event.count({
+          where: {
+            schoolId,
+            eventDate: { gte: today },
+            status: { not: "CANCELLED" },
+          },
+        }),
+      ])
+      roleStats = {
+        total_students: totalStudents,
+        present_today: presentToday,
+        upcoming_events: upcomingEvents,
+      }
     }
+
+    // Today's periods, for the roles whose day is a timetable.
+    let todayTimetable = null
+    if (role === "STUDENT" || role === "TEACHER") {
+      try {
+        const { term } = await resolveActiveTerm(schoolId)
+        const day = await loadTodaySchedule({
+          schoolId,
+          userId,
+          role,
+          term: term ? { id: term.id, yearId: term.yearId, label: "" } : null,
+        })
+        todayTimetable = {
+          day_of_week: day.dayOfWeek,
+          date: "date" in day ? day.date : today.toISOString(),
+          closure:
+            "closure" in day && day.closure
+              ? {
+                  title: day.closure.title,
+                  type: day.closure.exceptionType,
+                }
+              : null,
+          periods: day.schedule.map((p) => ({
+            period_id: p.periodId,
+            period_name: p.periodName,
+            start_time: p.startTime,
+            end_time: p.endTime,
+            subject: p.subject || null,
+            class_name: p.className || null,
+            teacher: p.teacher || null,
+            room: p.room || null,
+            is_break: p.isBreak,
+            timetable_id: p.timetableId,
+            live_class: p.liveClass
+              ? {
+                  session_id: p.liveClass.sessionId,
+                  provider: p.liveClass.provider,
+                  meeting_url: p.liveClass.meetingUrl,
+                  status: p.liveClass.status,
+                }
+              : null,
+          })),
+        }
+      } catch (error) {
+        console.error("Mobile dashboard today timetable error:", error)
+      }
+    }
+
+    const nextActions = rankNextActions(role, upcoming)
+    const quickActions = getQuickActionsByRole(role).map((a) => {
+      const href = a.href ?? ""
+      return {
+        key: href.replace(/^\//, "").replace(/\//g, "_") || "home",
+        label: a.label,
+        description: a.description,
+        href,
+        icon: a.iconName,
+      }
+    })
 
     return NextResponse.json({
       user_name: user?.username || auth.email,
@@ -156,6 +287,19 @@ export async function GET(request: NextRequest) {
       unread_notifications: unreadNotifications,
       announcements_count: announcements,
       ...roleStats,
+      // --- additive (2026-09) ---
+      school: {
+        id: schoolId,
+        name: school?.name ?? "",
+        name_en: school?.nameEn ?? null,
+        logo_url: school?.logoUrl ?? null,
+        // null = every module enabled
+        enabled_modules: parseEnabledModules(school?.enabledModules),
+      },
+      unread_messages: unreadMessages._sum.unreadCount ?? 0,
+      next_actions: nextActions,
+      quick_actions: quickActions,
+      today_timetable: todayTimetable,
     })
   } catch (error) {
     console.error("Mobile dashboard error:", error)
