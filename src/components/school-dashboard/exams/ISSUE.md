@@ -52,7 +52,9 @@ Below `md` only; `md` and up keep their classes. Kit: `../shared/README.md` ("Ph
   `certificate-list.tsx:224` verify link has no locale prefix, formats dates with a hard-coded
   `"ar"`, shows raw `status`/`config.type` enums and toasts English "Share URL:"; revoke
   stores English "Revoked by administrator"; `version-library.tsx` and
-  `ai-generate-content.tsx` toast raw `result.error` codes.
+  `ai-generate-content.tsx` toast raw `result.error` codes. Raw question-type enums
+  (`MULTIPLE_CHOICE`) still print in `mark/mobile-grading.tsx:265`'s badge and in the result
+  PDF templates (`results/lib/templates/{classic,modern,minimal}.tsx`).
 
 ## P0 — fixed 2026-08-29
 
