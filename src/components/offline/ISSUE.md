@@ -29,11 +29,14 @@ last_audited: 2026-09-13
 - [x] Fast on thin networks — proxy no longer forces a 1.1 MB page re-render per Server Action; chunks served from Cloudflare's edge; 1 MB of clone CSS off the dashboard; every sidebar route prefetchable (2026-09-13)
 - [x] Offline clicks land on a real page — `useOffline` off (it froze clicks before the worker), RSC payloads keyed with `_rsc`, each opened page saved as HTML once a day, "not on this device yet" card with Back and Retry, offline shell in its own untrimmed cache refreshed daily (2026-09-14)
 - [x] Shared device on a slow network — sign-out button and sign-in/join pages tell the worker to forget every saved page before they move on (2026-09-14)
+- [x] Connection toast follows the student — offline (stays up), slow, back online; the top-of-page strip was invisible once scrolled (#414, 2026-09-14)
 - [ ] Static cache trims oldest-inserted first, so the most-used chunks go first once it passes 400 entries; a saved page whose chunks were trimmed shows without its scripts offline
 - [ ] Exam submission in the outbox
 - [ ] Transport boarding in the outbox
 
 ## Log
+
+- 2026-09-14 — #414 ("no notice when the internet is low or offline", STUDENT on an iPhone): the strip only renders at the top of the content, so a drop while scrolled said nothing. `sync-banner.tsx` now also fires one sonner toast with id `connection` on each change: offline (no timeout), slow (5 s), back online (3 s). Verified in Playwright at 390px with the network cut while scrolled down. Slow on iOS: Safari has no `navigator.connection`, so "slow" there still comes only from the worker serving a saved copy after four seconds; Chrome/Android also reads `effectiveType` 2g/slow-2g.
 
 - 2026-09-14 — Protected media vs. the saved-pages cache, checked against `public/service-worker.js`: `/api/*`, cross-origin and `Range` requests return before any cache is opened, so a saved lesson page carries only `/api/lumos/video/<id>` references — offline, the text opens and the video cannot play, as policy requires. `/api/lumos/video` now also refuses non-media fetch destinations (lumos `87d62ee9e`). Docs gained "Lessons open offline; their videos do not" and "The installed app cannot block screenshots" (hogwarts#411). Not re-run on a built worker this pass — the SW itself is unchanged.
 

@@ -2,10 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useSyncExternalStore } from "react"
+import { useEffect, useRef, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { AlertTriangle, Loader2, RefreshCw, WifiOff } from "lucide-react"
+import { toast } from "sonner"
 
 import { useOnlineStatus, useOutbox } from "@/lib/offline/hooks"
 import { installOutboxTriggers } from "@/lib/offline/outbox"
@@ -55,6 +56,29 @@ if (typeof navigator !== "undefined" && navigator.serviceWorker) {
   })
 }
 
+// The Network Information API's own verdict of a weak link (Chrome/Android;
+// Safari has no `navigator.connection`, so there the worker's "slow" serve is
+// the only signal).
+type NetworkInformation = EventTarget & { effectiveType?: string }
+
+function readConnection(): NetworkInformation | undefined {
+  if (typeof navigator === "undefined") return undefined
+  return (navigator as Navigator & { connection?: NetworkInformation })
+    .connection
+}
+
+function subscribeWeak(listener: () => void) {
+  const connection = readConnection()
+  connection?.addEventListener("change", listener)
+  return () => connection?.removeEventListener("change", listener)
+}
+
+const readWeak = () => {
+  const type = readConnection()?.effectiveType
+  return type === "slow-2g" || type === "2g"
+}
+const readWeakServer = () => false
+
 function samePage(url: string | null, pathname: string | null): boolean {
   if (!url || !pathname || typeof window === "undefined") return false
   try {
@@ -88,17 +112,8 @@ export function OfflineSyncBanner({ labels }: { labels?: OfflineLabels }) {
   const servedHere = served !== null && samePage(served.url, pathname)
   const offline = !online || (servedHere && served.reason === "failed")
   const stale = !offline && servedHere
-
-  useEffect(() => installOutboxTriggers(), [])
-
-  // A full load served from a saved copy has no client to message while the
-  // worker chooses the response; ask once the page is here.
-  useEffect(() => {
-    navigator.serviceWorker?.controller?.postMessage({
-      type: "stale-check",
-      url: window.location.href,
-    })
-  }, [pathname])
+  const weak = useSyncExternalStore(subscribeWeak, readWeak, readWeakServer)
+  const connection = offline ? "offline" : stale || weak ? "slow" : "online"
 
   const t = (
     k: string,
@@ -111,6 +126,54 @@ export function OfflineSyncBanner({ labels }: { labels?: OfflineLabels }) {
     }
     return s
   }
+
+  useEffect(() => installOutboxTriggers(), [])
+
+  // The strip sits at the top of the page, so a connection that drops while
+  // the student is scrolled down said nothing (#414). A toast follows them:
+  // it stays up while offline and is replaced — same id — by "slow" or
+  // "back online". A page that simply loads online stays quiet.
+  const lastConnection = useRef<typeof connection>("online")
+  useEffect(() => {
+    const previous = lastConnection.current
+    lastConnection.current = connection
+    if (connection === previous) return
+    if (connection === "offline") {
+      toast.warning(t("offlineNow", "You're offline"), {
+        id: "connection",
+        description: t(
+          "offlineToastHint",
+          "Pages you've opened still work. Anything you do is saved and synced later."
+        ),
+        duration: Infinity,
+      })
+    } else if (connection === "slow") {
+      toast.warning(t("slowConnection", "Your connection is slow"), {
+        id: "connection",
+        description: undefined,
+        duration: 5000,
+      })
+    } else if (previous === "offline") {
+      toast.success(t("backOnline", "You're back online"), {
+        id: "connection",
+        description: undefined,
+        duration: 3000,
+      })
+    } else {
+      toast.dismiss("connection")
+    }
+    // `t` reads labels that never change after mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connection])
+
+  // A full load served from a saved copy has no client to message while the
+  // worker chooses the response; ask once the page is here.
+  useEffect(() => {
+    navigator.serviceWorker?.controller?.postMessage({
+      type: "stale-check",
+      url: window.location.href,
+    })
+  }, [pathname])
 
   const showConnection = offline || stale
   const showWork = pending > 0 || parked > 0
