@@ -22,6 +22,24 @@ import { useEffect, type RefObject } from "react"
  * Shared by the lumos lesson hero and the live room's title card, which draw
  * the same frame and must open the same way.
  */
+/**
+ * The element's document top from layout offsets, NOT `getBoundingClientRect`:
+ * the rect includes ancestor transforms, and the marketing `LoadingWrapper`
+ * holds the page at `scale(0.98)` while this runs — on a 4,000px page that
+ * moved a 56px hero to 97px and landed the page 41px past its top edge.
+ */
+function layoutTop(el: HTMLElement) {
+  let top = 0
+  let node: HTMLElement | null = el
+  while (node) {
+    top += node.offsetTop
+    const parent = node.offsetParent as HTMLElement | null
+    if (parent) top += parent.clientTop
+    node = parent
+  }
+  return top
+}
+
 export function useOpenOnHero(
   ref: RefObject<HTMLElement | null>,
   active: boolean,
@@ -34,7 +52,7 @@ export function useOpenOnHero(
     // A restored position — back/forward, a reload part-way down — is the
     // reader's own and outranks this.
     if (window.scrollY !== 0) return
-    const top = el.getBoundingClientRect().top + window.scrollY
+    const top = layoutTop(el)
     if (top <= 0) return
     // `instant`: this is where the page STARTS, not somewhere it travels to.
     window.scrollTo({ top, behavior: "instant" })
