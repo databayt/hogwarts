@@ -24,9 +24,21 @@ vi.mock("@/components/file/providers/factory", () => ({
 vi.mock("@/app/api/mobile/lib/student-access", () => ({
   canAccessStudent: vi.fn(),
 }))
-vi.mock("@/app/api/mobile/auth/jwt", () => ({
-  verifyToken: vi.fn(),
-}))
+vi.mock("@/app/api/mobile/lib/authenticate", async () => {
+  const { NextResponse } = await import("next/server")
+  return {
+    authenticate: vi.fn(async (req: Request) =>
+      req.headers.get("Authorization")
+        ? {
+            userId: "user-1",
+            email: "",
+            schoolId: "school-1",
+            role: "GUARDIAN",
+          }
+        : NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    ),
+  }
+})
 
 const SCHOOL = "school-1"
 const USER = "user-1"
