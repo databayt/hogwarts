@@ -1,9 +1,57 @@
-import { memo } from "react"
+"use client"
+
+import { memo, useLayoutEffect, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 
 import { BubbleTail } from "./bubble-tail"
 import { BubbleTimestamp, type BubbleStatus } from "./bubble-timestamp"
+
+/** One line of the 17/24 body; anything taller has wrapped. */
+const LINE_PX = 24
+
+/**
+ * Narrow a wrapped paragraph to its longest line. CSS sizes a wrapped block
+ * to the width it wrapped AT, so a two-line message keeps the full 263px and
+ * leaves a gap beside its shorter lines; the iOS app hugs the longest line.
+ * Single-line messages already fit and are never measured.
+ */
+function useHugLongestLine(text: string) {
+  const ref = useRef<HTMLParagraphElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const fit = () => {
+      el.style.width = ""
+      if (el.offsetHeight <= LINE_PX * 1.5) return
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      const lines = new Map<number, [number, number]>()
+      for (const r of range.getClientRects()) {
+        if (!r.width) continue
+        const key = Math.round(r.top)
+        const line = lines.get(key)
+        lines.set(
+          key,
+          line
+            ? [Math.min(line[0], r.left), Math.max(line[1], r.right)]
+            : [r.left, r.right]
+        )
+      }
+      let widest = 0
+      for (const [l, r] of lines.values()) widest = Math.max(widest, r - l)
+      if (widest) el.style.width = `${Math.ceil(widest)}px`
+    }
+    fit()
+    // A web font landing after the first paint changes every line's width.
+    let live = true
+    document.fonts?.ready.then(() => live && fit())
+    return () => {
+      live = false
+    }
+  }, [text])
+  return ref
+}
 
 type Props = {
   side: "me" | "other"
@@ -48,6 +96,7 @@ export const MessageBubble = memo(function MessageBubble({
   const isMe = side === "me"
   const failed = status === "failed"
   const Wrapper = failed && onRetry ? "button" : "div"
+  const textRef = useHugLongestLine(text)
   return (
     <div
       className={cn(
@@ -70,7 +119,7 @@ export const MessageBubble = memo(function MessageBubble({
         onClick={failed ? onRetry : undefined}
         aria-label={failed ? retryLabel : undefined}
         className={cn(
-          "relative flex max-w-[287px] min-w-[64px] flex-col items-start gap-[3px] text-start",
+          "relative flex max-w-[283px] min-w-[64px] flex-col items-start gap-[3px] text-start",
           "rounded-[20px] border-[0.33px] border-[color:var(--wa-surface-shadow-baloon)]",
           tail && (isMe ? "rounded-ee-[4px]" : "rounded-es-[4px]"),
           "px-[12px] pt-[7px] pb-[6px]",
@@ -91,8 +140,9 @@ export const MessageBubble = memo(function MessageBubble({
         {/* `dir="auto"`: a message takes its own direction, the way WhatsApp
             draws Arabic right-aligned inside an English UI and vice versa. */}
         <p
+          ref={textRef}
           dir="auto"
-          className="max-w-[263px] text-[17px] leading-[24px] tracking-[-0.2px] break-words whitespace-pre-wrap text-[color:var(--wa-text-primary)]"
+          className="max-w-[259px] text-[17px] leading-[24px] tracking-[-0.2px] break-words whitespace-pre-wrap text-[color:var(--wa-text-primary)]"
         >
           {text}
         </p>

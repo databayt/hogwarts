@@ -31,7 +31,7 @@ export const LocationBubble = memo(function LocationBubble({
     >
       <div
         className={cn(
-          "relative flex w-[240px] max-w-full flex-col overflow-hidden rounded-[12px]",
+          "relative flex w-[240px] max-w-full flex-col overflow-hidden rounded-[20px]",
           "border-[0.66px] border-[color:var(--wa-surface-shadow-baloon)]",
           isMe
             ? "bg-[color:var(--wa-surface-baloon-me)]"

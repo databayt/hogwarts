@@ -15,7 +15,7 @@ export function ChatWallpaper({ children, className }: Props) {
   return (
     <div
       className={cn(
-        "relative flex h-full w-full flex-col bg-[#F5F2EB] dark:bg-[#0B141A]",
+        "relative flex h-full w-full flex-col bg-[#F4F0E9] dark:bg-[#0B141A]",
         className
       )}
       style={{

@@ -39,7 +39,7 @@ export const ReplyBubble = memo(function ReplyBubble({
     >
       <div
         className={cn(
-          "relative flex max-w-[287px] flex-col gap-[4px] rounded-[12px]",
+          "relative flex max-w-[287px] flex-col gap-[4px] rounded-[20px]",
           "border-[0.66px] border-[color:var(--wa-surface-shadow-baloon)]",
           "px-[6px] pt-[5px] pb-[6.5px]",
           isMe

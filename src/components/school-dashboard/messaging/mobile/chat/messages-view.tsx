@@ -400,7 +400,7 @@ export const MessagesView = memo(function MessagesView({
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto overscroll-contain pt-[calc(env(safe-area-inset-top,0px)+56px)] pb-[8px] [-webkit-overflow-scrolling:touch]"
+          className="flex-1 overflow-y-auto overscroll-contain pt-[calc(env(safe-area-inset-top,0px)+70px)] pb-[8px] [-webkit-overflow-scrolling:touch]"
         >
           <div ref={contentRef}>
             {/* The spinner pill WhatsApp shows while a page of history comes in. */}

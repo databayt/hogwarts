@@ -28,7 +28,8 @@ export function EncryptionNotice({
   return (
     <div
       className={cn(
-        "flex w-full justify-center px-[16px] pt-[12px] pb-[4px]",
+        // The date pill above already leaves 14px; 13px down to the first bubble.
+        "flex w-full justify-center px-[16px] pb-[13px]",
         className
       )}
     >

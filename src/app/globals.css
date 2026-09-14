@@ -713,7 +713,7 @@ body {
    phone's own 432px pitch, served from this app's public/ because the
    CloudFront origin this used to point at answers HTTP 403. */
 .wa-doodle-bg {
-  background: #f5f2eb url("/icons/whatsapp/wp-wa-chat-bg.svg") top left / 432px
+  background: #f4f0e9 url("/icons/whatsapp/wp-wa-chat-bg.svg") top left / 432px
     auto repeat;
 }
 .dark .wa-doodle-bg {
@@ -761,9 +761,9 @@ body {
   --wa-surface-panel: rgba(245, 242, 235, 0.8);
   --wa-surface-search-chat: #f5f5f4;
   --wa-surface-invert: #0a0a0a;
-  --wa-surface-baloon-me: #d8fdd2;
+  --wa-surface-baloon-me: #cffdcf;
   --wa-surface-baloon-other: #ffffff;
-  --wa-surface-date: #ffffff;
+  --wa-surface-date: #fdfdfd;
   --wa-surface-input-chat: #ffffff;
   --wa-surface-shadow-baloon: rgba(0, 0, 0, 0.06);
   --wa-text-primary: #0a0a0a;
@@ -801,7 +801,7 @@ body {
   --wa-border-input-chat: #b2b2b2;
   --wa-border-quote: #d42a66;
   --wa-text-quote-title: #d42a66;
-  --wa-surface-notice: #fff0d3;
+  --wa-surface-notice: #ffeed1;
   --wa-text-notice: #0a0a0a;
 }
 .dark {

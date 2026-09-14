@@ -35,7 +35,7 @@ export const VoiceNoteBubble = memo(function VoiceNoteBubble({
     >
       <div
         className={cn(
-          "relative flex w-[287px] max-w-full items-center gap-[10px] rounded-[12px]",
+          "relative flex w-[287px] max-w-full items-center gap-[10px] rounded-[20px]",
           "border-[0.66px] border-[color:var(--wa-surface-shadow-baloon)]",
           "px-[8px] py-[8px]",
           isMe

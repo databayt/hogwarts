@@ -335,7 +335,7 @@ export function MessageList({
 
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className={cn("relative flex-1 bg-[#F5F2EB] dark:bg-[#0B141A]", className)}>
+      <div className={cn("relative flex-1 bg-[#F4F0E9] dark:bg-[#0B141A]", className)}>
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -359,7 +359,7 @@ export function MessageList({
   // Render virtualized list
   if (enableVirtualization) {
     return (
-      <div className={cn("relative flex-1 bg-[#F5F2EB] dark:bg-[#0B141A]", className)}>
+      <div className={cn("relative flex-1 bg-[#F4F0E9] dark:bg-[#0B141A]", className)}>
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -482,7 +482,7 @@ export function MessageList({
 
   // Non-virtualized fallback
   return (
-    <div className={cn("relative flex-1 bg-[#F5F2EB] dark:bg-[#0B141A]", className)}>
+    <div className={cn("relative flex-1 bg-[#F4F0E9] dark:bg-[#0B141A]", className)}>
       <div
         className="pointer-events-none absolute inset-0"
         style={{
