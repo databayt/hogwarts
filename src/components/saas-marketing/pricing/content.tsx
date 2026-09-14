@@ -8,6 +8,7 @@ import { ComparePlans } from "@/components/saas-marketing/pricing/compare-plans"
 import { getUserSubscriptionPlan } from "@/components/saas-marketing/pricing/lib/subscription"
 import { PricingCards } from "@/components/saas-marketing/pricing/pricing-cards"
 
+import { ImmersiveHero } from "../immersive-hero"
 import { Calculator } from "./calculator"
 import EnterpriseSection from "./enterprise-section"
 import PricingFAQs from "./pricing-faqs"
@@ -38,7 +39,9 @@ export default async function PricingContent(props: Props) {
 
   return (
     <div className="flex w-full flex-col items-center py-14">
-      <PricingHeader dictionary={dictionary} />
+      <ImmersiveHero className="-mt-8 flex w-full justify-center pt-8">
+        <PricingHeader dictionary={dictionary} />
+      </ImmersiveHero>
       <PricingCards
         userId={user?.id}
         subscriptionPlan={subscriptionPlan}

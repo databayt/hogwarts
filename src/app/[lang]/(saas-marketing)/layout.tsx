@@ -35,7 +35,11 @@ export default async function MarketingLayout({
   return (
     <DictionaryProvider dictionary={dictionary}>
       <LoadingWrapper>
-        <div className="marketing-container flex min-h-screen flex-col">
+        {/* `has-[[data-immersive]]` — a page that wraps its hero in
+            `ImmersiveHero` unpins the header below `lg`, the lumos lesson's
+            phone pattern: the page opens on the hero's top edge and the bar
+            is one short scroll up. Desktop keeps the sticky bar. */}
+        <div className="marketing-container flex min-h-screen flex-col max-lg:has-[[data-immersive]]:[&_[data-slot=site-header]]:static">
           <Suspense fallback={null}>
             <AccessCheck />
           </Suspense>

@@ -19,6 +19,7 @@ import {
 import { communitySearchParams } from "@/components/saas-marketing/community/search-params"
 import { CommunitySubjectsGrid } from "@/components/saas-marketing/community/subjects-grid"
 import { CommunityTabsNav } from "@/components/saas-marketing/community/tabs-nav"
+import { ImmersiveHero } from "@/components/saas-marketing/immersive-hero"
 
 // Locale-aware metadata. The page is force-dynamic (reads searchParams +
 // Prisma), so generateMetadata runs per-request — no build-time page-data
@@ -95,40 +96,42 @@ export default async function CommunityHubPage({
 
   return (
     <div className="container mx-auto max-w-6xl px-4 pb-16 lg:px-0">
-      <PageHeader
-        className="border-border/50 dark:border-border border-b"
-        announcement={
-          <Link
-            href="#subjects"
-            className="group mb-2 inline-flex items-center gap-2 px-0.5 text-sm font-medium"
-          >
-            <Image
-              src="/feature/exam.png"
-              alt=""
-              width={16}
-              height={16}
-              className="h-4 w-4 object-contain"
+      <ImmersiveHero>
+        <PageHeader
+          className="border-border/50 dark:border-border border-b"
+          announcement={
+            <Link
+              href="#subjects"
+              className="group mb-2 inline-flex items-center gap-2 px-0.5 text-sm font-medium"
+            >
+              <Image
+                src="/feature/exam.png"
+                alt=""
+                width={16}
+                height={16}
+                className="h-4 w-4 object-contain"
+              />
+              <span className="underline-offset-4 group-hover:underline">
+                {pill}
+              </span>
+              <ArrowRight className="ms-1 h-4 w-4 rtl:hidden" />
+              <ArrowLeft className="ms-1 hidden h-4 w-4 rtl:block" />
+            </Link>
+          }
+          heading={heading}
+          description={description}
+          headingClassName="max-w-2xl text-balance text-4xl font-semibold tracking-tight lg:leading-[1.1] xl:text-5xl xl:tracking-tight"
+          descriptionClassName="max-w-2xl text-balance text-base font-light leading-7 sm:text-lg"
+          actions={
+            <TwoButtons
+              primaryLabel={browseLabel}
+              primaryHref="#subjects"
+              secondaryLabel={requestLabel}
+              secondaryHref={`/${lang}/contact`}
             />
-            <span className="underline-offset-4 group-hover:underline">
-              {pill}
-            </span>
-            <ArrowRight className="ms-1 h-4 w-4 rtl:hidden" />
-            <ArrowLeft className="ms-1 hidden h-4 w-4 rtl:block" />
-          </Link>
-        }
-        heading={heading}
-        description={description}
-        headingClassName="max-w-2xl text-balance text-4xl font-semibold tracking-tight lg:leading-[1.1] xl:text-5xl xl:tracking-tight"
-        descriptionClassName="max-w-2xl text-balance text-base font-light leading-7 sm:text-lg"
-        actions={
-          <TwoButtons
-            primaryLabel={browseLabel}
-            primaryHref="#subjects"
-            secondaryLabel={requestLabel}
-            secondaryHref={`/${lang}/contact`}
-          />
-        }
-      />
+          }
+        />
+      </ImmersiveHero>
       <div className="border-border/50 dark:border-border flex items-center justify-between gap-4 border-b-[0.5px] py-3">
         <div className="min-w-0 flex-1">
           <CommunityTabsNav

@@ -47,7 +47,10 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
   ]
 
   return (
+    // `data-slot` so the marketing layout can unpin the bar on a phone when
+    // the page opens on its hero (`data-immersive`, see `ImmersiveHero`).
     <header
+      data-slot="site-header"
       className="bleed-bg bg-background sticky top-0 z-50 w-full"
       dir={isRTL ? "rtl" : "ltr"}
     >

@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { ImmersiveHero } from "../immersive-hero"
 import {
   CATEGORIES,
   FEATURE_DETAILS,
@@ -148,7 +149,7 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
 
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="py-12 md:py-16">
-        {hero}
+        <ImmersiveHero className="-mt-8 pt-8">{hero}</ImmersiveHero>
 
         {showcaseBlock}
 
@@ -179,7 +180,7 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="py-12 md:py-16">
-      {hero}
+      <ImmersiveHero className="-mt-8 pt-8">{hero}</ImmersiveHero>
 
       {showcaseBlock}
 

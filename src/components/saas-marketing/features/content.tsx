@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { ImmersiveHero } from "../immersive-hero"
 import { IMPACT_METRICS } from "./constants"
 import FeatureTabs from "./feature-tabs"
 import Hero from "./hero"
@@ -25,7 +26,9 @@ export default function Content({ dictionary, params }: ContentProps) {
 
   return (
     <div className="px-responsive lg:px-0">
-      <Hero dictionary={dictionary} params={params} />
+      <ImmersiveHero>
+        <Hero dictionary={dictionary} params={params} />
+      </ImmersiveHero>
       <FeatureTabs lang={params.lang} />
 
       {/* Impact metrics */}
