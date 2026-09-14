@@ -8,8 +8,13 @@ maturity: Built+Polish
 completion: 85
 tracker: https://github.com/databayt/hogwarts/issues/324
 docs: https://ed.databayt.org/en/docs/messages
-last_audited: 2026-05-25
+last_audited: 2026-09-13
 ---
+
+## 2026-09-13 — the bell stops hammering a dead connection (LOCAL, not pushed)
+
+- [x] `use-notifications.ts` `fetchBellDataShared`: a failed bell request (no network, or a non-OK answer) starts a 15 s cooldown for every hook instance in the tab, and the shared fetch resolves `null` instead of rejecting. Measured with the server unreachable: bursts of ~120 `/api/notifications/bell` requests (a failure is instant, so each remount, focus and poll became its own request) and an unhandled rejection from the initial fetch on every load. After: one request per cooldown or poll tick.
+- [ ] The burst's trigger was not isolated (a fresh load polls correctly every 30 s); the cooldown caps it whatever the trigger.
 
 ## 2026-09-12 — Web Push lane (browser channel)
 

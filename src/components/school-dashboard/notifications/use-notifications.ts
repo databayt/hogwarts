@@ -46,8 +46,14 @@ const DEFAULT_POLL_INTERVAL = 30000
 // call per window instead of issuing parallel identical polls.
 // ---------------------------------------------------------------------------
 const POLL_SHARE_WINDOW_MS = 5000
+// After a failed request (no network, or the server said no), nobody in the
+// tab asks again for this long. A failure is instant when the connection is
+// gone, so without it every remount, focus and poll became its own request:
+// ~120 bell requests in a burst with the server unreachable (2026-09-13).
+const FAILURE_COOLDOWN_MS = 15000
 
 let inflightPoll: Promise<NotificationBellData | null> | null = null
+let lastFailureAt = 0
 let inflightLocale: string | undefined
 let lastPollAt = 0
 let lastPollLocale: string | undefined
@@ -80,6 +86,9 @@ async function fetchBellDataShared(
   if (inflightPoll && inflightLocale === locale) {
     return inflightPoll
   }
+  if (Date.now() - lastFailureAt < FAILURE_COOLDOWN_MS) {
+    return lastPollLocale === locale ? lastPollData : null
+  }
   inflightLocale = locale
   inflightPoll = requestBellData(locale)
     .then((data) => {
@@ -89,8 +98,16 @@ async function fetchBellDataShared(
         lastPollData = data
         lastPollLocale = locale
         lastPollAt = Date.now()
+      } else {
+        lastFailureAt = Date.now()
       }
       return data
+    })
+    // Resolve, never reject: callers treat null as "nothing new", and the
+    // initial fetch has no catch of its own.
+    .catch(() => {
+      lastFailureAt = Date.now()
+      return null
     })
     .finally(() => {
       inflightPoll = null
