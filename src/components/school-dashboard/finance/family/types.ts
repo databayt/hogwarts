@@ -27,6 +27,7 @@ export interface FamilyInstallment {
   status: InstallmentStatus
   feeAssignmentId: string
   feeName: string
+  studentId: string
   studentName: string
   academicYear: string
 }
@@ -42,6 +43,7 @@ export interface FamilyPayment {
   status: string
   feeName: string
   academicYear: string
+  studentId: string
   studentName: string
 }
 

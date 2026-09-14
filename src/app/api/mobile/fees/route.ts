@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
+import { canAccessStudent } from "../lib/student-access"
 
 /**
  * GET /api/mobile/fees — list fee records for the user/student
@@ -21,6 +22,12 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1")
     const perPage = parseInt(searchParams.get("per_page") || "30")
     const skip = (page - 1) * perPage
+
+    // A named student must be one the caller may see (self, linked child, or
+    // school staff) — without this any token could read any pupil's fees.
+    if (studentId && !(await canAccessStudent(auth, studentId))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
 
     // If no studentId provided, try to find the student linked to this user
     let targetStudentId = studentId

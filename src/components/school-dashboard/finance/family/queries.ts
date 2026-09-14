@@ -44,11 +44,32 @@ import type {
 export async function getFamilyMoney(
   lang: Locale
 ): Promise<FamilyMoney | null> {
-  const [session, { schoolId }] = await Promise.all([auth(), getTenantContext()])
+  const [session, { schoolId }] = await Promise.all([
+    auth(),
+    getTenantContext(),
+  ])
   const userId = session?.user?.id
   const role = session?.user?.role
 
   if (!userId || !schoolId) return null
+  return loadFamilyMoney({ userId, schoolId, role, lang })
+}
+
+/**
+ * The same resolution for an explicit caller — the mobile fee routes pass the
+ * bearer token's user, school and role instead of a web session.
+ */
+export async function loadFamilyMoney({
+  userId,
+  schoolId,
+  role,
+  lang,
+}: {
+  userId: string
+  schoolId: string
+  role: string | null | undefined
+  lang: Locale
+}): Promise<FamilyMoney | null> {
   if (role !== "STUDENT" && role !== "GUARDIAN") return null
 
   // Which students this caller may see. A student is exactly one; a guardian
@@ -139,7 +160,8 @@ export async function getFamilyMoney(
   ])
 
   const currency =
-    school?.currency ?? resolveDefaultCurrency(school?.country, school?.timezone)
+    school?.currency ??
+    resolveDefaultCurrency(school?.country, school?.timezone)
 
   // Rails this family can actually pay with: the school's region list, minus
   // rails with no API key, minus wallet rails the school never published an
@@ -192,6 +214,7 @@ export async function getFamilyMoney(
 
     const installments = buildFamilyInstallments({
       assignmentId: a.id,
+      studentId: a.studentId,
       feeName,
       studentName,
       academicYear: a.academicYear,
@@ -228,6 +251,7 @@ export async function getFamilyMoney(
         status: p.status,
         feeName,
         academicYear: a.academicYear,
+        studentId: a.studentId,
         studentName,
       })
     }
@@ -247,13 +271,17 @@ export async function getFamilyMoney(
     })
 
   const due = installments.filter(
-    (i) => i.status === "OVERDUE" || i.status === "PENDING" || i.status === "PARTIAL"
+    (i) =>
+      i.status === "OVERDUE" || i.status === "PENDING" || i.status === "PARTIAL"
   )
 
   const totals = {
     billed: fees.reduce((sum, f) => sum + f.total, 0),
     paid: fees.reduce((sum, f) => sum + f.paid, 0),
-    pendingVerification: fees.reduce((sum, f) => sum + f.pendingVerification, 0),
+    pendingVerification: fees.reduce(
+      (sum, f) => sum + f.pendingVerification,
+      0
+    ),
     remaining: fees.reduce((sum, f) => sum + f.remaining, 0),
     overdue: installments
       .filter((i) => i.status === "OVERDUE")
@@ -288,6 +316,7 @@ export async function getFamilyMoney(
  */
 function buildFamilyInstallments({
   assignmentId,
+  studentId,
   feeName,
   studentName,
   academicYear,
@@ -297,6 +326,7 @@ function buildFamilyInstallments({
   overdueAfter,
 }: {
   assignmentId: string
+  studentId: string
   feeName: string
   studentName: string
   academicYear: string
@@ -317,6 +347,7 @@ function buildFamilyInstallments({
 }): FamilyInstallment[] {
   const base = {
     feeAssignmentId: assignmentId,
+    studentId,
     feeName,
     studentName,
     academicYear,

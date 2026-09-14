@@ -35,6 +35,7 @@ import { getDisplayLang } from "@/components/translation/locale"
 
 import { allocatePaymentToInvoices } from "../lib/invoice-allocation"
 import { checkCurrentUserPermission } from "../lib/permissions"
+import { createFeeCheckoutCore, userOwnsAssignment } from "./checkout-core"
 import {
   buildFeeStructureWhere,
   calculateSiblingDiscount,
@@ -103,37 +104,6 @@ function isAuthError(
 // ============================================
 // FEE ASSIGNMENT OWNERSHIP CHECK
 // ============================================
-
-/**
- * Check whether the given user is the student themselves OR a guardian linked
- * to the student that owns this assignment. The Pay-Online button on
- * `/finance/fees/my` is rendered for STUDENT and GUARDIAN roles, but
- * `requireFeePermission("view")` only honors finance admin roles. Without an
- * ownership check those button clicks would silently fail with UNAUTHORIZED.
- */
-async function userOwnsAssignment(args: {
-  userId: string
-  studentId: string
-  schoolId: string
-}): Promise<boolean> {
-  // STUDENT: User row links directly to Student via Student.userId
-  const student = await db.student.findFirst({
-    where: { id: args.studentId, schoolId: args.schoolId },
-    select: { userId: true },
-  })
-  if (student?.userId && student.userId === args.userId) return true
-
-  // GUARDIAN: Guardian.userId links to a User; StudentGuardian links Guardian to Student
-  const guardian = await db.guardian.findFirst({
-    where: {
-      schoolId: args.schoolId,
-      userId: args.userId,
-      studentGuardians: { some: { studentId: args.studentId } },
-    },
-    select: { id: true },
-  })
-  return Boolean(guardian)
-}
 
 // ============================================
 // FEE STRUCTURE ACTIONS
@@ -2149,160 +2119,40 @@ export async function createFeePaymentCheckout(
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    // Permission and assignment load in parallel — we need the assignment's
-    // studentId to run the ownership check for STUDENT/GUARDIAN, but we want
-    // permission failure to short-circuit before NOT_FOUND so the response
-    // shape matches the legacy (admin-only) flow.
-    const [isFinanceAdmin, assignment] = await Promise.all([
-      checkCurrentUserPermission(schoolId, "fees", "view"),
-      db.feeAssignment.findFirst({
-        where: { id: feeAssignmentId, schoolId },
-        include: {
-          student: { select: { id: true, firstName: true, lastName: true } },
-          feeStructure: { select: { name: true } },
-          payments: { where: { status: "SUCCESS" }, select: { amount: true } },
-        },
-      }),
-    ])
-
-    if (!isFinanceAdmin) {
-      // Without an assignment we can't verify ownership — return UNAUTHORIZED
-      // (not NOT_FOUND) so a non-admin probing for assignment IDs gets a
-      // uniform refusal regardless of whether the row exists.
-      if (!assignment) {
-        return actionError(ACTION_ERRORS.UNAUTHORIZED)
-      }
-      const isOwner = await userOwnsAssignment({
-        userId: session.user.id,
-        studentId: assignment.studentId,
-        schoolId,
-      })
-      if (!isOwner) {
-        return actionError(ACTION_ERRORS.UNAUTHORIZED)
-      }
-    }
-
-    if (!assignment) {
-      return actionError(ACTION_ERRORS.NOT_FOUND)
-    }
-
-    // Calculate remaining amount
-    const totalPaid = assignment.payments.reduce(
-      (sum, p) => sum + Number(p.amount),
-      0
-    )
-    const remaining = Number(assignment.finalAmount) - totalPaid
-    if (remaining <= 0) {
-      return actionError(ACTION_ERRORS.FEE_FULLY_PAID)
-    }
-
-    // Load school for currency + subdomain. `domain` is the per-school
-    // subdomain (e.g. "alqabs" for alqabs.balqalam.com) that drives the
-    // tenant-aware redirect — without it the gateway sends the payer back to
-    // the SaaS apex, breaking the school dashboard URL contract. The root
-    // domain comes from the current request (see tenant-url.ts).
-    const school = await db.school.findFirst({
-      where: { id: schoolId },
-      select: {
-        currency: true,
-        name: true,
-        domain: true,
-        country: true,
-        timezone: true,
-      },
-    })
-    // Charge in the currency the assignment was DENOMINATED in (snapshot at
-    // assignment time), not whatever the school's currency is today — the
-    // webhook records `assignment.currency`, and the two must agree.
-    const currency =
-      assignment.currency ??
-      school?.currency ??
-      resolveDefaultCurrency(school?.country, school?.timezone)
-    const baseUrl = await resolveTenantBaseUrl(school?.domain)
-
-    // B2: resolve the school's configured + currency-compatible gateway instead
-    // of always hardcoding "stripe". Tap is the primary for Gulf/UAE schools.
-    const { createPaymentCheckout, resolveAvailableMethods } =
-      await import("@/lib/payment/provider")
-    const { toSmallestUnit } = await import("@/lib/payment/currency")
-    const { isManualGateway } = await import("@/lib/payment/types")
-    const availableGateways = resolveAvailableMethods(
-      school?.country,
-      school?.timezone,
-      currency
-    )
-
-    // Honour the rail the payer actually clicked, but only after re-resolving
-    // it server-side: previously this always took availableGateways[0], so on a
-    // multi-rail school (e.g. AE = [tap, stripe]) clicking "Stripe" silently
-    // charged via Tap. An unavailable request is refused, never downgraded.
-    if (requestedGateway && !availableGateways.includes(requestedGateway)) {
-      return actionError(ACTION_ERRORS.PAYMENT_GATEWAY_UNAVAILABLE)
-    }
-    const gateway =
-      requestedGateway ?? availableGateways.find((g) => !isManualGateway(g))
-
-    // Manual rails (bankak/cashi/cash/bank_transfer) settle outside the app and
-    // produce no checkout URL — they go through submitManualPaymentProof. This
-    // also stops a Sudan school (whose list is wallet-first) from silently
-    // falling into a redirect flow that can never complete.
-    if (!gateway || isManualGateway(gateway)) {
-      return actionError(ACTION_ERRORS.PAYMENT_GATEWAY_UNAVAILABLE)
-    }
-
-    // Where the payer lands afterwards. Families cannot open the admin-only
-    // assignment page (it is gated on fees:view — every parent who was sent
-    // there after paying saw "access denied"), so they return to their own
-    // money surface at /finance, which mounts the return banner; finance staff
-    // return to the assignment they were looking at.
-    // `assignment` + `gateway` let the landing page verify the charge with
-    // the gateway (Tap appends `tap_id`; Stripe substitutes
-    // `{CHECKOUT_SESSION_ID}`), so it shows a truthful state even before the
-    // webhook lands — or if it never does.
-    const returnPath = isFinanceAdmin
-      ? `/${lang}/finance/fees/assignments/${feeAssignmentId}`
-      : `/${lang}/finance`
-    const returnQuery = `assignment=${encodeURIComponent(feeAssignmentId)}&gateway=${gateway}`
-    const stripeSessionParam =
-      gateway === "stripe" ? "&session_id={CHECKOUT_SESSION_ID}" : ""
-    const successUrl = `${baseUrl}${returnPath}?payment=success&${returnQuery}${stripeSessionParam}`
-    const cancelUrl = `${baseUrl}${returnPath}?payment=cancelled&${returnQuery}`
-
-    const result = await createPaymentCheckout(gateway, {
-      amount: remaining,
-      currency,
-      context: "school_fee",
+    // Finance staff may pay any assignment; everyone else falls back to the
+    // ownership check inside the core (student themselves / linked guardian).
+    // The core is shared with POST /api/mobile/fees/pay.
+    const isFinanceAdmin = await checkCurrentUserPermission(
       schoolId,
-      referenceId: feeAssignmentId,
-      referenceNumber: `FEE-${feeAssignmentId.slice(-8).toUpperCase()}`,
-      successUrl,
-      cancelUrl,
-      lineItems: [
-        {
-          name: assignment.feeStructure?.name || "School Fee",
-          description: `${[assignment.student?.firstName, assignment.student?.lastName].filter(Boolean).join(" ")} — ${assignment.academicYear}`,
-          quantity: 1,
-          // Stripe needs the charge in the smallest currency unit. The adapter
-          // uses this verbatim when lineItems are present (it does NOT fall back
-          // to `amount`), so a hardcoded 0 here would create a $0 checkout while
-          // the webhook still marks the fee PAID. Convert the remaining balance.
-          unitAmount: toSmallestUnit(remaining, currency),
-        },
-      ],
-      metadata: {
-        type: "fee_payment",
-        feeAssignmentId,
-        studentId: assignment.studentId,
-        schoolId,
-      },
-      customerEmail: session.user.email || undefined,
+      "fees",
+      "view"
+    )
+
+    const out = await createFeeCheckoutCore({
+      schoolId,
+      userId: session.user.id,
+      email: session.user.email,
+      isFinanceAdmin,
+      feeAssignmentId,
+      lang,
+      requestedGateway,
+      baseUrl: (domain) => resolveTenantBaseUrl(domain),
     })
 
-    if (!result.success || !result.checkoutUrl) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+    switch (out.status) {
+      case "unauthorized":
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      case "notFound":
+        return actionError(ACTION_ERRORS.NOT_FOUND)
+      case "fullyPaid":
+        return actionError(ACTION_ERRORS.FEE_FULLY_PAID)
+      case "gatewayUnavailable":
+        return actionError(ACTION_ERRORS.PAYMENT_GATEWAY_UNAVAILABLE)
+      case "failed":
+        return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
-    return { success: true, data: { checkoutUrl: result.checkoutUrl } }
+    return { success: true, data: { checkoutUrl: out.checkoutUrl } }
   } catch (error) {
     console.error("Error creating fee payment checkout:", error)
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)

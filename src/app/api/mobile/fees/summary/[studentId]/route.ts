@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
+import { canAccessStudent } from "../../../lib/student-access"
 
 /**
  * GET /api/mobile/fees/summary/:studentId — fee summary
@@ -19,6 +20,10 @@ export async function GET(
     if (isAuthError(auth)) return auth
 
     const { studentId } = await params
+
+    if (!(await canAccessStudent(auth, studentId))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
 
     const fees = await db.feeRecord.findMany({
       where: { schoolId: auth.schoolId, studentId },
