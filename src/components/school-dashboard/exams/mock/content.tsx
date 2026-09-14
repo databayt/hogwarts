@@ -108,62 +108,70 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {mc?.totalExams ?? "Total Exams"}
             </CardTitle>
-            <FileText className="text-muted-foreground h-4 w-4" />
+            <FileText className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{exams.length}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {exams.length}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {mc?.availableMockExams ?? "Available mock exams"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {mc?.subjects ?? "Subjects"}
             </CardTitle>
-            <GraduationCap className="text-muted-foreground h-4 w-4" />
+            <GraduationCap className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{subjects.length}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {subjects.length}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {mc?.acrossSubjects ?? "Across subjects"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {mc?.avgDuration ?? "Avg Duration"}
             </CardTitle>
-            <Clock className="text-muted-foreground h-4 w-4" />
+            <Clock className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgDuration}m</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {avgDuration}m
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {mc?.averageExamDuration ?? "Average exam duration"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {mc?.questionsLabel ?? "Questions"}
             </CardTitle>
-            <BookOpen className="text-muted-foreground h-4 w-4" />
+            <BookOpen className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalQuestions}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {totalQuestions}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {mc?.totalQuestionsAcrossExams ?? "Total questions across exams"}
             </p>
           </CardContent>
@@ -177,7 +185,10 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
       />
 
       {isStudentOrGuardian && attempts.length > 0 && (
-        <AttemptHistory attempts={attempts} title="My Mock Exam Attempts" />
+        <AttemptHistory
+          attempts={attempts}
+          title={mc?.myMockAttempts ?? "My Mock Exam Attempts"}
+        />
       )}
     </div>
   )

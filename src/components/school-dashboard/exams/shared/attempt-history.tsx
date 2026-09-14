@@ -7,9 +7,11 @@
 // Shows student's past attempts with scores, dates, and trends
 import { Clock, Medal, TrendingUp } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 export interface AttemptItem {
   id: string
@@ -36,6 +38,7 @@ export function AttemptHistory({
 }: AttemptHistoryProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.shared
+  const { locale } = useLocale()
 
   if (attempts.length === 0) return null
 
@@ -47,7 +50,7 @@ export function AttemptHistory({
     attempts[0].percentage > attempts[attempts.length - 1].percentage
 
   return (
-    <Card>
+    <Card className="max-md:bg-muted max-md:border-0">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">{title}</CardTitle>
@@ -90,10 +93,10 @@ export function AttemptHistory({
         {attempts.map((attempt) => (
           <div
             key={attempt.id}
-            className={`flex items-center justify-between rounded-md border p-3 ${
+            className={`flex items-center justify-between rounded-md border p-3 max-md:border-0 ${
               attempt.isBest
                 ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20"
-                : ""
+                : "max-md:bg-background"
             }`}
           >
             <div className="min-w-0 flex-1">
@@ -114,7 +117,7 @@ export function AttemptHistory({
                 {attempt.submittedAt && (
                   <span className="flex items-center gap-0.5">
                     <Clock className="h-3 w-3" />
-                    {new Date(attempt.submittedAt).toLocaleDateString()}
+                    {formatDate(attempt.submittedAt, locale)}
                   </span>
                 )}
               </div>

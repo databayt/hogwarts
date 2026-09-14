@@ -4,11 +4,11 @@
 import type React from "react"
 import Link from "next/link"
 import { auth } from "@/auth"
-import { format } from "date-fns"
 import { Award, Download, FileBarChart, TrendingUp } from "lucide-react"
 import { type SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -148,19 +148,24 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       const examTitle = examTitleById.get(result.id) ?? result.exam.title
 
       return (
-        <Card key={result.id}>
-          <CardContent className="flex items-center justify-between p-4">
-            <div>
+        <Card key={result.id} className="max-md:bg-muted max-md:border-0">
+          <CardContent className="flex items-center justify-between gap-3 p-4 max-md:flex-wrap">
+            <div className="min-w-0">
               <p className="font-medium">{examTitle}</p>
               <p className="text-muted-foreground text-sm">
                 {role === "GUARDIAN" &&
                   `${result.student.firstName} ${result.student.lastName} - `}
-                {name} - {format(result.exam.examDate, "MMM d, yyyy")}
+                {name} -{" "}
+                {formatDate(result.exam.examDate, lang, {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
               </p>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-end">
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold max-md:text-lg">
                   {result.percentage.toFixed(0)}%
                 </p>
                 <p className="text-muted-foreground text-xs">
@@ -175,6 +180,13 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                       : result.percentage >= 50
                         ? "secondary"
                         : "destructive"
+                  }
+                  // Only the grey "secondary" tier needs the phone contrast
+                  // fix — default/destructive already carry their own color.
+                  className={
+                    result.percentage >= 50 && result.percentage < 80
+                      ? "max-md:bg-background"
+                      : undefined
                   }
                 >
                   {result.grade}
@@ -357,19 +369,28 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
   }
 
   const r = dictionary?.results
+  const resultsUiAnalytics = dictionary?.school?.exams?.resultsUi?.analytics
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:justify-end">
         <div></div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
+        <div className="flex gap-2 max-md:flex-wrap">
+          <Button
+            asChild
+            variant="outline"
+            className="max-md:h-10 max-md:w-auto max-md:rounded-full max-md:px-5"
+          >
             <Link href={`/${lang}/exams/certificates`}>
               <Award className="me-2 h-4 w-4" />
-              {lang === "ar" ? "إدارة الشهادات" : "Manage Certificates"}
+              {resultsUiAnalytics?.manageCertificates ??
+                (lang === "ar" ? "إدارة الشهادات" : "Manage Certificates")}
             </Link>
           </Button>
-          <Button asChild>
+          <Button
+            asChild
+            className="max-md:h-10 max-md:w-auto max-md:rounded-full max-md:px-5"
+          >
             <Link href={`/${lang}/exams/result/analytics`}>
               <TrendingUp className="me-2 h-4 w-4" />
               {r?.actions?.viewAnalytics}
@@ -379,7 +400,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       </div>
 
       {examsWithResults.length === 0 ? (
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileBarChart className="text-muted-foreground mb-4 h-12 w-12" />
             <h3 className="mb-2 text-lg font-semibold">
@@ -388,7 +409,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
             <p className="text-muted-foreground mb-4 text-sm">
               {r?.messages?.noResultsDescription}
             </p>
-            <Button asChild>
+            <Button asChild className="max-md:h-10 max-md:rounded-full">
               <Link href={`/${lang}/exams`}>{r?.actions?.goToExams}</Link>
             </Button>
           </CardContent>
@@ -396,17 +417,22 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       ) : (
         <div className="grid gap-4">
           {examsWithResults.map((exam) => (
-            <Card key={exam.id}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <Card key={exam.id} className="max-md:bg-muted max-md:border-0">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 max-md:flex-col max-md:items-start max-md:gap-3">
                 <div>
                   <CardTitle>{exam.title}</CardTitle>
                   <p className="text-muted-foreground mt-1 text-sm">
                     {exam.className} • {exam.name} •{" "}
-                    {new Date(exam.examDate).toLocaleDateString()}
+                    {formatDate(exam.examDate, lang)}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <Button asChild variant="outline" size="sm">
+                <div className="flex gap-2 max-md:w-full max-md:flex-wrap">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="max-md:bg-background max-md:h-9 max-md:rounded-full"
+                  >
                     <Link href={`/${lang}/exams/result/${exam.id}`}>
                       <FileBarChart className="me-2 h-4 w-4" />
                       {r?.actions?.viewResults}
@@ -417,15 +443,25 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                     examTitle={exam.title}
                     eligibleCount={exam.totalStudents}
                   />
-                  <Button asChild variant="outline" size="sm">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="max-md:bg-background max-md:h-9 max-md:rounded-full"
+                  >
                     <Link
                       href={`/${lang}/exams/certificates?examId=${exam.id}`}
                     >
                       <Award className="me-2 h-4 w-4" />
-                      {lang === "ar" ? "الشهادات" : "Certificates"}
+                      {resultsUiAnalytics?.certificates ??
+                        (lang === "ar" ? "الشهادات" : "Certificates")}
                     </Link>
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="max-md:bg-background max-md:h-9 max-md:rounded-full"
+                  >
                     <Download className="me-2 h-4 w-4" />
                     {r?.actions?.exportCSV}
                   </Button>

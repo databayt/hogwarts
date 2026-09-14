@@ -165,61 +165,67 @@ export default async function ResultsAnalyticsContent({
         </Button>
 
         {/* Overview Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+        <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+          <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+            <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+              <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                 {r?.statistics?.completedExams || "Completed Exams"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalExams}</div>
-              <p className="text-muted-foreground text-xs">
+            <CardContent className="max-md:px-4 max-md:pb-4">
+              <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+                {totalExams}
+              </div>
+              <p className="text-muted-foreground text-xs max-md:hidden">
                 {r?.statistics?.totalExaminations || "Total examinations"}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+            <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+              <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                 {r?.statistics?.totalResults || "Total Results"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalResults}</div>
-              <p className="text-muted-foreground text-xs">
+            <CardContent className="max-md:px-4 max-md:pb-4">
+              <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+                {totalResults}
+              </div>
+              <p className="text-muted-foreground text-xs max-md:hidden">
                 {r?.statistics?.studentResultsGenerated ||
                   "Student results generated"}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+            <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+              <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                 {r?.statistics?.averageScore || "Average Score"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+            <CardContent className="max-md:px-4 max-md:pb-4">
+              <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
                 {overallAveragePercentage.toFixed(1)}%
               </div>
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-xs max-md:hidden">
                 {r?.statistics?.overallPerformance || "Overall performance"}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+            <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+              <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                 {r?.statistics?.passRate || "Pass Rate"}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{passRate.toFixed(1)}%</div>
-              <p className="text-muted-foreground text-xs">
+            <CardContent className="max-md:px-4 max-md:pb-4">
+              <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+                {passRate.toFixed(1)}%
+              </div>
+              <p className="text-muted-foreground text-xs max-md:hidden">
                 {r?.statistics?.successPercentage || "Success percentage"}
               </p>
             </CardContent>
@@ -227,7 +233,7 @@ export default async function ResultsAnalyticsContent({
         </div>
 
         {/* Performance Indicators */}
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0">
           <CardHeader>
             <CardTitle>
               {r?.sections?.performanceIndicators || "Performance Indicators"}

@@ -63,58 +63,72 @@ export async function QuizContent({ lang }: { lang?: Locale } = {}) {
         <p className="text-muted-foreground">{d?.description}</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {d?.totalQuizzes}
             </CardTitle>
-            <Zap className="text-muted-foreground h-4 w-4" />
+            <Zap className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{quizzes.length}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {quizzes.length}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {d?.availableQuizzes}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {d?.questionPoolStat}
             </CardTitle>
-            <HelpCircle className="text-muted-foreground h-4 w-4" />
+            <HelpCircle className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalQuestionPool}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {totalQuestionPool}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {d?.catalogQuestions}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{d?.subjects}</CardTitle>
-            <GraduationCap className="text-muted-foreground h-4 w-4" />
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
+              {d?.subjects}
+            </CardTitle>
+            <GraduationCap className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{subjects.length}</div>
-            <p className="text-muted-foreground text-xs">{d?.acrossSubjects}</p>
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {subjects.length}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
+              {d?.acrossSubjects}
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {d?.avgQuestions}
             </CardTitle>
-            <BookOpen className="text-muted-foreground h-4 w-4" />
+            <BookOpen className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgQuestions}</div>
-            <p className="text-muted-foreground text-xs">{d?.perQuiz}</p>
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {avgQuestions}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
+              {d?.perQuiz}
+            </p>
           </CardContent>
         </Card>
       </div>

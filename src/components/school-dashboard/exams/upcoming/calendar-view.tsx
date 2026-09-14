@@ -18,6 +18,7 @@ import {
 } from "date-fns"
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -26,6 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 export interface CalendarExam {
   id: string
@@ -80,6 +82,7 @@ interface CalendarViewProps {
 
 export function CalendarView({ exams }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const { locale } = useLocale()
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
@@ -95,7 +98,7 @@ export function CalendarView({ exams }: CalendarViewProps) {
   }
 
   return (
-    <Card>
+    <Card className="max-md:bg-muted max-md:border-0">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <Button
@@ -106,7 +109,10 @@ export function CalendarView({ exams }: CalendarViewProps) {
             <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
           </Button>
           <h3 className="text-lg font-semibold">
-            {format(currentMonth, "MMMM yyyy")}
+            {formatDate(currentMonth, locale, {
+              month: "long",
+              year: "numeric",
+            })}
           </h3>
           <Button
             variant="ghost"
@@ -134,7 +140,7 @@ export function CalendarView({ exams }: CalendarViewProps) {
         <div className="grid grid-cols-7 gap-px">
           {/* Empty cells for days before month start */}
           {Array.from({ length: startDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} className="min-h-[80px]" />
+            <div key={`empty-${i}`} className="min-h-[80px] max-md:min-h-14" />
           ))}
 
           {/* Day cells */}
@@ -146,7 +152,7 @@ export function CalendarView({ exams }: CalendarViewProps) {
             return (
               <div
                 key={dateKey}
-                className={`min-h-[80px] rounded-md border p-1 ${
+                className={`min-h-[80px] rounded-md border p-1 max-md:min-h-14 max-md:p-0.5 ${
                   isToday(day)
                     ? "border-primary bg-primary/5"
                     : isPast
@@ -161,7 +167,7 @@ export function CalendarView({ exams }: CalendarViewProps) {
                       : "text-muted-foreground"
                   }`}
                 >
-                  {format(day, "d")}
+                  {formatDate(day, locale, { day: "numeric" })}
                 </div>
 
                 {/* Exam dots */}

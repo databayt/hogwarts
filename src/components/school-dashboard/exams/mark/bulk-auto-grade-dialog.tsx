@@ -73,7 +73,11 @@ export function BulkAutoGradeDialog({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="secondary" size="sm">
+        <Button
+          variant="secondary"
+          size="sm"
+          className="max-md:h-9 max-md:rounded-full max-md:px-4"
+        >
           <Zap className="me-2 h-4 w-4" />
           Auto-Grade All
           <Badge variant="outline" className="ms-2 text-xs">

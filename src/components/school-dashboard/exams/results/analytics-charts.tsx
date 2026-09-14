@@ -21,6 +21,7 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export interface ScoreDistributionBucket {
   range: string
@@ -81,13 +82,18 @@ interface AnalyticsChartsProps {
 }
 
 export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.resultsUi?.analytics
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
         {/* Score Distribution Histogram */}
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Score Distribution</CardTitle>
+            <CardTitle className="text-base">
+              {t?.scoreDistribution ?? "Score Distribution"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {data.scoreDistribution.length > 0 ? (
@@ -117,16 +123,18 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
               </ResponsiveContainer>
             ) : (
               <p className="text-muted-foreground py-8 text-center text-sm">
-                No score data available
+                {t?.noScoreData ?? "No score data available"}
               </p>
             )}
           </CardContent>
         </Card>
 
         {/* Grade Distribution Pie */}
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Grade Distribution</CardTitle>
+            <CardTitle className="text-base">
+              {t?.gradeDistribution ?? "Grade Distribution"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {data.gradeDistribution.length > 0 ? (
@@ -170,7 +178,7 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
               </div>
             ) : (
               <p className="text-muted-foreground py-8 text-center text-sm">
-                No grade data available
+                {t?.noGradeData ?? "No grade data available"}
               </p>
             )}
           </CardContent>
@@ -179,11 +187,13 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Top Performers */}
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-emerald-500" />
-              <CardTitle className="text-base">Top Performers</CardTitle>
+              <CardTitle className="text-base">
+                {t?.topPerformers ?? "Top Performers"}
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -213,18 +223,20 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
               ))
             ) : (
               <p className="text-muted-foreground py-4 text-center text-sm">
-                No data
+                {t?.noData ?? "No data"}
               </p>
             )}
           </CardContent>
         </Card>
 
         {/* Bottom Performers */}
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <TrendingDown className="h-4 w-4 text-orange-500" />
-              <CardTitle className="text-base">Needs Improvement</CardTitle>
+              <CardTitle className="text-base">
+                {t?.needsImprovementLabel ?? "Needs Improvement"}
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -251,36 +263,40 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
               ))
             ) : (
               <p className="text-muted-foreground py-4 text-center text-sm">
-                No data
+                {t?.noData ?? "No data"}
               </p>
             )}
           </CardContent>
         </Card>
 
         {/* Absent Students */}
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <UserX className="h-4 w-4 text-red-500" />
-              <CardTitle className="text-base">Attendance</CardTitle>
+              <CardTitle className="text-base">
+                {t?.attendance ?? "Attendance"}
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Present</span>
+                <span className="text-sm">{t?.present ?? "Present"}</span>
                 <span className="text-sm font-bold">
                   {data.totalStudents - data.absentCount}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Absent</span>
+                <span className="text-sm">{t?.absent ?? "Absent"}</span>
                 <span className="text-sm font-bold text-red-600">
                   {data.absentCount}
                 </span>
               </div>
               <div className="flex items-center justify-between border-t pt-2">
-                <span className="text-sm font-medium">Attendance Rate</span>
+                <span className="text-sm font-medium">
+                  {t?.attendanceRate ?? "Attendance Rate"}
+                </span>
                 <Badge
                   variant={
                     data.totalStudents > 0 &&

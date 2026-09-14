@@ -70,22 +70,24 @@ export function MockExamList({
       )}
 
       {mockSource === "school" && schoolMocks.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
           {schoolMocks.map((mock) => (
-            <Card key={mock.id}>
-              <CardHeader className="pb-3">
-                <CardTitle className="line-clamp-2 text-base">
+            <Card key={mock.id} className="max-md:bg-muted max-md:border-0">
+              <CardHeader className="pb-3 max-md:p-4 max-md:pb-2">
+                <CardTitle className="line-clamp-2 text-base max-md:text-sm max-md:leading-5">
                   {mock.title}
                 </CardTitle>
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   {mock.name && <Badge variant="outline">{mock.name}</Badge>}
                   {mock.className && (
-                    <Badge variant="secondary">{mock.className}</Badge>
+                    <Badge variant="secondary" className="max-md:bg-background">
+                      {mock.className}
+                    </Badge>
                   )}
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
+              <CardContent className="max-md:px-4 max-md:pb-4">
+                <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm max-md:gap-1 max-md:text-xs">
                   <div className="flex items-center gap-1">
                     <FileText className="h-3.5 w-3.5" />
                     {mock.totalQuestions} {t?.questions ?? "questions"}
@@ -98,12 +100,12 @@ export function MockExamList({
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="pt-0">
+              <CardFooter className="pt-0 max-md:px-4 max-md:pb-4">
                 <Button
                   asChild
                   size="sm"
                   variant="outline"
-                  className="w-full gap-1"
+                  className="max-md:bg-background w-full gap-1 max-md:h-9 max-md:rounded-full"
                 >
                   <Link href={`exams/${mock.examId}/take`}>
                     <Play className="h-3.5 w-3.5" />
@@ -153,7 +155,7 @@ export function MockExamList({
           </div>
 
           {filtered.length === 0 ? (
-            <Card>
+            <Card className="max-md:bg-muted max-md:border-0">
               <CardContent className="flex min-h-[200px] items-center justify-center">
                 <p className="text-muted-foreground">
                   {t?.noMocks ?? "No mock exams found matching your filters."}
@@ -161,13 +163,13 @@ export function MockExamList({
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
               {filtered.map((exam) => (
-                <Card key={exam.id}>
-                  <CardHeader className="pb-3">
+                <Card key={exam.id} className="max-md:bg-muted max-md:border-0">
+                  <CardHeader className="pb-3 max-md:p-4 max-md:pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <CardTitle className="line-clamp-2 text-base">
+                        <CardTitle className="line-clamp-2 text-base max-md:text-sm max-md:leading-5">
                           {exam.title}
                         </CardTitle>
                       </div>
@@ -186,14 +188,17 @@ export function MockExamList({
                       >
                         {exam.name}
                       </Badge>
-                      <Badge variant="secondary">
+                      <Badge
+                        variant="secondary"
+                        className="max-md:bg-background"
+                      >
                         {t?.tabs?.[exam.examType as keyof typeof t.tabs] ??
                           exam.examType}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
+                  <CardContent className="max-md:px-4 max-md:pb-4">
+                    <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm max-md:gap-1 max-md:text-xs">
                       {exam.chapterName && (
                         <div className="col-span-2 flex items-center gap-1">
                           <BookOpen className="h-3.5 w-3.5" />
@@ -222,8 +227,12 @@ export function MockExamList({
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter className="pt-0">
-                    <Button asChild size="sm" className="w-full gap-1">
+                  <CardFooter className="pt-0 max-md:px-4 max-md:pb-4">
+                    <Button
+                      asChild
+                      size="sm"
+                      className="w-full gap-1 max-md:h-9 max-md:rounded-full"
+                    >
                       <Link href={`mock/${exam.id}/take`}>
                         <Play className="h-3.5 w-3.5" />
                         {t?.startMock ?? "Start Mock"}

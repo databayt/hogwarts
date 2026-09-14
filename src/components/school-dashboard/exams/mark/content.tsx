@@ -118,8 +118,8 @@ export async function MarkingContent({
   return (
     <div className="space-y-6">
       {/* Header Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-stretch max-md:gap-3">
+        <div className="flex items-center gap-2 max-md:flex-wrap">
           {canManage && (
             <BulkAutoGradeDialog
               pendingAutoGradable={pendingAutoGradable}
@@ -150,14 +150,21 @@ export async function MarkingContent({
             />
           )}
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
+        <div className="flex gap-2 max-md:flex-wrap">
+          <Button
+            asChild
+            variant="outline"
+            className="max-md:h-10 max-md:w-auto max-md:rounded-full max-md:px-5"
+          >
             <Link href={`/${locale}/exams/mark/questions`}>
               <FileText className="me-2 h-4 w-4" />
               {dict.navigation.questionBank}
             </Link>
           </Button>
-          <Button asChild>
+          <Button
+            asChild
+            className="max-md:h-10 max-md:w-auto max-md:rounded-full max-md:px-5"
+          >
             <Link href={`/${locale}/exams/mark/questions/create`}>
               <Plus className="me-2 h-4 w-4" />
               {dict.buttons.newQuestion}
@@ -167,51 +174,59 @@ export async function MarkingContent({
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="p-4">
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted p-4 max-md:h-full max-md:rounded-none max-md:border-0 max-md:px-4 max-md:pt-4 max-md:pb-1">
           <div className="flex items-center gap-2">
-            <FileText className="text-muted-foreground h-5 w-5" />
+            <FileText className="text-muted-foreground h-5 w-5 max-md:hidden" />
             <div>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                 {dict.statistics.totalSubmissions}
               </p>
-              <h3 className="text-2xl font-bold">{total}</h3>
+              <h3 className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+                {total}
+              </h3>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="max-md:bg-muted p-4 max-md:h-full max-md:rounded-none max-md:border-0 max-md:px-4 max-md:pt-4 max-md:pb-1">
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-yellow-600" />
+            <Clock className="h-5 w-5 text-yellow-600 max-md:hidden" />
             <div>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                 {dict.statistics.notStarted}
               </p>
-              <h3 className="text-2xl font-bold">{notStarted}</h3>
+              <h3 className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+                {notStarted}
+              </h3>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="max-md:bg-muted p-4 max-md:h-full max-md:rounded-none max-md:border-0 max-md:px-4 max-md:pt-4 max-md:pb-1">
           <div className="flex items-center gap-2">
-            <CircleAlert className="h-5 w-5 text-orange-600" />
+            <CircleAlert className="h-5 w-5 text-orange-600 max-md:hidden" />
             <div>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                 {dict.statistics.needsReview}
               </p>
-              <h3 className="text-2xl font-bold">{needsReview}</h3>
+              <h3 className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+                {needsReview}
+              </h3>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="max-md:bg-muted p-4 max-md:h-full max-md:rounded-none max-md:border-0 max-md:px-4 max-md:pt-4 max-md:pb-1">
           <div className="flex items-center gap-2">
-            <CircleCheck className="h-5 w-5 text-green-600" />
+            <CircleCheck className="h-5 w-5 text-green-600 max-md:hidden" />
             <div>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
                 {dict.statistics.completed}
               </p>
-              <h3 className="text-2xl font-bold">{completed}</h3>
+              <h3 className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+                {completed}
+              </h3>
             </div>
           </div>
         </Card>

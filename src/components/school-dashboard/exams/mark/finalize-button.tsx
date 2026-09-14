@@ -63,6 +63,7 @@ export function FinalizeResultsButton({
       size="sm"
       onClick={handleClick}
       disabled={isPending}
+      className="max-md:h-9 max-md:rounded-full max-md:px-4"
     >
       {isPending ? (
         <Loader2 className="me-2 size-4 animate-spin" />

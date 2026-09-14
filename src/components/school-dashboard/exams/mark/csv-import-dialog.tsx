@@ -121,7 +121,11 @@ export function CSVImportDialog({ examId }: CSVImportDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1 max-md:h-9 max-md:rounded-full max-md:px-4"
+        >
           <Upload className="h-4 w-4" />
           Import CSV
         </Button>

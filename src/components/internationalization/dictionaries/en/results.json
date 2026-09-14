@@ -275,14 +275,26 @@
       "grade": "Grade",
       "subjects": "Subjects",
       "attendance": "Attendance",
-      "status": "Status"
+      "status": "Status",
+      "studentId": "Student ID",
+      "actions": "Actions"
     },
     "empty": "No report cards found. Select a term and click \"Generate Report Cards\".",
     "subjectsCount": "subjects",
     "status": {
       "published": "Published",
       "draft": "Draft"
-    }
+    },
+    "stats": {
+      "total": "Total",
+      "published": "Published",
+      "pdfReady": "PDF ready"
+    },
+    "noTerms": "No academic terms yet. Set up terms in the school settings first.",
+    "emptyTerm": "No report cards for this term yet.",
+    "emptyManage": "Use \"Generate Report Cards\" above to create them from exam results.",
+    "tableTitle": "Report cards · {year} · {term} {number}",
+    "termBadge": "{year} · {term} {number}"
   },
 
   "transcripts": {

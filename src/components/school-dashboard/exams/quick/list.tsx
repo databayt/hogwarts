@@ -107,7 +107,14 @@ export function QuickAssessmentList({
     }
 
     return (
-      <Badge variant={variants[status] || "secondary"}>
+      <Badge
+        variant={variants[status] || "secondary"}
+        className={
+          (variants[status] || "secondary") === "secondary"
+            ? "max-md:bg-background"
+            : undefined
+        }
+      >
         {status.toLowerCase().replace("_", " ")}
       </Badge>
     )
@@ -115,10 +122,10 @@ export function QuickAssessmentList({
 
   const getTypeBadge = (type: string) => {
     const labels: Record<string, string> = {
-      EXIT_TICKET: "Exit Ticket",
-      POLL: "Poll",
-      WARM_UP: "Warm-Up",
-      CHECK_IN: "Check-In",
+      EXIT_TICKET: t?.form?.types?.exitTicket ?? "Exit Ticket",
+      POLL: t?.form?.types?.poll ?? "Poll",
+      WARM_UP: t?.form?.types?.warmUp ?? "Warm-Up",
+      CHECK_IN: t?.form?.types?.checkIn ?? "Check-In",
     }
 
     return (
@@ -130,11 +137,11 @@ export function QuickAssessmentList({
 
   if (assessments.length === 0) {
     return (
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0">
         <CardContent className="flex min-h-[200px] items-center justify-center">
           <p className="text-muted-foreground">
-            No quick assessments found. Create your first assessment to get
-            started.
+            {t?.content?.noAssessments ??
+              "No quick assessments found. Create your first assessment to get started."}
           </p>
         </CardContent>
       </Card>
@@ -142,16 +149,16 @@ export function QuickAssessmentList({
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
       {assessments.map((assessment) => (
-        <Card key={assessment.id}>
-          <CardHeader>
+        <Card key={assessment.id} className="max-md:bg-muted max-md:border-0">
+          <CardHeader className="max-md:p-4 max-md:pb-2">
             <div className="flex items-start justify-between">
               <div className="flex-1 space-y-1">
-                <CardTitle className="line-clamp-1">
+                <CardTitle className="line-clamp-1 max-md:text-sm max-md:leading-5">
                   {assessment.title}
                 </CardTitle>
-                <CardDescription className="flex items-center gap-2">
+                <CardDescription className="flex items-center gap-2 max-md:flex-wrap">
                   {getTypeBadge(assessment.type)}
                   {getStatusBadge(assessment.status)}
                 </CardDescription>
@@ -169,7 +176,7 @@ export function QuickAssessmentList({
                         router.push(`/exams/quick/${assessment.id}`)
                       }
                     >
-                      View Details
+                      {t?.content?.viewDetails ?? "View Details"}
                     </DropdownMenuItem>
                     {assessment.status === "DRAFT" && (
                       <DropdownMenuItem
@@ -177,7 +184,7 @@ export function QuickAssessmentList({
                         disabled={isLoading === assessment.id}
                       >
                         <Play className="me-2 h-4 w-4" />
-                        Launch
+                        {t?.content?.launch ?? "Launch"}
                       </DropdownMenuItem>
                     )}
                     {assessment.status === "ACTIVE" && (
@@ -186,7 +193,7 @@ export function QuickAssessmentList({
                         disabled={isLoading === assessment.id}
                       >
                         <Square className="me-2 h-4 w-4" />
-                        Close
+                        {t?.content?.close ?? "Close"}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
@@ -194,8 +201,8 @@ export function QuickAssessmentList({
               )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
+          <CardContent className="space-y-2 max-md:px-4 max-md:pb-4">
+            <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm max-md:grid-cols-1 max-md:gap-1 max-md:text-xs">
               <div>
                 <span className="font-medium">
                   {t?.list?.class ?? "Class:"}
@@ -220,7 +227,7 @@ export function QuickAssessmentList({
                 </span>{" "}
                 {assessment.duration}m
               </div>
-              <div className="col-span-2">
+              <div className="col-span-2 max-md:col-span-1">
                 <span className="font-medium">
                   {t?.list?.responses ?? "Responses:"}
                 </span>{" "}

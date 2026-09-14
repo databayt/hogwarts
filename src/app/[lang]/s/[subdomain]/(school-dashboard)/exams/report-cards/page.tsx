@@ -27,7 +27,10 @@ export default async function ReportCardsPage({ params, searchParams }: Props) {
 
   return (
     <PageContainer>
-      <div className="flex flex-col gap-4">
+      {/* min-w-0: a grid item (the Shell is a grid) sizes to its content, and the
+          report table is wider than a phone — the column would widen with it
+          and the layout would clip the panels off the start edge. */}
+      <div className="flex flex-col gap-4 max-md:min-w-0">
         <PageHeadingSetter
           title={dictionary?.school?.exams?.reportCards || "Report Cards"}
         />

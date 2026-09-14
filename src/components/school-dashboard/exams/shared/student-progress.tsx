@@ -121,12 +121,15 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
 
   if (!data || data.totalExams === 0) {
     return (
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0">
         <CardContent className="flex flex-col items-center justify-center py-12">
           <FileText className="text-muted-foreground mb-4 h-12 w-12" />
-          <h3 className="mb-2 text-lg font-semibold">No Progress Data Yet</h3>
+          <h3 className="mb-2 text-lg font-semibold">
+            {t?.noProgressData ?? "No Progress Data Yet"}
+          </h3>
           <p className="text-muted-foreground text-sm">
-            Take some exams to see your progress here.
+            {t?.noProgressDescription ??
+              "Take some exams to see your progress here."}
           </p>
         </CardContent>
       </Card>
@@ -187,62 +190,73 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
       )}
 
       {/* Summary cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Overall Average
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
+              {t?.overallAverage ?? "Overall Average"}
             </CardTitle>
-            <Award className="text-muted-foreground h-4 w-4" />
+            <Award className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.overallAverage}%</div>
-            <p className="text-muted-foreground text-xs">
-              Across {data.totalExams} exams
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {data.overallAverage}%
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
+              {(t?.acrossExams ?? "Across {count} exams").replace(
+                "{count}",
+                String(data.totalExams)
+              )}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {t?.examsTaken ?? "Exams Taken"}
             </CardTitle>
-            <FileText className="text-muted-foreground h-4 w-4" />
+            <FileText className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.totalExams}</div>
-            <p className="text-muted-foreground text-xs">
-              {data.subjectTrends.length} subjects
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {data.totalExams}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
+              {data.subjectTrends.length} {t?.subjects ?? "subjects"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Best Subject</CardTitle>
-            <TrendingUp className="h-4 w-4 text-emerald-500" />
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
+              {t?.bestSubject ?? "Best Subject"}
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-emerald-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="truncate text-lg font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="truncate text-lg font-bold max-md:text-base max-md:leading-6">
               {data.bestSubject || "N/A"}
             </div>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {t?.highestAverage ?? "Highest average"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Needs Work</CardTitle>
-            <TrendingDown className="h-4 w-4 text-orange-500" />
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
+              {t?.needsWork ?? "Needs Work"}
+            </CardTitle>
+            <TrendingDown className="h-4 w-4 text-orange-500 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="truncate text-lg font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="truncate text-lg font-bold max-md:text-base max-md:leading-6">
               {data.weakestSubject || "N/A"}
             </div>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {t?.lowestAverage ?? "Lowest average"}
             </p>
           </CardContent>
@@ -251,7 +265,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
 
       {/* Subject trends line chart */}
       {data.subjectTrends.length > 0 && lineChartData.length > 1 && (
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">
@@ -306,12 +320,12 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Question type radar chart */}
         {radarData.length >= 3 && (
-          <Card>
+          <Card className="max-md:bg-muted max-md:border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Brain className="h-4 w-4" />
                 <CardTitle className="text-base">
-                  Question Type Performance
+                  {t?.questionTypePerformance ?? "Question Type Performance"}
                 </CardTitle>
               </div>
             </CardHeader>
@@ -339,12 +353,12 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
 
         {/* Question type list (when < 3 types for radar) */}
         {radarData.length > 0 && radarData.length < 3 && (
-          <Card>
+          <Card className="max-md:bg-muted max-md:border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Brain className="h-4 w-4" />
                 <CardTitle className="text-base">
-                  Question Type Performance
+                  {t?.questionTypePerformance ?? "Question Type Performance"}
                 </CardTitle>
               </div>
             </CardHeader>
@@ -376,12 +390,12 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
 
         {/* Bloom taxonomy bar chart */}
         {bloomData.length > 0 && (
-          <Card>
+          <Card className="max-md:bg-muted max-md:border-0">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 <CardTitle className="text-base">
-                  Bloom&apos;s Taxonomy
+                  {t?.bloomsTaxonomy ?? "Bloom's Taxonomy"}
                 </CardTitle>
               </div>
             </CardHeader>
@@ -421,11 +435,11 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
       {/* No marking data message */}
       {data.questionTypePerformance.length === 0 &&
         data.bloomPerformance.length === 0 && (
-          <Card>
+          <Card className="max-md:bg-muted max-md:border-0">
             <CardContent className="py-8 text-center">
               <p className="text-muted-foreground text-sm">
-                Detailed question-level analytics will appear after your exams
-                are graded.
+                {t?.detailedAnalytics ??
+                  "Detailed question-level analytics will appear after your exams are graded."}
               </p>
             </CardContent>
           </Card>

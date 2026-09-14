@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 import { Calendar, Clock, Users } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -74,7 +75,7 @@ export default async function PendingPage({ params }: Props) {
         />
 
         {pendingExams.length === 0 ? (
-          <Card>
+          <Card className="max-md:bg-muted max-md:border-0">
             <CardContent className="pt-6">
               <p className="text-muted-foreground text-center">
                 {d?.noPendingExams || "No pending exams to grade"}
@@ -82,33 +83,39 @@ export default async function PendingPage({ params }: Props) {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
             {pendingExams.map((exam) => (
-              <Card key={exam.id}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{exam.title}</CardTitle>
-                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
+              <Card key={exam.id} className="max-md:bg-muted max-md:border-0">
+                <CardHeader className="max-md:p-4 max-md:pb-2">
+                  <CardTitle className="text-lg max-md:line-clamp-2 max-md:text-sm max-md:leading-5">
+                    {exam.title}
+                  </CardTitle>
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm max-md:text-xs">
                     <Calendar className="h-4 w-4" />
-                    {new Date(exam.examDate).toLocaleDateString()}
+                    {formatDate(exam.examDate, lang)}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
+                <CardContent className="space-y-3 max-md:space-y-2 max-md:px-4 max-md:pb-4">
+                  <div className="flex items-center gap-2 text-sm max-md:flex-wrap max-md:gap-1.5 max-md:text-xs">
                     <Users className="h-4 w-4" />
                     <span>{exam.class?.name}</span>
                     <span className="text-muted-foreground">•</span>
                     <span>{exam.subject?.name}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 max-md:flex-wrap max-md:gap-1.5">
                     <Badge variant="outline">
                       <Clock className="me-1 h-3 w-3" />
                       {d?.pending || "Pending"}
                     </Badge>
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="max-md:bg-background">
                       {exam._count.examResults} {d?.results || "results"}
                     </Badge>
                   </div>
-                  <Button asChild className="w-full" size="sm">
+                  <Button
+                    asChild
+                    className="w-full max-md:h-9 max-md:rounded-full"
+                    size="sm"
+                  >
                     <Link href={`/${lang}/exams/mark/grade/${exam.id}`}>
                       {d?.startGrading || "Start Grading"}
                     </Link>

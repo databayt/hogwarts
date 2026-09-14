@@ -36,7 +36,7 @@ export async function ProgressReportContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-stretch max-md:gap-3">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
             {pc?.title ?? "Progress Reports"}
@@ -47,7 +47,10 @@ export async function ProgressReportContent({
           </p>
         </div>
         {canManage && (
-          <Button asChild>
+          <Button
+            asChild
+            className="max-md:h-10 max-md:w-auto max-md:self-start max-md:rounded-full max-md:px-5"
+          >
             <Link href="progress/new">
               <Plus className="me-2 h-4 w-4" />
               {pc?.newSchedule ?? "New Schedule"}
@@ -56,17 +59,19 @@ export async function ProgressReportContent({
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-3 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {pc?.totalSchedules ?? "Total Schedules"}
             </CardTitle>
-            <Settings className="text-muted-foreground h-4 w-4" />
+            <Settings className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{schedules.length}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {schedules.length}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {(pc?.activeCount ?? "{count} active").replace(
                 "{count}",
                 String(activeSchedules.length)
@@ -74,30 +79,34 @@ export async function ProgressReportContent({
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {pc?.activeLabel ?? "Active"}
             </CardTitle>
-            <Calendar className="text-muted-foreground h-4 w-4" />
+            <Calendar className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeSchedules.length}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {activeSchedules.length}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {pc?.runningSchedules ?? "Running schedules"}
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {pc?.reportsGenerated ?? "Reports Generated"}
             </CardTitle>
-            <FileText className="text-muted-foreground h-4 w-4" />
+            <FileText className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalReports}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
+              {totalReports}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:hidden">
               {pc?.allTime ?? "All time"}
             </p>
           </CardContent>
