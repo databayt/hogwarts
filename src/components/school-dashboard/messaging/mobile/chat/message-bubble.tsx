@@ -51,23 +51,32 @@ export const MessageBubble = memo(function MessageBubble({
   return (
     <div
       className={cn(
-        "flex w-full items-end gap-[8px] px-[16px] pb-[4px]",
+        // 4px between bubbles of one run, 14px after the bubble that closes
+        // it — measured off public/whatsapp/File (3).png and File (4).png.
+        "flex w-full items-end gap-[8px] px-[16px]",
+        tail ? "pb-[14px]" : "pb-[4px]",
         isMe ? "justify-end" : "justify-start",
         className
       )}
     >
       {failed && <FailedMark label={statusLabels?.failed} />}
+      {/* Measured off File (4).png at 3x: 20px corners (squared where the tail
+          joins), 12px sides, a 17/24 body, a hairline edge and no drop shadow.
+          The bubble shrinks to its text — the time is its own row under the
+          text, never an overlay, so a long line no longer stretches every
+          bubble to the maximum width. */}
       <Wrapper
         type={Wrapper === "button" ? "button" : undefined}
         onClick={failed ? onRetry : undefined}
         aria-label={failed ? retryLabel : undefined}
         className={cn(
-          "relative flex max-w-[287px] min-w-[88px] flex-col items-start gap-[2px] text-start",
-          "rounded-[12px] border-[0.66px] border-[color:var(--wa-surface-shadow-baloon)]",
-          "px-[10px] pt-[5.5px] pb-[6.5px]",
+          "relative flex max-w-[287px] min-w-[64px] flex-col items-start gap-[3px] text-start",
+          "rounded-[20px] border-[0.33px] border-[color:var(--wa-surface-shadow-baloon)]",
+          tail && (isMe ? "rounded-ee-[4px]" : "rounded-es-[4px]"),
+          "px-[12px] pt-[7px] pb-[6px]",
           isMe
             ? "bg-[color:var(--wa-surface-baloon-me)]"
-            : "bg-[color:var(--wa-surface-baloon-other)] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]",
+            : "bg-[color:var(--wa-surface-baloon-other)]",
           failed && "opacity-90"
         )}
       >
@@ -83,21 +92,16 @@ export const MessageBubble = memo(function MessageBubble({
             draws Arabic right-aligned inside an English UI and vice versa. */}
         <p
           dir="auto"
-          className="max-w-[267px] text-[15.8px] leading-[21px] tracking-[-0.21px] break-words whitespace-pre-wrap text-[color:var(--wa-text-primary)]"
+          className="max-w-[263px] text-[17px] leading-[24px] tracking-[-0.2px] break-words whitespace-pre-wrap text-[color:var(--wa-text-primary)]"
         >
           {text}
-          {/* Reserve trailing space for timestamp overlay */}
-          <span
-            aria-hidden
-            className={cn("inline-block", isMe ? "w-[70px]" : "w-[52px]")}
-          />
         </p>
 
         <BubbleTimestamp
           time={time}
           status={isMe ? (status ?? "sent") : null}
           labels={statusLabels}
-          className="absolute end-[8.11px] bottom-[3px]"
+          className="h-[15px] self-end"
         />
       </Wrapper>
     </div>

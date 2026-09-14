@@ -20,15 +20,20 @@ export function BubbleTail({ side, className }: Props) {
         "pointer-events-none absolute bottom-0",
         // Logical insets: under RTL "me" sits on the left, so the tail has to
         // follow the bubble rather than stay pinned to a physical edge.
-        side === "me" ? "-end-[7.5px]" : "-start-[7.5px] scale-x-[-1]",
-        "rtl:scale-x-[-1]",
+        // The path points right. Both flips write the same `--tw-scale-x`, so
+        // they never cancel — each side states its RTL value outright.
+        side === "me"
+          ? "-end-[7.5px] rtl:scale-x-[-1]"
+          : "-start-[7.5px] scale-x-[-1] rtl:scale-x-100",
         color,
         className
       )}
       aria-hidden
     >
       <path
-        d="M7.5 4L7.5 0H0V14C3.66 17.25 10.63 17.86 13.1 17.97C13.41 17.99 13.56 17.6 13.35 17.38C11.7 15.73 7.5 10.83 7.5 4Z"
+        // One concave sweep from the bubble's edge down to the tip, over the
+        // full 18px — File (4).png flares across ~13px, not the last 6.
+        d="M0 0H7.5C7.5 7 9.2 13.2 13.1 16.9C13.5 17.3 13.3 18 12.7 18H0Z"
         fill="currentColor"
       />
     </svg>

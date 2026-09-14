@@ -69,7 +69,9 @@ export const BubbleTimestamp = memo(function BubbleTimestamp({
         // Clock time is formatted on the client's own zone; the server's zone
         // differs, and React patches the text on hydrate.
         suppressHydrationWarning
-        className="text-[11px] leading-none tracking-[0.55px] text-[color:var(--wa-text-secondary-alpha)]"
+        // "00:11" inks 30px wide and 8px tall in File (4).png — 11.5px with
+        // no tracking, not 11px spread by half a pixel a letter.
+        className="text-[11.5px] leading-none text-[color:var(--wa-text-secondary-alpha)] tabular-nums"
       >
         {time}
       </time>
