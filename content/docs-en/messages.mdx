@@ -212,6 +212,8 @@ Every other page keeps Thmanyah for Arabic.
 
 `MessageMailIcon` in the platform header fetches `/api/messages/unread-count` on mount and on tab focus, and increments live via the Socket.IO `message:new` event.
 
+Its link to `/messages` prefetches only on hover, touch or focus. The route group has its own dictionary provider, so the automatic viewport prefetch pulled 684 KB on every dashboard open (fixed 2026-09-13).
+
 ## Notifications
 
 | Trigger           | Recipients                     | Priority |

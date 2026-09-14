@@ -68,6 +68,10 @@ older than 7 days once the deploy is verified. Prefer a `no_compute` branch over
    deploy.
 6. **Verify with a real login**, not an exit code. `admin@kingfahd.com` / `1234` on
    `kingfahd.balqalam.com` reaches a live tenant dashboard.
+7. **Check the edge cache.** Two `curl -sI` on one `/_next/static` chunk: `x-edge-cache: miss`, then
+   `hit`. `bypass` on every static file means the container compressed despite
+   `accept-encoding: identity` — set `compress: false` for the container build (`CF_CONTAINER`).
+   The dashboard's two mount-time Server Action responses should be about 1 KB.
 
 ## Known open items
 

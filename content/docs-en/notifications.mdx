@@ -208,7 +208,11 @@ Enums: `NotificationType`, `NotificationPriority`, `NotificationChannel`.
 
 `bell-icon.tsx` (badge + recent popover), `card.tsx` (per-item rendering), `list.tsx` (tabbed all/unread, date grouping), `notification-center-client.tsx` (SSR + socket merge), and `preferences-form.tsx` (per-type per-channel toggle matrix).
 
-Hooks expose the data — dual-channel (Socket.IO when available, 30 s polling fallback), with optimistic updates. An initial fetch always runs regardless of transport (a live socket only pushes _new_ events), and polled snapshots merge through `poll-merge.ts` — forward-only read-state sync, so a notification read in another tab clears here without fighting optimistic updates:
+Hooks expose the data — dual-channel (Socket.IO when available, 30 s polling fallback), with optimistic updates. An initial fetch always runs regardless of transport (a live socket only pushes _new_ events), and polled snapshots merge through `poll-merge.ts` — forward-only read-state sync, so a notification read in another tab clears here without fighting optimistic updates.
+
+Every hook in a tab shares one bell request. A success is reused for 5 s. A failed or non-OK request starts a 15 s cooldown for all of them, and the shared fetch resolves `null` instead of rejecting, so a first load while offline no longer throws an unhandled rejection. Before the cooldown (2026-09-13), an unreachable server drew bursts of about 120 bell requests: a failure is instant, so each remount, focus and poll became its own request.
+
+The hooks, in use:
 
 ```typescript
 const {

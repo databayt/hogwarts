@@ -194,7 +194,7 @@ Nothing else needs undoing. No application code was changed for the bridge — t
 
 | | |
 | --- | --- |
-| Worker | `hogwarts` (`cf/worker.js`) — forwards every request to one container, Host header intact |
+| Worker | `hogwarts` (`cf/worker.js`) — forwards every request to one container, Host header intact. Since 2026-09-13 it also serves `/_next/static`, `/_next/image`, `/fonts` and the PWA icons from Cloudflare's cache (below) |
 | Container | `HogwartsContainer`, `standard-1` (½ vCPU, 4 GiB), `max_instances: 1`, `sleepAfter: 24h` |
 | Image | `Dockerfile`: `node:22-bookworm-slim` + prebuilt Next standalone, COPY-only, linux/amd64 |
 | Code | pinned with `CF_SOURCE=bb675c5af` (what balqalam.com ran on Vercel) for a like-for-like cutover |
@@ -245,6 +245,30 @@ scripts/deploy-cloudflare.sh /tmp/prod.env deploy    # wrangler builds + pushes 
 - **Secrets** only change on rotation: `scripts/cf-secrets.sh /tmp/prod.env`, then deploy again —
   a container reads `envVars` at start.
 - The build needs Docker running (colima) and the `buildx` plugin.
+- **Check the edge cache after a deploy.** Run `curl -sI https://kingfahd.balqalam.com/_next/static/chunks/<any-chunk>.js`
+  twice: `x-edge-cache: miss`, then `hit`. `bypass` on every static file means the container still
+  compressed the response despite `accept-encoding: identity`; set `compress: false` for the container
+  build (`CF_CONTAINER`).
+
+### Edge cache (2026-09-13)
+
+A container fetch is not a CDN fetch, so nothing was cached at the edge until `cf/worker.js` did it
+itself: every hashed chunk, font and optimised image went to the one container, about 0.5 s apiece
+from Europe, 70 files on a cold dashboard. The Worker now answers these paths from `caches.default`:
+
+| Path | Origin cache policy |
+| --- | --- |
+| `/_next/static/*` | build-hashed, immutable for a year |
+| `/_next/image` | 30 days, must-revalidate; keyed by the format the browser accepts (avif, webp or original), because the Cache API ignores `Vary` |
+| `/fonts/*` | immutable (next.config headers) |
+| `/icon-*.png`, `/apple-touch-icon.png`, `/favicon.ico` | a day (next.config headers) |
+
+- A response is stored only when the origin says `public` with a real `max-age`, sets no cookie and
+  carries no `content-encoding`. The service worker (`max-age=0`) and anything with a session never qualify.
+- Entries are keyed under the apex host, so every tenant shares one copy of a build.
+- The container is asked for identity encoding. The edge stores one uncompressed representation, and
+  Cloudflare compresses JS, CSS and fonts for each visitor on the way out.
+- Every response on these paths carries `x-edge-cache: hit | miss | bypass`.
 
 ### Crons
 
@@ -295,8 +319,9 @@ cannot read the zone's records), or the toggles done by hand in the dashboard.
 - `ed.databayt.org` / `demo.databayt.org` stay on Vercel (that zone's DNS is on Vercel).
 - WebSockets (`server.js`, geofence) were never on Vercel either; parity, not a regression. The
   dashboard's console shows the same `ws://localhost:3001` socket.io failures and `/_vercel/insights`
-  404s it showed on Vercel (`NEXT_PUBLIC_SOCKET_URL` is localhost in prod; the analytics scripts are
-  Vercel-hosted). Noise, not breakage — gate `@vercel/analytics` on `VERCEL` when convenient.
+  404s it showed on Vercel (`NEXT_PUBLIC_SOCKET_URL` is localhost in prod). Noise, not breakage. The `/_vercel/insights` 404s
+  are gone: Vercel Analytics and Speed Insights were removed from the app on 2026-09-13, though both
+  packages are still listed in `package.json`.
 - Prisma runs its normal engine (`debian-openssl-3.0.x`, generated at build); the driver-adapter
   code in `src/lib/db.ts` stays inert unless `DB_ADAPTER=pg`.
 

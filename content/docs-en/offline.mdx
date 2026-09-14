@@ -57,25 +57,84 @@ Two more pieces landed the same day: **Web Push** (a browser or the installed ap
 
 #### How to experience it (any school, today)
 
-1. **Install.** On Android Chrome open `https://<school>.balqalam.com`, sign in, and a welcome sheet slides up offering the app — tap **Continue**: Android opens the install sheet; iPhone opens the share sheet, where you pick *Add to Home Screen* (a two-step guide appears underneath). The icon carries the school's name in Arabic, opens right-to-left in the school's colour, and has no browser chrome.
-2. **Mark attendance offline.** Open *Attendance → Quick* for a section, put the phone in airplane mode, mark the absentees and save. The panel says the marks were saved on the device and the sync banner shows one pending item. Turn the network back on: the banner drains within seconds and the marks appear on the server; save the same section again and the server keeps whichever mark is newer. Guardians get the absence notice when the replay lands, not before.
-3. **Turn on push.** *Notifications → Preferences → Push* asks the browser's permission on the tap and subscribes this device. From then on an absence, exam or live-class notice also arrives as a system notification; tapping it opens that page in the installed app. On iPhone the toggle only works from the installed app (Safari cannot receive Web Push).
+1. **Install.** On Android Chrome open `https://<school>.balqalam.com`, sign in, and a welcome sheet slides up offering the app — tap **Continue**: Android opens the install sheet; iPhone opens the share sheet, where you pick _Add to Home Screen_ (a two-step guide appears underneath). The icon carries the school's name in Arabic, opens right-to-left in the school's colour, and has no browser chrome.
+2. **Mark attendance offline.** Open _Attendance → Quick_ for a section, put the phone in airplane mode, mark the absentees and save. The panel says the marks were saved on the device and the sync banner shows one pending item. Turn the network back on: the banner drains within seconds and the marks appear on the server; save the same section again and the server keeps whichever mark is newer. Guardians get the absence notice when the replay lands, not before.
+3. **Turn on push.** _Notifications → Preferences → Push_ asks the browser's permission on the tap and subscribes this device. From then on an absence, exam or live-class notice also arrives as a system notification; tapping it opens that page in the installed app. On iPhone the toggle only works from the installed app (Safari cannot receive Web Push).
 4. **Lose the connection anywhere.** In airplane mode, opening any app route shows the school's offline page in the right language — with the outbox view listing what is queued — instead of the browser's error screen.
 
 What is verified by tooling: the install audit passes on `demo` and `kingfahd` (0 FAIL), the worker controls the page after one reload, the outbox replay returns `applied` then `duplicate`, and the push cron reports the channel configured. What only a phone can verify: that a push actually shows on a device and that the offline page appears under a real disconnect — both tracked in [hogwarts#408](https://github.com/databayt/hogwarts/issues/408).
 
-### Shipped 2026-09-13 — explorable offline, and fast on thin networks
+### Shipped 2026-09-13/14 — explorable offline, and fast on thin networks
 
-A live measurement of `kingfahd` on 4G explained the slow menu: every dashboard open shipped 1.38 MB of HTML (935 KB of it the dictionary), 63 script chunks, 1 MB of CSS from marketing-site clones, 36 prefetch requests and **two 1.1 MB Server Action responses** — because the proxy wrote the locale cookie on every response, and Next answers any Server Action whose request carries a proxy-set cookie with a full re-render of the page. And no static file was cached at Cloudflare's edge: each chunk round-tripped to the single container, ~0.5 s apiece from Europe. All of it is fixed: the cookie is written only when it changes, the Worker serves hashed chunks, fonts and optimised images from the edge, the clone stylesheets load only on the pages that use them, every sidebar route has a loading boundary so its link is prefetched and a tap draws the skeleton at once, and pages visited in the last 30 s come back from memory.
+A live measurement of `kingfahd` on 4G explained the slow menu. Every dashboard open shipped 1.38 MB of HTML, 935 KB of it the dictionary, plus 63 script chunks, 1 MB of CSS from marketing-site clones, 36 prefetch requests and **two 1.1 MB Server Action responses**. The proxy wrote the locale cookie on every response, and Next answers any Server Action whose request carries a proxy-set cookie with a full re-render of the page. No static file was cached at Cloudflare's edge either: each chunk round-tripped to the single container, about 0.5 s apiece from Europe.
 
-**Offline is no longer a dead end.** Service worker v7 keeps every screen a signed-in user opens — the HTML of a full load and the payload of a client-side navigation — in a cache named by a per-user session key the server sends with each response. A different key, or none, empties the previous person's pages, and the sign-out button and the sign-in and join pages tell the worker to forget everything before they move on, so a shared device can only ever replay the last signed-in person's own screens — even on a network too slow to have answered yet. With no connection, an opened page renders as last seen and the blue strip says so; an unopened page shows the offline page. When the network is merely slow (no answer within four seconds), the saved copy appears with a "slow connection — saved copy" strip and a Retry. Every dashboard page opened on a good connection is also kept as a full page, once a day, so it opens offline from any other page. The installed app also saves the whole sidebar in the background — once a day, on 4G, with data saver off, after the screen is idle — so the menu can be explored at a bus stop.
+What changed for speed:
+
+- **The locale cookie is written only when it changes**, so a Server Action answers with its own data again.
+- **The Worker serves hashed chunks, fonts, icons and optimised images from Cloudflare's edge.** It asks the container for uncompressed bytes and lets the edge compress for each visitor, keys optimised images by the format the browser accepts, and stamps every static response `x-edge-cache: hit | miss | bypass`.
+- **The clone stylesheets load only on the pages that use them.**
+- **Every sidebar route has a loading boundary**, so its link is prefetched and a tap draws the skeleton at once. Pages visited in the last 30 s come back from memory.
+- **The header's messages link prefetches on hover, touch or focus**, not on sight: its route group carried a 684 KB dictionary.
+- **The notification bell backs off for 15 s after a failed request.** With the server unreachable it had been sending bursts of about 120 requests.
+
+**How offline works now (service worker v7):**
+
+- **Saved per person.** Every screen a signed-in user opens is kept in a cache named by a per-user session key the server sends with each response. A response carrying a different key, or none, empties the previous person's pages. The sign-out button, and the sign-in and join pages as they open, tell the worker to forget everything first: on a slow network a saved copy can appear before any response reveals who is signed in.
+- **Saved as whole pages.** A client-side navigation leaves no HTML behind, so each dashboard page opened on a good connection (4G-class, data saver off) is also saved as a full page, once a day. The installed app also saves the whole sidebar once a day. A navigation's payload is saved too, but it only answers the exact navigation it came from.
+- **Network first.** A page with a saved copy shows it when the network fails, or has not answered within four seconds, and the request keeps running to refresh the copy. The strip says which: "You're offline…" or "Slow connection — showing the last saved copy of this page", with Retry.
+- **Unopened pages say so.** A page with no saved copy shows "This page isn't on this device yet" with Back and Retry; an installed iPhone app has no back button of its own. The offline page and the files it needs live in their own cache, refreshed daily, so the fallback survives deploys.
+
+**Corrected on 2026-09-14.** The first version of this section passed a test that replayed navigations the same tab had just made. With the server actually stopped, three things failed, and a fourth gap showed on a slow network:
+
+| Found                                                                     | Cause                                                                                                                    | Fix                                                                                 |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| A sidebar click did nothing offline                                       | Next's experimental `useOffline` was on; its scheduler sends no requests while offline, the likely cause                 | The flag is off, so every click reaches the worker                                  |
+| The dashboard stayed on screen under the Teachers address                 | A payload saved on students → teachers was replayed on dashboard → teachers                                              | Saved payloads are keyed with Next's `_rsc`, which names the router tree they patch |
+| Pages opened by a click had no offline copy                               | An offline click never repeats an online `_rsc`: a prefetched route sends a partial tree, an offline click the whole one | Each opened page is saved as HTML                                                   |
+| On a slow network the next person could see the previous one's saved page | The worker learned about a new session only from a response                                                              | Sign-out and the sign-in and join pages clear saved pages first                     |
+
+**Measured** on a local production build — offline checks with the server stopped, slow checks behind a proxy that holds every response for 5 s:
+
+| Check                                               | Result                                                |
+| --------------------------------------------------- | ----------------------------------------------------- |
+| Dashboard open: each of two Server Action responses | 1.1 MB before, about 1 KB after                       |
+| Dashboard CSS                                       | 1,078 KB before, 589 KB after                         |
+| Tap Students → skeleton on screen                   | 58 ms                                                 |
+| Offline: dashboard → a page opened before           | Saved page in 283 ms, under the offline strip         |
+| Offline: a page never opened                        | "This page isn't on this device yet"; Back returns    |
+| Slow: reload a saved page                           | Saved copy at 4.0 s, slow-connection strip with Retry |
+| Slow: sign out                                      | Saved pages gone before the sign-out request returned |
+| Slow: the next account's first dashboard            | Waited 5.1 s for its own page                         |
+| One saved dashboard page on the device              | 1,367 KB                                              |
 
 #### How to experience it
 
-1. Open the installed app on a good connection, sign in, and leave the dashboard on screen for a minute.
-2. Airplane mode. Tap through the sidebar: the pages you opened — and, from the installed app, the rest of the menu — render as they last were, under the strip "You're offline. Pages you've opened before still work…". Anything you mark is queued as before.
-3. Throttle instead of cutting (a weak-signal room): a page that takes longer than four seconds to answer shows its saved copy at once with the slow-connection strip; Retry asks the server again.
-4. Sign out and sign in as another account on the same phone: the first account's saved pages are gone before the second dashboard renders.
+1. Open the app on a good connection, sign in, and open a few sidebar pages.
+2. Airplane mode. Tap through the pages you opened: they render as last seen under "You're offline. Pages you've opened before still work…". A page you never opened shows "This page isn't on this device yet", and **Back** returns to where you were. Anything you mark is queued as before.
+3. On a weak signal rather than none, a saved page that takes longer than four seconds shows its saved copy under the slow-connection strip; **Retry** asks the server again.
+4. Sign out and sign in as another account on the same phone: nothing the first account saved appears, even before the network answers.
+
+To test from a computer, stop the server, or use a phone in airplane mode. The browser developer tools' Offline setting does not reach the service worker's own requests, so "offline" pages quietly load from the server.
+
+#### Limits
+
+- **Storage.** A saved dashboard page is about 1.4 MB, mostly the dictionary. The cap of 80 saved pages per person allows about 110 MB, far past the 25 MB average in _What success looks like_. Moving the dictionary out of the HTML fixes size and speed together.
+- **Server load.** Saving opened pages costs one extra server render per page, per person, per day.
+- **Session expiry** lands on the sign-in page, which also clears that same person's saved pages.
+- **Script eviction.** Past 400 files the worker's static cache drops its oldest entries first, which can include scripts every page uses; a saved page whose scripts were dropped shows without them offline.
+- **Delete account** signs out without clearing saved pages first; the session-key check clears them as soon as the network answers.
+
+#### Files
+
+| File                                            | Role                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `public/service-worker.js`                      | v7: saved pages per session key, offline shell, offline/slow reason, outbox wake, Web Push |
+| `src/components/offline/warmup.tsx`             | Asks the worker to save the opened page and, from the installed app, the whole sidebar     |
+| `src/components/offline/forget-saved-pages.tsx` | Clears saved pages at sign-out, sign-in and join                                           |
+| `src/components/offline/sync-banner.tsx`        | The offline and slow-connection strip                                                      |
+| `src/components/offline/content.tsx`            | The offline page, and the "not on this device yet" card                                    |
+| `src/proxy.ts`                                  | Sends `x-session-key`; writes the locale cookie only when it changes                       |
+| `cf/worker.js`                                  | Edge cache for static files                                                                |
 
 ## Engineering principles (no compromise)
 
@@ -136,24 +195,24 @@ Each compromise we considered, and why we rejected it.
 
 The plan extends existing resilience scaffolding rather than replacing it. Two gold-standard implementations already live in the codebase — the exam auto-save hook and the geofence GPS tracker — and the foundation epic generalizes both into one reusable, production-grade library.
 
-| Component               | Location                                                                  | Current state                                                                |
-| ----------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Service worker          | `public/service-worker.js`                                                | Network-first cache for HTML/API; `syncOfflineForms()` at line 160 is a stub |
-| SW registration         | `src/components/providers/service-worker-provider.tsx`                    | Production-only `window.load` register                                       |
-| Offline fallback page   | `src/components/offline/content.tsx`                                      | Static; no last-sync indicator                                               |
-| Manifest                | `src/app/manifest.ts`                                                     | Installable; shortcuts for `/attendance` + `/attendance/qr-code`             |
-| `useOfflineQueue<T>`    | `src/components/school-dashboard/attendance/shared/hooks.ts:541`          | In-memory only; lost on reload — to be retired                               |
-| `LocationQueue` (IDB)   | `src/components/school-dashboard/attendance/geofencee/geo-tracker.tsx:59` | Full IndexedDB queue, batch flush — generalized into shared primitive        |
-| Exam auto-save          | `src/components/school-dashboard/exams/take/hooks/use-auto-save.ts`       | Debounce + localStorage + exp-backoff — generalized into shared primitive    |
-| Application draft       | `src/components/school-marketing/application/application-context.tsx:412` | Server session + per-campaign + per-user localStorage — migrated to Dexie    |
-| Onboarding draft        | `src/components/onboarding/util.ts:291`                                   | `DRAFT_STORAGE_KEY = "onboarding_draft_"` — migrated to Dexie                |
-| Network strategies      | `src/lib/performance-optimization.ts`                                     | slow-2g/2g/3g/4g/saveData/rtt — wired into `useNetworkStatus`                |
-| LRU server cache        | `src/lib/cache/exam-cache.ts`                                             | TTL cache for grade boundaries, school branding                              |
-| Circuit breaker         | `src/lib/circuit-breaker.ts`                                              | 5 failures → 30 s cooldown for DB                                            |
-| `@tanstack/react-query` | `package.json`                                                            | Installed `5.90.12` — wired up in EPIC-0                                     |
-| `socket.io-client`      | `package.json`                                                            | Installed `4.8.1` — used for WebSocket cache invalidation in EPIC-0          |
-| Mobile API              | `src/app/api/mobile/**`                                                   | 30+ JWT-auth endpoints (snake_case JSON)                                     |
-| Geofence boarding hook  | `src/app/api/transportation/geofence-boarding/route.ts`                   | Bearer-token webhook; idempotent; ack-and-ignore for no-match codes          |
+| Component               | Location                                                                  | Current state                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Service worker          | `public/service-worker.js`                                                | v7: static assets cache-first; signed-in pages saved per session key; offline shell refreshed daily; `/api/` network-only; wakes a tab to drain the outbox |
+| SW registration         | `src/components/providers/service-worker-provider.tsx`                    | Production only (`NEXT_PUBLIC_SW_DEV=1` for a local `next start`); registers at once when the page has already loaded                                      |
+| Offline fallback page   | `src/components/offline/content.tsx`                                      | Outbox view; "not on this device yet" card with Back and Retry when served in place of an unsaved page                                                     |
+| Manifest                | `src/app/manifest.ts`                                                     | Installable; shortcuts for `/attendance` + `/attendance/qr-code`                                                                                           |
+| `useOfflineQueue<T>`    | `src/components/school-dashboard/attendance/shared/hooks.ts:541`          | In-memory only; lost on reload — to be retired                                                                                                             |
+| `LocationQueue` (IDB)   | `src/components/school-dashboard/attendance/geofencee/geo-tracker.tsx:59` | Full IndexedDB queue, batch flush — generalized into shared primitive                                                                                      |
+| Exam auto-save          | `src/components/school-dashboard/exams/take/hooks/use-auto-save.ts`       | Debounce + localStorage + exp-backoff — generalized into shared primitive                                                                                  |
+| Application draft       | `src/components/school-marketing/application/application-context.tsx:412` | Server session + per-campaign + per-user localStorage — migrated to Dexie                                                                                  |
+| Onboarding draft        | `src/components/onboarding/util.ts:291`                                   | `DRAFT_STORAGE_KEY = "onboarding_draft_"` — migrated to Dexie                                                                                              |
+| Network strategies      | `src/lib/performance-optimization.ts`                                     | slow-2g/2g/3g/4g/saveData/rtt — wired into `useNetworkStatus`                                                                                              |
+| LRU server cache        | `src/lib/cache/exam-cache.ts`                                             | TTL cache for grade boundaries, school branding                                                                                                            |
+| Circuit breaker         | `src/lib/circuit-breaker.ts`                                              | 5 failures → 30 s cooldown for DB                                                                                                                          |
+| `@tanstack/react-query` | `package.json`                                                            | Installed `5.90.12` — wired up in EPIC-0                                                                                                                   |
+| `socket.io-client`      | `package.json`                                                            | Installed `4.8.1` — used for WebSocket cache invalidation in EPIC-0                                                                                        |
+| Mobile API              | `src/app/api/mobile/**`                                                   | 30+ JWT-auth endpoints (snake_case JSON)                                                                                                                   |
+| Geofence boarding hook  | `src/app/api/transportation/geofence-boarding/route.ts`                   | Bearer-token webhook; idempotent; ack-and-ignore for no-match codes                                                                                        |
 
 ## Schema facts
 
@@ -616,6 +675,9 @@ Manual checks before declaring a feature "offline-done". Run on Safari iOS 16.4,
 - [ ] Service worker registered (`chrome://serviceworker-internals` shows active)
 - [ ] Manifest installable (install icon visible or "Add to Home Screen" on iOS)
 - [ ] App-shell loads with `Network: Offline` after one prior online visit
+- [ ] Dashboard offline: a page opened while online renders from its saved copy under the offline strip; a page never opened shows "This page isn't on this device yet" and Back returns. Test with airplane mode or the server stopped — the developer tools' Offline setting does not reach the worker's own requests
+- [ ] Slow network, responses held longer than 4 s: a saved page shows its copy under the slow-connection strip, and Retry refreshes it
+- [ ] Shared device: sign out, sign in as another account — no page saved by the first account appears, on a slow network too
 - [ ] Offline page renders with last-sync time + pending-mutation count + storage UI
 - [ ] Teacher bulk attendance: mark 20 students offline → reload → all visible as pending → reconnect → all flushed → no duplicates
 - [ ] Student exam: enter answers offline → submit offline → "submission queued" full-screen → reconnect → submitted
@@ -651,41 +713,41 @@ Manual checks before declaring a feature "offline-done". Run on Safari iOS 16.4,
 
 ## Key files
 
-| Path                                                                      | Role                                                       |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `src/lib/offline/db.ts` (new)                                             | Dexie tenant DB factory + schema versioning                |
-| `src/lib/offline/opfs.ts` (new)                                           | OPFS abstraction (`putBlob`/`getBlob`/`deleteBlob`)        |
-| `src/lib/offline/registry.ts` (new)                                       | `actionRegistry` typed map                                 |
-| `src/lib/offline/types.ts` (new)                                          | Discriminated-union mutation envelope types                |
-| `src/lib/offline/state-machine.ts` (new)                                  | XState mutation lifecycle                                  |
-| `src/lib/offline/compression.ts` (new)                                    | LZ4 + MessagePack compression pipeline                     |
-| `src/lib/offline/integrity.ts` (new)                                      | SHA-256 content-hash verification                          |
-| `src/lib/offline/sync-worker.ts` (new)                                    | Web Worker sync engine                                     |
-| `src/components/offline/use-mutation-queue.ts` (new)                      | Canonical persistent queue hook                            |
-| `src/components/offline/use-network-status.ts` (new)                      | Composed network status hook                               |
-| `src/components/offline/use-offline-mutation.ts` (new)                    | react-query wrapper for mutations                          |
-| `src/components/offline/use-live-query.ts` (new)                          | Dexie live query wrapper                                   |
-| `src/components/offline/use-storage-estimate.ts` (new)                    | `navigator.storage.estimate()` reactive hook               |
-| `src/components/offline/provider.tsx` (new)                               | `<OfflineProvider>`                                        |
-| `src/components/offline/pending-mutations-drawer.tsx` (new)               | UI for in-flight queue                                     |
-| `src/components/offline/conflict-resolver.tsx` (new)                      | Structured merge UI primitive                              |
-| `src/components/offline/install-prompt-banner.tsx` (new)                  | `beforeinstallprompt` capture UI                           |
-| `src/components/offline/update-available-toast.tsx` (new)                 | SW update flow UI                                          |
-| `src/components/offline/cached-data-banner.tsx` (new)                     | "data is from cache" indicator                             |
-| `src/components/offline/devtools.tsx` (new)                               | `<OfflineDevtools>` panel (DEVELOPER only)                 |
-| `src/app/api/offline/sync/[domain]/route.ts` (new)                        | Per-domain sync shard endpoints                            |
-| `src/app/api/cache-invalidate/route.ts` (new)                             | WebSocket cache invalidation broadcast                     |
-| `src/app/api/uploads/resumable/[uploadId]/[partNumber]/route.ts` (new)    | tus-style chunked upload                                   |
-| `public/service-worker.js`                                                | Replace `syncOfflineForms()` stub at line 160              |
-| `prisma/models/offline-sync.prisma` (new)                                 | `OfflineMutation` + `OfflineSyncLog` + `CacheInvalidation` |
-| `src/components/school-dashboard/attendance/actions/bulk.ts:33`           | Register as `"attendance.bulkUpload"`                      |
-| `src/components/school-dashboard/exams/take/actions.ts:369`               | Register as `"exam.submit"`                                |
-| `src/components/school-dashboard/attendance/geofencee/geo-tracker.tsx:59` | Retire `LocationQueue`; use shared primitives              |
-| `src/components/school-dashboard/attendance/shared/hooks.ts:541`          | Replace in-memory `useOfflineQueue`                        |
-| `src/lib/performance-optimization.ts`                                     | Wire as `useNetworkStatus` dependency                      |
-| `src/app/manifest.ts`                                                     | Add `/exams`, `/messages`, `/timetable` shortcuts          |
-| `src/components/internationalization/{school-en,school-ar}.json`          | Add `dictionary.offline.*` keys                            |
-| `playwright/tests/offline.spec.ts` (new)                                  | E2E covering four role flows + tenant + conflicts          |
+| Path                                                                      | Role                                                                                           |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `src/lib/offline/db.ts` (new)                                             | Dexie tenant DB factory + schema versioning                                                    |
+| `src/lib/offline/opfs.ts` (new)                                           | OPFS abstraction (`putBlob`/`getBlob`/`deleteBlob`)                                            |
+| `src/lib/offline/registry.ts` (new)                                       | `actionRegistry` typed map                                                                     |
+| `src/lib/offline/types.ts` (new)                                          | Discriminated-union mutation envelope types                                                    |
+| `src/lib/offline/state-machine.ts` (new)                                  | XState mutation lifecycle                                                                      |
+| `src/lib/offline/compression.ts` (new)                                    | LZ4 + MessagePack compression pipeline                                                         |
+| `src/lib/offline/integrity.ts` (new)                                      | SHA-256 content-hash verification                                                              |
+| `src/lib/offline/sync-worker.ts` (new)                                    | Web Worker sync engine                                                                         |
+| `src/components/offline/use-mutation-queue.ts` (new)                      | Canonical persistent queue hook                                                                |
+| `src/components/offline/use-network-status.ts` (new)                      | Composed network status hook                                                                   |
+| `src/components/offline/use-offline-mutation.ts` (new)                    | react-query wrapper for mutations                                                              |
+| `src/components/offline/use-live-query.ts` (new)                          | Dexie live query wrapper                                                                       |
+| `src/components/offline/use-storage-estimate.ts` (new)                    | `navigator.storage.estimate()` reactive hook                                                   |
+| `src/components/offline/provider.tsx` (new)                               | `<OfflineProvider>`                                                                            |
+| `src/components/offline/pending-mutations-drawer.tsx` (new)               | UI for in-flight queue                                                                         |
+| `src/components/offline/conflict-resolver.tsx` (new)                      | Structured merge UI primitive                                                                  |
+| `src/components/offline/install-prompt-banner.tsx` (new)                  | `beforeinstallprompt` capture UI                                                               |
+| `src/components/offline/update-available-toast.tsx` (new)                 | SW update flow UI                                                                              |
+| `src/components/offline/cached-data-banner.tsx` (new)                     | "data is from cache" indicator                                                                 |
+| `src/components/offline/devtools.tsx` (new)                               | `<OfflineDevtools>` panel (DEVELOPER only)                                                     |
+| `src/app/api/offline/sync/[domain]/route.ts` (new)                        | Per-domain sync shard endpoints                                                                |
+| `src/app/api/cache-invalidate/route.ts` (new)                             | WebSocket cache invalidation broadcast                                                         |
+| `src/app/api/uploads/resumable/[uploadId]/[partNumber]/route.ts` (new)    | tus-style chunked upload                                                                       |
+| `public/service-worker.js`                                                | v7 shipped; the `syncOfflineForms()` stub is gone — the worker wakes a tab to drain the outbox |
+| `prisma/models/offline-sync.prisma` (new)                                 | `OfflineMutation` + `OfflineSyncLog` + `CacheInvalidation`                                     |
+| `src/components/school-dashboard/attendance/actions/bulk.ts:33`           | Register as `"attendance.bulkUpload"`                                                          |
+| `src/components/school-dashboard/exams/take/actions.ts:369`               | Register as `"exam.submit"`                                                                    |
+| `src/components/school-dashboard/attendance/geofencee/geo-tracker.tsx:59` | Retire `LocationQueue`; use shared primitives                                                  |
+| `src/components/school-dashboard/attendance/shared/hooks.ts:541`          | Replace in-memory `useOfflineQueue`                                                            |
+| `src/lib/performance-optimization.ts`                                     | Wire as `useNetworkStatus` dependency                                                          |
+| `src/app/manifest.ts`                                                     | Add `/exams`, `/messages`, `/timetable` shortcuts                                              |
+| `src/components/internationalization/{school-en,school-ar}.json`          | Add `dictionary.offline.*` keys                                                                |
+| `playwright/tests/offline.spec.ts` (new)                                  | E2E covering four role flows + tenant + conflicts                                              |
 
 ## Glossary
 
