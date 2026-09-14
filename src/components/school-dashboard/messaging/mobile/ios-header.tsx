@@ -30,6 +30,14 @@ type Props = {
   /** What the options button opens; without items it stays a plain button. */
   optionsMenu?: IosHeaderMenuItem[]
   optionsLabel?: string
+  /** Select chats mode replaces every control with Done and one action. */
+  selectBar?: {
+    doneLabel: string
+    onDone: () => void
+    actionLabel: string
+    onAction: () => void
+    actionDisabled?: boolean
+  }
   /** Title as the large-title collapse draws it: hidden until `collapsed`. */
   collapsingTitle?: string
   /** The page's big title has scrolled under the header. */
@@ -52,6 +60,7 @@ export function IosHeader({
   exitLabel,
   optionsMenu,
   optionsLabel,
+  selectBar,
   collapsingTitle,
   collapsed = false,
   className,
@@ -125,7 +134,28 @@ export function IosHeader({
         </p>
       )}
 
-      {onExit && (
+      {selectBar && (
+        <>
+          <button
+            type="button"
+            onClick={selectBar.onAction}
+            disabled={selectBar.actionDisabled}
+            className="wa-glass-control pointer-events-auto flex h-[44px] items-center rounded-full px-[18px] text-[17px] leading-none tracking-[-0.43px] disabled:opacity-40"
+          >
+            {selectBar.actionLabel}
+          </button>
+          <div className="h-[26px] flex-1" />
+          <button
+            type="button"
+            onClick={selectBar.onDone}
+            className="pointer-events-auto flex h-[44px] items-center rounded-full bg-[color:var(--wa-surface-product)] px-[18px] text-[17px] leading-none font-semibold tracking-[-0.43px] text-[color:var(--wa-text-invert)]"
+          >
+            {selectBar.doneLabel}
+          </button>
+        </>
+      )}
+
+      {!selectBar && onExit && (
         <HeaderCircularButton onClick={onExit} ariaLabel={exitLabel ?? "Back"}>
           <WaIcon
             name="ic-wa-chevron-lt-32"
@@ -134,7 +164,7 @@ export function IosHeader({
         </HeaderCircularButton>
       )}
 
-      {showOptions && (
+      {!selectBar && showOptions && (
         <HeaderCircularButton
           onClick={hasMenu ? () => setMenuOpen(true) : onOptions}
           ariaLabel={optionsLabel ?? "More options"}
@@ -144,7 +174,7 @@ export function IosHeader({
         </HeaderCircularButton>
       )}
 
-      {(onExit || showOptions) && <div className="h-[26px] flex-1" />}
+      {!selectBar && (onExit || showOptions) && <div className="h-[26px] flex-1" />}
 
       {hasMenu && menuOpen && (
         <>
@@ -156,12 +186,14 @@ export function IosHeader({
             onClick={() => setMenuOpen(false)}
             className="pointer-events-auto fixed inset-0 z-40 cursor-default"
           />
-          {/* The reference opens the card over the button that summoned it,
-              anchored to the same start edge. */}
+          {/* Measured off public/whatsapp/File (2).png at 3x: a 250 x 104
+              card whose top sits level with the header discs, 8px in from the
+              start edge, covering the button that opened it. Rows are 42px
+              apart; the 17px glyph centres 40px in, the label starts at 65. */}
           <div
             role="menu"
             aria-label={optionsLabel ?? "More options"}
-            className="wa-glass-menu pointer-events-auto absolute start-[8px] top-[calc(env(safe-area-inset-top,0px)+4px)] z-50 flex min-w-[196px] flex-col rounded-[28px] py-[8px]"
+            className="wa-glass-menu pointer-events-auto absolute start-[8px] top-[calc(env(safe-area-inset-top,0px)+4px)] z-50 flex w-[250px] flex-col rounded-[32px] py-[10px]"
           >
             {optionsMenu!.map((item) => (
               <button
@@ -172,7 +204,7 @@ export function IosHeader({
                   setMenuOpen(false)
                   item.onSelect()
                 }}
-                className="flex h-[44px] items-center gap-[14px] px-[24px] text-start text-[17px] leading-none tracking-[-0.34px] text-[color:var(--wa-text-primary)] active:bg-black/5"
+                className="flex h-[42px] items-center gap-[13px] ps-[28px] pe-[20px] text-start text-[17px] leading-none tracking-[-0.43px] text-[#0a0a0a] active:bg-black/5 dark:text-[#f2f2f2]"
               >
                 <span className="flex size-[24px] shrink-0 items-center justify-center">
                   {item.icon}
@@ -184,13 +216,13 @@ export function IosHeader({
         </>
       )}
 
-      {showCamera && (
+      {!selectBar && showCamera && (
         <HeaderCircularButton onClick={onCamera} ariaLabel="Camera">
-          <WaIcon name="ic-wa-camera-24" className="size-[24px]" />
+          <WaIcon name="ic-wa-camera-24" className="size-[35px]" />
         </HeaderCircularButton>
       )}
 
-      {showAdd && (
+      {!selectBar && showAdd && (
         <HeaderCircularButton
           onClick={onAdd}
           ariaLabel="New chat"
@@ -198,7 +230,7 @@ export function IosHeader({
         >
           <WaIcon
             name="ic-wa-plus-add-24"
-            className="size-[24px] text-[color:var(--wa-text-invert)]"
+            className="size-[35px] text-[color:var(--wa-text-invert)]"
           />
         </HeaderCircularButton>
       )}

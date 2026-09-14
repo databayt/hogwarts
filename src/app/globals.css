@@ -996,15 +996,20 @@ body {
     var(--wa-glass-shadow);
 }
 
-/* The options card the header's ⋯ opens (public/whatsapp/File (2).png): a
-   near-opaque frosted sheet with a soft, wide drop — thicker than the discs
-   so the list under it stays out of the way of the labels. */
+/* The options card the header's ⋯ opens, sampled off
+   public/whatsapp/File (2).png: the fill reads (251,251,251) over a white
+   list, the edge carries a one-pixel white rim, and the shadow is wide and
+   faint — still 12 levels under white 8px beside the card, lighter above it
+   than below, so it falls downward. The blur shows where the large title
+   passes under the card. */
 .wa-glass-menu {
-  background: rgba(250, 250, 250, 0.88);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 0.5px solid var(--wa-glass-border);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.14);
+  background: rgba(251, 251, 251, 0.9);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 0 0 0.5px rgba(0, 0, 0, 0.04),
+    0 10px 44px rgba(0, 0, 0, 0.13);
 }
 .dark .wa-glass-menu {
   background: rgba(40, 48, 54, 0.88);

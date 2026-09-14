@@ -1166,6 +1166,9 @@ export function MessagingClient({
       relativeYesterday: m?.ui?.relative_yesterday ?? "Yesterday",
       moreOptions: m?.ui?.mobile?.more_options ?? "More options",
       readAll: m?.ui?.mobile?.read_all ?? "Read all",
+      selectChats: m?.ui?.mobile?.select_chats ?? "Select chats",
+      done: m?.ui?.mobile?.done ?? "Done",
+      markRead: m?.ui?.mobile?.mark_read ?? "Read",
       updatesRecent: m?.ui?.mobile?.updates_recent,
       updatesEmptyTitle: m?.ui?.mobile?.updates_empty_title,
       updatesEmptyBody: m?.ui?.mobile?.updates_empty_body,
@@ -1235,15 +1238,24 @@ export function MessagingClient({
     () => router.push(`/${locale}/dashboard`),
     [router, locale]
   )
-  // Every unread row clears at once; the server marks each in the background
-  // and the next poll reconciles anything that failed.
-  const handleReadAll = useCallback(() => {
-    for (const c of conversations) {
-      if (!c.unreadCount) continue
-      clearUnreadLocally(c.id)
-      markConversationAsRead({ conversationId: c.id }).catch(() => {})
-    }
-  }, [conversations, clearUnreadLocally])
+  // Rows clear at once; the server marks each in the background and the next
+  // poll reconciles anything that failed.
+  const markReadLocally = useCallback(
+    (ids: Iterable<string>) => {
+      for (const id of ids) {
+        clearUnreadLocally(id)
+        markConversationAsRead({ conversationId: id }).catch(() => {})
+      }
+    },
+    [clearUnreadLocally]
+  )
+  const handleReadAll = useCallback(
+    () =>
+      markReadLocally(
+        conversations.filter((c) => c.unreadCount).map((c) => c.id)
+      ),
+    [conversations, markReadLocally]
+  )
   const goProfile = useCallback(
     () => router.push(`/${locale}/profile`),
     [router, locale]
@@ -1313,6 +1325,7 @@ export function MessagingClient({
     onOpenDashboard: goDashboard,
     onExit: goDashboard,
     onReadAll: handleReadAll,
+    onReadSelected: markReadLocally,
     onOpenProfile: goProfile,
     onOpenNotifications: goNotifications,
     onOpenCall: goCall,

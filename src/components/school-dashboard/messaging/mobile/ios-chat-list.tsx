@@ -47,6 +47,9 @@ type L = {
   relativeYesterday: string
   moreOptions: string
   readAll: string
+  selectChats: string
+  done: string
+  markRead: string
 }
 
 const DEFAULT_L: L = {
@@ -84,6 +87,9 @@ const DEFAULT_L: L = {
   relativeYesterday: "Yesterday",
   moreOptions: "More options",
   readAll: "Read all",
+  selectChats: "Select chats",
+  done: "Done",
+  markRead: "Read",
 }
 
 type Props = {
@@ -100,6 +106,8 @@ type Props = {
   /** Leaves /messages — without it the phone has no way out of the inbox. */
   onExit?: () => void
   onReadAll?: () => void
+  /** Marks the chats picked in Select chats mode as read. */
+  onReadSelected?: (ids: string[]) => void
   onOpenArchived?: () => void
   onAddFilter?: () => void
   /** Drawn by the shell's Settings tab, passed through for callers. */
@@ -121,6 +129,7 @@ export function IosChatList({
   onOptions,
   onExit,
   onReadAll,
+  onReadSelected,
   onOpenArchived,
   onAddFilter,
   locale = "en",
@@ -139,19 +148,62 @@ export function IosChatList({
     setCollapsed(e.currentTarget.scrollTop > 34)
   }, [])
 
-  const optionsMenu = useMemo(
+  const [selecting, setSelecting] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(() => new Set())
+  const stopSelecting = useCallback(() => {
+    setSelecting(false)
+    setSelected(new Set())
+  }, [])
+  const onRowClick = useCallback(
+    (id: string) => {
+      if (!selecting) return onConversationClick(id)
+      setSelected((prev) => {
+        const next = new Set(prev)
+        if (next.has(id)) next.delete(id)
+        else next.add(id)
+        return next
+      })
+    },
+    [selecting, onConversationClick]
+  )
+
+  // Same two rows, same order, as public/whatsapp/File (2).png.
+  const optionsMenu = useMemo(() => {
+    const items = []
+    if (onReadSelected) {
+      items.push({
+        id: "select-chats",
+        label: L.selectChats,
+        icon: <SelectChatsGlyph />,
+        onSelect: () => setSelecting(true),
+      })
+    }
+    if (onReadAll) {
+      items.push({
+        id: "read-all",
+        label: L.readAll,
+        icon: <ReadAllGlyph />,
+        onSelect: onReadAll,
+      })
+    }
+    return items.length ? items : undefined
+  }, [onReadSelected, onReadAll, L.selectChats, L.readAll])
+
+  const selectBar = useMemo(
     () =>
-      onReadAll
-        ? [
-            {
-              id: "read-all",
-              label: L.readAll,
-              icon: <ReadAllGlyph />,
-              onSelect: onReadAll,
+      selecting
+        ? {
+            doneLabel: L.done,
+            onDone: stopSelecting,
+            actionLabel: L.markRead,
+            actionDisabled: selected.size === 0,
+            onAction: () => {
+              onReadSelected?.([...selected])
+              stopSelecting()
             },
-          ]
+          }
         : undefined,
-    [onReadAll, L.readAll]
+    [selecting, selected, L.done, L.markRead, onReadSelected, stopSelecting]
   )
 
   const filters = useMemo(
@@ -235,6 +287,7 @@ export function IosChatList({
           onOptions={onOptions}
           optionsMenu={optionsMenu}
           optionsLabel={L.moreOptions}
+          selectBar={selectBar}
           onExit={onExit}
           exitLabel={L.tabBack}
           onCamera={onCamera}
@@ -277,7 +330,13 @@ export function IosChatList({
           )}
 
           {rowsData.map((row) => (
-            <IosChatRow key={row.id} row={row} onClick={onConversationClick} />
+            <IosChatRow
+              key={row.id}
+              row={row}
+              onClick={onRowClick}
+              selectable={selecting}
+              selected={selected.has(row.id)}
+            />
           ))}
         </div>
 
@@ -294,7 +353,26 @@ export function IosChatList({
   )
 }
 
-/** The reference's "Read all" mark: a speech bubble carrying a tick. */
+/* The menu glyphs are traced from public/whatsapp/File (2).png, where each
+   measures 17px square inside the row's 24px slot, drawn in a 1.5px line. */
+function SelectChatsGlyph() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-[24px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="7.75" />
+      <path d="m8.6 12.2 2.3 2.3 4.5-5" />
+    </svg>
+  )
+}
+
 function ReadAllGlyph() {
   return (
     <svg
@@ -302,13 +380,13 @@ function ReadAllGlyph() {
       className="size-[24px]"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.6"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
     >
-      <path d="M6 4.5h12A2.5 2.5 0 0 1 20.5 7v8a2.5 2.5 0 0 1-2.5 2.5h-6l-4.5 3v-3H6A2.5 2.5 0 0 1 3.5 15V7A2.5 2.5 0 0 1 6 4.5Z" />
-      <path d="m8.5 11 2.5 2.5 4.5-4.5" />
+      <path d="M6.2 4.25h11.6c1.1 0 1.95.85 1.95 1.95v8.6c0 1.1-.85 1.95-1.95 1.95h-6.3l-3.7 3v-3H6.2c-1.1 0-1.95-.85-1.95-1.95V6.2c0-1.1.85-1.95 1.95-1.95Z" />
+      <path d="m8.8 10.6 2.2 2.2 4.2-4.6" />
     </svg>
   )
 }

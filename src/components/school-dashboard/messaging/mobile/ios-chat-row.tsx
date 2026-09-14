@@ -40,6 +40,9 @@ type Props = {
   row: IosChatRowData
   /** Receives the row's conversation id, so one handler serves every row. */
   onClick?: (id: string) => void
+  /** Select chats mode: a tick circle leads the row and a tap toggles it. */
+  selectable?: boolean
+  selected?: boolean
   className?: string
 }
 
@@ -53,6 +56,8 @@ export { PersonGlyph }
 export const IosChatRow = memo(function IosChatRow({
   row,
   onClick,
+  selectable = false,
+  selected = false,
   className,
 }: Props) {
   const avatarColor = getAvatarColor(row.avatarKey ?? row.id)
@@ -65,11 +70,37 @@ export const IosChatRow = memo(function IosChatRow({
     <button
       type="button"
       onClick={() => onClick?.(row.id)}
+      aria-pressed={selectable ? selected : undefined}
       className={cn(
         "flex w-full items-start gap-[12.66px] ps-[16px] pt-[10px] text-start active:bg-black/5",
         className
       )}
     >
+      {selectable && (
+        <span
+          aria-hidden
+          className={cn(
+            "mt-[19px] flex size-[22px] shrink-0 items-center justify-center rounded-full",
+            selected
+              ? "bg-[color:var(--wa-surface-product)] text-[color:var(--wa-text-invert)]"
+              : "border-[1.5px] border-[color:var(--wa-border-cta-filters)]"
+          )}
+        >
+          {selected && (
+            <svg
+              viewBox="0 0 12 12"
+              className="size-[12px]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m2.5 6.2 2.3 2.3 4.7-5" />
+            </svg>
+          )}
+        </span>
+      )}
       <div className="relative shrink-0 pt-[2px]">
         <div className="relative size-[56px] overflow-hidden rounded-full border-[0.33px] border-[color:var(--wa-border-avatar)] bg-neutral-200">
           {row.avatarUrl ? (
