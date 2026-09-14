@@ -46,7 +46,7 @@ export async function GET(
     const { submissions_count: _count, ...forFamily } = body
     return NextResponse.json({
       ...forFamily,
-      submission: submissionDto(submission),
+      submission: await submissionDto(submission),
     })
   } catch (error) {
     console.error("Mobile assignment detail error:", error)

@@ -12,7 +12,10 @@ import {
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
 import { hasRole } from "../../../lib/roles"
-import { isTenantStorageUrl } from "../../../lib/tenant-storage"
+import {
+  isTenantStorageUrl,
+  signAttachmentUrls,
+} from "../../../lib/tenant-storage"
 import {
   pageParams,
   resolveAssignmentAccess,
@@ -92,18 +95,21 @@ export async function GET(
     ])
 
     return NextResponse.json({
-      data: rows.map((r) => ({
-        id: r.id,
-        student_id: r.student.id,
-        student_name: `${r.student.firstName} ${r.student.lastName}`.trim(),
-        status: r.status,
-        submitted_at: r.submittedAt,
-        content: r.content,
-        attachments: r.attachments,
-        score: r.score === null ? null : Number(r.score),
-        feedback: r.feedback,
-        graded_at: r.gradedAt,
-      })),
+      data: await Promise.all(
+        rows.map(async (r) => ({
+          id: r.id,
+          student_id: r.student.id,
+          student_name: `${r.student.firstName} ${r.student.lastName}`.trim(),
+          status: r.status,
+          submitted_at: r.submittedAt,
+          content: r.content,
+          attachments: r.attachments,
+          attachment_urls: await signAttachmentUrls(r.attachments),
+          score: r.score === null ? null : Number(r.score),
+          feedback: r.feedback,
+          graded_at: r.gradedAt,
+        }))
+      ),
       total,
       page,
       per_page: perPage,
@@ -203,7 +209,9 @@ export async function POST(
       ? await getStudentSubmission(auth.schoolId, student.id, id)
       : null
 
-    return NextResponse.json(submissionDto(submission), { status: 201 })
+    return NextResponse.json(await submissionDto(submission), {
+      status: 201,
+    })
   } catch (error) {
     console.error("Mobile assignment submit error:", error)
     return NextResponse.json(

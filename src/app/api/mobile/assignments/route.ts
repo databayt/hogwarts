@@ -74,7 +74,9 @@ export async function GET(request: NextRequest) {
       const all = await getAssignmentsForStudent(auth.schoolId, studentId)
       const start = (page - 1) * perPage
       return NextResponse.json({
-        data: all.slice(start, start + perPage).map(studentAssignmentDto),
+        data: await Promise.all(
+          all.slice(start, start + perPage).map(studentAssignmentDto)
+        ),
         total: all.length,
         page,
         per_page: perPage,

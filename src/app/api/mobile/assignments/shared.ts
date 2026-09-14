@@ -14,20 +14,24 @@ import type { StudentSubmission } from "@/components/school-dashboard/listings/a
 import type { MobileAuthContext } from "../lib/authenticate"
 import { hasRole } from "../lib/roles"
 import { canAccessStudent } from "../lib/student-access"
+import { signAttachmentUrls } from "../lib/tenant-storage"
 
 /**
  * Shared pieces of the mobile assignments routes: DTO mappers and the one
  * access rule every `/assignments/:id/*` route applies.
  */
 
-export function submissionDto(s: StudentSubmission | null) {
+export async function submissionDto(s: StudentSubmission | null) {
   if (!s) return null
   return {
     id: s.id,
     status: s.status,
     submitted_at: s.submittedAt,
     content: s.content,
+    // Stored URLs (send these back when resubmitting) …
     attachments: s.attachments,
+    // … and short-lived signed URLs to open them, index-aligned.
+    attachment_urls: await signAttachmentUrls(s.attachments),
     score: s.score,
     feedback: s.feedback,
     graded_at: s.gradedAt,
@@ -35,7 +39,7 @@ export function submissionDto(s: StudentSubmission | null) {
 }
 
 /** A student's own row: the assignment plus their submission, if any. */
-export function studentAssignmentDto(a: MyAssignment) {
+export async function studentAssignmentDto(a: MyAssignment) {
   return {
     id: a.id,
     title: a.title,
@@ -49,7 +53,7 @@ export function studentAssignmentDto(a: MyAssignment) {
     class_id: a.classId,
     class_name: a.className,
     subject_name: a.subjectName,
-    submission: submissionDto(a.submission),
+    submission: await submissionDto(a.submission),
   }
 }
 

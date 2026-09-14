@@ -17,45 +17,11 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 import { db } from "@/lib/db"
 import { deleteObject } from "@/lib/s3"
 import { getTenantContext } from "@/lib/tenant-context"
-import { checkSchoolVideoQuota } from "@/components/lumos/lib/quota"
-
-let s3Client: S3Client | null = null
-
-function getS3Client(): S3Client | null {
-  if (
-    !process.env.AWS_ACCESS_KEY_ID ||
-    !process.env.AWS_SECRET_ACCESS_KEY ||
-    !process.env.AWS_S3_BUCKET
-  ) {
-    return null
-  }
-
-  if (!s3Client) {
-    s3Client = new S3Client({
-      region: process.env.AWS_REGION || "us-east-1",
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    })
-  }
-  return s3Client
-}
-
-const MAX_VIDEO_SIZE = 5 * 1024 * 1024 * 1024 // 5GB
-const ALLOWED_VIDEO_TYPES = [
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-  "video/x-msvideo",
-]
-const PRESIGNED_URL_EXPIRY = 15 * 60 // 15 minutes
+import { presignUpload } from "@/lib/upload/presign"
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,92 +51,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 4. Parse request body
-    const body = await request.json()
-    const { filename, contentType, size } = body as {
-      filename: string
-      contentType: string
-      size: number
+    // 4. Validate + mint — MIME allowlist, 5GB cap, quota pre-check and the
+    // `stream/<schoolId>/video/` key live in src/lib/upload/presign.ts.
+    const body = (await request.json()) as {
+      filename?: unknown
+      contentType?: unknown
+      size?: unknown
     }
-
-    if (!filename || !contentType || !size) {
-      return NextResponse.json(
-        { error: "Missing required fields: filename, contentType, size" },
-        { status: 400 }
-      )
-    }
-
-    // 5. Validate content type
-    if (!ALLOWED_VIDEO_TYPES.includes(contentType)) {
-      return NextResponse.json(
-        { error: `Invalid content type: ${contentType}` },
-        { status: 400 }
-      )
-    }
-
-    // 6. Validate size
-    if (size > MAX_VIDEO_SIZE) {
-      return NextResponse.json(
-        { error: "File exceeds maximum size of 5GB" },
-        { status: 400 }
-      )
-    }
-
-    // 6b. Storage quota pre-check — refuse before any bytes move, instead of
-    // letting the upload finish and failing at submit time.
-    if (schoolId) {
-      const quota = await checkSchoolVideoQuota(schoolId, size)
-      if (!quota.allowed) {
-        return NextResponse.json(
-          { error: "Storage quota exceeded for this school" },
-          { status: 413 }
-        )
-      }
-    }
-
-    // 7. Check S3 configuration
-    const client = getS3Client()
-    if (!client) {
-      return NextResponse.json(
-        { error: "S3 not configured for direct uploads" },
-        { status: 500 }
-      )
-    }
-
-    // 8. Generate S3 key
-    const timestamp = Date.now()
-    const sanitizedName = filename.replace(/[^a-zA-Z0-9.-]/g, "_")
-    const key = `stream/${schoolId ?? "platform"}/video/${timestamp}_${sanitizedName}`
-    const bucket = process.env.AWS_S3_BUCKET!
-
-    // 9. Generate presigned PUT URL
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      ContentType: contentType,
-      ContentLength: size,
+    const out = await presignUpload({
+      kind: "video",
+      schoolId,
+      filename: body.filename,
+      contentType: body.contentType,
+      size: body.size,
     })
+    if (!out.ok) {
+      return NextResponse.json({ error: out.error }, { status: out.status })
+    }
 
-    // @ts-expect-error - AWS SDK @smithy/types version mismatch between packages
-    const presignedUrl = await getSignedUrl(client, command, {
-      expiresIn: PRESIGNED_URL_EXPIRY,
-    })
-
-    // 10. Canonical stored URL — always the bucket's own S3 URL.
-    //
-    // This used to prefer `CLOUDFRONT_DOMAIN`, which names a distribution that
-    // fronts a *different* bucket, so every upload recorded a URL that 403s.
-    // It is also no longer a delivery URL at all: reads go through
-    // /api/lumos/video/<id>, which authorizes and then signs `storageKey`.
-    // What we persist is just the durable identity of the object.
-    const finalUrl = `https://${bucket}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`
-
+    // The stored URL is the bucket's own S3 URL, never a delivery URL: reads go
+    // through /api/lumos/video/<id>, which authorizes and then signs
+    // `storageKey`. (It used to prefer CLOUDFRONT_DOMAIN, which fronts a
+    // different bucket, so every upload recorded a URL that 403'd.)
     return NextResponse.json({
-      presignedUrl,
-      finalUrl,
-      key,
+      presignedUrl: out.presignedUrl,
+      finalUrl: out.finalUrl,
+      key: out.key,
       storageProvider: "aws_s3",
-      expiresIn: PRESIGNED_URL_EXPIRY,
+      expiresIn: out.expiresIn,
     })
   } catch (error) {
     console.error("Presigned URL generation failed:", error)
