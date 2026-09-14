@@ -8,7 +8,7 @@ maturity: In Progress
 completion: 40
 tracker: https://github.com/databayt/hogwarts/issues/315
 docs: https://ed.databayt.org/en/docs/mobile-api
-last_audited: 2026-05-25
+last_audited: 2026-09-14
 ---
 
 # Mobile API Layer
@@ -33,7 +33,19 @@ All endpoints (except `/api/mobile/auth/*` and `/api/mobile/schools`) require:
 - `Authorization: Bearer <jwt>` header
 - JWT must contain `schoolId` claim (issued at login)
 
-Shared helper: `lib/authenticate.ts` — extracts and verifies token, returns `{ userId, email, schoolId, role }` or 401/400 error.
+Shared helper: `lib/authenticate.ts` — extracts and verifies token, returns `{ userId, email, schoolId, role }` or an error:
+
+| Status | Body                             | When                                                              |
+| ------ | -------------------------------- | ----------------------------------------------------------------- |
+| 401    | `{ error: "Unauthorized" }`      | no bearer token                                                   |
+| 401    | `{ error: "Invalid token" }`     | bad signature / expired / a refresh token / user no longer exists |
+| 400    | `{ error: "No school context" }` | token has no `schoolId`                                           |
+| 403    | `{ error: "suspended" }`         | `User.isSuspended`                                                |
+| 401    | `{ error: "Token revoked" }`     | token `tv` ≠ `User.tokenVersion` (after logout / password reset)  |
+
+Suspension and token version are cached per user for 60s (logout clears its own entry). Tokens minted before `tv` existed count as version 0.
+
+Role checks use `lib/roles.ts` → `hasRole(auth, ...roles)`, typed off Prisma `UserRole` (DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, ACCOUNTANT, STAFF, USER). There is no SUPER_ADMIN; DEVELOPER is the platform role.
 
 ### Multi-Tenancy
 
@@ -54,22 +66,31 @@ All field names use **snake_case** (mobile DTO convention).
 
 ### Auth (pre-existing)
 
-| Method | Path                            | Description          |
-| ------ | ------------------------------- | -------------------- |
-| POST   | `/api/mobile/auth`              | Email/password login |
-| PUT    | `/api/mobile/auth`              | Refresh token        |
-| POST   | `/api/mobile/auth/google`       | Google OAuth         |
-| POST   | `/api/mobile/auth/register`     | Registration         |
-| POST   | `/api/mobile/auth/reset`        | Password reset       |
-| POST   | `/api/mobile/auth/verify-otp`   | OTP verification     |
-| POST   | `/api/mobile/auth/new-password` | Set new password     |
-| GET    | `/api/mobile/schools`           | List schools         |
+| Method | Path                            | Description                                                                   |
+| ------ | ------------------------------- | ----------------------------------------------------------------------------- |
+| POST   | `/api/mobile/auth`              | Email/password login                                                          |
+| PUT    | `/api/mobile/auth`              | Refresh (`X-Refresh-Token`); 401 on stale `tv`, 403 suspended                 |
+| POST   | `/api/mobile/auth/google`       | Google sign-in — see _Social login_ below                                     |
+| POST   | `/api/mobile/auth/apple`        | Apple sign-in (identity token verified against Apple JWKS)                    |
+| POST   | `/api/mobile/auth/facebook`     | Facebook sign-in                                                              |
+| POST   | `/api/mobile/auth/logout`       | Authenticated; bumps `User.tokenVersion` → every token of the user is revoked |
+| POST   | `/api/mobile/auth/register`     | Registration                                                                  |
+| POST   | `/api/mobile/auth/reset`        | Password reset                                                                |
+| POST   | `/api/mobile/auth/verify-otp`   | OTP verification                                                              |
+| POST   | `/api/mobile/auth/new-password` | Set new password (also revokes existing tokens)                               |
+| GET    | `/api/mobile/schools`           | List schools                                                                  |
+
+**Social login never issues a token without a school.** Body may carry `school_id`. If the identity is already school-scoped → the usual `{ access_token, refresh_token, expires_at, user }`. If `school_id` names a school the verified email already has an account in → tokens for that school account. Otherwise → `200 { needs_school: true, schools: [{ id, name, name_en, logo_url, domain }] }` (the email's schools, same shape as `GET /schools`; empty when the provider gave no email) — retry the same call with `school_id`.
 
 ### Dashboard (new)
 
 | Method | Path                    | Description              |
 | ------ | ----------------------- | ------------------------ |
 | GET    | `/api/mobile/dashboard` | Role-based summary stats |
+
+Original flat fields stay (`user_name`, `avatar_url`, `role`, `school_name`, `unread_notifications`, `announcements_count`, role stats). Role stats: STUDENT `attendance_percentage, upcoming_exams, today_classes` · TEACHER `total_classes, today_classes` · GUARDIAN `children_count` · ADMIN/DEVELOPER `total_students, total_teachers, total_classes` · ACCOUNTANT `pending_invoices, pending_amount, overdue_invoices, overdue_amount, collected_today` · STAFF `total_students, present_today, upcoming_events`.
+
+Additive (2026-09): `school { id, name, name_en, logo_url, enabled_modules (null = all) }`, `unread_messages`, `next_actions [{ kind, mark, href }]` (web `rankNextActions` over the shared upcoming loader; `href` is a locale-less web path), `quick_actions [{ key, label, description, href, icon }]`, `today_timetable` (STUDENT/TEACHER, else null) `{ day_of_week, date, closure { title, type } | null, periods [{ period_id, period_name, start_time, end_time, subject, class_name, teacher, room, is_break, timetable_id, live_class }] }`.
 
 ### Profile (new)
 
@@ -116,11 +137,12 @@ All field names use **snake_case** (mobile DTO convention).
 
 ### Notifications (new)
 
-| Method | Path                                 | Description              |
-| ------ | ------------------------------------ | ------------------------ |
-| GET    | `/api/mobile/notifications`          | List (with unread count) |
-| POST   | `/api/mobile/notifications/:id/read` | Mark single read         |
-| POST   | `/api/mobile/notifications/read-all` | Mark all read            |
+| Method | Path                                 | Description                                                                |
+| ------ | ------------------------------------ | -------------------------------------------------------------------------- |
+| GET    | `/api/mobile/notifications`          | List (with unread count)                                                   |
+| POST   | `/api/mobile/notifications/:id/read` | Mark single read                                                           |
+| POST   | `/api/mobile/notifications/read-all` | Mark all read                                                              |
+| POST   | `/api/mobile/notifications/register` | `{ device_token, platform: android\|ios }` — one active token per platform |
 
 ### Timetable (new)
 
@@ -137,10 +159,41 @@ All field names use **snake_case** (mobile DTO convention).
 
 ### Fees (new)
 
-| Method | Path                                  | Description     |
-| ------ | ------------------------------------- | --------------- |
-| GET    | `/api/mobile/fees`                    | Fee records     |
-| GET    | `/api/mobile/fees/summary/:studentId` | Payment summary |
+| Method | Path                                  | Description                                                                                                        |
+| ------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| GET    | `/api/mobile/fees`                    | Legacy FeeRecord rows (`student_id` now ownership-checked)                                                         |
+| GET    | `/api/mobile/fees/summary/:studentId` | Legacy summary (ownership-checked)                                                                                 |
+| GET    | `/api/mobile/fees/invoices`           | STUDENT/GUARDIAN instalments — `student_id, status, due=true, lang, page, per_page`; + `currency, totals, methods` |
+| GET    | `/api/mobile/fees/invoices/:id`       | One instalment + `fee` balance, `payments`, `methods`, `can_pay_online`                                            |
+| GET    | `/api/mobile/fees/payments`           | Payment history (SUCCESS + PENDING_VERIFICATION)                                                                   |
+| POST   | `/api/mobile/fees/pay`                | `{ fee_assignment_id, gateway?, lang? }` → `{ checkout_url, gateway, amount, currency }` (Stripe/Tap)              |
+
+The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` uses the web checkout core. Refusals: 403 `UNAUTHORIZED`, 409 `FEE_FULLY_PAID`, 422 `PAYMENT_GATEWAY_UNAVAILABLE` (manual rails), 502 `PAYMENT_FAILED`.
+
+### Assignments (new)
+
+| Method | Path                                                    | Description                                                                               |
+| ------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| GET    | `/api/mobile/assignments`                               | STUDENT own classes · GUARDIAN `?student_id=` · TEACHER own classes · ADMIN/DEVELOPER all |
+| GET    | `/api/mobile/assignments/:id`                           | Detail (+ `submission` for student / guardian `?student_id=`)                             |
+| POST   | `/api/mobile/assignments/:id/submissions`               | STUDENT hand-in `{ content?, attachments?: [file_url] }` → 201 submission                 |
+| GET    | `/api/mobile/assignments/:id/submissions`               | TEACHER (of the class) / ADMIN — `status, page, per_page`                                 |
+| PUT    | `/api/mobile/assignments/:id/submissions/:submissionId` | Grade `{ score, feedback? }`; 400 `SCORE_ABOVE_TOTAL`                                     |
+
+### Report Cards
+
+| Method | Path                               | Description                                                  |
+| ------ | ---------------------------------- | ------------------------------------------------------------ |
+| GET    | `/api/mobile/report-cards`         | List                                                         |
+| GET    | `/api/mobile/report-cards/:id`     | Detail                                                       |
+| GET    | `/api/mobile/report-cards/:id/pdf` | 302 to a 15-min signed URL · 404 · 403 · 425 while rendering |
+
+### Offline & Uploads (new)
+
+| Method | Path                         | Description                                                                                                                                          |
+| ------ | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/mobile/offline/sync`   | Outbox drain `{ items: [{ idempotency_key, kind, payload, created_at }] }` → `{ results: [{ idempotency_key, result, code?, data? }], server_time }` |
+| POST   | `/api/mobile/upload/presign` | `{ purpose: attachment\|payment_proof\|video, filename, content_type, size }` → `{ upload_url, file_url, key, expires_in, method, headers }`         |
 
 ### Announcements (new)
 
@@ -198,9 +251,6 @@ These endpoints are called by the Android app but don't have backend routes yet:
 
 | Priority | Group              | Endpoints Needed                                                                     |
 | -------- | ------------------ | ------------------------------------------------------------------------------------ |
-| P0       | Invoices           | `GET /invoices`, `GET /invoices/:id`                                                 |
-| P0       | Payments           | `POST /payments/process`, `GET /payments/transactions`                               |
-| P1       | Report Cards       | `GET /report-cards`, `GET /report-cards/:id`, `GET /report-cards/:id/pdf`            |
 | P1       | Teacher Grades     | `POST /teacher/classes/:id/grades`, `POST /teacher/classes/:id/attendance`           |
 | P1       | Teacher Schedule   | `GET /teacher/schedule`, `GET /teacher/classes/:id/assessments`                      |
 | P1       | Admin Staff        | `GET /admin/staff`, `GET /admin/staff/:id`                                           |
