@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { parseEnabledModules } from "@/lib/enabled-modules"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -250,7 +251,7 @@ export default async function EditorLayout({ children, params }: Props) {
         return `${translatedPlan} ${planWord}`
       }
       case "modules": {
-        const em = school.enabledModules as string[] | null
+        const em = parseEnabledModules(school.enabledModules)
         if (!em)
           return (cs?.allModulesEnabled as string) ?? "All modules enabled"
         const modulesLabel = (cs?.modulesEnabled as string) ?? "modules enabled"

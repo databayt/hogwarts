@@ -3,33 +3,28 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { db } from "@/lib/db"
+import {
+  isPickableMethod,
+  readAttendanceMethods,
+  writeAttendanceMethods,
+} from "@/components/school-dashboard/attendance/settings/store"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
-
-const DEFAULT_METHODS = ["MANUAL", "QR_CODE", "BARCODE"]
 
 /**
  * GET /api/mobile/attendance/methods — list enabled attendance methods
  * PUT /api/mobile/attendance/methods — update enabled methods (ADMIN only)
+ *
+ * Backed by the school's default AttendancePolicy row — the same row the web
+ * /attendance/settings page edits. School.enabledModules is never touched:
+ * it is the sidebar's string[] of module keys.
  */
 export async function GET(request: NextRequest) {
   try {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    const school = await db.school.findUnique({
-      where: { id: auth.schoolId },
-      select: { enabledModules: true },
-    })
-
-    // enabledModules is a Json field; extract attendance methods if present
-    const modules = school?.enabledModules as Record<string, unknown> | null
-    const methods =
-      modules && Array.isArray(modules.attendanceMethods)
-        ? (modules.attendanceMethods as string[])
-        : DEFAULT_METHODS
-
+    const methods = await readAttendanceMethods(auth.schoolId)
     return NextResponse.json({ methods })
   } catch (error) {
     console.error("Mobile get methods error:", error)
@@ -46,41 +41,28 @@ export async function PUT(request: NextRequest) {
     if (isAuthError(auth)) return auth
 
     // Authorization: manage_settings is ADMIN-only per the central matrix.
-    // "SUPER_ADMIN" is dead code → "DEVELOPER".
     if (auth.role !== "ADMIN" && auth.role !== "DEVELOPER") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const body = await request.json()
-    const { methods } = body
+    const body = await request.json().catch(() => null)
+    const methods: unknown = body?.methods
 
-    if (!Array.isArray(methods) || methods.length === 0) {
+    if (
+      !Array.isArray(methods) ||
+      methods.length === 0 ||
+      !methods.every((m) => typeof m === "string" && isPickableMethod(m))
+    ) {
       return NextResponse.json(
-        { error: "methods must be a non-empty array" },
+        { error: "methods must be a non-empty array of known methods" },
         { status: 400 }
       )
     }
 
-    // Read current enabledModules, merge in attendanceMethods
-    const school = await db.school.findUnique({
-      where: { id: auth.schoolId },
-      select: { enabledModules: true },
-    })
+    const unique = [...new Set(methods)]
+    await writeAttendanceMethods(auth.schoolId, unique)
 
-    const existingModules =
-      (school?.enabledModules as Record<string, unknown> | null) || {}
-
-    await db.school.update({
-      where: { id: auth.schoolId },
-      data: {
-        enabledModules: {
-          ...existingModules,
-          attendanceMethods: methods,
-        },
-      },
-    })
-
-    return NextResponse.json({ methods })
+    return NextResponse.json({ methods: unique })
   } catch (error) {
     console.error("Mobile update methods error:", error)
     return NextResponse.json(

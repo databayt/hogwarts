@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
+import { parseEnabledModules } from "@/lib/enabled-modules"
 import { cn } from "@/lib/utils"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { ErrorToast } from "@/components/atom/toast"
@@ -28,7 +29,7 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
   const [, startTransition] = useTransition()
 
   // Current enabled state: null = all enabled
-  const initialEnabled = school.enabledModules as string[] | null
+  const initialEnabled = parseEnabledModules(school.enabledModules)
   const [enabledSet, setEnabledSet] = useState<Set<string>>(() => {
     if (!initialEnabled) {
       // null = all modules enabled

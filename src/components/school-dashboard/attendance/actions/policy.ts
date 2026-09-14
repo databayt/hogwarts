@@ -10,6 +10,13 @@ import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import {
+  DEFAULT_METHODS,
+  defaultPolicyCreateData,
+  findDefaultPolicy,
+  isPickableMethod,
+  PICKABLE_METHODS,
+} from "../settings/store"
 import type { ActionResponse } from "./core"
 import { guardAttendance } from "./helpers"
 
@@ -422,23 +429,6 @@ export async function dismissPolicyTrigger(
 // SCHOOL-WIDE ATTENDANCE SETTINGS (backed by the default AttendancePolicy row)
 // ============================================================================
 
-/** The school-wide default policy row managed by /attendance/settings. */
-const DEFAULT_POLICY_NAME = "Default"
-
-const PICKABLE_METHODS = [
-  "MANUAL",
-  "QR_CODE",
-  "BARCODE",
-  "GEOFENCE",
-  "KIOSK",
-  "BULK_UPLOAD",
-  "RFID",
-  "NFC",
-  "BLUETOOTH",
-  "FINGERPRINT",
-  "FACE_RECOGNITION",
-] as const
-
 const attendanceSettingsSchema = z.object({
   lateThreshold: z.number().int().min(5).max(60),
   absentThreshold: z.number().int().min(15).max(120),
@@ -455,20 +445,8 @@ const SETTINGS_DEFAULTS: AttendanceSettings = {
   absentThreshold: 30,
   graceperiod: 15,
   requireCheckOut: false,
-  methods: ["MANUAL", "QR_CODE", "BARCODE", "GEOFENCE", "KIOSK", "BULK_UPLOAD"],
+  methods: DEFAULT_METHODS,
   maxDailyAbsences: null,
-}
-
-async function findDefaultPolicy(schoolId: string) {
-  return (
-    (await db.attendancePolicy.findFirst({
-      where: { schoolId, name: DEFAULT_POLICY_NAME, appliesTo: { has: "ALL" } },
-    })) ??
-    (await db.attendancePolicy.findFirst({
-      where: { schoolId, appliesTo: { has: "ALL" } },
-      orderBy: { priority: "desc" },
-    }))
-  )
 }
 
 /**
@@ -490,10 +468,7 @@ export async function getAttendanceSettings(): Promise<
       }
     }
 
-    const methods = policy.methods.filter(
-      (m): m is AttendanceSettings["methods"][number] =>
-        (PICKABLE_METHODS as readonly string[]).includes(m)
-    )
+    const methods = policy.methods.filter(isPickableMethod)
     return {
       success: true,
       data: {
@@ -550,17 +525,7 @@ export async function updateAttendanceSettings(
       id = existing.id
     } else {
       const created = await db.attendancePolicy.create({
-        data: {
-          ...data,
-          schoolId,
-          name: DEFAULT_POLICY_NAME,
-          description: "School-wide attendance settings",
-          appliesTo: ["ALL"],
-          priority: 0,
-          // Required Time column; marking flows don't read it yet — a
-          // sensible fixed default until per-policy start times get UI.
-          startTime: new Date("1970-01-01T07:30:00.000Z"),
-        },
+        data: defaultPolicyCreateData(schoolId, data),
         select: { id: true },
       })
       id = created.id

@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { parseEnabledModules } from "@/lib/enabled-modules"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { ModalProvider } from "@/components/atom/modal/context"
@@ -25,11 +26,11 @@ import { SchoolProvider } from "@/components/school-dashboard/context/school-con
 import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
 import { WelcomeDialog } from "@/components/school-dashboard/welcome/welcome-dialog"
 import PlatformHeader from "@/components/template/platform-header/content"
-import PlatformSidebar from "@/components/template/platform-sidebar/content"
 import {
   platformNav,
   type Role as PlatformRole,
 } from "@/components/template/platform-sidebar/config"
+import PlatformSidebar from "@/components/template/platform-sidebar/content"
 import { getText } from "@/components/translation/display"
 import { detectLang } from "@/components/translation/util"
 
@@ -157,12 +158,14 @@ export default async function PlatformLayout({
 
   // The sidebar this role will see, as URLs, for the service worker to save
   // ahead of the first disconnection (same filter as the sidebar itself).
-  const enabledModules = school.enabledModules as string[] | null | undefined
+  const enabledModules = parseEnabledModules(school.enabledModules)
   const warmUrls = platformNav
     .filter((item) => item.roles.includes(serverRole as PlatformRole))
     .filter(
       (item) =>
-        item.alwaysVisible || !enabledModules || enabledModules.includes(item.key)
+        item.alwaysVisible ||
+        !enabledModules ||
+        enabledModules.includes(item.key)
     )
     .map((item) => `/${lang}${item.href}`)
 

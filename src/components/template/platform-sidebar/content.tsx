@@ -6,6 +6,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { parseEnabledModules } from "@/lib/enabled-modules"
 import {
   Sidebar,
   SidebarContent,
@@ -76,10 +77,7 @@ export default function PlatformSidebar({
                 // Module visibility: alwaysVisible items always show;
                 // if school has enabledModules configured, only show listed ones
                 if (item.alwaysVisible) return true
-                const enabled = school?.enabledModules as
-                  | string[]
-                  | null
-                  | undefined
+                const enabled = parseEnabledModules(school?.enabledModules)
                 if (!enabled) return true // null = all visible
                 return enabled.includes(item.key)
               })
