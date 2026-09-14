@@ -13,9 +13,8 @@ import { type AnnouncementRow } from "@/components/school-dashboard/listings/ann
 import { announcementsSearchParams } from "@/components/school-dashboard/listings/announcements/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/announcements/permissions"
 import {
-  buildViewerAudienceWhere,
   getAnnouncementsList,
-  isAudienceOnlyRole,
+  resolveViewerAudience,
 } from "@/components/school-dashboard/listings/announcements/queries"
 import { AnnouncementsTable } from "@/components/school-dashboard/listings/announcements/table"
 import { localize } from "@/components/translation/localize"
@@ -46,12 +45,11 @@ export default async function AnnouncementsContent({
     try {
       // Staff see the whole school list; a student or guardian sees only the
       // published notices addressed to them (school, their role, their classes).
-      const userId = session?.user?.id
-      const audience = isAudienceOnlyRole(role as UserRole | null)
-        ? userId
-          ? await buildViewerAudienceWhere(schoolId, userId, role as UserRole)
-          : { id: { in: [] } }
-        : undefined
+      const audience = await resolveViewerAudience(
+        schoolId,
+        session?.user?.id,
+        role as UserRole | null
+      )
 
       const { rows, count } = await getAnnouncementsList(
         schoolId,

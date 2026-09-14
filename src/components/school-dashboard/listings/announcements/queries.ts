@@ -235,6 +235,22 @@ export async function buildViewerAudienceWhere(
   }
 }
 
+/**
+ * The audience narrowing for one viewer, or `undefined` for staff (who see the
+ * whole school list). A reader role with no user id sees nothing. Every list
+ * and detail read — the web page, its load-more action, the mobile API —
+ * goes through this one decision.
+ */
+export async function resolveViewerAudience(
+  schoolId: string,
+  userId: string | null | undefined,
+  role: UserRole | null | undefined
+): Promise<Prisma.AnnouncementWhereInput | undefined> {
+  if (!isAudienceOnlyRole(role)) return undefined
+  if (!userId) return { id: { in: [] } }
+  return buildViewerAudienceWhere(schoolId, userId, role as UserRole)
+}
+
 // ============================================================================
 // Query Functions
 // ============================================================================
@@ -244,12 +260,16 @@ export async function buildViewerAudienceWhere(
  * @param schoolId - School ID for multi-tenant filtering
  * @param params - Query parameters
  * @param audience - Viewer audience narrowing (students and guardians)
+ * @param select - Columns to read; defaults to `announcementListSelect`
  * @returns Promise with announcements and total count
  */
-export async function getAnnouncementsList(
+export async function getAnnouncementsList<
+  S extends Prisma.AnnouncementSelect = typeof announcementListSelect,
+>(
   schoolId: string,
   params: Partial<AnnouncementQueryParams> = {},
-  audience?: Prisma.AnnouncementWhereInput
+  audience?: Prisma.AnnouncementWhereInput,
+  select?: S
 ) {
   const base = buildAnnouncementWhere(schoolId, params)
   const where: Prisma.AnnouncementWhereInput = audience
@@ -265,12 +285,15 @@ export async function getAnnouncementsList(
       orderBy,
       skip,
       take,
-      select: announcementListSelect,
+      select: select ?? announcementListSelect,
     }),
     db.announcement.count({ where }),
   ])
 
-  return { rows, count }
+  return {
+    rows: rows as unknown as Prisma.AnnouncementGetPayload<{ select: S }>[],
+    count,
+  }
 }
 
 /**

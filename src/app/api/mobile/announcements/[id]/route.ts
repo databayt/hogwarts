@@ -4,13 +4,21 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { resolveViewerAudience } from "@/components/school-dashboard/listings/announcements/queries"
+import { localizeOne } from "@/components/translation/localize"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { displayLang, viewerRole } from "../viewer"
 
 /**
  * GET /api/mobile/announcements/:id — announcement detail
  *
+ * Visibility matches the web's reading page (`getAnnouncement`): a student,
+ * guardian or plain user may only open a notice they are an audience for;
+ * a draft, a staff notice or another class's notice reads as 404.
+ *
  * Also marks the announcement as read for the current user.
+ * Query: `lang` (ar|en) localizes title and body.
  */
 export async function GET(
   request: NextRequest,
@@ -21,13 +29,25 @@ export async function GET(
     if (isAuthError(auth)) return auth
 
     const { id } = await params
+    const lang = displayLang(new URL(request.url).searchParams)
 
-    const announcement = await db.announcement.findFirst({
-      where: { id, schoolId: auth.schoolId },
+    const audience = await resolveViewerAudience(
+      auth.schoolId,
+      auth.userId,
+      viewerRole(auth)
+    )
+
+    const found = await db.announcement.findFirst({
+      where: {
+        id,
+        schoolId: auth.schoolId,
+        ...(audience ? { AND: [audience] } : {}),
+      },
       select: {
         id: true,
         title: true,
         body: true,
+        lang: true,
         scope: true,
         priority: true,
         published: true,
@@ -38,18 +58,26 @@ export async function GET(
         classId: true,
         role: true,
         createdAt: true,
+        updatedAt: true,
         creator: { select: { username: true, image: true } },
         class: { select: { id: true, name: true } },
         _count: { select: { readReceipts: true } },
       },
     })
 
-    if (!announcement) {
+    if (!found) {
       return NextResponse.json(
         { error: "Announcement not found" },
         { status: 404 }
       )
     }
+
+    const announcement = lang
+      ? ((await localizeOne("Announcement", found, {
+          schoolId: auth.schoolId,
+          lang,
+        })) ?? found)
+      : found
 
     // Mark as read (upsert to avoid duplicates)
     await db.announcementRead
@@ -92,6 +120,10 @@ export async function GET(
       created_at: announcement.createdAt.toISOString(),
       author_name: announcement.creator?.username || null,
       author_avatar: announcement.creator?.image || null,
+      // Additive (2026-09)
+      updated_at: announcement.updatedAt.toISOString(),
+      lang: announcement.lang,
+      is_read: true,
     })
   } catch (error) {
     console.error("Mobile announcement detail error:", error)

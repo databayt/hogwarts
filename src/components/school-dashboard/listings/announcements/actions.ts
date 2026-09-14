@@ -99,6 +99,7 @@ import {
 import {
   buildViewerAudienceWhere,
   isAudienceOnlyRole,
+  resolveViewerAudience,
 } from "@/components/school-dashboard/listings/announcements/queries"
 // ============================================================================
 // Announcement Config Actions
@@ -722,12 +723,23 @@ export async function getAnnouncements(
       }
     }
 
+    // Load-more must narrow exactly like the first page (content.tsx): a
+    // student or guardian only ever pages through notices addressed to them,
+    // and nobody pages into half-finished wizard drafts.
+    const audience = await resolveViewerAudience(
+      schoolId,
+      authContext.userId,
+      authContext.role
+    )
+
     // Build where clause with proper types
     const where: any = {
       schoolId,
+      wizardStep: null,
       ...titleFilter,
       ...(sp.scope && { scope: sp.scope }),
       ...(sp.published && { published: sp.published === "true" }),
+      ...(audience ? { AND: [audience] } : {}),
     }
 
     // Build pagination

@@ -199,9 +199,10 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 
 ### Announcements (new)
 
-| Method | Path                        | Description             |
-| ------ | --------------------------- | ----------------------- |
-| GET    | `/api/mobile/announcements` | Published announcements |
+| Method | Path                            | Description                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/mobile/announcements`     | Exactly the web `/announcements` list for the caller (`resolveViewerAudience` in `listings/announcements/queries.ts`): staff see the whole school list, drafts included; STUDENT/GUARDIAN/USER (and any unknown role) see only published, unexpired notices for the school, their role or their classes. Pinned first, then newest. `page, per_page (≤100), title, lang (ar\|en)`. Additive: `scope, target_role, class_id, is_published, is_pinned, is_featured, lang, created_at, is_read` |
+| GET    | `/api/mobile/announcements/:id` | Same audience rule (not an audience → 404); marks read. `lang`. Additive: `updated_at, lang, is_read`                                                                                                                                                                                                                                                                                                  |
 
 ### Events (new)
 
