@@ -10,10 +10,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import {
-  dispatchNotification,
-  dispatchNotificationsToAudience,
-} from "@/lib/dispatch-notification"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
@@ -25,6 +22,7 @@ import {
 import { prewarm } from "@/components/translation/prewarm"
 
 import { assertAssignmentPermission, getAuthContext } from "./authorization"
+import { gradeSubmissionCore, gradeSubmissionSchema } from "./grade-core"
 
 type AssignmentSelectResult = {
   id: string
@@ -264,66 +262,25 @@ export async function gradeSubmission(input: {
 
     assertAssignmentPermission(authContext, "grade", { schoolId })
 
-    const parsed = z
-      .object({
-        submissionId: z.string().min(1),
-        score: z.number().min(0),
-        feedback: z.string().optional(),
-      })
-      .parse(input)
+    const parsed = gradeSubmissionSchema.parse(input)
 
-    // Verify submission exists and belongs to this school
-    const submission = await db.assignmentSubmission.findFirst({
-      where: { id: parsed.submissionId, schoolId },
-      select: {
-        id: true,
-        studentId: true,
-        assignment: {
-          select: { id: true, title: true, totalPoints: true },
-        },
-        student: {
-          select: { userId: true },
-        },
-      },
+    const out = await gradeSubmissionCore({
+      schoolId,
+      graderUserId: authContext.userId,
+      submissionId: parsed.submissionId,
+      score: parsed.score,
+      feedback: parsed.feedback,
     })
-
-    if (!submission) {
+    if (out.status === "notFound") {
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
-
-    await db.assignmentSubmission.updateMany({
-      where: { id: parsed.submissionId, schoolId },
-      data: {
-        score: parsed.score,
-        feedback: parsed.feedback || null,
-        status: "GRADED",
-        gradedAt: new Date(),
-      },
-    })
-
-    // Notify the student that their assignment was graded (non-blocking)
-    if (submission.student.userId) {
-      dispatchNotification({
-        schoolId,
-        userId: submission.student.userId,
-        type: "assignment_graded",
-        title: `تم تصحيح الواجب: ${submission.assignment.title}`,
-        body: `حصلت على ${parsed.score}/${submission.assignment.totalPoints} في "${submission.assignment.title}"`,
-        priority: "normal",
-        channels: ["in_app"],
-        metadata: {
-          assignmentId: submission.assignment.id,
-          submissionId: parsed.submissionId,
-          score: parsed.score,
-          totalPoints: submission.assignment.totalPoints,
-          url: `/assignments/${submission.assignment.id}`,
-        },
-      }).catch((err) =>
-        console.error("[gradeSubmission] Notification error:", err)
+    if (out.status === "scoreAboveTotal") {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        `Score exceeds ${out.totalPoints}`
       )
     }
 
-    revalidatePath(ASSIGNMENTS_PATH)
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[gradeSubmission] Error:", error)

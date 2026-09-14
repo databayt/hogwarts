@@ -2,7 +2,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
 
-import type { OwnSubmission } from "./submit-core"
+import {
+  ownSubmissionSelect,
+  toOwnSubmission,
+  type StudentSubmission,
+} from "./submit-core"
 
 export interface MyAssignment {
   id: string
@@ -13,8 +17,10 @@ export interface MyAssignment {
   status: string
   totalPoints: number
   dueDate: Date
+  classId: string
   className: string
-  submission: OwnSubmission | null
+  subjectName: string | null
+  submission: StudentSubmission | null
 }
 
 /**
@@ -28,14 +34,30 @@ export async function getMyAssignments(
 ): Promise<MyAssignment[]> {
   const student = await db.student.findFirst({
     where: { userId, schoolId },
-    select: { id: true, studentClasses: { select: { classId: true } } },
+    select: { id: true },
   })
-  if (!student || student.studentClasses.length === 0) return []
+  if (!student) return []
+  return getAssignmentsForStudent(schoolId, student.id)
+}
+
+/**
+ * The same list for a known student — what a guardian (or the mobile app on a
+ * guardian's behalf) sees for one child. Callers own the access check.
+ */
+export async function getAssignmentsForStudent(
+  schoolId: string,
+  studentId: string
+): Promise<MyAssignment[]> {
+  const classes = await db.studentClass.findMany({
+    where: { schoolId, studentId },
+    select: { classId: true },
+  })
+  if (classes.length === 0) return []
 
   const rows = await db.schoolAssignment.findMany({
     where: {
       schoolId,
-      classId: { in: student.studentClasses.map((c) => c.classId) },
+      classId: { in: classes.map((c) => c.classId) },
       status: { not: "DRAFT" },
     },
     orderBy: [{ dueDate: "desc" }],
@@ -49,16 +71,12 @@ export async function getMyAssignments(
       status: true,
       totalPoints: true,
       dueDate: true,
-      class: { select: { name: true } },
+      class: {
+        select: { id: true, name: true, subject: { select: { name: true } } },
+      },
       submissions: {
-        where: { studentId: student.id },
-        select: {
-          status: true,
-          submittedAt: true,
-          content: true,
-          score: true,
-          feedback: true,
-        },
+        where: { studentId },
+        select: ownSubmissionSelect,
         take: 1,
       },
     },
@@ -75,16 +93,10 @@ export async function getMyAssignments(
       status: r.status,
       totalPoints: Number(r.totalPoints),
       dueDate: r.dueDate,
+      classId: r.class.id,
       className: r.class.name,
-      submission: s
-        ? {
-            status: s.status,
-            submittedAt: s.submittedAt,
-            content: s.content,
-            score: s.score === null ? null : Number(s.score),
-            feedback: s.feedback,
-          }
-        : null,
+      subjectName: r.class.subject?.name ?? null,
+      submission: s ? toOwnSubmission(s) : null,
     }
   })
 }

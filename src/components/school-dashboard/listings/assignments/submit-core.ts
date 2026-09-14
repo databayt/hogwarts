@@ -134,6 +134,47 @@ export interface OwnSubmission {
   feedback: string | null
 }
 
+/** The full stored row, for readers that need more than the web card shows. */
+export interface StudentSubmission extends OwnSubmission {
+  id: string
+  attachments: string[]
+  gradedAt: Date | null
+}
+
+/** Prisma select behind `OwnSubmission` — shared with my-assignments.ts. */
+export const ownSubmissionSelect = {
+  id: true,
+  status: true,
+  submittedAt: true,
+  content: true,
+  attachments: true,
+  score: true,
+  feedback: true,
+  gradedAt: true,
+} as const
+
+export function toOwnSubmission(row: {
+  id: string
+  status: string
+  submittedAt: Date | null
+  content: string | null
+  attachments: string[]
+  score: { toString(): string } | number | null
+  feedback: string | null
+  gradedAt: Date | null
+}): StudentSubmission {
+  return {
+    id: row.id,
+    status: row.status,
+    submittedAt: row.submittedAt,
+    content: row.content,
+    attachments: row.attachments,
+    score: row.score === null ? null : Number(row.score),
+    feedback: row.feedback,
+    gradedAt: row.gradedAt,
+  }
+}
+
 /** What the signed-in student has on file for an assignment, if anything. */
 export async function getOwnSubmission(
   userId: string,
@@ -145,28 +186,20 @@ export async function getOwnSubmission(
     select: { id: true },
   })
   if (!student) return null
+  return getStudentSubmission(schoolId, student.id, assignmentId)
+}
+
+/** A given student's submission for an assignment (guardian / mobile views). */
+export async function getStudentSubmission(
+  schoolId: string,
+  studentId: string,
+  assignmentId: string
+): Promise<StudentSubmission | null> {
   const row = await db.assignmentSubmission.findUnique({
     where: {
-      schoolId_assignmentId_studentId: {
-        schoolId,
-        assignmentId,
-        studentId: student.id,
-      },
+      schoolId_assignmentId_studentId: { schoolId, assignmentId, studentId },
     },
-    select: {
-      status: true,
-      submittedAt: true,
-      content: true,
-      score: true,
-      feedback: true,
-    },
+    select: ownSubmissionSelect,
   })
-  if (!row) return null
-  return {
-    status: row.status,
-    submittedAt: row.submittedAt,
-    content: row.content,
-    score: row.score === null ? null : Number(row.score),
-    feedback: row.feedback,
-  }
+  return row ? toOwnSubmission(row) : null
 }

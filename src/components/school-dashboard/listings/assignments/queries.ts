@@ -35,6 +35,8 @@ export type AssignmentListFilters = {
   status?: "DRAFT" | "PUBLISHED" | "IN_PROGRESS" | "COMPLETED" | "GRADED"
   dueDateFrom?: Date
   dueDateTo?: Date
+  /** Only assignments of classes this Teacher (Teacher.id) teaches or co-teaches. */
+  teacherId?: string
 }
 
 export type PaginationParams = {
@@ -206,6 +208,11 @@ export function buildAssignmentWhere(
     where.classId = filters.classId
   }
 
+  // Teacher filter — lead teacher or any ClassTeacher row
+  if (filters.teacherId) {
+    where.class = teacherClassWhere(filters.teacherId)
+  }
+
   // Type filter
   if (filters.type) {
     where.type = filters.type
@@ -228,6 +235,28 @@ export function buildAssignmentWhere(
   }
 
   return where
+}
+
+/** A class the teacher leads or is attached to as a co-teacher/assistant. */
+export function teacherClassWhere(teacherId: string): Prisma.ClassWhereInput {
+  return {
+    OR: [{ teacherId }, { classTeachers: { some: { teacherId } } }],
+  }
+}
+
+/**
+ * Whether a Teacher (Teacher.id) teaches the class — lead or ClassTeacher.
+ */
+export async function teachesClass(
+  schoolId: string,
+  teacherId: string,
+  classId: string
+): Promise<boolean> {
+  const row = await db.class.findFirst({
+    where: { id: classId, schoolId, ...teacherClassWhere(teacherId) },
+    select: { id: true },
+  })
+  return !!row
 }
 
 /**
