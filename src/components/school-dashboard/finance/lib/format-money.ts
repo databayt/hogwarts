@@ -17,6 +17,15 @@
  */
 
 /**
+ * Latin digits in both languages. `ar-SA` on its own renders Arabic-Indic
+ * digits, while every other figure on the same card — counts, dates, the
+ * tables, the dashboard's own stats (`@/lib/i18n-format`) — renders Latin, so a
+ * KPI tile read "٧٫٣ مليون ج.س." beside "3750". The locale still decides the
+ * grouping, the decimal mark and the translated compact word ("مليون").
+ */
+const DIGITS = { numberingSystem: "latn" } as const
+
+/**
  * Format a whole-currency-unit amount (not cents) as a localized currency string.
  * Use this when the upstream value is already in the display currency unit
  * (e.g., dashboard aggregates that do not multiply by 100).
@@ -29,6 +38,7 @@ export function formatMoney(
 ): string {
   const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
   return new Intl.NumberFormat(bcp47, {
+    ...DIGITS,
     style: "currency",
     currency: currency.toUpperCase(),
     maximumFractionDigits: 0,
@@ -48,11 +58,11 @@ const COMPACT_THRESHOLD = 10_000
  *
  * Abbreviation comes from `Intl`'s own compact notation rather than a hand-
  * rolled suffix table, because the abbreviation is a translatable word, not a
- * letter: Arabic reads ١٠٫٦ مليون / ١٦٤٫٥ ألف / ١٫٥ مليار. Gluing a Latin "m"
- * onto Arabic digits produced "١٠٫٦m ج.س.", which is not a thing anyone reads.
+ * letter: Arabic reads 10.6 مليون / 164.5 ألف / 1.5 مليار. Gluing a Latin "m"
+ * onto an Arabic figure produced "10.6m ج.س.", which is not a thing anyone reads.
  *
  *   en  10,593,000 SDG -> "SDG 10.6m"
- *   ar  10,593,000 SDG -> "‏١٠٫٦ مليون ج.س."
+ *   ar  10,593,000 SDG -> "‏10.6 مليون ج.س."
  */
 export function formatCompactMoney(
   amount: number,
@@ -64,6 +74,7 @@ export function formatCompactMoney(
 
   const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
   const parts = new Intl.NumberFormat(bcp47, {
+    ...DIGITS,
     style: "currency",
     currency: currency.toUpperCase(),
     notation: "compact",
@@ -83,8 +94,8 @@ export function formatCompactMoney(
 }
 
 /**
- * Locale-aware number formatter (no currency symbol).
- * Swaps Western digits for Arabic-Indic when locale === "ar".
+ * Locale-aware number formatter (no currency symbol). Latin digits in both
+ * languages, like the money formatters above.
  */
 export function formatNumber(
   value: number,
@@ -92,5 +103,5 @@ export function formatNumber(
   opts?: Intl.NumberFormatOptions
 ): string {
   const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
-  return new Intl.NumberFormat(bcp47, opts).format(value)
+  return new Intl.NumberFormat(bcp47, { ...DIGITS, ...opts }).format(value)
 }

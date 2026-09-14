@@ -92,15 +92,16 @@ export default async function MyPayslipsPage({ params }: Props) {
           {p?.noPayslips || "You have no payslips yet."}
         </p>
       ) : (
-        <div className="space-y-2">
+        // Phone: one grey grouped list; amount and status drop under the date.
+        <div className="max-md:bg-muted space-y-2 max-md:space-y-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl max-md:[&>a]:block">
           {slips.map((slip) => (
             <Link
               key={slip.id}
               href={`/${lang}/finance/payroll/slips/${slip.id}`}
             >
-              <Card className="hover:bg-muted/50 transition-colors">
-                <CardContent className="flex items-center justify-between py-3">
-                  <div>
+              <Card className="hover:bg-muted/50 transition-colors max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none">
+                <CardContent className="flex items-center justify-between py-3 max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4">
+                  <div className="max-md:min-w-0">
                     <p className="font-medium">
                       {formatDate(slip.payPeriodStart, lang)} —{" "}
                       {formatDate(slip.payPeriodEnd, lang)}
@@ -109,8 +110,8 @@ export default async function MyPayslipsPage({ params }: Props) {
                       {slip.slipNumber}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">
+                  <div className="flex items-center gap-3 max-md:justify-between">
+                    <span className="font-medium max-md:tabular-nums">
                       {formatCurrency(Number(slip.netSalary), lang, currency)}
                     </span>
                     <Badge

@@ -73,16 +73,16 @@ export default async function AllReportsPage({ params }: Props) {
           {d?.noReportsGenerated || "No reports generated yet."}
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="max-md:bg-muted space-y-3 max-md:space-y-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl">
           {reports.map((report) => (
             <Card
               key={report.id}
-              className="hover:bg-muted/50 transition-colors"
+              className="hover:bg-muted/50 transition-colors max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none"
             >
-              <CardContent className="flex items-center justify-between py-4">
-                <div>
+              <CardContent className="flex items-center justify-between py-4 max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3">
+                <div className="max-md:min-w-0">
                   <p className="font-medium">{report.reportName}</p>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-sm max-md:text-xs">
                     {report.fiscalYear?.name ??
                       d?.noFiscalYear ??
                       "No fiscal year"}{" "}
@@ -92,7 +92,7 @@ export default async function AllReportsPage({ params }: Props) {
                       : (d?.pending ?? "Pending")}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 max-md:justify-between">
                   <Badge variant="secondary">{report.reportType}</Badge>
                   <Badge
                     variant={

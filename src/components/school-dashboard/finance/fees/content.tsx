@@ -15,6 +15,7 @@ import {
 
 import { db } from "@/lib/db"
 import { selfHealFeeProvisioning } from "@/lib/fee-provisioning-self-heal"
+import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -157,6 +158,24 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   const c = (d?.common || {}) as Record<string, string>
   const mp = (d?.mainPage || {}) as Record<string, string>
 
+  // Phone: a compact money figure steps down a size so a long amount never
+  // breaks its currency word across lines — same threshold as
+  // finance/lib/dashboard-components.tsx's StatsCard.
+  const statFigureClass = (value: string) =>
+    cn(
+      "max-md:font-bold max-md:tabular-nums",
+      value.length > 10
+        ? "max-md:text-base max-md:leading-6"
+        : "max-md:text-lg max-md:leading-7"
+    )
+  const feesCollectedDisplay = formatCompactMoney(
+    totalFeesCollected,
+    currency,
+    lang
+  )
+  const pendingDisplay = formatCompactMoney(pendingPayments, currency, lang)
+  const overdueDisplay = formatCompactMoney(overduePayments, currency, lang)
+
   interface Module {
     show: boolean
     href: string
@@ -243,68 +262,85 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       {/* Financial Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {fp.feesCollected || "Fees Collected"}
             </CardTitle>
-            <DollarSign className="text-muted-foreground h-4 w-4" />
+            <DollarSign className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCompactMoney(totalFeesCollected, currency, lang)}
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div
+              className={cn(
+                "text-2xl font-bold",
+                statFigureClass(feesCollectedDisplay)
+              )}
+            >
+              {feesCollectedDisplay}
             </div>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {fp.completedPayments || "Completed payments"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {fp.pendingPayments || "Pending Payments"}
             </CardTitle>
-            <CircleAlert className="text-muted-foreground h-4 w-4" />
+            <CircleAlert className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCompactMoney(pendingPayments, currency, lang)}
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div
+              className={cn(
+                "text-2xl font-bold",
+                statFigureClass(pendingDisplay)
+              )}
+            >
+              {pendingDisplay}
             </div>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {activeAssignmentsCount} {fp.assignments || "assignments"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {fp.overduePayments || "Overdue Payments"}
             </CardTitle>
-            <TriangleAlert className="text-muted-foreground h-4 w-4" />
+            <TriangleAlert className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCompactMoney(overduePayments, currency, lang)}
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div
+              className={cn(
+                "text-2xl font-bold",
+                statFigureClass(overdueDisplay)
+              )}
+            >
+              {overdueDisplay}
             </div>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {c.requiresAction || fp.requiresAction || "Requires action"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {fp.activeScholarships || "Active Scholarships"}
             </CardTitle>
-            <Award className="text-muted-foreground h-4 w-4" />
+            <Award className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{scholarshipsCount}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:font-bold max-md:tabular-nums">
+              {scholarshipsCount}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {c.availablePrograms ||
                 fp.availablePrograms ||
                 "Available programs"}
@@ -314,11 +350,14 @@ export default async function FeesContent({ dictionary, lang }: Props) {
       </div>
 
       {/* Modules — compact navigation */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {visibleModules.map((m) => {
           const Icon = m.icon
           return (
-            <Card key={m.href} className="p-4">
+            <Card
+              key={m.href}
+              className="max-md:bg-muted p-4 max-md:border-0 max-md:shadow-none"
+            >
               <CardContent className="space-y-3 p-0">
                 <div className="flex items-center gap-3">
                   <div

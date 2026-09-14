@@ -7,6 +7,7 @@ import Link from "next/link"
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -70,7 +71,10 @@ export default async function ProfitLossPage({ params }: Props) {
           </h3>
           <Link
             href={`/${lang}/finance/reports`}
-            className={buttonVariants({ variant: "outline" })}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "max-md:rounded-full"
+            )}
           >
             {d?.backToReports || "Back to Reports"}
           </Link>
@@ -97,7 +101,10 @@ export default async function ProfitLossPage({ params }: Props) {
           </h3>
           <Link
             href={`/${lang}/finance/reports`}
-            className={buttonVariants({ variant: "outline" })}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "max-md:rounded-full"
+            )}
           >
             {d?.backToReports || "Back to Reports"}
           </Link>
@@ -146,7 +153,7 @@ export default async function ProfitLossPage({ params }: Props) {
       </div>
 
       {/* Revenue */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-sm font-medium">
             {d?.revenue || "Revenue"}
@@ -158,40 +165,73 @@ export default async function ProfitLossPage({ params }: Props) {
               {d?.noRevenueAccounts || "No revenue accounts."}
             </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">{d?.code || "Code"}</th>
-                  <th className="pb-2">{d?.account || "Account"}</th>
-                  <th className="pb-2 text-end">{d?.amount || "Amount"}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="hidden md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-start">
+                      <th className="pb-2">{d?.code || "Code"}</th>
+                      <th className="pb-2">{d?.account || "Account"}</th>
+                      <th className="pb-2 text-end">{d?.amount || "Amount"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.revenue.map((r) => (
+                      <tr
+                        key={r.accountCode}
+                        className="border-b last:border-0"
+                      >
+                        <td className="py-2 font-mono">{r.accountCode}</td>
+                        <td className="py-2">{nameOf(r)}</td>
+                        <td className="py-2 text-end">
+                          {formatCurrency(r.balance, lang, currency)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="font-medium">
+                      <td className="pt-2" colSpan={2}>
+                        {d?.totalRevenue || "Total Revenue"}
+                      </td>
+                      <td className="pt-2 text-end">
+                        {formatCurrency(data.totalRevenue, lang, currency)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              {/* Phone: readable label/amount rows instead of a 3-column
+                  table that wrapped account names to 2-3 lines. */}
+              <div className="divide-y md:hidden">
                 {data.revenue.map((r) => (
-                  <tr key={r.accountCode} className="border-b last:border-0">
-                    <td className="py-2 font-mono">{r.accountCode}</td>
-                    <td className="py-2">{nameOf(r)}</td>
-                    <td className="py-2 text-end">
+                  <div
+                    key={r.accountCode}
+                    className="flex items-center justify-between gap-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate">{nameOf(r)}</p>
+                      <p className="text-muted-foreground font-mono text-xs">
+                        {r.accountCode}
+                      </p>
+                    </div>
+                    <p className="shrink-0 tabular-nums">
                       {formatCurrency(r.balance, lang, currency)}
-                    </td>
-                  </tr>
+                    </p>
+                  </div>
                 ))}
-                <tr className="font-medium">
-                  <td className="pt-2" colSpan={2}>
-                    {d?.totalRevenue || "Total Revenue"}
-                  </td>
-                  <td className="pt-2 text-end">
+                <div className="flex items-center justify-between gap-3 py-2 font-medium">
+                  <p>{d?.totalRevenue || "Total Revenue"}</p>
+                  <p className="shrink-0 tabular-nums">
                     {formatCurrency(data.totalRevenue, lang, currency)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </p>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Expenses */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-sm font-medium">
             {d?.expenses || "Expenses"}
@@ -203,52 +243,83 @@ export default async function ProfitLossPage({ params }: Props) {
               {d?.noExpenseAccounts || "No expense accounts."}
             </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">{d?.code || "Code"}</th>
-                  <th className="pb-2">{d?.account || "Account"}</th>
-                  <th className="pb-2 text-end">{d?.amount || "Amount"}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="hidden md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-start">
+                      <th className="pb-2">{d?.code || "Code"}</th>
+                      <th className="pb-2">{d?.account || "Account"}</th>
+                      <th className="pb-2 text-end">{d?.amount || "Amount"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.expenses.map((e) => (
+                      <tr
+                        key={e.accountCode}
+                        className="border-b last:border-0"
+                      >
+                        <td className="py-2 font-mono">{e.accountCode}</td>
+                        <td className="py-2">{nameOf(e)}</td>
+                        <td className="py-2 text-end">
+                          {formatCurrency(e.balance, lang, currency)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="font-medium">
+                      <td className="pt-2" colSpan={2}>
+                        {d?.totalExpenses || "Total Expenses"}
+                      </td>
+                      <td className="pt-2 text-end">
+                        {formatCurrency(data.totalExpenses, lang, currency)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="divide-y md:hidden">
                 {data.expenses.map((e) => (
-                  <tr key={e.accountCode} className="border-b last:border-0">
-                    <td className="py-2 font-mono">{e.accountCode}</td>
-                    <td className="py-2">{nameOf(e)}</td>
-                    <td className="py-2 text-end">
+                  <div
+                    key={e.accountCode}
+                    className="flex items-center justify-between gap-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate">{nameOf(e)}</p>
+                      <p className="text-muted-foreground font-mono text-xs">
+                        {e.accountCode}
+                      </p>
+                    </div>
+                    <p className="shrink-0 tabular-nums">
                       {formatCurrency(e.balance, lang, currency)}
-                    </td>
-                  </tr>
+                    </p>
+                  </div>
                 ))}
-                <tr className="font-medium">
-                  <td className="pt-2" colSpan={2}>
-                    {d?.totalExpenses || "Total Expenses"}
-                  </td>
-                  <td className="pt-2 text-end">
+                <div className="flex items-center justify-between gap-3 py-2 font-medium">
+                  <p>{d?.totalExpenses || "Total Expenses"}</p>
+                  <p className="shrink-0 tabular-nums">
                     {formatCurrency(data.totalExpenses, lang, currency)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </p>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Net Income Summary */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-sm font-medium">
             {d?.netIncome || "Net Income"}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between max-md:flex-wrap max-md:gap-2">
             <div className="space-y-1">
-              <p className="text-2xl font-bold">
+              <p className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:tabular-nums">
                 {formatCurrency(data.netIncome, lang, currency)}
               </p>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm max-md:text-xs">
                 {d?.revenue || "Revenue"}{" "}
                 {formatCurrency(data.totalRevenue, lang, currency)} &minus;{" "}
                 {d?.expenses || "Expenses"}{" "}

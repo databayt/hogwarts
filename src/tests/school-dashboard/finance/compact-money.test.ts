@@ -30,6 +30,14 @@ describe("formatCompactMoney", () => {
     expect(thousands).not.toMatch(/[A-Za-z]/)
   })
 
+  it("draws Arabic figures in Latin digits, like every other figure on the card", () => {
+    // ar-SA alone gives Arabic-Indic digits ("١٠٫٦"), beside counts and dates that
+    // render Latin through @/lib/i18n-format.
+    expect(formatCompactMoney(10_593_000, "SDG", "ar")).toContain("10.6")
+    expect(formatCompactMoney(4_820, "SDG", "ar")).toContain("4,820")
+    expect(formatCompactMoney(10_593_000, "SDG", "ar")).not.toMatch(/[\u0660-\u0669]/)
+  })
+
   it("keeps the currency code's capitals while lowercasing the unit", () => {
     expect(formatCompactMoney(10_593_000, "SDG", "en")).toContain("SDG")
   })

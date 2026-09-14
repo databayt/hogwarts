@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { formatCurrency } from "@/lib/i18n-format"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -123,53 +124,55 @@ export default async function FeeReportsPage({ params }: Props) {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl sm:grid-cols-2 lg:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardDescription className="max-md:line-clamp-1 max-md:text-xs">
               {d?.totalCollected || "Total Collected"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold tabular-nums">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold tabular-nums max-md:text-base max-md:leading-6">
               {formatCurrency(stats.totalCollected, lang, currency)}
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardDescription className="max-md:line-clamp-1 max-md:text-xs">
               {d?.totalPending || "Total Pending"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold tabular-nums">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold tabular-nums max-md:text-base max-md:leading-6">
               {formatCurrency(stats.totalPending, lang, currency)}
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardDescription className="max-md:line-clamp-1 max-md:text-xs">
               {d?.collectionRate || "Collection Rate"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold tabular-nums">{collectionRate}%</p>
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold tabular-nums max-md:text-lg max-md:leading-7">
+              {collectionRate}%
+            </p>
             <Progress value={collectionRate} className="mt-2 h-2" />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardDescription className="max-md:line-clamp-1 max-md:text-xs">
               {d?.activeScholarships || "Active Scholarships"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold tabular-nums">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold tabular-nums max-md:text-lg max-md:leading-7">
               {stats.totalScholarships}
             </p>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-sm max-md:line-clamp-1 max-md:text-xs">
               {stats.unpaidFines} {d?.unpaidFines || "unpaid fines"}
             </p>
           </CardContent>
@@ -177,7 +180,7 @@ export default async function FeeReportsPage({ params }: Props) {
       </div>
 
       {/* Assignment Status Breakdown */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle>
             {d?.assignmentStatusBreakdown || "Assignment Status Breakdown"}
@@ -194,7 +197,7 @@ export default async function FeeReportsPage({ params }: Props) {
               {d?.noFeeAssignments || "No fee assignments found."}
             </p>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-2 sm:grid-cols-2 lg:grid-cols-5">
               {statusEntries.map(([status, data]) => {
                 const colors: Record<string, string> = {
                   PAID: "bg-green-500/10 text-green-500",
@@ -206,12 +209,12 @@ export default async function FeeReportsPage({ params }: Props) {
                 return (
                   <div
                     key={status}
-                    className="rounded-lg border p-4 text-center"
+                    className="max-md:bg-background rounded-lg border p-4 text-center max-md:h-full"
                   >
                     <Badge variant="outline" className={colors[status] || ""}>
                       {status}
                     </Badge>
-                    <p className="mt-2 text-2xl font-bold tabular-nums">
+                    <p className="mt-2 text-2xl font-bold tabular-nums max-md:text-lg max-md:leading-7">
                       {data.count}
                     </p>
                     <p className="text-muted-foreground text-sm tabular-nums">
@@ -227,7 +230,7 @@ export default async function FeeReportsPage({ params }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Top Fee Structures */}
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
           <CardHeader>
             <CardTitle>{d?.feeStructures || "Fee Structures"}</CardTitle>
             <CardDescription>
@@ -263,7 +266,7 @@ export default async function FeeReportsPage({ params }: Props) {
         </Card>
 
         {/* Recent Payments */}
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
           <CardHeader>
             <CardTitle>{d?.recentPayments || "Recent Payments"}</CardTitle>
             <CardDescription>

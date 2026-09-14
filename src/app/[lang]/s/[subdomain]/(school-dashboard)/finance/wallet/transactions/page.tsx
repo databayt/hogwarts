@@ -75,37 +75,44 @@ export default async function WalletTransactionsPage({ params }: Props) {
           {wp?.noTransactionsYet || "No transactions yet."}
         </p>
       ) : (
-        <div className="space-y-3">
+        // Phone: one grey grouped list; amount/balance/badge drop under the
+        // description. The wallet id in the meta line can break mid-token —
+        // a bare cuid has no spaces, so it forced the row wider than the
+        // screen before, clipping the badge off the far edge.
+        <div className="max-md:bg-muted space-y-3 max-md:space-y-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl">
           {transactions.map((tx) => (
-            <Card key={tx.id}>
-              <CardContent className="flex items-center justify-between py-4">
-                <div>
-                  <p className="font-medium">
+            <Card
+              key={tx.id}
+              className="max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none"
+            >
+              <CardContent className="flex items-center justify-between py-4 max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3">
+                <div className="max-md:min-w-0">
+                  <p className="font-medium max-md:line-clamp-2">
                     {tx.description ||
                       tx.reference ||
                       c?.transaction ||
                       "Transaction"}
                   </p>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-sm max-md:text-xs max-md:break-all">
                     {walletTypeLabels?.[tx.wallet.walletType] ??
                       tx.wallet.walletType}{" "}
                     &mdash; {tx.wallet.ownerId}
                     {tx.sourceModule && <> &mdash; {tx.sourceModule}</>}
                   </p>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-sm max-md:text-xs">
                     {formatDate(tx.createdAt, lang)}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 max-md:justify-between">
                   <div className="text-end">
-                    <p className="font-medium">
+                    <p className="font-medium max-md:tabular-nums">
                       {formatCurrency(
                         Number(tx.amount),
                         lang,
                         tx.wallet.currency || defaultCurrency
                       )}
                     </p>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-sm max-md:text-xs">
                       {c?.balance || "Balance"}:{" "}
                       {formatCurrency(
                         Number(tx.balanceAfter),

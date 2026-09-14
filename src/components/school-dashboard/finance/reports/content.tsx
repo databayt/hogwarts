@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -84,74 +85,82 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {rp?.generatedReports || "Generated Reports"}
             </CardTitle>
-            <FileBarChart className="text-muted-foreground h-4 w-4" />
+            <FileBarChart className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{generatedReportsCount}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:font-bold max-md:tabular-nums">
+              {generatedReportsCount}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {reportsCount} {c?.total || "total"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {rp?.reportTypes || "Report Types"}
             </CardTitle>
-            <BarChart className="text-muted-foreground h-4 w-4" />
+            <BarChart className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-md:px-4 max-md:pb-4">
             {/* Three financial statements are actually implemented and
                 navigable: balance sheet, profit & loss, trial balance. */}
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-muted-foreground text-xs">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:font-bold max-md:tabular-nums">
+              3
+            </div>
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {rp?.availableReports || "Available reports"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {rp?.scheduled || "Scheduled"}
             </CardTitle>
-            <Calendar className="text-muted-foreground h-4 w-4" />
+            <Calendar className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:font-bold max-md:tabular-nums">
+              -
+            </div>
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {rp?.automatedReports || "Automated reports"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {rp?.exports || "Exports"}
             </CardTitle>
-            <Download className="text-muted-foreground h-4 w-4" />
+            <Download className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:font-bold max-md:tabular-nums">
+              -
+            </div>
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {rp?.pdfExcelCsv || "PDF, Excel, CSV"}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+      <div className="grid gap-6 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="border-primary/20 max-md:bg-muted max-md:border-0 max-md:shadow-none">
+          <CardHeader className="max-md:p-5 max-md:pb-3">
+            <CardTitle className="flex items-center gap-2 max-md:text-base">
               <TrendingUp className="text-primary h-5 w-5" />
               {rp?.profitLoss || "Profit & Loss Statement"}
             </CardTitle>
@@ -160,7 +169,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
                 "Income statement showing revenue and expenses"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/profit-loss`}>
                 {c?.generateReport || "Generate Report"}
@@ -169,9 +178,9 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+          <CardHeader className="max-md:p-5 max-md:pb-3">
+            <CardTitle className="flex items-center gap-2 max-md:text-base">
               <BarChart className="h-5 w-5" />
               {rp?.balanceSheet || "Balance Sheet"}
             </CardTitle>
@@ -180,7 +189,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
                 "Assets, liabilities, and equity statement"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/balance-sheet`}>
                 {c?.generateReport || "Generate Report"}
@@ -189,9 +198,9 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+          <CardHeader className="max-md:p-5 max-md:pb-3">
+            <CardTitle className="flex items-center gap-2 max-md:text-base">
               <BarChart className="h-5 w-5" />
               {rp?.trialBalance || "Trial Balance"}
             </CardTitle>
@@ -200,7 +209,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
                 "List of all accounts with debit/credit balances"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/trial-balance`}>
                 {c?.generateReport || "Generate Report"}
@@ -209,9 +218,9 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+          <CardHeader className="max-md:p-5 max-md:pb-3">
+            <CardTitle className="flex items-center gap-2 max-md:text-base">
               <FileBarChart className="h-5 w-5" />
               {rp?.allReports || "All Reports"}
             </CardTitle>
@@ -219,7 +228,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
               {rp?.allReportsDesc || "View and manage all generated reports"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/all`}>
                 {(rp?.viewAllCount || "View All ({count})").replace(

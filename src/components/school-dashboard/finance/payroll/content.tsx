@@ -232,7 +232,7 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
 
       {/* Quick Actions */}
       {canProcess && (
-        <Card>
+        <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
           <CardHeader>
             <CardTitle>{c?.quickActions || "Quick Actions"}</CardTitle>
             <CardDescription>
@@ -240,27 +240,47 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+              className="max-md:h-10 max-md:rounded-full max-md:px-5"
+            >
               <Clock className="me-2 h-4 w-4" />
               {pp?.processCurrentMonth || "Process Current Month"}
               <span className="text-muted-foreground ms-2 text-xs">
                 {c?.comingSoon}
               </span>
             </Button>
-            <Button variant="outline" size="sm" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+              className="max-md:h-10 max-md:rounded-full max-md:px-5"
+            >
               <FileText className="me-2 h-4 w-4" />
               {pp?.generateSlips || "Generate Slips"}
               <span className="text-muted-foreground ms-2 text-xs">
                 {c?.comingSoon}
               </span>
             </Button>
-            <Button variant="outline" size="sm" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+              className="max-md:h-10 max-md:rounded-full max-md:px-5"
+            >
               {pp?.payrollSummary || "Payroll Summary"}
               <span className="text-muted-foreground ms-2 text-xs">
                 {c?.comingSoon}
               </span>
             </Button>
-            <Button variant="outline" size="sm" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+              className="max-md:h-10 max-md:rounded-full max-md:px-5"
+            >
               {pp?.taxReport || "Tax Report"}
               <span className="text-muted-foreground ms-2 text-xs">
                 {c?.comingSoon}

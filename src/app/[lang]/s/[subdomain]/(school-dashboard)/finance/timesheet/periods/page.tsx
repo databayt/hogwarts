@@ -75,16 +75,16 @@ export default async function TimesheetPeriodsPage({ params }: Props) {
           {tp?.noTimesheetPeriodsYet || "No timesheet periods yet."}
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="max-md:bg-muted space-y-3 max-md:space-y-0 max-md:divide-y max-md:overflow-hidden max-md:rounded-xl">
           {periods.map((period) => (
             <Card
               key={period.id}
-              className="hover:bg-muted/50 transition-colors"
+              className="hover:bg-muted/50 transition-colors max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none"
             >
-              <CardContent className="flex items-center justify-between py-4">
-                <div>
+              <CardContent className="flex items-center justify-between py-4 max-md:px-4 max-md:py-3">
+                <div className="max-md:min-w-0">
                   <p className="font-medium">{period.name}</p>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-sm max-md:text-xs">
                     {formatDate(period.startDate, lang)} &mdash;{" "}
                     {formatDate(period.endDate, lang)} &mdash;{" "}
                     {period._count.entries} {c?.entries || "entries"}

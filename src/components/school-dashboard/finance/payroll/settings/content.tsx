@@ -86,7 +86,7 @@ export default async function PayrollSettingsContent({
         </Card>
       )}
 
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-base">{d?.country}</CardTitle>
           <CardDescription>{d?.autoDetected}</CardDescription>
@@ -98,7 +98,7 @@ export default async function PayrollSettingsContent({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-base">{d?.incomeTaxBrackets}</CardTitle>
         </CardHeader>
@@ -130,7 +130,7 @@ export default async function PayrollSettingsContent({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-base">{d?.socialSecurity}</CardTitle>
         </CardHeader>

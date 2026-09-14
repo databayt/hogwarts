@@ -7,6 +7,7 @@ import Link from "next/link"
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,6 +35,9 @@ export default async function TrialBalancePage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.reportsPage
+  // Existing key, already used the same way by accounts/chart and
+  // accounts/ledger — translates the raw ASSET/LIABILITY/... enum.
+  const acctTypeLabels = dictionary?.finance?.accountsConfig?.accountTypeLabels
   const { schoolId, can } = await resolveFinanceAccess("reports", ["view"])
 
   if (!schoolId) {
@@ -70,7 +74,10 @@ export default async function TrialBalancePage({ params }: Props) {
           </h3>
           <Link
             href={`/${lang}/finance/reports`}
-            className={buttonVariants({ variant: "outline" })}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "max-md:rounded-full"
+            )}
           >
             {d?.backToReports || "Back to Reports"}
           </Link>
@@ -97,7 +104,10 @@ export default async function TrialBalancePage({ params }: Props) {
           </h3>
           <Link
             href={`/${lang}/finance/reports`}
-            className={buttonVariants({ variant: "outline" })}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "max-md:rounded-full"
+            )}
           >
             {d?.backToReports || "Back to Reports"}
           </Link>
@@ -141,14 +151,17 @@ export default async function TrialBalancePage({ params }: Props) {
           </Badge>
           <Link
             href={`/${lang}/finance/reports`}
-            className={buttonVariants({ variant: "outline" })}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "max-md:rounded-full"
+            )}
           >
             {d?.backToReports || "Back to Reports"}
           </Link>
         </div>
       </div>
 
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-sm font-medium">
             {d?.accountBalances || "Account Balances"}
@@ -160,91 +173,149 @@ export default async function TrialBalancePage({ params }: Props) {
               {d?.noAccountBalances || "No account balances found."}
             </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">{d?.code || "Code"}</th>
-                  <th className="pb-2">{d?.account || "Account"}</th>
-                  <th className="pb-2">{d?.type || "Type"}</th>
-                  <th className="pb-2 text-end">{d?.debit || "Debit"}</th>
-                  <th className="pb-2 text-end">{d?.credit || "Credit"}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="hidden md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-start">
+                      <th className="pb-2">{d?.code || "Code"}</th>
+                      <th className="pb-2">{d?.account || "Account"}</th>
+                      <th className="pb-2">{d?.type || "Type"}</th>
+                      <th className="pb-2 text-end">{d?.debit || "Debit"}</th>
+                      <th className="pb-2 text-end">{d?.credit || "Credit"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.accounts.map((a) => (
+                      <tr
+                        key={a.accountCode}
+                        className="border-b last:border-0"
+                      >
+                        <td className="py-2 font-mono">{a.accountCode}</td>
+                        <td className="py-2">
+                          {names.get(a.accountName) ?? a.accountName}
+                        </td>
+                        <td className="py-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {acctTypeLabels?.[a.accountType] ?? a.accountType}
+                          </Badge>
+                        </td>
+                        <td className="py-2 text-end">
+                          {a.debitBalance > 0
+                            ? formatCurrency(a.debitBalance, lang, currency)
+                            : "\u2014"}
+                        </td>
+                        <td className="py-2 text-end">
+                          {a.creditBalance > 0
+                            ? formatCurrency(a.creditBalance, lang, currency)
+                            : "\u2014"}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="font-medium">
+                      <td className="pt-2" colSpan={3}>
+                        {d?.totals || "Totals"}
+                      </td>
+                      <td className="pt-2 text-end">
+                        {formatCurrency(data.totalDebits, lang, currency)}
+                      </td>
+                      <td className="pt-2 text-end">
+                        {formatCurrency(data.totalCredits, lang, currency)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              {/* Phone: readable label/amount rows instead of a 5-column
+                  table that wrapped account names to 2-3 lines. */}
+              <div className="divide-y md:hidden">
                 {data.accounts.map((a) => (
-                  <tr key={a.accountCode} className="border-b last:border-0">
-                    <td className="py-2 font-mono">{a.accountCode}</td>
-                    <td className="py-2">
-                      {names.get(a.accountName) ?? a.accountName}
-                    </td>
-                    <td className="py-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {a.accountType}
-                      </Badge>
-                    </td>
-                    <td className="py-2 text-end">
-                      {a.debitBalance > 0
-                        ? formatCurrency(a.debitBalance, lang, currency)
-                        : "\u2014"}
-                    </td>
-                    <td className="py-2 text-end">
-                      {a.creditBalance > 0
-                        ? formatCurrency(a.creditBalance, lang, currency)
-                        : "\u2014"}
-                    </td>
-                  </tr>
+                  <div
+                    key={a.accountCode}
+                    className="flex items-start justify-between gap-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate">
+                        {names.get(a.accountName) ?? a.accountName}
+                      </p>
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <span className="text-muted-foreground font-mono text-xs">
+                          {a.accountCode}
+                        </span>
+                        <Badge variant="secondary" className="text-xs">
+                          {acctTypeLabels?.[a.accountType] ?? a.accountType}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-end text-xs">
+                      {a.debitBalance > 0 && (
+                        <p className="tabular-nums">
+                          {d?.debit || "Debit"}:{" "}
+                          {formatCurrency(a.debitBalance, lang, currency)}
+                        </p>
+                      )}
+                      {a.creditBalance > 0 && (
+                        <p className="tabular-nums">
+                          {d?.credit || "Credit"}:{" "}
+                          {formatCurrency(a.creditBalance, lang, currency)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 ))}
-                <tr className="font-medium">
-                  <td className="pt-2" colSpan={3}>
-                    {d?.totals || "Totals"}
-                  </td>
-                  <td className="pt-2 text-end">
-                    {formatCurrency(data.totalDebits, lang, currency)}
-                  </td>
-                  <td className="pt-2 text-end">
-                    {formatCurrency(data.totalCredits, lang, currency)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                <div className="flex items-center justify-between gap-3 py-2 font-medium">
+                  <p>{d?.totals || "Totals"}</p>
+                  <div className="shrink-0 text-end text-xs">
+                    <p className="tabular-nums">
+                      {d?.debit || "Debit"}:{" "}
+                      {formatCurrency(data.totalDebits, lang, currency)}
+                    </p>
+                    <p className="tabular-nums">
+                      {d?.credit || "Credit"}:{" "}
+                      {formatCurrency(data.totalCredits, lang, currency)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl sm:grid-cols-3 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {d?.totalDebits || "Total Debits"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold max-md:text-base max-md:leading-6">
               {formatCurrency(data.totalDebits, lang, currency)}
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {d?.totalCredits || "Total Credits"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold max-md:text-base max-md:leading-6">
               {formatCurrency(data.totalCredits, lang, currency)}
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {d?.difference || "Difference"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold max-md:text-base max-md:leading-6">
               {formatCurrency(
                 Math.abs(data.totalDebits - data.totalCredits),
                 lang,

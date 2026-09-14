@@ -7,6 +7,7 @@ import Link from "next/link"
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { actionErrorMessage } from "@/lib/resolve-action-error"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -70,7 +71,10 @@ export default async function BalanceSheetPage({ params }: Props) {
           </h3>
           <Link
             href={`/${lang}/finance/reports`}
-            className={buttonVariants({ variant: "outline" })}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "max-md:rounded-full"
+            )}
           >
             {d?.backToReports || "Back to Reports"}
           </Link>
@@ -97,7 +101,10 @@ export default async function BalanceSheetPage({ params }: Props) {
           </h3>
           <Link
             href={`/${lang}/finance/reports`}
-            className={buttonVariants({ variant: "outline" })}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "max-md:rounded-full"
+            )}
           >
             {d?.backToReports || "Back to Reports"}
           </Link>
@@ -149,7 +156,10 @@ export default async function BalanceSheetPage({ params }: Props) {
           </Badge>
           <Link
             href={`/${lang}/finance/reports`}
-            className={buttonVariants({ variant: "outline" })}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "max-md:rounded-full"
+            )}
           >
             {d?.backToReports || "Back to Reports"}
           </Link>
@@ -157,7 +167,7 @@ export default async function BalanceSheetPage({ params }: Props) {
       </div>
 
       {/* Assets */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-sm font-medium">
             {d?.assets || "Assets"}
@@ -169,40 +179,75 @@ export default async function BalanceSheetPage({ params }: Props) {
               {d?.noAssetAccounts || "No asset accounts."}
             </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">{d?.code || "Code"}</th>
-                  <th className="pb-2">{d?.account || "Account"}</th>
-                  <th className="pb-2 text-end">{d?.balance || "Balance"}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="hidden md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-start">
+                      <th className="pb-2">{d?.code || "Code"}</th>
+                      <th className="pb-2">{d?.account || "Account"}</th>
+                      <th className="pb-2 text-end">
+                        {d?.balance || "Balance"}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.assets.map((a) => (
+                      <tr
+                        key={a.accountCode}
+                        className="border-b last:border-0"
+                      >
+                        <td className="py-2 font-mono">{a.accountCode}</td>
+                        <td className="py-2">{nameOf(a)}</td>
+                        <td className="py-2 text-end">
+                          {formatCurrency(a.balance, lang, currency)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="font-medium">
+                      <td className="pt-2" colSpan={2}>
+                        {d?.totalAssets || "Total Assets"}
+                      </td>
+                      <td className="pt-2 text-end">
+                        {formatCurrency(data.totalAssets, lang, currency)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              {/* Phone: readable label/amount rows instead of a 3-column
+                  table that wrapped account names to 2-3 lines. */}
+              <div className="divide-y md:hidden">
                 {data.assets.map((a) => (
-                  <tr key={a.accountCode} className="border-b last:border-0">
-                    <td className="py-2 font-mono">{a.accountCode}</td>
-                    <td className="py-2">{nameOf(a)}</td>
-                    <td className="py-2 text-end">
+                  <div
+                    key={a.accountCode}
+                    className="flex items-center justify-between gap-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate">{nameOf(a)}</p>
+                      <p className="text-muted-foreground font-mono text-xs">
+                        {a.accountCode}
+                      </p>
+                    </div>
+                    <p className="shrink-0 tabular-nums">
                       {formatCurrency(a.balance, lang, currency)}
-                    </td>
-                  </tr>
+                    </p>
+                  </div>
                 ))}
-                <tr className="font-medium">
-                  <td className="pt-2" colSpan={2}>
-                    {d?.totalAssets || "Total Assets"}
-                  </td>
-                  <td className="pt-2 text-end">
+                <div className="flex items-center justify-between gap-3 py-2 font-medium">
+                  <p>{d?.totalAssets || "Total Assets"}</p>
+                  <p className="shrink-0 tabular-nums">
                     {formatCurrency(data.totalAssets, lang, currency)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </p>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Liabilities */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-sm font-medium">
             {d?.liabilities || "Liabilities"}
@@ -214,40 +259,73 @@ export default async function BalanceSheetPage({ params }: Props) {
               {d?.noLiabilityAccounts || "No liability accounts."}
             </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">{d?.code || "Code"}</th>
-                  <th className="pb-2">{d?.account || "Account"}</th>
-                  <th className="pb-2 text-end">{d?.balance || "Balance"}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="hidden md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-start">
+                      <th className="pb-2">{d?.code || "Code"}</th>
+                      <th className="pb-2">{d?.account || "Account"}</th>
+                      <th className="pb-2 text-end">
+                        {d?.balance || "Balance"}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.liabilities.map((l) => (
+                      <tr
+                        key={l.accountCode}
+                        className="border-b last:border-0"
+                      >
+                        <td className="py-2 font-mono">{l.accountCode}</td>
+                        <td className="py-2">{nameOf(l)}</td>
+                        <td className="py-2 text-end">
+                          {formatCurrency(l.balance, lang, currency)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="font-medium">
+                      <td className="pt-2" colSpan={2}>
+                        {d?.totalLiabilities || "Total Liabilities"}
+                      </td>
+                      <td className="pt-2 text-end">
+                        {formatCurrency(data.totalLiabilities, lang, currency)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="divide-y md:hidden">
                 {data.liabilities.map((l) => (
-                  <tr key={l.accountCode} className="border-b last:border-0">
-                    <td className="py-2 font-mono">{l.accountCode}</td>
-                    <td className="py-2">{nameOf(l)}</td>
-                    <td className="py-2 text-end">
+                  <div
+                    key={l.accountCode}
+                    className="flex items-center justify-between gap-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate">{nameOf(l)}</p>
+                      <p className="text-muted-foreground font-mono text-xs">
+                        {l.accountCode}
+                      </p>
+                    </div>
+                    <p className="shrink-0 tabular-nums">
                       {formatCurrency(l.balance, lang, currency)}
-                    </td>
-                  </tr>
+                    </p>
+                  </div>
                 ))}
-                <tr className="font-medium">
-                  <td className="pt-2" colSpan={2}>
-                    {d?.totalLiabilities || "Total Liabilities"}
-                  </td>
-                  <td className="pt-2 text-end">
+                <div className="flex items-center justify-between gap-3 py-2 font-medium">
+                  <p>{d?.totalLiabilities || "Total Liabilities"}</p>
+                  <p className="shrink-0 tabular-nums">
                     {formatCurrency(data.totalLiabilities, lang, currency)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </p>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Equity */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle className="text-sm font-medium">
             {d?.equity || "Equity"}
@@ -259,72 +337,105 @@ export default async function BalanceSheetPage({ params }: Props) {
               {d?.noEquityAccounts || "No equity accounts."}
             </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">{d?.code || "Code"}</th>
-                  <th className="pb-2">{d?.account || "Account"}</th>
-                  <th className="pb-2 text-end">{d?.balance || "Balance"}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="hidden md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-start">
+                      <th className="pb-2">{d?.code || "Code"}</th>
+                      <th className="pb-2">{d?.account || "Account"}</th>
+                      <th className="pb-2 text-end">
+                        {d?.balance || "Balance"}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.equity.map((e) => (
+                      <tr
+                        key={e.accountCode}
+                        className="border-b last:border-0"
+                      >
+                        <td className="py-2 font-mono">{e.accountCode}</td>
+                        <td className="py-2">{nameOf(e)}</td>
+                        <td className="py-2 text-end">
+                          {formatCurrency(e.balance, lang, currency)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="font-medium">
+                      <td className="pt-2" colSpan={2}>
+                        {d?.totalEquity || "Total Equity"}
+                      </td>
+                      <td className="pt-2 text-end">
+                        {formatCurrency(data.totalEquity, lang, currency)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="divide-y md:hidden">
                 {data.equity.map((e) => (
-                  <tr key={e.accountCode} className="border-b last:border-0">
-                    <td className="py-2 font-mono">{e.accountCode}</td>
-                    <td className="py-2">{nameOf(e)}</td>
-                    <td className="py-2 text-end">
+                  <div
+                    key={e.accountCode}
+                    className="flex items-center justify-between gap-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate">{nameOf(e)}</p>
+                      <p className="text-muted-foreground font-mono text-xs">
+                        {e.accountCode}
+                      </p>
+                    </div>
+                    <p className="shrink-0 tabular-nums">
                       {formatCurrency(e.balance, lang, currency)}
-                    </td>
-                  </tr>
+                    </p>
+                  </div>
                 ))}
-                <tr className="font-medium">
-                  <td className="pt-2" colSpan={2}>
-                    {d?.totalEquity || "Total Equity"}
-                  </td>
-                  <td className="pt-2 text-end">
+                <div className="flex items-center justify-between gap-3 py-2 font-medium">
+                  <p>{d?.totalEquity || "Total Equity"}</p>
+                  <p className="shrink-0 tabular-nums">
                     {formatCurrency(data.totalEquity, lang, currency)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </p>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Summary */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl sm:grid-cols-3 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {d?.totalAssets || "Total Assets"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold max-md:text-base max-md:leading-6">
               {formatCurrency(data.totalAssets, lang, currency)}
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {d?.totalLiabilities || "Total Liabilities"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold max-md:text-base max-md:leading-6">
               {formatCurrency(data.totalLiabilities, lang, currency)}
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {d?.totalEquity || "Total Equity"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <p className="text-2xl font-bold max-md:text-base max-md:leading-6">
               {formatCurrency(data.totalEquity, lang, currency)}
             </p>
           </CardContent>

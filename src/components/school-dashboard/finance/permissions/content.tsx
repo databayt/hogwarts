@@ -230,13 +230,17 @@ export function PermissionManagementContent() {
             {p?.description || "Manage finance module permissions for users"}
           </p>
         </div>
-        <Button onClick={loadData} disabled={loading}>
+        <Button
+          onClick={loadData}
+          disabled={loading}
+          className="max-md:h-10 max-md:rounded-full max-md:px-5"
+        >
           {p?.refresh || "Refresh"}
         </Button>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
         <CardHeader>
           <CardTitle>{p?.filters || "Filters"}</CardTitle>
         </CardHeader>
@@ -250,7 +254,7 @@ export function PermissionManagementContent() {
                   placeholder={p?.searchPlaceholder || "Name or email..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="ps-8"
+                  className="max-md:bg-background ps-8"
                 />
               </div>
             </div>
@@ -258,7 +262,7 @@ export function PermissionManagementContent() {
             <div>
               <Label>{p?.role || "Role"}</Label>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="max-md:bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -282,7 +286,7 @@ export function PermissionManagementContent() {
                   setModuleFilter(value as FinanceModule | "all")
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="max-md:bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

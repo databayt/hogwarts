@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -126,72 +127,97 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
 
   const sp = fd?.salaryPage as Record<string, string> | undefined
 
+  // Phone: a compact money figure steps down a size so a long amount never
+  // breaks its currency word across lines — same threshold as
+  // finance/lib/dashboard-components.tsx's StatsCard.
+  const statFigureClass = (value: string) =>
+    cn(
+      "max-md:font-bold max-md:tabular-nums",
+      value.length > 10
+        ? "max-md:text-base max-md:leading-6"
+        : "max-md:text-lg max-md:leading-7"
+    )
+  const monthlyDisplay = formatCompactMoney(totalMonthlySalary, currency, lang)
+  const averageDisplay = formatCompactMoney(averageSalary, currency, lang)
+
   return (
     <div className="space-y-6">
       {/* Financial Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className="max-md:bg-border grid gap-4 max-md:grid-cols-2 max-md:gap-px max-md:overflow-hidden max-md:rounded-xl md:grid-cols-4 max-md:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {sp?.monthlyPayroll || "Monthly Payroll"}
             </CardTitle>
-            <DollarSign className="text-muted-foreground h-4 w-4" />
+            <DollarSign className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCompactMoney(totalMonthlySalary, currency, lang)}
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div
+              className={cn(
+                "text-2xl font-bold",
+                statFigureClass(monthlyDisplay)
+              )}
+            >
+              {monthlyDisplay}
             </div>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {sp?.totalBasicSalary || "Total basic salary"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {sp?.activeStaff || "Active Staff"}
             </CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
+            <Users className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeStructuresCount}</div>
-            <p className="text-muted-foreground text-xs">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:font-bold max-md:tabular-nums">
+              {activeStructuresCount}
+            </div>
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {sp?.withSalaryStructures || "With salary structures"} /{" "}
               {totalStaffCount}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {sp?.averageSalary || "Average Salary"}
             </CardTitle>
-            <TrendingUp className="text-muted-foreground h-4 w-4" />
+            <TrendingUp className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCompactMoney(averageSalary, currency, lang)}
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div
+              className={cn(
+                "text-2xl font-bold",
+                statFigureClass(averageDisplay)
+              )}
+            >
+              {averageDisplay}
             </div>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {sp?.perStaffMember || "Per staff member"}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="max-md:bg-muted max-md:h-full max-md:rounded-none max-md:border-0 max-md:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 max-md:px-4 max-md:pt-4 max-md:pb-1">
+            <CardTitle className="max-md:text-muted-foreground text-sm font-medium max-md:line-clamp-1 max-md:text-xs max-md:font-normal">
               {sp?.components || "Components"}
             </CardTitle>
-            <Settings className="text-muted-foreground h-4 w-4" />
+            <Settings className="text-muted-foreground h-4 w-4 max-md:hidden" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="max-md:px-4 max-md:pb-4">
+            <div className="text-2xl font-bold max-md:text-lg max-md:leading-7 max-md:font-bold max-md:tabular-nums">
               {allowancesCount + deductionsCount}
             </div>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs max-md:line-clamp-2 max-md:leading-4">
               {allowancesCount} {sp?.allowances || "allowances"},{" "}
               {deductionsCount} {sp?.deductions || "deductions"}
             </p>
@@ -200,12 +226,12 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
       </div>
 
       {/* Feature Sections */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
         {/* Salary Structures */}
         {canEdit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+            <CardHeader className="max-md:p-5 max-md:pb-3">
+              <CardTitle className="flex items-center gap-2 max-md:text-base">
                 <FileText className="h-5 w-5" />
                 {sp?.salaryStructures || "Salary Structures"}
               </CardTitle>
@@ -214,7 +240,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
                   "Define and manage staff salary structures"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/salary/structures`}>
                   {sp?.viewStructures || "View Structures"} (
@@ -234,9 +260,9 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
 
         {/* Allowances */}
         {canEdit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+            <CardHeader className="max-md:p-5 max-md:pb-3">
+              <CardTitle className="flex items-center gap-2 max-md:text-base">
                 <Award className="h-5 w-5" />
                 {sp?.allowances || "Allowances"}
               </CardTitle>
@@ -244,7 +270,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
                 {sp?.manageAllowances || "Manage salary allowances and bonuses"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
               <Button className="w-full" disabled>
                 {sp?.viewAllowances || "View Allowances"} ({allowancesCount})
                 <span className="text-muted-foreground ms-2 text-xs">
@@ -265,9 +291,9 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
 
         {/* Deductions */}
         {canEdit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+            <CardHeader className="max-md:p-5 max-md:pb-3">
+              <CardTitle className="flex items-center gap-2 max-md:text-base">
                 <TrendingUp className="h-5 w-5" />
                 {sp?.deductions || "Deductions"}
               </CardTitle>
@@ -276,7 +302,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
                   "Manage salary deductions and contributions"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
               <Button className="w-full" disabled>
                 {sp?.viewDeductions || "View Deductions"} ({deductionsCount})
                 <span className="text-muted-foreground ms-2 text-xs">
@@ -296,9 +322,9 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
         )}
 
         {/* Salary Calculator */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+          <CardHeader className="max-md:p-5 max-md:pb-3">
+            <CardTitle className="flex items-center gap-2 max-md:text-base">
               <Calculator className="h-5 w-5" />
               {sp?.salaryCalculator || "Salary Calculator"}
             </CardTitle>
@@ -306,7 +332,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
               {sp?.calculateNetSalary || "Calculate net salary with components"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
             <Button className="w-full" disabled>
               <Calculator className="me-2 h-4 w-4" />
               {sp?.openCalculator || "Open Calculator"}
@@ -325,9 +351,9 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
 
         {/* Salary Reports */}
         {canExport && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+            <CardHeader className="max-md:p-5 max-md:pb-3">
+              <CardTitle className="flex items-center gap-2 max-md:text-base">
                 <BarChart className="h-5 w-5" />
                 {sp?.salaryReports || "Salary Reports"}
               </CardTitle>
@@ -336,7 +362,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
                   "Generate salary analysis and reports"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
               <Button className="w-full" disabled>
                 {c?.viewReports || "View Reports"}
                 <span className="text-muted-foreground ms-2 text-xs">
@@ -355,9 +381,9 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
 
         {/* Bulk Operations */}
         {canEdit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">
+            <CardHeader className="max-md:p-5 max-md:pb-3">
+              <CardTitle className="flex items-center gap-2 max-md:text-base">
                 <Users className="h-5 w-5" />
                 {sp?.bulkOperations || "Bulk Operations"}
               </CardTitle>
@@ -366,7 +392,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
                   "Apply salary changes to multiple staff"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 max-md:flex max-md:flex-wrap max-md:gap-2 max-md:space-y-0 max-md:px-5 max-md:pb-5 max-md:[&>*]:h-10 max-md:[&>*]:w-auto max-md:[&>*]:rounded-full max-md:[&>*]:px-5">
               <Button className="w-full" disabled>
                 {sp?.bulkIncrement || "Bulk Increment"}
                 <span className="text-muted-foreground ms-2 text-xs">
