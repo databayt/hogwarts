@@ -41,7 +41,15 @@ build() {
     git archive "$REF" | tar -x -C "$BUILD_DIR"
     for f in ${CF_OVERLAY:-}; do mkdir -p "$BUILD_DIR/$(dirname "$f")"; cp -R "$f" "$BUILD_DIR/$f"; echo "    overlay: $f"; done
   fi
-  cp .env "$BUILD_DIR/.env"                       # prisma.config.ts loads it
+  # prisma.config.ts loads .env, and next build fills every name production
+  # leaves unset from it — so a dev endpoint set only locally got inlined into
+  # the client bundle (NEXT_PUBLIC_SOCKET_URL=http://localhost:3001 had every
+  # prod dashboard dialing the visitor's own machine). Drop local-only values
+  # that point at this machine; names production defines are overridden anyway.
+  awk 'NR==FNR { if (match($0, /^[A-Za-z_][A-Za-z0-9_]*=/)) prod[substr($0, 1, RLENGTH-1)]=1; next }
+       match($0, /^[A-Za-z_][A-Za-z0-9_]*=/) { k=substr($0, 1, RLENGTH-1)
+         if (!(k in prod) && $0 ~ /localhost|127\.0\.0\.1/) { print "    .env: dropped local-only " k > "/dev/stderr"; next } }
+       { print }' "$ENV_FILE" .env > "$BUILD_DIR/.env"
   cd "$BUILD_DIR"
 
   echo "==> installing for darwin + linux/x64 (sharp, swc binaries for the image)"
