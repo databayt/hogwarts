@@ -5,13 +5,19 @@ import { NextRequest, NextResponse } from "next/server"
 import * as z from "zod"
 
 import { db } from "@/lib/db"
+import {
+  checkRateLimitAsync,
+  createRateLimitResponse,
+  RATE_LIMITS,
+} from "@/lib/rate-limit"
 
 /**
  * Mobile OTP Verification
  *
- * Validates a 6-digit OTP against the VerificationToken table.
- * On success, deletes the token so it cannot be reused.
- * The mobile app calls this before showing the new-password screen.
+ * Validates a 6-digit OTP against the VerificationToken table without
+ * consuming it: the app checks the code here, then sends the same code to
+ * /api/mobile/auth/new-password, which deletes the token once the password
+ * changes. Deleting it here made every reset fail at the last step.
  *
  * POST /api/mobile/auth/verify-otp
  * Body: { email: string, otp: string }
@@ -25,6 +31,17 @@ const VerifyOTPSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Same limit as new-password: a non-consuming check must not become a
+    // free oracle for brute-forcing the 6-digit code.
+    const rl = await checkRateLimitAsync(
+      request,
+      RATE_LIMITS.AUTH,
+      "mobile-verify-otp"
+    )
+    if (!rl.allowed) {
+      return createRateLimitResponse(rl.resetTime)
+    }
+
     const body = await request.json()
 
     // Validate input
@@ -67,11 +84,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // OTP is valid — delete the token so it cannot be reused
-    await db.verificationToken.delete({
-      where: { id: verificationToken.id },
-    })
-
+    // Valid. Leave the token in place — new-password consumes it.
     return NextResponse.json({
       message: "Verification successful",
     })
