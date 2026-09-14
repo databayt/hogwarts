@@ -168,11 +168,23 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
               </p>
             </div>
           </div>
-          <DrawerDescription className="text-muted-foreground mt-5 text-start text-[15px] leading-snug">
-            {t(
-              "installStep",
-              'Tap Continue, then choose "Add to Home Screen".'
-            )}
+          <DrawerDescription
+            asChild
+            className="text-foreground mt-6 space-y-3 text-start text-[16px] leading-snug"
+          >
+            <ol>
+              {[
+                t("installStep1", "Tap Continue"),
+                t("installStep2", 'Choose "Add to Home Screen"'),
+              ].map((step, i) => (
+                <li key={i} className="flex items-center gap-3">
+                  <span className="bg-muted text-foreground grid size-7 shrink-0 place-items-center rounded-full text-[14px] font-semibold tabular-nums">
+                    {i + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
           </DrawerDescription>
 
           {/* Safari's share menu with "Add to Home Screen" highlighted. */}
