@@ -119,8 +119,11 @@ Additive (2026-09): `school { id, name, name_en, logo_url, enabled_modules (null
 | POST   | `/api/mobile/attendance/bulk`        | Bulk mark class                                                                                                                                    |
 | GET    | `/api/mobile/attendance/clock`       | Own clock state `{ available, kind: staff\|teacher\|null, checked_in_at, checked_out_at, today_hours, week_hours }`; no clock → `available: false` |
 | POST   | `/api/mobile/attendance/clock`       | `{ action: in\|out }` → same shape; 403 role, 404 `NO_CLOCK_IDENTITY` / `NOT_CHECKED_IN`                                                           |
+| GET    | `/api/mobile/attendance/today`       | ADMIN/STAFF/DEVELOPER day overview (web `/attendance` overview); `limit` (1–20, default 5) for `needs_attention`                                   |
 
 Clock rules are the web clock card's (`attendance/actions/clock-core.ts`): TEACHER/STAFF/ADMIN/DEVELOPER; a StaffMember row clocks into StaffTimesheetEntry, else a Teacher row into the finance TimesheetEntry (DRAFT); both directions idempotent. "Today" is the server's midnight, as on web.
+
+`attendance/today` reads `attendance/queries.ts` (shared with `getTodaysDashboard` + `getFollowUpStudents`) and returns `today { date, day_name, is_school_day }`, `stats { total_students, marked_today, present, absent, late, attendance_rate, classes_total, classes_marked }`, `unmarked_classes [{ id, name, student_count }]` (empty on a non-school day), `needs_attention [{ student_id, student_name, class_name, issue: consecutive_absence|unexcused_pending, severity: critical|warning|info, details, count, date, action_url }]`, `needs_attention_summary { critical, warning, info }`, `recent_activity [{ id, student_name, class_name, status, method, date, time, marked_at }]` (last 10; `time` is a server-local label, prefer `marked_at`).
 
 ### Grades (new)
 
