@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { hasRole } from "../../lib/roles"
 
 /**
  * GET /api/mobile/admin/school — school info
@@ -60,7 +61,7 @@ export async function PUT(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    if (auth.role !== "ADMIN" && auth.role !== "SUPER_ADMIN") {
+    if (!hasRole(auth, "ADMIN", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

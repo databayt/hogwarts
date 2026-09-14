@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { hasRole } from "../../lib/roles"
 
 /**
  * GET /api/mobile/students/:studentId — student detail
@@ -97,7 +98,7 @@ export async function DELETE(
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    if (auth.role !== "ADMIN" && auth.role !== "SUPER_ADMIN") {
+    if (!hasRole(auth, "ADMIN", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -135,7 +136,7 @@ export async function PUT(
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    if (auth.role !== "ADMIN" && auth.role !== "SUPER_ADMIN") {
+    if (!hasRole(auth, "ADMIN", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

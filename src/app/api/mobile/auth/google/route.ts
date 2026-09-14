@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 import * as z from "zod"
 
 import { db } from "@/lib/db"
-import { buildAuthResponse } from "@/app/api/mobile/auth/jwt"
+import { completeSocialLogin } from "@/app/api/mobile/auth/social-school"
 
 /**
  * Mobile Google Sign-In API
@@ -15,10 +15,14 @@ import { buildAuthResponse } from "@/app/api/mobile/auth/jwt"
  *
  * POST /api/mobile/auth/google
  * Body: { idToken: string }
+ * Body may add: { school_id?: string }
  * Returns: { access_token, refresh_token, expires_at, user }
+ *       or { needs_school: true, schools: [{ id, name, name_en, logo_url, domain }] }
  */
 
 const GoogleAuthSchema = z.object({
+  /** Pick a school the verified email already belongs to. */
+  school_id: z.string().min(1).optional(),
   id_token: z.string().min(1, "Google ID token is required"),
 })
 
@@ -108,6 +112,7 @@ export async function POST(request: NextRequest) {
       username: string | null
       image: string | null
       isSuspended?: boolean | null
+      tokenVersion?: number | null
     }
 
     if (existingUser) {
@@ -162,9 +167,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Generate JWT pair and return AuthResponse
-    const authResponse = await buildAuthResponse(user)
-    return NextResponse.json(authResponse)
+    // Tokens only ever carry a school: a platform-level identity either picks
+    // a school its email belongs to or gets { needs_school, schools } back.
+    return completeSocialLogin(user, validated.data.school_id)
   } catch (error) {
     console.error("Mobile Google auth error:", error)
     return NextResponse.json(

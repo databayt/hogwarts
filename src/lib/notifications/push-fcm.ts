@@ -24,6 +24,8 @@
 
 import { db } from "@/lib/db"
 
+import { FCM_DEVICE_ENTITY_TYPES } from "./fcm-device"
+
 interface PendingPush {
   notificationId: string
   userId: string
@@ -88,13 +90,13 @@ async function pullPendingPushes(limit: number): Promise<PendingPush[]> {
 /**
  * Look up FCM device tokens for a user. Tokens land here via the
  * mobile registration endpoint which stores them as
- * `NotificationSubscription(entityType: "fcm_device", entityId: token)`.
+ * `NotificationSubscription(entityType: "fcm_device[:android|:ios]", entityId: token)`.
  */
 async function getFcmTokensForUser(userId: string): Promise<string[]> {
   const subs = await db.notificationSubscription.findMany({
     where: {
       userId,
-      entityType: "fcm_device",
+      entityType: { in: [...FCM_DEVICE_ENTITY_TYPES] },
       active: true,
     },
     select: { entityId: true },

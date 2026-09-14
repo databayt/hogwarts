@@ -7,7 +7,11 @@ import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { getUserByIdentifier } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
-import { buildAuthResponse, verifyToken } from "@/app/api/mobile/auth/jwt"
+import {
+  buildAuthResponse,
+  tokenVersionOf,
+  verifyToken,
+} from "@/app/api/mobile/auth/jwt"
 
 /**
  * Mobile Authentication API
@@ -150,11 +154,23 @@ export async function PUT(request: NextRequest) {
           role: true,
           username: true,
           image: true,
+          isSuspended: true,
+          tokenVersion: true,
         },
       })
 
       if (!user) {
         return NextResponse.json({ error: "User not found" }, { status: 401 })
+      }
+
+      if (user.isSuspended) {
+        return NextResponse.json({ error: "suspended" }, { status: 403 })
+      }
+
+      // A logout (or any revocation) bumps tokenVersion; refresh tokens minted
+      // before it can no longer mint new access tokens.
+      if (tokenVersionOf(payload) !== user.tokenVersion) {
+        return NextResponse.json({ error: "Token revoked" }, { status: 401 })
       }
 
       const authResponse = await buildAuthResponse(user)

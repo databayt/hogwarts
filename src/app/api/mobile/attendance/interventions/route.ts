@@ -7,6 +7,7 @@ import type { InterventionStatus } from "@prisma/client"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { hasRole } from "../../lib/roles"
 
 /**
  * GET /api/mobile/attendance/interventions — list attendance interventions
@@ -21,13 +22,8 @@ export async function GET(request: NextRequest) {
     if (isAuthError(auth)) return auth
 
     // Authorization: read access broadens to TEACHER/STAFF; mutations elsewhere
-    // are admin-only per matrix. "SUPER_ADMIN" is dead code → "DEVELOPER".
-    if (
-      auth.role !== "TEACHER" &&
-      auth.role !== "ADMIN" &&
-      auth.role !== "STAFF" &&
-      auth.role !== "DEVELOPER"
-    ) {
+    // are admin-only per matrix.
+    if (!hasRole(auth, "TEACHER", "ADMIN", "STAFF", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

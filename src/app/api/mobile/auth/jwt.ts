@@ -27,6 +27,7 @@ export async function generateAccessToken(user: {
   email: string
   schoolId: string | null
   role: string
+  tokenVersion?: number | null
 }) {
   return new SignJWT({
     sub: user.id,
@@ -34,6 +35,7 @@ export async function generateAccessToken(user: {
     schoolId: user.schoolId,
     role: user.role,
     type: "access",
+    tv: user.tokenVersion ?? 0,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -41,10 +43,14 @@ export async function generateAccessToken(user: {
     .sign(JWT_SECRET)
 }
 
-export async function generateRefreshToken(userId: string) {
+export async function generateRefreshToken(
+  userId: string,
+  tokenVersion: number | null = 0
+) {
   return new SignJWT({
     sub: userId,
     type: "refresh",
+    tv: tokenVersion ?? 0,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -54,6 +60,15 @@ export async function generateRefreshToken(userId: string) {
 
 export async function verifyToken(token: string) {
   return jwtVerify(token, JWT_SECRET)
+}
+
+/**
+ * The token-version claim. Tokens minted before `tv` existed carry none and
+ * count as version 0, so sessions issued before the column landed keep working
+ * until the first logout bumps the user's version.
+ */
+export function tokenVersionOf(payload: Record<string, unknown>): number {
+  return typeof payload.tv === "number" ? payload.tv : 0
 }
 
 /**
@@ -107,6 +122,7 @@ export async function buildAuthResponse(user: {
   role: string
   username: string | null
   image: string | null
+  tokenVersion?: number | null
 }) {
   const [accessToken, refreshToken, userResponse] = await Promise.all([
     generateAccessToken({
@@ -114,8 +130,9 @@ export async function buildAuthResponse(user: {
       email: user.email || "",
       schoolId: user.schoolId,
       role: user.role,
+      tokenVersion: user.tokenVersion,
     }),
-    generateRefreshToken(user.id),
+    generateRefreshToken(user.id, user.tokenVersion),
     buildUserResponse(user),
   ])
 

@@ -9,6 +9,7 @@ import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
+import { hasRole } from "../lib/roles"
 
 /**
  * Mobile Students API
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    if (auth.role !== "ADMIN" && auth.role !== "SUPER_ADMIN") {
+    if (!hasRole(auth, "ADMIN", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

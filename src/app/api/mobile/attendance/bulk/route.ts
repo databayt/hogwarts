@@ -7,6 +7,7 @@ import type { AttendanceStatus } from "@prisma/client"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { hasRole } from "../../lib/roles"
 
 /**
  * POST /api/mobile/attendance/bulk — bulk mark attendance for a class
@@ -17,13 +18,7 @@ export async function POST(request: NextRequest) {
     if (isAuthError(auth)) return auth
 
     // Authorization: matches central attendance permission matrix (mark action).
-    // "SUPER_ADMIN" is dead code — replaced with "DEVELOPER", STAFF added.
-    if (
-      auth.role !== "TEACHER" &&
-      auth.role !== "ADMIN" &&
-      auth.role !== "STAFF" &&
-      auth.role !== "DEVELOPER"
-    ) {
+    if (!hasRole(auth, "TEACHER", "ADMIN", "STAFF", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

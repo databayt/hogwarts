@@ -7,6 +7,7 @@ import type { Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { hasRole } from "../../lib/roles"
 
 /**
  * GET /api/mobile/exams/question-bank — browse question bank
@@ -16,11 +17,7 @@ export async function GET(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    if (
-      auth.role !== "TEACHER" &&
-      auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
-    ) {
+    if (!hasRole(auth, "TEACHER", "ADMIN", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

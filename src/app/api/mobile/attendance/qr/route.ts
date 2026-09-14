@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { hasRole } from "../../lib/roles"
 
 /**
  * POST /api/mobile/attendance/qr — create a QR code session
@@ -20,12 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Authorization: QR session generation is teacher-driven — STAFF excluded
     // intentionally because creating QR sessions requires class context.
-    // "SUPER_ADMIN" is dead code — replaced with "DEVELOPER".
-    if (
-      auth.role !== "TEACHER" &&
-      auth.role !== "ADMIN" &&
-      auth.role !== "DEVELOPER"
-    ) {
+    if (!hasRole(auth, "TEACHER", "ADMIN", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

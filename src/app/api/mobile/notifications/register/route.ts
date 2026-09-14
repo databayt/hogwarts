@@ -4,14 +4,20 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { FCM_DEVICE, fcmEntityType } from "@/lib/notifications/fcm-device"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 
 /**
  * POST /api/mobile/notifications/register — register FCM device token
  *
- * Stores the device token as a NotificationSubscription with entityType "fcm_device".
- * Upserts so re-registering the same token is idempotent.
+ * Stores the device token as a NotificationSubscription whose entityType
+ * names the platform: `fcm_device:android`, `fcm_device:ios`, or plain
+ * `fcm_device` when the client did not say. Upserts so re-registering the
+ * same token is idempotent.
+ *
+ * A user keeps one active token PER PLATFORM — registering a new Android
+ * token retires the old Android token, never the user's iPhone.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const deviceToken = body.device_token
-    const platform = body.platform // "ios" | "android"
+    const platform: unknown = body.platform // "ios" | "android"
 
     if (!deviceToken || typeof deviceToken !== "string") {
       return NextResponse.json(
@@ -29,13 +35,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use NotificationSubscription to store FCM tokens
-    // entityType = "fcm_device", entityId = device token
+    const entityType = fcmEntityType(platform)
+
     await db.notificationSubscription.upsert({
       where: {
         userId_entityType_entityId: {
           userId: auth.userId,
-          entityType: "fcm_device",
+          entityType,
           entityId: deviceToken,
         },
       },
@@ -46,22 +52,25 @@ export async function POST(request: NextRequest) {
       create: {
         schoolId: auth.schoolId,
         userId: auth.userId,
-        entityType: "fcm_device",
+        entityType,
         entityId: deviceToken,
         active: true,
       },
     })
 
-    // Deactivate old tokens for this user on the same platform
-    // (a user should only have one active token per platform)
-    if (platform === "ios" || platform === "android") {
+    if (entityType !== FCM_DEVICE) {
+      // Retire older tokens on the same platform, plus the untagged legacy row
+      // for THIS token (registered before platforms were tagged) so one device
+      // never holds two live rows.
       await db.notificationSubscription.updateMany({
         where: {
           userId: auth.userId,
           schoolId: auth.schoolId,
-          entityType: "fcm_device",
-          entityId: { not: deviceToken },
           active: true,
+          OR: [
+            { entityType, entityId: { not: deviceToken } },
+            { entityType: FCM_DEVICE, entityId: deviceToken },
+          ],
         },
         data: { active: false },
       })

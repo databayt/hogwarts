@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../../../lib/authenticate"
+import { hasRole } from "../../../../lib/roles"
 
 /**
  * GET /api/mobile/teacher/classes/:classId/assessments — list exams for a class
@@ -18,11 +19,7 @@ export async function GET(
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    if (
-      auth.role !== "TEACHER" &&
-      auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
-    ) {
+    if (!hasRole(auth, "TEACHER", "ADMIN", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

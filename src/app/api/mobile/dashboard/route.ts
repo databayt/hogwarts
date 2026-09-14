@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
         })
         roleStats = { children_count: children }
       }
-    } else if (role === "ADMIN" || role === "SUPER_ADMIN") {
+    } else if (role === "ADMIN" || role === "DEVELOPER") {
       const [totalStudents, totalTeachers, totalClasses] = await Promise.all([
         db.student.count({ where: { schoolId, status: "ACTIVE" } }),
         db.teacher.count({ where: { schoolId, employmentStatus: "ACTIVE" } }),

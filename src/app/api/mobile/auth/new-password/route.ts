@@ -116,6 +116,8 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         passwordChangedAt: new Date(),
         mustChangePassword: false,
+        // A new password signs every mobile device out.
+        tokenVersion: { increment: 1 },
       },
     })
 

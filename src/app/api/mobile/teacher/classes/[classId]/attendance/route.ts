@@ -7,6 +7,7 @@ import type { AttendanceStatus } from "@prisma/client"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../../../lib/authenticate"
+import { hasRole } from "../../../../lib/roles"
 
 /**
  * POST /api/mobile/teacher/classes/:classId/attendance — batch attendance for a class
@@ -19,11 +20,7 @@ export async function POST(
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    if (
-      auth.role !== "TEACHER" &&
-      auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
-    ) {
+    if (!hasRole(auth, "TEACHER", "ADMIN", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

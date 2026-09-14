@@ -5,6 +5,11 @@ import { NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
 
+import {
+  schoolDirectorySelect,
+  toSchoolDirectoryDto,
+} from "../lib/school-directory"
+
 /**
  * Mobile Schools List API
  *
@@ -22,24 +27,12 @@ export async function GET() {
         isActive: true,
         isPublished: true,
       },
-      select: {
-        id: true,
-        name: true,
-        nameEn: true,
-        logoUrl: true,
-        domain: true,
-      },
+      select: schoolDirectorySelect,
       orderBy: { name: "asc" },
     })
 
     // Map to snake_case for mobile DTOs
-    const response = schools.map((school) => ({
-      id: school.id,
-      name: school.name,
-      name_en: school.nameEn,
-      logo_url: school.logoUrl,
-      domain: school.domain,
-    }))
+    const response = schools.map(toSchoolDirectoryDto)
 
     return NextResponse.json(response)
   } catch (error) {

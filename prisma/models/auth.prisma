@@ -19,6 +19,9 @@ model User {
   password           String?
   role               UserRole  @default(USER)
   isSuspended        Boolean   @default(false)
+  /// Bumped on logout / revocation; mobile JWTs carry it as `tv` and are
+  /// rejected when it no longer matches.
+  tokenVersion       Int       @default(0)
   mustChangePassword Boolean   @default(false)
   passwordChangedAt  DateTime?
 

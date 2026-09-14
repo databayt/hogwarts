@@ -2,15 +2,16 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { NextRequest, NextResponse } from "next/server"
+import { createRemoteJWKSet, jwtVerify } from "jose"
 import * as z from "zod"
 
 import { db } from "@/lib/db"
-import { buildAuthResponse } from "@/app/api/mobile/auth/jwt"
+import { completeSocialLogin } from "@/app/api/mobile/auth/social-school"
 
 /**
  * Mobile Apple Sign-In API
  *
- * Decodes an Apple identity token (JWT), finds or creates the user,
+ * Verifies an Apple identity token (JWT), finds or creates the user,
  * and returns JWT tokens for the mobile client.
  *
  * Apple only sends the user's name on the FIRST sign-in, so given_name
@@ -18,10 +19,14 @@ import { buildAuthResponse } from "@/app/api/mobile/auth/jwt"
  *
  * POST /api/mobile/auth/apple
  * Body: { identity_token: string, authorization_code?: string, given_name?: string, family_name?: string }
+ * Body may add: { school_id?: string }
  * Returns: { access_token, refresh_token, expires_at, user }
+ *       or { needs_school: true, schools: [{ id, name, name_en, logo_url, domain }] }
  */
 
 const AppleAuthSchema = z.object({
+  /** Pick a school the verified email already belongs to. */
+  school_id: z.string().min(1).optional(),
   identity_token: z.string().min(1, "Apple identity token is required"),
   authorization_code: z.string().optional(),
   given_name: z.string().optional(),
@@ -34,22 +39,29 @@ interface AppleTokenPayload {
   email_verified?: string | boolean
 }
 
-/**
- * Decode an Apple identity_token JWT payload without verification.
- *
- * Apple identity tokens are JWTs signed with Apple's private key.
- * We decode the payload segment (base64url) to extract claims.
- */
-function decodeAppleToken(identityToken: string): AppleTokenPayload {
-  const parts = identityToken.split(".")
-  if (parts.length !== 3) {
-    throw new Error("Invalid JWT format")
-  }
+const APPLE_ISSUER = "https://appleid.apple.com"
+const appleJwks = createRemoteJWKSet(new URL(`${APPLE_ISSUER}/auth/keys`))
 
-  // Base64url decode the payload (second segment)
-  const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/")
-  const decoded = Buffer.from(payload, "base64").toString("utf-8")
-  return JSON.parse(decoded)
+/**
+ * Verify an Apple identity_token against Apple's published signing keys.
+ *
+ * It used to be base64-decoded without any check, which let anyone mint a
+ * "token" for any email. Now that a verified email can open a school-scoped
+ * account (see social-school.ts) the signature, issuer and expiry must hold.
+ * The audience is pinned when `APPLE_CLIENT_ID` (comma-separated bundle /
+ * service ids) is configured.
+ */
+async function verifyAppleToken(
+  identityToken: string
+): Promise<AppleTokenPayload> {
+  const audience = process.env.APPLE_CLIENT_ID?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+  const { payload } = await jwtVerify(identityToken, appleJwks, {
+    issuer: APPLE_ISSUER,
+    ...(audience?.length ? { audience } : {}),
+  })
+  return payload as unknown as AppleTokenPayload
 }
 
 export async function POST(request: NextRequest) {
@@ -74,7 +86,7 @@ export async function POST(request: NextRequest) {
     // Decode the Apple identity token
     let applePayload: AppleTokenPayload
     try {
-      applePayload = decodeAppleToken(identityToken)
+      applePayload = await verifyAppleToken(identityToken)
     } catch {
       return NextResponse.json(
         { error: "Invalid Apple identity token" },
@@ -89,8 +101,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Apple may not always include email (e.g., "Hide My Email" relay)
-    const email = applePayload.email?.toLowerCase() || null
+    // Apple may not always include email (e.g., "Hide My Email" relay). An
+    // unverified email is treated as absent — it must never match an account.
+    const emailVerified =
+      applePayload.email_verified === true ||
+      applePayload.email_verified === "true"
+    const email =
+      emailVerified && applePayload.email
+        ? applePayload.email.toLowerCase()
+        : null
 
     // Build display name from request body (Apple only sends name on first sign-in)
     const displayName =
@@ -114,6 +133,7 @@ export async function POST(request: NextRequest) {
       username: string | null
       image: string | null
       isSuspended?: boolean | null
+      tokenVersion?: number | null
     }
 
     if (existingAccount) {
@@ -201,9 +221,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Generate JWT pair and return AuthResponse
-    const authResponse = await buildAuthResponse(user)
-    return NextResponse.json(authResponse)
+    // Tokens only ever carry a school: a platform-level identity either picks
+    // a school its email belongs to or gets { needs_school, schools } back.
+    return completeSocialLogin(user, validated.data.school_id)
   } catch (error) {
     console.error("Mobile Apple auth error:", error)
     return NextResponse.json(

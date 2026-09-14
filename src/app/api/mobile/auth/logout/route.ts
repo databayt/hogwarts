@@ -3,18 +3,33 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { authenticate, isAuthError } from "../../lib/authenticate"
+import { db } from "@/lib/db"
+
+import {
+  authenticate,
+  invalidateAuthCache,
+  isAuthError,
+} from "../../lib/authenticate"
 
 /**
  * POST /api/mobile/auth/logout — mobile logout
  *
- * Confirms logout to the mobile app. The JWT is stateless so there is
- * no server-side session to destroy — the client discards its token.
+ * Revokes every mobile token the user holds: bumping `User.tokenVersion`
+ * makes all access and refresh tokens carrying the old `tv` claim fail
+ * `authenticate()` and the refresh endpoint. Signs the user out of every
+ * device, which is the only revocation a stateless JWT allows.
  */
 export async function POST(request: NextRequest) {
   try {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
+
+    await db.user.update({
+      where: { id: auth.userId },
+      data: { tokenVersion: { increment: 1 } },
+      select: { id: true },
+    })
+    invalidateAuthCache(auth.userId)
 
     return NextResponse.json({ success: true })
   } catch (error) {

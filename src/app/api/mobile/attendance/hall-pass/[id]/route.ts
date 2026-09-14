@@ -7,6 +7,7 @@ import type { HallPassStatus } from "@prisma/client"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
+import { hasRole } from "../../../lib/roles"
 
 /**
  * PUT /api/mobile/attendance/hall-pass/:id — update a hall pass
@@ -23,13 +24,7 @@ export async function PUT(
     if (isAuthError(auth)) return auth
 
     // Authorization: hall passes are managed by classroom staff.
-    // "SUPER_ADMIN" is dead code → "DEVELOPER"; STAFF added.
-    if (
-      auth.role !== "TEACHER" &&
-      auth.role !== "ADMIN" &&
-      auth.role !== "STAFF" &&
-      auth.role !== "DEVELOPER"
-    ) {
+    if (!hasRole(auth, "TEACHER", "ADMIN", "STAFF", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
