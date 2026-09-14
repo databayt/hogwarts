@@ -147,7 +147,7 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
 
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pt-8">
           {/* App identity: icon beside name + short description, at start. */}
-          <div className="flex items-center gap-3 pe-10">
+          <div className="flex items-center gap-3">
             <Image
               src="/apple-touch-icon.png"
               alt=""
@@ -157,10 +157,12 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
               priority
             />
             <div className="min-w-0 text-start">
-              <DrawerTitle className="text-[24px] leading-tight font-bold tracking-tight">
+              {/* Only the title shares a row with the close button; the
+                  description sits below it and stays on one line. */}
+              <DrawerTitle className="pe-10 text-[24px] leading-tight font-bold tracking-tight">
                 {t("installAppName", "balqalam")}
               </DrawerTitle>
-              <p className="text-muted-foreground mt-0.5 text-[14px] leading-snug">
+              <p className="text-muted-foreground mt-0.5 text-[min(14px,3.6vw)] leading-snug whitespace-nowrap">
                 {t(
                   "installAppDesc",
                   "Feels native, opens full screen, and works offline."
@@ -192,7 +194,7 @@ export function InstallCard({ labels }: { labels?: OfflineLabels }) {
             src="/install/add-to-home-screen.jpg"
             alt=""
             width={1170}
-            height={1219}
+            height={752}
             sizes="(max-width: 480px) 100vw, 480px"
             className="mt-5 h-auto w-full rounded-[22px]"
           />
