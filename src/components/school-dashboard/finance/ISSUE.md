@@ -30,6 +30,17 @@ Below `md` only; `md` and up keep their classes unless noted. Kit: `../shared/RE
   grey lists with figures under the title, scrolling ledger/reconciliation tables, stat panels,
   grey forms with pill submits. invoice/analysis no longer clips (phantom grid column from
   `col-span-2` with no columns; fixed below md only — still overflows 768–1023px).
+- **fees / payroll / salary / timesheet / wallet / reports / permissions** `899cf2ad1`: stat
+  panels and grey door cards on the fees, fees-reports, salary and reports hubs; grouped lists
+  for runs, payslips, timesheet entries/periods, wallets and wallet transactions (wallet owner ids
+  are bare cuids and overflowed the viewport — they break anywhere now); balance sheet, P&L and trial
+  balance get a label/amount phone rendering beside the untouched desktop table. **Every width:**
+  the trial balance printed raw `AccountType` enums (now `accountsConfig.accountTypeLabels`), and
+  `lib/format-money.ts` pins Latin digits (KPI money was Arabic-Indic beside Latin counts; test in
+  `compact-money.test.ts`).
+- **Open — permissions:** the per-user list below the fold (≈529k px, unpaginated) shows raw role
+  enums and its edit button clips like the wallet rows did. Demo balance sheet shows negative total
+  assets — seed data (petty cash and operating bank carry credit balances), not UI.
 - **Open — strings:** `finance.reconciliation` is missing from `finance.json` entirely (the whole
   page is English on /ar); `budget/content.tsx:129` "utilization"; `banking.justNow/minsAgo/
   hoursAgo/daysAgo` don't exist; `bank-list.tsx` "Never"/"Just now"/"{h}h ago" + raw

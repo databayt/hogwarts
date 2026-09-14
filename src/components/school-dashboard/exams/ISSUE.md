@@ -25,6 +25,16 @@ Below `md` only; `md` and up keep their classes. Kit: `../shared/README.md` ("Ph
   panel, pill buttons, search on its own row. Fixed: `/exams/certificates` rendered without
   `lang` (English showed the Arabic dictionary); the catalog looked up keys that do not exist
   (`types.chapterTest`, the preview dialog's `detail.*`).
+- **Marking, results and practice** `781ddfd23`: mark, questions, pending, results, analytics,
+  recent, progress, upcoming, quick, quiz and mock — stat rows as one grey panel, grey cards with
+  pills, quiz and mock catalogs two across (the student quiz page went from ~2.4M px to ~68k px).
+  `/exams/report-cards` (`reports/content.tsx`) was English end to end and clipped off the start
+  edge (grid Shell column grew to the table's width): labels now read `results.reportCards`, the
+  column takes `min-w-0` below md. Every width: `toLocaleDateString()` / date-fns English months →
+  `formatDate`.
+- **Open — report cards:** `reports/generate-button.tsx` and `publish-button.tsx` (trigger, dialog,
+  toasts) are hardcoded English; the report table lists every card unpaginated (975 rows ≈ 38k px).
+  Quiz cards print English unit suffixes ("46pts", "17Q", "33m"); `/exams/mark` "Auto-Grade All".
 - **Open — strings with no key:** `generate/catalog-tab.tsx` (Adopted, Preview, Adopt, "No
   catalog exams found", "exams total", the preview dialog's pass/schools/variants/Sample
   Questions/pts/Close/Adopt This Exam); `generate/contributions.tsx` (questions, adopted,
