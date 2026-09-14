@@ -264,6 +264,7 @@ describe("GET /api/mobile/dashboard", () => {
           end_time: "1970-01-01T08:45:00.000Z",
           subject: "Math",
           class_name: "10A",
+          section_id: "sec1",
           teacher: "T One",
           room: "R1",
           is_break: false,

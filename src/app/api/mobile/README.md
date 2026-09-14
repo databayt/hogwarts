@@ -90,7 +90,7 @@ All field names use **snake_case** (mobile DTO convention).
 
 Original flat fields stay (`user_name`, `avatar_url`, `role`, `school_name`, `unread_notifications`, `announcements_count`, role stats). Role stats: STUDENT `attendance_percentage, upcoming_exams, today_classes` · TEACHER `total_classes, today_classes` · GUARDIAN `children_count` · ADMIN/DEVELOPER `total_students, total_teachers, total_classes` · ACCOUNTANT `pending_invoices, pending_amount, overdue_invoices, overdue_amount, collected_today` · STAFF `total_students, present_today, upcoming_events`.
 
-Additive (2026-09): `school { id, name, name_en, logo_url, enabled_modules (null = all) }`, `unread_messages`, `events_today` (school events dated today, not cancelled), `next_actions [{ kind, mark, href }]` (web `rankNextActions` over the shared upcoming loader; `href` is a locale-less web path), `quick_actions [{ key, label, description, href, icon }]`, `today_timetable` (STUDENT/TEACHER, else null) `{ day_of_week, date, closure { title, type } | null, periods [{ period_id, period_name, start_time, end_time, subject, class_name, teacher, room, is_break, timetable_id, live_class }] }`.
+Additive (2026-09): `school { id, name, name_en, logo_url, enabled_modules (null = all) }`, `unread_messages`, `events_today` (school events dated today, not cancelled), `next_actions [{ kind, mark, href }]` (web `rankNextActions` over the shared upcoming loader; `href` is a locale-less web path), `quick_actions [{ key, label, description, href, icon }]`, `today_timetable` (STUDENT/TEACHER, else null) `{ day_of_week, date, closure { title, type } | null, periods [{ period_id, period_name, start_time, end_time, subject, class_name, section_id, teacher, room, is_break, timetable_id, live_class }] }`.
 
 ### Profile (new)
 
@@ -217,10 +217,11 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 
 ### Teacher (new)
 
-| Method | Path                                       | Description                  |
-| ------ | ------------------------------------------ | ---------------------------- |
-| GET    | `/api/mobile/teacher/classes`              | Assigned sections + subjects |
-| GET    | `/api/mobile/teacher/classes/:id/students` | Students in section          |
+| Method | Path                                       | Description                                                                                                                                   |
+| ------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/mobile/teacher/classes`              | Assigned sections + subjects                                                                                                                  |
+| GET    | `/api/mobile/teacher/classes/:id/students` | Students in section                                                                                                                           |
+| GET    | `/api/mobile/teacher/schedule?day=`        | Own slots `{ data: [{ id, day_of_week, subject_name, section_id, section_name, grade_name, classroom, period_name, start_time, end_time }] }` |
 
 ### Admin (new)
 

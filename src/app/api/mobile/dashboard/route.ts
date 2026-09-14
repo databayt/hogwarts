@@ -265,6 +265,7 @@ export async function GET(request: NextRequest) {
             end_time: p.endTime,
             subject: p.subject || null,
             class_name: p.className || null,
+            section_id: p.sectionId ?? null,
             teacher: p.teacher || null,
             room: p.room || null,
             is_break: p.isBreak,

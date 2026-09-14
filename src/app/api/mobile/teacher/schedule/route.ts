@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { hasRole } from "../../lib/roles"
 
 /**
  * GET /api/mobile/teacher/schedule — teacher's timetable entries
@@ -18,11 +19,7 @@ export async function GET(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    if (
-      auth.role !== "TEACHER" &&
-      auth.role !== "ADMIN" &&
-      auth.role !== "DEVELOPER"
-    ) {
+    if (!hasRole(auth, "TEACHER", "ADMIN", "DEVELOPER")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -70,6 +67,7 @@ export async function GET(request: NextRequest) {
       id: s.id,
       day_of_week: s.dayOfWeek,
       subject_name: s.subject?.name || null,
+      section_id: s.section?.id ?? null,
       section_name: s.section?.name || null,
       grade_name: s.section?.grade?.name || null,
       classroom: s.classroom?.roomName || null,
