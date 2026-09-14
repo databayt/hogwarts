@@ -11,13 +11,19 @@
  * Two surfaces, one state machine:
  *
  *   ≥ 768px  — a centred Dialog: title, textarea, hint, captcha, Submit.
- *   < 768px  — a full-height bottom sheet that is a blank page, like iPhone
- *              Notes: no title, no close button, no composer chrome — one
- *              borderless textarea that starts at the top and fills down.
- *              The keyboard's Send key submits. Captcha, error, cooldown and
- *              success lines appear under the text only when they apply.
- *              The sheet pads itself by the keyboard's height, read from
- *              `window.visualViewport` (the only signal iOS Safari gives).
+ *   < 768px  — a bottom sheet that is a blank page, like iPhone Notes: a
+ *              slim bar with ✕ (close) and ✓ (send — dimmed until the draft
+ *              is long enough), then one borderless textarea that starts at
+ *              the top and fills down. The keyboard's Send key and ✓ both
+ *              submit. Captcha, error and cooldown lines appear under the
+ *              text only when they apply. A sent report closes the sheet and
+ *              shows `ReportSentAlert`, which dismisses itself.
+ *              The sheet is pinned to `window.visualViewport` (the only
+ *              keyboard signal iOS Safari gives): focusing the textarea
+ *              scrolls iOS's layout viewport up by the keyboard's height, and
+ *              a sheet anchored to the layout viewport's bottom carried its
+ *              first line off the top of the screen until the keyboard was
+ *              dismissed (#415).
  *
  * Symmetric success: every accepted submission shows the same success toast
  * regardless of which bucket it landed in. Only verified-bucket results
@@ -39,7 +45,7 @@
  */
 import * as React from "react"
 import { useParams } from "next/navigation"
-import { Bug } from "lucide-react"
+import { Bug, Check, Loader2, X } from "lucide-react"
 
 import { REPORT_LIMITS } from "@/lib/report/limits"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -53,6 +59,7 @@ import {
 } from "@/components/ui/dialog"
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetTitle,
@@ -63,6 +70,7 @@ import {
   type ReportDict,
   type ReportLang,
 } from "./dictionary"
+import { ReportSentAlert } from "./sent-alert"
 
 type ReportCategory =
   | "visual"
@@ -153,6 +161,8 @@ export function ReportIssueDialog({
     undefined
   )
   const [cooldownUntil, setCooldownUntil] = React.useState<number | null>(null)
+  const [sentOpen, setSentOpen] = React.useState(false)
+  const [sentBody, setSentBody] = React.useState("")
   const cooldownActive = useCooldown(cooldownUntil)
 
   const trimmed = description.trim()
@@ -191,18 +201,30 @@ export function ReportIssueDialog({
     try {
       const res = await onSubmit(payload)
       if (res.ok) {
-        setStatus("success")
-        setIssueNumber(res.issueNumber)
         setCooldownUntil(Date.now() + COOLDOWN_MS)
         setDescription("")
         setCaptchaToken(null)
+        if (isMobile) {
+          // The sheet slides away as the confirmation card zooms in.
+          setSentBody(
+            res.issueNumber
+              ? t.sentBodyWithId.replace("{id}", String(res.issueNumber))
+              : t.sentBody
+          )
+          setOpen(false)
+          setStatus("idle")
+          setSentOpen(true)
+        } else {
+          setStatus("success")
+          setIssueNumber(res.issueNumber)
+        }
       } else {
         setStatus("error")
       }
     } catch {
       setStatus("error")
     }
-  }, [canSubmit, captchaToken, description, dir, onSubmit])
+  }, [canSubmit, captchaToken, description, dir, isMobile, onSubmit, t])
 
   // Success closes the surface on its own after a beat.
   React.useEffect(() => {
@@ -299,10 +321,17 @@ export function ReportIssueDialog({
           {...shared}
         />
       )}
+
+      <ReportSentAlert
+        open={sentOpen}
+        onOpenChange={setSentOpen}
+        dir={dir}
+        title={t.sentTitle}
+        body={sentBody}
+      />
     </>
   )
 }
-
 // ─── surfaces ──────────────────────────────────────────────────────────────
 
 interface SurfaceProps {
@@ -400,33 +429,14 @@ function MobileSheet({
   description,
   setDescription,
   onMobileKeyDown,
+  submit,
+  canSubmit,
   status,
   cooldownActive,
-  successMessage,
   captcha,
 }: SurfaceProps & OpenProps) {
-  const keyboardInset = useKeyboardInset(open)
-  const notice =
-    status === "success" ? (
-      <p className="text-green-600" role="status">
-        {successMessage}
-      </p>
-    ) : (
-      <>
-        {captcha}
-        {status === "error" && (
-          <p className="text-destructive" role="alert">
-            {t.error}
-          </p>
-        )}
-        {cooldownActive && <p>{t.cooldown}</p>}
-      </>
-    )
-  const hasNotice =
-    status === "success" ||
-    status === "error" ||
-    cooldownActive ||
-    Boolean(captcha)
+  const frame = useVisualViewportFrame(open)
+  const hasNotice = status === "error" || cooldownActive || Boolean(captcha)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -434,16 +444,47 @@ function MobileSheet({
         side="bottom"
         dir={dir}
         className="bg-background h-[calc(100dvh-2.5rem)] gap-0 rounded-t-[2rem] border-0 p-0 [&>button]:hidden"
-        style={{ paddingBottom: keyboardInset }}
+        // Pinned to what is actually visible: 2.5rem below the visual
+        // viewport's top, down to the keyboard's edge.
+        style={
+          frame
+            ? {
+                top: frame.top + SHEET_TOP_GAP,
+                bottom: "auto",
+                height: frame.height - SHEET_TOP_GAP,
+              }
+            : undefined
+        }
       >
         <SheetTitle className="sr-only">{t.title}</SheetTitle>
         <SheetDescription className="sr-only">{t.description}</SheetDescription>
 
-        {/* A blank page, like Notes: no chrome, the text starts at the top and
-            flows down; the keyboard's Send key submits. */}
+        {/* A blank page, like Notes: a slim bar with close and send, then the
+            text starts at the top and flows down. */}
         <div className="flex h-full flex-col">
+          <div className="flex h-14 shrink-0 items-center justify-between px-3">
+            <SheetClose
+              className="text-muted-foreground hover:bg-accent inline-flex size-10 items-center justify-center rounded-full"
+              aria-label={t.close}
+            >
+              <X className="size-5" aria-hidden />
+            </SheetClose>
+            <button
+              type="button"
+              onClick={() => void submit()}
+              disabled={!canSubmit}
+              aria-label={t.send}
+              className="bg-primary text-primary-foreground inline-flex size-10 items-center justify-center rounded-full transition-opacity disabled:opacity-30"
+            >
+              {status === "loading" ? (
+                <Loader2 className="size-5 animate-spin" aria-hidden />
+              ) : (
+                <Check className="size-5" aria-hidden />
+              )}
+            </button>
+          </div>
           <textarea
-            className="text-foreground placeholder:text-muted-foreground min-h-0 w-full flex-1 resize-none border-0 bg-transparent px-5 pt-6 pb-4 text-[17px] leading-6 outline-none"
+            className="text-foreground placeholder:text-muted-foreground min-h-0 w-full flex-1 resize-none border-0 bg-transparent px-5 pt-1 pb-4 text-[17px] leading-6 outline-none"
             placeholder={t.composerPlaceholder}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -458,7 +499,13 @@ function MobileSheet({
               className="text-muted-foreground shrink-0 space-y-2 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-sm"
               aria-live="polite"
             >
-              {notice}
+              {captcha}
+              {status === "error" && (
+                <p className="text-destructive" role="alert">
+                  {t.error}
+                </p>
+              )}
+              {cooldownActive && <p>{t.cooldown}</p>}
             </div>
           )}
         </div>
@@ -589,31 +636,36 @@ function useCooldown(until: number | null): boolean {
   return until !== null && lapsed !== until
 }
 
+/** Space above the sheet, so the page behind still shows as a sliver. */
+const SHEET_TOP_GAP = 40
+
+type ViewportFrame = { top: number; height: number }
+
 /**
- * Height of the on-screen keyboard (plus any browser chrome it displaces),
- * from the visual viewport. 0 when closed or unsupported.
+ * The visible part of the screen, in layout-viewport coordinates — where a
+ * `position: fixed` element has to go to sit above the keyboard. `null` when
+ * closed or unsupported (the sheet's own `100dvh` height applies then).
+ *
+ * Replaces a bottom padding of `innerHeight - vv.height - vv.offsetTop`: on
+ * iOS that expression is ~0 exactly when the keyboard is up, because iOS
+ * scrolls the layout viewport (`offsetTop`) instead of shrinking it.
  */
-function useKeyboardInset(active: boolean): number {
-  const [inset, setInset] = React.useState(0)
+function useVisualViewportFrame(active: boolean): ViewportFrame | null {
+  const [frame, setFrame] = React.useState<ViewportFrame | null>(null)
   React.useEffect(() => {
     if (!active || typeof window === "undefined") return
     const vv = window.visualViewport
     if (!vv) return
-    const update = () => {
-      const next = Math.max(
-        0,
-        Math.round(window.innerHeight - vv.height - vv.offsetTop)
-      )
-      setInset(next)
-    }
+    const update = () =>
+      setFrame({ top: Math.round(vv.offsetTop), height: Math.round(vv.height) })
     update()
     vv.addEventListener("resize", update)
     vv.addEventListener("scroll", update)
     return () => {
       vv.removeEventListener("resize", update)
       vv.removeEventListener("scroll", update)
-      setInset(0)
+      setFrame(null)
     }
   }, [active])
-  return active ? inset : 0
+  return active ? frame : null
 }
