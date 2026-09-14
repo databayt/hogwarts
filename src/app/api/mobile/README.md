@@ -110,13 +110,17 @@ Additive (2026-09): `school { id, name, name_en, logo_url, enabled_modules (null
 
 ### Attendance (new)
 
-| Method | Path                                 | Description                          |
-| ------ | ------------------------------------ | ------------------------------------ |
-| GET    | `/api/mobile/attendance/student/:id` | Student records                      |
-| GET    | `/api/mobile/attendance/class/:id`   | Class roster + attendance for a date |
-| GET    | `/api/mobile/attendance/summary/:id` | Summary (present/absent/late counts) |
-| POST   | `/api/mobile/attendance/mark`        | Mark single student                  |
-| POST   | `/api/mobile/attendance/bulk`        | Bulk mark class                      |
+| Method | Path                                 | Description                                                                                                                                        |
+| ------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/mobile/attendance/student/:id` | Student records                                                                                                                                    |
+| GET    | `/api/mobile/attendance/class/:id`   | Class roster + attendance for a date                                                                                                               |
+| GET    | `/api/mobile/attendance/summary/:id` | Summary (present/absent/late counts)                                                                                                               |
+| POST   | `/api/mobile/attendance/mark`        | Mark single student                                                                                                                                |
+| POST   | `/api/mobile/attendance/bulk`        | Bulk mark class                                                                                                                                    |
+| GET    | `/api/mobile/attendance/clock`       | Own clock state `{ available, kind: staff\|teacher\|null, checked_in_at, checked_out_at, today_hours, week_hours }`; no clock → `available: false` |
+| POST   | `/api/mobile/attendance/clock`       | `{ action: in\|out }` → same shape; 403 role, 404 `NO_CLOCK_IDENTITY` / `NOT_CHECKED_IN`                                                           |
+
+Clock rules are the web clock card's (`attendance/actions/clock-core.ts`): TEACHER/STAFF/ADMIN/DEVELOPER; a StaffMember row clocks into StaffTimesheetEntry, else a Teacher row into the finance TimesheetEntry (DRAFT); both directions idempotent. "Today" is the server's midnight, as on web.
 
 ### Grades (new)
 
