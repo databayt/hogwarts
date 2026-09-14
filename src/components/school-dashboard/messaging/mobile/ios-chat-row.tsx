@@ -153,7 +153,7 @@ export const IosChatRow = memo(function IosChatRow({
             {row.pinned && !hasUnread && (
               <WaIcon
                 name="ic-wa-pin-16"
-                className="size-[16px] rotate-45 text-[color:var(--wa-text-secondary)]"
+                className="size-[16px] text-[color:var(--wa-text-secondary)]"
                 ariaLabel="Pinned"
               />
             )}

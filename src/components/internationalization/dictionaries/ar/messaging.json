@@ -138,6 +138,8 @@
     },
     "mobile": {
       "input_placeholder": "رسالة",
+      "more_options": "خيارات أخرى",
+      "read_all": "قراءة الكل",
       "group_fallback": "مجموعة",
       "title": "رسائل",
       "search_placeholder": "البحث في الرسائل",

@@ -1,8 +1,17 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
 import { cn } from "@/lib/utils"
 
 import { WaIcon } from "./wa-icon"
+
+export type IosHeaderMenuItem = {
+  id: string
+  label: string
+  icon: React.ReactNode
+  onSelect: () => void
+}
 
 type Props = {
   title?: string
@@ -15,6 +24,12 @@ type Props = {
   onAdd?: () => void
   onBack?: () => void
   backLabel?: string
+  /** A glass back disc at the start edge, beside the options button. */
+  onExit?: () => void
+  exitLabel?: string
+  /** What the options button opens; without items it stays a plain button. */
+  optionsMenu?: IosHeaderMenuItem[]
+  optionsLabel?: string
   /** Title as the large-title collapse draws it: hidden until `collapsed`. */
   collapsingTitle?: string
   /** The page's big title has scrolled under the header. */
@@ -33,11 +48,24 @@ export function IosHeader({
   onAdd,
   onBack,
   backLabel,
+  onExit,
+  exitLabel,
+  optionsMenu,
+  optionsLabel,
   collapsingTitle,
   collapsed = false,
   className,
 }: Props) {
   const hasTitle = Boolean(title)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const hasMenu = Boolean(optionsMenu?.length)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false)
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [menuOpen])
   return (
     <div
       className={cn(
@@ -97,18 +125,68 @@ export function IosHeader({
         </p>
       )}
 
+      {onExit && (
+        <HeaderCircularButton onClick={onExit} ariaLabel={exitLabel ?? "Back"}>
+          <WaIcon
+            name="ic-wa-chevron-lt-32"
+            className="size-[26px] rtl:scale-x-[-1]"
+          />
+        </HeaderCircularButton>
+      )}
+
       {showOptions && (
+        <HeaderCircularButton
+          onClick={hasMenu ? () => setMenuOpen(true) : onOptions}
+          ariaLabel={optionsLabel ?? "More options"}
+          expanded={hasMenu ? menuOpen : undefined}
+        >
+          <WaIcon name="ic-wa-meetball-24" className="size-[24px]" />
+        </HeaderCircularButton>
+      )}
+
+      {(onExit || showOptions) && <div className="h-[26px] flex-1" />}
+
+      {hasMenu && menuOpen && (
         <>
-          <HeaderCircularButton onClick={onOptions} ariaLabel="More options">
-            <WaIcon name="ic-wa-meetball-24" className="size-[20px]" />
-          </HeaderCircularButton>
-          <div className="h-[26px] flex-1" />
+          {/* Any tap outside the card closes it, and does nothing else. */}
+          <button
+            type="button"
+            aria-hidden
+            tabIndex={-1}
+            onClick={() => setMenuOpen(false)}
+            className="pointer-events-auto fixed inset-0 z-40 cursor-default"
+          />
+          {/* The reference opens the card over the button that summoned it,
+              anchored to the same start edge. */}
+          <div
+            role="menu"
+            aria-label={optionsLabel ?? "More options"}
+            className="wa-glass-menu pointer-events-auto absolute start-[8px] top-[calc(env(safe-area-inset-top,0px)+4px)] z-50 flex min-w-[196px] flex-col rounded-[28px] py-[8px]"
+          >
+            {optionsMenu!.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false)
+                  item.onSelect()
+                }}
+                className="flex h-[44px] items-center gap-[14px] px-[24px] text-start text-[17px] leading-none tracking-[-0.34px] text-[color:var(--wa-text-primary)] active:bg-black/5"
+              >
+                <span className="flex size-[24px] shrink-0 items-center justify-center">
+                  {item.icon}
+                </span>
+                {item.label}
+              </button>
+            ))}
+          </div>
         </>
       )}
 
       {showCamera && (
         <HeaderCircularButton onClick={onCamera} ariaLabel="Camera">
-          <WaIcon name="ic-wa-camera-24" className="size-[20px]" />
+          <WaIcon name="ic-wa-camera-24" className="size-[24px]" />
         </HeaderCircularButton>
       )}
 
@@ -120,7 +198,7 @@ export function IosHeader({
         >
           <WaIcon
             name="ic-wa-plus-add-24"
-            className="size-[19px] text-[color:var(--wa-text-invert)]"
+            className="size-[24px] text-[color:var(--wa-text-invert)]"
           />
         </HeaderCircularButton>
       )}
@@ -132,11 +210,13 @@ function HeaderCircularButton({
   children,
   onClick,
   ariaLabel,
+  expanded,
   variant = "default",
 }: {
   children: React.ReactNode
   onClick?: () => void
   ariaLabel: string
+  expanded?: boolean
   variant?: "default" | "product"
 }) {
   return (
@@ -144,6 +224,8 @@ function HeaderCircularButton({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
+      aria-haspopup={expanded === undefined ? undefined : "menu"}
+      aria-expanded={expanded}
       className={cn(
         // The button exists at two sizes off one component: 48 standing alone
         // as a symbol, 44 everywhere the file's own top toolbar places it, and

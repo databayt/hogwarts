@@ -138,6 +138,8 @@
     },
     "mobile": {
       "input_placeholder": "Message",
+      "more_options": "More options",
+      "read_all": "Read all",
       "group_fallback": "Group",
       "title": "Messages",
       "search_placeholder": "Search messages",

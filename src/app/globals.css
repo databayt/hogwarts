@@ -996,6 +996,21 @@ body {
     var(--wa-glass-shadow);
 }
 
+/* The options card the header's ⋯ opens (public/whatsapp/File (2).png): a
+   near-opaque frosted sheet with a soft, wide drop — thicker than the discs
+   so the list under it stays out of the way of the labels. */
+.wa-glass-menu {
+  background: rgba(250, 250, 250, 0.88);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 0.5px solid var(--wa-glass-border);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.14);
+}
+.dark .wa-glass-menu {
+  background: rgba(40, 48, 54, 0.88);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
 /* The tab bar capsule wears the same material one size up. Node 5:596 casts
    it straight down (offset 0,8 — blur 40, no spread), so only the refractive
    rim mirrors under RTL, never the shadow. The node's own GLASS effect binds

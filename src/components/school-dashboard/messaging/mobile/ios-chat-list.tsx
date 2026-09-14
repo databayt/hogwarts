@@ -45,6 +45,8 @@ type L = {
   previewLocation: string
   previewDeleted: string
   relativeYesterday: string
+  moreOptions: string
+  readAll: string
 }
 
 const DEFAULT_L: L = {
@@ -80,6 +82,8 @@ const DEFAULT_L: L = {
   previewLocation: "Location",
   previewDeleted: "You deleted this message.",
   relativeYesterday: "Yesterday",
+  moreOptions: "More options",
+  readAll: "Read all",
 }
 
 type Props = {
@@ -93,6 +97,9 @@ type Props = {
   onNewChat?: () => void
   onCamera?: () => void
   onOptions?: () => void
+  /** Leaves /messages — without it the phone has no way out of the inbox. */
+  onExit?: () => void
+  onReadAll?: () => void
   onOpenArchived?: () => void
   onAddFilter?: () => void
   /** Drawn by the shell's Settings tab, passed through for callers. */
@@ -112,6 +119,8 @@ export function IosChatList({
   onNewChat,
   onCamera,
   onOptions,
+  onExit,
+  onReadAll,
   onOpenArchived,
   onAddFilter,
   locale = "en",
@@ -129,6 +138,21 @@ export function IosChatList({
   const onScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     setCollapsed(e.currentTarget.scrollTop > 34)
   }, [])
+
+  const optionsMenu = useMemo(
+    () =>
+      onReadAll
+        ? [
+            {
+              id: "read-all",
+              label: L.readAll,
+              icon: <ReadAllGlyph />,
+              onSelect: onReadAll,
+            },
+          ]
+        : undefined,
+    [onReadAll, L.readAll]
+  )
 
   const filters = useMemo(
     () => [
@@ -209,6 +233,10 @@ export function IosChatList({
           showCamera
           showAdd
           onOptions={onOptions}
+          optionsMenu={optionsMenu}
+          optionsLabel={L.moreOptions}
+          onExit={onExit}
+          exitLabel={L.tabBack}
           onCamera={onCamera}
           onAdd={onNewChat}
           collapsingTitle={L.titleChats}
@@ -263,6 +291,25 @@ export function IosChatList({
         </div>
       </div>
     </div>
+  )
+}
+
+/** The reference's "Read all" mark: a speech bubble carrying a tick. */
+function ReadAllGlyph() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-[24px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M6 4.5h12A2.5 2.5 0 0 1 20.5 7v8a2.5 2.5 0 0 1-2.5 2.5h-6l-4.5 3v-3H6A2.5 2.5 0 0 1 3.5 15V7A2.5 2.5 0 0 1 6 4.5Z" />
+      <path d="m8.5 11 2.5 2.5 4.5-4.5" />
+    </svg>
   )
 }
 

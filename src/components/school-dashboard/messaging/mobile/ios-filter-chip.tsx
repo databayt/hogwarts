@@ -42,7 +42,7 @@ export function IosFilterChip({
       {iconOnly ? (
         <WaIcon
           name="ic-wa-plus-filter-24"
-          className="size-[12px] text-[color:var(--wa-text-cta-filters)]"
+          className="size-[24px] text-[color:var(--wa-text-cta-filters)]"
           ariaLabel="More filters"
         />
       ) : (

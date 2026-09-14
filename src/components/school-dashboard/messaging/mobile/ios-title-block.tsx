@@ -38,7 +38,7 @@ export function IosTitleBlock({
   return (
     <div
       className={cn(
-        "flex w-full flex-col items-start gap-[16px] pt-[18px] pb-[10px]",
+        "flex w-full flex-col items-start gap-[22px] pt-[18px] pb-[10px]",
         className
       )}
     >
