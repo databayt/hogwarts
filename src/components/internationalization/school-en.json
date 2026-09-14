@@ -3845,6 +3845,8 @@
         "summary": "Summary",
         "exams": "Exams",
         "qbank": "QBank",
+        "examsBook": "Exams",
+        "referencesBook": "References",
         "assignments": "Assignments",
         "continueWatching": "Continue to watch",
         "views": "views",
@@ -8856,13 +8858,13 @@
       "similarBooks": "You Might Also Like",
       "borrowFailed": "Failed to borrow book",
       "returnFailed": "Failed to return book",
-      "unexpectedError": "An unexpected error occurred",
-      "hero": {
       "borrowedTitle": "Borrowed",
       "borrowedBody": "This book was added to your borrowed books. Please return it by {date}.",
       "returnedTitle": "Returned",
       "returnedBody": "Thank you for returning this book. It is back on the shelf for the next reader.",
       "gotIt": "Got it",
+      "unexpectedError": "An unexpected error occurred",
+      "hero": {
         "title": "Revelio",
         "subtitle": "Unlock hidden."
       }

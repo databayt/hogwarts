@@ -3843,6 +3843,8 @@
         "summary": "ملخص",
         "exams": "اختبارات",
         "qbank": "بنك الأسئلة",
+        "examsBook": "امتحانات",
+        "referencesBook": "مراجع",
         "assignments": "واجبات",
         "continueWatching": "تابع المشاهدة",
         "views": "مشاهدة",
@@ -8864,13 +8866,13 @@
       "similarBooks": "قد يعجبك أيضاً",
       "borrowFailed": "فشل في استعارة الكتاب",
       "returnFailed": "فشل في إرجاع الكتاب",
-      "unexpectedError": "حدث خطأ غير متوقع",
-      "hero": {
       "borrowedTitle": "تمت الاستعارة",
       "borrowedBody": "أُضيف هذا الكتاب إلى كتبك المستعارة. يُرجى إعادته قبل {date}.",
       "returnedTitle": "تم الإرجاع",
       "returnedBody": "شكرًا لإعادتك هذا الكتاب، فقد عاد إلى الرف ليقرأه غيرك.",
       "gotIt": "حسنًا",
+      "unexpectedError": "حدث خطأ غير متوقع",
+      "hero": {
         "title": "ريفيليو",
         "subtitle": "اكشف المخفي."
       }

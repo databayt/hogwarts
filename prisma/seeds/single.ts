@@ -41,6 +41,7 @@ import { seedAllUsers } from "./auth"
 import { backfillClassGrades } from "./backfill-class-grades"
 import { backfillStudentSections } from "./backfill-student-sections"
 import { seedBanking } from "./banking"
+import { seedCatalogAssignments } from "./catalog-assignments"
 import { seedAeCurriculum } from "./catalog/ae"
 import { seedConceptBanners } from "./catalog/banners"
 import { seedCatalogBooks } from "./catalog/books"
@@ -788,8 +789,16 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedMessaging(prisma, schoolId, teachers, students, adminUsers)
     },
   },
+  "catalog-assignments": {
+    description:
+      "Catalog واجبات for every subject the demo student takes (subject page row)",
+    run: async (prisma, schoolId) => {
+      await seedCatalogAssignments(prisma, schoolId)
+    },
+  },
   "messaging-demo": {
-    description: "Authored inboxes for the student/teacher/parent demo accounts",
+    description:
+      "Authored inboxes for the student/teacher/parent demo accounts",
     run: async (prisma, schoolId) => {
       await seedDemoInboxes(prisma, schoolId)
     },
