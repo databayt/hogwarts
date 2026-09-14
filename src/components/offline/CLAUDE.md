@@ -7,5 +7,8 @@
 - `next dev` never registers the worker. Verify with `next build && next start` and `NEXT_PUBLIC_SW_DEV=1`, or against the demo tenant.
 - Rule that auto-loads on the worker file: kun `next-16/sw-no-authenticated-cache` — pages may be cached ONLY inside the `x-session-key` namespace; a response with another key or none drops the rest first. Do not "fix" the page cache back to network-only; do not key anything on the URL alone.
 - Never set a cookie on every proxy response. Next merges proxy-set cookies into the request store's mutable cookies, so every Server Action re-renders and re-sends the whole page (1.1 MB on the dashboard). `setLocaleCookie` in `src/proxy.ts` writes only on change.
+- Never turn on `experimental.useOffline` here. With it on and the server unreachable, a sidebar click sent no request and never reached the worker's saved copy (tried and reverted 2026-09-13; its scheduler stops fetching while offline, the likely cause). The worker's 503 → full navigation is the fallback, and its `sw-stale` message carries `reason` (`failed` | `slow`) for the strip.
+- RSC payloads are cached WITH `_rsc` in the key — a payload is a patch against the tree it was requested from. Never strip it again.
+- Anything that ends or starts a session calls `forgetSavedPages()` (or mounts `<ForgetSavedPages />`) before it navigates: the slow-network path can serve a saved copy before any response reveals the new person.
 - Adding a sidebar route: give it a `loading.tsx`, or its link is never prefetched and the tap shows nothing until the server answers.
 - Static assets are edge-cached by `cf/worker.js` (paths in `EDGE_CACHEABLE`, only when the origin says `public` with a max-age). A file that must stay fresh keeps `max-age=0`.

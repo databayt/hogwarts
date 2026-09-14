@@ -777,7 +777,10 @@
       "installPicHome": "Add to Home Screen",
       "installAppName": "balqalam",
       "offlineBrowsing": "You're offline. Pages you've opened before still work, and anything you do is saved and synced later.",
-      "staleCopy": "Slow connection — showing the last saved copy of this page."
+      "staleCopy": "Slow connection — showing the last saved copy of this page.",
+      "notSavedTitle": "This page isn't on this device yet",
+      "notSavedHint": "Open it once while you're connected and it will be here next time. Pages you've already opened still work.",
+      "back": "Back"
     },
     "viewer": {
       "viewOnly": "View only — downloading is disabled by the school",

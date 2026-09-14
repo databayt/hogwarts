@@ -5,7 +5,6 @@
 import { useEffect, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useOffline } from "next/offline"
 import { AlertTriangle, Loader2, RefreshCw, WifiOff } from "lucide-react"
 
 import { useOnlineStatus, useOutbox } from "@/lib/offline/hooks"
@@ -14,16 +13,21 @@ import { Button } from "@/components/ui/button"
 
 import type { OfflineLabels } from "./outbox-view"
 
-// The last page the service worker served from a saved copy — because the
-// network was gone or too slow — as an external store: the worker's message
-// arrives outside React, and the strip must not set state inside an effect.
+// The last page the service worker served from a saved copy, and why —
+// "failed" (no network) or "slow" (no answer within its limit) — as an
+// external store: the worker's message arrives outside React, and the strip
+// must not set state inside an effect. The worker is the one source of
+// "offline" beyond `navigator.onLine`: a dead server or a captive portal
+// leaves onLine true, but its fetch fails all the same.
+type Served = { url: string; reason: "failed" | "slow" }
+
 const staleStore = {
-  url: null as string | null,
+  served: null as Served | null,
   listeners: new Set<() => void>(),
 }
 
-function setStaleUrl(url: string | null) {
-  staleStore.url = url
+function setServed(served: Served | null) {
+  staleStore.served = served
   staleStore.listeners.forEach((l) => l())
 }
 
@@ -34,13 +38,20 @@ function subscribeStale(listener: () => void) {
   }
 }
 
-const readStale = () => staleStore.url
+const readStale = () => staleStore.served
 const readStaleServer = () => null
 
 if (typeof navigator !== "undefined" && navigator.serviceWorker) {
   navigator.serviceWorker.addEventListener("message", (e: MessageEvent) => {
     if (e.data?.type !== "sw-stale") return
-    setStaleUrl(e.data.stale ? String(e.data.url) : null)
+    setServed(
+      e.data.stale
+        ? {
+            url: String(e.data.url),
+            reason: e.data.reason === "slow" ? "slow" : "failed",
+          }
+        : null
+    )
   })
 }
 
@@ -66,17 +77,17 @@ function samePage(url: string | null, pathname: string | null): boolean {
  */
 export function OfflineSyncBanner({ labels }: { labels?: OfflineLabels }) {
   const { pending, parked, drain, draining } = useOutbox()
-  const routerOffline = useOffline()
   const online = useOnlineStatus()
-  const offline = routerOffline || !online
   const pathname = usePathname()
   const router = useRouter()
-  const staleUrl = useSyncExternalStore(
+  const served = useSyncExternalStore(
     subscribeStale,
     readStale,
     readStaleServer
   )
-  const stale = !offline && samePage(staleUrl, pathname)
+  const servedHere = served !== null && samePage(served.url, pathname)
+  const offline = !online || (servedHere && served.reason === "failed")
+  const stale = !offline && servedHere
 
   useEffect(() => installOutboxTriggers(), [])
 
@@ -125,14 +136,14 @@ export function OfflineSyncBanner({ labels }: { labels?: OfflineLabels }) {
                   "Slow connection — showing the last saved copy of this page."
                 )}
           </span>
-          {stale && (
+          {servedHere && (
             <Button
               type="button"
               size="sm"
               variant="outline"
               className="ms-auto h-7"
               onClick={() => {
-                setStaleUrl(null)
+                setServed(null)
                 router.refresh()
               }}
             >

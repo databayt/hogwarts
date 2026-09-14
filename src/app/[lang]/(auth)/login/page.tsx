@@ -13,6 +13,7 @@ import { DemoLoginForm } from "@/components/auth/login/demo-form"
 import { LoginForm } from "@/components/auth/login/form"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ForgetSavedPages } from "@/components/offline/forget-saved-pages"
 
 interface Props {
   params: Promise<{ lang: Locale }>
@@ -41,6 +42,7 @@ const LoginPage = async ({ params }: Props) => {
 
     return (
       <Suspense fallback={<div className="h-10" />}>
+        <ForgetSavedPages />
         <DemoLoginForm dictionary={dictionary} roles={roles} />
       </Suspense>
     )
@@ -48,6 +50,7 @@ const LoginPage = async ({ params }: Props) => {
 
   return (
     <Suspense fallback={<div className="h-10" />}>
+      <ForgetSavedPages />
       <LoginForm dictionary={dictionary} />
     </Suspense>
   )

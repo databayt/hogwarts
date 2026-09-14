@@ -37,11 +37,13 @@ const nextConfig: NextConfig = {
     // screens; `static` (5 min) also covers the loading boundaries the
     // sidebar links prefetch, so a click draws its skeleton at once.
     staleTimes: { dynamic: 30, static: 300 },
-    // A navigation, prefetch or Server Action that fails for lack of network
-    // no longer throws — it waits and retries when the connection returns,
-    // and `useOffline()` (next/offline) reports the state to the offline
-    // strip in the dashboard.
-    useOffline: true,
+    // NOT `useOffline`. Tried 2026-09-13 with the server unreachable: a
+    // click on a sidebar link sent no request for the page and nothing moved,
+    // so the service worker's saved copy was never asked for. While that
+    // flag's offline state is set, the segment cache's scheduler sends no
+    // fetches (`hasNetworkBandwidth`) — the likely cause. Without it every
+    // navigation reaches the worker, which answers from a saved copy or with a
+    // 503 the router turns into a full load (saved HTML or the offline page).
     optimizePackageImports: [
       "@assistant-ui/react",
       "@radix-ui/react-icons",

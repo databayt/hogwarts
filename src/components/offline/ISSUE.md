@@ -25,12 +25,17 @@ last_audited: 2026-09-13
 - [x] Quick attendance queues offline and replays idempotently (2026-09-12)
 - [x] Web Push lane — `PushSubscription`, VAPID, processor on the push cron, preferences toggle (2026-09-12; device delivery verified after deploy)
 - [x] Install card — `install-card.tsx` in the dashboard layout: `beforeinstallprompt` on Android, Share hint on iOS, 14-day dismissal (2026-09-12)
-- [x] Dashboard explorable offline — worker v6 keeps opened pages per session key, warms the sidebar from the installed app, offline/stale strip (2026-09-13)
+- [x] Dashboard explorable offline — worker v7 keeps opened pages per session key, warms the sidebar from the installed app, offline/stale strip (2026-09-13)
 - [x] Fast on thin networks — proxy no longer forces a 1.1 MB page re-render per Server Action; chunks served from Cloudflare's edge; 1 MB of clone CSS off the dashboard; every sidebar route prefetchable (2026-09-13)
+- [x] Offline clicks land on a real page — `useOffline` off (it froze clicks before the worker), RSC payloads keyed with `_rsc`, each opened page saved as HTML once a day, "not on this device yet" card with Back and Retry, offline shell in its own untrimmed cache refreshed daily (2026-09-14)
+- [x] Shared device on a slow network — sign-out button and sign-in/join pages tell the worker to forget every saved page before they move on (2026-09-14)
+- [ ] Static cache trims oldest-inserted first, so the most-used chunks go first once it passes 400 entries; a saved page whose chunks were trimmed shows without its scripts offline
 - [ ] Exam submission in the outbox
 - [ ] Transport boarding in the outbox
 
 ## Log
+
+- 2026-09-14 — Offline pass verified on a local `next build` + `next start` with the server stopped. With `useOffline` on, a sidebar click sent no request and nothing moved; off, the same click reached the worker. A payload saved on students → teachers was being replayed on dashboard → teachers (URL said teachers, content stayed the dashboard): the flight key now keeps `_rsc`. Offline clicks rarely match an online `_rsc` (prefetched routes send a partial tree), so opened pages are also saved as HTML: dashboard → students offline rendered the saved page in 283 ms with the strip; an unopened page shows the not-saved card, and Back returns to the saved page. Sign-out from the user menu emptied the admin's namespace; the teacher's sign-in got a new key; the forget message cleared 4 pages + 2 payloads offline in 2 ms.
 
 - 2026-09-13 — Measured on kingfahd (Chrome, 4G): dashboard HTML 1.38 MB (935 KB of it the dictionary), 63 chunks / 2.9 MB JS, 1 MB CSS, 36 prefetch requests and two 1.1 MB Server Action responses on every open; no `cf-cache-status` on any chunk. Root causes and fixes in README "Explorable offline". Deploy pending — say "deploy".
 

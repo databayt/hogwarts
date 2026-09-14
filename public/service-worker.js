@@ -1,5 +1,10 @@
 // Service worker — offline shell, static-asset cache, saved pages, push.
 //
+// v7 (2026-09-13): a saved copy is served with WHY — the network failed or
+//   was slow — so the strip can say "offline" or "slow connection". RSC
+//   payloads are keyed with `_rsc` (see flightKey). The app no longer runs
+//   Next's experimental `useOffline`: with it on, a click hung before any
+//   request reached this worker (see next.config.ts).
 // v6 (2026-09-13): the dashboard is explorable offline.
 //   Every screen a signed-in user opens — the HTML of a full load and the
 //   RSC payload of a client-side navigation — is saved under a cache named
@@ -28,8 +33,14 @@
 // behaviour.
 //
 // Rule: kun `.claude/rules/next-16/sw-no-authenticated-cache.md`.
-const VERSION = "v6"
+const VERSION = "v7"
 const STATIC_CACHE_NAME = `hogwarts-static-${VERSION}`
+// The offline pages, the files they need to render and the install
+// essentials. Never trimmed: the fallback must survive a long session and a
+// deploy. Refreshed once a day while online (refreshShell).
+const SHELL_CACHE_NAME = `hogwarts-shell-${VERSION}`
+const SHELL_TTL_MS = 24 * 60 * 60 * 1000
+const SHELL_STAMP = "/__sw/shell-refreshed"
 const META_CACHE_NAME = `hogwarts-meta-${VERSION}`
 const PAGES_CACHE_PREFIX = `hogwarts-pages-${VERSION}-` // + session key: HTML
 const FLIGHT_CACHE_PREFIX = `hogwarts-flight-${VERSION}-` // + session key: RSC payloads
@@ -61,12 +72,12 @@ const ASSET_IN_HTML_RE = /(?:src|href)="(\/_next\/static\/[^"]+)"/g
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME).then(async (cache) => {
+    caches.open(SHELL_CACHE_NAME).then(async (cache) => {
       await cache.addAll(PRECACHE)
       // The offline page is a React tree: its HTML is useless without the
       // script chunks it references, and those are only cached once fetched.
-      // Pull them now so the offline library renders on a device that has
-      // never opened /offline while online.
+      // Pull them now so the offline page renders (and its buttons work) on a
+      // device that has never opened /offline while online.
       for (const path of Object.values(OFFLINE_PAGES)) {
         try {
           const res = await cache.match(path)
@@ -85,6 +96,31 @@ self.addEventListener("install", (event) => {
   self.skipWaiting()
 })
 
+// The offline pages again, from the build that is live now — once a day, and
+// only files those pages still reference stay in the shell. Without it the
+// fallback kept the chunks of whichever build first installed this worker.
+async function refreshShell() {
+  if (!self.navigator.onLine) return
+  const meta = await caches.open(META_CACHE_NAME)
+  const stamp = await meta.match(SHELL_STAMP)
+  if (stamp && Date.now() - Number(await stamp.text()) < SHELL_TTL_MS) return
+  await meta.put(SHELL_STAMP, new Response(String(Date.now())))
+
+  const shell = await caches.open(SHELL_CACHE_NAME)
+  const keep = new Set(PRECACHE)
+  for (const path of Object.values(OFFLINE_PAGES)) {
+    const response = await fetch(path, { cache: "no-store" })
+    if (!response.ok || response.redirected || !isHtml(response)) return
+    const html = await response.clone().text()
+    await shell.put(path, response)
+    await harvestStaticAssets(html, shell)
+    for (const m of html.matchAll(ASSET_IN_HTML_RE)) keep.add(m[1])
+  }
+  for (const req of await shell.keys()) {
+    if (!keep.has(new URL(req.url).pathname)) await shell.delete(req)
+  }
+}
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -95,6 +131,7 @@ self.addEventListener("activate", (event) => {
             .filter(
               (n) =>
                 n !== STATIC_CACHE_NAME &&
+                n !== SHELL_CACHE_NAME &&
                 n !== META_CACHE_NAME &&
                 !n.startsWith(PAGES_CACHE_PREFIX) &&
                 !n.startsWith(FLIGHT_CACHE_PREFIX)
@@ -103,7 +140,7 @@ self.addEventListener("activate", (event) => {
         )
       )
       .then(() => caches.open(STATIC_CACHE_NAME))
-      .then((cache) => trimCache(cache, STATIC_CACHE_CAP, new Set(PRECACHE)))
+      .then((cache) => trimCache(cache, STATIC_CACHE_CAP))
   )
   self.clients.claim()
 })
@@ -147,6 +184,27 @@ async function readSessionKey() {
   const hit = await meta.match(SESSION_META)
   sessionKeyMemo = hit ? (await hit.text()) || null : null
   return sessionKeyMemo
+}
+
+// Everything saved for anyone: the page and payload namespaces, the session
+// key, the warm-up stamps. Sent by the page when a session ends or is about to
+// begin (src/components/offline/forget-saved-pages.tsx) — the response-header
+// path below cannot cover a saved copy served on a slow network before any
+// response has arrived.
+async function forgetEveryone() {
+  sessionKeyMemo = null
+  staleServed.clear()
+  const meta = await caches.open(META_CACHE_NAME)
+  for (const req of await meta.keys()) await meta.delete(req)
+  const names = await caches.keys()
+  await Promise.all(
+    names
+      .filter(
+        (n) =>
+          n.startsWith(PAGES_CACHE_PREFIX) || n.startsWith(FLIGHT_CACHE_PREFIX)
+      )
+      .map((n) => caches.delete(n))
+  )
 }
 
 // A response from the proxy tells us who is signed in. A change of key —
@@ -213,9 +271,21 @@ function pageKey(href) {
   return u.href
 }
 
-// `_rsc` is a hash of the request headers (router state, prefetch flags) and
-// changes between visits to the same page; the payload is keyed without it.
+// A navigation's RSC payload is keyed WITH `_rsc`. Next computes it from the
+// request's router-state tree, prefetch flags and next-url, and the payload
+// is a patch against exactly that tree: the same page reached from another
+// page gets a different `_rsc` and needs a different patch. Keyed without it
+// (v6), a payload saved on students → teachers was replayed on dashboard →
+// teachers, and the router drew the dashboard under the teachers URL. A miss
+// answers 503, and the router falls back to the saved HTML.
 function flightKey(href) {
+  const u = new URL(href)
+  u.hash = ""
+  return u.href
+}
+
+// The page a request belongs to, as the strip knows it: no fragment, no `_rsc`.
+function noteKey(href) {
   const u = new URL(href)
   u.hash = ""
   u.searchParams.delete("_rsc")
@@ -225,6 +295,8 @@ function flightKey(href) {
 // Static assets: cache-first. Hashed under /_next/static, so a hit is always
 // the right bytes; the image optimiser keys its output by URL.
 async function cacheFirst(request) {
+  const shellHit = await (await caches.open(SHELL_CACHE_NAME)).match(request)
+  if (shellHit) return shellHit
   const cache = await caches.open(STATIC_CACHE_NAME)
   const hit = await cache.match(request)
   if (hit) return hit
@@ -232,7 +304,7 @@ async function cacheFirst(request) {
   if (response && response.status === 200 && response.type === "basic") {
     cache
       .put(request, response.clone())
-      .then(() => trimCache(cache, STATIC_CACHE_CAP, new Set(PRECACHE)))
+      .then(() => trimCache(cache, STATIC_CACHE_CAP))
       .catch(() => {})
   }
   return response
@@ -241,21 +313,26 @@ async function cacheFirst(request) {
 const SLOW = Symbol("slow")
 const FAILED = Symbol("failed")
 
-// Pages served from a saved copy in the last minute, by page key — the page
-// asks (`stale-check`) once it has loaded, since a navigation has no client to
-// message while the response is being chosen.
+// Pages served from a saved copy in the last minute, by note key, with why:
+// "failed" (no network) or "slow" (no answer within SLOW_NETWORK_MS) — the
+// strip's wording. The page asks (`stale-check`) whenever its path changes: a
+// full load has no client to message while its response is being chosen, and
+// a client-side navigation's own message would be answered "not stale" by
+// that check if the serve were not recorded here too.
 const staleServed = new Map()
 
-function noteStale(event, request, key) {
-  if (request.mode === "navigate") {
-    staleServed.set(key, Date.now())
-    return
-  }
-  if (!event.clientId) return
+function noteStale(event, request, reason) {
+  staleServed.set(noteKey(request.url), { at: Date.now(), reason })
+  if (request.mode === "navigate" || !event.clientId) return
   event.waitUntil(
     self.clients.get(event.clientId).then((client) => {
       if (client)
-        client.postMessage({ type: "sw-stale", url: request.url, stale: true })
+        client.postMessage({
+          type: "sw-stale",
+          url: request.url,
+          stale: true,
+          reason,
+        })
     })
   )
 }
@@ -306,7 +383,7 @@ async function pageFirst(event, request, { cachePrefix, key, expect }) {
   clearTimeout(timer)
   if (outcome === SLOW || outcome === FAILED) {
     event.waitUntil(network.catch(() => {}))
-    noteStale(event, request, key)
+    noteStale(event, request, outcome === FAILED ? "failed" : "slow")
     return saved
   }
   return outcome
@@ -322,9 +399,15 @@ async function offlineNavigation(url) {
       ignoreSearch: true,
       ignoreVary: true,
     })
-    if (loose) return loose
+    if (loose) {
+      staleServed.set(noteKey(url.href), { at: Date.now(), reason: "failed" })
+      return loose
+    }
   }
-  const page = await caches.match(offlinePageFor(url.pathname))
+  const offlinePath = offlinePageFor(url.pathname)
+  const page =
+    (await (await caches.open(SHELL_CACHE_NAME)).match(offlinePath)) ||
+    (await caches.match(offlinePath))
   return (
     page ||
     new Response("Offline", { status: 503, statusText: "Service Unavailable" })
@@ -411,37 +494,78 @@ async function warmPages(urls) {
   const pages = await caches.open(PAGES_CACHE_PREFIX + key)
   const statics = await caches.open(STATIC_CACHE_NAME)
   for (const href of urls) {
-    let u
-    try {
-      u = new URL(href, self.location.origin)
-    } catch {
-      continue
-    }
-    if (u.origin !== self.location.origin) continue
-    if (await pages.match(u.href, { ignoreVary: true })) continue
-    try {
-      const response = await fetch(u.href, {
-        credentials: "same-origin",
-        headers: { accept: "text/html" },
-        priority: "low",
-      })
-      if (response.headers.get(SESSION_HEADER) !== key) break
-      if (
-        response.ok &&
-        response.type === "basic" &&
-        !response.redirected &&
-        isHtml(response)
-      ) {
-        const html = await response.clone().text()
-        await pages.put(u.href, response)
-        await harvestStaticAssets(html, statics)
-      }
-    } catch {
-      // Offline or aborted: the stamp stands, tomorrow's run picks it up.
-    }
-    await new Promise((r) => setTimeout(r, WARM_GAP_MS))
+    const outcome = await savePage(href, key, pages, statics)
+    if (outcome === "stop") break
+    if (outcome === "fetched")
+      await new Promise((r) => setTimeout(r, WARM_GAP_MS))
   }
   await trimCache(pages, PAGES_CACHE_CAP)
+}
+
+// One page's HTML for the current person, fetched when it is missing or its
+// saved copy is older than WARM_TTL_MS. "stop" means the response belongs to
+// someone else (the session changed under us); nothing is saved then.
+async function savePage(href, key, pages, statics) {
+  let u
+  try {
+    u = new URL(href, self.location.origin)
+  } catch {
+    return "skip"
+  }
+  if (u.origin !== self.location.origin) return "skip"
+  const saved = await pages.match(pageKey(u.href), { ignoreVary: true })
+  if (saved) {
+    const at = Date.parse(saved.headers.get("date") || "")
+    if (at && Date.now() - at < WARM_TTL_MS) return "fresh"
+  }
+  try {
+    const response = await fetch(u.href, {
+      credentials: "same-origin",
+      headers: { accept: "text/html" },
+      priority: "low",
+    })
+    if (response.headers.get(SESSION_HEADER) !== key) return "stop"
+    if (
+      response.ok &&
+      response.type === "basic" &&
+      !response.redirected &&
+      isHtml(response)
+    ) {
+      const html = await response.clone().text()
+      await pages.put(pageKey(u.href), response)
+      await harvestStaticAssets(html, statics)
+    }
+  } catch {
+    // Offline or aborted: the next visit asks again.
+  }
+  return "fetched"
+}
+
+// The page a person just opened by a client-side navigation, saved as HTML.
+// A saved RSC payload only answers the exact navigation it came from (see
+// flightKey), and an offline click rarely repeats one: without a prefetch the
+// router sends its whole tree, so the key differs. The offline fallback that
+// works from any page is the full load of a saved HTML copy, so each page
+// opened on a good connection is kept that way, once a day, one at a time.
+// Sent by src/components/offline/warmup.tsx.
+let saveQueue = Promise.resolve()
+const saveQueued = new Set()
+
+function queueSavePage(href) {
+  if (saveQueued.has(href)) return saveQueue
+  saveQueued.add(href)
+  saveQueue = saveQueue
+    .then(async () => {
+      const key = await readSessionKey()
+      if (!key) return
+      const pages = await caches.open(PAGES_CACHE_PREFIX + key)
+      const statics = await caches.open(STATIC_CACHE_NAME)
+      await savePage(href, key, pages, statics)
+      await trimCache(pages, PAGES_CACHE_CAP)
+    })
+    .catch(() => {})
+    .finally(() => saveQueued.delete(href))
+  return saveQueue
 }
 
 // ---------------------------------------------------------------------------
@@ -461,6 +585,16 @@ self.addEventListener("message", (event) => {
     case "drain-outbox":
       event.waitUntil(wakePagesToDrain())
       break
+    case "session-end":
+      event.waitUntil(
+        forgetEveryone()
+          .catch(() => {})
+          .then(() => event.ports?.[0]?.postMessage({ type: "session-ended" }))
+      )
+      break
+    case "save-page":
+      if (typeof data.url === "string") event.waitUntil(queueSavePage(data.url))
+      break
     case "warm-pages":
       if (Array.isArray(data.urls))
         event.waitUntil(
@@ -468,19 +602,22 @@ self.addEventListener("message", (event) => {
         )
       break
     case "stale-check": {
+      event.waitUntil(refreshShell().catch(() => {}))
       if (typeof data.url !== "string" || !event.source) break
       let key
       try {
-        key = pageKey(data.url)
+        key = noteKey(data.url)
       } catch {
         break
       }
-      const at = staleServed.get(key)
+      const hit = staleServed.get(key)
       staleServed.delete(key)
+      const stale = !!hit && Date.now() - hit.at < 60_000
       event.source.postMessage({
         type: "sw-stale",
         url: data.url,
-        stale: !!at && Date.now() - at < 60_000,
+        stale,
+        reason: stale ? hit.reason : null,
       })
       break
     }

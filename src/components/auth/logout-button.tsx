@@ -4,6 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { usePathname } from "next/navigation"
 
+import { forgetSavedPages } from "@/components/offline/forget-saved-pages"
+
 import { logout } from "./logout-action"
 
 interface LogoutButtonProps {
@@ -35,6 +37,10 @@ export const LogoutButton = ({ children, className }: LogoutButtonProps) => {
     // - On main domain: browser navigates to /en → SaaS homepage
     // - On school subdomain: browser navigates to /en → proxy rewrites to /en/s/{subdomain}/
     const returnUrl = `/${locale}`
+
+    // The worker forgets this person's saved pages first: the navigation below
+    // could otherwise be answered from them on a slow network.
+    await forgetSavedPages()
 
     // Call logout action (clears session server-side)
     await logout(returnUrl)
