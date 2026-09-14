@@ -62,7 +62,11 @@ Open:
 - [ ] **Signed S3 URLs are 2h bearer links** once redirected; shortening needs
       `MAX_SOURCE_RETRIES` to reset after good playback first.
 - [ ] **Real capture blocking** = native shell (Android `FLAG_SECURE`, iOS
-      capture blanking) or DRM — filed as an idea issue, not built.
+      capture blanking) or DRM — [#411](https://github.com/databayt/hogwarts/issues/411), not built.
+- [ ] **`saas-dashboard/catalog/video-actions.ts` `getVideos`** still returns
+      raw `videoUrl` + `storageKey` to DEVELOPER — the last exit handing out a
+      storage URL. Nothing renders it as a link today; route it through
+      `buildProtectedVideoUrl` when that surface is next touched.
 
 ---
 

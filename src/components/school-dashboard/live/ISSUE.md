@@ -23,6 +23,10 @@ Open:
       only possible from a native shell (Android `FLAG_SECURE`).
 - [ ] **Not verified in a live room** — no SFU locally; the watermark is
       verified in the harness (`scripts/watermark/`) and by unit tests.
+- [ ] **Permission prompts flash the visible mark.** The camera/mic prompt
+      and the screen-share picker blur the window, so the mark shows for a few
+      seconds on join and on share. Intended by the signal design — not a bug
+      to file; revisit if schools find it noisy.
 - [ ] Clicking the slides iframe is ignored by the capture signal (focus moved
       INTO the page), but a cross-origin `window.open` from slides would show
       the mark — acceptable.
