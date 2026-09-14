@@ -292,6 +292,13 @@
   --msg-timestamp: oklch(0.664 0.024 235.2); /* #8696a0 */
 }
 
+/* Capture deterrence: `useCaptureDeterrents` stamps this on a protected
+   container for 1.5s after PrintScreen, so "PrtScn → paste" is an empty frame.
+   One rule for the lumos player, recordings and the live room's tiles. */
+[data-capture-blank] video {
+  visibility: hidden;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -13,7 +13,7 @@ interface Props {
 
 export default async function LumosReviewPage({ params }: Props) {
   const { lang } = await params
-  await requireSettingsAccess(lang)
+  const { session } = await requireSettingsAccess(lang)
 
   // getSubmittedVideos self-guards role + school; the feed is the whole point
   // of this route, so it is fetched here rather than passed down as a prop
@@ -26,6 +26,7 @@ export default async function LumosReviewPage({ params }: Props) {
   return (
     <VideoReviewContent
       videos={submittedVideos}
+      viewer={{ id: session.user.id, email: session.user.email ?? null }}
       lang={lang}
       dictionary={dictionary.lumos || {}}
     />

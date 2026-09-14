@@ -92,9 +92,8 @@ interface LumosLessonContentProps {
    */
   quizQuestions?: LessonQuizQuestion[]
   /**
-   * Who is watching. Feeds the forensic watermark on the MATERIAL viewer —
-   * the lesson's own video player no longer carries one. Renders nothing at
-   * all when this is absent.
+   * Who is watching. Feeds the forensic watermark on the video player and the
+   * material viewer. Neither renders a mark when this is absent.
    */
   viewer?: { id: string; email: string | null }
 }
@@ -957,6 +956,7 @@ export function LumosLessonContent({
             lessonNumber={lesson.position}
             courseTitle={lesson.chapter.course.title}
             courseHref={baseUrl}
+            viewer={viewer}
             className="h-full w-full"
             labels={playerLabels}
           />

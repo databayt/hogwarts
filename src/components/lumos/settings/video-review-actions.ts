@@ -15,7 +15,9 @@ export interface SubmittedVideoItem {
   id: string
   title: string
   description: string | null
-  videoUrl: string
+  /** Null when the school may not preview it — a PRIVATE video is the
+   *  owner's alone, even in their own school's status feed. */
+  videoUrl: string | null
   provider: string
   durationSeconds: number | null
   visibility: string
@@ -103,10 +105,17 @@ export async function getSubmittedVideos(): Promise<SubmittedVideoItem[]> {
   // the authorizing route rather than the raw storage URL, which is a
   // permanent, unauthenticated link to the object for anyone it is forwarded
   // to — the role gate covers who sees the page, not who can use the URL after.
+  //
+  // PRIVATE rows stay in the feed (the school still sees that a submission
+  // exists and where it stands) but carry no preview: the video route refuses
+  // an ADMIN a PRIVATE video, and a link that can only 403 is worse than none.
   return videos.map((v) => ({
     ...v,
-    videoUrl: isExternallyHostedVideo(v.videoUrl)
-      ? v.videoUrl
-      : buildProtectedVideoUrl(v.id),
+    videoUrl:
+      v.visibility === "PRIVATE"
+        ? null
+        : isExternallyHostedVideo(v.videoUrl)
+          ? v.videoUrl
+          : buildProtectedVideoUrl(v.id),
   }))
 }

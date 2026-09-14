@@ -61,6 +61,9 @@ interface Props {
     card: RoomTitleCardLabels
   }
   slides: SlideOption[]
+  /** The signed-in viewer's email, for the watermark's visible mark. The
+   *  LiveKit participant NAME is a display name, not an address. */
+  viewerEmail?: string | null
 }
 
 // Eligibility verdicts — the server said no. Eject immediately; retrying
@@ -140,6 +143,7 @@ export function RoomClient({
   header,
   labels,
   slides,
+  viewerEmail,
 }: Props) {
   const router = useRouter()
   // No ticket until the viewer asks for one. Minting it is not a read: as
@@ -357,6 +361,7 @@ export function RoomClient({
             slides={slides}
             config={ticket.roomConfig}
             clock={{ startsAtMs: card.startsAtMs, endsAtMs: card.endsAtMs }}
+            viewerEmail={viewerEmail}
           />
         </LayoutContextProvider>
       </LiveKitRoom>

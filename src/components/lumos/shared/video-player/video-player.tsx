@@ -28,6 +28,7 @@ import {
   useVideoProgress,
   useVideoProtection,
 } from "./hooks"
+import { VideoWatermark } from "./video-watermark"
 import {
   airplayvideo,
   checkmark,
@@ -183,6 +184,7 @@ export function VideoPlayer({
   lessonNumber,
   courseTitle,
   courseHref,
+  viewer,
   labels,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -705,8 +707,17 @@ export function VideoPlayer({
         onDragStart={(e) => e.preventDefault()}
       />
 
-      {/* PrintScreen mitigation: the protection hook stamps this attribute for 1.5s */}
-      <style>{`[data-capture-blank] video { visibility: hidden; }`}</style>
+      {/* Forensic mark on protected sources: faint always, visible while a
+          capture may be starting. Restored 2026-09-14 in that two-layer form
+          (Abdout: "appear at recording / screenshot times"), after the
+          always-visible marks came off on 2026-09-09. The PrintScreen blank
+          rule it pairs with lives in globals.css. */}
+      {isProtected && viewer?.id && (
+        <VideoWatermark
+          userId={viewer.id}
+          userEmail={viewer.email ?? undefined}
+        />
+      )}
 
       {/* Center overlay (play/pause, loading) */}
       <VideoOverlay

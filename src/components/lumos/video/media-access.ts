@@ -79,11 +79,9 @@ export type MediaAccessResult =
  * The gate, in the order it is applied:
  * 1. Owner (the uploader) sees their own video at any visibility or approval
  *    state — they need to review what they just proposed.
- * 2. Reviewers see their own school's videos at any approval state. The
- *    review queue is *by definition* PENDING, so without this a reviewer
- *    could open `/lumos/review` and be refused the very video they are being
- *    asked to judge. Mirrors `getSubmittedVideos`' own ADMIN/DEVELOPER +
- *    schoolId gate.
+ * 2. Reviewers see videos at any approval state: DEVELOPER (the platform
+ *    approver) everywhere, a school ADMIN only its own school's and never a
+ *    PRIVATE one — an owner's "only me" holds against the school too.
  * 3. Everyone else needs `approvalStatus = APPROVED`.
  * 4. A school that has hidden the video via ContentOverride does not get it,
  *    even when the visibility would otherwise allow it.
@@ -134,12 +132,19 @@ export async function resolveVideoAccess({
   // 1. Owner — always, regardless of visibility or approval state.
   if (video.userId === userId) return granted
 
-  // 2. Reviewers, on their own school's submissions. DEVELOPER reviews the
-  //    platform lane (PUBLIC/PAID) and so is not school-scoped; an ADMIN is
-  //    only a reviewer for their own school's queue.
+  // 2. Reviewers. DEVELOPER is the platform's sole approver (2026-08-28) and
+  //    must be able to play anything it is asked to judge, PRIVATE included,
+  //    so it is not school-scoped. A school ADMIN keeps a preview of its own
+  //    school's submissions at any approval state — but NOT of a PRIVATE one.
+  //    PRIVATE is the owner saying "only me"; the ADMIN decides nothing since
+  //    the platform took the approval step, so there is no job that needs to
+  //    override that, and the lesson page never showed it to them either.
   const isReviewer =
     role === "DEVELOPER" ||
-    (role === "ADMIN" && !!schoolId && video.schoolId === schoolId)
+    (role === "ADMIN" &&
+      !!schoolId &&
+      video.schoolId === schoolId &&
+      video.visibility !== "PRIVATE")
   if (isReviewer) return granted
 
   // 3. Everyone else needs an approved video.

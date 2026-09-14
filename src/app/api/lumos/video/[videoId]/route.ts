@@ -30,11 +30,29 @@ import {
  * "this viewer, for a couple of hours". Screen recording remains out of scope
  * for anything short of EME/DRM — the watermark is what covers that case.
  */
+/**
+ * Fetch-metadata destinations a media element sends. Anything else that
+ * declares itself is refused — above all `document`: opening this URL in a
+ * tab (a pasted link, an old "preview" anchor, "Open video in new tab") hands
+ * the viewer the browser's bare player, with its Download button, no
+ * watermark and none of the protected player's guards.
+ *
+ * An ABSENT header is allowed on purpose: older browsers and the native
+ * mobile players send none, and a script that omits it can already use its
+ * cookie with curl — this closes the one-click path, not a determined one.
+ */
+const MEDIA_FETCH_DESTINATIONS = new Set(["video", "audio"])
+
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ videoId: string }> }
 ): Promise<NextResponse> {
   const { videoId } = await params
+
+  const fetchDest = req.headers.get("sec-fetch-dest")
+  if (fetchDest && !MEDIA_FETCH_DESTINATIONS.has(fetchDest)) {
+    return NextResponse.json({ error: "Not available" }, { status: 403 })
+  }
 
   const session = await auth()
   if (!session?.user?.id) {

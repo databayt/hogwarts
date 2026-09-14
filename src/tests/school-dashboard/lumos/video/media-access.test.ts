@@ -133,11 +133,9 @@ describe("resolveVideoAccess", () => {
     ).resolves.toEqual({ ok: false, reason: "forbidden" })
   })
 
-  it("lets a school ADMIN play their own school's PENDING video", async () => {
-    // The review queue is entirely PENDING — refusing reviewers here would
-    // make /lumos/review unable to play what it is reviewing.
+  it("lets a school ADMIN preview their own school's PENDING video", async () => {
     mockVideo.mockResolvedValue(
-      video({ visibility: "PRIVATE", approvalStatus: "PENDING" })
+      video({ visibility: "SCHOOL", approvalStatus: "PENDING" })
     )
 
     await expect(
@@ -146,6 +144,39 @@ describe("resolveVideoAccess", () => {
         userId: "admin-1",
         schoolId: "school-1",
         role: "ADMIN",
+      })
+    ).resolves.toMatchObject({ ok: true })
+  })
+
+  it("denies a school ADMIN a PRIVATE video from their own school", async () => {
+    // PRIVATE is the owner's "only me". The ADMIN approves nothing since the
+    // platform became the sole approver, so nothing justifies overriding it.
+    for (const approvalStatus of ["PENDING", "APPROVED"] as const) {
+      mockVideo.mockResolvedValue(
+        video({ visibility: "PRIVATE", approvalStatus })
+      )
+
+      const result = await resolveVideoAccess({
+        videoId: "v-1",
+        userId: "admin-1",
+        schoolId: "school-1",
+        role: "ADMIN",
+      })
+      expect(result.ok).toBe(false)
+    }
+  })
+
+  it("lets a DEVELOPER play a PRIVATE video it must approve", async () => {
+    mockVideo.mockResolvedValue(
+      video({ visibility: "PRIVATE", approvalStatus: "PENDING" })
+    )
+
+    await expect(
+      resolveVideoAccess({
+        videoId: "v-1",
+        userId: "dev-1",
+        schoolId: null,
+        role: "DEVELOPER",
       })
     ).resolves.toMatchObject({ ok: true })
   })

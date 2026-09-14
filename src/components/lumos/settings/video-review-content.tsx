@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 
 import type { SubmittedVideoItem } from "./video-review-actions"
+import { VideoPreview } from "./video-preview"
 
 /**
  * The school's submission STATUS FEED.
@@ -22,6 +23,8 @@ import type { SubmittedVideoItem } from "./video-review-actions"
  */
 interface Props {
   videos: SubmittedVideoItem[]
+  /** Who is watching a preview — the watermark's identity. */
+  viewer?: { id: string; email?: string | null }
   lang?: string
   // The `lumos` dictionary subtree.
   dictionary?: Record<string, any>
@@ -36,7 +39,12 @@ const STATUS_VARIANT: Record<
   REJECTED: "destructive",
 }
 
-export function VideoReviewContent({ videos, lang = "en", dictionary }: Props) {
+export function VideoReviewContent({
+  videos,
+  viewer,
+  lang = "en",
+  dictionary,
+}: Props) {
   const d = dictionary?.videoReview ?? {}
   const locale = lang === "ar" ? "ar" : "en"
   const dateFmt = new Intl.DateTimeFormat(locale, {
@@ -128,16 +136,27 @@ export function VideoReviewContent({ videos, lang = "en", dictionary }: Props) {
                   <p className="text-sm">{video.description}</p>
                 )}
 
-                {/* Video link */}
-                <a
-                  href={video.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
-                >
-                  {d.previewVideo ?? "Preview video"}{" "}
-                  <ExternalLink className="size-3" />
-                </a>
+                {/* Preview. Self-hosted videos play in place through the
+                    protected player — the video route refuses to be opened as
+                    a tab. An external provider's page is theirs to link to. */}
+                {video.videoUrl &&
+                  (video.videoUrl.startsWith("/api/lumos/") ? (
+                    <VideoPreview
+                      src={video.videoUrl}
+                      viewer={viewer}
+                      label={d.previewVideo ?? "Preview video"}
+                    />
+                  ) : (
+                    <a
+                      href={video.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
+                    >
+                      {d.previewVideo ?? "Preview video"}{" "}
+                      <ExternalLink className="size-3" />
+                    </a>
+                  ))}
 
                 {/* Rejection feedback — the reason this feed shows non-PENDING
                     rows at all. */}

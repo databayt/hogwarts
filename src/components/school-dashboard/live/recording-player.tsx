@@ -5,7 +5,7 @@
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { VideoWatermark } from "@/components/lumos/shared/video-player/video-watermark"
+import { ProtectedVideo } from "@/components/lumos/shared/video-player/protected-video"
 import { getRecordingUrl } from "@/components/school-dashboard/live/actions/recordings"
 
 interface Props {
@@ -52,33 +52,15 @@ export function RecordingPlayer({ recordingId, labels, viewer }: Props) {
     )
   }
 
+  // Watched in the app, never saved — see ProtectedVideo for what that means.
   return (
-    // Watched in the app, never saved: no download control, no
-    // picture-in-picture or casting (both leave the watermark behind), no
-    // context menu, and a forensic watermark with the viewer's identity.
-    <div
-      data-video-protected
-      className="relative aspect-video w-full overflow-hidden rounded-md bg-black select-none"
-      onContextMenu={(e) => e.preventDefault()}
-      onDragStart={(e) => e.preventDefault()}
-    >
-      <video
-        controls
-        controlsList="nodownload noremoteplayback"
-        disablePictureInPicture
-        disableRemotePlayback
-        playsInline
-        src={url}
-        onError={() => {
-          setUrl(null)
-          setError(labels.error)
-        }}
-        className="h-full w-full"
-      />
-      <VideoWatermark
-        userId={viewer?.id}
-        userEmail={viewer?.email ?? undefined}
-      />
-    </div>
+    <ProtectedVideo
+      src={url}
+      viewer={viewer}
+      onError={() => {
+        setUrl(null)
+        setError(labels.error)
+      }}
+    />
   )
 }

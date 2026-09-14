@@ -26,6 +26,7 @@ import {
   squareAndArrowUp,
   xmark,
 } from "@/components/lumos/shared/video-player/sf-symbols"
+import { useCaptureDeterrents } from "@/components/lumos/shared/video-player/hooks/use-capture-deterrents"
 import { VideoWatermark } from "@/components/lumos/shared/video-player/video-watermark"
 import { recordClassEvent } from "@/components/school-dashboard/live/actions/room-events"
 import {
@@ -66,6 +67,8 @@ interface RoomShellProps {
   /** The class's own clock, for the card's progress row. Null on an open
    *  room, which has no slated start or end. */
   clock: { startsAtMs: number | null; endsAtMs: number | null }
+  /** The viewer's email for the watermark's visible mark. */
+  viewerEmail?: string | null
 }
 
 /** A chrome layer's motion in and out, and its absence. */
@@ -105,6 +108,7 @@ export function RoomShell({
   slides,
   config,
   clock,
+  viewerEmail,
 }: RoomShellProps) {
   const isHost = role === "HOST" || role === "CO_HOST"
   const channel = useClassChannel({ hostIdentity, isHost })
@@ -142,6 +146,11 @@ export function RoomShell({
   // picture between filling the stage and fitting inside it — the same glyph
   // meaning the same thing on every device it can.
   const rootRef = useRef<HTMLDivElement>(null)
+  // Save/print/view-source keys and the PrintScreen blank over every tile.
+  // The container half only: a live call has no single <video>, and pausing
+  // on a hidden tab would drop the viewer out of their own class.
+  const stageRef = useRef<HTMLElement>(null)
+  useCaptureDeterrents({ containerRef: stageRef })
   const [fullscreen, setFullscreen] = useState(false)
   const [fit, setFit] = useState(false)
   const fullscreenSupported =
@@ -249,6 +258,8 @@ export function RoomShell({
 
       <div className="relative flex h-full min-h-0">
         <main
+          ref={stageRef}
+          data-video-protected
           className="relative min-w-0 flex-1 select-none"
           onContextMenu={(e) => e.preventDefault()}
           onClick={hide.toggle}
@@ -260,8 +271,11 @@ export function RoomShell({
               of the class carries who was watching. No time or date stamp
               on a live call (Abdout, 2026-09-13). */}
           <VideoWatermark
+            // identity IS the app user id (livekit/token.ts). The name is a
+            // display name: printed as an "email" it masked to "Ahm***d",
+            // which identified nobody.
             userId={localParticipant.identity}
-            userEmail={localParticipant.name ?? undefined}
+            userEmail={viewerEmail ?? undefined}
             rotationInterval={20000}
             showTimestamp={false}
           />

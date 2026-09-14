@@ -490,6 +490,7 @@ export default async function Page({ params }: Props) {
       locale={lang}
       slides={slides}
       card={card}
+      viewerEmail={session.user.email ?? null}
       header={
         schoolLookup.success ? (
           <RoomPageHeader

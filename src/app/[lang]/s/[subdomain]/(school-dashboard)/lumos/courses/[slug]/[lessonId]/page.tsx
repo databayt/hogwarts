@@ -99,7 +99,7 @@ export default async function LumosLessonPage({ params }: Props) {
         lesson={lesson}
         quizQuestions={lessonContent.questions}
         // Identifies the viewer in the forensic watermark on the lesson's
-        // MATERIALS. The video player itself no longer carries one.
+        // video and materials. Without it neither renders a mark.
         viewer={{
           id: session.user.id,
           email: session.user.email ?? null,

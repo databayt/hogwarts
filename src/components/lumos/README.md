@@ -185,8 +185,7 @@ src/components/lumos/
 │   ├── get-continue-watching.ts    # Resume watching list
 │   ├── get-dashboard-data.ts       # Dashboard aggregate data
 │   ├── check-enrollment.ts         # Enrollment status check
-│   ├── admin-get-course.ts         # Admin course detail
-│   └── admin-get-lesson.ts         # Admin lesson detail
+│   └── admin-get-course.ts         # Admin course detail
 ├── not-admin/
 │   └── content.tsx                 # Access denied fallback
 └── __tests__/                      # utility + action + data-fetcher tests

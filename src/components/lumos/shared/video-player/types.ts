@@ -47,6 +47,12 @@ export interface VideoPlayerProps {
    * already builds this path for its own links.
    */
   courseHref?: string
+  /**
+   * Who is watching — the forensic watermark's identity. Protected sources
+   * render the mark only when this is present, so the lesson page MUST pass
+   * it (the mark silently did nothing for months once when it did not).
+   */
+  viewer?: { id: string; email?: string | null }
   // i18n — every field is optional with an English fallback at each call
   // site, so a missing key never blanks the UI. Built by the caller (today,
   // only dashboard/lesson/content.tsx) from the `lumos` dictionary subtree.
