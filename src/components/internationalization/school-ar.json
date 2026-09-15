@@ -493,6 +493,7 @@
         "messages": "الرسائل",
         "sendMessage": "إرسال رسالة",
         "myChildren": "أبنائي",
+        "children": "الأبناء",
         "viewChildrenProfiles": "عرض ملفات الأبناء",
         "checkChildrenGrades": "فحص درجات الأبناء",
         "viewAttendanceRecords": "عرض سجلات الحضور",
@@ -520,7 +521,7 @@
         "notifications": "الإشعارات",
         "classrooms": "الفصول",
         "lessons": "الدروس",
-        "profile": "ملفي"
+        "profile": "الملف"
       },
       "of": "من",
       "homeWidget": {

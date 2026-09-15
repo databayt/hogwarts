@@ -113,7 +113,7 @@ export function getQuickActionsByRole(
         },
         {
           iconName: "Sparkle",
-          label: "My Grades",
+          label: "Grades",
           description: "Check your grades",
           href: "/grades",
         },
@@ -136,7 +136,7 @@ export function getQuickActionsByRole(
       return [
         {
           iconName: "Users",
-          label: "My Children",
+          label: "Children",
           description: "View children's profiles",
           href: "/parents",
         },

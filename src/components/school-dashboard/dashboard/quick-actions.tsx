@@ -35,7 +35,8 @@ export interface QuickAction {
  * rows of coloured cards, matching the home block above them: a cell-width tile
  * at a 29.2% radius, a 13px label underneath, and the same artwork lifted from
  * the Android app's `drawable-nodpi` into `public/tiles/`. A student's four —
- * Assignments, My Grades, Profile, Settings — each get their own Android tile.
+ * Assignments, Grades, Profile, Settings — each get their own tile; Profile
+ * is Apple's grey Contacts book (`public/tiles/contacts.png`, from macOS).
  *
  * The radius is the home block's, not Android's 14dp-on-64dp (21.9%). Seven of
  * the seventeen tiles carry a ~26% radius baked into their alpha and the other
@@ -49,7 +50,6 @@ export interface QuickAction {
 const tileByLabel: Record<string, string> = {
   Assignments: "assignments",
   Grades: "grades",
-  "My Grades": "grades",
   Performance: "grades",
   Schedule: "schedule",
   Messages: "message",
@@ -69,7 +69,7 @@ const tileByLabel: Record<string, string> = {
   Settings: "setting",
   Profile: "contacts",
   Staff: "students",
-  "My Children": "students",
+  Children: "students",
   Classrooms: "students",
   Subjects: "subject",
   Reports: "exams",
@@ -134,7 +134,7 @@ const iconMap: Record<
   Contact: AnthropicIcons.Chat, // Contact
 }
 
-// Convert "My Grades" → "myGrades", "School" → "school"
+// Convert "Contact Teacher" → "contactTeacher", "School" → "school"
 function toCamelCase(str: string): string {
   const words = str.split(/\s+/)
   return words

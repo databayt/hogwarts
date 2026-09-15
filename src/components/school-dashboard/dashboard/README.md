@@ -28,6 +28,11 @@ Android home screen carries no title above its grid. It hides
 itself from `md` up and sits above whatever the role's dashboard renders, so it
 adds a row for every role without touching the role views.
 
+Quick-action labels carry no "My" (#418, 2026-09-15): Grades, Profile
+(Arabic `الملف` — `الملف الشخصي` truncates at the 65px tile), Children. The
+Profile tile is Apple's grey Contacts book, `public/tiles/contacts.png`,
+cropped from macOS `Contacts.app` (#417); `profile.png` stays for `AppTile`.
+
 - `home-block.tsx` — server half; counts the school's events dated today for the
   widget's bottom line, tenant-scoped and best-effort (falls back to zero).
 - `home-block-client.tsx` — the grid. Widget first in DOM order, cluster second,

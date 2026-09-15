@@ -493,6 +493,7 @@
         "messages": "Messages",
         "sendMessage": "Send a message",
         "myChildren": "My Children",
+        "children": "Children",
         "viewChildrenProfiles": "View children's profiles",
         "checkChildrenGrades": "Check children's grades",
         "viewAttendanceRecords": "View attendance records",
@@ -520,7 +521,7 @@
         "notifications": "Notifications",
         "classrooms": "Classrooms",
         "lessons": "Lessons",
-        "profile": "My Profile"
+        "profile": "Profile"
       },
       "of": "of",
       "homeWidget": {

@@ -141,7 +141,7 @@ describe("GET /api/mobile/dashboard", () => {
     })
     expect(body.quick_actions[0]).toEqual({
       key: "parents",
-      label: "My Children",
+      label: "Children",
       description: expect.any(String),
       href: "/parents",
       icon: expect.any(String),
