@@ -35,7 +35,7 @@ export interface QuickAction {
  * rows of coloured cards, matching the home block above them: a cell-width tile
  * at a 29.2% radius, a 13px label underneath, and the same artwork lifted from
  * the Android app's `drawable-nodpi` into `public/tiles/`. A student's four —
- * Assignments, Grades, Profile, Settings — each get their own tile; Profile
+ * Assignments, Exams, Profile, Settings — each get their own tile; Profile
  * is Apple's grey Contacts book (`public/tiles/contacts.png`, from macOS).
  *
  * The radius is the home block's, not Android's 14dp-on-64dp (21.9%). Seven of
@@ -50,6 +50,7 @@ export interface QuickAction {
 const tileByLabel: Record<string, string> = {
   Assignments: "assignments",
   Grades: "grades",
+  Exams: "exams",
   Performance: "grades",
   Schedule: "schedule",
   Messages: "message",

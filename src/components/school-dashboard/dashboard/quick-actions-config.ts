@@ -112,10 +112,10 @@ export function getQuickActionsByRole(
           href: "/assignments",
         },
         {
-          iconName: "Sparkle",
-          label: "Grades",
-          description: "Check your grades",
-          href: "/grades",
+          iconName: "Notebook",
+          label: "Exams",
+          description: "View your exams",
+          href: "/exams",
         },
         {
           iconName: "Users",

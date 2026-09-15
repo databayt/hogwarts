@@ -480,6 +480,7 @@
         "announce": "Announce",
         "createAnnouncement": "Create school announcement",
         "takeAttendance": "Take class attendance",
+        "exams": "Exams",
         "grades": "Grades",
         "recordGrades": "Record student grades",
         "assignments": "Assignments",
