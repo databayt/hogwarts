@@ -67,7 +67,7 @@ const tileByLabel: Record<string, string> = {
   School: "home",
   Dashboard: "home",
   Settings: "setting",
-  Profile: "profile",
+  Profile: "contacts",
   Staff: "students",
   "My Children": "students",
   Classrooms: "students",
