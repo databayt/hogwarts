@@ -281,7 +281,6 @@ export function IosChatList({
           and it passes underneath both. */}
       <div className="absolute inset-x-0 top-0 z-20">
         <IosHeader
-          showOptions
           showCamera
           showAdd
           onOptions={onOptions}
