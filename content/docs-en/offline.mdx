@@ -81,7 +81,7 @@ What changed for speed:
 
 - **Saved per person.** Every screen a signed-in user opens is kept in a cache named by a per-user session key the server sends with each response. A response carrying a different key, or none, empties the previous person's pages. The sign-out button, and the sign-in and join pages as they open, tell the worker to forget everything first: on a slow network a saved copy can appear before any response reveals who is signed in.
 - **Saved as whole pages.** A client-side navigation leaves no HTML behind, so each dashboard page opened on a good connection (4G-class, data saver off) is also saved as a full page, once a day. The installed app also saves the whole sidebar once a day. A navigation's payload is saved too, but it only answers the exact navigation it came from.
-- **Network first.** A page with a saved copy shows it when the network fails, or has not answered within four seconds, and the request keeps running to refresh the copy. The strip says which: "You're offline…" or "Slow connection — showing the last saved copy of this page", with Retry. A toast says the same wherever the page is scrolled: "You're offline" stays until the connection returns, then "You're back online"; a slow connection shows "Your connection is slow" for five seconds.
+- **Network first.** A page with a saved copy shows it when the network fails, or has not answered within four seconds, and the request keeps running to refresh the copy. It does so silently: no strip, no toast, no "offline", "slow" or "back online" notice (#416). When the connection comes back, a page showing its saved copy refreshes itself, and queued work drains on its own. The only strip left is work the server rejected — "N items need attention", linking to `/offline`.
 - **Unopened pages say so.** A page with no saved copy shows "This page isn't on this device yet" with Back and Retry; an installed iPhone app has no back button of its own. The offline page and the files it needs live in their own cache, refreshed daily, so the fallback survives deploys.
 - **Lessons open offline; their videos do not.** A saved lesson page holds text, quiz questions (never the answers) and a reference to the video — never the video, a recording or a material. Those stay behind `/api/lumos/*`, which the worker never caches, and the video address refuses anything but the in-app player. This is the 2026-08-30 school policy (videos and materials are watched in the app, never copied to a device), and it is why a PRIVATE video cannot outlive its owner's choice on someone's phone.
 - **The installed app cannot block screenshots.** An installed PWA is still the browser: no web API stops or detects a screen capture. Every video, recording and the live room carry the viewer's code in a 1% watermark that survives a capture, plus a visible mark on capture signals — see [Lumos → protection](/docs/lms). Real blocking needs a native shell ([hogwarts#411](https://github.com/databayt/hogwarts/issues/411)).
@@ -102,9 +102,9 @@ What changed for speed:
 | Dashboard open: each of two Server Action responses | 1.1 MB before, about 1 KB after                       |
 | Dashboard CSS                                       | 1,078 KB before, 589 KB after                         |
 | Tap Students → skeleton on screen                   | 58 ms                                                 |
-| Offline: dashboard → a page opened before           | Saved page in 283 ms, under the offline strip         |
+| Offline: dashboard → a page opened before           | Saved page in 283 ms (strip removed since, #416)      |
 | Offline: a page never opened                        | "This page isn't on this device yet"; Back returns    |
-| Slow: reload a saved page                           | Saved copy at 4.0 s, slow-connection strip with Retry |
+| Slow: reload a saved page                           | Saved copy at 4.0 s (strip removed since, #416)       |
 | Slow: sign out                                      | Saved pages gone before the sign-out request returned |
 | Slow: the next account's first dashboard            | Waited 5.1 s for its own page                         |
 | One saved dashboard page on the device              | 1,367 KB                                              |
@@ -113,7 +113,7 @@ What changed for speed:
 
 1. Open the app on a good connection, sign in, and open a few sidebar pages.
 2. Airplane mode. Tap through the pages you opened: they render as last seen under "You're offline. Pages you've opened before still work…". A page you never opened shows "This page isn't on this device yet", and **Back** returns to where you were. Anything you mark is queued as before.
-3. On a weak signal rather than none, a saved page that takes longer than four seconds shows its saved copy under the slow-connection strip; **Retry** asks the server again.
+3. On a weak signal rather than none, a saved page that takes longer than four seconds shows its saved copy, silently; it refreshes itself when the connection returns.
 4. Sign out and sign in as another account on the same phone: nothing the first account saved appears, even before the network answers.
 
 To test from a computer, stop the server, or use a phone in airplane mode. The browser developer tools' Offline setting does not reach the service worker's own requests, so "offline" pages quietly load from the server.
@@ -133,7 +133,7 @@ To test from a computer, stop the server, or use a phone in airplane mode. The b
 | `public/service-worker.js`                      | v7: saved pages per session key, offline shell, offline/slow reason, outbox wake, Web Push |
 | `src/components/offline/warmup.tsx`             | Asks the worker to save the opened page and, from the installed app, the whole sidebar     |
 | `src/components/offline/forget-saved-pages.tsx` | Clears saved pages at sign-out, sign-in and join                                           |
-| `src/components/offline/sync-banner.tsx`        | The offline and slow-connection strip                                                      |
+| `src/components/offline/sync-banner.tsx`        | Outbox drain triggers, silent refresh on reconnect, the "needs attention" strip             |
 | `src/components/offline/content.tsx`            | The offline page, and the "not on this device yet" card                                    |
 | `src/proxy.ts`                                  | Sends `x-session-key`; writes the locale cookie only when it changes                       |
 | `cf/worker.js`                                  | Edge cache for static files                                                                |

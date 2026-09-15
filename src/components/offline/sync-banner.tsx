@@ -5,12 +5,10 @@
 import { useEffect, useRef, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { AlertTriangle, Loader2, RefreshCw, WifiOff } from "lucide-react"
-import { toast } from "sonner"
+import { AlertTriangle } from "lucide-react"
 
 import { useOnlineStatus, useOutbox } from "@/lib/offline/hooks"
 import { installOutboxTriggers } from "@/lib/offline/outbox"
-import { Button } from "@/components/ui/button"
 
 import type { OfflineLabels } from "./outbox-view"
 
@@ -56,29 +54,6 @@ if (typeof navigator !== "undefined" && navigator.serviceWorker) {
   })
 }
 
-// The Network Information API's own verdict of a weak link (Chrome/Android;
-// Safari has no `navigator.connection`, so there the worker's "slow" serve is
-// the only signal).
-type NetworkInformation = EventTarget & { effectiveType?: string }
-
-function readConnection(): NetworkInformation | undefined {
-  if (typeof navigator === "undefined") return undefined
-  return (navigator as Navigator & { connection?: NetworkInformation })
-    .connection
-}
-
-function subscribeWeak(listener: () => void) {
-  const connection = readConnection()
-  connection?.addEventListener("change", listener)
-  return () => connection?.removeEventListener("change", listener)
-}
-
-const readWeak = () => {
-  const type = readConnection()?.effectiveType
-  return type === "slow-2g" || type === "2g"
-}
-const readWeakServer = () => false
-
 function samePage(url: string | null, pathname: string | null): boolean {
   if (!url || !pathname || typeof window === "undefined") return false
   try {
@@ -90,17 +65,16 @@ function samePage(url: string | null, pathname: string | null): boolean {
 
 /**
  * Mounted once in the school dashboard layout: installs the outbox's drain
- * triggers and shows the strips a student needs.
+ * triggers and keeps offline work silent.
  *
- * Losing the connection says something now — but only because pages keep
- * working: the strip says that the screens they have opened are still here
- * and that anything they do is kept for later. A page shown from its saved
- * copy while ONLINE (the network was too slow to answer) says so too, with
- * a way to ask again — a teacher must never take a saved attendance page for
- * a live one. Work still waiting to reach the server keeps its own strip.
+ * Offline, slow and back-online say nothing (#416 reverses #414): pages keep
+ * working from their saved copies, work waits in the outbox and drains on its
+ * own, and a page shown from a saved copy refreshes itself once the network
+ * returns. The one strip left is work the server REFUSED — that needs a
+ * person, so it links to /offline.
  */
 export function OfflineSyncBanner({ labels }: { labels?: OfflineLabels }) {
-  const { pending, parked, drain, draining } = useOutbox()
+  const { parked } = useOutbox()
   const online = useOnlineStatus()
   const pathname = usePathname()
   const router = useRouter()
@@ -110,10 +84,6 @@ export function OfflineSyncBanner({ labels }: { labels?: OfflineLabels }) {
     readStaleServer
   )
   const servedHere = served !== null && samePage(served.url, pathname)
-  const offline = !online || (servedHere && served.reason === "failed")
-  const stale = !offline && servedHere
-  const weak = useSyncExternalStore(subscribeWeak, readWeak, readWeakServer)
-  const connection = offline ? "offline" : stale || weak ? "slow" : "online"
 
   const t = (
     k: string,
@@ -129,42 +99,18 @@ export function OfflineSyncBanner({ labels }: { labels?: OfflineLabels }) {
 
   useEffect(() => installOutboxTriggers(), [])
 
-  // The strip sits at the top of the page, so a connection that drops while
-  // the student is scrolled down said nothing (#414). A toast follows them:
-  // it stays up while offline and is replaced — same id — by "slow" or
-  // "back online". A page that simply loads online stays quiet.
-  const lastConnection = useRef<typeof connection>("online")
+  // A saved copy on screen is swapped for the live page, without a word, when
+  // the connection comes BACK — only on that edge: refreshing whenever a copy
+  // is on screen would re-ask every four seconds on a slow link, which the
+  // worker answers with the copy again.
+  const wasOnline = useRef(online)
   useEffect(() => {
-    const previous = lastConnection.current
-    lastConnection.current = connection
-    if (connection === previous) return
-    if (connection === "offline") {
-      toast.warning(t("offlineNow", "You're offline"), {
-        id: "connection",
-        description: t(
-          "offlineToastHint",
-          "Pages you've opened still work. Anything you do is saved and synced later."
-        ),
-        duration: Infinity,
-      })
-    } else if (connection === "slow") {
-      toast.warning(t("slowConnection", "Your connection is slow"), {
-        id: "connection",
-        description: undefined,
-        duration: 5000,
-      })
-    } else if (previous === "offline") {
-      toast.success(t("backOnline", "You're back online"), {
-        id: "connection",
-        description: undefined,
-        duration: 3000,
-      })
-    } else {
-      toast.dismiss("connection")
-    }
-    // `t` reads labels that never change after mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connection])
+    const cameBack = online && !wasOnline.current
+    wasOnline.current = online
+    if (!cameBack || !servedHere) return
+    setServed(null)
+    router.refresh()
+  }, [online, servedHere, router])
 
   // A full load served from a saved copy has no client to message while the
   // worker chooses the response; ask once the page is here.
@@ -175,96 +121,21 @@ export function OfflineSyncBanner({ labels }: { labels?: OfflineLabels }) {
     })
   }, [pathname])
 
-  const showConnection = offline || stale
-  const showWork = pending > 0 || parked > 0
-  if (!showConnection && !showWork) return null
+  if (parked === 0) return null
 
   return (
-    <>
-      {showConnection && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-sky-300 bg-sky-50 px-4 py-2 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-100"
-        >
-          <WifiOff className="h-4 w-4 shrink-0" aria-hidden />
-          <span>
-            {offline
-              ? t(
-                  "offlineBrowsing",
-                  "You're offline. Pages you've opened before still work, and anything you do is saved and synced later."
-                )
-              : t(
-                  "staleCopy",
-                  "Slow connection — showing the last saved copy of this page."
-                )}
-          </span>
-          {servedHere && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="ms-auto h-7"
-              onClick={() => {
-                setServed(null)
-                router.refresh()
-              }}
-            >
-              {t("retry", "Retry")}
-            </Button>
-          )}
-        </div>
-      )}
-      {showWork && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={
-            "flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2 text-sm " +
-            (parked > 0
-              ? "border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100"
-              : "border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-100")
-          }
-        >
-          {parked > 0 ? (
-            <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-          ) : (
-            <RefreshCw className="h-4 w-4 shrink-0" aria-hidden />
-          )}
-          {pending > 0 && (
-            <span>
-              {t("pendingSync", "{count} items waiting to sync", {
-                count: pending,
-              })}
-            </span>
-          )}
-          {parked > 0 && (
-            <Link
-              href="/offline"
-              className="font-medium underline underline-offset-2"
-            >
-              {t("attention", "{count} items need attention", {
-                count: parked,
-              })}
-            </Link>
-          )}
-          {pending > 0 && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="ms-auto h-7"
-              disabled={draining}
-              onClick={() => void drain()}
-            >
-              {draining ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              ) : null}
-              {draining ? t("syncing", "Syncing…") : t("syncNow", "Sync now")}
-            </Button>
-          )}
-        </div>
-      )}
-    </>
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-red-300 bg-red-50 px-4 py-2 text-sm text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100"
+    >
+      <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+      <Link
+        href="/offline"
+        className="font-medium underline underline-offset-2"
+      >
+        {t("attention", "{count} items need attention", { count: parked })}
+      </Link>
+    </div>
   )
 }

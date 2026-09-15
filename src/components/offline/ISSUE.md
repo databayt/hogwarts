@@ -29,12 +29,14 @@ last_audited: 2026-09-13
 - [x] Fast on thin networks — proxy no longer forces a 1.1 MB page re-render per Server Action; chunks served from Cloudflare's edge; 1 MB of clone CSS off the dashboard; every sidebar route prefetchable (2026-09-13)
 - [x] Offline clicks land on a real page — `useOffline` off (it froze clicks before the worker), RSC payloads keyed with `_rsc`, each opened page saved as HTML once a day, "not on this device yet" card with Back and Retry, offline shell in its own untrimmed cache refreshed daily (2026-09-14)
 - [x] Shared device on a slow network — sign-out button and sign-in/join pages tell the worker to forget every saved page before they move on (2026-09-14)
-- [x] Connection toast follows the student — offline (stays up), slow, back online; the top-of-page strip was invisible once scrolled (#414, 2026-09-14)
+- [x] ~~Connection toast follows the student (#414, 2026-09-14)~~ — reversed: offline work is silent (#416, 2026-09-15)
 - [ ] Static cache trims oldest-inserted first, so the most-used chunks go first once it passes 400 entries; a saved page whose chunks were trimmed shows without its scripts offline
 - [ ] Exam submission in the outbox
 - [ ] Transport boarding in the outbox
 
 ## Log
+
+- 2026-09-15 — #416 (team, STUDENT on an iPhone, reverses #414): "I don't want to see any of these toasts… work silently in the background." `sync-banner.tsx` no longer shows the offline/slow strip, its Retry, the "waiting to sync" strip, or any connection toast. What stays: outbox drain triggers, the worker's `sw-stale` store, and one strip for items the server rejected (they need a person). New: on the offline→online edge a page served from a saved copy calls `router.refresh()` — only on that edge, since refreshing whenever a copy is shown would loop every four seconds on a slow link. Verified at 390px in Playwright: network cut and restored, zero toasts, no connection strip. Left as-is (per-action state, not connection notices): quick attendance's "saved on this phone" toast and the submission card's "saved on this device" line. The `offlineNow`/`slowConnection`/`backOnline`/`staleCopy`/`offlineBrowsing` dictionary keys are unused now.
 
 - 2026-09-14 — #414 ("no notice when the internet is low or offline", STUDENT on an iPhone): the strip only renders at the top of the content, so a drop while scrolled said nothing. `sync-banner.tsx` now also fires one sonner toast with id `connection` on each change: offline (no timeout), slow (5 s), back online (3 s). Verified in Playwright at 390px with the network cut while scrolled down. Slow on iOS: Safari has no `navigator.connection`, so "slow" there still comes only from the worker serving a saved copy after four seconds; Chrome/Android also reads `effectiveType` 2g/slow-2g.
 
