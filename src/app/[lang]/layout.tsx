@@ -40,11 +40,40 @@ export async function generateMetadata({
   const dictionary = await getDictionary(lang as Locale)
   const config = localeConfig[lang as Locale]
 
+  const title =
+    dictionary.metadata?.title || "balqalam - School Management System"
+  const description =
+    dictionary.metadata?.description ||
+    "A comprehensive school management school-dashboard"
+  // The link-preview card WhatsApp, iMessage and X draw when someone shares
+  // the domain. `public/og.png` is the homepage's font.thmanyah.com look
+  // (green field, pale-green highlight, Thmanyah Serif Display) with بالقلم
+  // in place of ثمانية. Metadata merges shallowly, so a child segment that
+  // sets its own `openGraph` drops this image unless it repeats it.
+  const image = {
+    url: "/og.png",
+    width: 1200,
+    height: 630,
+    alt: "نظام بالقلم — أصيل. حديث. مرن. حي.",
+  }
+
   return {
-    title: dictionary.metadata?.title || "balqalam - School Management System",
-    description:
-      dictionary.metadata?.description ||
-      "A comprehensive school management school-dashboard",
+    title,
+    description,
+    openGraph: {
+      type: "website",
+      siteName: "بالقلم",
+      locale: lang === "ar" ? "ar_SA" : "en_US",
+      title,
+      description,
+      images: [image],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image.url],
+    },
     other: {
       "accept-language": lang,
     },

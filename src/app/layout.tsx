@@ -24,6 +24,9 @@ import "@/styles/apple-clone.css"
 import "@/styles/thmanyah-clone.css"
 
 export const metadata: Metadata = {
+  // Resolves relative Open Graph image URLs. Without it a non-Vercel build
+  // (Cloudflare) falls back to http://localhost:3000 and share cards break.
+  metadataBase: new URL("https://balqalam.com"),
   title: "balqalam",
   description: "School automation",
   // Added to the Home Screen, the app opens without Safari's chrome — which is
