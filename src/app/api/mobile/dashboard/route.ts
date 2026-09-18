@@ -9,6 +9,7 @@ import { resolveActiveTerm } from "@/lib/term-resolver"
 import { rankNextActions } from "@/components/school-dashboard/dashboard/next-action-rank"
 import { getQuickActionsByRole } from "@/components/school-dashboard/dashboard/quick-actions-config"
 import { loadUpcomingData } from "@/components/school-dashboard/dashboard/upcoming-queries"
+import { resolveScheduleDay } from "@/components/school-dashboard/timetable/resolve-schedule-day"
 import { loadTodaySchedule } from "@/components/school-dashboard/timetable/today-schedule"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
@@ -237,20 +238,34 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Today's periods, for the roles whose day is a timetable.
+    // The day's periods, for the roles whose day is a timetable.
+    //
+    // NOT strictly "today": the same fall-forward the web's day card does
+    // (`resolveScheduleDay`, shared) — on a Friday the web shows Sunday, so the
+    // app must too. `is_today` says which it landed on; a day it fell PAST is
+    // never reported, closure included. When nothing in the lookahead window
+    // has classes it stays on today, which is the payload iOS has always read.
     let todayTimetable = null
     if (role === "STUDENT" || role === "TEACHER") {
       try {
         const { term } = await resolveActiveTerm(schoolId)
-        const day = await loadTodaySchedule({
-          schoolId,
-          userId,
-          role,
-          term: term ? { id: term.id, yearId: term.yearId, label: "" } : null,
-        })
+        const resolvedTerm = term
+          ? { id: term.id, yearId: term.yearId, label: "" }
+          : null
+        const { resolved, today: startDay } = await resolveScheduleDay((date) =>
+          loadTodaySchedule({
+            schoolId,
+            userId,
+            role,
+            term: resolvedTerm,
+            ...(date ? { date } : {}),
+          })
+        )
+        const day = resolved?.day ?? startDay
         todayTimetable = {
           day_of_week: day.dayOfWeek,
           date: "date" in day ? day.date : today.toISOString(),
+          is_today: resolved ? resolved.isToday : true,
           closure:
             "closure" in day && day.closure
               ? {

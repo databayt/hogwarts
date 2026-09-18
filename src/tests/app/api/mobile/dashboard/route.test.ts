@@ -255,6 +255,7 @@ describe("GET /api/mobile/dashboard", () => {
     expect(body.today_timetable).toEqual({
       day_of_week: 1,
       date: "2026-09-14T00:00:00.000Z",
+      is_today: true,
       closure: null,
       periods: [
         {
@@ -278,6 +279,137 @@ describe("GET /api/mobile/dashboard", () => {
         },
       ],
     })
+  })
+
+  // --- today_timetable falls forward, exactly as the web's day card does ---
+
+  /** A day pattern: `withClass` decides whether any period is actually taught. */
+  const dayPattern = (
+    date: string,
+    withClass: boolean,
+    closure: { title: string; exceptionType: string } | null = null
+  ) => ({
+    dayOfWeek: 5,
+    date,
+    termLabel: "",
+    closure,
+    schedule: [
+      {
+        periodId: "p1",
+        periodName: "Period 1",
+        startTime: "1970-01-01T08:00:00.000Z",
+        endTime: "1970-01-01T08:45:00.000Z",
+        subject: withClass ? "Math" : "",
+        className: withClass ? "10A" : "",
+        teacher: withClass ? "T One" : "",
+        room: "",
+        sectionId: null,
+        subjectId: null,
+        timetableId: withClass ? "tt1" : null,
+        isBreak: false,
+        liveClass: null,
+      },
+    ],
+  })
+
+  async function studentWithTerm() {
+    await authAs("STUDENT")
+    vi.mocked(db.student.findFirst).mockResolvedValue({
+      id: "s1",
+      sectionId: "sec1",
+    } as never)
+    resolveActiveTerm.mockResolvedValue({
+      term: { id: "term1", yearId: "y1" },
+      source: "explicit",
+    })
+  }
+
+  it("falls forward past an empty weekend to the next day with classes", async () => {
+    await studentWithTerm()
+    loadTodaySchedule.mockImplementation(
+      async (input: { date?: Date }) =>
+        input.date
+          ? dayPattern("2026-09-20T00:00:00.000Z", true)
+          : dayPattern("2026-09-18T00:00:00.000Z", false)
+    )
+
+    const { GET } = await import("@/app/api/mobile/dashboard/route")
+    const body = await (await GET(get())).json()
+
+    expect(body.today_timetable.is_today).toBe(false)
+    expect(body.today_timetable.date).toBe("2026-09-20T00:00:00.000Z")
+    expect(body.today_timetable.periods[0].timetable_id).toBe("tt1")
+    // Today was read with no date, then the day after it.
+    expect(loadTodaySchedule).toHaveBeenCalledWith({
+      schoolId: SCHOOL,
+      userId: USER,
+      role: "STUDENT",
+      term: { id: "term1", yearId: "y1", label: "" },
+    })
+    expect(loadTodaySchedule.mock.calls.length).toBeGreaterThan(1)
+  })
+
+  it("skips a closed day and never reports the closure it fell past", async () => {
+    await studentWithTerm()
+    loadTodaySchedule.mockImplementation(async (input: { date?: Date }) =>
+      input.date
+        ? dayPattern("2026-09-19T00:00:00.000Z", true)
+        : dayPattern("2026-09-18T00:00:00.000Z", true, {
+            title: "عيد",
+            exceptionType: "HOLIDAY",
+          })
+    )
+
+    const { GET } = await import("@/app/api/mobile/dashboard/route")
+    const body = await (await GET(get())).json()
+
+    expect(body.today_timetable).toMatchObject({
+      date: "2026-09-19T00:00:00.000Z",
+      is_today: false,
+      closure: null,
+    })
+  })
+
+  it("stays on today — closure and all — when nothing in the window has classes", async () => {
+    await studentWithTerm()
+    loadTodaySchedule.mockImplementation(async () =>
+      dayPattern("2026-09-18T00:00:00.000Z", false, {
+        title: "عيد",
+        exceptionType: "HOLIDAY",
+      })
+    )
+
+    const { GET } = await import("@/app/api/mobile/dashboard/route")
+    const body = await (await GET(get())).json()
+
+    // The payload iOS has always read, plus is_today.
+    expect(body.today_timetable).toMatchObject({
+      date: "2026-09-18T00:00:00.000Z",
+      is_today: true,
+      closure: { title: "عيد", type: "HOLIDAY" },
+    })
+    // Today + four lookahead days, and no further.
+    expect(loadTodaySchedule).toHaveBeenCalledTimes(5)
+  })
+
+  it("no periods at all stops at today rather than walking the week", async () => {
+    await studentWithTerm()
+    loadTodaySchedule.mockResolvedValue({
+      schedule: [],
+      dayOfWeek: 5,
+      message: "No active term",
+    })
+
+    const { GET } = await import("@/app/api/mobile/dashboard/route")
+    const body = await (await GET(get())).json()
+
+    expect(body.today_timetable).toMatchObject({
+      day_of_week: 5,
+      is_today: true,
+      closure: null,
+      periods: [],
+    })
+    expect(loadTodaySchedule).toHaveBeenCalledTimes(1)
   })
 
   it("accountant stats come from the invoice counts + today's collections", async () => {

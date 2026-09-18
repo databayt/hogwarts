@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getTodaySchedule } from "@/components/school-dashboard/timetable/actions"
+import { resolveScheduleDay } from "@/components/school-dashboard/timetable/resolve-schedule-day"
 import SimpleGrid from "@/components/school-dashboard/timetable/views/simple-grid"
 
 import { SectionHeading } from "./section-heading"
@@ -134,49 +135,39 @@ interface DaySchedule {
 }
 
 /**
- * How many days forward the card will look for a day that actually has classes
- * on it.
+ * Read the day, then the next few, until one of them has classes.
  *
- * The Sudanese school week runs Sunday to Thursday, so the two-day weekend
- * needs two hops at most; the extra headroom is for a declared holiday sitting
- * against it. The search stops at the FIRST day with classes, so a school day
- * costs exactly one read and only a Friday pays for a second.
- *
+ * The walk itself is `resolveScheduleDay` — shared with the mobile dashboard's
+ * `today_timetable`, so the phone web card and the app land on the same day.
  * Falling forward rather than showing an empty weekend is /timetable's own
  * behaviour — `student-view.tsx` picks the next working day for the same
  * reason, and the column header names the day it landed on, so nothing here
  * has to explain itself.
  */
-const LOOKAHEAD_DAYS = 4
-
-/** Read the day, then the next few, until one of them has classes. */
 async function resolveDay(role: string): Promise<DaySchedule | null> {
-  const today = new Date()
+  const { resolved } = await resolveScheduleDay((date) =>
+    getTodaySchedule(date ? { date } : undefined)
+  )
+  if (!resolved) return null
 
-  for (let offset = 0; offset <= LOOKAHEAD_DAYS; offset += 1) {
-    const date = new Date(today)
-    date.setDate(date.getDate() + offset)
+  const { day: result, isToday } = resolved
+  // Spread rather than read straight off the union: the no-active-term
+  // branch returns `never[]`, and `.map` on `never[] | Row[]` is not
+  // callable.
+  const rows = [...result.schedule]
 
-    const result = await getTodaySchedule(offset === 0 ? undefined : { date })
-    // Spread rather than read straight off the union: the no-active-term
-    // branch returns `never[]`, and `.map` on `never[] | Row[]` is not
-    // callable.
-    const rows = [...result.schedule]
-
-    // No periods at all means no term and no school week — looking at
-    // tomorrow would ask the same question and get the same answer.
-    if (rows.length === 0) return null
-
-    // A declared holiday still returns the day's PATTERN — `getTodaySchedule`
-    // informs rather than blanks, and /timetable prints a "school is closed"
-    // notice above the grid for exactly this case. This card has no room for a
-    // notice, so it treats a closed day the way it treats a weekend and moves
-    // on; showing the pattern with nothing saying عيد would be a lie. The `in`
-    // guard is for the no-active-term branch of the union, which has no
-    // `closure` at all.
-    if ("closure" in result && result.closure) continue
-
-    const slots = rows
+  return {
+    dayOfWeek: result.dayOfWeek,
+    isToday,
+    periods: rows.map((row, i) => ({
+      id: row.periodId,
+      name: row.periodName,
+      order: i,
+      startTime: row.startTime,
+      endTime: row.endTime,
+      isBreak: row.isBreak,
+    })),
+    slots: rows
       .filter((row) => row.timetableId)
       .map((row) => ({
         id: row.timetableId as string,
@@ -188,24 +179,6 @@ async function resolveDay(role: string): Promise<DaySchedule | null> {
         // A teacher already knows who is teaching; what they need beside the
         // subject is which section walks in. `viewMode="teacher"` reads this.
         sectionName: role === "TEACHER" ? row.className : undefined,
-      }))
-
-    if (slots.length === 0) continue
-
-    return {
-      dayOfWeek: result.dayOfWeek,
-      isToday: offset === 0,
-      periods: rows.map((row, i) => ({
-        id: row.periodId,
-        name: row.periodName,
-        order: i,
-        startTime: row.startTime,
-        endTime: row.endTime,
-        isBreak: row.isBreak,
       })),
-      slots,
-    }
   }
-
-  return null
 }
