@@ -461,9 +461,10 @@ describe("GET /api/mobile/dashboard/sections", () => {
         expect(JSON.stringify(where), role).not.toContain(OTHER_SCHOOL)
         // Every read either names the school directly or reaches it through a
         // relation that does (`class: { teacherId, schoolId }`).
-        expect(JSON.stringify(where), `${role} ${JSON.stringify(where)}`).toContain(
-          SCHOOL
-        )
+        expect(
+          JSON.stringify(where),
+          `${role} ${JSON.stringify(where)}`
+        ).toContain(SCHOOL)
       }
     }
   })

@@ -326,11 +326,10 @@ describe("GET /api/mobile/dashboard", () => {
 
   it("falls forward past an empty weekend to the next day with classes", async () => {
     await studentWithTerm()
-    loadTodaySchedule.mockImplementation(
-      async (input: { date?: Date }) =>
-        input.date
-          ? dayPattern("2026-09-20T00:00:00.000Z", true)
-          : dayPattern("2026-09-18T00:00:00.000Z", false)
+    loadTodaySchedule.mockImplementation(async (input: { date?: Date }) =>
+      input.date
+        ? dayPattern("2026-09-20T00:00:00.000Z", true)
+        : dayPattern("2026-09-18T00:00:00.000Z", false)
     )
 
     const { GET } = await import("@/app/api/mobile/dashboard/route")
@@ -339,14 +338,16 @@ describe("GET /api/mobile/dashboard", () => {
     expect(body.today_timetable.is_today).toBe(false)
     expect(body.today_timetable.date).toBe("2026-09-20T00:00:00.000Z")
     expect(body.today_timetable.periods[0].timetable_id).toBe("tt1")
-    // Today was read with no date, then the day after it.
-    expect(loadTodaySchedule).toHaveBeenCalledWith({
+    // Today was read with no date, then the day after it — and the walk
+    // stopped there, because that day had a class.
+    expect(loadTodaySchedule).toHaveBeenCalledTimes(2)
+    expect(loadTodaySchedule).toHaveBeenNthCalledWith(1, {
       schoolId: SCHOOL,
       userId: USER,
       role: "STUDENT",
       term: { id: "term1", yearId: "y1", label: "" },
     })
-    expect(loadTodaySchedule.mock.calls.length).toBeGreaterThan(1)
+    expect(loadTodaySchedule.mock.calls[1][0].date).toBeInstanceOf(Date)
   })
 
   it("skips a closed day and never reports the closure it fell past", async () => {
