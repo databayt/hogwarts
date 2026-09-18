@@ -84,13 +84,16 @@ All field names use **snake_case** (mobile DTO convention).
 
 ### Dashboard (new)
 
-| Method | Path                    | Description              |
-| ------ | ----------------------- | ------------------------ |
-| GET    | `/api/mobile/dashboard` | Role-based summary stats |
+| Method | Path                             | Description                                  |
+| ------ | -------------------------------- | -------------------------------------------- |
+| GET    | `/api/mobile/dashboard`          | Role-based summary stats                     |
+| GET    | `/api/mobile/dashboard/sections` | The per-role sections under the phone blocks |
 
 Original flat fields stay (`user_name`, `avatar_url`, `role`, `school_name`, `unread_notifications`, `announcements_count`, role stats). Role stats: STUDENT `attendance_percentage, upcoming_exams, today_classes` · TEACHER `total_classes, today_classes` · GUARDIAN `children_count` · ADMIN/DEVELOPER `total_students, total_teachers, total_classes` · ACCOUNTANT `pending_invoices, pending_amount, overdue_invoices, overdue_amount, collected_today` · STAFF `total_students, present_today, upcoming_events`.
 
 Additive (2026-09): `school { id, name, name_en, logo_url, enabled_modules (null = all) }`, `unread_messages`, `events_today` (school events dated today, not cancelled), `next_actions [{ kind, mark, href }]` (web `rankNextActions` over the shared upcoming loader; `href` is a locale-less web path), `quick_actions [{ key, label, description, href, icon }]`, `today_timetable` (STUDENT/TEACHER, else null) `{ day_of_week, date, closure { title, type } | null, periods [{ period_id, period_name, start_time, end_time, subject, class_name, section_id, teacher, room, is_break, timetable_id, live_class }] }`.
+
+`dashboard/sections` is the web's `ResourceUsageSection` + `InvoiceHistorySection` (`dashboard/queries.ts`, shared with `getResourceUsageByRole` / `getInvoicesByRole`): `resource_usage [{ key, name, used, limit, unit, percent }]`, `invoices [{ id, date, description, amount, currency, status: paid|open|void }]`. `key` is the stable camelCase id under `school.dashboard.resourceNames` in the dictionaries (`lessonsThisWeek`, `ungradedWork`, `currentGpa`, `activeUsers`, …) — localize by it, fall back to `name` (the server's English label). `percent` is the number the web's usage table prints last: `Math.round(used / limit * 100)`, unclamped, 0 when `limit` is 0. `date` is ISO; `amount` is a number and `currency` is `USD` (the web prints a `$`). Every role gets 200 with two arrays; a role the web renders no sections for (USER, anything outside the eight dashboard variants) gets two EMPTY arrays rather than the ADMIN fall-through, which would be the whole school's billing. Rows come back empty when the caller has no student/teacher row. DEVELOPER's usage rows are platform-wide by design (`schoolsActive`, `platformUsers`); its invoices are still school-scoped.
 
 ### Profile (new)
 

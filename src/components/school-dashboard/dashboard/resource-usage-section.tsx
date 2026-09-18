@@ -27,6 +27,9 @@ export type DashboardRole =
   | "ADMIN"
   | "DEVELOPER"
 
+/** A row plus the dictionary key the server stamped on it, when it has one. */
+type KeyedUsageResource = UsageResource & { key?: string }
+
 export interface ResourceUsageSectionProps {
   role: DashboardRole
   className?: string
@@ -161,7 +164,7 @@ export function ResourceUsageSection({
   className,
   sectionTitle,
 }: ResourceUsageSectionProps) {
-  const [resources, setResources] = useState<UsageResource[]>(
+  const [resources, setResources] = useState<KeyedUsageResource[]>(
     defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN
   )
   const [isLoading, setIsLoading] = useState(true)
@@ -186,7 +189,8 @@ export function ResourceUsageSection({
         const data = await getResourceUsageByRole(role)
         if (data && data.length > 0) {
           // Map server data to UsageResource format
-          const mappedResources: UsageResource[] = data.map((item) => ({
+          const mappedResources: KeyedUsageResource[] = data.map((item) => ({
+            key: item.key,
             name: item.name,
             used: item.used,
             limit: item.limit,
@@ -205,10 +209,13 @@ export function ResourceUsageSection({
     fetchData()
   }, [role])
 
-  // Translate resource names and units via dictionary
+  // Translate resource names and units via dictionary. The server stamps the
+  // dictionary key on every row it returns (`queries.ts`) — the app localizes
+  // by the same key — and `toCamelCase` is the fallback for the static rows
+  // below, which carry a name only.
   const translatedResources = resources.map((r) => ({
     ...r,
-    name: resDict?.[toCamelCase(r.name)] || r.name,
+    name: resDict?.[r.key ?? toCamelCase(r.name)] || r.name,
     unit: r.unit ? unitDict?.[r.unit] || r.unit : r.unit,
   }))
 
