@@ -251,14 +251,34 @@ for (const role of roles) {
           const from = trail[i - 1]
           const to = trail[i]
           const href = `/${locale}${to}`
+          const link = s.page.locator(`a[href="${href}"]`).first()
+          let viaSheet = false
+          if (!(await link.isVisible().catch(() => false))) {
+            // Phone layout: the sidebar is a sheet that is not mounted until it
+            // is opened. Open it the way a thumb would, THEN start the clock —
+            // the measured tap is the one on the link.
+            // Desktop-narrow: the shadcn sidebar trigger. Phone: the header's
+            // "menu" popover (the sidebar trigger exists there but is hidden).
+            const candidates = [
+              s.page.locator('[data-slot="sidebar-trigger"], [data-sidebar="trigger"]').first(),
+              s.page.locator('button[aria-haspopup="dialog"]').filter({ hasText: /menu|القائمة/i }).first(),
+            ]
+            let trigger = null
+            for (const c of candidates) if (await c.isVisible().catch(() => false)) { trigger = c; break }
+            if (trigger) {
+              await trigger.click()
+              await link.waitFor({ state: "visible", timeout: 5000 }).catch(() => {})
+              await s.page.waitForTimeout(400) // the sheet's own slide-in is not part of the navigation
+              viaSheet = true
+            }
+          }
           s.ledger.mark()
           await s.page.evaluate(() => window.__armNav())
-          const link = s.page.locator(`a[href="${href}"]`).first()
           let synthetic = false
           if (await link.isVisible().catch(() => false)) await link.click()
           else {
-            // Phone layout keeps the sidebar in a sheet. The anchor is still in
-            // the DOM; a DOM click drives the same Link handler.
+            // Still not visible: if the anchor is in the DOM at all, a DOM click
+            // drives the same Link handler.
             synthetic = true
             const found = await s.page.evaluate((h) => {
               const a = document.querySelector(`a[href="${h}"]`)
@@ -284,7 +304,7 @@ for (const role of roles) {
           }
           const rel = (t) => (t == null || state.t0 == null ? null : Math.round(t - state.t0))
           const nav = {
-            role, from, to, run, synthetic,
+            role, from, to, run, synthetic, viaSheet,
             visualResponseMs: rel(state.firstFrame ?? state.firstMutation),
             urlChangeMs: rel(state.urlChanged),
             settledMs: rel(state.lastMutation),
