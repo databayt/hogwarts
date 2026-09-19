@@ -25,18 +25,47 @@ Every claim about speed in this repo should be a number from this lab —
 | `pnpm perf:rum`        | Field data: p75 from real phones (Workers Analytics Engine)              | Cloudflare token |
 | `pnpm perf:report`     | `REPORT.md` + `summary.json`, budget verdicts, diff against the baseline | a run directory  |
 | `pnpm perf:check`      | **The gate.** `perf:build` + report, exit 1 on a regression              | a `.next` build  |
-| `pnpm perf`            | probe → browser flows (phone profile) → report                           | a running target |
+| `pnpm perf`            | probe → browser flows (phone profile) → report, all against ONE target   | a running target |
 
 Everything writes to `performance/reports/latest/` unless `--out <dir>` says
 otherwise. Pass arguments after `--`: `pnpm perf:playwright -- --target prod --roles teacher`.
 
 ### Targets
 
-`--target local` (default) is `http://demo.localhost:3000` — run a **production
-build** (`pnpm build && pnpm start`), never `next dev`: dev bundles are several
-times larger and unminified, and its numbers mean nothing. `--target prod` is
-the live demo tenant. It signs in with the public demo accounts, loads one page
-at a time and never writes — one careful user, not a load test.
+`--target prod` (the default for everything except `perf:queries`) is the live
+demo tenant. It signs in with the public demo accounts, loads one page at a
+time and never writes — one careful user, not a load test.
+
+`--target local` is `http://demo.localhost:3000` serving a **production
+build** — never `next dev`: dev bundles are several times larger and
+unminified, and its numbers mean nothing. Do **not** use `pnpm build` for it:
+`prebuild` runs `ensure-demo.ts`, which seeds whatever `DATABASE_URL` points at
+(the deploy script skips it for that reason). The recipe that works on this
+16 GB Mac without stopping Colima, ~4 minutes, leaving the working tree and the
+deploy cache alone:
+
+```bash
+B=~/.cache/hogwarts-perf-build && rm -rf $B && mkdir -p $B
+git archive HEAD | tar -x -C $B && cp .env $B/.env
+cp -R public/fonts/thmanyah/. $B/public/fonts/thmanyah/   # licensed fonts are not in git
+cd $B && pnpm install --frozen-lockfile --prefer-offline
+CF_CONTAINER=1 NODE_OPTIONS=--max-old-space-size=3072 NEXT_BUILD_CPUS=2 pnpm exec next build
+
+PERF_NEXT_DIR=$B/.next pnpm perf:build        # from the repo: the static inventory needs no server
+
+# To SERVE it: a CF_CONTAINER build ships only the Linux Prisma engine.
+cp $(find node_modules/.pnpm -path "*/.prisma/client/libquery_engine-darwin-arm64.dylib.node" | head -1) \
+   $(find .next/standalone/node_modules/.pnpm -type d -path "*/.prisma/client" | head -1)/
+cd .next/standalone && ln -sfn $B/.next/static .next/static && ln -sfn $B/public public && cp $B/.env .env
+PERF_TRACE=1 PORT=3000 node server.js > /tmp/hogwarts-trace.log 2>&1    # then: pnpm perf:queries -- --trace /tmp/hogwarts-trace.log
+```
+
+The deployed build is already on disk after every deploy:
+`PERF_NEXT_DIR=~/.cache/hogwarts-cf-build/.next pnpm perf:build`.
+Locally, sign-in redirects to a production host (the `.env` builds tenant URLs
+on a production root); the session cookie is set on `demo.localhost` anyway and
+the lab carries on. Local static files are gzip and local prefetches all land —
+local JS byte counts read high against production.
 
 Local database timings are never evidence about production: the local database
 is on the same machine, production's is an ocean away (see "Database").
@@ -114,10 +143,17 @@ not fail on them — a laptop's clock is not a contract. It runs in
 `scripts/deploy-cloudflare.sh build` (warns; `PERF_GATE=strict` aborts), and
 `.github/workflows/perf.yml` checks production weekly and on demand.
 
+`browser-*.json` (raw per-run data, ~1 MB a run) is git-ignored. On a fresh
+clone, re-running `perf:report` on a committed run directory would rewrite its
+`REPORT.md` and `summary.json` WITHOUT the page, navigation and sign-in
+sections — treat committed run directories as read-only and report into a new
+one.
+
 After an intentional change, promote the new numbers:
 
 ```bash
-pnpm perf:report -- --run performance/reports/latest --save-baseline
+pnpm perf:report -- --run <dir> --save-static     # a build's bundle numbers only
+pnpm perf:report -- --run <dir> --save-baseline   # a full production run
 ```
 
 ## Rules
@@ -177,12 +213,24 @@ queries are a second of waiting. Until they are co-located:
    the previous result.
 2. **No query in a loop.** `findMany({ where: { id: { in } } })`, `include`, or
    one aggregate — never N `findUnique`.
-3. **Layouts are paid by every page under them — and by every prefetch.** A
-   query in the dashboard layout runs once per prefetched link, too.
-4. `select` the columns the UI shows; paginate on the server; aggregate in SQL.
-5. `schoolId` in every `where`, always — an index on `(schoolId, …)` is what
+3. **A layout's queries are paid by every page under it.** (Not by prefetches:
+   measured 2026-09-19, a prefetch render stops at the loading boundary and
+   never reaches Prisma — prefetches cost container CPU, not database trips.)
+4. **Resolve a shared fact once per request.** The teacher dashboard read the
+   school 7 times, the active term 6 and the teacher row 4 in ONE render, each
+   widget for itself. Wrap the read in React `cache()` — it is scoped to the
+   request, so nothing crosses users or schools — but never memoize a resolver
+   that some caller uses after WRITING the same rows (`resolveActiveTerm` has
+   two such callers): give read paths their own cached reader.
+5. **Data a page needs to be useful belongs in its render, streamed**, not in
+   server actions fired on mount: `/timetable` makes 27 queries in 18
+   sequential steps AFTER it has mounted — ~1.6 s in production that no
+   skeleton prefetch can hide.
+6. `select` the columns the UI shows; paginate on the server; aggregate in SQL.
+7. `schoolId` in every `where`, always — an index on `(schoolId, …)` is what
    makes the query fast, and its absence is a data leak, not a perf bug.
-6. `PERF_TRACE=1 pnpm dev > trace.log` then `pnpm perf:queries -- --trace trace.log`
+8. `PERF_TRACE=1 pnpm dev > trace.log` (dev is fine HERE — only the structure of
+   the queries is read, never their speed) then `pnpm perf:queries -- --trace trace.log`
    counts a route's queries, its sequential steps and its duplicates.
 
 ### Caching: only what cannot leak

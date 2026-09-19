@@ -359,9 +359,13 @@ exam-paper PDF pages, whose purpose it is), `xlsx` 47 → 0, PostHog 490 → 0.
 | teacher `/students`   | 1602 KB             | 793 KB              | -51%   |
 | teacher `/grades`     | 1486 KB             | 847 KB              | -43%   |
 
-The "after" column is **conservative**: the local server gzips static files,
-production's edge serves brotli (10–15 % smaller). That is the whole of admin
-`/dashboard`'s +8 % — like for like (table above) it is −9 %. This run also
+The "after" column is **conservative, for two reasons**, and the static table
+above is the clean like-for-like comparison. (1) On localhost 2–4× more
+prefetches finish inside the measurement window (`/attendance`: 18 on
+production, 79 locally), so the browser fetched far more script files (58 → 105) — the local run downloads JavaScript for routes the production run never
+got to. (2) The local server gzips static files; production's edge serves
+brotli, 10–15 % smaller. Admin `/dashboard`'s +8 % is those two effects on a
+page whose own initial set fell 9 %. Even so, every other page halves. This run also
 caught what the static inventory could not: teacher `/students` still pulled
 1377 KB, because its prefetched `/profile/[id]` rows dragged in a 587 KB chunk of
 base64 payment logos (`7e6fa4585`).
@@ -385,6 +389,14 @@ the translated error message.
   and downloads a 355 KB `%PDF`. `/students`: a 148 KB CSV, no library at all —
   that page had been shipping 600 KB of PDF and Excel code for a CSV button.
 - **The service worker fix**, against production itself — table in #2.
+
+### A second instrument agrees
+
+`pnpm perf:lighthouse` (one run each, production, Lighthouse's simulated
+phone — corroboration, not a baseline): teacher `/attendance` ships 2306 KB of
+which Lighthouse's coverage counts **1668 KB of JavaScript as unused** during
+load, LCP 12.5 s; `/login` weighs 1080 KB (this lab's harness: 1048–1056 KB).
+The marketing home page is 4.1 MB with LCP 5.6 s — not examined here.
 
 ### Not verified yet — needs the deploy
 

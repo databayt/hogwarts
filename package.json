@@ -62,7 +62,7 @@
     "crm:funnel-tick": "tsx scripts/funnel/tick.ts",
     "crm:funnel-apply-inbox": "tsx scripts/funnel/apply-inbox.ts",
     "cf:deploy": "scripts/deploy-cloudflare.sh",
-    "perf": "node performance/scripts/probe.mjs && node performance/playwright/run.mjs --profile mobile && node performance/scripts/report.mjs",
+    "perf": "node performance/scripts/perf.mjs",
     "perf:build": "node performance/scripts/bundle-report.mjs",
     "perf:probe": "node performance/scripts/probe.mjs",
     "perf:playwright": "node performance/playwright/run.mjs",

@@ -27,7 +27,7 @@ import { chromium } from "@playwright/test"
 import { arg, ensureDir, fmtKB, fmtMs, labRoot, list, readJson, table } from "../scripts/lib.mjs"
 
 const lab = readJson(path.join(labRoot, "config/lab.json"))
-const targetName = arg("target", "local")
+const targetName = arg("target", "prod")
 const target = lab.targets[targetName]
 const locale = arg("locale", lab.locale)
 const runs = Number(arg("runs", "3"))

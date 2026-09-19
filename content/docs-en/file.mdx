@@ -25,8 +25,9 @@ import {
   FileBrowser,
   useUpload,
   useExport,
-  useGenerate,
 } from "@/components/file"
+// PDF templates pull @react-pdf/renderer — import them from their own module
+import { useGenerate } from "@/components/file/generate/use-generate"
 
 <Uploader folder="documents" category="document" onUpload={(urls) => console.log(urls)} />
 
@@ -184,9 +185,13 @@ Pre-built templates render PDFs via `@react-pdf/renderer`. All return a `Blob` a
 | Transcript  | `useGenerate.transcript()`  | Academic transcripts               |
 
 ```ts
+import { useGenerate } from "@/components/file/generate/use-generate"
+
 const { invoice } = useGenerate()
 const blob = await invoice({ schoolId, items, customer, total })
 ```
+
+`generate` is **not** re-exported from `@/components/file`: see [What the barrel exports](#what-the-barrel-exports).
 
 Each template accepts a typed payload and renders both a downloadable PDF and an inline preview component (`InvoicePreview`, etc.).
 
@@ -262,9 +267,28 @@ import type {
 } from "@/components/file"
 ```
 
+## What the barrel exports
+
+`@/components/file` is imported by client components (`ExportButton`, `FileUploader`, …), and a re-export is bundled **whether or not the importer uses it**. Until 2026-09-19 the barrel re-exported the whole block, and 44–49 routes — students, attendance, grades, classrooms, exams, finance, teachers — shipped `@react-pdf/renderer` (462 KB gzip), the Node `crypto` polyfill (137 KB), `xlsx` (135 KB) and the AWS SDK (45 KB) in their initial JavaScript to draw a table with an Export button. Removing those re-exports took **870 KB gzip off each of those routes**.
+
+So the barrel carries components, hooks, types and light helpers. These are imported from their own module:
+
+| What                                         | Import from                                                           | Why it stays out of the barrel |
+| -------------------------------------------- | --------------------------------------------------------------------- | ------------------------------ |
+| Storage providers (`getProvider`, S3, R2)    | `@/components/file/providers` · `…/providers/factory`                 | AWS / R2 SDKs, server-only     |
+| Rate limiting                                | `@/components/file/rate-limit`                                        | Upstash client, server-only    |
+| CDN signing (`generateSignedUrl`, …)         | `@/components/file/cdn`                                               | `node:crypto`, server-only     |
+| Deduplication (`generateFileHash`, …)        | `@/components/file/deduplication`                                     | `node:crypto`, server-only     |
+| PDF templates, `useGenerate`                 | `@/components/file/generate/*`                                        | `@react-pdf/renderer`          |
+| `exportToExcel`, `exportToPdf`, `PDFPreview` | `@/components/file/export/excel-generator` · `…/export/pdf-generator` | `xlsx`, `@react-pdf/renderer`  |
+
+Their **types** are still exported from the barrel. `useExport` and the spreadsheet parser load `xlsx` / `@react-pdf/renderer` with `await import()` when an export or a parse is actually asked for — follow the same pattern for anything heavy that serves a click rather than a render.
+
+`pnpm perf:check` fails the build gate if one of these libraries re-enters a tracked route's initial JavaScript ([performance guide](https://github.com/databayt/hogwarts/blob/main/performance/README.md)).
+
 ## Migration from the old layout
 
-Older code imported from `@/components/upload`, `@/components/export`, `@/components/import`, etc. Migrate to a single import:
+Older code imported from `@/components/upload`, `@/components/export`, `@/components/import`, etc. Migrate components and hooks to the barrel (heavy and server-only modules keep their own path — see above):
 
 ```ts
 // before

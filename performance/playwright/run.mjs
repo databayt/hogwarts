@@ -39,7 +39,7 @@ import {
 } from "./collect.mjs"
 
 const lab = readJson(path.join(labRoot, "config/lab.json"))
-const targetName = arg("target", "local")
+const targetName = arg("target", "prod")
 const target = lab.targets[targetName]
 if (!target) throw new Error(`unknown target "${targetName}"`)
 const profileName = arg("profile", "mobile")
