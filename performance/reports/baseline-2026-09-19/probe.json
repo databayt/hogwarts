@@ -1,0 +1,97 @@
+{
+  "generatedAt": "2026-09-19T06:08:38.103Z",
+  "target": "prod",
+  "samples": 25,
+  "vantage": {
+    "colo": "JNB",
+    "country": "RW"
+  },
+  "payloads": [
+    {
+      "url": "https://balqalam.com/ar",
+      "status": 200,
+      "encoding": "gzip",
+      "wireBytes": 23803,
+      "htmlBytes": 104377,
+      "flightBytes": 29797,
+      "flightShare": 0.28547476934573707,
+      "largestFlightChunk": 29797,
+      "scripts": 25,
+      "stylesheets": 4,
+      "cacheControl": "s-maxage=31536000"
+    },
+    {
+      "url": "https://demo.balqalam.com/ar/login",
+      "status": 200,
+      "encoding": "gzip",
+      "wireBytes": 274172,
+      "htmlBytes": 1155821,
+      "flightBytes": 1143499,
+      "flightShare": 0.9893391796826672,
+      "largestFlightChunk": 1140167,
+      "scripts": 26,
+      "stylesheets": 4,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    }
+  ],
+  "latency": [
+    {
+      "name": "edge (cached static chunk)",
+      "url": "https://demo.balqalam.com/_next/static/chunks/0fn5g6wdwm_uz.js",
+      "samples": 26,
+      "status": 200,
+      "min": 101.42420800000036,
+      "p50": 111.50495799999999,
+      "p95": 130.4881250000003,
+      "max": 510.8619590000003,
+      "edgeCache": "hit",
+      "encoding": "br"
+    },
+    {
+      "name": "origin (container, no database)",
+      "url": "https://demo.balqalam.com/__perf-probe-1789798123909.txt",
+      "samples": 26,
+      "status": 500,
+      "min": 322.47870799999873,
+      "p50": 333.0149999999994,
+      "p95": 362.2459170000002,
+      "max": 638.7049999999999,
+      "edgeCache": null,
+      "encoding": null
+    },
+    {
+      "name": "origin + tenant lookup (manifest)",
+      "url": "https://demo.balqalam.com/manifest.webmanifest",
+      "samples": 26,
+      "status": 200,
+      "min": 309.62724999999773,
+      "p50": 326.09391700000197,
+      "p95": 382.6426250000004,
+      "max": 385.3040409999994,
+      "edgeCache": null,
+      "encoding": "br"
+    },
+    {
+      "name": "public page (login HTML)",
+      "url": "https://demo.balqalam.com/ar/login",
+      "samples": 11,
+      "status": 200,
+      "min": 382.56987500000105,
+      "p50": 398.4869580000013,
+      "p95": 885.6715000000004,
+      "max": 885.6715000000004,
+      "edgeCache": null,
+      "encoding": "gzip"
+    }
+  ],
+  "database": {
+    "what": "SELECT 1 over the container's warm Prisma pool (one round trip)",
+    "samples": 25,
+    "min": 90,
+    "p50": 91,
+    "p95": 308,
+    "p99": 844,
+    "max": 844,
+    "bridgeP50": 149
+  }
+}
