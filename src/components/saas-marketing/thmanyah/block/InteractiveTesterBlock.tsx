@@ -275,7 +275,9 @@ export function InteractiveTesterBlock() {
   const taRef = useRef<HTMLTextAreaElement>(null)
 
   /* Decorative caret: measured off the mirror's trailing marker, mirroring
-     the reference's own technique (2px bar, 1.3em tall, min 20px). */
+     the reference's own technique (2px bar, 1.3em tall, min 20px). It is
+     drawn AFTER the copy in reading order, which is a different physical
+     side per direction — see the offset below. */
   const measureCaret = useCallback(() => {
     const m = mirrorRef.current
     const k = markerRef.current
@@ -291,12 +293,15 @@ export function InteractiveTesterBlock() {
        left the caret x; only the height is overridden to 1.3em. */
     void lh
     setCaret({
-      /* the live bar sits its padding + border (8 + 1px) left of the range x */
-      left: kr.left - mr.left - 9,
+      /* The live RTL bar sits 9px LEFT of the range x — a 2px bar with a 7px
+         gap — which in that direction is just AFTER the text. Under LTR the
+         text ends on the other side, so the same gap puts the bar 7px to the
+         RIGHT; keeping −9 there drew it 9px inside the final glyph. */
+      left: kr.left - mr.left + (rtl ? -9 : 7),
       top: kr.top - mr.top - ta.scrollTop,
       height: h,
     })
-  }, [])
+  }, [rtl])
 
   useLayoutEffect(() => {
     measureCaret()

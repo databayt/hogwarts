@@ -5039,17 +5039,32 @@ body:has(.thmanyah-shell) {
   direction: ltr;
 }
 
-/* The hero's highlight bar. `inset: 28px -1px 26px 1px` overhangs the text
-   by 1px at the reading start and pulls in 1px at the end; mirrored, that is
-   the same 1px on the other sides.                                         */
+/* The hero's highlight bar. The base rule overhangs the text by 1px at the
+   reading start and pulls in 1px at the end; mirrored, that is the same 1px
+   on the other sides.
+
+   ONLY the horizontal axis, deliberately. This selector is (0,3,0) and every
+   base `.hero-mark` rule is (0,1,0) — a media query adds no specificity — so
+   an `inset` shorthand here also outranks the phone band's
+   `inset: 15px 0 12px` and the tablet band's top/bottom, at EVERY width. It
+   did: the phone mark came out 13px tall inside a 67px line box, a sliver
+   rather than a highlight, and nothing in a width-only measurement catches
+   it.
+
+   The tablet band needs no rule of its own for the same reason — it sets
+   only `right: -1px` at (0,1,0), which this outranks, and `left: -1px`
+   carries through from here.                                               */
 .thmanyah-shell[dir="ltr"] .hero-mark {
-  inset: 28px 1px 26px -1px;
+  right: 1px;
+  left: -1px;
 }
 
-@media (min-width: 600px) and (max-width: 809.98px) {
+/* The phone's own bar is symmetric (`inset: 15px 0 12px`), so its mirror is
+   too — and it has to be restated, because the rule above outranks it.     */
+@media (max-width: 599.98px) {
   .thmanyah-shell[dir="ltr"] .hero-mark {
-    right: 1px;
-    left: -1px;
+    right: 0;
+    left: 0;
   }
 }
 

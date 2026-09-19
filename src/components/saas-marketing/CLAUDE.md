@@ -359,11 +359,30 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
       Arabic's 762 / 793, mark 488 against 454, and restores the 80px gap.
       Measure a replacement the same way: set `textContent` on the live
       `.hero-words h1` nodes after `document.fonts.ready` and read the boxes.
+    - **Two traps the first pass fell into, both invisible to a width-only
+      measurement.** (1) `.thmanyah-shell[dir="ltr"] .foo` is **(0,3,0)** and
+      every base rule is (0,1,0) — a media query adds NO specificity — so an
+      LTR override written as an `inset` shorthand also beat the phone and
+      tablet bands' top/bottom at every width, and the phone hero mark came
+      out 13px tall in a 67px line box instead of 40. Name only the axis you
+      mean to flip. (2) The Modern ticker normalised `translateX` into
+      `[0, copyWidth]`, which is right only while the flex row overflows the
+      clip to the LEFT (RTL). Under LTR it overflows RIGHT, the range is
+      `[-copyWidth, 0]`, and the old bound sent the first negative frame to
+      `+copyWidth` — the whole track parked outside the clip, ~55s of empty
+      strip at 100px/s. **Neither shows up under the Playwright MCP's pinned
+      `prefers-reduced-motion: reduce`**, which skips the ticker's integration
+      step: verify it with a real `browser_mouse_drag_xy` across
+      `.modern-clip` and read `.modern-track`'s transform, plus how much of
+      the clip the tiles actually cover.
     - **Verified 2026-09-19**: `/ar` geometry matches production
       balqalam.com/ar on every measured box and on `scrollHeight` (11478 at
       1440); `/en` renders 160 text nodes against `/ar`'s 160, no horizontal
       overflow at 320/390/1440, and the only Arabic left on `/en` is the
-      bilingual specimen and the `id="خط-ثمانيـة"` anchor.
+      bilingual specimen and the `id="خط-ثمانيـة"` anchor. Hero mark height
+      at 390 is 40px on both; the ticker wraps seamlessly under a real drag in
+      both directions (clip stays ~1400/1440 covered); the tester's decorative
+      caret sits 7px after the copy on `/en` and −9px on `/ar`.
     - **Open**: `public/og.png` still sets بالقلم in Arabic, so an `/en` share
       card carries an Arabic wordmark — it needs an English twin
       (`public/og-en.png`); see the note in `[lang]/layout.tsx`. The tester's

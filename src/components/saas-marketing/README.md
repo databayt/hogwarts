@@ -20,9 +20,10 @@ Public-facing marketing components for the Hogwarts SaaS platform. Includes the 
 ### Homepage — the thmanyah clone
 
 Since 2026-08-31 the SaaS marketing homepage is a verbatim reproduction of
-**font.thmanyah.com**, ported from the standalone clone at `~/thmanyah`. It is
-Arabic and RTL at every breakpoint on `/ar` and `/en` alike — the reference has
-no English variant.
+**font.thmanyah.com**, ported from the standalone clone at `~/thmanyah`. The
+reference has no English variant, so until 2026-09-19 the clone was Arabic and
+RTL at every breakpoint on `/ar` and `/en` alike; it now follows the route's
+locale in both language and direction.
 
 - **Route:** `src/app/[lang]/(thmanyah)/page.tsx`, plus `licenses/` and
   `licenses-en/` (the homepage footer and FAQ both link to "الترخيص"; both paths
@@ -32,13 +33,26 @@ no English variant.
   SiteFooter / Chatbot would break the mirror. The only piece of that layout
   still wanted — `AccessCheck`'s `?access=denied` toast — is re-mounted on the
   page.
+- **Copy:** `thmanyah/lib/copy.ts` — `COPY.ar` / `COPY.en` for every word on
+  the page, read through `useThmanyahLocale()`. The locale enters the tree once
+  in `HomeTemplate`. The `ar` half is the reference and is byte-for-byte the
+  literals that used to live in the blocks, tatweel counts included, because
+  the Arabic headline and labels are width-tuned against the reference's boxes.
+  `lib/fonts.ts` keeps only what is structural (the CSS family per card, the
+  300→900 ramp, each area's bilingual specimen line).
 - **Styles:** `src/styles/thmanyah-clone.css`, imported globally from the root
   layout beside `zenda-clone.css` / `apple-clone.css`, and scoped to
   `.thmanyah-shell`. The file's own header documents the four deltas from the
   source; the load-bearing one is that the reset selectors use
   `:where(.thmanyah-shell)` so they stay at the reference's zero specificity.
   A plain `.thmanyah-shell textarea` outranks `.tester-ta { font-size: 124px }`
-  and silently shrinks the type tester to 12px.
+  and silently shrinks the type tester to 12px. The LTR mirror is an APPENDED
+  block at the end of the file scoped `.thmanyah-shell[dir="ltr"]`, restating
+  only the declarations that name a physical side — add there rather than
+  rewriting the rules above into logical properties, so `/ar` cannot regress.
+  Mind the specificity: that selector is (0,3,0) against the base rules'
+  (0,1,0), and a media query adds none, so an override must name only the
+  axis it means to flip.
 - **Assets** live at the paths the reference uses — `public/{fonts,images,
 videos,lottie}` — so no CSS or JSX URL had to change. Every `<Image>` in the
   clone is `unoptimized`, matching the source's `images.unoptimized: true`:

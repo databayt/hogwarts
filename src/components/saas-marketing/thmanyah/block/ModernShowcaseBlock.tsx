@@ -284,6 +284,7 @@ function Ticker({
     /* the live ticker sits at translateX(0) under prefers-reduced-motion */
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)")
     const copyWidth = tiles.reduce((a, t) => a + t.w, 0) + tiles.length * GAP
+    const lo = baseDir > 0 ? 0 : -copyWidth
     const tick = (now: number) => {
       const dt = Math.min((now - prev) / 1000, 0.05)
       prev = now
@@ -293,9 +294,17 @@ function Ticker({
         s.v += (target - s.v) * (1 - Math.exp(-dt / 0.6))
         s.x += s.v * dt
       }
-      // wrap so the copies loop seamlessly
-      if (s.x > copyWidth) s.x -= copyWidth
-      if (s.x < 0) s.x += copyWidth
+      /* Wrap so the copies loop seamlessly. The valid range depends on
+         which way the flex row overflows the clip: under RTL the track
+         hangs off to the LEFT, so translateX runs 0 -> +copyWidth and
+         +copyWidth is visually identical to 0; under LTR it hangs off
+         to the RIGHT and the range is -copyWidth -> 0. Normalising to
+         [0, copyWidth] in both — as this did — sent the first negative
+         frame of an LTR ticker to +copyWidth, which parks the whole
+         track outside the clip: ~55 seconds of empty strip at 100px/s
+         before a tile comes back. */
+      if (s.x > lo + copyWidth) s.x -= copyWidth
+      if (s.x < lo) s.x += copyWidth
       if (trackRef.current)
         trackRef.current.style.transform = `translateX(${s.x}px)`
       raf = requestAnimationFrame(tick)
