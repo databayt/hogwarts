@@ -463,9 +463,20 @@ already opens on the phone block — the calendar widget, the next-action banner
 today's classes and the quick-action tiles — and a fifth thing above the fold
 there would be one too many. Same idiom as `QuickActionsSection`'s
 `hidden md:block`. The server render has no viewport, so this is CSS, not a JS
-media query, which does mean `Upcoming` still runs its mount-time work on a
-phone where nothing shows it — the trade every `hidden md:*` section on this
-page already makes.
+media query. Hiding it costs nothing: `Upcoming` fetches nothing (see below).
+
+**The flip card draws literals.** None of the six call sites passes `data`, so
+`Upcoming` falls through to `getDefaultData(role)` — a table of constants near
+the top of `upcoming.tsx`. Every school on the platform sees the same "Storage
+usage at 85%" and "2 active issues" as an admin, the same Ahmed and Sara with
+the same three and two pending assignments as a guardian, the same "Math
+Homework — due Tomorrow" as a student. This is the same class of invented data
+that `f57396f7c` and `84160e7bd` removed from the accountant and the admin's
+attendance register, and it was true of this card before the cut too — it came
+back exactly as it was, which is what "restore the previous dashboard" asked
+for. It is knowingly outstanding, not overlooked. Wiring it is passing real
+`data` down from each role's server file; the prop and the per-role types are
+already there.
 
 `getWeatherData("metric", locale)` is called again in all six server files, each
 in its own try/catch that logs and falls through to `null`: the `Weather` card

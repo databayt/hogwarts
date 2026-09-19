@@ -186,10 +186,18 @@ Every role renders these six sections in order. Section 2 is title-less.
 | 5   | Invoice History    | `InvoiceHistorySection`    |
 | 6   | Financial Overview | `FinancialOverviewSection` |
 
-The student and teacher dashboards are the exception. Both hide sections 1 and
-2 and move the chart section up to sit directly under Quick Actions, so their
-order reads Quick Actions, charts, Resource Usage, Invoice History. Their
-server wrappers skip the matching fetches rather than throwing the data away.
+Section 1 is desktop-only, and section 2 is drawn by nobody.
+
+Since 2026-09-19 the hero is one shared component, `DashboardHero`
+(`hero-section.tsx`), rendered by all six roles and gated `hidden md:flex`.
+Below `md` the page opens on the phone block instead — the calendar widget, the
+next-action banner, today's classes and the quick-action tiles — so a phone
+never sees section 1. Section 2, Quick Look, stays hidden everywhere and its
+fetch (`getQuickLookData`) is still not made; `getWeatherData` is.
+
+Every role also moves the chart section up to sit directly under Quick Actions,
+so the drawn order reads hero, Quick Actions, charts, Resource Usage, Invoice
+History.
 
 ## Loading placeholder
 
@@ -296,9 +304,14 @@ Showcase components (`card-*.tsx`, `chart-*.tsx`, `stat-*.tsx`, `dashboard-showc
 ## Upcoming flip card
 
 Role-specific 3D flip card. Front shows primary content; back shows secondary.
-The student and teacher dashboards no longer render it — see the section-order
-note above — so the rows below describe what each of the others shows, and what
-those two would show again if section 1 were restored.
+All six roles render it again from `md` up (see the section-order note above).
+
+**Its numbers are literals.** No call site passes `data`, so the card falls
+through to `getDefaultData(role)` in `upcoming.tsx` — every school sees the same
+"Storage usage at 85%", the same two children named Ahmed and Sara, the same
+"Math Homework — due Tomorrow". The columns below are the shape of each role's
+card, not a reading of any school. The `data` prop and the per-role types exist;
+wiring it is passing real rows down from each role's server file.
 
 | Role       | Primary                            | Secondary                       |
 | ---------- | ---------------------------------- | ------------------------------- |

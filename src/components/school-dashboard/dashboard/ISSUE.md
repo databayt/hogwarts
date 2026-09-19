@@ -85,6 +85,16 @@
   usage table, invoice table — because their dashboards have not been measured
   and a placeholder in the wrong order costs more than one left out. Measure
   those three and add their shapes (2026-09-10).
+- **The Upcoming flip card draws literals for every school.** It is back on all
+  six dashboards from `md` up (2026-09-19, restoring what `f57396f7c` cut), and
+  no call site passes it `data` — so it renders `getDefaultData(role)` from
+  `upcoming.tsx`: "Storage usage at 85%" and "2 active issues" for every admin,
+  Ahmed and Sara for every guardian, "Math Homework — due Tomorrow" for every
+  student. Same class as the accountant's invented revenue and the admin's
+  invented attendance register, both removed 2026-09-12; this one was restored
+  deliberately and knowingly, because the card is what was asked for. The prop
+  and the per-role types are already defined — wiring it is passing real rows
+  from each role's server file.
 - Charts use some hardcoded sample data in bar-graph component
 - No data export from dashboard views
 - Period switcher does not persist selection across navigations

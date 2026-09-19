@@ -23,8 +23,13 @@ import type { WeatherData } from "./weather-actions"
  * `hidden md:block`; don't reach for a JS media query, the server render has
  * no width.
  *
- * `Upcoming` still runs its mount-time work while the wrapper is CSS-hidden,
- * which is the trade every `hidden md:*` section on this page already makes.
+ * Hiding costs nothing here: `Upcoming` takes no data prop from any of the six
+ * call sites and fetches nothing — it renders `getDefaultData(role)`, a table
+ * of literals in `upcoming.tsx`. Which is the other thing to know about this
+ * component: every school sees the same "Storage usage at 85%", the same
+ * "2 active issues", the same Ahmed and Sara. It is the shape of a card, not a
+ * reading of the school. Wiring it means passing real `data` from each role's
+ * server file — the prop already exists.
  */
 export function DashboardHero({
   role,
