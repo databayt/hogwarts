@@ -29,6 +29,13 @@ canonical for code-side context (read by the `/report` agent)._
 
 ## Recently Landed
 
+- [x] `GET/POST /api/mobile/library/*` — books, book detail, borrow, the
+      reader's loans and return (2026-09-19). The Android `feature/library`
+      module has been calling these paths since it was written; every one of
+      them 404'd in production until now, so the block could not show a single
+      book. Verified end to end against the demo school, including the borrow
+      transaction and its three 409 guards.
+
 - [x] `GET /api/mobile/search` — the Spotlight palette's entity search over
       HTTP, so the Android app can reach the same 15 kinds the web reaches
       through its server action (2026-09-19). Follow-up: the app's search

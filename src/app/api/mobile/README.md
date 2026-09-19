@@ -259,6 +259,33 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 | ------ | ---------------------- | ------------------------- |
 | GET    | `/api/mobile/subjects` | School's adopted subjects |
 
+### Library (new)
+
+| Method | Path                                          | Description                                  |
+| ------ | --------------------------------------------- | -------------------------------------------- |
+| GET    | `/api/mobile/library/books`                   | The school's shelves, newest first            |
+| GET    | `/api/mobile/library/books/:id`               | One book                                      |
+| POST   | `/api/mobile/library/books/:id/borrow`        | Borrow a copy (201)                           |
+| GET    | `/api/mobile/library/my-borrowings`           | The reader's own loans, open ones first       |
+| POST   | `/api/mobile/library/borrowings/:id/return`   | Give a book back                              |
+
+The same `SchoolBook` / `BorrowRecord` tables the web library reads through
+server actions. `books` takes `category` (matched against the book's genre,
+which is what the web's shelves are grouped by), `search` (title or author),
+`page` and `limit` (default 20, capped at 100).
+
+Borrowing enforces `actions.ts#borrowBook`'s rules in the same order and
+answers 409 with a reason: `borrow_limit_reached` (with the `limit`),
+`no_copies_available`, `already_borrowed`. The record and the copy count move
+in one transaction. Returning answers 409 `already_returned`, and a loan that
+is not the caller's own reads as 404.
+
+Two fields the Android DTO asks for do not exist in the schema:
+`shelf_location` and `section_name` are sent as empty strings rather than
+invented, and `fine` as null — the schema records no fines, and 0 would read
+as "nothing owed" when the truth is "not tracked". **There is no renew**: the
+web has none either, so a reader who wants longer returns and borrows again.
+
 ### Search (new)
 
 | Method | Path                 | Description                                  |
