@@ -292,8 +292,16 @@ const AR: ThmanyahCopy = {
 const EN: ThmanyahCopy = {
   hero: {
     eyebrow: "The balqalam platform",
-    words: ["One", "system", "runs", "your", "school"],
-    highlight: "and its teaching",
+    /* Four items plus the marked pair, which wraps to TWO lines at 92px in
+       the 840px box exactly as the Arabic does — 750 / 719 against Arabic's
+       762 / 793, mark 488 against 454. A literal rendering of the Arabic
+       ("One system runs your school and its teaching") measures three lines
+       there, and the third pushed the hero's CTA past its own 60px bottom
+       padding on a 640px-tall viewport, where the Arabic still clears it by
+       80px. "The school day" is the English idiom for what the Arabic names
+       twice, and it is the vocabulary the stats and FAQ already use. */
+    words: ["One", "system", "runs", "your"],
+    highlight: "school day",
     cta: "Try the platform now",
   },
   answer: {

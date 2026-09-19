@@ -349,6 +349,16 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
       scripts (`AREAS[].lines.{ar,en}` in `fonts.ts`); the route's own script
       leads. `Surface` in `fonts.ts` is now structure only (`id`/`css`/
       `titleSs01`) — its words moved to `copy.surfaces.cards`.
+    - **The English headline is length-fitted, like the Arabic one.** A
+      literal rendering ("One system runs your school and its teaching") set
+      to THREE lines in the 840px box at 92px, and the third line pushed the
+      hero's CTA past its own 60px bottom padding on a 640px-tall viewport
+      where the Arabic still cleared it by 80px. It is
+      **"One system runs your school day"** — four items plus the marked
+      "school day" — which wraps to two lines at 750 / 719 against the
+      Arabic's 762 / 793, mark 488 against 454, and restores the 80px gap.
+      Measure a replacement the same way: set `textContent` on the live
+      `.hero-words h1` nodes after `document.fonts.ready` and read the boxes.
     - **Verified 2026-09-19**: `/ar` geometry matches production
       balqalam.com/ar on every measured box and on `scrollHeight` (11478 at
       1440); `/en` renders 160 text nodes against `/ar`'s 160, no horizontal
