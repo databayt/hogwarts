@@ -1,5 +1,9 @@
 // Service worker — offline shell, static-asset cache, saved pages, push.
 //
+// v8 (2026-09-19): saving a page no longer delays showing it. v7 awaited
+//   `cache.put` before answering, which resolves only after the last byte —
+//   so every page and every client-side navigation reached the browser
+//   buffered instead of streamed (see pageFirst).
 // v7 (2026-09-13): a saved copy is served with WHY — the network failed or
 //   was slow — so the strip can say "offline" or "slow connection". RSC
 //   payloads are keyed with `_rsc` (see flightKey). The app no longer runs
@@ -33,7 +37,7 @@
 // behaviour.
 //
 // Rule: kun `.claude/rules/next-16/sw-no-authenticated-cache.md`.
-const VERSION = "v7"
+const VERSION = "v8"
 const STATIC_CACHE_NAME = `hogwarts-static-${VERSION}`
 // The offline pages, the files they need to render and the install
 // essentials. Never trimmed: the fallback must survive a long session and a
@@ -358,9 +362,25 @@ async function pageFirst(event, request, { cachePrefix, key, expect }) {
         // Only the current person's pages, and only when the proxy confirmed
         // this very response is theirs.
         if (current && response.headers.get(SESSION_HEADER) === current) {
-          const cache = await caches.open(cachePrefix + current)
-          await cache.put(key, response.clone())
-          event.waitUntil(trimCache(cache, PAGES_CACHE_CAP))
+          // Save a copy WITHOUT holding the page back for it. `cache.put`
+          // settles only when the whole body has arrived, so awaiting it here
+          // (v7) turned every streamed page into a buffered one: the browser
+          // got its first byte after the last one had been downloaded and
+          // written to disk. Measured on production 2026-09-19: the dashboard
+          // document waited 344 ms without this worker and 1078 ms with it,
+          // and a page that streams for longer than SLOW_NETWORK_MS was
+          // replaced by its saved copy although the server had answered.
+          const copy = response.clone()
+          event.waitUntil(
+            caches
+              .open(cachePrefix + current)
+              .then((cache) =>
+                cache
+                  .put(key, copy)
+                  .then(() => trimCache(cache, PAGES_CACHE_CAP))
+              )
+              .catch(() => {})
+          )
         }
       }
     }
