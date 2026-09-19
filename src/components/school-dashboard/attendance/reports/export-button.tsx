@@ -28,9 +28,6 @@ import {
   getAttendanceStats,
 } from "@/components/school-dashboard/attendance/actions"
 
-import { downloadExcel, generateAttendanceExcel } from "./excel-generator"
-import { downloadPDF, generateAttendancePDF } from "./pdf-generator"
-
 type Filters = {
   classId?: string
   studentId?: string
@@ -129,6 +126,10 @@ export function AttendanceReportExportButton({
           ? (statsResult as any)
           : null
 
+      // @react-pdf/renderer (~460 KB gzip) loads when a PDF is asked for, not
+      // with the reports page — performance/README.md, "JavaScript".
+      const { downloadPDF, generateAttendancePDF } =
+        await import("./pdf-generator")
       const blob = await generateAttendancePDF({
         records: records as any,
         stats,
@@ -178,6 +179,9 @@ export function AttendanceReportExportButton({
           ? (statsResult as any)
           : null
 
+      // xlsx (~135 KB gzip): same rule.
+      const { downloadExcel, generateAttendanceExcel } =
+        await import("./excel-generator")
       const blob = generateAttendanceExcel({
         records: records as any,
         stats,

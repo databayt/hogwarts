@@ -4,7 +4,7 @@
 import Image from "next/image"
 
 import { asset } from "@/lib/asset-url"
-import { Icons } from "@/components/atom/icons"
+import { Icons } from "@/components/atom/brand-icons"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 const paymentMethods = [
