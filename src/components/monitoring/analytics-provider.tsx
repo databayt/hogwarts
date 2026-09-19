@@ -4,26 +4,31 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect } from "react"
 import { usePathname } from "next/navigation"
-import posthog from "posthog-js"
+// PostHog is ~74 KB gzip and this module is in the initial JavaScript of
+// every route, login included. A static import made every visitor download
+// and parse it before the page could hydrate — even in production, where no
+// NEXT_PUBLIC_POSTHOG_KEY was configured and the library never ran
+// (measured 2026-09-19: on 490 of 493 routes). It is now fetched only when a
+// key exists, and only once the browser is idle.
+//
+// UTM params (utm_source/medium/campaign — what kun's social pipeline stamps on
+// every outbound link) are still captured on the first $pageview: init reads
+// the landing URL, and idle fires within 3 s.
+const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY
 
-// Module scope, not an effect: init must run once, before any capture, and
-// this file is already a client module mounted in the root layout. UTM params
-// (utm_source/medium/campaign — what kun's social pipeline stamps on every
-// outbound link) are captured automatically on each $pageview, so social
-// attribution starts the moment NEXT_PUBLIC_POSTHOG_KEY exists in the env.
-if (
-  typeof window !== "undefined" &&
-  process.env.NEXT_PUBLIC_POSTHOG_KEY &&
-  !posthog.__loaded
-) {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-    api_host: "https://eu.i.posthog.com",
-    // history-change pageviews — App Router SPA navigations count too.
-    defaults: "2025-05-24",
+function startPostHog(): void {
+  if (!POSTHOG_KEY) return
+  void import("posthog-js").then(({ default: posthog }) => {
+    if (posthog.__loaded) return
+    posthog.init(POSTHOG_KEY, {
+      api_host: "https://eu.i.posthog.com",
+      // history-change pageviews — App Router SPA navigations count too.
+      defaults: "2025-05-24",
+    })
+    // use-form.tsx carries guarded window.posthog.capture calls (form_step_view,
+    // form_step_complete, …) that have waited for exactly this bridge.
+    ;(window as unknown as { posthog?: typeof posthog }).posthog = posthog
   })
-  // use-form.tsx carries guarded window.posthog.capture calls (form_step_view,
-  // form_step_complete, …) that have waited for exactly this bridge.
-  ;(window as unknown as { posthog?: typeof posthog }).posthog = posthog
 }
 
 type WindowWithVa = Window & {
@@ -39,6 +44,17 @@ type WindowWithVa = Window & {
  */
 export function AnalyticsProvider() {
   const pathname = usePathname()
+
+  useEffect(() => {
+    if (!POSTHOG_KEY) return
+    const idle = (
+      window as Window & {
+        requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number
+      }
+    ).requestIdleCallback
+    if (idle) idle(startPostHog, { timeout: 3000 })
+    else setTimeout(startPostHog, 2000)
+  }, [])
 
   useEffect(() => {
     const va = (window as WindowWithVa).va

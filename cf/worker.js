@@ -97,9 +97,67 @@ function freezable(response) {
   return !!maxAge && Number(maxAge[1]) > 0
 }
 
+// ---- Real-user metrics (src/components/monitoring/web-vitals.tsx) -----------
+// The page's beacon is answered HERE and written to Workers Analytics Engine:
+// it never reaches the half-vCPU container and never touches Neon. One data
+// point per metric; the tenant is the index so a small school's samples are
+// not sampled away behind a large one's. Nothing identifying is stored — the
+// page sends a route PATTERN and coarse device facts, and what is added here
+// (role cookie, Cloudflare's country/colo) is no finer than that.
+// Without the RUM binding (local, or a deploy that dropped it) this is a no-op.
+const RUM_PATH = "/api/rum"
+const RUM_METRICS = new Set(["TTFB", "FCP", "LCP", "INP", "CLS", "FID", "NAV", "SRV"])
+const RUM_ROLES = new Set([
+  "DEVELOPER", "ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "ACCOUNTANT", "STAFF", "USER",
+])
+const clip = (v, n = 64) => (typeof v === "string" ? v.slice(0, n) : "")
+
+function tenantOf(hostname) {
+  const m = /^([a-z0-9-]+)\.(?:balqalam\.com|databayt\.org)$/.exec(hostname)
+  return m && m[1] !== "www" && m[1] !== "ed" ? m[1] : "_main"
+}
+
+async function collectRum(request, env) {
+  const accepted = new Response(null, { status: 204, headers: { "cache-control": "no-store" } })
+  if (!env.RUM) return accepted
+  try {
+    const raw = await request.text()
+    if (raw.length > 4096) return accepted
+    const body = JSON.parse(raw)
+    if (!body || !Array.isArray(body.samples)) return accepted
+    const url = new URL(request.url)
+    const role = /(?:^|;\s*)authjs\.role=([A-Z]+)/.exec(request.headers.get("cookie") || "")?.[1]
+    const cf = request.cf || {}
+    for (const s of body.samples.slice(0, 12)) {
+      if (!s || !RUM_METRICS.has(s.n) || !Number.isFinite(s.v) || s.v < 0 || s.v > 600000) continue
+      env.RUM.writeDataPoint({
+        indexes: [tenantOf(url.hostname)],
+        blobs: [
+          s.n, // blob1  metric
+          clip(body.route, 96), // blob2  route pattern
+          RUM_ROLES.has(role) ? role : "anon", // blob3  role
+          clip(body.locale, 2), // blob4  locale
+          clip(body.device, 8), // blob5  phone | tablet | desktop
+          clip(body.net, 8), // blob6  effective connection type
+          clip(s.t, 24), // blob7  navigation type
+          clip(s.r, 20), // blob8  good | needs-improvement | poor
+          clip(cf.country, 2), // blob9  country
+          clip(cf.colo, 4), // blob10 Cloudflare location that served them
+          body.sw ? "sw" : "no-sw", // blob11 service worker in control
+        ],
+        doubles: [s.v, Number(body.mem) || 0, Number(body.cpu) || 0],
+      })
+    }
+  } catch {
+    // A malformed beacon is dropped; measuring never fails a request.
+  }
+  return accepted
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
+    if (request.method === "POST" && url.pathname === RUM_PATH) return collectRum(request, env)
     const cacheable =
       request.method === "GET" &&
       EDGE_CACHEABLE.some((re) => re.test(url.pathname))

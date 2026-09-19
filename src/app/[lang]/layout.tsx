@@ -19,6 +19,7 @@ import {
 } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AnalyticsProvider } from "@/components/monitoring/analytics-provider"
+import { WebVitals } from "@/components/monitoring/web-vitals"
 import { DirectionProvider } from "@/components/providers/direction-provider"
 import { ServiceWorkerProvider } from "@/components/providers/service-worker-provider"
 import { UserThemeProvider } from "@/components/theme/theme-provider"
@@ -157,6 +158,7 @@ export default async function LocaleLayout({
                 {children}
                 <Toaster />
                 <AnalyticsProvider />
+                <WebVitals />
                 <ServiceWorkerProvider />
               </UserThemeProvider>
             </ThemeProvider>

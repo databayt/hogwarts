@@ -23,6 +23,11 @@
     "bindings": [{ "name": "HOGWARTS", "class_name": "HogwartsContainer" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["HogwartsContainer"] }],
+  // Real-user metrics. cf/worker.js answers POST /api/rum itself and writes one
+  // Analytics Engine data point per Web Vital — the beacon never reaches the
+  // container or Neon. Read them with `pnpm perf:rum`. The Worker no-ops
+  // without this binding, so it is safe to remove.
+  "analytics_engine_datasets": [{ "binding": "RUM", "dataset": "hogwarts_rum" }],
   // Routes capture a hostname only once its DNS record is PROXIED (orange cloud):
   // grey-clouded records still resolve straight to Vercel. Cutover = toggle the
   // cloud per record (demo first, then apex/www, then the `*` record); rollback =
