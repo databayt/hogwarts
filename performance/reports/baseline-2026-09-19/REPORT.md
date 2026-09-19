@@ -212,29 +212,104 @@ Build `1789709863481` · measured from **RW** through Cloudflare **JNB**. Timing
 
 | route | files | JS | CSS | verdict | heavy libraries loaded before hydration |
 | --- | --- | --- | --- | --- | --- |
-| /announcements | 64 | 1624.3 KB | 90.2 KB | FAIL | cmdk, country-state-city, date-fns, framer-motion, libphonenumber, next-auth-client, posthog, react-day-picker, react-pdf/pdfkit, shiki-grammars, socket.io, sonner, tanstack-table, xlsx, zod |
-| /finance | 59 | 1569.8 KB | 90.2 KB | FAIL | cmdk, date-fns, framer-motion, next-auth-client, posthog, react-pdf/pdfkit, recharts, shiki-grammars, socket.io, sonner, tanstack-table, xlsx, zod |
-| /students | 60 | 1555.3 KB | 90.2 KB | FAIL | cmdk, date-fns, framer-motion, lottie, next-auth-client, posthog, react-pdf/pdfkit, shiki-grammars, socket.io, sonner, tanstack-table, xlsx, zod |
-| /teachers | 59 | 1545.7 KB | 90.2 KB | FAIL | cmdk, date-fns, framer-motion, lottie, next-auth-client, posthog, react-pdf/pdfkit, shiki-grammars, socket.io, sonner, tanstack-table, xlsx, zod |
-| /grades | 57 | 1462.2 KB | 90.2 KB | FAIL | cmdk, date-fns, framer-motion, next-auth-client, posthog, react-pdf/pdfkit, shiki-grammars, socket.io, sonner, tanstack-table, xlsx, zod |
-| /classrooms | 57 | 1459 KB | 90.2 KB | FAIL | cmdk, date-fns, framer-motion, next-auth-client, posthog, react-pdf/pdfkit, shiki-grammars, socket.io, sonner, tanstack-table, xlsx, zod |
-| /attendance | 56 | 1458.5 KB | 90.2 KB | FAIL | cmdk, date-fns, framer-motion, next-auth-client, posthog, react-pdf/pdfkit, shiki-grammars, socket.io, sonner, tanstack-table, xlsx, zod |
-| /exams | 55 | 1445.4 KB | 90.2 KB | FAIL | cmdk, date-fns, framer-motion, next-auth-client, posthog, react-pdf/pdfkit, shiki-grammars, socket.io, sonner, tanstack-table, xlsx, zod |
-| /dashboard | 49 | 750.3 KB | 90.2 KB | FAIL | date-fns, framer-motion, next-auth-client, posthog, recharts, shiki-grammars, socket.io, sonner, zod |
-| /timetable | 44 | 584.4 KB | 90.8 KB | WARN | cmdk, date-fns, framer-motion, next-auth-client, posthog, shiki-grammars, socket.io, sonner, zod |
-| /library | 41 | 552.7 KB | 90.2 KB | WARN | date-fns, framer-motion, next-auth-client, posthog, shiki-grammars, socket.io, sonner, zod |
-| /my-assignments | 40 | 549.4 KB | 90.2 KB | WARN | date-fns, framer-motion, next-auth-client, posthog, shiki-grammars, socket.io, sonner, zod |
-| /notifications | 41 | 549 KB | 90.2 KB | WARN | date-fns, framer-motion, next-auth-client, posthog, shiki-grammars, socket.io, sonner, zod |
-| /parent | 39 | 547 KB | 90.2 KB | WARN | date-fns, framer-motion, next-auth-client, posthog, shiki-grammars, socket.io, sonner, zod |
-| / | 33 | 538.6 KB | 168.4 KB | WARN | gsap, lottie, next-auth-client, posthog, shiki-grammars, sonner, swiper |
-| /messages | 31 | 435 KB | 90.2 KB | WARN | next-auth-client, posthog, shiki-grammars, socket.io, sonner, zod |
-| /login | 26 | 378.8 KB | 90.2 KB | WARN | next-auth-client, posthog, prisma-client-browser, shiki-grammars, sonner, zod |
+| /announcements | 64 | 1624.3 KB | 90.2 KB | FAIL | country-state-city, framer-motion, libphonenumber, posthog, react-pdf/pdfkit, socket.io, xlsx |
+| /finance | 59 | 1569.8 KB | 90.2 KB | FAIL | framer-motion, posthog, react-pdf/pdfkit, recharts, socket.io, xlsx |
+| /students | 60 | 1555.3 KB | 90.2 KB | FAIL | framer-motion, lottie, posthog, react-pdf/pdfkit, socket.io, xlsx |
+| /teachers | 59 | 1545.7 KB | 90.2 KB | FAIL | framer-motion, lottie, posthog, react-pdf/pdfkit, socket.io, xlsx |
+| /grades | 57 | 1462.2 KB | 90.2 KB | FAIL | framer-motion, posthog, react-pdf/pdfkit, socket.io, xlsx |
+| /classrooms | 57 | 1459 KB | 90.2 KB | FAIL | framer-motion, posthog, react-pdf/pdfkit, socket.io, xlsx |
+| /attendance | 56 | 1458.5 KB | 90.2 KB | FAIL | framer-motion, posthog, react-pdf/pdfkit, socket.io, xlsx |
+| /exams | 55 | 1445.4 KB | 90.2 KB | FAIL | framer-motion, posthog, react-pdf/pdfkit, socket.io, xlsx |
+| /dashboard | 49 | 750.3 KB | 90.2 KB | FAIL | framer-motion, posthog, recharts, socket.io |
+| /timetable | 44 | 584.4 KB | 90.8 KB | WARN | framer-motion, posthog, socket.io |
+| /library | 41 | 552.7 KB | 90.2 KB | WARN | framer-motion, posthog, socket.io |
+| /my-assignments | 40 | 549.4 KB | 90.2 KB | WARN | framer-motion, posthog, socket.io |
+| /notifications | 41 | 549 KB | 90.2 KB | WARN | framer-motion, posthog, socket.io |
+| /parent | 39 | 547 KB | 90.2 KB | WARN | framer-motion, posthog, socket.io |
+| / | 33 | 538.6 KB | 168.4 KB | WARN | gsap, lottie, posthog, swiper |
+| /messages | 31 | 435 KB | 90.2 KB | WARN | posthog, socket.io |
+| /login | 26 | 378.8 KB | 90.2 KB | WARN | posthog, prisma-client-browser |
 
 ### Libraries in initial JS that serve a click, not a render
 
 | library | routes | examples |
 | --- | --- | --- |
-| react-pdf/pdfkit | 48 | /announcements /admission /live/dashboard /finance /students/archived /students |
+| posthog | 490 | /announcements /admission /live/dashboard /finance /students/archived /students |
+| react-pdf/pdfkit | 47 | /announcements /admission /live/dashboard /finance /students/archived /students |
 | xlsx | 47 | /announcements /admission /live/dashboard /finance /students/archived /students |
 | mermaid | 1 | /sales |
 | prisma-client-browser | 10 | /staff /exams/qbank /exams/generate/templates /dashboard/settings /compliance /compliance |
+
+## Against the baseline (baseline-2026-09-19)
+
+| metric | baseline | now | change |  |
+| --- | --- | --- | --- | --- |
+| /dashboard initial JS | 681.2 KB | 750.3 KB | +10% | REGRESSION |
+| /timetable initial JS | 515.3 KB | 584.4 KB | +13% | REGRESSION |
+| /library initial JS | 483.6 KB | 552.7 KB | +14% | REGRESSION |
+| /my-assignments initial JS | 480.3 KB | 549.4 KB | +14% | REGRESSION |
+| /notifications initial JS | 479.9 KB | 549 KB | +14% | REGRESSION |
+| / initial JS | 470.7 KB | 538.6 KB | +14% | REGRESSION |
+| /parent initial JS | 477.9 KB | 547 KB | +14% | REGRESSION |
+| /messages initial JS | 365.8 KB | 435 KB | +19% | REGRESSION |
+| /login initial JS | 309.8 KB | 378.8 KB | +22% | REGRESSION |
+| /announcements initial JS | 753.5 KB | 1624.3 KB | +116% | REGRESSION |
+| /finance initial JS | 698.8 KB | 1569.8 KB | +125% | REGRESSION |
+| /students initial JS | 685.3 KB | 1555.3 KB | +127% | REGRESSION |
+| /teachers initial JS | 674.9 KB | 1545.7 KB | +129% | REGRESSION |
+| /grades initial JS | 592 KB | 1462.2 KB | +147% | REGRESSION |
+| /classrooms initial JS | 588.9 KB | 1459 KB | +148% | REGRESSION |
+| /attendance initial JS | 587.6 KB | 1458.5 KB | +148% | REGRESSION |
+| /exams initial JS | 574.5 KB | 1445.4 KB | +152% | REGRESSION |
+
+## Regressions
+- /dashboard initial JS (gzip KB): 681.2 → 750.3 (+10%)
+- /dashboard: posthog entered the initial JS
+- /attendance initial JS (gzip KB): 587.6 → 1458.5 (+148%)
+- /attendance: posthog entered the initial JS
+- /attendance: react-pdf/pdfkit entered the initial JS
+- /attendance: xlsx entered the initial JS
+- /students initial JS (gzip KB): 685.3 → 1555.3 (+127%)
+- /students: posthog entered the initial JS
+- /students: react-pdf/pdfkit entered the initial JS
+- /students: xlsx entered the initial JS
+- /teachers initial JS (gzip KB): 674.9 → 1545.7 (+129%)
+- /teachers: posthog entered the initial JS
+- /teachers: react-pdf/pdfkit entered the initial JS
+- /teachers: xlsx entered the initial JS
+- /grades initial JS (gzip KB): 592 → 1462.2 (+147%)
+- /grades: posthog entered the initial JS
+- /grades: react-pdf/pdfkit entered the initial JS
+- /grades: xlsx entered the initial JS
+- /finance initial JS (gzip KB): 698.8 → 1569.8 (+125%)
+- /finance: posthog entered the initial JS
+- /finance: react-pdf/pdfkit entered the initial JS
+- /finance: xlsx entered the initial JS
+- /announcements initial JS (gzip KB): 753.5 → 1624.3 (+116%)
+- /announcements: posthog entered the initial JS
+- /announcements: react-pdf/pdfkit entered the initial JS
+- /announcements: xlsx entered the initial JS
+- /timetable initial JS (gzip KB): 515.3 → 584.4 (+13%)
+- /timetable: posthog entered the initial JS
+- /messages initial JS (gzip KB): 365.8 → 435 (+19%)
+- /messages: posthog entered the initial JS
+- /notifications initial JS (gzip KB): 479.9 → 549 (+14%)
+- /notifications: posthog entered the initial JS
+- /library initial JS (gzip KB): 483.6 → 552.7 (+14%)
+- /library: posthog entered the initial JS
+- /classrooms initial JS (gzip KB): 588.9 → 1459 (+148%)
+- /classrooms: posthog entered the initial JS
+- /classrooms: react-pdf/pdfkit entered the initial JS
+- /classrooms: xlsx entered the initial JS
+- /exams initial JS (gzip KB): 574.5 → 1445.4 (+152%)
+- /exams: posthog entered the initial JS
+- /exams: react-pdf/pdfkit entered the initial JS
+- /exams: xlsx entered the initial JS
+- /parent initial JS (gzip KB): 477.9 → 547 (+14%)
+- /parent: posthog entered the initial JS
+- /my-assignments initial JS (gzip KB): 480.3 → 549.4 (+14%)
+- /my-assignments: posthog entered the initial JS
+- / initial JS (gzip KB): 470.7 → 538.6 (+14%)
+- /: posthog entered the initial JS
+- /login initial JS (gzip KB): 309.8 → 378.8 (+22%)
+- /login: posthog entered the initial JS

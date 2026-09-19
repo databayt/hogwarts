@@ -9,6 +9,9 @@
  *   node performance/scripts/report.mjs --run performance/reports/latest
  *   node performance/scripts/report.mjs --run <dir> --check         # exit 1 on a regression or a banned library
  *   node performance/scripts/report.mjs --run <dir> --save-baseline # promote this run to performance/baseline.json
+ *   node performance/scripts/report.mjs --run <dir> --save-static   # promote only its bundle numbers (a build, no
+ *                                                                   # production run): the gate then guards the new
+ *                                                                   # bundles while the production timings stay as measured
  */
 import fs from "node:fs"
 import path from "node:path"
@@ -18,6 +21,7 @@ import { arg, fmtKB, fmtMs, labRoot, mdTable, median, readJson } from "./lib.mjs
 const runDir = path.resolve(arg("run") || path.join(labRoot, "reports/latest"))
 const check = arg("check") === "true"
 const saveBaseline = arg("save-baseline") === "true"
+const saveStatic = arg("save-static") === "true"
 const budgets = readJson(path.join(labRoot, "config/budgets.json"))
 const baselineFile = path.join(labRoot, "baseline.json")
 const baseline = fs.existsSync(baselineFile) ? readJson(baselineFile) : null
@@ -213,6 +217,12 @@ fs.writeFileSync(path.join(runDir, "summary.json"), JSON.stringify(summary, null
 if (saveBaseline) {
   fs.writeFileSync(baselineFile, JSON.stringify(summary, null, 2) + "\n")
   console.log(`baseline ← ${summary.run}`)
+} else if (saveStatic) {
+  if (!baseline) throw new Error("no performance/baseline.json to update — use --save-baseline first")
+  if (!Object.keys(summary.static).length) throw new Error("this run has no bundle.json — run `pnpm perf:build` into it first")
+  const next = { ...baseline, static: summary.static, staticFrom: { run: summary.run, buildId: summary.buildId, at: summary.generatedAt } }
+  fs.writeFileSync(baselineFile, JSON.stringify(next, null, 2) + "\n")
+  console.log(`baseline.static ← ${summary.run} (build ${summary.buildId}); production timings unchanged`)
 }
 
 // ---- markdown ------------------------------------------------------------------------

@@ -1,0 +1,447 @@
+{
+  "generatedAt": "2026-09-19T11:10:21.237Z",
+  "run": "after-2026-09-19",
+  "buildId": "1789801682856",
+  "vantage": {
+    "colo": "JNB",
+    "country": "RW"
+  },
+  "static": {
+    "/dashboard": {
+      "jsFiles": 48,
+      "initialJsGzipKB": 681.2,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "recharts",
+        "socket.io"
+      ]
+    },
+    "/attendance": {
+      "jsFiles": 50,
+      "initialJsGzipKB": 587.6,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "socket.io"
+      ]
+    },
+    "/students": {
+      "jsFiles": 54,
+      "initialJsGzipKB": 685.3,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "lottie",
+        "socket.io"
+      ]
+    },
+    "/teachers": {
+      "jsFiles": 52,
+      "initialJsGzipKB": 674.9,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "lottie",
+        "socket.io"
+      ]
+    },
+    "/grades": {
+      "jsFiles": 51,
+      "initialJsGzipKB": 592,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "socket.io"
+      ]
+    },
+    "/finance": {
+      "jsFiles": 53,
+      "initialJsGzipKB": 698.8,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "recharts",
+        "socket.io"
+      ]
+    },
+    "/announcements": {
+      "jsFiles": 57,
+      "initialJsGzipKB": 753.5,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "country-state-city",
+        "framer-motion",
+        "libphonenumber",
+        "socket.io"
+      ]
+    },
+    "/timetable": {
+      "jsFiles": 43,
+      "initialJsGzipKB": 515.3,
+      "initialCssGzipKB": 90.8,
+      "libs": [
+        "framer-motion",
+        "socket.io"
+      ]
+    },
+    "/messages": {
+      "jsFiles": 30,
+      "initialJsGzipKB": 365.8,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "socket.io"
+      ]
+    },
+    "/notifications": {
+      "jsFiles": 40,
+      "initialJsGzipKB": 479.9,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "socket.io"
+      ]
+    },
+    "/library": {
+      "jsFiles": 40,
+      "initialJsGzipKB": 483.6,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "socket.io"
+      ]
+    },
+    "/classrooms": {
+      "jsFiles": 51,
+      "initialJsGzipKB": 588.9,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "socket.io"
+      ]
+    },
+    "/exams": {
+      "jsFiles": 48,
+      "initialJsGzipKB": 574.5,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "socket.io"
+      ]
+    },
+    "/parent": {
+      "jsFiles": 38,
+      "initialJsGzipKB": 477.9,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "socket.io"
+      ]
+    },
+    "/my-assignments": {
+      "jsFiles": 39,
+      "initialJsGzipKB": 480.3,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "framer-motion",
+        "socket.io"
+      ]
+    },
+    "/": {
+      "jsFiles": 33,
+      "initialJsGzipKB": 470.7,
+      "initialCssGzipKB": 168.4,
+      "libs": [
+        "gsap",
+        "lottie",
+        "swiper"
+      ]
+    },
+    "/login": {
+      "jsFiles": 25,
+      "initialJsGzipKB": 309.8,
+      "initialCssGzipKB": 90.2,
+      "libs": [
+        "prisma-client-browser"
+      ]
+    }
+  },
+  "pages": {
+    "none-local": {
+      "admin /dashboard cold": {
+        "runs": 1,
+        "ttfbMs": 22,
+        "docWaitMs": 21,
+        "fcpMs": 448,
+        "lcpMs": 1420,
+        "cls": 0.043,
+        "tbtMs": 0,
+        "requests": 157,
+        "networkRequests": 126,
+        "transferKB": 1761.4,
+        "htmlTransferKB": 299.6,
+        "htmlDecodedKB": 1371.1,
+        "flightKB": 1212.3,
+        "jsTransferKB": 870.5,
+        "fontTransferKB": 361.8,
+        "prefetches": 47,
+        "serverActions": 2,
+        "lcpElement": "img.h-auto.object-contain"
+      },
+      "admin /attendance cold": {
+        "runs": 1,
+        "ttfbMs": 7,
+        "docWaitMs": 6,
+        "fcpMs": 412,
+        "lcpMs": 1068,
+        "cls": 0.078,
+        "tbtMs": 0,
+        "requests": 203,
+        "networkRequests": 149,
+        "transferKB": 1426.9,
+        "htmlTransferKB": 284.9,
+        "htmlDecodedKB": 1244.3,
+        "flightKB": 1150.4,
+        "jsTransferKB": 648.9,
+        "fontTransferKB": 361.8,
+        "prefetches": 79,
+        "serverActions": 3,
+        "lcpElement": "img.h-auto.object-contain"
+      },
+      "admin /students cold": {
+        "runs": 1,
+        "ttfbMs": 9,
+        "docWaitMs": 9,
+        "fcpMs": 420,
+        "lcpMs": 628,
+        "cls": 0.033,
+        "tbtMs": 0,
+        "requests": 196,
+        "networkRequests": 161,
+        "transferKB": 1667.1,
+        "htmlTransferKB": 288.7,
+        "htmlDecodedKB": 1327.1,
+        "flightKB": 1170.3,
+        "jsTransferKB": 749.6,
+        "fontTransferKB": 361.8,
+        "prefetches": 87,
+        "serverActions": 0,
+        "lcpElement": "img.h-auto.object-contain"
+      },
+      "admin /grades cold": {
+        "runs": 1,
+        "ttfbMs": 8,
+        "docWaitMs": 7,
+        "fcpMs": 408,
+        "lcpMs": 884,
+        "cls": 0.033,
+        "tbtMs": 0,
+        "requests": 164,
+        "networkRequests": 132,
+        "transferKB": 1461.6,
+        "htmlTransferKB": 289.3,
+        "htmlDecodedKB": 1389.7,
+        "flightKB": 1192,
+        "jsTransferKB": 667.3,
+        "fontTransferKB": 361.8,
+        "prefetches": 59,
+        "serverActions": 0,
+        "lcpElement": "img.h-auto.object-contain"
+      },
+      "teacher /dashboard cold": {
+        "runs": 1,
+        "ttfbMs": 9,
+        "docWaitMs": 9,
+        "fcpMs": 384,
+        "lcpMs": 1332,
+        "cls": 0.033,
+        "tbtMs": 0,
+        "requests": 150,
+        "networkRequests": 110,
+        "transferKB": 1861,
+        "htmlTransferKB": 303,
+        "htmlDecodedKB": 1389.5,
+        "flightKB": 1223.1,
+        "jsTransferKB": 737.1,
+        "fontTransferKB": 361.8,
+        "prefetches": 44,
+        "serverActions": 2,
+        "lcpElement": "img.h-auto.object-contain"
+      },
+      "teacher /attendance cold": {
+        "runs": 1,
+        "ttfbMs": 6,
+        "docWaitMs": 6,
+        "fcpMs": 380,
+        "lcpMs": 996,
+        "cls": 0.034,
+        "tbtMs": 0,
+        "requests": 153,
+        "networkRequests": 128,
+        "transferKB": 1578.7,
+        "htmlTransferKB": 282.5,
+        "htmlDecodedKB": 1211.8,
+        "flightKB": 1150.2,
+        "jsTransferKB": 808.7,
+        "fontTransferKB": 361.8,
+        "prefetches": 47,
+        "serverActions": 3,
+        "lcpElement": "img.h-auto.object-contain"
+      },
+      "teacher /students cold": {
+        "runs": 1,
+        "ttfbMs": 7,
+        "docWaitMs": 6,
+        "fcpMs": 396,
+        "lcpMs": 868,
+        "cls": 0.033,
+        "tbtMs": 0,
+        "requests": 178,
+        "networkRequests": 154,
+        "transferKB": 1701.5,
+        "htmlTransferKB": 287.2,
+        "htmlDecodedKB": 1318.8,
+        "flightKB": 1170.2,
+        "jsTransferKB": 792.7,
+        "fontTransferKB": 361.8,
+        "prefetches": 75,
+        "serverActions": 0,
+        "lcpElement": "img.h-auto.object-contain"
+      },
+      "teacher /grades cold": {
+        "runs": 1,
+        "ttfbMs": 7,
+        "docWaitMs": 6,
+        "fcpMs": 408,
+        "lcpMs": 868,
+        "cls": 0.033,
+        "tbtMs": 0,
+        "requests": 144,
+        "networkRequests": 133,
+        "transferKB": 1632.9,
+        "htmlTransferKB": 287.9,
+        "htmlDecodedKB": 1381.4,
+        "flightKB": 1191.9,
+        "jsTransferKB": 847.3,
+        "fontTransferKB": 361.8,
+        "prefetches": 47,
+        "serverActions": 0,
+        "lcpElement": "img.h-auto.object-contain"
+      }
+    }
+  },
+  "navigation": {
+    "none-local": {}
+  },
+  "interaction": {
+    "none-local": {
+      "samples": 0,
+      "medianMs": null,
+      "worstMs": null
+    }
+  },
+  "login": {
+    "none-local": {
+      "runs": 2,
+      "lcpMs": 40,
+      "ttfbMs": 8,
+      "tbtMs": 0,
+      "htmlTransferKB": 20.6,
+      "htmlDecodedKB": 79.1,
+      "flightKB": 67.2,
+      "jsTransferKB": 340.1,
+      "transferKB": 736.4,
+      "requests": 36,
+      "submitToDashboardMs": 0,
+      "signInActionMs": 0
+    }
+  },
+  "database": {
+    "what": "SELECT 1 over the container's warm Prisma pool (one round trip)",
+    "samples": 25,
+    "min": 90,
+    "p50": 91,
+    "p95": 308,
+    "p99": 844,
+    "max": 844,
+    "bridgeP50": 149
+  },
+  "latency": [
+    {
+      "name": "edge (cached static chunk)",
+      "url": "https://demo.balqalam.com/_next/static/chunks/0fn5g6wdwm_uz.js",
+      "samples": 26,
+      "status": 200,
+      "min": 101.42420800000036,
+      "p50": 111.50495799999999,
+      "p95": 130.4881250000003,
+      "max": 510.8619590000003,
+      "edgeCache": "hit",
+      "encoding": "br"
+    },
+    {
+      "name": "origin (container, no database)",
+      "url": "https://demo.balqalam.com/__perf-probe-1789798123909.txt",
+      "samples": 26,
+      "status": 500,
+      "min": 322.47870799999873,
+      "p50": 333.0149999999994,
+      "p95": 362.2459170000002,
+      "max": 638.7049999999999,
+      "edgeCache": null,
+      "encoding": null
+    },
+    {
+      "name": "origin + tenant lookup (manifest)",
+      "url": "https://demo.balqalam.com/manifest.webmanifest",
+      "samples": 26,
+      "status": 200,
+      "min": 309.62724999999773,
+      "p50": 326.09391700000197,
+      "p95": 382.6426250000004,
+      "max": 385.3040409999994,
+      "edgeCache": null,
+      "encoding": "br"
+    },
+    {
+      "name": "public page (login HTML)",
+      "url": "https://demo.balqalam.com/ar/login",
+      "samples": 11,
+      "status": 200,
+      "min": 382.56987500000105,
+      "p50": 398.4869580000013,
+      "p95": 885.6715000000004,
+      "max": 885.6715000000004,
+      "edgeCache": null,
+      "encoding": "gzip"
+    }
+  ],
+  "payloads": [
+    {
+      "url": "https://balqalam.com/ar",
+      "status": 200,
+      "encoding": "gzip",
+      "wireBytes": 23803,
+      "htmlBytes": 104377,
+      "flightBytes": 29797,
+      "flightShare": 0.28547476934573707,
+      "largestFlightChunk": 29797,
+      "scripts": 25,
+      "stylesheets": 4,
+      "cacheControl": "s-maxage=31536000"
+    },
+    {
+      "url": "https://demo.balqalam.com/ar/login",
+      "status": 200,
+      "encoding": "gzip",
+      "wireBytes": 274172,
+      "htmlBytes": 1155821,
+      "flightBytes": 1143499,
+      "flightShare": 0.9893391796826672,
+      "largestFlightChunk": 1140167,
+      "scripts": 26,
+      "stylesheets": 4,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    }
+  ]
+}

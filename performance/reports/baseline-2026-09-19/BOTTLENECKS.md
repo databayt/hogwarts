@@ -24,7 +24,7 @@ Anything marked _predicted_ has not been measured yet.
 | …first paint of that page                  | 6.8 s                            | 1.0 s  | FAIL    |
 | Open a page again, warm, on a phone (LCP)  | 1.7 s                            | 1.5 s  | ok      |
 | Sign in → dashboard painted                | 2.7 s desktop · 7.4 s phone      | —      | —       |
-| Document wait (request → first byte)       | 330–390 ms cold · 0.6–4.0 s warm | 300 ms  | FAIL    |
+| Document wait (request → first byte)       | 330–390 ms cold · 0.6–4.0 s warm | 300 ms | FAIL    |
 | Database round trip (p50 / p95 / p99)      | 91 / 308 / 844 ms                | 5 / 15 | FAIL    |
 | Initial JS, core listing routes            | 1.45–1.62 MB gzip                | 200 KB | FAIL    |
 | Document on the wire, every signed-in page | 276–295 KB                       | 40 KB  | FAIL    |
@@ -52,9 +52,43 @@ navigations settled inside the 500 ms target (0 of 24 routes by median).
   **min 90 · p50 91 · p95 308 · p99 844 ms** (n=25). 90 ms is the
   Frankfurt ↔ Virginia round trip; it is not connection setup
   (`DB_ADAPTER=pg` never reaches the container, so the pool is reused).
-- Server time per navigation (RSC wait): 350–3441 ms. `/messages` paints at
-  2.7 s whether or not the service worker buffers it (see #2): that is pure
-  server time.
+- Server time per navigation (RSC wait, payloads of a few KB so download is
+  not the cause): 350–3441 ms. `/messages` paints at 2.7 s whether or not the
+  service worker buffers it (see #2).
+- `pnpm perf:queries` on a production build (local database, so only the
+  STRUCTURE shows) — queries in the document's own render, and how many wait
+  on each other:
+
+  | Route (role)                                                  | Queries | Sequential steps | Duplicates | × 91 ms     |
+  | ------------------------------------------------------------- | ------- | ---------------- | ---------- | ----------- |
+  | `/dashboard` (teacher)                                        | **44**  | **10**           | **12**     | **~910 ms** |
+  | `/finance` (admin)                                            | 21      | 6                | 0          | ~546 ms     |
+  | `/dashboard` (admin)                                          | 9       | 4                | 2          | ~364 ms     |
+  | `/library` (admin)                                            | 5       | 4                | 0          | ~364 ms     |
+  | `/messages`, `/notifications`, `/exams`                       | 5–11    | 3                | 0          | ~273 ms     |
+  | students, teachers, grades, attendance, timetable, classrooms | 1–7     | 1                | 0          | ~91 ms      |
+
+  The teacher dashboard — the page a teacher opens every morning — resolves the
+  same facts again in every widget: `School.findUnique` ×7, `Term.findFirst` ×6,
+  `Teacher.findFirst` ×4, `Timetable.findMany` ×4 in ONE render. It is also the
+  slowest page measured (3.2–3.9 s to first byte, warm).
+
+- Several pages fetch their data AFTER mounting, through server actions and
+  API routes, where the same waterfall hides from first byte and shows up as
+  "settled". Queries outside any render, per page view:
+
+  | Page                   | Queries | Sequential steps | × 91 ms    | Same fact re-read                           |
+  | ---------------------- | ------- | ---------------- | ---------- | ------------------------------------------- |
+  | `/timetable` (teacher) | **27**  | **18**           | **~1.6 s** | `Term.findFirst` ×6, `Period.findMany` ×3   |
+  | `/timetable` (admin)   | 22      | 17               | ~1.5 s     | `Term.findFirst` ×4                         |
+  | sign-in action         | 16      | 12               | ~1.1 s     | `School.findUnique` ×2, `User.findFirst` ×2 |
+  | `/attendance`          | 12–15   | 8                | ~0.7 s     | `Teacher.findFirst` ×2                      |
+  | every page (the bell)  | 3       | 3                | ~0.27 s    | —                                           |
+
+  `/timetable` is the slowest navigation measured (students → timetable settled
+  at 5.5–7.5 s), and the sign-in row is the 0.9–1.2 s "action + redirect"
+  measured in the browser.
+
 - With 15 queries in a render, the chance that at least one lands in the
   308 ms+ tail is 1 − 0.95¹⁵ = **54 %**.
 
@@ -80,8 +114,14 @@ them do — and needs no data to move. A is where this should end up: the
 users are closer to Frankfurt than to Virginia. Either way, pin the region:
 today placement is luck.
 
-**Expected gain** _(predicted)_ — ~85 ms per sequential query step. A render
-with 10 steps: −850 ms. `pnpm perf:queries` counts the steps per route.
+**Expected gain** _(predicted)_ — ~85 ms per sequential query step: the
+teacher dashboard −850 ms, finance −510 ms, and every mount-time server action
+and notification-bell poll (3 sequential queries: ~270 ms → ~15 ms).
+
+**Worth doing regardless of where the database lives** — wrap the dashboard's
+shared lookups (school, current term, the teacher row) in React `cache()` so
+each is read once per render: 44 queries → ~27, and fewer steps. `cache()` is
+scoped to one request, so nothing is shared between users or schools.
 
 **Do not** adopt Hyperdrive for this. It is a Workers binding; the app runs
 in a container that already holds a warm pool, so there is no connection
@@ -124,7 +164,7 @@ the next deploy.
 
 ---
 
-## 3. Core routes ship 1.5 MB of JavaScript to draw a table — FIXED in source `b7982a824`
+## 3. Core routes ship 1.5 MB of JavaScript to draw a table — FIXED `b7982a824` `7e6fa4585`
 
 **Impact** — every cold visit to students, attendance, grades, classrooms,
 exams, finance, teachers, announcements. On the phone profile each 200 KB is a
@@ -150,11 +190,11 @@ used or not, so the AWS SDK and `node:crypto` came along.
 
 **Fix** — `useExport` and the spreadsheet parser `await import()` their
 library at the click; the barrel no longer re-exports server-only or heavy
-modules. **Expected gain** — −780 KB gzip on those routes; exact figures in
-"After" below once the verification build finishes. **Risk** — low: tsc clean,
-nothing imported the removed names through the barrel except one call
-(re-pointed). Export must be clicked once after deploy to confirm the lazy
-chunk loads.
+modules. **Measured gain** — **−870 KB gzip on each of the eight routes (−54 % to
+−60 %)**, e.g. `/attendance` 1459 → 588 KB; table in "After". **Risk** — low:
+tsc clean, nothing imported the removed names through the barrel except one
+call (re-pointed), and Export was clicked in a browser on the built app — both
+formats still produce files, their library fetched at the click.
 
 Still open: libphonenumber + country data on 57 routes (77 KB), the Prisma
 browser client on 10, and the 124 KB icon module on 456.
@@ -174,8 +214,9 @@ page. The auth pages passed the full dictionary to the form; the dashboard
 layout passes it to `DictionaryProvider`. The Arabic dictionary is ~900 KB.
 
 **Fix, part 1 — DONE `03dbd5d98`** — the six auth pages use
-`getAuthDictionary` (the four namespaces the forms read, ~46 KB). _Predicted:_
-login HTML 1129 KB → under 100 KB; exact figure in "After".
+`getAuthDictionary` (the four namespaces the forms read). **Measured:** login
+document 1128.7 → **79.1 KB**, 268 → **19.4 KB** on the wire (−93 %); sign-in
+through it verified in a browser.
 
 **Fix, part 2 — open, the larger prize** — the dashboard layout. 347
 components read `useDictionary()` and 299 server files pass `dictionary` down
@@ -218,10 +259,12 @@ timetable 46–57. Total requests per cold page: 83–147. The container is
 fire on dashboard mount and wait **514–833 ms** for ~700 bytes each — queued
 behind the prefetches, and paying #1.
 
-**Caution** — these prefetches are why a tap answers in 49 ms. Do not turn
-them off. **Fix** — measure what one prefetch costs the server
-(`pnpm perf:queries`: renders and queries per page view), then keep the
-viewport prefetch for the sidebar and move long in-page lists (student rows →
+**What a prefetch costs the database** — nothing: in the query audit a page
+view caused exactly ONE querying render (the document) on 15 of 18 routes, and
+2–5 on the other three. Prefetch renders stop at the loading boundary and
+never reach Prisma. The cost is container CPU and connection slots,
+not Neon. **Caution** — these prefetches are why a tap answers in 49 ms. Do not
+turn them off. **Fix** — keep the viewport prefetch for the sidebar and move long in-page lists (student rows →
 `/profile/[id]`, 20+ per page) to prefetch-on-intent, as the mail links already
 do. The mount-time actions should be part of the streamed render, not a second
 round trip after hydration.
@@ -265,8 +308,95 @@ imported by the root layout for every page).
 ## 10. Sign-in: 7.4 s on a phone
 
 Submit → dashboard painted: 2.7 s desktop, **7.4 s phone**. 0.9–1.2 s is the
-sign-in action and redirect (not traced yet; its database lookups each pay #1); the rest
+sign-in action and redirect — 16 queries in 12 sequential steps (#1); the rest
 is a cold dashboard (#3, #4). It needs no fix of its own.
+
+---
+
+## After — what the committed fixes measure
+
+Verified on a production build of `1789801682856` (HEAD `eeacfed66`, built like
+the deploy: `CF_CONTAINER=1`, standalone) served locally. **None of this is
+deployed.** Bytes are exact; nothing here is a timing claim about production.
+
+### Initial JavaScript per route — static inventory, gzip on both sides
+
+| Route             | Deployed | After  | Change |
+| ----------------- | -------- | ------ | ------ |
+| `/announcements`  | 1624 KB  | 753 KB | -54%   |
+| `/finance`        | 1570 KB  | 699 KB | -55%   |
+| `/students`       | 1555 KB  | 685 KB | -56%   |
+| `/teachers`       | 1546 KB  | 675 KB | -56%   |
+| `/grades`         | 1462 KB  | 592 KB | -60%   |
+| `/classrooms`     | 1459 KB  | 589 KB | -60%   |
+| `/attendance`     | 1459 KB  | 588 KB | -60%   |
+| `/exams`          | 1445 KB  | 574 KB | -60%   |
+| `/dashboard`      | 750 KB   | 681 KB | -9%    |
+| `/timetable`      | 584 KB   | 515 KB | -12%   |
+| `/library`        | 553 KB   | 484 KB | -13%   |
+| `/my-assignments` | 549 KB   | 480 KB | -13%   |
+| `/notifications`  | 549 KB   | 480 KB | -13%   |
+| `/parent`         | 547 KB   | 478 KB | -13%   |
+| `/`               | 539 KB   | 471 KB | -13%   |
+| `/messages`       | 435 KB   | 366 KB | -16%   |
+| `/login`          | 379 KB   | 310 KB | -18%   |
+
+Across all 493 routes: mean initial JS 647 → 502 KB gzip
+(-22%); routes over 1 MB **51 → 1**; over 600 KB
+137 → 81. In initial JS: `@react-pdf/renderer` 49 → 2 routes (the two
+exam-paper PDF pages, whose purpose it is), `xlsx` 47 → 0, PostHog 490 → 0.
+
+### JavaScript a cold page view downloads — measured in a browser
+
+| Page                  | Production (brotli) | After (local, gzip) | Change |
+| --------------------- | ------------------- | ------------------- | ------ |
+| admin `/dashboard`    | 807 KB              | 871 KB              | +8%    |
+| admin `/attendance`   | 1493 KB             | 649 KB              | -57%   |
+| admin `/students`     | 1582 KB             | 750 KB              | -53%   |
+| admin `/grades`       | 1485 KB             | 667 KB              | -55%   |
+| teacher `/dashboard`  | 1732 KB             | 737 KB              | -57%   |
+| teacher `/attendance` | 1495 KB             | 809 KB              | -46%   |
+| teacher `/students`   | 1602 KB             | 793 KB              | -51%   |
+| teacher `/grades`     | 1486 KB             | 847 KB              | -43%   |
+
+The "after" column is **conservative**: the local server gzips static files,
+production's edge serves brotli (10–15 % smaller). That is the whole of admin
+`/dashboard`'s +8 % — like for like (table above) it is −9 %. This run also
+caught what the static inventory could not: teacher `/students` still pulled
+1377 KB, because its prefetched `/profile/[id]` rows dragged in a 587 KB chunk of
+base64 payment logos (`7e6fa4585`).
+
+### The sign-in page
+
+| `/ar/login`           | Deployed         | After       |
+| --------------------- | ---------------- | ----------- |
+| Document              | 1128.7 KB        | **79.1 KB** |
+| RSC flight data in it | 1116.7 KB (99 %) | 67.1 KB     |
+| On the wire (gzip)    | 268.0 KB         | **19.4 KB** |
+
+Inside the 40 KB budget. Signing in through it works, in Arabic, including
+the translated error message.
+
+### Proven in a browser, not assumed
+
+- **Export still exports.** `/attendance/reports`: before any click neither
+  library is loaded; Export → Excel fetches the xlsx chunk at the click and
+  downloads a 593 KB `.xlsx` (`PK`); Export → PDF fetches react-pdf at the click
+  and downloads a 355 KB `%PDF`. `/students`: a 148 KB CSV, no library at all —
+  that page had been shipping 600 KB of PDF and Excel code for a CSV button.
+- **The service worker fix**, against production itself — table in #2.
+
+### Not verified yet — needs the deploy
+
+LCP, first paint and "settled" on production after these changes; the RUM
+pipeline end to end (the `RUM` Analytics Engine binding is new); the v8 worker
+replacing v7 on real devices. After "deploy":
+
+```bash
+pnpm perf:playwright -- --target prod --profile mobile --roles admin,teacher \
+  --routes /dashboard,/attendance,/students,/grades --out performance/reports/after-deploy
+pnpm perf:report -- --run performance/reports/after-deploy
+```
 
 ---
 
@@ -280,5 +410,9 @@ is a cold dashboard (#3, #4). It needs no fix of its own.
 - **Realtime** — production has no socket server (`NEXT_PUBLIC_SOCKET_URL` is
   unset), so there is nothing to load-test; `socket.io-client` (14 KB) still
   ships on 422 routes.
+- **Excel export on `/attendance/reports` was broken in production** — it asked
+  the action for 10000 rows, the action's schema allows 5000, the ZodError was
+  swallowed into the console and the teacher got no file. Found by clicking
+  Export in a browser to verify the lazy import; fixed in `eeacfed66`.
 - The existing Playwright auth setup fills `input[name="email"]`; the form's
   field is `identifier`. That is one reason that workflow fails.

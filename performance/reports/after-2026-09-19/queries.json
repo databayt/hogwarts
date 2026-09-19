@@ -1,0 +1,400 @@
+{
+  "generatedAt": "2026-09-19T11:08:05.805Z",
+  "roundTripMs": 91,
+  "rows": [
+    {
+      "role": "admin",
+      "route": "/dashboard",
+      "renders": 2,
+      "outsideRender": 5,
+      "queries": 21,
+      "docQueries": 9,
+      "steps": 2,
+      "dupes": 2,
+      "dupeList": [
+        "School.findUnique ×2",
+        "Student.count ×2"
+      ],
+      "estimatedServerMs": 182,
+      "sequence": [
+        "User.findUnique",
+        "School.findUnique",
+        "School.findUnique",
+        "Event.count",
+        "School.findUnique",
+        "Announcement.count",
+        "Student.count",
+        "Student.count",
+        "Attendance.count"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/attendance",
+      "renders": 1,
+      "outsideRender": 12,
+      "queries": 13,
+      "docQueries": 1,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/students",
+      "renders": 1,
+      "outsideRender": 3,
+      "queries": 6,
+      "docQueries": 3,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique",
+        "Student.count",
+        "Student.findMany"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/teachers",
+      "renders": 1,
+      "outsideRender": 3,
+      "queries": 6,
+      "docQueries": 3,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique",
+        "Teacher.findMany",
+        "Teacher.count"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/grades",
+      "renders": 1,
+      "outsideRender": 3,
+      "queries": 6,
+      "docQueries": 3,
+      "steps": 2,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 182,
+      "sequence": [
+        "User.findUnique",
+        "Result.findMany",
+        "Result.count"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/finance",
+      "renders": 1,
+      "outsideRender": 3,
+      "queries": 24,
+      "docQueries": 21,
+      "steps": 6,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 546,
+      "sequence": [
+        "User.findUnique",
+        "User.findUnique",
+        "School.findUnique",
+        "$raw.$queryRaw",
+        "$raw.$queryRaw",
+        "BankAccount.count",
+        "UserInvoice.count",
+        "ExpenseReceipt.count",
+        "PayrollRun.count",
+        "FeeAssignment.count",
+        "SalaryStructure.count",
+        "Wallet.count",
+        "Expense.count",
+        "TimesheetEntry.count",
+        "ChartOfAccount.count",
+        "Budget.count",
+        "FinancialReport.count",
+        "Expense.aggregate",
+        "Payment.aggregate",
+        "Payment.aggregate",
+        "UserInvoice.count"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/announcements",
+      "renders": 1,
+      "outsideRender": 3,
+      "queries": 6,
+      "docQueries": 3,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique",
+        "Announcement.findMany",
+        "Announcement.count"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/timetable",
+      "renders": 1,
+      "outsideRender": 22,
+      "queries": 23,
+      "docQueries": 1,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/messages",
+      "renders": 1,
+      "outsideRender": 9,
+      "queries": 16,
+      "docQueries": 7,
+      "steps": 4,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 364,
+      "sequence": [
+        "User.findUnique",
+        "User.findUnique",
+        "School.findUnique",
+        "Conversation.count",
+        "WhatsAppSession.findUnique",
+        "Conversation.findMany",
+        "$raw.$queryRaw"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/notifications",
+      "renders": 1,
+      "outsideRender": 3,
+      "queries": 8,
+      "docQueries": 5,
+      "steps": 3,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 273,
+      "sequence": [
+        "User.findUnique",
+        "Notification.findMany",
+        "Notification.count",
+        "Translation.findMany",
+        "Notification.count"
+      ]
+    },
+    {
+      "role": "admin",
+      "route": "/library",
+      "renders": 1,
+      "outsideRender": 3,
+      "queries": 8,
+      "docQueries": 5,
+      "steps": 3,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 273,
+      "sequence": [
+        "User.findUnique",
+        "BookSelection.findMany",
+        "Book.findMany",
+        "Translation.findMany",
+        "Book.findUnique"
+      ]
+    },
+    {
+      "role": "teacher",
+      "route": "/dashboard",
+      "renders": 1,
+      "outsideRender": 9,
+      "queries": 53,
+      "docQueries": 44,
+      "steps": 10,
+      "dupes": 12,
+      "dupeList": [
+        "Teacher.findFirst ×4",
+        "School.findUnique ×4",
+        "Term.findFirst ×3",
+        "AssignmentSubmission.count ×2",
+        "SchoolYear.findFirst ×2",
+        "Class.count ×2",
+        "Period.findMany ×2"
+      ],
+      "estimatedServerMs": 910,
+      "sequence": [
+        "User.findUnique",
+        "School.findUnique",
+        "Teacher.findFirst",
+        "Event.count",
+        "Teacher.findFirst",
+        "Term.findFirst",
+        "School.findUnique",
+        "Timetable.findMany",
+        "Term.findFirst",
+        "Timetable.findMany",
+        "AssignmentSubmission.count",
+        "Class.findMany",
+        "Term.findFirst",
+        "Class.count",
+        "Term.findFirst",
+        "SchoolYear.findFirst",
+        "School.findUnique",
+        "AssignmentSubmission.count",
+        "Period.findMany",
+        "Teacher.findFirst",
+        "SubstitutionRecord.findMany",
+        "Class.count",
+        "Timetable.findMany",
+        "ScheduleException.findFirst",
+        "SchoolAssignment.findMany",
+        "Class.findMany",
+        "Term.findFirst",
+        "Term.findFirst",
+        "SchoolYear.findFirst",
+        "SchoolExam.findMany",
+        "School.findUnique",
+        "Period.findMany",
+        "Teacher.findFirst",
+        "School.findUnique",
+        "SubstitutionRecord.findMany",
+        "Timetable.findMany",
+        "SubstitutionRecord.findMany",
+        "ScheduleException.findFirst",
+        "School.findUnique",
+        "School.findUnique",
+        "Section.findMany",
+        "ConferenceLink.findMany",
+        "Conference.findMany",
+        "Conference.findMany"
+      ]
+    },
+    {
+      "role": "teacher",
+      "route": "/attendance",
+      "renders": 1,
+      "outsideRender": 15,
+      "queries": 16,
+      "docQueries": 1,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique"
+      ]
+    },
+    {
+      "role": "teacher",
+      "route": "/students",
+      "renders": 1,
+      "outsideRender": 3,
+      "queries": 6,
+      "docQueries": 3,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique",
+        "Student.findMany",
+        "Student.count"
+      ]
+    },
+    {
+      "role": "teacher",
+      "route": "/grades",
+      "renders": 1,
+      "outsideRender": 3,
+      "queries": 6,
+      "docQueries": 3,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique",
+        "Result.findMany",
+        "Result.count"
+      ]
+    },
+    {
+      "role": "teacher",
+      "route": "/timetable",
+      "renders": 1,
+      "outsideRender": 27,
+      "queries": 28,
+      "docQueries": 1,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique"
+      ]
+    },
+    {
+      "role": "teacher",
+      "route": "/classrooms",
+      "renders": 4,
+      "outsideRender": 3,
+      "queries": 28,
+      "docQueries": 7,
+      "steps": 1,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 91,
+      "sequence": [
+        "User.findUnique",
+        "Classroom.findMany",
+        "Classroom.count",
+        "ClassroomType.findMany",
+        "AcademicGrade.findMany",
+        "Classroom.aggregate",
+        "Classroom.count"
+      ]
+    },
+    {
+      "role": "teacher",
+      "route": "/exams",
+      "renders": 5,
+      "outsideRender": 3,
+      "queries": 18,
+      "docQueries": 11,
+      "steps": 2,
+      "dupes": 0,
+      "dupeList": [],
+      "estimatedServerMs": 182,
+      "sequence": [
+        "User.findUnique",
+        "Teacher.findFirst",
+        "Class.findMany",
+        "SchoolExam.count",
+        "SchoolExam.count",
+        "SchoolExamTemplate.count",
+        "QuestionBank.count",
+        "StudentClass.count",
+        "SchoolExam.count",
+        "ExamResult.count",
+        "SchoolExam.count"
+      ]
+    }
+  ]
+}

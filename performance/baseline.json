@@ -9,293 +9,161 @@
   },
   "static": {
     "/dashboard": {
-      "jsFiles": 49,
-      "initialJsGzipKB": 750.3,
+      "jsFiles": 48,
+      "initialJsGzipKB": 681.2,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
         "recharts",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/attendance": {
-      "jsFiles": 56,
-      "initialJsGzipKB": 1458.5,
+      "jsFiles": 50,
+      "initialJsGzipKB": 587.6,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "react-pdf/pdfkit",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "socket.io"
       ]
     },
     "/students": {
-      "jsFiles": 60,
-      "initialJsGzipKB": 1555.3,
+      "jsFiles": 54,
+      "initialJsGzipKB": 685.3,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
         "lottie",
-        "next-auth-client",
-        "posthog",
-        "react-pdf/pdfkit",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "socket.io"
       ]
     },
     "/teachers": {
-      "jsFiles": 59,
-      "initialJsGzipKB": 1545.7,
+      "jsFiles": 52,
+      "initialJsGzipKB": 674.9,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
         "lottie",
-        "next-auth-client",
-        "posthog",
-        "react-pdf/pdfkit",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "socket.io"
       ]
     },
     "/grades": {
-      "jsFiles": 57,
-      "initialJsGzipKB": 1462.2,
+      "jsFiles": 51,
+      "initialJsGzipKB": 592,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "react-pdf/pdfkit",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "socket.io"
       ]
     },
     "/finance": {
-      "jsFiles": 59,
-      "initialJsGzipKB": 1569.8,
+      "jsFiles": 53,
+      "initialJsGzipKB": 698.8,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "react-pdf/pdfkit",
         "recharts",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "socket.io"
       ]
     },
     "/announcements": {
-      "jsFiles": 64,
-      "initialJsGzipKB": 1624.3,
+      "jsFiles": 57,
+      "initialJsGzipKB": 753.5,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
         "country-state-city",
-        "date-fns",
         "framer-motion",
         "libphonenumber",
-        "next-auth-client",
-        "posthog",
-        "react-day-picker",
-        "react-pdf/pdfkit",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "socket.io"
       ]
     },
     "/timetable": {
-      "jsFiles": 44,
-      "initialJsGzipKB": 584.4,
+      "jsFiles": 43,
+      "initialJsGzipKB": 515.3,
       "initialCssGzipKB": 90.8,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/messages": {
-      "jsFiles": 31,
-      "initialJsGzipKB": 435,
+      "jsFiles": 30,
+      "initialJsGzipKB": 365.8,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "next-auth-client",
-        "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/notifications": {
-      "jsFiles": 41,
-      "initialJsGzipKB": 549,
+      "jsFiles": 40,
+      "initialJsGzipKB": 479.9,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/library": {
-      "jsFiles": 41,
-      "initialJsGzipKB": 552.7,
+      "jsFiles": 40,
+      "initialJsGzipKB": 483.6,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/classrooms": {
-      "jsFiles": 57,
-      "initialJsGzipKB": 1459,
+      "jsFiles": 51,
+      "initialJsGzipKB": 588.9,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "react-pdf/pdfkit",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "socket.io"
       ]
     },
     "/exams": {
-      "jsFiles": 55,
-      "initialJsGzipKB": 1445.4,
+      "jsFiles": 48,
+      "initialJsGzipKB": 574.5,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "react-pdf/pdfkit",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "socket.io"
       ]
     },
     "/parent": {
-      "jsFiles": 39,
-      "initialJsGzipKB": 547,
+      "jsFiles": 38,
+      "initialJsGzipKB": 477.9,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/my-assignments": {
-      "jsFiles": 40,
-      "initialJsGzipKB": 549.4,
+      "jsFiles": 39,
+      "initialJsGzipKB": 480.3,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
-        "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/": {
       "jsFiles": 33,
-      "initialJsGzipKB": 538.6,
+      "initialJsGzipKB": 470.7,
       "initialCssGzipKB": 168.4,
       "libs": [
         "gsap",
         "lottie",
-        "next-auth-client",
-        "posthog",
-        "shiki-grammars",
-        "sonner",
         "swiper"
       ]
     },
     "/login": {
-      "jsFiles": 26,
-      "initialJsGzipKB": 378.8,
+      "jsFiles": 25,
+      "initialJsGzipKB": 309.8,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "next-auth-client",
-        "posthog",
-        "prisma-client-browser",
-        "shiki-grammars",
-        "sonner",
-        "zod"
+        "prisma-client-browser"
       ]
     }
   },
@@ -2512,5 +2380,10 @@
       "stylesheets": 4,
       "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
     }
-  ]
+  ],
+  "staticFrom": {
+    "run": "after-2026-09-19",
+    "buildId": "1789801682856",
+    "at": "2026-09-19T11:10:21.208Z"
+  }
 }

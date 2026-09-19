@@ -3,58 +3,171 @@
   "static": {
     "$comment": "From bundle.json — deterministic, no server needed. This is the regression gate.",
     "default": {
-      "initialJsGzipKB": { "target": 200, "warn": 350, "fail": 600 },
-      "initialCssGzipKB": { "target": 40, "warn": 70, "fail": 110 }
+      "initialJsGzipKB": {
+        "target": 200,
+        "warn": 350,
+        "fail": 600
+      },
+      "initialCssGzipKB": {
+        "target": 40,
+        "warn": 70,
+        "fail": 110
+      }
     },
     "routes": {
       "/login": {
-        "initialJsGzipKB": { "target": 150, "warn": 250, "fail": 400 }
+        "initialJsGzipKB": {
+          "target": 150,
+          "warn": 250,
+          "fail": 400
+        }
       }
     },
     "bannedInInitialJs": {
-      "$comment": "Libraries that must never be in a route's initial JS: they serve a click (export, upload, print), not a render. `except` lists routes whose purpose IS the library.",
+      "$comment": "Libraries that must never be in a route's initial JS: they serve a click (export, upload, print) or nothing at all, not a render. `except` lists routes whose purpose IS the library. `pnpm perf:check` fails when one of these ENTERS a tracked route.",
       "react-pdf/pdfkit": {
-        "except": ["/exams/paper/[generatedExamId]/preview"]
+        "except": [
+          "/exams/paper/[generatedExamId]",
+          "/exams/paper/[generatedExamId]/preview"
+        ]
       },
-      "xlsx": { "except": [] },
-      "prisma-client-browser": { "except": [] },
-      "mapbox-gl": { "except": [] },
-      "mermaid": { "except": ["/docs/[[...slug]]"] },
-      "livekit": { "except": ["/live/[id]/room", "/live/network-test"] }
+      "xlsx": {
+        "except": []
+      },
+      "prisma-client-browser": {
+        "except": []
+      },
+      "mapbox-gl": {
+        "except": []
+      },
+      "mermaid": {
+        "except": [
+          "/docs/[[...slug]]"
+        ]
+      },
+      "livekit": {
+        "except": [
+          "/live/[id]/room",
+          "/live/network-test"
+        ]
+      },
+      "posthog": {
+        "except": []
+      }
     }
   },
   "lab": {
     "$comment": "From browser-<profile>.json. Medians per route.",
     "mobile": {
-      "ttfbMs": { "target": 300, "warn": 800, "fail": 1800 },
-      "fcpMs": { "target": 1000, "warn": 1800, "fail": 3000 },
-      "lcpMs": { "target": 1500, "warn": 2500, "fail": 4000 },
-      "cls": { "target": 0.05, "warn": 0.1, "fail": 0.25 },
-      "tbtMs": { "target": 150, "warn": 300, "fail": 600 },
-      "requests": { "target": 45, "warn": 80, "fail": 130 },
-      "transferKB": { "target": 600, "warn": 1200, "fail": 2000 },
-      "htmlTransferKB": { "target": 40, "warn": 100, "fail": 200 }
+      "ttfbMs": {
+        "target": 300,
+        "warn": 800,
+        "fail": 1800
+      },
+      "fcpMs": {
+        "target": 1000,
+        "warn": 1800,
+        "fail": 3000
+      },
+      "lcpMs": {
+        "target": 1500,
+        "warn": 2500,
+        "fail": 4000
+      },
+      "cls": {
+        "target": 0.05,
+        "warn": 0.1,
+        "fail": 0.25
+      },
+      "tbtMs": {
+        "target": 150,
+        "warn": 300,
+        "fail": 600
+      },
+      "requests": {
+        "target": 45,
+        "warn": 80,
+        "fail": 130
+      },
+      "transferKB": {
+        "target": 600,
+        "warn": 1200,
+        "fail": 2000
+      },
+      "htmlTransferKB": {
+        "target": 40,
+        "warn": 100,
+        "fail": 200
+      }
     },
     "none": {
-      "ttfbMs": { "target": 300, "warn": 800, "fail": 1800 },
-      "lcpMs": { "target": 1500, "warn": 2500, "fail": 4000 },
-      "cls": { "target": 0.05, "warn": 0.1, "fail": 0.25 },
-      "requests": { "target": 45, "warn": 80, "fail": 130 },
-      "transferKB": { "target": 600, "warn": 1200, "fail": 2000 },
-      "htmlTransferKB": { "target": 40, "warn": 100, "fail": 200 }
+      "ttfbMs": {
+        "target": 300,
+        "warn": 800,
+        "fail": 1800
+      },
+      "lcpMs": {
+        "target": 1500,
+        "warn": 2500,
+        "fail": 4000
+      },
+      "cls": {
+        "target": 0.05,
+        "warn": 0.1,
+        "fail": 0.25
+      },
+      "requests": {
+        "target": 45,
+        "warn": 80,
+        "fail": 130
+      },
+      "transferKB": {
+        "target": 600,
+        "warn": 1200,
+        "fail": 2000
+      },
+      "htmlTransferKB": {
+        "target": 40,
+        "warn": 100,
+        "fail": 200
+      }
     }
   },
   "navigation": {
-    "visualResponseMs": { "target": 100, "warn": 200, "fail": 500 },
-    "settledMs": { "target": 500, "warn": 1000, "fail": 2500 },
-    "transferKB": { "target": 30, "warn": 100, "fail": 300 }
+    "visualResponseMs": {
+      "target": 100,
+      "warn": 200,
+      "fail": 500
+    },
+    "settledMs": {
+      "target": 500,
+      "warn": 1000,
+      "fail": 2500
+    },
+    "transferKB": {
+      "target": 30,
+      "warn": 100,
+      "fail": 300
+    }
   },
   "interaction": {
-    "durationMs": { "target": 100, "warn": 150, "fail": 200 }
+    "durationMs": {
+      "target": 100,
+      "warn": 150,
+      "fail": 200
+    }
   },
   "database": {
-    "roundTripP50Ms": { "target": 5, "warn": 20, "fail": 60 },
-    "roundTripP95Ms": { "target": 15, "warn": 50, "fail": 150 }
+    "roundTripP50Ms": {
+      "target": 5,
+      "warn": 20,
+      "fail": 60
+    },
+    "roundTripP95Ms": {
+      "target": 15,
+      "warn": 50,
+      "fail": 150
+    }
   },
   "regression": {
     "$comment": "Against performance/baseline.json (the committed summary). Bytes are deterministic, so their tolerance is tight; lab timings are noisy.",

@@ -1,5 +1,5 @@
 {
-  "$comment": "Byte signatures that identify a heavy dependency inside a minified production chunk. A chunk matches a library when ANY signature is present. Keep signatures distinctive: a string the library ships, not a word app code might contain.",
+  "$comment": "Byte signatures that identify a heavy dependency inside a minified production chunk. A chunk matches a library when ANY signature is present. A signature must be text ONLY the library ships — 'posthog' matched every chunk that mentions the word and reported 490 routes after the library had left all of them; 'mdi' matched shell-completion grammars. Validate a new one before trusting it: `pnpm perf:build` should attribute it to the routes you expect (quagga → /attendance/barcode only, stripe-js → the billing page only).",
   "libraries": {
     "mapbox-gl": [
       "mapboxgl",
@@ -85,9 +85,6 @@
     "country-state-city": [
       "\"isoCode\""
     ],
-    "iconify": [
-      "iconify"
-    ],
     "framer-motion": [
       "data-framer-appear-id",
       "framerAppearId"
@@ -100,42 +97,6 @@
     ],
     "prisma-client-browser": [
       "$Enums"
-    ],
-    "shiki-grammars": [
-      "scopeName"
-    ],
-    "cytoscape": [
-      "cytoscape"
-    ],
-    "zod": [
-      "ZodError"
-    ],
-    "react-hook-form": [
-      "react-hook-form"
-    ],
-    "tanstack-table": [
-      "getCoreRowModel"
-    ],
-    "date-fns": [
-      "date-fns"
-    ],
-    "i18next": [
-      "i18next"
-    ],
-    "dnd-kit": [
-      "DndDescribedBy"
-    ],
-    "react-day-picker": [
-      "rdp-"
-    ],
-    "cmdk": [
-      "cmdk-"
-    ],
-    "sonner": [
-      "data-sonner"
-    ],
-    "next-auth-client": [
-      "__NEXTAUTH"
     ]
   }
 }

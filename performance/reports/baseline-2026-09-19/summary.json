@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-19T06:44:56.871Z",
+  "generatedAt": "2026-09-19T11:10:21.178Z",
   "run": "baseline-2026-09-19",
   "buildId": "1789709863481",
   "vantage": {
@@ -13,15 +13,10 @@
       "initialJsGzipKB": 750.3,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
         "recharts",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/attendance": {
@@ -29,18 +24,11 @@
       "initialJsGzipKB": 1458.5,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
         "react-pdf/pdfkit",
-        "shiki-grammars",
         "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "xlsx"
       ]
     },
     "/students": {
@@ -48,19 +36,12 @@
       "initialJsGzipKB": 1555.3,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
         "lottie",
-        "next-auth-client",
         "posthog",
         "react-pdf/pdfkit",
-        "shiki-grammars",
         "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "xlsx"
       ]
     },
     "/teachers": {
@@ -68,19 +49,12 @@
       "initialJsGzipKB": 1545.7,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
         "lottie",
-        "next-auth-client",
         "posthog",
         "react-pdf/pdfkit",
-        "shiki-grammars",
         "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "xlsx"
       ]
     },
     "/grades": {
@@ -88,18 +62,11 @@
       "initialJsGzipKB": 1462.2,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
         "react-pdf/pdfkit",
-        "shiki-grammars",
         "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "xlsx"
       ]
     },
     "/finance": {
@@ -107,19 +74,12 @@
       "initialJsGzipKB": 1569.8,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
         "react-pdf/pdfkit",
         "recharts",
-        "shiki-grammars",
         "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "xlsx"
       ]
     },
     "/announcements": {
@@ -127,21 +87,13 @@
       "initialJsGzipKB": 1624.3,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
         "country-state-city",
-        "date-fns",
         "framer-motion",
         "libphonenumber",
-        "next-auth-client",
         "posthog",
-        "react-day-picker",
         "react-pdf/pdfkit",
-        "shiki-grammars",
         "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "xlsx"
       ]
     },
     "/timetable": {
@@ -149,15 +101,9 @@
       "initialJsGzipKB": 584.4,
       "initialCssGzipKB": 90.8,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/messages": {
@@ -165,12 +111,8 @@
       "initialJsGzipKB": 435,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "next-auth-client",
         "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/notifications": {
@@ -178,14 +120,9 @@
       "initialJsGzipKB": 549,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/library": {
@@ -193,14 +130,9 @@
       "initialJsGzipKB": 552.7,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/classrooms": {
@@ -208,18 +140,11 @@
       "initialJsGzipKB": 1459,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
         "react-pdf/pdfkit",
-        "shiki-grammars",
         "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "xlsx"
       ]
     },
     "/exams": {
@@ -227,18 +152,11 @@
       "initialJsGzipKB": 1445.4,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "cmdk",
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
         "react-pdf/pdfkit",
-        "shiki-grammars",
         "socket.io",
-        "sonner",
-        "tanstack-table",
-        "xlsx",
-        "zod"
+        "xlsx"
       ]
     },
     "/parent": {
@@ -246,14 +164,9 @@
       "initialJsGzipKB": 547,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/my-assignments": {
@@ -261,14 +174,9 @@
       "initialJsGzipKB": 549.4,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "date-fns",
         "framer-motion",
-        "next-auth-client",
         "posthog",
-        "shiki-grammars",
-        "socket.io",
-        "sonner",
-        "zod"
+        "socket.io"
       ]
     },
     "/": {
@@ -278,10 +186,7 @@
       "libs": [
         "gsap",
         "lottie",
-        "next-auth-client",
         "posthog",
-        "shiki-grammars",
-        "sonner",
         "swiper"
       ]
     },
@@ -290,12 +195,8 @@
       "initialJsGzipKB": 378.8,
       "initialCssGzipKB": 90.2,
       "libs": [
-        "next-auth-client",
         "posthog",
-        "prisma-client-browser",
-        "shiki-grammars",
-        "sonner",
-        "zod"
+        "prisma-client-browser"
       ]
     }
   },
