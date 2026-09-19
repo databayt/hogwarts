@@ -159,7 +159,11 @@ export function AttendanceReportExportButton({
           dateTo: dateRange.to.toISOString(),
           classId: filters.classId,
           status: filters.status as any,
-          limit: 10000, // Excel can handle more rows
+          // The action caps `limit` at 5000 (actions/bulk.ts). This asked
+          // for 10000, so the action threw a ZodError, the catch below logged
+          // it, and Excel export produced nothing — silently. Found
+          // 2026-09-19 while verifying the lazy import.
+          limit: 5000,
           offset: 0,
         }),
         getAttendanceStats({
