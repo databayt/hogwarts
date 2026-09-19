@@ -1,13 +1,24 @@
 /**
  * Upload curriculum subject assets to S3 — textbook PDFs + per-subject art.
  *
- * Scans curriculum trees for, per subject dir:
- *   textbook.pdf   → catalog/textbooks/{slug}/textbook.pdf   (Subject.pdf)
- *   cover.jpg      → catalog/textbooks/{slug}/cover.jpg      (Subject.cover)
- *   thumbnail.jpg  → catalog/textbooks/{slug}/thumbnail.jpg  (Subject.thumbnail)
- *   banner.jpg     → catalog/textbooks/{slug}/banner.jpg     (Subject.banner)
+ * Scans curriculum trees for, per subject dir, and mirrors the tree 1:1 onto
+ * the CDN (`curriculum/sd/g12/math/` → `catalog/sd/g12/math/`):
+ *   textbook.pdf   → catalog/{cur}/{grade}/{subjectDir}/textbook.pdf   (Subject.pdf)
+ *   cover.jpg      → …/cover.jpg                                      (Subject.cover)
+ *   thumbnail.jpg  → …/thumbnail.jpg                                  (Subject.thumbnail)
+ *   banner.jpg     → …/banner.jpg                                     (Subject.banner)
+ *   structure.json → …/structure.json                                 (no DB pointer)
+ *   textbook.md    → …/textbook.md                                    (no DB pointer)
  * uploads whatever exists (subjects without a textbook still get their art),
  * then points the matching catalog_subjects fields at the uploaded keys.
+ *
+ * `{subjectDir}` is the FOLDER name, not the DB slug suffix — 42 of 138 SD
+ * subjects disagree (`sd-g12-basic-math` lives in `curriculum/sd/g12/math/`).
+ * Keys come from `catalogKey()`, the single derivation.
+ *
+ * Assets with `field: null` (structure.json, textbook.md) write no DB pointer:
+ * the reader derives their keys from `Subject.pdf`'s directory. So
+ * `--assets=structure.json` uploads without touching the database at all.
  *
  * The seed (`prisma/seeds/catalog/sd.ts`) writes the SAME keys whenever the
  * local file exists, so seed and upload never disagree; run this after adding
@@ -19,11 +30,12 @@
  *   --force   overwrite keys that already exist. Without it an existing key is
  *             skipped, so a REPLACED edition (same slug, same key) would keep
  *             serving the old file forever — pass it for every replaced slug,
- *             then invalidate `/catalog/textbooks/<slug>/*` on CloudFront (the
+ *             then invalidate `/catalog/{cur}/{grade}/{subjectDir}/*` on CloudFront (the
  *             objects are uploaded `immutable, max-age=1y`).
  *   --only    comma-separated Subject slugs; everything else is left alone.
  *   --assets  comma-separated file names to upload (textbook.pdf, cover.jpg,
- *             thumbnail.jpg, banner.jpg, textbook.md); default all.
+ *             thumbnail.jpg, banner.jpg, structure.json, textbook.md);
+ *             default all.
  *   --bucket  target bucket. cdn.databayt.org is served from `databayt-cdn`,
  *             NOT from `AWS_S3_BUCKET` (the app's own bucket) — a key that is
  *             missing there 403s; run once per bucket.
@@ -40,6 +52,7 @@ import { PrismaClient } from "@prisma/client"
 import { config } from "dotenv"
 
 import { resolveSdDbSlug } from "../prisma/seeds/catalog/sd"
+import { catalogKey } from "../src/components/catalog/catalog-key"
 
 config()
 
@@ -56,7 +69,17 @@ function argValue(name: string): string | undefined {
   return hit ? hit.slice(name.length + 1) : undefined
 }
 
-const BUCKET = argValue("--bucket") ?? process.env.AWS_S3_BUCKET!
+const BUCKET = argValue("--bucket")
+if (!BUCKET) {
+  console.error(
+    "--bucket=<name> is required.\n" +
+      "  databayt-cdn      the CloudFront origin behind cdn.databayt.org\n" +
+      "  hogwarts-databayt the uploads bucket (AWS_S3_BUCKET)\n" +
+      "There is deliberately no default: AWS_S3_BUCKET is the uploads bucket, so\n" +
+      "defaulting to it silently publishes where CloudFront cannot serve."
+  )
+  process.exit(1)
+}
 const CURRICULUM_ROOT = resolve(__dirname, "../curriculum")
 const DRY_RUN = process.argv.includes("--dry-run")
 const FORCE = process.argv.includes("--force")
@@ -85,8 +108,16 @@ const SUBJECT_ASSETS = [
   { file: "cover.jpg", field: "cover", contentType: "image/jpeg" },
   { file: "thumbnail.jpg", field: "thumbnail", contentType: "image/jpeg" },
   { file: "banner.jpg", field: "banner", contentType: "image/jpeg" },
-  // Markdown twin of the textbook (MarkItDown output). No Subject field points at
-  // it: the key is deterministic — same prefix as textbook.pdf, `.md` extension.
+  // Authoring structure — exact chapter start pages. field: null, like the
+  // Markdown twin below: no Subject column points at either, because the reader
+  // derives both keys from Subject.pdf's directory.
+  {
+    file: "structure.json",
+    field: null,
+    contentType: "application/json; charset=utf-8",
+  },
+  // Markdown twin of the textbook (MarkItDown output). No Subject field points
+  // at it: the key is deterministic — same prefix as textbook.pdf, `.md` ext.
   {
     file: "textbook.md",
     field: null,
@@ -171,7 +202,10 @@ async function main() {
           const filePath = join(subjectPath, spec.file)
           if (!existsSync(filePath)) continue
           assets.push({
-            key: `catalog/textbooks/${slug}/${spec.file}`,
+            key: catalogKey(
+              { curriculum: cur.dir, grade, subjectDir: subject },
+              spec.file
+            ),
             filePath,
             contentType: spec.contentType,
             field: spec.field,

@@ -26,6 +26,7 @@ import fs from "fs"
 import path from "path"
 import type { Prisma, PrismaClient, SchoolLevel } from "@prisma/client"
 
+import { catalogKey } from "../../../src/components/catalog/catalog-key"
 import {
   clickviewConceptKey,
   gradeToLevel as cvGradeToLevel,
@@ -313,11 +314,12 @@ export function resolveSdDbSlug(grade: string, dirSubject: string): string {
 function localArtKey(
   grade: string,
   dirName: string,
-  dbSlug: string,
   file: "thumbnail.jpg" | "banner.jpg" | "cover.jpg"
 ): string | null {
   const localPath = path.join(CURRICULUM_DIR, grade, dirName, file)
-  return fs.existsSync(localPath) ? `catalog/textbooks/${dbSlug}/${file}` : null
+  return fs.existsSync(localPath)
+    ? catalogKey({ curriculum: "sd", grade, subjectDir: dirName }, file)
+    : null
 }
 
 // ============================================================================
@@ -677,19 +679,14 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
       // Real per-subject art beats the shared concept art whenever the local
       // file exists (upload-textbooks-all.ts pushes it to the same key).
       const subjThumb =
-        localArtKey(
-          entry.grade,
-          entry.dirName,
-          entry.dbSlug,
-          "thumbnail.jpg"
-        ) ??
+        localArtKey(entry.grade, entry.dirName, "thumbnail.jpg") ??
         (USE_CLICKVIEW
           ? clickviewConceptKey(cvLevel, concept, "thumbnail")
           : gradeConceptPrefix
             ? `${gradeConceptPrefix}/thumbnail`
             : null)
       const subjBanner =
-        localArtKey(entry.grade, entry.dirName, entry.dbSlug, "banner.jpg") ??
+        localArtKey(entry.grade, entry.dirName, "banner.jpg") ??
         (USE_CLICKVIEW
           ? clickviewConceptKey(cvLevel, concept, "banner")
           : gradeConceptPrefix
@@ -705,13 +702,20 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
       )
       const hasTextbook = fs.existsSync(textbookPath)
       const pdfKey = hasTextbook
-        ? `catalog/textbooks/${entry.dbSlug}/textbook.pdf`
+        ? catalogKey(
+            {
+              curriculum: "sd",
+              grade: entry.grade,
+              subjectDir: entry.dirName,
+            },
+            "textbook.pdf"
+          )
         : null
 
       // Real per-textbook cover (PDF page 1) when rendered locally, else the
       // shared concept cover.
       const coverKey =
-        localArtKey(entry.grade, entry.dirName, entry.dbSlug, "cover.jpg") ??
+        localArtKey(entry.grade, entry.dirName, "cover.jpg") ??
         (concept ? `catalog/concepts/${concept}/cover` : null)
 
       const newSubject = await prisma.subject.create({
@@ -774,24 +778,9 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
     // and uploaded by scripts/upload-textbooks-all.ts) over the shared concept
     // art. Cut over from a stale concept key whenever the local file exists;
     // otherwise only fill missing values with the concept fallback.
-    const localThumb = localArtKey(
-      entry.grade,
-      entry.dirName,
-      entry.dbSlug,
-      "thumbnail.jpg"
-    )
-    const localBanner = localArtKey(
-      entry.grade,
-      entry.dirName,
-      entry.dbSlug,
-      "banner.jpg"
-    )
-    const localCover = localArtKey(
-      entry.grade,
-      entry.dirName,
-      entry.dbSlug,
-      "cover.jpg"
-    )
+    const localThumb = localArtKey(entry.grade, entry.dirName, "thumbnail.jpg")
+    const localBanner = localArtKey(entry.grade, entry.dirName, "banner.jpg")
+    const localCover = localArtKey(entry.grade, entry.dirName, "cover.jpg")
     const conceptThumb = `catalog/concepts/g${entry.gradeNum}-${entry.concept}/thumbnail`
     const conceptBanner = `catalog/concepts/g${entry.gradeNum}-${entry.concept}/banner`
     const conceptCover = `catalog/concepts/${entry.concept}/cover`
@@ -825,7 +814,10 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
       "textbook.pdf"
     )
     if (!dbSubject.pdf && fs.existsSync(textbookPath)) {
-      updates.pdf = `catalog/textbooks/${entry.dbSlug}/textbook.pdf`
+      updates.pdf = catalogKey(
+        { curriculum: "sd", grade: entry.grade, subjectDir: entry.dirName },
+        "textbook.pdf"
+      )
     }
 
     // Update Arabic name from curriculum.json if available
@@ -898,7 +890,10 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
     // Load structure.json for real titles (folder name === structure slug)
     const structureData = loadStructure(entry.grade, entry.dirName)
     const subjectConcept =
-      authoredConcept(structureData?.concept, `${entry.grade}/${entry.dirName}`) ??
+      authoredConcept(
+        structureData?.concept,
+        `${entry.grade}/${entry.dirName}`
+      ) ??
       dbSubject.concept ??
       entry.concept
     const contentLang = subjectLangFor(entry.dirName, structureData)

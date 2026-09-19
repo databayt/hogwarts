@@ -36,7 +36,7 @@ const RTL_LANGS = new Set(["ar", "fa", "ur", "he", "ps", "ku"])
 export interface TextbookSubject {
   name: string
   slug: string
-  /** S3 key of the PDF (`catalog/textbooks/<slug>/textbook.pdf`). */
+  /** S3 key of the PDF (`catalog/<cur>/<grade>/<subjectDir>/textbook.pdf`). */
   pdfKey: string
   coverKey: string | null
   description: string | null

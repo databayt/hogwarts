@@ -5,7 +5,7 @@ import { normalizeStructure, type StructurePages } from "./spine"
 
 /**
  * The authoring `structure.json` published beside a textbook's twin on the
- * CDN (`catalog/textbooks/<slug>/structure.json`). Optional: when it is
+ * CDN (`catalog/<cur>/<grade>/<subjectDir>/structure.json`). Optional: when it is
  * missing the reader anchors the contents by name matching instead.
  */
 export async function fetchStructure(

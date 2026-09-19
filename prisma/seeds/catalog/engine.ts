@@ -21,6 +21,7 @@ import fs from "fs"
 import path from "path"
 import type { PrismaClient, SchoolLevel } from "@prisma/client"
 
+import { catalogKey } from "../../../src/components/catalog/catalog-key"
 import {
   clickviewConceptKey,
   gradeToLevel as cvGradeToLevel,
@@ -224,7 +225,16 @@ export async function syncCurriculumTree(
           thumbnail: subjThumb,
           banner: subjBanner,
           cover: concept ? `catalog/concepts/${concept}/cover` : null,
-          pdf: hasTextbook ? `catalog/textbooks/${slug}/textbook.pdf` : null,
+          pdf: hasTextbook
+            ? catalogKey(
+                {
+                  curriculum: config.dir,
+                  grade: `g${grade}`,
+                  subjectDir,
+                },
+                "textbook.pdf"
+              )
+            : null,
           sortOrder: sortIdx++,
           status: "PUBLISHED",
         },
@@ -235,7 +245,16 @@ export async function syncCurriculumTree(
           thumbnail: subjThumb,
           banner: subjBanner,
           cover: concept ? `catalog/concepts/${concept}/cover` : null,
-          pdf: hasTextbook ? `catalog/textbooks/${slug}/textbook.pdf` : null,
+          pdf: hasTextbook
+            ? catalogKey(
+                {
+                  curriculum: config.dir,
+                  grade: `g${grade}`,
+                  subjectDir,
+                },
+                "textbook.pdf"
+              )
+            : null,
         },
       })
       subjectCount++
