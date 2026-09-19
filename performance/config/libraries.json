@@ -1,0 +1,141 @@
+{
+  "$comment": "Byte signatures that identify a heavy dependency inside a minified production chunk. A chunk matches a library when ANY signature is present. Keep signatures distinctive: a string the library ships, not a word app code might contain.",
+  "libraries": {
+    "mapbox-gl": [
+      "mapboxgl",
+      "mapbox-gl"
+    ],
+    "livekit": [
+      "trackSubscribed",
+      "livekit-client"
+    ],
+    "pdfjs": [
+      "pdfjs",
+      "PDFWorker"
+    ],
+    "react-pdf/pdfkit": [
+      "pdfkit",
+      "react-pdf"
+    ],
+    "xlsx": [
+      "SheetJS"
+    ],
+    "jszip": [
+      "JSZip"
+    ],
+    "tiptap/prosemirror": [
+      "prosemirror",
+      "ProseMirror"
+    ],
+    "recharts": [
+      "recharts"
+    ],
+    "lottie": [
+      "bodymovin"
+    ],
+    "mermaid": [
+      "mermaid"
+    ],
+    "shiki": [
+      "vscode-textmate",
+      "vscode-oniguruma"
+    ],
+    "katex": [
+      "katex"
+    ],
+    "leaflet": [
+      "leaflet"
+    ],
+    "gsap": [
+      "GSAP"
+    ],
+    "moment": [
+      "_isAMomentObject"
+    ],
+    "emoji-mart": [
+      "emoji-mart"
+    ],
+    "html2canvas": [
+      "html2canvas"
+    ],
+    "jspdf": [
+      "jsPDF"
+    ],
+    "quagga": [
+      "Quagga"
+    ],
+    "swiper": [
+      "swiper-slide"
+    ],
+    "posthog": [
+      "posthog"
+    ],
+    "sentry": [
+      "__SENTRY__"
+    ],
+    "stripe-js": [
+      "js.stripe.com"
+    ],
+    "socket.io": [
+      "socket.io"
+    ],
+    "libphonenumber": [
+      "country_calling_codes"
+    ],
+    "country-state-city": [
+      "\"isoCode\""
+    ],
+    "iconify": [
+      "iconify"
+    ],
+    "framer-motion": [
+      "data-framer-appear-id",
+      "framerAppearId"
+    ],
+    "plaid": [
+      "cdn.plaid.com"
+    ],
+    "dictionary-json": [
+      "schoolDashboard"
+    ],
+    "prisma-client-browser": [
+      "$Enums"
+    ],
+    "shiki-grammars": [
+      "scopeName"
+    ],
+    "cytoscape": [
+      "cytoscape"
+    ],
+    "zod": [
+      "ZodError"
+    ],
+    "react-hook-form": [
+      "react-hook-form"
+    ],
+    "tanstack-table": [
+      "getCoreRowModel"
+    ],
+    "date-fns": [
+      "date-fns"
+    ],
+    "i18next": [
+      "i18next"
+    ],
+    "dnd-kit": [
+      "DndDescribedBy"
+    ],
+    "react-day-picker": [
+      "rdp-"
+    ],
+    "cmdk": [
+      "cmdk-"
+    ],
+    "sonner": [
+      "data-sonner"
+    ],
+    "next-auth-client": [
+      "__NEXTAUTH"
+    ]
+  }
+}

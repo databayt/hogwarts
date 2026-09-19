@@ -1,0 +1,104 @@
+{
+  "$comment": "The performance lab's single config. Targets, roles, routes and throttling profiles. Budgets live in budgets.json, library signatures in libraries.json.",
+  "locale": "ar",
+  "targets": {
+    "prod": {
+      "tenantOrigin": "https://demo.balqalam.com",
+      "marketingOrigin": "https://balqalam.com",
+      "healthUrl": "https://balqalam.com/api/health",
+      "allowWrites": false
+    },
+    "local": {
+      "tenantOrigin": "http://demo.localhost:3000",
+      "marketingOrigin": "http://localhost:3000",
+      "healthUrl": "http://localhost:3000/api/health",
+      "allowWrites": true
+    }
+  },
+  "roles": {
+    "admin": { "identifier": "admin@balqalam.com" },
+    "teacher": { "identifier": "teacher@balqalam.com" },
+    "guardian": { "identifier": "parent@balqalam.com" },
+    "student": { "identifier": "student@balqalam.com" }
+  },
+  "routes": {
+    "admin": [
+      "/dashboard",
+      "/attendance",
+      "/students",
+      "/teachers",
+      "/grades",
+      "/finance",
+      "/announcements",
+      "/timetable",
+      "/messages",
+      "/notifications",
+      "/library"
+    ],
+    "teacher": [
+      "/dashboard",
+      "/attendance",
+      "/students",
+      "/grades",
+      "/timetable",
+      "/classrooms",
+      "/exams"
+    ],
+    "guardian": ["/dashboard", "/parent", "/attendance", "/grades", "/finance"],
+    "student": [
+      "/dashboard",
+      "/my-assignments",
+      "/grades",
+      "/timetable",
+      "/library"
+    ]
+  },
+  "publicRoutes": [
+    { "origin": "marketing", "path": "/" },
+    { "origin": "tenant", "path": "/login" }
+  ],
+  "navigation": {
+    "admin": [
+      "/dashboard",
+      "/attendance",
+      "/students",
+      "/grades",
+      "/finance",
+      "/dashboard"
+    ],
+    "teacher": [
+      "/dashboard",
+      "/attendance",
+      "/students",
+      "/timetable",
+      "/dashboard"
+    ],
+    "guardian": ["/dashboard", "/attendance", "/grades", "/dashboard"],
+    "student": ["/dashboard", "/timetable", "/grades", "/dashboard"]
+  },
+  "profiles": {
+    "none": {
+      "description": "No emulation: desktop viewport, the vantage point's own network and CPU.",
+      "device": null,
+      "cpuSlowdown": 1,
+      "network": null
+    },
+    "mobile": {
+      "description": "Mid-range phone on an imperfect mobile network: Lighthouse's mobile defaults (4x CPU, 150 ms RTT, 1.6 Mbps down, 750 kbps up) on top of the vantage point's real latency.",
+      "device": "Pixel 5",
+      "cpuSlowdown": 4,
+      "network": { "latencyMs": 150, "downKbps": 1638, "upKbps": 750 }
+    },
+    "mobile-fast": {
+      "description": "Same phone on good 4G / Wi-Fi: 4x CPU, 40 ms added RTT, 9 Mbps down.",
+      "device": "Pixel 5",
+      "cpuSlowdown": 4,
+      "network": { "latencyMs": 40, "downKbps": 9000, "upKbps": 3000 }
+    }
+  },
+  "settle": {
+    "lcpQuietMs": 2000,
+    "navQuietMs": 600,
+    "capMs": 45000
+  }
+}

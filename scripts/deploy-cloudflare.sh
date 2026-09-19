@@ -74,6 +74,22 @@ build() {
   ls -d .next/standalone/node_modules/.pnpm/@img+sharp-linux-x64* >/dev/null 2>&1 && echo "    sharp linux-x64: ok" || echo "    WARN: sharp linux-x64 not in standalone output"
   find .next/standalone -name "libquery_engine-debian-openssl-3.0.x.so.node" | head -1 | grep -q . && echo "    prisma debian engine: ok" || echo "    WARN: prisma debian engine not in standalone output"
   du -sh .next/standalone .next/static public | sed 's/^/    /'
+
+  # Performance gate: what this build makes a phone download before it can
+  # hydrate, per tracked route, against performance/baseline.json. Static
+  # analysis of .next — seconds, no server. A regression is printed loudly and
+  # the build is kept (a 12-minute build is not thrown away by a byte count);
+  # PERF_GATE=strict makes it abort. Guide: performance/README.md.
+  if [[ -f performance/scripts/bundle-report.mjs ]]; then
+    echo "==> performance gate (initial JS per route vs performance/baseline.json)"
+    if node performance/scripts/bundle-report.mjs --next-dir .next --out performance/reports/latest >/dev/null \
+      && node performance/scripts/report.mjs --run performance/reports/latest --check | sed 's/^/    /'; then
+      echo "    performance gate: ok"
+    else
+      echo "    PERFORMANCE REGRESSION — see $BUILD_DIR/performance/reports/latest/REPORT.md"
+      [[ "${PERF_GATE:-warn}" == "strict" ]] && { echo "ABORT: PERF_GATE=strict"; exit 1; }
+    fi
+  fi
 }
 
 smoke() {

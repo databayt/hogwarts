@@ -326,44 +326,22 @@ npx tsx scripts/security-permissions.ts --role TEACHER  # Specific role
 
 ## ⚡ **Performance**
 
-### 14. `perf-lighthouse.ts` - Lighthouse Audits
+### 14–15. The performance lab — `performance/`
 
-**Performance, accessibility, SEO audits**
-
-```bash
-npx tsx scripts/perf-lighthouse.ts \
-  --url https://portsudan.databayt.org \
-  --mobile
-```
-
-**Targets:**
-
-- Performance: > 90
-- Accessibility: > 95
-- Best Practices: > 90
-- SEO: > 90
-
-**Note**: Requires `lighthouse` CLI installed globally
-
----
-
-### 15. `perf-bundle.ts` - Bundle Analysis
-
-**Analyze bundle size and optimization opportunities**
+`perf-lighthouse.ts` and `perf-bundle.ts` lived here until 2026-09-19. Neither
+measured anything (one printed how to install Lighthouse, the other summed the
+size of `.next/`), so they were replaced by a lab that does:
 
 ```bash
-npx tsx scripts/perf-bundle.ts
+pnpm perf:build        # per-route initial JS/CSS from a build, heavy libraries named
+pnpm perf:probe        # edge vs container vs database latency, document payloads
+pnpm perf:playwright   # cold / warm / navigation / interaction in a real browser
+pnpm perf:queries      # database round trips and waterfalls per route
+pnpm perf:report       # REPORT.md + budget verdicts + diff against the baseline
+pnpm perf:check        # the gate: exit 1 on a bundle regression
 ```
 
-**Provides:**
-
-- Total bundle size
-- Per-route breakdown
-- Optimization recommendations
-- Tree-shaking opportunities
-- Dynamic import suggestions
-
-**Target**: < 100 KB per route (gzipped)
+Guide, budgets and how to read the reports: [`performance/README.md`](../performance/README.md).
 
 ---
 
@@ -467,8 +445,8 @@ npx tsx scripts/db-backup.ts --school khartoum
 # 1. Security scan
 npx tsx scripts/security-scan.ts
 
-# 2. Performance check
-npx tsx scripts/perf-bundle.ts
+# 2. Performance check (after `pnpm build`)
+pnpm perf:check
 
 # 3. Data integrity
 npx tsx scripts/db-anomalies.ts

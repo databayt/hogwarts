@@ -58,7 +58,16 @@
     "crm:funnel-gates": "tsx scripts/funnel/gates.ts",
     "crm:funnel-tick": "tsx scripts/funnel/tick.ts",
     "crm:funnel-apply-inbox": "tsx scripts/funnel/apply-inbox.ts",
-    "cf:deploy": "scripts/deploy-cloudflare.sh"
+    "cf:deploy": "scripts/deploy-cloudflare.sh",
+    "perf": "node performance/scripts/probe.mjs && node performance/playwright/run.mjs --profile mobile && node performance/scripts/report.mjs",
+    "perf:build": "node performance/scripts/bundle-report.mjs",
+    "perf:probe": "node performance/scripts/probe.mjs",
+    "perf:playwright": "node performance/playwright/run.mjs",
+    "perf:lighthouse": "node performance/lighthouse/run.mjs",
+    "perf:queries": "node performance/scripts/query-audit.mjs",
+    "perf:rum": "node performance/scripts/rum-report.mjs",
+    "perf:report": "node performance/scripts/report.mjs",
+    "perf:check": "node performance/scripts/bundle-report.mjs && node performance/scripts/report.mjs --check"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.37",

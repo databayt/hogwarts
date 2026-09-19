@@ -1,0 +1,86 @@
+# Production performance check — performance/README.md.
+#
+# Measures the LIVE demo tenant from a GitHub runner: no build, no secrets (the
+# demo accounts are public). It exists to catch what a deploy changed for real
+# users — document weight, JavaScript shipped, request counts, a route that
+# stopped streaming — within a week, or on demand right after a deploy.
+#
+# What it gates on: BYTES against performance/baseline.json. Bytes are the same
+# from any vantage point. Timings are reported but never fail the job: a
+# runner in Virginia is not a teacher's phone in Khartoum, and a red pipeline
+# that cries wolf gets ignored.
+#
+# The build-time gate (initial JS per route) runs inside
+# scripts/deploy-cloudflare.sh, where the build already exists.
+name: Performance (production)
+
+on:
+  workflow_dispatch:
+    inputs:
+      roles:
+        description: "Roles to measure (comma-separated)"
+        default: "admin,teacher"
+      runs:
+        description: "Runs per route (median is reported)"
+        default: "3"
+  schedule:
+    - cron: "0 4 * * 1" # Mondays 04:00 UTC — before the school week starts
+
+permissions:
+  contents: read
+
+concurrency:
+  group: perf-production
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    if: github.repository == 'databayt/hogwarts'
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The lab is self-contained (relative imports + Playwright). Staging it
+      # outside the repo keeps `npm install` from reconciling the app's 200
+      # packages and running its Prisma postinstall.
+      - name: Stage the lab
+        run: |
+          mkdir -p "$RUNNER_TEMP/lab"
+          cp -R performance "$RUNNER_TEMP/lab/performance"
+          cd "$RUNNER_TEMP/lab"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund @playwright/test@1.57.0
+          npx playwright install --with-deps chromium
+
+      - name: Network probe
+        working-directory: ${{ runner.temp }}/lab
+        run: node performance/scripts/probe.mjs --target prod --samples 15 --out performance/reports/ci
+
+      - name: Browser flows (mid-range phone profile)
+        working-directory: ${{ runner.temp }}/lab
+        run: >
+          node performance/playwright/run.mjs --target prod --profile mobile
+          --roles "${{ inputs.roles || 'admin,teacher' }}"
+          --routes /dashboard,/attendance,/students,/grades
+          --runs "${{ inputs.runs || '3' }}"
+          --out performance/reports/ci
+
+      - name: Report and byte regression check
+        working-directory: ${{ runner.temp }}/lab
+        run: node performance/scripts/report.mjs --run performance/reports/ci --check
+
+      - name: Summary
+        if: always()
+        run: cat "$RUNNER_TEMP/lab/performance/reports/ci/REPORT.md" >> "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-report
+          path: ${{ runner.temp }}/lab/performance/reports/ci
+          retention-days: 30

@@ -103,3 +103,10 @@ public/fonts/thmanyah/.manifest-version
 
 # Playwright/browser MCP scratch screenshots
 /.claude/playwright-output
+
+# Performance lab: scratch runs are local; the baseline run directory and
+# performance/baseline.json are committed. See performance/README.md.
+/performance/reports/latest/
+/performance/reports/ci/
+/performance/reports/**/lhci/
+/performance/reports/**/*.log
