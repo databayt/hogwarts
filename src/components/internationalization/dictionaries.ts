@@ -72,6 +72,40 @@ export const getMarketingDictionary = cache(async (locale: Locale) => {
 })
 
 /**
+ * Auth pages — login, join, reset, new-password, new-verification, error.
+ *
+ * These pages hand their dictionary to a CLIENT form, and a prop to a client
+ * component is serialized into the document. With the full dictionary that
+ * was 838 KB of the 1.15 MB `/ar/login` HTML (production, 2026-09-19) — the
+ * first screen every teacher and parent opens, on a cold cache. The forms
+ * under src/components/auth read four namespaces: `auth`, `common`,
+ * `userMenu`, `messages`. Send those and nothing else.
+ *
+ * Partial by design, typed as the full `Dictionary` like the other
+ * route-scoped loaders. An auth form that starts reading another namespace
+ * must add it here; the optional-chaining house rule keeps a miss from
+ * crashing, but it renders the English fallback.
+ */
+export const getAuthDictionary = cache(
+  async (locale: Locale): Promise<Dictionary> => {
+    const load = async (loc: Locale) => {
+      const [general, messages] = await Promise.all([
+        loadLocale(flatDictionaries.general, loc),
+        loadFeature("messages", loc),
+      ])
+      const { auth, common, userMenu } = general
+      return { auth, common, userMenu, messages } as unknown as Dictionary
+    }
+    try {
+      return await load(locale)
+    } catch {
+      console.warn(`Failed to load auth dictionary for locale: ${locale}`)
+      return await load("en")
+    }
+  }
+)
+
+/**
  * Platform core pages - general + school + saas-dashboard + messages
  * Used for: lab, attendance, basic school-dashboard features
  */

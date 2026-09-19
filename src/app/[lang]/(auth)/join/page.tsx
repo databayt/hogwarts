@@ -3,7 +3,7 @@
 
 import { RegisterForm } from "@/components/auth/join/form"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getAuthDictionary } from "@/components/internationalization/dictionaries"
 import { ForgetSavedPages } from "@/components/offline/forget-saved-pages"
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 
 const RegisterPage = async ({ params }: Props) => {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getAuthDictionary(lang)
 
   return (
     <>

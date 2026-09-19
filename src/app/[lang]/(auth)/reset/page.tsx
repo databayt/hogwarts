@@ -3,7 +3,7 @@
 
 import { ResetForm } from "@/components/auth/reset/form"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getAuthDictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   params: Promise<{ lang: Locale }>
@@ -11,7 +11,7 @@ interface Props {
 
 const ResetPage = async ({ params }: Props) => {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getAuthDictionary(lang)
 
   return <ResetForm dictionary={dictionary} lang={lang} />
 }

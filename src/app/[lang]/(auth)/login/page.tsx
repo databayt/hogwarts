@@ -12,7 +12,7 @@ import {
 import { DemoLoginForm } from "@/components/auth/login/demo-form"
 import { LoginForm } from "@/components/auth/login/form"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getAuthDictionary } from "@/components/internationalization/dictionaries"
 import { ForgetSavedPages } from "@/components/offline/forget-saved-pages"
 
 interface Props {
@@ -21,7 +21,7 @@ interface Props {
 
 const LoginPage = async ({ params }: Props) => {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getAuthDictionary(lang)
 
   // The showcase tenant swaps the credential fields for a role picker. Auth
   // routes aren't rewritten under /s/[subdomain] (see src/proxy.ts), so the
