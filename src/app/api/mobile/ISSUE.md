@@ -8,7 +8,7 @@ maturity: In Progress
 completion: 40
 tracker: https://github.com/databayt/hogwarts/issues/315
 docs: https://ed.databayt.org/en/docs/mobile-api
-last_audited: 2026-05-25
+last_audited: 2026-09-19
 ---
 
 # Mobile API Layer — Production Readiness Tracker
@@ -26,6 +26,14 @@ checkboxes here. The tracker is canonical for cross-feature visibility; this fil
 canonical for code-side context (read by the `/report` agent)._
 
 - [ ] _To be filled in_
+
+## Recently Landed
+
+- [x] `GET /api/mobile/search` — the Spotlight palette's entity search over
+      HTTP, so the Android app can reach the same 15 kinds the web reaches
+      through its server action (2026-09-19). Follow-up: the app's search
+      screen still lists pages and actions only; wiring the dynamic half is a
+      client change, not a server one.
 
 ## Known Issues
 

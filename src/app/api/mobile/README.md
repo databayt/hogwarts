@@ -8,7 +8,7 @@ maturity: In Progress
 completion: 40
 tracker: https://github.com/databayt/hogwarts/issues/315
 docs: https://ed.databayt.org/en/docs/mobile-api
-last_audited: 2026-09-14
+last_audited: 2026-09-19
 ---
 
 # Mobile API Layer
@@ -258,6 +258,46 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 | Method | Path                   | Description               |
 | ------ | ---------------------- | ------------------------- |
 | GET    | `/api/mobile/subjects` | School's adopted subjects |
+
+### Search (new)
+
+| Method | Path                 | Description                                  |
+| ------ | -------------------- | -------------------------------------------- |
+| GET    | `/api/mobile/search` | Spotlight entity search across the 15 kinds |
+
+The phone's half of the web's Cmd+K palette. Same engine
+(`generic-command-menu/server/global-search.ts`) the web reaches through a
+server action, which a phone cannot call.
+
+Query params: `q` (required, min 2 chars), `kinds` (comma list of
+`student,teacher,guardian,class,classroom,subject,vehicle,driver,route,application,payment,invoice,book,announcement,event`),
+`lang` (`en|ar`, default `en`), `limit` (per kind, default 5, capped at 20).
+
+The query is normalized before it reaches a predicate (`normalize.ts` — alef
+variants, harakat, ya, ta-marbuta, tatweel), so `أح` and `اح` return the same
+rows here as they do in the browser.
+
+```
+{ data: [ { kind, results: [ { id, label, secondary_label, href, breadcrumb, lang } ] } ],
+  total, took_ms }
+```
+
+`href` carries no locale prefix; the client prepends its own.
+
+| Status | Body                         | When                                        |
+| ------ | ---------------------------- | ------------------------------------------- |
+| 400    | `{ error: "query_too_short" }` | `q` under 2 characters                    |
+| 400    | `{ error: "invalid_kind" }`  | `kinds` names something outside the union   |
+| 403    | `{ error: "forbidden" }`     | role `USER` — signed in, not in a school yet |
+
+RBAC narrowing is `buildEntityKindList`'s, unchanged: an ADMIN sees every kind
+in their school, a STUDENT only what is theirs. Verified against the demo
+school — admin `ah` → book, student, teacher, guardian, application, invoice;
+student `ah` → book alone.
+
+Unlike the web action this route does **not** wrap the search in
+`unstable_cache`: that is an RSC revalidation primitive keyed to tags a route
+handler does not participate in.
 
 ---
 
