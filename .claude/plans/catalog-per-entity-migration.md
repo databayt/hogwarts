@@ -1,5 +1,28 @@
 # Catalog image migration: concept-shared → per-entity slug paths
 
+> **SUPERSEDED IN PART (2026-09-19) — do not run alongside the CDN key-scheme migration.**
+>
+> §2 of this document proposes `catalog/<curriculum>/<subjectSlug>/` with **no grade segment**
+> (e.g. `catalog/us/us-g3-math/`). That scheme was replaced by a hierarchical one:
+>
+> ```
+> catalog/<curriculum>/<grade>/<subjectDir>/[<chapterSlug>/[<lessonSlug>/]]<asset>
+> ```
+>
+> where `<subjectDir>` is the curriculum FOLDER name (`math`), not the DB slug suffix
+> (`basic-math`) — 42 of 138 SD subjects disagree between the two, so this is not cosmetic.
+>
+> The helper this document reserves at `src/components/catalog/catalog-key.ts` **now exists** and
+> implements the hierarchical scheme. Use `catalogBase()` / `catalogKey()` from it rather than the
+> `catalogKey({ curriculum, subjectSlug, ... })` signature sketched in §3.1, and read the
+> slug → folder mapping from `prisma/seeds/catalog/sd-subject-dirs.json` (committed, 138 entries)
+> rather than deriving it — the dir→slug overrides in `sd.ts` are not invertible.
+>
+> **Everything else in this document still stands**: the per-entity image goal, the backfill
+> strategy, `processAndUploadCatalogImage`, the ClickView provenance, and the `-{size}.webp`
+> convention owned by `image-url.ts`. Only the base path changes. When this migration runs, its
+> thumbnails land at `catalog/<cur>/<grade>/<subjectDir>/<chapterSlug>/<lessonSlug>/thumbnail`.
+
 **Status:** PLAN — review before any code change.
 **Goal:** every Subject / Chapter / Lesson resolves its OWN image from a clean, deterministic CDN
 key derived purely from its slugs, replacing today's concept-shared keys. Preserve the existing

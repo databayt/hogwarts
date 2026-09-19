@@ -1,0 +1,968 @@
+[
+  {
+    "slug": "sd-g1-arabic",
+    "curriculum": "sd",
+    "grade": "g1",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g1-english",
+    "curriculum": "sd",
+    "grade": "g1",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g1-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g1",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g1-math",
+    "curriculum": "sd",
+    "grade": "g1",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-arabic",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-arabic-advanced",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "arabic-specialized",
+    "source": "override"
+  },
+  {
+    "slug": "sd-g10-art",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "art",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-biology",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "biology",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-chemistry",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "chemistry",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-computer-science",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "computer-science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-engineering",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "engineering",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-english-v2",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-entrepreneurship",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "entrepreneurship",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-french",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "french",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-geography",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "geography",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-history",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "history",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-home-economics",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "home-economics",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "islamic-studies",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-literature",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "arabic-literature",
+    "source": "override"
+  },
+  {
+    "slug": "sd-g10-math",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-military-sciences",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "military-science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-national-education",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "national-education",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-physics",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "physics",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-quran",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "quran",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g10-rhetoric",
+    "curriculum": "sd",
+    "grade": "g10",
+    "subjectDir": "arabic-rhetoric",
+    "source": "override"
+  },
+  {
+    "slug": "sd-g11-arabic-advanced",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "arabic-specialized",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-arts-design",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "art",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-biology",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "biology",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-chemistry",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "chemistry",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-commerce",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "commercial-studies",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-computer-science",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "computer-science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-engineering",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "engineering",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-english",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-family-sciences",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "home-economics",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-french",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "french",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-geography",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "geography",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-grammar",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "arabic-grammar",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "islamic-studies",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-literature",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "arabic-literature",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-math",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-military-sciences",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "military-science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-physics",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "physics",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-quran-studies",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "quran",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g11-rhetoric",
+    "curriculum": "sd",
+    "grade": "g11",
+    "subjectDir": "arabic-rhetoric",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-agriculture",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "agriculture",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-arabic-advanced",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "arabic-specialized",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-arts-design",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "art",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-basic-math",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-biology",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "biology",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-chemistry",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "chemistry",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-christian-education",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "christian-education",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-commerce",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "commercial-studies",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-computer-science",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "computer-science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-engineering",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "engineering",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-english",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-family-sciences",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "home-economics",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-french",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "french",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-geography",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "geography",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-grammar",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "arabic-grammar",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-history",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "history",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-islamic-studies-optional",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "islamic-studies-optional",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-literary-studies",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "literary-studies",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-literature",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "arabic-literature",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-math-specialized",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "math-specialized",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-military-sciences",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "military-science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-physical-education",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "physical-education",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-physics",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "physics",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g12-rhetoric",
+    "curriculum": "sd",
+    "grade": "g12",
+    "subjectDir": "arabic-rhetoric",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g2-arabic",
+    "curriculum": "sd",
+    "grade": "g2",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g2-english",
+    "curriculum": "sd",
+    "grade": "g2",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g2-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g2",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g2-math",
+    "curriculum": "sd",
+    "grade": "g2",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g3-arabic",
+    "curriculum": "sd",
+    "grade": "g3",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g3-english",
+    "curriculum": "sd",
+    "grade": "g3",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g3-geography",
+    "curriculum": "sd",
+    "grade": "g3",
+    "subjectDir": "geography",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g3-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g3",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g3-math",
+    "curriculum": "sd",
+    "grade": "g3",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g3-science",
+    "curriculum": "sd",
+    "grade": "g3",
+    "subjectDir": "science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g4-arabic",
+    "curriculum": "sd",
+    "grade": "g4",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g4-arts",
+    "curriculum": "sd",
+    "grade": "g4",
+    "subjectDir": "art",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g4-computer",
+    "curriculum": "sd",
+    "grade": "g4",
+    "subjectDir": "ict",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g4-english-v2",
+    "curriculum": "sd",
+    "grade": "g4",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g4-history",
+    "curriculum": "sd",
+    "grade": "g4",
+    "subjectDir": "history",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g4-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g4",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g4-math",
+    "curriculum": "sd",
+    "grade": "g4",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g4-science",
+    "curriculum": "sd",
+    "grade": "g4",
+    "subjectDir": "science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-arabic",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-arts",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "art",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-clothing",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "clothing",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-computer",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "ict",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-earth-environment",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "earth-environment",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-english",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-geography",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "geography",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-history",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "history",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-home-economics",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "home-economics",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-math",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-resources",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "resources",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-science",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g5-technology",
+    "curriculum": "sd",
+    "grade": "g5",
+    "subjectDir": "technology",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g6-arabic-v2",
+    "curriculum": "sd",
+    "grade": "g6",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g6-arts",
+    "curriculum": "sd",
+    "grade": "g6",
+    "subjectDir": "art",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g6-english",
+    "curriculum": "sd",
+    "grade": "g6",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g6-geography",
+    "curriculum": "sd",
+    "grade": "g6",
+    "subjectDir": "geography",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g6-history",
+    "curriculum": "sd",
+    "grade": "g6",
+    "subjectDir": "history",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g6-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g6",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g6-math",
+    "curriculum": "sd",
+    "grade": "g6",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g6-science",
+    "curriculum": "sd",
+    "grade": "g6",
+    "subjectDir": "science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g6-technology",
+    "curriculum": "sd",
+    "grade": "g6",
+    "subjectDir": "ict",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g7-arabic",
+    "curriculum": "sd",
+    "grade": "g7",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g7-art",
+    "curriculum": "sd",
+    "grade": "g7",
+    "subjectDir": "art",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g7-english",
+    "curriculum": "sd",
+    "grade": "g7",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g7-geography",
+    "curriculum": "sd",
+    "grade": "g7",
+    "subjectDir": "geography",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g7-history",
+    "curriculum": "sd",
+    "grade": "g7",
+    "subjectDir": "history",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g7-ict",
+    "curriculum": "sd",
+    "grade": "g7",
+    "subjectDir": "ict",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g7-islamic-education",
+    "curriculum": "sd",
+    "grade": "g7",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g7-math",
+    "curriculum": "sd",
+    "grade": "g7",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g7-science",
+    "curriculum": "sd",
+    "grade": "g7",
+    "subjectDir": "science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-arabic",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-art",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "art",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-english",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-geography",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "geography",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-history",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "history",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-islamic-education",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-math",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-national-education",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "national-education",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-science",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g8-technology",
+    "curriculum": "sd",
+    "grade": "g8",
+    "subjectDir": "technology",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g9-arabic",
+    "curriculum": "sd",
+    "grade": "g9",
+    "subjectDir": "arabic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g9-communication-tech",
+    "curriculum": "sd",
+    "grade": "g9",
+    "subjectDir": "ict",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g9-english",
+    "curriculum": "sd",
+    "grade": "g9",
+    "subjectDir": "english",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g9-geography",
+    "curriculum": "sd",
+    "grade": "g9",
+    "subjectDir": "geography",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g9-history",
+    "curriculum": "sd",
+    "grade": "g9",
+    "subjectDir": "history",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g9-islamic-studies",
+    "curriculum": "sd",
+    "grade": "g9",
+    "subjectDir": "islamic",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g9-math",
+    "curriculum": "sd",
+    "grade": "g9",
+    "subjectDir": "math",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g9-science",
+    "curriculum": "sd",
+    "grade": "g9",
+    "subjectDir": "science",
+    "source": "tree"
+  },
+  {
+    "slug": "sd-g9-technical-education",
+    "curriculum": "sd",
+    "grade": "g9",
+    "subjectDir": "technical-education",
+    "source": "tree"
+  }
+]
