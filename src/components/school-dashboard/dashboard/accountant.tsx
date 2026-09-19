@@ -14,6 +14,7 @@ import { getFinancialSummary } from "./actions"
 import { ActivityRings } from "./activity-rings"
 import { ChartSection } from "./chart-section"
 import { EmptyState } from "./empty-state"
+import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { MetricCard } from "./metric-card"
 import { PerformanceGauge } from "./performance-gauge"
@@ -22,6 +23,7 @@ import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { SectionHeading } from "./section-heading"
+import { getWeatherData, type WeatherData } from "./weather-actions"
 
 interface AccountantDashboardProps {
   user: {
@@ -42,9 +44,18 @@ export async function AccountantDashboard({
 }: AccountantDashboardProps) {
   // Wrap entire component in try-catch for comprehensive error handling (like AdminDashboard)
   try {
-    // The Upcoming/Weather hero and the Quick Look row are hidden on this
-    // dashboard, so their fetches (getQuickLookData, getWeatherData) are not
-    // made here — restore both alongside the JSX below.
+    // The Quick Look row is still hidden on this dashboard, so
+    // `getQuickLookData` is not called here — restore it alongside the JSX
+    // below. The Upcoming/Weather hero is back, so its fetch is made.
+
+    // The hero's weather. Best-effort: it renders its own empty state, so a
+    // failure here must not cost the whole dashboard.
+    let weatherData: WeatherData | null = null
+    try {
+      weatherData = await getWeatherData("metric", locale)
+    } catch (error) {
+      console.error("[AccountantDashboard] Error fetching weather:", error)
+    }
 
     // Get tenant context for subdomain with error handling
     let schoolId: string | null = null
@@ -226,12 +237,20 @@ export async function AccountantDashboard({
     return (
       <div className="space-y-8">
         {/* ============ SHARED SECTIONS (the student dashboard's order) ======
-            The Upcoming/Weather hero and the Quick Look row of announcements /
-            events / notifications / messages are hidden here, as they are on
-            the student and teacher dashboards. Restore by putting the JSX back
-            and re-importing `Upcoming`, `Weather`, `QuickLookSection`,
-            `getQuickLookData` and `getWeatherData`. */}
+            The hero opens the dashboard again from `md` up (`DashboardHero` —
+            this role's flip card beside the school's weather); below `md` the
+            phone block in `content.tsx` opens the page instead. The Quick Look
+            row of announcements / events / notifications / messages stays
+            hidden — restore it by putting its JSX back and re-importing
+            `QuickLookSection` and `getQuickLookData`. */}
         <div className="space-y-6">
+          <DashboardHero
+            role="ACCOUNTANT"
+            locale={locale}
+            subdomain={school?.domain || ""}
+            weatherData={weatherData}
+          />
+
           {/* Quick Actions — from `md` up only. Below it the phone dashboard
               shows this same section near the top instead
               (`phone-quick-actions.tsx`), where a thumb reaches it; two copies

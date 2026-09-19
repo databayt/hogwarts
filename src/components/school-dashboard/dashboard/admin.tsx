@@ -7,7 +7,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { type QuickLookData } from "./actions"
 import { AdminDashboardClient } from "./admin-client"
-import { type WeatherData } from "./weather-actions"
+import { getWeatherData, type WeatherData } from "./weather-actions"
 
 interface Props {
   user: {
@@ -28,11 +28,18 @@ export async function AdminDashboard({
 }: Props) {
   // Wrap entire component in try-catch for comprehensive error handling
   try {
-    // The Upcoming/Weather hero and the Quick Look row are hidden on this
-    // dashboard, so their fetches (getQuickLookData, getWeatherData) are not
-    // made here — restore both alongside the JSX in `admin-client.tsx`.
+    // The Quick Look row is still hidden on this dashboard, so its fetch
+    // (getQuickLookData) is not made here — restore it alongside the JSX in
+    // `admin-client.tsx`. The Upcoming/Weather hero is back, so its fetch is.
     const quickLookData: QuickLookData | undefined = undefined
-    const weatherData: WeatherData | null = null
+    let weatherData: WeatherData | null = null
+    try {
+      weatherData = await getWeatherData("metric", locale)
+    } catch (error) {
+      // The hero renders its own empty state, so a weather failure must not
+      // cost the whole dashboard.
+      console.error("[AdminDashboard] Error fetching weather:", error)
+    }
 
     // Get tenant context for subdomain with error handling
     let schoolId: string | null = null

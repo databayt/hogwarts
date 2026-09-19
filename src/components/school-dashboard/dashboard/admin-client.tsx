@@ -6,15 +6,13 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { QuickLookData } from "./actions"
 import { ChartSection } from "./chart-section"
+import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { SectionHeading } from "./section-heading"
-// New unified components
-import { Upcoming } from "./upcoming"
-import { Weather } from "./weather"
 import type { WeatherData } from "./weather-actions"
 
 // ============================================================================
@@ -70,32 +68,6 @@ function QuickActionsSection({
 }
 
 // ============================================================================
-// SECTION: Hero Section (Upcoming + Weather)
-// ============================================================================
-
-function HeroSection({
-  locale,
-  subdomain,
-  weatherData,
-}: {
-  locale: string
-  subdomain: string
-  weatherData?: WeatherData | null
-}) {
-  return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-      <Upcoming role="ADMIN" locale={locale} subdomain={subdomain} />
-      <Weather
-        current={weatherData?.current}
-        forecast={weatherData?.forecast}
-        location={weatherData?.location}
-        className="lg:w-auto lg:max-w-sm lg:min-w-[280px] lg:self-end"
-      />
-    </div>
-  )
-}
-
-// ============================================================================
 // MAIN CLIENT COMPONENT
 // ============================================================================
 
@@ -108,18 +80,19 @@ export function AdminDashboardClient({
   return (
     <div className="space-y-8">
       {/* ============ SHARED SECTIONS (the student dashboard's order) ========
-          The Upcoming/Weather hero and the Quick Look row of announcements /
-          events / notifications / messages are hidden here, as they are on the
-          student and teacher dashboards. `HeroSection` and `QuickLookSection`
-          are still in the file, and `admin.tsx` no longer fetches for them —
-          restore both together. */}
+          The hero opens the dashboard again from `md` up (`DashboardHero` —
+          the role's flip card beside the school's weather); below `md` the
+          phone block in `content.tsx` opens the page instead. The Quick Look
+          row of announcements / events / notifications / messages stays
+          hidden, and `admin.tsx` still does not fetch for it. */}
       <div className="space-y-6">
-        {/* <HeroSection
+        <DashboardHero
+          role="ADMIN"
           locale={locale}
           subdomain={subdomain}
           weatherData={weatherData}
         />
-        <QuickLookSection
+        {/* <QuickLookSection
           locale={locale}
           subdomain={subdomain}
           data={quickLookData}

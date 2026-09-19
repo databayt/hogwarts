@@ -15,6 +15,7 @@ import type { QuickLookData } from "./actions"
 import { ChartSection } from "./chart-section"
 import { periodLabel, periodMinutes, useNowMinutes } from "./day-clock"
 import { EmptyState } from "./empty-state"
+import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { MetricCard } from "./metric-card"
 import { QuickActions } from "./quick-actions"
@@ -25,8 +26,6 @@ import { ScheduleItem } from "./schedule-item"
 import { SectionHeading } from "./section-heading"
 import { TodayLiveAction } from "./today-live-action"
 import type { StudentDashboardData } from "./types"
-import { Upcoming } from "./upcoming"
-import { Weather } from "./weather"
 import type { WeatherData } from "./weather-actions"
 
 // ============================================================================
@@ -53,32 +52,6 @@ function useStudentDict() {
     quickActionsTitle: dict?.quickActions?.title,
     liveClasses: school?.liveClasses,
   }
-}
-
-// ============================================================================
-// SECTION: Hero (Upcoming + Weather)
-// ============================================================================
-
-function HeroSection({
-  locale,
-  subdomain,
-  weatherData,
-}: {
-  locale: string
-  subdomain: string
-  weatherData?: WeatherData | null
-}) {
-  return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-      <Upcoming role="STUDENT" locale={locale} subdomain={subdomain} />
-      <Weather
-        current={weatherData?.current}
-        forecast={weatherData?.forecast}
-        location={weatherData?.location}
-        className="lg:w-auto lg:max-w-sm lg:min-w-[280px] lg:self-end"
-      />
-    </div>
-  )
 }
 
 // ============================================================================
@@ -268,16 +241,21 @@ export function StudentDashboardClient({
     <div className="space-y-8">
       {/* ============ TOP HERO SECTION (Unified Order) ============ */}
       <div className="space-y-6">
-        {/* Sections 1 and 2 (Upcoming + Weather hero, and the Quick Look row
-            of announcements / events / notifications / messages) are hidden on
-            the student dashboard. Restore by un-commenting here and passing
-            `quickLookData` / `weatherData` again from `student.tsx`. */}
-        {/* <HeroSection
+        {/* Section 1: the hero — the student's flip card beside the school's
+            weather. `md` and up only (`DashboardHero`); below it the phone
+            block in `content.tsx` opens the page instead. */}
+        <DashboardHero
+          role="STUDENT"
           locale={locale}
           subdomain={subdomain}
           weatherData={weatherData}
         />
-        <QuickLookSection
+
+        {/* Section 2, the Quick Look row of announcements / events /
+            notifications / messages, is still hidden. Restore by
+            un-commenting here and passing `quickLookData` from
+            `student.tsx`. */}
+        {/* <QuickLookSection
           locale={locale}
           subdomain={subdomain}
           data={quickLookData}

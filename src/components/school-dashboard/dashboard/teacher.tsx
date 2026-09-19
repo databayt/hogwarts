@@ -8,6 +8,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getTeacherDashboardData } from "./actions"
 import { TeacherDashboardClient } from "./teacher-client"
 import type { TeacherDashboardData } from "./types"
+import { getWeatherData, type WeatherData } from "./weather-actions"
 
 interface TeacherDashboardProps {
   user: {
@@ -33,9 +34,9 @@ export async function TeacherDashboard({
     // Fetch real data from server actions with error handling
     let data: TeacherDashboardData
     try {
-      // The Upcoming/Weather hero and the Quick Look row are hidden on the
-      // teacher dashboard, so their fetches (getQuickLookData, getWeatherData)
-      // are not made here — restore both alongside the JSX in teacher-client.
+      // The Quick Look row is still hidden on the teacher dashboard, so
+      // `getQuickLookData` is not called here — restore it alongside the JSX
+      // in teacher-client. The Upcoming/Weather hero is back, so its fetch is.
       data = await getTeacherDashboardData()
     } catch (error) {
       console.error("[TeacherDashboard] Error fetching data:", error)
@@ -54,6 +55,15 @@ export async function TeacherDashboard({
           </Card>
         </div>
       )
+    }
+
+    // The hero's weather. Best-effort: it renders its own empty state, so a
+    // failure here must not cost the whole dashboard.
+    let weatherData: WeatherData | null = null
+    try {
+      weatherData = await getWeatherData("metric", locale)
+    } catch (error) {
+      console.error("[TeacherDashboard] Error fetching weather:", error)
     }
 
     // Get tenant context for subdomain with error handling
@@ -86,6 +96,7 @@ export async function TeacherDashboard({
           locale={locale}
           subdomain={school?.domain || ""}
           data={data}
+          weatherData={weatherData}
         />
       </div>
     )

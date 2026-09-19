@@ -441,6 +441,51 @@ DELETED and a comment left in its place naming what to re-import — those three
 build the hero inline rather than through a `HeroSection`, so there was nothing
 to keep. Take it back out of `f57396f7c` if you want it.
 
+> **Superseded for the hero on 2026-09-19** — see the next entry. The Quick Look
+> row is still hidden everywhere and `getQuickLookData` is still uncalled; only
+> the Upcoming/Weather half of this came back.
+
+### The hero came back, on desktop only, and the welcome dialog went (2026-09-19)
+
+The desktop dashboard opened on Quick Actions behind a "Quick Guide" modal. Both
+halves of that are now the other way round: the hero is the first thing on the
+page, and no dialog covers it.
+
+The hero is one component for all six roles — `hero-section.tsx`, exporting
+`DashboardHero({ role, locale, subdomain, weatherData })`. Three roles had built
+it through a local `HeroSection` and three inline; all six now call this one, so
+they cannot drift apart again and the breakpoint lives in one place. The local
+`HeroSection` definitions in `admin-client.tsx`, `student-client.tsx` and
+`teacher-client.tsx` are gone, along with their `Upcoming` / `Weather` imports.
+
+**`hidden md:flex` is the whole point of the change.** Below `md` the page
+already opens on the phone block — the calendar widget, the next-action banner,
+today's classes and the quick-action tiles — and a fifth thing above the fold
+there would be one too many. Same idiom as `QuickActionsSection`'s
+`hidden md:block`. The server render has no viewport, so this is CSS, not a JS
+media query, which does mean `Upcoming` still runs its mount-time work on a
+phone where nothing shows it — the trade every `hidden md:*` section on this
+page already makes.
+
+`getWeatherData("metric", locale)` is called again in all six server files, each
+in its own try/catch that logs and falls through to `null`: the `Weather` card
+draws its own empty state, so a weather failure must not cost the dashboard.
+That is one query per load per role back, the half of `f57396f7c`'s saving that
+paid for a section nothing drew.
+
+The "Quick Guide" welcome dialog is no longer rendered. It was already suppressed
+on phones (`4a16656dd`, 2026-09-13 — `welcome-dialog.tsx` still carries the
+`(max-width: 767px)` check that did it), so desktop was the only place it still
+appeared, and it opened over the dashboard on first visit. The element and its
+import are out of
+`src/app/[lang]/s/[subdomain]/(school-dashboard)/layout.tsx`; `welcome-dialog.tsx`,
+`welcome-dialog-lazy.tsx` and the `dashboard.welcomeDialog` copy are untouched,
+so restoring it is re-adding the element.
+
+Verified on `demo.localhost:3000/en/dashboard` as ADMIN: at 1440 the hero draws
+above Quick Actions (flip card left, weather right) and no dialog opens; at 390
+the four phone blocks are unchanged and no hero appears.
+
 `PRINCIPAL` is not in the Prisma `UserRole` enum, so `content.tsx`'s
 `case "PRINCIPAL"` is unreachable and `principal.tsx` is dead code. It was left
 untouched, including its mock alerts — deleting 800 lines was not this pass.

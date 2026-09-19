@@ -8,14 +8,14 @@ import { Calendar } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
-
 import { type Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { QuickLookData } from "./actions"
 import { ChartSection } from "./chart-section"
 import { periodLabel, periodMinutes, useNowMinutes } from "./day-clock"
 import { EmptyState } from "./empty-state"
+import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { MetricCard } from "./metric-card"
 import { QuickActions } from "./quick-actions"
@@ -26,8 +26,6 @@ import { ScheduleItem } from "./schedule-item"
 import { SectionHeading } from "./section-heading"
 import { TodayLiveAction } from "./today-live-action"
 import type { TeacherDashboardData } from "./types"
-import { Upcoming } from "./upcoming"
-import { Weather } from "./weather"
 import type { WeatherData } from "./weather-actions"
 
 // ============================================================================
@@ -54,32 +52,6 @@ function useTeacherDict() {
     quickActionsTitle: dict?.quickActions?.title,
     liveClasses: school?.liveClasses,
   }
-}
-
-// ============================================================================
-// SECTION: Hero (Upcoming + Weather)
-// ============================================================================
-
-function HeroSection({
-  locale,
-  subdomain,
-  weatherData,
-}: {
-  locale: string
-  subdomain: string
-  weatherData?: WeatherData | null
-}) {
-  return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-      <Upcoming role="TEACHER" locale={locale} subdomain={subdomain} />
-      <Weather
-        current={weatherData?.current}
-        forecast={weatherData?.forecast}
-        location={weatherData?.location}
-        className="lg:w-auto lg:max-w-sm lg:min-w-[280px] lg:self-end"
-      />
-    </div>
-  )
 }
 
 // ============================================================================
@@ -187,81 +159,80 @@ function TodaySection({
   // school-timezone weekday, same active term, same Join target.
   return (
     <Card className="hidden md:block">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Calendar className="h-4 w-4" />
-            {sections?.todaysClasses || "Today's Classes"}
-          </CardTitle>
-          <Badge variant="outline">
-            {format(new Date(), "EEEE, MMM d", { locale: dateLocale })}
-          </Badge>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {remaining.length > 0 ? (
-            remaining.map((cls, index) => {
-              // "Now" is a claim about the clock, so only a period the clock
-              // is actually inside may make it. Everything else is at most
-              // "Next", and only the first row of what is left can be that.
-              // Index 0 used to claim "Next" unconditionally, which read as a
-              // class starting imminently at four in the afternoon.
-              const isNow =
-                nowMin !== null &&
-                nowMin >= periodMinutes(cls.startTime) &&
-                nowMin < periodMinutes(cls.endTime)
-              const isNext = !isNow && nowMin !== null && index === 0
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Calendar className="h-4 w-4" />
+          {sections?.todaysClasses || "Today's Classes"}
+        </CardTitle>
+        <Badge variant="outline">
+          {format(new Date(), "EEEE, MMM d", { locale: dateLocale })}
+        </Badge>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {remaining.length > 0 ? (
+          remaining.map((cls, index) => {
+            // "Now" is a claim about the clock, so only a period the clock
+            // is actually inside may make it. Everything else is at most
+            // "Next", and only the first row of what is left can be that.
+            // Index 0 used to claim "Next" unconditionally, which read as a
+            // class starting imminently at four in the afternoon.
+            const isNow =
+              nowMin !== null &&
+              nowMin >= periodMinutes(cls.startTime) &&
+              nowMin < periodMinutes(cls.endTime)
+            const isNext = !isNow && nowMin !== null && index === 0
 
-              return (
-                <ScheduleItem
-                  key={cls.id}
-                  time={periodLabel(cls.startTime)}
-                  title={cls.name}
-                  subtitle={`${labels?.room || "Room"} ${cls.room} • ${cls.students} ${labels?.students || "students"}`}
-                  badge={
-                    isNow
-                      ? labels?.now || "Now"
-                      : isNext
-                        ? labels?.next || "Next"
-                        : undefined
-                  }
-                  badgeVariant={isNow ? "default" : "secondary"}
-                  isActive={isNow}
-                  // Start the class from the home page too — the room is still
-                  // where it meets; online is additive, so the marker sits
-                  // beside it. Same resolver the students see, so neither side
-                  // can be looking at a link the other does not have.
-                  action={
-                    <TodayLiveAction
-                      liveClass={cls.liveClass}
-                      startTime={cls.startTime}
-                      endTime={cls.endTime}
-                      lang={locale as Locale}
-                      joinLabel={
-                        liveClasses?.join ??
-                        (locale === "ar" ? "انضمام" : "Join")
-                      }
-                      onlineLabel={
-                        liveClasses?.online ??
-                        (locale === "ar" ? "مباشر" : "Online")
-                      }
-                    />
-                  }
-                />
-              )
-            })
-          ) : dayIsDone ? (
-            <EmptyState
-              iconName="CheckCircle"
-              title={labels?.classesDone || "Classes are done for today"}
-              description={labels?.seeYouTomorrow || "See you tomorrow!"}
-            />
-          ) : (
-            <EmptyState
-              iconName="Calendar"
-              title={labels?.noClasses || "No classes scheduled for today"}
-              description={labels?.enjoyDayOff || "Enjoy your day off!"}
-            />
-          )}
-        </CardContent>
+            return (
+              <ScheduleItem
+                key={cls.id}
+                time={periodLabel(cls.startTime)}
+                title={cls.name}
+                subtitle={`${labels?.room || "Room"} ${cls.room} • ${cls.students} ${labels?.students || "students"}`}
+                badge={
+                  isNow
+                    ? labels?.now || "Now"
+                    : isNext
+                      ? labels?.next || "Next"
+                      : undefined
+                }
+                badgeVariant={isNow ? "default" : "secondary"}
+                isActive={isNow}
+                // Start the class from the home page too — the room is still
+                // where it meets; online is additive, so the marker sits
+                // beside it. Same resolver the students see, so neither side
+                // can be looking at a link the other does not have.
+                action={
+                  <TodayLiveAction
+                    liveClass={cls.liveClass}
+                    startTime={cls.startTime}
+                    endTime={cls.endTime}
+                    lang={locale as Locale}
+                    joinLabel={
+                      liveClasses?.join ?? (locale === "ar" ? "انضمام" : "Join")
+                    }
+                    onlineLabel={
+                      liveClasses?.online ??
+                      (locale === "ar" ? "مباشر" : "Online")
+                    }
+                  />
+                }
+              />
+            )
+          })
+        ) : dayIsDone ? (
+          <EmptyState
+            iconName="CheckCircle"
+            title={labels?.classesDone || "Classes are done for today"}
+            description={labels?.seeYouTomorrow || "See you tomorrow!"}
+          />
+        ) : (
+          <EmptyState
+            iconName="Calendar"
+            title={labels?.noClasses || "No classes scheduled for today"}
+            description={labels?.enjoyDayOff || "Enjoy your day off!"}
+          />
+        )}
+      </CardContent>
     </Card>
   )
 }
@@ -281,17 +252,21 @@ export function TeacherDashboardClient({
     <div className="space-y-8">
       {/* ============ TOP HERO SECTION (Unified Order) ============ */}
       <div className="space-y-6">
-        {/* Sections 1 and 2 (Upcoming + Weather hero, and the Quick Look row
-            of announcements / events / notifications / messages) are hidden on
-            the teacher dashboard, matching the student's. Restore by
-            un-commenting here and passing `quickLookData` / `weatherData`
-            again from `teacher.tsx`. */}
-        {/* <HeroSection
+        {/* Section 1: the hero — the teacher's flip card beside the school's
+            weather. `md` and up only (`DashboardHero`); below it the phone
+            block in `content.tsx` opens the page instead. */}
+        <DashboardHero
+          role="TEACHER"
           locale={locale}
           subdomain={subdomain}
           weatherData={weatherData}
         />
-        <QuickLookSection
+
+        {/* Section 2, the Quick Look row of announcements / events /
+            notifications / messages, is still hidden. Restore by
+            un-commenting here and passing `quickLookData` from
+            `teacher.tsx`. */}
+        {/* <QuickLookSection
           locale={locale}
           subdomain={subdomain}
           data={quickLookData}

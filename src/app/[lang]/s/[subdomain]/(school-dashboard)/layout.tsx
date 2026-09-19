@@ -24,7 +24,6 @@ import { PageHeadingProvider } from "@/components/school-dashboard/context/page-
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
-import { WelcomeDialog } from "@/components/school-dashboard/welcome/welcome-dialog"
 import PlatformHeader from "@/components/template/platform-header/content"
 import {
   platformNav,
@@ -226,12 +225,13 @@ export default async function PlatformLayout({
                     hasPassword={!!currentUser?.password}
                   />
                 )}
-                {!mustChangePassword && (
-                  <WelcomeDialog
-                    userId={session.user.id}
-                    dictionary={dictionary?.school?.dashboard?.welcomeDialog}
-                  />
-                )}
+                {/* The "Quick Guide" welcome dialog stood here, rendered for
+                    every user who had not dismissed it. Phones stopped showing
+                    it on 2026-09-13 (`4a16656dd`) and the desktop dashboard
+                    now matches: the page opens on its own hero rather than
+                    behind a modal. `welcome-dialog.tsx` and its
+                    `dashboard.welcomeDialog` copy are untouched — restoring it
+                    is re-adding this element and its import. */}
               </div>
             </PageHeadingProvider>
           </ModalProvider>
