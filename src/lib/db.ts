@@ -4,6 +4,8 @@
 import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 
+import { traceQuery, TRACE_QUERIES } from "@/lib/perf-trace"
+
 /**
  * Prisma Client Singleton - Database Connection Management
  *
@@ -116,8 +118,26 @@ function createBaseClient(): PrismaClient {
   return new PrismaClient()
 }
 
+/**
+ * PERF_TRACE=1 — time every query and attribute it to the request that made it
+ * (src/lib/perf-trace.ts). Off by default and then not even installed, so
+ * production pays nothing for it. `pnpm perf:queries` reads the trace to count
+ * each route's round trips: at ~90 ms per trip to Neon, the number of
+ * sequential queries IS the page's server time.
+ */
+function withQueryTrace(client: PrismaClient): PrismaClient {
+  if (!TRACE_QUERIES) return client
+  return client.$extends({
+    query: {
+      $allOperations({ model, operation, args, query }) {
+        return traceQuery(model, operation, args, () => query(args))
+      },
+    },
+  }) as unknown as PrismaClient
+}
+
 function createClient(): PrismaClient {
-  const client = createBaseClient()
+  const client = withQueryTrace(createBaseClient())
 
   if (!IS_DEV) return client
 
