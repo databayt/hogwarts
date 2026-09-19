@@ -15,7 +15,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getProvider } from "@/components/file"
+import { getProvider } from "@/components/file/providers/factory"
 
 import { checkFinancePermission } from "../lib/permissions"
 import { extractReceiptData, retryExtraction } from "./ai/extract-receipt-data"

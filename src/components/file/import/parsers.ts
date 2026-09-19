@@ -6,8 +6,6 @@
  * File parsing utilities for different formats
  */
 
-import * as XLSX from "xlsx"
-
 import { parseCsvContent } from "../export/csv-generator"
 import type {
   ImportColumn,
@@ -103,6 +101,9 @@ export async function parseExcelFile(
   totalRows: number
   sheets: string[]
 }> {
+  // xlsx is ~135 KB gzip: loaded when a spreadsheet is actually parsed, not
+  // with every page that can open the importer.
+  const XLSX = await import("xlsx")
   const buffer = await file.arrayBuffer()
   const workbook = XLSX.read(buffer, { type: "array" })
 

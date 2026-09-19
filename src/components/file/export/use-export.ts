@@ -11,9 +11,7 @@
 import { useCallback, useRef, useState } from "react"
 
 import { downloadBlob, exportToCsv } from "./csv-generator"
-import { exportToExcel } from "./excel-generator"
 import { generateExportFilename } from "./formatters"
-import { exportToPdf } from "./pdf-generator"
 import type {
   ExportColumn,
   ExportConfig,
@@ -134,6 +132,9 @@ export function useExport<T>(
           message: "Generating Excel...",
         })
 
+        // xlsx is ~135 KB gzip. Loaded when someone asks for a spreadsheet,
+        // not with every page that shows an Export button.
+        const { exportToExcel } = await import("./excel-generator")
         const result = await exportToExcel({
           ...config,
           data: exportData,
@@ -194,6 +195,8 @@ export function useExport<T>(
           message: "Generating PDF...",
         })
 
+        // @react-pdf/renderer is ~460 KB gzip — same rule as xlsx above.
+        const { exportToPdf } = await import("./pdf-generator")
         const result = await exportToPdf({
           ...config,
           data: exportData,

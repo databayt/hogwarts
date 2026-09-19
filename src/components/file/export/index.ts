@@ -47,19 +47,10 @@ export {
   parseCsvContent,
 } from "./csv-generator"
 
-// Excel Generator
-export {
-  exportToExcel,
-  exportToExcelMultiSheet,
-  exportFromTemplate,
-} from "./excel-generator"
-
-// PDF Generator
-export {
-  exportToPdf,
-  PDFPreview,
-  createStyles as createPdfStyles,
-} from "./pdf-generator"
+// The Excel and PDF generators are NOT re-exported: xlsx (~135 KB gzip) and
+// @react-pdf/renderer (~460 KB gzip) would ride along with every importer of
+// this index. `useExport` loads them when an export is asked for; anything
+// else imports "./excel-generator" / "./pdf-generator" directly.
 
 // Hook
 export { useExport } from "./use-export"

@@ -103,9 +103,22 @@ export {
 } from "./config"
 
 // ============================================================================
-// Providers
+// NOT re-exported here — import from the sub-module
 // ============================================================================
-export * from "./providers"
+// This barrel is imported by client components (ExportButton, FileUploader…),
+// and a re-export is bundled whether or not the importer uses it. Everything
+// below is server-only or serves a click rather than a render; re-exporting it
+// here put the AWS SDK, Node's `crypto` polyfill, xlsx and @react-pdf/renderer
+// into the initial JavaScript of 44–49 routes (~860 KB gzip on /students,
+// measured 2026-09-19 — performance/README.md).
+//
+//   storage providers   @/components/file/providers        (AWS / R2 SDKs)
+//   rate limiting       @/components/file/rate-limit       (Upstash)
+//   CDN signing         @/components/file/cdn              (node:crypto)
+//   deduplication       @/components/file/deduplication    (node:crypto)
+//   document templates  @/components/file/generate         (@react-pdf/renderer)
+//   Excel / PDF export  @/components/file/export/excel-generator · pdf-generator
+//                       (useExport loads them on demand)
 
 // ============================================================================
 // Shared Utilities (flattened from shared/)
@@ -163,40 +176,8 @@ export {
   getFileIcon,
 } from "./icons"
 
-// ============================================================================
-// Rate Limiting (flat)
-// ============================================================================
-export {
-  RATE_LIMITS,
-  createUploadRateLimiter,
-  createBandwidthRateLimiter,
-  checkSchoolUploadLimit,
-  checkUserUploadLimit,
-  checkEndpointRateLimit,
-  getRateLimitStatus,
-  resetRateLimit,
-  getRateLimitAnalytics,
-  formatRateLimitError,
-  withRateLimit,
-  createCustomRateLimiter,
-} from "./rate-limit"
 export type { RateLimitResult } from "./rate-limit"
 
-// ============================================================================
-// CDN (flat)
-// ============================================================================
-export {
-  getCDNConfig,
-  generateCDNUrl,
-  generateSignedUrl,
-  verifySignedUrl,
-  generateOptimizedImageUrl,
-  generateResponsiveSrcSet,
-  generateThumbnailUrl,
-  generatePrefetchLinks,
-  getCacheControlHeaders,
-  purgeCDNCache,
-} from "./cdn"
 export type { CDNConfig, ImageTransformOptions } from "./cdn"
 
 // ============================================================================
@@ -222,17 +203,6 @@ export type {
   TierStats,
 } from "./tier-manager"
 
-// ============================================================================
-// File Deduplication (flat)
-// ============================================================================
-export {
-  generateFileHash,
-  generateFileHashFromStream,
-  generateFileHashFromFile,
-  generateChunkHash,
-  verifyFileHash,
-  generateUploadId,
-} from "./deduplication"
 
 // ============================================================================
 // Quota Management Module
@@ -379,14 +349,6 @@ export {
   exportToCsv,
   downloadBlob,
   parseCsvContent,
-  // Excel
-  exportToExcel,
-  exportToExcelMultiSheet,
-  exportFromTemplate,
-  // PDF
-  exportToPdf,
-  PDFPreview,
-  createPdfStyles,
   // Hook
   useExport,
   // Components
@@ -473,9 +435,9 @@ export type {
 export * from "./print"
 
 // ============================================================================
-// Generate Module
+// Generate Module — types only (the templates pull @react-pdf/renderer)
 // ============================================================================
-export * from "./generate"
+export type * from "./generate/types"
 
 // ============================================================================
 // Browser Module
