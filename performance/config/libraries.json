@@ -68,7 +68,7 @@
       "swiper-slide"
     ],
     "posthog": [
-      "posthog"
+      "PostHog couldn't be initialized"
     ],
     "sentry": [
       "__SENTRY__"

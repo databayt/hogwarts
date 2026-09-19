@@ -167,6 +167,11 @@ async function signIn(page, identifier) {
   const clickedAt = Date.now()
   await page.locator('form button[type="submit"]').first().click()
   await page.waitForURL((u) => !u.pathname.includes("/login"), { timeout: lab.settle.capMs })
+  // A local .env that builds tenant URLs on a production root sends the browser
+  // off to that host after sign-in. The session cookie is set on THIS origin, so
+  // the run can continue; there is just no landing page here to time.
+  if (new URL(page.url()).origin !== origin)
+    return { toFirstPaintMs: null, toLcpMs: null, toNavigationStartMs: null, landedOffOrigin: page.url() }
   await settle(page, lab.settle)
   // Click → the landing page's LCP, on the wall clock. NOT "now - clickedAt":
   // settle() ends with a deliberate quiet window that the user never waits for.

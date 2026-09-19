@@ -7,14 +7,17 @@
  *
  * One JSON line per query goes to stdout:
  *
- *   {"perf":"db","q":"Student.findMany","t":1789…,"ms":3.1,"req":"k3f9x2","sig":"9c1e07aa"}
+ *   {"perf":"db","q":"Student.findMany","t":1789…,"ms":3.1,"req":"k3f9x2","r":1,"sig":"9c1e07aa"}
  *
  *   PERF_TRACE=1 pnpm dev > /tmp/hogwarts-trace.log     # then: pnpm perf:queries
  *
  * `req` groups the queries of one server render — React's `cache()` is scoped
  * to the request being rendered, so its first call mints the id and every
  * later call in that render gets the same one. Outside a render (route
- * handlers, cron) there is no such scope and each call gets its own id.
+ * handlers, cron) there is no such scope: every call mints a new id. That is
+ * also how the two are told apart — asking twice gives the same answer only
+ * inside a render — and `r` records it (1 = render, 0 = anything else), so the
+ * audit never mistakes the notification bell's API route for a page render.
  *
  * `sig` is a hash of the query's arguments, so the audit can spot the same
  * query issued twice in one render WITHOUT the arguments — ids, names, emails —
@@ -54,8 +57,10 @@ export async function traceQuery<T>(
   run: () => Promise<T>
 ): Promise<T> {
   let req = "-"
+  let inRender = false
   try {
     req = requestId()
+    inRender = requestId() === req
   } catch {
     // Not inside a render.
   }
@@ -70,6 +75,7 @@ export async function traceQuery<T>(
       t: startedAt,
       ms: Math.round((performance.now() - started) * 10) / 10,
       req,
+      r: inRender ? 1 : 0,
       sig: signature(args),
     })
     // Not console.log: next.config's `removeConsole` strips it in production.

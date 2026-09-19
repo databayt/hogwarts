@@ -16,8 +16,12 @@
  * It signs in, opens each tracked route once, and attributes the traced
  * queries (src/lib/perf-trace.ts) to the route by time window. Per route:
  *
- *   renders   server renders the page load caused (document + prefetches + actions)
- *   queries   across all of them
+ *   renders   server renders that queried during the page view (the document,
+ *             plus any prefetch or action render that touched the database)
+ *   other     queries made OUTSIDE a render in that window — API routes such as
+ *             the notification bell, route handlers. The trace marks which is
+ *             which (`r`); they are counted, never mistaken for a page render.
+ *   queries   all of the above
  *   doc q     queries of the document's own render
  *   steps     of those, how many ran one after another ("waves")
  *   dupes     identical query + identical arguments, repeated in one render
@@ -91,8 +95,11 @@ for (const role of roles) {
     await page.waitForTimeout(5000) // prefetches + mount-time actions belong to this page load
     const to = Date.now()
     const inWindow = readTrace().filter((q) => q.t >= from && q.t <= to)
-    const byRender = new Map()
-    for (const q of inWindow) byRender.set(q.req, [...(byRender.get(q.req) ?? []), q])
+    // Older traces have no `r`; treat a multi-query group as a render.
+    const byId = new Map()
+    for (const q of inWindow) byId.set(q.req, [...(byId.get(q.req) ?? []), q])
+    const byRender = new Map([...byId].filter(([, qs]) => (qs[0].r ?? (qs.length > 1 ? 1 : 0)) === 1))
+    const outside = inWindow.length - [...byRender.values()].reduce((n, qs) => n + qs.length, 0)
     // The document's render is the first one to start in the window.
     const renders = [...byRender.values()].sort((a, b) => Math.min(...a.map((q) => q.t)) - Math.min(...b.map((q) => q.t)))
     const doc = renders[0] ?? []
@@ -104,6 +111,7 @@ for (const role of roles) {
       role,
       route,
       renders: renders.length,
+      outsideRender: outside,
       queries: inWindow.length,
       docQueries: doc.length,
       steps,
@@ -113,7 +121,7 @@ for (const role of roles) {
       sequence: [...doc].sort((a, b) => a.t - b.t).map((q) => q.q),
     })
     const r = rows[rows.length - 1]
-    console.log(`${role} ${route}: ${r.renders} renders · ${r.queries} queries · document ${r.docQueries} in ${r.steps} steps · ${r.dupes} duplicate(s)`)
+    console.log(`${role} ${route}: ${r.renders} renders + ${r.outsideRender} queries outside a render · ${r.queries} total · document ${r.docQueries} in ${r.steps} steps · ${r.dupes} duplicate(s)`)
   }
   await context.close()
 }
@@ -123,8 +131,8 @@ fs.writeFileSync(path.join(outDir, "queries.json"), JSON.stringify({ generatedAt
 console.log(`\nServer waterfall — one production round trip ≈ ${rtt} ms\n`)
 console.log(
   table(
-    ["role", "route", "renders", "queries", "doc q", "steps", "dupes", "est. ms", "repeated in the document render"],
-    rows.map((r) => [r.role, r.route, r.renders, r.queries, r.docQueries, r.steps, r.dupes, r.estimatedServerMs, r.dupeList.slice(0, 3).join(", ") || "—"])
+    ["role", "route", "renders", "other", "queries", "doc q", "steps", "dupes", "est. ms", "repeated in the document render"],
+    rows.map((r) => [r.role, r.route, r.renders, r.outsideRender, r.queries, r.docQueries, r.steps, r.dupes, r.estimatedServerMs, r.dupeList.slice(0, 3).join(", ") || "—"])
   )
 )
 console.log(`\n→ ${path.relative(process.cwd(), path.join(outDir, "queries.json"))}`)
