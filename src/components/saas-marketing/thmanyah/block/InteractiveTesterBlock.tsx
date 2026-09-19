@@ -10,6 +10,7 @@ import React, {
 import { motion } from "framer-motion"
 import { createPortal } from "react-dom"
 
+import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import {
   FAMILIES,
   FRAMER_SPRING,
@@ -44,24 +45,20 @@ import {
 type Align = "right" | "center" | "left"
 type Bg = "black" | "green" | "white"
 
-const WEIGHT_MENU: Array<{
-  label: string
-  value: 300 | 400 | 500 | 700 | 900
-  valueLabel: string
-}> = [
-  { label: "رفيـع", value: 300, valueLabel: "رفيــــع" },
-  { label: "عادي", value: 400, valueLabel: "عادي" },
-  { label: "متوسط", value: 500, valueLabel: "متوســط" },
-  { label: "سميــك", value: 700, valueLabel: "سميــك" },
-  { label: "ثقيــل", value: 900, valueLabel: "ثقيـــل" },
-]
+/** The 300→900 ramp. Labels come from `copy.tester.weights`, same order. */
+const WEIGHT_VALUES = [300, 400, 500, 700, 900] as const
+type WeightValue = (typeof WEIGHT_VALUES)[number]
 
-/* The editable specimen. Sized to the reference's own two lines so the
-   panel opens at the same visual mass — at 72px/700 the reference inks 912
-   and 2149px; these ink 882 and 2134 (−3.3% / −0.7%), so the box still
-   opens 530px tall and wraps the same way. */
-const DEFAULT_TEXT =
-  "منظومة حيّة؛ تُنظّم يوم المدرسة.\nمن أول حصة إلى آخر تقرير، يبقى كل رقم في مكانه، ويرى كل طرفٍ ما يخصّه وحده."
+/* The editable specimen lives in `copy.ts`. The Arabic one is sized to the
+   reference's own two lines so the panel opens at the same visual mass — at
+   72px/700 the reference inks 912 and 2149px; ours ink 882 and 2134
+   (−3.3% / −0.7%), so the box still opens 530px tall and wraps the same way.
+   The English one is written to the same two-line shape.
+
+   ss01 is an ARABIC stylistic set and does nothing to Latin glyphs. The
+   switch is kept on `/en` because it is one of the four controls the
+   reference's control row is measured around, and the tester still types
+   Arabic if you paste it. */
 
 const PANEL_BG: Record<Bg, string> = {
   black: "rgb(0, 0, 0)",
@@ -88,6 +85,7 @@ function Select<T extends string | number>({
   ink,
   ctlClass,
   navName,
+  rtl,
 }: {
   label: string
   value: T
@@ -97,9 +95,17 @@ function Select<T extends string | number>({
   ink: string
   ctlClass: string
   navName: string
+  rtl: boolean
 }) {
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState<{ top: number; right: number } | null>(null)
+  /* Exactly one of the two is set, so the menu hangs off the control's
+     READING-start edge: the reference aligns its right edge 13px past the
+     control's right, which under LTR is the left edge 13px past the left. */
+  const [pos, setPos] = useState<{
+    top: number
+    right?: number
+    left?: number
+  } | null>(null)
   const navRef = useRef<HTMLElement>(null)
   const triggerRef = useRef<HTMLDivElement>(null)
 
@@ -109,11 +115,15 @@ function Select<T extends string | number>({
     if (!nav || !trig) return
     const n = nav.getBoundingClientRect()
     const t = trig.getBoundingClientRect()
-    setPos({
-      top: t.bottom + window.scrollY + 8,
-      right: document.documentElement.clientWidth - n.right - 13,
-    })
-  }, [])
+    setPos(
+      rtl
+        ? {
+            top: t.bottom + window.scrollY + 8,
+            right: document.documentElement.clientWidth - n.right - 13,
+          }
+        : { top: t.bottom + window.scrollY + 8, left: n.left - 13 }
+    )
+  }, [rtl])
 
   useLayoutEffect(() => {
     if (!open) return
@@ -141,7 +151,7 @@ function Select<T extends string | number>({
         aria-expanded={open}
       >
         <div className="tester-label-box">
-          <p dir="rtl" className="tester-label" style={{ color: ink }}>
+          <p className="tester-label" style={{ color: ink }}>
             {label}
           </p>
         </div>
@@ -160,7 +170,7 @@ function Select<T extends string | number>({
           }}
         >
           <div className="tester-value-box">
-            <p dir="rtl" className="tester-value" style={{ color: ink }}>
+            <p className="tester-value" style={{ color: ink }}>
               {current.valueLabel ?? current.label}
             </p>
           </div>
@@ -184,7 +194,12 @@ function Select<T extends string | number>({
         createPortal(
           <div
             className="tester-menu-layer"
-            style={{ top: pos.top, right: pos.right, width: menuWidth }}
+            style={{
+              top: pos.top,
+              right: pos.right,
+              left: pos.left,
+              width: menuWidth,
+            }}
           >
             <div
               className="tester-menu-backdrop"
@@ -211,7 +226,6 @@ function Select<T extends string | number>({
                     >
                       <div className="tester-menu-text-box">
                         <p
-                          dir="rtl"
                           className="tester-menu-text"
                           style={
                             selected
@@ -237,12 +251,14 @@ function Select<T extends string | number>({
 /* ── Block ───────────────────────────────────────────────────────────────── */
 
 export function InteractiveTesterBlock() {
+  const { lang, dir, rtl, copy } = useThmanyahLocale()
   const [family, setFamily] = useState<FamilyId>("display")
-  const [weight, setWeight] = useState<300 | 400 | 500 | 700 | 900>(700)
-  const [align, setAlign] = useState<Align>("right")
+  const [weight, setWeight] = useState<WeightValue>(700)
+  /* The specimen opens aligned to the reading edge, like every other block. */
+  const [align, setAlign] = useState<Align>(rtl ? "right" : "left")
   const [ss01, setSs01] = useState(false)
   const [bg, setBg] = useState<Bg>("black")
-  const [text, setText] = useState(DEFAULT_TEXT)
+  const [text, setText] = useState(copy.tester.specimen)
   const [focused, setFocused] = useState(false)
   const [caret, setCaret] = useState<{
     left: number
@@ -322,33 +338,45 @@ export function InteractiveTesterBlock() {
               {/* .framer-t1meku — controls */}
               <div className="tester-controls">
                 <Select
-                  label="الخط"
+                  label={copy.tester.font}
                   navName="S Display"
                   ctlClass="tester-ctl--font"
                   ink={ink}
+                  rtl={rtl}
                   value={family}
                   onChange={(v) => setFamily(v)}
                   menuWidth={282}
                   options={FAMILIES.map((f) => ({
                     value: f.id,
-                    /* live: the display family shows its one-tatweel select label
-                       everywhere; text/sans use their two-tatweel titles */
-                    label: f.id === "display" ? f.selectLabel : f.title,
-                    valueLabel: f.id === "display" ? f.selectLabel : f.title,
+                    /* live: the display family shows its one-tatweel select
+                       label everywhere; text/sans use their two-tatweel
+                       titles. On `/en` the family's own Latin name is the
+                       label — these ARE the typeface's names, so they are
+                       not translated, only transliterated by the foundry. */
+                    label: rtl
+                      ? f.id === "display"
+                        ? f.selectLabel
+                        : f.title
+                      : f.latin,
+                    valueLabel: rtl
+                      ? f.id === "display"
+                        ? f.selectLabel
+                        : f.title
+                      : f.latin,
                   }))}
                 />
                 <Select
-                  label="الوزن"
+                  label={copy.tester.weight}
                   navName="Bold"
                   ctlClass="tester-ctl--weight"
                   ink={ink}
+                  rtl={rtl}
                   value={weight}
                   onChange={(v) => setWeight(v)}
                   menuWidth={152}
-                  options={WEIGHT_MENU.map((w) => ({
-                    value: w.value,
-                    label: w.label,
-                    valueLabel: w.valueLabel,
+                  options={WEIGHT_VALUES.map((value, i) => ({
+                    value,
+                    label: copy.tester.weights[i],
                   }))}
                 />
 
@@ -359,33 +387,50 @@ export function InteractiveTesterBlock() {
                 >
                   <nav className="tester-align" data-framer-name="R">
                     <div className="tester-label-box">
-                      <p
-                        dir="rtl"
-                        className="tester-label"
-                        style={{ color: ink }}
-                      >
-                        المحاذاة
+                      <p className="tester-label" style={{ color: ink }}>
+                        {copy.tester.alignment}
                       </p>
                     </div>
                     <div className="tester-align-row">
-                      {(
-                        [
-                          {
-                            id: "right",
-                            name: "Item 3",
-                            icon: "tester-align-icon--right",
-                          },
-                          {
-                            id: "center",
-                            name: "Item 2",
-                            icon: "tester-align-icon--center",
-                          },
-                          {
-                            id: "left",
-                            name: "Item 1",
-                            icon: "tester-align-icon--left",
-                          },
-                        ] as const
+                      {/* Reading-start, centre, reading-end — so the first
+                          swatch is always "align to where the text starts".
+                          The reference, being RTL-only, hard-coded right
+                          first. */}
+                      {(rtl
+                        ? ([
+                            {
+                              id: "right",
+                              name: "Item 3",
+                              icon: "tester-align-icon--right",
+                            },
+                            {
+                              id: "center",
+                              name: "Item 2",
+                              icon: "tester-align-icon--center",
+                            },
+                            {
+                              id: "left",
+                              name: "Item 1",
+                              icon: "tester-align-icon--left",
+                            },
+                          ] as const)
+                        : ([
+                            {
+                              id: "left",
+                              name: "Item 1",
+                              icon: "tester-align-icon--left",
+                            },
+                            {
+                              id: "center",
+                              name: "Item 2",
+                              icon: "tester-align-icon--center",
+                            },
+                            {
+                              id: "right",
+                              name: "Item 3",
+                              icon: "tester-align-icon--right",
+                            },
+                          ] as const)
                       ).map((it) => (
                         <motion.div
                           key={it.id}
@@ -416,11 +461,10 @@ export function InteractiveTesterBlock() {
                   >
                     <div className="tester-label-box">
                       <p
-                        dir="rtl"
                         className="tester-label tester-label--ss01"
                         style={{ color: ink }}
                       >
-                        الحروف مرسلة
+                        {copy.tester.stylisticSet}
                       </p>
                     </div>
                     <div className="tester-ss-row">
@@ -463,7 +507,8 @@ export function InteractiveTesterBlock() {
                   <textarea
                     ref={taRef}
                     className="tester-ta"
-                    dir="rtl"
+                    dir={dir}
+                    lang={lang}
                     spellCheck={false}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -476,6 +521,7 @@ export function InteractiveTesterBlock() {
                     ref={mirrorRef}
                     className="tester-mirror"
                     aria-hidden
+                    dir={dir}
                     style={typo}
                   >
                     {text}
@@ -505,11 +551,14 @@ export function InteractiveTesterBlock() {
               data-framer-name="Backdrop"
               data-bg={bg}
               initial={false}
+              /* The pill is a flex row, so under LTR the swatches sit in
+                 the mirror order and the ring's physical anchor flips with
+                 them: black leads the row in both directions. */
               animate={
-                bg === "black"
-                  ? { left: "auto", right: 7, x: 0, y: -15 }
-                  : bg === "green"
-                    ? { left: "50%", right: "auto", x: -15, y: -15 }
+                bg === "green"
+                  ? { left: "50%", right: "auto", x: -15, y: -15 }
+                  : (bg === "black") === rtl
+                    ? { left: "auto", right: 7, x: 0, y: -15 }
                     : { left: 7, right: "auto", x: 0, y: -15 }
               }
               transition={FRAMER_SPRING}

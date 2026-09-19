@@ -4978,3 +4978,84 @@ body:has(.thmanyah-shell) {
     max-width: 1440px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LTR (`/en`) — the mirror of everything above that is physically anchored
+   ═══════════════════════════════════════════════════════════════════════
+   The reference (font.thmanyah.com) is Arabic-only, so every rule above was
+   written against `dir=rtl` and a handful of them name a physical side. The
+   shell now takes the route's direction (see the route's page.tsx), so this
+   block restates just those rules for `dir=ltr`.
+
+   It is deliberately an APPENDED OVERRIDE rather than a rewrite of the rules
+   above into logical properties: `/ar` is the reference this page is measured
+   against, and a block that never matches under `dir=rtl` cannot move it. Add
+   to this block, do not "fix" the rule upstream.
+
+   Everything not listed here mirrors for free — the layout is flexbox, and
+   `flex-start` / `flex-end` / `align-items` on a row or a column's cross axis
+   are already direction-relative.                                          */
+
+/* Copy that hugged the right edge now hugs the left one. (The rules above
+   say `right` rather than `start` because that is what was read off the
+   reference's CSSOM.)                                                      */
+.thmanyah-shell[dir="ltr"] .aseel-headline,
+.thmanyah-shell[dir="ltr"] .trials-eyebrow,
+.thmanyah-shell[dir="ltr"] .trials-headline,
+.thmanyah-shell[dir="ltr"] .trials-lede,
+.thmanyah-shell[dir="ltr"] .trials-cell-number,
+.thmanyah-shell[dir="ltr"] .trials-cell-desc,
+.thmanyah-shell[dir="ltr"] .trials-row-number,
+.thmanyah-shell[dir="ltr"] .trials-row-desc,
+.thmanyah-shell[dir="ltr"] .fonts-card-latin,
+.thmanyah-shell[dir="ltr"] .fonts-card-desc,
+.thmanyah-shell[dir="ltr"] .fonts-weight-label,
+.thmanyah-shell[dir="ltr"] .fonts-specimen,
+.thmanyah-shell[dir="ltr"] .fonts-acc-desc,
+.thmanyah-shell[dir="ltr"] .modern-eyebrow,
+.thmanyah-shell[dir="ltr"] .modern-headline,
+.thmanyah-shell[dir="ltr"] .faq-title,
+.thmanyah-shell[dir="ltr"] .faq-q,
+.thmanyah-shell[dir="ltr"] .faq-a--right {
+  text-align: left;
+}
+
+/* The dropdown menu is portaled to <body>, OUTSIDE the shell, so it cannot
+   be reached by a `.thmanyah-shell[dir=…]` selector — it takes <html>'s
+   direction instead. Its top/left|right come from `Select`'s own measuring
+   code, which already flips.                                               */
+[dir="ltr"] .tester-menu-text {
+  text-align: left;
+}
+
+/* Sections that pinned `direction` for their own subtree. `.trials-section`
+   sets it so the "No." cells read right-to-left; the tester's textarea and
+   its measuring mirror set it so typed Arabic behaves. Both follow the route
+   now — the textarea still carries a `dir` attribute per render, and this is
+   what stops the author rule from outranking it.                           */
+.thmanyah-shell[dir="ltr"] .trials-section,
+.thmanyah-shell[dir="ltr"] .tester-ta,
+.thmanyah-shell[dir="ltr"] .tester-mirror {
+  direction: ltr;
+}
+
+/* The hero's highlight bar. `inset: 28px -1px 26px 1px` overhangs the text
+   by 1px at the reading start and pulls in 1px at the end; mirrored, that is
+   the same 1px on the other sides.                                         */
+.thmanyah-shell[dir="ltr"] .hero-mark {
+  inset: 28px 1px 26px -1px;
+}
+
+@media (min-width: 600px) and (max-width: 809.98px) {
+  .thmanyah-shell[dir="ltr"] .hero-mark {
+    right: 1px;
+    left: -1px;
+  }
+}
+
+/* The black top/bottom fade over the JAMLIA Lottie. The Lottie is a flex
+   item and mirrors on its own, so its cover has to follow it across.       */
+.thmanyah-shell[dir="ltr"] .trials-fade {
+  right: 0;
+  left: auto;
+}

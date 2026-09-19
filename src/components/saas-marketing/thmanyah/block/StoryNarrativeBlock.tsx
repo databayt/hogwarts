@@ -5,6 +5,7 @@ import { motion, useInView } from "framer-motion"
 
 import { WordmarkWriting } from "@/components/saas-marketing/thmanyah/atom/WordmarkWriting"
 import { CDN_IMAGES } from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
+import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
 
 /**
@@ -19,24 +20,19 @@ import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
  * Rows stack below 1200px, and below 600px the reference collapses row B's
  * image to 0px height; that quirk is mirrored in globals.css.
  */
+/* `start`, not `right` — the shell carries the route's direction now, and
+   under `dir=rtl` the two compute identically. */
 const TEXT_STYLE: React.CSSProperties = {
   fontFamily: '"thmanyah sans", sans-serif',
   fontWeight: 300,
   color: "#000",
-  textAlign: "right",
+  textAlign: "start",
 }
-
-/* Row B copy kept as single strings so the rendered h2 has exactly two
-   child nodes (text + span) like the reference, with the trailing
-   U+00A0 living inside the text node rather than as its own child. */
-const ANSWER_B_BODY =
-  "منظومة موحدة تمنح الإدارة تحكّمًا كاملاً ورؤية دقيقة، وتمنح المعلّمين أدوات أكثر كفاءة، وأولياء الأمور تجربة أكثر سهولة ووضوحًا. فالحضور والدرجات والجداول والرسوم تعمل على قاعدةٍ واحدة، فما يُسجَّل في الصف صباحًا يظهر في تقرير الإدارة ولوحة وليّ الأمر فورًا، بلا نسخٍ ولا تكرار. وتبقى المدرسة تعمل بلغتها وتقويمها ونظام درجاتها، لا بقوالب جاهزة تُفرض عليها.\xa0"
-const ANSWER_B_BOLD =
-  "كل ما تحتاجه المدرسة لإدارة يومها، ومتابعة أدائها، واتخاذ قراراتها، في منصة واحدة."
 
 const APPEAR = reveal(60, 0.5)
 
 export function StoryNarrativeBlock() {
+  const { copy } = useThmanyahLocale()
   const eightRef = useRef<HTMLDivElement>(null)
   /* not `once` — the write loops, so it should stop while off screen */
   const eightInView = useInView(eightRef, { amount: 0.4 })
@@ -50,17 +46,11 @@ export function StoryNarrativeBlock() {
         <div className="answer-row answer-row--a" data-framer-name="Row A">
           {/* Text (.framer-1n6arzq) */}
           <motion.div {...APPEAR} className="answer-text answer-text--a">
-            <h2 dir="rtl" style={TEXT_STYLE}>
-              الارتقاء بأداء المؤسسة التعليمية يبدأ من توحيد جميع تفاصيل العمل
-              في مكان واحد. منصة إلكترونية متكاملة تجمع العمليات الإدارية،
-              الأكاديمية، والمالية تحت سقف واحد، لتبسّط إدارة المدرسة، وتنظّم
-              عملياتها، وتربط جميع أطرافها ضمن تجربة أكثر سلاسة ووضوحًا.
+            <h2 style={TEXT_STYLE}>
+              {copy.answer.a[0]}
               <br />
               <br />
-              فبدل أن تتوزّع تفاصيل اليوم بين سجلٍّ للحضور، ودفترٍ للدرجات،
-              وملفٍّ للرسوم، تصبح جميعها في مكان واحد، مترابطةً ومحدّثةً، لينتقل
-              الجهد من جمع البيانات إلى فهمها، ومن متابعة التفاصيل إلى اتخاذ
-              القرار.
+              {copy.answer.a[1]}
             </h2>
           </motion.div>
 
@@ -82,7 +72,7 @@ export function StoryNarrativeBlock() {
               />
               <img
                 src={CDN_IMAGES["ha-compare-1"].webp}
-                alt="Arabic Letter"
+                alt=""
                 fetchPriority="high"
                 className="absolute inset-0 h-full w-full object-cover object-center"
               />
@@ -125,7 +115,7 @@ export function StoryNarrativeBlock() {
               />
               <img
                 src={CDN_IMAGES["ha-compare-2"].webp}
-                alt="Content represnent us"
+                alt=""
                 loading="lazy"
                 className="absolute inset-0 h-full w-full object-cover object-center"
               />
@@ -134,8 +124,12 @@ export function StoryNarrativeBlock() {
 
           {/* Text (.framer-17jeuwe) */}
           <motion.div {...APPEAR} className="answer-text answer-text--b">
-            <h2 dir="rtl" style={TEXT_STYLE}>
-              {ANSWER_B_BODY}
+            {/* Body and closer are single strings, so the rendered h2 has
+                exactly two child nodes (text + span) like the reference, with
+                the trailing U+00A0 inside the text node rather than as its
+                own child. */}
+            <h2 style={TEXT_STYLE}>
+              {copy.answer.bBody}
               <span
                 className="font-medium text-black"
                 style={{
@@ -143,7 +137,7 @@ export function StoryNarrativeBlock() {
                   fontWeight: 500,
                 }}
               >
-                {ANSWER_B_BOLD}
+                {copy.answer.bBold}
               </span>
             </h2>
           </motion.div>

@@ -5,7 +5,10 @@ import { Suspense } from "react"
 import { preload } from "react-dom"
 
 import { Chatbot } from "@/components/chatbot"
-import { type Locale } from "@/components/internationalization/config"
+import {
+  localeConfig,
+  type Locale,
+} from "@/components/internationalization/config"
 import { AccessCheck } from "@/components/saas-marketing/access-check"
 import { HomeTemplate } from "@/components/saas-marketing/thmanyah/template/HomeTemplate"
 
@@ -29,12 +32,19 @@ import { HomeTemplate } from "@/components/saas-marketing/thmanyah/template/Home
  * shell it also inherits the document's real `dir` instead of the clone's
  * pinned RTL.
  *
- * The page is Arabic and RTL at every breakpoint, on `/ar` and `/en` alike:
- * the reference has no English variant and the whole layout is authored
- * right-to-left, so `dir` is pinned on the shell rather than inherited from
- * the locale. Nothing inside the clone reads Radix's direction context (only
- * `Slot`, which has none), so no DirectionProvider is needed — and pinning one
- * here would mutate `document.documentElement.dir` for the rest of the session.
+ * The shell's `dir`/`lang` follow the ROUTE. They used to be pinned to Arabic
+ * RTL at every locale — the reference has no English variant and the whole
+ * layout is authored right-to-left — which meant `/en` served an Arabic page.
+ * It is set explicitly rather than inherited because the prerendered <html>
+ * carries the default locale (`ar`/`rtl`) until the root layout's corrective
+ * inline script runs. Nothing inside the clone reads Radix's direction context
+ * (only `Slot`, which has none), so no DirectionProvider is needed — and
+ * mounting one here would mutate `document.documentElement.dir` for the rest
+ * of the session.
+ *
+ * Copy for both locales lives in `thmanyah/lib/copy.ts`; the mirrored
+ * geometry lives at the end of `thmanyah-clone.css` under
+ * `.thmanyah-shell[dir="ltr"]`, so the Arabic page is untouched by it.
  *
  * Styles: `src/styles/thmanyah-clone.css`, loaded from the root layout
  * alongside the other clone sheets and scoped to `.thmanyah-shell`.
@@ -45,6 +55,8 @@ export default async function Home({
   params: Promise<{ lang: string }>
 }) {
   const { lang } = await params
+  const locale = (lang === "en" ? "en" : "ar") as Locale
+  const dir = localeConfig[locale].dir
 
   // The two faces the first viewport actually draws with, and nothing else.
   // `thmanyah-clone.css` declares fifteen @font-face rules (3 families x 5
@@ -77,13 +89,13 @@ export default async function Home({
 
   return (
     <>
-      <div className="thmanyah-shell" dir="rtl" lang="ar">
+      <div className="thmanyah-shell" dir={dir} lang={locale}>
         <Suspense fallback={null}>
           <AccessCheck />
         </Suspense>
-        <HomeTemplate lang={lang} />
+        <HomeTemplate lang={locale} />
       </div>
-      <Chatbot lang={lang as Locale} promptType="saasMarketing" />
+      <Chatbot lang={locale} promptType="saasMarketing" />
     </>
   )
 }

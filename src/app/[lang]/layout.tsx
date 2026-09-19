@@ -46,16 +46,26 @@ export async function generateMetadata({
   const description =
     dictionary.metadata?.description ||
     "A comprehensive school management school-dashboard"
+  const isArabic = lang !== "en"
+
   // The link-preview card WhatsApp, iMessage and X draw when someone shares
   // the domain. `public/og.png` is the homepage's font.thmanyah.com look
   // (green field, pale-green highlight, Thmanyah Serif Display) with بالقلم
   // in place of ثمانية. Metadata merges shallowly, so a child segment that
   // sets its own `openGraph` drops this image unless it repeats it.
+  //
+  // KNOWN GAP: the artwork itself sets بالقلم in Arabic, so an `/en` share
+  // card carries an Arabic wordmark over an English title. The `alt` and the
+  // site name below follow the locale; the IMAGE needs an English twin
+  // (`public/og-en.png`, same 1200x630 treatment) before the card reads
+  // right for an English audience.
   const image = {
     url: "/og.png",
     width: 1200,
     height: 630,
-    alt: "نظام بالقلم — أصيل. حديث. مرن. حي.",
+    alt: isArabic
+      ? "نظام بالقلم — أصيل. حديث. مرن. حي."
+      : "balqalam — a school platform that is rooted, modern, flexible, alive.",
   }
 
   return {
@@ -63,7 +73,7 @@ export async function generateMetadata({
     description,
     openGraph: {
       type: "website",
-      siteName: "بالقلم",
+      siteName: isArabic ? "بالقلم" : "balqalam",
       locale: lang === "ar" ? "ar_SA" : "en_US",
       title,
       description,

@@ -309,12 +309,56 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
     homepage's footer and FAQ link to them; both paths had to be added to
     `publicRoutes` in **both** `src/routes.ts` and `src/proxy.ts` — the proxy
     keeps its own copy of the list, and an unknown path 307s to `/login`.
-  - _Always RTL, both locales._ The reference has no English variant. `dir` and
-    `lang` are pinned on `.thmanyah-shell`, deliberately **not** via
-    `DirectionProvider` — that provider writes `document.documentElement.dir`
-    in an effect, and on `/en` it would leave the whole session RTL after a
-    soft navigation away. Nothing in the clone reads Radix direction context
-    (its only Radix import is `Slot`), so the context is unnecessary.
+  - _The homepage is bilingual and direction-aware (2026-09-19)._ It used to
+    be Arabic RTL at BOTH locales — `dir`/`lang` were pinned to `rtl`/`ar` on
+    `.thmanyah-shell` because the reference has no English variant — so
+    `balqalam.com/en` served an Arabic page. The shell now takes the ROUTE's
+    direction, still set explicitly (not inherited) and still deliberately
+    **not** via `DirectionProvider`: that provider writes
+    `document.documentElement.dir` in an effect and would leave the session's
+    direction behind after a soft navigation away. Nothing in the clone reads
+    Radix direction context (its only Radix import is `Slot`), so the context
+    is unnecessary.
+    - **All page copy lives in `thmanyah/lib/copy.ts`** (`COPY.ar` / `COPY.en`),
+      reached through `useThmanyahLocale()`. The locale enters the tree once,
+      in `HomeTemplate`, via `ThmanyahLocaleProvider` — not per block from
+      `useParams`, so the words and the shell's `dir` cannot disagree. It is
+      NOT the shared dictionary on purpose: every block here is `"use client"`
+      and threading `en.json`/`ar.json` into a client tree ships it in the RSC
+      payload (measured at ~95 % of HTML weight on other surfaces).
+    - **The `ar` strings are the reference and are byte-for-byte the literals
+      that used to sit in the blocks**, tatweel counts included — the Arabic
+      headline, CTA label and section headings are width-tuned against
+      font.thmanyah.com's own boxes. Do not "tidy" a tatweel in `copy.ts`; it
+      is geometry. The fitting notes stayed in the blocks they belong to.
+    - **Mirrored CSS is an appended block at the end of `thmanyah-clone.css`**,
+      scoped `.thmanyah-shell[dir="ltr"]`, restating only the ~25 declarations
+      that name a physical side (the `text-align: right` copy rules, the two
+      `direction: rtl` subtrees, `.hero-mark`'s 1px inset, `.trials-fade`).
+      Add there; do NOT rewrite the rules above it into logical properties —
+      a block that never matches under `dir=rtl` cannot regress `/ar`.
+      The tester's dropdown is portaled to `<body>`, outside the shell, so its
+      one rule is scoped `[dir="ltr"]` on the document instead.
+    - **Direction-dependent BEHAVIOUR, not just alignment**: the اصيل wipe
+      travels `+travel` under LTR (it reveals along reading direction), the
+      Modern ticker's base velocity flips sign (`baseDir`), the tester's
+      dropdown hangs off the control's reading-start edge, its alignment
+      toggle is ordered start/centre/end and opens on `left` in English, and
+      the swatch ring's physical anchor follows the pill's flex order.
+    - **Bilingual by design, still**: the `#8-fonts` specimen rows render BOTH
+      scripts (`AREAS[].lines.{ar,en}` in `fonts.ts`); the route's own script
+      leads. `Surface` in `fonts.ts` is now structure only (`id`/`css`/
+      `titleSs01`) — its words moved to `copy.surfaces.cards`.
+    - **Verified 2026-09-19**: `/ar` geometry matches production
+      balqalam.com/ar on every measured box and on `scrollHeight` (11478 at
+      1440); `/en` renders 160 text nodes against `/ar`'s 160, no horizontal
+      overflow at 320/390/1440, and the only Arabic left on `/en` is the
+      bilingual specimen and the `id="خط-ثمانيـة"` anchor.
+    - **Open**: `public/og.png` still sets بالقلم in Arabic, so an `/en` share
+      card carries an Arabic wordmark — it needs an English twin
+      (`public/og-en.png`); see the note in `[lang]/layout.tsx`. The tester's
+      ss01 switch is a no-op on Latin glyphs and is kept only because the
+      reference's control row is measured around four controls.
   - _CSS: `src/styles/thmanyah-clone.css`, global import, `.thmanyah-shell`
     scope._ Per-route CSS chunks are NOT removed on soft navigation, so the
     source's document-level reset had to be re-anchored rather than relied on

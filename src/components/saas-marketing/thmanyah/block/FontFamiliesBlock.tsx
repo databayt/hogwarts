@@ -3,12 +3,13 @@
 import React, { useState } from "react"
 import { motion } from "framer-motion"
 
+import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import {
   AREAS,
   FRAMER_SPRING,
   reveal,
   SURFACES,
-  SURFACES_BADGE,
+  type Area,
   type Surface,
 } from "@/components/saas-marketing/thmanyah/lib/fonts"
 
@@ -31,7 +32,20 @@ import {
  *          chevron all spring.
  *
  * Declarations live in globals.css under `.fonts-*`.
+ *
+ * `fonts.ts` holds only what is structural — which CSS family a card renders
+ * in, the 300→900 weight ramp, and each area's Arabic + English specimen
+ * line. The words on the cards (title, secondary line, description, the
+ * badge and the area labels) come from `lib/copy.ts` and are merged in here,
+ * so the same three cards read in whichever language the route is.
  */
+
+/** A card's structural data with this locale's words merged onto it. */
+type LocalisedSurface = Surface & {
+  title: string
+  latin: string
+  description: string
+}
 
 const CHEVRON_SVG =
   'url("data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 xmlns:xlink=%22http://www.w3.org/1999/xlink%22 viewBox=%220 0 24 24%22><path d=%22M 5.143 9.429 L 12 16.286 L 18.857 9.429%22 fill=%22transparent%22 stroke-width=%222%22 stroke=%22rgb(0, 0, 0)%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22></path></svg>")'
@@ -49,26 +63,27 @@ const JUSTIFY: Record<number, string> = {
    reference's alternating 8/10px row gaps (frames 1 & 3 use 8, the rest 10). */
 function AreaFrame({
   area,
+  label,
   surfaces,
   justify,
   clipClass,
   gap,
+  arabicFirst,
 }: {
-  area: (typeof AREAS)[number]
-  surfaces: Surface[]
+  area: Area
+  label: string
+  surfaces: LocalisedSurface[]
   justify: string
   clipClass: string
   gap: number
+  /** The route's own script leads; the other follows as the second line. */
+  arabicFirst: boolean
 }) {
   return (
-    <div className="fonts-weight" data-framer-name={area.label}>
+    <div className="fonts-weight" data-framer-name={label}>
       <div className="fonts-weight-label-box">
-        <p
-          dir="rtl"
-          className="fonts-weight-label"
-          style={{ fontWeight: area.value }}
-        >
-          {area.label}
+        <p className="fonts-weight-label" style={{ fontWeight: area.value }}>
+          {label}
         </p>
       </div>
       <motion.div
@@ -86,30 +101,24 @@ function AreaFrame({
             animate={{ opacity: 1, transformPerspective: 1200 }}
             transition={FRAMER_SPRING}
           >
-            <div className="fonts-line">
-              <p
-                dir="rtl"
-                className="fonts-specimen"
-                style={{
-                  fontFamily: `"${f.css}", ${f.id === "sans" ? "sans-serif" : "serif"}`,
-                  fontWeight: area.value,
-                }}
-              >
-                {area.lines[f.id].ar}
-              </p>
-            </div>
-            <div className="fonts-line">
-              <p
-                dir="ltr"
-                className="fonts-specimen"
-                style={{
-                  fontFamily: `"${f.css}", ${f.id === "sans" ? "sans-serif" : "serif"}`,
-                  fontWeight: area.value,
-                }}
-              >
-                {area.lines[f.id].en}
-              </p>
-            </div>
+            {(arabicFirst
+              ? (["ar", "en"] as const)
+              : (["en", "ar"] as const)
+            ).map((script) => (
+              <div key={script} className="fonts-line">
+                <p
+                  dir={script === "ar" ? "rtl" : "ltr"}
+                  lang={script}
+                  className="fonts-specimen"
+                  style={{
+                    fontFamily: `"${f.css}", ${f.id === "sans" ? "sans-serif" : "serif"}`,
+                    fontWeight: area.value,
+                  }}
+                >
+                  {area.lines[f.id][script]}
+                </p>
+              </div>
+            ))}
           </motion.div>
         ))}
       </motion.div>
@@ -121,7 +130,14 @@ const CARD_BG_ACTIVE = "rgb(0, 188, 109)"
 const CARD_BG_IDLE = "rgb(175, 227, 182)"
 
 export function FontFamiliesBlock() {
+  const { rtl, copy } = useThmanyahLocale()
   const [active, setActive] = useState(0)
+
+  const surfaces: LocalisedSurface[] = SURFACES.map((s) => ({
+    ...s,
+    ...copy.surfaces.cards[s.id],
+  }))
+  const areaLabel = (i: number) => copy.surfaces.areas[i] ?? AREAS[i].label
 
   return (
     <div id="8-fonts" className="fonts-section">
@@ -130,7 +146,7 @@ export function FontFamiliesBlock() {
         <div className="fonts-comp" data-framer-name="Variant 1">
           {/* Text (.framer-1pbjgc8) — the family cards */}
           <div className="fonts-cards" data-framer-name="Text">
-            {SURFACES.map((f, i) => {
+            {surfaces.map((f, i) => {
               const isActive = i === active
               const serif = f.id !== "sans"
               return (
@@ -160,7 +176,6 @@ export function FontFamiliesBlock() {
                     <div className="fonts-card-row">
                       <div className="fonts-card-title-box">
                         <p
-                          dir="rtl"
                           className="fonts-card-title"
                           style={{
                             fontFamily: `"${f.css}", ${serif ? "serif" : "sans-serif"}`,
@@ -173,14 +188,13 @@ export function FontFamiliesBlock() {
                         </p>
                       </div>
                       <div className="fonts-card-badge-box">
-                        <p dir="rtl" className="fonts-card-badge">
-                          {SURFACES_BADGE}
+                        <p className="fonts-card-badge">
+                          {copy.surfaces.badge}
                         </p>
                       </div>
                     </div>
                     <div className="fonts-card-latin-box">
                       <p
-                        dir="ltr"
                         className="fonts-card-latin"
                         style={{
                           fontFamily: `"${f.css}", ${serif ? "serif" : "sans-serif"}`,
@@ -192,9 +206,7 @@ export function FontFamiliesBlock() {
                   </div>
                   {isActive && (
                     <div className="fonts-card-desc-box">
-                      <p dir="rtl" className="fonts-card-desc">
-                        {f.description}
-                      </p>
+                      <p className="fonts-card-desc">{f.description}</p>
                     </div>
                   )}
                 </motion.div>
@@ -209,10 +221,12 @@ export function FontFamiliesBlock() {
                 {i > 0 && <div className="fonts-sep" aria-hidden />}
                 <AreaFrame
                   area={a}
-                  surfaces={SURFACES}
+                  label={areaLabel(i)}
+                  surfaces={surfaces}
                   justify={JUSTIFY[active]}
                   clipClass="fonts-clip"
                   gap={i === 0 || i === 2 ? 8 : 10}
+                  arabicFirst={rtl}
                 />
               </React.Fragment>
             ))}
@@ -224,7 +238,7 @@ export function FontFamiliesBlock() {
       <div className="fonts-accordion">
         <div className="fonts-acc-comp">
           <div className="fonts-acc-text" data-framer-name="Text">
-            {SURFACES.map((f, i) => {
+            {surfaces.map((f, i) => {
               const open = i === active
               const serif = f.id !== "sans"
               const fam = `"${f.css}", ${serif ? "serif" : "sans-serif"}`
@@ -258,7 +272,6 @@ export function FontFamiliesBlock() {
                             <div className="fonts-acc-titlerow">
                               <div className="fonts-acc-title-box">
                                 <p
-                                  dir="rtl"
                                   className="fonts-acc-title"
                                   style={{
                                     fontFamily: fam,
@@ -272,17 +285,15 @@ export function FontFamiliesBlock() {
                               </div>
                               <div className="fonts-acc-badge-box">
                                 <p
-                                  dir="rtl"
                                   className="fonts-acc-badge"
                                   style={{ fontFamily: fam }}
                                 >
-                                  {SURFACES_BADGE}
+                                  {copy.surfaces.badge}
                                 </p>
                               </div>
                             </div>
                             <div className="fonts-acc-latin-box">
                               <p
-                                dir="ltr"
                                 className="fonts-acc-latin"
                                 style={{ fontFamily: fam }}
                               >
@@ -305,9 +316,7 @@ export function FontFamiliesBlock() {
                           </motion.div>
                         </div>
                         <div className="fonts-acc-desc-box">
-                          <p dir="rtl" className="fonts-acc-desc">
-                            {f.description}
-                          </p>
+                          <p className="fonts-acc-desc">{f.description}</p>
                         </div>
                       </div>
 
@@ -323,10 +332,12 @@ export function FontFamiliesBlock() {
                               )}
                               <AreaFrame
                                 area={a}
+                                label={areaLabel(j)}
                                 surfaces={[f]}
                                 justify="flex-start"
                                 clipClass="fonts-acc-clip"
                                 gap={j === 0 || j === 2 ? 8 : 10}
+                                arabicFirst={rtl}
                               />
                             </React.Fragment>
                           ))}

@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { motion, useScroll, useTransform } from "framer-motion"
 
+import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
+
 /**
  * سجلٌّ أصيل — the reference's "الصفـات" section, mechanics untouched.
  *
@@ -20,10 +22,12 @@ import { motion, useScroll, useTransform } from "framer-motion"
  * customer-facing — see the note at the images below.
  *
  * The frame is sticky and the sibling spacer supplies the scroll runway. As
- * the runway is consumed the mask translates left while the card inside it
+ * the runway is consumed the mask translates away while the card inside it
  * counter-translates by the same amount, so the "before" image stays visually
- * pinned while its window slides away — wiping right-to-left to reveal the
- * "after" image underneath. Geometry lives in globals.css (`.aseel-*`).
+ * pinned while its window slides off — wiping to reveal the "after" image
+ * underneath. The wipe follows READING DIRECTION: right-to-left on `/ar`,
+ * left-to-right on `/en`, which is the sign of `travel`. Geometry lives in
+ * globals.css (`.aseel-*`).
  */
 
 /* Wipe travel measured off the reference: it deliberately over-travels past
@@ -33,6 +37,7 @@ const TRAVEL_DESKTOP = 1600
 const TRAVEL_PHONE = 500
 
 export function CalligraphyComparisonBlock() {
+  const { dir, rtl, copy } = useThmanyahLocale()
   const spacerRef = useRef<HTMLDivElement>(null)
   /* Read the breakpoint on first render too: initialising to the desktop
      travel would paint one over-wiped frame on a phone that loads part-way
@@ -64,30 +69,26 @@ export function CalligraphyComparisonBlock() {
     offset: ["start end", "end end"],
   })
 
-  const x = useTransform(scrollYProgress, [0, 1], [0, -travel])
+  /* The mask leaves towards the reading direction's end: negative x (left)
+     under RTL, positive (right) under LTR. */
+  const x = useTransform(scrollYProgress, [0, 1], [0, rtl ? -travel : travel])
   const xCounter = useTransform(x, (v) => -v)
 
   return (
-    <div dir="rtl" className="aseel-inner" data-framer-name="اصيل">
+    <div dir={dir} className="aseel-inner" data-framer-name="اصيل">
       <div className="aseel-frame" data-framer-name="Frame">
         {/* title (.framer-33f5si) */}
         <div id="jamal" className="aseel-title" data-framer-name="title">
           <div className="aseel-title-group">
             <div className="aseel-eyebrow-box">
-              <h2 dir="rtl" className="aseel-eyebrow">
-                سجلٌّ أصيل
-              </h2>
+              <h2 className="aseel-eyebrow">{copy.aseel.eyebrow}</h2>
             </div>
             <div className="aseel-headline-box">
-              <p dir="rtl" className="aseel-headline">
-                كما لو أن الورق لم يتغيّر.
-              </p>
+              <p className="aseel-headline">{copy.aseel.headline}</p>
             </div>
           </div>
           <div className="aseel-lede-box">
-            <p dir="rtl" className="aseel-lede">
-              يجمع بين أُلفة الورق ودقّة النظام، فلا يضيع سطرٌ ولا يُعاد كتابته.
-            </p>
+            <p className="aseel-lede">{copy.aseel.lede}</p>
           </div>
         </div>
 
@@ -109,7 +110,7 @@ export function CalligraphyComparisonBlock() {
             <div className="aseel-media aseel-media--phone">
               <Image
                 src="/images/calligraphy-manuscript-2-phone.png"
-                alt="بمنظومة بالقلم"
+                alt={copy.aseel.after}
                 width={788}
                 height={756}
                 sizes="calc(100vw - 40px)"
@@ -120,7 +121,7 @@ export function CalligraphyComparisonBlock() {
             <div className="aseel-media aseel-media--wide">
               <Image
                 src="/images/calligraphy-manuscript-2.png"
-                alt="بمنظومة بالقلم"
+                alt={copy.aseel.after}
                 width={1547}
                 height={756}
                 sizes="min(100vw - 120px, 1440px)"
@@ -132,9 +133,7 @@ export function CalligraphyComparisonBlock() {
               className="aseel-pill aseel-pill--after"
               data-framer-name="After Title"
             >
-              <p dir="rtl" className="aseel-pill-text">
-                بمنظومة بالقلم
-              </p>
+              <p className="aseel-pill-text">{copy.aseel.after}</p>
             </div>
           </div>
 
@@ -149,7 +148,7 @@ export function CalligraphyComparisonBlock() {
               <div className="aseel-media aseel-media--phone">
                 <Image
                   src="/images/calligraphy-manuscript-1-phone.png"
-                  alt="بالورق والدفاتر"
+                  alt={copy.aseel.before}
                   width={788}
                   height={752}
                   sizes="calc(100vw - 40px)"
@@ -160,7 +159,7 @@ export function CalligraphyComparisonBlock() {
               <div className="aseel-media aseel-media--wide">
                 <Image
                   src="/images/calligraphy-manuscript-1.png"
-                  alt="بالورق والدفاتر"
+                  alt={copy.aseel.before}
                   width={1547}
                   height={756}
                   sizes="min(100vw - 120px, 1440px)"
@@ -172,9 +171,7 @@ export function CalligraphyComparisonBlock() {
                 className="aseel-pill aseel-pill--before"
                 data-framer-name="Before Title"
               >
-                <p dir="rtl" className="aseel-pill-text">
-                  بالورق والدفاتر
-                </p>
+                <p className="aseel-pill-text">{copy.aseel.before}</p>
               </div>
             </motion.div>
           </motion.div>

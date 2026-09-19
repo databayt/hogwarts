@@ -85,47 +85,23 @@ export const SPECIMEN_EN =
    `value` keeps the reference's 300→900 ramp, so the rows still darken down
    the column. */
 
+/* A card's STRUCTURE only. Its title, secondary line and description are
+   locale-dependent and live in `copy.ts` under `surfaces.cards`, keyed by
+   this `id`; `FontFamiliesBlock` merges the two. Keeping the words out of
+   here is what stopped the cards from reading Arabic on `/en`. */
 export interface Surface {
   id: FamilyId
-  /** Card title (Arabic) */
-  title: string
-  /** Latin name under the title */
-  latin: string
-  /** One-line description, shown on the active card only */
-  description: string
   /** CSS family the card + its rows render in */
   css: string
+  /** The reference only turns ss01 on for the first card's title */
   titleSs01: boolean
 }
 
 export const SURFACES: Surface[] = [
-  {
-    id: "display",
-    title: "لوحة الإدارة",
-    latin: "Admin Console",
-    description: "الصورة الكاملة للمدرسة، من القبول إلى التقارير.",
-    css: "thmanyah serif display",
-    titleSs01: true,
-  },
-  {
-    id: "text",
-    title: "لوحة المعلّم",
-    latin: "Teacher Workspace",
-    description: "أدوات الصف اليومية، بأقل عدد من النقرات.",
-    css: "thmanyah serif text",
-    titleSs01: false,
-  },
-  {
-    id: "sans",
-    title: "بوابة وليّ الأمر",
-    latin: "Guardian Portal",
-    description: "متابعة واضحة لابنه، دون أن يتصل بالمدرسة.",
-    css: "thmanyah sans",
-    titleSs01: false,
-  },
+  { id: "display", css: "thmanyah serif display", titleSs01: true },
+  { id: "text", css: "thmanyah serif text", titleSs01: false },
+  { id: "sans", css: "thmanyah sans", titleSs01: false },
 ]
-
-export const SURFACES_BADGE = "5 مجالات"
 
 export interface AreaLine {
   ar: string
@@ -133,9 +109,11 @@ export interface AreaLine {
 }
 
 export interface Area {
+  /** Arabic label — the fallback; `copy.surfaces.areas[i]` is what renders */
   label: string
   /** The reference's weight ramp — the rows still darken down the column */
   value: 300 | 400 | 500 | 700 | 900
+  /** Both scripts always render; the route's own leads. */
   lines: Record<FamilyId, AreaLine>
 }
 

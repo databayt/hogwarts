@@ -10,6 +10,7 @@ import {
   type CdnPoster,
   type CdnVideo,
 } from "@/components/saas-marketing/thmanyah/lib/cdn-assets"
+import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
 
 /**
@@ -19,9 +20,12 @@ import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
  * The ticker is a horizontally clipped <section> (cursor: grab) holding a
  * flex <ul> of fixed-width tiles (gap 16) rendered three times so the loop
  * wraps seamlessly. Measured off the live site: the track moves at 100px/s
- * (translateX increasing, i.e. towards the right under dir=rtl), it does
- * not pause on hover, a drag follows the pointer 1:1, and on release the
- * fling decays back to the base speed *in the drag's direction*.
+ * (translateX increasing, i.e. towards the right under dir=rtl — the
+ * direction the next tile comes FROM), it does not pause on hover, a drag
+ * follows the pointer 1:1, and on release the fling decays back to the base
+ * speed *in the drag's direction*. Under LTR the flex row is laid the other
+ * way, so the base velocity's sign flips with it (`baseDir`) and the ticker
+ * still feeds new tiles in from the reading-start edge.
  *
  * ≥600 the tiles are ~482px tall (a 462px 1080x1128 video + nine posters
  * at their design widths); below 600 the reference swaps to a 350px set
@@ -254,16 +258,19 @@ function Ticker({
   tiles,
   sizes,
   copies,
+  baseDir,
 }: {
   tiles: Tile[]
   sizes: string
   copies: number
+  /** +1 when the row is laid right-to-left, -1 when left-to-right. */
+  baseDir: 1 | -1
 }) {
   const trackRef = useRef<HTMLUListElement>(null)
   const state = useRef({
     x: 0,
-    v: SPEED,
-    dir: 1,
+    v: SPEED * baseDir,
+    dir: baseDir as number,
     dragging: false,
     lastX: 0,
     lastT: 0,
@@ -295,7 +302,7 @@ function Ticker({
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [tiles])
+  }, [tiles, baseDir])
 
   const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
     const s = state.current
@@ -402,6 +409,7 @@ function Ticker({
 }
 
 export function ModernShowcaseBlock() {
+  const { rtl, copy } = useThmanyahLocale()
   const phone = usePhone()
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
@@ -415,21 +423,14 @@ export function ModernShowcaseBlock() {
           <div className="modern-title-inner">
             <div className="modern-heading">
               <div className="modern-text">
-                <h2 dir="rtl" className="modern-eyebrow">
-                  نظام حديث
-                </h2>
+                <h2 className="modern-eyebrow">{copy.modern.eyebrow}</h2>
               </div>
               <div className="modern-text">
-                <p dir="rtl" className="modern-headline">
-                  يصنع توازنًا مريحًا لمدرستك
-                </p>
+                <p className="modern-headline">{copy.modern.headline}</p>
               </div>
             </div>
             <div className="modern-text">
-              <p dir="rtl" className="modern-lede">
-                تفهمه من النظرة الأولى، يجمع بين الوضوح والسرعة، بلمسة هادئة
-                تُبرز ما يهمّ.
-              </p>
+              <p className="modern-lede">{copy.modern.lede}</p>
             </div>
           </div>
         </div>
@@ -441,10 +442,11 @@ export function ModernShowcaseBlock() {
         >
           {mounted && (
             <Ticker
-              key={phone ? "phone" : "web"}
+              key={`${phone ? "phone" : "web"}-${rtl ? "rtl" : "ltr"}`}
               tiles={phone ? PHONE : DESKTOP}
               sizes={phone ? "656px" : "905px"}
               copies={phone ? 2 : 3}
+              baseDir={rtl ? 1 : -1}
             />
           )}
         </div>

@@ -14,6 +14,10 @@ import { InteractiveTesterBlock } from "@/components/saas-marketing/thmanyah/blo
 import { ModernShowcaseBlock } from "@/components/saas-marketing/thmanyah/block/ModernShowcaseBlock"
 import { StatsMetricsBlock } from "@/components/saas-marketing/thmanyah/block/StatsMetricsBlock"
 import { StoryNarrativeBlock } from "@/components/saas-marketing/thmanyah/block/StoryNarrativeBlock"
+import {
+  thmanyahLocaleFor,
+  ThmanyahLocaleProvider,
+} from "@/components/saas-marketing/thmanyah/lib/copy"
 import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
 
 /**
@@ -26,59 +30,69 @@ import { reveal } from "@/components/saas-marketing/thmanyah/lib/fonts"
  * families accordion + the tester + its trigger anchor, and `Footer` holds
  * the mint CTA card + the bottom bar — exactly as the reference nests them,
  * so every section measures 1:1 against its live counterpart.
+ *
+ * Every block below is `"use client"` and reads its words through
+ * `useThmanyahLocale()`. The route's locale is put into that context HERE
+ * rather than derived per block from `useParams`, so the copy and the
+ * shell's `dir` can never disagree — one value, resolved once, in the same
+ * place the section list lives.
  */
 export function HomeTemplate({ lang }: { lang: string }) {
+  const locale = thmanyahLocaleFor(lang)
+
   return (
-    <MotionConfig reducedMotion="user">
-      <main className="page-wrap">
-        {/* Trigger + Hero (.framer-1hxa3yr / .framer-23p5c9) */}
-        <HeroBlock />
+    <ThmanyahLocaleProvider value={locale}>
+      <MotionConfig reducedMotion="user">
+        <main className="page-wrap">
+          {/* Trigger + Hero (.framer-1hxa3yr / .framer-23p5c9) */}
+          <HeroBlock />
 
-        {/* The Answer (.framer-1ogfghp) */}
-        <StoryNarrativeBlock />
+          {/* The Answer (.framer-1ogfghp) */}
+          <StoryNarrativeBlock />
 
-        {/* Trials (.framer-1ns1rxg) */}
-        <StatsMetricsBlock />
+          {/* Trials (.framer-1ns1rxg) */}
+          <StatsMetricsBlock />
 
-        {/* الصفـات (.framer-1yhopfz): اصيل · مرن · New design - wireframe */}
-        <section
-          id="الصفـات"
-          className="traits-section"
-          data-framer-name="الصفـات"
-        >
-          <CalligraphyComparisonBlock />
-          <FeaturesBlock />
-        </section>
+          {/* الصفـات (.framer-1yhopfz): اصيل · مرن · New design - wireframe */}
+          <section
+            id="الصفـات"
+            className="traits-section"
+            data-framer-name="الصفـات"
+          >
+            <CalligraphyComparisonBlock />
+            <FeaturesBlock />
+          </section>
 
-        {/* Try (.framer-b9uyjp): #8-fonts · tester · Trigger #tyt */}
-        <section className="try-section" data-framer-name="Try">
-          <FontFamiliesBlock />
-          <InteractiveTesterBlock />
-          <div
-            id="tyt"
-            className="try-trigger"
-            data-framer-name="Trigger"
-            aria-hidden
-          />
-        </section>
+          {/* Try (.framer-b9uyjp): #8-fonts · tester · Trigger #tyt */}
+          <section className="try-section" data-framer-name="Try">
+            <FontFamiliesBlock />
+            <InteractiveTesterBlock />
+            <div
+              id="tyt"
+              className="try-trigger"
+              data-framer-name="Trigger"
+              aria-hidden
+            />
+          </section>
 
-        {/* Modern (.framer-1lwlxn7) */}
-        <ModernShowcaseBlock />
+          {/* Modern (.framer-1lwlxn7) */}
+          <ModernShowcaseBlock />
 
-        {/* FAQ (.framer-808h3m) */}
-        <FaqBlock />
+          {/* FAQ (.framer-808h3m) */}
+          <FaqBlock />
 
-        {/* Footer (.framer-scq2lf): CTA card · bottom bar */}
-        <motion.section
-          id="footer"
-          className="footer-section"
-          data-framer-name="Footer"
-          {...reveal(60, 0.5)}
-        >
-          <DownloadCtaBlock lang={lang} />
-          <FooterBlock />
-        </motion.section>
-      </main>
-    </MotionConfig>
+          {/* Footer (.framer-scq2lf): CTA card · bottom bar */}
+          <motion.section
+            id="footer"
+            className="footer-section"
+            data-framer-name="Footer"
+            {...reveal(60, 0.5)}
+          >
+            <DownloadCtaBlock lang={locale.lang} />
+            <FooterBlock />
+          </motion.section>
+        </main>
+      </MotionConfig>
+    </ThmanyahLocaleProvider>
   )
 }

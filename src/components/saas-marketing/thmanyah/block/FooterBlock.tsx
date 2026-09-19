@@ -3,6 +3,7 @@
 import React from "react"
 
 import { ReportIssue } from "@/components/report-issue"
+import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 
 /**
  * Footer bottom bar — the reference's .framer-15ptizc: a 1320px-max,
@@ -18,7 +19,9 @@ import { ReportIssue } from "@/components/report-issue"
  *     the reference's exact 24px logo height. "من داتابيت" carries the same
  *     treatment, so the whole lockup is one string in one element (a normal
  *     word space rather than the link's 10px flex gap), inside the link to
- *     databayt.org.
+ *     databayt.org. On `/en` the same lockup reads "balqalam by Databayt"
+ *     in the same face — the display family carries Latin — and the
+ *     underline still marks the maker half.
  *   · the link slot carries the app's real <ReportIssue variant="text" />,
  *     the same component marketing-header/site-footer.tsx uses, so a report
  *     lands in the existing queue. Its "الإبلاغ عن مشكلة" label comes from
@@ -56,6 +59,9 @@ const WORDMARK_STYLE: React.CSSProperties = {
 }
 
 export function FooterBlock() {
+  const { copy } = useThmanyahLocale()
+  const { wordmarkLead, wordmarkMaker } = copy.footer
+
   return (
     <div className="footer-bar" data-framer-name="Footer">
       {/* .framer-d3pryj */}
@@ -65,20 +71,20 @@ export function FooterBlock() {
           href="https://databayt.org"
           target="_blank"
           rel="noopener"
-          aria-label="بالقلم من داتابيت"
+          aria-label={`${wordmarkLead}${wordmarkMaker}`}
         >
-          <p dir="rtl" className="footer-wordmark" style={WORDMARK_STYLE}>
-            {"بالقلم من "}
+          <p className="footer-wordmark" style={WORDMARK_STYLE}>
+            {wordmarkLead}
             <span
               style={{ textDecoration: "underline", textUnderlineOffset: 3 }}
             >
-              {"داتابيت"}
+              {wordmarkMaker}
             </span>
           </p>
         </a>
         <div className="footer-bar-links">
           <div className="footer-pre">
-            <p dir="rtl" className="footer-license">
+            <p className="footer-license">
               <ReportIssue variant="text" />
             </p>
           </div>

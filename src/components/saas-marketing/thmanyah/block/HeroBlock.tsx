@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 
 import { tenantOriginForHost } from "@/lib/root-domain"
 import { DemoLink } from "@/components/saas-marketing/demo-link"
+import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 
 /**
  * 1:1 mirror of the reference hero (.framer-23p5c9) — no site header.
@@ -20,13 +21,17 @@ import { DemoLink } from "@/components/saas-marketing/demo-link"
  *   label  : thmanyah sans 400 · 16px/24px · #fff ; icon 20×20 · bounce translateY
  */
 
+/* `textAlign: "start"` rather than `"right"`: the shell now carries the
+   route's direction, so the headline hugs the reading edge in both — right
+   under `dir=rtl`, left under `dir=ltr` — and `/ar` computes exactly what
+   the hard-coded `right` used to. */
 const H1_STYLE: React.CSSProperties = {
   fontFamily: '"thmanyah serif display", serif',
   fontWeight: 900,
   lineHeight: "1.4em",
   fontFeatureSettings: '"ss01" on',
   color: "#000",
-  textAlign: "right",
+  textAlign: "start",
 }
 
 /* Headline — the optimized form of marketing.hero.title
@@ -36,8 +41,8 @@ const H1_STYLE: React.CSSProperties = {
    operations and teaching, together. المنظومة → نظام واحد · لإدارة المدارس →
    يُدير أعمـال المدرسـة · والعملية التعليمية → والتعليـم معًا.
 
-   The brief is ZERO visual drift from the reference, so every flex item is
-   width-tuned with tatweel to its reference twin at 92px (the reference
+   The brief is ZERO visual drift from the reference, so every Arabic flex item
+   is width-tuned with tatweel to its reference twin at 92px (the reference
    itself tunes with tatweel in قـرّرنا/ثمانيــة/عربيًّــــا):
      نظام 169.8 vs لماذا 165 · واحد 169.3 vs قـرّرنا 170.6
      يُدير 129.6 vs في 139.9 (no valid tatweel slot — د breaks the join)
@@ -49,18 +54,18 @@ const H1_STYLE: React.CSSProperties = {
    line 2 fit with 1.8px slack at exactly 600px wide — this keeps ~12px,
    matching the reference's own margins). The wrap container is
    min(432|840, 100vw − 2×section-padding); a 320px phone (280px) is the
-   binding case — highlight 236.9 vs the reference's 237. */
-const WORDS: Array<{ text: string; ss01?: boolean; name: string }> = [
-  { text: "نظام", ss01: true, name: "27zag5" },
-  { text: "واحد", ss01: true, name: "150tskc" },
-  { text: "يُدير", ss01: true, name: "ldw5z9" },
-  { text: "أعمـال", ss01: true, name: "pmu4ak" },
-  { text: "المدرسـة", ss01: true, name: "1ayb9f3" },
-]
+   binding case — highlight 236.9 vs the reference's 237.
 
-/* From the reference's __framer__appearAnimationsContent: every hero block
-   fades in from perspective(1200px) translateY(100px) — the subtitle from
-   50px — over 1.2s with ease [0.45, 0.4, 0.17, 0.82] and no delay. */
+   The English headline ("One system runs your school and its teaching")
+   keeps the same SHAPE — five flex items plus the marked group — so it
+   wraps to the same line count per breakpoint. It is not tatweel-tunable,
+   and there is no English reference to drift from; the Arabic numbers above
+   are the ones that must not move. Both live in `lib/copy.ts`.
+
+   The flex item's key used to be the reference's Framer node name; the words
+   are locale-dependent now, so it is the index — the list is fixed-length
+   and never reordered. */
+
 const EASE: [number, number, number, number] = [0.45, 0.4, 0.17, 0.82]
 const APPEAR = {
   initial: { opacity: 0.001, y: 100, transformPerspective: 1200 },
@@ -75,12 +80,17 @@ const APPEAR_SUB = {
 
 /* SSR/first-paint href for the CTA. An explicit NEXT_PUBLIC_DEMO_URL wins;
    otherwise the primary root's demo tenant, which DemoLink re-resolves to the
-   visitor's own root after mount. */
-const DEMO_FALLBACK_HREF = `${
-  process.env.NEXT_PUBLIC_DEMO_URL || tenantOriginForHost(null, "demo")
-}/ar/dashboard`
+   visitor's own root after mount. The locale is the ROUTE's — the demo school
+   has a real English dashboard, and this used to hard-code `/ar` because the
+   page itself was pinned Arabic. */
+const demoFallbackHref = (lang: string) =>
+  `${
+    process.env.NEXT_PUBLIC_DEMO_URL || tenantOriginForHost(null, "demo")
+  }/${lang}/dashboard`
 
 export function HeroBlock() {
+  const { lang, rtl, copy } = useThmanyahLocale()
+
   return (
     <>
       {/* Trigger anchor (.framer-1hxa3yr): absolute, top 78px, 437px tall */}
@@ -105,8 +115,7 @@ export function HeroBlock() {
           {/* Subtitle (.framer-1y9s2py) */}
           <motion.div {...APPEAR_SUB} className="w-full">
             <h3
-              dir="rtl"
-              className="hero-title w-full text-right text-black"
+              className="hero-title w-full text-start text-black"
               style={{
                 fontFamily: '"thmanyah sans", sans-serif',
                 fontWeight: 400,
@@ -114,42 +123,32 @@ export function HeroBlock() {
                   '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
               }}
             >
-              منصة بالقلم
+              {copy.hero.eyebrow}
             </h3>
           </motion.div>
 
           {/* Words (.framer-ht94lv): row-wrap, 840px, gap 10px 17px */}
           <div
-            dir="rtl"
             className="hero-words flex w-full flex-row flex-wrap items-center justify-start"
             data-framer-name="Words"
           >
-            {WORDS.map((w) => (
-              <div key={w.name} className="flex flex-col">
-                <h1
-                  dir="rtl"
-                  style={{
-                    ...H1_STYLE,
-                    fontFeatureSettings: w.ss01 ? '"ss01" on' : "normal",
-                  }}
-                >
-                  {w.text}
-                </h1>
+            {copy.hero.words.map((word, i) => (
+              <div key={i} className="flex flex-col">
+                <h1 style={H1_STYLE}>{word}</h1>
               </div>
             ))}
 
             {/* Highlight group (.framer-115xp5q) */}
             <div className="relative flex flex-row items-center justify-center gap-[10px]">
-              {/* Mark (.framer-whameh) */}
+              {/* Mark (.framer-whameh) — anchored at the reading edge, so
+                  it grows away from the text it marks in either direction. */}
               <motion.div
                 {...APPEAR}
-                className="hero-mark origin-right"
+                className={`hero-mark ${rtl ? "origin-right" : "origin-left"}`}
                 aria-hidden
               />
               <div className="relative flex flex-col">
-                <h1 dir="rtl" style={H1_STYLE}>
-                  والتعليـم معًا
-                </h1>
+                <h1 style={H1_STYLE}>{copy.hero.highlight}</h1>
               </div>
             </div>
           </div>
@@ -159,7 +158,7 @@ export function HeroBlock() {
             reference's in-page anchor. DemoLink follows the visitor's root
             domain, so on balqalam.com it resolves to demo.balqalam.com, on
             ed.databayt.org to demo.databayt.org, and locally to
-            demo.localhost:3000. The page is pinned Arabic, so is the demo.
+            demo.localhost:3000. The demo opens in the route's own locale.
 
             Label is "جرّب المنصة الآن" (try it now), not the reference's
             "احصل على الخط" / our earlier "احصل على المنصة": the button opens a
@@ -172,13 +171,12 @@ export function HeroBlock() {
             جرّب المنصة مجانًا 179.6 · استكشف المنصة 173.0 · جرّب المنصة 142.7. */}
         <motion.div {...APPEAR} className="hero-cta">
           <DemoLink
-            fallbackHref={DEMO_FALLBACK_HREF}
-            lang="ar"
+            fallbackHref={demoFallbackHref(lang)}
+            lang={lang}
             path="/dashboard"
             className="inline-flex h-10 flex-row items-center justify-center gap-[10px] rounded-[20px] bg-black px-4 no-underline"
           >
             <p
-              dir="rtl"
               className="text-[16px] leading-[24px] text-white"
               style={{
                 fontFamily: '"thmanyah sans", sans-serif',
@@ -187,7 +185,7 @@ export function HeroBlock() {
                   '"blwf" on, "cv09" on, "cv03" on, "cv04" on, "cv11" on',
               }}
             >
-              جرّب المنصة الآن
+              {copy.hero.cta}
             </p>
             <motion.span
               className="block h-5 w-5 shrink-0 will-change-transform"

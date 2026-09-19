@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { motion, useInView, useReducedMotion } from "framer-motion"
 
 import { LottiePlayer } from "@/components/saas-marketing/thmanyah/atom/LottiePlayer"
+import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import { REVEAL_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
 import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
 
@@ -31,13 +32,14 @@ import { usePhone } from "@/components/saas-marketing/thmanyah/lib/hooks"
  * text colour (invisible on the black section) — both exactly as live.
  */
 
-type Stat = { prefix: string; number: string; description: string }
+/* The strings live in `lib/copy.ts`; the notes that governed them stay here,
+   because that is where the next person edits the section.
 
-/* The reference's three numbers are craft-effort counts (45 typefaces
-   studied, 1,200 hours, 80 versions) — it sells to designers. Ours are
-   SCOPE counts, because a school buyer can evaluate coverage but not our
-   hours. Every one is understated against a figure verifiable in this repo,
-   so the section can be fact-checked:
+   STATS — the reference's three numbers are craft-effort counts (45 typefaces
+   studied, 1,200 hours, 80 versions) — it sells to designers. Ours are SCOPE
+   counts, because a school buyer can evaluate coverage but not our hours.
+   Every one is understated against a figure verifiable in this repo, so the
+   section can be fact-checked:
      60+  vs 62 feature modules shown as built/partial (of 101 defined) —
           SHOWN_FEATURES in saas-marketing/features/constants.tsx
      300+ vs 330 `model` declarations across prisma/models/*.prisma
@@ -46,53 +48,33 @@ type Stat = { prefix: string; number: string; description: string }
    Re-check before changing a digit. Deliberately NOT used: any count of
    schools or students served — `marketing.hero.badge` claims "+700 مدرسة
    مؤتمتة" with nothing in the repo behind it, and one unverifiable number
-   in a credibility section costs you the other two. */
-const STATS: Stat[] = [
-  {
-    prefix: "أكثر من",
-    number: "60",
-    description: "وحدة تغطي يوم المدرسة، من القبول إلى التقارير.",
-  },
-  {
-    prefix: "أكثر من",
-    number: "300",
-    description: "نموذج بيانات تقوم عليها سجلات المدرسة وتقاريرها.",
-  },
-  {
-    prefix: "تعمل بـ",
-    number: "8",
-    description: "أدوار، لكل دورٍ لوحته وما يخصّه وحده.",
-  },
-]
+   in a credibility section costs you the other two.
 
-/* The lede cycles, the way the reference's does. On font.thmanyah.com the
-   whole START component is a Framer variant set — `ح / W`, `و / ً`, `ه / W` —
-   and each variant ships its OWN lede describing that letterform's trial. The
-   swap is enter-only: the outgoing paragraph is unmounted outright (its node
-   stops existing) and the incoming one plays opacity 0 -> 1 with translateY
-   60 -> 0 under the same appear spring the rest of the page uses. Measured on
-   the live site: no exit animation, no overshoot, ~1.4s to settle, variants
-   held 2.3s / 2.8s / 4.2s — uneven because each hold is one Lottie letter's
-   draw. Ours holds a uniform CYCLE_MS: the single jamlia loop has no
-   per-letter segments to sync to, so a varying hold would be arbitrary.
+   LEDES — the lede cycles, the way the reference's does. On
+   font.thmanyah.com the whole START component is a Framer variant set —
+   `ح / W`, `و / ً`, `ه / W` — and each variant ships its OWN lede describing
+   that letterform's trial. The swap is enter-only: the outgoing paragraph is
+   unmounted outright (its node stops existing) and the incoming one plays
+   opacity 0 -> 1 with translateY 60 -> 0 under the same appear spring the
+   rest of the page uses. Measured on the live site: no exit animation, no
+   overshoot, ~1.4s to settle, variants held 2.3s / 2.8s / 4.2s — uneven
+   because each hold is one Lottie letter's draw. Ours holds a uniform
+   CYCLE_MS: the single jamlia loop has no per-letter segments to sync to, so
+   a varying hold would be arbitrary.
 
    Three claims, each checkable in this repo and none of them repeating a stat
    cell below (the roles line lives there):
-     RTL-native   -- every surface authored right-to-left; `dir` is pinned on
-                     the shell, not inherited (see the route's page.tsx)
+     RTL-native   -- every surface is authored right-to-left first; the shell
+                     takes the route's direction (see the route's page.tsx)
      responsive   -- one component tree across the breakpoints, not a
                      stripped phone build; see the row/column variants this
                      very section carries
      offline      -- downloads + an outbox that drains through
                      /api/offline/sync
-   Keep each under ~68 characters: `.trials-lede-box` is a fixed 60px below
-   810px, which is exactly two lines at 20px/1.5em, and `.trials-title` is
-   `overflow: clip` -- a third line vanishes with no warning. */
-const LEDES: string[] = [
-  "صُمِّمت من اليمين إلى اليسار منذ أول سطر.",
-  "من شاشة الهاتف إلى شاشة المكتب، الواجهة نفسها كاملة.",
-  "تعمل دون اتصال، وتُزامن ما أُنجز حين تعود الشبكة.",
-]
+   Keep each under ~68 characters in BOTH locales: `.trials-lede-box` is a
+   fixed 60px below 810px, which is exactly two lines at 20px/1.5em, and
+   `.trials-title` is `overflow: clip` -- a third line vanishes with no
+   warning. */
 
 /** How long each lede is held before the next one takes its place. */
 const CYCLE_MS = 4000
@@ -103,6 +85,8 @@ const HIDDEN = { opacity: 0.001, y: 60, transformPerspective: 1200 }
 const SHOWN = { opacity: 1, y: 0, transformPerspective: 1200 }
 
 export function StatsMetricsBlock() {
+  const { copy } = useThmanyahLocale()
+  const { stats: STATS, ledes: LEDES } = copy.trials
   const phone = usePhone()
   /* One trigger for the container and, on the phone variant, the lede: the
      live "START/Mob" lede carries its own appear effect (opacity 0 · y 60)
@@ -124,7 +108,7 @@ export function StatsMetricsBlock() {
       CYCLE_MS
     )
     return () => window.clearInterval(id)
-  }, [onScreen])
+  }, [onScreen, LEDES.length])
 
   /* translateY is the vestibular trigger, not the crossfade — so a reduced-
      motion reader still gets all three ledes, they just fade rather than
@@ -152,14 +136,10 @@ export function StatsMetricsBlock() {
               {/* .framer-vh2812 */}
               <div className="trials-head-group">
                 <div className="trials-text">
-                  <h2 dir="rtl" className="trials-eyebrow">
-                    رحلة بناء
-                  </h2>
+                  <h2 className="trials-eyebrow">{copy.trials.eyebrow}</h2>
                 </div>
                 <div className="trials-text">
-                  <p dir="rtl" className="trials-headline">
-                    منظومة عربية غير مسبوقة
-                  </p>
+                  <p className="trials-headline">{copy.trials.headline}</p>
                 </div>
               </div>
               <motion.div
@@ -175,7 +155,6 @@ export function StatsMetricsBlock() {
                     between ledes. */}
                 <motion.p
                   key={lede}
-                  dir="rtl"
                   className="trials-lede"
                   initial={ledeHidden}
                   animate={ledeShown}
@@ -210,9 +189,7 @@ export function StatsMetricsBlock() {
                     data-framer-name={i === 0 ? "Cell 1" : "Cell 2"}
                   >
                     <div className="trials-text">
-                      <p className="trials-cell-label" dir="rtl">
-                        {s.prefix}
-                      </p>
+                      <p className="trials-cell-label">{s.prefix}</p>
                     </div>
                     <div className="trials-cell-body">
                       <div className="trials-text">
@@ -221,9 +198,7 @@ export function StatsMetricsBlock() {
                         </h1>
                       </div>
                       <div className="trials-text">
-                        <p className="trials-cell-desc" dir="rtl">
-                          {s.description}
-                        </p>
+                        <p className="trials-cell-desc">{s.description}</p>
                       </div>
                     </div>
                   </div>
@@ -257,9 +232,7 @@ export function StatsMetricsBlock() {
             data-framer-name={i === 0 ? "Cell 1" : "Cell 2"}
           >
             <div className="trials-text">
-              <p className="trials-row-label" dir="rtl">
-                {s.prefix}
-              </p>
+              <p className="trials-row-label">{s.prefix}</p>
             </div>
             <div className="trials-cell-body">
               <div className="trials-text">
@@ -268,9 +241,7 @@ export function StatsMetricsBlock() {
                 </h1>
               </div>
               <div className="trials-text">
-                <p className="trials-row-desc" dir="rtl">
-                  {s.description}
-                </p>
+                <p className="trials-row-desc">{s.description}</p>
               </div>
             </div>
           </div>

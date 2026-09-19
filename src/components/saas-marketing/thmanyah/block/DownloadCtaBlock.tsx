@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
+import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
 import { FRAMER_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
 
 /**
@@ -36,13 +37,12 @@ import { FRAMER_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
  * absolutely-centred icon + label, the invisible sans Regular helper that
  * sizes it, and the hover darken.
  *
- * `lang` comes from the route, not from the shell. The clone pins `dir`
- * and `lang` to Arabic at every locale because the reference has no
- * English variant — but onboarding is our own product and has a real
- * English wizard, and dropping `[lang]` on the way in is what silently
- * flipped Arabic users to English once before.
+ * `lang` comes from the route. It was already threaded here when the rest
+ * of the shell was pinned Arabic, because onboarding is our own product with
+ * a real English wizard and dropping `[lang]` on the way in is what silently
+ * flipped Arabic users to English once before; now the whole page follows it.
  *
- * Width-matched to the reference at its own sizes: line 1
+ * The ARABIC copy is width-matched to the reference at its own sizes: line 1
  * "من السهل أن تبـدأ مع" 394.2px vs "كن أول من يستخــــدم" 394.0 (52px
  * Light) — one tatweel, the same device the reference's own line uses;
  * line 2 "منصـة بالقلم" 260.1px vs
@@ -58,12 +58,12 @@ import { FRAMER_SPRING } from "@/components/saas-marketing/thmanyah/lib/fonts"
 
 const MotionLink = motion.create(Link)
 
-/* The pill's width comes from the invisible helper copy of this string —
-   both the visible label and the helper must read it, or the two disagree
-   and the text overflows its own button. */
-const LABEL = "ابدأ الآن معنا"
-
 export function DownloadCtaBlock({ lang }: { lang: string }) {
+  const { copy } = useThmanyahLocale()
+  /* The pill's width comes from the invisible helper copy of this string —
+     both the visible label and the helper must read it, or the two disagree
+     and the text overflows its own button. */
+  const label = copy.footer.ctaLabel
   const [hover, setHover] = useState(false)
 
   const bg = hover ? "rgba(0, 0, 0, 0.85)" : "rgb(0, 0, 0)"
@@ -73,11 +73,11 @@ export function DownloadCtaBlock({ lang }: { lang: string }) {
     <div className="footer-card">
       {/* .framer-5jxo0q */}
       <div className="footer-cta-text">
-        <p dir="rtl" className="footer-cta-line footer-cta-line--light">
-          من السهل أن تبـدأ مع
+        <p className="footer-cta-line footer-cta-line--light">
+          {copy.footer.ctaLine1}
         </p>
-        <p dir="rtl" className="footer-cta-line footer-cta-line--black">
-          منصـة بالقلم
+        <p className="footer-cta-line footer-cta-line--black">
+          {copy.footer.ctaLine2}
         </p>
       </div>
 
@@ -145,12 +145,8 @@ export function DownloadCtaBlock({ lang }: { lang: string }) {
                 />
               </svg>
               <div className="footer-btn-label-box">
-                <p
-                  dir="rtl"
-                  className="footer-btn-label"
-                  style={{ color: ink }}
-                >
-                  {LABEL}
+                <p className="footer-btn-label" style={{ color: ink }}>
+                  {label}
                 </p>
               </div>
             </div>
@@ -161,9 +157,7 @@ export function DownloadCtaBlock({ lang }: { lang: string }) {
               data-framer-name="Helper"
               aria-hidden
             >
-              <p dir="rtl" className="footer-btn-helper-text">
-                {LABEL}
-              </p>
+              <p className="footer-btn-helper-text">{label}</p>
             </div>
           </MotionLink>
         </div>
