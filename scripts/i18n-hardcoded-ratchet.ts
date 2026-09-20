@@ -29,9 +29,17 @@ const SCAN_DIRS = [join(ROOT, "src", "app"), join(ROOT, "src", "components")]
  * its side (see `/api/mobile/translate`), so hardcoded English in API error
  * responses is out of scope for the UI-translation ratchet. Server actions in
  * `src/components/**` (the UI data path) remain fully scanned.
+ *
+ * DICTIONARY MODULES are excluded by NAME as well as by directory. The old
+ * pattern only skipped a `dictionaries/` folder, so a co-located module like
+ * `report-issue/dictionary.ts` — which is precisely where a feature's English
+ * copy is SUPPOSED to live — was scanned and its `error: "Something went
+ * wrong. Try again."` counted as a hardcoded string. That single false
+ * positive was the whole of the errorReturn ratchet's 1129-vs-1128 failure.
+ * A dictionary module is the destination of this rule, not a violation of it.
  */
 const EXCLUDE_RE =
-  /(\/src\/app\/api\/|\/dictionaries\/|\/src\/tests\/|\.test\.|\.spec\.|\.d\.ts$)/
+  /(\/src\/app\/api\/|\/dictionaries\/|\/src\/tests\/|\.test\.|\.spec\.|\.d\.ts$|(^|\/)dictionary[^/]*\.tsx?$|-dictionary\.tsx?$)/
 
 export const PATTERNS = {
   formLabel: /<FormLabel>[A-Za-z][^{<]+<\/FormLabel>/,

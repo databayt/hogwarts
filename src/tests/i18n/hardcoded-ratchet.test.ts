@@ -37,15 +37,37 @@ import {
 // gates `OFFER_NOT_AVAILABLE`/`OFFER_EXPIRED`/`REGISTRATION_FEE_ALREADY_PAID`
 // in application/offer/actions.ts (+7), each following its file's existing
 // error-code pattern. errorReturn 1116→1128.
+//
+// Re-baselined 2026-09-20: six patterns had drifted well BELOW their floors
+// and nobody had locked the wins in, so the gate had up to 46 strings of
+// slack in one pattern — enough to let a sweep's gain be silently spent by
+// the next feature. Measured, no code moved to get here:
+//   formLabel 23→20 · toast 106→94 · button 34→33 · selectLabel 1547→1501
+//   zodMessage 864→821 · placeholder 161→145      (−121 strings in total)
+//
+// errorReturn STAYS at 1128 and is now met exactly. It read 1129 because the
+// scanner skipped a `dictionaries/` FOLDER but not a co-located module named
+// `dictionary.ts` — so the English side of `report-issue/dictionary.ts`, the
+// one place that copy is supposed to live, counted as a hardcoded string.
+// Fixed in the scanner's EXCLUDE_RE, not by moving the string.
+//
+// bilingualField is DELIBERATELY left at 111 while the tree measures 205.
+// The gap is two intentional bilingual vocabularies —
+// `school-dashboard/documents/field-vocab.ts` (83) and
+// `timetable/structures.ts` (48) — which show `labelEn`/`labelAr` side by side
+// on purpose, plus the school-marketing `nameEn` work. Raising the floor would
+// sanction an exception to the single-language rule that is not this test's
+// call to make; it needs a decision, not a baseline bump. See
+// `.claude/rules/translation.md`.
 const BASELINE_BY_PATTERN: Record<PatternName, number> = {
-  formLabel: 23,
-  toast: 106,
-  button: 34,
+  formLabel: 20,
+  toast: 94,
+  button: 33,
   errorReturn: 1128,
-  selectLabel: 1547,
-  zodMessage: 864,
+  selectLabel: 1501,
+  zodMessage: 821,
   bilingualField: 111,
-  placeholder: 161,
+  placeholder: 145,
 }
 
 /**

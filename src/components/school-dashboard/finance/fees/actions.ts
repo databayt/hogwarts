@@ -10,6 +10,7 @@
  * Includes: fee structures, assignments, payments, scholarships, and fines
  */
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
@@ -32,6 +33,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getDisplayLang } from "@/components/translation/locale"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { allocatePaymentToInvoices } from "../lib/invoice-allocation"
 import { checkCurrentUserPermission } from "../lib/permissions"
@@ -203,6 +205,12 @@ export async function createFeeStructure(
       },
     })
 
+    // `name` is user text on a registered model, so the other language's
+    // first reader would otherwise pay the Google round-trip on render.
+    after(() =>
+      prewarm("FeeStructure", feeStructure, { schoolId: ctx.schoolId })
+    )
+
     revalidatePath("/finance/fees")
     return { success: true, data: feeStructure.id }
   } catch (error) {
@@ -351,6 +359,17 @@ export async function updateFeeStructure(
             : undefined,
       },
     })
+
+    // Same reason as the create path: `name` is user text on a registered
+    // model. `{ id, name }` is all prewarm needs — it reads the registered
+    // fields off the row it is handed.
+    after(() =>
+      prewarm(
+        "FeeStructure",
+        { id, name: formData.name as string },
+        { schoolId: ctx.schoolId }
+      )
+    )
 
     // -----------------------------------------------------------------------
     // Level 3 — Propagate amount changes to existing FeeAssignments
