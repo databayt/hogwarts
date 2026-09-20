@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import {
   Children,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -17,7 +18,8 @@ import {
   type TouchEvent as ReactTouchEvent,
 } from "react"
 import Link from "next/link"
-import { X } from "lucide-react"
+import { Check, X } from "lucide-react"
+import { flushSync } from "react-dom"
 
 import { CoverScreen } from "./cover"
 import { BookEngine, type Anchor } from "./engine"
@@ -26,6 +28,7 @@ import {
   BRIGHTNESS_MAX,
   BRIGHTNESS_MIN,
   FONTS,
+  GUIDE_DIMS,
   LEADINGS,
   MODES,
   oneOf,
@@ -35,6 +38,7 @@ import {
   THEMES,
   usePreference,
   writeStorage,
+  type GuideDim,
 } from "./prefs"
 import {
   buildIndex,
@@ -47,6 +51,7 @@ import {
 import {
   ContentsSheet,
   CustomizeSheet,
+  LineGuideIcon,
   MenuIcon,
   ReadingMenu,
   SearchSheet,
@@ -67,6 +72,14 @@ import type { BookMeta, CoverInfo, ReaderLabels, SectionMeta } from "./types"
  */
 const GAP = 64
 type SheetName = null | "contents" | "search" | "settings" | "customize"
+
+/** View Transitions are still ahead of the DOM lib types on some setups. */
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (callback: () => void) => {
+    finished: Promise<void>
+    ready: Promise<void>
+  }
+}
 
 const posKey = (slug: string) => `hogwarts:textbook:${slug}:pos`
 const bookmarksKey = (slug: string) => `hogwarts:textbook:${slug}:bookmarks`
@@ -130,6 +143,8 @@ export function BookReader({
   const rootRef = useRef<HTMLDivElement>(null)
   const guideRef = useRef<HTMLDivElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
+  const pageRef = useRef<HTMLDivElement>(null)
+  const turnIdRef = useRef(0)
   const [engine] = useState(() => new BookEngine())
   const snap = useSyncExternalStore(
     engine.subscribe,
@@ -149,6 +164,7 @@ export function BookReader({
   )
   const [rotationPref, setRotationPref] = usePreference(PREF.rotation, "off")
   const [guidePref, setGuidePref] = usePreference(PREF.guide, "off")
+  const [guideDimPref, setGuideDimPref] = usePreference(PREF.guideDim, "high")
   const rotationLocked = rotationPref === "on"
   const theme = oneOf(themePref, THEMES, "original")
   const mode = oneOf(modePref, MODES, "light")
@@ -170,10 +186,16 @@ export function BookReader({
   const facsimile = facsimilePref === "on" && meta.hasPageImages
   // A band over a page image says nothing, so the guide stands down there.
   const guide = guidePref === "on" && !facsimile
+  const guideDim = oneOf(guideDimPref, GUIDE_DIMS, "high")
 
   const [size, setSize] = useState({ W: 360, H: 640, measured: false })
   const [chrome, setChrome] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [guideMenu, setGuideMenu] = useState(false)
+  // The page turn rides the View Transition API where the browser has it; off
+  // the server and where it is missing, the track's own transform transition
+  // is the fallback. Flipped on after mount so hydration matches the server.
+  const [pageVT, setPageVT] = useState(false)
   const [sheet, setSheet] = useState<SheetName>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [bookmarks, setBookmarks] = useState<number[]>(() =>
@@ -191,6 +213,64 @@ export function BookReader({
   const sectionPages = useMemo<(number[] | null)[]>(
     () => [null, null, ...sections.map((s) => s.pages)],
     [sections]
+  )
+
+  // ── Page turn ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const doc = document as ViewTransitionDocument
+    if (typeof doc.startViewTransition === "function") setPageVT(true)
+  }, [])
+
+  // Drive a next/prev through a View Transition so the current page slides
+  // off over the next one. The engine mutation must be flushed synchronously
+  // inside the transition callback so the API captures the after-state; a
+  // reduced-motion or unsupported browser just runs the mutation. The
+  // view-transition-name is set just for the turn (not permanently) so it
+  // never leaves a stacking context that would re-order the chrome — the
+  // counter sits over the menu scrim by z-index and must keep doing so. The
+  // direction and RTL sign live on <html> because the pseudo-elements read
+  // their variables from the view-transition tree, a child of :root.
+  const turn = useCallback(
+    (run: () => void, dir: "next" | "prev") => {
+      const doc = document as ViewTransitionDocument
+      const start = doc.startViewTransition?.bind(doc)
+      const page = pageRef.current
+      const reduce = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)"
+      ).matches
+      if (!start || reduce || !page) {
+        run()
+        return
+      }
+      const id = ++turnIdRef.current
+      const html = document.documentElement
+      html.dataset.bookTurn = dir
+      html.style.setProperty("--book-turn-sign", rtl ? "-1" : "1")
+      page.style.viewTransitionName = "book-page"
+      const transition = start(() => flushSync(run))
+      // A newer turn supersedes this one; only the latest cleans up, so it
+      // never strips the direction out from under the turn now running.
+      const cleanup = () => {
+        if (turnIdRef.current !== id) return
+        delete html.dataset.bookTurn
+        html.style.removeProperty("--book-turn-sign")
+        if (page) page.style.viewTransitionName = ""
+      }
+      transition.finished.then(cleanup, cleanup)
+      // An abort by a newer turn rejects `ready`; that is expected, not an error.
+      transition.ready.catch(() => {})
+    },
+    [rtl]
+  )
+  // Advancing always slides the current page off over the next; RTL only
+  // reverses the side it leaves by, which --book-turn-sign carries.
+  const turnNext = useCallback(
+    () => turn(() => engine.next(), "next"),
+    [turn, engine]
+  )
+  const turnPrev = useCallback(
+    () => turn(() => engine.prev(), "prev"),
+    [turn, engine]
   )
 
   // ── Geometry ──────────────────────────────────────────────────────────
@@ -281,29 +361,29 @@ export function BookReader({
         return
       switch (e.key) {
         case "ArrowLeft":
-          if (rtl) engine.next()
-          else engine.prev()
+          if (rtl) turnNext()
+          else turnPrev()
           break
         case "ArrowRight":
-          if (rtl) engine.prev()
-          else engine.next()
+          if (rtl) turnPrev()
+          else turnNext()
           break
         case "ArrowDown":
         case "PageDown":
         case " ":
           e.preventDefault()
-          engine.next()
+          turnNext()
           break
         case "ArrowUp":
         case "PageUp":
           e.preventDefault()
-          engine.prev()
+          turnPrev()
           break
       }
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [engine, rtl, sheet, menuOpen])
+  }, [rtl, sheet, menuOpen, turnNext, turnPrev])
 
   useEffect(() => {
     if (!toast) return
@@ -369,13 +449,13 @@ export function BookReader({
     const rect = e.currentTarget.getBoundingClientRect()
     const x = (e.clientX - rect.left) / rect.width
     if (x < 0.22) {
-      if (rtl) engine.next()
-      else engine.prev()
+      if (rtl) turnNext()
+      else turnPrev()
       return
     }
     if (x > 0.78) {
-      if (rtl) engine.prev()
-      else engine.next()
+      if (rtl) turnPrev()
+      else turnNext()
       return
     }
     setChrome((c) => !c)
@@ -395,10 +475,10 @@ export function BookReader({
     if (Math.abs(dx) < 48 || Math.abs(dy) > 80) return
     // Dragging the page towards the book's start reveals the next page.
     if (dx < 0) {
-      if (rtl) engine.prev()
-      else engine.next()
-    } else if (rtl) engine.next()
-    else engine.prev()
+      if (rtl) turnPrev()
+      else turnNext()
+    } else if (rtl) turnNext()
+    else turnPrev()
   }
 
   const trackGuide = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -481,6 +561,12 @@ export function BookReader({
         : (current?.title ?? meta.title)
   const translate = (col: number) =>
     `translateX(${(rtl ? 1 : -1) * col * (size.W + GAP)}px)`
+  const dimLabels: Record<GuideDim, string> = {
+    high: labels.dimHigh,
+    medium: labels.dimMedium,
+    low: labels.dimLow,
+    none: labels.dimNone,
+  }
 
   return (
     <div
@@ -494,6 +580,8 @@ export function BookReader({
       data-facsimile={facsimile ? "on" : undefined}
       data-chrome-visible={chrome ? "on" : "off"}
       data-guide={guide ? "on" : undefined}
+      data-guide-dim={guide ? guideDim : undefined}
+      data-vt={pageVT ? "on" : undefined}
       onPointerMove={guide ? trackGuide : undefined}
       onPointerDown={guide ? trackGuide : undefined}
       style={
@@ -506,85 +594,102 @@ export function BookReader({
         } as CSSProperties
       }
     >
-      <div
-        className="book-stage"
-        onClick={onStageClick}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
-        <div ref={viewportRef} className="book-viewport" dir={meta.dir}>
-          <div
-            data-section
-            data-kind="cover"
-            className="book-section"
-            data-current={snap.sec === 0 || undefined}
-          >
-            <CoverScreen
-              cover={cover}
-              title={meta.title}
-              edition={meta.edition}
-              labels={labels}
-            />
-          </div>
-          <div
-            data-section
-            data-kind="toc"
-            className="book-section"
-            data-current={snap.sec === 1 || undefined}
-          >
-            <div
-              className="book-track"
-              data-instant={snap.instant || undefined}
-              style={
-                snap.sec === 1 ? { transform: translate(snap.col) } : undefined
-              }
-            >
-              <div className="book-flow" dir={meta.dir} lang={meta.lang}>
-                <TocPage
-                  toc={toc}
-                  labels={labels}
-                  lang={lang}
-                  offset={meta.offset}
-                />
-              </div>
-            </div>
-          </div>
-          {Children.map(children, (child, i) => (
+      {/* The page — text, running head and folio — is one snapshot unit so a
+          turn slides it whole. The chrome (close, menu, guide) lives outside
+          it and cross-fades over itself, invisibly. */}
+      <div ref={pageRef} className="book-page">
+        <div
+          className="book-stage"
+          onClick={onStageClick}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <div ref={viewportRef} className="book-viewport" dir={meta.dir}>
             <div
               data-section
-              data-kind="flow"
+              data-kind="cover"
               className="book-section"
-              data-current={snap.sec === i + 2 || undefined}
+              data-current={snap.sec === 0 || undefined}
+            >
+              <CoverScreen
+                cover={cover}
+                title={meta.title}
+                edition={meta.edition}
+                labels={labels}
+              />
+            </div>
+            <div
+              data-section
+              data-kind="toc"
+              className="book-section"
+              data-current={snap.sec === 1 || undefined}
             >
               <div
                 className="book-track"
                 data-instant={snap.instant || undefined}
                 style={
-                  snap.sec === i + 2
+                  snap.sec === 1
                     ? { transform: translate(snap.col) }
                     : undefined
                 }
               >
-                {child}
+                <div className="book-flow" dir={meta.dir} lang={meta.lang}>
+                  <TocPage
+                    toc={toc}
+                    labels={labels}
+                    lang={lang}
+                    offset={meta.offset}
+                  />
+                </div>
               </div>
             </div>
-          ))}
-          {facsimile && kind === "flow" && snap.page != null && (
-            <div className="book-facsimile">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`${pagesBaseUrl}/${snap.page}.webp`}
-                alt={fill(labels.pageImageAlt, {
-                  page: formatNumber(snap.page, lang),
-                })}
-                decoding="async"
-              />
-            </div>
-          )}
+            {Children.map(children, (child, i) => (
+              <div
+                data-section
+                data-kind="flow"
+                className="book-section"
+                data-current={snap.sec === i + 2 || undefined}
+              >
+                <div
+                  className="book-track"
+                  data-instant={snap.instant || undefined}
+                  style={
+                    snap.sec === i + 2
+                      ? { transform: translate(snap.col) }
+                      : undefined
+                  }
+                >
+                  {child}
+                </div>
+              </div>
+            ))}
+            {facsimile && kind === "flow" && snap.page != null && (
+              <div className="book-facsimile">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`${pagesBaseUrl}/${snap.page}.webp`}
+                  alt={fill(labels.pageImageAlt, {
+                    page: formatNumber(snap.page, lang),
+                  })}
+                  decoding="async"
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {runningHead && <div className="book-running-head">{runningHead}</div>}
+        {runningHead && <div className="book-running-head">{runningHead}</div>}
+        {kind !== "cover" && globalPage != null && (
+          <div className="book-counter" aria-live="polite">
+            {chrome
+              ? fill(labels.pageOfTotal, {
+                  page: formatNumber(globalPage, lang),
+                  total: formatNumber(total, lang),
+                })
+              : formatNumber(globalPage, lang)}
+          </div>
+        )}
+      </div>
       {chrome && !menuOpen && (
         <Link
           href={subjectHref}
@@ -595,17 +700,7 @@ export function BookReader({
           <X />
         </Link>
       )}
-      {kind !== "cover" && globalPage != null && (
-        <div className="book-counter" aria-live="polite">
-          {chrome
-            ? fill(labels.pageOfTotal, {
-                page: formatNumber(globalPage, lang),
-                total: formatNumber(total, lang),
-              })
-            : formatNumber(globalPage, lang)}
-        </div>
-      )}
-      {chrome && !menuOpen && (
+      {chrome && !menuOpen && !guideMenu && (
         <button
           type="button"
           className="book-round book-menu-button"
@@ -651,11 +746,78 @@ export function BookReader({
         />
       )}
       {toast && <div className="book-toast">{toast}</div>}
-      {/* The line guide: the band the reader follows, everything else dimmed
-          back. It tracks the pointer straight on the node — routing every
-          move through state would repaginate the book on a mouse twitch. */}
+      {/* The line guide: the reader's line held clear while the rest of the
+          page is dimmed back. The lens tracks the pointer straight on the
+          node — routing every move through state would repaginate the book on
+          a mouse twitch. */}
       {guide && (
-        <div ref={guideRef} className="book-guide" aria-hidden="true" />
+        <div ref={guideRef} className="book-guide" aria-hidden="true">
+          <div className="book-guide-lens" />
+        </div>
+      )}
+      {/* The guide disc opens the Background Dimming menu, as the reference
+          does — how deep to hold the page back, or turn the guide off. */}
+      {guide && (
+        <button
+          type="button"
+          className="book-round book-guide-disc"
+          aria-label={labels.lineGuideOptions}
+          aria-haspopup="menu"
+          aria-expanded={guideMenu}
+          data-chrome
+          onClick={() => setGuideMenu((v) => !v)}
+        >
+          <LineGuideIcon />
+        </button>
+      )}
+      {guideMenu && (
+        <div
+          className="book-guide-menu-backdrop"
+          role="presentation"
+          onClick={() => setGuideMenu(false)}
+        >
+          <div
+            className="book-guide-menu"
+            role="menu"
+            aria-label={labels.backgroundDimming}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="book-guide-menu-title">
+              {labels.backgroundDimming}
+            </div>
+            {GUIDE_DIMS.map((level) => (
+              <button
+                key={level}
+                type="button"
+                role="menuitemradio"
+                aria-checked={guideDim === level}
+                className="book-guide-menu-item"
+                onClick={() => {
+                  setGuideDimPref(level)
+                  setGuideMenu(false)
+                }}
+              >
+                <span className="book-guide-check">
+                  {guideDim === level && <Check aria-hidden="true" />}
+                </span>
+                <span>{dimLabels[level]}</span>
+              </button>
+            ))}
+            <div className="book-guide-menu-divider" role="separator" />
+            <button
+              type="button"
+              role="menuitem"
+              className="book-guide-menu-item"
+              onClick={() => {
+                setGuidePref("off")
+                setGuideMenu(false)
+              }}
+            >
+              <span className="book-guide-check" />
+              <span>{labels.lineGuideTurnOff}</span>
+            </button>
+          </div>
+        </div>
       )}
       {/* The brightness veil: it dims the reading screen the way the phone's
           own slider does, and never intercepts a tap. */}

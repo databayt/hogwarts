@@ -20,7 +20,17 @@ export const PREF = {
   brightness: "hogwarts:textbook:brightness",
   rotation: "hogwarts:textbook:rotation",
   guide: "hogwarts:textbook:guide",
+  guideDim: "hogwarts:textbook:guideDim",
 } as const
+
+/**
+ * Line-guide background dimming, deepest first — the levels the reference's
+ * "Background Dimming" menu offers. "high" is measured off the capture
+ * (the veil reads var(--book-bg) at 84%); the rest are chosen to step down
+ * evenly and are not measured.
+ */
+export const GUIDE_DIMS = ["high", "medium", "low", "none"] as const
+export type GuideDim = (typeof GUIDE_DIMS)[number]
 
 export const SCALES = [0.85, 1, 1.15, 1.3, 1.5, 1.75]
 /** The six reading palettes, in the order the reference lays its cards out. */

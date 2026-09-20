@@ -4021,7 +4021,14 @@
           "pageOfTotal": "{page} of {total}",
           "coverAlt": "Cover of {title}",
           "pageImageAlt": "Original page {page}",
-          "percentN": "{n}%"
+          "percentN": "{n}%",
+          "backgroundDimming": "Background Dimming",
+          "dimHigh": "High",
+          "dimMedium": "Medium",
+          "dimLow": "Low",
+          "dimNone": "None",
+          "lineGuideTurnOff": "Turn Off Line Guide",
+          "lineGuideOptions": "Line guide options"
         }
       }
     },

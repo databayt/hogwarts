@@ -4021,7 +4021,14 @@
           "pageOfTotal": "{page} من {total}",
           "coverAlt": "غلاف {title}",
           "pageImageAlt": "الصفحة الأصلية {page}",
-          "percentN": "{n}٪"
+          "percentN": "{n}٪",
+          "backgroundDimming": "تعتيم الخلفية",
+          "dimHigh": "عالٍ",
+          "dimMedium": "متوسط",
+          "dimLow": "منخفض",
+          "dimNone": "بلا",
+          "lineGuideTurnOff": "إيقاف خط القراءة",
+          "lineGuideOptions": "خيارات خط القراءة"
         }
       }
     },

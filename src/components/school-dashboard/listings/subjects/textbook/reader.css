@@ -126,31 +126,128 @@
 .book[data-mode="dark"][data-theme="focus"] {
   --book-fg: #e3ddcb;
 }
-/* The line guide — a clear band at the reader's line with the rest of the
-   page held back. The band is three lines of the flow's own leading, so it
-   grows with the text size. It follows the pointer through --book-guide-y,
-   set straight on the node. */
+/* The line guide — the reader's line held in a clear capsule while the rest
+   of the page is dimmed back, as the reference's "Background Dimming" does.
+   The capsule is a transparent rounded rect whose huge box-shadow spread
+   paints the veil everywhere but inside it; it tracks the pointer through
+   --book-guide-y (px, set on the node) on the compositor. The dimming
+   strength is chosen from the guide-disc menu and lives on the root as
+   data-guide-dim. */
 .book-guide {
   position: absolute;
   inset: 0;
   z-index: 29;
-  --book-guide-y: 50%;
-  --book-guide-h: calc(1.125rem * var(--book-scale) * var(--book-lh) * 3);
-  --book-guide-ink: rgba(0, 0, 0, 0.42);
-  background: linear-gradient(
-    to bottom,
-    var(--book-guide-ink) 0,
-    var(--book-guide-ink) calc(var(--book-guide-y) - var(--book-guide-h) / 2),
-    transparent calc(var(--book-guide-y) - var(--book-guide-h) / 2),
-    transparent calc(var(--book-guide-y) + var(--book-guide-h) / 2),
-    var(--book-guide-ink) calc(var(--book-guide-y) + var(--book-guide-h) / 2)
-  );
+  overflow: hidden;
+  --book-guide-y: 50vh;
   pointer-events: none;
 }
+.book-guide-lens {
+  position: absolute;
+  top: 0;
+  inset-inline: clamp(1.25rem, 4vw, calc(50% - 21rem));
+  height: var(--book-guide-h);
+  --book-guide-h: calc(1.125rem * var(--book-scale) * var(--book-lh) + 0.6rem);
+  --book-guide-veil: color-mix(in srgb, var(--book-bg) 84%, transparent);
+  transform: translateY(calc(var(--book-guide-y) - var(--book-guide-h) / 2));
+  border-radius: 0.875rem;
+  box-shadow:
+    0 0 0 100vmax var(--book-guide-veil),
+    inset 0 0 0 0.5px var(--book-rule),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  will-change: transform;
+}
+.book[data-guide-dim="medium"] .book-guide-lens {
+  --book-guide-veil: color-mix(in srgb, var(--book-bg) 62%, transparent);
+}
+.book[data-guide-dim="low"] .book-guide-lens {
+  --book-guide-veil: color-mix(in srgb, var(--book-bg) 40%, transparent);
+}
+.book[data-guide-dim="none"] .book-guide-lens {
+  --book-guide-veil: transparent;
+}
 /* On a dark page the same veil barely reads, so it is drawn deeper. */
-.book[data-mode="dark"] .book-guide,
-.book[data-theme="quiet"] .book-guide {
-  --book-guide-ink: rgba(0, 0, 0, 0.55);
+.book[data-mode="dark"] .book-guide-lens,
+.book[data-theme="quiet"] .book-guide-lens {
+  --book-guide-veil: color-mix(in srgb, var(--book-bg) 88%, transparent);
+}
+.book[data-mode="dark"][data-guide-dim="medium"] .book-guide-lens,
+.book[data-theme="quiet"][data-guide-dim="medium"] .book-guide-lens {
+  --book-guide-veil: color-mix(in srgb, var(--book-bg) 66%, transparent);
+}
+.book[data-mode="dark"][data-guide-dim="low"] .book-guide-lens,
+.book[data-theme="quiet"][data-guide-dim="low"] .book-guide-lens {
+  --book-guide-veil: color-mix(in srgb, var(--book-bg) 44%, transparent);
+}
+.book[data-mode="dark"][data-guide-dim="none"] .book-guide-lens,
+.book[data-theme="quiet"][data-guide-dim="none"] .book-guide-lens {
+  --book-guide-veil: transparent;
+}
+
+/* The guide disc — the bottom-corner control that opens the dimming menu,
+   the counterpart to the reading-menu button while the guide is on. It sits
+   above the veil so it stays reachable, mirrors under RTL. */
+.book-guide-disc {
+  position: absolute;
+  bottom: calc(0.75rem + var(--book-safe-bottom));
+  inset-inline-start: 2.1875rem;
+  z-index: 31;
+}
+.book-guide-menu-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 32;
+}
+.book-guide-menu {
+  position: absolute;
+  bottom: calc(4.3125rem + var(--book-safe-bottom));
+  inset-inline-start: 1.25rem;
+  z-index: 33;
+  min-width: 15rem;
+  padding: 0.375rem 0;
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--book-bg) 80%, transparent);
+  backdrop-filter: blur(30px) saturate(180%);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px var(--book-rule);
+  font-family: var(--book-ui);
+}
+.book-guide-menu-title {
+  padding: 0.5rem 1rem 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--book-muted);
+}
+.book-guide-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--book-fg);
+  font: inherit;
+  font-size: 1.0625rem;
+  text-align: start;
+  cursor: pointer;
+}
+.book-guide-menu-item:active {
+  background: color-mix(in srgb, var(--book-fg) 8%, transparent);
+}
+.book-guide-check {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.book-guide-check svg {
+  width: 100%;
+  height: 100%;
+}
+.book-guide-menu-divider {
+  height: 0.5px;
+  margin: 0.375rem 0;
+  background: var(--book-rule);
 }
 /* The brightness veil — the last thing over the page, never over a tap. */
 .book-dim {
@@ -213,6 +310,26 @@
   .book-track {
     transition: none;
   }
+}
+
+/* ── Page turn ─────────────────────────────────────────────────────────────
+   When the browser can snapshot the page (View Transitions), a turn slides
+   the whole page — its text, running head and folio — as one image: the
+   current page rides off toward the spine over the next, which waits just
+   behind, dimmed and slightly trailing, then brightens as it lands. The
+   .book-page wrapper is the snapshot unit; the chrome outside it (close,
+   menu, guide) cross-fades invisibly over itself. */
+.book-page {
+  position: absolute;
+  inset: 0;
+}
+/* view-transition-name is set on this element only for the duration of a turn
+   (in book.tsx), never permanently: a standing name establishes a stacking
+   context that would drop the folio counter below the reading-menu scrim. */
+/* With the turn owned by the transition, the inner track must not also
+   slide, or the incoming page animates twice. */
+.book[data-vt] .book-track {
+  transition: none;
 }
 .book-flow {
   width: var(--book-w);
@@ -1473,5 +1590,77 @@ body:has(.book-sheet-contents) [data-slot="drawer-overlay"] {
   .book-round,
   .book-menu-backdrop {
     display: none;
+  }
+}
+
+/* ── Page-turn View Transition pseudo-elements ─────────────────────────────
+   These live on the view-transition tree, a child of :root, so their driving
+   custom properties (--book-turn-sign, +1 LTR / -1 RTL) and the direction
+   flag (data-book-turn) are set on <html> for the duration of the turn, not
+   on .book. mix-blend-mode:normal is mandatory: the UA default plus-lighter
+   blows the stacked page pair out to white. */
+::view-transition-group(book-page) {
+  animation: none;
+}
+::view-transition-old(book-page),
+::view-transition-new(book-page) {
+  mix-blend-mode: normal;
+  animation-duration: 0.34s;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+/* Next: the current page (old) rides off over the next page (new). */
+html[data-book-turn="next"]::view-transition-old(book-page) {
+  z-index: 2;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.14);
+  animation-name: book-turn-off;
+}
+html[data-book-turn="next"]::view-transition-new(book-page) {
+  z-index: 1;
+  animation-name: book-turn-reveal;
+}
+/* Prev: the previous page (new) slides back in over the current page (old). */
+html[data-book-turn="prev"]::view-transition-old(book-page) {
+  z-index: 1;
+  animation-name: book-turn-recede;
+}
+html[data-book-turn="prev"]::view-transition-new(book-page) {
+  z-index: 2;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.14);
+  animation-name: book-turn-on;
+}
+@keyframes book-turn-off {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(var(--book-turn-sign, 1) * -100%));
+  }
+}
+@keyframes book-turn-reveal {
+  from {
+    transform: translateX(calc(var(--book-turn-sign, 1) * 12%));
+    filter: brightness(0.8);
+  }
+  to {
+    transform: translateX(0);
+    filter: brightness(1);
+  }
+}
+@keyframes book-turn-on {
+  from {
+    transform: translateX(calc(var(--book-turn-sign, 1) * -100%));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes book-turn-recede {
+  from {
+    transform: translateX(0);
+    filter: brightness(1);
+  }
+  to {
+    transform: translateX(calc(var(--book-turn-sign, 1) * 12%));
+    filter: brightness(0.8);
   }
 }
