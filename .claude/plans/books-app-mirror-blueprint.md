@@ -280,7 +280,7 @@ Acceptance crop: `(0,150,1170,700)` opener; `(0,2020,1170,2532)` foot.
 | Menu    | tapping the disc opens a glass panel **244×272 at (30, 530)**, radius 34 (kit context menu), bg `#f8f8f8`: header "Background Dimming" 13 pt `#8e8e93`, rows High ✓ / Medium / Low / None 17 pt with 42-pt pitch (y 591, 631, 674, 716), checkmark 17 pt at inset 20, separator, "Turn Off Line Guide" 17 pt at y 779 | `[C]` box, `[M]` rows, radius `[K]` |
 | Motion  | the guide follows a drag on the page (finger down on the lit line moves it); which line lights on a tap is `[U]`                                                                                                                                                                                                      | `[U]`                               |
 
-### Built (2026‑09‑20, uncommitted)
+### Built (2026‑09‑20)
 
 Rebuilt to the spec. The three-line black-42 % band is gone. Now: ONE line held clear in a
 `.book-guide-lens` — a transparent rounded rect whose `box-shadow: 0 0 0 100vmax
@@ -310,18 +310,26 @@ The turn is a slide, not a curl. Advancing, the **current** page rides off towar
 **over** the next page, which waits just behind it — dimmed and slightly trailing — then brightens
 in as it lands. Read off the four frames (390 pt, LTR Pride & Prejudice sample):
 
-| Element       | Spec                                                                                                                                           | Tag                                                                        |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Outgoing page | on top, translates `0 → −100%` toward the spine (RTL: `→ +100%`); a soft leading-edge shadow `0 0 12px rgba(0,0,0,.14)`; carries its own folio | `[M]`                                                                      |
-| Incoming page | beneath (z 1), starts trailing `+12%` of width on the reveal side and `brightness(0.8)`, eases to `translateX(0)` `brightness(1)`              | `[M]` parallax +140 px ≈ 12 % `[M]`, dim 215/255 ≈ `brightness(.84)` `[C]` |
-| Reveal colour | the incoming page reads ≈ 215 (grey) mid-turn on a white page — a brightness dip, not an opacity veil (keeps the text/paper relation)          | `[M]`                                                                      |
-| Duration      | ~0.34 s, `cubic-bezier(0.2, 0.7, 0.2, 1)`                                                                                                      | `[U]`                                                                      |
-| Folio         | travels with its page (44 on the outgoing, 45 on the incoming)                                                                                 | `[M]`                                                                      |
+| Element        | Spec                                                                                                                                                             | Tag                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
+| Outgoing page  | on top, translates `0 → −100%` toward the spine (RTL: `→ +100%`); carries its own running head and folio                                                        | `[M]`                     |
+| Incoming page  | beneath, offset **`17.4% × (1 − p)`** of width on the reveal side, `p` = the outgoing page's own progress — it starts 17.4 % behind and closes to 0              | `[M]` 204.2 / 203.0 px, two frames |
+| Incoming dim   | luminance **`1 − 0.229 × (1 − p)`** — paper 196.6/255 at `p = 0`, rising to white. Modelled as `brightness(0.771 → 1)`                                          | `[M]` d/(1−p) = .2307 / .2288 / .2289 |
+| Corner radius  | **48 pt** on the moving page — the display's own 47.33 pt corner; only its trailing corners are ever seen                                                        | `[M]` fit rms 2.2 px      |
+| Edge shadow    | ≈ **4.5 % black over ~5 pt** at the leading edge, fading with `(1 − p)`; shipped flat at `0 0 6px rgba(0,0,0,.045)` — the fade is imperceptible and costs a repaint | `[M]` .045 / .033 / .017  |
+| Folio          | travels with its page (44 on the outgoing, 45 on the incoming)                                                                                                  | `[M]`                     |
+| Duration/curve | `0.36s`, `cubic-bezier(0.42, 0, 0.58, 1)` (UIKit's default easeInOut); exposed as `--book-turn-duration` / `--book-turn-ease`                                    | `[U]` — see below         |
 
-All four captures are the **next** (advance) turn; the **prev** turn is built as its
-symmetric reverse (new page slides in over the old, old recedes and dims) — no capture, `[U]`.
-The `brightness` floor is set to `0.8`; the earliest frame reads ≈ 202/255 (`brightness(.79)`),
-the mid-turn value is the 215 above — consistent, `[C]`.
+**The captures fix position, never time.** The three in-flight frames are *positions* in the turn
+(p = 0.099 / 0.315 / 0.606); nothing in them dates it — the file timestamps are copy times, out of
+order, and no one takes three iPhone screenshots inside a ~350 ms animation. An earlier pass fitted
+an easing curve to them by assuming the frames were evenly spaced in time and reported rms 0.04;
+**that assumption is unfounded and the fit proves nothing.** What the frames DO fix, exactly and
+redundantly, are the two laws above — each derived twice from independent frames, agreeing to
+under 1 %. The curve is therefore chosen, not measured.
+
+All four captures are the **next** (advance) turn; the **prev** turn is built as its symmetric
+reverse (new page slides in over the old, old recedes and dims) — no capture, `[U]`.
 
 ### Built (2026‑09‑20)
 
@@ -352,19 +360,32 @@ Four things the first cut got wrong, each found by measuring and each load-beari
 3. **Suppress the root transition.** Nothing outside the page changes across a turn, so the UA's
    default root cross-fade is pure cost, and its `plus-lighter` blend ghosted the pages together.
    Frozen under `html[data-book-turn]`.
-4. **The easing was fitted, not guessed.** The outgoing page sits at 9.9 % / 31.5 % / 60.6 % across
-   IMG_2739/2740/2741, so the motion *eases in*, accelerates and settles.
-   `cubic-bezier(0.42, 0, 0.58, 1)` (plain ease-in-out) reproduces those points to rms 0.04; the
-   front-loaded curves tried first were ~13x worse and read as a snap — 94 % of the travel spent in
-   the first 45 % of the time, which is exactly the "not smooth" complaint.
+4. **The easing.** The front-loaded curves tried first read as a snap — 94 % of the travel spent in
+   the first 45 % of the time, which is exactly the "not smooth" report. Replaced with UIKit's
+   default `easeInOut`, `cubic-bezier(0.42, 0, 0.58, 1)`. A *choice*, tagged `[U]`: an intermediate
+   pass claimed it was fitted to the captures, on an even-time-spacing assumption nothing supports.
+5. **Both laws were mis-read, corrected 2026‑09‑20.** Parallax shipped at 12 % and the dim floor at
+   `brightness(0.8)`. 12 % is the offset measured *in IMG_2740*, i.e. the value at `p = 0.315` — not
+   the amplitude at `p = 0`, which is **17.4 %**; the turn was understating the parallax by ~45 %
+   throughout. The dim floor is **0.771**. The 48 pt corner and the edge shadow were measured in the
+   first pass and never implemented at all; both are in now.
 
 Verified in-browser at 390 pt on `sd-g12-biology` (an Arabic book, so `meta.dir === "rtl"` and the
-whole turn mirrors): a real turn measured **8.2 % / 33.2 % / 66.8 %** against the reference's
-9.9 / 31.5 / 60.6, incoming parallax −11 → −8 → −4 → 0 % and `brightness` 0.82 → 0.87 → 0.93 → 1;
-the leaving page is opaque and on top with a clean seam and no ghosting; forward and back both run,
-`prev` sets its own direction, and the turn leaves no `data-book-turn`, sign or name behind.
+whole turn mirrors). A live turn sampled at five points, each checked against the measured laws
+rather than against a single frame:
 
----
+| p     | parallax | `17.4 %·(1−p)` | brightness | `1 − .229·(1−p)` |
+| ----- | -------- | -------------- | ---------- | ---------------- |
+| 0.056 | 16.42 %  | 16.42 %        | 0.784      | 0.784            |
+| 0.194 | 14.02 %  | 14.02 %        | 0.816      | 0.816            |
+| 0.405 | 10.35 %  | 10.35 %        | 0.864      | 0.864            |
+| 0.664 | 5.85 %   | 5.85 %         | 0.923      | 0.923            |
+| 0.871 | 2.25 %   | 2.25 %         | 0.970      | 0.970            |
+
+The frame held at `p = 0.3145` is the mirror of IMG_2740. The leaving page is opaque and on top
+with its 48 pt trailing corners, a clean seam and no ghosting; forward and back both run, a rapid
+double-tap advances two pages, `prev` sets its own direction, and a turn leaves no
+`data-book-turn`, sign or name behind.
 
 ## 7. Reading menu (IMG_2579, IMG_2595)
 

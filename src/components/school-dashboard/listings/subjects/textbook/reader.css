@@ -1635,17 +1635,31 @@ html[data-book-turn]::view-transition-new(root) {
 ::view-transition-group(book-leaf-in) {
   animation: none;
 }
+/* The two knobs the captures cannot fix — stills give position, never time.
+   Duration and curve are UIKit's defaults (0.35s, easeInOut), which is what a
+   plain UIView page transition uses; tune here if it reads fast or slow on a
+   real device. The radius IS measured (see below). */
+:root {
+  --book-turn-duration: 0.36s;
+  --book-turn-ease: cubic-bezier(0.42, 0, 0.58, 1);
+  --book-turn-radius: 48px;
+}
 ::view-transition-old(book-leaf-out),
 ::view-transition-new(book-leaf-in) {
   mix-blend-mode: normal;
-  animation-duration: 0.36s;
+  /* The page is the whole screen and carries the display's own corner radius:
+     measured 144px = 48pt off IMG_2740's leaving card (rms 2.2px), which is
+     the 47.33pt corner of a 390pt-class iPhone. Only the trailing corners are
+     ever seen — the leading ones sit against paper of the same colour. */
+  border-radius: var(--book-turn-radius, 48px);
+  animation-duration: var(--book-turn-duration, 0.36s);
   /* Fitted to the reference, not guessed. The outgoing page sits at 9.9% /
      31.5% / 60.6% across the three turn captures (IMG_2739/2740/2741), so the
      motion EASES IN, accelerates through the middle and settles — ease-in-out.
      This curve reproduces those three points to rms 0.04; the front-loaded
      curves tried first (0.2,0.7,0.2,1 and 0.32,0.72,0,1) were ~13x worse and
      read as a snap: 94% of the travel was spent in the first 45% of the time. */
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-timing-function: var(--book-turn-ease, cubic-bezier(0.42, 0, 0.58, 1));
 }
 /* A group with a single image would otherwise take the UA's fade. */
 ::view-transition-new(book-leaf-out),
@@ -1661,7 +1675,7 @@ html[data-book-turn="next"]::view-transition-group(book-leaf-in) {
   z-index: 1;
 }
 html[data-book-turn="next"]::view-transition-old(book-leaf-out) {
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.045);
   animation-name: book-turn-off;
 }
 html[data-book-turn="next"]::view-transition-new(book-leaf-in) {
@@ -1678,7 +1692,7 @@ html[data-book-turn="prev"]::view-transition-old(book-leaf-out) {
   animation-name: book-turn-recede;
 }
 html[data-book-turn="prev"]::view-transition-new(book-leaf-in) {
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.045);
   animation-name: book-turn-on;
 }
 @keyframes book-turn-off {
@@ -1691,8 +1705,8 @@ html[data-book-turn="prev"]::view-transition-new(book-leaf-in) {
 }
 @keyframes book-turn-reveal {
   from {
-    transform: translateX(calc(var(--book-turn-sign, 1) * 12%));
-    filter: brightness(0.8);
+    transform: translateX(calc(var(--book-turn-sign, 1) * 17.4%));
+    filter: brightness(0.771);
   }
   to {
     transform: translateX(0);
@@ -1713,7 +1727,7 @@ html[data-book-turn="prev"]::view-transition-new(book-leaf-in) {
     filter: brightness(1);
   }
   to {
-    transform: translateX(calc(var(--book-turn-sign, 1) * 12%));
-    filter: brightness(0.8);
+    transform: translateX(calc(var(--book-turn-sign, 1) * 17.4%));
+    filter: brightness(0.771);
   }
 }
