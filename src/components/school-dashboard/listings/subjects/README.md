@@ -100,21 +100,32 @@ view.
   on the slider because a page cannot set screen brightness, and line-density
   marks in place of the two suns.
 - Page turn (2026-09-20): a next/prev slides the whole page — text, running
-  head, folio — as one **View Transition**. The current page rides off toward
-  the spine over the next, which waits behind it dimmed and slightly trailing,
-  then brightens as it lands (mirrors `books-app/IMG_2739–2742`). The engine,
-  columns and markers are untouched; `.book-page` takes `view-transition-name`
-  only for the turn (a permanent name would drop the folio counter under the
-  menu scrim), the direction and RTL sign ride `<html>` (the pseudo-elements
-  read their vars from the `:root`-owned transition tree), and a turn-id guard
-  keeps a rapid double-tap from stripping the running turn. Reduced-motion and
-  unsupported browsers fall back to the instant move.
+  head, folio — as one **View Transition** (mirrors `books-app/IMG_2739–2742`).
+  The current page rides off toward the spine over the next, which waits behind
+  it dimmed and slightly trailing, then brightens as it lands. The engine,
+  columns and markers are untouched. Five things it depends on, all learned the
+  hard way: the wrapper is **`.book-turn-page`**, never `.book-page` (that class
+  is already every article page inside the flow — reusing it positioned all 107
+  pages of a chapter at `inset: 0` and collapsed the column pagination); the
+  element is **renamed mid-transition** (`book-leaf-out` → `book-leaf-in`) so the
+  two pages land in separate groups, because Chrome paints `-old` under `-new`
+  inside one image pair and ignores `z-index` between them; the wrapper carries
+  `background: var(--book-bg)` or each snapshot is text on transparency and the
+  pages ghost through each other; the UA root cross-fade is suppressed during a
+  turn; and the easing is fitted to the captures — ease-in-out
+  `cubic-bezier(0.42, 0, 0.58, 1)`, since the reference sits at 9.9/31.5/60.6 %
+  across its three frames. The name is set only for the turn (a standing one
+  drops the folio counter under the menu scrim), direction and RTL sign ride
+  `<html>`, and a turn-id guard keeps a rapid double-tap from stripping the
+  running turn. Reduced-motion and unsupported browsers fall back to the
+  instant move.
 - Line guide (2026-09-20): one line held clear in a `.book-guide-lens` capsule
   while the rest is dimmed by a veil in the **page's own bg colour** (white over
   white paper stays white, the same veil over ink lands at the measured 215 —
   one element, correct in every theme). A bottom-start `.book-guide-disc` opens
   the "Background Dimming" menu (`IMG_2743`): High / Medium / Low / None, then
-  Turn Off Line Guide; the stop persists in `PREF.guideDim`.
+  Turn Off Line Guide; the stop persists in `PREF.guideDim`. The lens snaps to
+  the flow's line grid so it holds exactly one line rather than straddling two.
 - `cover.tsx`, `toc.tsx`, `ornament.tsx`, `prefs.ts`, `search.ts`,
   `format.ts`, `types.ts`, `structure.ts`, `reader.css` (themes
   original/paper/quiet/night, Thmanyah or Rubik, six sizes, three leadings).

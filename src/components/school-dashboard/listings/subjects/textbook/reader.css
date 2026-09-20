@@ -317,11 +317,19 @@
    the whole page — its text, running head and folio — as one image: the
    current page rides off toward the spine over the next, which waits just
    behind, dimmed and slightly trailing, then brightens as it lands. The
-   .book-page wrapper is the snapshot unit; the chrome outside it (close,
-   menu, guide) cross-fades invisibly over itself. */
-.book-page {
+   .book-turn-page wrapper is the snapshot unit; the chrome outside it (close,
+   menu, guide) cross-fades invisibly over itself. The name must NOT be
+   `.book-page` — that class is already the per-page article wrapper inside the
+   flow (article.tsx), and positioning it absolutely stacks every page of the
+   chapter at one spot and collapses the column pagination. */
+.book-turn-page {
   position: absolute;
   inset: 0;
+  /* The page must carry its own paper. Without a background the snapshot is
+     text on transparency, so the leaving and arriving pages show through each
+     other mid-turn instead of one occluding the other — the page colour lives
+     on .book, which is captured in the root snapshot, not in this one. */
+  background: var(--book-bg);
 }
 /* view-transition-name is set on this element only for the duration of a turn
    (in book.tsx), never permanently: a standing name establishes a stacking
@@ -1599,32 +1607,77 @@ body:has(.book-sheet-contents) [data-slot="drawer-overlay"] {
    flag (data-book-turn) are set on <html> for the duration of the turn, not
    on .book. mix-blend-mode:normal is mandatory: the UA default plus-lighter
    blows the stacked page pair out to white. */
-::view-transition-group(book-page) {
+/* Nothing outside the page changes across a turn, so the root's default
+   cross-fade is pure cost — and its plus-lighter blend ghosts the two page
+   snapshots over each other. Freeze it: show the new root, drop the old.
+   Scoped to a turn so other transitions in the app keep their defaults. */
+html[data-book-turn]::view-transition-group(root) {
   animation: none;
 }
-::view-transition-old(book-page),
-::view-transition-new(book-page) {
+html[data-book-turn]::view-transition-old(root) {
+  animation: none;
+  opacity: 0;
   mix-blend-mode: normal;
-  animation-duration: 0.34s;
-  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-/* Next: the current page (old) rides off over the next page (new). */
-html[data-book-turn="next"]::view-transition-old(book-page) {
+html[data-book-turn]::view-transition-new(root) {
+  animation: none;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+/* The leaving and arriving pages must be TWO groups, not one image pair.
+   Chrome composites `-old` under `-new` inside a pair and ignores z-index
+   between them (verified: computed z-index 2/1 applied, paint order did not
+   change), so a single name can never put the outgoing page on top. book.tsx
+   therefore renames the element mid-transition — `book-leaf-out` at capture,
+   `book-leaf-in` after the update — giving one group that holds only the old
+   image and one that holds only the new, whose z-index DOES order them. */
+::view-transition-group(book-leaf-out),
+::view-transition-group(book-leaf-in) {
+  animation: none;
+}
+::view-transition-old(book-leaf-out),
+::view-transition-new(book-leaf-in) {
+  mix-blend-mode: normal;
+  animation-duration: 0.36s;
+  /* Fitted to the reference, not guessed. The outgoing page sits at 9.9% /
+     31.5% / 60.6% across the three turn captures (IMG_2739/2740/2741), so the
+     motion EASES IN, accelerates through the middle and settles — ease-in-out.
+     This curve reproduces those three points to rms 0.04; the front-loaded
+     curves tried first (0.2,0.7,0.2,1 and 0.32,0.72,0,1) were ~13x worse and
+     read as a snap: 94% of the travel was spent in the first 45% of the time. */
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+}
+/* A group with a single image would otherwise take the UA's fade. */
+::view-transition-new(book-leaf-out),
+::view-transition-old(book-leaf-in) {
+  animation: none;
+  opacity: 0;
+}
+/* Next: the current page (out) rides off over the next page (in). */
+html[data-book-turn="next"]::view-transition-group(book-leaf-out) {
   z-index: 2;
+}
+html[data-book-turn="next"]::view-transition-group(book-leaf-in) {
+  z-index: 1;
+}
+html[data-book-turn="next"]::view-transition-old(book-leaf-out) {
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.14);
   animation-name: book-turn-off;
 }
-html[data-book-turn="next"]::view-transition-new(book-page) {
-  z-index: 1;
+html[data-book-turn="next"]::view-transition-new(book-leaf-in) {
   animation-name: book-turn-reveal;
 }
-/* Prev: the previous page (new) slides back in over the current page (old). */
-html[data-book-turn="prev"]::view-transition-old(book-page) {
+/* Prev: the previous page (in) slides back in over the current page (out). */
+html[data-book-turn="prev"]::view-transition-group(book-leaf-out) {
   z-index: 1;
+}
+html[data-book-turn="prev"]::view-transition-group(book-leaf-in) {
+  z-index: 2;
+}
+html[data-book-turn="prev"]::view-transition-old(book-leaf-out) {
   animation-name: book-turn-recede;
 }
-html[data-book-turn="prev"]::view-transition-new(book-page) {
-  z-index: 2;
+html[data-book-turn="prev"]::view-transition-new(book-leaf-in) {
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.14);
   animation-name: book-turn-on;
 }

@@ -246,8 +246,16 @@ export function BookReader({
       const html = document.documentElement
       html.dataset.bookTurn = dir
       html.style.setProperty("--book-turn-sign", rtl ? "-1" : "1")
-      page.style.viewTransitionName = "book-page"
-      const transition = start(() => flushSync(run))
+      // Two names, one element: what is captured as "old" belongs to the
+      // book-leaf-out group and what is captured as "new" to book-leaf-in, so
+      // the two pages land in separate groups whose z-index actually orders
+      // them. One shared name puts the outgoing page under the incoming one,
+      // which no z-index can undo.
+      page.style.viewTransitionName = "book-leaf-out"
+      const transition = start(() => {
+        flushSync(run)
+        page.style.viewTransitionName = "book-leaf-in"
+      })
       // A newer turn supersedes this one; only the latest cleans up, so it
       // never strips the direction out from under the turn now running.
       const cleanup = () => {
@@ -484,7 +492,25 @@ export function BookReader({
   const trackGuide = (e: ReactPointerEvent<HTMLDivElement>) => {
     const node = guideRef.current
     if (!node) return
-    node.style.setProperty("--book-guide-y", `${e.clientY}px`)
+    // Snap to the flow's line grid so the capsule holds ONE line the way the
+    // reference does; tracking the raw pointer leaves it straddling two. The
+    // grid is the flow's own leading — unitless line-height computes to px,
+    // and `normal` (no numeric value) falls back to the declared ratio.
+    const flow = rootRef.current?.querySelector<HTMLElement>(
+      ".book-section[data-current] .book-flow"
+    )
+    let y = e.clientY
+    if (flow) {
+      const cs = getComputedStyle(flow)
+      const parsed = parseFloat(cs.lineHeight)
+      const line = Number.isFinite(parsed)
+        ? parsed
+        : parseFloat(cs.fontSize) * 1.9
+      const top = flow.getBoundingClientRect().top
+      if (line > 0)
+        y = top + (Math.floor((e.clientY - top) / line) + 0.5) * line
+    }
+    node.style.setProperty("--book-guide-y", `${y}px`)
   }
 
   const share = async () => {
@@ -597,7 +623,7 @@ export function BookReader({
       {/* The page — text, running head and folio — is one snapshot unit so a
           turn slides it whole. The chrome (close, menu, guide) lives outside
           it and cross-fades over itself, invisibly. */}
-      <div ref={pageRef} className="book-page">
+      <div ref={pageRef} className="book-turn-page">
         <div
           className="book-stage"
           onClick={onStageClick}

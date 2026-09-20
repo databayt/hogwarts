@@ -323,27 +323,46 @@ symmetric reverse (new page slides in over the old, old recedes and dims) — no
 The `brightness` floor is set to `0.8`; the earliest frame reads ≈ 202/255 (`brightness(.79)`),
 the mid-turn value is the 215 above — consistent, `[C]`.
 
-### Built (2026‑09‑20, uncommitted)
+### Built (2026‑09‑20)
 
 Implemented with the **View Transitions API**, which leaves the engine, columns, markers and
-search DOM untouched. `.book-stage` + running head + folio are wrapped in one `.book-page`
-(`view-transition-name: book-page` under `data-vt`, set after mount so hydration matches). A
-tap/swipe/arrow next/prev runs through `turn()`: it sets `data-book-turn` (`next`/`prev`) and
-`--book-turn-sign` (+1 LTR / −1 RTL) **on `<html>`** — the pseudo-elements read their vars from the
-view-transition tree, a child of `:root`, not from `.book` — then `startViewTransition(() =>
-flushSync(run))`. The pseudo rules set `mix-blend-mode: normal` (mandatory — the UA `plus-lighter`
-default blows the stacked pair to white), z 2/1 for old/new, `::view-transition-group animation:
-none`, and the four keyframes above. The track's own `transition` is killed under `data-vt` so the
-incoming page does not slide twice; reduced-motion and unsupported browsers fall back to the
-instant engine move.
+search DOM untouched. `.book-stage` + running head + folio are wrapped in one **`.book-turn-page`**
+— NOT `.book-page`, which is already the per-page article wrapper inside the flow (`article.tsx`);
+reusing that name positioned all 107 pages of a chapter at `inset: 0`, stacked them on one spot and
+collapsed the column pagination (the book reported 31 screens instead of 584 and the text rendered
+as an unreadable pile). A tap/swipe/arrow next/prev runs through `turn()`, which sets
+`data-book-turn` (`next`/`prev`) and `--book-turn-sign` (+1 LTR / −1 RTL) **on `<html>`** — the
+pseudo-elements read their vars from the view-transition tree, a child of `:root`, not from `.book`
+— then `startViewTransition(() => flushSync(run))`. Reduced-motion and unsupported browsers fall
+back to the instant engine move; the track's own `transition` is killed under `data-vt` so the
+incoming page never slides twice.
 
-Verified in-browser: turns fire (counter changes), direction is correct for RTL content,
-`data-book-turn` is set, `startViewTransition` is called. The live VT **snapshot cannot be captured
-under DevTools device emulation** (fractional backing-store DPR → "Snapshot capture failed") — a
-harness limit, not the code; it should work on a real device `[U]`. The keyframe geometry was proven by
-driving the exact `book-turn-off` / `book-turn-reveal` keyframes on two stacked layers and pausing
-at 31 %: outgoing `−294 px`, incoming `+8.6 px` trailing and `brightness(0.96)` — the IMG_2740/2741
-frame.
+Four things the first cut got wrong, each found by measuring and each load-bearing:
+
+1. **Two groups, not one image pair.** Chrome composites `::view-transition-old` *under*
+   `::view-transition-new` inside a pair and **ignores `z-index` between them** — verified: the
+   computed z-index really was 2 / 1 and the paint order did not change, so the leaving page sat
+   beneath the arriving one. `turn()` therefore renames the element mid-transition —
+   `book-leaf-out` at capture, `book-leaf-in` after the update — so each page lands in its own
+   group, and **group** `z-index` does order them.
+2. **The page must carry its own paper.** `.book-turn-page` had no background, so each snapshot was
+   text on transparency and the two pages showed through each other. It now sets
+   `background: var(--book-bg)` (the page colour otherwise lives on `.book`, which is captured in
+   the *root* snapshot, not the page's).
+3. **Suppress the root transition.** Nothing outside the page changes across a turn, so the UA's
+   default root cross-fade is pure cost, and its `plus-lighter` blend ghosted the pages together.
+   Frozen under `html[data-book-turn]`.
+4. **The easing was fitted, not guessed.** The outgoing page sits at 9.9 % / 31.5 % / 60.6 % across
+   IMG_2739/2740/2741, so the motion *eases in*, accelerates and settles.
+   `cubic-bezier(0.42, 0, 0.58, 1)` (plain ease-in-out) reproduces those points to rms 0.04; the
+   front-loaded curves tried first were ~13x worse and read as a snap — 94 % of the travel spent in
+   the first 45 % of the time, which is exactly the "not smooth" complaint.
+
+Verified in-browser at 390 pt on `sd-g12-biology` (an Arabic book, so `meta.dir === "rtl"` and the
+whole turn mirrors): a real turn measured **8.2 % / 33.2 % / 66.8 %** against the reference's
+9.9 / 31.5 / 60.6, incoming parallax −11 → −8 → −4 → 0 % and `brightness` 0.82 → 0.87 → 0.93 → 1;
+the leaving page is opaque and on top with a clean seam and no ghosting; forward and back both run,
+`prev` sets its own direction, and the turn leaves no `data-book-turn`, sign or name behind.
 
 ---
 
