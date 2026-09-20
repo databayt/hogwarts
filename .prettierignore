@@ -3,3 +3,6 @@ node_modules
 .next
 build
 .contentlayer
+# Verbatim scanned-book transcriptions — prettier renumbers ordered lists
+# and rewrites bullet markers, which fabricates content. Never format these.
+curriculum
