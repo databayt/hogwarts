@@ -40,6 +40,59 @@
 
 ## Resolved
 
+- **2026-09-20 — Nine designed covers, published as shared concepts rather than
+  per subject.** A second Figma batch (`Frame 13–23`, same 2669×3691 board as
+  biology's, textless artwork on the lower half) was mapped to nine of the 23
+  concepts in `concepts-data.ts` instead of to nine subjects — Abdout's call, so
+  one drawing serves every subject and every grade that resolves to the concept:
+  `languages` (Arabic letterforms), `religion` (Islamic tilework), `english`
+  (a grammar desk), `math` (a street grid dissolving into leaf veins),
+  `geography` (a Nile-delta city map), `earth-science` (a canoe on woodcut
+  water), `arts` (a geometric elephant), `computer-science` (a circuit board)
+  and `science` (a rooted tree). Rasterised by the new
+  `scripts/catalog/render-cover.mjs` — headless Chromium at 2x, sharp lanczos3
+  to 1000×1383, JPEG q82 4:4:4 — which reproduces biology's hand-made cover to
+  within 0.1 % (257,424 vs 257,085 B), so it is the committed version of the
+  2026-09-07 recipe.
+
+  Published two ways. **(a) The concept slot was empty.** 242 of 380 subjects
+  carry `cover = catalog/concepts/<concept>/cover`, and that key resolved to
+  nothing — not raw, not through `legacyConceptToClickview` (its regex only
+  matches the older `g{grade}-{concept}/{thumbnail|banner}` shape), not as the
+  `-{size}.webp` variant `image-url.ts` falls back to for a bare prefix. All
+  three consumers of `Subject.cover` call `getCloudFrontUrl(key)` raw, so a
+  JPEG at the extension-less key is what they fetch; nine such objects now put
+  art on **113 subjects across every grade and curriculum** that previously
+  rendered a flat colour. **(b) Grade 12** additionally got the matching
+  `curriculum/sd/g12/<dir>/cover.jpg` for the 15 subjects whose concept is one
+  of the nine, because a local file always beats the concept fallback in
+  `sd.ts`'s `localArtKey` — without it g12 would not have changed. Each source
+  export is kept beside it as `cover.svg` (`cover.png` for `religion`, which
+  exported as PNG), and the outgoing cover archived to
+  `_old/2026-09-20-pre-designed-cover/`.
+
+  No code, schema or seed change: all 25 g12 rows already pointed at
+  `catalog/sd/g12/<dir>/cover.jpg`, so this is a byte replacement under an
+  existing key. Uploaded `--force` to `databayt-cdn` and `hogwarts-databayt`,
+  then mirrored onto the legacy `catalog/textbooks/<slug>/` prefix with
+  `aws s3 cp` (default `COPY` directive, which carries `image/jpeg` +
+  `immutable` across) — production's DB still points there until the catalog
+  pointer flip owed from the 09-19 deploy, and the mirror also makes the
+  pending `migrate-catalog-keys.ts` copy a no-op instead of clobbering the new
+  art with the old scan. All 30 g12 keys and all 9 concept keys verified by
+  content-length after invalidating `E3PHDXTDSBCQSJ`.
+
+  **OPEN:** Abdout wants the concept slugs simplified (`earth-science` → `earth`,
+  `science` → `nature`, …). Safe to do — `CONCEPT_TO_ARCHIVE` is an explicit
+  slug→archive map, so renaming slugs never touches the live clickview keys —
+  but it spans `concepts-data.ts`, `clickview-key.ts`, `timetable-reference.ts`,
+  five curriculum seeds, a test and 378 DB rows, and needs the name table agreed
+  first. **Also open:** three sources are soft (`languages` 736×414, `science`
+  626×468, `math` 597×900) and upscale 1.4–1.7×; `Frame 18` (node `652_41`) was
+  never exported; ten g12 subjects still carry the aggregator's scan
+  (agriculture, biology's own designed cover aside, chemistry, physics,
+  engineering, commerce, military-sciences, family-sciences, history, PE).
+
 - **2026-09-13 — The biology hero wears its own banner again.** The
   2026-09-08 entry below is reverted: the cover-art crop read as a textbook
   cover on the subject page. `banner.jpg` is back to the ClickView triptych
