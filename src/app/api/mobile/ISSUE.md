@@ -29,6 +29,14 @@ canonical for code-side context (read by the `/report` agent)._
 
 ## Recently Landed
 
+- [x] `GET /api/mobile/live/*` — the session list, a session's recordings and a
+      signed playback URL (2026-09-20). The join route could already mint a
+      ticket; nothing could tell a phone a session existed. Verified against
+      the demo school: the same three clock-straddling sessions the browser
+      shows (two live, one scheduled), 165 past sessions, and 404 rather than
+      403 for anything out of the reader's scope. **Not verified: a signed
+      playback URL** — the demo has no `ready` recording to sign.
+
 - [x] `POST/GET /api/mobile/courses/*` — enrol, lesson progress, lesson quiz
       and certificate (2026-09-20). `feature/lumos` on Android has been calling
       these four paths since it was written and every one 404'd, so 45 files of

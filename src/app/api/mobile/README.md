@@ -259,6 +259,45 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 | ------ | ---------------------- | ------------------------- |
 | GET    | `/api/mobile/subjects` | School's adopted subjects |
 
+### Live (new)
+
+| Method | Path                                             | Description                                   |
+| ------ | ------------------------------------------------ | --------------------------------------------- |
+| GET    | `/api/mobile/live/sessions`                      | Sessions the reader may see                    |
+| GET    | `/api/mobile/live/sessions/:id/recordings`       | That session's recordings (display fields)     |
+| GET    | `/api/mobile/live/recordings/:id/url`            | A fresh signed playback URL                    |
+| GET    | `/api/mobile/conference/:id/join` (pre-existing) | Mint a join ticket                             |
+
+`/conference/:id/join` could already mint a ticket, but nothing could tell a
+phone a session existed — the timetable route returns slots with no live-class
+field, and there was no list. A ticket you cannot discover is a door with no
+corridor.
+
+`window` is `today` (default), `upcoming` or `past`; `page` and `limit`
+(default 20, capped at 100) paginate. Today and upcoming read forwards, the
+past reads newest first — how a student looks for the class they missed.
+
+Visibility is the web's own: `resolveViewerSectionScope` decides between the
+whole school (staff), the reader's own sections plus every school-wide session
+(students and guardians), or nothing, and `buildLiveClassWhere` turns that into
+the same `where` the web list uses. Recordings add `canAccessSession` on top,
+so one section cannot pull another's recording inside the same school. A
+session or recording the reader may not open answers **404, not 403** — the
+alternative tells them whose class it was.
+
+`meeting_url` is sent only for an `external` session. A LiveKit room is reached
+with a ticket from the join route, never with a URL.
+
+The **demo tenant's clock repair runs here too**. Its three clock-straddling
+rows go stale within the hour and the web landing calls `ensureDemoClock`
+before it renders; without the same call the phone shows an empty day while
+the browser shows three live classes. Demo only — it never invents a class for
+a real school.
+
+S3 internals (bucket, key, region) never leave the server. Playback is a fresh
+signature per request, with the web's four-hour TTL for the web's reason: a
+mid-playback URL swap reloads the player and drops the viewer back to 0:00.
+
 ### Courses — Lumos (new)
 
 | Method | Path                                                          | Description                            |
