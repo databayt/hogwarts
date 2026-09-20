@@ -7,7 +7,6 @@ import {
   isSaasDashboardRoute,
   type Role,
 } from "@/routes"
-
 import { decode } from "next-auth/jwt"
 
 import {
@@ -128,6 +127,14 @@ const publicSiteRoutes = [
 // (src/app/[lang]/<route>/[token]) and are served globally like auth routes:
 // never subdomain-rewritten, never bounced to login.
 const publicShareRoutes = ["/invoice/", "/report-card/", "/certificate/"]
+
+// Root-level pages that live at src/app/[lang]/<route> and have no twin inside
+// the tenant tree. Like the auth routes they must be served as-is on a school
+// host, never rewritten under /s/<subdomain>/ — the invitation email now links
+// to the school's own domain, and the rewrite made that link a 404. They are
+// NOT public: an invitee still gets bounced to login first (with the school's
+// context), which is the intended flow.
+const globalRootRoutes = ["/accept-invite"]
 
 function isPublicShareRoute(pathWithoutLocale: string): boolean {
   return publicShareRoutes.some(
@@ -463,7 +470,11 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
     // Same for public token-share pages (/invoice|report-card|certificate/
     // {token}) — they live at the app root, so a share link opened on a school
     // subdomain must NOT be rewritten into the tenant tree (it would 404).
-    if (isAuth || isPublicShareRoute(pathWithoutLocale)) {
+    if (
+      isAuth ||
+      isPublicShareRoute(pathWithoutLocale) ||
+      globalRootRoutes.includes(pathWithoutLocale)
+    ) {
       const requestHeaders = new Headers(req.headers)
       requestHeaders.set("x-locale", locale)
       requestHeaders.set("x-subdomain", subdomain)

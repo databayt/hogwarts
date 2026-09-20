@@ -23,6 +23,11 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
 import { sendEmail } from "@/lib/email"
+import {
+  LIVE_ROOT_DOMAIN,
+  mainHostFor,
+  tenantOriginForRoot,
+} from "@/lib/root-domain"
 import { REMINDER_COOLDOWN_HOURS } from "@/lib/invitation-utils"
 
 // Verify cron secret to prevent unauthorized access
@@ -108,9 +113,12 @@ export async function GET(request: NextRequest) {
             schoolName,
             role: invitation.requestedRole,
             daysLeft,
+            // A cron has no request host to resolve a root from, so it picks
+            // the live one explicitly. The old hardcoded databayt.org links
+            // answer HTTP 402 since the move to Cloudflare.
             portalUrl: subdomain
-              ? `https://${subdomain}.databayt.org`
-              : "https://ed.databayt.org",
+              ? tenantOriginForRoot(subdomain)
+              : `https://${mainHostFor(LIVE_ROOT_DOMAIN)}`,
           },
         })
 

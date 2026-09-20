@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 import { after } from "next/server"
 import { auth } from "@/auth"
 import { z } from "zod"
@@ -18,6 +19,7 @@ import {
   isInvitationExpired,
   MAX_RESEND_COUNT,
 } from "@/lib/invitation-utils"
+import { mainOriginForHost, tenantOriginForHost } from "@/lib/root-domain"
 import type { ProvisionStudentResult } from "@/lib/student-provisioning"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
@@ -39,6 +41,24 @@ import {
   resetMemberPasswordSchema,
   suspendMemberSchema,
 } from "./validation"
+
+/**
+ * Where an invitation email sends the invited person: the school's OWN host.
+ *
+ * Both links used to be hardcoded to `ed.databayt.org` / `<sub>.databayt.org`.
+ * Since the move to Cloudflare every `databayt.org` host answers HTTP 402, so
+ * every invitation sent from a `balqalam.com` school pointed at a dead domain.
+ * Deriving the origin from the request keeps a school on the root its admin is
+ * already using, and keeps working if another apex is added later.
+ */
+async function schoolOrigin(subdomain: string): Promise<string> {
+  const requestHeaders = await headers()
+  const host =
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
+  return subdomain
+    ? tenantOriginForHost(host, subdomain)
+    : mainOriginForHost(host)
+}
 
 // --- Change Role ---
 export async function changeRole(
@@ -766,6 +786,7 @@ export async function inviteMember(
     // Send invitation email (fire-and-forget)
     const schoolName = school?.name || "School Portal"
     const subdomain = school?.domain || ""
+    const origin = await schoolOrigin(subdomain)
     sendEmail({
       to: parsed.email,
       subject: `Invitation to join ${schoolName}`,
@@ -773,10 +794,8 @@ export async function inviteMember(
       data: {
         schoolName,
         role: parsed.role,
-        portalUrl: subdomain
-          ? `https://${subdomain}.databayt.org`
-          : "https://ed.databayt.org",
-        acceptUrl: `https://ed.databayt.org/accept-invite?token=${request.invitationToken}`,
+        portalUrl: origin,
+        acceptUrl: `${origin}/accept-invite?token=${request.invitationToken}`,
       },
     }).catch(console.error)
 
@@ -856,6 +875,7 @@ export async function resendInvitation(
 
     const schoolName = school?.name || "School Portal"
     const subdomain = school?.domain || ""
+    const origin = await schoolOrigin(subdomain)
 
     // Re-send invitation email (fire-and-forget)
     sendEmail({
@@ -867,10 +887,8 @@ export async function resendInvitation(
       data: {
         schoolName,
         role: request.requestedRole,
-        portalUrl: subdomain
-          ? `https://${subdomain}.databayt.org`
-          : "https://ed.databayt.org",
-        acceptUrl: `https://ed.databayt.org/accept-invite?token=${newToken}`,
+        portalUrl: origin,
+        acceptUrl: `${origin}/accept-invite?token=${newToken}`,
       },
     }).catch(console.error)
 
