@@ -310,7 +310,7 @@ export async function updateFeeStructure(
       ) as unknown as Prisma.InputJsonValue
     }
 
-    await db.feeStructure.update({
+    const updatedStructure = await db.feeStructure.update({
       where: { id },
       data: {
         name: formData.name as string,
@@ -361,14 +361,12 @@ export async function updateFeeStructure(
     })
 
     // Same reason as the create path: `name` is user text on a registered
-    // model. `{ id, name }` is all prewarm needs — it reads the registered
-    // fields off the row it is handed.
+    // model. Pass the row Prisma returned rather than hand-building
+    // `{ id, name }` — prewarm reads whichever fields the registry declares,
+    // so a hand-built partial would silently under-warm the day
+    // `description` joins them.
     after(() =>
-      prewarm(
-        "FeeStructure",
-        { id, name: formData.name as string },
-        { schoolId: ctx.schoolId }
-      )
+      prewarm("FeeStructure", updatedStructure, { schoolId: ctx.schoolId })
     )
 
     // -----------------------------------------------------------------------
