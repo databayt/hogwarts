@@ -259,6 +259,47 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 | ------ | ---------------------- | ------------------------- |
 | GET    | `/api/mobile/subjects` | School's adopted subjects |
 
+### Courses — Lumos (new)
+
+| Method | Path                                                          | Description                            |
+| ------ | ------------------------------------------------------------- | -------------------------------------- |
+| POST   | `/api/mobile/courses/:courseId/enroll`                        | Enrol in a free catalog subject (201)  |
+| POST   | `/api/mobile/courses/:courseId/lessons/:lessonId/progress`    | Record a watch sample, or completion   |
+| POST   | `/api/mobile/courses/:courseId/lessons/:lessonId/quiz`        | Grade and record a lesson quiz         |
+| GET    | `/api/mobile/courses/:courseId/certificate`                   | This reader's certificate, if issued   |
+
+`courseId` is a catalog subject's id or its slug — the catalog endpoints hand
+back both. The catalog is global; what carries the token's school is the
+enrolment, the progress and the certificate.
+
+Each route calls the module the web calls, not a copy of it:
+`progress-core.ts#applyLessonProgress` and `#completeLessonCore` (which is what
+issues the certificate when a subject's last published lesson lands), and
+`quiz-submission.ts#submitLessonQuizCore` (which grades against the set the
+player rendered, writes only a first attempt to the gradebook, and treats a
+repeated `attempt_id` as one attempt).
+
+Progress and quiz both accept the moment the reader acted — `sampled_at` and
+`submitted_at` — so an outbox drained hours later cannot overwrite a newer
+row. Verified: a replay dated yesterday carrying 5 seconds left a live 90 in
+place.
+
+Refusals: 409 `not_enrolled` (progress before enrolling), 409
+`already_enrolled`, 409 `no_questions`, 403 `forbidden` (an attempt id
+belonging to another reader), 404 for an unknown course or lesson.
+
+**A paid subject answers 402**, with its `price`, `currency` and the
+`checkout_path` to open on the web. The web's enrolment mints a Stripe
+checkout session and waits for the webhook; minting one here would mean
+inventing success and cancel URLs for a screen that does not exist.
+
+`passed` in the quiz result is **the API's own default at 50%** — the web
+defines no pass mark for a lesson quiz, it records the score and lets report
+cards decide. The Android DTO requires a boolean; replace the default the day
+a school configures a threshold. `certificate_url` is null because nothing
+renders a certificate file yet; `verification_code` is the certificate number,
+which is what a school checks.
+
 ### Library (new)
 
 | Method | Path                                          | Description                                  |

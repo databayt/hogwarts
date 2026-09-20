@@ -29,6 +29,14 @@ canonical for code-side context (read by the `/report` agent)._
 
 ## Recently Landed
 
+- [x] `POST/GET /api/mobile/courses/*` — enrol, lesson progress, lesson quiz
+      and certificate (2026-09-20). `feature/lumos` on Android has been calling
+      these four paths since it was written and every one 404'd, so 45 files of
+      course player could not enrol a student or save a second of progress.
+      Each route calls the same core module the web action calls. Paid
+      enrolment answers 402 with a checkout path rather than inventing a
+      mobile Stripe flow.
+
 - [x] `GET/POST /api/mobile/library/*` — books, book detail, borrow, the
       reader's loans and return (2026-09-19). The Android `feature/library`
       module has been calling these paths since it was written; every one of
