@@ -210,21 +210,21 @@ const GRADE_SLUG_OVERRIDES: Record<string, Record<string, string>> = {
 const LESSON_TYPE_CONCEPT: Record<string, string> = {
   // Arabic lesson types (g1-g8)
   reading: "english",
-  literature: "languages",
-  dictation: "languages",
-  expression: "arts",
-  grammar: "psychology",
+  literature: "language",
+  dictation: "language",
+  expression: "art",
+  grammar: "mind",
   // Arabic lesson types (g9+)
   spelling: "english",
-  writing: "arts",
+  writing: "art",
   // French lesson types
   decouverte: "geography",
-  "ecouter-et-comprendre": "languages",
-  ecrire: "arts",
+  "ecouter-et-comprendre": "language",
+  ecrire: "art",
   lire: "english",
-  ouverture: "celebrations",
-  parler: "sociology",
-  bilan: "economics",
+  ouverture: "celebration",
+  parler: "society",
+  bilan: "economy",
 }
 
 // ============================================================================

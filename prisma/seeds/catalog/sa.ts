@@ -39,7 +39,7 @@ const DATA: CurriculumWithSubjects = {
       slug: "arabic",
       department: "اللغات",
       concept: "language",
-      color: colorFor("languages"),
+      color: colorFor("language"),
       grades: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     },
     {
@@ -71,7 +71,7 @@ const DATA: CurriculumWithSubjects = {
       slug: "islamic-studies",
       department: "التربية الإسلامية",
       concept: "faith",
-      color: colorFor("religion"),
+      color: colorFor("faith"),
       grades: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     },
     {
@@ -87,7 +87,7 @@ const DATA: CurriculumWithSubjects = {
       slug: "digital-skills",
       department: "التقنية",
       concept: "computer",
-      color: colorFor("computer-science"),
+      color: colorFor("computer"),
       grades: [4, 5, 6, 7, 8, 9],
     },
     {
@@ -95,7 +95,7 @@ const DATA: CurriculumWithSubjects = {
       slug: "computer",
       department: "التقنية",
       concept: "computer",
-      color: colorFor("computer-science"),
+      color: colorFor("computer"),
       grades: [10, 11, 12],
     },
     {
@@ -103,7 +103,7 @@ const DATA: CurriculumWithSubjects = {
       slug: "pe",
       department: "التربية البدنية",
       concept: "sport",
-      color: colorFor("pe"),
+      color: colorFor("sport"),
       grades: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     },
     {
@@ -111,7 +111,7 @@ const DATA: CurriculumWithSubjects = {
       slug: "art",
       department: "الفنون",
       concept: "art",
-      color: colorFor("arts"),
+      color: colorFor("art"),
       grades: [1, 2, 3, 4, 5, 6, 7, 8, 9],
     },
     {
@@ -119,7 +119,7 @@ const DATA: CurriculumWithSubjects = {
       slug: "life-skills",
       department: "المهارات الحياتية",
       concept: "skills",
-      color: colorFor("life-skills"),
+      color: colorFor("skills"),
       grades: [1, 2, 3, 4, 5, 6, 7, 8, 9],
     },
     {
@@ -127,7 +127,7 @@ const DATA: CurriculumWithSubjects = {
       slug: "biology",
       department: "العلوم",
       concept: "life",
-      color: colorFor("biology"),
+      color: colorFor("life"),
       grades: [10, 11, 12],
     },
     {
@@ -151,7 +151,7 @@ const DATA: CurriculumWithSubjects = {
       slug: "critical-thinking",
       department: "المهارات الحياتية",
       concept: "skills",
-      color: colorFor("life-skills"),
+      color: colorFor("skills"),
       grades: [10, 11, 12],
     },
   ],

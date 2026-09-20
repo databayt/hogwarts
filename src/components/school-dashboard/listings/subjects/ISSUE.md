@@ -72,14 +72,37 @@
   pluralised `life-sciences` the high archive actually uses — all three levels
   verified 200. Its nearest-concept rule deliberately does **not** claim
   بيئة/environment, which stays with `earth`, so no existing subject silently
-  changed concept. Scope: `concepts-data.ts` (registry, colours, rules, both
-  subject maps, the pool), `clickview-key.ts` (map keys only), 71 literal
-  `concept:` sites across six curriculum seeds and
-  `assemble-sudan-curriculum.ts`, one test, and 10,417 DB rows. Verified by
-  resolving all 504 concept keys in the database through the real resolver and
-  curling every one of the 119 distinct clickview targets — all 200 — then
-  re-loading the page that had been broken: 63 images, none broken. `tsc` clean,
-  417 catalog tests pass. **Note:** nothing resolves to `nature` yet, so its
+  changed concept.
+
+  **A concept slug does not only appear as `concept: "x"`, and that is the
+  second way this bites.** Searching for that one shape missed three more
+  surfaces, all found only by grepping for slugs that can ONLY be concepts
+  (`teacher-pd`, `career-tech`, `earth-science`, `life-skills`, `celebrations`):
+  **53 `colorFor("…")` arguments** in the same six seed files whose `concept:`
+  lines had already been renamed; `banners.ts`'s `OLD_SLUG_TO_CONCEPT` and
+  `sd.ts`'s `LESSON_TYPE_CONCEPT`, where the concept is the **value** and the
+  key is a subject slug or lesson type that must NOT move; and — invisible to
+  any repo grep because `curriculum/` is gitignored — **231 authored `concept`
+  values in 29 `structure.json` files**. Those last ones fail silently in the
+  other direction: `sd.ts` validates them against `CONCEPTS` and drops an
+  unknown one with a warning, so the hand-authored concept/image map from
+  2026-09-05 would have degraded to pool rotation on the next seed. 18 of them
+  are published, so they were re-uploaded to both buckets and invalidated.
+  Deliberately NOT renamed: `image-map.ts`, `engine.ts`, `catalog-assignments.ts`'s
+  `LAB_SUBJECTS` and `generate-us-curriculum-mdx.ts` key on **subject** slugs
+  (`career-education`, `teacher-development`), not concepts.
+
+  Scope: `concepts-data.ts` (registry, colours, rules, both subject maps, the
+  pool), `clickview-key.ts` (map keys only), 71 `concept:` literals + 53
+  `colorFor()` args + 25 map values across six curriculum seeds, `banners.ts`,
+  `sd.ts` and `assemble-sudan-curriculum.ts`, one test, 231 structure.json
+  values, and **11,544 DB rows** (6,444 in the first pass, 5,100 in the child
+  tables the first pass missed). Verified by resolving all 504 concept keys in
+  the database through the real resolver and curling every one of the 119
+  distinct clickview targets — all 200 — re-loading the page that had been
+  broken (63 images, none broken), and statically checking all 346 authored
+  structure.json concepts against `CONCEPTS` (0 invalid; 24 concepts, every one
+  with an archive mapping). `tsc` clean, 417 catalog tests pass. **Note:** nothing resolves to `nature` yet, so its
   cover is published but unused until a subject is assigned to it.
   Also fixed in passing: `assemble-sudan-curriculum.ts` set `concept: "arabic"`
   in six places, which was never a valid concept and fell through to
