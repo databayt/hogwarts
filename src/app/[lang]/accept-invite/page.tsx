@@ -1,19 +1,59 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import Link from "next/link"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { isInvitationExpired } from "@/lib/invitation-utils"
+import { schoolNameMetadata, tenantHostMetadata } from "@/lib/tenant-metadata"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { resolveSchoolDisplayName } from "@/components/template/site-header/display-name"
 
 import { AcceptInviteForm } from "./form"
 
 interface AcceptInvitePageProps {
   params: Promise<{ lang: Locale }>
   searchParams: Promise<{ token?: string }>
+}
+
+// The invited teacher should see the school that invited them, not "بالقلم".
+// This route lives outside /s/[subdomain], so the tenant layout's metadata
+// never reaches it — and the school cannot be read from the host either: the
+// invitation email links to the MAIN host (membership/actions.ts), so the
+// token is the only reliable source. Falling back to the host covers a link
+// opened on the school's own domain.
+export async function generateMetadata({
+  params,
+  searchParams,
+}: AcceptInvitePageProps): Promise<Metadata> {
+  const { lang } = await params
+  const { token } = await searchParams
+
+  if (token) {
+    const request = await db.membershipRequest.findUnique({
+      where: { invitationToken: token },
+      select: {
+        school: {
+          select: {
+            id: true,
+            name: true,
+            nameEn: true,
+            preferredLanguage: true,
+          },
+        },
+      },
+    })
+    if (request?.school) {
+      return schoolNameMetadata(
+        await resolveSchoolDisplayName(request.school, lang)
+      )
+    }
+  }
+
+  return tenantHostMetadata(lang)
 }
 
 export default async function AcceptInvitePage({
