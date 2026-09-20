@@ -31,29 +31,30 @@ export function gradeToLevel(grade: number): Level {
  * some entirely.
  */
 export const CONCEPT_TO_ARCHIVE: Record<string, string> = {
-  arts: "arts",
-  biology: "life-science",
-  "career-tech": "career-and-technical-education",
-  celebrations: "celebrations-commemorations-and-festivals",
+  art: "arts",
+  life: "life-science",
+  career: "career-and-technical-education",
+  celebration: "celebrations-commemorations-and-festivals",
   chemistry: "chemistry",
-  civics: "civics-and-government",
-  "computer-science": "computer-science-and-technology",
-  "earth-science": "earth-and-space-science",
-  economics: "economics",
+  civic: "civics-and-government",
+  computer: "computer-science-and-technology",
+  earth: "earth-and-space-science",
+  economy: "economics",
   english: "english-language-arts",
   geography: "geography",
   health: "health",
   history: "history",
-  languages: "world-languages",
-  "life-skills": "life-skills",
+  language: "world-languages",
+  skills: "life-skills",
   math: "math",
-  pe: "physical-education",
+  nature: "life-science",
+  sport: "physical-education",
   physics: "physics",
-  psychology: "psychology",
-  religion: "religion",
+  mind: "psychology",
+  faith: "religion",
   science: "science-and-engineering-practices",
-  sociology: "sociology",
-  "teacher-pd": "teacher-professional-development",
+  society: "sociology",
+  teaching: "teacher-professional-development",
 }
 
 /**
@@ -64,29 +65,30 @@ export const CONCEPT_TO_ARCHIVE: Record<string, string> = {
  */
 const ARCHIVE_BY_LEVEL: Record<Level, Record<string, string>> = {
   elementary: {
-    "career-tech": "life-skills", // fallback — no CTE art at elementary
+    career: "life-skills", // fallback — no CTE art at elementary
     chemistry: "physical-science", // fallback — no chemistry art at elementary
     physics: "physical-science", // fallback
-    psychology: "health", // fallback
+    mind: "health", // fallback
     science: "physical-science", // fallback
-    sociology: "civics-and-government", // fallback
+    society: "civics-and-government", // fallback
   },
   middle: {
-    "career-tech": "careers-and-technical-education",
+    career: "careers-and-technical-education",
     chemistry: "chemical-science",
-    celebrations: "arts", // fallback — no celebrations art at middle
+    celebration: "arts", // fallback — no celebrations art at middle
     history: "world-history",
     physics: "physical-science", // fallback
-    psychology: "health", // fallback
-    religion: "religion-and-ethics",
-    sociology: "civics-and-government", // fallback
+    mind: "health", // fallback
+    faith: "religion-and-ethics",
+    society: "civics-and-government", // fallback
   },
   high: {
-    biology: "life-sciences",
-    economics: "business-and-economics",
-    celebrations: "arts", // fallback — no celebrations art at high
+    life: "life-sciences",
+    nature: "life-sciences", // the high archive pluralises it
+    economy: "business-and-economics",
+    celebration: "arts", // fallback — no celebrations art at high
     history: "world-history",
-    religion: "religion-and-philosophy",
+    faith: "religion-and-philosophy",
   },
 }
 

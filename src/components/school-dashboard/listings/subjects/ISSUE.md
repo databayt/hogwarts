@@ -40,6 +40,51 @@
 
 ## Resolved
 
+- **2026-09-20 (b) — The concepts are one generic word each, and `nature` is a
+  24th.** 15 slugs renamed (`earth-science`→`earth`, `languages`→`language`,
+  `arts`→`art`, `biology`→`life`, `life-skills`→`skills`, `pe`→`sport`,
+  `economics`→`economy`, `sociology`→`society`, `teacher-pd`→`teaching`,
+  `career-tech`→`career`, `computer-science`→`computer`,
+  `celebrations`→`celebration`, `psychology`→`mind`, `civics`→`civic`,
+  `religion`→`faith`); `math`, `english`, `history`, `geography`, `health`,
+  `physics`, `chemistry` and `science` keep their names. `science` and `nature`
+  are deliberately **different ideas** — Abdout's call — so the rooted-tree
+  artwork moved to the new `nature` concept and `science` went back to having no
+  cover until it gets its own.
+
+  **The trap, and it bit:** `conceptArchive()` falls back to the raw concept
+  name when it is not in `CONCEPT_TO_ARCHIVE`, so a row left on an old slug does
+  not error — it resolves to a clickview key that does not exist and renders a
+  0×0 broken image. The concept slug is stored in **four** places and all of
+  them must move together. The easy ones to miss are the child tables:
+  `catalog_chapters.thumbnailKey` and `catalog_lessons.thumbnailKey` hold the
+  legacy `catalog/concepts/g<N>-<concept>/thumbnail` shape too — 9,195 rows
+  locally, which the first migration pass missed and a browser check caught as
+  `clickview/high-languages-thumbnail.jpg` at 0×0. The migration is committed as
+  `scripts/catalog/rename-concepts.sql` (idempotent, verified by a no-op
+  re-run); **it MUST be run against prod at deploy time behind a Neon restore
+  point**, because the code ships the new names while prod's rows are still on
+  the old ones.
+
+  Renaming is otherwise safe: `CONCEPT_TO_ARCHIVE` is an explicit slug→archive
+  map, so the archive VALUES (and therefore every live clickview key) never
+  moved. `nature` maps to `life-science`, with a `high` override to the
+  pluralised `life-sciences` the high archive actually uses — all three levels
+  verified 200. Its nearest-concept rule deliberately does **not** claim
+  بيئة/environment, which stays with `earth`, so no existing subject silently
+  changed concept. Scope: `concepts-data.ts` (registry, colours, rules, both
+  subject maps, the pool), `clickview-key.ts` (map keys only), 71 literal
+  `concept:` sites across six curriculum seeds and
+  `assemble-sudan-curriculum.ts`, one test, and 10,417 DB rows. Verified by
+  resolving all 504 concept keys in the database through the real resolver and
+  curling every one of the 119 distinct clickview targets — all 200 — then
+  re-loading the page that had been broken: 63 images, none broken. `tsc` clean,
+  417 catalog tests pass. **Note:** nothing resolves to `nature` yet, so its
+  cover is published but unused until a subject is assigned to it.
+  Also fixed in passing: `assemble-sudan-curriculum.ts` set `concept: "arabic"`
+  in six places, which was never a valid concept and fell through to
+  `nearestConcept` — now `language`, the value that fallback produced anyway.
+
 - **2026-09-20 — Nine designed covers, published as shared concepts rather than
   per subject.** A second Figma batch (`Frame 13–23`, same 2669×3691 board as
   biology's, textless artwork on the lower half) was mapped to nine of the 23
@@ -82,12 +127,7 @@
   art with the old scan. All 30 g12 keys and all 9 concept keys verified by
   content-length after invalidating `E3PHDXTDSBCQSJ`.
 
-  **OPEN:** Abdout wants the concept slugs simplified (`earth-science` → `earth`,
-  `science` → `nature`, …). Safe to do — `CONCEPT_TO_ARCHIVE` is an explicit
-  slug→archive map, so renaming slugs never touches the live clickview keys —
-  but it spans `concepts-data.ts`, `clickview-key.ts`, `timetable-reference.ts`,
-  five curriculum seeds, a test and 378 DB rows, and needs the name table agreed
-  first. **Also open:** three sources are soft (`languages` 736×414, `science`
+  **Also open:** three sources are soft (`languages` 736×414, `science`
   626×468, `math` 597×900) and upscale 1.4–1.7×; `Frame 18` (node `652_41`) was
   never exported; ten g12 subjects still carry the aggregator's scan
   (agriculture, biology's own designed cover aside, chemistry, physics,

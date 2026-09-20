@@ -9,15 +9,15 @@ import { resolveBannerSource } from "../../../prisma/seeds/catalog/banners"
 
 describe("resolveBannerSource", () => {
   it("borrows the nearest downloaded neighbor from the concept's pool chain", () => {
-    // health chain: ["health", "life-skills", "biology", "science", "economics"]
-    const downloaded = new Set(["biology", "math"])
-    expect(resolveBannerSource("health", downloaded)).toBe("biology")
+    // health chain: ["health", "skills", "life", "science", "economy"]
+    const downloaded = new Set(["life", "math"])
+    expect(resolveBannerSource("health", downloaded)).toBe("life")
   })
 
   it("prefers earlier chain neighbors over later ones", () => {
-    const downloaded = new Set(["science", "biology"])
-    // biology comes before science in the health chain
-    expect(resolveBannerSource("health", downloaded)).toBe("biology")
+    const downloaded = new Set(["science", "life"])
+    // life comes before science in the health chain
+    expect(resolveBannerSource("health", downloaded)).toBe("life")
   })
 
   it("falls back to any downloaded concept when no chain neighbor matches", () => {
