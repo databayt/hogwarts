@@ -1,0 +1,92 @@
+# Vetted palette for faith subjects (islamic, islamic-studies, quran, christian-education).
+# Every cover below was VIEWED on 2026-09-20 and is neutral. For these subjects, chapter and lesson images MUST come from this list.
+# Format: key | topic | what it shows is implied by the topic; group | source subject
+clickview/elementary-civic-values-and-virtues-cover.jpg | Civic Values and Virtues | Civics and Citizenship | Civics and Government
+clickview/elementary-community-cover.jpg | Community | Civics and Citizenship | Civics and Government
+clickview/elementary-community-engagement-and-care-cover.jpg | Community Engagement and Care | - | Teacher Professional Development
+clickview/elementary-cooking-and-food-preparation-cover.jpg | Cooking and Food Preparation | Personal Health | Health
+clickview/elementary-dental-health-cover.jpg | Dental Health | Personal Health | Health
+clickview/elementary-ethics-and-decision-making-cover.jpg | Ethics and Decision Making | Relationships | Life Skills
+clickview/elementary-family-cover.jpg | Family | Relationships | Life Skills
+clickview/elementary-farming-and-food-production-cover.jpg | Farming and Food Production | Environmental and Human Interaction | Geography
+clickview/elementary-friendship-cover.jpg | Friendship | Relationships | Life Skills
+clickview/elementary-habitats-cover.jpg | Habitats | Ecosystems | Life Science
+clickview/elementary-healthy-lifestyle-cover.jpg | Healthy Lifestyle | Personal Health | Health
+clickview/elementary-international-day-of-awareness-of-food-loss-and-waste-cover.jpg | International Day of Awareness of Food Loss and Waste | Earth's Systems and Resources | Earth and Space Science
+clickview/elementary-international-friendship-day-cover.jpg | International Friendship Day | Relationships | Life Skills
+clickview/elementary-keeping-clean-and-healthy-cover.jpg | Keeping Clean and Healthy | Personal Health | Health
+clickview/elementary-leadership-cover.jpg | Leadership | Classroom Skills | Life Skills
+clickview/elementary-map-skills-cover.jpg | Map Skills | Geography Skills | Geography
+clickview/elementary-narrative-writing-cover.jpg | Narrative Writing | Text Types | English Language Arts
+clickview/elementary-nature-conservation-cover.jpg | Nature Conservation | Environmental and Human Interaction | Geography
+clickview/elementary-opinion-writing-cover.jpg | Opinion Writing | Text Types | English Language Arts
+clickview/elementary-parts-of-a-story-cover.jpg | Parts of a Story | Writing | English Language Arts
+clickview/elementary-plants-cover.jpg | Plants | Animals and Plants | Life Science
+clickview/elementary-poetry-cover.jpg | Poetry | Text Types | English Language Arts
+clickview/elementary-purpose-and-audience-in-writing-cover.jpg | Purpose and Audience in Writing | Writing | English Language Arts
+clickview/elementary-random-acts-of-kindness-day-cover.jpg | Random Acts of Kindness Day | Relationships | Life Skills
+clickview/elementary-respectful-relationships-cover.jpg | Respectful Relationships | Relationships | Life Skills
+clickview/elementary-seasons-cover.jpg | Seasons | Weather and Climate | Earth and Space Science
+clickview/elementary-self-awareness-cover.jpg | Self-Awareness | Relationships | Life Skills
+clickview/elementary-settlements-and-migration-cover.jpg | Settlements and Migration | Environmental and Human Interaction | Geography
+clickview/elementary-stars-cover.jpg | Stars | Space Systems | Earth and Space Science
+clickview/elementary-the-moon-cover.jpg | The Moon | Space Systems | Earth and Space Science
+clickview/elementary-the-school-community-cover.jpg | The School Community | Civics and Citizenship | Civics and Government
+clickview/elementary-the-water-cycle-cover.jpg | The Water Cycle | Earth's Systems and Resources | Earth and Space Science
+clickview/elementary-this-month-in-history-cover.jpg | This Month in History | Historical Thinking Concepts | History
+clickview/elementary-weather-and-climate-types-cover.jpg | Weather and Climate Types | Weather and Climate | Earth and Space Science
+clickview/elementary-world-health-day-cover.jpg | World Health Day | Community Health | Health
+clickview/elementary-world-kindness-day-cover.jpg | World Kindness Day | Relationships | Life Skills
+clickview/elementary-world-poetry-day-cover.jpg | World Poetry Day | Text Types | English Language Arts
+clickview/elementary-world-water-day-cover.jpg | World Water Day | Earth's Systems and Resources | Earth and Space Science
+clickview/elementary-writing-structure-and-organization-cover.jpg | Writing Structure and Organization | Writing | English Language Arts
+clickview/high-accounting-and-finance-cover.jpg | Accounting and Finance | Business | Business and Economics
+clickview/high-consumer-and-workplace-math-cover.jpg | Consumer and Workplace Math | Number and Quantity | Math
+clickview/high-corporate-social-responsibility-cover.jpg | Corporate Social Responsibility | Business | Business and Economics
+clickview/high-debating-and-public-speaking-cover.jpg | Debating and Public Speaking | Speaking and Listening | English Language Arts
+clickview/high-decision-making-cover.jpg | Decision Making | Decision Making | Life Skills
+clickview/high-ecosystem-energy-and-health-cover.jpg | Ecosystem Energy and Health | Ecosystems and Biodiversity | Life Sciences
+clickview/high-extreme-weather-cover.jpg | Extreme Weather | Earth and Human Activity | Earth and Space Science
+clickview/high-food-origins-cover.jpg | Food Origins | Agriculture, Food and Natural Resources | Career and Technical Education
+clickview/high-food-product-development-cover.jpg | Food Product Development | Agriculture, Food and Natural Resources | Career and Technical Education
+clickview/high-food-quality-and-safety-cover.jpg | Food Quality and Safety | Hospitality and Tourism | Career and Technical Education
+clickview/high-international-day-of-peace-cover.jpg | International Day of Peace | Civics and Government Special Events | Civics and Government
+clickview/high-international-trade-cover.jpg | International Trade | Business | Business and Economics
+clickview/high-language-and-text-analysis-skills-cover.jpg | Language and Text Analysis Skills | Analyzing Literature | English Language Arts
+clickview/high-leadership-skills-cover.jpg | Leadership Skills | Work Based Learning | Career and Technical Education
+clickview/high-learning-cover.jpg | Learning | General | Psychology
+clickview/high-marketing-cover.jpg | Marketing | Business | Business and Economics
+clickview/high-migration-cover.jpg | Migration | Environmental and Human Interaction | Geography
+clickview/high-plants-cover.jpg | Plants | Ecosystems and Biodiversity | Life Sciences
+clickview/high-poetic-devices-cover.jpg | Poetic Devices | Analyzing Literature | English Language Arts
+clickview/high-poetic-forms-and-structure-cover.jpg | Poetic Forms and Structure | Analyzing Literature | English Language Arts
+clickview/high-research-and-ethics-in-sociology-cover.jpg | Research and Ethics in Sociology | General | Sociology
+clickview/high-self-awareness-cover.jpg | Self-Awareness | Mental and Emotional Wellbeing | Life Skills
+clickview/high-self-esteem-cover.jpg | Self-Esteem | Mental and Emotional Wellbeing | Life Skills
+clickview/high-sound-cover.jpg | Sound | Waves | Physics
+clickview/high-stars-cover.jpg | Stars | Earth's Place in the Universe | Earth and Space Science
+clickview/high-study-skills-cover.jpg | Study Skills | Study and Review Techniques | Life Skills
+clickview/high-water-cover.jpg | Water | Earth Systems | Earth and Space Science
+clickview/high-writing-structures-and-conventions-cover-vYZEv6.jpg | Writing Structures and Conventions | Writing Genres and Processes | English Language Arts
+clickview/middle-being-a-historian-cover.jpg | Being a Historian | Historical Thinking Skills | U.S. History
+clickview/middle-debating-and-public-speaking-cover.jpg | Debating and Public Speaking | Speaking and Listening | English Language Arts
+clickview/middle-decision-making-cover.jpg | Decision Making | Decision Making | Life Skills
+clickview/middle-extreme-weather-cover.jpg | Extreme Weather | Physical Systems | Geography
+clickview/middle-friendship-cover.jpg | Friendship | Relationships | Life Skills
+clickview/middle-identity-and-community-cover.jpg | Identity and Community | Environmental and Human Interaction | Geography
+clickview/middle-international-day-of-peace-cover.jpg | International Day of Peace | Civics and Government Special Events | Civics and Government
+clickview/middle-leadership-skills-cover.jpg | Leadership Skills | Career Planning and Workplace Skills | Careers and Technical Education
+clickview/middle-life-of-plants-cover.jpg | Life of Plants | Cells and Organisms | Life Science
+clickview/middle-literary-texts-cover.jpg | Literary Texts | Reading Skills | English Language Arts
+clickview/middle-self-awareness-cover.jpg | Self-Awareness | Mental and Emotional Wellbeing | Life Skills
+clickview/middle-settlements-and-migration-cover.jpg | Settlements and Migration | Environmental and Human Interaction | Geography
+clickview/middle-sound-cover.jpg | Sound | Waves | Physical Science
+clickview/middle-study-skills-cover.jpg | Study Skills | Study and Review Techniques | Life Skills
+clickview/middle-the-earth-sun-and-moon-cover.jpg | The Earth, Sun and Moon | Earth's Place in the Universe | Earth and Space Science
+clickview/middle-the-water-cycle-cover.jpg | The Water Cycle | Earth Systems | Earth and Space Science
+clickview/middle-topographic-maps-cover.jpg | Topographic Maps | Geography Skills | Geography
+clickview/middle-vocabulary-cover.jpg | Vocabulary | Grammar, Punctuation and Vocabulary | English Language Arts
+clickview/middle-writing-skills-cover.jpg | Writing Skills | Writing | English Language Arts
+clickview/elementary-islam-cover.jpg | Islam | World Religions | Religion
+clickview/elementary-ramadan-cover.jpg | Ramadan | Religious Events | Religion
+clickview/middle-islam-cover.jpg | Islam | World Religions | Religion and Ethics
