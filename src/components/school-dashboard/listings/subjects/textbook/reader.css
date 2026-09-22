@@ -397,6 +397,14 @@
   border-top: 1px solid var(--book-rule);
   margin: 1.2em 0;
 }
+.book-figure {
+  display: block;
+  max-width: 100%;
+  max-height: calc(var(--book-h) - 3rem);
+  margin: 0.75em auto;
+  border-radius: 0.5rem;
+  break-inside: avoid;
+}
 .book-table {
   max-height: calc(var(--book-h) - 2rem);
   overflow: auto;

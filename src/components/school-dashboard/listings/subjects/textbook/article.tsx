@@ -3,7 +3,10 @@
 
 import { formatNumber } from "./format"
 import { Ornament } from "./ornament"
+import type { Opener } from "./load"
 import type { Block, TwinPage } from "./parse"
+
+export type { Opener } from "./load"
 
 /**
  * One flow of the book, server-rendered: a `<section id="p-N">` per PDF
@@ -12,11 +15,6 @@ import type { Block, TwinPage } from "./parse"
  * which printed page a screen shows. Chapter and lesson openers are the
  * designed headings (kicker, title, ornament) placed at the page they start.
  */
-export interface Opener {
-  kicker: string | null
-  title: string
-  level: "chapter" | "lesson"
-}
 
 export function TextbookArticle({
   pages,
@@ -24,6 +22,7 @@ export function TextbookArticle({
   dir,
   lang,
   offset,
+  assetBaseUrl,
 }: {
   pages: TwinPage[]
   openers: Record<number, Opener>
@@ -31,6 +30,8 @@ export function TextbookArticle({
   lang: string
   /** PDF index − printed number; null hides the printed folios. */
   offset: number | null
+  /** The book's folder on the CDN; figure `src`s are relative to it. */
+  assetBaseUrl: string
 }) {
   return (
     <div className="book-flow" dir={dir} lang={lang}>
@@ -65,7 +66,7 @@ export function TextbookArticle({
               </span>
             )}
             {page.blocks.map((block, i) => (
-              <BlockView key={i} block={block} />
+              <BlockView key={i} block={block} assetBaseUrl={assetBaseUrl} />
             ))}
           </section>
         )
@@ -74,7 +75,13 @@ export function TextbookArticle({
   )
 }
 
-function BlockView({ block }: { block: Block }) {
+function BlockView({
+  block,
+  assetBaseUrl,
+}: {
+  block: Block
+  assetBaseUrl: string
+}) {
   switch (block.kind) {
     case "heading": {
       // h2 is reserved for the chapter opener; book headings start at h3.
@@ -126,5 +133,18 @@ function BlockView({ block }: { block: Block }) {
     }
     case "rule":
       return <hr />
+    case "image":
+      // The scanned page the figure sits on. Plain <img>: the CDN already
+      // serves it at reading size, and the column layout sizes it.
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="book-figure"
+          src={`${assetBaseUrl}/${block.src}`}
+          alt={block.alt}
+          loading="lazy"
+          decoding="async"
+        />
+      )
   }
 }

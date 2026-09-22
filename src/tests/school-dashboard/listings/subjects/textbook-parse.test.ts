@@ -573,3 +573,27 @@ describe("elongate", () => {
     expect(elongate("الأحياء", 0)).toBe("الأحياء")
   })
 })
+
+describe("figures", () => {
+  it("parses a page-image line as an image block, not a paragraph", () => {
+    const md = [
+      "<!-- page 12 -->",
+      "نص قبل الشكل",
+      "",
+      "![الشكل (1): الانشطار الثنائي](pages/12.webp)",
+      "",
+      "**الشكل (1): الانشطار الثنائي**",
+    ].join("\n")
+    const [p] = parseTwin(md).pages
+    expect(p.blocks).toEqual([
+      { kind: "paragraph", text: "نص قبل الشكل" },
+      { kind: "image", alt: "الشكل (1): الانشطار الثنائي", src: "pages/12.webp" },
+      { kind: "paragraph", text: "الشكل (1): الانشطار الثنائي" },
+    ])
+  })
+
+  it("keeps anything but a relative page image as text", () => {
+    const md = "<!-- page 3 -->\n![x](https://evil.example/a.png)"
+    expect(parseTwin(md).pages[0].blocks[0].kind).toBe("paragraph")
+  })
+})

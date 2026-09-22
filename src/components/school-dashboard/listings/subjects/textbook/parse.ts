@@ -32,6 +32,9 @@ export type Block =
   | { kind: "list"; ordered: boolean; items: string[] }
   | { kind: "table"; rows: string[][] }
   | { kind: "rule" }
+  /** A figure: `![caption](pages/N.webp)`. `src` stays relative to the book's
+   *  folder; the reader resolves it against the `pages/` base it already has. */
+  | { kind: "image"; alt: string; src: string }
 
 export interface TwinPage {
   /** 1-based PDF page index from the marker; null when the twin has no markers. */
@@ -59,6 +62,8 @@ const NUMBERED = /^\s*(?:\d+|[٠-٩]+)[.)]\s+(.+)$/
 const TABLE_ROW = /^\s*\|.*\|\s*$/
 const TABLE_SEP = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/
 const RULE = /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/
+/** A figure line, and only a relative page image — anything else stays text. */
+const IMAGE = /^\s*!\[([^\]]*)\]\((pages\/\d+\.(?:webp|png|jpe?g))\)\s*$/i
 
 function unquote(v: string): string {
   const t = v.trim()
@@ -124,6 +129,12 @@ function parseBlocks(lines: string[]): Block[] {
     if (RULE.test(line)) {
       flushParagraph(para, blocks)
       blocks.push({ kind: "rule" })
+      i++
+      continue
+    }
+    if ((m = line.match(IMAGE))) {
+      flushParagraph(para, blocks)
+      blocks.push({ kind: "image", alt: cleanInline(m[1]), src: m[2] })
       i++
       continue
     }

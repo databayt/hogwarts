@@ -40,6 +40,15 @@
 
 ## Resolved
 
+- **2026-09-22 — The textbook is served to the Android app, and figures render.**
+  `textbook/load.ts` now owns the book assembly (Markdown + `structure.json` →
+  meta, cover, contents, sections, openers); `content.tsx` renders from it and
+  the new `GET /api/mobile/textbooks/[slug]?lang=` returns the same structure as
+  JSON, so the native reader and the web cannot disagree about a page. Figure
+  lines `![caption](pages/N.webp)` were printed as raw text on the web; `parse.ts`
+  now emits an `image` block and `article.tsx` renders it (`.book-figure`,
+  capped at one page). sd-g12-biology: 144 figures, 22 sections, 514 KB JSON.
+
 - **2026-09-20 (b) — The concepts are one generic word each, and `nature` is a
   24th.** 15 slugs renamed (`earth-science`→`earth`, `languages`→`language`,
   `arts`→`art`, `biology`→`life`, `life-skills`→`skills`, `pe`→`sport`,
