@@ -177,6 +177,15 @@ sections — About, Information, shelves.
 
 ### Left open
 
+- **2026-09-22 — The phone reads the library the page reads.** The mobile
+  API listed `SchoolBook` rows only (books someone had already opened on the
+  web), untranslated, and the app re-cut the shelves itself. The page logic
+  now lives in loaders — `load.ts` (home shelves), `book-list/load.ts`
+  (`/library/books`), `book-detail/load.ts` (the book page, incl. the lazy
+  `SchoolBook` create) — used by the pages and by
+  `GET /api/mobile/library/{home,catalog,catalog/[id]}`. Ids on the phone are
+  catalog ids now; borrowing still takes the `school_book_id`.
+
 - **The eyebrow and the genre render in English on `/ar`.**
   `BOOK_GRADE_LEVEL_LABELS` in `config.ts` is an English-only map, and `genre`
   is stored in English on the catalog row. Both predate this work and both need
