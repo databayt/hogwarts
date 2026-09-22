@@ -8,7 +8,7 @@ maturity: In Progress
 completion: 40
 tracker: https://github.com/databayt/hogwarts/issues/315
 docs: https://ed.databayt.org/en/docs/mobile-api
-last_audited: 2026-09-19
+last_audited: 2026-09-22
 ---
 
 # Mobile API Layer — Production Readiness Tracker
@@ -28,6 +28,19 @@ canonical for code-side context (read by the `/report` agent)._
 - [ ] _To be filled in_
 
 ## Recently Landed
+
+- [x] `GET /api/mobile/subjects` is scoped by role, like `/subjects` on the
+      web (2026-09-22). It used to return every subject the school adopted:
+      a grade-12 student got 130 subjects across grades 1-12, while the web
+      showed them 25. It now reuses `getSubjectIdsForStudent` /
+      `getSubjectIdsForTeacher` from the subjects listing. A student with no
+      `Student` row gets an empty list, not the whole catalogue. Verified
+      locally: student 25 (all grade 12), teacher 48, admin 130 (unchanged).
+      `GET /api/mobile/subjects/:id` now drops chapters and lessons the school
+      hid (`ContentOverride.isHidden`) for non-admins, and returns
+      `textbook_pdf_url` / `textbook_cover_url` / `textbook_reader_href`.
+      **Not verified: the hidden-content filter** — prod has no hidden
+      overrides to exercise it. **Reaches phones only after the next deploy.**
 
 - [x] `GET /api/mobile/live/*` — the session list, a session's recordings and a
       signed playback URL (2026-09-20). The join route could already mint a

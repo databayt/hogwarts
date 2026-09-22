@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { getCloudFrontUrl } from "@/lib/cloudfront-url"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { getText } from "@/components/translation/display"
 import type { Lang } from "@/components/translation/types"
@@ -57,6 +58,10 @@ export async function GET(
         totalChapters: true,
         totalLessons: true,
         totalContent: true,
+        // The textbook. Without these the phone's materials tile had nothing
+        // to point at, so its textbook branch could never fire.
+        pdf: true,
+        cover: true,
         usageCount: true,
         averageRating: true,
         ratingCount: true,
@@ -106,8 +111,52 @@ export async function GET(
       t(subject.department),
     ])
 
+    // The school's curated view. A school can hide a chapter or a lesson it
+    // does not teach, and the web drops those entirely for everyone who
+    // cannot customise — `subjects/[slug]/page.tsx`, same `canCustomize`
+    // test. Without this the phone showed a student material their school
+    // had removed, which is worse than showing nothing: it is wrong and it
+    // looks authoritative.
+    const canCustomize = auth.role === "ADMIN" || auth.role === "DEVELOPER"
+    const allChapterIds = subject.chapters.map((ch) => ch.id)
+    const allLessonIds = subject.chapters.flatMap((ch) =>
+      ch.lessons.map((l) => l.id)
+    )
+    const overrideOr = [
+      ...(allChapterIds.length > 0
+        ? [{ catalogChapterId: { in: allChapterIds } }]
+        : []),
+      ...(allLessonIds.length > 0
+        ? [{ catalogLessonId: { in: allLessonIds } }]
+        : []),
+    ]
+    const overrides =
+      canCustomize || overrideOr.length === 0
+        ? []
+        : await db.contentOverride.findMany({
+            where: { schoolId, OR: overrideOr, isHidden: true },
+            select: { catalogChapterId: true, catalogLessonId: true },
+          })
+    const hiddenChapterIds = new Set(
+      overrides.map((o) => o.catalogChapterId).filter(Boolean)
+    )
+    const hiddenLessonIds = new Set(
+      overrides.map((o) => o.catalogLessonId).filter(Boolean)
+    )
+
+    // Everything below reads this rather than `subject.chapters`, so the
+    // chapter list and the video shelf cannot disagree about what exists.
+    const visibleChapters = canCustomize
+      ? subject.chapters
+      : subject.chapters
+          .filter((ch) => !hiddenChapterIds.has(ch.id))
+          .map((ch) => ({
+            ...ch,
+            lessons: ch.lessons.filter((l) => !hiddenLessonIds.has(l.id)),
+          }))
+
     const chapters = await Promise.all(
-      subject.chapters.map(async (ch) => ({
+      visibleChapters.map(async (ch) => ({
         id: ch.id,
         name: await t(ch.name),
         slug: ch.slug,
@@ -133,7 +182,7 @@ export async function GET(
 
     // Videos: flatten all lessons into video cards. Matches the derivation
     // in src/app/[lang]/.../subjects/[slug]/page.tsx lines 304–318.
-    const videos = subject.chapters.flatMap((ch) =>
+    const videos = visibleChapters.flatMap((ch) =>
       ch.lessons.map((l) => ({
         id: l.id,
         title: "",
@@ -149,7 +198,7 @@ export async function GET(
     // Translate video titles (fetch once, map back by id for preserved order).
     const videoTitleMap = new Map<string, string>()
     await Promise.all(
-      subject.chapters.flatMap((ch) =>
+      visibleChapters.flatMap((ch) =>
         ch.lessons.map(async (l) => {
           videoTitleMap.set(l.id, await t(l.name))
         })
@@ -157,8 +206,8 @@ export async function GET(
     )
     for (const v of videos) v.title = videoTitleMap.get(v.id) ?? ""
 
-    const chapterIds = subject.chapters.map((ch) => ch.id)
-    const lessonIds = subject.chapters.flatMap((ch) =>
+    const chapterIds = visibleChapters.map((ch) => ch.id)
+    const lessonIds = visibleChapters.flatMap((ch) =>
       ch.lessons.map((l) => l.id)
     )
 
@@ -337,6 +386,14 @@ export async function GET(
       average_rating: subject.averageRating,
       rating_count: subject.ratingCount,
       status: subject.status,
+      // The scanned textbook, when the subject has one. `reader_href` is the
+      // web's own in-app reader; a phone has no native reader yet, so a
+      // client that cannot open it falls back to the PDF.
+      textbook_pdf_url: subject.pdf ? getCloudFrontUrl(subject.pdf) : null,
+      textbook_cover_url: subject.cover ? getCloudFrontUrl(subject.cover) : null,
+      textbook_reader_href: subject.pdf
+        ? `/subjects/${subject.slug}/textbook`
+        : null,
       chapters,
       videos,
       materials,

@@ -257,7 +257,7 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 
 | Method | Path                   | Description               |
 | ------ | ---------------------- | ------------------------- |
-| GET    | `/api/mobile/subjects` | School's adopted subjects |
+| GET    | `/api/mobile/subjects` | School's adopted subjects, scoped by role (student: own grade · teacher: taught) |
 
 ### Live (new)
 

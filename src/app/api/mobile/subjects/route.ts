@@ -10,6 +10,13 @@ import { localize } from "@/components/translation/localize"
 import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
+import {
+  getStudentIdByUserId,
+  getSubjectIdsForStudent,
+  getSubjectIdsForTeacher,
+  getTeacherIdByUserId,
+} from "@/components/school-dashboard/listings/subjects/queries"
+
 import { authenticate, isAuthError } from "../lib/authenticate"
 
 /**
@@ -21,6 +28,16 @@ import { authenticate, isAuthError } from "../lib/authenticate"
  *
  * GET /api/mobile/subjects
  * Query params: search, department, lang
+ *
+ * Scoped by role, the way the web page is. This used to return every subject
+ * the school had adopted to whoever asked, so a grade-12 student on a phone
+ * was handed the whole catalogue — 130 subjects down to grade-1 readers —
+ * while the same account in a browser saw the 25 of their own grade.
+ *
+ * The rule is not reimplemented here. `getSubjectIdsForStudent` and
+ * `getSubjectIdsForTeacher` are the functions `subjects/content.tsx` filters
+ * with, in a module with no `"use server"`, so a route handler can call them
+ * directly — as the search and courses routes already call their own cores.
  */
 const SUBJECT_SELECT = {
   id: true,
@@ -78,6 +95,30 @@ export async function GET(request: NextRequest) {
       } catch {
         // Fall through with empty list
       }
+    }
+
+    // A student or a teacher resolves to their own record. There is no
+    // `?studentId` to honour here: the web ignores that prop for those roles
+    // precisely so a student cannot widen their own view, and a mobile client
+    // is no more trustworthy than a browser.
+    let visibleSubjectIds: Set<string> | null = null
+    if (auth.role === "STUDENT") {
+      const studentId = await getStudentIdByUserId(schoolId, auth.userId)
+      // An account with no Student row sees nothing, not everything — the
+      // web is explicit about this and it is the safer direction to fail.
+      visibleSubjectIds = studentId
+        ? await getSubjectIdsForStudent(schoolId, studentId)
+        : new Set<string>()
+    } else if (auth.role === "TEACHER") {
+      const teacherId = await getTeacherIdByUserId(schoolId, auth.userId)
+      if (teacherId) {
+        visibleSubjectIds = await getSubjectIdsForTeacher(schoolId, teacherId)
+      }
+    }
+
+    if (visibleSubjectIds !== null) {
+      const allowed = visibleSubjectIds
+      selections = selections.filter((s) => allowed.has(s.catalogSubjectId))
     }
 
     const seen = new Set<string>()
