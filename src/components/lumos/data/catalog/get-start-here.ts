@@ -53,9 +53,11 @@ export interface StartHereItem {
 export const getStartHereLesson = cache(async function getStartHereLesson(
   /** The grade's courses IN ORDER; the first one with a usable lesson wins. */
   candidates: { id: string; slug: string }[],
-  lang: string
+  lang: string,
+  /** The school, when the caller already knows it (the mobile route). */
+  explicitSchoolId?: string
 ): Promise<StartHereItem | null> {
-  const { schoolId } = await getTenantContext()
+  const schoolId = explicitSchoolId ?? (await getTenantContext()).schoolId
   if (!schoolId || candidates.length === 0) return null
 
   // Walking the list matters: a course whose chapters are all unpublished (or

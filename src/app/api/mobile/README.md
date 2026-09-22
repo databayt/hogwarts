@@ -258,6 +258,8 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 | Method | Path                   | Description               |
 | ------ | ---------------------- | ------------------------- |
 | GET    | `/api/mobile/subjects` | School's adopted subjects, scoped by role (student: own grade · teacher: taught) |
+| GET    | `/api/mobile/live/landing` | The `/live` landing for this reader (shared `loadLiveLanding`) |
+| GET    | `/api/mobile/lumos/courses` | `/lumos/courses`: grade shelves, lead card, search (`?level=&search=&page=`) |
 
 ### Live (new)
 

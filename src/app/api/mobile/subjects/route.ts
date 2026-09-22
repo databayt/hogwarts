@@ -55,6 +55,7 @@ const SUBJECT_SELECT = {
   usageCount: true,
   averageRating: true,
   ratingCount: true,
+  status: true,
 } as const
 
 export async function GET(request: NextRequest) {
@@ -121,12 +122,40 @@ export async function GET(request: NextRequest) {
       selections = selections.filter((s) => allowed.has(s.catalogSubjectId))
     }
 
+    // Published catalog subjects only, one card each — `content.tsx` drops a
+    // draft or archived subject even when the school still selects it.
     const seen = new Set<string>()
-    const unique = selections.filter((s) => {
+    const unique: {
+      catalogSubjectId: string
+      customName: string | null
+      subject: (typeof selections)[number]["subject"]
+    }[] = selections.filter((s) => {
+      if (!s.subject || s.subject.status !== "PUBLISHED") return false
       if (seen.has(s.catalogSubjectId)) return false
       seen.add(s.catalogSubjectId)
       return true
     })
+
+    // A student's or teacher's subject can reach them through a class, a
+    // timetable slot or a teacher's expertise with no SubjectSelection row
+    // behind it. The web fetches those too; without this the phone showed a
+    // shorter list than the browser for the same account.
+    if (visibleSubjectIds !== null && visibleSubjectIds.size > 0) {
+      const missingIds = Array.from(visibleSubjectIds).filter(
+        (id) => !seen.has(id)
+      )
+      if (missingIds.length > 0) {
+        const extra = await db.subject.findMany({
+          where: { id: { in: missingIds }, status: "PUBLISHED" },
+          select: SUBJECT_SELECT,
+        })
+        for (const subject of extra) {
+          if (seen.has(subject.id)) continue
+          seen.add(subject.id)
+          unique.push({ catalogSubjectId: subject.id, customName: null, subject })
+        }
+      }
+    }
 
     const filtered = unique.filter((s) => {
       if (department && s.subject.department !== department) return false
@@ -182,9 +211,29 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // The web grid's order: lowest grade first, then name in the reader's
+    // language (`catalog-subjects-grid.tsx`). Sorting here keeps every client
+    // on the same order without each one re-deriving the collation.
+    const collator = new Intl.Collator(lang === "ar" ? "ar" : "en")
+    data.sort((a, b) => {
+      const gradeA = a.grades[0] ?? 0
+      const gradeB = b.grades[0] ?? 0
+      if (gradeA !== gradeB) return gradeA - gradeB
+      return collator.compare(a.name, b.name)
+    })
+
+    // The level tabs on `/subjects` depend on how many stages the school runs
+    // ((browse)/layout.tsx): one stage means "All" already is that stage, so
+    // the web draws no level tabs. The phone needs the same fact to decide.
+    const schoolLevels = await db.academicLevel
+      .findMany({ where: { schoolId }, select: { level: true } })
+      .then((rows) => Array.from(new Set(rows.map((r) => r.level))))
+      .catch(() => [] as string[])
+
     return NextResponse.json({
       data,
       total: data.length,
+      school_levels: schoolLevels,
     })
   } catch (error) {
     console.error("Mobile subjects error:", error)

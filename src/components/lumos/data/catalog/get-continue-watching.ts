@@ -51,18 +51,24 @@ export interface ContinueWatchingItem {
  * ordered by most recently watched.
  */
 export const getContinueWatching = cache(async function getContinueWatching(
-  limit = 10
+  limit = 10,
+  /**
+   * The reader, when the caller already knows it. The mobile route resolves
+   * them from a bearer token, with no web session for `auth()` to read. The
+   * page omits it.
+   */
+  explicit?: { schoolId: string; userId: string }
 ): Promise<ContinueWatchingItem[]> {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
+  const userId = explicit?.userId ?? (await auth())?.user?.id
+  const schoolId = explicit?.schoolId ?? (await getTenantContext()).schoolId
 
-  if (!session?.user?.id || !schoolId) {
+  if (!userId || !schoolId) {
     return []
   }
 
   const progress = await db.lessonProgress.findMany({
     where: {
-      userId: session.user.id,
+      userId,
       isCompleted: false,
       watchedSeconds: { gt: 0 },
       totalSeconds: { gt: 0 },
@@ -108,7 +114,7 @@ export const getContinueWatching = cache(async function getContinueWatching(
   const instructors = await resolveLessonInstructors(
     progress.filter((p) => p.lesson != null).map((p) => p.lesson.id),
     schoolId,
-    session.user.id
+    userId
   )
 
   return progress

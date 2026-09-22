@@ -60,9 +60,15 @@ export interface CourseShelves {
  * added" the same way. Grade is the one axis this data actually varies on.
  */
 export const getCourseShelves = cache(async function getCourseShelves(
-  lang: string
+  lang: string,
+  /**
+   * The school, when the caller already knows it. The mobile route does — it
+   * resolves the school from a bearer token, and there is no web request for
+   * `getTenantContext` to read. The page omits it.
+   */
+  explicitSchoolId?: string
 ): Promise<CourseShelves> {
-  const { schoolId } = await getTenantContext()
+  const schoolId = explicitSchoolId ?? (await getTenantContext()).schoolId
   if (!schoolId) return { shelves: [], total: 0 }
 
   const displayLang = (lang || "en") as Lang

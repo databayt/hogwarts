@@ -36,13 +36,20 @@ export async function getAllCatalogCourses(
     category?: string
     grade?: number
     lang?: string
-  } = {}
+  } = {},
+  /**
+   * The school, for a caller that has ALREADY authenticated it — the mobile
+   * route, which resolves it from a verified bearer token and has no web
+   * request for `getTenantContext` to read.
+   *
+   * Safe only because this module is `server-only` and not an action: back
+   * when it was one, a school argument let any browser read (and, via
+   * ensureSubjectSelections below, write) another school's catalog. Never
+   * pass a value that came from the client.
+   */
+  trusted?: { schoolId: string }
 ) {
-  // schoolId must come from the request's tenant context — back when this was
-  // an action, taking it as an argument let any caller read (and, via
-  // ensureSubjectSelections below, write) another school's catalog. Keep it
-  // resolved here so the API route wrapping this cannot reintroduce that.
-  const { schoolId } = await getTenantContext()
+  const schoolId = trusted?.schoolId ?? (await getTenantContext()).schoolId
   if (!schoolId) {
     return { rows: [] as CatalogCourseType[], count: 0 }
   }

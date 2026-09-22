@@ -29,6 +29,21 @@ canonical for code-side context (read by the `/report` agent)._
 
 ## Recently Landed
 
+- [x] Phone parity for `/subjects`, `/live` and `/lumos/courses` (2026-09-22).
+      `GET /api/mobile/subjects` now keeps only PUBLISHED subjects, adds the
+      student's/teacher's subjects that reach them without a selection row,
+      returns them in the web grid's order (lowest grade, then name) and
+      carries `school_levels`, which decide whether the level tabs appear.
+      `GET /api/mobile/live/landing` serves `loadLiveLanding` — now shared
+      with the `/live` page, which used to hold that logic inline — so the
+      phone gets the same viewer rules, online state, phases, catch-up and
+      recording ranking. `GET /api/mobile/lumos/courses` is the courses page's
+      `CoursesRenderer` over the same four reads; `getCourseShelves`,
+      `getContinueWatching`, `getStartHereLesson` and `getAllCatalogCourses`
+      take an optional server-verified school/user for it. Not mirrored: the
+      admin readiness band (its coverage read authorises against the web
+      session).
+
 - [x] `GET /api/mobile/subjects` is scoped by role, like `/subjects` on the
       web (2026-09-22). It used to return every subject the school adopted:
       a grade-12 student got 130 subjects across grades 1-12, while the web
