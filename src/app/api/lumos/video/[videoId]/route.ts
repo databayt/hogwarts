@@ -1,11 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { NextResponse, type NextRequest } from "next/server"
-import { auth } from "@/auth"
 
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSignedReadUrl, SIGNED_READ_TTL_SECONDS } from "@/lib/s3"
-import { getTenantContext } from "@/lib/tenant-context"
+import { resolveMediaViewer } from "@/lib/media-viewer"
 import {
   denialStatus,
   resolveVideoAccess,
@@ -54,10 +53,12 @@ export async function GET(
     return NextResponse.json({ error: "Not available" }, { status: 403 })
   }
 
-  const session = await auth()
-  if (!session?.user?.id) {
+  // The web session, or the mobile app's Bearer token — see resolveMediaViewer.
+  const viewer = await resolveMediaViewer(req)
+  if (!viewer) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+  const session = { user: { id: viewer.userId, role: viewer.role } }
 
   const rl = await checkUserRateLimit(
     session.user.id,
@@ -68,7 +69,7 @@ export async function GET(
     return NextResponse.json({ error: "Too many requests" }, { status: 429 })
   }
 
-  const { schoolId } = await getTenantContext()
+  const { schoolId } = viewer
 
   const access = await resolveVideoAccess({
     videoId,

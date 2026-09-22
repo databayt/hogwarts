@@ -39,10 +39,15 @@ export async function POST(
     // core takes the list form the web player posts.
     const answers = Object.entries(
       body.answers as Record<string, unknown>
-    ).map(([questionId, selected]) => ({
-      questionId,
-      selectedIndex: Number(selected),
-    }))
+    ).map(([questionId, selected]) =>
+      // A number is the chosen option; a string is a free-text answer. The
+      // grader reads `selectedOptionIndex` / `answerText` — the old
+      // `selectedIndex` key was never read, so every phone answer graded as
+      // unanswered.
+      typeof selected === "string"
+        ? { questionId, answerText: selected }
+        : { questionId, selectedOptionIndex: Number(selected) }
+    )
 
     const submittedAt = body.submitted_at ? new Date(body.submitted_at) : undefined
 
@@ -76,6 +81,15 @@ export async function POST(
       // any school set. Replace it the day a threshold is configured.
       passed: result.percentage >= PASS_PERCENTAGE,
       synced_to_gradebook: result.recorded,
+      // The web player's post-submit reveal, question by question.
+      verdicts: result.verdicts.map((v) => ({
+        question_id: v.questionId,
+        is_correct: v.isCorrect,
+        correct_index: v.correctIndex,
+        correct_answers: v.correctAnswers,
+        explanation: v.explanation,
+        sample_answer: v.sampleAnswer,
+      })),
     })
   } catch (error) {
     console.error("[mobile/courses/lessons/quiz] POST failed:", error)

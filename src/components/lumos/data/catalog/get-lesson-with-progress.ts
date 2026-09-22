@@ -142,9 +142,35 @@ export const getLessonWithProgress = cache(async function getLessonWithProgress(
   const session = await auth()
   const { schoolId } = await getTenantContext()
 
-  if (!session?.user) {
+  if (!session?.user?.id) {
     return null
   }
+  return readLessonWithProgress(lessonId, {
+    userId: session.user.id,
+    role: session.user.role || "",
+    schoolId,
+  })
+})
+
+/** Who is reading — the web session's, or the mobile token's. */
+export interface LessonViewer {
+  userId: string
+  role: string
+  schoolId: string | null
+}
+
+/**
+ * The lesson for one viewer — `getLessonWithProgress`'s body with the viewer
+ * passed in, so the mobile route (`/api/mobile/lumos/lessons/[lessonId]`)
+ * reads exactly what the page reads. Not a server action: it trusts its
+ * viewer argument, so only server code may call it.
+ */
+export async function readLessonWithProgress(
+  lessonId: string,
+  viewer: LessonViewer
+): Promise<LessonWithProgress | null> {
+  const { schoolId } = viewer
+  const session = { user: { id: viewer.userId, role: viewer.role } }
 
   try {
     const lesson = await db.lesson.findFirst({
@@ -584,4 +610,4 @@ export const getLessonWithProgress = cache(async function getLessonWithProgress(
     })
     throw error
   }
-})
+}

@@ -75,6 +75,19 @@ Open:
 The skeletons were written for pages that no longer exist, and half the routes
 borrowed a parent's. Fixed:
 
+- **2026-09-22 — The phone reads the course and lesson pages the web reads.**
+  `GET /api/mobile/lumos/courses/[slug]` (the page's `getCatalogCourse` +
+  enrolment + progress) and `GET /api/mobile/lumos/lessons/[lessonId]`
+  (`readLessonWithProgress` — `getLessonWithProgress`'s body with the viewer
+  passed in — plus the answer-key-free quiz). Progress moved to
+  `course-progress-core.ts` so the `"use server"` action never takes a caller's
+  identity. `/api/lumos/{video,file}` accept the app's Bearer token
+  (`lib/media-viewer.ts`), same access checks. **Fixed:** the mobile quiz route
+  sent `selectedIndex`, which the grader never reads — every phone answer graded
+  as unanswered; it now sends `selectedOptionIndex` / `answerText` and returns
+  per-question verdicts. **Not on the phone:** unmarking a completed lesson (the
+  mobile progress route only completes), the instructor switcher, paid unlock.
+
 - **One server-only module, `loading.tsx`.** `/lumos/courses` pulled its
   fallback out of `courses/content.tsx`, a `"use client"` file, so the skeleton
   could not paint before that bundle arrived. Its card skeleton drew five rows
