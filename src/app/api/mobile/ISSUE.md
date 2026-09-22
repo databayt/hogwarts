@@ -41,6 +41,9 @@ canonical for code-side context (read by the `/report` agent)._
       `textbook_pdf_url` / `textbook_cover_url` / `textbook_reader_href`.
       **Not verified: the hidden-content filter** — prod has no hidden
       overrides to exercise it. **Reaches phones only after the next deploy.**
+      `GET /api/mobile/subjects/my-subjects` is deleted: no client called it
+      (Android's screen was unreachable, and it's now removed too), and it
+      picked subjects by class enrolment rather than the web's grade rule.
 
 - [x] `GET /api/mobile/live/*` — the session list, a session's recordings and a
       signed playback URL (2026-09-20). The join route could already mint a
