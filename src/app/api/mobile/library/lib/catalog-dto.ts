@@ -10,7 +10,7 @@ export function toCatalogCardDto(book: {
   id: string
   title: string
   author: string
-  genre: string
+  genre?: string | null
   coverUrl: string | null
   coverColor: string | null
   rating: number
@@ -19,7 +19,7 @@ export function toCatalogCardDto(book: {
     id: book.id,
     title: book.title,
     author: book.author,
-    genre: book.genre,
+    genre: book.genre ?? "",
     cover_url: book.coverUrl || null,
     cover_color: book.coverColor,
     rating: book.rating,

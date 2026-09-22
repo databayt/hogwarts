@@ -50,7 +50,7 @@ export async function GET(
       readCourseProgress(course.id, auth.userId, auth.schoolId),
       getDictionary(lang),
     ])
-    const l = (dictionary as { lumos?: Record<string, Record<string, string>> }).lumos ?? {}
+    const l = (dictionary as unknown as { lumos?: Record<string, Record<string, string>> }).lumos ?? {}
     const cd = l.courseDetail ?? {}
     const eb = l.enrollmentButton ?? {}
     const cp = l.courseProgress ?? {}
