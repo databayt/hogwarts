@@ -263,3 +263,34 @@ function normalizedPath(path: string): string {
   const beforeQuery = path.split("?")[0] ?? path
   return beforeQuery.replace(/\/$/, "") || "/"
 }
+
+/**
+ * The same adapter for a reporter the CALLER has already authenticated — the
+ * mobile report route, which knows its user from a verified bearer token and
+ * has no web session for `auth()` to read. Everything else (rate limits,
+ * dedup, corroboration, bans, the GitHub write) is the web adapter's, so a
+ * phone report goes through exactly the pipeline a browser report does, and
+ * is judged as the signed-in reporter it is rather than as anonymous.
+ */
+export function hogwartsReportAdapterFor(user: {
+  id: string
+  role: string
+  email: string | null
+}): ReportAdapter {
+  return {
+    ...hogwartsReportAdapter,
+    async getReporter(input: ReportInput): Promise<ReporterContext> {
+      const ipHash = hashIp(await getClientIpFromHeaders())
+      return {
+        kind: "authenticated",
+        userId: user.id,
+        role: user.role,
+        emailVerified: Boolean(user.email),
+        accountAgeDays: 30, // Phase 1 constant, as for a browser reporter
+        isSuspended: false,
+        ipHash,
+        isTeam: isTeamReporter(user.role, user.email, input.pageUrl),
+      }
+    },
+  }
+}

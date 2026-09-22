@@ -7,6 +7,8 @@ import { db } from "@/lib/db"
 import { loadLiveLanding } from "@/components/school-dashboard/live/landing/load"
 import type { LandingSession } from "@/components/school-dashboard/live/landing/types"
 import { canOpenLanding } from "@/components/school-dashboard/live/landing/viewer"
+import { computeLiveLinkCoverage } from "@/components/school-dashboard/live/link-coverage"
+import { getLiveKitReadiness } from "@/components/school-dashboard/live/livekit/client"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 
@@ -21,9 +23,10 @@ import { authenticate, isAuthError } from "../../lib/authenticate"
  * doors it offers. Times arrive formatted in the school's own zone, as the
  * web prints them.
  *
- * The admin readiness band is not here: its coverage read is a server action
- * that authorises against the web session, and a phone hands an admin to the
- * settings page for it.
+ * Admins also get the readiness band's data, assembled as the page assembles
+ * it — LiveKit and recording provisioning plus meeting-link coverage — from
+ * `computeLiveLinkCoverage`, the body the settings action authorises and
+ * then calls.
  *
  * GET /api/mobile/live/landing?lang=ar|en
  */
@@ -53,6 +56,28 @@ export async function GET(request: NextRequest) {
     })
 
     const { viewer, policy } = landing
+
+    // Separately, so a settings failure cannot blank the strip — as on the page.
+    let readiness: Record<string, unknown> | null = null
+    if (viewer.canConfigure) {
+      try {
+        const kit = getLiveKitReadiness()
+        const coverage = await computeLiveLinkCoverage(schoolId)
+        readiness = {
+          livekit_ready: kit.configured,
+          recording_ready: kit.recordingConfigured,
+          has_fallback: coverage.data.hasFallback,
+          coverage: {
+            total: coverage.data.total,
+            covered: coverage.data.covered,
+            gap_count: coverage.data.gapCount,
+          },
+        }
+      } catch (error) {
+        console.error("[mobile/live/landing] readiness failed:", error)
+      }
+    }
+
     return NextResponse.json({
       viewer: {
         role: viewer.role,
@@ -75,6 +100,7 @@ export async function GET(request: NextRequest) {
       upcoming: landing.upcoming.map(toDto),
       catch_up: landing.catchUp.map(toDto),
       recordings: landing.recordings.map(toDto),
+      readiness,
     })
   } catch (error) {
     console.error("[mobile/live/landing] GET failed:", error)

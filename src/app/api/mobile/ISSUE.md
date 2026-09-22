@@ -29,6 +29,15 @@ canonical for code-side context (read by the `/report` agent)._
 
 ## Recently Landed
 
+- [x] The rest of the phone parity (2026-09-22): `POST /api/mobile/report`
+      (the footer's "Report an issue", through `runReportPipeline` with
+      `hogwartsReportAdapterFor` supplying the token's user), `GET
+      /api/mobile/lumos/course-search` (the search sheet's typeahead and
+      featured shelf — `/api/lumos/course-search` for a token), and the admin
+      readiness band on `/api/mobile/live/landing`, whose coverage now comes
+      from `computeLiveLinkCoverage` (the settings action authorises, then
+      calls it).
+
 - [x] Phone parity for `/subjects`, `/live` and `/lumos/courses` (2026-09-22).
       `GET /api/mobile/subjects` now keeps only PUBLISHED subjects, adds the
       student's/teacher's subjects that reach them without a selection row,

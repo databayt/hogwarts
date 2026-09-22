@@ -13,6 +13,7 @@ import { getCourseShelves } from "@/components/lumos/data/catalog/get-course-she
 import { getStartHereLesson } from "@/components/lumos/data/catalog/get-start-here"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { toCourseDto } from "./course-dto"
 
 /**
  * Mobile Lumos courses — `/lumos/courses`, as data.
@@ -132,20 +133,5 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[mobile/lumos/courses] GET failed:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
-
-function toCourseDto(c: CatalogCourseType) {
-  return {
-    id: c.id,
-    slug: c.slug,
-    title: c.title,
-    image_url: c.imageUrl,
-    color: c._catalog.color,
-    grades: c._catalog.grades,
-    chapters: c._count.chapters,
-    enrollments: c._count.enrollments,
-    total_lessons: c._catalog.totalLessons,
-    average_rating: c._catalog.averageRating,
   }
 }

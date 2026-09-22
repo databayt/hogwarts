@@ -260,6 +260,8 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 | GET    | `/api/mobile/subjects` | School's adopted subjects, scoped by role (student: own grade · teacher: taught) |
 | GET    | `/api/mobile/live/landing` | The `/live` landing for this reader (shared `loadLiveLanding`) |
 | GET    | `/api/mobile/lumos/courses` | `/lumos/courses`: grade shelves, lead card, search (`?level=&search=&page=`) |
+| GET    | `/api/mobile/lumos/course-search` | Search sheet: typeahead (`q`) and featured shelf (`grade`) |
+| POST   | `/api/mobile/report` | Report an issue from the phone (same pipeline as the web footer) |
 
 ### Live (new)
 
