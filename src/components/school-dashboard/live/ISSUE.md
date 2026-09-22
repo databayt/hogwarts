@@ -8,6 +8,16 @@
 
 With the lumos pass (`87d62ee9e`; details in `lumos/ISSUE.md`).
 
+- [x] **2026-09-22 — The phone opens a class natively.** `/live/[id]`'s logic
+      moved into `detail-load.ts` (the page renders from it) and the read into
+      `actions/read-live-class.ts` — a plain module, because `getLiveClass` is a
+      server action and must never take a caller-supplied identity; the action
+      passes `requireContext`, the new `GET /api/mobile/live/sessions/[id]`
+      passes the Bearer actor. The Android app now renders the class page, the
+      recordings and a native LiveKit room (stage, mic, camera, leave) from the
+      existing `/api/mobile/conference/[id]/join` ticket. Not on the phone yet:
+      hands, chat/questions, polls, whiteboard, slides, quality menu.
+
 - [x] **The room's watermark identified nobody** — it masked the participant's
       display name as an email. `viewerEmail` now comes from the page session.
 - [x] **Two-layer watermark** on the stage and recordings: 1% forensic code,

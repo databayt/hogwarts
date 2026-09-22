@@ -37,6 +37,7 @@ import {
 import { resolveSubstitutes } from "./materialize-day"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
 import { findSlotSessionForDay } from "./slot-session"
+import { readLiveClass } from "./read-live-class"
 import { transitionToLive } from "./went-live"
 
 /**
@@ -664,94 +665,5 @@ async function listForGuardian(ctx: Ctx, filter?: { status?: string[] }) {
  * resolves no schoolId (truly anonymous), the request is denied.
  */
 export async function getLiveClass(id: string) {
-  // Try every role bucket — each requireContext call enforces auth +
-  // schoolId + role. The first one that succeeds gives us the context.
-  const dashboardCtx = await requireContext("read_school_dashboard")
-  let ctx: Ctx | null = dashboardCtx.ok ? dashboardCtx : null
-  if (!ctx) {
-    const studentCtx = await requireContext("join_as_participant")
-    ctx = studentCtx.ok ? studentCtx : null
-  }
-  if (!ctx) {
-    const guardianCtx = await requireContext("join_as_observer")
-    ctx = guardianCtx.ok ? guardianCtx : null
-  }
-  if (!ctx) {
-    return actionError(ACTION_ERRORS.UNAUTHORIZED)
-  }
-
-  try {
-    const session = await db.conference.findFirst({
-      where: { id, schoolId: ctx.schoolId, deletedAt: null },
-      include: {
-        // `userId` so the detail page can match the viewer against the HOST:
-        // End is gated on it, because a TEACHER may only end their OWN class.
-        teacher: {
-          select: { id: true, userId: true, firstName: true, lastName: true },
-        },
-        section: { select: { id: true, name: true } },
-        subject: { select: { id: true, name: true } },
-        catalogLesson: {
-          select: {
-            id: true,
-            name: true,
-            chapter: { select: { subject: { select: { slug: true } } } },
-          },
-        },
-        // The physical room the anchored class ALSO meets in. Online is
-        // additive — a hybrid school's staff need to see both halves here.
-        timetable: {
-          select: { classroom: { select: { roomName: true } } },
-        },
-        // Recording lifecycle for the page's "processing… / ready / failed"
-        // states, and the lesson video it was published into.
-        recordings: {
-          where: { deletedAt: null },
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          select: {
-            id: true,
-            status: true,
-            failureReason: true,
-            publishedVideoId: true,
-            durationSeconds: true,
-          },
-        },
-        resources: {
-          orderBy: { order: "asc" },
-          select: {
-            id: true,
-            url: true,
-            title: true,
-            schoolExam: {
-              select: {
-                id: true,
-                title: true,
-                examType: true,
-                examDate: true,
-              },
-            },
-            schoolAssignment: {
-              select: { id: true, title: true, type: true, dueDate: true },
-            },
-          },
-        },
-      },
-    })
-    if (!session) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
-    // Enrollment gate: same-school is not enough for STUDENT/GUARDIAN — the
-    // row (incl. meetingUrl) only leaves the server for a session they may
-    // actually attend. NOT_FOUND (not UNAUTHORIZED) so other sections'
-    // sessions aren't revealed to exist. Staff roles (incl. ACCOUNTANT via
-    // read_school_dashboard) keep whole-school read.
-    if (
-      (ctx.role === "STUDENT" || ctx.role === "GUARDIAN") &&
-      !(await canAccessSession(ctx, session.sectionId, session.visibility))
-    ) {
-      return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
-    }
-    return { success: true as const, data: session }
-  } catch {
-    return actionError(ACTION_ERRORS.LOAD_FAILED)
-  }
+  return readLiveClass(id, requireContext)
 }

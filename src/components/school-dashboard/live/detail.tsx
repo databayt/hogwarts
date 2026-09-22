@@ -10,15 +10,9 @@ import { typography } from "@/lib/typography"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { describeAttendanceSync } from "@/components/school-dashboard/live/actions/attendance-sync"
-import { getLiveClass } from "@/components/school-dashboard/live/actions/sessions"
+import { requireContext } from "@/components/school-dashboard/live/actions/helpers"
+import { loadLiveClassDetail } from "@/components/school-dashboard/live/detail-load"
 import { EndClassButton } from "@/components/school-dashboard/live/end-class-button"
-import { isRecordingConfigured } from "@/components/school-dashboard/live/livekit/client"
-import {
-  getAttendanceSyncEnabled,
-  getLessonReferenceContent,
-  type LessonReferenceContent,
-} from "@/components/school-dashboard/live/queries"
 import { SessionState } from "@/components/school-dashboard/live/session-state"
 
 interface Props {
@@ -63,92 +57,40 @@ export async function LiveClassDetailContent({
   locale,
   dictionary,
 }: Props) {
-  const result = await getLiveClass(id)
-  if (!("success" in result) || !result.success) {
+  const tenant = await getTenantContext()
+  const detail = await loadLiveClassDetail(
+    id,
+    {
+      userId: (await auth())?.user?.id,
+      role: tenant.role,
+      schoolId: tenant.schoolId,
+    },
+    requireContext
+  )
+  if (!detail) {
     notFound()
   }
-  const session = result.data
+  const {
+    session,
+    canJoin,
+    recordingState,
+    recordingAvailable,
+    isExternal,
+    attendanceMode,
+    canMarkAttendance,
+    canEnd,
+    lessonContent,
+    examResources,
+    assignmentResources,
+    linkResources,
+    hasReferences,
+  } = detail
+  const lessonHref = detail.lessonHref ? `/${locale}${detail.lessonHref}` : null
 
   const t = dictionary?.liveClasses
   const r = t?.references
-
-  const canJoin = session.status === "live" || session.status === "scheduled"
   const st = t?.states
-  const latestRecording = session.recordings?.[0] ?? null
-  const recordingState: "none" | "processing" | "ready" | "failed" =
-    !latestRecording
-      ? "none"
-      : latestRecording.status === "ready"
-        ? "ready"
-        : latestRecording.status === "failed" ||
-            latestRecording.status === "expired"
-          ? "failed"
-          : "processing"
-  // The recorded lesson lives in lumos once the bridge has published it.
-  const lessonSlug = session.catalogLesson?.chapter?.subject?.slug ?? null
-  const lessonHref =
-    latestRecording?.publishedVideoId && session.catalogLesson && lessonSlug
-      ? `/${locale}/lumos/courses/${lessonSlug}/${session.catalogLesson.id}`
-      : null
-  // "Enabled" on a session that can never produce an MP4 is a lie the teacher
-  // discovers on an empty recordings page. The bucket gate decides the label.
-  const recordingAvailable = isRecordingConfigured()
-  const isExternal = session.provider === "external"
-
-  /** Roles that can open the manual register (mirrors /attendance/manual). */
-  const ATTENDANCE_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
   const at = t?.attendanceNote
-  const { schoolId: tenantSchoolId, role: viewerRole } =
-    await getTenantContext()
-  const attendanceMode = tenantSchoolId
-    ? describeAttendanceSync(
-        session,
-        await getAttendanceSyncEnabled(tenantSchoolId)
-      )
-    : "disabled"
-  // Only the roles that can actually open the manual register get the link.
-  const canMarkAttendance = ATTENDANCE_ROLES.includes(viewerRole ?? "")
-
-  // End is offered only while a class is actually running, to the roles the
-  // PERMISSION_MATRIX lets end one — and, for a TEACHER, only on their OWN
-  // class, mirroring the ownership check inside `endLiveClass`. Rendering a
-  // button the server will refuse is worse than rendering none.
-  const END_ROLES = ["DEVELOPER", "ADMIN", "TEACHER"]
-  const viewerUserId = (await auth())?.user?.id
-  const canEnd =
-    session.status === "live" &&
-    END_ROLES.includes(viewerRole ?? "") &&
-    (viewerRole !== "TEACHER" || session.teacher?.userId === viewerUserId)
-
-  // The linked catalog lesson's teachable content (videos, materials,
-  // practice questions) — one FK, whole payload.
-  let lessonContent: LessonReferenceContent | null = null
-  if (session.catalogLessonId) {
-    try {
-      // schoolId scopes the contributed content: without it the listing
-      // showed every school's private and unapproved videos/materials.
-      lessonContent = tenantSchoolId
-        ? await getLessonReferenceContent(
-            session.catalogLessonId,
-            tenantSchoolId
-          )
-        : null
-    } catch {
-      lessonContent = null
-    }
-  }
-
-  const examResources = session.resources.filter((x) => x.schoolExam)
-  const assignmentResources = session.resources.filter(
-    (x) => x.schoolAssignment
-  )
-  const linkResources = session.resources.filter((x) => x.url)
-
-  const hasReferences =
-    Boolean(session.catalogLesson) ||
-    examResources.length > 0 ||
-    assignmentResources.length > 0 ||
-    linkResources.length > 0
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
