@@ -4,7 +4,7 @@
 /**
  * Catalog orchestrator.
  *
- * - `seedCatalog`      — fast default: US + full Sudan, registered. Kept thin so
+ * - `seedCatalog`      — fast default: US + full Sudan (from the catalog repo), registered. Kept thin so
  *                        existing `pnpm db:seed:single catalog` calls still work.
  * - `seedFullCatalog`  — everything: all 12 curricula → registry (links
  *                        curriculumId) → shared concept images.
@@ -20,29 +20,22 @@ import type { SubjectRef } from "../types"
 import { logSuccess } from "../utils"
 import { seedAeCurriculum } from "./ae"
 import { seedConceptBanners } from "./banners"
-import { seedCaieIgcseCurriculum } from "./caie-igcse"
-import { seedCbseCurriculum } from "./cbse"
 import { seedConceptImages } from "./concepts"
 import { seedEgCurriculum } from "./eg"
-import { seedGbCurriculum } from "./gb"
-import { seedIbCurriculum } from "./ib"
 import { seedJoCurriculum } from "./jo"
 import { seedKwCurriculum } from "./kw"
 import { seedQaCurriculum } from "./qa"
 import { seedCurriculumRegistry } from "./registry"
 import { seedSaCurriculum } from "./sa"
-import { seedSdCurriculum } from "./sd"
-import { seedSdContent } from "./sd-content"
+import { seedCatalogTree } from "./tree"
 import { seedUsCurriculum } from "./us"
 
 // Canonical seed order: deep sources first, then the subjects-only nationals.
+// The deep curricula (sd, gb, cbse, ib-dp, caie-igcse) come from the catalog
+// repo through seedCatalogTree; us.ts keeps its own US K-12 source.
 const SOURCES = [
   seedUsCurriculum,
-  seedSdCurriculum,
-  seedGbCurriculum,
-  seedCbseCurriculum,
-  seedCaieIgcseCurriculum,
-  seedIbCurriculum,
+  (prisma: PrismaClient) => seedCatalogTree(prisma),
   seedSaCurriculum,
   seedEgCurriculum,
   seedAeCurriculum,
@@ -70,8 +63,7 @@ export async function seedCatalog(prisma: PrismaClient): Promise<SubjectRef[]> {
   }
 
   await seedUsCurriculum(prisma)
-  await seedSdCurriculum(prisma)
-  await seedSdContent(prisma)
+  await seedCatalogTree(prisma, { curricula: ["sd"] })
   await seedCurriculumRegistry(prisma)
   return publishedSubjects(prisma)
 }
@@ -81,7 +73,6 @@ export async function seedFullCatalog(
   prisma: PrismaClient
 ): Promise<SubjectRef[]> {
   for (const seed of SOURCES) await seed(prisma)
-  await seedSdContent(prisma)
   await seedCurriculumRegistry(prisma)
   await seedConceptImages(prisma)
   await seedConceptBanners()

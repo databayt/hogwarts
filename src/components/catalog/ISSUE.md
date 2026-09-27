@@ -2,7 +2,7 @@
 
 **Status:** PRODUCTION READY (code paths); content/assets partial
 **Completion:** 95%
-**Last Updated:** 2026-07-17
+**Last Updated:** 2026-09-27
 
 ---
 
@@ -69,6 +69,18 @@
 - [x] Block docs: README.md / CLAUDE.md / ISSUE.md (this file)
 
 ---
+
+## Catalog repository switchover (2026-09-27)
+
+- [x] Curricula moved to **github.com/databayt/catalog** (repo mirrors `cdn.databayt.org/catalog/`); 471 subjects, one schema, validator-gated; binaries pinned in `assets.lock.json`
+- [x] `tree.ts` replaces sd.ts / sd-content.ts / engine.ts tree callers — adopts rows by pre-catalog slug (ids preserved), archives what the catalog dropped, rebuilds questions/exams from folders
+- [x] Reader accepts the catalog `structure.json` shape (title objects, `textbook.pageOffset`) and the old one
+- [x] Old SD subject slugs 308 → catalog ids (`legacy-slugs.ts`, `proxy.ts`)
+- [x] Retired: upload-textbooks-all, gen-curriculum-structure, build-subject-dir-manifest, migrate-catalog-keys, flip-catalog-pointers, publish-qbank, sd-subject-dirs.json, rebuild-g1 (art-authoring kept as history in the catalog repo)
+- [ ] **Production rollout** — Neon restore point → `CATALOG_CONCURRENCY=16 pnpm db:seed:single sd` against prod → `pnpm publish:cdn --apply --overwrite sd` + `pnpm assets push --apply --overwrite` in the catalog → deploy (reader + redirects) → verify
+- [ ] Adopt gb / cbse / ib-dp / caie-igcse on prod (replaces `catalog-deploy-sync.ts` decisions on `gb-national-*` / `ib-diploma-*`)
+- [ ] Depend on `@databayt/catalog` (git dep) instead of the copied `catalog-key.ts` / `clickview-key.ts` / `concepts-data.ts`
+- [ ] Decide the superseded `sd-g10-literature` / `sd-g10-rhetoric` / `sd-g10-arabic-advanced` rows (not in the catalog; left untouched)
 
 ## P1 — production gaps (next)
 

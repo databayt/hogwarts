@@ -290,6 +290,35 @@ describe("spine", () => {
     expect(normalizeStructure(null)).toBeNull()
   })
 
+  it("normalizeStructure reads the catalog shape: title objects, page settings under textbook", () => {
+    expect(
+      normalizeStructure({
+        id: "sd-g12-biology",
+        lang: "ar",
+        title: { ar: "علم الأحياء", en: "Biology" },
+        textbook: { pageNumbers: "book", pageOffset: 8 },
+        chapters: [
+          {
+            slug: "c1",
+            title: { ar: "التكاثر غير الجنسي", en: "Asexual Reproduction" },
+            page: 1,
+            lessons: [{ slug: "l1", title: { en: "Only English" }, page: 2 }],
+          },
+        ],
+      })
+    ).toEqual({
+      pageNumbers: "book",
+      pageOffset: 8,
+      chapters: [
+        {
+          title: "التكاثر غير الجنسي",
+          page: 1,
+          lessons: [{ title: "Only English", page: 2 }],
+        },
+      ],
+    })
+  })
+
   it("resolveToc maps printed structure pages through the offset, in book order", () => {
     const structure = normalizeStructure({
       pageNumbers: "book",
@@ -587,7 +616,11 @@ describe("figures", () => {
     const [p] = parseTwin(md).pages
     expect(p.blocks).toEqual([
       { kind: "paragraph", text: "نص قبل الشكل" },
-      { kind: "image", alt: "الشكل (1): الانشطار الثنائي", src: "pages/12.webp" },
+      {
+        kind: "image",
+        alt: "الشكل (1): الانشطار الثنائي",
+        src: "pages/12.webp",
+      },
       { kind: "paragraph", text: "الشكل (1): الانشطار الثنائي" },
     ])
   })

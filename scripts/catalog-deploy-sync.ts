@@ -26,12 +26,9 @@ import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
 
 import { seedConceptBanners } from "../prisma/seeds/catalog/banners"
-import { seedCaieIgcseCurriculum } from "../prisma/seeds/catalog/caie-igcse"
-import { seedCbseCurriculum } from "../prisma/seeds/catalog/cbse"
 import { seedConceptImages } from "../prisma/seeds/catalog/concepts"
-import { seedGbCurriculum } from "../prisma/seeds/catalog/gb"
-import { seedIbCurriculum } from "../prisma/seeds/catalog/ib"
 import { seedCurriculumRegistry } from "../prisma/seeds/catalog/registry"
+import { seedCatalogTree } from "../prisma/seeds/catalog/tree"
 
 const STALE_SLUG_PREFIXES = ["gb-national-g", "ib-diploma-g"]
 
@@ -174,10 +171,9 @@ async function main() {
   if (execute) {
     console.log("\nSeeding registry + deep curricula + assets…")
     await seedCurriculumRegistry(prisma)
-    await seedGbCurriculum(prisma)
-    await seedCbseCurriculum(prisma)
-    await seedCaieIgcseCurriculum(prisma)
-    await seedIbCurriculum(prisma)
+    await seedCatalogTree(prisma, {
+      curricula: ["gb", "cbse", "caie-igcse", "ib-dp"],
+    })
     await seedConceptImages(prisma)
     await seedConceptBanners()
 

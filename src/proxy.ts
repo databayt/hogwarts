@@ -14,6 +14,7 @@ import {
   getSubdomainFromHost,
   isMainDomainHost,
 } from "@/lib/root-domain"
+import { currentSubjectSlug } from "@/components/catalog/legacy-slugs"
 import { i18n, type Locale } from "@/components/internationalization/config"
 import {
   detectLocale,
@@ -285,6 +286,14 @@ async function routeRequest(req: NextRequest, authenticated: boolean) {
     url.pathname.match(/\.(png|jpg|jpeg|gif|ico|svg|css|js|woff2?)$/)
   ) {
     return NextResponse.next()
+  }
+
+  // Subjects renamed to their catalog ids keep their old URLs alive.
+  const segments = url.pathname.split("/")
+  const renamed = segments.map((seg) => currentSubjectSlug(seg) ?? seg)
+  if (renamed.some((seg, i) => seg !== segments[i])) {
+    url.pathname = renamed.join("/")
+    return NextResponse.redirect(url, 308)
   }
 
   // Check if pathname has locale

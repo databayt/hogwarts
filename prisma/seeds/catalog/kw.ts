@@ -5,8 +5,8 @@
  * Kuwait (KW) — subjects-only national curriculum.
  *
  * Grade-spanning subjects on the shared concept thumbnails; no authored
- * chapter/lesson tree yet. Graduates to a syncCurriculumTree caller once
- * curriculum/kw/ is authored. Curriculum record owned by registry.ts.
+ * chapter/lesson tree yet. Graduates to the catalog repo (tree.ts) once
+ * catalog/kw/ is authored. Curriculum record owned by registry.ts.
  *
  * Usage: pnpm db:seed:single kw
  */

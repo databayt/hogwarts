@@ -417,59 +417,54 @@ model Subject {                                    // table catalog_subjects
 }
 ```
 
-### On-disk content trees — `curriculum/`
+### The catalog repository — `databayt/catalog`
 
-The `curriculum/` directory is the **content source of truth** for the deep
-curricula. The build tool (`curriculum/_build_tools/engine.py`) writes, and the
-seed engine reads, this shape:
+The deep curricula no longer live in this repo. Their **source of truth is
+[github.com/databayt/catalog](https://github.com/databayt/catalog)**, cloned
+beside this repo as `../catalog`, and it mirrors the CDN exactly:
 
 ```
-curriculum/<dir>/
-  g{N}/                       # grade
-    <subject>/                # e.g. math, science
-      structure.json          # { subject, chapters: [{ name, slug, lessons: [...] }] }
-      textbook.pdf            # optional — merged free official PDF
+../catalog/sd/g6/math/structure.json      ==  cdn.databayt.org/catalog/sd/g6/math/structure.json
+../catalog/sd/g6/math/c1/l3/qbank.json    ==  cdn.databayt.org/catalog/sd/g6/math/c1/l3/qbank.json
+
+<curriculum>/<grade>/<subject>/
+  structure.json                 # id, title {ar,en}, source, chapters c<N> → lessons l<N>
+  qbank.json · exams.json        # subject level
+  c<N>/qbank.json · exams.json   # chapter N (book order)
+  c<N>/l<N>/…                    # lesson N within that chapter
+  textbook.pdf · textbook.md · cover/thumbnail/banner.jpg · pages/<N>.webp
 ```
 
-`scripts/gen-curriculum-structure.ts` turns a compact chapter-list spec into a
-`structure.json` tree; `scripts/upload-textbooks-all.ts` pushes any tree's
-textbook PDFs to S3. Legacy formats (`us-inventory.json`,
-`sudan-curriculum.json`) keep their bespoke seeds — only net-new curricula go
-through the tree engine.
+The subject id is `<curriculum>-<grade>-<subject>` (`sd-g12-biology`) — the
+same three segments as the path, so there is no folder↔slug table. A question
+lives once, in the folder of its scope; exams carry hogwarts' `examType`
+vocabulary (`final`, `midterm`, `chapter_test`, `practice`, `quiz`,
+`diagnostic`). Content changes go to the catalog repo (validated there by
+`pnpm validate`), never to this one.
 
-### `syncCurriculumTree` (the tree engine)
+### `tree.ts` — the one catalog seed
 
-The per-seed duplication (upsert, count update, chapter/lesson loop, concept
-assignment) is factored into one helper, `syncCurriculumTree`
-(`prisma/seeds/catalog/engine.ts`). A new deep curriculum is a ~20-line source
-file:
+`prisma/seeds/catalog/tree.ts` (`seedCatalogTree`) reads the clone for `sd`,
+`gb`, `cbse`, `ib-dp` and `caie-igcse` (the catalog's `us` tree is the Aldar
+variant and is **not** adopted — `us.ts` keeps US K-12). Per subject it upserts
+`Subject`, then **adopts** chapters and lessons instead of rebuilding them:
 
-```ts
-// prisma/seeds/catalog/gb.ts
-import { syncCurriculumTree } from "./engine"
+- a subject is found by its catalog id, else by its pre-catalog slug (the
+  catalog's `scripts/migrate/renames.json`) and renamed in place — same id,
+  same `SubjectSelection`s; `proxy.ts` 308s old slugs
+  (`src/components/catalog/legacy-slugs.ts`);
+- chapters/lessons are matched by their pre-catalog slug (or current
+  `c<N>`/`l<N>`) and renamed to their position — ids survive, so live-class
+  sessions and lesson progress keep their lesson;
+- rows the catalog no longer has are set `ARCHIVED` with an `archived-` slug,
+  never deleted.
 
-export async function seedGbCurriculum(prisma: PrismaClient) {
-  return syncCurriculumTree(prisma, {
-    dir: "uk", // curriculum/uk/
-    country: "GB",
-    code: "GB", // canonical curriculum code
-    slugPrefix: "gb", // gb-g{N}-{subject}
-    name: "British (England)",
-    lang: "en",
-    gradeRange: [1, 12],
-    sortBase: 20000,
-  })
-}
-```
-
-It reads any `curriculum/<dir>/g{N}/<subject>/structure.json` tree, upserts
-`Subject`/`Chapter`/`Lesson` with the canonical code/country, attaches the
-textbook PDF S3 key when present, and rotates the shared concept thumbnail across
-chapters. It is idempotent (subject upsert by slug; chapters/lessons replaced).
-Subjects carry only the curriculum **code** — `registry.ts` owns the `Curriculum`
-row and backfills `curriculumId`. The four live callers are `gb.ts`, `cbse.ts`,
-`caie-igcse.ts`, `ib.ts`. The six subjects-only Arab nationals
-(`sa.ts`…`jo.ts`) share `seedSubjectsOnly`.
+Asset keys point at the canonical `catalog/<cur>/<grade>/<subject>/…` path
+whenever the catalog's `assets.lock.json` has the file. Questions and exams are
+rebuilt per subject from the files, scope from the folder (chapter-level
+questions are spread over that chapter's lessons for the lesson practice quiz).
+Without a clone the seed does nothing and deletes nothing, so deploy-time seeds
+are safe. `CATALOG_DIR` / `CATALOG_CURRICULA` / `CATALOG_CONCURRENCY` tune it.
 
 ### Curricula & codes
 
@@ -497,18 +492,18 @@ its own values (`sd-national`, `ib-diploma`).
 ### Coverage
 
 All **twelve** curricula have subjects. **Six are deep** (real chapters and
-lessons) — US, Sudan, England (`curriculum/uk`), Cambridge IGCSE, IB-DP, and
+lessons) — US, Sudan, England (catalog `gb`), Cambridge IGCSE, IB-DP, and
 Indian CBSE. The six Arab national curricula stay **subjects-only** until their
 ministry textbook structures are authored.
 
 | Curriculum      | Code         | Grades | Subjects | Chapters | Lessons | Source                  | Seed         |
 | --------------- | ------------ | ------ | -------- | -------- | ------- | ----------------------- | ------------ |
 | United States   | `US`         | 1–12   | ~240     | ~750     | ~3,993  | US-inventory            | `us`         |
-| Sudan           | `SD`         | 1–12   | 135      | 888      | 4,501   | `curriculum/sd`         | `sd`         |
-| England         | `GB`         | 1–12   | 184      | 363      | 730     | `curriculum/uk`         | `gb`         |
-| Cambridge IGCSE | `CAIE-IGCSE` | 10     | 8        | 76       | 76      | `curriculum/caie-igcse` | `caie-igcse` |
-| IB Diploma      | `IB-DP`      | 12     | 9        | 49       | 49      | `curriculum/ib`         | `ib`         |
-| Indian CBSE     | `CBSE`       | 10     | 7        | 58       | 58      | `curriculum/in`         | `cbse`       |
+| Sudan           | `SD`         | 1–12   | 135      | 812      | 4,144   | catalog `sd`            | `sd`         |
+| England         | `GB`         | 1–12   | 184      | 363      | 730     | catalog `gb`            | `gb`         |
+| Cambridge IGCSE | `CAIE-IGCSE` | 10     | 8        | 76       | 76      | catalog `caie-igcse`    | `caie-igcse` |
+| IB Diploma      | `IB-DP`      | 12     | 9        | 49       | 49      | catalog `ib-dp`         | `ib`         |
+| Indian CBSE     | `CBSE`       | 10     | 7        | 58       | 58      | catalog `cbse`          | `cbse`       |
 | Saudi Arabia    | `SA`         | 1–12   | ~132     | none     | none    | inline `sa.ts`          | `sa`         |
 | Egypt           | `EG`         | 1–12   | ~140     | none     | none    | inline `eg.ts`          | `eg`         |
 | UAE             | `AE`         | 1–12   | ~144     | none     | none    | inline `ae.ts`          | `ae`         |
@@ -518,9 +513,9 @@ ministry textbook structures are authored.
 
 > The deep transnational curricula (Cambridge, IB, CBSE) cover a representative
 > grade so far; extending to every grade is mechanical (author more
-> `structure.json`). The on-disk `curriculum/us` (Aldar American, 128/266/535) is
-> **not ingested** — it collides on the `us-g{N}-*` slug space and is shallower;
-> it stays as a reference overlay. No merge planned.
+> `structure.json` in the catalog repo). The catalog's `us` tree (Aldar American,
+> 128 subjects) is **not ingested** — it collides on the `us-g{N}-*` slug space;
+> it stays a reference overlay.
 
 ### Textbook reader — the book as pages (2026-09-07)
 
@@ -552,18 +547,13 @@ browser. Files:
 
 ### Real content — Sudan (all grades)
 
-`catalog/sd-content.ts` ingests the **authored** question banks and final exams
-that live next to each Sudan textbook
-(`curriculum/sd/g{1–12}/<subject>/{qbank,exams}.json`) into
-`Question`/`Exam`/`ExamQuestion`: 102 subjects, ~2,700 questions (100%
-chapter-mapped; 405 also lesson-mapped, which is what feeds the lumos lesson
-practice quiz), and one linked final exam per subject. Question ids resolve to
-chapters/lessons through a boundary-safe slug scan plus per-scheme parsers
-covering the seven authored id formats. A quality gate skips the 22 g11/g12
-files that are template-generated placeholders (>50% junk markers) — those
-subjects keep synthetic content instead. Rows are tagged `"sd"`; ingest is
-delete-and-recreate per subject and runs **locally** (`pnpm db:seed:single
-sd-content`) since `curriculum/` is not deployed.
+The Sudan question banks and exams come with the tree seed: 7,395 unique
+questions and 1,533 exams across g1–g12, each question stored in its
+chapter/lesson folder in the catalog (the id-parsing rules that used to live in
+`sd-content.ts` placed them once, in the catalog migration). 3,754
+template-generated placeholders were removed there. Rows are tagged
+`["sd", "<grade>", "<subject>"]`; `content.ts` skips synthetic content for any
+subject with `"sd"`-tagged questions.
 
 Sudan lessons deliberately have **no Video rows** — the lumos lesson player
 falls back to the shared `story.mp4` clip on every SD lesson, so the player
@@ -599,24 +589,22 @@ Priorities: an OCR pass (Tesseract Arabic) on scanned PDFs, then manual entry fo
 ### File map
 
 ```
+../catalog/                          # github.com/databayt/catalog — the content (mirrors the CDN)
 prisma/
   models/catalog.prisma              # Subject, Chapter, Lesson + shared enums
   seeds/catalog/
-    engine.ts                        # syncCurriculumTree + seedSubjectsOnly (shared)
+    tree.ts                          # the catalog seed: sd · gb · cbse · ib-dp · caie-igcse
+    engine.ts                        # seedSubjectsOnly (shallow nationals)
     registry.ts                      # 12 Curriculum records + curriculumId backfill
     index.ts                         # seedCatalog + seedFullCatalog
     us.ts                            # US (240, us-inventory.json)
-    sd.ts                            # Full Sudan from curriculum/sd/ (125)
-    sd-content.ts                    # SD real qbank+exams ingest, g1–g12
-    gb.ts / cbse.ts / caie-igcse.ts / ib.ts   # deep tree callers
     {sa,eg,ae,qa,kw,jo}.ts           # 6 subjects-only nationals
     concepts.ts / banners.ts         # shared image upload + backfill
     content.ts / books.ts / videos.ts / exam-templates.ts / demo.ts
     single.ts                        # CLI registry
-curriculum/
-  <dir>/g{N}/<subject>/structure.json   # on-disk content trees
-  _build_tools/engine.py             # writes the trees
 src/components/catalog/
+  catalog-key.ts                     # CDN key builder (same as @databayt/catalog)
+  legacy-slugs.ts                    # pre-catalog subject slug → catalog id (proxy redirect)
   setup.ts                           # findSubjects(), inferCurriculum()
   academic-config.ts                 # per-curriculum CurriculumAcademicConfig
   image.ts / image-url.ts            # Sharp pipeline + URL resolution
@@ -691,27 +679,25 @@ the catalog with `country: "SD"` and `curriculum: "SD"`. Slug pattern
 |  12   | Secondary  |       25 |      192 |     870 | Shahada year — all streams; 13 structures rebuilt from the books' TOCs + 5 subjects added 2026-09 |
 
 **Grade 10 moved to the new Sudanese national curriculum in 2025/26** (NCCER first
-editions dated 2025). Since 2026-09-04 `curriculum/sd/g10/` carries that set: four
+editions dated 2025). Since 2026-09-04 the catalog's `sd/g10/` carries that set: four
 new subjects (التربية الوطنية، ريادة الأعمال، الفيزياء، and a unified اللغة العربية
 book that replaces the old المطالعة/البلاغة/النحو sub-books), and eight subjects
 replaced in place (biology, chemistry, history, maths 3rd ed., engineering,
 التربية الإسلامية — formerly الدراسات الإسلامية, التربية الفنية — formerly الفنون
 والتصميم, and تكنولوجيا المعلومات والاتصالات — formerly علوم الحاسوب). The old
-editions are archived under `<subject>/_old/<label>/` and the superseded Arabic
-sub-book directories under `curriculum/sd/_old/2026-09-04/`; both locations are
-inert (the seed and the uploader walk `g1..g12` only). Their DB rows
+editions were archived before the move to the catalog repo (they stay in the
+local pre-catalog archive, not in the catalog). Their DB rows
 (`sd-g10-literature`, `sd-g10-rhetoric`, `sd-g10-arabic-advanced`) remain
 PUBLISHED until archived by decision. Structures come from the books' own tables
-of contents (`structure.json`, `source: official-toc-2026-09`); the ledger is
-`curriculum/sd/TEXTBOOK_AUDIT.md`.
+of contents (`structure.json`, `source.basis: official-toc-2026-09`); the ledger is
+the catalog's `docs/history/sd-textbook-audit.md`.
 
 Grade 11 followed on 2026-09-05: its 18 legacy structures (generic units, few
 lessons) were rebuilt from the books' own tables of contents (19 subjects, 122
 chapters, 511 lessons), and every grade-11 and grade-12 textbook now has a
-Markdown twin beside the PDF on the CDN (`catalog/textbooks/<slug>/textbook.md`,
+Markdown twin beside the PDF on the CDN (`catalog/sd/<grade>/<subject>/textbook.md`,
 produced by the `textbook` keyword: MarkItDown, an Arabic RTL repair, and a
-tesseract OCR fallback, graded A–C in the front matter). Production picks the
-rebuilt structures up on the next deploy-time `sd` + `sd-content` seed.
+tesseract OCR fallback, graded A–C in the front matter).
 
 Secondary streams (10–12) are routed by patterns in `setup.ts`:
 
@@ -755,12 +741,13 @@ question banks at subject scope (re-authoring pending).
 
 ### Adding a national curriculum
 
-Sudan predates the generic pipeline (TOC-driven seed). A new national curriculum
-(e.g. Egypt `EG`) goes through the tree engine:
+A new national curriculum (e.g. Egypt `EG`) is authored in the catalog repo,
+then adopted here:
 
-1. Author `curriculum/eg/g{N}/<subject>/structure.json`.
-2. Add a one-line `prisma/seeds/catalog/eg.ts` calling `syncCurriculumTree` with
-   `country: "EG", code: "EG"`, and register it in `prisma/seeds/single.ts`.
+1. In github.com/databayt/catalog: add `eg` to `vocab/curricula.json` and author
+   `eg/curriculum.json` + `eg/g{N}/<subject>/structure.json` (`pnpm validate`).
+2. Add `eg: { country: "EG", code: "EG", sortBase: … }` to `CURRICULA` in
+   `prisma/seeds/catalog/tree.ts` (and a `single.ts` entry if wanted).
 3. Add `EG → "EG"` to `inferCurriculum()` and `COUNTRY_CURRICULUM`
    (`src/lib/timetable-reference.ts`).
 4. Add Arabic names to `SUBJECT_CONCEPT_BY_NAME` in `concepts-data.ts`.
@@ -810,7 +797,7 @@ image-less** (a flat color is the last resort). Every seed (`us.ts`, `sd.ts`,
 Chapters within a subject rotate through a pool of 5 related concepts for visual
 variety (cycled by `sequenceOrder % poolSize`): e.g. `math` → math, science,
 computer-science, physics, economics; `science` → science, biology, chemistry,
-physics, earth-science. The deep seeds and `syncCurriculumTree` inherit this; for
+physics, earth-science. The catalog seed (`tree.ts`) inherits this; for
 subjects-only curricula, chapter/lesson images come for free once depth lands.
 
 ### Variants
@@ -855,8 +842,8 @@ catalog/subjects/{slug}/…/thumbnail-{size}.webp     # US lesson/chapter covers
 | Subject thumbnails          | `concepts.ts`             | **Complete** — all 12 curricula, all 12 grades                                                                                                                      |
 | Banners                     | `banners.ts`              | **Self-covering** — ~10 of 23 concepts have their own legacy banner; the seed now borrows the nearest `CONCEPT_POOL` neighbor's for the rest (23/23 after next run) |
 | Textbook covers             | —                         | **Missing** — `cover` key set on every subject, object never uploaded (card falls back to icon)                                                                     |
-| Textbook PDFs               | `upload-textbooks-all.ts` | **Sudan only** — 118 `textbook.pdf`; no other curriculum                                                                                                            |
-| Lesson / chapter thumbnails | `structure.json` `image`  | **Sudan, all twelve grades** — authored per chapter, lessons inherit (`scripts/catalog/art-authoring/README.md`). US rows still render shared concept art; `lesson-covers.ts` is the older US path    |
+| Textbook PDFs               | catalog `assets push`     | **Sudan + CBSE g10 science** — pinned in the catalog's `assets.lock.json`                                                                                                                |
+| Lesson / chapter thumbnails | `structure.json` `image`  | **Sudan, all twelve grades** — authored per chapter, lessons inherit (catalog `docs/history/art-authoring/`). US rows still render shared concept art; `lesson-covers.ts` is the older US path    |
 | Videos                      | `videos.ts` / contributed | **Probe-verified** — the seed HEAD-checks each `.mp4` and only registers rows whose object exists (stale seed rows removed); real uploads still pending             |
 | Books                       | `books.ts`                | **External** — 51 books on `covers.openlibrary.org`; `scripts/snapshot-book-covers.ts` localizes them to our CDN (run with prod AWS creds)                          |
 | Materials                   | `content.ts`              | **Metadata-only** — `fileUrl` null; material cards become clickable automatically once a `fileUrl`/`externalUrl` lands                                              |
@@ -875,8 +862,8 @@ explicit run. **Always use `pnpm db:seed:single <name>`** — never the full see
 | ------------------------------------------------- | --------------------------------------------------------------------------- |
 | `full`                                            | `seedFullCatalog` — all 12 curricula → registry → concept images (fresh DB) |
 | `catalog`                                         | Fast default: US (~240) + full Sudan + registry                             |
-| `us` / `sd`                                       | US (inventory) / full Sudan from `curriculum/sd/`                           |
-| `gb` / `cbse` / `caie-igcse` / `ib`               | Deep curricula via `syncCurriculumTree` from `curriculum/<dir>/`            |
+| `us` / `sd`                                       | US (inventory) / Sudan from the catalog repo (`tree.ts`)                   |
+| `gb` / `cbse` / `caie-igcse` / `ib` / `catalog-tree` | Deep curricula from the catalog repo (`tree.ts`; `catalog-tree` = all)    |
 | `sa` / `eg` / `ae` / `qa` / `kw` / `jo`           | The 6 subjects-only nationals (`seedSubjectsOnly`)                          |
 | `registry`                                        | All 12 `Curriculum` records + backfill `Subject.curriculumId`               |
 | `concepts` / `banners`                            | Concept thumbnails & banners → Sharp → S3/CloudFront                        |
@@ -887,11 +874,11 @@ explicit run. **Always use `pnpm db:seed:single <name>`** — never the full see
 ```bash
 pnpm db:seed:single --list        # list available seeds
 pnpm db:seed:single catalog       # fast default: US + full Sudan + registry
-pnpm db:seed:single gb            # England — deep, from curriculum/uk
+pnpm db:seed:single gb            # British — deep, from the catalog repo
 pnpm db:seed:single sa            # Saudi Arabia — subjects-only national
 pnpm db:seed:single registry      # (re)link all 12 Curriculum records
 pnpm db:seed:single concepts      # thumbnails → S3/CDN
-pnpm tsx scripts/upload-textbooks-all.ts   # Sudan textbook PDFs → S3
+cd ../catalog && pnpm assets push --apply  # textbook PDFs / art → CDN (catalog repo)
 ```
 
 ### Idempotency

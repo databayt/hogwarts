@@ -4,49 +4,37 @@
 /**
  * The single derivation for every catalog CDN key.
  *
- * Scheme (2026-09-19) — a browsable hierarchy that mirrors how the content is
- * actually organised on disk:
+ *   catalog/<curriculum>/<grade>/<subject>/textbook.pdf
+ *   catalog/<curriculum>/<grade>/<subject>/c<N>/qbank.json
+ *   catalog/<curriculum>/<grade>/<subject>/c<N>/l<N>/exams.json
  *
- *   catalog/<curriculum>/<grade>/<subjectDir>/textbook.pdf
- *   catalog/<curriculum>/<grade>/<subjectDir>/<chapterSlug>/qbank.json
- *   catalog/<curriculum>/<grade>/<subjectDir>/<chapterSlug>/<lessonSlug>/quiz.json
+ * The key is the repository path prefixed with `catalog/` — the repo mirrors
+ * the CDN (github.com/databayt/catalog, src/paths.ts), and the subject id is `<curriculum>-<grade>-<subject>` —
+ * so a key, a path and an id are three spellings of the same thing, with no
+ * override table in between.
  *
- * It replaces the flat `catalog/textbooks/<dbSlug>/` prefix, which restated
- * curriculum + grade + subject in a form nothing could browse and had no room
- * to address anything below a subject.
+ * Runtime code usually holds a stored key (e.g. a subject's textbook.pdf) and
+ * derives siblings from it with `catalogSibling`.
  *
- * `<subjectDir>` is the CURRICULUM FOLDER name (`math`), not the DB slug
- * suffix (`basic-math`) — so the scheme is 1:1 with `curriculum/sd/` on disk
- * and the publish path needs no dir->slug override table. The 14 global + ~25
- * per-grade overrides in `prisma/seeds/catalog/sd.ts` map dir->slug and are NOT
- * invertible in general, which is why callers holding only a DB slug read
- * `prisma/seeds/catalog/sd-subject-dirs.json` instead of reversing them.
- *
- * Runtime does not derive these at all: it reads the stored `Subject.pdf` key
- * and strips the filename (see `catalogSibling`, and the equivalent inline
- * expression in `school-dashboard/listings/subjects/textbook/content.tsx`).
- *
- * This module is PURE — no env, no I/O — so seeds, scripts and RSC can all
- * import it. It only JOINS segments; it never appends a suffix. The
- * `-{sm,md,lg,original}.webp` variant convention still belongs to
- * `./image-url.ts`.
+ * PURE — no env, no I/O — so apps, seeds, scripts and RSC can all import it.
+ * It only joins segments; URL encoding is `encodeCatalogKey`'s job.
  */
 
 export const CATALOG_ROOT = "catalog"
 
-/** The flat prefix this scheme replaces. Kept for the migration + rollback. */
+/** @deprecated The flat pre-2026-09-19 prefix, kept only for rollback tooling. */
 export const CATALOG_LEGACY_ROOT = "catalog/textbooks"
 
 export interface CatalogScope {
-  /** Curriculum FOLDER name — "sd", "uk", "in". Lowercase. */
+  /** Curriculum id — "sd", "gb", "cbse", "ib-dp". */
   curriculum: string
-  /** Grade FOLDER name, including the "g" — "g12". */
+  /** Grade id, including the "g" — "g12". */
   grade: string
-  /** Subject FOLDER name — "biology", "math" (never "basic-math"). */
+  /** Subject folder — "biology", "islamic-studies", "math-specialized". */
   subjectDir: string
-  /** Chapter slug — "01-asexual-reproduction". */
+  /** Chapter — "c1" (positional, like grades). */
   chapterSlug?: string
-  /** Lesson slug — "01-characteristics-of-asexual-reproduction". */
+  /** Lesson within the chapter — "l3". */
   lessonSlug?: string
 }
 
@@ -60,8 +48,8 @@ export type CatalogAsset =
   | "banner.jpg"
   | "qbank.json"
   | "exams.json"
-  | "quiz.json"
   | `pages/${number}.webp`
+  | `pages-md/${number}.md`
 
 /** Control characters are invalid in a path segment; built without a literal. */
 const CONTROL_CHARS = new RegExp(
@@ -74,8 +62,8 @@ const CONTROL_CHARS = new RegExp(
  * `subjectDir` would otherwise silently collapse `catalog/sd/g12//textbook.pdf`
  * into a sibling of the grade.
  *
- * Non-ASCII is ALLOWED: 61 lesson slugs under sd-g5 are raw Arabic. They are
- * valid S3 keys; it is the URL that needs encoding, not the key.
+ * Catalog slugs are ASCII (the validator enforces it), but this guard stays
+ * permissive so it can also build keys for legacy objects.
  */
 function assertSegment(value: string, field: string): string {
   if (!value) throw new Error(`catalogKey: ${field} is empty`)
@@ -124,9 +112,9 @@ export function catalogBase(scope: CatalogScope): string {
 export function catalogKey(scope: CatalogScope, asset: CatalogAsset): string {
   // `pages/<N>.webp` is the one asset carrying a slash, so it is validated as a
   // pair rather than through assertSegment.
-  if (asset.startsWith("pages/")) {
-    const page = asset.slice("pages/".length)
-    if (!/^\d+\.webp$/.test(page))
+  if (asset.startsWith("pages/") || asset.startsWith("pages-md/")) {
+    const page = asset.slice(asset.indexOf("/") + 1)
+    if (!/^\d+\.(webp|md)$/.test(page))
       throw new Error(
         `catalogKey: malformed page asset ${JSON.stringify(asset)}`
       )
@@ -136,7 +124,7 @@ export function catalogKey(scope: CatalogScope, asset: CatalogAsset): string {
   return `${catalogBase(scope)}/${asset}`
 }
 
-/** The flat prefix a DB slug used to live under, WITH its trailing slash. */
+/** @deprecated The flat prefix a DB slug used to live under, WITH its trailing slash. */
 export function catalogLegacyPrefix(dbSlug: string): string {
   return `${CATALOG_LEGACY_ROOT}/${assertSegment(dbSlug, "dbSlug")}/`
 }
@@ -152,8 +140,8 @@ export function catalogLegacyPrefix(dbSlug: string): string {
  *
  *   catalogSibling("catalog/sd/g12/biology/textbook.pdf", "textbook.md")
  *     -> "catalog/sd/g12/biology/textbook.md"
- *   catalogSibling("catalog/sd/g12/biology/textbook.pdf", "01-mitosis", "qbank.json")
- *     -> "catalog/sd/g12/biology/01-mitosis/qbank.json"
+ *   catalogSibling("catalog/sd/g12/biology/textbook.pdf", "c1", "l3", "qbank.json")
+ *     -> "catalog/sd/g12/biology/c1/l3/qbank.json"
  */
 export function catalogSibling(
   storedKey: string,
@@ -177,3 +165,9 @@ export function catalogSibling(
 export function encodeCatalogKey(key: string): string {
   return key.split("/").map(encodeURIComponent).join("/")
 }
+
+/** `chapterSlug(1)` -> "c1". Chapters are numbered in book order from 1. */
+export const chapterSlug = (n: number): string => `c${n}`
+
+/** `lessonSlug(3)` -> "l3". Lessons are numbered from 1 within their chapter. */
+export const lessonSlug = (n: number): string => `l${n}`

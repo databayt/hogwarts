@@ -45,11 +45,34 @@ function nonNegativeInt(v: unknown): number | null {
   return positiveInt(v)
 }
 
-/** Accept only what the reader needs from an arbitrary structure.json. */
+/**
+ * A title in either catalog shape: the pre-catalog string, or the catalog's
+ * `{ ar, en, fr }` — the book's own language first (that is what the twin's
+ * page text is written in, and what the offset vote matches against).
+ */
+function titleText(v: unknown, lang: string): string {
+  if (typeof v === "string") return v
+  if (v && typeof v === "object") {
+    const t = v as Record<string, unknown>
+    const s = t[lang] ?? t.ar ?? t.en ?? t.fr
+    return typeof s === "string" ? s : ""
+  }
+  return ""
+}
+
+/**
+ * Accept only what the reader needs from an arbitrary structure.json — the
+ * catalog shape (github.com/databayt/catalog: `title` objects, page settings
+ * under `textbook`) or the pre-catalog one (string titles, top-level fields).
+ */
 export function normalizeStructure(json: unknown): StructurePages | null {
   if (!json || typeof json !== "object") return null
   const o = json as Record<string, unknown>
   if (!Array.isArray(o.chapters)) return null
+  const lang = typeof o.lang === "string" ? o.lang : "ar"
+  const book = (
+    o.textbook && typeof o.textbook === "object" ? o.textbook : o
+  ) as Record<string, unknown>
   const chapters: StructureChapter[] = o.chapters.map((c) => {
     const cc = (c && typeof c === "object" ? c : {}) as Record<string, unknown>
     const lessons: StructureLesson[] = Array.isArray(cc.lessons)
@@ -58,18 +81,21 @@ export function normalizeStructure(json: unknown): StructurePages | null {
             string,
             unknown
           >
-          return { title: String(ll.title ?? ""), page: positiveInt(ll.page) }
+          return {
+            title: titleText(ll.title, lang),
+            page: positiveInt(ll.page),
+          }
         })
       : []
     return {
-      title: String(cc.title ?? ""),
+      title: titleText(cc.title, lang),
       page: positiveInt(cc.page),
       lessons,
     }
   })
   return {
-    pageNumbers: o.pageNumbers === "pdf" ? "pdf" : "book",
-    pageOffset: nonNegativeInt(o.pageOffset),
+    pageNumbers: book.pageNumbers === "pdf" ? "pdf" : "book",
+    pageOffset: nonNegativeInt(book.pageOffset),
     chapters,
   }
 }

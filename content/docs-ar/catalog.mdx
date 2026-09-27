@@ -388,55 +388,49 @@ model Subject {                                    // table catalog_subjects
 }
 ```
 
-### أشجار المحتوى على القرص — `curriculum/`
+### مستودع الكتالوج — `databayt/catalog`
 
-دليل `curriculum/` هو **مصدر الحقيقة للمحتوى** للمناهج العميقة. أداة البناء
-(`curriculum/_build_tools/engine.py`) تكتب، ومحرّك البذرة يقرأ، هذا الشكل:
+لم تعد المناهج العميقة تعيش في هذا المستودع. **مصدر الحقيقة هو
+[github.com/databayt/catalog](https://github.com/databayt/catalog)**، يُستنسخ بجوار
+هذا المستودع في `../catalog`، وهو مرآة مطابقة لشبكة التوزيع:
 
 ```
-curriculum/<dir>/
-  g{N}/                       # grade
-    <subject>/                # e.g. math, science
-      structure.json          # { subject, chapters: [{ name, slug, lessons: [...] }] }
-      textbook.pdf            # optional — merged free official PDF
+../catalog/sd/g6/math/structure.json      ==  cdn.databayt.org/catalog/sd/g6/math/structure.json
+../catalog/sd/g6/math/c1/l3/qbank.json    ==  cdn.databayt.org/catalog/sd/g6/math/c1/l3/qbank.json
+
+<curriculum>/<grade>/<subject>/
+  structure.json                 # id، title {ar,en}، المصدر، الفصول c<N> ← الدروس l<N>
+  qbank.json · exams.json        # مستوى المادة
+  c<N>/qbank.json · exams.json   # الفصل N (بترتيب الكتاب)
+  c<N>/l<N>/…                    # الدرس N داخل الفصل
+  textbook.pdf · textbook.md · cover/thumbnail/banner.jpg · pages/<N>.webp
 ```
 
-`scripts/gen-curriculum-structure.ts` يحوّل مواصفة قائمة فصول مُوجزة إلى شجرة
-`structure.json`؛ و`scripts/upload-textbooks-all.ts` يدفع كتب أي شجرة (PDF) إلى
-S3. الصيغ القديمة (`us-inventory.json`، `sudan-curriculum.json`) تحتفظ ببذورها
-الخاصّة — والمناهج الجديدة وحدها تمرّ عبر محرّك الشجرة.
+معرّف المادة هو `<curriculum>-<grade>-<subject>` (`sd-g12-biology`) — المقاطع
+الثلاثة نفسها التي في المسار، فلا جدول تحويل بين المجلّد والمعرّف. يعيش السؤال مرة
+واحدة في مجلّد نطاقه، وتحمل الامتحانات مفردات `examType` في هوغوورتس (`final`،
+`midterm`، `chapter_test`، `practice`، `quiz`، `diagnostic`). تعديلات المحتوى تذهب
+إلى مستودع الكتالوج (ويتحقّق منها هناك `pnpm validate`)، لا إلى هذا المستودع.
 
-### `syncCurriculumTree` (محرّك الشجرة)
+### `tree.ts` — بذرة الكتالوج الوحيدة
 
-التكرار لكل بذرة (upsert، تحديث الأعداد، حلقة الفصل/الدرس، إسناد المفهوم) مُجمَّع في
-مساعد واحد `syncCurriculumTree` (`prisma/seeds/catalog/engine.ts`). المنهج العميق
-الجديد ملفّ مصدر بـ~20 سطراً:
+`prisma/seeds/catalog/tree.ts` (`seedCatalogTree`) يقرأ النسخة المحلية لـ`sd` و`gb`
+و`cbse` و`ib-dp` و`caie-igcse` (شجرة `us` في الكتالوج هي نسخة الدار الأمريكية
+و**لا** تُعتمد — يبقى `us.ts` لمنهج US K-12). لكل مادة يُحدِّث `Subject` ثم **يتبنّى**
+الفصول والدروس بدل إعادة بنائها:
 
-```ts
-// prisma/seeds/catalog/gb.ts
-import { syncCurriculumTree } from "./engine"
+- تُوجد المادة بمعرّف الكتالوج، وإلا بمعرّفها السابق (`scripts/migrate/renames.json`
+  في الكتالوج) فيُعاد تسميتها في مكانها — المعرّف الداخلي نفسه واختيارات المدارس نفسها؛
+  ويحوّل `proxy.ts` الروابط القديمة بـ308 (`src/components/catalog/legacy-slugs.ts`)؛
+- تُطابَق الفصول والدروس بمعرّفها السابق (أو `c<N>`/`l<N>` الحالي) وتُسمّى بموضعها —
+  فتبقى المعرّفات، وتحتفظ الحصص المباشرة وتقدّم الطلاب بدروسها؛
+- ما لم يعد في الكتالوج يصبح `ARCHIVED` ببادئة `archived-`، ولا يُحذف أبداً.
 
-export async function seedGbCurriculum(prisma: PrismaClient) {
-  return syncCurriculumTree(prisma, {
-    dir: "uk", // curriculum/uk/
-    country: "GB",
-    code: "GB", // canonical curriculum code
-    slugPrefix: "gb", // gb-g{N}-{subject}
-    name: "British (England)",
-    lang: "en",
-    gradeRange: [1, 12],
-    sortBase: 20000,
-  })
-}
-```
-
-يقرأ أي شجرة `curriculum/<dir>/g{N}/<subject>/structure.json`، ويُحدِّث/يُدرِج
-(upsert) `Subject`/`Chapter`/`Lesson` بالرمز/البلد القانوني، ويُرفق مفتاح S3 لكتاب
-PDF عند وجوده، ويُدوِّر مصغّر المفهوم المشترك عبر الفصول. وهو قابل لإعادة التنفيذ
-بأمان (upsert للمادة حسب slug؛ والفصول/الدروس تُستبدَل). تحمل المواد **رمز** المنهج
-فقط — `registry.ts` يملك صفّ `Curriculum` ويملأ `curriculumId`. المستدعون الأربعة
-الأحياء هم `gb.ts`، و`cbse.ts`، و`caie-igcse.ts`، و`ib.ts`. والمناهج العربية الستة
-مواد-فقط (`sa.ts`…`jo.ts`) تتشارك `seedSubjectsOnly`.
+مفاتيح الأصول تشير إلى المسار القانوني `catalog/<cur>/<grade>/<subject>/…` متى وُجد
+الملف في `assets.lock.json` بالكتالوج. تُعاد بناء الأسئلة والامتحانات لكل مادة من
+الملفات، والنطاق من المجلّد (أسئلة مستوى الفصل تُوزَّع على دروس ذلك الفصل لاختبار
+التدريب). بلا نسخة محلية لا تفعل البذرة شيئاً ولا تحذف شيئاً، فبذور وقت النشر آمنة.
+`CATALOG_DIR` / `CATALOG_CURRICULA` / `CATALOG_CONCURRENCY` تضبطها.
 
 ### المناهج والرموز
 
@@ -464,17 +458,17 @@ PDF عند وجوده، ويُدوِّر مصغّر المفهوم المشتر�
 ### التغطية
 
 كل المناهج **الاثني عشر** لها مواد. **ستة بعمق** (فصول ودروس حقيقية) — US، والسودان،
-وإنجلترا (`curriculum/uk`)، وكامبريدج IGCSE، وIB-DP، والهندي CBSE. أما المناهج
+وإنجلترا (`gb` في الكتالوج)، وكامبريدج IGCSE، وIB-DP، والهندي CBSE. أما المناهج
 العربية الوطنية الستة فتبقى **مواد فقط** حتى تُؤلَّف بنية كتبها الوزارية.
 
 | المنهج           | الرمز        | الصفوف | مواد | فصول | دروس   | المصدر                  | البذرة       |
 | ---------------- | ------------ | ------ | ---- | ---- | ------ | ----------------------- | ------------ |
 | الولايات المتحدة | `US`         | 1–12   | ~240 | ~750 | ~3,993 | US-inventory            | `us`         |
-| السودان          | `SD`         | 1–12   | 135  | 888  | 4,501  | `curriculum/sd`         | `sd`         |
-| إنجلترا          | `GB`         | 1–12   | 184  | 363  | 730    | `curriculum/uk`         | `gb`         |
-| كامبريدج IGCSE   | `CAIE-IGCSE` | 10     | 8    | 76   | 76     | `curriculum/caie-igcse` | `caie-igcse` |
-| بكالوريا IB      | `IB-DP`      | 12     | 9    | 49   | 49     | `curriculum/ib`         | `ib`         |
-| الهندي CBSE      | `CBSE`       | 10     | 7    | 58   | 58     | `curriculum/in`         | `cbse`       |
+| السودان          | `SD`         | 1–12   | 135  | 812  | 4,144  | الكتالوج `sd`           | `sd`         |
+| إنجلترا          | `GB`         | 1–12   | 184  | 363  | 730    | الكتالوج `gb`           | `gb`         |
+| كامبريدج IGCSE   | `CAIE-IGCSE` | 10     | 8    | 76   | 76     | الكتالوج `caie-igcse`   | `caie-igcse` |
+| بكالوريا IB      | `IB-DP`      | 12     | 9    | 49   | 49     | الكتالوج `ib-dp`        | `ib`         |
+| الهندي CBSE      | `CBSE`       | 10     | 7    | 58   | 58     | الكتالوج `cbse`         | `cbse`       |
 | السعودية         | `SA`         | 1–12   | ~132 | —    | —      | `sa.ts` المضمّن         | `sa`         |
 | مصر              | `EG`         | 1–12   | ~140 | —    | —      | `eg.ts` المضمّن         | `eg`         |
 | الإمارات         | `AE`         | 1–12   | ~144 | —    | —      | `ae.ts` المضمّن         | `ae`         |
@@ -483,9 +477,9 @@ PDF عند وجوده، ويُدوِّر مصغّر المفهوم المشتر�
 | الأردن           | `JO`         | 1–12   | ~150 | —    | —      | `jo.ts` المضمّن         | `jo`         |
 
 > المناهج العابرة للحدود العميقة (كامبريدج، IB، CBSE) تغطّي صفّاً تمثيلياً حتى الآن؛
-> وتوسعتها لكل صفّ آليّة (تأليف مزيد من `structure.json`). أما `curriculum/us` على
-> القرص (Aldar American، 128/266/535) فهي **غير مُدمَجة** — تتصادم على فضاء المعرّف
-> `us-g{N}-*` وهي أقلّ عمقاً؛ تبقى طبقة مرجعية. لا دمج مخطّط له.
+> وتوسعتها لكل صفّ آليّة (تأليف مزيد من `structure.json` في الكتالوج). أما شجرة `us`
+> في الكتالوج (الدار الأمريكية، 128 مادة) فهي **غير مُدمَجة** — تتصادم على فضاء المعرّف
+> `us-g{N}-*`؛ تبقى طبقة مرجعية.
 
 ### قارئ الكتاب المدرسي — الكتاب صفحاتٍ (2026-09-07)
 
@@ -514,15 +508,11 @@ _السمات والإعدادات_ (الأصلي / ورقي / هادئ / ليل
 
 ### المحتوى الحقيقي — السودان (كل الصفوف)
 
-`catalog/sd-content.ts` يُدمِج بنوك الأسئلة والامتحانات النهائية **المؤلَّفة**
-الموجودة بجوار كل كتاب مدرسي سوداني
-(`curriculum/sd/g{1–12}/<subject>/{qbank,exams}.json`) في
-`Question`/`Exam`/`ExamQuestion`: ‏102 مادة، ~2,700 سؤال (100% مربوطة بالفصول؛
-منها 405 مربوطة بالدروس أيضاً — وهي ما يُغذّي اختبار التدريب في صفحة الدرس)،
-وامتحان نهائي مرتبط لكل مادة. بوّابة جودة تتخطّى 22 ملفاً في الصفّين 11–12
-مولَّدة قالبياً (>50% علامات حشو) — تلك المواد تُبقي المحتوى الاصطناعي بدلاً
-منه. الصفوف موسومة `"sd"`؛ والدمج حذفٌ-وإعادة-إنشاء لكل مادة ويعمل **محلياً**
-(`pnpm db:seed:single sd-content`) لأن `curriculum/` لا يُنشر.
+بنوك أسئلة السودان وامتحاناته تأتي مع بذرة الشجرة: 7,395 سؤالاً فريداً و1,533
+امتحاناً عبر الصفوف 1–12، وكل سؤال محفوظ في مجلّد فصله/درسه في الكتالوج (قواعد
+تحليل المعرّفات التي كانت في `sd-content.ts` وضعته مرة واحدة أثناء ترحيل الكتالوج).
+وأُزيل هناك 3,754 سؤالاً قالبياً حشواً. الصفوف موسومة `["sd", "<grade>", "<subject>"]`؛
+ويتخطّى `content.ts` المحتوى الاصطناعي لأي مادة لها أسئلة موسومة `"sd"`.
 
 دروس السودان بلا صفوف `Video` **عمداً** — مشغّل الدرس في lumos يعود إلى مقطع
 `story.mp4` المشترك في كل درس سوداني، فلا يظهر مشغّل فارغ ولا رابط لكائن مفقود
@@ -556,24 +546,22 @@ _السمات والإعدادات_ (الأصلي / ورقي / هادئ / ليل
 ### خريطة الملفات
 
 ```
+../catalog/                          # github.com/databayt/catalog — المحتوى (مرآة شبكة التوزيع)
 prisma/
   models/catalog.prisma              # Subject, Chapter, Lesson + shared enums
   seeds/catalog/
-    engine.ts                        # syncCurriculumTree + seedSubjectsOnly (shared)
+    tree.ts                          # بذرة الكتالوج: sd · gb · cbse · ib-dp · caie-igcse
+    engine.ts                        # seedSubjectsOnly (المناهج الوطنية الضحلة)
     registry.ts                      # 12 Curriculum records + curriculumId backfill
     index.ts                         # seedCatalog + seedFullCatalog
     us.ts                            # US (240, us-inventory.json)
-    sd.ts                            # Full Sudan from curriculum/sd/ (125)
-    sd-content.ts                    # SD real qbank+exams ingest, g1–g12
-    gb.ts / cbse.ts / caie-igcse.ts / ib.ts   # deep tree callers
     {sa,eg,ae,qa,kw,jo}.ts           # 6 subjects-only nationals
     concepts.ts / banners.ts         # shared image upload + backfill
     content.ts / books.ts / videos.ts / exam-templates.ts / demo.ts
     single.ts                        # CLI registry
-curriculum/
-  <dir>/g{N}/<subject>/structure.json   # on-disk content trees
-  _build_tools/engine.py             # writes the trees
 src/components/catalog/
+  catalog-key.ts                     # باني مفاتيح CDN (مطابق لـ @databayt/catalog)
+  legacy-slugs.ts                    # معرّف المادة السابق ← معرّف الكتالوج (تحويل في proxy)
   setup.ts                           # findSubjects(), inferCurriculum()
   academic-config.ts                 # per-curriculum CurriculumAcademicConfig
   image.ts / image-url.ts            # Sharp pipeline + URL resolution
@@ -645,26 +633,23 @@ jq '.tiers.high.subjects[]       | .topics[]' scripts/us-curriculum/us-inventory
 |  12  | Secondary  |   25 |  192 |  870 | سنة الشهادة — كل المسارات؛ 13 بنية أُعيد بناؤها من فهارس الكتب و5 مواد أُضيفت 2026-09               |
 
 **انتقل الصف الأول الثانوي إلى المنهج القومي السوداني الجديد في 2025/26** (طبعات
-أولى من المركز القومي للمناهج مؤرَّخة 2025). منذ 2026-09-04 يحمل `curriculum/sd/g10/`
+أولى من المركز القومي للمناهج مؤرَّخة 2025). منذ 2026-09-04 يحمل `sd/g10/` في الكتالوج
 تلك المجموعة: أربع مواد جديدة (التربية الوطنية، ريادة الأعمال، الفيزياء، وكتاب
 اللغة العربية الموحَّد الذي يحلّ محلّ كتب المطالعة/البلاغة/النحو القديمة)، وثماني
 مواد استُبدلت في مكانها (الأحياء، الكيمياء، التاريخ، الرياضيات ط3، العلوم الهندسية،
 التربية الإسلامية — كانت الدراسات الإسلامية، التربية الفنية — كانت الفنون والتصميم،
-وتكنولوجيا المعلومات والاتصالات — كانت علوم الحاسوب). الطبعات القديمة مؤرشفة تحت
-`<subject>/_old/<label>/` ومجلدات كتب العربية الفرعية المُلغاة تحت
-`curriculum/sd/_old/2026-09-04/`؛ الموضعان خاملان (البذرة والرافع يمشيان في
-`g1..g12` فقط). صفوف قاعدة البيانات الخاصة بها (`sd-g10-literature`،
+وتكنولوجيا المعلومات والاتصالات — كانت علوم الحاسوب). الطبعات القديمة أُرشفت قبل
+الانتقال إلى مستودع الكتالوج (تبقى في الأرشيف المحلي السابق، لا في الكتالوج). صفوف قاعدة البيانات الخاصة بها (`sd-g10-literature`،
 `sd-g10-rhetoric`، `sd-g10-arabic-advanced`) تبقى منشورة حتى تُؤرشَف بقرار. البنى
-مأخوذة من جداول محتويات الكتب نفسها (`structure.json`، `source: official-toc-2026-09`)؛
-السجل الكامل في `curriculum/sd/TEXTBOOK_AUDIT.md`.
+مأخوذة من جداول محتويات الكتب نفسها (`structure.json`، `source.basis: official-toc-2026-09`)؛
+السجل الكامل في `docs/history/sd-textbook-audit.md` بالكتالوج.
 
 ولحق الصف الحادي عشر في 2026-09-05: أُعيد بناء بناه القديمة الثماني عشرة (وحدات
 عامة بلا دروس تقريباً) من جداول محتويات الكتب نفسها (19 مادة، 122 وحدة، 511 درساً)،
 وصار لكل كتاب في الصفين الحادي عشر والثاني عشر توأمٌ بصيغة Markdown بجوار ملف PDF على
-شبكة التوزيع (`catalog/textbooks/<slug>/textbook.md`، تُنتجه الكلمة المفتاحية
+شبكة التوزيع (`catalog/sd/<grade>/<subject>/textbook.md`، تُنتجه الكلمة المفتاحية
 `textbook`: MarkItDown ثم إصلاح اتجاه العربية ثم OCR احتياطي بـ tesseract، مع درجة
-جودة A–C في ترويسة الملف). يلتقط الإنتاج البنى الجديدة مع بذرة `sd` ثم `sd-content`
-في النشر التالي.
+جودة A–C في ترويسة الملف).
 
 مسارات الثانوي (10–12) تُوجَّه بأنماط في `setup.ts`:
 
@@ -708,12 +693,12 @@ const ARTS_ONLY_PATTERNS = [
 
 ### إضافة منهج وطني
 
-السودان يسبق الخطّ العام (بذرة مُحرَّكة بجدول المحتويات). المنهج الوطني الجديد (مثل
-مصر `EG`) يمرّ عبر محرّك الشجرة:
+المنهج الوطني الجديد (مثل مصر `EG`) يُؤلَّف في مستودع الكتالوج ثم يُعتمد هنا:
 
-1. ألِّف `curriculum/eg/g{N}/<subject>/structure.json`.
-2. أضف ملفّاً بسطر واحد `prisma/seeds/catalog/eg.ts` يستدعي `syncCurriculumTree`
-   بـ`country: "EG", code: "EG"`، وسجّله في `prisma/seeds/single.ts`.
+1. في github.com/databayt/catalog: أضف `eg` إلى `vocab/curricula.json` وألِّف
+   `eg/curriculum.json` و`eg/g{N}/<subject>/structure.json` (`pnpm validate`).
+2. أضف `eg: { country: "EG", code: "EG", sortBase: … }` إلى `CURRICULA` في
+   `prisma/seeds/catalog/tree.ts` (ومدخلاً في `single.ts` إن أردت).
 3. أضف `EG → "EG"` إلى `inferCurriculum()` و`COUNTRY_CURRICULUM`
    (`src/lib/timetable-reference.ts`).
 4. أضف الأسماء العربية إلى `SUBJECT_CONCEPT_BY_NAME` في `concepts-data.ts`.
@@ -762,7 +747,7 @@ Subject (any curriculum)
 الفصول داخل المادة تدور عبر حوض من 5 مفاهيم مرتبطة للتنوّع البصري (تُدوَّر بـ
 `sequenceOrder % poolSize`): مثلاً `math` → math، science، computer-science،
 physics، economics؛ و`science` → science، biology، chemistry، physics،
-earth-science. البذور العميقة و`syncCurriculumTree` ترث هذا؛ وللمناهج مواد-فقط،
+earth-science. بذرة الكتالوج (`tree.ts`) ترث هذا؛ وللمناهج مواد-فقط،
 تأتي صور الفصل/الدرس مجاناً بمجرّد توفّر العمق.
 
 ### النسخ (Variants)
@@ -806,7 +791,7 @@ catalog/subjects/{slug}/…/thumbnail-{size}.webp     # US lesson/chapter covers
 | مصغّرات المواد          | `concepts.ts`             | **مكتمل** — كل المناهج الـ12، كل الصفوف الـ12                                                                                                       |
 | البانرات                | `banners.ts`              | **مُغطّى ذاتياً** — ~10 من 23 مفهوماً لها بانر خاص؛ البذرة تستعير الآن بانر أقرب جار في `CONCEPT_POOL` للبقية (23/23 بعد التشغيل القادم)            |
 | أغلفة الكتب             | —                         | **مفقود** — مفتاح `cover` مضبوط على كل مادة، لكن الكائن لم يُرفَع قطّ (تتراجع البطاقة إلى أيقونة)                                                   |
-| ملفات الكتب (PDF)       | `upload-textbooks-all.ts` | **السودان فقط** — 118 `textbook.pdf`؛ لا منهج آخر                                                                                                   |
+| ملفات الكتب (PDF)       | `assets push` بالكتالوج   | **السودان + علوم CBSE ص10** — مثبّتة في `assets.lock.json` بالكتالوج                                                                                                    |
 | مصغّرات الدروس / الفصول | `lesson-covers.ts`        | **US فقط** — تُسحَب من CDN وقت البذرة                                                                                                               |
 | الفيديوهات              | `videos.ts` / مُساهَم به  | **مُتحقَّق بالفحص** — البذرة تفحص كل `.mp4` برأسية HEAD ولا تسجّل إلا الصفوف ذات الكائن الموجود (وتحذف الصفوف القديمة)؛ الرفع الفعلي ما زال معلّقاً |
 | الكتب                   | `books.ts`                | **خارجي** — 51 كتاباً على `covers.openlibrary.org`؛ السكربت `scripts/snapshot-book-covers.ts` يوطّنها إلى CDN لدينا (يعمل ببيانات AWS الإنتاج)      |
@@ -827,8 +812,8 @@ registry → صور المفاهيم. وبذرة `catalog` الافتراضية 
 | ------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `full`                                            | `seedFullCatalog` — كل المناهج الـ12 → registry → صور المفاهيم (قاعدة جديدة) |
 | `catalog`                                         | الافتراضي السريع: US (~240) + السودان الكامل + registry                      |
-| `us` / `sd`                                       | US (الجرد) / السودان الكامل من `curriculum/sd/`                              |
-| `gb` / `cbse` / `caie-igcse` / `ib`               | المناهج العميقة عبر `syncCurriculumTree` من `curriculum/<dir>/`              |
+| `us` / `sd`                                       | US (الجرد) / السودان من مستودع الكتالوج (`tree.ts`)                         |
+| `gb` / `cbse` / `caie-igcse` / `ib` / `catalog-tree` | المناهج العميقة من مستودع الكتالوج (`tree.ts`؛ `catalog-tree` = الكل) |
 | `sa` / `eg` / `ae` / `qa` / `kw` / `jo`           | المناهج الوطنية الستة مواد-فقط (`seedSubjectsOnly`)                          |
 | `registry`                                        | كل سجلّات `Curriculum` الـ12 + ملء `Subject.curriculumId`                    |
 | `concepts` / `banners`                            | مصغّرات المفاهيم والبانرات → Sharp → S3/CloudFront                           |
@@ -839,11 +824,11 @@ registry → صور المفاهيم. وبذرة `catalog` الافتراضية 
 ```bash
 pnpm db:seed:single --list        # list available seeds
 pnpm db:seed:single catalog       # fast default: US + full Sudan + registry
-pnpm db:seed:single gb            # England — deep, from curriculum/uk
+pnpm db:seed:single gb            # British — deep, from the catalog repo
 pnpm db:seed:single sa            # Saudi Arabia — subjects-only national
 pnpm db:seed:single registry      # (re)link all 12 Curriculum records
 pnpm db:seed:single concepts      # thumbnails → S3/CDN
-pnpm tsx scripts/upload-textbooks-all.ts   # Sudan textbook PDFs → S3
+cd ../catalog && pnpm assets push --apply  # textbook PDFs / art → CDN (catalog repo)
 ```
 
 ### التكرارية (Idempotency)

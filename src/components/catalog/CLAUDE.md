@@ -37,46 +37,24 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
 - **Per-curriculum provisioning** via `academic-config.ts`: SD keeps the original Arabic
   6+3+3 + Science/Arts streams byte-for-byte; US/GB/CBSE/transnational get their own
   structures; unknown codes fall back to a generic English 6+3+3.
-- **SD real content, all grades** (2026-07-17): `prisma/seeds/catalog/sd-content.ts`
-  ingests `curriculum/sd/g{1–12}/<subject>/{qbank,exams}.json` into
-  Question/Exam/ExamQuestion (delete-and-recreate per subject; rows tagged `"sd"`).
-  Chapter/lesson scope resolves from the question id via a boundary-safe slug scan +
-  per-scheme regexes (7 authored id schemes); the `catalogLessonId` it sets is what makes
-  the stream lesson practice quiz non-empty. A quality gate junk-skips files >50%
-  template placeholders ("Which concept is most important in unit-01?") — those subjects
-  keep `content.ts` synthetic rows. `content.ts` skips synthetic exams/questions for any
-  subject that HAS questions tagged `"sd"` (dynamic guard, converges in either run
-  order) and prunes all-scope-null orphaned synthetic rows (tree seeds SetNull the scope
-  FKs on every chapter rebuild — without the prune they accumulate per cycle). SD
-  subject art prefers real `catalog/textbooks/<slug>/{thumbnail,banner,cover}.jpg` keys
-  when the local file exists; `scripts/upload-textbooks-all.ts` uploads all four asset
-  types and shares `resolveSdDbSlug` with the seed. SD lessons deliberately get NO Video
-  rows — the stream player's `story.mp4` fallback is the intended surface (never write
-  Video rows pointing at objects that don't exist on the CDN; `videos.ts` HEAD-probes).
-  curriculum/ is .vercelignore'd, so all SD ingest runs are LOCAL against the target DB;
-  deploy-time seeds skip without deleting.
-- **SD textbook editions are archived, never overwritten** (2026-09-04): grade 10 is on
-  the NEW Sudanese national curriculum (NCCER first editions dated 2025) and
-  `curriculum/sd/g10/*` now holds that set; a replaced edition moves to
-  `<subject>/_old/<label>/` (pdf, structure, cover, qbank/exams, `chapters-tree.json`),
-  superseded subject dirs move to `curriculum/sd/_old/<date>/`, and both are inert
-  because `sd.ts`, `sd-content.ts` and `upload-textbooks-all.ts` walk `g1..g12` only.
-  Two seed facts that decide how an update lands: Phase 3 **refreshes `name` from
-  `curriculum.json` on every run** (so a renamed subject — الدراسات الإسلامية → التربية
-  الإسلامية, علوم الحاسوب → تكنولوجيا المعلومات — is a curriculum.json edit, not a new
-  dir), and the description says "يتناول N وحدات", so `structure.json` chapters must be
-  the book's units. A replaced subject whose qbank moved to `_old/` keeps its old
-  questions at subject scope, chapter-less (sd-content skips without deleting; the
-  chapter rebuild SetNulls) — re-author before relying on them. **Seed order is
-  `sd` then `sd-content`, always, and `sd-content` must be re-run after ANY later
-  `sd` run**: every `sd` pass deletes and recreates the SD chapters/lessons, which
-  SetNulls the chapter/lesson scope of every ingested question and empties the
-  lumos lesson practice quiz until `sd-content` restores it (the catalog seed
-  index — `seedCatalog` / `seedFullCatalog`, which the prebuild `ensure-demo`
-  path drives — already runs them in that order; only manual `db:seed:single`
-  runs can get it wrong). Uploading is
-  deploy-gated: replaced slugs keep their CDN keys, so an upload changes what
-  production serves immediately. Full ledger: `curriculum/sd/TEXTBOOK_AUDIT.md`.
+- **Content lives in the catalog repo** (2026-09-27): curricula moved out of the
+  gitignored `curriculum/` into **github.com/databayt/catalog** (clone at `../catalog`),
+  which mirrors `cdn.databayt.org/catalog/` path for path — `sd/g6/math/c1/l3/qbank.json`.
+  Subject id = `<curriculum>-<grade>-<subject>`; chapters `c<N>` (book order), lessons
+  `l<N>` (within the chapter); each question lives once, in its scope's folder; exams
+  carry `examType` values. ONE seed reads it — `prisma/seeds/catalog/tree.ts`
+  (`seedCatalogTree`, single seeds `sd` / `gb` / `cbse` / `caie-igcse` / `ib` /
+  `catalog-tree`) — replacing sd.ts, sd-content.ts and the engine.ts tree callers.
+  Author content in the catalog repo, never here.
+- **Adoption, not rebuild**: tenant rows reference catalog chapters/lessons (147 live-class
+  sessions, lesson progress), so `tree.ts` adopts rows by their pre-catalog slug (the
+  catalog's `scripts/migrate/renames.json`) and renames them in place — ids survive. Rows
+  the catalog no longer has become `ARCHIVED` with an `archived-` slug, never deleted.
+  Renamed SUBJECT slugs 308-redirect via `legacy-slugs.ts` in `proxy.ts`. Questions/exams
+  have no tenant references and are rebuilt per subject from the files.
+- **Deploy-safe**: without a clone `tree.ts` does nothing and deletes nothing, so the
+  prebuild seed stays inert on Cloudflare builds; catalog seeds run LOCAL against the
+  target DB. The catalog's `us` tree (Aldar variant) is NOT adopted — `us.ts` keeps US K-12.
 - **PUBLISHED is the visibility floor**: every school-facing catalog read filters
   `status: "PUBLISHED"` (+ `approvalStatus`/`visibility` where the model has them).
 - **Approval publishes**: `approveContent` sets `status: "PUBLISHED"` for
@@ -142,6 +120,8 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
   `publishSchool` re-run them on already-provisioned schools. The periods-duplication bug
   (terms guarded, periods not) is exactly the class of regression to avoid; the
   `catalog-setup` re-run test locks it.
+- **Never write content here or re-create `curriculum/`** — the catalog repo is the source;
+  its validator is the gate. A hogwarts-side edit is overwritten on the next seed.
 - **Stale catalog subjects are never blind-deleted** — `SubjectSelection`/`Enrollment`
   CASCADE on subject delete. `scripts/catalog-deploy-sync.ts` deletes only rows with zero
   school references and reports the rest.

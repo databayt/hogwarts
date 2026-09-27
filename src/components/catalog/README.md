@@ -44,7 +44,7 @@ Import directly by path, e.g. `import { setupCatalogForSchool } from "@/componen
 - **Seeds** — `prisma/seeds/catalog/` (`index.ts` orchestrator, `registry.ts` 12-curricula
   source of truth, `engine.ts` generic tree engine, `sd.ts`/`us.ts` deep seeds, national
   subjects-only seeds, `content.ts` (idempotent), media seeds).
-- **Content store** — `curriculum/` (on-disk source trees: sd, us, uk, in, fr, ib, caie-igcse).
+- **Content store** — the catalog repo (github.com/databayt/catalog, clone at `../catalog`; mirrors `cdn.databayt.org/catalog/`), seeded by `prisma/seeds/catalog/tree.ts`. `legacy-slugs.ts` maps pre-catalog subject slugs to catalog ids.
 - **Scripts** — `scripts/*` (`upload-textbooks-all.ts`, `seed-s3-videos.ts`,
   `migrate-catalog-images.ts`, `catalog-deploy-sync.ts` (deploy runbook as one
   plan/execute command), `snapshot-book-covers.ts` (OpenLibrary → own S3), …).

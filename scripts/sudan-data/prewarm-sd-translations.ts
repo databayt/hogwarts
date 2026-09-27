@@ -6,9 +6,9 @@
  * the Sudan curriculum (subject / chapter / lesson names) so the English UI shows
  * the textbooks' real English rendering instead of a machine translation.
  *
- * Source of truth: `curriculum/sd/g{N}/<subject>/structure.json` — every chapter
- * and lesson carries `title` (as printed in the book, Arabic) and `titleEn`
- * (human translation written during the 2026-08 official-TOC rebuild).
+ * Source of truth: the catalog clone (`../catalog`, or `CATALOG_DIR`) —
+ * `sd/g{N}/<subject>/structure.json`, where the subject, every chapter and every
+ * lesson carries `title: { ar, en }` (ar as printed, en the human translation).
  *
  * The cache (`Translation` @@map translation_cache) is keyed by
  * (schoolId, sourceText, sourceLanguage, targetLanguage) and `localize()` uses
@@ -31,23 +31,17 @@ import { config } from "dotenv"
 config()
 
 const prisma = new PrismaClient()
-const ROOT = path.resolve(__dirname, "../../curriculum/sd")
+const ROOT = path.join(
+  process.env.CATALOG_DIR ?? path.resolve(__dirname, "../../../catalog"),
+  "sd"
+)
 const DRY = process.argv.includes("--dry")
 
-interface StructureLesson {
-  title: string
-  titleEn?: string
-}
-interface StructureChapter {
-  title: string
-  titleEn?: string
-  lessons?: StructureLesson[]
-}
+type Title = { ar?: string; en?: string }
 interface StructureFile {
   lang?: string
-  subjectAr?: string
-  subjectEn?: string
-  chapters?: StructureChapter[]
+  title: Title
+  chapters?: { title: Title; lessons?: { title: Title }[] }[]
 }
 
 const ARABIC = /[؀-ۿ]/
@@ -74,10 +68,10 @@ function collectPairs(): Map<string, string> {
         continue
       }
       if (data.lang && data.lang !== "ar") continue
-      add(data.subjectAr, data.subjectEn)
+      add(data.title.ar, data.title.en)
       for (const ch of data.chapters ?? []) {
-        add(ch.title, ch.titleEn)
-        for (const l of ch.lessons ?? []) add(l.title, l.titleEn)
+        add(ch.title.ar, ch.title.en)
+        for (const l of ch.lessons ?? []) add(l.title.ar, l.title.en)
       }
     }
   }
@@ -86,9 +80,7 @@ function collectPairs(): Map<string, string> {
 
 async function main() {
   const pairs = collectPairs()
-  console.log(
-    `Collected ${pairs.size} official ar→en title pairs from curriculum/sd`
-  )
+  console.log(`Collected ${pairs.size} official ar→en title pairs from ${ROOT}`)
 
   const schools = await prisma.school.findMany({
     where: {

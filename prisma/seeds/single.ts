@@ -45,14 +45,10 @@ import { seedCatalogAssignments } from "./catalog-assignments"
 import { seedAeCurriculum } from "./catalog/ae"
 import { seedConceptBanners } from "./catalog/banners"
 import { seedCatalogBooks } from "./catalog/books"
-import { seedCaieIgcseCurriculum } from "./catalog/caie-igcse"
-import { seedCbseCurriculum } from "./catalog/cbse"
 import { seedConceptImages } from "./catalog/concepts"
 import { seedCatalogContent } from "./catalog/content"
 import { seedEgCurriculum } from "./catalog/eg"
 import { seedExamTemplates } from "./catalog/exam-templates"
-import { seedGbCurriculum } from "./catalog/gb"
-import { seedIbCurriculum } from "./catalog/ib"
 import { seedCatalog, seedFullCatalog } from "./catalog/index"
 import { seedJoCurriculum } from "./catalog/jo"
 import { seedKwCurriculum } from "./catalog/kw"
@@ -60,8 +56,7 @@ import { seedLessonCovers } from "./catalog/lesson-covers"
 import { seedQaCurriculum } from "./catalog/qa"
 import { seedCurriculumRegistry } from "./catalog/registry"
 import { seedSaCurriculum } from "./catalog/sa"
-import { seedSdCurriculum } from "./catalog/sd"
-import { seedSdContent } from "./catalog/sd-content"
+import { seedCatalogTree } from "./catalog/tree"
 import { seedUsCurriculum } from "./catalog/us"
 import { seedCatalogVideos } from "./catalog/videos"
 import { seedAllClasses } from "./classes"
@@ -486,34 +481,34 @@ const SEEDS: Record<string, SeedEntry> = {
   },
   gb: {
     description:
-      "England National Curriculum (GB) — deep tree from curriculum/uk (184 subjects / 363 chapters / 730 lessons)",
+      "British curriculum (GB) — deep tree from the catalog repo (../catalog/gb)",
     global: true,
     run: async (prisma) => {
-      await seedGbCurriculum(prisma)
+      await seedCatalogTree(prisma, { curricula: ["gb"] })
     },
   },
   cbse: {
     description:
-      "Indian CBSE (NCERT) — tree from curriculum/in (structure.json from official NCERT chapter lists)",
+      "Indian CBSE (NCERT) — tree from the catalog repo (../catalog/cbse)",
     global: true,
     run: async (prisma) => {
-      await seedCbseCurriculum(prisma)
+      await seedCatalogTree(prisma, { curricula: ["cbse"] })
     },
   },
   "caie-igcse": {
     description:
-      "Cambridge IGCSE — tree from curriculum/caie-igcse (structure from official Cambridge syllabi)",
+      "Cambridge IGCSE — tree from the catalog repo (../catalog/caie-igcse)",
     global: true,
     run: async (prisma) => {
-      await seedCaieIgcseCurriculum(prisma)
+      await seedCatalogTree(prisma, { curricula: ["caie-igcse"] })
     },
   },
   ib: {
     description:
-      "IB Diploma Programme — deep tree from curriculum/ib (structure from IB subject guides); replaces world.ts IB",
+      "IB Diploma Programme — tree from the catalog repo (../catalog/ib-dp)",
     global: true,
     run: async (prisma) => {
-      await seedIbCurriculum(prisma)
+      await seedCatalogTree(prisma, { curricula: ["ib-dp"] })
     },
   },
   banners: {
@@ -532,20 +527,28 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedConceptImages(prisma)
     },
   },
-  sd: {
+  "catalog-tree": {
     description:
-      "Sync Sudan curriculum chapters/lessons from curriculum/sd/ directory + concept images",
+      "Every catalog curriculum (sd, gb, cbse, ib-dp, caie-igcse) from ../catalog — adopts existing rows, ids preserved",
     global: true,
     run: async (prisma) => {
-      await seedSdCurriculum(prisma)
+      await seedCatalogTree(prisma)
+    },
+  },
+  sd: {
+    description:
+      "Sudan — subjects, chapters, lessons, questions and exams from the catalog repo (../catalog/sd)",
+    global: true,
+    run: async (prisma) => {
+      await seedCatalogTree(prisma, { curricula: ["sd"] })
     },
   },
   "sd-content": {
     description:
-      "Ingest authored SD qbank + exams for all grades (curriculum/sd/g1–g12) into catalog Question/Exam",
+      "Alias of `sd` — questions and exams now come with the catalog tree seed",
     global: true,
     run: async (prisma) => {
-      await seedSdContent(prisma)
+      await seedCatalogTree(prisma, { curricula: ["sd"] })
     },
   },
   content: {

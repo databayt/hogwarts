@@ -84,7 +84,7 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
           name: "engine.ts",
           type: "file",
           description:
-            "syncCurriculumTree (deep) + seedSubjectsOnly (shallow) — shared seeder",
+            "seedSubjectsOnly — the shallow nationals' shared seeder",
         },
         {
           name: "registry.ts",
@@ -97,30 +97,10 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
           description: "US — the US-curriculum source backbone",
         },
         {
-          name: "sd.ts",
+          name: "tree.ts",
           type: "file",
           description:
-            "Sudan — subjects + chapters + lessons, from curriculum/sd/",
-        },
-        {
-          name: "gb.ts",
-          type: "file",
-          description: "England (GB) — deep, from curriculum/uk",
-        },
-        {
-          name: "cbse.ts",
-          type: "file",
-          description: "Indian CBSE — deep, from curriculum/in",
-        },
-        {
-          name: "caie-igcse.ts",
-          type: "file",
-          description: "Cambridge IGCSE — deep, from curriculum/caie-igcse",
-        },
-        {
-          name: "ib.ts",
-          type: "file",
-          description: "IB Diploma — deep, from curriculum/ib",
+            "the catalog repo (../catalog) → sd · gb · cbse · ib-dp · caie-igcse: subjects, chapters, lessons, questions, exams — ids preserved",
         },
         {
           name: "sa.ts · eg.ts · ae.ts · qa.ts · kw.ts · jo.ts",
@@ -212,49 +192,22 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
       description: "LMS read queries",
     },
     {
-      name: "curriculum/",
+      name: "../catalog/",
       type: "directory",
-      description: "on-disk content source",
+      description:
+        "github.com/databayt/catalog — the curriculum repo; mirrors cdn.databayt.org/catalog/",
       children: [
         {
-          name: "sd/",
+          name: "sd/ · gb/ · us/ · cbse/ · ib-dp/ · caie-igcse/",
           type: "directory",
-          description: "Sudan — read by sd",
+          description:
+            "<cur>/<grade>/<subject>/{structure,qbank,exams}.json, c<N>/l<N>/ — read by tree.ts (us is not adopted)",
         },
         {
-          name: "uk/",
-          type: "directory",
-          description: "British → GB (read by gb)",
-        },
-        {
-          name: "in/",
-          type: "directory",
-          description: "Indian CBSE (read by cbse)",
-        },
-        {
-          name: "caie-igcse/",
-          type: "directory",
-          description: "Cambridge IGCSE (read by caie-igcse)",
-        },
-        {
-          name: "ib/",
-          type: "directory",
-          description: "IB Diploma (read by ib)",
-        },
-        {
-          name: "us/",
-          type: "directory",
-          description: "Aldar American — unread (US uses the master inventory)",
-        },
-        {
-          name: "fr/",
-          type: "directory",
-          description: "French — image-only",
-        },
-        {
-          name: "_build_tools/",
-          type: "directory",
-          description: "engine.py — generates the trees",
+          name: "scripts/migrate/renames.json",
+          type: "file",
+          description:
+            "pre-catalog slug → catalog id (tree.ts adopts rows by it)",
         },
       ],
     },
@@ -276,16 +229,6 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
           name: "sudan-data/",
           type: "directory",
           description: "Sudan source data + TOC + PDFs",
-        },
-        {
-          name: "upload-textbooks-all.ts",
-          type: "file",
-          description: "upload textbook PDFs to S3 (all curriculum trees)",
-        },
-        {
-          name: "gen-curriculum-structure.ts",
-          type: "file",
-          description: "spec JSON → structure.json tree",
         },
       ],
     },

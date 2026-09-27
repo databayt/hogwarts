@@ -8,10 +8,10 @@ import {
   catalogKey,
   catalogLegacyPrefix,
   catalogSibling,
+  chapterSlug,
   encodeCatalogKey,
+  lessonSlug,
 } from "@/components/catalog/catalog-key"
-
-import manifest from "../../../prisma/seeds/catalog/sd-subject-dirs.json"
 
 const BIOLOGY = {
   curriculum: "sd",
@@ -28,18 +28,16 @@ describe("catalogBase", () => {
     expect(
       catalogBase({
         ...BIOLOGY,
-        chapterSlug: "01-asexual-reproduction",
-        lessonSlug: "01-characteristics-of-asexual-reproduction",
+        chapterSlug: "c1",
+        lessonSlug: "l1",
       })
-    ).toBe(
-      "catalog/sd/g12/biology/01-asexual-reproduction/01-characteristics-of-asexual-reproduction"
-    )
+    ).toBe("catalog/sd/g12/biology/c1/l1")
   })
 
   it("refuses a lesson without its chapter", () => {
-    expect(() =>
-      catalogBase({ ...BIOLOGY, lessonSlug: "01-whatever" })
-    ).toThrow(/lessonSlug given without chapterSlug/)
+    expect(() => catalogBase({ ...BIOLOGY, lessonSlug: "l1" })).toThrow(
+      /lessonSlug given without chapterSlug/
+    )
   })
 
   it.each([
@@ -102,10 +100,11 @@ describe("catalogSibling", () => {
     expect(
       catalogSibling(
         "catalog/sd/g12/biology/textbook.pdf",
-        "01-asexual-reproduction",
+        "c1",
+        "l3",
         "qbank.json"
       )
-    ).toBe("catalog/sd/g12/biology/01-asexual-reproduction/qbank.json")
+    ).toBe("catalog/sd/g12/biology/c1/l3/qbank.json")
   })
 
   it("matches the inline expression the reader uses today", () => {
@@ -147,56 +146,23 @@ describe("catalogLegacyPrefix", () => {
   })
 })
 
-describe("sd-subject-dirs.json manifest", () => {
-  const entries = manifest as {
-    slug: string
-    curriculum: string
-    grade: string
-    subjectDir: string
-    source: string
-  }[]
-
-  it("covers every row that carries the legacy prefix", () => {
-    // 138, not 137: sd-g8-art has art keys and no pdf.
-    expect(entries).toHaveLength(138)
-    expect(entries.some((e) => e.slug === "sd-g8-art")).toBe(true)
-  })
-
-  it("produces a valid, unique base path for every entry", () => {
-    const seen = new Map<string, string>()
-    for (const e of entries) {
-      const base = catalogBase(e)
-      expect(base.startsWith("catalog/sd/")).toBe(true)
-      const clash = seen.get(base)
-      expect(
-        clash,
-        `${e.slug} and ${clash} both map to ${base}`
-      ).toBeUndefined()
-      seen.set(base, e.slug)
+describe("the catalog rule: path, key and subject id agree", () => {
+  it("derives the base from the same three segments as the subject id", () => {
+    // github.com/databayt/catalog mirrors the CDN: sd/g12/biology/… is
+    // catalog/sd/g12/biology/…, and the subject id is sd-g12-biology.
+    for (const [curriculum, grade, subjectDir] of [
+      ["sd", "g12", "biology"],
+      ["sd", "g1", "islamic-studies"],
+      ["ib-dp", "g12", "math"],
+    ] as const) {
+      expect(catalogBase({ curriculum, grade, subjectDir })).toBe(
+        `catalog/${curriculum}/${grade}/${subjectDir}`
+      )
     }
-    expect(seen.size).toBe(entries.length)
   })
 
-  it("keeps the folder name, not the slug suffix", () => {
-    // The decision this whole scheme turns on. 42 of 138 disagree.
-    const byslug = new Map(entries.map((e) => [e.slug, e]))
-    expect(catalogBase(byslug.get("sd-g12-basic-math")!)).toBe(
-      "catalog/sd/g12/math"
-    )
-    expect(catalogBase(byslug.get("sd-g1-islamic-studies")!)).toBe(
-      "catalog/sd/g1/islamic"
-    )
-    expect(catalogBase(byslug.get("sd-g12-biology")!)).toBe(
-      "catalog/sd/g12/biology"
-    )
-  })
-
-  it("resolves the three CDN-only rows by explicit override", () => {
-    const overrides = entries.filter((e) => e.source === "override")
-    expect(overrides.map((e) => e.slug).sort()).toEqual([
-      "sd-g10-arabic-advanced",
-      "sd-g10-literature",
-      "sd-g10-rhetoric",
-    ])
+  it("names chapters and lessons by position", () => {
+    expect(chapterSlug(1)).toBe("c1")
+    expect(lessonSlug(12)).toBe("l12")
   })
 })
