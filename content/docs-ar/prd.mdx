@@ -1,15 +1,15 @@
 ---
 title: متطلبات المنتج
-description: متطلبات Hogwarts — النطاق، البنية، نموذج الأدوار، NFRs، القيود، مسارات المساهمة.
+description: متطلبات بالقلم — النطاق، البنية، نموذج الأدوار، NFRs، القيود، مسارات المساهمة.
 ---
 
-Hogwarts منصة مفتوحة المصدر متعددة المستأجرين لمدارس K-12.
+بالقلم منصة مفتوحة المصدر متعددة المستأجرين لمدارس K-12.
 
 | الخاصية          | القيمة                                                               |
 | ---------------- | -------------------------------------------------------------------- |
 | المستودع         | [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts) |
-| الإنتاج          | [ed.databayt.org](https://ed.databayt.org)                           |
-| الوثائق          | [ed.databayt.org/docs](https://ed.databayt.org/docs)                 |
+| الإنتاج          | [balqalam.com](https://balqalam.com)                           |
+| الوثائق          | [balqalam.com/docs](https://balqalam.com/docs)                 |
 | الترخيص          | SSPL-1.0                                                             |
 | اللغة الافتراضية | العربية (RTL)                                                        |
 | النوع            | تطبيق ويب SaaS B2B متعدد المستأجرين                                  |
@@ -61,11 +61,11 @@ Hogwarts منصة مفتوحة المصدر متعددة المستأجرين ل
 تعدد المستأجرين القائم على النطاقات الفرعية يُحلّ على edge.
 
 ```text
-الإنتاج:      school.databayt.org             →  /[lang]/s/school/...
-المستأجر التجريبي: kingfahad.databayt.org    →  /[lang]/s/kingfahad/...
+الإنتاج:      school.balqalam.com             →  /[lang]/s/school/...
+المستأجر التجريبي: kingfahd.balqalam.com    →  /[lang]/s/kingfahad/...
 معاينة:        tenant---branch.vercel.app     →  /[lang]/s/tenant/...
 التطوير:       subdomain.localhost:3000       →  /[lang]/s/subdomain/...
-نطاق مخصص:    www.theirschool.com (CNAME)    →  منصة Hogwarts
+نطاق مخصص:    www.theirschool.com (CNAME)    →  منصة بالقلم
 ```
 
 تدفق الحل:
@@ -78,7 +78,7 @@ Hogwarts منصة مفتوحة المصدر متعددة المستأجرين ل
 
 ### تخزين بلغة واحدة
 
-لا تستخدم Hogwarts أعمدة ثنائية اللغة. كل المحتوى يُخزَّن بلغة المدرسة المختارة مع حقل `lang`. القراءات بلغة أخرى تمرّ عبر Google Translate وتُخزَّن مؤقتاً في `Translation`. نصوص الواجهة في القواميس (`src/components/internationalization/dictionaries/`)، و`getText()` (`@/components/translation/display`) هو الوصول القانوني.
+لا تستخدم منصة بالقلم أعمدة ثنائية اللغة. كل المحتوى يُخزَّن بلغة المدرسة المختارة مع حقل `lang`. القراءات بلغة أخرى تمرّ عبر Google Translate وتُخزَّن مؤقتاً في `Translation`. نصوص الواجهة في القواميس (`src/components/internationalization/dictionaries/`)، و`getText()` (`@/components/translation/display`) هو الوصول القانوني.
 
 ## الأدوار
 
@@ -151,7 +151,7 @@ Hogwarts منصة مفتوحة المصدر متعددة المستأجرين ل
 
 تنطبق على كل مساهمة. تُفرَض عبر hooks وagents وبوابات المراجعة.
 
-- **الترخيص — SSPL-1.0.** استضافة ذاتية مجانية. إعادة بيع Hogwarts كخدمة مُستضافة تتطلّب ترخيصاً تجارياً.
+- **الترخيص — SSPL-1.0.** استضافة ذاتية مجانية. إعادة بيع بالقلم كخدمة مُستضافة تتطلّب ترخيصاً تجارياً.
 - **سلامة تعدد المستأجرين.** كل استعلام Prisma يتضمّن `schoolId` (أو يكون النموذج عاماً ويُصرَّح بذلك). اختبارات العزل في `tests/multi-tenant/`.
 - **تخزين بلغة واحدة.** لا أعمدة ثنائية اللغة، حقل `lang` واحد لكل صف.
 - **CSS منطقي فقط.** `ms-*` / `me-*` / `ps-*` / `pe-*` — لا `ml-*` / `mr-*` / `pl-*` / `pr-*`.

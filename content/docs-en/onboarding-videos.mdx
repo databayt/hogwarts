@@ -1,6 +1,6 @@
 ---
 title: Onboarding Videos
-description: Adapting Airbnb's three onboarding stage videos into school-themed animations for Hogwarts.
+description: Adapting Airbnb's three onboarding stage videos into school-themed animations for Balqalam.
 ---
 
 The mkan host onboarding has 3 stages, each opening with a ~4-second animated video on Airbnb's CDN. We replace the house-building animation with a school-building animation, keeping the same progressive 3-stage narrative (outline → details → complete).
@@ -48,7 +48,7 @@ Paid options for later: [Runway Gen-3 Alpha](https://runwayml.com) ($12/mo, best
 1. **Extract keyframes** — screenshot the peak frame from each original video.
 2. **Edit keyframes** — Canva or Figma free tier: swap house for school silhouette (flag, clock tower, grid windows). Keep the flat illustration style and color palette.
 3. **Animate** — Kling AI image-to-video with prompt `"smooth building animation, flat illustration style, minimal motion, 4 seconds"`.
-4. **Background** — easiest is to bake in a gradient (mkan uses `from-orange-50 to-pink-50`; pick Hogwarts theme colors). Alternatives: CapCut (built-in BG removal), [Unscreen](https://www.unscreen.com) (watermark on free), [Remove.bg Video](https://www.remove.bg).
+4. **Background** — easiest is to bake in a gradient (mkan uses `from-orange-50 to-pink-50`; pick Balqalam theme colors). Alternatives: CapCut (built-in BG removal), [Unscreen](https://www.unscreen.com) (watermark on free), [Remove.bg Video](https://www.remove.bg).
 5. **Polish** — CapCut: trim to 4s, add seamless loop, export MP4 (H.264) for browsers, optionally WebM.
 
 ## Alternatives
@@ -68,7 +68,7 @@ Paid options for later: [Runway Gen-3 Alpha](https://runwayml.com) ($12/mo, best
 
 ## Integration
 
-Hogwarts onboarding has 15 steps. School-adapted videos slot into stage intros following mkan's pattern:
+Balqalam onboarding has 15 steps. School-adapted videos slot into stage intros following mkan's pattern:
 
 ```tsx
 const illustration = (

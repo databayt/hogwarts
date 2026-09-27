@@ -1,9 +1,9 @@
 ---
 title: Competitors
-description: Market landscape and competitor analysis — global SIS incumbents, MENA regional players, British-curriculum MIS, open-source peers, and how Hogwarts compares.
+description: Market landscape and competitor analysis — global SIS incumbents, MENA regional players, British-curriculum MIS, open-source peers, and how Balqalam compares.
 ---
 
-Hogwarts is an open-source, multi-tenant K-12 platform shipping in production at [ed.databayt.org](https://ed.databayt.org). Where the established SIS vendors target large North-American districts with closed, English-first stacks, Hogwarts is Arabic-first, RTL-native, subdomain-isolated per school, and priced for emerging-market budgets.
+Balqalam is an Arabic-first, multi-tenant K-12 platform shipping in production at [balqalam.com](https://balqalam.com). Where the established SIS vendors target large North-American districts with closed, English-first stacks, Balqalam is Arabic-first, RTL-native, subdomain-isolated per school, and priced for emerging-market budgets.
 
 This page maps five distinct competitive sets — **global SIS incumbents** (the feature baseline), **MENA regional players** (who we actually meet in a deal), **British-curriculum MIS** (who the international schools shortlist), **open-source peers** (the closest architectural analogues), and **LMS & virtual classroom platforms** (the complementary e-learning stack) — plus the assessment tools that shaped the exams module. The [battle-card section](#why-mena-schools-choose-hogwarts) is the prose for proposals and discovery calls.
 
@@ -114,9 +114,9 @@ Architecturally the closest set: schools can read the code, self-host, and leave
 | [OpenEduCat](https://openeducat.org/)           | Odoo / Python    | ERP-shaped; inherits the Odoo module ecosystem                                |
 | [Frappe Education](https://frappe.io/education) | Frappe / ERPNext | Self-host or Frappe Cloud; admissions, fees, assessments, portals             |
 
-**Where Hogwarts diverges from the peer set:**
+**Where Balqalam diverges from the peer set:**
 
-- **Multi-tenant SaaS by default, not a per-school install.** Every peer above is architected as one deployment per institution. Hogwarts is `schoolId`-scoped with subdomain routing — one deployment serves many schools, which is what makes a free tier and a 24-hour onboarding possible.
+- **Multi-tenant SaaS by default, not a per-school install.** Every peer above is architected as one deployment per institution. Balqalam is `schoolId`-scoped with subdomain routing — one deployment serves many schools, which is what makes a free tier and a 24-hour onboarding possible.
 - **Modern stack, not PHP/Rails/Odoo.** Next.js 16 + React 19 + Prisma + TypeScript is what a 2026 contributor already knows.
 - **Arabic-first rather than Arabic-translated.** No peer above treats RTL as the default rendering path.
 - **Where they are ahead:** install-base maturity, plugin ecosystems (Odoo/Frappe especially), and years of edge cases in state reporting. Do not claim parity on breadth of deployment history.
@@ -125,7 +125,7 @@ Architecturally the closest set: schools can read the code, self-host, and leave
 
 Schools frequently operate a learning management system alongside their core SIS. In North American and international K-12 districts, specialized virtual classroom software like **[Class](https://www.class.com/k12/)** positions itself as "deeply integrated and complementary to your LMS" — syncing rosters and enrollments, launching live rooms directly from the LMS, and tracking student progress back to the central gradebook.
 
-Hogwarts bypasses this multi-vendor friction entirely: instead of requiring schools to buy, maintain, and glue together three separate systems (SIS + standalone LMS + video add-on), Hogwarts **integrates both a native LMS ([Lumos](/docs/lms)) and synchronized video conferencing ([Conference](/docs/live)) directly into the core platform**.
+Balqalam bypasses this multi-vendor friction entirely: instead of requiring schools to buy, maintain, and glue together three separate systems (SIS + standalone LMS + video add-on), Balqalam **integrates both a native LMS ([Lumos](/docs/lms)) and synchronized video conferencing ([Conference](/docs/live)) directly into the core platform**.
 
 | Platform                                                                                                             | Type                             | Reach / Market                                                   | Notable for us                                                                                                                      |
 | -------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -139,7 +139,7 @@ Hogwarts bypasses this multi-vendor friction entirely: instead of requiring scho
 **What the LMS ecosystem tells us:**
 
 - **The multi-vendor tax is real.** A standard school deployment often pays for an SIS (PowerSchool / iSAMS), an LMS (Schoology / Canvas), and a virtual classroom tool (Class.com / Zoom licenses), plus the integration middleware (OneRoster / LTI 1.3). For emerging markets and independent private schools, this stack is cost-prohibitive.
-- **Roster & gradebook sync is the main friction point.** Class.com highlights LMS roster sync and launching live sessions from the LMS because bridging separate databases constantly causes data drift. Hogwarts eliminates this friction entirely: students, sections, timetable slots, Lumos course materials, and live conference sessions all share the exact same Prisma database scoped by `schoolId`.
+- **Roster & gradebook sync is the main friction point.** Class.com highlights LMS roster sync and launching live sessions from the LMS because bridging separate databases constantly causes data drift. Balqalam eliminates this friction entirely: students, sections, timetable slots, Lumos course materials, and live conference sessions all share the exact same Prisma database scoped by `schoolId`.
 - **Where they lead:** Tens of thousands of pre-built publisher integrations, LTI 1.3 app marketplaces, and decade-long institutional familiarity.
 
 ## Assessment & exam-creation tools
@@ -188,11 +188,11 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ## Feature comparison
 
-"Industry standard" means at least 5 of the 9 [global incumbents](#global-sis-incumbents) ship the capability. "Hogwarts" reflects what is shipped in production today; aspirational items are called out in the Notes column.
+"Industry standard" means at least 5 of the 9 [global incumbents](#global-sis-incumbents) ship the capability. "Balqalam" reflects what is shipped in production today; aspirational items are called out in the Notes column.
 
 ### Core
 
-| Feature            | Hogwarts | Industry standard | Notes                              |
+| Feature            | Balqalam | Industry standard | Notes                              |
 | ------------------ | -------- | ----------------- | ---------------------------------- |
 | Student management | Yes      | Yes               | 8-role RBAC; `schoolId`-scoped     |
 | Teacher management | Yes      | Yes               | Role-aware sidebar + permissions   |
@@ -201,7 +201,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### Academic
 
-| Feature             | Hogwarts | Industry standard | Notes                                 |
+| Feature             | Balqalam | Industry standard | Notes                                 |
 | ------------------- | -------- | ----------------- | ------------------------------------- |
 | Attendance tracking | Yes      | Yes               | Manual + QR + geofence boarding       |
 | Exam management     | Yes      | Yes               | Wizard, question banks, auto-marking  |
@@ -212,7 +212,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### Scheduling
 
-| Feature             | Hogwarts | Industry standard | Notes                             |
+| Feature             | Balqalam | Industry standard | Notes                             |
 | ------------------- | -------- | ----------------- | --------------------------------- |
 | Timetable builder   | Yes      | Yes               | Drag-and-drop; conflict detection |
 | Schedule management | Yes      | Yes               | Term + week views                 |
@@ -220,7 +220,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### Finance
 
-| Feature            | Hogwarts | Industry standard | Notes                                        |
+| Feature            | Balqalam | Industry standard | Notes                                        |
 | ------------------ | -------- | ----------------- | -------------------------------------------- |
 | Fees and invoices  | Yes      | Yes               | Auto-provisioning per enrollment             |
 | Payment processing | Yes      | Partial           | Stripe + bankak + tap + cash + bank transfer |
@@ -228,7 +228,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### Facilities
 
-| Feature           | Hogwarts | Industry standard | Notes                                        |
+| Feature           | Balqalam | Industry standard | Notes                                        |
 | ----------------- | -------- | ----------------- | -------------------------------------------- |
 | Library system    | Yes      | Yes               | Catalog + circulation                        |
 | Transportation    | Yes      | Yes               | Vehicles, drivers, routes, geofence boarding |
@@ -238,21 +238,21 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### HR
 
-| Feature          | Hogwarts | Industry standard | Notes                                   |
+| Feature          | Balqalam | Industry standard | Notes                                   |
 | ---------------- | -------- | ----------------- | --------------------------------------- |
 | Staff management | Yes      | Yes               | Profiles + role assignments             |
 | Leave management | Partial  | Yes               | Time-off requests; payroll-link roadmap |
 
 ### Operations
 
-| Feature           | Hogwarts | Industry standard | Notes   |
+| Feature           | Balqalam | Industry standard | Notes   |
 | ----------------- | -------- | ----------------- | ------- |
 | Inventory control | No       | Partial           | Roadmap |
 | Asset tracking    | No       | Partial           | Roadmap |
 
 ### Analytics
 
-| Feature                  | Hogwarts | Industry standard | Notes                                       |
+| Feature                  | Balqalam | Industry standard | Notes                                       |
 | ------------------------ | -------- | ----------------- | ------------------------------------------- |
 | Reports and analytics    | Yes      | Yes               | Per-feature dashboards                      |
 | Dashboard builder        | Partial  | Partial           | Fixed dashboards today; custom widgets WIP  |
@@ -260,7 +260,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### Communication
 
-| Feature             | Hogwarts | Industry standard | Notes                                     |
+| Feature             | Balqalam | Industry standard | Notes                                     |
 | ------------------- | -------- | ----------------- | ----------------------------------------- |
 | Communication hub   | Yes      | Yes               | In-app messages + announcements           |
 | Announcements board | Yes      | Yes               | Role-targeted                             |
@@ -270,7 +270,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### Enrollment
 
-| Feature             | Hogwarts | Industry standard | Notes                                       |
+| Feature             | Balqalam | Industry standard | Notes                                       |
 | ------------------- | -------- | ----------------- | ------------------------------------------- |
 | Admissions portal   | Yes      | Yes               | Multi-step application + AI document review |
 | Online applications | Yes      | Yes               | Subdomain-scoped per school                 |
@@ -278,14 +278,14 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### Community
 
-| Feature           | Hogwarts | Industry standard | Notes                                  |
+| Feature           | Balqalam | Industry standard | Notes                                  |
 | ----------------- | -------- | ----------------- | -------------------------------------- |
 | Alumni management | Partial  | Partial           | Records exist; engagement features WIP |
 | Event management  | Yes      | Yes               | Calendar + RSVPs                       |
 
 ### Welfare
 
-| Feature                 | Hogwarts | Industry standard | Notes                                     |
+| Feature                 | Balqalam | Industry standard | Notes                                     |
 | ----------------------- | -------- | ----------------- | ----------------------------------------- |
 | Discipline tracking     | Yes      | Yes               | Incidents + actions                       |
 | Health records          | Partial  | Yes               | Basic medical fields; full record roadmap |
@@ -293,7 +293,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### Enterprise
 
-| Feature                      | Hogwarts | Industry standard | Notes                                           |
+| Feature                      | Balqalam | Industry standard | Notes                                           |
 | ---------------------------- | -------- | ----------------- | ----------------------------------------------- |
 | Multi-campus support         | Yes      | Yes               | Subdomain per school; tenant isolation          |
 | Government / state reporting | Partial  | Yes               | Custom exports per ministry                     |
@@ -302,7 +302,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### E-learning
 
-| Feature            | Hogwarts | Industry standard | Notes                       |
+| Feature            | Balqalam | Industry standard | Notes                       |
 | ------------------ | -------- | ----------------- | --------------------------- |
 | LMS integration    | Yes      | Partial           | Native Lumos block          |
 | Online assignments | Yes      | Yes               | Submission, rubric, grading |
@@ -310,7 +310,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ### Documents
 
-| Feature                | Hogwarts | Industry standard | Notes                  |
+| Feature                | Balqalam | Industry standard | Notes                  |
 | ---------------------- | -------- | ----------------- | ---------------------- |
 | ID card generation     | Partial  | Yes               | Templates roadmap      |
 | Certificate generation | Partial  | Yes               | Templates roadmap      |
@@ -329,11 +329,11 @@ Moved to its own page: [Landing-page teardown](/docs/competitors/landing-page) �
 - **MEA payment rails** — Stripe + bankak + tap + cash + bank transfer + mobile money.
 - **AI-assisted admission** — document classification, merit ranking, bank-receipt extraction.
 
-## Why MENA schools choose Hogwarts
+## Why MENA schools choose Balqalam
 
 Battle-card content for [Proposal](/docs/proposal) and [Sales](/docs/sales) discovery calls. Each row is one line a school admin should hear in 60 seconds, paired with the incumbent it counters.
 
-| Concern                                    | What incumbents offer                                             | What Hogwarts offers                                                            |
+| Concern                                    | What incumbents offer                                             | What Balqalam offers                                                            |
 | ------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | Arabic UI quality                          | English UI translated, RTL bolted on (global SIS, Odoo/ERP ports) | RTL is the default, every screen, every role; English is the translation        |
 | Cost for a small private school            | $5K–$50K / year all-in (regional incumbents)                      | Free for ≤100 students; $1.50 / student / month thereafter                      |

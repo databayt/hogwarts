@@ -1,15 +1,15 @@
 ---
 title: PRD
-description: Hogwarts product requirements — scope, architecture, role model, NFRs, constraints, contribution paths.
+description: Balqalam product requirements — scope, architecture, role model, NFRs, constraints, contribution paths.
 ---
 
-Hogwarts is an open-source, multi-tenant K-12 school platform.
+Balqalam is an open-source, multi-tenant K-12 school platform.
 
 | Attribute      | Value                                                                |
 | -------------- | -------------------------------------------------------------------- |
 | Repo           | [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts) |
-| Live           | [ed.databayt.org](https://ed.databayt.org)                           |
-| Docs           | [ed.databayt.org/docs](https://ed.databayt.org/docs)                 |
+| Live           | [balqalam.com](https://balqalam.com)                           |
+| Docs           | [balqalam.com/docs](https://balqalam.com/docs)                 |
 | License        | SSPL-1.0                                                             |
 | Default locale | Arabic (RTL)                                                         |
 | Type           | SaaS B2B multi-tenant web app                                        |
@@ -51,11 +51,11 @@ For canonical counts of models, routes, dashboard pages, and tests, see [MVP](/d
 Subdomain-based multi-tenancy resolved at the edge.
 
 ```text
-Production:   school.databayt.org             →  /[lang]/s/school/...
-Pilot tenant: kingfahad.databayt.org          →  /[lang]/s/kingfahad/...
+Production:   school.balqalam.com             →  /[lang]/s/school/...
+Pilot tenant: kingfahd.balqalam.com          →  /[lang]/s/kingfahad/...
 Preview:      tenant---branch.vercel.app      →  /[lang]/s/tenant/...
 Development:  subdomain.localhost:3000        →  /[lang]/s/subdomain/...
-Custom:       www.theirschool.com (CNAME)     →  Hogwarts platform
+Custom:       www.theirschool.com (CNAME)     →  Balqalam platform
 ```
 
 Resolution flow:
@@ -68,7 +68,7 @@ Resolution flow:
 
 ### Single-language storage
 
-Hogwarts does not use bilingual columns. All content is stored in the school's chosen language with a `lang` field. Reads in another language go through Google Translate, cached in `Translation`. UI strings live in dictionaries (`src/components/internationalization/dictionaries/`); `getText()` (`@/components/translation/display`) is the canonical accessor.
+Balqalam does not use bilingual columns. All content is stored in the school's chosen language with a `lang` field. Reads in another language go through Google Translate, cached in `Translation`. UI strings live in dictionaries (`src/components/internationalization/dictionaries/`); `getText()` (`@/components/translation/display`) is the canonical accessor.
 
 ## Roles
 
@@ -130,7 +130,7 @@ A school can: accept applicants → register students → manage classes / secti
 
 These rules apply to every contribution. Enforced by hooks, agents, and review gates.
 
-- **License — SSPL-1.0.** Self-host free. Reselling Hogwarts as a hosted service requires a commercial license.
+- **License — SSPL-1.0.** Self-host free. Reselling Balqalam as a hosted service requires a commercial license.
 - **Multi-tenant safety.** Every Prisma query includes `schoolId` (or the model is global and explicitly opts out). Isolation tests in `tests/multi-tenant/`.
 - **Single-language storage.** Never bilingual columns; one `lang` field per row.
 - **Logical CSS only.** `ms-*` / `me-*` / `ps-*` / `pe-*` — never `ml-*` / `mr-*` / `pl-*` / `pr-*`.
