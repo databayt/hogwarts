@@ -275,19 +275,22 @@ export function AttendanceProvider({
   }, [])
 
   // Mark single attendance record
+  // Optimistic: the mark shows the moment it is made and the server call
+  // follows. It used to wait for the round trip before showing anything, and
+  // never read the action's answer — a failed save still toasted success.
   const markAttendance = useCallback(
     async (record: Partial<AttendanceRecord>): Promise<AttendanceRecord> => {
       setLoading(true)
       setError(null)
+      // Add method if not provided
+      const fullRecord = {
+        ...record,
+        method: record.method || currentMethod,
+        markedAt: new Date().toISOString(),
+        id: Date.now().toString(), // Temporary ID
+      } as AttendanceRecord
+      setAttendance((prev) => [...prev, fullRecord])
       try {
-        // Add method if not provided
-        const fullRecord = {
-          ...record,
-          method: record.method || currentMethod,
-          markedAt: new Date().toISOString(),
-          id: Date.now().toString(), // Temporary ID
-        } as AttendanceRecord
-
         // Call server action
         if (record.studentId && record.classId && record.status) {
           type PrismaStatus =
@@ -306,7 +309,7 @@ export function AttendanceProvider({
             holiday: "HOLIDAY",
           }
 
-          await markSingleAttendance({
+          const result = await markSingleAttendance({
             studentId: record.studentId,
             classId: record.classId,
             date:
@@ -317,9 +320,12 @@ export function AttendanceProvider({
             method: record.method || currentMethod,
             notes: record.notes,
           })
+          if (!result?.success) {
+            throw new Error(
+              t?.errors?.serverError ?? "Failed to mark attendance"
+            )
+          }
         }
-
-        setAttendance((prev) => [...prev, fullRecord])
 
         toast({
           title: dictionary?.common?.success ?? "Success",
@@ -329,6 +335,7 @@ export function AttendanceProvider({
 
         return fullRecord
       } catch (err) {
+        setAttendance((prev) => prev.filter((r) => r.id !== fullRecord.id))
         const message =
           err instanceof Error ? err.message : "Failed to mark attendance"
         setError(message)
@@ -409,10 +416,19 @@ export function AttendanceProvider({
   )
 
   // Update attendance record
+  // Optimistic, like markAttendance: apply, persist, restore on failure.
   const updateAttendance = useCallback(
     async (id: string, updates: Partial<AttendanceRecord>) => {
       setLoading(true)
       setError(null)
+      let previous: AttendanceRecord | undefined
+      setAttendance((prev) =>
+        prev.map((record) => {
+          if (record.id !== id) return record
+          previous = record
+          return { ...record, ...updates }
+        })
+      )
       try {
         // Call server action to persist the update
         if (updates.studentId && updates.classId && updates.status) {
@@ -432,7 +448,7 @@ export function AttendanceProvider({
             holiday: "HOLIDAY",
           }
 
-          await markSingleAttendance({
+          const result = await markSingleAttendance({
             studentId: updates.studentId,
             classId: updates.classId,
             date:
@@ -443,13 +459,12 @@ export function AttendanceProvider({
             method: updates.method || currentMethod,
             notes: updates.notes,
           })
+          if (!result?.success) {
+            throw new Error(
+              t?.errors?.serverError ?? "Failed to update attendance"
+            )
+          }
         }
-
-        setAttendance((prev) =>
-          prev.map((record) =>
-            record.id === id ? { ...record, ...updates } : record
-          )
-        )
 
         toast({
           title: dictionary?.common?.success ?? "Success",
@@ -457,6 +472,12 @@ export function AttendanceProvider({
             t?.success?.attendanceUpdated ?? "Attendance updated successfully",
         })
       } catch (err) {
+        const restore = previous
+        if (restore) {
+          setAttendance((prev) =>
+            prev.map((record) => (record.id === id ? restore : record))
+          )
+        }
         const message =
           err instanceof Error ? err.message : "Failed to update attendance"
         setError(message)

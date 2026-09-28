@@ -351,7 +351,12 @@ export async function markAttendance(
       )
     ).catch((err) => console.error("[markAttendance] Notification error:", err))
 
-    revalidatePath("/attendance")
+    // No revalidatePath: every caller (the marking page, quick attendance,
+    // the per-student context) already holds the marks it just sent in
+    // client state. The path string matched no cache entry anyway — its only
+    // effect was to make this response a full re-render of the page from the
+    // root layout (dictionary included) and to purge every prefetched link,
+    // on the save a teacher makes for every class, every day.
     return { success: true, data: { count: results.length } }
   } catch (error) {
     console.error("[markAttendance] Error:", error)
@@ -458,7 +463,8 @@ export async function markSingleAttendance(input: {
       )
     }
 
-    revalidatePath("/attendance")
+    // No revalidatePath — see markAttendance: the caller already shows the
+    // mark it sent, and a re-render of the whole page confirmed nothing.
     return { success: true, data: { attendance: { id: existing?.id } } }
   } catch (error) {
     console.error("[markSingleAttendance] Error:", error)

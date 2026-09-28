@@ -131,30 +131,44 @@ export function AttendanceContent({ dictionary, lang }: Props) {
   const [changed, setChanged] = useState<
     Record<string, AttendanceRow["status"]>
   >({})
+  // The rows already show every mark the teacher made (onChangeStatus writes
+  // them locally), so a save only has to persist them. It used to reload the
+  // whole list afterwards — a second round trip and a skeleton flash on every
+  // save — and it ignored the action's answer, so a failed save still said
+  // "saved" and the reload then quietly reverted the teacher's marks.
   const onSubmit = async () => {
+    const sent = changed
+    const records = Object.entries(sent).map(([studentId, status]) => ({
+      studentId,
+      status,
+    }))
+    if (records.length === 0) return
     setSubmitting(true)
     try {
-      const records = Object.entries(changed).map(([studentId, status]) => ({
-        studentId,
-        status,
-      }))
-      await markAttendance({
+      const result = await markAttendance({
         sectionId,
         date: new Date(date).toISOString(),
         records,
       })
-      setChanged({})
-      await load()
+      if (!result?.success) {
+        // Keep the unsaved marks on screen and in `changed`, so Save retries them.
+        ErrorToast(dictionary?.attendance?.failed || "Failed")
+        return
+      }
+      // Clear only what was sent and not changed again while saving.
+      setChanged((current) => {
+        const next = { ...current }
+        for (const [studentId, status] of Object.entries(sent)) {
+          if (next[studentId] === status) delete next[studentId]
+        }
+        return next
+      })
       SuccessToast(
         dictionary?.attendance?.attendanceSaved ||
           "Attendance saved successfully"
       )
-    } catch (e) {
-      ErrorToast(
-        e instanceof Error
-          ? e.message
-          : dictionary?.attendance?.failed || "Failed"
-      )
+    } catch {
+      ErrorToast(dictionary?.attendance?.failed || "Failed")
     } finally {
       setSubmitting(false)
     }
