@@ -7,6 +7,7 @@ import { createGroq } from "@ai-sdk/groq"
 import { CoreMessage, generateText } from "ai"
 
 import { db } from "@/lib/db"
+import { extractIdentifiers } from "@/lib/funnel/identifiers"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -292,7 +293,10 @@ export async function sendMessage(
     const result = await generateText({
       model: groq(CHAT_MODEL),
       messages: recentMessages,
-      system: systemPrompt,
+      system:
+        systemPromptType === "saasMarketing"
+          ? systemPrompt + askState(messages, locale)
+          : systemPrompt,
       // Low temperature → factual, on-script answers (never invent prices).
       temperature: 0.3,
       // Caps replies at ~2–3 sentences or a short list — tight and snappy.
@@ -302,15 +306,93 @@ export async function sendMessage(
       providerOptions: { groq: { reasoningEffort: "low" } },
     })
 
+    // A reasoning model can spend its whole cap thinking and return "" — an
+    // empty bubble reads as a dead product. Fall back to the capture ask.
+    if (!result.text.trim()) {
+      return { success: true, content: fallbackReply(systemPromptType, locale) }
+    }
+
     return {
       success: true,
-      content: result.text,
+      content:
+        systemPromptType === "saasMarketing"
+          ? dropRepeatAsk(result.text, messages)
+          : result.text,
     }
   } catch (error) {
+    // Groq's free tier caps tokens per minute; during an outreach wave the
+    // visitor would otherwise read a raw English provider error. The capture
+    // above already ran, so the fallback turns a failure into the ask.
     console.error("Server Action Error:", error)
     return {
-      success: false,
-      error: error instanceof Error ? error.message : "Internal server error",
+      success: true,
+      content: fallbackReply(systemPromptType, locale),
     }
   }
+}
+
+const ASK_RE = /واتساب|whatsapp/i
+const textOf = (m: { content: unknown }) =>
+  typeof m.content === "string" ? m.content : ""
+
+function contactState(messages: Array<{ role: string; content: unknown }>) {
+  const gave = messages.some((m) => {
+    if (m.role !== "user") return false
+    const f = extractIdentifiers(textOf(m))
+    return Boolean(f.email || f.phone)
+  })
+  const asked = messages.some(
+    (m) => m.role === "assistant" && ASK_RE.test(textOf(m))
+  )
+  return { gave, asked }
+}
+
+/**
+ * The note in `askState` lowers the repeat rate; it does not end it (the
+ * model still re-asked on 1 turn in 3). Once the ask is on record, a line
+ * that makes it again is cut — unless it is the whole reply.
+ */
+function dropRepeatAsk(
+  reply: string,
+  messages: Array<{ role: string; content: unknown }>
+): string {
+  const { gave, asked } = contactState(messages)
+  if (!gave && !asked) return reply
+  const kept = reply.split("\n").filter((l) => !ASK_RE.test(l))
+  const out = kept.join("\n").trim()
+  return out || reply
+}
+
+/**
+ * Whether the contact ask may still be made — decided in code, not by the
+ * model. A 20B model told "ask once" asks every turn (measured 2026-09-28);
+ * a funnel that nags reads as spam. So the transcript is scanned here and the
+ * model is told the state as a fact.
+ */
+function askState(
+  messages: Array<{ role: string; content: unknown }>,
+  locale: string
+): string {
+  const { gave, asked } = contactState(messages)
+  const ar = locale === "ar"
+  if (gave)
+    return ar
+      ? "\n\n## حالة المحادثة\nأعطى الزائر رقمه أو بريده بالفعل. لا تطلبه مجددًا أبدًا."
+      : "\n\n## Conversation state\nThe visitor has ALREADY given a number or email. Never ask for one again."
+  if (asked)
+    return ar
+      ? "\n\n## حالة المحادثة\nطلبتَ رقم واتساب أو بريدًا في رد سابق. لا تطلبه مجددًا في هذه المحادثة — أجب عن السؤال فقط."
+      : "\n\n## Conversation state\nYou ALREADY asked for a WhatsApp number or email in an earlier reply. Do not ask again in this conversation — just answer the question."
+  return ""
+}
+
+function fallbackReply(type: SystemPromptType, locale: string): string {
+  const ar = locale === "ar"
+  if (type === "saasMarketing")
+    return ar
+      ? "عذرًا، لم أتمكن من الإجابة الآن. اترك رقم واتساب أو بريدًا إلكترونيًا وسيتواصل معك فريق «بالقلم» ويجهّز لمدرستك نسخة تجريبية مجانية لثلاثة أشهر."
+      : "Sorry, I couldn't answer just now. Leave a WhatsApp number or an email and the Balqalam team will reach you and prepare a free three-month trial copy for your school."
+  return ar
+    ? "عذرًا، لم أتمكن من الإجابة الآن. حاول مجددًا بعد قليل، أو تواصل مع المدرسة مباشرة."
+    : "Sorry, I couldn't answer just now. Please try again shortly, or contact the school directly."
 }
