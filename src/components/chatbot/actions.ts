@@ -22,6 +22,15 @@ import {
 import type { ChatbotDictionary, SchoolChatbotDisplay } from "./type"
 
 /**
+ * Groq retired `llama-3.1-8b-instant` and every reply in prod became an
+ * English "model does not exist" error (found 2026-09-28; the translation
+ * lane hit the same wall on 09-09 and moved to gpt-oss-20b — see
+ * `src/components/translation/groq.ts`). A dead default is a dead chatbot:
+ * check `GET api.groq.com/openai/v1/models` before trusting it.
+ */
+const CHAT_MODEL = process.env.GROQ_CHAT_MODEL ?? "openai/gpt-oss-20b"
+
+/**
  * Returns the display + visibility context the chatbot client needs:
  * personalised welcome (school name), branded avatar (logo), and the
  * boolean flags that decide which CTA chips to surface.
@@ -281,13 +290,16 @@ export async function sendMessage(
     const recentMessages = messages.slice(-10)
 
     const result = await generateText({
-      model: groq("llama-3.1-8b-instant"),
+      model: groq(CHAT_MODEL),
       messages: recentMessages,
       system: systemPrompt,
       // Low temperature → factual, on-script answers (never invent prices).
       temperature: 0.3,
       // Caps replies at ~2–3 sentences or a short list — tight and snappy.
+      // gpt-oss is a reasoning model and its reasoning tokens count against
+      // this cap, so effort stays "low" (~60 reasoning tokens measured).
       maxOutputTokens: 400,
+      providerOptions: { groq: { reasoningEffort: "low" } },
     })
 
     return {

@@ -174,7 +174,7 @@ export function ChatButton({
           data-chat-button
           className={cn(
             CHATBOT_POSITIONS[position],
-            "z-[9999] hidden transition-all duration-700 ease-in-out md:block",
+            "z-[9999] block transition-all duration-700 ease-in-out",
             "h-12 w-12 rounded-full p-2 md:h-14 md:w-14",
             "border-none bg-transparent shadow-none hover:bg-transparent",
             "hover:scale-105",

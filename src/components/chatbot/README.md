@@ -13,7 +13,7 @@ It runs in two modes from the same component, decided by `promptType`:
 | **SaaS**        | `saasMarketing` | `app/[lang]/(saas-marketing)/layout.tsx`                 | School owners evaluating Databayt |
 | **School site** | `schoolSite`    | `app/[lang]/s/[subdomain]/(school-marketing)/layout.tsx` | Prospective parents/students      |
 
-Answers come from Groq (`llama-3.1-8b-instant`) via the AI SDK. The **system
+Answers come from Groq (`openai/gpt-oss-20b`, override `GROQ_CHAT_MODEL`; `llama-3.1-8b-instant` was retired by Groq) via the AI SDK. The **system
 prompt _is_ the knowledge base** — it's assembled server-side and never shipped
 to the client; only the assistant's reply crosses the wire.
 

@@ -38,9 +38,9 @@ export const providers = {
     powerful: anthropic("claude-3-opus-20240229"),
   },
   groq: {
-    fast: groq("llama-3.1-8b-instant"),
-    balanced: groq("llama-3.1-70b-versatile"),
-    powerful: groq("llama-3.2-90b-text-preview"),
+    fast: groq("openai/gpt-oss-20b"),
+    balanced: groq("openai/gpt-oss-120b"),
+    powerful: groq("openai/gpt-oss-120b"),
   },
 }
 
@@ -129,6 +129,8 @@ export const modelCosts = {
   "llama-3.1-8b-instant": { input: 0.05, output: 0.08 },
   "llama-3.1-70b-versatile": { input: 0.59, output: 0.79 },
   "llama-3.2-90b-text-preview": { input: 2.5, output: 2.5 },
+  "openai/gpt-oss-20b": { input: 0.1, output: 0.5 },
+  "openai/gpt-oss-120b": { input: 0.15, output: 0.75 },
 }
 
 // Helper to estimate operation cost
