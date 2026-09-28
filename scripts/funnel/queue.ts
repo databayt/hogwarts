@@ -39,17 +39,42 @@ export const globToRe = (g: string) =>
     "i"
   )
 
+/**
+ * A name that is scraped debris, not a school's name — it is pasted into the
+ * opening line ("أكتب لكم بخصوص {school}"), so a Facebook snippet there reads
+ * as a bot. Held back for a human to rename, never sent.
+ */
+export function isJunkName(name: string): boolean {
+  return (
+    name.length > 90 ||
+    /facebook|https?:|www\.|·|‼|[٠-٩0-9]{1,2}[/‏]+[٠-٩0-9]{1,2}[/‏]+[٠-٩0-9]{2,4}/i.test(name)
+  )
+}
+
 export function buildQueue(rows: Company[]): QueueRow[] {
   const q: QueueRow[] = []
+  // One recipient, one message. Branches of one school share a switchboard
+  // or an admissions inbox (measured 2026-09-28: 11 duplicate sends across 10
+  // recipients, one number listed on three sections of one complex), and a
+  // recipient already messaged under another row must not get a second opener.
+  const contacted = new Set<string>()
   for (const c of rows) {
     const stage = (c.stage ?? "").toUpperCase()
-    if (stage !== "COLD" && stage !== "PROSPECT") continue
     const outreach = (c.outreachStatus ?? "NOT_STARTED").toUpperCase()
-    if (outreach !== "NOT_STARTED") continue
+    const eligible =
+      (stage === "COLD" || stage === "PROSPECT") && outreach === "NOT_STARTED"
+    if (!eligible) {
+      const e164 = toE164(c.schoolPhone, c.country)
+      if (e164) contacted.add(e164)
+      const email = emailOf(c.principalContact)
+      if (email) contacted.add(email.toLowerCase())
+      continue
+    }
     const e164 = toE164(c.schoolPhone, c.country)
     const mobile = e164 && isMobile(e164) ? e164 : null
     const email = emailOf(c.principalContact)
     if (!mobile && !email) continue
+    if (isJunkName(c.name ?? "")) continue
     const rail = railOf(c.country, e164)
     const tier = (c.tier ?? "C").toUpperCase()
     const seg = `${rail}-${tier}` // v1 key — bands join once student counts exist
@@ -64,7 +89,19 @@ export function buildQueue(rows: Company[]): QueueRow[] {
     })
   }
   // Tier A first, then B; sd rail leads inside a tier (WhatsApp-first market).
+  // Among equals the shorter name wins the recipient: "Doha College" over
+  // "Doha College West Bay" — the umbrella name suits a shared inbox.
   const rank = (r: QueueRow) =>
     `${{ A: 0, B: 1 }[r.tier] ?? 2}-${r.seg.startsWith("sd") ? 0 : 1}`
-  return q.sort((a, b) => rank(a).localeCompare(rank(b)))
+  q.sort(
+    (a, b) =>
+      rank(a).localeCompare(rank(b)) || a.name.length - b.name.length
+  )
+  const seen = new Set(contacted)
+  return q.filter((r) => {
+    const k = r.to.toLowerCase()
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
 }
