@@ -8,7 +8,7 @@ import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { Chatbot } from "@/components/chatbot"
 import { isRTL, type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
+import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { ApplicationStatusBanner } from "@/components/school-marketing/admission/application-status-banner"
 import { resolveSchoolDisplayName } from "@/components/template/site-header/display-name"
 import { fontDmSans, fontPoppins } from "@/components/template/zenda-fonts"
@@ -100,7 +100,7 @@ export default async function SiteLayout({
   const dir = isRTL(lang as Locale) ? "rtl" : "ltr"
 
   return (
-    <DictionaryProvider dictionary={dictionary}>
+    <LocaleDictionaryProvider lang={lang}>
       {/*
         No LoadingWrapper here, deliberately. It held the page at
         `visibility: hidden` behind a full-screen "0%..100%" counter for ~2s,
@@ -168,6 +168,6 @@ export default async function SiteLayout({
           />
         </div>
       </>
-    </DictionaryProvider>
+    </LocaleDictionaryProvider>
   )
 }

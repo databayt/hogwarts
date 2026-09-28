@@ -11,11 +11,7 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
-import {
-  getMessagingDictionary,
-  type Dictionary,
-} from "@/components/internationalization/dictionaries"
-import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
+import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import { MustChangePasswordGate } from "@/components/school-dashboard/must-change-password-gate"
 import { getText } from "@/components/translation/display"
@@ -39,14 +35,11 @@ export default async function MessagingLayout({
   params,
 }: Readonly<MessagingLayoutProps>) {
   const { subdomain, lang } = await params
-  const [result, session, dictionary] = await Promise.all([
+  // The dictionary reaches this subtree through LocaleDictionaryProvider (a
+  // static client module), so the layout no longer loads or serializes one.
+  const [result, session] = await Promise.all([
     getSchoolBySubdomain(subdomain),
     auth(),
-    // Route-scoped: this subtree only renders messaging UI (consumes the
-    // `messaging` namespace + core general/school). getMessagingDictionary
-    // covers core + messages + messaging; the omitted feature namespaces are
-    // never accessed here, so the narrower payload is safe at runtime.
-    getMessagingDictionary(lang as Locale),
   ])
 
   if (!result.success) {
@@ -119,7 +112,7 @@ export default async function MessagingLayout({
   const isRTL = checkIsRTL(lang as Locale)
 
   return (
-    <DictionaryProvider dictionary={dictionary as Dictionary}>
+    <LocaleDictionaryProvider lang={lang}>
       <SchoolProvider school={school}>
         <ModalProvider>
           <div
@@ -138,6 +131,6 @@ export default async function MessagingLayout({
           </Suspense>
         </ModalProvider>
       </SchoolProvider>
-    </DictionaryProvider>
+    </LocaleDictionaryProvider>
   )
 }

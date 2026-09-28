@@ -15,7 +15,7 @@ import {
   type Locale,
 } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
+import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { InstallCard } from "@/components/offline/install-card"
 import { OfflineSyncBanner } from "@/components/offline/sync-banner"
 import { OfflineWarmup } from "@/components/offline/warmup"
@@ -173,7 +173,7 @@ export default async function PlatformLayout({
     .map((item) => `/${lang}${item.href}`)
 
   return (
-    <DictionaryProvider dictionary={dictionary}>
+    <LocaleDictionaryProvider lang={lang}>
       <SchoolProvider school={school}>
         <SidebarProvider>
           <ModalProvider>
@@ -234,6 +234,6 @@ export default async function PlatformLayout({
           </ModalProvider>
         </SidebarProvider>
       </SchoolProvider>
-    </DictionaryProvider>
+    </LocaleDictionaryProvider>
   )
 }

@@ -43,8 +43,15 @@ type Story = {
 // English fallbacks below govern the COUNT, deliberately: the Swiper's loop and
 // the zoom-by-progress tween index into these five slides, so a translation
 // that dropped one would leave the slider a card short mid-loop.
-function getStories(dictionary?: Dictionary): Story[] {
-  const items = dictionary?.marketing?.site?.home?.testimonials?.items ?? []
+// Only the testimonials copy crosses into this client component. It used to
+// take the whole dictionary — ~1.3 MB of JSON serialized into the school home
+// page's payload to read one section of it.
+type TestimonialsCopy = NonNullable<
+  NonNullable<NonNullable<Dictionary["marketing"]>["site"]>["home"]
+>["testimonials"]
+
+function getStories(copy?: TestimonialsCopy): Story[] {
+  const items = copy?.items ?? []
   const fallbacks: Story[] = [
     {
       name: "Thyge",
@@ -147,11 +154,11 @@ function syncSlideTransition(swiper: SwiperClass, duration: number) {
   }
 }
 
-export function Testimonials({ dictionary }: { dictionary?: Dictionary }) {
+export function Testimonials({ copy }: { copy?: TestimonialsCopy }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const swiperRef = useRef<SwiperClass | null>(null)
-  const t = dictionary?.marketing?.site?.home?.testimonials
-  const STORIES = getStories(dictionary)
+  const t = copy
+  const STORIES = getStories(copy)
 
   // First slide doubles as the section's "active card": the reference tags its
   // name/rating/quote (and photo) so they animate in on scroll, while the other

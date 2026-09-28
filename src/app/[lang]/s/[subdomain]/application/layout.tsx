@@ -4,12 +4,7 @@
 import type { Metadata } from "next"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
-import { type Locale } from "@/components/internationalization/config"
-import {
-  getPlatformCoreDictionary,
-  type Dictionary,
-} from "@/components/internationalization/dictionaries"
-import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
+import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
 import { ReportIssue } from "@/components/report-issue"
 
 // Application flow uses cookies + dictionary lookup - always dynamic
@@ -44,14 +39,12 @@ export default async function ApplicationLayout({
   params,
 }: ApplicationLayoutProps) {
   const { lang } = await params
-  // Route-scoped: the application/admission flow only consumes core
-  // general/school keys plus the `messages` namespace (form validation helpers).
-  // The other feature namespaces + lumos are never accessed here, so the
-  // narrower getPlatformCoreDictionary (core + messages) payload is safe.
-  const dictionary = await getPlatformCoreDictionary(lang as Locale)
+  // The dictionary reaches the flow through LocaleDictionaryProvider (a static,
+  // cached client module), so this layout no longer loads or serializes one
+  // into every step's document and Server Action response.
 
   return (
-    <DictionaryProvider dictionary={dictionary as Dictionary}>
+    <LocaleDictionaryProvider lang={lang}>
       <div className="flex min-h-screen flex-col">
         <main className="flex w-full flex-1 items-center px-4 sm:px-6 md:px-12 lg:px-20">
           {children}
@@ -60,6 +53,6 @@ export default async function ApplicationLayout({
           <ReportIssue />
         </div>
       </div>
-    </DictionaryProvider>
+    </LocaleDictionaryProvider>
   )
 }

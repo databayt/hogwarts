@@ -28,7 +28,7 @@ export function HomeContent({ lang = "en", dictionary }: HomeContentProps) {
       <Rewards lang={lang} dictionary={dictionary} />
       <Schools lang={lang} dictionary={dictionary} />
       <HowItWorks dictionary={dictionary} />
-      <Testimonials dictionary={dictionary} />
+      <Testimonials copy={dictionary?.marketing?.site?.home?.testimonials} />
       <Benefits dictionary={dictionary} />
       <CTA lang={lang} dictionary={dictionary} />
     </>
