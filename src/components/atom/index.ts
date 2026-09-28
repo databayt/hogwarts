@@ -32,3 +32,7 @@ export type {
   AirbnbHamburgerMenuProps,
   AirbnbUser,
 } from "./airbnb-hamburger-menu"
+
+// Image atoms
+export { BlurImage, NEUTRAL_BLUR } from "./blur-image"
+export type { BlurImageProps } from "./blur-image"
