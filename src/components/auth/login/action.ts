@@ -11,6 +11,7 @@ import * as z from "zod"
 import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
 import { db } from "@/lib/db"
 import { cookieDomainForHost, tenantOriginForHost } from "@/lib/root-domain"
+import { getSchoolIdFromSubdomain } from "@/lib/tenant-context"
 import {
   sendTwoFactorTokenEmail,
   sendVerificationEmail,
@@ -86,9 +87,14 @@ export const login = async (
   const trimmedIdentifier = identifier.trim()
   const identifierIsEmail = trimmedIdentifier.includes("@")
 
-  // Check brute force protection — key on the identifier before any DB work so
-  // timing can't be used to enumerate valid usernames/emails.
-  const blocked = await isBruteForceBlocked(trimmedIdentifier)
+  // Brute-force protection keys on the identifier before any user lookup, so
+  // timing can't be used to enumerate valid usernames/emails. The school is
+  // resolved from the subdomain (never the identifier), so it runs alongside
+  // — from the tenant resolver's in-memory cache, usually with no query.
+  const [blocked, subdomainSchoolId] = await Promise.all([
+    isBruteForceBlocked(trimmedIdentifier),
+    subdomain ? getSchoolIdFromSubdomain(subdomain) : null,
+  ])
   if (blocked) {
     return {
       error: "Too many failed attempts. Please try again in 15 minutes.",
@@ -96,14 +102,7 @@ export const login = async (
   }
 
   // Resolve schoolId from subdomain for tenant-aware user lookup
-  let loginSchoolId: string | undefined
-  if (subdomain) {
-    const school = await db.school.findFirst({
-      where: { domain: subdomain },
-      select: { id: true },
-    })
-    loginSchoolId = school?.id
-  }
+  const loginSchoolId: string | undefined = subdomainSchoolId ?? undefined
 
   const existingUser = await getUserByIdentifier(
     trimmedIdentifier,
@@ -241,12 +240,12 @@ export const login = async (
       // User clicked "Platform" on school marketing
       // Check if user is a member of THIS school
       if (existingUser.schoolId) {
-        const school = await db.school.findUnique({
-          where: { id: existingUser.schoolId },
-          select: { domain: true },
-        })
+        // Membership without another query: the subdomain already resolved to
+        // a school above, and a domain belongs to exactly one school.
+        const isMember =
+          !!loginSchoolId && existingUser.schoolId === loginSchoolId
 
-        if (school?.domain === subdomain) {
+        if (isMember) {
           // User is a member of this school - construct absolute URL on the
           // root domain the login came from
           const schoolBaseUrl = tenantOriginForHost(requestHost, subdomain)
@@ -255,7 +254,7 @@ export const login = async (
             "[LOGIN-ACTION] 🏫 School member accessing their dashboard:",
             {
               subdomain,
-              userSchool: school.domain,
+              userSchool: subdomain,
               finalRedirectUrl,
             }
           )
@@ -264,7 +263,7 @@ export const login = async (
           finalRedirectUrl = `/${redirectLocale}/access-denied`
           console.log("[LOGIN-ACTION] ⛔ User belongs to different school:", {
             requestedSchool: subdomain,
-            userSchool: school?.domain,
+            userSchoolId: existingUser.schoolId,
             finalRedirectUrl,
           })
         }
