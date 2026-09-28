@@ -218,8 +218,10 @@ model ExamResult {
   @@unique([examId, studentId])
   @@index([schoolId, examId])
   @@index([schoolId, studentId])
-  @@index([schoolId, examId, marksObtained])
-  @@index([schoolId, examId, percentage])
+  // [schoolId, examId, marksObtained] and [schoolId, examId, percentage] were
+  // dropped 2026-09-28: 0 scans in the recorded history, ~10 MB on a database
+  // at 97 % of Neon's free cap. An exam holds tens of rows, so rank counts
+  // (`percentage > x`) and exports ordered by marks read [schoolId, examId].
   @@index([schoolId, studentId, createdAt])
   @@index([isAbsent])
   @@map("exam_results")
