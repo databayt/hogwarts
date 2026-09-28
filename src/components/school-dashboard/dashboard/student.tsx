@@ -1,14 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getStudentDashboardData } from "./actions"
+import { loadDashboardHero } from "./hero-data"
 import { StudentDashboardClient } from "./student-client"
 import type { StudentDashboardData } from "./types"
-import { getWeatherData, type WeatherData } from "./weather-actions"
 
 interface StudentDashboardProps {
   user: {
@@ -31,6 +30,9 @@ export async function StudentDashboard({
 
   // Wrap entire component in try-catch for comprehensive error handling
   try {
+    // Started before this dashboard's own data and awaited beside it —
+    // see loadDashboardHero.
+    const hero = loadDashboardHero(locale)
     // Fetch real data from server actions with error handling
     let data: StudentDashboardData
     try {
@@ -57,38 +59,7 @@ export async function StudentDashboard({
       )
     }
 
-    // The hero's weather. Best-effort: it renders its own empty state, so a
-    // failure here must not cost the whole dashboard.
-    let weatherData: WeatherData | null = null
-    try {
-      weatherData = await getWeatherData("metric", locale)
-    } catch (error) {
-      console.error("[StudentDashboard] Error fetching weather:", error)
-    }
-
-    // Get tenant context for subdomain with error handling
-    let schoolId: string | null = null
-    try {
-      const tenantContext = await getTenantContext()
-      schoolId = tenantContext.schoolId
-    } catch (error) {
-      console.error("[StudentDashboard] Error getting tenant context:", error)
-    }
-
-    // Get school subdomain for URL construction with error handling
-    let school: { domain: string | null } | null = null
-    try {
-      if (schoolId) {
-        const { db } = await import("@/lib/db")
-        const id = schoolId // TypeScript narrowing helper
-        school = await db.school.findUnique({
-          where: { id },
-          select: { domain: true },
-        })
-      }
-    } catch (error) {
-      console.error("[StudentDashboard] Error fetching school domain:", error)
-    }
+    const { weatherData, school } = await hero
 
     return (
       <div className="space-y-8">

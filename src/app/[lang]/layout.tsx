@@ -161,7 +161,13 @@ export default async function LocaleLayout({
       <div
         className={`${fontClass} ${GeistSans.variable} ${fontThmanyahText.variable} ${fontThmanyahSans.variable} layout-container antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}
       >
-        <SessionProvider session={session}>
+        {/* refetchOnWindowFocus off: next-auth has no staleness window, so
+            every return to the tab — on a phone, every switch back from
+            WhatsApp — fetched /api/auth/session (the whole auth handler) just
+            as the user was about to tap. Server renders read auth() on every
+            request anyway, and sign-in/out in another tab still syncs through
+            next-auth's storage event. */}
+        <SessionProvider session={session} refetchOnWindowFocus={false}>
           <NuqsAdapter>
             <ThemeProvider>
               <UserThemeProvider>

@@ -5,7 +5,6 @@ import Link from "next/link"
 import { format } from "date-fns"
 import { ChevronRight, TrendingDown, TrendingUp } from "lucide-react"
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -16,6 +15,7 @@ import { ActivityRings } from "./activity-rings"
 import { ChartSection } from "./chart-section"
 import { ComparisonLineChart } from "./comparison-chart"
 import { EmptyState } from "./empty-state"
+import { loadDashboardHero } from "./hero-data"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { MetricCard } from "./metric-card"
 import { PerformanceGauge } from "./performance-gauge"
@@ -49,6 +49,9 @@ export async function PrincipalDashboard({
 }: PrincipalDashboardProps) {
   // Wrap entire component in try-catch for comprehensive error handling (like AdminDashboard)
   try {
+    // Started before this dashboard's own data and awaited beside it —
+    // see loadDashboardHero.
+    const hero = loadDashboardHero(locale, { weather: false })
     // Fetch Quick Look and Weather data
     let quickLookData
     let weatherData
@@ -63,29 +66,7 @@ export async function PrincipalDashboard({
       console.error("[PrincipalDashboard] Error fetching data:", error)
     }
 
-    // Get tenant context for subdomain with error handling
-    let schoolId: string | null = null
-    try {
-      const tenantContext = await getTenantContext()
-      schoolId = tenantContext.schoolId
-    } catch (error) {
-      console.error("[PrincipalDashboard] Error getting tenant context:", error)
-    }
-
-    // Get school info for URL construction and display
-    let school: { domain: string | null; name: string | null } | null = null
-    try {
-      if (schoolId) {
-        const { db } = await import("@/lib/db")
-        const id = schoolId
-        school = await db.school.findUnique({
-          where: { id },
-          select: { domain: true, name: true },
-        })
-      }
-    } catch (error) {
-      console.error("[PrincipalDashboard] Error fetching school domain:", error)
-    }
+    const { school } = await hero
 
     // Fetch real data from database with error handling
     let totalStudents = 0

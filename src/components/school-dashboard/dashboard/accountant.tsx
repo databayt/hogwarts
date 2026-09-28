@@ -5,7 +5,6 @@ import Link from "next/link"
 import { format, isToday, isTomorrow } from "date-fns"
 import { ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react"
 
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -14,6 +13,7 @@ import { getFinancialSummary } from "./actions"
 import { ActivityRings } from "./activity-rings"
 import { ChartSection } from "./chart-section"
 import { EmptyState } from "./empty-state"
+import { loadDashboardHero } from "./hero-data"
 import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { MetricCard } from "./metric-card"
@@ -23,7 +23,6 @@ import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { SectionHeading } from "./section-heading"
-import { getWeatherData, type WeatherData } from "./weather-actions"
 
 interface AccountantDashboardProps {
   user: {
@@ -44,48 +43,14 @@ export async function AccountantDashboard({
 }: AccountantDashboardProps) {
   // Wrap entire component in try-catch for comprehensive error handling (like AdminDashboard)
   try {
+    // Started before this dashboard's own data and awaited beside it —
+    // see loadDashboardHero.
+    const hero = loadDashboardHero(locale)
     // The Quick Look row is still hidden on this dashboard, so
     // `getQuickLookData` is not called here — restore it alongside the JSX
     // below. The Upcoming/Weather hero is back, so its fetch is made.
 
-    // The hero's weather. Best-effort: it renders its own empty state, so a
-    // failure here must not cost the whole dashboard.
-    let weatherData: WeatherData | null = null
-    try {
-      weatherData = await getWeatherData("metric", locale)
-    } catch (error) {
-      console.error("[AccountantDashboard] Error fetching weather:", error)
-    }
-
-    // Get tenant context for subdomain with error handling
-    let schoolId: string | null = null
-    try {
-      const tenantContext = await getTenantContext()
-      schoolId = tenantContext.schoolId
-    } catch (error) {
-      console.error(
-        "[AccountantDashboard] Error getting tenant context:",
-        error
-      )
-    }
-
-    // Get school subdomain for URL construction with error handling
-    let school: { domain: string | null; name: string | null } | null = null
-    try {
-      if (schoolId) {
-        const { db } = await import("@/lib/db")
-        const id = schoolId
-        school = await db.school.findUnique({
-          where: { id },
-          select: { domain: true, name: true },
-        })
-      }
-    } catch (error) {
-      console.error(
-        "[AccountantDashboard] Error fetching school domain:",
-        error
-      )
-    }
+    const { weatherData, school } = await hero
 
     // Fetch real invoice data from database with error handling
     let totalInvoices = 0
