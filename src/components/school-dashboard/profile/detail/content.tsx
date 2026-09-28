@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import ProfileContent from "../client"
 import type { ProfileViewData } from "../queries"
@@ -15,16 +16,18 @@ import type { ProfileViewData } from "../queries"
 interface ProfileDetailContentProps {
   profileData: ProfileViewData | null
   errorCode?: string | null
-  dictionary: Dictionary
+  /** Optional: read from LocaleDictionaryProvider when omitted. */
+  dictionary?: Dictionary
   lang?: Locale
 }
 
 export function ProfileDetailContent({
   profileData,
   errorCode,
-  dictionary,
+  dictionary: dictionaryProp,
   lang,
 }: ProfileDetailContentProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const router = useRouter()
 
   const p = dictionary?.school?.profile as Record<string, any> | undefined

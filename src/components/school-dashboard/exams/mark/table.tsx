@@ -33,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 
 import { getColumns } from "./columns"
 
@@ -44,7 +45,8 @@ type MarkingQueueItem = StudentAnswer & {
 
 interface MarkingTableProps {
   data: MarkingQueueItem[]
-  dictionary: Dictionary
+  /** Optional: read from LocaleDictionaryProvider when omitted. */
+  dictionary?: Dictionary
   /** True schoolId-scoped row count, independent of the (max 100) loaded
    * queue in `data`. Falls back to `data.length` when the caller doesn't know
    * the true total, preserving prior behavior for sub-filtered tabs. */
@@ -53,9 +55,10 @@ interface MarkingTableProps {
 
 function MarkingTableInner({
   data,
-  dictionary,
+  dictionary: dictionaryProp,
   totalCount,
 }: MarkingTableProps) {
+  const dictionary = useDictionaryFallback(dictionaryProp)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")

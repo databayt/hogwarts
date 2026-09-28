@@ -29,9 +29,8 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  // Resolve params once, then fetch dictionary + session in parallel.
   const { lang } = await params
-  const [dictionary, session] = await Promise.all([getDictionary(lang), auth()])
+  const session = await auth()
 
   // Check permissions - staff only
   const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
@@ -41,7 +40,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <AttendanceProvider initialMethod="MANUAL">
-      <AttendanceContent dictionary={dictionary.school} lang={lang} />
+      <AttendanceContent lang={lang} />
     </AttendanceProvider>
   )
 }

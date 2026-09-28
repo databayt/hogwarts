@@ -42,3 +42,17 @@ export function useDictionary() {
 
   return { dictionary, isLoading }
 }
+
+/**
+ * The `dictionary` prop when one was passed, otherwise the provider's.
+ *
+ * For client components moving off `dictionary` props: a dictionary passed
+ * from a server component is serialized into the page payload — once per
+ * prop, not once per page (the marking page carried five full copies,
+ * 1.4 MB). Under LocaleDictionaryProvider the same object is already in
+ * context from a cached chunk, so call sites can simply stop passing it.
+ */
+export function useDictionaryFallback(prop?: Dictionary | null): Dictionary {
+  const contextDict = useContext(DictionaryContext)
+  return (prop ?? contextDict) as Dictionary
+}

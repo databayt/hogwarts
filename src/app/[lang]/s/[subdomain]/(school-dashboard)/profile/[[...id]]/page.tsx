@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Page({ params }: Props) {
   const { lang, id } = await params
-  const [dictionary, session] = await Promise.all([getDictionary(lang), auth()])
+  const session = await auth()
 
   const targetId = id?.[0] || session?.user?.id
   if (!targetId) {
@@ -28,7 +28,6 @@ export default async function Page({ params }: Props) {
       <ProfileDetailContent
         profileData={null}
         errorCode="NOT_AUTHENTICATED"
-        dictionary={dictionary}
         lang={lang}
       />
     )
@@ -41,17 +40,10 @@ export default async function Page({ params }: Props) {
       <ProfileDetailContent
         profileData={null}
         errorCode={result.errorCode}
-        dictionary={dictionary}
         lang={lang}
       />
     )
   }
 
-  return (
-    <ProfileDetailContent
-      profileData={result.data}
-      dictionary={dictionary}
-      lang={lang}
-    />
-  )
+  return <ProfileDetailContent profileData={result.data} lang={lang} />
 }

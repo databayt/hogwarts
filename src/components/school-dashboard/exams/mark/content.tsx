@@ -250,18 +250,11 @@ export async function MarkingContent({
         </TabsList>
 
         <TabsContent value="all">
-          <MarkingTable
-            data={submissions}
-            dictionary={dictionary}
-            totalCount={total}
-          />
+          <MarkingTable data={submissions} totalCount={total} />
         </TabsContent>
 
         <TabsContent value="pending">
-          <MarkingTable
-            data={submissions.filter((s) => !s.markingResult)}
-            dictionary={dictionary}
-          />
+          <MarkingTable data={submissions.filter((s) => !s.markingResult)} />
         </TabsContent>
 
         <TabsContent value="review">
@@ -269,7 +262,6 @@ export async function MarkingContent({
             data={submissions.filter(
               (s) => s.markingResult && s.markingResult.needsReview
             )}
-            dictionary={dictionary}
           />
         </TabsContent>
 
@@ -278,7 +270,6 @@ export async function MarkingContent({
             data={submissions.filter(
               (s) => s.markingResult && s.markingResult.status === "COMPLETED"
             )}
-            dictionary={dictionary}
           />
         </TabsContent>
       </Tabs>

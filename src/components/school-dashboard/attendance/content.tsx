@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
 import {
   getAttendanceList,
   getAttendanceReportCsv,
@@ -41,7 +42,11 @@ interface Props {
   lang?: string
 }
 
-export function AttendanceContent({ dictionary, lang }: Props) {
+export function AttendanceContent({ dictionary: dictionaryProp, lang }: Props) {
+  // The school dictionary comes from LocaleDictionaryProvider unless passed;
+  // as a prop it was ~600 KB serialized into the manual-attendance page.
+  const fullDictionary = useDictionaryFallback()
+  const dictionary = dictionaryProp ?? fullDictionary?.school
   const [submitting, setSubmitting] = useState(false)
   const [sectionId, setSectionId] = useState("")
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
