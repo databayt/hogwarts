@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { cache } from "react"
 import { cookies, headers } from "next/headers"
 import type { NextRequest } from "next/server"
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
@@ -871,11 +872,29 @@ function buildAuthOptions(cookieDomain: string | undefined): NextAuthConfig {
   }
 }
 
-export const {
-  handlers: { GET, POST },
-  auth,
+const {
+  handlers,
+  auth: nextAuth,
   signIn,
   signOut,
 } = NextAuth(async (req) =>
   buildAuthOptions(cookieDomainForHost(await resolveRequestHost(req)))
 )
+
+export const { GET, POST } = handlers
+export { signIn, signOut }
+
+// One session per server render. `auth()` is called ~900 times across the
+// app — the layout, getTenantContext, every page and query helper — and each
+// call rebuilt the config above, decrypted the JWT and ran both callbacks;
+// for a user with no schoolId the jwt callback also queries the database.
+// React cache() dedupes the zero-argument form within one RSC render; it
+// does not memoize inside Server Actions or route handlers, so a session
+// changed by an action is re-read fresh by the render that follows. The
+// wrapper form, auth(handler), passes through untouched.
+const sessionForRender = cache(() => nextAuth())
+
+export const auth = ((...args: unknown[]) =>
+  args.length === 0
+    ? sessionForRender()
+    : (nextAuth as (...a: unknown[]) => unknown)(...args)) as typeof nextAuth

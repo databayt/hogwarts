@@ -1,3 +1,5 @@
+import { cache } from "react"
+
 import { db } from "@/lib/db"
 import {
   computeTermDates,
@@ -13,7 +15,15 @@ import {
  * 2. Current date falls within term dates
  * 3. Most recent term by start date
  */
-export async function resolveActiveTerm(schoolId: string): Promise<{
+/**
+ * Deduped per server render — the teacher dashboard alone resolved the term
+ * six times in one render. cache() is a passthrough inside Server Actions and
+ * route handlers, which is where terms are written (timetable, catalog
+ * provisioning), so an action never reads a term memoized before its write.
+ */
+export const resolveActiveTerm = cache(resolveActiveTermUncached)
+
+async function resolveActiveTermUncached(schoolId: string): Promise<{
   term: {
     id: string
     termNumber: number
@@ -25,94 +35,42 @@ export async function resolveActiveTerm(schoolId: string): Promise<{
 }> {
   const today = new Date()
 
-  const termSelect = {
-    id: true,
-    termNumber: true,
-    startDate: true,
-    endDate: true,
-    schoolYear: { select: { id: true } },
-  } as const
-
-  // Priority 1: Explicitly marked as active. When more than one term is
-  // flagged active (legacy duplicate-provisioning data), prefer the one whose
-  // date range contains today so period/timetable lookups resolve to the right
-  // academic window; fall back to any active term.
-  const activeTerm =
-    (await db.term.findFirst({
-      where: {
-        schoolId,
-        isActive: true,
-        startDate: { lte: today },
-        endDate: { gte: today },
-      },
-      select: termSelect,
-    })) ??
-    (await db.term.findFirst({
-      where: { schoolId, isActive: true },
-      select: termSelect,
-    }))
-
-  if (activeTerm) {
-    return {
-      term: {
-        id: activeTerm.id,
-        termNumber: activeTerm.termNumber,
-        startDate: activeTerm.startDate,
-        endDate: activeTerm.endDate,
-        yearId: activeTerm.schoolYear.id,
-      },
-      source: "explicit",
-    }
-  }
-
-  // Priority 2: Current date falls within term dates
-  const currentTerm = await db.term.findFirst({
-    where: {
-      schoolId,
-      startDate: { lte: today },
-      endDate: { gte: today },
-    },
-    select: termSelect,
-  })
-
-  if (currentTerm) {
-    return {
-      term: {
-        id: currentTerm.id,
-        termNumber: currentTerm.termNumber,
-        startDate: currentTerm.startDate,
-        endDate: currentTerm.endDate,
-        yearId: currentTerm.schoolYear.id,
-      },
-      source: "date_range",
-    }
-  }
-
-  // Priority 3: Most recent term
-  const recentTerm = await db.term.findFirst({
+  // One query for all three read priorities. They used to be up to four
+  // sequential Term.findFirst calls (~90 ms each from the app to Neon), and
+  // this runs on the dashboard, timetable, attendance and live paths. A
+  // school holds a handful of terms, so pick in memory with the same rules.
+  const terms = await db.term.findMany({
     where: { schoolId },
     orderBy: { startDate: "desc" },
-    select: termSelect,
+    select: {
+      id: true,
+      termNumber: true,
+      startDate: true,
+      endDate: true,
+      isActive: true,
+      schoolYear: { select: { id: true } },
+    },
   })
 
-  if (recentTerm) {
+  const picked = pickActiveTerm(terms, today)
+  if (picked) {
+    const { term, source } = picked
     return {
       term: {
-        id: recentTerm.id,
-        termNumber: recentTerm.termNumber,
-        startDate: recentTerm.startDate,
-        endDate: recentTerm.endDate,
-        yearId: recentTerm.schoolYear.id,
+        id: term.id,
+        termNumber: term.termNumber,
+        startDate: term.startDate,
+        endDate: term.endDate,
+        yearId: term.schoolYear.id,
       },
-      source: "most_recent",
+      source,
     }
   }
 
   // Priority 4: Auto-provision a default year, full term set, periods, and week
   // config when none exist. Uses country-aware calendar logic so the term dates
   // are correct for the school's region.
-  const termCount = await db.term.count({ where: { schoolId } })
-  if (termCount === 0) {
+  if (terms.length === 0) {
     try {
       const schoolRecord = await db.school.findUnique({
         where: { id: schoolId },
@@ -218,4 +176,33 @@ export async function resolveActiveTerm(schoolId: string): Promise<{
   }
 
   return { term: null, source: "none" }
+}
+
+type TermRow = {
+  startDate: Date
+  endDate: Date
+  isActive: boolean
+}
+
+/**
+ * The resolver's read priorities, applied to a school's terms sorted by
+ * start date, newest first:
+ * 1. an active term whose dates contain today, else any active term
+ *    (legacy data can flag more than one term active);
+ * 2. a term whose dates contain today;
+ * 3. the most recent term.
+ */
+export function pickActiveTerm<T extends TermRow>(
+  terms: readonly T[],
+  today: Date
+): { term: T; source: "explicit" | "date_range" | "most_recent" } | null {
+  const containsToday = (t: T) => t.startDate <= today && t.endDate >= today
+  const active =
+    terms.find((t) => t.isActive && containsToday(t)) ??
+    terms.find((t) => t.isActive)
+  if (active) return { term: active, source: "explicit" }
+  const current = terms.find(containsToday)
+  if (current) return { term: current, source: "date_range" }
+  if (terms[0]) return { term: terms[0], source: "most_recent" }
+  return null
 }

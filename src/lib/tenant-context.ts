@@ -3,6 +3,7 @@
 
 import "server-only"
 
+import { cache } from "react"
 import { cookies, headers } from "next/headers"
 import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
@@ -41,7 +42,10 @@ const subdomainCache = new Map<
   string,
   { schoolId: string | null; expiresAt: number }
 >()
-const MEMORY_CACHE_TTL_MS = 60 * 1000 // 1 minute (fallback)
+// A subdomain maps to one school for the life of the school. One container
+// serves every request, so the in-memory tier answers almost everything; it
+// used to expire after a minute and send the next request to Redis or Neon.
+const MEMORY_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 const REDIS_CACHE_TTL_S = 300 // 5 minutes (shared)
 
 /**
@@ -151,7 +155,12 @@ export type TenantContext = {
   isPlatformAdmin: boolean
 }
 
-export async function getTenantContext(): Promise<TenantContext> {
+// Deduped per server render: ~1000 call sites across the app, several per
+// page, each of which re-read the session, cookies and headers. cache() does
+// not memoize inside Server Actions, where each action resolves it once.
+export const getTenantContext = cache(resolveTenantContext)
+
+async function resolveTenantContext(): Promise<TenantContext> {
   try {
     const session = (await auth()) as ExtendedSession | null
     const cookieStore = await cookies()

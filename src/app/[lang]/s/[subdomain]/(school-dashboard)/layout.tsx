@@ -1,11 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 
-import { db } from "@/lib/db"
 import { parseEnabledModules } from "@/lib/enabled-modules"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { SidebarProvider } from "@/components/ui/sidebar"
@@ -23,7 +23,7 @@ import { ReportIssueFooter } from "@/components/report-issue-footer"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
-import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
+import { MustChangePasswordGate } from "@/components/school-dashboard/must-change-password-gate"
 import PlatformHeader from "@/components/template/platform-header/content"
 import {
   platformNav,
@@ -88,7 +88,11 @@ export default async function PlatformLayout({
     notFound()
   }
 
-  const school = result.data
+  // A copy: result.data is the object held in getSchoolBySubdomain's
+  // module-level cache, and the name is rewritten below per viewer language.
+  // Mutating it in place served one visitor's translated name to every other
+  // request for up to a minute — and sent each of them back through getText.
+  const school = { ...result.data }
 
   // Translate school name for display when viewing in a different language
   if (lang === "en" && school.nameEn) {
@@ -168,13 +172,6 @@ export default async function PlatformLayout({
     )
     .map((item) => `/${lang}${item.href}`)
 
-  // Check if user must change their password (e.g., admin-forced reset)
-  const currentUser = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { mustChangePassword: true, password: true },
-  })
-  const mustChangePassword = currentUser?.mustChangePassword ?? false
-
   return (
     <DictionaryProvider dictionary={dictionary}>
       <SchoolProvider school={school}>
@@ -220,11 +217,11 @@ export default async function PlatformLayout({
                     <ReportIssueFooter />
                   </div>
                 </div>
-                {mustChangePassword && (
-                  <ForceChangePasswordModal
-                    hasPassword={!!currentUser?.password}
-                  />
-                )}
+                {/* Admin-forced password reset. Streams in behind the page
+                    instead of holding the whole layout for its lookup. */}
+                <Suspense fallback={null}>
+                  <MustChangePasswordGate userId={session.user.id} />
+                </Suspense>
                 {/* The "Quick Guide" welcome dialog stood here, rendered for
                     every user who had not dismissed it. Phones stopped showing
                     it on 2026-09-13 (`4a16656dd`) and the desktop dashboard

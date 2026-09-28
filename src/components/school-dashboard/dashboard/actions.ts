@@ -593,10 +593,20 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     }
   }
 
-  const teacher = await db.teacher.findFirst({
-    where: { userId, schoolId },
-    select: { id: true },
-  })
+  // Three steps, not ten: everything below needs only the teacher's id, the
+  // school's timezone and the active term, so the reads run side by side.
+  // Each sequential step is a full app ↔ database round trip.
+  const [teacher, teacherSchoolRow, { term: teacherTerm }] = await Promise.all([
+    db.teacher.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { timezone: true },
+    }),
+    resolveActiveTerm(schoolId),
+  ])
 
   if (!teacher) {
     return {
@@ -620,155 +630,161 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   // container), so for a school whose local day straddles the UTC boundary the
   // card showed the wrong day; and with no term filter a slot from a finished
   // term could still land in it.
-  const [teacherSchoolRow, { term: teacherTerm }] = await Promise.all([
-    db.school.findUnique({
-      where: { id: schoolId },
-      select: { timezone: true },
-    }),
-    resolveActiveTerm(schoolId),
-  ])
   const teacherNow = new Date()
   const dayOfWeek = schoolDayOfWeek(
     teacherSchoolRow?.timezone ?? "UTC",
     teacherNow
   )
 
-  // Section-based slots carry `teacherId` on the row itself and have no
-  // `class`; the old `class: { teacherId }` filter was an implicit inner join
-  // that matched none of them, so the count read 0 for every teacher.
-  const todaysSlots = await db.timetable.findMany({
-    where: {
-      schoolId,
-      dayOfWeek: dayOfWeek,
-      weekOffset: 0,
-      ...(teacherTerm ? { termId: teacherTerm.id } : {}),
-      OR: [
-        { teacherId: teacher.id },
-        { class: { is: { teacherId: teacher.id } } },
-      ],
-    },
-    include: {
-      class: {
-        select: {
-          name: true,
-          _count: { select: { studentClasses: true } },
+  const [
+    todaysClasses,
+    classes,
+    pendingGradingCount,
+    attendanceDueCount,
+    pendingAssignments,
+    upcomingExams,
+  ] = await Promise.all([
+    // Section-based slots carry `teacherId` on the row itself and have no
+    // `class`; the old `class: { teacherId }` filter was an implicit inner join
+    // that matched none of them, so the count read 0 for every teacher.
+    db.timetable
+      .findMany({
+        where: {
+          schoolId,
+          dayOfWeek: dayOfWeek,
+          weekOffset: 0,
+          ...(teacherTerm ? { termId: teacherTerm.id } : {}),
+          OR: [
+            { teacherId: teacher.id },
+            { class: { is: { teacherId: teacher.id } } },
+          ],
+        },
+        include: {
+          class: {
+            select: {
+              name: true,
+              _count: { select: { studentClasses: true } },
+            },
+          },
+          section: {
+            select: { name: true, _count: { select: { students: true } } },
+          },
+          subject: { select: { name: true } },
+          classroom: { select: { roomName: true } },
+          period: { select: { startTime: true, endTime: true } },
+        },
+        orderBy: { period: { startTime: "asc" } },
+      })
+      .then((todaysSlots) =>
+        // A class that is also online today gets its Join target — the same
+        // resolver the student card and the timetable today-cards use, so the
+        // teacher and the students in the room can never disagree about where
+        // the class meets.
+        teacherTerm
+          ? attachLiveClasses(
+              schoolId,
+              teacherTerm.id,
+              teacherNow,
+              todaysSlots.map((slot) => ({
+                ...slot,
+                timetableId: slot.id,
+              }))
+            )
+          : todaysSlots.map((slot) => ({
+              ...slot,
+              timetableId: slot.id,
+              liveClass: null,
+            }))
+      ),
+    // One read for both the student total and the per-class averages (these
+    // were two findMany calls over the same classes).
+    db.class.findMany({
+      where: { teacherId: teacher.id, schoolId },
+      select: {
+        name: true,
+        _count: { select: { studentClasses: true } },
+        schoolExams: {
+          select: { results: { select: { percentage: true } } },
         },
       },
-      section: {
-        select: { name: true, _count: { select: { students: true } } },
-      },
-      subject: { select: { name: true } },
-      classroom: { select: { roomName: true } },
-      period: { select: { startTime: true, endTime: true } },
-    },
-    orderBy: { period: { startTime: "asc" } },
-  })
-
-  // A class that is also online today gets its Join target — the same resolver
-  // the student card and the timetable today-cards use, so the teacher and the
-  // students in the room can never disagree about where the class meets.
-  const todaysClasses = teacherTerm
-    ? await attachLiveClasses(
+    }),
+    db.assignmentSubmission.count({
+      where: {
         schoolId,
-        teacherTerm.id,
-        teacherNow,
-        todaysSlots.map((slot) => ({
-          ...slot,
-          timetableId: slot.id,
-        }))
-      )
-    : todaysSlots.map((slot) => ({
-        ...slot,
-        timetableId: slot.id,
-        liveClass: null,
-      }))
-
-  const teacherClasses = await db.class.findMany({
-    where: { teacherId: teacher.id, schoolId },
-    select: { _count: { select: { studentClasses: true } } },
-  })
-
-  const totalStudents = teacherClasses.reduce(
-    (sum, cls) => sum + cls._count.studentClasses,
-    0
-  )
-
-  const pendingGradingCount = await db.assignmentSubmission.count({
-    where: {
-      schoolId,
-      status: "SUBMITTED",
-      assignment: { class: { teacherId: teacher.id } },
-    },
-  })
-
-  const attendanceDueCount = await db.class.count({
-    where: {
-      teacherId: teacher.id,
-      schoolId,
-      NOT: {
-        studentClasses: {
-          every: {
-            student: {
-              attendances: {
-                some: { date: { gte: today, lt: tomorrow } },
+        status: "SUBMITTED",
+        assignment: { class: { teacherId: teacher.id } },
+      },
+    }),
+    db.class.count({
+      where: {
+        teacherId: teacher.id,
+        schoolId,
+        NOT: {
+          studentClasses: {
+            every: {
+              student: {
+                attendances: {
+                  some: { date: { gte: today, lt: tomorrow } },
+                },
               },
             },
           },
         },
       },
-    },
-  })
-
-  const pendingAssignments = await db.schoolAssignment.findMany({
-    where: {
-      schoolId,
-      status: "PUBLISHED",
-      class: { teacherId: teacher.id },
-    },
-    include: {
-      class: { select: { name: true } },
-      submissions: { where: { status: "SUBMITTED" } },
-    },
-    orderBy: { dueDate: "asc" },
-    take: 5,
-  })
-
-  const classes = await db.class.findMany({
-    where: { teacherId: teacher.id, schoolId },
-    include: {
-      schoolExams: {
-        include: { results: { select: { percentage: true } } },
+    }),
+    db.schoolAssignment.findMany({
+      where: {
+        schoolId,
+        status: "PUBLISHED",
+        class: { teacherId: teacher.id },
       },
-    },
-  })
+      select: {
+        id: true,
+        title: true,
+        dueDate: true,
+        class: { select: { name: true } },
+        // Only the count is shown — no need to ship every submission row.
+        _count: {
+          select: { submissions: { where: { status: "SUBMITTED" } } },
+        },
+      },
+      orderBy: { dueDate: "asc" },
+      take: 5,
+    }),
+    db.schoolExam.findMany({
+      where: {
+        schoolId,
+        class: { teacherId: teacher.id },
+        examDate: { gte: today },
+        status: "PLANNED",
+      },
+      select: {
+        id: true,
+        title: true,
+        examDate: true,
+        class: { select: { name: true } },
+      },
+      orderBy: { examDate: "asc" },
+      take: 5,
+    }),
+  ])
+
+  const totalStudents = classes.reduce(
+    (sum, cls) => sum + cls._count.studentClasses,
+    0
+  )
 
   const classPerformance = classes.map((cls) => {
-    const allResults = cls.schoolExams.flatMap(
-      (exam: { results: { percentage: number }[] }) => exam.results
-    )
+    const allResults = cls.schoolExams.flatMap((exam) => exam.results)
     const average =
       allResults.length > 0
-        ? allResults.reduce(
-            (sum: number, r: { percentage: number }) => sum + r.percentage,
-            0
-          ) / allResults.length
+        ? allResults.reduce((sum, r) => sum + r.percentage, 0) /
+          allResults.length
         : 0
     return {
       className: cls.name,
       average: Math.round(average * 100) / 100,
     }
-  })
-
-  const upcomingExams = await db.schoolExam.findMany({
-    where: {
-      schoolId,
-      class: { teacherId: teacher.id },
-      examDate: { gte: today },
-      status: "PLANNED",
-    },
-    include: { class: { select: { name: true } } },
-    orderBy: { examDate: "asc" },
-    take: 5,
   })
 
   const upcomingDeadlines = upcomingExams.map((exam) => ({
@@ -803,7 +819,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
       title: assignment.title,
       className: assignment.class?.name || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
-      submissionsCount: assignment.submissions?.length || 0,
+      submissionsCount: assignment._count.submissions,
     })),
     classPerformance,
     upcomingDeadlines,

@@ -1,10 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { Suspense } from "react"
 import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 
-import { db } from "@/lib/db"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { ModalProvider } from "@/components/atom/modal/context"
 import {
@@ -17,7 +17,7 @@ import {
 } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
-import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
+import { MustChangePasswordGate } from "@/components/school-dashboard/must-change-password-gate"
 import { getText } from "@/components/translation/display"
 import { detectLang } from "@/components/translation/util"
 
@@ -56,7 +56,9 @@ export default async function MessagingLayout({
     notFound()
   }
 
-  const school = result.data
+  // A copy — result.data is getSchoolBySubdomain's cached object, and the
+  // name is rewritten below per viewer language (see the dashboard layout).
+  const school = { ...result.data }
 
   // Translate school name for display when viewing in a different language
   if (lang === "en" && school.nameEn) {
@@ -116,12 +118,6 @@ export default async function MessagingLayout({
 
   const isRTL = checkIsRTL(lang as Locale)
 
-  const currentUser = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { mustChangePassword: true, password: true },
-  })
-  const mustChangePassword = currentUser?.mustChangePassword ?? false
-
   return (
     <DictionaryProvider dictionary={dictionary as Dictionary}>
       <SchoolProvider school={school}>
@@ -137,9 +133,9 @@ export default async function MessagingLayout({
           >
             {children}
           </div>
-          {mustChangePassword && (
-            <ForceChangePasswordModal hasPassword={!!currentUser?.password} />
-          )}
+          <Suspense fallback={null}>
+            <MustChangePasswordGate userId={session.user.id} />
+          </Suspense>
         </ModalProvider>
       </SchoolProvider>
     </DictionaryProvider>
