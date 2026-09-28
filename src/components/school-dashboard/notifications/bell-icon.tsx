@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useState } from "react"
+import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { Bell } from "lucide-react"
 
@@ -16,8 +17,16 @@ import {
 import { CountBadge } from "@/components/atom/count-badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { NotificationListScrollable } from "./list"
 import { useNotificationBell } from "./use-notifications"
+
+// Loaded when the popover first opens (and warmed on hover/focus), not with
+// the header: the list pulls in framer-motion, which as a static import sat in
+// the initial JS of every dashboard route for a panel most visits never open.
+const loadList = () => import("./list")
+const NotificationListScrollable = dynamic(
+  () => loadList().then((m) => m.NotificationListScrollable),
+  { ssr: false }
+)
 
 interface NotificationBellIconProps {
   locale?: "ar" | "en"
@@ -98,6 +107,8 @@ export function NotificationBellIcon({
             }
             aria-haspopup="dialog"
             aria-expanded={isOpen}
+            onPointerEnter={() => void loadList()}
+            onFocus={() => void loadList()}
           >
             <span className="relative">
               <Bell className={cn("size-4", iconClassName)} />

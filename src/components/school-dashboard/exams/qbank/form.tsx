@@ -5,10 +5,10 @@
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
 import { useForm, type UseFormReturn } from "react-hook-form"
 import type { z } from "zod"
 
+import { BloomLevel, DifficultyLevel, QuestionType } from "@/lib/client-enums"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"

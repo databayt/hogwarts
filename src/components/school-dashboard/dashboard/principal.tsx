@@ -12,13 +12,16 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getPrincipalDashboardData, getQuickLookData } from "./actions"
 import { ActivityRings } from "./activity-rings"
-import { ChartSection } from "./chart-section"
-import { ComparisonLineChart } from "./comparison-chart"
 import { EmptyState } from "./empty-state"
 import { loadDashboardHero } from "./hero-data"
 import { InvoiceHistorySection } from "./invoice-history-section"
+import {
+  ChartSection,
+  ComparisonLineChart,
+  PerformanceGauge,
+  WeeklyActivityChart,
+} from "./lazy-charts"
 import { MetricCard } from "./metric-card"
-import { PerformanceGauge } from "./performance-gauge"
 import { ProgressCard } from "./progress-card"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
@@ -28,7 +31,6 @@ import { SectionHeading } from "./section-heading"
 import { Upcoming } from "./upcoming"
 import { Weather } from "./weather"
 import { getWeatherData } from "./weather-actions"
-import { WeeklyActivityChart } from "./weekly-chart"
 
 interface PrincipalDashboardProps {
   user: {

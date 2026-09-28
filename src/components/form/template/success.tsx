@@ -5,7 +5,6 @@
 import * as React from "react"
 import confetti from "canvas-confetti"
 import { ArrowRight, CheckCircle2 } from "lucide-react"
-import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -88,52 +87,35 @@ export function FormSuccess({
   }, [showConfetti, hasAnimated, confettiColors])
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className={cn("flex flex-col items-center space-y-6 py-8", className)}
+    // CSS entrance (tw-animate-css), not the motion library: this template is
+    // re-exported by the form barrel, which put the library in the initial JS
+    // of every route with a form wizard. Same stagger as before.
+    <div
+      className={cn(
+        "animate-in fade-in-0 zoom-in-95 flex flex-col items-center space-y-6 py-8 duration-500 ease-out [animation-fill-mode:both] motion-reduce:animate-none",
+        className
+      )}
     >
       {/* Success icon */}
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-        className="bg-primary/10 flex h-20 w-20 items-center justify-center rounded-full"
-      >
+      <div className="animate-in zoom-in-0 bg-primary/10 flex h-20 w-20 items-center justify-center rounded-full duration-500 [animation-delay:200ms] [animation-fill-mode:both] motion-reduce:animate-none">
         <CheckCircle2 className="text-primary h-10 w-10" />
-      </motion.div>
+      </div>
 
       {/* Title and description */}
       <div className="space-y-2 text-center">
-        <motion.h2
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-2xl font-semibold tracking-tight"
-        >
+        <h2 className="animate-in fade-in-0 slide-in-from-bottom-2.5 text-2xl font-semibold tracking-tight [animation-delay:300ms] [animation-fill-mode:both] motion-reduce:animate-none">
           {title}
-        </motion.h2>
+        </h2>
         {description && (
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-muted-foreground max-w-md"
-          >
+          <p className="animate-in fade-in-0 slide-in-from-bottom-2.5 text-muted-foreground max-w-md [animation-delay:400ms] [animation-fill-mode:both] motion-reduce:animate-none">
             {description}
-          </motion.p>
+          </p>
         )}
       </div>
 
       {/* Next steps */}
       {nextSteps && nextSteps.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="w-full max-w-md space-y-3"
-        >
+        <div className="animate-in fade-in-0 slide-in-from-bottom-5 w-full max-w-md space-y-3 [animation-delay:500ms] [animation-fill-mode:both] motion-reduce:animate-none">
           <h3 className="text-muted-foreground text-center text-sm font-medium">
             Next Steps
           </h3>
@@ -197,22 +179,18 @@ export function FormSuccess({
               return <div key={index}>{content}</div>
             })}
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Complete button */}
       {onComplete && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-        >
+        <div className="animate-in fade-in-0 [animation-delay:700ms] [animation-fill-mode:both] motion-reduce:animate-none">
           <Button onClick={onComplete} size="lg" className="mt-4">
             Continue
             <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
           </Button>
-        </motion.div>
+        </div>
       )}
-    </motion.div>
+    </div>
   )
 }

@@ -39,7 +39,11 @@
  * - Socket.IO server (configurable via NEXT_PUBLIC_SOCKET_URL env)
  * - Default: http://localhost:3001 (development)
  */
-import { io, Socket } from "socket.io-client"
+// Type-only at module level: the client library loads inside connect(), after
+// the "no socket server configured" early return. Production sets no
+// NEXT_PUBLIC_SOCKET_URL, so it never connects — yet the static import put
+// socket.io-client in the initial JS of 422 routes.
+import type { Socket } from "socket.io-client"
 
 import type {
   AttendanceRecord,
@@ -284,7 +288,10 @@ class SocketService {
 
       try {
         // Fetch signed JWT for production auth; falls back to query params in dev
-        const token = await this.fetchSocketToken()
+        const [token, { io }] = await Promise.all([
+          this.fetchSocketToken(),
+          import("socket.io-client"),
+        ])
 
         this.socket = io(this.url, {
           transports: ["websocket", "polling"],

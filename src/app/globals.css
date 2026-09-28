@@ -567,6 +567,19 @@ body {
   container-type: inline-size;
 }
 
+/* Progress bar: grows from empty on mount, then follows value changes with
+   the element's own transition (see components/ui/progress.tsx). A `from`-only
+   keyframe animates to whatever scaleX the inline style sets. */
+@keyframes progress-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@utility animate-progress-in {
+  animation: progress-in 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Smooth shimmer animation for skeletons */
 @keyframes shimmer {
   0% {

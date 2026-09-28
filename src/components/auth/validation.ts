@@ -37,7 +37,9 @@
  * - Prevent common passwords (password123, qwerty, etc.)
  */
 
-import { UserRole } from "@prisma/client"
+// Type-only: a value import of the enum pulled Prisma's browser client (47 KB
+// gzip) into the sign-in page, the first screen anyone opens.
+import type { UserRole } from "@prisma/client"
 import * as z from "zod"
 
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -54,7 +56,7 @@ export function createSettingsSchema(dictionary: Dictionary) {
     .object({
       name: z.optional(z.string()),
       isTwoFactorEnabled: z.optional(z.boolean()),
-      role: z.enum([UserRole.ADMIN, UserRole.USER]),
+      role: z.enum(["ADMIN", "USER"] as const satisfies readonly UserRole[]),
       email: z.optional(z.string().email()),
       password: z.optional(z.string().min(6)),
       newPassword: z.optional(z.string().min(6)),
@@ -162,7 +164,7 @@ export const SettingsSchema = z
   .object({
     name: z.optional(z.string()),
     isTwoFactorEnabled: z.optional(z.boolean()),
-    role: z.enum([UserRole.ADMIN, UserRole.USER]),
+    role: z.enum(["ADMIN", "USER"] as const satisfies readonly UserRole[]),
     email: z.optional(z.string().email()),
     password: z.optional(z.string().min(6)),
     newPassword: z.optional(z.string().min(6)),

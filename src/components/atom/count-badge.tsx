@@ -2,8 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { AnimatePresence, motion } from "framer-motion"
-
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 
@@ -33,27 +31,23 @@ export function CountBadge({
   count: number
   className?: string
 }) {
+  // CSS pop-in (tw-animate-css), not framer-motion: this badge sits on the
+  // header's bell and mail on every dashboard route, and was one of the
+  // imports that put framer-motion in all of their initial JS.
+  if (count <= 0) return null
   return (
-    <AnimatePresence>
-      {count > 0 && (
-        <motion.span
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className={cn(
-            "pointer-events-none absolute -top-1.5 ltr:-right-1.5 rtl:-left-1.5",
-            className
-          )}
-        >
-          <Badge
-            variant="destructive"
-            className="h-4 min-w-4 justify-center px-1 text-[10px] leading-none font-semibold tabular-nums"
-          >
-            {count > 99 ? "99+" : count}
-          </Badge>
-        </motion.span>
+    <span
+      className={cn(
+        "animate-in zoom-in-0 fade-in-0 pointer-events-none absolute -top-1.5 duration-200 ltr:-right-1.5 rtl:-left-1.5",
+        className
       )}
-    </AnimatePresence>
+    >
+      <Badge
+        variant="destructive"
+        className="h-4 min-w-4 justify-center px-1 text-[10px] leading-none font-semibold tabular-nums"
+      >
+        {count > 99 ? "99+" : count}
+      </Badge>
+    </span>
   )
 }

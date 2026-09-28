@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useTransition } from "react"
 import Link from "next/link"
-import { UserRole } from "@prisma/client"
+import type { UserRole } from "@prisma/client"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"

@@ -2,8 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { DifficultyLevel, QuestionType } from "@prisma/client"
-
+import { DifficultyLevel, QuestionType } from "@/lib/client-enums"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useDictionary } from "@/components/internationalization/use-dictionary"

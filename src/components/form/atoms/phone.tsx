@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import dynamic from "next/dynamic"
 import { useFormContext } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -13,9 +14,17 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { PhoneInput, type CountryData } from "@/components/atom/phone-input"
+import type { CountryData } from "@/components/atom/phone-input"
 
 import type { BaseFieldProps } from "../types"
+
+// Loaded as its own chunk. The form barrel (@/components/form) re-exports this
+// field, so a static import put libphonenumber + country data (~150 KB gzip)
+// in the initial JS of every route that imports any field from the barrel —
+// 57 routes, most of which render the form only inside a closed dialog.
+const PhoneInput = dynamic(() =>
+  import("@/components/atom/phone-input").then((m) => m.PhoneInput)
+)
 
 interface PhoneFieldProps extends BaseFieldProps {
   defaultCountry?: string

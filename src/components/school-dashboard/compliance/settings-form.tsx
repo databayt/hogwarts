@@ -3,9 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
-import { ComplianceProvider, ConnectorMode } from "@prisma/client"
 import { toast } from "sonner"
 
+import { ComplianceProvider, ConnectorMode } from "@/lib/client-enums"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

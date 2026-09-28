@@ -11,19 +11,21 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getStaffDashboardData } from "./actions"
 import { ActivityRings } from "./activity-rings"
-import { ChartSection } from "./chart-section"
 import { EmptyState } from "./empty-state"
 import { loadDashboardHero } from "./hero-data"
 import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
+import {
+  ChartSection,
+  PerformanceGauge,
+  WeeklyActivityChart,
+} from "./lazy-charts"
 import { MetricCard } from "./metric-card"
-import { PerformanceGauge } from "./performance-gauge"
 import { ProgressCard } from "./progress-card"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { SectionHeading } from "./section-heading"
-import { WeeklyActivityChart } from "./weekly-chart"
 
 interface StaffDashboardProps {
   user: {

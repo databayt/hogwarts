@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { motion } from "framer-motion"
 import { Progress as ProgressPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
@@ -43,17 +42,15 @@ function Progress({
 function ProgressIndicator({ value }: { value?: number | null }) {
   const scale = Math.min(Math.max(value || 0, 0), 100) / 100
 
+  // CSS, not framer-motion: Progress renders on 80+ screens, and the motion
+  // import put framer-motion in the initial JS of nearly every route. The
+  // keyframe grows the bar from empty on mount; the transition follows later
+  // value changes. Same curve and duration as before.
   return (
-    <motion.div
+    <div
       data-slot="progress-indicator"
-      className="bg-primary h-full w-full flex-1 origin-left rtl:origin-right"
-      initial={{ scaleX: 0 }}
-      animate={{ scaleX: scale }}
-      transition={{
-        type: "tween",
-        duration: 0.8,
-        ease: [0.4, 0.0, 0.2, 1],
-      }}
+      className="bg-primary motion-safe:animate-progress-in h-full w-full flex-1 origin-left transition-transform duration-800 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none rtl:origin-right"
+      style={{ transform: `scaleX(${scale})` }}
     />
   )
 }

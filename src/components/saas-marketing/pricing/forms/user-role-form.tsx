@@ -4,12 +4,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { User, UserRole } from "@prisma/client"
+import type { User } from "@prisma/client"
 import { useSession } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { UserRole } from "@/lib/client-enums"
 import { Button } from "@/components/ui/button"
 import {
   Form,

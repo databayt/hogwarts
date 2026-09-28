@@ -4,9 +4,9 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { ComplianceProvider } from "@prisma/client"
 import { toast } from "sonner"
 
+import { ComplianceProvider } from "@/lib/client-enums"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {

@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import dynamic from "next/dynamic"
 import { useFormContext } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -12,9 +13,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { CountryDropdown } from "@/components/atom/country-dropdown"
 
 import type { BaseFieldProps } from "../types"
+
+// Loaded as its own chunk — see ./phone.tsx: the form barrel otherwise put
+// the country dataset in the initial JS of every route that uses the barrel.
+const CountryDropdown = dynamic(() =>
+  import("@/components/atom/country-dropdown").then((m) => m.CountryDropdown)
+)
 
 interface CountryFieldProps extends BaseFieldProps {
   searchPlaceholder?: string

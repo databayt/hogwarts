@@ -5,9 +5,9 @@
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { QuickLookData } from "./actions"
-import { ChartSection } from "./chart-section"
 import { DashboardHero } from "./hero-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
+import { ChartSection } from "./lazy-charts"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { QuickLookSection } from "./quick-look-section"

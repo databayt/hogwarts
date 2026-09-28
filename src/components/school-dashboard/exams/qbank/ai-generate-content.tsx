@@ -9,7 +9,6 @@
  */
 import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
-import { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
 import {
   Check,
   CheckCircle,
@@ -20,6 +19,7 @@ import {
   X,
 } from "lucide-react"
 
+import { BloomLevel, DifficultyLevel, QuestionType } from "@/lib/client-enums"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

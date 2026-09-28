@@ -20,6 +20,7 @@ import {
   type ComponentType,
   type SVGProps,
 } from "react"
+import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
 import { Check, Copy } from "lucide-react"
 
@@ -34,7 +35,6 @@ import {
 } from "@/components/ui/dialog"
 
 import { generateCredentials } from "./actions"
-import { HandLock } from "./hand-lock"
 import { EmailIcon, MessageIcon, WhatsAppIcon } from "./icons"
 import { fillTemplate, normalizePhone } from "./share"
 import {
@@ -45,6 +45,13 @@ import {
   useCredentialsDialogState,
 } from "./store"
 import type { CredentialsPayload } from "./types"
+
+// The dialog's hero animation (lottie-react + motion) loads with the dialog.
+// Statically imported, lottie sat in the initial JS of the students and
+// teachers tables — every visit, for a dialog opened a few times a term.
+const HandLock = dynamic(() => import("./hand-lock").then((m) => m.HandLock), {
+  ssr: false,
+})
 
 interface CredentialsDialogProps {
   /** The `school.students.credentials` dictionary block (shared by all roles). */
