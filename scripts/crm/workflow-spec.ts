@@ -114,6 +114,11 @@ export const SPEC = {
           name: "{{trigger.properties.after.name}}",
           phone: "{{trigger.properties.after.schoolPhone}}",
           stage: "{{trigger.properties.after.stage}}",
+          // 2026-09-28: the card prints the variant tick rendered for THIS
+          // school (version 1c70ec5c), instead of a text frozen in Hermes.
+          message: "{{trigger.properties.after.outreachMessage}}",
+          variant: "{{trigger.properties.after.outreachVariant}}",
+          wave: "{{trigger.properties.after.outreachWave}}",
         },
       },
     },

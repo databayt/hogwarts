@@ -6,8 +6,22 @@
  *   pnpm crm:funnel-tick --lane=email --segment='gulf-*' --limit=10 \
  *        --reply-to=<real mailbox> --apply
  *
- * Flags: --lane=<whatsapp|email> --segment=<glob over "<rail>-<tier>">
- *        --limit=<N> --reply-to=<addr> --from=<addr> --apply
+ * Flags: --lane=<whatsapp|email> --segment=<glob[,glob…] over "<rail>-<tier>">
+ *        --limit=<N> --wave=<id> --reply-to=<addr> --from=<addr> --apply
+ *        --id=<companyId>   TEST ONLY: target one company (a throwaway) and
+ *                           nothing else — `--limit=1` on a segment takes the
+ *                           first REAL school of a stable sort, so never test
+ *                           the roll that way.
+ *
+ * WAVES (2026-09-28). --wave is REQUIRED on --apply: every send lands in
+ * `scripts/crm/.data/waves/<wave>.json` (school, lane, variant, Resend id),
+ * and the same facts are stamped on the company (outreachWave,
+ * outreachVariant, outreachMessage). The message itself comes from
+ * `scripts/funnel/templates/variants.json`, chosen per school by
+ * `chooseVariant` (src/lib/funnel/waves.ts); the loop in loop.sh reads the
+ * ledgers back (replies, bounces) and learn.ts turns them into the next
+ * wave's proposal. The WhatsApp card prints `outreachMessage`, so the
+ * variant reaches the human who sends it.
  *
  * POPULATION vs SCHEDULE: every reachable school is in the queue (377 at first
  * census); the ramp only sets drain speed — 10/day week 1 → 20 → 30 (a fresh
@@ -44,18 +58,23 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
+import {
+  chooseVariant,
+  renderVariant,
+  variantStats,
+  type LedgerRow,
+} from "@/lib/funnel/waves"
+
 import { twentyClient, type TwentyClient } from "../crm/twenty-rest"
 import {
   argv,
   DECK_URL,
   emailOf,
   flag,
-  isMobile,
   loadEnv,
-  openingMessage,
-  railOf,
-  toE164,
 } from "./lib"
+import { buildQueue, globToRe, type Company, type QueueRow } from "./queue"
+import { appendRows, loadAllLedgers, loadVariants } from "./store"
 
 loadEnv()
 
@@ -63,64 +82,23 @@ const APPLY = flag("apply")
 const LANE = argv("lane") // whatsapp | email | '' (dry shows both)
 const SEGMENT = argv("segment")
 const LIMIT = parseInt(argv("limit", "0"), 10) || 0
-const REPLY_TO = argv("reply-to")
-const FROM = argv("from", "فريق بالقلم <noreply@databayt.org>")
+// The mailbox inbox.ts reads — from the central .env, never hardcoded (public repo).
+const REPLY_TO = argv("reply-to", (process.env.FUNNEL_MAILBOX ?? "").trim())
+const WAVE = argv("wave")
+const ONLY_ID = argv("id")
+// A cold email that asks a question must not come from `noreply@` — the
+// address contradicts the ask, and a person's name out-replies a team name.
+// The display name follows the variant's language; replies go to REPLY_TO
+// (the inbox inbox.ts reads). databayt.org carries Resend DKIM, so the From
+// stays aligned under its strict DMARC. `--from=` still overrides both.
+const FROM_FLAG = argv("from")
+const fromFor = (lang: "ar" | "en") =>
+  FROM_FLAG ||
+  (lang === "en"
+    ? "Osman Abdout · Balqalam <contact@databayt.org>"
+    : "عثمان عبدوت · بالقلم <contact@databayt.org>")
 const WORKFLOW_NAME = "School shortlisted → outreach"
 
-interface Company {
-  id: string
-  name?: string | null
-  stage?: string | null
-  tier?: string | null
-  country?: string | null
-  schoolPhone?: string | null
-  principalContact?: string | null
-  outreachStatus?: string | null
-}
-
-interface QueueRow {
-  id: string
-  name: string
-  tier: string
-  seg: string
-  lane: "whatsapp" | "email"
-  to: string // e164 or email
-}
-
-const globToRe = (g: string) =>
-  new RegExp(
-    `^${g.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`,
-    "i"
-  )
-
-function buildQueue(rows: Company[]): QueueRow[] {
-  const q: QueueRow[] = []
-  for (const c of rows) {
-    const stage = (c.stage ?? "").toUpperCase()
-    if (stage !== "COLD" && stage !== "PROSPECT") continue
-    const outreach = (c.outreachStatus ?? "NOT_STARTED").toUpperCase()
-    if (outreach !== "NOT_STARTED") continue
-    const e164 = toE164(c.schoolPhone, c.country)
-    const mobile = e164 && isMobile(e164) ? e164 : null
-    const email = emailOf(c.principalContact)
-    if (!mobile && !email) continue
-    const rail = railOf(c.country, e164)
-    const tier = (c.tier ?? "C").toUpperCase()
-    const seg = `${rail}-${tier}` // v1 key — bands join once student counts exist
-    q.push({
-      id: c.id,
-      name: c.name ?? "(unnamed)",
-      tier,
-      seg,
-      lane: mobile ? "whatsapp" : "email",
-      to: mobile ?? email!,
-    })
-  }
-  // Tier A first, then B; sd rail leads inside a tier (WhatsApp-first market).
-  const rank = (r: QueueRow) =>
-    `${{ A: 0, B: 1 }[r.tier] ?? 2}-${r.seg.startsWith("sd") ? 0 : 1}`
-  return q.sort((a, b) => rank(a).localeCompare(rank(b)))
-}
 
 async function workflowIsActive(t: TwentyClient): Promise<boolean> {
   try {
@@ -142,16 +120,14 @@ async function workflowIsActive(t: TwentyClient): Promise<boolean> {
   }
 }
 
-async function sendEmailTouch(to: string, school: string): Promise<string> {
+async function sendEmailTouch(
+  to: string,
+  subject: string,
+  text: string,
+  from: string
+): Promise<string> {
   const key = (process.env.RESEND_API_KEY ?? "").trim()
   if (!key) throw new Error("RESEND_API_KEY missing")
-  const text = [
-    openingMessage(school),
-    "",
-    `العرض التعريفي: ${DECK_URL}`,
-    "",
-    "إن لم ترغبوا بمراسلاتنا مستقبلاً، يكفي الرد بكلمة «إيقاف».",
-  ].join("\n")
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -159,10 +135,10 @@ async function sendEmailTouch(to: string, school: string): Promise<string> {
       Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      from: FROM,
+      from,
       to,
       reply_to: REPLY_TO,
-      subject: "منصة «بالقلم» لإدارة المدارس — تجربة مجانية ٣ أشهر لمدرستكم",
+      subject,
       text,
     }),
   })
@@ -185,6 +161,10 @@ async function main() {
     throw new Error(
       "--apply needs --lane=whatsapp|email — one lane per deliberate act."
     )
+  if (APPLY && !WAVE)
+    throw new Error(
+      "--apply needs --wave=<id> (w1, w2, …). A send outside a wave is a send nobody can learn from."
+    )
   if (APPLY && !SEGMENT)
     throw new Error(
       "--apply needs --segment (e.g. --segment=sd-A or --segment=gulf-*). An unsegmented blast erases the reason this lane exists."
@@ -197,6 +177,19 @@ async function main() {
 
   const segRe = SEGMENT ? globToRe(SEGMENT) : null
   if (segRe) queue = queue.filter((r) => segRe.test(r.seg))
+  if (ONLY_ID) {
+    queue = queue.filter((r) => r.id === ONLY_ID)
+    if (!queue.length)
+      throw new Error(
+        `--id=${ONLY_ID} is not in the queue (needs stage COLD/PROSPECT, outreachStatus NOT_STARTED, and a mobile or email in the segment).`
+      )
+  }
+  const variants = loadVariants()
+  const stats = variantStats(loadAllLedgers())
+  const pick = (r: QueueRow) => {
+    const v = chooseVariant(r.id, r.lane, variants, stats, r.lang)
+    return { v, ...renderVariant(v, { school: r.name, deck: DECK_URL }) }
+  }
   const laneQueue = (lane: string) => queue.filter((r) => r.lane === lane)
 
   console.log(`\n═══ Funnel tick — the roll ═══`)
@@ -217,7 +210,9 @@ async function main() {
       const batch = laneQueue(lane).slice(0, LIMIT || 10)
       console.log(`  ${lane} — next ${batch.length} (dry):`)
       for (const r of batch)
-        console.log(`    [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}`)
+        console.log(
+          `    [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}  (${pick(r).v.id})`
+        )
       console.log("")
     }
     console.log(
@@ -245,38 +240,58 @@ async function main() {
       `  Flipping ${batch.length} → SHORTLISTED (the workflow takes it from there):`
     )
     const done: string[] = []
+    const rows: LedgerRow[] = []
     for (const r of batch) {
+      const m = pick(r)
       // `r.to` IS the verified E.164 mobile in this lane — write it back so the
       // card's wa.me link is built from a dialable number, not the raw import.
+      // outreachMessage rides the same PATCH: the trigger fires on `stage`,
+      // and the workflow's body reads `after.*`, so the card gets THIS text.
       await t.rest("PATCH", `companies/${r.id}`, {
         stage: "SHORTLISTED",
         schoolPhone: r.to,
+        outreachWave: WAVE,
+        outreachVariant: m.v.id,
+        outreachMessage: m.text,
       })
-      console.log(`    ✓ [${r.seg}] ${r.name.slice(0, 48)}`)
+      console.log(`    ✓ [${r.seg}] ${r.name.slice(0, 48)}  (${m.v.id})`)
       done.push(r.id)
+      rows.push(ledgerRow(r, m.v.id, "queued"))
     }
     receipt(LANE, batch, done)
+    console.log(`  ledger → ${appendRows(WAVE, rows)}`)
   } else if (LANE === "email") {
     if (!REPLY_TO || !emailOf(REPLY_TO))
       throw new Error(
         "--reply-to=<real mailbox> is required for the email lane. Stop-on-reply is the hardest rule here — a reply must land where a person reads, or the lead is silently lost."
       )
     console.log(
-      `  Sending ${batch.length} touch-1 emails (from ${FROM}, replies → ${REPLY_TO}):`
+      `  Sending ${batch.length} touch-1 emails (from ${fromFor("ar")} | ${fromFor("en")}, replies → ${REPLY_TO}):`
     )
     const done: string[] = []
+    const rows: LedgerRow[] = []
     for (const r of batch) {
+      const m = pick(r)
       try {
-        const id = await sendEmailTouch(r.to, r.name)
+        const id = await sendEmailTouch(
+          r.to,
+          m.subject ?? "",
+          m.text,
+          fromFor(m.v.lang)
+        )
         await t.rest("PATCH", `companies/${r.id}`, {
           stage: "CONTACTED",
           outreachStatus: "SENT",
           lastOutreachAt: new Date().toISOString(),
+          outreachWave: WAVE,
+          outreachVariant: m.v.id,
+          outreachMessage: m.text,
         })
         console.log(
-          `    ✓ [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}  (resend ${id})`
+          `    ✓ [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}  (${m.v.id}, resend ${id})`
         )
         done.push(r.id)
+        rows.push({ ...ledgerRow(r, m.v.id, "sent"), resendId: id })
       } catch (e) {
         await t
           .rest("PATCH", `companies/${r.id}`, { outreachStatus: "FAILED" })
@@ -284,16 +299,36 @@ async function main() {
         console.log(
           `    ✗ [${r.seg}] ${r.name.slice(0, 48)} → ${r.to}  ${e instanceof Error ? e.message : e}`
         )
+        rows.push(ledgerRow(r, m.v.id, "failed"))
       }
       await new Promise((r2) => setTimeout(r2, 600))
     }
     receipt(LANE, batch, done)
+    console.log(`  ledger → ${appendRows(WAVE, rows)}`)
   } else {
     throw new Error(`unknown --lane=${LANE}`)
   }
   console.log(
     `\n  Re-measure: pnpm crm:funnel-gates  (the yield ledger diffs the artifact)\n`
   )
+}
+
+function ledgerRow(
+  r: QueueRow,
+  variant: string,
+  status: LedgerRow["status"]
+): LedgerRow {
+  return {
+    companyId: r.id,
+    name: r.name,
+    lane: r.lane,
+    seg: r.seg,
+    to: r.to,
+    variant,
+    at: new Date().toISOString(),
+    status,
+    events: [],
+  }
 }
 
 function receipt(lane: string, batch: QueueRow[], done: string[]) {
@@ -310,6 +345,7 @@ function receipt(lane: string, batch: QueueRow[], done: string[]) {
         at: new Date().toISOString(),
         lane,
         segment: SEGMENT,
+        wave: WAVE,
         limit: LIMIT,
         attempted: batch.length,
         applied: done.length,

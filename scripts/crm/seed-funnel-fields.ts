@@ -118,6 +118,29 @@ async function main() {
 
     for (const f of fields) {
       if (existing.has(f.name)) {
+        // SELECT options: append the missing ones, never drop or rewrite a
+        // live option — rows store the VALUE, so a dropped option orphans them.
+        // (stage is handled below with its ladder ordering.)
+        const live = (obj.fields ?? []).find((x) => x.name === f.name)
+        const liveVals = new Set((live?.options ?? []).map((o) => o.value))
+        const missing =
+          f.options && f.name !== "stage" && live?.options
+            ? f.options.filter((o) => !liveVals.has(o))
+            : []
+        if (missing.length && live) {
+          console.log(
+            `  + ${f.name.padEnd(20)} append option(s): ${missing.join(", ")}  (${liveVals.size} kept)`
+          )
+          created += missing.length
+          if (APPLY)
+            await t.rest("PATCH", `metadata/fields/${live.id}`, {
+              options: [
+                ...(live.options ?? []),
+                ...missing.map((v, i) => toOption(v, liveVals.size + i)),
+              ],
+            })
+          continue
+        }
         console.log(`  = ${f.name.padEnd(20)} exists`)
         skipped++
         continue

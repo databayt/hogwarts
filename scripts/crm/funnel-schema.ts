@@ -306,7 +306,9 @@ export const COMPANY_FUNNEL_FIELDS: FieldDef[] = [
     label: "Outreach status",
     type: "SELECT",
     icon: "IconSend",
-    options: ["NOT_STARTED", "QUEUED", "SENT", "FAILED", "OPTED_OUT"],
+    // REPLIED appended 2026-09-28 for the reply reader (scripts/funnel/inbox.ts).
+    // SELECT options are append-only for the same reason stage options are.
+    options: ["NOT_STARTED", "QUEUED", "SENT", "FAILED", "OPTED_OUT", "REPLIED"],
     description:
       "What happened to the message, which `stage` cannot express. QUEUED means the " +
       "request was accepted by the relay — NOT that a message reached anyone. Only a " +
@@ -330,6 +332,34 @@ export const COMPANY_FUNNEL_FIELDS: FieldDef[] = [
     options: ["OWNER", "PRINCIPAL", "ADMIN", "UNKNOWN"],
     description:
       "Only a signer can sign. An admin gets material built to be forwarded upward.",
+  },
+  // ── The wave ledger's mirror (2026-09-28) ──────────────────────────────────
+  // The ledger file (scripts/crm/.data/waves/<wave>.json) is the record the
+  // learner reads; these three make the same facts visible on the board and
+  // carry the variant's text into the workflow → Hermes card, so the WhatsApp
+  // copy follows the variant instead of a template frozen in Hermes config.
+  {
+    name: "outreachWave",
+    label: "Outreach wave",
+    type: "TEXT",
+    icon: "IconWaveSine",
+    description: "Which wave messaged this school (w1, w2, …). Set by tick --wave.",
+  },
+  {
+    name: "outreachVariant",
+    label: "Message variant",
+    type: "TEXT",
+    icon: "IconFlask",
+    description:
+      "Which opening-message variant it received (scripts/funnel/templates/variants.json).",
+  },
+  {
+    name: "outreachMessage",
+    label: "Opening message",
+    type: "TEXT",
+    icon: "IconMessage",
+    description:
+      "The exact first message, rendered for this school. The Slack card prints it.",
   },
 ]
 

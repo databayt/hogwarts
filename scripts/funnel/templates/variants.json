@@ -1,0 +1,77 @@
+{
+  "$comment": "Opening-message variants for the hogwarts outreach waves. Only active ones send. One active variant per lane → every school gets it; two or more → ~80% incumbent (best reply rate after 10 sends, else the oldest) / ~20% challenger, split by a hash of the company id. New variants arrive INACTIVE from `pnpm crm:funnel-learn --propose`; `pnpm crm:funnel-variant activate <id>` is Abdout's yes. lang=en is used only for rail `other`. Placeholders: {school}, {deck}. Never edit an id that has been sent — add a new one with `parent` set, so the ledger's history stays attributable.",
+  "variants": [
+    {
+      "id": "wa-ar@1",
+      "lane": "whatsapp",
+      "lang": "ar",
+      "active": true,
+      "parent": null,
+      "createdAt": "2026-08-22",
+      "hypothesis": "Baseline: who is speaking, what it is in the school's own words, a no-conditions 3-month trial, ONE small yes/no ask. The deck goes only after a reply.",
+      "body": [
+        "السلام عليكم ورحمة الله وبركاته",
+        "",
+        "أكتب لكم بخصوص {school}.",
+        "",
+        "معكم فريق داتابيت. طوّرنا منصة «بالقلم» لإدارة المدارس — القبول والتسجيل، الرسوم والفواتير والرواتب، التواصل مع أولياء الأمور، وموقع إلكتروني خاص بالمدرسة.",
+        "",
+        "نتيح ثلاثة أشهر تجربة مجانية كاملة، بدون رسوم وبدون التزام.",
+        "",
+        "هل ترغبون أن نجهّز نسخة تجريبية باسم مدرستكم لتجربتها؟"
+      ]
+    },
+    {
+      "id": "email-ar@1",
+      "lane": "email",
+      "lang": "ar",
+      "active": true,
+      "parent": null,
+      "createdAt": "2026-08-22",
+      "hypothesis": "Baseline: the WhatsApp opener plus the deck link and a one-word opt-out, subject naming the product and the free trial.",
+      "subject": "منصة «بالقلم» لإدارة المدارس — تجربة مجانية ٣ أشهر لمدرستكم",
+      "body": [
+        "السلام عليكم ورحمة الله وبركاته",
+        "",
+        "أكتب لكم بخصوص {school}.",
+        "",
+        "معكم فريق داتابيت. طوّرنا منصة «بالقلم» لإدارة المدارس — القبول والتسجيل، الرسوم والفواتير والرواتب، التواصل مع أولياء الأمور، وموقع إلكتروني خاص بالمدرسة.",
+        "",
+        "أرفقنا لكم تعريفاً مختصراً.",
+        "",
+        "نتيح ثلاثة أشهر تجربة مجانية كاملة، بدون رسوم وبدون التزام.",
+        "",
+        "هل ترغبون أن نجهّز نسخة تجريبية باسم مدرستكم لتجربتها؟",
+        "",
+        "العرض التعريفي: {deck}",
+        "",
+        "إن لم ترغبوا بمراسلاتنا مستقبلاً، يكفي الرد بكلمة «إيقاف»."
+      ]
+    },
+    {
+      "id": "email-en@1",
+      "lane": "email",
+      "lang": "en",
+      "active": true,
+      "parent": "email-ar@1",
+      "createdAt": "2026-09-28",
+      "hypothesis": "Rail `other` (outside SD/Gulf/EG) is not Arabic-first; the same offer in English.",
+      "subject": "Balqalam school management — a free 3-month trial for {school}",
+      "body": [
+        "Hello,",
+        "",
+        "I am writing about {school}.",
+        "",
+        "We are the Databayt team. We built Balqalam, a school management platform — admissions and enrolment, fees, invoices and payroll, parent communication, and a website for the school.",
+        "",
+        "We offer a full three-month free trial, with no fees and no commitment.",
+        "",
+        "Would you like us to prepare a trial copy under your school's name?",
+        "",
+        "A short introduction: {deck}",
+        "",
+        "If you would rather not hear from us again, just reply \"stop\"."
+      ]
+    }
+  ]
+}
