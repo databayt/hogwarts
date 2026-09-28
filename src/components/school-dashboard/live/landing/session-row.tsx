@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Fragment, type ReactNode } from "react"
-import Image from "next/image"
+import { BlurImage, blurFromColor } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { Radio } from "lucide-react"
 
@@ -335,9 +335,10 @@ function Portrait({
 }) {
   if (photoUrl) {
     return (
-      <Image
+      <BlurImage
         src={photoUrl}
         alt=""
+        plain
         width={24}
         height={24}
         className="size-6 shrink-0 rounded-full object-cover"
@@ -384,9 +385,10 @@ function Art({ session, sizes }: { session: LandingSession; sizes: string }) {
     )
   }
   return (
-    <Image
+    <BlurImage
       src={session.imageUrl}
       alt=""
+      blurDataURL={blurFromColor(session.color)}
       fill
       className="object-cover"
       sizes={sizes}

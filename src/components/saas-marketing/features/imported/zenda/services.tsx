@@ -8,7 +8,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
@@ -218,7 +218,7 @@ export function Features() {
                       </div>
                     </div>
                     <div className="services_img-wrap">
-                      <Image
+                      <BlurImage
                         src={s.image}
                         alt={s.title}
                         width={s.width}

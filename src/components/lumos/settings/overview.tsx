@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import {
   ArrowDown,
@@ -170,7 +170,7 @@ export function LumosAdminDashboardContent({ dictionary, lang, stats }: Props) {
               >
                 <div className="bg-muted relative aspect-[16/10] overflow-hidden rounded-xl">
                   {course.imageUrl ? (
-                    <Image
+                    <BlurImage
                       src={course.imageUrl}
                       alt={course.title}
                       fill

@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { asset } from "@/lib/asset-url"
@@ -91,9 +91,10 @@ export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
                 {/* Icon with slow animation effect */}
                 <div className="animation-box flex-1">
                   <div className="relative h-24 w-24 md:h-28 md:w-28">
-                    <Image
+                    <BlurImage
                       src={card.icon}
                       alt=""
+                      plain
                       fill
                       className="object-contain"
                     />

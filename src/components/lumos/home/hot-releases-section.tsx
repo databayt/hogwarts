@@ -1,6 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { ArrowRight, Star } from "lucide-react"
 
@@ -81,7 +81,7 @@ export function HotReleasesSection({ dictionary, lang, courses }: Props) {
                     colour when it has none. */}
                 <div className="aspect-video overflow-hidden">
                   {course.imageUrl ? (
-                    <Image
+                    <BlurImage
                       src={course.imageUrl}
                       alt={course.title}
                       width={320}

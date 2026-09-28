@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
@@ -28,12 +28,13 @@ export default function Hero({ dictionary, params }: HeroProps) {
           href={`/${params.lang}/features/live-classroom`}
           className="group mb-2 inline-flex items-center gap-2 px-0.5 text-sm font-medium"
         >
-          <Image
+          <BlurImage
             src="/feature/streaming.png"
             alt=""
             width={16}
             height={16}
             className="h-4 w-4 dark:invert"
+            plain
           />
           <span className="underline-offset-4 group-hover:underline">
             {t.badge}

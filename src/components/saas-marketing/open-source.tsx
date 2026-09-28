@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import type { Locale } from "@/components/internationalization/config"
@@ -77,13 +77,14 @@ export default async function OpenSource({
         >
           {contributors.length > 0
             ? contributors.map((contributor) => (
-                <Image
+                <BlurImage
                   key={contributor.id}
                   src={contributor.avatar_url}
                   alt={contributor.login}
                   width={40}
                   height={40}
                   className="border-background rounded-full border-2"
+                  plain
                 />
               ))
             : // Fallback placeholders if fetch fails

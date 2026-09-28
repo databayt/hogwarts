@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { Badge } from "@/components/ui/badge"
@@ -52,7 +52,7 @@ export function CommunitySubjectsGrid({ subjects, lang }: Props) {
               style={{ backgroundColor: subject.color ?? "#6b7280" }}
             >
               {subject.imageUrl ? (
-                <Image
+                <BlurImage
                   src={subject.imageUrl}
                   alt={subject.name}
                   fill

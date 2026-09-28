@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import MaxWidthWrapper from "../shared/max-width-wrapper"
 
@@ -312,23 +312,25 @@ export default function BentoGrid() {
                       Glodie
                     </span>
                     <div className="ring-background size-7 ring-4">
-                      <Image
+                      <BlurImage
                         width={100}
                         height={100}
                         className="size-full rounded-full border"
                         src="https://randomuser.me/api/portraits/men/4.jpg"
                         alt="fake-avatar"
+                        plain
                       />
                     </div>
                   </div>
                   <div className="relative ms-[calc(50%-1rem)] flex items-center gap-2">
                     <div className="ring-background size-8 ring-4">
-                      <Image
+                      <BlurImage
                         width={100}
                         height={100}
                         className="size-full rounded-full border"
                         src="https://randomuser.me/api/portraits/men/6.jpg"
                         alt="fake-avatar"
+                        plain
                       />
                     </div>
                     <span className="bg-muted/50 muted block h-fit rounded-md border px-2 py-1">
@@ -340,12 +342,13 @@ export default function BentoGrid() {
                       B. Ng
                     </span>
                     <div className="ring-background size-7 ring-4">
-                      <Image
+                      <BlurImage
                         width={100}
                         height={100}
                         className="size-full rounded-full border"
                         src="https://randomuser.me/api/portraits/men/2.jpg"
                         alt="fake-avatar"
+                        plain
                       />
                     </div>
                   </div>

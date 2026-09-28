@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import type * as React from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 
@@ -100,8 +100,9 @@ export function TileFace({
 }: Pick<AppTileItem, "art" | "icon" | "tint"> & { className?: string }) {
   if (art) {
     return (
-      <Image
+      <BlurImage
         src={`/tiles/${art}.png`}
+        plain
         alt=""
         width={64}
         height={64}

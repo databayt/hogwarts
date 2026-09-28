@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState } from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { Check, Pencil } from "lucide-react"
 
@@ -294,7 +294,7 @@ export function LumosCourseDetailContent({
             >
               {course.imageUrl ? (
                 <>
-                  <Image
+                  <BlurImage
                     src={course.imageUrl}
                     alt={course.title}
                     fill
@@ -607,7 +607,7 @@ function CourseLessonCard({
         style={{ backgroundColor: fallbackColor ?? "#6b7280" }}
       >
         {lesson.imageUrl && !failed && (
-          <Image
+          <BlurImage
             src={lesson.imageUrl}
             alt={lesson.title}
             fill

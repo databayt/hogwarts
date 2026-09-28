@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
@@ -195,8 +195,9 @@ export function QuickActions({
               className="flex flex-col items-center gap-[5px] focus:outline-none"
             >
               {tile ? (
-                <Image
+                <BlurImage
                   src={`/tiles/${tile}.png`}
+        plain
                   alt=""
                   width={64}
                   height={64}

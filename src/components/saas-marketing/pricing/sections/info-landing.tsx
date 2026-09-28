@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import { cn } from "@/lib/utils"
 
@@ -46,7 +46,7 @@ export default function InfoLanding({
           )}
         >
           <div className="aspect-video">
-            <Image
+            <BlurImage
               className="size-full object-cover object-center"
               src={data.image}
               alt={data.title}

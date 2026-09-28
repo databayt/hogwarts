@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import { motion } from "framer-motion"
 
 import type { Locale } from "@/components/internationalization/config"
@@ -174,7 +174,7 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
 
         {/* Mobile: phone only (pill grid hidden on small screens) */}
         <div className="flex items-center justify-center md:hidden">
-          <Image
+          <BlurImage
             src="https://cdn.databayt.org/hogwarts/images/phone-mockup.webp"
             alt={phoneAlt}
             width={320}
@@ -219,7 +219,7 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
           {/* Phone absolutely centered over the rows */}
           <div className="pointer-events-none absolute top-0 left-1/2 z-10 -translate-x-1/2">
             <div className="relative">
-              <Image
+              <BlurImage
                 src="https://cdn.databayt.org/hogwarts/images/phone-mockup.webp"
                 alt={phoneAlt}
                 width={320}
@@ -260,7 +260,7 @@ function PillItem({
   if (pill.kind === "iconOnly") {
     return (
       <div className="border-border bg-card flex h-36 w-36 shrink-0 items-center justify-center rounded-full border">
-        <Image
+        <BlurImage
           src={pill.icon}
           alt={pill.alt}
           width={80}
@@ -283,7 +283,7 @@ function PillItem({
 
   return (
     <div className="border-border bg-card flex h-36 shrink-0 items-center gap-4 rounded-full border ps-8 pe-16">
-      <Image
+      <BlurImage
         src={pill.icon}
         alt=""
         width={56}
@@ -340,7 +340,7 @@ function StaticPhoneScreen() {
             "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 50%, #8b5cf6 100%)",
         }}
       >
-        <Image
+        <BlurImage
           src="https://cdn.databayt.org/hogwarts/icons/services/backpack.webp"
           alt=""
           width={96}
@@ -360,7 +360,7 @@ function StaticPhoneScreen() {
           background: "linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)",
         }}
       >
-        <Image
+        <BlurImage
           src="https://cdn.databayt.org/hogwarts/icons/services/activities-paint.png"
           alt=""
           width={72}

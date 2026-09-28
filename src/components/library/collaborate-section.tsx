@@ -4,7 +4,7 @@
 // while the artwork was a remote cover that needed an `onError` fallback; the
 // photograph below is a CDN asset that needs none, so the boundary is gone.
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { asset } from "@/lib/asset-url"
@@ -60,8 +60,8 @@ export function CollaborateSection({
     <section className="dark:bg-muted/50 w-full max-w-full overflow-hidden rounded-2xl bg-[#F5F5F0]">
       <div className="flex flex-col lg:flex-row">
         {/* Image - Left side */}
-        <div className="relative aspect-[4/3] lg:aspect-auto lg:w-1/2">
-          <Image
+        <div className="relative aspect-[4/3] overflow-hidden lg:aspect-auto lg:w-1/2">
+          <BlurImage
             src={asset("/photos/harry-potter.png")}
             alt={book.title}
             fill

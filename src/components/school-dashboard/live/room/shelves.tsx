@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 // Server components: pure prop composition, no client hooks or handlers.
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import {
   ChevronRight,
@@ -364,7 +364,7 @@ export function RoomPeopleShelf({
           <div key={person.id} className="w-24 shrink-0 text-center">
             <div className="bg-muted relative mx-auto size-20 overflow-hidden rounded-full">
               {person.photoUrl ? (
-                <Image
+                <BlurImage
                   src={person.photoUrl}
                   alt={person.name}
                   fill

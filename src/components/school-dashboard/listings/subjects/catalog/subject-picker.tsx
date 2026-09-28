@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
-import Image from "next/image"
+import { BlurImage, blurFromColor } from "@/components/atom/blur-image"
 import { Check, Loader2, Plus, Search, Star, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -541,9 +541,10 @@ function PickerThumb({
       style={{ backgroundColor: color ?? "#6b7280" }}
     >
       {showImage && (
-        <Image
+        <BlurImage
           src={imageUrl}
           alt={name}
+          blurDataURL={blurFromColor(color)}
           fill
           className="object-cover"
           sizes="192px"

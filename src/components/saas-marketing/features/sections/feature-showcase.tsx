@@ -14,7 +14,7 @@
 
 import { createElement, useEffect, useRef } from "react"
 import { DM_Sans } from "next/font/google"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
@@ -275,7 +275,7 @@ export function FeatureShowcase({ data }: Props) {
                                   ))}
                                 </div>
                                 <div className="relative min-h-0 flex-1 overflow-hidden">
-                                  <Image
+                                  <BlurImage
                                     src={card.image}
                                     alt={card.title}
                                     fill

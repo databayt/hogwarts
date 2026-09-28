@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 // Server component: pure prop composition, no client hooks or handlers.
 
-import Image from "next/image"
+import { BlurImage, blurFromColor } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { Play } from "lucide-react"
 
@@ -142,11 +142,12 @@ function Art({ session }: { session: LandingSession }) {
     )
   }
   return (
-    <Image
+    <BlurImage
       src={session.imageUrl}
       alt=""
+      blurDataURL={blurFromColor(session.color)}
       fill
-      className="object-cover transition-transform duration-300 group-hover:scale-105"
+      className="object-cover transition-[filter,scale] duration-300 group-hover:scale-105"
       sizes="256px"
       unoptimized
     />

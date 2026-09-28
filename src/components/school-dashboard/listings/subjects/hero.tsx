@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
@@ -47,7 +47,7 @@ export function SubjectHero({
 
   return (
     <div className="bg-muted relative h-48 overflow-hidden rounded-xl sm:h-56 md:h-64">
-      <Image
+      <BlurImage
         src={imageUrl}
         alt={displayName}
         fill

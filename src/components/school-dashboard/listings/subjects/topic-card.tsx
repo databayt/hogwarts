@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -49,11 +49,11 @@ function TopicCardInner({
   return (
     <div className={cn("group block", className)}>
       <div className="bg-muted relative aspect-video overflow-hidden rounded-lg">
-        <Image
+        <BlurImage
           src={imageUrl}
           alt={title}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover transition-[filter,scale] duration-300 group-hover:scale-105"
           quality={100}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />

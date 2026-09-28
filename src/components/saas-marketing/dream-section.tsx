@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import {
   AnimatePresence,
@@ -375,9 +375,9 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
               ease: "easeOut",
               zIndex: { delay: 0.15 },
             }}
-            className="pointer-events-none absolute -start-48 top-[250px] h-[30rem] w-80"
+            className="pointer-events-none absolute -start-48 top-[250px] h-[30rem] w-80 overflow-hidden"
           >
-            <Image
+            <BlurImage
               src={tagImages[hoveredTag]}
               alt="Feature preview"
               fill

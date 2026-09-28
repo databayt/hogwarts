@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { db } from "@/lib/db"
@@ -90,7 +90,7 @@ export default async function LibraryMyProfileContent({
               <div key={record.id} className="library-profile-card">
                 <div className="library-profile-card-image">
                   {record.book.coverUrl ? (
-                    <Image
+                    <BlurImage
                       src={record.book.coverUrl}
                       alt={record.book.title}
                       width={150}
@@ -164,7 +164,7 @@ export default async function LibraryMyProfileContent({
               <div key={record.id} className="library-profile-history-item">
                 <div className="library-profile-history-image">
                   {record.book.coverUrl ? (
-                    <Image
+                    <BlurImage
                       src={record.book.coverUrl}
                       alt={record.book.title}
                       width={80}

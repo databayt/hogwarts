@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import Image from "next/image"
+import { BlurImage, blurFromColor } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { Play } from "lucide-react"
 
@@ -46,9 +46,10 @@ export function ContinueWatchingSection({ items, lang, dictionary }: Props) {
               style={{ backgroundColor: item.color || "#1a1a1a" }}
             >
               {item.thumbnailUrl ? (
-                <Image
+                <BlurImage
                   src={item.thumbnailUrl}
                   alt={item.lessonTitle}
+                  blurDataURL={blurFromColor(item.color)}
                   fill
                   className="object-cover"
                   sizes="256px"

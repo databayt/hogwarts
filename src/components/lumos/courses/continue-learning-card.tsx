@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 // Server-composable: no hooks, no handlers, so it costs the page no hydration.
-import Image from "next/image"
+import { BlurImage, blurFromColor } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { Badge } from "@/components/ui/badge"
@@ -153,9 +153,10 @@ function Art({ item }: { item: LeadCardItem }) {
     )
   }
   return (
-    <Image
+    <BlurImage
       src={item.thumbnailUrl}
       alt=""
+      blurDataURL={blurFromColor(item.color)}
       fill
       className="object-cover"
       sizes="120px"
@@ -183,9 +184,10 @@ function Portrait({
 }) {
   if (photoUrl) {
     return (
-      <Image
+      <BlurImage
         src={photoUrl}
         alt=""
+        plain
         width={24}
         height={24}
         className="size-6 shrink-0 rounded-full object-cover"

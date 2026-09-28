@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import { HeaderSection } from "@/components/atom/header-section"
 
@@ -26,12 +26,13 @@ export default function Testimonials() {
                   <div>
                     <div className="relative mb-4 flex items-center gap-3">
                       <span className="relative inline-flex size-10 shrink-0 items-center justify-center rounded-full">
-                        <Image
+                        <BlurImage
                           width={100}
                           height={100}
                           className="size-full rounded-full border"
                           src={item.image}
                           alt={item.name}
+                          plain
                         />
                       </span>
                       <div>

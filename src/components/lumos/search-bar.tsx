@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
@@ -785,7 +785,7 @@ function CourseThumb({
   return (
     <div className={cn("bg-muted relative overflow-hidden", className)}>
       {course.imageUrl && !imageError ? (
-        <Image
+        <BlurImage
           src={course.imageUrl}
           alt=""
           fill

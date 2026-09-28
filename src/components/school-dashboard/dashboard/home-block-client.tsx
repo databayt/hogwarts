@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
@@ -183,8 +183,9 @@ export function HomeBlockClient({
             href={`/${locale}${tile.href}`}
             className="flex flex-col items-center gap-[5px] focus:outline-none"
           >
-            <Image
+            <BlurImage
               src={tile.src}
+        plain
               alt=""
               width={ICON_PX}
               height={ICON_PX}

@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import MaxWidthWrapper from "../shared/max-width-wrapper"
 
@@ -11,7 +11,7 @@ export default function PreviewLanding() {
       <MaxWidthWrapper>
         <div className="md:bg-muted/30 md:ring-border rounded-xl md:p-3.5 md:ring-1 md:ring-inset">
           <div className="relative aspect-video overflow-hidden rounded-xl border md:rounded-lg">
-            <Image
+            <BlurImage
               className="size-full object-cover object-center dark:opacity-85 dark:invert"
               src="/_static/blog/blog-post-3.jpg"
               alt="preview landing"

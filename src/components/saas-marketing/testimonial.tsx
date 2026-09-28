@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import { asset } from "@/lib/asset-url"
 import SectionHeading from "@/components/atom/section-heading"
@@ -93,12 +93,13 @@ export default function Testimonial({ dictionary, lang }: TestimonialProps) {
               </div>
 
               <div className="flex items-center gap-3 py-4">
-                <Image
+                <BlurImage
                   src={testimonial.avatar}
                   alt={`${testimonial.name}'s avatar`}
                   width={40}
                   height={40}
                   className="aspect-square rounded-full object-cover"
+                  plain
                 />
                 <div className="flex flex-col">
                   <strong>{testimonial.name}</strong>

@@ -10,7 +10,7 @@ import {
   useState,
   useTransition,
 } from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import {
@@ -1167,7 +1167,7 @@ export function ProposeVideoDialog({
                                 {/* Thumbnail */}
                                 <div className="bg-muted relative aspect-video w-full overflow-hidden rounded-md">
                                   {subject.imageUrl ? (
-                                    <Image
+                                    <BlurImage
                                       src={subject.imageUrl}
                                       alt={subject.name}
                                       fill
@@ -1248,7 +1248,7 @@ export function ProposeVideoDialog({
                                   }}
                                 >
                                   {ch.imageUrl || activeSubject?.imageUrl ? (
-                                    <Image
+                                    <BlurImage
                                       src={
                                         (ch.imageUrl ||
                                           activeSubject?.imageUrl)!
@@ -1339,7 +1339,7 @@ export function ProposeVideoDialog({
                                   {lesson.imageUrl ||
                                   activeChapter?.imageUrl ||
                                   activeSubject?.imageUrl ? (
-                                    <Image
+                                    <BlurImage
                                       src={
                                         (lesson.imageUrl ||
                                           activeChapter?.imageUrl ||

@@ -4,7 +4,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import { cn } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
@@ -176,7 +176,7 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
               description={description}
               icon={
                 imageSrc ? (
-                  <Image
+                  <BlurImage
                     src={imageSrc}
                     alt={title}
                     width={dim}

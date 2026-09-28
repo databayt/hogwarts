@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import { motion, useScroll, useTransform } from "framer-motion"
 
 import { useThmanyahLocale } from "@/components/saas-marketing/thmanyah/lib/copy"
@@ -108,7 +108,7 @@ export function CalligraphyComparisonBlock() {
           <div className="aseel-card" data-framer-name="بمنظومة بالقلم">
             {/* the reference swaps to a near-square phone crop below 600 */}
             <div className="aseel-media aseel-media--phone">
-              <Image
+              <BlurImage
                 src="/images/calligraphy-manuscript-2-phone.png"
                 alt={copy.aseel.after}
                 width={788}
@@ -119,7 +119,7 @@ export function CalligraphyComparisonBlock() {
               />
             </div>
             <div className="aseel-media aseel-media--wide">
-              <Image
+              <BlurImage
                 src="/images/calligraphy-manuscript-2.png"
                 alt={copy.aseel.after}
                 width={1547}
@@ -146,7 +146,7 @@ export function CalligraphyComparisonBlock() {
             >
               {/* the reference swaps to a near-square phone crop below 600 */}
               <div className="aseel-media aseel-media--phone">
-                <Image
+                <BlurImage
                   src="/images/calligraphy-manuscript-1-phone.png"
                   alt={copy.aseel.before}
                   width={788}
@@ -157,7 +157,7 @@ export function CalligraphyComparisonBlock() {
                 />
               </div>
               <div className="aseel-media aseel-media--wide">
-                <Image
+                <BlurImage
                   src="/images/calligraphy-manuscript-1.png"
                   alt={copy.aseel.before}
                   width={1547}

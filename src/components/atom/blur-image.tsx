@@ -11,6 +11,18 @@ import { cn } from "@/lib/utils"
 export const NEUTRAL_BLUR =
   "data:image/webp;base64,UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoQAAwAA4BaJaQAA3AA/vEAgAA="
 
+/**
+ * A solid-colour LQIP from a hex the data already carries — the catalog stores a
+ * colour per subject/lesson, so the blur can start in the right hue for free
+ * instead of the neutral grey. Cheaper than a stored LQIP and better than none.
+ */
+export function blurFromColor(color: string | null | undefined) {
+  if (!color) return undefined
+  const hex = color.trim()
+  if (!/^#[0-9a-fA-F]{3,8}$/.test(hex)) return undefined
+  return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect width='1' height='1' fill='%23${hex.slice(1)}'/%3E%3C/svg%3E`
+}
+
 export type BlurImageProps = ImageProps & {
   /** Skip the blur-up (fade only, no placeholder). Use for tiny icons and logos. */
   plain?: boolean

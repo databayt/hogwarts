@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -41,7 +41,7 @@ export default function Features({ lang }: FeaturesProps) {
                     className="absolute inset-x-6 top-0 aspect-video -translate-y-1/2 rounded-full border bg-gradient-to-b from-purple-500/80 to-white opacity-25 blur-2xl duration-300 group-hover:-translate-y-[40%] group-hover:scale-125 dark:from-white dark:to-white dark:opacity-5 dark:group-hover:opacity-10"
                   />
                   {feature.image ? (
-                    <Image
+                    <BlurImage
                       src={feature.image}
                       alt={feature.title}
                       width={320}

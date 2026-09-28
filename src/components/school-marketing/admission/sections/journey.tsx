@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
@@ -236,7 +236,7 @@ export function AdmissionJourney({ lang, dictionary }: AdmissionJourneyProps) {
                        * the file as authored is the only way the transparency
                        * is guaranteed to be the transparency that renders. */}
                       <div className="adm-jrn_panel-art">
-                        <Image
+                        <BlurImage
                           src={step.art}
                           alt=""
                           width={step.artW}
