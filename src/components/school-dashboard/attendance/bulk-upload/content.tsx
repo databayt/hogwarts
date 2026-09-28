@@ -82,6 +82,7 @@ import {
 } from "../actions"
 import { useAttendanceContext } from "../core/attendance-context"
 import { phone } from "../shared/phone"
+import { SkeletonList } from "@/components/atom/loading"
 
 interface BulkUploadContentProps {
   dictionary?: any
@@ -712,8 +713,9 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         </CardHeader>
         <CardContent>
           {loadingData ? (
-            <div className="flex items-center justify-center py-8">
-              <LoaderCircle className="text-muted-foreground h-6 w-6 animate-spin" />
+            <div role="status" aria-busy="true">
+              <span className="sr-only">{dictionary?.common?.loading}</span>
+              <SkeletonList items={3} showAvatar={false} showCards />
             </div>
           ) : recentUploads.length === 0 ? (
             <div className="text-muted-foreground py-8 text-center">

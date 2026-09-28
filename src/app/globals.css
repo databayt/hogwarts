@@ -580,6 +580,11 @@ body {
 @utility animate-shimmer {
   animation: shimmer 1.8s ease-in-out infinite;
 
+  /* Sweep in reading direction: left→right in LTR, right→left in Arabic. */
+  &:where([dir="rtl"], [dir="rtl"] *) {
+    animation-direction: reverse;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     animation: none;
     opacity: 0.7;

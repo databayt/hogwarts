@@ -1371,20 +1371,11 @@ export function LumosPaymentSkeleton({
 }
 
 // =============================================================================
-// LUMOS COURSE SLUG — minimal centred loader (the page redirects to its first
-// lesson)
+// LUMOS COURSE SLUG — the page only redirects to the course's first lesson,
+// so the wait is drawn as the destination: the lesson player's shape (no
+// centred spinner — the swap to the real lesson then moves nothing).
 // =============================================================================
 
 export function LumosCourseSlugSkeleton() {
-  return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="border-foreground/20 border-t-foreground size-8 animate-spin rounded-full border-2" />
-        <div className="space-y-2 text-center">
-          <Skeleton className="mx-auto h-5 w-36" />
-          <Skeleton className="mx-auto h-4 w-52" />
-        </div>
-      </div>
-    </div>
-  )
+  return <LumosLessonPlayerSkeleton />
 }

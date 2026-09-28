@@ -35,7 +35,6 @@ import {
   Activity,
   BarChart3,
   Calendar,
-  LoaderCircle,
   RefreshCw,
   TrendingUp,
   TriangleAlert,
@@ -78,6 +77,9 @@ import {
 } from "../actions"
 import { AttendanceExport } from "../core/attendance-export"
 import { phone } from "../shared/phone"
+import { AttendancePageSkeleton } from "../loading-skeleton"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonChart, SkeletonStats } from "@/components/atom/loading"
 import { AttendanceCalendarView, type CalendarData } from "./calendar-view"
 import {
   AbsenceReasonsChart,
@@ -421,14 +423,19 @@ export default function AnalyticsContent({
 
   if (loading && !stats) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <LoaderCircle className="text-muted-foreground mx-auto mb-4 h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground">
-            {t?.loading?.records ?? "Loading analytics..."}
-          </p>
+      <AttendancePageSkeleton label={t?.loading?.records} action>
+        {/* filter card → stat row → tab strip → overview charts */}
+        <Skeleton className="h-[88px] w-full rounded-xl" />
+        <SkeletonStats
+          count={5}
+          columns={cn("md:grid-cols-5", phone.panel)}
+        />
+        <Skeleton className="h-9 w-full" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <SkeletonChart variant="line" />
+          <SkeletonChart variant="pie" />
         </div>
-      </div>
+      </AttendancePageSkeleton>
     )
   }
 

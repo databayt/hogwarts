@@ -9,7 +9,7 @@
 "use client"
 
 import * as React from "react"
-import { Grid3X3, List, LoaderCircle, Plus } from "lucide-react"
+import { Grid3X3, List, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -28,6 +28,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SkeletonCard, SkeletonDataTable } from "@/components/atom/loading"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useDebouncedCallback } from "@/components/table/use-debounced-callback"
 
@@ -238,8 +239,17 @@ export function ReceiptsContent({
 
       {/* Content */}
       {isLoading && receipts.length === 0 ? (
-        <div className="flex items-center justify-center py-12">
-          <LoaderCircle className="text-primary h-8 w-8 animate-spin" />
+        <div role="status" aria-busy="true">
+          <span className="sr-only">{(dictionary as any)?.common?.loading}</span>
+          {viewMode === "grid" ? (
+            <div className="grid gap-4 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : (
+            <SkeletonDataTable columns={columns.length} rows={8} />
+          )}
         </div>
       ) : receipts.length === 0 && !searchTerm ? (
         <Card className="max-md:bg-muted max-md:border-0 max-md:shadow-none">

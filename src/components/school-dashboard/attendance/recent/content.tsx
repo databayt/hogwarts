@@ -11,7 +11,6 @@ import {
   CircleCheck,
   CircleX,
   Clock,
-  LoaderCircle,
   RefreshCw,
   Users,
 } from "lucide-react"
@@ -43,6 +42,8 @@ import {
   getSectionsForSelection,
 } from "../actions"
 import { phone } from "../shared/phone"
+import { AttendancePageSkeleton } from "../loading-skeleton"
+import { SkeletonList } from "@/components/atom/loading"
 
 interface Props {
   dictionary?: Dictionary["school"]
@@ -295,14 +296,14 @@ export function RecentActivityContent({
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <LoaderCircle className="text-muted-foreground mx-auto mb-4 h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground">
-            {(dict as any)?.loadingRecent ?? "Loading recent activity..."}
-          </p>
-        </div>
-      </div>
+      <AttendancePageSkeleton
+        label={(dict as any)?.loadingRecent}
+        action
+        stats={4}
+        statsColumns="md:grid-cols-4"
+      >
+        <SkeletonList items={6} />
+      </AttendancePageSkeleton>
     )
   }
 

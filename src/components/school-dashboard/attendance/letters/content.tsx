@@ -33,6 +33,7 @@ import {
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { phone } from "../shared/phone"
+import { SkeletonList } from "@/components/atom/loading"
 import {
   bulkGenerateLetters,
   getStudentsNeedingLetters,
@@ -289,8 +290,9 @@ export function LettersContent({ locale }: LettersContentProps) {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+              <div role="status" aria-busy="true">
+                <span className="sr-only">{dictionary?.common?.loading}</span>
+                <SkeletonList items={4} showAvatar={false} />
               </div>
             ) : students.length === 0 ? (
               <p className="text-muted-foreground py-8 text-center">

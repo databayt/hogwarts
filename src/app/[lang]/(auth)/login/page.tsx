@@ -12,6 +12,7 @@ import {
 import { DemoLoginForm } from "@/components/auth/login/demo-form"
 import { LoginForm } from "@/components/auth/login/form"
 import { type Locale } from "@/components/internationalization/config"
+import { AuthFormSkeleton } from "@/components/auth/form-skeleton"
 import { getAuthDictionary } from "@/components/internationalization/dictionaries"
 import { ForgetSavedPages } from "@/components/offline/forget-saved-pages"
 
@@ -41,7 +42,16 @@ const LoginPage = async ({ params }: Props) => {
     }))
 
     return (
-      <Suspense fallback={<div className="h-10" />}>
+      <Suspense
+        fallback={
+          <AuthFormSkeleton
+            fields={0}
+            buttons={roles.length}
+            buttonClassName="h-12 rounded-lg md:h-11"
+            label={dictionary?.common?.loading}
+          />
+        }
+      >
         <ForgetSavedPages />
         <DemoLoginForm dictionary={dictionary} roles={roles} />
       </Suspense>
@@ -49,7 +59,7 @@ const LoginPage = async ({ params }: Props) => {
   }
 
   return (
-    <Suspense fallback={<div className="h-10" />}>
+    <Suspense fallback={<AuthFormSkeleton label={dictionary?.common?.loading} />}>
       <ForgetSavedPages />
       <LoginForm dictionary={dictionary} />
     </Suspense>

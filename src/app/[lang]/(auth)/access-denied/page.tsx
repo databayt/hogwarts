@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { AuthFormSkeleton } from "@/components/auth/form-skeleton"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
@@ -27,7 +28,7 @@ const AccessDeniedPage = async ({ params }: Props) => {
   const reasons = [t.reason1, t.reason2, t.reason3]
 
   return (
-    <Suspense fallback={<div className="h-10" />}>
+    <Suspense fallback={<AuthFormSkeleton fields={0} label={dictionary?.common?.loading} />}>
       <Card className="border-destructive/20 w-full max-w-md">
         <CardHeader className="text-center">
           <div className="bg-destructive/10 mx-auto mb-4 flex size-16 items-center justify-center rounded-full">

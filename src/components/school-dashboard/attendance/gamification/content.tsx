@@ -20,6 +20,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { phone } from "../shared/phone"
+import { AttendancePageSkeleton } from "../loading-skeleton"
+import { SkeletonList } from "@/components/atom/loading"
 import {
   getActiveCompetitions,
   getLeaderboard,
@@ -88,9 +90,9 @@ export function GamificationContent({ locale }: GamificationContentProps) {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-      </div>
+      <AttendancePageSkeleton label={dictionary?.common?.loading} tabs>
+        <SkeletonList items={6} />
+      </AttendancePageSkeleton>
     )
   }
 

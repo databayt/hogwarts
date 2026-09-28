@@ -5,6 +5,7 @@ import { Suspense } from "react"
 
 import { ErrorCard } from "@/components/auth/error-card"
 import { type Locale } from "@/components/internationalization/config"
+import { AuthFormSkeleton } from "@/components/auth/form-skeleton"
 import { getAuthDictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
@@ -16,7 +17,7 @@ const AuthErrorPage = async ({ params }: Props) => {
   const dictionary = await getAuthDictionary(lang)
 
   return (
-    <Suspense fallback={<div className="h-10" />}>
+    <Suspense fallback={<AuthFormSkeleton fields={0} label={dictionary?.common?.loading} />}>
       <ErrorCard dictionary={dictionary} lang={lang} />
     </Suspense>
   )

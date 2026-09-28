@@ -11,7 +11,6 @@ import {
   Clock,
   FileSpreadsheet,
   ListFilter,
-  LoaderCircle,
   RefreshCw,
   Search,
 } from "lucide-react"
@@ -53,6 +52,7 @@ import {
   getSectionsForSelection,
 } from "../actions"
 import { phone } from "../shared/phone"
+import { SkeletonDataTable } from "@/components/atom/loading"
 import { AttendanceReportExportButton } from "./export-button"
 
 interface ReportRecord {
@@ -561,8 +561,14 @@ export function ReportsContent({
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <LoaderCircle className="text-muted-foreground h-8 w-8 animate-spin" />
+            <div role="status" aria-busy="true">
+              <span className="sr-only">{dictionary?.common?.loading}</span>
+              <SkeletonDataTable
+                columns={8}
+                rows={8}
+                showToolbar={false}
+                showPagination={false}
+              />
             </div>
           ) : filteredRecords.length === 0 ? (
             <div className="text-muted-foreground py-12 text-center">

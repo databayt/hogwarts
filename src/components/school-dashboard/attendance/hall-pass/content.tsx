@@ -18,6 +18,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { phone } from "../shared/phone"
+import {
+  AttendanceCardSkeleton,
+  AttendancePageSkeleton,
+} from "../loading-skeleton"
 import { cancelHallPass, getActiveHallPasses, returnHallPass } from "./actions"
 import { IssuePassDialog } from "./issue-dialog"
 import type { HallPassDestination } from "./validation"
@@ -135,9 +139,13 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-      </div>
+      <AttendancePageSkeleton label={dictionary?.common?.loading} action>
+        <div className="grid gap-4 max-md:gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <AttendanceCardSkeleton key={i} />
+          ))}
+        </div>
+      </AttendancePageSkeleton>
     )
   }
 

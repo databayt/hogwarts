@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { BankingDashboardContent } from "@/components/school-dashboard/finance/banking/dashboard/content"
+import { DashboardSkeleton } from "@/components/school-dashboard/finance/banking/dashboard/skeleton"
 
 export default async function BankingDashboardPage({
   searchParams,
@@ -25,7 +26,9 @@ export default async function BankingDashboardPage({
   }
 
   return (
-    <Suspense fallback={<div>{dictionary?.common?.loading}</div>}>
+    <Suspense
+      fallback={<DashboardSkeleton label={dictionary?.common?.loading} />}
+    >
       <BankingDashboardContent
         user={session.user}
         searchParams={resolvedSearchParams}

@@ -24,6 +24,7 @@ import {
 } from "@/lib/root-domain"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
   Form,
@@ -427,7 +428,7 @@ export const LoginForm = ({
       <Card className="bg-background border-none shadow-none">
         <CardHeader className="text-center" />
         <CardContent className="hidden">
-          <Suspense fallback={<div className="h-10" />}>
+          <Suspense fallback={<Skeleton className="h-10 w-full" />}>
             <Social dictionary={dictionary} />
           </Suspense>
         </CardContent>

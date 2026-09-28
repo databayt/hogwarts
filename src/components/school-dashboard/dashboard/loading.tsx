@@ -57,36 +57,12 @@ export function ActivityCardSkeleton() {
 }
 
 /**
- * Loading skeleton for table/list views
- */
-export function TableSkeleton({ rows = 5 }: { rows?: number }) {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: rows }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center justify-between rounded-lg border p-3"
-        >
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[150px]" />
-            <Skeleton className="h-3 w-[100px]" />
-          </div>
-          <div className="space-y-2 text-end">
-            <Skeleton className="ms-auto h-6 w-[60px]" />
-            <Skeleton className="h-3 w-[80px]" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/**
  * Full lab loading state
  */
-export function DashboardLoadingSkeleton() {
+export function DashboardLoadingSkeleton({ label }: { label?: string } = {}) {
   return (
-    <div className="space-y-6">
+    <div role="status" aria-busy="true" className="space-y-6">
+      <span className="sr-only">{label ?? "Loading…"}</span>
       {/* Header skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-[200px]" />
@@ -127,18 +103,6 @@ export function DashboardLoadingSkeleton() {
   )
 }
 
-/**
- * Loading state with custom message
- */
-export function LoadingMessage({
-  message = "Loading lab...",
-}: {
-  message?: string
-}) {
-  return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
-      <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2" />
-      <p className="text-muted-foreground text-sm">{message}</p>
-    </div>
-  )
-}
+// Tables: use `SkeletonDataTable` from `@/components/atom/loading` (the kit),
+// passing the real table's column count. The unused local `TableSkeleton`
+// duplicate and the centred-spinner `LoadingMessage` were removed for it.

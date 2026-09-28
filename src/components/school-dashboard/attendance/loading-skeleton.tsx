@@ -2,8 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import type { ReactNode } from "react"
+
+import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonStats } from "@/components/atom/loading"
 import {
   Table,
   TableBody,
@@ -12,6 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+
+import { phone } from "./shared/phone"
 
 export function AttendanceTableSkeleton({ rows = 10 }: { rows?: number }) {
   return (
@@ -153,6 +159,52 @@ export function ButtonLoadingSkeleton({ className }: { className?: string }) {
     <div className={`inline-flex items-center gap-2 ${className}`}>
       <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-900"></div>
       <span>Loading...</span>
+    </div>
+  )
+}
+
+/**
+ * Page-body skeleton for the attendance sub-pages that fetch on the client
+ * (ai, analytics, gamification, hall-pass, recent). Mirrors their shared
+ * shape: header (title + subtitle + optional action), an optional stat-card
+ * row in the page's own grid, an optional full-width tab strip, then the
+ * page-specific body passed as children.
+ */
+export function AttendancePageSkeleton({
+  label,
+  action = false,
+  stats = 0,
+  statsColumns = "md:grid-cols-4",
+  tabs = false,
+  children,
+}: {
+  /** Translated "Loading…" for screen readers. */
+  label?: string
+  action?: boolean
+  stats?: number
+  statsColumns?: string
+  tabs?: boolean
+  children?: ReactNode
+}) {
+  return (
+    <div role="status" aria-busy="true" className="space-y-6">
+      <span className="sr-only">{label ?? "Loading…"}</span>
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-5 w-64 max-w-full" />
+        </div>
+        {action && <Skeleton className="h-9 w-32 max-md:h-10 max-md:rounded-full" />}
+      </div>
+      {stats > 0 && (
+        <SkeletonStats
+          count={stats}
+          columns={cn(statsColumns, phone.panel)}
+          className="[&>*]:max-md:bg-muted [&>*]:max-md:rounded-none [&>*]:max-md:border-0 [&>*]:max-md:shadow-none"
+        />
+      )}
+      {tabs && <Skeleton className="h-9 w-full" />}
+      {children}
     </div>
   )
 }

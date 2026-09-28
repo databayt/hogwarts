@@ -21,6 +21,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { phone } from "../shared/phone"
+import { AttendancePageSkeleton } from "../loading-skeleton"
+import { SkeletonList } from "@/components/atom/loading"
 import {
   createInterventionFromRecommendation,
   getAtRiskStudents,
@@ -137,9 +139,15 @@ export function AIContent({ locale }: AIContentProps) {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-      </div>
+      <AttendancePageSkeleton
+        label={dictionary?.common?.loading}
+        action
+        stats={5}
+        statsColumns="md:grid-cols-5"
+        tabs
+      >
+        <SkeletonList items={4} showAvatar={false} showCards />
+      </AttendancePageSkeleton>
     )
   }
 
