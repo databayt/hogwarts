@@ -2,12 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -227,7 +227,7 @@ export async function processBarcodeScan(
       metadata: { deviceId, barcode: barcode.substring(0, 4) + "****" },
     })
 
-    revalidatePath("/attendance/barcode")
+    refreshPage("/attendance/barcode")
 
     return {
       success: true,
@@ -330,7 +330,7 @@ export async function assignBarcodeToStudent(
       },
     })
 
-    revalidatePath("/attendance/barcode")
+    refreshPage("/attendance/barcode")
 
     return {
       success: true,
@@ -445,7 +445,7 @@ export async function updateBarcodeStatus(
       data: { isActive },
     })
 
-    revalidatePath("/attendance/barcode")
+    refreshPage("/attendance/barcode")
 
     return {
       success: true,
@@ -499,7 +499,7 @@ export async function deleteBarcode(identifierId: string) {
       where: { id: identifierId },
     })
 
-    revalidatePath("/attendance/barcode")
+    refreshPage("/attendance/barcode")
 
     return {
       success: true,
@@ -591,7 +591,7 @@ export async function bulkImportBarcodes(csvData: string) {
       }
     }
 
-    revalidatePath("/attendance/barcode")
+    refreshPage("/attendance/barcode")
 
     return {
       success: true,

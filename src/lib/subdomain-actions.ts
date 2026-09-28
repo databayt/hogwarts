@@ -60,10 +60,9 @@
  * - Requires middleware for subdomain routing to work
  * - Not validated against existing TLDs or reserved domains
  */
-import { revalidatePath } from "next/cache"
-
 import { dbCircuitBreaker } from "@/lib/circuit-breaker"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { dnsService } from "./dns-service"
 import { isValidSubdomain, normalizeSubdomain } from "./subdomain"
@@ -164,7 +163,7 @@ export async function reserveSubdomain(
       data: { domain: normalizeSubdomain(subdomain) },
     })
 
-    revalidatePath("/onboarding")
+    refreshPage("/onboarding")
     return { success: true }
   } catch (error) {
     console.error("Error reserving subdomain:", error)
@@ -230,7 +229,7 @@ export async function updateSubdomain(
       data: { domain: normalizeSubdomain(newSubdomain) },
     })
 
-    revalidatePath("/saas-dashboard/tenants")
+    refreshPage("/saas-dashboard/tenants")
     return { success: true }
   } catch (error) {
     console.error("Error updating subdomain:", error)

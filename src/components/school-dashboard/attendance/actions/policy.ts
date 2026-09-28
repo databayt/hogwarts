@@ -2,12 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -209,7 +209,7 @@ export async function evaluatePolicies(): Promise<
       }
     }
 
-    revalidatePath("/attendance/policies")
+    refreshPage("/attendance/policies")
 
     return {
       success: true,
@@ -344,7 +344,7 @@ export async function createPolicyExemption(
       },
     })
 
-    revalidatePath("/attendance/policies")
+    refreshPage("/attendance/policies")
 
     return {
       success: true,
@@ -412,7 +412,7 @@ export async function dismissPolicyTrigger(
       },
     })
 
-    revalidatePath("/attendance/policies")
+    refreshPage("/attendance/policies")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -531,7 +531,7 @@ export async function updateAttendanceSettings(
       id = created.id
     }
 
-    revalidatePath("/attendance/settings")
+    refreshPage("/attendance/settings")
     return { success: true, data: { id } }
   } catch (error) {
     console.error("[updateAttendanceSettings] Error:", error)

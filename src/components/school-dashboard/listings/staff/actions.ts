@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertStaffPermission, getAuthContext } from "./authorization"
@@ -55,7 +56,7 @@ export async function createStaff(
       },
     })
 
-    revalidatePath("/staff")
+    refreshPage("/staff")
 
     return { success: true, data: { id: staff.id } }
   } catch (error) {
@@ -115,7 +116,7 @@ export async function updateStaff(
       data: validated,
     })
 
-    revalidatePath("/staff")
+    refreshPage("/staff")
     revalidatePath(`/staff/${id}`)
 
     return { success: true, data: undefined }
@@ -169,7 +170,7 @@ export async function deleteStaff(id: string): Promise<ActionResponse<void>> {
       where: { id, schoolId },
     })
 
-    revalidatePath("/staff")
+    refreshPage("/staff")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -228,7 +229,7 @@ export async function bulkDeleteStaff(
       },
     })
 
-    revalidatePath("/staff")
+    refreshPage("/staff")
 
     return { success: true, data: { count: validIds.length } }
   } catch (error) {

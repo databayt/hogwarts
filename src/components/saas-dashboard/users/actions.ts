@@ -2,10 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import {
   logOperatorAudit,
   requireNotImpersonating,
@@ -141,7 +141,7 @@ export async function userDelete(input: {
       reason: `Deleted user "${userEmail}".${validated.reason ? ` Reason: ${validated.reason}` : ""}`,
     })
 
-    revalidatePath("/users")
+    refreshPage("/users")
 
     return {
       success: true,
@@ -208,7 +208,7 @@ export async function userToggleSuspend(input: {
         `${updated.isSuspended ? "Suspended" : "Unsuspended"} user "${user.email}". ${validated.reason || ""}`.trim(),
     })
 
-    revalidatePath("/users")
+    refreshPage("/users")
 
     return {
       success: true,
@@ -276,7 +276,7 @@ export async function userResetSchool(input: {
         `Detached user "${user.email}" from school. ${validated.reason || ""}`.trim(),
     })
 
-    revalidatePath("/users")
+    refreshPage("/users")
 
     return {
       success: true,

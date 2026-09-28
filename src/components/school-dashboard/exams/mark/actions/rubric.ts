@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { createRubricSchema } from "../validation"
 import type { ActionResponse, CreateRubricInput } from "./types"
@@ -102,7 +103,7 @@ export async function createRubric(
       return newRubric
     })
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/qbank/${validated.questionId}`)
 
     return {
@@ -207,7 +208,7 @@ export async function updateRubric(
       })
     })
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/qbank/${existingRubric.questionId}`)
 
     return { success: true }
@@ -264,8 +265,8 @@ export async function deleteRubric(id: string): Promise<ActionResponse> {
       }
     }
 
-    revalidatePath("/exams/mark")
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/mark")
+    refreshPage("/exams/qbank")
 
     return { success: true }
   } catch (error) {

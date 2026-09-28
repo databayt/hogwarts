@@ -1,10 +1,10 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { validateDistribution } from "../validation"
@@ -212,8 +212,8 @@ export async function adoptExam(input: {
       return { examId: exam.id, generatedExamId: generatedExam.id }
     })
 
-    revalidatePath("/exams")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams")
+    refreshPage("/exams/generate")
 
     return { success: true, data: result }
   } catch (error) {
@@ -337,7 +337,7 @@ export async function adoptExamTemplate(
       return newTemplate
     })
 
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/generate")
     return { success: true, data: { templateId: template.id } }
   } catch (error) {
     console.error("Adopt catalog template error:", error)

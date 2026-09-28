@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import type {
   AnnouncementPriority,
@@ -13,6 +12,7 @@ import type {
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { prewarm } from "@/components/translation/prewarm"
 
 import { getAllowedScopes } from "./authorization"
@@ -133,7 +133,7 @@ export async function createTemplate(input: TemplateInput) {
 
     after(() => prewarm("AnnouncementTemplate", template, { schoolId }))
 
-    revalidatePath("/announcements")
+    refreshPage("/announcements")
     return { success: true, data: { id: template.id } }
   } catch (error) {
     console.error("[createTemplate] Error:", error)
@@ -197,7 +197,7 @@ export async function updateTemplate(
       )
     )
 
-    revalidatePath("/announcements")
+    refreshPage("/announcements")
     return { success: true }
   } catch (error) {
     console.error("[updateTemplate] Error:", error)
@@ -227,7 +227,7 @@ export async function deleteTemplate(id: string) {
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    revalidatePath("/announcements")
+    refreshPage("/announcements")
     return { success: true }
   } catch (error) {
     console.error("[deleteTemplate] Error:", error)

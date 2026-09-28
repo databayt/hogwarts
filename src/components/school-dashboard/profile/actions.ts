@@ -7,6 +7,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { recomputeProfileBadges } from "./badges"
@@ -73,7 +74,7 @@ export async function updateGitHubProfile(
       },
     })
 
-    revalidatePath("/profile")
+    refreshPage("/profile")
     revalidatePath("/[lang]/s/[subdomain]/(school-dashboard)/profile", "page")
     return { success: true as const }
   } catch (error) {
@@ -161,7 +162,7 @@ export async function uploadProfileAvatar(formData: FormData) {
       })
     }
 
-    revalidatePath("/profile")
+    refreshPage("/profile")
     revalidatePath("/[lang]/s/[subdomain]/(school-dashboard)/profile", "page")
     return { success: true as const, data: { url } }
   } catch (error) {
@@ -247,7 +248,7 @@ export async function updatePinnedItems(
       }),
     ])
 
-    revalidatePath("/profile")
+    refreshPage("/profile")
     revalidatePath("/[lang]/s/[subdomain]/(school-dashboard)/profile", "page")
     return { success: true as const }
   } catch (error) {

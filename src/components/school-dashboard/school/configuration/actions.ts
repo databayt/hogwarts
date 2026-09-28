@@ -9,6 +9,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 // Schema for school identity update
 const schoolIdentitySchema = z.object({
@@ -106,8 +107,8 @@ export async function updateSchoolIdentity(
       },
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/identity")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/identity")
 
     return { success: true }
   } catch (error) {
@@ -169,8 +170,8 @@ export async function updateSchoolBranding(
       },
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/branding")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/branding")
 
     return { success: true }
   } catch (error) {
@@ -219,8 +220,8 @@ export async function updateHeroImage(
       },
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/hero")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/hero")
     // Also revalidate the marketing page since it shows the hero
     revalidatePath("/")
 
@@ -277,8 +278,8 @@ export async function updateSchoolLocation(
       },
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/location")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/location")
     return { success: true }
   } catch (error) {
     console.error("Error updating school location:", error)
@@ -330,8 +331,8 @@ export async function updateSchoolPricing(
       },
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/pricing")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/pricing")
     return { success: true }
   } catch (error) {
     console.error("Error updating school pricing:", error)
@@ -390,8 +391,8 @@ export async function updatePlanLimits(
       },
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/plan")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/plan")
 
     return { success: true }
   } catch (error) {
@@ -440,8 +441,8 @@ export async function updateSchoolCapacity(
       },
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/capacity")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/capacity")
 
     return { success: true }
   } catch (error) {
@@ -489,8 +490,8 @@ export async function updateEnabledModules(
       },
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/modules")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/modules")
 
     return { success: true }
   } catch (error) {
@@ -555,8 +556,8 @@ export async function updateSchoolName(
       data: updateData,
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/title")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/title")
 
     return { success: true }
   } catch (error) {
@@ -670,8 +671,8 @@ export async function updateSchoolNameFormat(
       data: { nameFormat: validatedData.nameFormat },
     })
 
-    revalidatePath("/school/configuration")
-    revalidatePath("/school/configuration/name-format")
+    refreshPage("/school/configuration")
+    refreshPage("/school/configuration/name-format")
 
     return { success: true }
   } catch (error) {

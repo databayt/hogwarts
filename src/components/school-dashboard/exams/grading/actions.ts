@@ -12,10 +12,10 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import type { GradingSystem } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -98,7 +98,7 @@ export async function saveGradingConfig(data: GradingConfigInput) {
     },
   })
 
-  revalidatePath("/settings/grading")
+  refreshPage("/settings/grading")
 
   return { success: true, config }
 }
@@ -458,7 +458,7 @@ export async function updateGradeBoundaries(
     },
   })
 
-  revalidatePath("/settings/grading")
+  refreshPage("/settings/grading")
 
   return { success: true, config }
 }

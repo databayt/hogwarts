@@ -14,6 +14,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import type { ActionResponse } from "./types"
 
@@ -117,7 +118,7 @@ export async function createGeneratedExamForPaper(
       return ge
     })
 
-    revalidatePath("/exams")
+    refreshPage("/exams")
     revalidatePath(`/exams/${examId}`)
     revalidatePath(`/exams/paper/${generatedExam.id}`)
 

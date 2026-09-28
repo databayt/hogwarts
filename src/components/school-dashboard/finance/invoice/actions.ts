@@ -11,6 +11,7 @@ import { ar, enUS } from "date-fns/locale"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resend } from "@/components/school-dashboard/finance/invoice/email.config"
 import { SendInvoiceEmail } from "@/components/school-dashboard/finance/invoice/send-invoice-email"
@@ -321,7 +322,7 @@ export async function deleteInvoice({
       })
     })
 
-    revalidatePath("/finance/invoice")
+    refreshPage("/finance/invoice")
     return { success: true }
   } catch (error) {
     return actionError(ACTION_ERRORS.INVOICE_DELETE_FAILED)

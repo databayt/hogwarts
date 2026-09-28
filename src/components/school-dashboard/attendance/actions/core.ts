@@ -11,6 +11,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { isChannelAvailable, sendAttendanceSMS } from "@/lib/notifications/sms"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   canMarkAttendance,
@@ -946,7 +947,7 @@ export async function quickMarkAllPresent(input: {
       status: "PRESENT" as const,
     }))
 
-    revalidatePath("/attendance")
+    refreshPage("/attendance")
 
     return {
       success: true,
@@ -1003,7 +1004,7 @@ export async function checkOutStudent(input: {
     data: { checkOutTime: new Date() },
   })
 
-  revalidatePath("/attendance")
+  refreshPage("/attendance")
   return { success: true }
 }
 
@@ -1030,7 +1031,7 @@ export async function bulkCheckOut(input: {
     data: { checkOutTime: new Date() },
   })
 
-  revalidatePath("/attendance")
+  refreshPage("/attendance")
   return { success: true, count: result.count }
 }
 
@@ -1085,7 +1086,7 @@ export async function deleteAttendance(attendanceId: string): Promise<{
       data: { deletedAt: now },
     })
 
-    revalidatePath("/attendance")
+    refreshPage("/attendance")
 
     return { success: true, deletedAt: now }
   } catch (error) {
@@ -1139,7 +1140,7 @@ export async function bulkDeleteAttendance(attendanceIds: string[]): Promise<{
       data: { deletedAt: now },
     })
 
-    revalidatePath("/attendance")
+    refreshPage("/attendance")
 
     return { success: true, deleted: result.count }
   } catch (error) {
@@ -1201,7 +1202,7 @@ export async function restoreAttendance(attendanceId: string): Promise<{
       data: { deletedAt: null },
     })
 
-    revalidatePath("/attendance")
+    refreshPage("/attendance")
 
     return { success: true }
   } catch (error) {

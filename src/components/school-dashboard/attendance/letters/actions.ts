@@ -8,13 +8,13 @@
  */
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isStaffRole } from "../authorization"
 import {
@@ -207,7 +207,7 @@ export async function generateLetter(
       console.log("Would send email to:", guardian?.emailAddress)
     }
 
-    revalidatePath("/attendance/letters")
+    refreshPage("/attendance/letters")
 
     return {
       success: true,
@@ -432,7 +432,7 @@ export async function bulkGenerateLetters(
   const successCount = results.filter((r) => r.success).length
   const failCount = results.filter((r) => !r.success).length
 
-  revalidatePath("/attendance/letters")
+  refreshPage("/attendance/letters")
 
   return {
     success: failCount === 0,

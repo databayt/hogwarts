@@ -9,10 +9,9 @@
  * Multi-tenant safe server actions for salary structure management
  * Includes: salary structures, allowances, deductions, and salary calculations
  */
-import { revalidatePath } from "next/cache"
-
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import {
@@ -189,7 +188,7 @@ export async function createSalaryStructure(
       },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true, data: salaryStructure.id }
   } catch (error) {
     console.error("Error creating salary structure:", error)
@@ -238,7 +237,7 @@ export async function updateSalaryStructure(
       },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true }
   } catch (error) {
     console.error("Error updating salary structure:", error)
@@ -265,7 +264,7 @@ export async function deactivateSalaryStructure(
       },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true }
   } catch (error) {
     console.error("Error deactivating salary structure:", error)
@@ -302,7 +301,7 @@ export async function addAllowance(
       },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true, data: allowance.id }
   } catch (error) {
     console.error("Error adding allowance:", error)
@@ -343,7 +342,7 @@ export async function updateAllowance(
       },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true }
   } catch (error) {
     console.error("Error updating allowance:", error)
@@ -366,7 +365,7 @@ export async function deleteAllowance(
       where: { id: allowanceId, schoolId },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true }
   } catch (error) {
     console.error("Error deleting allowance:", error)
@@ -403,7 +402,7 @@ export async function addDeduction(
       },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true, data: deduction.id }
   } catch (error) {
     console.error("Error adding deduction:", error)
@@ -441,7 +440,7 @@ export async function updateDeduction(
       },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true }
   } catch (error) {
     console.error("Error updating deduction:", error)
@@ -464,7 +463,7 @@ export async function deleteDeduction(
       where: { id: deductionId, schoolId },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true }
   } catch (error) {
     console.error("Error deleting deduction:", error)
@@ -640,7 +639,7 @@ export async function applySalaryIncrement(
       },
     })
 
-    revalidatePath("/finance/salary")
+    refreshPage("/finance/salary")
     return { success: true }
   } catch (error) {
     console.error("Error applying salary increment:", error)

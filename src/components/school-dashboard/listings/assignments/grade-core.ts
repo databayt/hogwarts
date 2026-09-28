@@ -1,11 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 
 /**
  * Grading a submission — shared by the `gradeSubmission` action and the
@@ -102,7 +102,7 @@ export async function gradeSubmissionCore(input: {
     )
   }
 
-  revalidatePath("/assignments")
+  refreshPage("/assignments")
 
   return {
     status: "graded",

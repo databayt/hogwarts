@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type {
@@ -101,7 +101,7 @@ export async function createProgressSchedule(
       },
     })
 
-    revalidatePath("/exams/progress")
+    refreshPage("/exams/progress")
     return { success: true, data: { id: schedule.id } }
   } catch (error) {
     console.error("Error creating progress schedule:", error)
@@ -224,7 +224,7 @@ export async function updateProgressSchedule(
       data: updateData,
     })
 
-    revalidatePath("/exams/progress")
+    refreshPage("/exams/progress")
     return { success: true }
   } catch (error) {
     console.error("Error updating progress schedule:", error)
@@ -251,7 +251,7 @@ export async function deleteProgressSchedule(
 
     await db.progressReportSchedule.delete({ where: { id } })
 
-    revalidatePath("/exams/progress")
+    refreshPage("/exams/progress")
     return { success: true }
   } catch (error) {
     console.error("Error deleting progress schedule:", error)
@@ -412,7 +412,7 @@ export async function generateProgressReports(
       },
     })
 
-    revalidatePath("/exams/progress")
+    refreshPage("/exams/progress")
     return {
       success: true,
       data: { generated, failed },

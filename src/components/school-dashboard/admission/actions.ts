@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { auth } from "@/auth"
 import type {
@@ -23,6 +22,7 @@ import {
 } from "@/lib/dispatch-notification"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
+import { refreshPage } from "@/lib/refresh-page"
 import type { ProvisionGuardianInput } from "@/lib/student-provisioning"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
@@ -352,7 +352,7 @@ export async function createCampaign(
       },
     })
 
-    revalidatePath("/admission")
+    refreshPage("/admission")
     return { success: true, data: { id: campaign.id } }
   } catch (error) {
     console.error("[createCampaign]", error)
@@ -400,7 +400,7 @@ export async function updateCampaign(
       },
     })
 
-    revalidatePath("/admission")
+    refreshPage("/admission")
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateCampaign]", error)
@@ -446,7 +446,7 @@ export async function deleteCampaign(params: {
       where: { id: params.id, schoolId },
     })
 
-    revalidatePath("/admission")
+    refreshPage("/admission")
     return { success: true, data: null }
   } catch (error) {
     console.error("[deleteCampaign]", error)
@@ -789,7 +789,7 @@ export async function updateApplicationStatus(params: {
       }
     }
 
-    revalidatePath("/admission")
+    refreshPage("/admission")
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateApplicationStatus]", error)
@@ -915,7 +915,7 @@ export async function updateApplicationScores(params: {
       data: updateData,
     })
 
-    revalidatePath("/admission/merit")
+    refreshPage("/admission/merit")
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateApplicationScores]", error)
@@ -1065,7 +1065,7 @@ export async function generateMeritList(params: {
       )
     }
 
-    revalidatePath("/admission/merit")
+    refreshPage("/admission/merit")
     return { success: true, data: null }
   } catch (error) {
     console.error("[generateMeritList]", error)
@@ -1719,8 +1719,8 @@ export async function confirmEnrollment(params: {
       )
     }
 
-    revalidatePath("/admission/enrollment")
-    revalidatePath("/students")
+    refreshPage("/admission/enrollment")
+    refreshPage("/students")
     return {
       success: true,
       data: {
@@ -1843,7 +1843,7 @@ export async function recordPayment(params: {
       console.warn("[recordPayment] Notification setup failed:", notifErr)
     }
 
-    revalidatePath("/admission/enrollment")
+    refreshPage("/admission/enrollment")
     return { success: true, data: null }
   } catch (error) {
     console.error("[recordPayment]", error)
@@ -1935,7 +1935,7 @@ export async function confirmRegistrationPayment(params: {
       return actionError(ACTION_ERRORS.REGISTRATION_FEE_ALREADY_PAID)
     }
 
-    revalidatePath("/admission/enrollment")
+    refreshPage("/admission/enrollment")
     return { success: true, data: null }
   } catch (error) {
     console.error("[confirmRegistrationPayment]", error)
@@ -2203,9 +2203,9 @@ export async function placeStudentInSection(params: {
       )
     }
 
-    revalidatePath("/admission/enrollment")
-    revalidatePath("/students")
-    revalidatePath("/classrooms")
+    refreshPage("/admission/enrollment")
+    refreshPage("/students")
+    refreshPage("/classrooms")
 
     if (noClassesForGrade) {
       return {

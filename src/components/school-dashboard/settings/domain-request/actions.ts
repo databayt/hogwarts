@@ -2,13 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import { refreshPage } from "@/lib/refresh-page"
 
 const domainRequestSchema = z.object({
   domain: z
@@ -85,8 +85,8 @@ export async function createDomainRequest(formData: FormData) {
       requestId: domainRequest.id,
     })
 
-    revalidatePath("/settings/domain")
-    revalidatePath("/school/configuration")
+    refreshPage("/settings/domain")
+    refreshPage("/school/configuration")
     return { success: true, data: domainRequest }
   } catch (error) {
     logger.error(
@@ -154,8 +154,8 @@ export async function cancelDomainRequest(requestId: string) {
       requestId,
     })
 
-    revalidatePath("/settings/domain")
-    revalidatePath("/school/configuration")
+    refreshPage("/settings/domain")
+    refreshPage("/school/configuration")
     return { success: true }
   } catch (error) {
     logger.error(
@@ -205,7 +205,7 @@ export async function approveDomainRequest(requestId: string) {
       schoolId: request.schoolId,
     })
 
-    revalidatePath("/school/domain-requests")
+    refreshPage("/school/domain-requests")
     return { success: true }
   } catch (error) {
     logger.error(
@@ -240,7 +240,7 @@ export async function rejectDomainRequest(requestId: string, reason?: string) {
       reason,
     })
 
-    revalidatePath("/school/domain-requests")
+    refreshPage("/school/domain-requests")
     return { success: true }
   } catch (error) {
     logger.error(

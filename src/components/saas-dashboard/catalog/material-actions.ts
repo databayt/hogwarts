@@ -2,10 +2,9 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
-
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import { catalogMaterialSchema } from "./material-validation"
@@ -38,7 +37,7 @@ export async function createMaterial(data: FormData): Promise<ActionResponse> {
       },
     })
 
-    revalidatePath("/catalog/materials")
+    refreshPage("/catalog/materials")
     return { success: true, data: { id: material.id } }
   } catch (error) {
     return {
@@ -79,7 +78,7 @@ export async function updateMaterial(
       data: safeData,
     })
 
-    revalidatePath("/catalog/materials")
+    refreshPage("/catalog/materials")
     return { success: true, data: { id: material.id } }
   } catch (error) {
     return {
@@ -101,7 +100,7 @@ export async function deleteMaterial(id: string): Promise<ActionResponse> {
 
     await db.material.delete({ where: { id } })
 
-    revalidatePath("/catalog/materials")
+    refreshPage("/catalog/materials")
     return { success: true }
   } catch (error) {
     return {

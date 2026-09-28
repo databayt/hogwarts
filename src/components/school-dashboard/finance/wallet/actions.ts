@@ -7,11 +7,11 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import type { WalletActionResult } from "./types"
@@ -50,7 +50,7 @@ export async function createWallet(
       },
     })
 
-    revalidatePath("/finance/wallet")
+    refreshPage("/finance/wallet")
     return { success: true, data: wallet as any }
   } catch (error) {
     console.error("Error creating wallet:", error)
@@ -134,7 +134,7 @@ export async function topupWallet(formData: FormData) {
       )
     }
 
-    revalidatePath("/finance/wallet")
+    refreshPage("/finance/wallet")
     return { success: true, data: result }
   } catch (error) {
     console.error("Error topping up wallet:", error)
@@ -205,7 +205,7 @@ export async function refundWallet(formData: FormData) {
       return { wallet: updatedWallet, transaction }
     })
 
-    revalidatePath("/finance/wallet")
+    refreshPage("/finance/wallet")
     return { success: true, data: result }
   } catch (error) {
     console.error("Error refunding wallet:", error)

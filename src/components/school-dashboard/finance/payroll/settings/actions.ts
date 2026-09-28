@@ -2,12 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isFinanceAuthError, requireFinanceActor } from "../../guard"
 
@@ -54,6 +54,6 @@ export async function saveSchoolPayrollPolicy(
     },
   })
 
-  revalidatePath("/finance/payroll/settings")
+  refreshPage("/finance/payroll/settings")
   return { success: true }
 }

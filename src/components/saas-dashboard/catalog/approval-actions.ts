@@ -9,6 +9,7 @@ import { z } from "zod"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { notifySchoolOfVideoDecision } from "@/lib/platform-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 // ============================================================================
@@ -289,7 +290,7 @@ export async function approveContent(
         }
     }
 
-    revalidatePath("/catalog/approvals")
+    refreshPage("/catalog/approvals")
     return { success: true }
   } catch (error) {
     return {
@@ -382,7 +383,7 @@ export async function rejectContent(
         }
     }
 
-    revalidatePath("/catalog/approvals")
+    refreshPage("/catalog/approvals")
     return { success: true }
   } catch (error) {
     return {
@@ -547,7 +548,7 @@ export async function updateContentFlags(
         }
     }
 
-    revalidatePath("/catalog/approvals")
+    refreshPage("/catalog/approvals")
     revalidatePath(tabPathFor(contentType))
     return { success: true }
   } catch (error) {

@@ -2,13 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { Prisma, UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { isStaffRole } from "../authorization"
@@ -157,8 +157,8 @@ export async function submitExcuse(input: {
       }
     }
 
-    revalidatePath("/attendance")
-    revalidatePath("/parent-portal/attendance")
+    refreshPage("/attendance")
+    refreshPage("/parent-portal/attendance")
 
     return { success: true, data: { excuseId: excuse.id } }
   } catch (error) {
@@ -296,8 +296,8 @@ export async function reviewExcuse(input: {
       })
     }
 
-    revalidatePath("/attendance")
-    revalidatePath("/parent-portal/attendance")
+    refreshPage("/attendance")
+    refreshPage("/parent-portal/attendance")
 
     return { success: true, data: { updated: true } }
   } catch (error) {

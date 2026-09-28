@@ -2,12 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -89,7 +89,7 @@ export async function submitSubjectProposal(
       },
     })
 
-    revalidatePath("/subjects")
+    refreshPage("/subjects")
     return { success: true, data: { id: proposal.id } }
   } catch (error) {
     return {
@@ -125,7 +125,7 @@ export async function submitChapterProposal(
       },
     })
 
-    revalidatePath("/subjects")
+    refreshPage("/subjects")
     return { success: true, data: { id: proposal.id } }
   } catch (error) {
     return {
@@ -161,7 +161,7 @@ export async function submitLessonProposal(
       },
     })
 
-    revalidatePath("/subjects")
+    refreshPage("/subjects")
     return { success: true, data: { id: proposal.id } }
   } catch (error) {
     return {
@@ -271,7 +271,7 @@ export async function updateProposal(
       },
     })
 
-    revalidatePath("/subjects")
+    refreshPage("/subjects")
     return { success: true }
   } catch (error) {
     return {

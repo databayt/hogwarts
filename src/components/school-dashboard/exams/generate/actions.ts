@@ -40,6 +40,7 @@ import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getSchoolSubject } from "@/lib/school-subjects"
 
 import type {
@@ -106,7 +107,7 @@ export async function createQuestion(
       },
     })
 
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/qbank")
     return { success: true, data: { id: question.id } }
   } catch (error) {
     console.error("Create question error:", error)
@@ -149,7 +150,7 @@ export async function updateQuestion(
       data: validated,
     })
 
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/qbank")
     revalidatePath(`/exams/qbank/${questionId}`)
     return { success: true, data: { id: question.id } }
   } catch (error) {
@@ -196,7 +197,7 @@ export async function deleteQuestion(
       },
     })
 
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/qbank")
     return { success: true, data: undefined }
   } catch (error) {
     console.error("Delete question error:", error)
@@ -363,7 +364,7 @@ export async function createTemplate(
       })
     })
 
-    revalidatePath("/exams/generate/templates")
+    refreshPage("/exams/generate/templates")
     return { success: true, data: { id: template.id } }
   } catch (error) {
     console.error("Create template error:", error)
@@ -530,8 +531,8 @@ export async function generateExam(
       })),
     })
 
-    revalidatePath("/exams")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams")
+    refreshPage("/exams/generate")
     return { success: true, data: { generatedExamId: generatedExam.id } }
   } catch (error) {
     console.error("Generate exam error:", error)

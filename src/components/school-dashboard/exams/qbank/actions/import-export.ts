@@ -13,11 +13,11 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -242,7 +242,7 @@ export async function importQuestionsFromCSV(
     }
 
     // Revalidate the questions page
-    revalidatePath("/exams/questions")
+    refreshPage("/exams/questions")
 
     return {
       success: true,

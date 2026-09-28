@@ -18,6 +18,7 @@ import { Prisma } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import {
   analyzeDistractors,
@@ -180,7 +181,7 @@ export async function analyzeQuestion(questionId: string) {
       },
     })
 
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/qbank")
     revalidatePath(`/exams/qbank/${questionId}`)
 
     return {
@@ -318,7 +319,7 @@ export async function analyzeExamQuestions(examId: string) {
       await analyzeQuestion(questionId)
     }
 
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/qbank")
     revalidatePath(`/exams/${examId}`)
 
     return {

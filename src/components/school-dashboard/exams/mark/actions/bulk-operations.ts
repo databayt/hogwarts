@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isAutoGradable } from "../utils"
 import { bulkGradeSchema } from "../validation"
@@ -117,7 +118,7 @@ export async function bulkGradeExam(
       }
     }
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${validated.examId}/results`)
 
     return {
@@ -235,7 +236,7 @@ export async function bulkAIGrade(
       await new Promise((resolve) => setTimeout(resolve, 1000))
     }
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${examId}/results`)
 
     return {
@@ -390,7 +391,7 @@ export async function importMarksFromCSV(
       }
     }
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${examId}/results`)
 
     return {
@@ -459,7 +460,7 @@ export async function resetExamGrades(examId: string): Promise<ActionResponse> {
       })
     })
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${examId}/results`)
 
     return { success: true }

@@ -18,6 +18,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import {
   getGradeBoundaries,
   upsertExamResult,
@@ -184,7 +185,7 @@ export async function finalizeExamResults(
       )
     }
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${examId}/results`)
 
     return {

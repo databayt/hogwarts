@@ -2,13 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import { localize } from "@/components/translation/localize"
 import { prewarm } from "@/components/translation/prewarm"
@@ -137,7 +137,7 @@ export async function createYearLevel(
     // Warm the other-language cache off the response path (seamless first read)
     after(() => prewarm("YearLevel", yearLevel, { schoolId }))
 
-    revalidatePath("/students/year-levels")
+    refreshPage("/students/year-levels")
     return {
       success: true,
       data: { yearLevel },
@@ -246,7 +246,7 @@ export async function updateYearLevel(
       )
     }
 
-    revalidatePath("/students/year-levels")
+    refreshPage("/students/year-levels")
     return {
       success: true,
       data: null,
@@ -320,7 +320,7 @@ export async function deleteYearLevel(
       where: { id: validated.id, schoolId },
     })
 
-    revalidatePath("/students/year-levels")
+    refreshPage("/students/year-levels")
     return { success: true }
   } catch (error) {
     console.error("Failed to delete year level:", error)

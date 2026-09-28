@@ -90,6 +90,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertAnnouncementPermission,
@@ -1000,7 +1001,7 @@ export async function updateAnnouncementConfig(
     })
 
     // Revalidate config page
-    revalidatePath("/announcements/config")
+    refreshPage("/announcements/config")
 
     return {
       success: true,

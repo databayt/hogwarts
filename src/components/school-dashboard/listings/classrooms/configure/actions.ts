@@ -2,13 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   defaultRoomName,
@@ -308,7 +308,7 @@ export async function generateSections(
       }
     })
 
-    revalidatePath("/classrooms")
+    refreshPage("/classrooms")
     return { success: true, data: { created: totalCreated, details } }
   } catch (error) {
     console.error("[generateSections] Error:", error)
@@ -556,8 +556,8 @@ export async function generateClassesForGrade(
       }
     }
 
-    revalidatePath("/classrooms")
-    revalidatePath("/classes")
+    refreshPage("/classrooms")
+    refreshPage("/classes")
     return { success: true, data: { created: totalCreated, details } }
   } catch (error) {
     console.error("[generateClassesForGrade] Error:", error)
@@ -664,8 +664,8 @@ export async function bulkEnrollStudentsInClasses(
       )
     }
 
-    revalidatePath("/classrooms")
-    revalidatePath("/students")
+    refreshPage("/classrooms")
+    refreshPage("/students")
     return { success: true, data: { enrolled: totalEnrolled, details } }
   } catch (error) {
     console.error("[bulkEnrollStudentsInClasses] Error:", error)

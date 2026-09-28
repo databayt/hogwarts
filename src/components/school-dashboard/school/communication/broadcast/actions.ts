@@ -2,9 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
-
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { processNotificationBatch } from "@/components/school-dashboard/notifications/email-service"
 
 import { requireSchoolRole } from "../../require-school-admin"
@@ -50,7 +49,7 @@ export async function sendBroadcast(input: BroadcastInput) {
     await processNotificationBatch(batch.id, schoolId, userId)
   }
 
-  revalidatePath("/school/communication/broadcast")
+  refreshPage("/school/communication/broadcast")
   return batch
 }
 

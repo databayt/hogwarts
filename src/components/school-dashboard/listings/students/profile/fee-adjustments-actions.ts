@@ -7,7 +7,6 @@
 // `wizard/fees/actions.ts` when the fees step was removed from the student
 // wizard — admins now apply scholarships and overrides from the student
 // profile's Fees tab instead. See issue #265.
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 
@@ -15,6 +14,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getFeePreviewByGradeId, type FeePreview } from "@/lib/fee-preview"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { checkCurrentUserPermission } from "../../../finance/lib/permissions"
@@ -245,8 +245,8 @@ export async function applyFeeAdjustments(
       }
     })
 
-    revalidatePath("/students")
-    revalidatePath("/finance/fees")
+    refreshPage("/students")
+    refreshPage("/finance/fees")
     return { success: true }
   } catch (error) {
     return actionError(

@@ -1,6 +1,5 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { after } from "next/server"
 import { auth } from "@/auth"
@@ -19,6 +18,7 @@ import {
   isInvitationExpired,
   MAX_RESEND_COUNT,
 } from "@/lib/invitation-utils"
+import { refreshPage } from "@/lib/refresh-page"
 import { mainOriginForHost, tenantOriginForHost } from "@/lib/root-domain"
 import type { ProvisionStudentResult } from "@/lib/student-provisioning"
 import { provisionStudent } from "@/lib/student-provisioning"
@@ -226,7 +226,7 @@ export async function changeRole(
       )
     }
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true, data: { id: parsed.userId } }
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -279,7 +279,7 @@ export async function assignGrade(
       data: { academicGradeId: parsed.academicGradeId },
     })
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true, data: { id: parsed.userId } }
   } catch (error) {
     return {
@@ -358,7 +358,7 @@ export async function suspendMember(
       actorId: authContext.userId,
     }).catch(console.error)
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true }
   } catch (error) {
     return {
@@ -432,7 +432,7 @@ export async function activateMember(
       actorId: authContext.userId,
     }).catch(console.error)
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true }
   } catch (error) {
     return {
@@ -542,7 +542,7 @@ export async function removeMember(
       },
     })
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true }
   } catch (error) {
     return {
@@ -651,7 +651,7 @@ export async function approveMemberRequest(
       }).catch(console.error)
     }
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true }
   } catch (error) {
     return {
@@ -711,7 +711,7 @@ export async function rejectMemberRequest(
       }).catch(console.error)
     }
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true }
   } catch (error) {
     return {
@@ -799,7 +799,7 @@ export async function inviteMember(
       },
     }).catch(console.error)
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true, data: { id: request.id } }
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -892,7 +892,7 @@ export async function resendInvitation(
       },
     }).catch(console.error)
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true }
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -990,7 +990,7 @@ export async function acceptInvitation(
       }
     })
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true, data: { domain: request.school.domain || "" } }
   } catch (error) {
     return {
@@ -1092,7 +1092,7 @@ export async function bulkSuspend(
       count++
     }
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true, data: { count } }
   } catch (error) {
     return {
@@ -1156,7 +1156,7 @@ export async function bulkActivate(
       count++
     }
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true, data: { count } }
   } catch (error) {
     return {
@@ -1279,7 +1279,7 @@ export async function forcePasswordReset(
       }).catch(console.error)
     }
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return { success: true }
   } catch (error) {
     return {
@@ -1365,7 +1365,7 @@ export async function resetMemberPassword(
       )
     }
 
-    revalidatePath("/school/membership")
+    refreshPage("/school/membership")
     return {
       success: true,
       data: {

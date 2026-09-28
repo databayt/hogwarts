@@ -3,9 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import crypto from "crypto"
-import { revalidatePath } from "next/cache"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -94,7 +94,7 @@ export async function createCertificateConfig(
       },
     })
 
-    revalidatePath("/exams/certificates")
+    refreshPage("/exams/certificates")
     return { success: true, data: { id: config.id } }
   } catch (error) {
     console.error("Error creating certificate config:", error)
@@ -186,7 +186,7 @@ export async function updateCertificateConfig(
       data: updateData,
     })
 
-    revalidatePath("/exams/certificates")
+    refreshPage("/exams/certificates")
     return { success: true }
   } catch (error) {
     console.error("Error updating certificate config:", error)
@@ -226,7 +226,7 @@ export async function deleteCertificateConfig(
       await db.examCertificateConfig.delete({ where: { id } })
     }
 
-    revalidatePath("/exams/certificates")
+    refreshPage("/exams/certificates")
     return { success: true }
   } catch (error) {
     console.error("Error deleting certificate config:", error)
@@ -276,7 +276,7 @@ export async function setDefaultCertificateConfig(
       }),
     ])
 
-    revalidatePath("/exams/certificates")
+    refreshPage("/exams/certificates")
     return { success: true }
   } catch (error) {
     console.error("Error setting default certificate config:", error)
@@ -338,7 +338,7 @@ export async function autoGenerateCertificates(input: {
     })
     if (!result.success) return result
 
-    revalidatePath("/exams/certificates")
+    refreshPage("/exams/certificates")
     return {
       success: true,
       data: {
@@ -478,7 +478,7 @@ export async function generateCertificate(
       },
     })
 
-    revalidatePath("/exams/certificates")
+    refreshPage("/exams/certificates")
     return {
       success: true,
       data: {
@@ -696,7 +696,7 @@ export async function batchGenerateCertificates(
       }
     }
 
-    revalidatePath("/exams/certificates")
+    refreshPage("/exams/certificates")
     return {
       success: true,
       data: { generated, skipped, failed, certificates },
@@ -752,7 +752,7 @@ export async function shareCertificate(
       },
     })
 
-    revalidatePath("/exams/certificates")
+    refreshPage("/exams/certificates")
     return {
       success: true,
       data: {
@@ -863,7 +863,7 @@ export async function revokeCertificate(
       },
     })
 
-    revalidatePath("/exams/certificates")
+    refreshPage("/exams/certificates")
     return { success: true }
   } catch (error) {
     console.error("Error revoking certificate:", error)

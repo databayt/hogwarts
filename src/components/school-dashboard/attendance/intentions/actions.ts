@@ -9,13 +9,13 @@
  */
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { Prisma, UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { getOwnedStudentIds } from "../actions/helpers"
@@ -147,7 +147,7 @@ export async function submitAbsenceIntention(
     // Fire-and-forget: Notify relevant parties
     notifyIntentionSubmission(schoolId, intention.id).catch(console.error)
 
-    revalidatePath("/attendance/intentions")
+    refreshPage("/attendance/intentions")
 
     return { success: true, data: { id: intention.id } }
   } catch (error) {
@@ -221,7 +221,7 @@ export async function reviewAbsenceIntention(
       console.error
     )
 
-    revalidatePath("/attendance/intentions")
+    refreshPage("/attendance/intentions")
 
     return { success: true, data: { id: updated.id } }
   } catch (error) {
@@ -507,7 +507,7 @@ export async function cancelAbsenceIntention(
       where: { id: intentionId },
     })
 
-    revalidatePath("/attendance/intentions")
+    refreshPage("/attendance/intentions")
 
     return { success: true, data: undefined }
   } catch (error) {

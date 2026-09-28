@@ -2,10 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 const userNameSchema = z.object({ name: z.string().min(1).max(32) })
 export type FormData = z.infer<typeof userNameSchema>
@@ -19,6 +19,6 @@ export async function updateUserName(userId: string, data: FormData) {
     where: { id: userId },
     data: { username: parsed.data.name },
   })
-  revalidatePath("/lab/settings")
+  refreshPage("/lab/settings")
   return { status: "success" as const }
 }

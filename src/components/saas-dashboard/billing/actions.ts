@@ -2,12 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { Prisma, type Invoice } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { refreshPage } from "@/lib/refresh-page"
 import {
   logOperatorAudit,
   requireNotImpersonating,
@@ -86,7 +86,7 @@ export async function invoiceUpdateStatus(input: {
       action: `BILLING_INVOICE_${validated.status.toUpperCase()}`,
     })
 
-    revalidatePath("/billing")
+    refreshPage("/billing")
 
     return { success: true, data: invoice }
   } catch (error) {

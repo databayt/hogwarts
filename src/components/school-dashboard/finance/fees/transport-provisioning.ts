@@ -16,13 +16,13 @@
 // sourceSignals.{transportRouteId,billingMonth}, assignments by the
 // @@unique([studentId, feeStructureId, academicYear]) constraint, and invoice
 // sync by its own count-guard — re-running a month creates nothing twice.
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { ensureInvoicesForAssignment } from "@/lib/fee-invoice-sync"
+import { refreshPage } from "@/lib/refresh-page"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { isFinanceAuthError, requireFinanceActor } from "../guard"
@@ -194,8 +194,8 @@ export async function provisionTransportFees(
       }
     }
 
-    revalidatePath("/finance/fees")
-    revalidatePath("/finance/invoice")
+    refreshPage("/finance/fees")
+    refreshPage("/finance/invoice")
 
     return {
       success: true,

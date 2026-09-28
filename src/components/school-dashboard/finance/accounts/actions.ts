@@ -8,11 +8,11 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import { JOURNAL_ENTRY_NUMBER_FORMAT, StandardAccountCodes } from "./config"
@@ -70,7 +70,7 @@ export async function createAccount(
       },
     })
 
-    revalidatePath("/finance/accounts")
+    refreshPage("/finance/accounts")
     return { success: true, data: account as any }
   } catch (error) {
     console.error("Error creating account:", error)
@@ -119,7 +119,7 @@ export async function updateAccount(
       },
     })
 
-    revalidatePath("/finance/accounts")
+    refreshPage("/finance/accounts")
     return { success: true, data: account as any }
   } catch (error) {
     console.error("Error updating account:", error)
@@ -162,7 +162,7 @@ export async function deleteAccount(
       data: { isActive: false },
     })
 
-    revalidatePath("/finance/accounts")
+    refreshPage("/finance/accounts")
     return { success: true, data: account as any }
   } catch (error) {
     console.error("Error deleting account:", error)
@@ -252,7 +252,7 @@ export async function createJournalEntry(
       },
     })
 
-    revalidatePath("/finance/accounts/journal")
+    refreshPage("/finance/accounts/journal")
     return { success: true, data: journalEntry as any }
   } catch (error) {
     console.error("Error creating journal entry:", error)
@@ -319,8 +319,8 @@ export async function postJournalEntry(
       },
     })
 
-    revalidatePath("/finance/accounts/journal")
-    revalidatePath("/finance/accounts/ledger")
+    refreshPage("/finance/accounts/journal")
+    refreshPage("/finance/accounts/ledger")
     return { success: true, data: updated as any }
   } catch (error) {
     console.error("Error posting journal entry:", error)

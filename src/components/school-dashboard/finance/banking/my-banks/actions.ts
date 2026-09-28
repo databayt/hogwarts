@@ -3,10 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cache } from "react"
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResult, BankAccount } from "../types"
@@ -97,8 +97,8 @@ export async function removeBank(params: {
       where: { id: params.accountId },
     })
 
-    revalidatePath("/banking/my-banks")
-    revalidatePath("/banking")
+    refreshPage("/banking/my-banks")
+    refreshPage("/banking")
 
     return {
       success: true,

@@ -8,7 +8,6 @@
  */
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type {
   AttendanceStatus,
@@ -23,6 +22,7 @@ import {
   type StudentAttendanceData,
 } from "@/lib/ai/attendance-predictor"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { translate } from "@/components/translation/actions"
 import { detectLang } from "@/components/translation/util"
 
@@ -273,7 +273,7 @@ export async function runRiskPredictions(
       lastRunAt: predictions.processedAt,
     }
 
-    revalidatePath("/attendance/ai")
+    refreshPage("/attendance/ai")
 
     return {
       success: true,
@@ -571,8 +571,8 @@ export async function createInterventionFromRecommendation(
       },
     })
 
-    revalidatePath("/attendance/ai")
-    revalidatePath("/attendance/interventions")
+    refreshPage("/attendance/ai")
+    refreshPage("/attendance/interventions")
 
     return { success: true, data: intervention }
   } catch (error) {

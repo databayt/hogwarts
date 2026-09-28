@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { submitAnswerSchema } from "../validation"
 import type { ActionResponse, SubmitAnswerInput } from "./types"
@@ -276,7 +277,7 @@ export async function clearStudentAnswer(
       }
     }
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
 
     return { success: true }
   } catch (error) {

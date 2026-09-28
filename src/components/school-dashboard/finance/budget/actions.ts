@@ -7,11 +7,11 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import type { BudgetActionResult } from "./types"
@@ -48,7 +48,7 @@ export async function createBudget(
       },
     })
 
-    revalidatePath("/finance/budget")
+    refreshPage("/finance/budget")
     return { success: true, data: budget as any }
   } catch (error) {
     console.error("Error creating budget:", error)
@@ -91,7 +91,7 @@ export async function updateBudget(
       },
     })
 
-    revalidatePath("/finance/budget")
+    refreshPage("/finance/budget")
     return { success: true, data: budget as any }
   } catch (error) {
     console.error("Error updating budget:", error)
@@ -129,7 +129,7 @@ export async function createBudgetAllocation(formData: FormData) {
       },
     })
 
-    revalidatePath("/finance/budget")
+    refreshPage("/finance/budget")
     return { success: true, data: allocation }
   } catch (error) {
     console.error("Error creating allocation:", error)

@@ -2,10 +2,9 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
-
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import { catalogAssignmentSchema } from "./assignment-validation"
@@ -40,7 +39,7 @@ export async function createAssignment(
       },
     })
 
-    revalidatePath("/catalog/assignments")
+    refreshPage("/catalog/assignments")
     return { success: true, data: { id: assignment.id } }
   } catch (error) {
     return {
@@ -81,7 +80,7 @@ export async function updateAssignment(
       data: safeData,
     })
 
-    revalidatePath("/catalog/assignments")
+    refreshPage("/catalog/assignments")
     return { success: true, data: { id: assignment.id } }
   } catch (error) {
     return {
@@ -103,7 +102,7 @@ export async function deleteAssignment(id: string): Promise<ActionResponse> {
 
     await db.assignment.delete({ where: { id } })
 
-    revalidatePath("/catalog/assignments")
+    refreshPage("/catalog/assignments")
     return { success: true }
   } catch (error) {
     return {

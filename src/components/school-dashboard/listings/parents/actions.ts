@@ -81,6 +81,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertParentPermission,
@@ -1219,7 +1220,7 @@ export async function bulkDeleteParents(input: {
       where: { id: { in: validIds }, schoolId },
     })
 
-    revalidatePath("/parents")
+    refreshPage("/parents")
     return { success: true, data: { count: result.count as number } }
   } catch (error) {
     console.error("[bulkDeleteParents] Error:", error)

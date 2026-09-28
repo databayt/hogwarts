@@ -2,13 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { getOwnedStudentIds } from "../actions/helpers"
 import {
@@ -118,7 +118,7 @@ export async function generateAttendanceQR(
       },
     })
 
-    revalidatePath("/attendance/qr-code")
+    refreshPage("/attendance/qr-code")
 
     return {
       success: true,
@@ -356,7 +356,7 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       metadata: { deviceId },
     })
 
-    revalidatePath("/attendance/qr-code")
+    refreshPage("/attendance/qr-code")
 
     return {
       success: true,
@@ -511,7 +511,7 @@ export async function invalidateQRSession(sessionId: string) {
       newValue: { isActive: false, invalidatedAt: new Date().toISOString() },
     })
 
-    revalidatePath("/attendance/qr-code")
+    refreshPage("/attendance/qr-code")
 
     return {
       success: true,

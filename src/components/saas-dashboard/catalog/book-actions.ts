@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import { catalogBookSchema } from "./book-validation"
@@ -44,7 +45,7 @@ export async function createBook(
       },
     })
 
-    revalidatePath("/catalog/books")
+    refreshPage("/catalog/books")
     return { success: true, data: { id: book.id } }
   } catch (error) {
     return {
@@ -92,7 +93,7 @@ export async function updateBook(
       data: safeData,
     })
 
-    revalidatePath("/catalog/books")
+    refreshPage("/catalog/books")
     revalidatePath(`/catalog/books/${id}`)
     return { success: true, data: { id: book.id } }
   } catch (error) {
@@ -117,7 +118,7 @@ export async function deleteBook(id: string): Promise<ActionResponse> {
 
     await db.book.delete({ where: { id } })
 
-    revalidatePath("/catalog/books")
+    refreshPage("/catalog/books")
     return { success: true }
   } catch (error) {
     return {

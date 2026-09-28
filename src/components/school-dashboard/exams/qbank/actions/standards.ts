@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 import type { CurriculumStandard } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { prewarm } from "@/components/translation/prewarm"
 
 import {
@@ -88,8 +89,8 @@ export async function createCurriculumStandard(
     })
 
     after(() => prewarm("CurriculumStandard", standard, { schoolId }))
-    revalidatePath("/exams/qbank")
-    revalidatePath("/exams/standards")
+    refreshPage("/exams/qbank")
+    refreshPage("/exams/standards")
 
     return {
       success: true,
@@ -318,8 +319,8 @@ export async function updateCurriculumStandard(
     })
 
     after(() => prewarm("CurriculumStandard", standard, { schoolId }))
-    revalidatePath("/exams/qbank")
-    revalidatePath("/exams/standards")
+    refreshPage("/exams/qbank")
+    refreshPage("/exams/standards")
 
     return {
       success: true,
@@ -405,8 +406,8 @@ export async function deleteCurriculumStandard(
       },
     })
 
-    revalidatePath("/exams/qbank")
-    revalidatePath("/exams/standards")
+    refreshPage("/exams/qbank")
+    refreshPage("/exams/standards")
 
     return { success: true }
   } catch (error) {
@@ -498,7 +499,7 @@ export async function linkQuestionToStandards(data: {
       }
     })
 
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/qbank")
     revalidatePath(`/exams/qbank/${validated.questionId}`)
 
     return { success: true }

@@ -2,10 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import { localize } from "@/components/translation/localize"
 import { prewarm } from "@/components/translation/prewarm"
@@ -149,7 +149,7 @@ export async function createDepartment(
     // Warm the other-language cache off the response path (seamless first read)
     after(() => prewarm("Department", department, { schoolId }))
 
-    revalidatePath("/teachers/departments")
+    refreshPage("/teachers/departments")
     return {
       success: true,
       message: "Department created successfully",
@@ -236,7 +236,7 @@ export async function updateDepartment(
       after(() => prewarm("Department", department, { schoolId }))
     }
 
-    revalidatePath("/teachers/departments")
+    refreshPage("/teachers/departments")
     return {
       success: true,
       message: "Department updated successfully",
@@ -305,7 +305,7 @@ export async function toggleDepartmentHead(params: {
       data: { isDepartmentHead: !record.isDepartmentHead },
     })
 
-    revalidatePath("/teachers/departments")
+    refreshPage("/teachers/departments")
     return {
       success: true,
       message: record.isDepartmentHead
@@ -376,7 +376,7 @@ export async function deleteDepartment(
       where: { id: validated.id },
     })
 
-    revalidatePath("/teachers/departments")
+    refreshPage("/teachers/departments")
     return { success: true, message: "Department deleted successfully" }
   } catch (error) {
     console.error("Failed to delete department:", error)

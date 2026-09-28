@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { DocumentTemplate, DocumentTemplateCategory } from "@prisma/client"
 
@@ -14,6 +13,7 @@ import {
   validateDocxTemplate,
   type DocxTemplateIssue,
 } from "@/lib/docx-fill"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { FIELD_VOCAB } from "./field-vocab"
@@ -119,8 +119,8 @@ export async function createDocumentTemplate(
       },
     })
 
-    revalidatePath("/exams/templates")
-    revalidatePath("/grades/templates")
+    refreshPage("/exams/templates")
+    refreshPage("/grades/templates")
     return {
       success: true,
       data: {
@@ -186,8 +186,8 @@ export async function setDefaultTemplate(id: string): Promise<ActionResponse> {
       }),
     ])
 
-    revalidatePath("/exams/templates")
-    revalidatePath("/grades/templates")
+    refreshPage("/exams/templates")
+    refreshPage("/grades/templates")
     return { success: true }
   } catch (error) {
     return {
@@ -217,8 +217,8 @@ export async function deleteDocumentTemplate(
     })
     if (count === 0) return actionError(ACTION_ERRORS.TEMPLATE_NOT_FOUND)
 
-    revalidatePath("/exams/templates")
-    revalidatePath("/grades/templates")
+    refreshPage("/exams/templates")
+    refreshPage("/grades/templates")
     return { success: true }
   } catch (error) {
     return {

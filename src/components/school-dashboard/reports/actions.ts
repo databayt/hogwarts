@@ -14,11 +14,11 @@
  * `getReportCards`) serve the id-scoped publish-button surface and are
  * still in use; they auto-fire `report_ready` notifications on publish.
  */
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { sendBatchGradeNotifications } from "@/components/school-dashboard/grades/actions/notifications"
 
 type ActionResponse<T = void> =
@@ -58,8 +58,8 @@ export async function publishReportCards(input: {
       },
     })
 
-    revalidatePath("/exams/report-cards")
-    revalidatePath("/parent")
+    refreshPage("/exams/report-cards")
+    refreshPage("/parent")
 
     // Fan out `report_ready` to student + guardians for every newly-published
     // card. Notifications are best-effort: a template-lookup miss does not
@@ -104,7 +104,7 @@ export async function updateReportCardComments(input: {
       },
     })
 
-    revalidatePath("/exams/report-cards")
+    refreshPage("/exams/report-cards")
     return { success: true }
   } catch (error) {
     console.error("Update comments error:", error)

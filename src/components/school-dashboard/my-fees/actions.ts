@@ -2,12 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // Mirrors the PaymentMethod enum declared in Prisma.
@@ -75,7 +75,7 @@ export async function setPreferredPaymentMethod(
     })
     if (updated.count === 0) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
-    revalidatePath("/my-fees")
+    refreshPage("/my-fees")
     return { success: true }
   } catch (error) {
     return actionError(

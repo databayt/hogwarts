@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { Decimal } from "@prisma/client/runtime/library"
 import { z } from "zod"
@@ -10,6 +9,7 @@ import { z } from "zod"
 import { actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 /** Valid AI domains that can be toggled */
@@ -63,7 +63,7 @@ export async function updateAISettings(
       },
     })
 
-    revalidatePath("/settings")
+    refreshPage("/settings")
     return { success: true }
   } catch (error) {
     console.error("Failed to update AI settings:", error)

@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { QuestionBankDTO, TemplateDistribution } from "../types"
@@ -245,7 +246,7 @@ export async function createExamVersion(
       return ge
     })
 
-    revalidatePath("/exams")
+    refreshPage("/exams")
     revalidatePath(`/exams/generate`)
     return { success: true, data: { generatedExamId: generatedExam.id } }
   } catch (error) {
@@ -352,7 +353,7 @@ export async function deleteExamVersion(
       })
     })
 
-    revalidatePath("/exams")
+    refreshPage("/exams")
     revalidatePath(`/exams/generate`)
     return { success: true }
   } catch (error) {

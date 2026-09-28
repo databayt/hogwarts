@@ -8,12 +8,12 @@
  */
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { KioskAction, KioskMethod } from "./validation"
@@ -346,7 +346,7 @@ export async function processKioskCheck(
       },
     })
 
-    revalidatePath("/attendance")
+    refreshPage("/attendance")
 
     return { success: true, attendanceId: attendance?.id }
   } catch (error) {

@@ -2,9 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
-
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { requireSchoolRole } from "../../require-school-admin"
 import {
@@ -34,7 +33,7 @@ export async function createTemplate(input: TemplateInput) {
     },
   })
 
-  revalidatePath("/school/communication/templates")
+  refreshPage("/school/communication/templates")
   return template
 }
 
@@ -54,7 +53,7 @@ export async function updateTemplate(input: unknown) {
     data,
   })
 
-  revalidatePath("/school/communication/templates")
+  refreshPage("/school/communication/templates")
   return template
 }
 
@@ -68,6 +67,6 @@ export async function deleteTemplate(id: string) {
 
   await db.notificationTemplate.delete({ where: { id } })
 
-  revalidatePath("/school/communication/templates")
+  refreshPage("/school/communication/templates")
   return { success: true }
 }

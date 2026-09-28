@@ -15,12 +15,12 @@
  */
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { HallPassDestination, UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { CreateHallPassInput, ReturnHallPassInput } from "./validation"
@@ -135,7 +135,7 @@ export async function createHallPass(
       },
     })
 
-    revalidatePath("/attendance/hall-passes")
+    refreshPage("/attendance/hall-passes")
 
     return {
       success: true,
@@ -193,7 +193,7 @@ export async function returnHallPass(
       },
     })
 
-    revalidatePath("/attendance/hall-passes")
+    refreshPage("/attendance/hall-passes")
 
     return {
       success: true,
@@ -237,7 +237,7 @@ export async function cancelHallPass(passId: string): Promise<ActionResult> {
       data: { status: "CANCELLED" },
     })
 
-    revalidatePath("/attendance/hall-passes")
+    refreshPage("/attendance/hall-passes")
 
     return { success: true }
   } catch (error) {

@@ -73,6 +73,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
 import { getModelOrThrow } from "@/lib/prisma-guards"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -501,7 +502,7 @@ export async function enrollStudentInClass(input: {
     await syncStudentClassToEnrollment(schoolId, studentId, classId)
 
     revalidatePath(CLASSES_PATH)
-    revalidatePath("/students")
+    refreshPage("/students")
 
     return {
       success: true,
@@ -579,7 +580,7 @@ export async function unenrollStudentFromClass(input: {
     })
 
     revalidatePath(CLASSES_PATH)
-    revalidatePath("/students")
+    refreshPage("/students")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -1886,7 +1887,7 @@ export async function bulkDeleteClasses(input: {
       where: { id: { in: validIds }, schoolId },
     })
 
-    revalidatePath("/classrooms")
+    refreshPage("/classrooms")
     return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[bulkDeleteClasses] Error:", error)

@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import { processOCRWithAI } from "@/lib/ai/openai"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import type { ActionResponse, OCRResult } from "./types"
 
@@ -74,7 +75,7 @@ export async function processAnswerOCR(
       },
     })
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${studentAnswer.examId}`)
 
     return {
@@ -239,7 +240,7 @@ export async function correctOCRText(
       },
     })
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${studentAnswer.examId}`)
 
     return { success: true }

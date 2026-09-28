@@ -2,10 +2,9 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
-
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import { catalogQuestionSchema } from "./question-validation"
@@ -47,7 +46,7 @@ export async function createQuestion(data: FormData): Promise<ActionResponse> {
       },
     })
 
-    revalidatePath("/catalog/questions")
+    refreshPage("/catalog/questions")
     return { success: true, data: { id: question.id } }
   } catch (error) {
     return {
@@ -98,7 +97,7 @@ export async function updateQuestion(
       },
     })
 
-    revalidatePath("/catalog/questions")
+    refreshPage("/catalog/questions")
     return { success: true, data: { id: question.id } }
   } catch (error) {
     return {
@@ -120,7 +119,7 @@ export async function deleteQuestion(id: string): Promise<ActionResponse> {
 
     await db.question.delete({ where: { id } })
 
-    revalidatePath("/catalog/questions")
+    refreshPage("/catalog/questions")
     return { success: true }
   } catch (error) {
     return {

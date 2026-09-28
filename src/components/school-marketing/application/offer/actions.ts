@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import type { Prisma } from "@prisma/client"
 import { nanoid } from "nanoid"
 
@@ -29,6 +28,7 @@ import {
   type WalletDetails,
 } from "@/lib/payment/types"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { refreshPage } from "@/lib/refresh-page"
 import { tenantUrl } from "@/components/school-marketing/admission/actions/urls"
 
 import { selectOfferFeeStructures, sumRegistrationFee } from "./fee-structures"
@@ -647,7 +647,7 @@ export async function acceptOffer(
       })
     }
 
-    revalidatePath("/application")
+    refreshPage("/application")
 
     return {
       success: true,
@@ -751,7 +751,7 @@ export async function declineOffer(
       })
     }
 
-    revalidatePath("/application")
+    refreshPage("/application")
 
     return {
       success: true,
@@ -963,7 +963,7 @@ export async function createRegistrationFeeCheckout(
       },
     })
 
-    revalidatePath("/application")
+    refreshPage("/application")
 
     return {
       success: true,
@@ -1103,7 +1103,7 @@ export async function recordRegistrationCashIntent(
       },
     })
 
-    revalidatePath("/application")
+    refreshPage("/application")
 
     return {
       success: true,
@@ -1255,7 +1255,7 @@ export async function recordRegistrationBankTransferIntent(
       },
     })
 
-    revalidatePath("/application")
+    refreshPage("/application")
 
     return {
       success: true,
@@ -1414,7 +1414,7 @@ export async function recordRegistrationWalletIntent(
       },
     })
 
-    revalidatePath("/application")
+    refreshPage("/application")
 
     return {
       success: true,
@@ -1535,7 +1535,7 @@ export async function submitRegistrationFeeProof(
       console.error("[submitRegistrationFeeProof] notification error:", err)
     }
 
-    revalidatePath("/application")
+    refreshPage("/application")
     return { success: true, data: { proofUrl: url } }
   } catch (error) {
     console.error("[submitRegistrationFeeProof]", error)

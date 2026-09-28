@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import type { GradingMethod, MarkingStatus } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { gradeOverrideSchema } from "../validation"
 import type { ActionResponse, GradeOverrideInput } from "./types"
@@ -97,7 +98,7 @@ export async function manualGrade(
       })
     }
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${studentAnswer.examId}/results`)
 
     return { success: true }
@@ -197,7 +198,7 @@ export async function overrideGrade(data: FormData): Promise<ActionResponse> {
       })
     })
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${markingResult.examId}/results`)
 
     return { success: true }
@@ -315,7 +316,7 @@ export async function reviewAIGrade(
       data: updateData,
     })
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${markingResult.examId}/results`)
 
     return { success: true }

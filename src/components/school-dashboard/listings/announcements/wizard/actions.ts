@@ -2,13 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { prewarm } from "@/components/translation/prewarm"
 
 import { checkAnnouncementPermission, getAllowedScopes } from "../authorization"
@@ -148,7 +148,7 @@ export async function submitAnnouncementWizard(
           { schoolId }
         )
       )
-      revalidatePath("/announcements")
+      refreshPage("/announcements")
       return { success: true, data: { id } }
     }
 
@@ -188,7 +188,7 @@ export async function submitAnnouncementWizard(
         { schoolId }
       )
     )
-    revalidatePath("/announcements")
+    refreshPage("/announcements")
     return { success: true, data: { id: created.id } }
   } catch {
     return actionError(ACTION_ERRORS.SAVE_FAILED)
@@ -223,7 +223,7 @@ export async function completeAnnouncementWizard(
       data: { wizardStep: null },
     })
 
-    revalidatePath("/announcements")
+    refreshPage("/announcements")
     return { success: true }
   } catch {
     return actionError(ACTION_ERRORS.SAVE_FAILED)

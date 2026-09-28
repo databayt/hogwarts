@@ -7,11 +7,11 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import type { TimesheetActionResult } from "./types"
@@ -48,7 +48,7 @@ export async function createTimesheet(
       },
     })
 
-    revalidatePath("/finance/timesheet")
+    refreshPage("/finance/timesheet")
     return { success: true, data: timesheet as any }
   } catch (error) {
     console.error("Error creating timesheet:", error)
@@ -108,7 +108,7 @@ export async function addTimesheetEntry(formData: FormData) {
       return { entry, timesheet }
     })
 
-    revalidatePath("/finance/timesheet")
+    refreshPage("/finance/timesheet")
     return { success: true, data: result }
   } catch (error) {
     console.error("Error adding timesheet entry:", error)
@@ -143,7 +143,7 @@ export async function submitTimesheet(timesheetId: string) {
       },
     })
 
-    revalidatePath("/finance/timesheet")
+    refreshPage("/finance/timesheet")
     return { success: true, data: timesheet }
   } catch (error) {
     console.error("Error submitting timesheet:", error)
@@ -183,7 +183,7 @@ export async function approveTimesheet(formData: FormData) {
       },
     })
 
-    revalidatePath("/finance/timesheet")
+    refreshPage("/finance/timesheet")
     return { success: true, data: timesheet }
   } catch (error) {
     console.error("Error approving timesheet:", error)

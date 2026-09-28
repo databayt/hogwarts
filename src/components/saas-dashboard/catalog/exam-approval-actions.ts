@@ -2,10 +2,9 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
-
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import type {
@@ -137,7 +136,7 @@ export async function approveExam(
       return { success: false, error: "exam_already_processed" }
     }
 
-    revalidatePath("/catalog/approvals")
+    refreshPage("/catalog/approvals")
     return { success: true }
   } catch (error) {
     return {
@@ -184,7 +183,7 @@ export async function rejectExam(
       return { success: false, error: "exam_already_processed" }
     }
 
-    revalidatePath("/catalog/approvals")
+    refreshPage("/catalog/approvals")
     return { success: true }
   } catch (error) {
     return {
@@ -303,7 +302,7 @@ export async function approveExamTemplate(id: string): Promise<ActionResponse> {
       return { success: false, error: "template_already_processed" }
     }
 
-    revalidatePath("/catalog/approvals")
+    refreshPage("/catalog/approvals")
     return { success: true }
   } catch (error) {
     return {
@@ -353,7 +352,7 @@ export async function rejectExamTemplate(
       return { success: false, error: "template_already_processed" }
     }
 
-    revalidatePath("/catalog/approvals")
+    refreshPage("/catalog/approvals")
     return { success: true }
   } catch (error) {
     return {

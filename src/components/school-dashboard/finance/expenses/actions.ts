@@ -7,11 +7,11 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { checkCurrentUserPermission } from "../lib/permissions"
 import type { ExpenseActionResult } from "./types"
@@ -60,7 +60,7 @@ export async function createExpense(
       },
     })
 
-    revalidatePath("/finance/expenses")
+    refreshPage("/finance/expenses")
     return { success: true, data: expense as any }
   } catch (error) {
     console.error("Error creating expense:", error)
@@ -126,7 +126,7 @@ export async function updateExpense(
       },
     })
 
-    revalidatePath("/finance/expenses")
+    refreshPage("/finance/expenses")
     return { success: true, data: expense as any }
   } catch (error) {
     console.error("Error updating expense:", error)
@@ -172,7 +172,7 @@ export async function approveExpense(formData: FormData) {
       },
     })
 
-    revalidatePath("/finance/expenses")
+    refreshPage("/finance/expenses")
     return { success: true, data: expense }
   } catch (error) {
     console.error("Error approving expense:", error)
@@ -252,7 +252,7 @@ export async function markExpensePaid(
       )
     }
 
-    revalidatePath("/finance/expenses")
+    refreshPage("/finance/expenses")
     return { success: true }
   } catch (error) {
     console.error("Error marking expense paid:", error)
@@ -291,7 +291,7 @@ export async function createExpenseCategory(formData: FormData) {
       },
     })
 
-    revalidatePath("/finance/expenses")
+    refreshPage("/finance/expenses")
     return { success: true, data: category }
   } catch (error) {
     console.error("Error creating category:", error)

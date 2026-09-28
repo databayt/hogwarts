@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { auth } from "@/auth"
 import { z } from "zod"
@@ -10,6 +9,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getSchoolSubjects } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
@@ -105,7 +105,7 @@ export async function createSubject(
           where: { id: existing.id, schoolId },
           data: { isActive: true },
         })
-        revalidatePath("/subjects")
+        refreshPage("/subjects")
         return { success: true, data: { id: existing.id } }
       }
       return {
@@ -126,7 +126,7 @@ export async function createSubject(
       },
     })
 
-    revalidatePath("/subjects")
+    refreshPage("/subjects")
     return { success: true, data: { id: row.id } }
   } catch (error) {
     console.error("[createSubject] Error:", error)
@@ -196,7 +196,7 @@ export async function updateSubject(
       data,
     })
 
-    revalidatePath("/subjects")
+    refreshPage("/subjects")
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[updateSubject] Error:", error)
@@ -258,7 +258,7 @@ export async function deleteSubject(input: {
       data: { isActive: false },
     })
 
-    revalidatePath("/subjects")
+    refreshPage("/subjects")
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[deleteSubject] Error:", error)
@@ -554,7 +554,7 @@ export async function bulkDeleteSubjects(input: {
       data: { isActive: false },
     })
 
-    revalidatePath("/subjects")
+    refreshPage("/subjects")
     return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[bulkDeleteSubjects] Error:", error)

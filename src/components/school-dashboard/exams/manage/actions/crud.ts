@@ -2,12 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import { prewarm } from "@/components/translation/prewarm"
 
@@ -148,7 +148,7 @@ export async function createExam(
       targetClassId: parsed.classId,
     }).catch((err) => console.error("[createExam] Notification error:", err))
 
-    revalidatePath("/exams")
+    refreshPage("/exams")
     return {
       success: true,
       data: { id: exam.id },
@@ -293,7 +293,7 @@ export async function updateExam(
     // freshly written values. Non-blocking and best-effort.
     after(() => prewarm("Exam", { id, ...data }, { schoolId }))
 
-    revalidatePath("/exams")
+    refreshPage("/exams")
     return {
       success: true,
     }
@@ -391,7 +391,7 @@ export async function deleteExam(input: {
       targetClassId: examExists.classId,
     }).catch((err) => console.error("[deleteExam] Notification error:", err))
 
-    revalidatePath("/exams")
+    refreshPage("/exams")
     return {
       success: true,
     }

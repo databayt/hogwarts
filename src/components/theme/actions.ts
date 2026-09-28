@@ -9,10 +9,10 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { getPresetById, themePresets } from "./presets"
 import {
@@ -107,7 +107,7 @@ export async function saveUserTheme(formData: FormData) {
       },
     })
 
-    revalidatePath("/settings")
+    refreshPage("/settings")
     return { success: true, theme }
   } catch (error) {
     console.error("Error saving theme:", error)
@@ -160,7 +160,7 @@ export async function updateUserTheme(themeId: string, formData: FormData) {
       },
     })
 
-    revalidatePath("/settings")
+    refreshPage("/settings")
     return { success: true, theme }
   } catch (error) {
     console.error("Error updating theme:", error)
@@ -216,7 +216,7 @@ export async function activateUserTheme(formData: FormData) {
       }),
     ])
 
-    revalidatePath("/settings")
+    refreshPage("/settings")
     return { success: true }
   } catch (error) {
     console.error("Error activating theme:", error)
@@ -270,7 +270,7 @@ export async function deleteUserTheme(formData: FormData) {
       where: { id: validated.themeId },
     })
 
-    revalidatePath("/settings")
+    refreshPage("/settings")
     return { success: true }
   } catch (error) {
     console.error("Error deleting theme:", error)
@@ -352,7 +352,7 @@ export async function applyPresetTheme(formData: FormData) {
       }),
     ])
 
-    revalidatePath("/settings")
+    refreshPage("/settings")
     return { success: true, themeId }
   } catch (error) {
     console.error("Error applying preset theme:", error)

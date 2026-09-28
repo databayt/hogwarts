@@ -7,7 +7,6 @@
  * Admission Document AI Server Actions
  * Classify, extract, and process admission documents
  */
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
@@ -15,6 +14,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { createProcessingJob } from "@/lib/document-extraction/queue-runner"
 import { logger } from "@/lib/logger"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { assertAdmissionPermission, isPermissionDenied } from "../authorization"
 import { classifyAdmissionDocument } from "./classify"
@@ -290,7 +290,7 @@ export async function processApplicationDocument(
       schoolId,
     })
 
-    revalidatePath("/admission")
+    refreshPage("/admission")
 
     return {
       success: true,

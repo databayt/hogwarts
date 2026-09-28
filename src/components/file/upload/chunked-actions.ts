@@ -15,7 +15,6 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import {
   AbortMultipartUploadCommand,
@@ -28,6 +27,7 @@ import type { FileCategory, StorageProvider } from "@prisma/client"
 
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { generateCDNUrl, generateSignedUrl } from "@/components/file/cdn"
 import {
   generateChunkHash,
@@ -536,7 +536,7 @@ export async function completeChunkedUpload(
     })
 
     // 11. Revalidate
-    revalidatePath("/files")
+    refreshPage("/files")
 
     return {
       success: true,

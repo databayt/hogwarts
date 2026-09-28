@@ -3,12 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import crypto from "crypto"
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { TeacherWizardData } from "./use-teacher-wizard"
@@ -180,7 +180,7 @@ export async function completeTeacherWizard(
       data: { wizardStep: null },
     })
 
-    revalidatePath("/teachers")
+    refreshPage("/teachers")
     return { success: true }
   } catch (error) {
     return {

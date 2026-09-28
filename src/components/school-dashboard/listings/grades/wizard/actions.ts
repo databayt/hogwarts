@@ -2,12 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { GradeWizardData } from "./use-grade-wizard"
@@ -159,7 +159,7 @@ export async function completeGradeWizard(
       data: { wizardStep: null },
     })
 
-    revalidatePath("/grades")
+    refreshPage("/grades")
     return { success: true }
   } catch (error) {
     return {

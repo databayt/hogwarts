@@ -2,9 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
-
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { requireSchoolRole } from "../../require-school-admin"
 import {
@@ -42,6 +41,6 @@ export async function updateAnnouncementConfig(
     create: { schoolId, ...validated },
   })
 
-  revalidatePath("/school/communication/settings")
+  refreshPage("/school/communication/settings")
   return config
 }

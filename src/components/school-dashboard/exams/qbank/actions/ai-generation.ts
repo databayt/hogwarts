@@ -7,12 +7,12 @@
  * AI Question Generation Server Actions
  * Generate questions using OpenAI and bulk-save to QuestionBank
  */
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { QuestionType } from "@prisma/client"
 
 import { generateQuestionsWithAI, isAIServiceAvailable } from "@/lib/ai/openai"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { checkAIGenerationRateLimit } from "../../lib/security"
 import type { AIGeneratedQuestion } from "../types"
@@ -203,8 +203,8 @@ export async function saveAIGeneratedQuestions(input: {
       savedCount++
     }
 
-    revalidatePath("/exams/qbank")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/qbank")
+    refreshPage("/exams/generate")
 
     return { success: true, data: { savedCount } }
   } catch (error) {

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import {
   generateExamPreview,
@@ -183,8 +184,8 @@ export async function generateExam(
       return exam
     })
 
-    revalidatePath("/exams")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams")
+    refreshPage("/exams/generate")
     revalidatePath(`/exams/${validated.examId}`)
 
     return {
@@ -420,8 +421,8 @@ export async function regenerateExam(
       return exam
     })
 
-    revalidatePath("/exams")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams")
+    refreshPage("/exams/generate")
 
     return {
       success: true,
@@ -479,8 +480,8 @@ export async function deleteGeneratedExam(
       })
     })
 
-    revalidatePath("/exams")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams")
+    refreshPage("/exams/generate")
 
     return { success: true }
   } catch (error) {

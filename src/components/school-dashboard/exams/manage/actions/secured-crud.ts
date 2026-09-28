@@ -10,10 +10,10 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -154,7 +154,7 @@ export const createExamSecured = secureExamAction.create(
         },
       })
 
-      revalidatePath("/exams")
+      refreshPage("/exams")
       return {
         success: true,
         data: { id: exam.id },
@@ -260,7 +260,7 @@ export const updateExamSecured = secureExamAction.update(
         data,
       })
 
-      revalidatePath("/exams")
+      refreshPage("/exams")
       return {
         success: true,
       }
@@ -347,7 +347,7 @@ export const deleteExamSecured = secureExamAction.delete(
         where: { id: examId, schoolId },
       })
 
-      revalidatePath("/exams")
+      refreshPage("/exams")
       return { success: true }
     } catch (error) {
       console.error("Error deleting exam:", error)

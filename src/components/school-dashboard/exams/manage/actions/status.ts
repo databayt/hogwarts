@@ -9,6 +9,7 @@ import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResponse } from "./types"
@@ -93,7 +94,7 @@ export async function startExam(
       },
     })
 
-    revalidatePath("/exams")
+    refreshPage("/exams")
     revalidatePath(`/exams/${examId}`)
 
     return {
@@ -183,9 +184,9 @@ export async function completeExam(
       }
     }
 
-    revalidatePath("/exams")
+    refreshPage("/exams")
     revalidatePath(`/exams/${examId}`)
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
 
     return {
       success: true,
@@ -286,7 +287,7 @@ export async function cancelExam(
       targetClassId: exam.classId,
     }).catch((err) => console.error("[cancelExam] Notification error:", err))
 
-    revalidatePath("/exams")
+    refreshPage("/exams")
     revalidatePath(`/exams/${examId}`)
 
     return {

@@ -4,10 +4,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 // School-wide bulk auto-grade for all pending auto-gradable submissions
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isAutoGradable } from "../utils"
 import { autoGradeAnswer } from "./auto-mark"
@@ -93,7 +93,7 @@ export async function bulkAutoGradeAll(): Promise<
       }
     }
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
 
     return {
       success: true,

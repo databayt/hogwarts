@@ -1,9 +1,9 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -194,7 +194,7 @@ export async function contributeExamToCatalog(
       return newExam
     })
 
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/generate")
     return { success: true, data: { catalogExamId: catalogExam.id } }
   } catch (error) {
     console.error("Contribute exam to catalog error:", error)
@@ -307,7 +307,7 @@ export async function contributeExamTemplateToCatalog(
       return newCatalogTemplate
     })
 
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/generate")
     return {
       success: true,
       data: { catalogExamTemplateId: catalogTemplate.id },

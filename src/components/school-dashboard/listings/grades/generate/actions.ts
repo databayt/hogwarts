@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import type {
   ActionResult,
@@ -72,7 +73,7 @@ export async function createQuestion(
       },
     })
 
-    revalidatePath("/generate/questions")
+    refreshPage("/generate/questions")
     return { success: true, data: { id: question.id } }
   } catch (error) {
     console.error("Create question error:", error)
@@ -119,7 +120,7 @@ export async function updateQuestion(
       data: validated,
     })
 
-    revalidatePath("/generate/questions")
+    refreshPage("/generate/questions")
     revalidatePath(`/generate/questions/${questionId}`)
     return { success: true, data: { id: question.id } }
   } catch (error) {
@@ -166,7 +167,7 @@ export async function deleteQuestion(
       },
     })
 
-    revalidatePath("/generate/questions")
+    refreshPage("/generate/questions")
     return { success: true, data: undefined }
   } catch (error) {
     console.error("Delete question error:", error)
@@ -301,7 +302,7 @@ export async function createTemplate(
       },
     })
 
-    revalidatePath("/generate/templates")
+    refreshPage("/generate/templates")
     return { success: true, data: { id: template.id } }
   } catch (error) {
     console.error("Create template error:", error)
@@ -465,8 +466,8 @@ export async function generateExam(
       })),
     })
 
-    revalidatePath("/exams")
-    revalidatePath("/generate")
+    refreshPage("/exams")
+    refreshPage("/generate")
     return { success: true, data: { generatedExamId: generatedExam.id } }
   } catch (error) {
     console.error("Generate exam error:", error)

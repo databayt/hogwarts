@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3"
 
 import { invalidateCache } from "@/lib/cloudfront"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import { lessonVideoSchema } from "./video-validation"
@@ -94,7 +94,7 @@ export async function createVideo(input: {
     },
   })
 
-  revalidatePath("/catalog")
+  refreshPage("/catalog")
   return { success: true, video }
 }
 
@@ -150,7 +150,7 @@ export async function deleteVideo(videoId: string) {
 
   await db.video.delete({ where: { id: videoId } })
 
-  revalidatePath("/catalog")
+  refreshPage("/catalog")
   return { success: true }
 }
 
@@ -167,6 +167,6 @@ export async function toggleVideoFeatured(videoId: string) {
     data: { isFeatured: !video.isFeatured },
   })
 
-  revalidatePath("/catalog")
+  refreshPage("/catalog")
   return { success: true, isFeatured: updated.isFeatured }
 }

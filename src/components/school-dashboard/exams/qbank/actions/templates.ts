@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { examTemplateSchema } from "../validation"
 import type {
@@ -71,8 +72,8 @@ export async function createTemplate(
       },
     })
 
-    revalidatePath("/exams/templates")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/templates")
+    refreshPage("/exams/generate")
 
     return {
       success: true,
@@ -141,9 +142,9 @@ export async function updateTemplate(
       },
     })
 
-    revalidatePath("/exams/templates")
+    refreshPage("/exams/templates")
     revalidatePath(`/exams/templates/${templateId}`)
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/generate")
 
     return { success: true }
   } catch (error) {
@@ -207,8 +208,8 @@ export async function deleteTemplate(
       }
     }
 
-    revalidatePath("/exams/templates")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/templates")
+    refreshPage("/exams/generate")
 
     return { success: true }
   } catch (error) {
@@ -373,8 +374,8 @@ export async function toggleTemplateStatus(
       },
     })
 
-    revalidatePath("/exams/templates")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/templates")
+    refreshPage("/exams/generate")
 
     return { success: true }
   } catch (error) {
@@ -441,7 +442,7 @@ export async function duplicateTemplate(
       },
     })
 
-    revalidatePath("/exams/templates")
+    refreshPage("/exams/templates")
 
     return {
       success: true,

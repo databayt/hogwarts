@@ -8,7 +8,6 @@
  */
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type {
   InterventionStatus,
@@ -18,6 +17,7 @@ import type {
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { isStaffRole } from "../../authorization"
 import {
@@ -249,7 +249,7 @@ export async function createTieredIntervention(
       },
     })
 
-    revalidatePath("/attendance/interventions")
+    refreshPage("/attendance/interventions")
 
     return {
       success: true,
@@ -332,7 +332,7 @@ export async function updateInterventionStatus(
       })
     }
 
-    revalidatePath("/attendance/interventions")
+    refreshPage("/attendance/interventions")
 
     return { success: true, data: updated }
   } catch (error) {

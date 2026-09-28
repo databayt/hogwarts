@@ -2,8 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
-
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import {
@@ -11,6 +9,7 @@ import {
   dispatchNotificationsToAudience,
   resolveSchoolLang,
 } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 // ============================================================================
@@ -301,8 +300,8 @@ export async function approveProposal(
       console.error("[approveProposal] Notification failed:", notifError)
     }
 
-    revalidatePath("/catalog")
-    revalidatePath("/catalog/proposals")
+    refreshPage("/catalog")
+    refreshPage("/catalog/proposals")
     return { success: true, data: { catalogEntityId: approved.entityId } }
   } catch (error) {
     return {
@@ -409,7 +408,7 @@ export async function rejectProposal(
       console.error("[rejectProposal] Notification failed:", notifError)
     }
 
-    revalidatePath("/catalog/proposals")
+    refreshPage("/catalog/proposals")
     return { success: true }
   } catch (error) {
     return {

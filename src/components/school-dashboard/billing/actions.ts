@@ -102,12 +102,12 @@
 
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 
@@ -317,7 +317,7 @@ export async function updateSubscription(
       },
     })
 
-    revalidatePath("/billing")
+    refreshPage("/billing")
     return { success: true, data: updatedSubscription }
   } catch (error) {
     console.error("Error updating subscription:", error)
@@ -385,7 +385,7 @@ export async function cancelSubscription(
       metadata: { reason: validated.reason, feedback: validated.feedback },
     })
 
-    revalidatePath("/billing")
+    refreshPage("/billing")
     return { success: true, data: updatedSubscription }
   } catch (error) {
     console.error("Error cancelling subscription:", error)
@@ -486,7 +486,7 @@ export async function addPaymentMethod(
       paymentMethodId: paymentMethod.id,
     })
 
-    revalidatePath("/billing")
+    refreshPage("/billing")
     return { success: true, data: paymentMethod }
   } catch (error) {
     console.error("Error adding payment method:", error)
@@ -532,7 +532,7 @@ export async function setDefaultPaymentMethod(
       data: { isDefault: true },
     })
 
-    revalidatePath("/billing")
+    refreshPage("/billing")
     return { success: true, data: undefined }
   } catch (error) {
     console.error("Error setting default payment method:", error)
@@ -596,7 +596,7 @@ export async function removePaymentMethod(
       paymentMethodId: paymentMethod.id,
     })
 
-    revalidatePath("/billing")
+    refreshPage("/billing")
     return { success: true, data: undefined }
   } catch (error) {
     console.error("Error removing payment method:", error)
@@ -1105,7 +1105,7 @@ export async function updateBillingPreferences(
       create: { schoolId, ...validated },
     })
 
-    revalidatePath("/billing")
+    refreshPage("/billing")
     return { success: true, data: preferences }
   } catch (error) {
     console.error("Error updating billing preferences:", error)

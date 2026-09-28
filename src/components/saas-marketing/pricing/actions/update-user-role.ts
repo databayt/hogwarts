@@ -2,10 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { UserRole } from "@prisma/client"
 
+import { refreshPage } from "@/lib/refresh-page"
 import { prisma } from "@/components/saas-marketing/pricing/lib/db"
 import { userRoleSchema } from "@/components/saas-marketing/pricing/lib/validations/user"
 
@@ -42,7 +42,7 @@ export async function updateUserRole(userId: string, data: FormData) {
       },
     })
 
-    revalidatePath("/lab/settings")
+    refreshPage("/lab/settings")
     return { status: "success" }
   } catch (error) {
     // console.log(error)

@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import {
@@ -40,7 +41,7 @@ export async function createSubject(data: FormData) {
     data: validated,
   })
 
-  revalidatePath("/catalog")
+  refreshPage("/catalog")
   return { success: true, subject }
 }
 
@@ -70,7 +71,7 @@ export async function updateSubject(id: string, data: FormData) {
     data: validated,
   })
 
-  revalidatePath("/catalog")
+  refreshPage("/catalog")
   revalidatePath(`/catalog/${id}`)
   return { success: true, subject }
 }
@@ -80,7 +81,7 @@ export async function deleteSubject(id: string) {
 
   await db.subject.delete({ where: { id } })
 
-  revalidatePath("/catalog")
+  refreshPage("/catalog")
   return { success: true }
 }
 

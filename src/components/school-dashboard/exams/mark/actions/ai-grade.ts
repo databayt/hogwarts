@@ -14,6 +14,7 @@ import {
   isAIServiceAvailable,
 } from "@/lib/ai/openai"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { checkAIGradingRateLimit } from "../../lib/security"
 import { parseAcceptedAnswers } from "../utils"
@@ -195,7 +196,7 @@ export async function aiGradeAnswer(
     // Save marking result
     await saveAIMarkingResult(studentAnswer, aiResult, session.user.id)
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${studentAnswer.examId}/results`)
 
     return {

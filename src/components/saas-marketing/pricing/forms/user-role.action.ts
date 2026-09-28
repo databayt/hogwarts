@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { UserRole } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 const userRoleSchema = z.object({ role: z.nativeEnum(UserRole) })
 export type FormData = z.infer<typeof userRoleSchema>
@@ -21,6 +21,6 @@ export async function updateUserRole(userId: string, data: FormData) {
     where: { id: userId },
     data: { role: parsed.data.role },
   })
-  revalidatePath("/lab/settings")
+  refreshPage("/lab/settings")
   return { status: "success" as const }
 }

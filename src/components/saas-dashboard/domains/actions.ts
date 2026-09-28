@@ -3,11 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import dns from "dns/promises"
-import { revalidatePath } from "next/cache"
 import type { DomainRequest } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import {
   logOperatorAudit,
   requireNotImpersonating,
@@ -82,7 +82,7 @@ export async function domainApprove(input: {
       reason: validated.notes,
     })
 
-    revalidatePath("/domains")
+    refreshPage("/domains")
 
     return { success: true, data: domainRequest }
   } catch (error) {
@@ -123,7 +123,7 @@ export async function domainReject(input: {
       reason: validated.notes,
     })
 
-    revalidatePath("/domains")
+    refreshPage("/domains")
 
     return { success: true, data: domainRequest }
   } catch (error) {
@@ -179,7 +179,7 @@ export async function domainVerify(input: {
         action: "DOMAIN_VERIFIED",
       })
 
-      revalidatePath("/domains")
+      refreshPage("/domains")
 
       return {
         success: true,
@@ -242,7 +242,7 @@ export async function domainCreate(input: {
       action: "DOMAIN_REQUEST_CREATED",
     })
 
-    revalidatePath("/domains")
+    refreshPage("/domains")
 
     return { success: true, data: domainRequest }
   } catch (error) {

@@ -12,6 +12,7 @@ import { auth } from "@/auth"
 import type { GradingMethod, MarkingStatus } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import {
   gradeFillBlank,
@@ -433,7 +434,7 @@ export async function batchAutoGradeWithKey(
       onProgress?.(progress)
     }
 
-    revalidatePath("/exams/mark")
+    refreshPage("/exams/mark")
     revalidatePath(`/exams/${examId}/results`)
 
     return {

@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ExamGenerateWizardData } from "./use-exam-generate-wizard"
@@ -217,8 +217,8 @@ export async function completeExamGenerateWizard(
       }),
     ])
 
-    revalidatePath("/exams")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams")
+    refreshPage("/exams/generate")
     return { success: true }
   } catch (error) {
     return {

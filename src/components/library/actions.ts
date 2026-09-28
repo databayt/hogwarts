@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertLibraryPermission, getAuthContext } from "./authorization"
@@ -66,8 +67,8 @@ export async function createBook(
       },
     })
 
-    revalidatePath("/library")
-    revalidatePath("/library/admin/books")
+    refreshPage("/library")
+    refreshPage("/library/admin/books")
 
     return {
       success: true,
@@ -121,9 +122,9 @@ export async function updateBook(
       data: updateFields,
     })
 
-    revalidatePath("/library")
+    refreshPage("/library")
     revalidatePath(`/library/books/${id}`)
-    revalidatePath("/library/admin/books")
+    refreshPage("/library/admin/books")
 
     return {
       success: true,
@@ -249,9 +250,9 @@ export async function borrowBook(
       }),
     ])
 
-    revalidatePath("/library")
+    refreshPage("/library")
     revalidatePath(`/library/books/${bookId}`)
-    revalidatePath("/library/my-profile")
+    refreshPage("/library/my-profile")
 
     return {
       success: true,
@@ -329,9 +330,9 @@ export async function returnBook(
       }),
     ])
 
-    revalidatePath("/library")
+    refreshPage("/library")
     revalidatePath(`/library/books/${borrowRecord.bookId}`)
-    revalidatePath("/library/my-profile")
+    refreshPage("/library/my-profile")
 
     return {
       success: true,
@@ -398,8 +399,8 @@ export async function deleteBook(
       where: { id },
     })
 
-    revalidatePath("/library")
-    revalidatePath("/library/admin/books")
+    refreshPage("/library")
+    refreshPage("/library/admin/books")
 
     return {
       success: true,
@@ -447,8 +448,8 @@ export async function markOverdueBooks(): Promise<ActionResponse> {
       },
     })
 
-    revalidatePath("/library/admin")
-    revalidatePath("/library/my-profile")
+    refreshPage("/library/admin")
+    refreshPage("/library/my-profile")
 
     return {
       success: true,

@@ -9,12 +9,12 @@
  * Multi-tenant safe server actions for payroll processing
  * Includes: payroll runs, salary slips, approval workflow, and disbursement
  */
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -204,7 +204,7 @@ export async function createPayrollRun(
       },
     })
 
-    revalidatePath("/finance/payroll")
+    refreshPage("/finance/payroll")
     return { success: true, data: payrollRun.id }
   } catch (error) {
     console.error("Error creating payroll run:", error)
@@ -478,7 +478,7 @@ export async function generateSalarySlips(
       )
     }
 
-    revalidatePath("/finance/payroll")
+    refreshPage("/finance/payroll")
     return { success: true, data: slipsGenerated }
   } catch (error) {
     console.error("Error generating salary slips:", error)
@@ -584,7 +584,7 @@ export async function approvePayroll(
       )
     }
 
-    revalidatePath("/finance/payroll")
+    refreshPage("/finance/payroll")
     return { success: true }
   } catch (error) {
     console.error("Error approving payroll:", error)
@@ -673,7 +673,7 @@ export async function rejectPayroll(
       )
     }
 
-    revalidatePath("/finance/payroll")
+    refreshPage("/finance/payroll")
     return { success: true }
   } catch (error) {
     console.error("Error rejecting payroll:", error)
@@ -837,7 +837,7 @@ export async function processPayments(
       }
     }
 
-    revalidatePath("/finance/payroll")
+    refreshPage("/finance/payroll")
     return { success: true, data: updateResult.count }
   } catch (error) {
     console.error("Error processing payments:", error)
@@ -1061,7 +1061,7 @@ export async function deletePayrollRun(runId: string): Promise<ActionResult> {
       where: { id: runId },
     })
 
-    revalidatePath("/finance/payroll")
+    refreshPage("/finance/payroll")
     return { success: true }
   } catch (error) {
     console.error("Error deleting payroll run:", error)

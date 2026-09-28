@@ -2,12 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -135,9 +135,9 @@ export async function selectBook(
       })
     })
 
-    revalidatePath("/library/catalog")
-    revalidatePath("/library/books")
-    revalidatePath("/library/admin/books")
+    refreshPage("/library/catalog")
+    refreshPage("/library/books")
+    refreshPage("/library/admin/books")
     return { success: true }
   } catch (error) {
     return {
@@ -187,9 +187,9 @@ export async function deselectBook(
       })
     })
 
-    revalidatePath("/library/catalog")
-    revalidatePath("/library/books")
-    revalidatePath("/library/admin/books")
+    refreshPage("/library/catalog")
+    refreshPage("/library/books")
+    refreshPage("/library/admin/books")
     return { success: true }
   } catch (error) {
     return {
@@ -228,9 +228,9 @@ export async function updateBookSelection(
       data: validated,
     })
 
-    revalidatePath("/library/catalog")
-    revalidatePath("/library/books")
-    revalidatePath("/library/admin/books")
+    refreshPage("/library/catalog")
+    refreshPage("/library/books")
+    refreshPage("/library/admin/books")
     return { success: true }
   } catch (error) {
     return {
@@ -267,9 +267,9 @@ export async function toggleBookSelection(
       data: { isActive },
     })
 
-    revalidatePath("/library/catalog")
-    revalidatePath("/library/books")
-    revalidatePath("/library/admin/books")
+    refreshPage("/library/catalog")
+    refreshPage("/library/books")
+    refreshPage("/library/admin/books")
     return { success: true }
   } catch (error) {
     return {

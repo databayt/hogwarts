@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { DifficultyLevel, QuestionType } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResponse } from "./types"
@@ -228,8 +228,8 @@ export async function adoptQuestion(
       return newQuestion
     })
 
-    revalidatePath("/exams/qbank")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/qbank")
+    refreshPage("/exams/generate")
 
     return { success: true, data: { id: question.id } }
   } catch (error) {

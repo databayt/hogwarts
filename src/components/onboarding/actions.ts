@@ -10,6 +10,7 @@ import {
   type ActionResponse,
 } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { getAuthContext, requireSchoolOwnership } from "./auth-helpers"
 
@@ -153,7 +154,7 @@ export async function initializeSchoolSetup(
       }
     }
 
-    revalidatePath("/onboarding")
+    refreshPage("/onboarding")
 
     return createActionResponse({
       schoolId: schoolResult.schoolId,
@@ -176,7 +177,7 @@ export async function reserveSubdomainForSchool(
     const result = await reserveSubdomain(subdomain, schoolId)
 
     if (result.success) {
-      revalidatePath("/onboarding")
+      refreshPage("/onboarding")
     }
 
     return createActionResponse(result)

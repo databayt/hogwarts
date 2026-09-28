@@ -11,6 +11,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
@@ -694,7 +695,7 @@ export async function bulkDeleteEvents(input: {
       where: { id: { in: validIds }, schoolId },
     })
 
-    revalidatePath("/events")
+    refreshPage("/events")
     return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[bulkDeleteEvents] Error:", error)

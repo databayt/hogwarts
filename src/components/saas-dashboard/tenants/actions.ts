@@ -8,6 +8,7 @@ import type { School } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import {
   repairProvisioning,
   type RepairResult,
@@ -96,7 +97,7 @@ export async function tenantToggleActive(input: {
       reason: validated.reason,
     })
 
-    revalidatePath("/tenants")
+    refreshPage("/tenants")
 
     return { success: true, data: updatedSchool }
   } catch (error) {
@@ -143,7 +144,7 @@ export async function tenantChangePlan(input: {
       reason: validated.reason,
     })
 
-    revalidatePath("/tenants")
+    refreshPage("/tenants")
 
     return { success: true, data: school }
   } catch (error) {
@@ -188,7 +189,7 @@ export async function tenantEndTrial(input: {
       reason: validated.reason,
     })
 
-    revalidatePath("/tenants")
+    refreshPage("/tenants")
 
     return { success: true, data: school }
   } catch (error) {
@@ -390,7 +391,7 @@ export async function tenantRepairProvisioning(input: {
     const result = await repairProvisioning(input.tenantId)
 
     if (result.repaired.length > 0) {
-      revalidatePath("/tenants")
+      refreshPage("/tenants")
     }
 
     return { success: true, data: result }
@@ -447,7 +448,7 @@ export async function tenantSetupCatalog(input: { tenantId: string }): Promise<
       }
     }
 
-    revalidatePath("/tenants")
+    refreshPage("/tenants")
     // After the skipped guard, result has levels/grades/streams/selections
     const { levels, grades, streams, selections } = result as {
       skipped: false
@@ -688,7 +689,7 @@ export async function tenantDelete(input: {
       reason: `Deleted "${school.name}" (${school.domain}).${validated.reason ? ` Reason: ${validated.reason}.` : ""} Affected: ${stats.users} users, ${stats.students} students, ${stats.teachers} teachers, ${stats.classes} classes.`,
     })
 
-    revalidatePath("/tenants")
+    refreshPage("/tenants")
 
     return {
       success: true,

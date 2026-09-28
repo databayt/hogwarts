@@ -9,6 +9,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { PARENT_GUARDIAN_TYPE_NAMES } from "@/lib/guardian-utils"
+import { refreshPage } from "@/lib/refresh-page"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 
@@ -314,7 +315,7 @@ export async function completeStudentWizard(studentId: string): Promise<
       )
     )
 
-    // Route PATTERNS with "page" — the previous bare `revalidatePath("/students")`
+    // Route PATTERNS with "page" — the previous bare `refreshPage("/students")`
     // matched no cache tag on a `[lang]/s/[subdomain]` route and was a no-op.
     // The Applications tab is invalidated too: this student now has an
     // ADMIN_DIRECT Application that the tab lists alongside portal ones.

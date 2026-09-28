@@ -2,10 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import {
   logOperatorAudit,
   requireNotImpersonating,
@@ -71,8 +71,8 @@ export async function reviewReceipt(data: z.infer<typeof reviewReceiptSchema>) {
         `Receipt ${validated.status} for invoice ${receipt.invoiceId}`,
     })
 
-    revalidatePath("/billing")
-    revalidatePath("/billing/receipts")
+    refreshPage("/billing")
+    refreshPage("/billing/receipts")
 
     return { success: true }
   } catch (error) {
@@ -129,8 +129,8 @@ export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
       reason: `Receipt uploaded: ${validated.fileName} for invoice ${validated.invoiceId} - Amount: $${(validated.amount / 100).toFixed(2)}`,
     })
 
-    revalidatePath("/billing")
-    revalidatePath("/billing/receipts")
+    refreshPage("/billing")
+    refreshPage("/billing/receipts")
 
     return { success: true, receiptId: receipt.id }
   } catch (error) {

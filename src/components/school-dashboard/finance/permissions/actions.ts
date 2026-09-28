@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import {
   checkFinancePermission,
   grantFinancePermission,
@@ -254,7 +254,7 @@ export async function grantPermission(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
-    revalidatePath("/finance/permissions")
+    refreshPage("/finance/permissions")
     return { success: true }
   } catch (error) {
     console.error("Error granting permission:", error)
@@ -291,7 +291,7 @@ export async function revokePermission(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
-    revalidatePath("/finance/permissions")
+    refreshPage("/finance/permissions")
     return { success: true }
   } catch (error) {
     console.error("Error revoking permission:", error)
@@ -341,7 +341,7 @@ export async function bulkGrantPermissions(
       }
     }
 
-    revalidatePath("/finance/permissions")
+    refreshPage("/finance/permissions")
     return { success: true, granted, failed }
   } catch (error) {
     console.error("Error bulk granting permissions:", error)
@@ -395,7 +395,7 @@ export async function bulkRevokePermissions(
       }
     }
 
-    revalidatePath("/finance/permissions")
+    refreshPage("/finance/permissions")
     return { success: true, revoked, failed }
   } catch (error) {
     console.error("Error bulk revoking permissions:", error)
@@ -447,7 +447,7 @@ export async function copyPermissions(
       if (success) copied++
     }
 
-    revalidatePath("/finance/permissions")
+    refreshPage("/finance/permissions")
     return { success: true, copied }
   } catch (error) {
     console.error("Error copying permissions:", error)

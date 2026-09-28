@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { createQuestionSchema } from "../validation"
 import type { ActionResponse, CreateQuestionInput } from "./types"
@@ -66,8 +67,8 @@ export async function createQuestion(
       },
     })
 
-    revalidatePath("/exams/mark")
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/mark")
+    refreshPage("/exams/qbank")
 
     return {
       success: true,
@@ -151,8 +152,8 @@ export async function updateQuestion(
       },
     })
 
-    revalidatePath("/exams/mark")
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/mark")
+    refreshPage("/exams/qbank")
     revalidatePath(`/exams/qbank/${id}`)
 
     return { success: true }
@@ -246,8 +247,8 @@ export async function deleteQuestion(id: string): Promise<ActionResponse> {
       }
     }
 
-    revalidatePath("/exams/mark")
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/mark")
+    refreshPage("/exams/qbank")
 
     return { success: true }
   } catch (error) {

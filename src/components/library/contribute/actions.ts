@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 function slugify(text: string): string {
@@ -92,7 +92,7 @@ export async function contributeBook(input: {
       },
     })
 
-    revalidatePath("/library/contribute")
+    refreshPage("/library/contribute")
     return { success: true, data: { bookId: book.id } }
   } catch (error) {
     return {

@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 
 import { questionBankSchema, type QuestionBankSchema } from "../validation"
 import type {
@@ -228,8 +229,8 @@ export async function createQuestion(
       return newQuestion
     })
 
-    revalidatePath("/exams/qbank")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/qbank")
+    refreshPage("/exams/generate")
 
     return {
       success: true,
@@ -406,9 +407,9 @@ export async function updateQuestion(
       return updated
     })
 
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/qbank")
     revalidatePath(`/exams/qbank/${questionId}`)
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/generate")
 
     return {
       success: true,
@@ -530,8 +531,8 @@ export async function deleteQuestion(
       }
     })
 
-    revalidatePath("/exams/qbank")
-    revalidatePath("/exams/generate")
+    refreshPage("/exams/qbank")
+    refreshPage("/exams/generate")
 
     return { success: true }
   } catch (error) {
@@ -757,7 +758,7 @@ export async function duplicateQuestion(
       return newQuestion
     })
 
-    revalidatePath("/exams/qbank")
+    refreshPage("/exams/qbank")
 
     return {
       success: true,

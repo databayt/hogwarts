@@ -3,11 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cache } from "react"
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResult, BankAccount } from "../types"
@@ -259,9 +259,9 @@ export async function createTransfer(
     })
 
     // Revalidate affected paths
-    revalidatePath("/banking")
-    revalidatePath("/banking/payment-transfer")
-    revalidatePath("/banking/transaction-history")
+    refreshPage("/banking")
+    refreshPage("/banking/payment-transfer")
+    refreshPage("/banking/transaction-history")
 
     return {
       success: true,

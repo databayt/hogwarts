@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -137,8 +137,8 @@ export async function submitQuestion(data: {
       return question
     })
 
-    revalidatePath("/subjects/catalog")
-    revalidatePath("/exams/qbank")
+    refreshPage("/subjects/catalog")
+    refreshPage("/exams/qbank")
     return { success: true, data: { id: result.id } }
   } catch (error) {
     return {
@@ -202,7 +202,7 @@ export async function submitMaterial(data: {
       },
     })
 
-    revalidatePath("/subjects/catalog")
+    refreshPage("/subjects/catalog")
     return { success: true, data: { id: material.id } }
   } catch (error) {
     return {
@@ -261,7 +261,7 @@ export async function submitAssignment(data: {
       },
     })
 
-    revalidatePath("/subjects/catalog")
+    refreshPage("/subjects/catalog")
     return { success: true, data: { id: assignment.id } }
   } catch (error) {
     return {
@@ -336,7 +336,7 @@ export async function updateContributionVisibility(
       }
     }
 
-    revalidatePath("/subjects/catalog")
+    refreshPage("/subjects/catalog")
     return { success: true }
   } catch (error) {
     return {

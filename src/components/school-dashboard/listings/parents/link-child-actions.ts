@@ -8,6 +8,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { redeemAccessCode, validateAccessCode } from "@/lib/student-access-code"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -123,7 +124,7 @@ export async function confirmLinkChild(input: {
       parsed.guardianTypeId
     )
 
-    revalidatePath("/parents")
+    refreshPage("/parents")
     revalidatePath(`/students/${result.studentId}`)
 
     return {

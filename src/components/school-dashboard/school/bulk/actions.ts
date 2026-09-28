@@ -14,6 +14,7 @@ import {
   preprocessCSV,
   type ImportType,
 } from "@/lib/import/csv-utils"
+import { refreshPage } from "@/lib/refresh-page"
 import {
   importGuardians,
   importStaff,
@@ -260,13 +261,13 @@ export async function bulkSmartImport(
 export async function createDepartment(formData: FormData) {
   await requireSchoolRole()
 
-  revalidatePath("/school/bulk")
+  refreshPage("/school/bulk")
   return { success: true, message: "Department creation coming soon" }
 }
 
 export async function createClassroom(formData: FormData) {
   await requireSchoolRole()
 
-  revalidatePath("/school/bulk")
+  refreshPage("/school/bulk")
   return { success: true, message: "Classroom creation coming soon" }
 }

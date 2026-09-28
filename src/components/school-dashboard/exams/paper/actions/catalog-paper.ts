@@ -1,9 +1,9 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -159,7 +159,7 @@ export async function adoptPaperTemplate(
         data: { usageCount: { increment: 1 } },
       })
 
-      revalidatePath("/exams/paper")
+      refreshPage("/exams/paper")
       return { success: true, data: { configId: existing.id } }
     }
 
@@ -202,7 +202,7 @@ export async function adoptPaperTemplate(
       return newConfig
     })
 
-    revalidatePath("/exams/paper")
+    refreshPage("/exams/paper")
     return { success: true, data: { configId: config.id } }
   } catch (error) {
     console.error("Adopt catalog paper template error:", error)

@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 import { upsertGradebookResult } from "@/components/school-dashboard/grades/lib/gradebook"
 import { prewarm } from "@/components/translation/prewarm"
@@ -72,7 +72,7 @@ export async function createQuickAssessment(
     })
 
     after(() => prewarm("QuickAssessment", assessment, { schoolId }))
-    revalidatePath("/exams/quick")
+    refreshPage("/exams/quick")
     return { success: true, data: { id: assessment.id } }
   } catch (error) {
     console.error("Error creating quick assessment:", error)
@@ -110,7 +110,7 @@ export async function launchQuickAssessment(
       data: { status: "ACTIVE" },
     })
 
-    revalidatePath("/exams/quick")
+    refreshPage("/exams/quick")
     return { success: true }
   } catch (error) {
     console.error("Error launching quick assessment:", error)
@@ -148,7 +148,7 @@ export async function closeQuickAssessment(
       data: { status: "CLOSED" },
     })
 
-    revalidatePath("/exams/quick")
+    refreshPage("/exams/quick")
     return { success: true }
   } catch (error) {
     console.error("Error closing quick assessment:", error)
@@ -322,7 +322,7 @@ export async function submitQuickResponse(
       }
     }
 
-    revalidatePath("/exams/quick")
+    refreshPage("/exams/quick")
     return { success: true }
   } catch (error) {
     console.error("Error submitting quick response:", error)

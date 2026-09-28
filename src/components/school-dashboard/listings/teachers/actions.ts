@@ -75,6 +75,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
+import { refreshPage } from "@/lib/refresh-page"
 import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
@@ -1334,7 +1335,7 @@ export async function bulkDeleteTeachers(input: {
       where: { id: { in: validIds }, schoolId },
     })
 
-    revalidatePath("/teachers")
+    refreshPage("/teachers")
     return { success: true, data: { count: result.count as number } }
   } catch (error) {
     console.error("[bulkDeleteTeachers] Error:", error)

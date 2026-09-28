@@ -8,12 +8,12 @@
  */
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { refreshPage } from "@/lib/refresh-page"
 import { getLabels } from "@/components/translation/person"
 
 import { getOwnedStudentIds } from "../actions/helpers"
@@ -79,7 +79,7 @@ export async function awardPoints(
       },
     })
 
-    revalidatePath("/attendance/gamification")
+    refreshPage("/attendance/gamification")
 
     return { success: true, data: reward }
   } catch (error) {
@@ -349,7 +349,7 @@ export async function awardBadge(
       })
     }
 
-    revalidatePath("/attendance/gamification")
+    refreshPage("/attendance/gamification")
 
     return { success: true, data: studentBadge }
   } catch (error) {
@@ -592,7 +592,7 @@ export async function createCompetition(
       })
     }
 
-    revalidatePath("/attendance/gamification")
+    refreshPage("/attendance/gamification")
 
     return { success: true, data: competition }
   } catch (error) {
@@ -750,7 +750,7 @@ export async function updateCompetitionStandings(
       })
     }
 
-    revalidatePath("/attendance/gamification")
+    refreshPage("/attendance/gamification")
 
     return { success: true }
   } catch (error) {
