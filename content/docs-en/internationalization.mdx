@@ -206,8 +206,44 @@ derive from it, so their shapes can never drift (guarded by
 `dictionary-loader-sync.test.ts`). All loaders are wrapped in React
 `cache()`: one merge per request regardless of call-site count.
 
-Route-scoped loaders keep the RSC payload down — use them in
-`DictionaryProvider` layouts:
+### Getting the dictionary to client components
+
+Don't pass the dictionary from a server component into a client component as
+a prop. A prop to a client component is serialized into the page's RSC
+payload, once per prop: the dashboard layout used to put about 1.3 MB of
+Arabic JSON into every document, and into every Server Action response that
+re-renders the page (every save does).
+
+Layouts render `LocaleDictionaryProvider`. It serves the whole dictionary from
+a static, per-locale client chunk that the edge and the service worker cache,
+and a page only ever loads its own locale:
+
+```tsx
+// layout.tsx (server)
+import { LocaleDictionaryProvider } from "@/components/internationalization/locale-dictionary-provider"
+
+export default async function Layout({ children, params }) {
+  const { lang } = await params
+  return <LocaleDictionaryProvider lang={lang}>{children}</LocaleDictionaryProvider>
+}
+```
+
+```tsx
+// any client component below it
+"use client"
+import { useDictionaryFallback } from "@/components/internationalization/use-dictionary"
+
+export function Row({ dictionary: prop }: { dictionary?: Dictionary }) {
+  const dictionary = useDictionaryFallback(prop) // the prop if given, else context
+}
+```
+
+The two chunks, `client/ar.ts` and `client/en.ts`, are generated from
+`namespaces.ts` by `node scripts/i18n/generate-client-dictionaries.mjs`. Run it
+after adding a namespace; `client-dictionary.test.ts` fails until you do.
+
+Route-scoped loaders keep server-side merges small. The saas layouts still pass
+one of these to `DictionaryProvider`:
 
 ```ts
 import {

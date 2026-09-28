@@ -53,6 +53,19 @@ backlog. Dynamic DB-content translation is the sibling block:
 - **Error-code pattern**: server actions return codes
   (`{ errorCode: "NOT_AUTHENTICATED" }`); clients map via `ErrorHelper`.
   Never return English error strings.
+- **Client components get the dictionary from context, never as a prop from
+  a server component** (2026-09-28). A prop to a client component is
+  serialized into the RSC payload once per prop: the dashboard layout's
+  provider put ~1.3 MB of Arabic JSON into every document and every
+  revalidating Server Action response, and `/exams/mark` carried five copies.
+  Layouts render `LocaleDictionaryProvider lang={lang}` (static per-locale
+  chunks in `client/`, next/dynamic so a page loads only its own locale);
+  client components call `useDictionary()` / `useDictionaryFallback(prop)`.
+  Passing a small subtree a component needs is fine; passing the whole
+  dictionary or `dictionary.school` is not.
+- **`client/ar.ts` and `client/en.ts` are generated** from `namespaces.ts` by
+  `scripts/i18n/generate-client-dictionaries.mjs`. Adding a namespace means
+  re-running it; `client-dictionary.test.ts` fails until you do.
 
 ## Danger Zones
 

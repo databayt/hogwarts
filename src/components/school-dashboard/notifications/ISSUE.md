@@ -11,6 +11,10 @@ docs: https://ed.databayt.org/en/docs/messages
 last_audited: 2026-09-13
 ---
 
+## Log
+
+- 2026-09-28 — The bell's list (`list.tsx`, framer-motion) loads when the popover first opens, warmed on hover/focus; `atom/count-badge.tsx` pops in with CSS. Both kept framer-motion in the initial JS of every dashboard route (`f889607ca`).
+
 ## 2026-09-13 — the bell stops hammering a dead connection (LOCAL, not pushed)
 
 - [x] `use-notifications.ts` `fetchBellDataShared`: a failed bell request (no network, or a non-OK answer) starts a 15 s cooldown for every hook instance in the tab, and the shared fetch resolves `null` instead of rejecting. Measured with the server unreachable: bursts of ~120 `/api/notifications/bell` requests (a failure is instant, so each remount, focus and poll became its own request) and an unhandled rejection from the initial fetch on every load. After: one request per cooldown or poll tick.

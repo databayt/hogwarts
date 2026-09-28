@@ -6,6 +6,10 @@
 
 ---
 
+## Log
+
+- 2026-09-28 — Server steps and bundle (`1edf6c27c`, `b1171ff73`, `f889607ca`): `getTeacherDashboardData` goes from ten sequential query steps to three (perf:queries, teacher: 36 queries in 2 steps, was 44 in 10); every role dashboard starts `loadDashboardHero` (weather + school row, `hero-data.ts`) before its own data and awaits it beside them. The recharts sections load through `lazy-charts.tsx` — `ChartSection` only when within 300px of the viewport, the role charts as next/dynamic chunks — so recharts (~310 KB gzip) left the route's initial JS.
+
 ## MVP Checklist
 
 - [x] Every role reads the student dashboard's order (2026-09-12) — admin, guardian, staff and accountant still opened on the Upcoming/Weather hero and the Quick Look row with the charts last; they now open on the quick actions with the charts directly under them, and each stopped calling `getQuickLookData` + `getWeatherData` for sections nothing renders (two queries per load per role). Hero and Quick Look JSX commented, not deleted, with the student file's restore note. `PRINCIPAL` is not in the Prisma `UserRole` enum, so `principal.tsx` is unreachable dead code and was left alone

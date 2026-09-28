@@ -19,6 +19,10 @@ last_audited: 2026-09-03
 
 ---
 
+## Log
+
+- 2026-09-28 — The first reads stream from the server (`cd61b43f9`, `a1e781ae5`): both timetable pages start `getActiveTerm` + `getPersonalizedTimetable` in `initial-data.ts` and pass the un-awaited promise; `RoleRouter` reads it with `use()` under the same `TimetableSurfaceSkeleton` (a null preload falls back to the old client load, errors included). The nested `SessionProvider` in `content.tsx` is gone — nothing here reads `useSession`, and without a `session` prop it fetched `/api/auth/session` on every visit. `getPersonalizedTimetable` runs role lookup, schedule config, term and dictionary side by side; `resolveActiveTerm` is one `findMany` (same priority rules, `pickActiveTerm`), memoized per render, and returns `yearName`. `TimetableContent` reads `dictionary.school` from context instead of a prop (document 692 → 169 KB, dev).
+
 ## MVP Checklist
 
 - [x] Weekly schedule builder with visual grid
