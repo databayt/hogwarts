@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { TimetableContent } from "@/components/school-dashboard/timetable/content"
+import { loadInitialTimetable } from "@/components/school-dashboard/timetable/initial-data"
 import {
   canModifyTimetable,
   rendersStudentTimetable,
@@ -36,6 +37,7 @@ export default async function Page({ params }: Props) {
       // shape from the server render on, rather than a week grid in front of a
       // phone that is about to show one day.
       studentShell={rendersStudentTimetable(role)}
+      initialData={loadInitialTimetable()}
     />
   )
 }

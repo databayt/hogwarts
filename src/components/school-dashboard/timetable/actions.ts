@@ -3233,17 +3233,21 @@ export async function getActiveTerm() {
     }
   }
 
-  // Fetch year name for label
-  const schoolYear = await db.schoolYear.findFirst({
-    where: { id: term.yearId },
-    select: { yearName: true },
-  })
+  // The resolver's one query already carries the year name.
+  const yearName =
+    term.yearName ??
+    (
+      await db.schoolYear.findFirst({
+        where: { id: term.yearId },
+        select: { yearName: true },
+      })
+    )?.yearName
 
   return {
     term: {
       id: term.id,
       termNumber: term.termNumber,
-      label: `${schoolYear?.yearName ?? t.unknown} - ${t.termLabel} ${term.termNumber}`,
+      label: `${yearName ?? t.unknown} - ${t.termLabel} ${term.termNumber}`,
       startDate: term.startDate,
       endDate: term.endDate,
       yearId: term.yearId,
@@ -3359,97 +3363,108 @@ export async function getPersonalizedTimetable(input: {
 
   if (!userId) throw new Error("NOT_AUTHENTICATED")
 
-  // Determine view type based on role
-  let viewType: ViewType = "admin"
-  let editable = true
-  let filterData: {
-    teacherId?: string
-    classId?: string
-    classIds?: string[]
-    childrenIds?: string[]
-  } = {}
+  // The role's filter (teacher / student / guardian row) and the schedule
+  // reads below do not depend on each other, so they run side by side — this
+  // is the load the timetable page waits on before any grid can render.
+  const resolveRoleView = async () => {
+    let viewType: ViewType = "admin"
+    let editable = true
+    let filterData: {
+      teacherId?: string
+      classId?: string
+      classIds?: string[]
+      childrenIds?: string[]
+    } = {}
 
-  switch (role) {
-    case "DEVELOPER":
-    case "ADMIN":
-      viewType = "admin"
-      break
+    switch (role) {
+      case "DEVELOPER":
+      case "ADMIN":
+        viewType = "admin"
+        break
 
-    case "TEACHER": {
-      viewType = "teacher"
-      // Get teacher record linked to user
-      const teacher = await db.teacher.findFirst({
-        where: { userId, schoolId },
-        select: { id: true },
-      })
-      if (teacher) {
-        filterData.teacherId = teacher.id
-      }
-      break
-    }
-
-    case "STUDENT": {
-      viewType = "student"
-      // Get student record and ALL enrolled classes
-      const student = await db.student.findFirst({
-        where: { userId, schoolId },
-        select: { id: true },
-      })
-      if (student) {
-        // Get ALL class enrollments (not just one)
-        const enrollments = await db.studentClass.findMany({
-          where: { studentId: student.id, schoolId },
-          select: { classId: true },
+      case "TEACHER": {
+        viewType = "teacher"
+        // Get teacher record linked to user
+        const teacher = await db.teacher.findFirst({
+          where: { userId, schoolId },
+          select: { id: true },
         })
-        const classIds = enrollments.map((e) => e.classId)
-        if (classIds.length > 0) {
-          filterData.classIds = classIds
+        if (teacher) {
+          filterData.teacherId = teacher.id
         }
+        break
       }
-      break
-    }
 
-    case "GUARDIAN": {
-      viewType = "guardian"
-      // Get guardian record
-      const guardian = await db.guardian.findFirst({
-        where: { userId, schoolId },
-        select: { id: true },
-      })
-      if (guardian) {
-        // Get linked children (students)
-        const studentGuardians = await db.studentGuardian.findMany({
-          where: { guardianId: guardian.id, schoolId },
-          select: {
-            student: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
+      case "STUDENT": {
+        viewType = "student"
+        // Get student record and ALL enrolled classes
+        const student = await db.student.findFirst({
+          where: { userId, schoolId },
+          select: { id: true },
+        })
+        if (student) {
+          // Get ALL class enrollments (not just one)
+          const enrollments = await db.studentClass.findMany({
+            where: { studentId: student.id, schoolId },
+            select: { classId: true },
+          })
+          const classIds = enrollments.map((e) => e.classId)
+          if (classIds.length > 0) {
+            filterData.classIds = classIds
+          }
+        }
+        break
+      }
+
+      case "GUARDIAN": {
+        viewType = "guardian"
+        // Get guardian record
+        const guardian = await db.guardian.findFirst({
+          where: { userId, schoolId },
+          select: { id: true },
+        })
+        if (guardian) {
+          // Get linked children (students)
+          const studentGuardians = await db.studentGuardian.findMany({
+            where: { guardianId: guardian.id, schoolId },
+            select: {
+              student: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
               },
             },
-          },
-        })
-        filterData.childrenIds = studentGuardians.map((sg) => sg.student.id)
+          })
+          filterData.childrenIds = studentGuardians.map((sg) => sg.student.id)
+        }
+        break
       }
-      break
+
+      case "ACCOUNTANT":
+      case "STAFF":
+        viewType = "admin"
+        editable = false
+        break
+
+      default:
+        viewType = "student" // Default to most restricted view
     }
 
-    case "ACCOUNTANT":
-    case "STAFF":
-      viewType = "admin"
-      editable = false
-      break
-
-    default:
-      viewType = "student" // Default to most restricted view
+    return { viewType, editable, filterData }
   }
+  const roleView = resolveRoleView()
 
   // Draft fallback: no real term yet — render a read-only grid built from the
   // school's structure. Writes nothing; editing is unlocked once an admin
   // provisions a real term via provisionTimetableForSchool().
   if (input.termId === DRAFT_TERM_ID) {
-    const draft = await buildDraftSchedule(schoolId)
+    const [{ viewType, filterData }, draft, t] = await Promise.all([
+      roleView,
+      buildDraftSchedule(schoolId),
+      getTimetableDict(),
+    ])
     return {
       viewType,
       editable: false,
@@ -3458,7 +3473,7 @@ export async function getPersonalizedTimetable(input: {
         id: DRAFT_TERM_ID,
         termNumber: 1,
         yearName: draft.yearName,
-        label: `${draft.yearName} — ${(await getTimetableDict()).draft}`,
+        label: `${draft.yearName} — ${t.draft}`,
       },
       workingDays: draft.workingDays,
       periods: draft.periods,
@@ -3468,17 +3483,20 @@ export async function getPersonalizedTimetable(input: {
     }
   }
 
-  // Get base schedule data
-  const { config } = await getScheduleConfig({ termId: input.termId })
-
-  const term = await db.term.findFirst({
-    where: { id: input.termId, schoolId },
-    select: {
-      yearId: true,
-      termNumber: true,
-      schoolYear: { select: { yearName: true } },
-    },
-  })
+  const [{ viewType, editable, filterData }, { config }, term, t] =
+    await Promise.all([
+      roleView,
+      getScheduleConfig({ termId: input.termId }),
+      db.term.findFirst({
+        where: { id: input.termId, schoolId },
+        select: {
+          yearId: true,
+          termNumber: true,
+          schoolYear: { select: { yearName: true } },
+        },
+      }),
+      getTimetableDict(),
+    ])
   if (!term) throw new Error("INVALID_TERM")
 
   const periods = await db.period.findMany({
@@ -3501,7 +3519,7 @@ export async function getPersonalizedTimetable(input: {
       id: input.termId,
       termNumber: term.termNumber,
       yearName: term.schoolYear.yearName,
-      label: `${term.schoolYear.yearName} - ${(await getTimetableDict()).termLabel} ${term.termNumber}`,
+      label: `${term.schoolYear.yearName} - ${t.termLabel} ${term.termNumber}`,
     },
     workingDays: config.workingDays,
     periods: periods.map((p, idx) => ({

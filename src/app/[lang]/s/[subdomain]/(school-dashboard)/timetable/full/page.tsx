@@ -4,6 +4,7 @@
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { TimetableContent } from "@/components/school-dashboard/timetable/content"
+import { loadInitialTimetable } from "@/components/school-dashboard/timetable/initial-data"
 
 export const metadata = { title: "Dashboard: Timetable - Full Week" }
 
@@ -15,5 +16,11 @@ export default async function Page({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <TimetableContent dictionary={dictionary.school} defaultTab="full" />
+  return (
+    <TimetableContent
+      dictionary={dictionary.school}
+      defaultTab="full"
+      initialData={loadInitialTimetable()}
+    />
+  )
 }

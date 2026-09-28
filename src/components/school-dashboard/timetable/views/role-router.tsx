@@ -2,7 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState, useTransition, type ReactNode } from "react"
+import {
+  use,
+  useEffect,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react"
 import { TriangleAlert } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -35,6 +41,19 @@ interface Props {
    * for a 130px segmented control.
    */
   studentShell?: boolean
+  /**
+   * The term and personalized data, started by the page on the server and
+   * streamed with the document. They used to be two Server Actions fired one
+   * after the other from the mount effect — two phone ↔ server round trips
+   * before any view could even start loading its grid. When the preload is
+   * missing or failed (null), the router loads them itself as before.
+   */
+  initialData?: Promise<InitialTimetable | null>
+}
+
+export interface InitialTimetable {
+  termId: string
+  data: unknown
 }
 
 type ViewType = "admin" | "teacher" | "student" | "guardian"
@@ -75,11 +94,17 @@ export default function RoleRouter({
   lang,
   defaultTab,
   studentShell = false,
+  initialData,
 }: Props) {
+  const initial = initialData ? use(initialData) : null
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [termId, setTermId] = useState<string | null>(null)
-  const [viewData, setViewData] = useState<PersonalizedData | null>(null)
+  const [termId, setTermId] = useState<string | null>(
+    initial?.termId ?? null
+  )
+  const [viewData, setViewData] = useState<PersonalizedData | null>(
+    (initial?.data as PersonalizedData | undefined) ?? null
+  )
   const [provisioning, setProvisioning] = useState(false)
   // "The first load has come back", which is NOT the same as "not pending".
   // `isPending` only goes true once the effect's transition starts, and effects
@@ -88,11 +113,12 @@ export default function RoleRouter({
   // through to the no-data branch, and shipped "لا توجد بيانات جدول" as the
   // opening state of a page that is merely still loading. Verified in the SSR
   // HTML. The skeleton owns every frame until this flips.
-  const [settled, setSettled] = useState(false)
+  const [settled, setSettled] = useState(initial !== null)
 
-  // Load active term and personalized data on mount
+  // Load active term and personalized data on mount — only when the page did
+  // not already stream them in.
   useEffect(() => {
-    loadInitialData()
+    if (!initial) loadInitialData()
   }, [])
 
   const loadInitialData = async () => {

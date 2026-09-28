@@ -30,6 +30,7 @@ async function resolveActiveTermUncached(schoolId: string): Promise<{
     startDate: Date
     endDate: Date
     yearId: string
+    yearName: string
   } | null
   source: "explicit" | "date_range" | "most_recent" | "none"
 }> {
@@ -48,7 +49,7 @@ async function resolveActiveTermUncached(schoolId: string): Promise<{
       startDate: true,
       endDate: true,
       isActive: true,
-      schoolYear: { select: { id: true } },
+      schoolYear: { select: { id: true, yearName: true } },
     },
   })
 
@@ -62,6 +63,7 @@ async function resolveActiveTermUncached(schoolId: string): Promise<{
         startDate: term.startDate,
         endDate: term.endDate,
         yearId: term.schoolYear.id,
+        yearName: term.schoolYear.yearName,
       },
       source,
     }
@@ -166,6 +168,7 @@ async function resolveActiveTermUncached(schoolId: string): Promise<{
             startDate: activeTermRecord.startDate,
             endDate: activeTermRecord.endDate,
             yearId: schoolYear.id,
+            yearName: schoolYear.yearName,
           },
           source: "explicit" as const,
         }
