@@ -3,8 +3,6 @@
 
 import { auth } from "@/auth"
 
-import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import { TimetableContent } from "@/components/school-dashboard/timetable/content"
 import { loadInitialTimetable } from "@/components/school-dashboard/timetable/initial-data"
 import {
@@ -15,21 +13,13 @@ import {
 
 export const metadata = { title: "Dashboard: Timetable" }
 
-interface Props {
-  params: Promise<{ lang: Locale; subdomain: string }>
-}
-
-export default async function Page({ params }: Props) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-
+export default async function Page() {
   const session = await auth()
   const role = (session?.user?.role as TimetableRole) || null
   const isAdmin = canModifyTimetable(role)
 
   return (
     <TimetableContent
-      dictionary={dictionary.school}
       defaultTab={isAdmin ? undefined : "today"}
       // The role is known here and nowhere else until two server actions have
       // answered inside the client tree — which is the entire wait the loading

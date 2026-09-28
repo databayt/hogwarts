@@ -9,6 +9,7 @@ import { useParams } from "next/navigation"
 
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { RoleRouter } from "./views"
 import { TimetableSurfaceSkeleton } from "./views/grid-skeleton"
@@ -26,13 +27,18 @@ interface Props {
 }
 
 function TimetableContentInner({
-  dictionary,
+  dictionary: dictionaryProp,
   defaultTab,
   studentShell,
   initialData,
 }: Props) {
   const params = useParams()
   const lang = (params?.lang as Locale) || "en"
+  // From the layout's LocaleDictionaryProvider (a cached static chunk). The
+  // pages used to pass `dictionary.school` as a prop — ~600 KB of Arabic
+  // JSON serialized into every timetable document and navigation.
+  const { dictionary: fromContext } = useDictionary()
+  const dictionary = dictionaryProp ?? fromContext?.school
 
   return (
     <div className="space-y-6">

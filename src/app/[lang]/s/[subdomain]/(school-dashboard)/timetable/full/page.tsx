@@ -1,26 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import { TimetableContent } from "@/components/school-dashboard/timetable/content"
 import { loadInitialTimetable } from "@/components/school-dashboard/timetable/initial-data"
 
 export const metadata = { title: "Dashboard: Timetable - Full Week" }
 
-interface Props {
-  params: Promise<{ lang: Locale; subdomain: string }>
-}
-
-export default async function Page({ params }: Props) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-
+export default function Page() {
   return (
-    <TimetableContent
-      dictionary={dictionary.school}
-      defaultTab="full"
-      initialData={loadInitialTimetable()}
-    />
+    <TimetableContent defaultTab="full" initialData={loadInitialTimetable()} />
   )
 }
