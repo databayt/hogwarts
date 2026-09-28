@@ -9,9 +9,9 @@ import {
   useState,
   type ReactNode,
 } from "react"
-import Image from "next/image"
 import Link from "next/link"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -336,7 +336,7 @@ function SubjectStyleCard({
         style={{ backgroundColor: thumbColor }}
       >
         {material.imageUrl && !imgFailed && (
-          <Image
+          <BlurImage
             src={material.imageUrl}
             alt={material.title}
             fill
@@ -390,7 +390,7 @@ function LessonStyleCard({
         style={{ backgroundColor: thumbColor }}
       >
         {material.imageUrl && !imgFailed && (
-          <Image
+          <BlurImage
             src={material.imageUrl}
             alt={material.title}
             fill

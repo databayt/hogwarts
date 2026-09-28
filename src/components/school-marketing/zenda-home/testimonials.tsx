@@ -16,6 +16,7 @@ import "swiper/css"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 const CDN = "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/"
@@ -289,10 +290,14 @@ export function Testimonials({ dictionary }: { dictionary?: Dictionary }) {
                               {...reveal(i === 0, "testimonial-img")}
                               className="testimonial_img-wrap"
                             >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
+                              {/* `.testimonial_img-wrap` is the frame: square,
+                                  round, overflow hidden — `.img-cover` fills it. */}
+                              <BlurImage
+                                unoptimized
                                 src={s.img}
                                 loading="lazy"
+                                width={372}
+                                height={372}
                                 alt={s.name}
                                 className="img-cover"
                               />
@@ -367,8 +372,9 @@ export function Testimonials({ dictionary }: { dictionary?: Dictionary }) {
             </div>
 
             <div testimonial-scope="" className="testimonial_abs-wrap">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <BlurImage
+                plain
+                unoptimized
                 src={CDN + "67da7e672525f92ae2c877cb_telescope.webp"}
                 loading="lazy"
                 width={174}

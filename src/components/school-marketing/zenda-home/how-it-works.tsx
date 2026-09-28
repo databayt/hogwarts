@@ -7,6 +7,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Fragment } from "react"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { HiwScroll } from "./hiw-scroll"
@@ -14,6 +15,21 @@ import { HiwScroll } from "./hiw-scroll"
 const CDN = "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/"
 
 type Block = { h: string; img: string; wrap: string; p: string }
+
+// Intrinsic sizes of the card art (next/image needs them; `.img-auto` sets the
+// rendered width, these only give the box its aspect ratio before load).
+const DIMS: Record<string, [number, number]> = {
+  [CDN + "67ecd573d52fd02665fc093c_Group%201244838934.webp"]: [1665, 1651],
+  [CDN + "67ecd57339122da7a049c1c3_Group%202147226802.webp"]: [1554, 1623],
+  [CDN + "67ecd5738b42c09836a6a451_Group%202147226814.webp"]: [1219, 1546],
+  [CDN + "67ecd5746a265afb0ef69250_Group%202147226817.webp"]: [1644, 1286],
+  [CDN + "67ecd573618ad39b90780be1_Group%202147226818.webp"]: [1597, 1483],
+  [CDN + "67ecd5731a9f1c4f49ce8fa4_Group%202147226801.webp"]: [1876, 1612],
+  [CDN + "67ecd573745cd68d0ee5b361_Group%202147226812.webp"]: [1661, 1713],
+  [CDN + "67ecd57301080e715ed55b09_Group%202147226813.webp"]: [1885, 1744],
+  [CDN + "6867786909fd44c183a35f1e_Exams.webp"]: [1915, 1960],
+  [CDN + "686776b7c313e2af8a057eb6_Counselling.webp"]: [1618, 1616],
+}
 
 // No `Record<string, Block>` annotation here on purpose -- keeping the object
 // literal's inferred type gives `keyof typeof B` the ten literal card keys
@@ -134,7 +150,16 @@ function MarqueeBlock({ b }: { b: Block }) {
     <div className="hiw_marquee_block">
       <h3 className="hiw_marquee_heading heading-style-h5">{b.h}</h3>
       <div className={`hiw_marquee_img-wrap ${b.wrap}`}>
-        <img src={b.img} loading="lazy" alt="" className="img-auto" />
+        <BlurImage
+          plain
+          unoptimized
+          src={b.img}
+          loading="lazy"
+          width={DIMS[b.img]?.[0] ?? 1600}
+          height={DIMS[b.img]?.[1] ?? 1600}
+          alt=""
+          className="img-auto"
+        />
       </div>
       <div className="text-wrap-balance">
         <p className="text-size-small">{b.p}</p>

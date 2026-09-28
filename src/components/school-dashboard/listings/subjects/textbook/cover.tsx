@@ -4,6 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, type CSSProperties } from "react"
 
+import { BlurImage } from "@/components/atom/blur-image"
+
 import { elongate, fill } from "./format"
 import type { CoverInfo, ReaderLabels } from "./types"
 
@@ -81,11 +83,17 @@ export function CoverScreen({
       {/* The book opens on its cover, at the size of the screen. */}
       <div className="book-cover-art" data-chrome>
         {cover.url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          // The tint (--book-tint) is the placeholder: a neutral LQIP over
+          // the full-screen cover would read as broken. `unoptimized` keeps
+          // the same bytes the raw <img> fetched.
+          <BlurImage
             src={cover.url}
             alt={fill(labels.coverAlt, { title })}
-            decoding="async"
+            fill
+            sizes="100vw"
+            unoptimized
+            loading="eager"
+            placeholder="empty"
           />
         ) : (
           <div className="book-cover-fallback">{title}</div>

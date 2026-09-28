@@ -51,10 +51,10 @@ export function BlurImage({
         "transition-[filter,scale,opacity] duration-700 ease-out",
         "motion-reduce:transition-none",
         loaded
-          ? "blur-0 scale-100 opacity-100"
+          ? "blur-none scale-100 opacity-100"
           : plain
             ? "opacity-0"
-            : "motion-reduce:blur-0 scale-105 blur-xl motion-reduce:scale-100",
+            : "motion-reduce:blur-none scale-105 blur-xl motion-reduce:scale-100",
         className
       )}
     />

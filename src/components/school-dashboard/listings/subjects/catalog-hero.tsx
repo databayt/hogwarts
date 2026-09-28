@@ -3,9 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/ui/star-rating"
 import type { Locale } from "@/components/internationalization/config"
@@ -73,7 +73,7 @@ export function CatalogHero({
         style={{ backgroundColor: subject.color ?? "#1e40af" }}
       >
         {subject.heroImageUrl && !heroFailed && (
-          <Image
+          <BlurImage
             src={subject.heroImageUrl}
             alt={subject.name}
             fill
@@ -83,6 +83,10 @@ export function CatalogHero({
             sizes="100vw"
             onError={onHeroError}
             unoptimized
+            // No stored LQIP yet: let the subject colour be the placeholder
+            // (a neutral gray over the LCP hero reads as broken) and keep the
+            // blur-to-sharp transition.
+            placeholder="empty"
           />
         )}
         {/* Scrim — the art is bright, white text needs a floor to sit on */}

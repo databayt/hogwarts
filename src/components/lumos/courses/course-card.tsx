@@ -3,10 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { memo, useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { Star } from "lucide-react"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import { cn } from "@/lib/utils"
 import type { CatalogCourseType } from "@/components/lumos/data/catalog/get-all-courses"
 
@@ -86,9 +86,9 @@ function CourseCardImpl({
       className={cn("group block", className)}
     >
       {/* Card Image */}
-      <div className="relative aspect-video overflow-hidden rounded-xl">
+      <div className="bg-muted relative aspect-video overflow-hidden rounded-xl">
         {course.imageUrl && !imageError ? (
-          <Image
+          <BlurImage
             src={course.imageUrl}
             alt={course.title}
             fill

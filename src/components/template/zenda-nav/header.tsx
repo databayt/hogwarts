@@ -17,12 +17,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { gsap } from "gsap"
 
 import { cn } from "@/lib/utils"
+import { BlurImage } from "@/components/atom/blur-image"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { TOOLBAR_BUTTON, TOOLBAR_ICON } from "@/components/atom/toolbar-size"
 import { UserButton, UserMenuInline } from "@/components/auth/user-button"
@@ -276,7 +276,8 @@ export function ZendaNav({
               zenda-shell.css has carried the sizing since the mark was first
               removed. */}
           {logoUrl ? (
-            <Image
+            <BlurImage
+              plain
               src={logoUrl}
               alt={displayName}
               width={32}

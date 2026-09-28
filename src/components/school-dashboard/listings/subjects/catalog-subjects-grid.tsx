@@ -3,9 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/ui/star-rating"
 import type { Locale } from "@/components/internationalization/config"
@@ -171,7 +171,7 @@ function SubjectThumb({
       style={{ backgroundColor: color ?? "#6b7280" }}
     >
       {showImage && (
-        <Image
+        <BlurImage
           src={imageUrl}
           alt={name}
           fill

@@ -8,6 +8,7 @@
 // application wizard -- the school has no app on any store.
 
 /* eslint-disable @next/next/no-img-element */
+import { BlurImage } from "@/components/atom/blur-image"
 import type { CSSProperties } from "react"
 
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -62,18 +63,16 @@ export function CTA({
 
             {/* footer illustration — absolutely positioned, pulled up so it pops out the top of the dark card */}
             <div className="cta_img-wrap">
-              <img
+              {/* Transparent art: `plain` fades it in (a blur placeholder
+                  would paint a box behind it). The optimizer replaces the
+                  Webflow srcSet — same responsive widths, same 100vw sizes. */}
+              <BlurImage
+                plain
                 src={CDN + IMG + ".webp"}
                 loading="lazy"
+                width={2237}
+                height={1332}
                 sizes="100vw"
-                srcSet={[
-                  `${CDN}${IMG}-p-500.webp 500w`,
-                  `${CDN}${IMG}-p-800.webp 800w`,
-                  `${CDN}${IMG}-p-1080.webp 1080w`,
-                  `${CDN}${IMG}-p-1600.webp 1600w`,
-                  `${CDN}${IMG}-p-2000.webp 2000w`,
-                  `${CDN}${IMG}.webp 2237w`,
-                ].join(", ")}
                 alt=""
                 className="img-auto"
               />

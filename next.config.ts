@@ -224,6 +224,13 @@ const nextConfig: NextConfig = {
         hostname: "cdn.databayt.org",
         pathname: "/**",
       },
+      // School-homepage (zenda-clone) art on Webflow's CDN — the CTA and gift
+      // go through the optimizer to keep their responsive srcSet (BlurImage).
+      {
+        protocol: "https",
+        hostname: "cdn.prod.website-files.com",
+        pathname: "/622da43f87e21836ee21bed6/**",
+      },
     ],
   },
 

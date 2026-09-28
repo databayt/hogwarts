@@ -7,6 +7,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { RewardsScroll } from "./rewards-scroll"
@@ -120,9 +121,13 @@ export function Rewards({
                   <div className="rewards_points-number">{pointsLabel}</div>
                   <div className="rewards_points-title hide">POINTS</div>
                   <div className="rewards_points-img-wrap">
-                    <img
+                    <BlurImage
+                      plain
+                      unoptimized
                       src={IMG.leafs}
                       loading="lazy"
+                      width={1092}
+                      height={734}
                       alt=""
                       className="img-auto"
                     />
@@ -130,7 +135,9 @@ export function Rewards({
                 </div>
 
                 <div rewards-globe="" className="rewards_circle-wrap">
-                  <img
+                  <BlurImage
+                    plain
+                    unoptimized
                     src={IMG.surface}
                     loading="lazy"
                     width={1024}
@@ -187,7 +194,9 @@ export function Rewards({
                 <div rewards-gift="" className="rewards_gift_parent">
                   <div className="rewards_gift_wrap">
                     <div className="rewards_gift_img">
-                      <img
+                      <BlurImage
+                        plain
+                        unoptimized
                         src={IMG.gift}
                         loading="lazy"
                         width={204}
@@ -215,9 +224,13 @@ export function Rewards({
 
               <div className="rewards_bg-coins-wrap">
                 <div {...target("rewards-coin-1")} className="rewards_bg-coin">
-                  <img
+                  <BlurImage
+                    plain
+                    unoptimized
                     src={IMG.coin}
                     loading="lazy"
+                    width={329}
+                    height={325}
                     alt=""
                     className="img-auto"
                   />
@@ -226,9 +239,13 @@ export function Rewards({
                   {...target("rewards-coin-2")}
                   className="rewards_bg-coin is-2"
                 >
-                  <img
+                  <BlurImage
+                    plain
+                    unoptimized
                     src={IMG.coin}
                     loading="lazy"
+                    width={329}
+                    height={325}
                     alt=""
                     className="img-auto"
                   />

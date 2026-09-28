@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 // ============================================================================
 // Types
@@ -64,7 +64,7 @@ export function BookCover({
   }
 
   return (
-    <Image
+    <BlurImage
       src={coverUrl}
       alt={title}
       width={width}

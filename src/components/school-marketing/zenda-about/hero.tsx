@@ -6,6 +6,7 @@
 // src/styles/zenda-clone.css). The flip cards stay PARENT/SCHOOL: the card
 // faces ARE letter artwork, so the two pill words are art-locked.
 
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { AboutHeroCards } from "./hero-cards"
@@ -111,9 +112,12 @@ export function Hero({ dictionary }: { dictionary?: Dictionary }) {
                   <div hero-card="" className="about-hero_card_item">
                     <div className={`about-hero_card_front ${front.cls ?? ""}`}>
                       <div className="about-hero_card_img-wrap">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <BlurImage
+                          plain
+                          unoptimized
                           src={front.src}
+                          width={872}
+                          height={872}
                           alt={front.letter}
                           className="img-auto"
                           loading="eager"
@@ -122,9 +126,12 @@ export function Hero({ dictionary }: { dictionary?: Dictionary }) {
                     </div>
                     <div className={`about-hero_card_back ${back.cls ?? ""}`}>
                       <div className="about-hero_card_img-wrap">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <BlurImage
+                          plain
+                          unoptimized
                           src={back.src}
+                          width={872}
+                          height={872}
                           alt={back.letter}
                           className="img-auto"
                           loading="lazy"

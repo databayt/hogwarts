@@ -3,11 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
 import type { BookListItem } from "../types"
+import { BlurImage } from "@/components/atom/blur-image"
 
 interface Props {
   book: BookListItem
@@ -41,7 +41,7 @@ export default function BookCard({ book }: Props) {
           style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
         >
           {hasValidImage ? (
-            <Image
+            <BlurImage
               src={book.coverUrl}
               alt={book.title}
               fill

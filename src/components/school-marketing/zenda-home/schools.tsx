@@ -7,6 +7,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { InstitutesLottie } from "./schools-lottie"
@@ -110,7 +111,9 @@ export function Schools({
                 {LOGOS.map((src) => (
                   <div key={src} className="schools_item">
                     <div className="schools_logo-wrap">
-                      <img
+                      <BlurImage
+                        plain
+                        unoptimized
                         src={src}
                         loading="lazy"
                         width={140}

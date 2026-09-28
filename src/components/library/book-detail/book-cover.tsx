@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import Image from "next/image"
+import { BlurImage } from "@/components/atom/blur-image"
 
 interface Props {
   coverUrl: string
@@ -34,9 +34,11 @@ export default function BookCover({
   )
 
   return (
-    <div className="book-cover-wrapper" style={{ backgroundColor: coverColor }}>
+    <div
+      className="book-cover-wrapper relative overflow-hidden"
+      style={{ backgroundColor: coverColor }}>
       {hasValidImage ? (
-        <Image
+        <BlurImage
           src={coverUrl}
           alt={title}
           width={400}

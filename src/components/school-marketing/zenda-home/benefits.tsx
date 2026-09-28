@@ -5,14 +5,13 @@
 // CSS scope (see src/styles/zenda-clone.css).
 
 /* eslint-disable @next/next/no-img-element */
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { BenefitsScroll } from "./benefits-scroll"
 
 const CDN = "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/"
 const GIFT = CDN + "67da6096879cc0328843d835_gift.webp"
-const GIFT_500 = CDN + "67da6096879cc0328843d835_gift-p-500.webp"
-const GIFT_800 = CDN + "67da6096879cc0328843d835_gift-p-800.webp"
 const COIN = CDN + "67e4dfdecfe71e2e85fb7a29_coin1.webp"
 const STAR = CDN + "682586d57eae34fbb9b8f719_star.webp"
 
@@ -60,13 +59,13 @@ export function Benefits({ dictionary }: { dictionary?: Dictionary }) {
               className="benefits_header-block"
             >
               <div benefits-gift-img="" className="benefits_gift-wrap">
-                <img
+                <BlurImage
+                  plain
                   src={GIFT}
                   loading="lazy"
                   width={208}
                   height={232}
                   alt=""
-                  srcSet={`${GIFT_500} 500w, ${GIFT_800} 800w, ${GIFT} 839w`}
                   sizes="208px"
                   className="img-auto"
                 />
@@ -75,10 +74,28 @@ export function Benefits({ dictionary }: { dictionary?: Dictionary }) {
                 <h2 className="benefits_heading heading-style-h3">{heading}</h2>
               </div>
               <div benefits-coin-1="" className="benefits_coin-wrap">
-                <img src={COIN} loading="lazy" alt="" className="img-auto" />
+                <BlurImage
+                  plain
+                  unoptimized
+                  src={COIN}
+                  loading="lazy"
+                  width={329}
+                  height={325}
+                  alt=""
+                  className="img-auto"
+                />
               </div>
               <div benefits-coin-2="" className="benefits_coin-wrap is-second">
-                <img src={COIN} loading="lazy" alt="" className="img-auto" />
+                <BlurImage
+                  plain
+                  unoptimized
+                  src={COIN}
+                  loading="lazy"
+                  width={329}
+                  height={325}
+                  alt=""
+                  className="img-auto"
+                />
               </div>
             </div>
 
@@ -97,13 +114,40 @@ export function Benefits({ dictionary }: { dictionary?: Dictionary }) {
                 {subheading}
               </h3>
               <div benefits-star-1="" className="benefits_star-wrap">
-                <img src={STAR} loading="lazy" alt="" className="img-auto" />
+                <BlurImage
+                  plain
+                  unoptimized
+                  src={STAR}
+                  loading="lazy"
+                  width={400}
+                  height={400}
+                  alt=""
+                  className="img-auto"
+                />
               </div>
               <div benefits-star-2="" className="benefits_star-wrap is-2">
-                <img src={STAR} loading="lazy" alt="" className="img-auto" />
+                <BlurImage
+                  plain
+                  unoptimized
+                  src={STAR}
+                  loading="lazy"
+                  width={400}
+                  height={400}
+                  alt=""
+                  className="img-auto"
+                />
               </div>
               <div benefits-star-3="" className="benefits_star-wrap is-3">
-                <img src={STAR} loading="lazy" alt="" className="img-auto" />
+                <BlurImage
+                  plain
+                  unoptimized
+                  src={STAR}
+                  loading="lazy"
+                  width={400}
+                  height={400}
+                  alt=""
+                  className="img-auto"
+                />
               </div>
             </div>
 

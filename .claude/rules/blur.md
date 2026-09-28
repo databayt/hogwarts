@@ -9,7 +9,7 @@ paths:
 A photo that pops out of an empty box reads as slow even when it isn't. Every content photo
 (catalog, cover, hero, gallery, card media, avatar larger than ~48 px) renders through
 `BlurImage` from `@/components/atom/blur-image`, which paints a blurred LQIP and transitions
-the real image from `blur-xl scale-105` to `blur-0 scale-100` on load.
+the real image from `blur-xl scale-105` to `blur-none scale-100` on load.
 
 ## Good
 

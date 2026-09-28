@@ -5,6 +5,7 @@
 // CSS scope (see src/styles/zenda-clone.css).
 
 /* eslint-disable @next/next/no-img-element */
+import { BlurImage } from "@/components/atom/blur-image"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { FeaturesScroll } from "./features-scroll"
@@ -30,6 +31,26 @@ const IMG = {
   bag: CDN + "685d45179dbf65da8996ec74_bag.webp",
   cup: CDN + "67e431889b4aa073c0a33447_cup-icon.webp",
 } as const
+
+// Intrinsic sizes (next/image needs them; `.img-auto` sets the rendered width).
+const DIMS: Record<keyof typeof IMG, [number, number]> = {
+  basketball: [329, 400],
+  transport: [402, 315],
+  uniform: [2000, 2000],
+  cloth: [2000, 2000],
+  compass: [233, 292],
+  bread: [305, 306],
+  juice: [355, 438],
+  textbooks: [345, 328],
+  fee: [0, 0], // SVG — rendered as a raw <img>
+  clock: [364, 368],
+  paintbrush: [273, 252],
+  events: [2001, 2000],
+  supplies: [346, 438],
+  mobile: [384, 780],
+  bag: [337, 361],
+  cup: [363, 431],
+}
 
 type Item = {
   attr?: string // GSAP target, e.g. "feature-left-1"
@@ -291,12 +312,25 @@ export function PhoneMockup({ dictionary }: { dictionary?: Dictionary }) {
                         <div
                           className={`features_img-wrap ${it.wrap ?? ""}`.trim()}
                         >
-                          <img
-                            src={IMG[it.img]}
-                            loading="lazy"
-                            alt=""
-                            className="img-auto"
-                          />
+                          {IMG[it.img].endsWith(".svg") ? (
+                            <img
+                              src={IMG[it.img]}
+                              loading="lazy"
+                              alt=""
+                              className="img-auto"
+                            />
+                          ) : (
+                            <BlurImage
+                              plain
+                              unoptimized
+                              src={IMG[it.img]}
+                              loading="lazy"
+                              width={DIMS[it.img][0]}
+                              height={DIMS[it.img][1]}
+                              alt=""
+                              className="img-auto"
+                            />
+                          )}
                         </div>
                       )}
                       {it.title && (
@@ -310,7 +344,9 @@ export function PhoneMockup({ dictionary }: { dictionary?: Dictionary }) {
 
             <div feature-mockup="" className="features_mobile_component">
               <div className="features_mobile_mockup">
-                <img
+                <BlurImage
+                  plain
+                  unoptimized
                   src={IMG.mobile}
                   loading="lazy"
                   width={384}
@@ -333,9 +369,13 @@ export function PhoneMockup({ dictionary }: { dictionary?: Dictionary }) {
                       <div
                         className={`features_mobile_icon ${b.iconClass ?? ""}`.trim()}
                       >
-                        <img
+                        <BlurImage
+                          plain
+                          unoptimized
                           src={IMG[b.icon]}
                           loading="lazy"
+                          width={DIMS[b.icon][0]}
+                          height={DIMS[b.icon][1]}
                           alt=""
                           className="img-auto"
                         />

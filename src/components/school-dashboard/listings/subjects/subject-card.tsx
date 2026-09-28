@@ -3,9 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import Image from "next/image"
 import Link from "next/link"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -60,7 +60,7 @@ function SubjectCardInner({
           "bg-muted relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-s-lg rounded-e-none"
         )}
       >
-        <Image
+        <BlurImage
           src={imageUrl}
           alt={displayName}
           fill

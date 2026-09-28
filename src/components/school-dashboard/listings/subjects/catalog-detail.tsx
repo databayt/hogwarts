@@ -3,10 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useRef, useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { BookOpen, ChevronRight } from "lucide-react"
 
+import { BlurImage } from "@/components/atom/blur-image"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -168,7 +168,7 @@ function ExploreAllCard({
         style={{ backgroundColor: color ?? "#6b7280" }}
       >
         {imageUrl && !failed && (
-          <Image
+          <BlurImage
             src={imageUrl}
             alt=""
             fill
@@ -211,7 +211,7 @@ function TopicCard({
         style={{ backgroundColor: fallbackColor ?? "#6b7280" }}
       >
         {chapter.imageUrl && !failed && (
-          <Image
+          <BlurImage
             src={chapter.imageUrl}
             alt={chapter.name}
             fill
@@ -286,7 +286,7 @@ function LessonCard({
         style={{ backgroundColor: fallbackColor ?? "#6b7280" }}
       >
         {lesson.imageUrl && !failed && (
-          <Image
+          <BlurImage
             src={lesson.imageUrl}
             alt={lesson.name}
             fill

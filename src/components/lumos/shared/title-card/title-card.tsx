@@ -7,6 +7,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
+import { BlurImage } from "@/components/atom/blur-image"
 
 /**
  * The Apple-TV title card: artwork edge to edge, a long fade up from the
@@ -118,7 +119,7 @@ export function TitleCard({
         )}
       >
         {thumbnailUrl ? (
-          <Image
+          <BlurImage
             src={thumbnailUrl}
             alt={alt}
             fill

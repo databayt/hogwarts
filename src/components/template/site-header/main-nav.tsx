@@ -2,11 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import Image from "next/image"
 import Link from "next/link"
 import { useSelectedLayoutSegment } from "next/navigation"
 
 import { cn } from "@/lib/utils"
+import { BlurImage } from "@/components/atom/blur-image"
 
 import { MainNavItem } from "./types"
 
@@ -55,7 +55,8 @@ export function MainNav({
         className="text-foreground me-4 flex items-center gap-2 lg:me-6"
       >
         <div className="pt-0.5">
-          <Image
+          <BlurImage
+            plain
             src={school.logoUrl || "/feather.png"}
             alt={`${displayName} Logo`}
             width={18}
