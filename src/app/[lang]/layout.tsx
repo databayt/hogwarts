@@ -33,11 +33,10 @@ import "leaflet/dist/leaflet.css"
 // re-apply a variable the root layout has already set on <html>. One
 // declaration, applied once, at the root.
 
-// The proxy's matcher skips every dotted path, so a request for a public/ file
-// that does not exist (`/icon-attendance.png`) lands here with the file name as
-// `lang`. `localeConfig[lang]` is then undefined and the render threw — a 500
-// that reads as an outage in the logs and in the service worker's
-// `cache.addAll` rejection. An unknown locale is a 404.
+// An unknown `lang` has no localeConfig entry, and reading `.dir` off it threw.
+// The proxy redirects locale-less paths and next.config.ts sends missing
+// dotted files (`/icon-attendance.png`) to /api/not-found, so this is a guard
+// for whatever still slips through: an unknown locale is a 404.
 function assertLocale(lang: string): asserts lang is Locale {
   if (!(i18n.locales as readonly string[]).includes(lang)) notFound()
 }

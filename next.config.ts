@@ -269,6 +269,19 @@ const nextConfig: NextConfig = {
   },
 
   // Lumos URL restructure redirects (old → new)
+  // A missing top-level file (`/icon-attendance.png`) would otherwise reach
+  // `app/[lang]` as an unknown locale and answer 500. `afterFiles` runs after
+  // public/ and static routes, so only a genuine miss lands on the 404 route.
+  async rewrites() {
+    return {
+      beforeFiles: [],
+      afterFiles: [
+        { source: "/:file([^/]+\\.[^/]+)", destination: "/api/not-found" },
+      ],
+      fallback: [],
+    }
+  },
+
   async redirects() {
     return [
       {
