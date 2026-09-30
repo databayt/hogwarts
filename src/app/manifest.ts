@@ -4,7 +4,8 @@
 import type { MetadataRoute } from "next"
 import { headers } from "next/headers"
 
-import { getSubdomainFromHost } from "@/lib/root-domain"
+import { resolveCustomDomain } from "@/lib/custom-domain"
+import { getSubdomainFromHost, isMainDomainHost } from "@/lib/root-domain"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 /**
@@ -12,7 +13,9 @@ import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
  *
  * The proxy never sees this request (its matcher skips every dotted path), so
  * there is no `x-subdomain` or `x-locale` header to read. The route resolves
- * the school from the Host itself. Because the browser fetches the manifest on
+ * the school from the Host itself — a root-domain label first, then, for a
+ * host no root claims, the same `custom-domain:{host}` Redis mapping the
+ * proxy uses, so a school on its own domain installs as itself. Because the browser fetches the manifest on
  * the tenant origin, a relative `start_url` of "/" already points at that
  * school — no absolute origin needed.
  *
@@ -51,7 +54,11 @@ const DEFAULT_THEME = "#3b82f6"
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const host = (await headers()).get("host")
-  const subdomain = getSubdomainFromHost(host)
+  let subdomain = getSubdomainFromHost(host)
+  // Same guard as the proxy: our own marketing hosts are never remapped.
+  if (!subdomain && host && !isMainDomainHost(host)) {
+    subdomain = await resolveCustomDomain(host)
+  }
 
   let school: {
     name?: string | null
