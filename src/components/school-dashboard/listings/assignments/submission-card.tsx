@@ -21,6 +21,8 @@ interface SubmissionCardProps {
   /** The `school.assignments.detail` subtree — nested groups are skipped. */
   labels?: Record<string, unknown>
   locale?: string
+  /** Surface override — /my-assignments draws it as the kit's grey card. */
+  className?: string
 }
 
 /**
@@ -34,6 +36,7 @@ export function StudentSubmissionCard({
   existing,
   labels,
   locale = "en",
+  className,
 }: SubmissionCardProps) {
   const t = (k: string, fallback: string) => {
     const v = labels?.[k]
@@ -77,7 +80,7 @@ export function StudentSubmissionCard({
   }
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Send className="h-5 w-5 rtl:-scale-x-100" aria-hidden />

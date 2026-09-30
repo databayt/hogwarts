@@ -7982,7 +7982,31 @@
       "description": "Everything your classes have set, and what you handed in.",
       "empty": "No assignments yet.",
       "due": "Due",
-      "points": "pts"
+      "points": "pts",
+      "nextDue": "Next due",
+      "allCaughtUp": "You're all caught up",
+      "allCaughtUpHint": "Nothing left to hand in right now.",
+      "overdueHeadline": "{count} overdue — you can still hand them in",
+      "open": "Open",
+      "stats": {
+        "toDo": "To do",
+        "overdue": "Overdue",
+        "handedIn": "Handed in",
+        "graded": "Graded"
+      },
+      "sections": {
+        "toDo": "To do",
+        "toDoHint": "Overdue first, then by due date.",
+        "handedIn": "Handed in",
+        "handedInHint": "Waiting for your teacher to mark.",
+        "graded": "Graded"
+      },
+      "when": {
+        "today": "Due today",
+        "tomorrow": "Due tomorrow",
+        "inDays": "In {count} days",
+        "overdue": "Overdue"
+      }
     },
     "myFees": {
       "title": "My Fees",

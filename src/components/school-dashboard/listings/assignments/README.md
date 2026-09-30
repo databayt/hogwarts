@@ -13,12 +13,17 @@ The Assignments feature enables teachers and administrators to create homework, 
 
 ### Routes
 
-| Route                                                                                  | Page              | Status |
-| -------------------------------------------------------------------------------------- | ----------------- | ------ |
-| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/assignments`                      | Assignments List  | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/assignments/[id]`                 | Assignment Detail | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/assignments/add/[id]/information` | Wizard Step 1     | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/assignments/add/[id]/details`     | Wizard Step 2     | Ready  |
+| Route                                                                                  | Page                     | Status |
+| -------------------------------------------------------------------------------------- | ------------------------ | ------ |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/assignments`                      | Assignments List         | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/assignments/[id]`                 | Assignment Detail        | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/assignments/add/[id]/information` | Wizard Step 1            | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/assignments/add/[id]/details`     | Wizard Step 2            | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/my-assignments`                              | My Assignments (student) | Ready  |
+
+### Student page (`/my-assignments`, واجباتي)
+
+`my-assignments-content.tsx` follows the shared phone-pattern kit used by /library, /live, /lumos and the student /exams (`school-dashboard/shared/README.md`): the saas-marketing green `BrandBanner` naming the next assignment due (or "all caught up" / the overdue count), one `StatPanel` (to do · overdue · handed in · graded), then three `SectionHeader` sections — To do (overdue first, then by due date), Handed in, Graded — of `ListRow`s with a `DateTile` for the due date. Each row is a native `<details>` that opens the brief and the `StudentSubmissionCard` in place, so the page stays a server component. Empty sections are not rendered. All layout is logical (`ms-`/`ps-`/`text-start`), so /ar (RTL) and /en (LTR) share one tree. Copy lives in `school.myAssignments` (`stats`, `sections`, `when`, `nextDue`, `allCaughtUp`, …).
 
 ### File Structure
 

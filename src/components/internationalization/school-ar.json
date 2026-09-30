@@ -7990,7 +7990,31 @@
       "description": "كل ما كلّفتك به صفوفك، وما سلّمته.",
       "empty": "لا توجد واجبات بعد.",
       "due": "الاستحقاق",
-      "points": "نقطة"
+      "points": "نقطة",
+      "nextDue": "الواجب القادم",
+      "allCaughtUp": "أنجزت كل واجباتك",
+      "allCaughtUpHint": "لا شيء بانتظار التسليم الآن.",
+      "overdueHeadline": "{count} متأخرة — ما زال بإمكانك تسليمها",
+      "open": "فتح",
+      "stats": {
+        "toDo": "المطلوب",
+        "overdue": "متأخرة",
+        "handedIn": "مُسلَّمة",
+        "graded": "مُصحَّحة"
+      },
+      "sections": {
+        "toDo": "المطلوب",
+        "toDoHint": "المتأخرة أولًا، ثم حسب موعد التسليم.",
+        "handedIn": "مُسلَّمة",
+        "handedInHint": "بانتظار تصحيح المعلم.",
+        "graded": "مُصحَّحة"
+      },
+      "when": {
+        "today": "اليوم",
+        "tomorrow": "غدًا",
+        "inDays": "بعد {count} أيام",
+        "overdue": "متأخر"
+      }
     },
     "myFees": {
       "title": "رسومي",
