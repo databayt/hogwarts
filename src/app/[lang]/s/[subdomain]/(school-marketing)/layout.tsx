@@ -4,6 +4,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { tenantOriginForRoot } from "@/lib/root-domain"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { Chatbot } from "@/components/chatbot"
 import { isRTL, type Locale } from "@/components/internationalization/config"
@@ -37,10 +38,11 @@ export async function generateMetadata({
   params: Promise<{ subdomain: string; lang: string }>
 }): Promise<Metadata> {
   const { subdomain, lang } = await params
-  const isProd = process.env.NODE_ENV === "production"
-  const baseUrl = isProd
-    ? `https://${subdomain}.databayt.org`
-    : `http://${subdomain}.localhost:3000`
+  // One canonical per school, whichever root served the request: every school
+  // answers on both roots under the same label, and the live one is
+  // balqalam.com (databayt.org answers 402 until its zone moves). Deriving it
+  // from the request host would make each root claim itself canonical.
+  const baseUrl = tenantOriginForRoot(subdomain)
 
   const result = await getSchoolBySubdomain(subdomain)
   const logoUrl = result.success ? result.data.logoUrl : null
