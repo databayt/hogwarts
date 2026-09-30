@@ -3,6 +3,7 @@
 
 import type { Metadata } from "next"
 import { headers } from "next/headers"
+import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 import { GeistSans } from "geist/font/sans"
 import type { Session } from "next-auth"
@@ -32,12 +33,22 @@ import "leaflet/dist/leaflet.css"
 // re-apply a variable the root layout has already set on <html>. One
 // declaration, applied once, at the root.
 
+// The proxy's matcher skips every dotted path, so a request for a public/ file
+// that does not exist (`/icon-attendance.png`) lands here with the file name as
+// `lang`. `localeConfig[lang]` is then undefined and the render threw — a 500
+// that reads as an outage in the logs and in the service worker's
+// `cache.addAll` rejection. An unknown locale is a 404.
+function assertLocale(lang: string): asserts lang is Locale {
+  if (!(i18n.locales as readonly string[]).includes(lang)) notFound()
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ lang: string }>
 }): Promise<Metadata> {
   const { lang } = await params
+  assertLocale(lang)
   const dictionary = await getDictionary(lang as Locale)
   const config = localeConfig[lang as Locale]
 
@@ -106,6 +117,7 @@ export default async function LocaleLayout({
   params: Promise<{ lang: string }>
 }) {
   const { lang } = await params
+  assertLocale(lang)
 
   // Skip auth() during `next build` page-data collection. Each call to
   // auth() hits the DB; multiplied across every statically-collected route
