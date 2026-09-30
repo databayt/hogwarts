@@ -61,7 +61,7 @@ export function addSecurityHeaders(
   // Permissions Policy (formerly Feature Policy)
   headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), accelerometer=(), gyroscope=()"
+    "camera=(self), microphone=(self), geolocation=(self), payment=(), usb=(), magnetometer=(), accelerometer=(), gyroscope=()"
   )
 
   // X-XSS-Protection (legacy but still useful for older browsers)

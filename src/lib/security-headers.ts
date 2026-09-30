@@ -26,9 +26,14 @@
  * - WHY: Preserves referrer for same-origin (analytics) but strips path for cross-origin
  * - TRADE-OFF: Loses path info in analytics for external navigation
  *
- * Permissions-Policy: geolocation=(self)
- * - WHY: Attendance module needs geolocation for location-based check-in
- * - Camera/microphone disabled (not needed for current features)
+ * Permissions-Policy: camera=(self), microphone=(self), geolocation=(self)
+ * - geolocation: location-based attendance check-in
+ * - camera: the QR and barcode attendance scanners call getUserMedia
+ * - microphone: voice messages in messaging record through getUserMedia
+ * - GOTCHA: the policy belongs to the document, not the route. A page loaded
+ *   as /dashboard keeps its policy when the client navigates to
+ *   /attendance/qr-code, so scoping camera to the attendance routes would
+ *   still block the scanner. `(self)` keeps third-party frames out.
  */
 
 export const securityHeaders = [
@@ -58,7 +63,7 @@ export const securityHeaders = [
   },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(self)",
+    value: "camera=(self), microphone=(self), geolocation=(self)",
   },
 ]
 
