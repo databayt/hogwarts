@@ -28,7 +28,8 @@
 - A blank employee number is stored as NULL. `""` made every later teacher without a number fail at Create (unique per school)
 - Every wizard action returns an `ACTION_ERRORS` code, and toasts are translated (no Zod JSON, Prisma text or English literals)
 - Create from the step or the footer goes through `wizard/finish.ts`: a failure toasts and stays put, and success shows "Teacher added"
-- Open: the gender select defaults to Male on a new draft; the main teacher create/update in `actions.ts` (outside the wizard) still saves `employeeId` as given; grade chips read "G1…G12" in Arabic
+- Birth-date picker has month/year dropdowns (1940 → today) — #426, 190a60a6c. #427 ("details not saved") was the one-word-name failure above
+- Open: a full name of three or more words drops the middle words (the teacher model has no middleName; "أحمد محمد علي" saves as "أحمد علي"); the experience/employment date pickers still have no year dropdown; the gender select defaults to Male on a new draft; the main teacher create/update in `actions.ts` (outside the wizard) still saves `employeeId` as given; grade chips read "G1…G12" in Arabic
 
 ## Known Issues
 
