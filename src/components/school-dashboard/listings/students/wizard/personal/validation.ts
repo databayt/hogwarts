@@ -34,6 +34,15 @@ export function createPersonalStudentSchema(v?: ValidationHelper) {
 
 export const personalStudentSchema = createPersonalStudentSchema()
 
+// What the server accepts. In "full" name mode a one-word name ("محمد" — the
+// family name comes from the father tab) parses to an empty lastName, which
+// the client's full schema allows; requiring it here failed every such save
+// and the father/mother never got written (hogwarts#424, #425). The split
+// mode's lastName requirement is enforced by its client schema.
+export const personalStudentServerSchema = personalStudentSchema.extend({
+  lastName: z.string().default(""),
+})
+
 export function getPersonalStudentSchema(
   nameFormat: NameFormat = "full",
   v?: ValidationHelper

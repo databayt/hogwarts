@@ -17,7 +17,7 @@ import type { NameFormat } from "@/lib/name-utils"
 import { authorizeWizardAction } from "../authorize"
 import {
   personalGuardianSchema,
-  personalStudentSchema,
+  personalStudentServerSchema,
   type PersonalGuardianFormData,
   type PersonalStudentFormData,
 } from "./validation"
@@ -91,7 +91,7 @@ export async function updateStudentPersonal(
     if (!authz.ok) return authz.response
     const { schoolId } = authz
 
-    const parsed = personalStudentSchema.parse(input)
+    const parsed = personalStudentServerSchema.parse(input)
 
     // Language the names were typed in (from current locale cookie).
     const cookieStore = await cookies()

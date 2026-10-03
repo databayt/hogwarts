@@ -93,13 +93,24 @@ export default function PersonalContent() {
     }
   }, [data, nameFormat])
 
+  // Admins press Next from the Father/Mother tab, where the student form is
+  // hidden — a student-side failure stopped the save with nothing on screen
+  // (hogwarts#424, #425). Bring the student tab back so its error shows.
+  const saveStudentTab = useCallback(async () => {
+    if (!studentFormRef.current) return
+    try {
+      await studentFormRef.current.saveAndNext()
+    } catch (error) {
+      setActiveTab("student")
+      throw error
+    }
+  }, [])
+
   // Sequential save: Student sub-form first, then Guardian (father+mother
   // persisted together in a single transaction). Both must succeed to advance.
   const onNext = useCallback(async () => {
     try {
-      if (studentFormRef.current) {
-        await studentFormRef.current.saveAndNext()
-      }
+      await saveStudentTab()
       if (guardianFormRef.current) {
         await guardianFormRef.current.saveAndNext()
       }
@@ -107,18 +118,16 @@ export default function PersonalContent() {
     } catch (error) {
       console.error("Error saving personal step:", error)
     }
-  }, [locale, studentId, router])
+  }, [locale, studentId, router, saveStudentTab])
 
   // Save without advancing. Footer's save-and-skip (Bookmark) icon awaits this
   // and only redirects on success — must re-throw on failure.
   const onSaveStep = useCallback(async () => {
-    if (studentFormRef.current) {
-      await studentFormRef.current.saveAndNext()
-    }
+    await saveStudentTab()
     if (guardianFormRef.current) {
       await guardianFormRef.current.saveAndNext()
     }
-  }, [])
+  }, [saveStudentTab])
 
   // Wire validity + custom onNext + onSave into the wizard footer.
   useEffect(() => {
