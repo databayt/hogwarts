@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { format } from "date-fns"
-import type { Locale } from "date-fns"
+import { ar, enUS } from "react-day-picker/locale"
 import { CalendarIcon } from "lucide-react"
 import { useFormContext } from "react-hook-form"
 
@@ -24,6 +24,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { DateFieldProps } from "../types"
 
@@ -70,6 +71,10 @@ export function DateField({
   locale,
 }: DateFieldProps) {
   const form = useFormContext()
+  // Callers rarely pass a locale; default to the page's so Arabic pages get
+  // Arabic month names, captions, aria labels and the formatted value.
+  const { locale: lang } = useLocale()
+  const dateLocale = locale ?? (lang === "ar" ? ar : enUS)
 
   // Combine disabled logic
   const isDateDisabled = (date: Date) => {
@@ -107,7 +112,7 @@ export function DateField({
                     format(
                       new Date(field.value),
                       "PPP",
-                      locale ? { locale } : undefined
+                      { locale: dateLocale }
                     )
                   ) : (
                     <span>{placeholder}</span>
@@ -145,7 +150,7 @@ export function DateField({
                 captionLayout={captionLayout}
                 startMonth={startMonth}
                 endMonth={endMonth}
-                locale={locale}
+                locale={dateLocale}
                 autoFocus
               />
             </PopoverContent>
