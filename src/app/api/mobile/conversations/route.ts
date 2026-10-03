@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const convoIds = participantRecords.map((p) => p.conversationId)
     if (convoIds.length === 0) {
-      return NextResponse.json({ data: [], total: 0 })
+      return NextResponse.json({ data: [], total: 0, communityMemberCount: 0 })
     }
 
     const participantMap = new Map(
@@ -128,7 +128,21 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ data, total: data.length })
+    // The Communities tab counts everyone the reader shares a room with, once
+    // — `countMembers` in `messaging/mobile/tabs/communities-view.tsx`. The web
+    // holds every participant client-side and dedupes there; the phone is only
+    // given the number, so the union is taken here.
+    const communityMembers = new Set<string>([auth.userId])
+    for (const c of conversations) {
+      if (c.type === "direct") continue
+      for (const p of c.participants) communityMembers.add(p.user.id)
+    }
+
+    return NextResponse.json({
+      data,
+      total: data.length,
+      communityMemberCount: communityMembers.size,
+    })
   } catch (error) {
     console.error("Mobile conversations error:", error)
     return NextResponse.json(
