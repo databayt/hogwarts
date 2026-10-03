@@ -151,6 +151,9 @@ Announcements, Assignments, Classes, Classrooms, Events, Grades, Parents, Staff,
 - Opening an add wizard creates the row up front, because the URL carries its id.
 - Closing before entering anything deletes it. The lists never show an empty draft, and a nightly cron removes the ones a closed tab left behind (`empty-drafts.ts` holds the single rule).
 - A draft with any data is kept and can be resumed from the list.
+- The student, teacher and parent wizards open instantly. "+" mints the draft id in the browser, opens the wizard on an empty seed and writes the row in the background (`useDraftLauncher`).
+- Their steps switch without a request (`WizardLayout steps`, `history.pushState`), and Next saves in the background through the wizard runtime. Create waits for every save, and a failed save brings its step back.
+- A step stays mounted after you leave it. An effect that initialises from the loaded row must run once per record, not on every show.
 
 ### Modal forms
 

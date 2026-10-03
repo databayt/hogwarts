@@ -12,6 +12,35 @@ sub-directory (`teachers/ISSUE.md`, …).
 - Create from the last step or the footer goes through `<entity>/wizard/finish.ts`. A failure toasts and stays put.
 - Errors are `ACTION_ERRORS` codes, translated in the form with `actionErrorMessage`.
 
+## Speed: "+" and "Next" do not wait on the server (students, teachers, parents)
+
+The three add wizards opt into the wizard runtime (`form/wizard/wizard-runtime.tsx`) by passing
+`steps` to `WizardLayout`:
+
+- **"+"** (`useDraftLauncher`) mints the id in the browser, prefetches the first step for it, and
+  opens the wizard at once on a seed (`emptyStudentDraft` / `emptyTeacherDraft` /
+  `emptyParentDraft`, which mirror what `get*ForWizard` returns for a new draft). The
+  `createDraft*(id)` INSERT runs behind it, and every save waits for it. The listing pages pass
+  `nameFormat` for the seed (`lib/school-name-format.ts`).
+- **Steps switch in the browser** with `history.pushState`. The layout renders the step for the path
+  itself, visited steps stay mounted under `<Activity>` (Back keeps what was typed), and the next
+  step pre-renders. The step `page.tsx` files remain for deep links and refreshes.
+- **Next is optimistic.** The save starts, and a rejection within 50 ms (client validation) keeps the
+  step. Otherwise the next step shows while the save finishes. A server failure toasts and brings
+  the step back. Create and Skip & Create `drain()` every pending save first, and Close drains
+  before it discards.
+- **Activity rule:** a hidden step re-runs its effects when shown again. An effect that initialises
+  from the loaded row must run once per record (`validityFromRef` keyed on `data.id`), or it
+  overrides what the user typed.
+- Teacher expertise loads its grade catalogue when the wizard opens (`expertise/resources.tsx`,
+  read with `use()`). The request starts in an effect: a Server Action called during render loops.
+- Dev measurements, 2026-10-03: Next 50–175 ms with 0 blocking requests (was a save, a locale
+  redirect and an RSC fetch in series). Back 1–90 ms. Fresh drafts make no `get*ForWizard`,
+  attachments or guardians load.
+
+Known, not fixed: re-saving the student personal step creates a second father/mother when no email
+or phone was entered (`createOrLinkGuardian` has nothing to match on). Pre-existing.
+
 ## Empty drafts
 
 `empty-drafts.ts` is the one definition of an EMPTY draft. A student draft is empty when it has no name and no parent, document, photo, grade, section, fee or login. A teacher draft is empty when it has no name, still has the `@draft.internal` placeholder email, and has no phone, qualification, experience, subject, department, photo or login. Three places use it:
