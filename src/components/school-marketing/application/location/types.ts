@@ -7,6 +7,8 @@ export interface LocationFormData {
   state: string
   postalCode?: string
   country: string
+  latitude?: number
+  longitude?: number
 }
 
 export interface LocationFormRef {

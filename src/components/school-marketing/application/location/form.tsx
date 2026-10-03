@@ -49,10 +49,6 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
     const { updateStepData } = useApplySession()
     const hasMapbox = !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-    const [coords, setCoords] = React.useState<{
-      latitude: number
-      longitude: number
-    }>({ latitude: 0, longitude: 0 })
 
     const schema = useMemo(() => {
       const messages = (dictionary as Record<string, unknown>)?.messages as
@@ -72,6 +68,8 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
         state: initialData?.state || "",
         postalCode: initialData?.postalCode || "",
         country: initialData?.country || "",
+        latitude: initialData?.latitude,
+        longitude: initialData?.longitude,
       },
     })
 
@@ -117,7 +115,8 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
       form.setValue("state", result.state, opts)
       form.setValue("postalCode", result.postalCode, opts)
       form.setValue("country", result.country, opts)
-      setCoords({ latitude: result.latitude, longitude: result.longitude })
+      form.setValue("latitude", result.latitude, opts)
+      form.setValue("longitude", result.longitude, opts)
     }
 
     const pickerValue = form.watch("address")
@@ -127,8 +126,8 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
           state: form.watch("state") || "",
           country: form.watch("country") || "",
           postalCode: form.watch("postalCode") || "",
-          latitude: coords.latitude,
-          longitude: coords.longitude,
+          latitude: form.watch("latitude") ?? 0,
+          longitude: form.watch("longitude") ?? 0,
         }
       : null
 

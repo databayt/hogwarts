@@ -27,6 +27,8 @@ export interface TeacherWizardData {
   state: string | null
   postalCode: string | null
   country: string | null
+  latitude: number | null
+  longitude: number | null
   wizardStep: string | null
   phoneNumbers: {
     id: string
@@ -94,6 +96,8 @@ export function emptyTeacherDraft(
     state: null,
     postalCode: null,
     country: null,
+    latitude: null,
+    longitude: null,
     wizardStep: "information",
     phoneNumbers: [],
     qualifications: [],

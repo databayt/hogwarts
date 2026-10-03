@@ -84,6 +84,13 @@ export function MapForm({
 
   return (
     <MapboxLocationPicker
+      // This form sets the school's own pin — no school reference marker
+      showSchool={false}
+      school={{
+        latitude: initialData?.latitude ?? null,
+        longitude: initialData?.longitude ?? null,
+        country: initialData?.country || null,
+      }}
       value={pickerValue}
       onChange={handleLocationChange}
       placeholder={dict.searchAddress || "Search for an address..."}

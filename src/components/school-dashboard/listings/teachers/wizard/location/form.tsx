@@ -61,6 +61,8 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
         state: initialData?.state || "",
         postalCode: initialData?.postalCode || "",
         country: initialData?.country || "",
+        latitude: initialData?.latitude,
+        longitude: initialData?.longitude,
       },
     })
 
@@ -104,23 +106,14 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
         }),
     }))
 
-    // The picker hands back the exact point the admin chose; the form only has
-    // address columns, so keep the coordinates alongside it in component state.
-    // Without this the picker was fed a hardcoded 0,0 — which is both Null
-    // Island and falsy, so its marker effect bailed out entirely: no pin
-    // appeared and the map never flew to the chosen place.
-    const [coords, setCoords] = React.useState<{
-      latitude: number
-      longitude: number
-    }>({ latitude: 0, longitude: 0 })
-
     const handleLocationChange = (result: LocationResult) => {
       form.setValue("currentAddress", result.address)
       form.setValue("city", result.city)
       form.setValue("state", result.state)
       form.setValue("postalCode", result.postalCode)
       form.setValue("country", result.country)
-      setCoords({ latitude: result.latitude, longitude: result.longitude })
+      form.setValue("latitude", result.latitude)
+      form.setValue("longitude", result.longitude)
     }
 
     const pickerValue = form.watch("currentAddress")
@@ -130,8 +123,8 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
           state: form.watch("state") || "",
           country: form.watch("country") || "",
           postalCode: form.watch("postalCode") || "",
-          latitude: coords.latitude,
-          longitude: coords.longitude,
+          latitude: form.watch("latitude") ?? 0,
+          longitude: form.watch("longitude") ?? 0,
         }
       : null
 

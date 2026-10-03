@@ -27,6 +27,8 @@ export interface StudentWizardData {
   state: string | null
   postalCode: string | null
   country: string | null
+  latitude: number | null
+  longitude: number | null
   // Emergency
   emergencyContactName: string | null
   emergencyContactPhone: string | null
@@ -115,6 +117,8 @@ export function emptyStudentDraft(
     state: null,
     postalCode: null,
     country: "SD",
+    latitude: null,
+    longitude: null,
     emergencyContactName: null,
     emergencyContactPhone: null,
     emergencyContactRelation: null,

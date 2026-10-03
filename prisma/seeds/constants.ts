@@ -58,6 +58,10 @@ export const DEMO_SCHOOL = {
   city: "Khartoum",
   state: "Khartoum",
   country: "SD",
+  // Pin for the map picker — without it every map in the demo started on 0,0
+  // (Gulf of Guinea) instead of around the school.
+  latitude: 15.5007,
+  longitude: 32.5599,
 
   // Pricing (SDG — Sudanese Pound; realistic private-school figures)
   tuitionFee: 450000,

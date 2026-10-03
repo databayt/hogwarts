@@ -1,5 +1,29 @@
 {
   "school": {
+    "locationPicker": {
+      "searchAddress": "Search a neighborhood, street or place",
+      "useCurrentLocation": "Use my current location",
+      "locating": "Finding your location…",
+      "noResults": "No match — tap the map to drop the pin where you are",
+      "nearSchool": "Near the school",
+      "searching": "Searching…",
+      "clear": "Clear",
+      "details": "Address",
+      "detailsPlaceholder": "Add house no., street or nearest landmark",
+      "dragToAdjust": "Drag the pin to adjust",
+      "tapToPin": "Tap the map to place the pin",
+      "detectingAddress": "Detecting address…",
+      "school": "School",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "twoFingerHint": "Use two fingers to move the map",
+      "ctrlScrollHint": "Use ctrl + scroll to zoom the map",
+      "ctrlScrollHintMac": "Use ⌘ + scroll to zoom the map",
+      "mapboxNotConfigured": "Map is not configured",
+      "locationBlocked": "Location access is blocked. Enable it in your browser settings.",
+      "locationDenied": "Location access was denied. Allow it in your browser settings.",
+      "locationTimeout": "Could not get your location. Try again or search instead."
+    },
     "configuration": {
       "academic": {
         "title": "Academic Setup",

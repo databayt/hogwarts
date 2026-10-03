@@ -53,6 +53,8 @@ export default function LocationContent() {
                   state: data.state ?? undefined,
                   postalCode: data.postalCode ?? undefined,
                   country: data.country ?? undefined,
+                  latitude: data.latitude ?? undefined,
+                  longitude: data.longitude ?? undefined,
                 }
               : undefined
           }

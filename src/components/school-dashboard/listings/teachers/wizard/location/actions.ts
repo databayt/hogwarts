@@ -24,6 +24,8 @@ export async function getTeacherLocation(
         state: true,
         postalCode: true,
         country: true,
+        latitude: true,
+        longitude: true,
       },
     })
 
@@ -37,6 +39,8 @@ export async function getTeacherLocation(
         state: teacher.state ?? undefined,
         postalCode: teacher.postalCode ?? undefined,
         country: teacher.country ?? undefined,
+        latitude: teacher.latitude ?? undefined,
+        longitude: teacher.longitude ?? undefined,
       },
     }
   } catch (error) {
@@ -63,6 +67,8 @@ export async function updateTeacherLocation(
         state: parsed.state || null,
         postalCode: parsed.postalCode || null,
         country: parsed.country || null,
+        latitude: parsed.latitude ?? null,
+        longitude: parsed.longitude ?? null,
       },
     })
 

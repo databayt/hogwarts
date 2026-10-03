@@ -615,116 +615,30 @@ body {
   }
 }
 
-/* Hide Mapbox logo to prevent flash */
-.mapboxgl-ctrl-logo {
-  display: none !important;
+/* Location picker pin: drops in when it lands. Animates the INNER element —
+   Mapbox positions the marker element itself with a transform, so animating
+   that one would fight the map. (The Mapbox wordmark stays visible: hiding it
+   breaks the Mapbox terms of service.) */
+@keyframes pin-drop {
+  0% {
+    transform: translateY(-18px) scale(0.9);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(2px) scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
 }
-
-/* Mapbox Geocoder Styles */
-.mapbox-geocoder-wrapper {
-  width: 100%;
+.location-pin-drop {
+  transform-origin: 50% 100%;
 }
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder {
-  width: 100%;
-  max-width: none;
-  font-family: inherit;
-  background-color: hsl(var(--background));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  box-shadow: none;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder:focus-within {
-  border-color: hsl(var(--ring));
-  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder--input {
-  height: 40px;
-  padding: 8px 40px;
-  font-size: 14px;
-  color: hsl(var(--foreground));
-  background: transparent;
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder--input::placeholder {
-  color: hsl(var(--muted-foreground));
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder--icon {
-  fill: hsl(var(--muted-foreground));
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder--icon-search {
-  top: 10px;
-  inset-inline-start: 12px;
-  width: 20px;
-  height: 20px;
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder--button {
-  background: transparent;
-  top: 8px;
-  inset-inline-end: 8px;
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder--icon-close {
-  width: 16px;
-  height: 16px;
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder .suggestions {
-  background-color: hsl(var(--popover));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  margin-top: 4px;
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder .suggestions > li {
-  border-bottom: 1px solid hsl(var(--border));
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder .suggestions > li:last-child {
-  border-bottom: none;
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder .suggestions > li > a {
-  padding: 10px 12px;
-  color: hsl(var(--foreground));
-  font-size: 14px;
-}
-
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder .suggestions > li > a:hover,
-.mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder .suggestions > .active > a {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
-}
-
-.mapbox-geocoder-wrapper
-  .mapboxgl-ctrl-geocoder
-  .suggestions
-  .mapboxgl-ctrl-geocoder--suggestion-title {
-  font-weight: 500;
-}
-
-.mapbox-geocoder-wrapper
-  .mapboxgl-ctrl-geocoder
-  .suggestions
-  .mapboxgl-ctrl-geocoder--suggestion-address {
-  color: hsl(var(--muted-foreground));
-  font-size: 12px;
-}
-
-/* Dark mode adjustments */
-.dark .mapbox-geocoder-wrapper .mapboxgl-ctrl-geocoder {
-  background-color: hsl(var(--background));
+@media (prefers-reduced-motion: no-preference) {
+  .location-pin-drop {
+    animation: pin-drop 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }
 
 /* WhatsApp doodle wallpaper pattern. One seamless pattern tile, tiled at the

@@ -72,6 +72,10 @@ model Application {
   state          String
   postalCode     String
   country        String  @default("SD")
+  // Exact map pin chosen in the location picker — Float so rows stay plain
+  // JSON for client components (a Decimal can't cross the RSC boundary)
+  latitude       Float?
+  longitude      Float?
 
   // Parent/Guardian Details
   fatherName       String?

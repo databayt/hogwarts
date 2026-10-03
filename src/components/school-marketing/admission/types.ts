@@ -38,6 +38,8 @@ export interface ApplicationFormData {
   state: string
   postalCode: string
   country: string
+  latitude?: number
+  longitude?: number
 
   // Step 4: Guardian Information
   fatherName: string

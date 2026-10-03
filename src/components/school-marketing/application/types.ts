@@ -78,6 +78,8 @@ export interface LocationStepData {
   state: string
   postalCode?: string
   country: string
+  latitude?: number
+  longitude?: number
 }
 
 export interface GuardianStepData {

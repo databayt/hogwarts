@@ -780,6 +780,10 @@ export async function submitApplication(
         state: validated.state,
         postalCode: validated.postalCode || "",
         country: validated.country,
+        latitude:
+          typeof validated.latitude === "number" ? validated.latitude : null,
+        longitude:
+          typeof validated.longitude === "number" ? validated.longitude : null,
         // Guardian
         fatherName: validated.fatherName || null,
         fatherOccupation: validated.fatherOccupation || null,

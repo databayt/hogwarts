@@ -3,7 +3,9 @@
 
 import type { Metadata } from "next"
 
+import { getSchoolGeo } from "@/lib/school-geo"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import { SchoolGeoProvider } from "@/components/atom/school-geo"
 import { resolveSchoolDisplayName } from "@/components/template/site-header/display-name"
 
 export const dynamic = "force-dynamic"
@@ -54,10 +56,19 @@ export async function generateMetadata({
   return metadata
 }
 
-export default function SubdomainLayout({
+export default async function SubdomainLayout({
   children,
+  params,
 }: {
   children: React.ReactNode
+  params: Promise<{ subdomain: string }>
 }) {
-  return children
+  const { subdomain } = await params
+  // Not awaited: only a mounted location picker reads it, so maps open around
+  // the school without the tenant shell waiting on the query.
+  return (
+    <SchoolGeoProvider value={getSchoolGeo(subdomain)}>
+      {children}
+    </SchoolGeoProvider>
+  )
 }

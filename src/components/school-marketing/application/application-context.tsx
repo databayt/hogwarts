@@ -70,6 +70,8 @@ const LOCATION_KEYS = [
   "state",
   "postalCode",
   "country",
+  "latitude",
+  "longitude",
 ] as const
 const GUARDIAN_KEYS = [
   "fatherName",

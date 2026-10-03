@@ -531,21 +531,28 @@ async function fillContactStep(page: Page): Promise<void> {
  * Must be called before any Mapbox interaction (search or map click).
  */
 async function setupMapboxMocks(page: Page): Promise<void> {
+  // Geocoding v6 shape (src/lib/mapbox.ts) — forward and reverse share it
   const mockFeature = {
-    id: "place.12345",
     type: "Feature",
-    text: "Khartoum",
-    place_name: "Khartoum, Khartoum State, Sudan",
-    center: [32.5599, 15.5007],
-    context: [
-      { id: "place.1", text: "Khartoum" },
-      { id: "region.1", text: "Khartoum" },
-      { id: "country.1", text: "Sudan", short_code: "sd" },
-    ],
-    properties: {},
+    id: "dXJuOm1ieHBsYzpLaGFydG91bQ",
+    geometry: { type: "Point", coordinates: [32.5599, 15.5007] },
+    properties: {
+      mapbox_id: "dXJuOm1ieHBsYzpLaGFydG91bQ",
+      feature_type: "place",
+      name: "Khartoum",
+      name_preferred: "Khartoum",
+      place_formatted: "Khartoum State, Sudan",
+      full_address: "Khartoum, Khartoum State, Sudan",
+      coordinates: { longitude: 32.5599, latitude: 15.5007 },
+      context: {
+        region: { name: "Khartoum State" },
+        country: { name: "Sudan", country_code: "SD" },
+        place: { name: "Khartoum" },
+      },
+    },
   }
 
-  await page.route("**/geocoding/v5/**", (route) => {
+  await page.route("**/search/geocode/v6/**", (route) => {
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -688,10 +695,8 @@ async function fillLocationStep(page: Page): Promise<void> {
   // Wait for dynamic Mapbox component to load (uses next/dynamic ssr: false)
   await page.waitForLoadState("networkidle").catch(() => {})
 
-  // Look for the Mapbox search input: placeholder="Search for an address..."
-  const searchInput = page.locator(
-    'input[placeholder*="Search for an address"], input[placeholder*="ابحث عن عنوان"]'
-  )
+  // The location picker's search box (a cmdk combobox input)
+  const searchInput = page.locator("input[cmdk-input]")
   const hasSearch = await searchInput
     .first()
     .isVisible({ timeout: TIMEOUTS.long }) // Mapbox loads async via dynamic import
@@ -1217,9 +1222,7 @@ test.describe("GROUP 3: Multi-step Form Navigation", () => {
     // Check for Mapbox search input first -- use long timeout because
     // the component is lazy-loaded via next/dynamic
     const hasMapboxSearch = await page
-      .locator(
-        'input[placeholder*="Search for an address"], input[placeholder*="ابحث عن عنوان"]'
-      )
+      .locator("input[cmdk-input]")
       .first()
       .isVisible({ timeout: TIMEOUTS.long })
       .catch(() => false)

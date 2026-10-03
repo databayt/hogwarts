@@ -1,5 +1,29 @@
 {
   "school": {
+    "locationPicker": {
+      "searchAddress": "ابحث عن حي أو شارع أو مكان",
+      "useCurrentLocation": "استخدم موقعي الحالي",
+      "locating": "جارٍ تحديد موقعك…",
+      "noResults": "لا توجد نتيجة — اضغط على الخريطة لتثبيت الدبوس في موقعك",
+      "nearSchool": "بالقرب من المدرسة",
+      "searching": "جارٍ البحث…",
+      "clear": "مسح",
+      "details": "العنوان",
+      "detailsPlaceholder": "أضف رقم المنزل أو الشارع أو أقرب معلم",
+      "dragToAdjust": "اسحب الدبوس لضبط الموقع",
+      "tapToPin": "اضغط على الخريطة لتثبيت الدبوس",
+      "detectingAddress": "جارٍ تحديد العنوان…",
+      "school": "المدرسة",
+      "zoomIn": "تكبير",
+      "zoomOut": "تصغير",
+      "twoFingerHint": "استخدم إصبعين لتحريك الخريطة",
+      "ctrlScrollHint": "استخدم ctrl مع التمرير لتكبير الخريطة",
+      "ctrlScrollHintMac": "استخدم ⌘ مع التمرير لتكبير الخريطة",
+      "mapboxNotConfigured": "الخريطة غير مهيأة",
+      "locationBlocked": "الوصول إلى الموقع محظور. فعّله من إعدادات المتصفح.",
+      "locationDenied": "تم رفض الوصول إلى الموقع. اسمح به من إعدادات المتصفح.",
+      "locationTimeout": "تعذر تحديد موقعك. حاول مرة أخرى أو ابحث بدلاً من ذلك."
+    },
     "configuration": {
       "academic": {
         "title": "الإعداد الأكاديمي",

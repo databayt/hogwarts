@@ -46,6 +46,8 @@ export async function seedSchool(prisma: PrismaClient): Promise<SchoolRef> {
     city: DEMO_SCHOOL.city,
     state: DEMO_SCHOOL.state,
     country: DEMO_SCHOOL.country,
+    latitude: DEMO_SCHOOL.latitude,
+    longitude: DEMO_SCHOOL.longitude,
     tuitionFee: DEMO_SCHOOL.tuitionFee,
     registrationFee: DEMO_SCHOOL.registrationFee,
     applicationFee: DEMO_SCHOOL.applicationFee,
