@@ -86,7 +86,7 @@ Open / found while here:
 - [x] Newcomers onboarding modal
 - [x] Schedule configuration step
 - [x] Loading states for all step pages
-- [ ] Maps API integration for location step
+- [x] Maps API integration for location step (Mapbox; 2026-10-04 rebuild: Arabic labels, Geocoding v6 biased to the school, smooth landing — see `src/components/atom/mapbox-location-picker.tsx`)
 - [ ] Stripe integration for price step
 - [ ] CSV/Excel parser for import step
 - [ ] DNS provider integration for subdomain step
@@ -101,7 +101,12 @@ Open / found while here:
 
 ### P1 -- High
 
-- [ ] **Maps API not integrated** -- Location step has form UI but no geocoding, address autocomplete, or map picker. Requires Google Maps or Mapbox API key.
+- [x] **Maps API not integrated** -- done long ago with Mapbox; rebuilt 2026-10-04. Four live faults fixed:
+  - Arabic labels were broken. `setRTLTextPlugin` was passed `true` as its _callback_. mapbox-gl also flips the global plugin status to `error` when a map unmounts mid-load, so every later map lost Arabic shaping; the plugin is now re-armed before each map. `setConfigProperty("basemap","language")` was a no-op, so labels stayed English on `/ar`; `language` + `setLanguage` now do this.
+  - Maps fed `0,0` opened in the Gulf of Guinea. The view now starts from the saved pin, then the school, then the school's country, then Khartoum (`src/lib/map-bias.ts`).
+  - Search had no bias: "الرياض" from Khartoum returned Saudi Arabia. It now uses v6 with `country` + `proximity` set to the school.
+  - GPS waited on reverse geocoding before moving the map, and errors used `alert()`. The map now flies first, and errors show inline.
+    This form passes `showSchool={false}` (the pin IS the school) and its own `school` hint (no tenant context during onboarding).
 - [ ] **Stripe not integrated** -- Price and discount steps have UI but no payment processing backend. Requires Stripe Connect setup.
 - [ ] **CSV import parser incomplete** -- Import step has UI but no file parsing logic. Needs CSV/Excel parser, column mapping, validation, and batch import.
 - [ ] **DNS configuration missing** -- Subdomain step has form but no DNS provider integration. Needs Cloudflare/Route53 API, availability checking, and SSL provisioning.

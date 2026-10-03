@@ -204,6 +204,8 @@ Active step order: **attachments → personal → location → academic → fees
 
 ## Known Issues
 
+- [x] **Application location step (2026-10-04)** — the picker opens around the school and its search is scoped to the school's country (Geocoding v6). The applicant's pin persists in the draft session (`LOCATION_KEYS` includes `latitude`/`longitude`) and on `Application.latitude/longitude` at submit. e2e mocks moved to the v6 response shape and to the `input[cmdk-input]` selector.
+
 ### Application Wizard — Gap Remediation (2026-05-22)
 
 - [x] **i18n**: attachment rejection messages + aria-label now use `school.admission.apply.form.attachments.*` keys (en+ar); fixed success-modal dict path (was reading `admission` instead of `school.admission`, so the modal was always English); added `errors.rateLimited`. _Deferred: Stripe checkout line-item localization — payment path, low value/risk (brief Stripe-hosted redirect)._

@@ -12,6 +12,10 @@ sub-directory (`teachers/ISSUE.md`, …).
 - Create from the last step or the footer goes through `<entity>/wizard/finish.ts`. A failure toasts and stays put.
 - Errors are `ACTION_ERRORS` codes, translated in the form with `actionErrorMessage`.
 
+## Location step (students, teachers)
+
+The step uses the shared location picker (`atom/mapbox-location-picker.tsx`). It opens around the school, which the tenant layout provides through `SchoolGeoProvider`, and shows the school as a reference marker. Since 2026-10-04 the pin is stored in `Student.latitude/longitude` and `Teacher.latitude/longitude`, which are `Float` so rows stay plain JSON for client components. Reopening a record therefore lands on its pin. Rows saved before then have address text only, and the map opens on the school.
+
 ## Speed: "+" and "Next" do not wait on the server (students, teachers, parents)
 
 The three add wizards opt into the wizard runtime (`form/wizard/wizard-runtime.tsx`) by passing

@@ -9,13 +9,13 @@ The onboarding system guides new schools through registration, configuration, an
 
 ### Group 1 — Basic information
 
-| Step         | Path            | Required | Database                                |
-| ------------ | --------------- | -------- | --------------------------------------- |
-| About school | `/about-school` | No       | static welcome                          |
-| Title        | `/title`        | Yes      | `School.name`                           |
-| Description  | `/description`  | Yes      | `schoolType`, `schoolLevel`, `planType` |
-| Location     | `/location`     | Yes      | `address`, `city`, `state`, `country`   |
-| Stand out    | `/stand-out`    | No       | static                                  |
+| Step         | Path            | Required | Database                                                       |
+| ------------ | --------------- | -------- | -------------------------------------------------------------- |
+| About school | `/about-school` | No       | static welcome                                                 |
+| Title        | `/title`        | Yes      | `School.name`                                                  |
+| Description  | `/description`  | Yes      | `schoolType`, `schoolLevel`, `planType`                        |
+| Location     | `/location`     | Yes      | `address`, `city`, `state`, `country`, `latitude`, `longitude` |
+| Stand out    | `/stand-out`    | No       | static                                                         |
 
 ### Group 2 — School setup
 
@@ -42,6 +42,16 @@ The `schedule` step is defined in `OnboardingStep` with its own component direct
 After all steps the user lands on `/congratulations` for a smart redirect (school subdomain dashboard or main domain depending on session state).
 
 Active step order is `ONBOARDING_CONFIG` in `src/components/form/footer.tsx`. Authoritative metadata (labels, validation, group, order) is `ONBOARDING_STEPS` in `src/components/onboarding/config.ts`.
+
+## Location picker
+
+One component, `src/components/atom/mapbox-location-picker.tsx`, sets every address in the app. That includes this step, school settings, the student and teacher add wizards, the public application, and transportation stops. It replaces separate country, city and district fields with a single search field, the user's current location, and a map.
+
+- **Search** uses Mapbox Geocoding v6, scoped to the school's country and ranked around the school. Typing "الرياض" from a Khartoum school finds the Khartoum neighborhood, not Saudi Arabia. If the school's country has no match, the search retries worldwide. Results go down to blocks such as "كافوري مربع 9". Use the arrow keys and Enter to pick, Esc to close.
+- **Starting view**: the saved pin, then the school, then the school's country, then Khartoum. It never opens at 0,0. Under a school, the school is drawn as a reference marker.
+- **Landing**: picking a result, using the current location or tapping the map moves the map immediately. The address arrives when reverse geocoding answers. Drag the pin to adjust. The address line under the map is editable, so you can add a house number or nearest landmark.
+- **Arabic**: map labels follow the page language. The RTL text plugin is armed before every map is created.
+- **Storage**: `address`/`city`/`state`/`country` as before, plus `latitude`/`longitude` on `School`, `Student`, `Teacher` and `Application`.
 
 ## Auth handshake
 
