@@ -2,12 +2,18 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useImperativeHandle, useTransition } from "react"
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useTransition,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import type { NameFormat } from "@/lib/name-utils"
 import { composeFullName } from "@/lib/name-utils"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import {
@@ -17,6 +23,7 @@ import {
   SelectField,
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTeacherInformation } from "./actions"
@@ -39,7 +46,17 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
     const t = wizard?.information as Record<string, string> | undefined
     const tWizard = wizard as Record<string, string> | undefined
 
-    const schema = getInformationSchema(nameFormat)
+    const v = useMemo(() => {
+      const messages = (dictionary as Record<string, unknown> | undefined)
+        ?.messages
+      return messages
+        ? createI18nHelpers(messages as never).validation
+        : undefined
+    }, [dictionary])
+    const schema = useMemo(
+      () => getInformationSchema(nameFormat, v),
+      [nameFormat, v]
+    )
 
     const form = useForm({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,17 +114,18 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
               )
               if (!result.success) {
                 ErrorToast(
-                  result.error || tWizard?.failedToSave || "Failed to save"
+                  actionErrorMessage(
+                    result.error,
+                    dictionary,
+                    tWizard?.failedToSave || "Failed to save"
+                  )
                 )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg =
-                err instanceof Error
-                  ? err.message
-                  : tWizard?.failedToSave || "Failed to save"
+              const msg = tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -147,6 +165,7 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
             <DateField
               name="birthDate"
               label={t?.dateOfBirth || "Date of Birth"}
+              placeholder={t?.pickDate}
               disabled={isPending}
             />
             <SelectField

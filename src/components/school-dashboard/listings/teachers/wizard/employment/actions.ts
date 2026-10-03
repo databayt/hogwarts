@@ -44,10 +44,8 @@ export async function getTeacherEmployment(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -64,7 +62,10 @@ export async function updateTeacherEmployment(
     await db.teacher.updateMany({
       where: { id: teacherId, schoolId },
       data: {
-        employeeId: parsed.employeeId ?? null,
+        // Blank must be NULL, not "": (schoolId, employeeId) is unique, so
+        // the first teacher saved with "" made every later one without an
+        // employee number fail at Create.
+        employeeId: parsed.employeeId?.trim() || null,
         joiningDate: parsed.joiningDate ?? null,
         employmentStatus: parsed.employmentStatus,
         employmentType: parsed.employmentType,
@@ -75,9 +76,15 @@ export async function updateTeacherEmployment(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      return actionError(ACTION_ERRORS.TEACHER_EMPLOYEE_ID_IN_USE)
     }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

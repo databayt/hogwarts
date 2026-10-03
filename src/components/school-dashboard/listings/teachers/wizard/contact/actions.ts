@@ -40,10 +40,8 @@ export async function getTeacherContact(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -66,10 +64,7 @@ export async function updateTeacherContact(
       },
     })
     if (existing) {
-      return {
-        success: false,
-        error: "Email already in use by another teacher",
-      }
+      return actionError(ACTION_ERRORS.TEACHER_EMAIL_IN_USE)
     }
 
     const phoneData: {
@@ -113,9 +108,7 @@ export async function updateTeacherContact(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

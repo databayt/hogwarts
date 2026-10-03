@@ -3187,6 +3187,7 @@
           "professionalBackground": "Professional Background"
         },
         "create": "Create",
+        "created": "Teacher added",
         "validationFailed": "Validation failed",
         "failedToSave": "Failed to save",
         "attachments": {
@@ -3209,6 +3210,7 @@
           "lastNamePlaceholder": "Enter last name",
           "fullNamePlaceholder": "Enter full name",
           "dateOfBirth": "Date of Birth",
+          "pickDate": "Pick a date",
           "gender": "Gender",
           "nationality": "Nationality",
           "nationalityPlaceholder": "Select nationality",

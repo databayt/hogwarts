@@ -6,6 +6,7 @@ import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, SelectField } from "@/components/form"
@@ -29,6 +30,8 @@ export const EmploymentForm = forwardRef<WizardFormRef, EmploymentFormProps>(
       ?.teachers as Record<string, unknown> | undefined
     const wizard = teachers?.wizard as Record<string, unknown> | undefined
     const t = wizard?.employment as Record<string, string> | undefined
+    const pickDate = (wizard?.information as Record<string, string> | undefined)
+      ?.pickDate
     const tWizard = wizard as Record<string, string> | undefined
 
     const form = useForm<EmploymentFormData>({
@@ -65,17 +68,18 @@ export const EmploymentForm = forwardRef<WizardFormRef, EmploymentFormProps>(
               const result = await updateTeacherEmployment(teacherId, data)
               if (!result.success) {
                 ErrorToast(
-                  result.error || tWizard?.failedToSave || "Failed to save"
+                  actionErrorMessage(
+                    result.error,
+                    dictionary,
+                    tWizard?.failedToSave || "Failed to save"
+                  )
                 )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg =
-                err instanceof Error
-                  ? err.message
-                  : tWizard?.failedToSave || "Failed to save"
+              const msg = tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -111,6 +115,7 @@ export const EmploymentForm = forwardRef<WizardFormRef, EmploymentFormProps>(
           <DateField
             name="joiningDate"
             label={t?.joiningDate || "Joining Date"}
+            placeholder={pickDate}
             disabled={isPending}
           />
           <div className="grid grid-cols-2 gap-4">
@@ -134,11 +139,13 @@ export const EmploymentForm = forwardRef<WizardFormRef, EmploymentFormProps>(
               <DateField
                 name="contractStartDate"
                 label={t?.contractStartDate || "Contract Start Date"}
+                placeholder={pickDate}
                 disabled={isPending}
               />
               <DateField
                 name="contractEndDate"
                 label={t?.contractEndDate || "Contract End Date"}
+                placeholder={pickDate}
                 disabled={isPending}
               />
             </>

@@ -50,10 +50,8 @@ export async function getTeacherExpertise(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -89,10 +87,8 @@ export async function updateTeacherExpertise(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -169,9 +165,7 @@ export async function getGradesAndSubjects(): Promise<
       data,
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load grades",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }

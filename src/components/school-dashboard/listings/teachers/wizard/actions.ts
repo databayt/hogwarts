@@ -89,10 +89,8 @@ export async function getTeacherForWizard(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load teacher",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -125,11 +123,8 @@ export async function createDraftTeacher(): Promise<
 
     return { success: true, data: { id: teacher.id } }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create teacher",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.TEACHER_CREATE_FAILED)
   }
 }
 
@@ -158,21 +153,16 @@ export async function completeTeacherWizard(
       return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
     }
 
-    if (!teacher.firstName || !teacher.lastName) {
-      return {
-        success: false,
-        error: "Name is required before completing",
-      }
+    // One word is a whole name in full-name schools (see the student wizard).
+    if (!teacher.firstName?.trim()) {
+      return actionError(ACTION_ERRORS.TEACHER_NAME_REQUIRED)
     }
 
     if (
       !teacher.emailAddress ||
       teacher.emailAddress.endsWith("@draft.internal")
     ) {
-      return {
-        success: false,
-        error: "Valid email is required before completing",
-      }
+      return actionError(ACTION_ERRORS.TEACHER_EMAIL_REQUIRED)
     }
 
     await db.teacher.updateMany({
@@ -183,13 +173,8 @@ export async function completeTeacherWizard(
     refreshPage("/teachers")
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to complete teacher wizard",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -240,12 +225,7 @@ export async function deleteDraftTeacher(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete draft teacher",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

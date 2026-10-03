@@ -6,6 +6,7 @@ import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { FileUploadField } from "@/components/form/atoms/file-upload"
@@ -53,17 +54,18 @@ export const PhotoForm = forwardRef<WizardFormRef, PhotoFormProps>(
               const result = await updateTeacherPhoto(teacherId, data)
               if (!result.success) {
                 ErrorToast(
-                  result.error || tWizard?.failedToSave || "Failed to save"
+                  actionErrorMessage(
+                    result.error,
+                    dictionary,
+                    tWizard?.failedToSave || "Failed to save"
+                  )
                 )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg =
-                err instanceof Error
-                  ? err.message
-                  : tWizard?.failedToSave || "Failed to save"
+              const msg = tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }

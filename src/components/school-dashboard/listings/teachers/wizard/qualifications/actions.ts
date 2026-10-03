@@ -51,10 +51,8 @@ export async function getTeacherQualifications(
 
     return { success: true, data }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -97,9 +95,7 @@ export async function updateTeacherQualifications(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

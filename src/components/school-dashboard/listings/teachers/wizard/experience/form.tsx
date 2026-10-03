@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus, Trash2 } from "lucide-react"
 import { useFieldArray, useForm } from "react-hook-form"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
@@ -72,17 +73,18 @@ export const ExperienceForm = forwardRef<WizardFormRef, ExperienceFormProps>(
               const result = await updateTeacherExperiences(teacherId, data)
               if (!result.success) {
                 ErrorToast(
-                  result.error || tWizard?.failedToSave || "Failed to save"
+                  actionErrorMessage(
+                    result.error,
+                    dictionary,
+                    tWizard?.failedToSave || "Failed to save"
+                  )
                 )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg =
-                err instanceof Error
-                  ? err.message
-                  : tWizard?.failedToSave || "Failed to save"
+              const msg = tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }

@@ -3187,6 +3187,7 @@
           "professionalBackground": "الخلفية المهنية"
         },
         "create": "إنشاء",
+        "created": "تمت إضافة المعلم",
         "validationFailed": "فشل التحقق",
         "failedToSave": "فشل الحفظ",
         "attachments": {
@@ -3209,6 +3210,7 @@
           "lastNamePlaceholder": "أدخل اسم العائلة",
           "fullNamePlaceholder": "أدخل الاسم الكامل",
           "dateOfBirth": "تاريخ الميلاد",
+          "pickDate": "اختر تاريخاً",
           "gender": "الجنس",
           "nationality": "الجنسية",
           "nationalityPlaceholder": "اختر الجنسية",

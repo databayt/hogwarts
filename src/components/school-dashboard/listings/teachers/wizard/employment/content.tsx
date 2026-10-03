@@ -10,14 +10,16 @@ import { useWizardValidation } from "@/components/form/template/wizard-validatio
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
-import { completeTeacherWizard } from "../actions"
+import { finishTeacherWizard } from "../finish"
 import { useTeacherWizard } from "../use-teacher-wizard"
 import { EmploymentForm } from "./form"
 
 export default function EmploymentContent() {
   const params = useParams()
   const router = useRouter()
+  const { locale } = useLocale()
   const teacherId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useTeacherWizard()
@@ -38,10 +40,8 @@ export default function EmploymentContent() {
       isSavingRef.current = true
       try {
         await formRef.current?.saveAndNext()
-        const result = await completeTeacherWizard(teacherId)
-        if (result.success) {
-          router.push("/teachers")
-        }
+        const ok = await finishTeacherWizard(teacherId, dictionary)
+        if (ok) router.push(`/${locale}/teachers`)
       } catch {
         // Error handled in form
       } finally {
@@ -51,7 +51,7 @@ export default function EmploymentContent() {
 
     setCustomNavigation({ onNext: handleNext })
     return () => setCustomNavigation(undefined)
-  }, [teacherId, router, setCustomNavigation])
+  }, [teacherId, router, setCustomNavigation, dictionary, locale])
 
   return (
     <WizardStep

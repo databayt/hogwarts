@@ -13,6 +13,7 @@ import React, {
 } from "react"
 import { X } from "lucide-react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -191,17 +192,18 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
               })
               if (!result.success) {
                 ErrorToast(
-                  result.error || tWizard?.failedToSave || "Failed to save"
+                  actionErrorMessage(
+                    result.error,
+                    dictionary,
+                    tWizard?.failedToSave || "Failed to save"
+                  )
                 )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg =
-                err instanceof Error
-                  ? err.message
-                  : tWizard?.failedToSave || "Failed to save"
+              const msg = tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }

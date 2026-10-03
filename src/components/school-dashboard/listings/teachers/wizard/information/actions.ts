@@ -9,7 +9,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { informationSchema, type InformationFormData } from "./validation"
+import { informationServerSchema, type InformationFormData } from "./validation"
 
 export async function getTeacherInformation(
   teacherId: string
@@ -42,10 +42,8 @@ export async function getTeacherInformation(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -57,7 +55,7 @@ export async function updateTeacherInformation(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const parsed = informationSchema.parse(input)
+    const parsed = informationServerSchema.parse(input)
 
     // Detect the language the name was entered in (from current locale)
     const cookieStore = await cookies()
@@ -77,9 +75,7 @@ export async function updateTeacherInformation(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
-    }
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

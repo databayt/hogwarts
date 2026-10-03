@@ -5,11 +5,10 @@
 import React from "react"
 
 import { WizardLayout } from "@/components/form/wizard"
-import {
-  completeTeacherWizard,
-  updateTeacherWizardStep,
-} from "@/components/school-dashboard/listings/teachers/wizard/actions"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { updateTeacherWizardStep } from "@/components/school-dashboard/listings/teachers/wizard/actions"
 import { TEACHER_WIZARD_CONFIG } from "@/components/school-dashboard/listings/teachers/wizard/config"
+import { finishTeacherWizard } from "@/components/school-dashboard/listings/teachers/wizard/finish"
 import {
   TeacherWizardProvider,
   useTeacherWizard,
@@ -20,6 +19,8 @@ export default function TeacherWizardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { dictionary } = useDictionary()
+
   return (
     <WizardLayout
       config={TEACHER_WIZARD_CONFIG}
@@ -30,7 +31,8 @@ export default function TeacherWizardLayout({
         updateTeacherWizardStep(entityId, step)
       }}
       onComplete={async (entityId) => {
-        await completeTeacherWizard(entityId)
+        const ok = await finishTeacherWizard(entityId, dictionary)
+        if (!ok) throw new Error("WIZARD_INCOMPLETE")
       }}
       finalDestination="/teachers"
       wizardStepField="wizardStep"
