@@ -138,6 +138,14 @@ Announcements, Assignments, Classes, Classrooms, Events, Grades, Parents, Staff,
 - Call `revalidatePath()` or `redirect()` after mutations.
 - Return typed `ActionResponse<T>`.
 
+### Server action errors
+
+- Return an `ACTION_ERRORS` code (`actionError(ACTION_ERRORS.SAVE_FAILED)`), never `error.message`. A Zod or Prisma message is not a sentence for an admin.
+- Log the real error on the server (`console.error`) before returning the code.
+- In the form, toast `actionErrorMessage(result.error, dictionary, fallback)` from `@/lib/resolve-action-error`. It returns the translated sentence for the code, or the fallback instead of a raw `SNAKE_CASE` code.
+- In a `catch`, toast the translated fallback, never `err.message`.
+- Wizards finish through one function per entity (`students/wizard/finish.ts`, `teachers/wizard/finish.ts`), so the last step's button and the footer's skip-and-create behave the same way.
+
 ### Modal forms
 
 - Use `ModalFormLayout` for two-column header / form layout.
