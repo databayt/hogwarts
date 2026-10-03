@@ -22,9 +22,10 @@ export function getPersonalCompleteness(input: {
   hasFatherOrMother: boolean
 }): PersonalCompleteness {
   return {
-    hasName:
-      (input.firstName?.trim().length ?? 0) > 0 &&
-      (input.lastName?.trim().length ?? 0) > 0,
+    // A one-word name ("محمد") is a whole name in full-name schools — the
+    // family name lives on the father. Requiring lastName here blocked Create
+    // after the personal step had accepted it (hogwarts#424, #425).
+    hasName: (input.firstName?.trim().length ?? 0) > 0,
     hasParent: input.hasFatherOrMother,
   }
 }

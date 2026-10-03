@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import { type LocationResult } from "@/lib/mapbox"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorToast } from "@/components/atom/toast"
@@ -83,17 +84,18 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
               const result = await updateStudentLocation(studentId, data)
               if (!result.success) {
                 ErrorToast(
-                  result.error || tRoot?.failedToSave || "Failed to save"
+                  actionErrorMessage(
+                    result.error,
+                    dictionary,
+                    tRoot?.failedToSave || "Failed to save"
+                  )
                 )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg =
-                err instanceof Error
-                  ? err.message
-                  : tRoot?.failedToSave || "Failed to save"
+              const msg = tRoot?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }

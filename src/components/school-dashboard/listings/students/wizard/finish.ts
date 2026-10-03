@@ -84,8 +84,12 @@ export async function finishStudentWizard(
       openCredentialsDialog("student", studentId, result.data.name)
     }
     return true
-  } catch (e) {
-    ErrorToast(e instanceof Error ? e.message : requirementsMsg)
+  } catch {
+    // A thrown action (network, server crash) carries technical text — show
+    // the translated generic message, never the raw exception.
+    ErrorToast(
+      (students?.failedToCreate as string | undefined) || requirementsMsg
+    )
     return false
   }
 }

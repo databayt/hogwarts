@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form"
 
 import type { NameFormat } from "@/lib/name-utils"
 import { composeFullName } from "@/lib/name-utils"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import {
@@ -142,17 +143,18 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
               )
               if (!result.success) {
                 ErrorToast(
-                  result.error || tRoot?.failedToSave || "Failed to save"
+                  actionErrorMessage(
+                    result.error,
+                    dictionary,
+                    tRoot?.failedToSave || "Failed to save"
+                  )
                 )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg =
-                err instanceof Error
-                  ? err.message
-                  : tRoot?.failedToSave || "Failed to save"
+              const msg = tRoot?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
