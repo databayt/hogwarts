@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import crypto from "crypto"
+import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
@@ -11,6 +12,7 @@ import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { EMPTY_TEACHER_DRAFT } from "../../empty-drafts"
 import type { TeacherWizardData } from "./use-teacher-wizard"
 
 /** Fetch full teacher data for the wizard */
@@ -196,6 +198,37 @@ export async function updateTeacherWizardStep(
     })
   } catch {
     // Non-critical, don't throw
+  }
+}
+
+/**
+ * The wizard's Close button — same contract as discardEmptyStudentDraft:
+ * the draft is deleted only while it is still EMPTY (empty-drafts.ts), and
+ * that check is the delete's own WHERE.
+ */
+export async function discardEmptyTeacherDraft(
+  teacherId: string
+): Promise<ActionResponse<{ discarded: boolean }>> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const { count } = await db.teacher.deleteMany({
+      where: { id: teacherId, schoolId, ...EMPTY_TEACHER_DRAFT },
+    })
+    if (count > 0) revalidatePath("/[lang]/s/[subdomain]/teachers", "page")
+
+    return { success: true, data: { discarded: count > 0 } }
+  } catch (error) {
+    console.error("[teacher-wizard]", error)
+    return actionError(ACTION_ERRORS.TEACHER_DELETE_FAILED)
   }
 }
 

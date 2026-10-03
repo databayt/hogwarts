@@ -42,6 +42,10 @@
       "schedule": "0 2 * * *"
     },
     {
+      "path": "/api/cron/purge-empty-drafts",
+      "schedule": "0 2 * * *"
+    },
+    {
       "path": "/api/cron/event-reminders",
       "schedule": "0 8 * * *"
     },

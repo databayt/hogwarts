@@ -107,6 +107,8 @@ import { getLabels, getNames } from "@/components/translation/person"
 import { search } from "@/components/translation/search"
 import { fullName } from "@/components/translation/util"
 
+import { hideEmptyStudentDrafts } from "../empty-drafts"
+
 // ============================================================================
 // Status Helpers
 // ============================================================================
@@ -1114,13 +1116,15 @@ export async function getStudents(
       }
     }
 
-    const where: any = withArchiveScope(
-      {
-        schoolId,
-        ...nameFilter,
-        ...(sp.status ? buildStudentStatusFilter(sp.status) : {}),
-      },
-      sp.scope
+    const where: any = hideEmptyStudentDrafts(
+      withArchiveScope(
+        {
+          schoolId,
+          ...nameFilter,
+          ...(sp.status ? buildStudentStatusFilter(sp.status) : {}),
+        },
+        sp.scope
+      )
     )
 
     // Build pagination

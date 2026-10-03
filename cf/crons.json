@@ -21,7 +21,8 @@
       "/api/cron/cleanup-trip-locations"
     ],
     "0 2 * * *": [
-      "/api/cron/cleanup-notifications"
+      "/api/cron/cleanup-notifications",
+      "/api/cron/purge-empty-drafts"
     ],
     "0 8 * * *": [
       "/api/cron/event-reminders",

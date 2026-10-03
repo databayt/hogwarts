@@ -91,6 +91,9 @@ interface WizardLayoutProps {
   showSave?: boolean
   /** Callback to complete the wizard early (skip remaining optional steps) */
   onComplete?: (entityId: string) => Promise<void>
+  /** Runs before Close navigates away — e.g. drop a draft nobody filled in.
+   *  A failure is swallowed: Close must always close. */
+  onClose?: (entityId: string) => Promise<unknown> | void
   /** Label for the skip button (default: "Skip & Create", use "Skip & Update" for edit mode) */
   skipLabel?: string
   /** Field name on entity data that tracks wizard progress (e.g., "wizardStep").
@@ -126,6 +129,7 @@ function WizardLayoutContent({
   showHelp = true,
   showSave = true,
   onComplete,
+  onClose,
   skipLabel,
   wizardStepField,
   children,
@@ -164,9 +168,16 @@ function WizardLayoutContent({
   const resolvedCloseDestination =
     closeDestination ?? basePath.replace(/\/add$/, "")
 
-  const handleClose = useCallback(() => {
+  const handleClose = useCallback(async () => {
+    if (entityId && onClose) {
+      try {
+        await onClose(entityId)
+      } catch {
+        // Close must always close.
+      }
+    }
     router.push(`/${locale}${resolvedCloseDestination}`)
-  }, [router, locale, resolvedCloseDestination])
+  }, [entityId, onClose, router, locale, resolvedCloseDestination])
 
   const handleSave = useCallback(async () => {
     if (!onSave || isSaving) return

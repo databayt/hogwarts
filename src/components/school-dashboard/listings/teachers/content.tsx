@@ -17,6 +17,8 @@ import { localize } from "@/components/translation/localize"
 import { getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
+import { hideEmptyTeacherDrafts } from "../empty-drafts"
+
 interface Props {
   searchParams: Promise<SearchParams>
   dictionary?: Dictionary["school"]
@@ -37,7 +39,7 @@ export default async function TeachersContent({
   const teacherModel = getModel("teacher")
   if (schoolId && teacherModel) {
     // Build where clause with filters
-    const where: any = {
+    const baseWhere: any = {
       schoolId,
       ...(sp.name
         ? {
@@ -60,6 +62,8 @@ export default async function TeachersContent({
           ? { wizardStep: null, employmentStatus: sp.status }
           : {}),
     }
+
+    const where = hideEmptyTeacherDrafts(baseWhere)
 
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
@@ -138,7 +142,12 @@ export default async function TeachersContent({
         name: nameTranslations.get(rawName) || rawName,
         firstName: t.firstName || "",
         lastName: t.lastName || "",
-        emailAddress: t.emailAddress || "-",
+        // A draft carries a "@draft.internal" placeholder until the contact
+        // step saves a real address — never show it.
+        emailAddress:
+          t.emailAddress && !t.emailAddress.endsWith("@draft.internal")
+            ? t.emailAddress
+            : "-",
         phone: t.phoneNumbers?.[0]?.phoneNumber || null,
         department: primaryDept
           ? (departmentNameById.get(primaryDept.id) ??

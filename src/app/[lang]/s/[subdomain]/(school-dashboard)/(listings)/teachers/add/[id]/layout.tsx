@@ -6,7 +6,10 @@ import React from "react"
 
 import { WizardLayout } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { updateTeacherWizardStep } from "@/components/school-dashboard/listings/teachers/wizard/actions"
+import {
+  discardEmptyTeacherDraft,
+  updateTeacherWizardStep,
+} from "@/components/school-dashboard/listings/teachers/wizard/actions"
 import { TEACHER_WIZARD_CONFIG } from "@/components/school-dashboard/listings/teachers/wizard/config"
 import { finishTeacherWizard } from "@/components/school-dashboard/listings/teachers/wizard/finish"
 import {
@@ -30,6 +33,7 @@ export default function TeacherWizardLayout({
       onStepChange={(entityId, step) => {
         updateTeacherWizardStep(entityId, step)
       }}
+      onClose={(entityId) => discardEmptyTeacherDraft(entityId)}
       onComplete={async (entityId) => {
         const ok = await finishTeacherWizard(entityId, dictionary)
         if (!ok) throw new Error("WIZARD_INCOMPLETE")

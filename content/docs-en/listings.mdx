@@ -146,6 +146,12 @@ Announcements, Assignments, Classes, Classrooms, Events, Grades, Parents, Staff,
 - In a `catch`, toast the translated fallback, never `err.message`.
 - Wizards finish through one function per entity (`students/wizard/finish.ts`, `teachers/wizard/finish.ts`), so the last step's button and the footer's skip-and-create behave the same way.
 
+### Wizard drafts
+
+- Opening an add wizard creates the row up front, because the URL carries its id.
+- Closing before entering anything deletes it. The lists never show an empty draft, and a nightly cron removes the ones a closed tab left behind (`empty-drafts.ts` holds the single rule).
+- A draft with any data is kept and can be resumed from the list.
+
 ### Modal forms
 
 - Use `ModalFormLayout` for two-column header / form layout.

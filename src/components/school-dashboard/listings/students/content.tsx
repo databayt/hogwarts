@@ -21,6 +21,8 @@ import { StudentsTable } from "@/components/school-dashboard/listings/students/t
 import { getLabels, getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
+import { hideEmptyStudentDrafts } from "../empty-drafts"
+
 interface Props {
   searchParams: Promise<SearchParams>
   school?: any
@@ -144,7 +146,9 @@ export default async function StudentsContent({
           }
         : {}),
     }
-    const where: any = withArchiveScope(baseFilters, sp.scope)
+    const where: any = hideEmptyStudentDrafts(
+      withArchiveScope(baseFilters, sp.scope)
+    )
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
     const orderBy = buildStudentOrderBy(sp.sort)

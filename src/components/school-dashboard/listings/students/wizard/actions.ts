@@ -13,6 +13,7 @@ import { refreshPage } from "@/lib/refresh-page"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { notifyProvisionedStudent } from "@/lib/student-provisioning-notify"
 
+import { EMPTY_STUDENT_DRAFT } from "../../empty-drafts"
 import { authorizeWizardAction } from "./authorize"
 import type { StudentWizardData } from "./use-student-wizard"
 import {
@@ -357,6 +358,35 @@ export async function updateStudentWizardStep(
     })
   } catch {
     // Non-critical, don't throw
+  }
+}
+
+/**
+ * The wizard's Close button. Opening "Add student" creates the row up front,
+ * so closing before typing anything left a nameless student in the list.
+ * Deletes the draft only while it is still EMPTY (see empty-drafts.ts) — the
+ * check is the delete's own WHERE, so a draft with any data is never touched
+ * and an enrolled student (wizardStep null) can't match.
+ */
+export async function discardEmptyStudentDraft(
+  studentId: string
+): Promise<ActionResponse<{ discarded: boolean }>> {
+  try {
+    const authz = await authorizeWizardAction("create")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
+
+    const { count } = await db.student.deleteMany({
+      where: { id: studentId, schoolId, ...EMPTY_STUDENT_DRAFT },
+    })
+    if (count > 0) revalidatePath("/[lang]/s/[subdomain]/students", "page")
+
+    return { success: true, data: { discarded: count > 0 } }
+  } catch (error) {
+    return actionError(
+      ACTION_ERRORS.STUDENT_DELETE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
