@@ -108,6 +108,8 @@ The action signature must accept `(prevState, formData)`.
 - `createWizardProvider` ships data with retry; the step reads `initialData`.
 - Application steps expose `{ saveAndNext: () => Promise<boolean> }` via `forwardRef`.
 - `onValidChange` callback emits validity to the parent for next-button enable/disable.
+- Pass `steps={{ slug: Component }}` to `WizardLayout` and steps switch in the browser (pushState, kept mounted under `<Activity>`). Next then saves in the background through `useWizardRuntime()`: `advance` moves on unless client validation fails at once, `drain` waits for every save before the wizard finishes. The listing "+" uses `useDraftLauncher` to open the wizard before its draft row is written.
+- Under `steps`, an effect that initialises from the loaded row runs once per record. A hidden step re-runs its effects when shown again.
 
 ## Anti-patterns
 
