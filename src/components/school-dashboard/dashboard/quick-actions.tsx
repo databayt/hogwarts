@@ -3,10 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
-import { BlurImage } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
+import { BlurImage } from "@/components/atom/blur-image"
 import { AnthropicIcons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -197,7 +197,7 @@ export function QuickActions({
               {tile ? (
                 <BlurImage
                   src={`/tiles/${tile}.png`}
-        plain
+                  plain
                   alt=""
                   width={64}
                   height={64}
