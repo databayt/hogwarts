@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { isDraftId } from "@/lib/draft-id"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -49,10 +50,15 @@ export async function getParentForWizard(
 }
 
 /** Create a draft guardian record to start the wizard */
-export async function createDraftParent(): Promise<
-  ActionResponse<{ id: string }>
-> {
+export async function createDraftParent(
+  /** Minted by the browser so the wizard can open before this INSERT lands */
+  id?: string
+): Promise<ActionResponse<{ id: string }>> {
   try {
+    if (id !== undefined && !isDraftId(id)) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
+
     const session = await auth()
     if (!session?.user) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
@@ -65,6 +71,7 @@ export async function createDraftParent(): Promise<
 
     const guardian = await db.guardian.create({
       data: {
+        ...(id ? { id } : {}),
         schoolId,
         firstName: "",
         lastName: "",

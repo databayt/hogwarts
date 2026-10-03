@@ -20,7 +20,7 @@ export default function AttachmentsContent() {
   const params = useParams()
   const studentId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
-  const { isLoading, updateData } = useStudentWizard()
+  const { isLoading, updateData, isFreshDraft } = useStudentWizard()
   const [isValid, setIsValid] = useState(true)
   const [initialData, setInitialData] = useState<Record<string, string>>()
   const { dictionary } = useDictionary()
@@ -33,7 +33,13 @@ export default function AttachmentsContent() {
   // flag, which React 19 reports as "Cannot update a component while rendering
   // a different component" and "state update on a component that hasn't
   // mounted yet" on every wizard open.
+  //
+  // Once per student: a hidden step re-runs its effects when shown again. A
+  // draft opened from "+" this session has no documents yet — no fetch.
+  const fetchedForRef = useRef<string | null>(null)
   useEffect(() => {
+    if (isFreshDraft || fetchedForRef.current === studentId) return
+    fetchedForRef.current = studentId
     let cancelled = false
     getStudentAttachments(studentId).then((res) => {
       if (!cancelled && res.success && res.data) {
@@ -43,7 +49,7 @@ export default function AttachmentsContent() {
     return () => {
       cancelled = true
     }
-  }, [studentId])
+  }, [studentId, isFreshDraft])
 
   // AI auto-fill: fire-and-forget extraction on document upload
   const handleDocumentUploaded = useCallback(

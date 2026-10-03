@@ -30,9 +30,13 @@ export default function InformationContent() {
 
   const nameFormat = (data?.nameFormat as NameFormat) ?? "full"
 
-  // Set initial validity from loaded data
+  // Set initial validity from loaded data — once per load. A hidden step
+  // re-runs its effects when shown again; re-applying the loaded row then
+  // would override the form's own (current) validity.
+  const validityFromRef = useRef<string | null>(null)
   useEffect(() => {
-    if (data) {
+    if (data && validityFromRef.current !== data.id) {
+      validityFromRef.current = data.id
       if (nameFormat === "full") {
         const full = composeFullName(data.firstName, null, data.lastName)
         setIsValid(full.trim().length >= 1)

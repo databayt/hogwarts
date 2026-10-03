@@ -32,6 +32,7 @@ export default function ContactContent() {
   return (
     <WizardStep
       entityId={parentId}
+      finalDestination="/parents"
       isValid={isValid}
       formRef={formRef}
       isLoading={isLoading}

@@ -8,6 +8,7 @@ import { after } from "next/server"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { isDraftId } from "@/lib/draft-id"
 import { PARENT_GUARDIAN_TYPE_NAMES } from "@/lib/guardian-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import { provisionStudent } from "@/lib/student-provisioning"
@@ -97,16 +98,21 @@ export async function getStudentForWizard(
 }
 
 /** Create a draft student record to start the wizard */
-export async function createDraftStudent(): Promise<
-  ActionResponse<{ id: string }>
-> {
+export async function createDraftStudent(
+  /** Minted by the browser so the wizard can open before this INSERT lands */
+  id?: string
+): Promise<ActionResponse<{ id: string }>> {
   try {
+    if (id !== undefined && !isDraftId(id)) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
     const authz = await authorizeWizardAction("create")
     if (!authz.ok) return authz.response
     const { schoolId } = authz
 
     const student = await db.student.create({
       data: {
+        ...(id ? { id } : {}),
         schoolId,
         firstName: "",
         lastName: "",

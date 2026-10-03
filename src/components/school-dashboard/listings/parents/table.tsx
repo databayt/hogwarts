@@ -32,6 +32,7 @@ import {
   GridEmptyState,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
+import { useDraftLauncher } from "@/components/form/wizard"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -40,6 +41,7 @@ import { deleteParent, getParents, getParentsCSV } from "./actions"
 import { getParentColumns, type ParentRow } from "./columns"
 import { LinkChildDialog } from "./link-child-dialog"
 import { createDraftParent } from "./wizard/actions"
+import { emptyParentDraft } from "./wizard/use-parent-wizard"
 
 interface ParentsTableProps {
   initialData: ParentRow[]
@@ -191,17 +193,13 @@ function ParentsTableInner({
     },
   })
 
-  // Handle create via wizard
-  const handleCreate = useCallback(async () => {
-    const result = await createDraftParent()
-    if (result.success && result.data) {
-      router.push(`/${lang}/parents/add/${result.data.id}/information`)
-    } else {
-      ErrorToast(
-        result.error || dictionary?.failedToCreate || "Failed to create"
-      )
-    }
-  }, [router, lang])
+  // Handle create via wizard — opens at once; the draft INSERT runs behind it.
+  const { launch: handleCreate } = useDraftLauncher({
+    firstStepHref: (id) => `/${lang}/parents/add/${id}/information`,
+    create: createDraftParent,
+    seed: emptyParentDraft,
+    disabled: !permissions.showAddButton,
+  })
 
   // Handle edit
   const handleEdit = useCallback(

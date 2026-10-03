@@ -2,23 +2,42 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useRef, useState } from "react"
+import React, { Suspense, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useTeacherWizard } from "../use-teacher-wizard"
-import type { GradeWithSubjects } from "./actions"
 import { ExpertiseForm } from "./form"
+import { useTeacherExpertiseGrades } from "./resources"
 
-interface ExpertiseContentProps {
-  grades: GradeWithSubjects[]
+export default function ExpertiseContent() {
+  return (
+    <Suspense
+      fallback={
+        <FormLayout>
+          <div className="space-y-3">
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+          </div>
+        </FormLayout>
+      }
+    >
+      <ExpertiseStep />
+    </Suspense>
+  )
 }
 
-export default function ExpertiseContent({ grades }: ExpertiseContentProps) {
+function ExpertiseStep() {
+  const grades = useTeacherExpertiseGrades()
   const params = useParams()
   const teacherId = params.id as string
   const formRef = useRef<WizardFormRef>(null)

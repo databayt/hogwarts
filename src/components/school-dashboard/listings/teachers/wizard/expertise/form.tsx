@@ -8,6 +8,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react"
@@ -61,8 +62,14 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
       new Set()
     )
 
+    // Apply the saved selection once. `initialData` is rebuilt on every
+    // parent render, and a hidden step re-runs its effects when shown again —
+    // either would otherwise wipe what the admin has just ticked.
+    const appliedInitialRef = useRef(false)
     useEffect(() => {
+      if (appliedInitialRef.current) return
       if (initialData?.subjectExpertise && grades.length > 0) {
+        appliedInitialRef.current = true
         const primary = new Set<string>()
         const secondary = new Set<string>()
         const gradeIds = new Set<string>()

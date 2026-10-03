@@ -9,7 +9,7 @@ import { formatDate } from "@/lib/i18n-format"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
-import { WizardStep } from "@/components/form/wizard"
+import { useWizardRuntime, WizardStep } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
@@ -101,6 +101,7 @@ export default function AcademicContent() {
   const [isValid, setIsValid] = useState(true)
   const { setCustomNavigation } = useWizardValidation()
   const isSavingRef = useRef(false)
+  const runtime = useWizardRuntime()
 
   const { dictionary } = useDictionary()
   const students = (dictionary?.school as Record<string, unknown>)?.students as
@@ -116,9 +117,12 @@ export default function AcademicContent() {
   useEffect(() => {
     const handleNext = async () => {
       if (isSavingRef.current) return
+      const form = formRef.current
       isSavingRef.current = true
       try {
-        await formRef.current?.saveAndNext()
+        // Earlier steps saved in the background — all must land first.
+        if (runtime && !(await runtime.drain())) return
+        await form?.saveAndNext()
         const ok = await finishStudentWizard(studentId, dictionary)
         if (ok) router.push(`/${locale}/students`)
       } catch {
@@ -130,7 +134,7 @@ export default function AcademicContent() {
 
     setCustomNavigation({ onNext: handleNext })
     return () => setCustomNavigation(undefined)
-  }, [studentId, router, locale, setCustomNavigation, dictionary])
+  }, [studentId, router, locale, setCustomNavigation, dictionary, runtime])
 
   return (
     <WizardStep

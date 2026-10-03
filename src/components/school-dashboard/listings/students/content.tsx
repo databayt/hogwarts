@@ -7,6 +7,7 @@ import { withArchiveScope } from "@/lib/archive-scope"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
+import { schoolNameFormat } from "@/lib/school-name-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -112,6 +113,9 @@ export default async function StudentsContent({
 }: Props) {
   const sp = await studentsSearchParams.parse(await searchParams)
   const { schoolId, role } = await getTenantContext()
+  // The add wizard opens on a browser-side seed and needs the school's name
+  // layout for it. Started now, awaited last — it overlaps the list queries.
+  const nameFormatPromise = schoolNameFormat(schoolId)
   const permissions = getUIConfigForRole(role as Role | null | undefined)
 
   const effectiveSchoolId = school?.id || schoolId
@@ -259,6 +263,8 @@ export default async function StudentsContent({
     })
     total = count as number
   }
+  const nameFormat = await nameFormatPromise
+
   return (
     <StudentsTable
       initialData={data}
@@ -271,6 +277,7 @@ export default async function StudentsContent({
       scope={sp.scope}
       permissions={permissions}
       role={role ?? null}
+      nameFormat={nameFormat}
     />
   )
 }

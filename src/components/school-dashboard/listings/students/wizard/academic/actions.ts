@@ -207,7 +207,8 @@ export async function updateStudentAcademic(
 
     // Without enrollStudentInGradeClasses the student has empty timetables
     // and does not appear in attendance rosters.
-    if (parsed.sectionId) {
+    const enroll = async () => {
+      if (!parsed.sectionId) return
       const section = await db.section.findFirst({
         where: { id: parsed.sectionId, schoolId },
         select: { gradeId: true },
@@ -231,7 +232,8 @@ export async function updateStudentAcademic(
     // Founder contract: by the time this action returns, FeeAssignment rows
     // exist for every matching active FeeStructure. Awaited + transactional;
     // re-running the wizard finalize is idempotent (no duplicate rows).
-    if (parsed.academicGradeId) {
+    const assignFees = async () => {
+      if (!parsed.academicGradeId) return
       try {
         await ensureStudentFeeAssignments({
           schoolId,
@@ -248,6 +250,10 @@ export async function updateStudentAcademic(
         )
       }
     }
+
+    // Independent of each other (classes vs fee rows, each given its grade):
+    // run them side by side instead of paying both latencies in a row.
+    await Promise.all([enroll(), assignFees()])
 
     return noClassesWarning
       ? { success: true, warning: ACTION_ERRORS.NO_CLASSES_FOR_GRADE }

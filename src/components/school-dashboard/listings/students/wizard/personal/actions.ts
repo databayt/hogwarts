@@ -141,9 +141,21 @@ export async function getStudentPersonalGuardians(
     if (!authz.ok) return authz.response
     const { schoolId } = authz
 
+    // Phones ride along in the same query — a findMany per guardian used to
+    // add a sequential round trip for each parent.
     const studentGuardians = await db.studentGuardian.findMany({
       where: { studentId, schoolId },
-      include: { guardian: true, guardianType: true },
+      include: {
+        guardian: {
+          include: {
+            phoneNumbers: {
+              where: { schoolId },
+              orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+            },
+          },
+        },
+        guardianType: true,
+      },
     })
 
     const result: PersonalGuardianFormData = {
@@ -160,10 +172,7 @@ export async function getStudentPersonalGuardians(
       // capitalise them — a plain lowercase compare left every legacy
       // student's parents out of the edit form, inviting a duplicate re-entry.
       const typeName = canonicalGuardianRole(sg.guardianType.name)
-      const phones = await db.guardianPhoneNumber.findMany({
-        where: { guardianId: sg.guardianId, schoolId },
-        orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
-      })
+      const phones = sg.guardian.phoneNumbers
       const primary = phones.find((p) => p.phoneType !== "whatsapp")
       const whatsapp = phones.find((p) => p.phoneType === "whatsapp")
       const displayName = [sg.guardian.firstName, sg.guardian.lastName]

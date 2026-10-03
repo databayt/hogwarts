@@ -7,10 +7,18 @@ import React from "react"
 import { WizardLayout } from "@/components/form/wizard"
 import { updateParentWizardStep } from "@/components/school-dashboard/listings/parents/wizard/actions"
 import { PARENT_WIZARD_CONFIG } from "@/components/school-dashboard/listings/parents/wizard/config"
+import ContactContent from "@/components/school-dashboard/listings/parents/wizard/contact/content"
+import InformationContent from "@/components/school-dashboard/listings/parents/wizard/information/content"
 import {
   ParentWizardProvider,
   useParentWizard,
 } from "@/components/school-dashboard/listings/parents/wizard/use-parent-wizard"
+
+// Steps switch in the browser — no request between them (see WizardLayout).
+const STEPS = {
+  information: InformationContent,
+  contact: ContactContent,
+}
 
 export default function ParentWizardLayout({
   children,
@@ -23,9 +31,10 @@ export default function ParentWizardLayout({
       dataProvider={ParentWizardProvider}
       loadHook={useParentWizard}
       basePath="/parents/add"
-      onStepChange={(entityId, step) => {
+      onStepChange={(entityId, step) =>
         updateParentWizardStep(entityId, step)
-      }}
+      }
+      steps={STEPS}
       finalLabel="Complete"
     >
       {children}

@@ -62,6 +62,46 @@ export interface TeacherWizardData {
   }[]
 }
 
+/**
+ * What `getTeacherForWizard` returns for a row `createDraftTeacher` has just
+ * written — the wizard opens on this while the INSERT is still in flight.
+ * The email is a placeholder of the same kind the server stamps; the steps
+ * treat any `@draft.internal` address as empty.
+ */
+export function emptyTeacherDraft(
+  id: string,
+  nameFormat: string
+): TeacherWizardData {
+  return {
+    id,
+    schoolId: "",
+    nameFormat,
+    firstName: "",
+    lastName: "",
+    gender: null,
+    nationality: null,
+    emailAddress: `draft-${id.slice(-8)}@draft.internal`,
+    birthDate: null,
+    profilePhotoUrl: null,
+    employeeId: null,
+    joiningDate: null,
+    employmentStatus: "ACTIVE",
+    employmentType: "FULL_TIME",
+    contractStartDate: null,
+    contractEndDate: null,
+    currentAddress: null,
+    city: null,
+    state: null,
+    postalCode: null,
+    country: null,
+    wizardStep: "information",
+    phoneNumbers: [],
+    qualifications: [],
+    experiences: [],
+    subjectExpertise: [],
+  }
+}
+
 export const {
   Provider: TeacherWizardProvider,
   useWizardData: useTeacherWizard,

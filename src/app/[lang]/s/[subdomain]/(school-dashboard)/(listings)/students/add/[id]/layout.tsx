@@ -10,12 +10,24 @@ import {
   discardEmptyStudentDraft,
   updateStudentWizardStep,
 } from "@/components/school-dashboard/listings/students/wizard/actions"
+import AcademicContent from "@/components/school-dashboard/listings/students/wizard/academic/content"
+import AttachmentsContent from "@/components/school-dashboard/listings/students/wizard/attachments/content"
 import { STUDENT_WIZARD_CONFIG } from "@/components/school-dashboard/listings/students/wizard/config"
 import { finishStudentWizard } from "@/components/school-dashboard/listings/students/wizard/finish"
+import LocationContent from "@/components/school-dashboard/listings/students/wizard/location/content"
+import PersonalContent from "@/components/school-dashboard/listings/students/wizard/personal/content"
 import {
   StudentWizardProvider,
   useStudentWizard,
 } from "@/components/school-dashboard/listings/students/wizard/use-student-wizard"
+
+// Steps switch in the browser — no request between them (see WizardLayout).
+const STEPS = {
+  attachments: AttachmentsContent,
+  personal: PersonalContent,
+  location: LocationContent,
+  academic: AcademicContent,
+}
 
 export default function StudentWizardLayout({
   children,
@@ -46,9 +58,10 @@ export default function StudentWizardLayout({
       loadHook={useStudentWizard}
       basePath="/students/add"
       backLabel={wizard?.back}
-      onStepChange={(entityId, step) => {
+      onStepChange={(entityId, step) =>
         updateStudentWizardStep(entityId, step)
-      }}
+      }
+      steps={STEPS}
       onClose={(entityId) => discardEmptyStudentDraft(entityId)}
       onComplete={async (entityId) => {
         // Same finisher as the academic step's Next: warnings toasted, the

@@ -30,6 +30,7 @@ import {
   GridEmptyState,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
+import { useDraftLauncher } from "@/components/form/wizard"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -42,6 +43,7 @@ import {
 } from "./actions"
 import { getTeacherColumns, type TeacherRow } from "./columns"
 import { createDraftTeacher } from "./wizard/actions"
+import { emptyTeacherDraft } from "./wizard/use-teacher-wizard"
 
 interface TeachersTableProps {
   initialData: TeacherRow[]
@@ -50,6 +52,8 @@ interface TeachersTableProps {
   lang: Locale
   perPage?: number
   permissions?: UIPermissions
+  /** School name layout — seeds the add wizard */
+  nameFormat?: string
 }
 
 function TeachersTableInner({
@@ -59,6 +63,7 @@ function TeachersTableInner({
   lang,
   perPage = 20,
   permissions = FULL_UI_PERMISSIONS,
+  nameFormat = "full",
 }: TeachersTableProps) {
   const router = useRouter()
   const { dictionary: fullDict } = useDictionary()
@@ -205,19 +210,13 @@ function TeachersTableInner({
     [optimisticRemove, refresh, t.failedToDeleteTeacher]
   )
 
-  // Handle create via wizard
-  const handleCreate = useCallback(async () => {
-    const result = await createDraftTeacher()
-    if (result.success && result.data) {
-      router.push(`/${lang}/teachers/add/${result.data.id}/information`)
-    } else {
-      ErrorToast(
-        result.error ||
-          (dictionary as any)?.failedToCreate ||
-          "Failed to create"
-      )
-    }
-  }, [router, lang])
+  // Handle create via wizard — opens at once; the draft INSERT runs behind it.
+  const { launch: handleCreate } = useDraftLauncher({
+    firstStepHref: (id) => `/${lang}/teachers/add/${id}/information`,
+    create: createDraftTeacher,
+    seed: (id) => emptyTeacherDraft(id, nameFormat),
+    disabled: !permissions.showAddButton,
+  })
 
   // Handle edit
   const handleEdit = useCallback(

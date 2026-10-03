@@ -24,6 +24,26 @@ export interface ParentWizardData {
   }[]
 }
 
+/**
+ * What `getParentForWizard` returns for a row `createDraftParent` has just
+ * written — the wizard opens on this while the INSERT is still in flight.
+ */
+export function emptyParentDraft(id: string): ParentWizardData {
+  return {
+    id,
+    schoolId: "",
+    firstName: "",
+    lastName: "",
+    lang: "ar",
+    emailAddress: null,
+    teacherId: null,
+    profilePhotoUrl: null,
+    userId: null,
+    wizardStep: "information",
+    phoneNumbers: [],
+  }
+}
+
 export const {
   Provider: ParentWizardProvider,
   useWizardData: useParentWizard,

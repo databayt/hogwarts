@@ -32,6 +32,7 @@ import {
   GridEmptyState,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
+import { useDraftLauncher } from "@/components/form/wizard"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -42,6 +43,7 @@ import { bulkSyncStudentGrades, getStudents, getStudentsCSV } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
 import { PurgeDialog } from "./purge-dialog"
 import { createDraftStudent } from "./wizard/actions"
+import { emptyStudentDraft } from "./wizard/use-student-wizard"
 
 interface StudentsTableProps {
   initialData: StudentRow[]
@@ -58,6 +60,8 @@ interface StudentsTableProps {
    *  table (`placeStudents`: ADMIN / STAFF / DEVELOPER), which is narrower than
    *  the students-block edit right a TEACHER holds. */
   role?: string | null
+  /** School name layout — seeds the add wizard */
+  nameFormat?: string
 }
 
 function StudentsTableInner({
@@ -71,6 +75,7 @@ function StudentsTableInner({
   scope = "active",
   permissions = FULL_UI_PERMISSIONS,
   role = null,
+  nameFormat = "full",
 }: StudentsTableProps) {
   const router = useRouter()
 
@@ -312,19 +317,13 @@ function StudentsTableInner({
     }
   }, [refresh])
 
-  // Handle create via wizard
-  const handleCreate = useCallback(async () => {
-    const result = await createDraftStudent()
-    if (result.success && result.data) {
-      router.push(`/${lang}/students/add/${result.data.id}/attachments`)
-    } else {
-      ErrorToast(
-        result.error ||
-          (dictionary as Record<string, string> | undefined)?.failedToCreate ||
-          "Failed to create"
-      )
-    }
-  }, [router, lang])
+  // Handle create via wizard — opens at once; the draft INSERT runs behind it.
+  const { launch: handleCreate } = useDraftLauncher({
+    firstStepHref: (id) => `/${lang}/students/add/${id}/attachments`,
+    create: createDraftStudent,
+    seed: (id) => emptyStudentDraft(id, nameFormat),
+    disabled: !permissions.showAddButton,
+  })
 
   // Handle edit
   const handleEdit = useCallback(

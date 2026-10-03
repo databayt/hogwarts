@@ -87,6 +87,66 @@ export interface StudentWizardData {
   wizardStep: string | null
 }
 
+/**
+ * What `getStudentForWizard` returns for a row `createDraftStudent` has just
+ * written (its stub DOB and gender, the schema defaults) — the wizard opens
+ * on this while the INSERT is still in flight.
+ */
+export function emptyStudentDraft(
+  id: string,
+  nameFormat: string
+): StudentWizardData {
+  return {
+    id,
+    schoolId: "",
+    nameFormat,
+    firstName: "",
+    middleName: null,
+    lastName: "",
+    dateOfBirth: new Date("2000-01-01"),
+    gender: "male",
+    nationality: "SD",
+    profilePhotoUrl: null,
+    email: null,
+    mobileNumber: null,
+    alternatePhone: null,
+    currentAddress: null,
+    city: null,
+    state: null,
+    postalCode: null,
+    country: "SD",
+    emergencyContactName: null,
+    emergencyContactPhone: null,
+    emergencyContactRelation: null,
+    enrollmentDate: new Date(),
+    admissionNumber: null,
+    status: "ACTIVE",
+    studentType: "REGULAR",
+    category: null,
+    academicGradeId: null,
+    academicStreamId: null,
+    sectionId: null,
+    medicalConditions: null,
+    allergies: null,
+    medicationRequired: null,
+    doctorName: null,
+    doctorContact: null,
+    insuranceProvider: null,
+    insuranceNumber: null,
+    bloodGroup: null,
+    previousSchoolName: null,
+    previousSchoolAddress: null,
+    previousGrade: null,
+    transferCertificateNo: null,
+    transferDate: null,
+    previousAcademicRecord: null,
+    guardians: [],
+    applicationId: null,
+    application: null,
+    wizardStep: "attachments",
+  }
+}
+
 export const {
   Provider: StudentWizardProvider,
   useWizardData: useStudentWizard,

@@ -26,8 +26,13 @@ export default function ContactContent() {
   const t = wizard?.contact as Record<string, string> | undefined
   const [isValid, setIsValid] = useState(false)
 
+  // Initial validity from the loaded row — once per load. A hidden step
+  // re-runs its effects when shown again; re-applying the row's (draft
+  // placeholder) email then would disable Next over a valid typed address.
+  const validityFromRef = useRef<string | null>(null)
   useEffect(() => {
-    if (data) {
+    if (data && validityFromRef.current !== data.id) {
+      validityFromRef.current = data.id
       const email = data.emailAddress
       setIsValid(
         email.trim().length > 0 &&

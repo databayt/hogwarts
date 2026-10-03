@@ -3,7 +3,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useImperativeHandle, useTransition } from "react"
-import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus, Trash2 } from "lucide-react"
 import { useFieldArray, useForm } from "react-hook-form"
@@ -33,7 +32,6 @@ interface ContactFormProps {
 export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
   ({ parentId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
-    const router = useRouter()
     const { dictionary } = useDictionary()
     const d = dictionary?.school?.parents as Record<string, any> | undefined
 
@@ -90,8 +88,7 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
                 return
               }
 
-              // Redirect to parents list
-              router.push("/parents")
+              // WizardStep's finalDestination returns to the list.
               resolve()
             } catch (err) {
               const msg = err instanceof Error ? err.message : "Failed to save"

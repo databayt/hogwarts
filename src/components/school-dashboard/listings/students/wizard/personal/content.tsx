@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useWizardRuntime } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
@@ -30,7 +31,8 @@ export default function PersonalContent() {
   const { locale, isRTL } = useLocale()
   const studentId = params.id as string
 
-  const { data, isLoading } = useStudentWizard()
+  const { data, isLoading, isFreshDraft } = useStudentWizard()
+  const runtime = useWizardRuntime()
   const { dictionary } = useDictionary()
   const students = (dictionary?.school as Record<string, unknown>)?.students as
     | Record<string, unknown>
@@ -63,8 +65,14 @@ export default function PersonalContent() {
   const initialGender = isDraft ? undefined : (data?.gender ?? undefined)
 
   // Load existing guardian data (not included in the wizard provider cache).
+  // Once per student — a hidden step re-runs its effects when shown again, and
+  // a refetch would reset the guardian form over what was typed. A draft
+  // opened from "+" this session has no guardians yet: nothing to fetch.
+  const guardiansForRef = useRef<string | null>(null)
   useEffect(() => {
-    if (!studentId) return
+    if (!studentId || isFreshDraft || guardiansForRef.current === studentId)
+      return
+    guardiansForRef.current = studentId
     getStudentPersonalGuardians(studentId).then((result) => {
       if (result.success && result.data) {
         setGuardianInitial(result.data)
@@ -74,11 +82,14 @@ export default function PersonalContent() {
         )
       }
     })
-  }, [studentId])
+  }, [studentId, isFreshDraft])
 
-  // Compute initial student validity from the loaded data.
+  // Compute initial student validity from the loaded data — once per student,
+  // for the same reason (it would override the form's current validity).
+  const validityFromRef = useRef<string | null>(null)
   useEffect(() => {
-    if (!data) return
+    if (!data || validityFromRef.current === data.id) return
+    validityFromRef.current = data.id
     if (nameFormat === "full") {
       const full = composeFullName(
         data.firstName,
@@ -96,38 +107,55 @@ export default function PersonalContent() {
   // Admins press Next from the Father/Mother tab, where the student form is
   // hidden — a student-side failure stopped the save with nothing on screen
   // (hogwarts#424, #425). Bring the student tab back so its error shows.
-  const saveStudentTab = useCallback(async () => {
-    if (!studentFormRef.current) return
-    try {
-      await studentFormRef.current.saveAndNext()
-    } catch (error) {
-      setActiveTab("student")
-      throw error
-    }
-  }, [])
-
-  // Sequential save: Student sub-form first, then Guardian (father+mother
-  // persisted together in a single transaction). Both must succeed to advance.
-  const onNext = useCallback(async () => {
-    try {
-      await saveStudentTab()
-      if (guardianFormRef.current) {
-        await guardianFormRef.current.saveAndNext()
+  //
+  // The handles are taken by the caller at click time: once the step is
+  // hidden its refs detach, but the handles keep working.
+  const saveBoth = useCallback(
+    async (student: WizardFormRef | null, guardian: WizardFormRef | null) => {
+      if (student) {
+        try {
+          await student.saveAndNext()
+        } catch (error) {
+          setActiveTab("student")
+          throw error
+        }
       }
-      router.push(`/${locale}/students/add/${studentId}/location`)
+      // Guardian (father+mother) persisted together in a single transaction.
+      if (guardian) await guardian.saveAndNext()
+    },
+    []
+  )
+
+  // Optimistic: location paints now; both saves finish behind it, and a
+  // failure brings this step back with its error (see wizard-runtime.tsx).
+  const onNext = useCallback(async () => {
+    const student = studentFormRef.current
+    const guardian = guardianFormRef.current
+    const next = `/${locale}/students/add/${studentId}/location`
+    try {
+      if (runtime) {
+        await runtime.advance(next, () => saveBoth(student, guardian))
+      } else {
+        await saveBoth(student, guardian)
+        router.push(next)
+      }
     } catch (error) {
       console.error("Error saving personal step:", error)
     }
-  }, [locale, studentId, router, saveStudentTab])
+  }, [locale, studentId, router, runtime, saveBoth])
 
   // Save without advancing. Footer's save-and-skip (Bookmark) icon awaits this
   // and only redirects on success — must re-throw on failure.
   const onSaveStep = useCallback(async () => {
-    await saveStudentTab()
-    if (guardianFormRef.current) {
-      await guardianFormRef.current.saveAndNext()
-    }
-  }, [saveStudentTab])
+    const student = studentFormRef.current
+    const guardian = guardianFormRef.current
+    if (!runtime) return saveBoth(student, guardian)
+    const saved = await runtime.enqueue(
+      () => saveBoth(student, guardian),
+      window.location.pathname
+    )
+    if (!saved) throw new Error("SAVE_FAILED")
+  }, [runtime, saveBoth])
 
   // Wire validity + custom onNext + onSave into the wizard footer.
   useEffect(() => {

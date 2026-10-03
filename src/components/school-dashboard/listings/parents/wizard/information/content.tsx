@@ -22,13 +22,16 @@ export default function InformationContent() {
   const { data, isLoading } = useParentWizard()
   const [isValid, setIsValid] = useState(false)
 
-  // Set initial validity from loaded data
+  // Set initial validity from loaded data — once per load. A hidden step
+  // re-runs its effects when shown again; re-applying the loaded row then
+  // would override the form's own (current) validity.
+  const validityFromRef = useRef<string | null>(null)
   useEffect(() => {
-    if (data) {
-      setIsValid(
-        data.firstName.trim().length >= 1 && data.lastName.trim().length >= 1
-      )
-    }
+    if (!data || validityFromRef.current === data.id) return
+    validityFromRef.current = data.id
+    setIsValid(
+      data.firstName.trim().length >= 1 && data.lastName.trim().length >= 1
+    )
   }, [data])
 
   return (
