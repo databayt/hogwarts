@@ -38,5 +38,17 @@ export { WizardLayout } from "./wizard-layout"
 // Step wrapper
 export { WizardStep } from "./wizard-step"
 
+// Runtime: in-browser step switching + ordered background saves
+export { useWizardRuntime, withLocale } from "./wizard-runtime"
+
+// Drafts opened from "+" before the server has written them
+export {
+  mintDraftId,
+  startDraft,
+  peekDraft,
+  type DraftResult,
+} from "./draft-store"
+export { useDraftLauncher } from "./use-draft-launcher"
+
 // Tabs
 export { WizardTabs, type WizardTab } from "./wizard-tabs"

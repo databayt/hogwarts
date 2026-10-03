@@ -3,16 +3,18 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
+  Activity,
   ReactNode,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, usePathname, useRouter } from "next/navigation"
 
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ErrorToast } from "@/components/atom/toast"
 import { FormFooter } from "@/components/form/footer"
 import type { StepConfig } from "@/components/form/footer"
 import {
@@ -25,6 +27,7 @@ import { ErrorBoundary } from "@/components/onboarding/error-boundary"
 
 import type { WizardConfig } from "./config"
 import { resolveFinalLabel, resolveGroupLabels } from "./config"
+import { useWizardRuntime, WizardRuntimeProvider } from "./wizard-runtime"
 
 /**
  * Generic Wizard Layout
@@ -71,8 +74,17 @@ interface WizardLayoutProps {
   basePath: string
   /** URL param name for the entity ID (default: "id") */
   idParam?: string
-  /** Callback when navigating to a new step (e.g., to persist wizardStep) */
-  onStepChange?: (entityId: string, step: string) => void
+  /** Persist progress when the user moves forward to a new step (e.g. the
+   *  wizardStep column). Runs in the save queue; skipped in edit mode. */
+  onStepChange?: (entityId: string, step: string) => unknown
+  /**
+   * Step components keyed by slug. When given, steps switch in the browser:
+   * the layout renders the step for the current path itself (route
+   * `children` are ignored — the step pages stay for deep links and
+   * refreshes), visited steps stay mounted under `<Activity>` so Back keeps
+   * what was typed, and the next step pre-renders so its code is ready.
+   */
+  steps?: Record<string, React.ComponentType>
   /** Final step button label */
   finalLabel?: string
   /** Back button label override (defaults to dictionary.school.onboarding.back) */
@@ -132,10 +144,16 @@ function WizardLayoutContent({
   onClose,
   skipLabel,
   wizardStepField,
+  steps,
+  scrollRef,
   children,
-}: Omit<WizardLayoutProps, "dataProvider">) {
+}: Omit<WizardLayoutProps, "dataProvider"> & {
+  scrollRef: React.RefObject<HTMLDivElement | null>
+}) {
   const params = useParams()
+  const pathname = usePathname()
   const router = useRouter()
+  const runtime = useWizardRuntime()
   const { isLoading, error, loadData, reload, data } = loadHook()
   const { dictionary } = useDictionary()
   const { locale } = useLocale()
@@ -169,6 +187,10 @@ function WizardLayoutContent({
     closeDestination ?? basePath.replace(/\/add$/, "")
 
   const handleClose = useCallback(async () => {
+    // Let the draft INSERT and any save still in flight land first — the
+    // discard below matches the row as it really is, and nothing typed is
+    // lost to a save that was cut off.
+    await runtime?.drain({ revealFailure: false })
     if (entityId && onClose) {
       try {
         await onClose(entityId)
@@ -177,7 +199,7 @@ function WizardLayoutContent({
       }
     }
     router.push(`/${locale}${resolvedCloseDestination}`)
-  }, [entityId, onClose, router, locale, resolvedCloseDestination])
+  }, [entityId, onClose, router, locale, resolvedCloseDestination, runtime])
 
   const handleSave = useCallback(async () => {
     if (!onSave || isSaving) return
@@ -189,14 +211,56 @@ function WizardLayoutContent({
     }
   }, [onSave, isSaving])
 
-  const handleStepChange = useCallback(
-    (step: string) => {
-      if (entityId && onStepChange) {
-        onStepChange(entityId, step)
-      }
-    },
-    [entityId, onStepChange]
+  // The step in the URL. With `steps`, this — not the route — picks what
+  // renders, so a pushState step switch costs no request.
+  const pathStep = pathname?.split("/").pop() ?? ""
+  const currentStep = config.steps.includes(pathStep) ? pathStep : null
+  const currentIndex = currentStep ? config.steps.indexOf(currentStep) : -1
+
+  // Persist progress whenever the user reaches a step further than before.
+  // (Every step registers custom navigation, so the footer's own
+  // onStepChange path never ran and the wizard could not resume.)
+  const furthestRef = useRef(currentIndex)
+  useEffect(() => {
+    if (!entityId || !onStepChange || !currentStep || isEditMode) return
+    if (currentIndex <= furthestRef.current) return
+    furthestRef.current = currentIndex
+    runtime?.enqueue(() => onStepChange(entityId, currentStep))
+  }, [entityId, onStepChange, currentStep, currentIndex, isEditMode, runtime])
+
+  // A step switch keeps the overlay's scroll position; start each at the top.
+  useEffect(() => {
+    if (steps) scrollRef.current?.scrollTo({ top: 0 })
+  }, [currentStep, steps, scrollRef])
+
+  // A draft opened from "+" is written in the background. If that INSERT
+  // fails (no permission, no school), nothing can be saved: say so, leave.
+  const draftCreated = runtime?.draftCreated
+  useEffect(() => {
+    let cancelled = false
+    draftCreated?.then((result) => {
+      if (cancelled || result.success) return
+      ErrorToast(
+        actionErrorMessage(
+          result.error,
+          dictionary as any,
+          (dictionary as any)?.common?.error || "Something went wrong"
+        )
+      )
+      router.push(`/${locale}${resolvedCloseDestination}`)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [draftCreated, dictionary, router, locale, resolvedCloseDestination])
+
+  // Visited steps stay mounted (hidden) so Back is instant and keeps input.
+  const [visited, setVisited] = useState<string[]>(() =>
+    currentStep ? [currentStep] : []
   )
+  if (steps && currentStep && !visited.includes(currentStep)) {
+    setVisited([...visited, currentStep])
+  }
 
   const loadedIdRef = useRef<string | null>(null)
 
@@ -211,6 +275,8 @@ function WizardLayoutContent({
 
   const handleSkipToComplete = useCallback(async () => {
     if (!entityId) return
+    // Every optimistic save must have landed before the record is finished.
+    if (runtime && !(await runtime.drain())) return
     try {
       await onComplete?.(entityId)
       const dest = finalDestination || config.finalDestination
@@ -227,6 +293,7 @@ function WizardLayoutContent({
     config.finalDestination,
     router,
     locale,
+    runtime,
   ])
 
   const footer = (
@@ -242,14 +309,13 @@ function WizardLayoutContent({
       }
       backLabel={backLabel}
       finalDestination={finalDestination || config.finalDestination}
-      onStepChange={handleStepChange}
       showClose={showClose}
       onClose={handleClose}
       showLogo={showLogo}
       showHelp={showHelp}
       showSave={showSave}
       onSave={handleSave}
-      isSaving={isSaving}
+      isSaving={isSaving || (runtime?.pending ?? 0) > 0}
       requiredSteps={config.skipToComplete ? config.requiredSteps : undefined}
       onSkipToComplete={
         config.skipToComplete ? handleSkipToComplete : undefined
@@ -258,7 +324,11 @@ function WizardLayoutContent({
     />
   )
 
-  if (isLoading) {
+  // Steps read the row once, at mount (their forms take it as defaults), so
+  // in steps mode they never mount before it exists. `isLoading` alone is not
+  // enough: on a hard load the first render has no row yet and the loading
+  // flag set by the effect below can land after the steps have mounted.
+  if (isLoading || (steps && !data && !error)) {
     return (
       <div className="flex min-h-full items-center justify-center pb-24">
         <div className="mx-auto w-full max-w-5xl">
@@ -315,9 +385,31 @@ function WizardLayoutContent({
     )
   }
 
+  let body: ReactNode = children
+  if (steps && currentStep) {
+    const nextStep = config.steps[currentIndex + 1]
+    body = config.steps
+      .filter(
+        (step) =>
+          steps[step] &&
+          (step === currentStep || step === nextStep || visited.includes(step))
+      )
+      .map((step) => {
+        const Step = steps[step]
+        return (
+          <Activity
+            key={step}
+            mode={step === currentStep ? "visible" : "hidden"}
+          >
+            <Step />
+          </Activity>
+        )
+      })
+  }
+
   return (
     <div className="flex min-h-full items-center justify-center pb-24">
-      <div className="mx-auto w-full max-w-5xl">{children}</div>
+      <div className="mx-auto w-full max-w-5xl">{body}</div>
       {footer}
     </div>
   )
@@ -328,14 +420,32 @@ export function WizardLayout({
   children,
   ...contentProps
 }: WizardLayoutProps) {
+  const params = useParams()
+  const { locale } = useLocale()
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const entityId =
+    (params[contentProps.idParam ?? "id"] as string | undefined) ?? null
+  const scope = entityId ? `/${locale}${contentProps.basePath}/${entityId}` : null
+
   return (
-    <div className="bg-background fixed inset-0 z-50 overflow-y-auto">
+    <div
+      ref={scrollRef}
+      className="bg-background fixed inset-0 z-50 overflow-y-auto"
+    >
       <ErrorBoundary>
         <DataProvider>
           <WizardValidationProvider>
-            <WizardLayoutContent {...contentProps}>
-              {children}
-            </WizardLayoutContent>
+            <WizardRuntimeProvider
+              locale={locale}
+              scope={scope}
+              steps={contentProps.config.steps}
+              clientSteps={!!contentProps.steps}
+              entityId={entityId}
+            >
+              <WizardLayoutContent {...contentProps} scrollRef={scrollRef}>
+                {children}
+              </WizardLayoutContent>
+            </WizardRuntimeProvider>
           </WizardValidationProvider>
         </DataProvider>
       </ErrorBoundary>

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { formatRelativeTime } from "@/components/file/formatters"
 import { useWizardValidationOptional } from "@/components/form/template/wizard-validation-context"
+import { useWizardRuntime } from "@/components/form/wizard/wizard-runtime"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { ReportIssue } from "@/components/report-issue"
 
@@ -150,6 +151,10 @@ export function FormFooter({
   skipLabel,
 }: FormFooterProps) {
   const router = useRouter()
+  const runtime = useWizardRuntime()
+  // Inside a WizardLayout, steps switch in the browser (no round trip).
+  const go = (href: string) =>
+    runtime ? runtime.navigate(href) : router.push(href)
   const params = useParams()
   const pathname = usePathname()
   const { locale: hookLocale } = useLocale()
@@ -235,7 +240,7 @@ export function FormFooter({
       // Don't fire onStepChange on back: it triggers a fire-and-forget DB
       // write that delays the click handler and would decrement
       // school.onboardingStep, which should track the furthest step reached.
-      router.push(`/${locale}${basePath}/${entityId}/${prevStep}`)
+      go(`/${locale}${basePath}/${entityId}/${prevStep}`)
     }
   }
 
@@ -263,7 +268,7 @@ export function FormFooter({
     if (currentStepIndex < config.steps.length - 1) {
       const nextStep = config.steps[currentStepIndex + 1]
       onStepChange?.(nextStep)
-      router.push(`/${locale}${basePath}/${entityId}/${nextStep}`)
+      go(`/${locale}${basePath}/${entityId}/${nextStep}`)
     }
   }
 

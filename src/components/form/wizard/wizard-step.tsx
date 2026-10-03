@@ -11,6 +11,7 @@ import { useWizardValidation } from "@/components/form/template/wizard-validatio
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { WizardFormRef } from "./config"
+import { useWizardRuntime, withLocale } from "./wizard-runtime"
 
 /**
  * Generic Wizard Step Wrapper
@@ -84,6 +85,7 @@ export function WizardStep({
   const { locale } = useLocale()
   const { enableNext, disableNext, setCustomNavigation, setOnSave } =
     useWizardValidation()
+  const runtime = useWizardRuntime()
   const isSavingRef = useRef(false)
 
   // Control next button state based on form validity
@@ -102,19 +104,31 @@ export function WizardStep({
       return
     }
 
+    // Hrefs are passed unprefixed ("/teachers/add/…"); pushing them as-is
+    // sent every Next through the proxy's locale redirect.
+    const nextHref = nextStep ? withLocale(nextStep, locale) : null
+    const finalHref = finalDestination
+      ? withLocale(finalDestination, locale)
+      : null
+
     const handleNext = async () => {
       if (isSavingRef.current) return
+      // Take the form's handle now — a step that is hidden later detaches
+      // its ref, but the handle keeps working.
+      const form = formRef.current
       isSavingRef.current = true
       try {
-        await formRef.current?.saveAndNext()
-        if (nextStep) {
-          router.push(nextStep)
-        } else if (finalDestination) {
-          router.push(
-            finalDestination.startsWith(`/${locale}`)
-              ? finalDestination
-              : `/${locale}${finalDestination}`
-          )
+        if (runtime?.clientSteps && nextHref) {
+          // Optimistic: the next step paints now, this save finishes behind it.
+          await runtime.advance(nextHref, () => form?.saveAndNext())
+          return
+        }
+        if (runtime && !(await runtime.drain())) return
+        await form?.saveAndNext()
+        if (nextHref) {
+          router.push(nextHref)
+        } else if (finalHref) {
+          router.push(finalHref)
         }
       } catch {
         // Error handled in form
@@ -128,9 +142,18 @@ export function WizardStep({
     // Register save-only handler (saves without navigating)
     const handleSave = async () => {
       if (isSavingRef.current) return
+      const form = formRef.current
       isSavingRef.current = true
       try {
-        await formRef.current?.saveAndNext()
+        if (runtime) {
+          const saved = await runtime.enqueue(
+            () => form?.saveAndNext(),
+            window.location.pathname
+          )
+          if (!saved) throw new Error("SAVE_FAILED")
+        } else {
+          await form?.saveAndNext()
+        }
       } catch {
         // Error handled in form
       } finally {
@@ -153,6 +176,7 @@ export function WizardStep({
     setOnSave,
     formRef,
     isReviewStep,
+    runtime,
   ])
 
   if (isLoading) {

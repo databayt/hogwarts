@@ -11,6 +11,9 @@ import React, {
   useRef,
   useState,
 } from "react"
+import { useParams } from "next/navigation"
+
+import { peekDraft } from "./draft-store"
 
 /**
  * Generic Wizard Data Provider Factory
@@ -41,6 +44,9 @@ interface WizardDataContextValue<T> {
   updateData: (partial: Partial<T>) => void
   reload: () => Promise<void>
   clearError: () => void
+  /** True when the data is the seed of a draft opened from "+" this session —
+   *  nothing has been saved yet, so steps can skip their own mount fetches. */
+  isFreshDraft: boolean
 }
 
 interface CreateWizardProviderOptions<T> {
@@ -66,12 +72,25 @@ export function createWizardProvider<T>(
   >(undefined)
 
   function Provider({ children }: { children: ReactNode }) {
-    const [data, setData] = useState<T | null>(null)
+    // A draft opened from "+" arrives with its seed in the draft store: open
+    // on it in the first render, with no load round trip and no skeleton.
+    const params = useParams()
+    const [seeded] = useState(() => {
+      for (const value of Object.values(params ?? {})) {
+        if (typeof value !== "string") continue
+        const draft = peekDraft<T>(value)
+        if (draft) return { id: value, seed: draft.seed }
+      }
+      return null
+    })
+    const [data, setData] = useState<T | null>(seeded?.seed ?? null)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [lastId, setLastId] = useState<string | null>(null)
+    const [lastId, setLastId] = useState<string | null>(seeded?.id ?? null)
+    const [isFreshDraft, setIsFreshDraft] = useState(!!seeded)
     const mountedRef = useRef(true)
     const loadFnRef = useRef(loadFn)
+    const loadedRef = useRef(false)
 
     useEffect(() => {
       mountedRef.current = true
@@ -87,6 +106,12 @@ export function createWizardProvider<T>(
 
     const loadData = useCallback(
       async (id: string, retryCount = 0) => {
+        if (retryCount === 0 && seeded?.id === id && !loadedRef.current) {
+          loadedRef.current = true
+          return
+        }
+        loadedRef.current = true
+        setIsFreshDraft(false)
         setIsLoading(true)
         setError(null)
         setLastId(id)
@@ -139,7 +164,7 @@ export function createWizardProvider<T>(
           setIsLoading(false)
         }
       },
-      [maxRetries]
+      [maxRetries, seeded]
     )
 
     const reload = useCallback(async () => {
@@ -158,6 +183,7 @@ export function createWizardProvider<T>(
       updateData,
       reload,
       clearError,
+      isFreshDraft,
     }
 
     return (
