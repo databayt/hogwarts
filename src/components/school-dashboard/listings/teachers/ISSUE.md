@@ -2,7 +2,7 @@
 
 **Status:** 🟢 READY
 **Completion:** 85%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-10-03
 
 ---
 
@@ -21,6 +21,14 @@
 - [x] Row actions (View, Edit, Delete)
 - [x] RBAC authorization checks
 - [ ] Loading skeletons and empty states
+
+## Fixed 2026-10-03 (wizard, f29c39a22)
+
+- One-word names (full-name schools) save and finish; the server no longer requires a last name
+- A blank employee number is stored as NULL. `""` made every later teacher without a number fail at Create (unique per school)
+- Every wizard action returns an `ACTION_ERRORS` code, and toasts are translated (no Zod JSON, Prisma text or English literals)
+- Create from the step or the footer goes through `wizard/finish.ts`: a failure toasts and stays put, and success shows "Teacher added"
+- Open: the gender select defaults to Male on a new draft; the main teacher create/update in `actions.ts` (outside the wizard) still saves `employeeId` as given; grade chips read "G1…G12" in Arabic
 
 ## Known Issues
 
