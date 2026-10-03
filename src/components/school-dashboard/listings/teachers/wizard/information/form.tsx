@@ -166,6 +166,10 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
               name="birthDate"
               label={t?.dateOfBirth || "Date of Birth"}
               placeholder={t?.pickDate}
+              captionLayout="dropdown"
+              startMonth={new Date(1940, 0)}
+              endMonth={new Date()}
+              maxDate={new Date()}
               disabled={isPending}
             />
             <SelectField
