@@ -67,13 +67,8 @@ import { seedAllUsers } from "./auth"
 import { seedBanking } from "./banking"
 import { seedCatalogBooks } from "./catalog/books"
 import { seedCatalog } from "./catalog/index"
-import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
-import {
-  ensureSeedAssignments,
-  seedConference,
-  topUpExpertise,
-} from "./conference"
+import { seedConference } from "./conference"
 import { SEED_IS_LITE, SEED_IS_MEDIUM } from "./constants"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
@@ -95,6 +90,7 @@ import { seedSchoolWithBranding } from "./school"
 import { seedStaffMembers } from "./staff-members"
 import { seedStreamCourses, seedStreamEnrollments } from "./stream"
 import { seedSubjects } from "./subjects"
+import { seedAllTeaching } from "./teaching"
 import type { SeedContext } from "./types"
 import {
   logHeader,
@@ -118,12 +114,11 @@ import { seedWallets } from "./wallet"
 // output so ensure-demo.ts takes the fast path instead of re-growing the demo
 // to full on every deploy. Each bound sits safely below what that profile
 // produces (lite ~52 students; medium ~380; every profile ~400 exams).
-export const SEED_THRESHOLDS: { students: number; exams: number } =
-  SEED_IS_LITE
-    ? { students: 30, exams: 20 }
-    : SEED_IS_MEDIUM
-      ? { students: 250, exams: 50 }
-      : { students: 500, exams: 100 }
+export const SEED_THRESHOLDS: { students: number; exams: number } = SEED_IS_LITE
+  ? { students: 30, exams: 20 }
+  : SEED_IS_MEDIUM
+    ? { students: 250, exams: 50 }
+    : { students: 500, exams: 100 }
 
 export async function getDemoSeedStatus(
   prisma: PrismaClient,
@@ -320,17 +315,19 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     )
 
     // ========================================================================
-    // PHASE 6: CLASSES & ENROLLMENTS
+    // PHASE 6: SECTIONS & TEACHING
     // ========================================================================
-    // Scope classes + timetable to the ACTIVE term, not blindly Term 1.
+    // Scope teaching + timetable to the ACTIVE term, not blindly Term 1.
     // `seedTerms` derives which term is active from today's date, so a seed run
     // during the Term 2 window (Jan–Jun) marked Term 2 active while everything
     // below landed on Term 1 — `resolveActiveTerm` then read Term 2 and found
     // zero slots, rendering an empty grid on a school with 1,120 seeded slots.
     const term = terms.find((t) => t.isActive) ?? terms[0]
 
-    const classes = await measureDuration("Classes & Enrollments", () =>
-      seedAllClasses(
+    // Sections, placement and subject teachers (no classes — retired
+    // 2026-10-04); later phases set work for each subject a grade takes.
+    const gradeSubjects = await measureDuration("Sections & Teaching", () =>
+      seedAllTeaching(
         prisma,
         school.id,
         subjects,
@@ -338,11 +335,10 @@ export async function seedMain(externalPrisma?: PrismaClient) {
         teachers,
         students,
         classrooms,
-        periods,
         term
       )
     )
-    context.classes = classes
+    context.gradeSubjects = gradeSubjects
 
     // ========================================================================
     // PHASE 7: LMS / STREAM
@@ -372,7 +368,7 @@ export async function seedMain(externalPrisma?: PrismaClient) {
       seedAssignments(
         prisma,
         school.id,
-        classes,
+        gradeSubjects,
         teachers,
         term.startDate,
         term.endDate
@@ -380,7 +376,13 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     )
 
     await measureDuration("Submissions", () =>
-      seedAssignmentSubmissions(prisma, school.id, students, classes, teachers)
+      seedAssignmentSubmissions(
+        prisma,
+        school.id,
+        students,
+        gradeSubjects,
+        teachers
+      )
     )
 
     // ========================================================================
@@ -396,11 +398,11 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     // PHASE 10: EXAMS, QBANK & GRADES
     // ========================================================================
     await measureDuration("Exams", () =>
-      seedExams(prisma, school.id, subjects, classes, term)
+      seedExams(prisma, school.id, subjects, gradeSubjects, term)
     )
 
     await measureDuration("Exam Results", () =>
-      seedExamResults(prisma, school.id, students, classes)
+      seedExamResults(prisma, school.id, students, gradeSubjects)
     )
 
     await measureDuration("QBank", () =>
@@ -450,7 +452,7 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     // PHASE 13: OPERATIONS
     // ========================================================================
     await measureDuration("Attendance", () =>
-      seedAttendance(prisma, school.id, students, classes, teachers, periods)
+      seedAttendance(prisma, school.id, students, teachers, periods)
     )
 
     // Attendance excuses and interventions (depends on attendance records)
@@ -468,14 +470,7 @@ export async function seedMain(externalPrisma?: PrismaClient) {
       )
     )
 
-    // Subject teachers BEFORE the timetable: generation keeps a subject in a
-    // section to its assigned teacher, so assigning first gives the demo a
-    // timetable where each subject in a section has one teacher (the old
-    // slot-by-slot backfill scattered it across several).
-    await measureDuration("Subject teachers", async () => {
-      const testTeacherId = await topUpExpertise(prisma, school.id)
-      await ensureSeedAssignments(prisma, school.id, term.id, testTeacherId)
-    })
+    // (Subject teachers are assigned in Phase 6, before this timetable.)
 
     // Timetable comes from the PRODUCTION generator — the same path a real
     // school gets at onboarding — so the seed and onboarding share one source
@@ -520,7 +515,7 @@ export async function seedMain(externalPrisma?: PrismaClient) {
 
     // Gamification (badges, streaks, competitions)
     await measureDuration("Gamification", () =>
-      seedGamification(prisma, school.id, students, classes)
+      seedGamification(prisma, school.id, students)
     )
 
     // Profile extras (organizations, memberships, earned badges)
@@ -575,7 +570,7 @@ export async function seedMain(externalPrisma?: PrismaClient) {
       subjects: subjects.length,
       yearLevels: yearLevels.length,
       classrooms: classrooms.length,
-      classes: classes.length,
+      gradeSubjects: gradeSubjects.length,
     })
   } catch (error) {
     console.error("❌ Seed failed:", error)

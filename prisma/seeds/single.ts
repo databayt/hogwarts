@@ -38,7 +38,6 @@ import {
 } from "./attendance-extras"
 import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
-import { backfillClassGrades } from "./backfill-class-grades"
 import { backfillStudentSections } from "./backfill-student-sections"
 import { seedBanking } from "./banking"
 import { seedCatalogAssignments } from "./catalog-assignments"
@@ -59,7 +58,6 @@ import { seedSaCurriculum } from "./catalog/sa"
 import { seedCatalogTree } from "./catalog/tree"
 import { seedUsCurriculum } from "./catalog/us"
 import { seedCatalogVideos } from "./catalog/videos"
-import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
 import { seedConference } from "./conference"
 import { seedEvents } from "./events"
@@ -88,11 +86,12 @@ import { seedComboniTeachers } from "./seed-comboni-teachers"
 import { seedStaffMembers } from "./staff-members"
 import { seedStreamCourses, seedStreamEnrollments } from "./stream"
 import { seedSubjects } from "./subjects"
+import { buildGradeSubjects, seedAllTeaching } from "./teaching"
 import { seedTransportation } from "./transportation"
 import type {
-  ClassRef,
   ClassroomRef,
   DepartmentRef,
+  GradeSubjectRef,
   PeriodRef,
   SchoolRef,
   StudentRef,
@@ -296,29 +295,17 @@ async function resolveClassrooms(
   }))
 }
 
-async function resolveClasses(
+/** The subjects each grade takes this term, with their teachers. */
+async function resolveGradeSubjects(
   prisma: PrismaClient,
   schoolId: string
-): Promise<ClassRef[]> {
-  const classes = await prisma.class.findMany({
-    where: { schoolId },
-    select: {
-      id: true,
-      name: true,
-      lang: true,
-      subjectId: true,
-      grade: {
-        select: { yearLevelId: true },
-      },
-    },
-  })
-  return classes.map((c) => ({
-    id: c.id,
-    name: c.name,
-    lang: c.lang ?? "ar",
-    subjectId: c.subjectId,
-    yearLevelId: c.grade?.yearLevelId ?? "",
-  }))
+): Promise<GradeSubjectRef[]> {
+  const [subjects, yearLevels, term] = await Promise.all([
+    resolveSubjects(prisma, schoolId),
+    resolveYearLevels(prisma, schoolId),
+    resolveTerm(prisma, schoolId),
+  ])
+  return buildGradeSubjects(prisma, schoolId, subjects, yearLevels, term)
 }
 
 async function resolvePeriods(
@@ -671,17 +658,16 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedStaffMembers(prisma, schoolId, departments, staffAndAdmins)
     },
   },
-  classes: {
-    description: "Classes + enrollments (400+)",
+  teaching: {
+    description: "Sections, placement and subject teachers",
     run: async (prisma, schoolId) => {
       const subjects = await resolveSubjects(prisma, schoolId)
       const yearLevels = await resolveYearLevels(prisma, schoolId)
       const teachers = await resolveTeachers(prisma, schoolId)
       const students = await resolveStudents(prisma, schoolId)
       const classrooms = await resolveClassrooms(prisma, schoolId)
-      const periods = await resolvePeriods(prisma, schoolId)
       const term = await resolveTerm(prisma, schoolId)
-      await seedAllClasses(
+      await seedAllTeaching(
         prisma,
         schoolId,
         subjects,
@@ -689,7 +675,6 @@ const SEEDS: Record<string, SeedEntry> = {
         teachers,
         students,
         classrooms,
-        periods,
         term
       )
     },
@@ -718,14 +703,14 @@ const SEEDS: Record<string, SeedEntry> = {
   assignments: {
     description: "Assignments + submissions",
     run: async (prisma, schoolId) => {
-      const classes = await resolveClasses(prisma, schoolId)
+      const gradeSubjects = await resolveGradeSubjects(prisma, schoolId)
       const teachers = await resolveTeachers(prisma, schoolId)
       const students = await resolveStudents(prisma, schoolId)
       const term = await resolveTerm(prisma, schoolId)
       await seedAssignments(
         prisma,
         schoolId,
-        classes,
+        gradeSubjects,
         teachers,
         term.startDate,
         term.endDate
@@ -734,7 +719,7 @@ const SEEDS: Record<string, SeedEntry> = {
         prisma,
         schoolId,
         students,
-        classes,
+        gradeSubjects,
         teachers
       )
     },
@@ -743,11 +728,11 @@ const SEEDS: Record<string, SeedEntry> = {
     description: "Exams + results + grading config",
     run: async (prisma, schoolId) => {
       const subjects = await resolveSubjects(prisma, schoolId)
-      const classes = await resolveClasses(prisma, schoolId)
+      const gradeSubjects = await resolveGradeSubjects(prisma, schoolId)
       const students = await resolveStudents(prisma, schoolId)
       const term = await resolveTerm(prisma, schoolId)
-      await seedExams(prisma, schoolId, subjects, classes, term)
-      await seedExamResults(prisma, schoolId, students, classes)
+      await seedExams(prisma, schoolId, subjects, gradeSubjects, term)
+      await seedExamResults(prisma, schoolId, students, gradeSubjects)
       await seedGradingConfig(prisma, schoolId)
     },
   },
@@ -889,17 +874,9 @@ const SEEDS: Record<string, SeedEntry> = {
     description: "Attendance records (10 days)",
     run: async (prisma, schoolId) => {
       const students = await resolveStudents(prisma, schoolId)
-      const classes = await resolveClasses(prisma, schoolId)
       const teachers = await resolveTeachers(prisma, schoolId)
       const periods = await resolvePeriods(prisma, schoolId)
-      await seedAttendance(
-        prisma,
-        schoolId,
-        students,
-        classes,
-        teachers,
-        periods
-      )
+      await seedAttendance(prisma, schoolId, students, teachers, periods)
     },
   },
   "attendance-extras": {
@@ -949,8 +926,7 @@ const SEEDS: Record<string, SeedEntry> = {
     description: "Badges, streaks, competitions",
     run: async (prisma, schoolId) => {
       const students = await resolveStudents(prisma, schoolId)
-      const classes = await resolveClasses(prisma, schoolId)
-      await seedGamification(prisma, schoolId, students, classes)
+      await seedGamification(prisma, schoolId, students)
     },
   },
   transportation: {
@@ -990,13 +966,6 @@ const SEEDS: Record<string, SeedEntry> = {
   },
 
   // Backfill scripts
-  "backfill-class-grades": {
-    description: "Backfill gradeId on Class records by parsing names",
-    global: true,
-    run: async () => {
-      await backfillClassGrades()
-    },
-  },
   "backfill-student-sections": {
     description:
       "Distribute unassigned students across sections (round-robin). Set BACKFILL_SCHOOL_DOMAIN=xxx to target one school.",

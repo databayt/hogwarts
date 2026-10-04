@@ -9,7 +9,7 @@
  *
  * Features:
  * - 25-30 announcements spread across term (one every 3-5 days)
- * - Mix scopes: school (70%), class (20%), role (10%)
+ * - Mix scopes: school (70%), section (20%), role (10%)
  * - MENA content: Ramadan schedule, winter uniform, extracurricular, safety drill, Quran competition
  * - Some with expiresAt (3-4 already expired)
  * - 1-2 pinned/featured
@@ -27,7 +27,7 @@ import { logPhase, logSuccess } from "./utils"
 interface AnnouncementSeed {
   title: string
   body: string
-  scope: "school" | "class" | "role"
+  scope: "school" | "section" | "role"
   priority: "low" | "normal" | "high" | "urgent"
   daysFromTermStart: number // Days from Sep 1 to set publishedAt
   expiresInDays?: number // Days after publish to expire (undefined = no expiry)
@@ -178,7 +178,7 @@ const ANNOUNCEMENTS: AnnouncementSeed[] = [
   {
     title: "واجب الرياضيات - الوحدة الثالثة",
     body: "يرجى حل تمارين الوحدة الثالثة (صفحات 45-50) وتسليمها يوم الخميس القادم.",
-    scope: "class",
+    scope: "section",
     priority: "normal",
     daysFromTermStart: 25,
     expiresInDays: 7,
@@ -186,7 +186,7 @@ const ANNOUNCEMENTS: AnnouncementSeed[] = [
   {
     title: "رحلة ميدانية - متحف التاريخ",
     body: "ستقوم فصول الصف التاسع برحلة إلى متحف التاريخ يوم الأربعاء القادم. يرجى إحضار إذن ولي الأمر.",
-    scope: "class",
+    scope: "section",
     priority: "normal",
     daysFromTermStart: 35,
     expiresInDays: 10,
@@ -194,7 +194,7 @@ const ANNOUNCEMENTS: AnnouncementSeed[] = [
   {
     title: "مشروع البحث العلمي - فصول العاشر",
     body: "آخر موعد لتسليم مشروع البحث العلمي هو 15 نوفمبر. يرجى الالتزام بالمواعيد.",
-    scope: "class",
+    scope: "section",
     priority: "high",
     daysFromTermStart: 50,
     expiresInDays: 25,
@@ -202,14 +202,14 @@ const ANNOUNCEMENTS: AnnouncementSeed[] = [
   {
     title: "نتائج الاختبار القصير - اللغة العربية",
     body: "تم رصد نتائج الاختبار القصير. يمكنكم مراجعة الدرجات عبر البوابة.",
-    scope: "class",
+    scope: "section",
     priority: "normal",
     daysFromTermStart: 42,
   },
   {
     title: "حصة تعويضية - الفيزياء",
     body: "ستعقد حصة تعويضية في مادة الفيزياء يوم السبت القادم من 9-11 صباحاً في المختبر.",
-    scope: "class",
+    scope: "section",
     priority: "normal",
     daysFromTermStart: 65,
     expiresInDays: 5,
@@ -255,10 +255,11 @@ export async function seedAnnouncements(
   const admin = adminUsers.find((u) => u.role === "ADMIN") || adminUsers[0]
   if (!admin) return 0
 
-  // Get some classes for class-scoped announcements
-  const classes = await prisma.class.findMany({
+  // Some sections for section-scoped announcements
+  const sections = await prisma.section.findMany({
     where: { schoolId },
-    select: { id: true },
+    orderBy: [{ gradeId: "asc" }, { letter: "asc" }],
+    select: { id: true, gradeId: true },
     take: 10,
   })
 
@@ -275,10 +276,10 @@ export async function seedAnnouncements(
       expiresAt.setDate(expiresAt.getDate() + ann.expiresInDays)
     }
 
-    // For class scope, assign a random class
-    const classId =
-      ann.scope === "class" && classes.length > 0
-        ? classes[count % classes.length].id
+    // For section scope, one of the sections in turn
+    const section =
+      ann.scope === "section" && sections.length > 0
+        ? sections[count % sections.length]
         : null
 
     // For role scope, assign TEACHER or GUARDIAN
@@ -297,7 +298,8 @@ export async function seedAnnouncements(
             title: ann.title,
             body: ann.body,
             lang: "ar",
-            scope: ann.scope,
+            // A section notice with no section to send to reaches the school
+            scope: ann.scope === "section" && !section ? "school" : ann.scope,
             priority: ann.priority,
             published: true,
             publishedAt,
@@ -305,7 +307,8 @@ export async function seedAnnouncements(
             pinned: ann.pinned || false,
             featured: ann.featured || false,
             createdBy: admin.id,
-            classId,
+            gradeId: section?.gradeId ?? null,
+            sectionId: section?.id ?? null,
             role: role as "TEACHER" | "GUARDIAN" | null,
           },
         })

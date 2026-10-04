@@ -72,6 +72,15 @@ production pipeline that real schools get at onboarding:
 - `setupCatalogForSchool` → AcademicLevels / Grades / Streams / SubjectSelections, read from
   the school's `country`/`curriculum` (demo = SD). `skipIfExists` makes re-runs a no-op.
 
+Phase 6 builds **teaching without classes** (retired 2026-10-04). `teaching.ts` creates the
+homeroom sections, places each student in one, and assigns each subject in each section a
+teacher (`SubjectTeacher`, via the production `ensureAssignments`) — before the timetable,
+so generation keeps one teacher per subject per section. Later phases take a
+`GradeSubjectRef` per subject a grade takes and set its exams and assignments for the whole
+grade (`gradeId`, no section); attendance is marked per student's section; competition
+entries and section notices name sections. Nothing creates a `Class`, `StudentClass` or
+`ClassTeacher` row. `pnpm db:seed:single teaching` re-runs the phase.
+
 Phase 10 follows the same rule for **grades**. `grades.ts` does not invent scores: it
 projects every GRADED `AssignmentSubmission` into the unified `Result` gradebook (scored
 with the gradebook spine's own `toPercentage` + `letterGradeFor` against the school's real

@@ -23,7 +23,7 @@ import type {
   PrismaClient,
 } from "@prisma/client"
 
-import type { ClassRef, PeriodRef, StudentRef, TeacherRef } from "./types"
+import type { PeriodRef, StudentRef, TeacherRef } from "./types"
 import { logPhase, logSuccess, randomNumber } from "./utils"
 
 // ============================================================================
@@ -148,7 +148,6 @@ export async function seedAttendance(
   prisma: PrismaClient,
   schoolId: string,
   students: StudentRef[],
-  classes: ClassRef[],
   teachers: TeacherRef[],
   periods?: PeriodRef[]
 ): Promise<number> {
@@ -160,38 +159,12 @@ export async function seedAttendance(
   const termStart = new Date("2025-09-01")
   const schoolDays = getSchoolDays(termStart, ATTENDANCE_DAYS)
 
-  // Map students to year levels and classes
-  const classByLevel = new Map<string, ClassRef>()
-  for (const c of classes) {
-    if (c.yearLevelId && !classByLevel.has(c.yearLevelId)) {
-      classByLevel.set(c.yearLevelId, c)
-    }
-  }
-
-  // Fallback: if no classes have yearLevelId (gradeId is null),
-  // match class names to year level names. Class names contain the level name
-  // e.g. "اللغة الإنجليزية - الصف الأول" contains "الصف الأول"
-  if (classByLevel.size === 0) {
-    // Get year levels to build name→id map
-    const yearLevels = await prisma.yearLevel.findMany({
-      where: { schoolId },
-      select: { id: true, levelName: true },
-    })
-    const levelNameToId = new Map<string, string>()
-    for (const yl of yearLevels) {
-      levelNameToId.set(yl.levelName, yl.id)
-    }
-
-    // Match each class to a year level by checking if class name contains level name
-    for (const c of classes) {
-      for (const [levelName, levelId] of levelNameToId) {
-        if (c.name.includes(levelName) && !classByLevel.has(levelId)) {
-          classByLevel.set(levelId, { ...c, yearLevelId: levelId })
-          break
-        }
-      }
-    }
-  }
+  // Each student is marked in their own section (classes are retired)
+  const placed = await prisma.student.findMany({
+    where: { schoolId, sectionId: { not: null } },
+    select: { id: true, sectionId: true },
+  })
+  const sectionOf = new Map(placed.map((p) => [p.id, p.sectionId as string]))
 
   // Assign behavior patterns to students (deterministic by index)
   const studentPatterns = new Map<string, StudentPattern>()
@@ -203,15 +176,6 @@ export async function seedAttendance(
   const teachingPeriods = (periods || []).filter(
     (p) => !p.name.toLowerCase().includes("break")
   )
-
-  // Secondary year levels (order >= 9 = intermediate/secondary)
-  const secondaryLevelIds = new Set<string>()
-  // We'll check yearLevelId from classes
-  for (const c of classes) {
-    // Classes with yearLevelId that maps to order >= 9 are secondary
-    // We don't have order here, so use a heuristic: look at class name containing intermediate/secondary subject indicators
-    // Better approach: just use 30% of students randomly for period tracking
-  }
 
   const teacher = teachers[0]
   let totalRecords = 0
@@ -225,7 +189,7 @@ export async function seedAttendance(
     const records: {
       schoolId: string
       studentId: string
-      classId: string
+      sectionId: string
       date: Date
       status: AttendanceStatus
       checkInTime: Date | null
@@ -237,9 +201,8 @@ export async function seedAttendance(
     }[] = []
 
     for (const student of students) {
-      if (!student.yearLevelId) continue
-      const classInfo = classByLevel.get(student.yearLevelId)
-      if (!classInfo) continue
+      const sectionId = sectionOf.get(student.id)
+      if (!sectionId) continue
 
       const pattern = studentPatterns.get(student.id) || "consistent"
       const status = getStatus(pattern, dayOfWeek, dayIndex)
@@ -269,7 +232,7 @@ export async function seedAttendance(
         records.push({
           schoolId,
           studentId: student.id,
-          classId: classInfo.id,
+          sectionId,
           date,
           status,
           checkInTime,
@@ -283,7 +246,7 @@ export async function seedAttendance(
         records.push({
           schoolId,
           studentId: student.id,
-          classId: classInfo.id,
+          sectionId,
           date,
           status,
           checkInTime,

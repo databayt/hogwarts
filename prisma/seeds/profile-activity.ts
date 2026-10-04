@@ -12,7 +12,7 @@
  *     demo teacher (lights the student AND teacher graphs, earns
  *     perfect_attendance / diligent_educator).
  *  2. UserActivity feed rows for demo accounts + a believable slice of users.
- *  3. PinnedItems per role, derived from each user's real subjects / classes /
+ *  3. PinnedItems per role, derived from each user's real subjects / sections /
  *     children / organizations.
  *  4. A parent↔teacher direct conversation with parent-sent messages
  *     (lights the parent graph).
@@ -342,21 +342,18 @@ export async function seedProfileActivity(
       student: {
         select: {
           id: true,
-          studentClasses: {
-            take: 6,
-            select: {
-              class: { select: { subject: { select: { name: true } } } },
-            },
-          },
+          academicGradeId: true,
+          section: { select: { gradeId: true } },
         },
       },
       teacher: {
         select: {
           id: true,
-          classes: {
+          // What they teach: a subject in a section
+          subjectTeachers: {
             take: 6,
             select: {
-              name: true,
+              section: { select: { name: true } },
               subject: { select: { name: true } },
             },
           },
@@ -377,6 +374,22 @@ export async function seedProfileActivity(
     take: 160,
   })
 
+  // A student's subjects are their grade's
+  const gradeSubjectRows = await prisma.subjectSelection.findMany({
+    where: { schoolId, isActive: true },
+    select: { gradeId: true, subject: { select: { id: true, name: true } } },
+  })
+  const subjectsOfGrade = new Map<string, Array<{ id: string; name: string }>>()
+  for (const row of gradeSubjectRows) {
+    const list = subjectsOfGrade.get(row.gradeId) ?? []
+    if (!list.some((s) => s.id === row.subject.id)) list.push(row.subject)
+    subjectsOfGrade.set(row.gradeId, list)
+  }
+  const studentGrade = (student: {
+    academicGradeId: string | null
+    section: { gradeId: string } | null
+  }) => student.section?.gradeId ?? student.academicGradeId
+
   const now = Date.now()
   const DAY = 24 * 60 * 60 * 1000
   let activitiesCreated = 0
@@ -391,11 +404,11 @@ export async function seedProfileActivity(
     })
     if (existingCount >= (isDemo ? 90 : 5)) continue
 
-    const subjects =
-      user.student?.studentClasses
-        .map((sc) => sc.class?.subject?.name)
-        .filter((n): n is string => !!n) ?? []
-    const classes = user.teacher?.classes ?? []
+    const gradeId = user.student ? studentGrade(user.student) : null
+    const subjects = (gradeId ? (subjectsOfGrade.get(gradeId) ?? []) : [])
+      .slice(0, 6)
+      .map((s) => s.name)
+    const teaching = user.teacher?.subjectTeachers ?? []
     const childNames =
       user.guardian?.studentGuardians
         .map((sg) => sg.student?.firstName)
@@ -417,9 +430,11 @@ export async function seedProfileActivity(
         { type: "EVENT_ATTENDED", title: "شارك في النشاط المدرسي" }
       )
     } else if (user.role === "TEACHER") {
-      const classNames = classes.map((c) => c.name).filter(Boolean)
-      const subjNames = classes
-        .map((c) => c.subject?.name)
+      const classNames = teaching
+        .map((t) => t.section?.name)
+        .filter((n): n is string => !!n)
+      const subjNames = teaching
+        .map((t) => t.subject?.name)
         .filter((n): n is string => !!n)
       templates.push(
         ...classNames.slice(0, 3).map(
@@ -535,19 +550,12 @@ export async function seedProfileActivity(
   // Student: top subjects + an achievement
   const studentUser = feedUsers.find((u) => u.email === DEMO_EMAILS.student)
   if (studentUser?.student) {
-    const subjectRows = await prisma.studentClass.findMany({
-      where: { schoolId, studentId: studentUser.student.id },
-      take: 2,
-      select: {
-        class: {
-          select: { subject: { select: { id: true, name: true } } },
-        },
-      },
-    })
+    const gradeId = studentGrade(studentUser.student)
+    const subjectRows = (
+      gradeId ? (subjectsOfGrade.get(gradeId) ?? []) : []
+    ).slice(0, 2)
     let order = 0
-    for (const r of subjectRows) {
-      const s = r.class?.subject
-      if (!s) continue
+    for (const s of subjectRows) {
       await upsertPin(
         studentUser.id,
         "SUBJECT",
@@ -563,28 +571,30 @@ export async function seedProfileActivity(
     }
   }
 
-  // Teacher: their classes + department
+  // Teacher: the subjects they teach in their sections + department
   if (demoTeacher.teacher) {
-    const teacherClasses = await prisma.class.findMany({
+    const teaching = await prisma.subjectTeacher.findMany({
       where: { schoolId, teacherId: demoTeacher.teacher.id },
       take: 2,
       select: {
-        id: true,
-        name: true,
+        sectionId: true,
+        subjectId: true,
+        section: {
+          select: { name: true, _count: { select: { students: true } } },
+        },
         subject: { select: { name: true } },
-        _count: { select: { studentClasses: true } },
       },
     })
     let order = 0
-    for (const c of teacherClasses) {
+    for (const t of teaching) {
       await upsertPin(
         demoTeacher.id,
         "CLASS",
-        c.id,
-        c.name,
-        c.subject?.name ?? null,
+        `${t.sectionId}:${t.subjectId}`,
+        `${t.subject.name} · ${t.section.name}`,
+        t.subject.name,
         order++,
-        [{ label: "الطلاب", value: c._count.studentClasses }]
+        [{ label: "الطلاب", value: t.section._count.students }]
       )
     }
   }

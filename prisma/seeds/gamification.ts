@@ -9,7 +9,7 @@
  *
  * Features:
  * - 8-10 AttendanceBadge definitions
- * - 1 AttendanceCompetition with ClassCompetitionEntry for 15 classes
+ * - 1 AttendanceCompetition with an entry for up to 15 sections
  * - AttendanceStreak for top 50 students
  * - 100-200 AttendanceReward point records
  * - 50-80 StudentBadge awards
@@ -17,7 +17,7 @@
 
 import type { PrismaClient } from "@prisma/client"
 
-import type { ClassRef, StudentRef } from "./types"
+import type { StudentRef } from "./types"
 import { logSuccess, randomNumber } from "./utils"
 
 // ============================================================================
@@ -114,8 +114,7 @@ const BADGE_DEFINITIONS = [
 export async function seedGamification(
   prisma: PrismaClient,
   schoolId: string,
-  students: StudentRef[],
-  classes: ClassRef[]
+  students: StudentRef[]
 ): Promise<number> {
   let totalRecords = 0
 
@@ -186,25 +185,30 @@ export async function seedGamification(
     // Skip
   }
 
-  // 3. Create Class Competition Entries (15 classes)
+  // 3. Create Competition Entries — one per section (up to 15)
   if (competitionId) {
-    const competitionClasses = classes.slice(0, 15)
-    for (let i = 0; i < competitionClasses.length; i++) {
-      const classInfo = competitionClasses[i]
+    const competitionSections = await prisma.section.findMany({
+      where: { schoolId },
+      orderBy: [{ gradeId: "asc" }, { letter: "asc" }],
+      select: { id: true },
+      take: 15,
+    })
+    for (let i = 0; i < competitionSections.length; i++) {
+      const section = competitionSections[i]
       const attendanceRate = 75 + randomNumber(0, 25) // 75-100%
       try {
         await prisma.classCompetitionEntry.upsert({
           where: {
-            competitionId_classId: {
+            competitionId_sectionId: {
               competitionId,
-              classId: classInfo.id,
+              sectionId: section.id,
             },
           },
           update: { attendanceRate, rank: i + 1 },
           create: {
             schoolId,
             competitionId,
-            classId: classInfo.id,
+            sectionId: section.id,
             totalStudents: randomNumber(25, 35),
             presentDays: randomNumber(200, 350),
             lateDays: randomNumber(10, 30),
@@ -220,8 +224,8 @@ export async function seedGamification(
     }
     logSuccess(
       "Competition Entries",
-      competitionClasses.length,
-      "class entries"
+      competitionSections.length,
+      "section entries"
     )
   }
 

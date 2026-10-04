@@ -3,14 +3,15 @@
 
 /**
  * Assignments Seed
- * Creates Assignments and Submissions for all classes
+ * Creates Assignments and Submissions for every subject a grade takes —
+ * whole-grade work (gradeId, no section), since classes are retired
  *
  * Phase 9: Assignments & Submissions
  */
 
 import type { PrismaClient, SubmissionStatus } from "@prisma/client"
 
-import type { ClassRef, StudentRef, TeacherRef } from "./types"
+import type { GradeSubjectRef, StudentRef, TeacherRef } from "./types"
 import {
   getRandomScore,
   logPhase,
@@ -137,12 +138,12 @@ const FEEDBACK_TEMPLATES = {
 // ============================================================================
 
 /**
- * Seed assignments for classes
+ * Seed assignments for every subject a grade takes
  */
 export async function seedAssignments(
   prisma: PrismaClient,
   schoolId: string,
-  classes: ClassRef[],
+  gradeSubjects: GradeSubjectRef[],
   teachers: TeacherRef[],
   termStart: Date,
   termEnd: Date
@@ -152,12 +153,13 @@ export async function seedAssignments(
   const assignmentIds: string[] = []
   const termDuration = termEnd.getTime() - termStart.getTime()
 
-  // Create 1-2 assignments per class (targeting 200+ assignments)
-  await processBatch(classes, 10, async (classInfo, classIndex) => {
-    // Get a teacher for this class (round-robin)
-    const teacher = teachers[classIndex % teachers.length]
+  // Create 1-2 assignments per grade subject (targeting 200+ assignments)
+  await processBatch(gradeSubjects, 10, async (unit, unitIndex) => {
+    // Set by the subject's teacher, else round-robin
+    const teacherUserId =
+      unit.teacherUserId ?? teachers[unitIndex % teachers.length]?.userId
 
-    // Create 1-2 assignments per class
+    // Create 1-2 assignments per grade subject
     const assignmentCount = randomNumber(1, 2)
 
     for (let i = 0; i < assignmentCount; i++) {
@@ -167,21 +169,22 @@ export async function seedAssignments(
 
       // Calculate due date spread across the term
       const dueOffset =
-        (classIndex * assignmentCount + i) / (classes.length * 2)
+        (unitIndex * assignmentCount + i) / (gradeSubjects.length * 2)
       const dueDate = new Date(termStart.getTime() + termDuration * dueOffset)
 
       // Publish date is 1-2 weeks before due date
       const publishOffset = randomNumber(7, 14) * 24 * 60 * 60 * 1000
       const publishDate = new Date(dueDate.getTime() - publishOffset)
 
-      const title = `${template.title} - ${classInfo.name}`
+      const title = `${template.title} - ${unit.name}`
 
       try {
         // Check if assignment already exists
         const existing = await prisma.schoolAssignment.findFirst({
           where: {
             schoolId,
-            classId: classInfo.id,
+            gradeId: unit.gradeId,
+            subjectId: unit.subjectId,
             title,
           },
         })
@@ -190,7 +193,12 @@ export async function seedAssignments(
           const assignment = await prisma.schoolAssignment.create({
             data: {
               schoolId,
-              classId: classInfo.id,
+              // The whole grade does it (no section)
+              gradeId: unit.gradeId,
+              sectionId: null,
+              subjectId: unit.subjectId,
+              termId: unit.termId,
+              createdById: teacherUserId ?? null,
               title,
               description: template.description,
               type,
@@ -210,7 +218,7 @@ export async function seedAssignments(
     }
   })
 
-  logSuccess("Assignments", assignmentIds.length, "across all classes")
+  logSuccess("Assignments", assignmentIds.length, "across all grade subjects")
 
   return assignmentIds
 }
@@ -223,7 +231,7 @@ export async function seedAssignmentSubmissions(
   prisma: PrismaClient,
   schoolId: string,
   students: StudentRef[],
-  classes: ClassRef[],
+  gradeSubjects: GradeSubjectRef[],
   teachers: TeacherRef[]
 ): Promise<number> {
   let submissionCount = 0
@@ -236,7 +244,7 @@ export async function seedAssignmentSubmissions(
     },
     select: {
       id: true,
-      classId: true,
+      gradeId: true,
       totalPoints: true,
       dueDate: true,
     },
@@ -247,7 +255,7 @@ export async function seedAssignmentSubmissions(
     return 0
   }
 
-  // Group students by year level (which maps to classes)
+  // Group students by year level (which maps to grades)
   const studentsByLevel = new Map<string, StudentRef[]>()
   for (const student of students) {
     if (!student.yearLevelId) continue
@@ -256,12 +264,18 @@ export async function seedAssignmentSubmissions(
     studentsByLevel.set(student.yearLevelId, existing)
   }
 
-  // For each assignment, create submissions for ~50% of students in that class
-  await processBatch(assignments, 5, async (assignment) => {
-    const classInfo = classes.find((c) => c.id === assignment.classId)
-    if (!classInfo) return
+  const yearLevelOfGrade = new Map(
+    gradeSubjects.map((u) => [u.gradeId, u.yearLevelId])
+  )
 
-    const levelStudents = studentsByLevel.get(classInfo.yearLevelId) || []
+  // For each assignment, create submissions for ~50% of the grade's students
+  await processBatch(assignments, 5, async (assignment) => {
+    const yearLevelId = assignment.gradeId
+      ? yearLevelOfGrade.get(assignment.gradeId)
+      : undefined
+    if (!yearLevelId) return
+
+    const levelStudents = studentsByLevel.get(yearLevelId) || []
 
     // 50% submission rate
     const submittingStudents = levelStudents.filter(() => Math.random() < 0.5)

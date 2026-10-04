@@ -8,16 +8,17 @@
  * Phase 10: Exams, QBank & Grades
  *
  * Features:
- * - Midterm + Final + 2-3 Quizzes per class
+ * - Midterm + Final + 2 Quizzes per subject a grade takes — whole-grade
+ *   exams (gradeId, no section), since classes are retired
  * - 5% absence rate per exam
  * - Score distribution varies by subject type
- * - Process 100 classes (up from 50)
+ * - Process 100 grade subjects
  * - seedGradingConfig: percentage-based, 60% passing, 4.0 GPA scale
  */
 
 import type { PrismaClient } from "@prisma/client"
 
-import type { ClassRef, StudentRef, SubjectRef, TermRef } from "./types"
+import type { GradeSubjectRef, StudentRef, SubjectRef, TermRef } from "./types"
 import {
   getRandomScore,
   logPhase,
@@ -34,16 +35,16 @@ export async function seedExams(
   prisma: PrismaClient,
   schoolId: string,
   subjects: SubjectRef[],
-  classes: ClassRef[],
+  gradeSubjects: GradeSubjectRef[],
   term: TermRef
 ): Promise<string[]> {
   logPhase(8, "EXAMS, QBANK & GRADES", "الامتحانات والدرجات")
 
   const examIds: string[] = []
-  const classesToProcess = classes.slice(0, 100)
+  const toProcess = gradeSubjects.slice(0, 100)
 
-  await processBatch(classesToProcess, 10, async (classInfo) => {
-    const subject = subjects.find((s) => s.id === classInfo.subjectId)
+  await processBatch(toProcess, 10, async (unit) => {
+    const subject = subjects.find((s) => s.id === unit.subjectId)
     if (!subject) return
 
     type ExamConfig = {
@@ -86,21 +87,30 @@ export async function seedExams(
     ]
 
     for (const examConfig of examTypes) {
-      const examTitle = `${examConfig.name} - ${classInfo.name}`
+      const examTitle = `${examConfig.name} - ${unit.name}`
       const examDate = new Date(
         term.startDate.getTime() + examConfig.dayOffset * 24 * 60 * 60 * 1000
       )
 
       try {
         const existing = await prisma.schoolExam.findFirst({
-          where: { schoolId, classId: classInfo.id, title: examTitle },
+          where: {
+            schoolId,
+            gradeId: unit.gradeId,
+            subjectId: subject.id,
+            title: examTitle,
+          },
         })
 
         if (!existing) {
           const exam = await prisma.schoolExam.create({
             data: {
               schoolId,
-              classId: classInfo.id,
+              // The whole grade sits it (no section)
+              gradeId: unit.gradeId,
+              sectionId: null,
+              termId: unit.termId,
+              createdById: unit.teacherUserId,
               subjectId: subject.id,
               title: examTitle,
               examDate,
@@ -126,7 +136,11 @@ export async function seedExams(
     }
   })
 
-  logSuccess("Exams", examIds.length, "Midterm + Final + Quizzes per class")
+  logSuccess(
+    "Exams",
+    examIds.length,
+    "Midterm + Final + Quizzes per grade subject"
+  )
 
   return examIds
 }
@@ -139,13 +153,13 @@ export async function seedExamResults(
   prisma: PrismaClient,
   schoolId: string,
   students: StudentRef[],
-  classes: ClassRef[]
+  gradeSubjects: GradeSubjectRef[]
 ): Promise<number> {
   let resultCount = 0
 
   const exams = await prisma.schoolExam.findMany({
-    where: { schoolId },
-    select: { id: true, classId: true, totalMarks: true },
+    where: { schoolId, gradeId: { not: null } },
+    select: { id: true, gradeId: true, subjectId: true, totalMarks: true },
   })
 
   if (exams.length === 0) {
@@ -161,11 +175,18 @@ export async function seedExamResults(
     studentsByLevel.set(student.yearLevelId, existing)
   }
 
-  await processBatch(exams, 5, async (exam) => {
-    const classInfo = classes.find((c) => c.id === exam.classId)
-    if (!classInfo) return
+  // The grade an exam is set for → its year level → its students
+  const yearLevelOfGrade = new Map(
+    gradeSubjects.map((u) => [u.gradeId, u.yearLevelId])
+  )
 
-    const levelStudents = studentsByLevel.get(classInfo.yearLevelId) || []
+  await processBatch(exams, 5, async (exam) => {
+    const yearLevelId = exam.gradeId
+      ? yearLevelOfGrade.get(exam.gradeId)
+      : undefined
+    if (!yearLevelId) return
+
+    const levelStudents = studentsByLevel.get(yearLevelId) || []
 
     for (const student of levelStudents) {
       // 5% absence rate

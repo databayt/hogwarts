@@ -4,13 +4,13 @@
 /**
  * Move one student to a different academic grade.
  *
- * Placement lives in several places at once, so changing `academicGradeId`
- * alone leaves the student half-moved: the section drives the timetable they
- * see, the enrollments drive their classes, and any stream belongs to the old
- * grade. This moves all of it together, then drops the coursework that is
- * anchored to classes they are no longer in — attendance, gradebook results,
- * submissions and exam results that would otherwise show the old grade's
- * subjects on a report card for their new grade.
+ * Placement lives in more than one place: the section drives the timetable
+ * and roster they see, the grade drives their subjects (and LMS courses), and
+ * any stream belongs to the old grade. This moves all of it together, then
+ * drops the coursework anchored to the old grade — its section's attendance,
+ * and gradebook results, submissions and exam results for work set for the old
+ * grade (or a legacy class of it) — that would otherwise show the old grade's
+ * subjects on a report card for the new one.
  *
  * Dry-run by default; pass --apply to write.
  *
@@ -21,7 +21,9 @@
 
 import "dotenv/config"
 
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient, type Prisma } from "@prisma/client"
+
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 
 export async function moveStudentToGrade(
   prisma: PrismaClient,
@@ -39,16 +41,18 @@ export async function moveStudentToGrade(
       sectionId: true,
       academicGradeId: true,
       academicStreamId: true,
+      section: { select: { gradeId: true } },
     },
   })
   if (!student) throw new Error(`No student for ${email} in this school`)
+  const oldGradeId = student.section?.gradeId ?? student.academicGradeId
 
   const grade = await prisma.academicGrade.findFirst({
     where: { schoolId, gradeNumber },
     select: { id: true, name: true },
   })
   if (!grade) throw new Error(`School has no grade ${gradeNumber}`)
-  if (grade.id === student.academicGradeId) {
+  if (grade.id === oldGradeId) {
     console.log(`${email} is already in ${grade.name}`)
     return
   }
@@ -70,105 +74,76 @@ export async function moveStudentToGrade(
       where: { id: student.academicStreamId, gradeId: grade.id },
     })) > 0
 
-  const targetClasses = await prisma.class.findMany({
-    where: { schoolId, gradeId: grade.id },
-    select: { id: true },
-  })
-  const targetIds = new Set(targetClasses.map((c) => c.id))
+  // What belongs to the old grade: its section's marks, and work set for the
+  // old grade or one of its legacy classes.
+  const oldClass = oldGradeId ? [{ class: { gradeId: oldGradeId } }] : []
+  const attendanceWhere: Prisma.AttendanceWhereInput = {
+    schoolId,
+    studentId: student.id,
+    OR: [
+      ...(student.sectionId ? [{ sectionId: student.sectionId }] : []),
+      ...oldClass,
+      { id: { in: [] } },
+    ],
+  }
+  const resultWhere: Prisma.ResultWhereInput = {
+    schoolId,
+    studentId: student.id,
+    OR: [
+      ...(oldGradeId ? [{ academicGradeId: oldGradeId }] : []),
+      ...(student.sectionId ? [{ sectionId: student.sectionId }] : []),
+      ...oldClass,
+      { id: { in: [] } },
+    ],
+  }
+  const oldWork = {
+    OR: [...(oldGradeId ? [{ gradeId: oldGradeId }] : []), ...oldClass],
+  }
+  const submissionWhere: Prisma.AssignmentSubmissionWhereInput = {
+    schoolId,
+    studentId: student.id,
+    assignment: oldWork.OR.length > 0 ? oldWork : { id: { in: [] } },
+  }
+  const examResultWhere: Prisma.ExamResultWhereInput = {
+    schoolId,
+    studentId: student.id,
+    exam: oldWork.OR.length > 0 ? oldWork : { id: { in: [] } },
+  }
+  // Legacy class enrollments in the old grade go with it
+  const enrollmentWhere: Prisma.StudentClassWhereInput = {
+    schoolId,
+    studentId: student.id,
+    class: oldGradeId ? { gradeId: oldGradeId } : { id: { in: [] } },
+  }
 
-  const enrolled = await prisma.studentClass.findMany({
-    where: { schoolId, studentId: student.id },
-    select: { id: true, classId: true },
-  })
-  const leaving = enrolled.filter((e) => !targetIds.has(e.classId))
-  const leavingClassIds = leaving.map((e) => e.classId)
-  const joining = targetClasses.filter(
-    (c) => !enrolled.some((e) => e.classId === c.id)
-  )
-
-  const attendance = await prisma.attendance.count({
-    where: {
-      schoolId,
-      studentId: student.id,
-      classId: { in: leavingClassIds },
-    },
-  })
-  const results = await prisma.result.count({
-    where: {
-      schoolId,
-      studentId: student.id,
-      classId: { in: leavingClassIds },
-    },
-  })
-  const submissions = await prisma.assignmentSubmission.count({
-    where: {
-      schoolId,
-      studentId: student.id,
-      assignment: { classId: { in: leavingClassIds } },
-    },
-  })
-  const examResults = await prisma.examResult.count({
-    where: {
-      schoolId,
-      studentId: student.id,
-      exam: { classId: { in: leavingClassIds } },
-    },
-  })
+  const [attendance, results, submissions, examResults, enrollments] =
+    await Promise.all([
+      prisma.attendance.count({ where: attendanceWhere }),
+      prisma.result.count({ where: resultWhere }),
+      prisma.assignmentSubmission.count({ where: submissionWhere }),
+      prisma.examResult.count({ where: examResultWhere }),
+      prisma.studentClass.count({ where: enrollmentWhere }),
+    ])
 
   console.log(
     `${apply ? "Moving" : "DRY RUN — would move"} ${email} to ${grade.name}` +
       `\n  section            ${section.letter} (${section._count.students} students)` +
       `\n  stream             ${keepStream ? "kept" : "cleared"}` +
-      `\n  enrollments left   ${leaving.length}` +
-      `\n  enrollments joined ${joining.length}` +
       `\n  attendance dropped ${attendance}` +
       `\n  results dropped    ${results}` +
       `\n  submissions dropped ${submissions}` +
-      `\n  exam results dropped ${examResults}`
+      `\n  exam results dropped ${examResults}` +
+      `\n  legacy enrollments dropped ${enrollments}`
   )
 
   if (!apply) return
 
   await prisma.$transaction([
-    prisma.attendance.deleteMany({
-      where: {
-        schoolId,
-        studentId: student.id,
-        classId: { in: leavingClassIds },
-      },
-    }),
-    prisma.result.deleteMany({
-      where: {
-        schoolId,
-        studentId: student.id,
-        classId: { in: leavingClassIds },
-      },
-    }),
-    prisma.assignmentSubmission.deleteMany({
-      where: {
-        schoolId,
-        studentId: student.id,
-        assignment: { classId: { in: leavingClassIds } },
-      },
-    }),
-    prisma.examResult.deleteMany({
-      where: {
-        schoolId,
-        studentId: student.id,
-        exam: { classId: { in: leavingClassIds } },
-      },
-    }),
-    prisma.studentClass.deleteMany({
-      where: { id: { in: leaving.map((e) => e.id) } },
-    }),
-    prisma.studentClass.createMany({
-      data: joining.map((c) => ({
-        schoolId,
-        studentId: student.id,
-        classId: c.id,
-      })),
-      skipDuplicates: true,
-    }),
+    prisma.attendance.deleteMany({ where: attendanceWhere }),
+    prisma.result.deleteMany({ where: resultWhere }),
+    prisma.assignmentSubmission.deleteMany({ where: submissionWhere }),
+    prisma.examResult.deleteMany({ where: examResultWhere }),
+    prisma.studentClass.deleteMany({ where: enrollmentWhere }),
     prisma.student.update({
       where: { id: student.id },
       data: {
@@ -178,6 +153,8 @@ export async function moveStudentToGrade(
       },
     }),
   ])
+  // The new grade's subjects in the LMS (adds only)
+  await syncStudentSubjectEnrollments(schoolId, student.id, prisma)
 
   console.log(`Moved ${email} to ${grade.name}, section ${section.letter}`)
 }

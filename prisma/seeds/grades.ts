@@ -129,11 +129,19 @@ export async function seedGradebookResults(
         select: {
           title: true,
           totalPoints: true,
-          classId: true,
+          subjectId: true,
+          termId: true,
+          // Legacy class work still names its subject through the class
           class: { select: { subjectId: true } },
         },
       },
-      student: { select: { academicGradeId: true } },
+      student: {
+        select: {
+          academicGradeId: true,
+          sectionId: true,
+          section: { select: { gradeId: true } },
+        },
+      },
     },
   })
 
@@ -170,8 +178,12 @@ export async function seedGradebookResults(
       return {
         schoolId,
         studentId: s.studentId,
-        classId: s.assignment.classId,
-        subjectId: s.assignment.class?.subjectId ?? null,
+        subjectId:
+          s.assignment.subjectId ?? s.assignment.class?.subjectId ?? null,
+        sectionId: s.student?.sectionId ?? null,
+        academicGradeId:
+          s.student?.section?.gradeId ?? s.student?.academicGradeId ?? null,
+        termId: s.assignment.termId ?? null,
         assignmentId: s.assignmentId,
         yearLevelId: s.student?.academicGradeId
           ? (yearLevelByGrade.get(s.student.academicGradeId) ?? null)

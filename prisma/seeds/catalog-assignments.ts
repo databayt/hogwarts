@@ -133,14 +133,19 @@ export async function seedCatalogAssignments(
     return 0
   }
 
-  const classes = await prisma.class.findMany({
-    where: {
-      schoolId,
-      studentClasses: { some: { student: { userId: account.id } } },
-    },
-    select: { subjectId: true },
+  // The student's subjects are their grade's (section's grade first)
+  const student = await prisma.student.findFirst({
+    where: { schoolId, userId: account.id },
+    select: { academicGradeId: true, section: { select: { gradeId: true } } },
   })
-  const subjectIds = [...new Set(classes.map((c) => c.subjectId))]
+  const gradeId = student?.section?.gradeId ?? student?.academicGradeId
+  const selections = gradeId
+    ? await prisma.subjectSelection.findMany({
+        where: { schoolId, gradeId, isActive: true },
+        select: { catalogSubjectId: true },
+      })
+    : []
+  const subjectIds = [...new Set(selections.map((s) => s.catalogSubjectId))]
 
   const subjects = await prisma.subject.findMany({
     where: { id: { in: subjectIds } },

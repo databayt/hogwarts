@@ -87,7 +87,7 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   1,120 slots landed in a section homeroom) and wrote classId-only rows with no
   sectionId/subjectId, which the section-based reads can't see. Same move the
   catalog block already made retiring `catalog/demo.ts`: seed and onboarding
-  share one source of truth. `prisma/seeds/timetable.ts` is now unreferenced —
+  share one source of truth. `prisma/seeds/timetable.ts` was deleted (2026-10-04, S15) —
   do NOT wire it back in. The generator only `createMany`s (skipDuplicates), so
   every caller must `deleteMany` the term's slots first to stay idempotent.
 - **Anything the seed writes must be scoped to the ACTIVE term** (2026-07-16):

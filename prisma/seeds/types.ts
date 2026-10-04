@@ -78,12 +78,21 @@ export interface ClassroomRef {
   capacity: number
 }
 
-export interface ClassRef {
-  id: string
-  name: string
-  lang: string
-  subjectId: string
+/**
+ * A subject a grade takes this term — one per active SubjectSelection. The
+ * seed sets its exams and assignments for the whole grade (classes are
+ * retired); it replaces the old ClassRef one-for-one, so volumes stay put.
+ */
+export interface GradeSubjectRef {
+  gradeId: string
   yearLevelId: string
+  subjectId: string
+  /** "<subject> - <level>" — the old class name, kept for work titles. */
+  name: string
+  termId: string
+  /** The teacher assigned the subject in the grade's first section, if any. */
+  teacherId: string | null
+  teacherUserId: string | null
 }
 
 export interface PeriodRef {
@@ -135,7 +144,7 @@ export interface SeedContext {
   yearLevels: YearLevelRef[]
   periods: PeriodRef[]
   classrooms: ClassroomRef[]
-  classes: ClassRef[]
+  gradeSubjects: GradeSubjectRef[]
   schoolYear: SchoolYearRef
   terms: TermRef[]
 }
