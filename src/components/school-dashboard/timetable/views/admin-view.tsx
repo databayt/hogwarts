@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { getCookie, setCookie } from "cookies-next"
 import { Check, ChevronsUpDown } from "lucide-react"
 
@@ -125,6 +125,11 @@ export default function AdminView({
 
   // Timetable data
   const [slots, setSlots] = useState<any[]>([])
+  // Periods in the open room that nobody teaches yet.
+  const unassignedCount = useMemo(
+    () => slots.filter((s) => !s.teacherId && !s.teacher).length,
+    [slots]
+  )
   const [entityInfo, setEntityInfo] = useState<any>(null)
   const [liveIndicators, setLiveIndicators] = useState<
     Record<string, "live" | "scheduled">
@@ -403,6 +408,18 @@ export default function AdminView({
       {/* Classroom View */}
       {viewMode === "classroom" && (
         <>
+          {selectedClassroom &&
+            !isLoadingData &&
+            !isLoading &&
+            unassignedCount > 0 && (
+              <div className="flex items-center gap-3 text-sm">
+                <Badge variant="outline">
+                  {(
+                    d?.needsTeacherCount ?? "{count} periods need a teacher"
+                  ).replace("{count}", String(unassignedCount))}
+                </Badge>
+              </div>
+            )}
           {isLoadingData || isLoading ? (
             <TimetableGridSkeleton
               workingDays={workingDays}
@@ -418,6 +435,7 @@ export default function AdminView({
               editable={editableProp}
               onSlotClick={editableProp ? handleSlotClick : undefined}
               liveIndicators={liveIndicators}
+              showNeedsTeacher
               dictionary={{
                 period: d?.period,
                 break: d?.break,
@@ -425,6 +443,7 @@ export default function AdminView({
                 conflict: d?.conflict,
                 liveNow: d?.liveNow,
                 scheduledToday: dictionary?.liveClasses?.status?.scheduled,
+                needsTeacher: d?.needsTeacher,
               }}
             />
           ) : null}

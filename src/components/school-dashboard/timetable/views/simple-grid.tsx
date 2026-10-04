@@ -74,6 +74,11 @@ interface SimpleGridProps {
    * read-only one opens the detail view. Same gesture, different verb.
    */
   onSlotInspect?: (slot: Slot) => void
+  /**
+   * Label teacher-less slots as waiting for a teacher. Admin-only: a student
+   * or parent gains nothing from a staffing gap they can't act on.
+   */
+  showNeedsTeacher?: boolean
   dictionary?: {
     period?: string
     /** Label for any non-teaching period (الفسحة / استراحة). */
@@ -82,6 +87,8 @@ interface SimpleGridProps {
     conflict?: string
     liveNow?: string
     scheduledToday?: string
+    /** Shown on a slot nobody teaches yet (بانتظار معلم). */
+    needsTeacher?: string
   }
 }
 
@@ -98,12 +105,15 @@ export default function SimpleGrid({
   liveIndicators,
   renderSlotAction,
   onSlotInspect,
+  showNeedsTeacher = false,
   dictionary,
 }: SimpleGridProps) {
   const liveNowLabel =
     dictionary?.liveNow ?? (isRTL ? "مباشر الآن" : "Live now")
   const scheduledTodayLabel =
     dictionary?.scheduledToday ?? (isRTL ? "مجدول اليوم" : "Scheduled today")
+  const needsTeacherLabel =
+    dictionary?.needsTeacher ?? (isRTL ? "بانتظار معلم" : "Needs teacher")
 
   // Get current day for highlighting
   const today = highlightToday ? new Date().getDay() : -1
@@ -164,6 +174,9 @@ export default function SimpleGrid({
     // Prefer subjectName (denormalized from section-based data) over subject
     const subjectLabel = slot.subjectName || slot.subject || ""
     const sectionLabel = slot.sectionName
+    // The timetable exists before the staff does: a slot with no teacher is
+    // a subject waiting for one, and says so instead of showing a blank.
+    const needsTeacher = showNeedsTeacher && !slot.teacherId && !slot.teacher
 
     switch (viewMode) {
       case "teacher":
@@ -173,6 +186,7 @@ export default function SimpleGrid({
             ? `${subjectLabel} - ${sectionLabel}`
             : slot.className || subjectLabel,
           secondary: slot.room || "",
+          needsTeacher: false,
         }
       case "room":
         return {
@@ -180,6 +194,7 @@ export default function SimpleGrid({
           secondary: sectionLabel
             ? `${slot.teacher || ""} ${slot.teacher && sectionLabel ? "·" : ""} ${sectionLabel}`.trim()
             : slot.teacher || "",
+          needsTeacher,
         }
       case "class":
       default:
@@ -188,6 +203,7 @@ export default function SimpleGrid({
           secondary: sectionLabel
             ? `${slot.teacher || ""} ${slot.teacher && sectionLabel ? "·" : ""} ${sectionLabel}`.trim()
             : slot.teacher || "",
+          needsTeacher,
         }
     }
   }
@@ -517,6 +533,11 @@ export default function SimpleGrid({
                           {display.secondary && (
                             <span className="mt-0.5 text-xs text-neutral-600 sm:mt-1 dark:text-neutral-400 print:text-[10px]">
                               {display.secondary}
+                            </span>
+                          )}
+                          {display.needsTeacher && (
+                            <span className="mt-0.5 text-xs text-neutral-500 italic dark:text-neutral-400 print:text-[10px]">
+                              {needsTeacherLabel}
                             </span>
                           )}
                           {slotAction && (
