@@ -27,15 +27,18 @@ import {
 } from "@/components/ui/select"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
+import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scope/picker"
+import {
+  EMPTY_TEACHING_SCOPE,
+  type TeachingScopeValue,
+} from "@/components/school-dashboard/teaching-scope/validation"
 
 import { downloadBase64 } from "./download"
 import {
   generateExamPaperFromTemplate,
   listBlueprintOptions,
-  listClassOptions,
   listExamOptions,
   type BlueprintOption,
-  type ClassOption,
   type ExamOption,
 } from "./exam-paper-flow"
 import { FIELD_VOCAB } from "./field-vocab"
@@ -57,11 +60,10 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
   const [mode, setMode] = useState<Mode>("existing")
   const [exams, setExams] = useState<ExamOption[]>([])
   const [blueprints, setBlueprints] = useState<BlueprintOption[]>([])
-  const [classes, setClasses] = useState<ClassOption[]>([])
 
   const [examId, setExamId] = useState("")
   const [blueprintId, setBlueprintId] = useState("")
-  const [classId, setClassId] = useState("")
+  const [scope, setScope] = useState<TeachingScopeValue>(EMPTY_TEACHING_SCOPE)
   const [title, setTitle] = useState("")
   const [examDate, setExamDate] = useState("")
   const [examType, setExamType] = useState("TEST")
@@ -79,14 +81,12 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
   useEffect(() => {
     if (!open) return
     void (async () => {
-      const [e, b, c] = await Promise.all([
+      const [e, b] = await Promise.all([
         listExamOptions(),
         listBlueprintOptions(),
-        listClassOptions(),
       ])
       if (e.success && e.data) setExams(e.data)
       if (b.success && b.data) setBlueprints(b.data)
-      if (c.success && c.data) setClasses(c.data)
     })()
   }, [open])
 
@@ -100,10 +100,18 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
     return template.mergeFields.map((tag) => ({ tag, ok: known.has(tag) }))
   }, [template])
 
+  // The blueprint fixes the subject; the scope picks grade and section.
+  const blueprint = blueprints.find((b) => b.id === blueprintId)
+  const pickBlueprint = (id: string) => {
+    setBlueprintId(id)
+    const next = blueprints.find((b) => b.id === id)
+    setScope({ ...EMPTY_TEACHING_SCOPE, subjectId: next?.subjectId ?? "" })
+  }
+
   const canSubmit =
     mode === "existing"
       ? !!examId
-      : !!blueprintId && !!classId && !!title.trim() && !!examDate
+      : !!blueprintId && !!scope.gradeId && !!title.trim() && !!examDate
 
   const submit = async () => {
     setBusy(true)
@@ -121,7 +129,8 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
             mode: "blueprint",
             documentTemplateId: template.id,
             blueprintId,
-            classId,
+            gradeId: scope.gradeId,
+            sectionId: scope.sectionId,
             title: title.trim(),
             examDate,
             examType: examType as "MIDTERM",
@@ -227,7 +236,7 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
                     {d?.noBlueprints}
                   </p>
                 ) : (
-                  <Select value={blueprintId} onValueChange={setBlueprintId}>
+                  <Select value={blueprintId} onValueChange={pickBlueprint}>
                     <SelectTrigger>
                       <SelectValue placeholder={d?.blueprint} />
                     </SelectTrigger>
@@ -242,21 +251,14 @@ export function UseExamTemplateDialog({ template, open, onOpenChange }: Props) {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label>{d?.class}</Label>
-                <Select value={classId} onValueChange={setClassId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={d?.class} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {blueprint && (
+                <TeachingScopePicker
+                  value={scope}
+                  onChange={setScope}
+                  subjectId={blueprint.subjectId}
+                  disabled={busy}
+                />
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="paper-title">{d?.examTitle}</Label>

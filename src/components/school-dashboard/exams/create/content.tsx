@@ -7,9 +7,11 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowRight, LibraryBig, Loader2, Sparkles } from "lucide-react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { ErrorToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { createDraftExam } from "@/components/school-dashboard/exams/manage/wizard/actions"
@@ -54,7 +56,16 @@ export default function ExamCreateChooser() {
       const result = await createDraftExam()
       if (result.success && result.data) {
         router.push(`/${locale}/exams/manage/add/${result.data.id}/information`)
+        return
       }
+      // A failure used to leave the button doing nothing at all.
+      ErrorToast(
+        actionErrorMessage(
+          result.success ? undefined : result.error,
+          dictionary,
+          dictionary?.common?.errors?.CREATE_FAILED ?? "Failed to create"
+        )
+      )
     })
   }
 

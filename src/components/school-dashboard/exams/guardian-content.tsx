@@ -15,6 +15,7 @@ import {
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,6 +28,10 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  examAudienceInclude,
+  studentExamsWhere,
+} from "@/components/school-dashboard/exams/lib/audience"
 import {
   AppTileGrid,
   DateTile,
@@ -114,12 +119,8 @@ export default async function GuardianExamsContent({
 
   const childIds = children.map((c) => c.id)
 
-  // Get all enrolled classes for all children
-  const enrolledClasses = await db.studentClass.findMany({
-    where: { studentId: { in: childIds }, schoolId },
-    select: { classId: true, studentId: true },
-  })
-  const classIds = [...new Set(enrolledClasses.map((sc) => sc.classId))]
+  // Where the children sit: sections, grades, and any legacy classes
+  const scopes = await getStudentScopes(schoolId, childIds)
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -129,12 +130,13 @@ export default async function GuardianExamsContent({
     db.schoolExam.findMany({
       where: {
         schoolId,
-        classId: { in: classIds },
+        wizardStep: null,
+        ...studentExamsWhere(scopes),
         status: { in: ["PLANNED", "IN_PROGRESS"] },
         examDate: { gte: today },
       },
       include: {
-        class: { select: { name: true, lang: true } },
+        ...examAudienceInclude,
         subject: { select: { name: true, lang: true } },
       },
       orderBy: { examDate: "asc" },

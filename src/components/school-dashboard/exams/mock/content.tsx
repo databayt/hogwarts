@@ -34,41 +34,11 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
       ? await getEnrolledSubjectIds(role, session?.user?.id, schoolId)
       : null
 
-  // For school mocks, get enrolled school subject IDs (for student/guardian)
-  let enrolledSchoolSubjectIds: string[] | undefined
-  if (schoolId && ["STUDENT", "GUARDIAN"].includes(role || "")) {
-    let studentIds: string[] = []
-    if (role === "STUDENT") {
-      const student = await db.student.findFirst({
-        where: { userId: session?.user?.id, schoolId },
-        select: { id: true },
-      })
-      if (student) studentIds = [student.id]
-    } else if (role === "GUARDIAN") {
-      const guardian = await db.guardian.findFirst({
-        where: { userId: session?.user?.id, schoolId },
-        select: { id: true },
-      })
-      if (guardian) {
-        const sgs = await db.studentGuardian.findMany({
-          where: { guardianId: guardian.id, schoolId },
-          select: { studentId: true },
-        })
-        studentIds = sgs.map((sg) => sg.studentId)
-      }
-    }
-    if (studentIds.length > 0) {
-      const classes = await db.studentClass.findMany({
-        where: { studentId: { in: studentIds }, schoolId },
-        select: { class: { select: { subjectId: true } } },
-      })
-      enrolledSchoolSubjectIds = [
-        ...new Set(
-          classes.map((c) => c.class.subjectId).filter(Boolean) as string[]
-        ),
-      ]
-    }
-  }
+  // School mocks use the same subject ids; a student with none sees none
+  const enrolledSchoolSubjectIds =
+    schoolId && ["STUDENT", "GUARDIAN"].includes(role || "")
+      ? (enrolledSubjectIds ?? [])
+      : undefined
 
   const isStudentOrGuardian = ["STUDENT", "GUARDIAN"].includes(role || "")
 

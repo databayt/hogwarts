@@ -6,6 +6,7 @@ import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { examRosterWhere } from "@/components/school-dashboard/exams/lib/audience"
 import { notifyAllResultsPublished } from "@/components/school-dashboard/exams/notifications/actions"
 
 import type { ActionResponse, ExamResultRow } from "./types"
@@ -284,16 +285,7 @@ export async function publishResults(input: {
       include: {
         _count: {
           select: {
-            results: true,
-          },
-        },
-        class: {
-          include: {
-            _count: {
-              select: {
-                studentClasses: true,
-              },
-            },
+            examResults: true,
           },
         },
       },
@@ -307,9 +299,12 @@ export async function publishResults(input: {
       }
     }
 
-    // Check if all students have results
-    const totalStudents = exam.class._count.studentClasses
-    const resultsEntered = exam._count.results
+    // Every student who sits the exam needs a result (marks entry writes
+    // ExamResult rows).
+    const totalStudents = await db.student.count({
+      where: examRosterWhere(schoolId, exam),
+    })
+    const resultsEntered = exam._count.examResults
 
     if (resultsEntered < totalStudents) {
       return {

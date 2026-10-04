@@ -14,6 +14,10 @@ import { renderToBuffer } from "@react-pdf/renderer"
 
 import { db } from "@/lib/db"
 import { getProvider } from "@/components/file/providers/factory"
+import {
+  examAudienceInclude,
+  examAudienceRef,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 import { AnswerKeyDocument } from "../../templates/answer-key-document"
 import { getVersionCode } from "../config"
@@ -197,7 +201,7 @@ export async function generateExamPaper(
       include: {
         exam: {
           include: {
-            class: { select: { name: true, id: true } },
+            ...examAudienceInclude,
             subject: { select: { name: true, id: true } },
           },
         },
@@ -258,7 +262,7 @@ export async function generateExamPaper(
     const paperData: ExamPaperData = {
       exam: {
         ...generatedExam.exam,
-        class: generatedExam.exam.class,
+        audience: examAudienceRef(generatedExam.exam),
         subject: generatedExam.exam.subject,
       } as ExamWithDetails,
       school: {
@@ -380,7 +384,7 @@ export async function generateAnswerKey(
         include: {
           exam: {
             include: {
-              class: { select: { name: true, id: true } },
+              ...examAudienceInclude,
               subject: { select: { name: true, id: true } },
             },
           },
@@ -480,7 +484,10 @@ export async function generateAnswerKey(
       const theme = withLocale(getThemePreset("CLASSIC"), locale)
 
       const document = React.createElement(AnswerKeyDocument, {
-        exam: generatedExam.exam,
+        exam: {
+          ...generatedExam.exam,
+          audience: examAudienceRef(generatedExam.exam),
+        },
         answers,
         theme,
       })
@@ -690,7 +697,7 @@ export async function getPaperData(
       include: {
         exam: {
           include: {
-            class: { select: { name: true, id: true } },
+            ...examAudienceInclude,
             subject: { select: { name: true, id: true } },
           },
         },
@@ -749,7 +756,7 @@ export async function getPaperData(
     const paperData: ExamPaperData = {
       exam: {
         ...generatedExam.exam,
-        class: generatedExam.exam.class,
+        audience: examAudienceRef(generatedExam.exam),
         subject: generatedExam.exam.subject,
       } as ExamWithDetails,
       school: {

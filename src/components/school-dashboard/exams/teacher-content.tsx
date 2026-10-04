@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { getTeacherPairs } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -31,6 +32,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { teacherExamsWhere } from "@/components/school-dashboard/exams/lib/audience"
 import {
   AppTileGrid,
   SectionHeader,
@@ -76,13 +78,18 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  // Get teacher's class IDs first
-  const teacherClasses = await db.class.findMany({
-    where: { schoolId, teacherId: teacher.id },
-    select: { id: true, name: true },
-  })
-
+  // What the teacher teaches: assigned (section, subject) pairs, and any
+  // legacy classes. Their exams are the ones they may open.
+  const [pairs, teacherClasses] = await Promise.all([
+    getTeacherPairs(schoolId, teacher.id),
+    db.class.findMany({
+      where: { schoolId, teacherId: teacher.id },
+      select: { id: true },
+    }),
+  ])
   const classIds = teacherClasses.map((c) => c.id)
+  const sectionIds = [...new Set(pairs.map((p) => p.sectionId))]
+  const myExams = teacherExamsWhere({ teacherId: teacher.id, userId, pairs })
 
   // Fetch teacher-scoped stats in parallel
   const [
@@ -96,7 +103,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
     resultsCount,
   ] = await Promise.all([
     db.schoolExam.count({
-      where: { schoolId, classId: { in: classIds } },
+      where: { schoolId, ...myExams },
     }),
     db.questionBank.count({
       where: { schoolId, createdBy: userId },
@@ -107,7 +114,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
     db.schoolExam.count({
       where: {
         schoolId,
-        classId: { in: classIds },
+        ...myExams,
         status: "IN_PROGRESS",
         examDate: { lt: today },
       },
@@ -115,7 +122,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
     db.schoolExam.count({
       where: {
         schoolId,
-        classId: { in: classIds },
+        ...myExams,
         status: { in: ["PLANNED", "IN_PROGRESS"] },
         examDate: { gte: today },
       },
@@ -123,17 +130,23 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
     db.schoolExam.count({
       where: {
         schoolId,
-        classId: { in: classIds },
+        ...myExams,
         status: "COMPLETED",
       },
     }),
-    db.studentClass.count({
-      where: { classId: { in: classIds } },
+    db.student.count({
+      where: {
+        schoolId,
+        OR: [
+          { sectionId: { in: sectionIds } },
+          { studentClasses: { some: { classId: { in: classIds } } } },
+        ],
+      },
     }),
     db.examResult.count({
       where: {
         schoolId,
-        exam: { classId: { in: classIds } },
+        exam: myExams,
       },
     }),
   ])
@@ -143,7 +156,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
   const h = dictionary?.results?.examsHome
   const acrossClasses = (h?.acrossClasses ?? "{count}").replace(
     "{count}",
-    String(teacherClasses.length)
+    String(sectionIds.length + teacherClasses.length)
   )
 
   const completionRate =

@@ -10,7 +10,9 @@ import { examCreateSchema } from "./validation"
 export type ExamFormData = {
   title: string
   description?: string
-  classId: string
+  gradeId: string
+  /** null = the whole grade. */
+  sectionId?: string | null
   subjectId: string
   examDate: Date
   startTime: string
@@ -36,7 +38,10 @@ export type ExamDTO = {
   schoolId: string
   title: string
   description: string | null
-  classId: string
+  /** Legacy exams only. */
+  classId: string | null
+  gradeId: string | null
+  sectionId: string | null
   subjectId: string
   examDate: Date
   startTime: string

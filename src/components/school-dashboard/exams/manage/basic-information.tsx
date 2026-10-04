@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scope/picker"
 
 import { EXAM_TYPES } from "./config"
 import { ExamFormStepProps } from "./types"
@@ -70,66 +71,21 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
         )}
       />
 
-      {/* Class and Subject */}
-      <div className="grid grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="classId"
-          render={({ field }) => (
-            <FormItem>
-              <Select
-                onValueChange={field.onChange}
-                value={field.value}
-                disabled={isView}
-              >
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={t?.selectClass ?? "Select class"}
-                    />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {/* TODO: Fetch classes from API */}
-                  <SelectItem value="class1">Class 1</SelectItem>
-                  <SelectItem value="class2">Class 2</SelectItem>
-                  <SelectItem value="class3">Class 3</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="subjectId"
-          render={({ field }) => (
-            <FormItem>
-              <Select
-                onValueChange={field.onChange}
-                value={field.value}
-                disabled={isView}
-              >
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={t?.selectSubject ?? "Select subject"}
-                    />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {/* TODO: Fetch subjects from API */}
-                  <SelectItem value="math">Mathematics</SelectItem>
-                  <SelectItem value="science">Science</SelectItem>
-                  <SelectItem value="english">English</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+      {/* Who sits it: grade → section or whole grade → subject */}
+      <TeachingScopePicker
+        value={{
+          gradeId: form.watch("gradeId") ?? "",
+          sectionId: form.watch("sectionId") ?? null,
+          subjectId: form.watch("subjectId") ?? "",
+        }}
+        onChange={(scope) => {
+          const opts = { shouldValidate: true, shouldDirty: true }
+          form.setValue("gradeId", scope.gradeId, opts)
+          form.setValue("sectionId", scope.sectionId, opts)
+          form.setValue("subjectId", scope.subjectId, opts)
+        }}
+        disabled={isView}
+      />
 
       {/* Exam Type */}
       <FormField

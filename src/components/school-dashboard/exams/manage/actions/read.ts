@@ -5,7 +5,9 @@
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
+import { studentExamsWhere } from "@/components/school-dashboard/exams/lib/audience"
 
 import { getExamsSchema } from "../validation"
 import type { ActionResponse, ExamListRow } from "./types"
@@ -32,7 +34,10 @@ export async function getExam(input: { id: string }): Promise<{
         title: true,
         description: true,
         classId: true,
+        gradeId: true,
+        sectionId: true,
         subjectId: true,
+        class: { select: { gradeId: true } },
         examDate: true,
         startTime: true,
         endTime: true,
@@ -113,6 +118,8 @@ export async function getExams(
               grade: { select: { name: true } },
             },
           },
+          section: { select: { name: true } },
+          grade: { select: { name: true } },
           subject: {
             select: {
               name: true,
@@ -127,7 +134,11 @@ export async function getExams(
     const mapped: ExamListRow[] = rows.map((exam) => ({
       id: exam.id,
       title: exam.title,
-      grade: exam.class?.grade?.name || "—",
+      grade:
+        exam.section?.name ||
+        exam.grade?.name ||
+        exam.class?.grade?.name ||
+        "—",
       subjectName: exam.subject?.name || "—",
       examDate: exam.examDate.toISOString(),
       startTime: exam.startTime,
@@ -188,21 +199,9 @@ export async function getUpcomingExams(input?: {
     }
 
     if (input?.studentId) {
-      // Get student's class
-      const student = await db.student.findFirst({
-        where: { id: input.studentId, schoolId },
-        include: {
-          studentClasses: {
-            select: { classId: true },
-          },
-        },
-      })
-
-      if (student) {
-        where.classId = {
-          in: student.studentClasses.map((sc) => sc.classId),
-        }
-      }
+      // The exams the student sits: their section, grade or legacy classes
+      const scopes = await getStudentScopes(schoolId, [input.studentId])
+      Object.assign(where, studentExamsWhere(scopes))
     }
 
     const exams = await db.schoolExam.findMany({
@@ -216,6 +215,8 @@ export async function getUpcomingExams(input?: {
             grade: { select: { name: true } },
           },
         },
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
         subject: {
           select: { name: true },
         },
@@ -225,7 +226,11 @@ export async function getUpcomingExams(input?: {
     const mapped: ExamListRow[] = exams.map((exam) => ({
       id: exam.id,
       title: exam.title,
-      grade: exam.class?.grade?.name || "—",
+      grade:
+        exam.section?.name ||
+        exam.grade?.name ||
+        exam.class?.grade?.name ||
+        "—",
       subjectName: exam.subject?.name || "—",
       examDate: exam.examDate.toISOString(),
       startTime: exam.startTime,

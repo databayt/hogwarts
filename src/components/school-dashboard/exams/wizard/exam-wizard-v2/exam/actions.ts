@@ -2,11 +2,14 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { auth } from "@/auth"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getSchoolSubjectOptions } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveTeachingScope } from "@/components/school-dashboard/teaching-scope/resolve"
 
 import { examDetailsSchema, type ExamDetailsFormData } from "./validation"
 
@@ -16,20 +19,30 @@ export async function updateExamDetails(
   input: ExamDetailsFormData
 ): Promise<ActionResponse> {
   try {
+    const session = await auth()
+    if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const parsed = examDetailsSchema.parse(input)
+    const result = examDetailsSchema.safeParse(input)
+    if (!result.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    const parsed = result.data
 
     // Find the generated exam to get the linked exam id
-    const genExam = await db.generatedExam.findFirst({
-      where: { id: generatedExamId, schoolId },
-      select: { examId: true },
-    })
+    const [genExam, resolved] = await Promise.all([
+      db.generatedExam.findFirst({
+        where: { id: generatedExamId, schoolId },
+        select: { examId: true, exam: { select: { termId: true } } },
+      }),
+      resolveTeachingScope(schoolId, parsed),
+    ])
 
     if (!genExam) {
       return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
+    if (!resolved.ok) return actionError(resolved.code)
+    const { scope } = resolved
 
     // Calculate endTime from startTime + duration
     const [hours, minutes] = parsed.startTime.split(":").map(Number)
@@ -43,8 +56,12 @@ export async function updateExamDetails(
       where: { id: genExam.examId, schoolId },
       data: {
         title: parsed.title,
-        classId: parsed.classId,
-        subjectId: parsed.subjectId,
+        // The scope replaces a legacy class.
+        classId: null,
+        gradeId: scope.gradeId,
+        sectionId: scope.sectionId,
+        subjectId: scope.subjectId,
+        termId: genExam.exam.termId ?? scope.termId,
         examDate: parsed.examDate,
         startTime: parsed.startTime,
         endTime,
@@ -59,29 +76,6 @@ export async function updateExamDetails(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to save",
-    }
-  }
-}
-
-/** Fetch classes for the current school */
-export async function getClassOptions(): Promise<
-  ActionResponse<{ id: string; name: string }[]>
-> {
-  try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-
-    const classes = await db.class.findMany({
-      where: { schoolId },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    })
-
-    return { success: true, data: classes }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load classes",
     }
   }
 }

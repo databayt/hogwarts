@@ -26,21 +26,22 @@ export async function getExamForWizard(
     const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
-        class: { select: { id: true, name: true } },
+        class: { select: { gradeId: true } },
         subject: { select: { id: true, name: true } },
       },
     })
 
     if (!exam) return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
 
+    // A legacy exam opens on its class's grade (see getExamInformation).
+    const gradeId = exam.gradeId ?? exam.class?.gradeId ?? ""
     return {
       success: true,
       data: {
         ...exam,
+        gradeId,
+        subjectId: gradeId ? exam.subjectId : "",
         retakePenalty: exam.retakePenalty ? Number(exam.retakePenalty) : null,
-        class: exam.class
-          ? { id: exam.class.id, className: exam.class.name }
-          : { id: "", className: "" },
         subject: exam.subject
           ? { id: exam.subject.id, name: exam.subject.name }
           : { id: "", name: "" },
@@ -69,25 +70,22 @@ export async function createDraftExam(): Promise<
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    // Find the first available class (which has a subjectId)
-    const firstClass = await db.class.findFirst({
-      where: { schoolId },
-      select: { id: true, subjectId: true },
+    // The column needs a subject before the information step picks the real
+    // scope. The draft has no grade until then, so it reaches nobody.
+    const firstSelection = await db.subjectSelection.findFirst({
+      where: { schoolId, isActive: true },
+      orderBy: { createdAt: "asc" },
+      select: { catalogSubjectId: true },
     })
 
-    if (!firstClass) {
-      return {
-        success: false,
-        error: "No classes found. Create a class first.",
-      }
-    }
+    if (!firstSelection) return actionError(ACTION_ERRORS.NO_SUBJECTS)
 
     const exam = await db.schoolExam.create({
       data: {
         schoolId,
         title: "",
-        classId: firstClass.id,
-        subjectId: firstClass.subjectId,
+        subjectId: firstSelection.catalogSubjectId,
+        createdById: session.user.id,
         examDate: new Date(),
         startTime: "09:00",
         endTime: "10:00",
@@ -125,7 +123,7 @@ export async function completeExamWizard(
 
     const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
-      select: { title: true, classId: true, subjectId: true },
+      select: { title: true, classId: true, gradeId: true },
     })
 
     if (!exam) {
@@ -137,6 +135,11 @@ export async function completeExamWizard(
         success: false,
         error: "Title is required before completing",
       }
+    }
+
+    // Without a grade (or a legacy class) the exam reaches no student.
+    if (!exam.gradeId && !exam.classId) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     await db.schoolExam.updateMany({
@@ -206,29 +209,6 @@ export async function deleteDraftExam(examId: string): Promise<ActionResponse> {
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to delete draft exam",
-    }
-  }
-}
-
-/** Fetch classes for the current school (for SelectField options) */
-export async function getClassOptions(): Promise<
-  ActionResponse<{ id: string; name: string }[]>
-> {
-  try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-
-    const classes = await db.class.findMany({
-      where: { schoolId },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    })
-
-    return { success: true, data: classes }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load classes",
     }
   }
 }

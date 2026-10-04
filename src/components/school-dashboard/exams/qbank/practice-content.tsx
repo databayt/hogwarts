@@ -7,6 +7,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 
+import { getEnrolledSubjectIds } from "../lib/scope"
 import { PracticeSession } from "./practice-session"
 
 interface Props {
@@ -27,25 +28,9 @@ export default async function PracticeContent({ lang }: Props) {
 
   if (!student) return null
 
-  const enrolledClasses = await db.studentClass.findMany({
-    where: { studentId: student.id, schoolId },
-    include: {
-      class: {
-        select: {
-          subjectId: true,
-          subject: { select: { id: true, name: true } },
-        },
-      },
-    },
-  })
-
-  const subjectIds = [
-    ...new Set(
-      enrolledClasses
-        .map((sc) => sc.class.subjectId)
-        .filter(Boolean) as string[]
-    ),
-  ]
+  // The student's grade's subjects (and any legacy classes')
+  const subjectIds =
+    (await getEnrolledSubjectIds("STUDENT", session.user.id, schoolId)) ?? []
 
   if (subjectIds.length === 0) return null
 

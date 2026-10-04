@@ -11,11 +11,12 @@
  * EXECUTION FLOW:
  * 1. Verify CRON_SECRET authorization (isAuthorizedCron — fails closed)
  * 2. Find all PLANNED or IN_PROGRESS exams with examDate in the next 24 hours
- * 3. Dispatch in-app + email notifications to the exam's class audience
+ * 3. Dispatch in-app + email notifications to the exam's audience
  * 4. Return { remindersSent, examsProcessed }
  *
  * TARGETING:
- * - Scoped to class: notifies all students/teachers enrolled in the exam's class.
+ * - The students who sit the exam (its section, its whole grade, or — for
+ *   legacy exams — its class) and the teachers who teach its subject there.
  *
  * IDEMPOTENCY:
  * - This cron runs once per day (0 7 * * *). The query window is exactly
@@ -30,6 +31,7 @@ import { NextResponse } from "next/server"
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
+import { examAudienceUserIds } from "@/components/school-dashboard/exams/lib/roster"
 
 export async function GET(request: Request) {
   if (!isAuthorizedCron(request, "exam-reminders")) {
@@ -56,6 +58,10 @@ export async function GET(request: Request) {
         schoolId: true,
         title: true,
         classId: true,
+        gradeId: true,
+        sectionId: true,
+        subjectId: true,
+        termId: true,
         examDate: true,
         startTime: true,
         school: {
@@ -72,6 +78,12 @@ export async function GET(request: Request) {
         day: "numeric",
       })
 
+      const targetUserIds = await examAudienceUserIds(exam.schoolId, exam, {
+        students: true,
+        teachers: true,
+      })
+      if (targetUserIds.length === 0) continue
+
       const { created } = await dispatchNotificationsToAudience({
         schoolId: exam.schoolId,
         type: "event_reminder",
@@ -84,8 +96,7 @@ export async function GET(request: Request) {
           url: `/exams/${exam.id}`,
         },
         lang: exam.school?.preferredLanguage ?? "ar",
-        targetScope: "class",
-        targetClassId: exam.classId,
+        targetUserIds,
       })
 
       remindersSent += created
@@ -96,6 +107,8 @@ export async function GET(request: Request) {
           examId: exam.id,
           schoolId: exam.schoolId,
           classId: exam.classId,
+          sectionId: exam.sectionId,
+          gradeId: exam.gradeId,
           examDate: exam.examDate,
           notificationsCreated: created,
         })

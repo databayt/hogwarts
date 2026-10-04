@@ -9,6 +9,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { generateExamPaperFromTemplate } from "@/components/school-dashboard/documents/exam-paper-flow"
 import { generateDocument } from "@/components/school-dashboard/documents/generate"
 import { autoGenerateExamQuestions } from "@/components/school-dashboard/exams/wizard/exam-wizard-v2/questions/auto-generate"
+import { resolveTeachingScope } from "@/components/school-dashboard/teaching-scope/resolve"
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
@@ -17,7 +18,6 @@ vi.mock("@/lib/db", () => ({
   db: {
     generatedExam: { findFirst: vi.fn(), create: vi.fn() },
     schoolExamTemplate: { findFirst: vi.fn() },
-    class: { findFirst: vi.fn() },
     schoolExam: { create: vi.fn(), deleteMany: vi.fn() },
     $transaction: vi.fn(),
   },
@@ -32,6 +32,10 @@ vi.mock("@/components/school-dashboard/documents/generate", () => ({
   generateDocument: vi.fn(),
 }))
 
+vi.mock("@/components/school-dashboard/teaching-scope/resolve", () => ({
+  resolveTeachingScope: vi.fn(),
+}))
+
 const SCHOOL_A = "school-1"
 const EXAM_ID = "exam-1"
 const GENERATED_ID = "gen-1"
@@ -40,7 +44,8 @@ const blueprintInput = {
   mode: "blueprint" as const,
   documentTemplateId: "tpl-1",
   blueprintId: "bp-1",
-  classId: "class-1",
+  gradeId: "grade-7",
+  sectionId: null,
   title: "Geography — final",
   examDate: "2026-08-01",
   examType: "FINAL" as const,
@@ -63,7 +68,15 @@ function stubBlueprintPath() {
     duration: 60,
     totalMarks: 40,
   } as never)
-  vi.mocked(db.class.findFirst).mockResolvedValue({ id: "class-1" } as never)
+  vi.mocked(resolveTeachingScope).mockResolvedValue({
+    ok: true,
+    scope: {
+      gradeId: "grade-7",
+      sectionId: null,
+      subjectId: "subj-1",
+      termId: "term-1",
+    },
+  })
   vi.mocked(db.$transaction).mockResolvedValue({
     examId: EXAM_ID,
     generatedExamId: GENERATED_ID,
@@ -152,13 +165,26 @@ describe("generateExamPaperFromTemplate", () => {
     expect(generateDocument).toHaveBeenCalledWith("tpl-1", GENERATED_ID)
   })
 
-  it("rejects a blueprint request missing its class", async () => {
+  it("rejects a blueprint request missing its grade", async () => {
     signInAs("ADMIN")
     const res = await generateExamPaperFromTemplate({
       ...blueprintInput,
-      classId: "",
+      gradeId: "",
     })
     expect(res.success).toBe(false)
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  it("refuses a grade that doesn't teach the blueprint's subject", async () => {
+    signInAs("ADMIN")
+    stubBlueprintPath()
+    vi.mocked(resolveTeachingScope).mockResolvedValue({
+      ok: false,
+      code: "SUBJECT_NOT_IN_GRADE",
+    })
+    const res = await generateExamPaperFromTemplate(blueprintInput)
+    expect(res.success).toBe(false)
+    expect(res.error).toBe("SUBJECT_NOT_IN_GRADE")
     expect(db.$transaction).not.toHaveBeenCalled()
   })
 })

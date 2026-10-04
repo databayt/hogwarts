@@ -80,9 +80,11 @@ export interface GeneratedExamWithDetails extends GeneratedExam {
   questions: GeneratedExamQuestionWithQuestion[]
 }
 
-/** Exam with class and subject */
+/** Exam with who sits it (see exams/lib/audience.ts) and its subject */
 export interface ExamWithDetails extends SchoolExam {
-  class: { name: string; id: string }
+  class: { name: string } | null
+  section: { name: string } | null
+  grade: { name: string } | null
   subject: { name: string; id: string }
 }
 

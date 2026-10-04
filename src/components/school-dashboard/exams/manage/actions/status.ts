@@ -11,6 +11,7 @@ import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
+import { examAudienceUserIds } from "@/components/school-dashboard/exams/lib/roster"
 
 import type { ActionResponse } from "./types"
 
@@ -266,11 +267,14 @@ export async function cancelExam(
       },
     })
 
-    // Notify students about exam cancellation (non-blocking)
-    const schoolPref = await db.school.findFirst({
-      where: { id: schoolId },
-      select: { preferredLanguage: true },
-    })
+    // Notify the students who sit it, and its teachers (non-blocking)
+    const [schoolPref, targetUserIds] = await Promise.all([
+      db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      }),
+      examAudienceUserIds(schoolId, exam, { students: true, teachers: true }),
+    ])
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
@@ -283,8 +287,7 @@ export async function cancelExam(
         examId,
         url: "/exams",
       },
-      targetScope: "class",
-      targetClassId: exam.classId,
+      targetUserIds,
     }).catch((err) => console.error("[cancelExam] Notification error:", err))
 
     refreshPage("/exams")

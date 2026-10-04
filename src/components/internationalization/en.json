@@ -435,7 +435,8 @@
       "INVALID_SECTION": "One of the sections no longer exists.",
       "SUBJECT_NOT_IN_GRADE": "This subject isn't taught in that grade.",
       "TEACHER_OVER_CAP": "This would take the teacher past their weekly limit.",
-      "ASSIGNMENT_FAILED": "Couldn't save the assignment. Try again."
+      "ASSIGNMENT_FAILED": "Couldn't save the assignment. Try again.",
+      "NO_SUBJECTS": "The school has no subjects yet. Choose its subjects first."
     },
     "tryAgain": "Try again"
   },

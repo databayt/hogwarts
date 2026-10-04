@@ -26,6 +26,19 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~85% complete. See [R
 
 ## Key Decisions
 
+- **Exams are set for a grade, never a class (2026-10-04)** — `Class` is being
+  retired (new schools have none). An exam's audience is `gradeId` + `sectionId`
+  (null = every section of the grade, plus students placed in the grade without a
+  section); legacy exams keep `classId`. Never branch on which kind you hold: use
+  `lib/audience.ts` — `examRosterWhere` (who sits it), `studentExamsWhere` (what a
+  student or a guardian's children sit), `teacherExamsWhere` (class teacher OR
+  creator OR a SubjectTeacher row for the exam's subject in its section/grade),
+  `examAudienceLabel` (section → grade → class name) — and `lib/roster.ts` for the
+  database side. New create paths take a scope from `TeachingScopePicker` and
+  validate it with `resolveTeachingScope` (grade is the school's, section is in the
+  grade, subject is taught there). A draft exam has no grade until its first step,
+  so it reaches nobody. The gradebook (`Result`) still needs a class — finalize
+  skips it for class-less exams until S5.
 - **Exam creation = 2-mode chooser; template-BUILD wizard removed (2026-07-18)** —
   `/exams/new` (`create/content.tsx`) is a one-screen chooser with **Adopt a template**
   (catalog browse/adopt + `AdoptExamDialog`) and **Generate with AI**

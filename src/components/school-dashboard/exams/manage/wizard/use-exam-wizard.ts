@@ -10,7 +10,10 @@ export interface ExamWizardData {
   schoolId: string
   title: string
   description: string | null
-  classId: string
+  /** "" until the information step picks a grade. */
+  gradeId: string
+  /** null = the whole grade. */
+  sectionId: string | null
   subjectId: string
   examType: string
   examDate: Date
@@ -28,7 +31,6 @@ export interface ExamWizardData {
   allowLateSubmit: boolean
   lateSubmitMinutes: number
   wizardStep: string | null
-  class: { id: string; name: string }
   subject: { id: string; name: string }
 }
 

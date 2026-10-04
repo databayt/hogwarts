@@ -54,6 +54,7 @@ model AcademicGrade {
   streams           AcademicStream[]
   subjectSelections SubjectSelection[]
   classes           Class[]
+  schoolExams       SchoolExam[]
   classrooms        Classroom[]
   sections          Section[]
   bookSelections    BookSelection[]

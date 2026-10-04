@@ -4,22 +4,23 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
   forwardRef,
-  useEffect,
+  useCallback,
   useImperativeHandle,
-  useState,
   useTransition,
 } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { EXAM_TYPE_OPTIONS } from "@/components/school-dashboard/exams/manage/wizard/config"
+import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scope/picker"
+import type { TeachingScopeValue } from "@/components/school-dashboard/teaching-scope/validation"
 
-import { getClassOptions, getSubjectOptions } from "../actions"
 import { updateExamInformation } from "./actions"
 import { informationSchema, type InformationFormData } from "./validation"
 
@@ -34,12 +35,6 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
     const { dictionary } = useDictionary()
     const t = dictionary?.school?.exams?.wizard?.examWizard?.information
     const [isPending, startTransition] = useTransition()
-    const [classOptions, setClassOptions] = useState<
-      { label: string; value: string }[]
-    >([])
-    const [subjectOptions, setSubjectOptions] = useState<
-      { label: string; value: string }[]
-    >([])
 
     const form = useForm<InformationFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,52 +42,37 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
       defaultValues: {
         title: initialData?.title || "",
         description: initialData?.description || "",
-        classId: initialData?.classId || "",
+        gradeId: initialData?.gradeId || "",
+        sectionId: initialData?.sectionId ?? null,
         subjectId: initialData?.subjectId || "",
         examType: initialData?.examType || "TEST",
       },
     })
 
-    // Load class and subject options
-    useEffect(() => {
-      async function loadOptions() {
-        const [classResult, subjectResult] = await Promise.all([
-          getClassOptions(),
-          getSubjectOptions(),
-        ])
-        if (classResult.success && classResult.data) {
-          setClassOptions(
-            classResult.data.map((c) => ({
-              label: c.name,
-              value: c.id,
-            }))
-          )
-        }
-        if (subjectResult.success && subjectResult.data) {
-          setSubjectOptions(
-            subjectResult.data.map((s) => ({
-              label: s.name,
-              value: s.id,
-            }))
-          )
-        }
-      }
-      loadOptions()
-    }, [])
-
     // Notify parent of validity changes
     const title = form.watch("title")
-    const classId = form.watch("classId")
+    const gradeId = form.watch("gradeId")
+    const sectionId = form.watch("sectionId")
     const subjectId = form.watch("subjectId")
     const examType = form.watch("examType")
     React.useEffect(() => {
       const isValid =
         title.trim().length >= 1 &&
-        classId.length >= 1 &&
+        gradeId.length >= 1 &&
         subjectId.length >= 1 &&
         !!examType
       onValidChange?.(isValid)
-    }, [title, classId, subjectId, examType, onValidChange])
+    }, [title, gradeId, subjectId, examType, onValidChange])
+
+    const setScope = useCallback(
+      (scope: TeachingScopeValue) => {
+        const opts = { shouldValidate: true, shouldDirty: true }
+        form.setValue("gradeId", scope.gradeId, opts)
+        form.setValue("sectionId", scope.sectionId, opts)
+        form.setValue("subjectId", scope.subjectId, opts)
+      },
+      [form]
+    )
 
     useImperativeHandle(ref, () => ({
       saveAndNext: () =>
@@ -107,7 +87,9 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
               const data = form.getValues()
               const result = await updateExamInformation(examId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  actionErrorMessage(result.error, dictionary, "Failed to save")
+                )
                 reject(new Error(result.error))
                 return
               }
@@ -139,20 +121,9 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
             }
             disabled={isPending}
           />
-          <SelectField
-            name="classId"
-            label="Class"
-            options={[...classOptions]}
-            placeholder={t?.selectClass ?? "Select a class"}
-            required
-            disabled={isPending}
-          />
-          <SelectField
-            name="subjectId"
-            label="Subject"
-            options={[...subjectOptions]}
-            placeholder={t?.selectSubject ?? "Select a subject"}
-            required
+          <TeachingScopePicker
+            value={{ gradeId, sectionId, subjectId }}
+            onChange={setScope}
             disabled={isPending}
           />
           <SelectField

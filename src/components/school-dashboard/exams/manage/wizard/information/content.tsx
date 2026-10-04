@@ -27,7 +27,7 @@ export default function InformationContent() {
     if (data) {
       setIsValid(
         data.title.trim().length >= 1 &&
-          data.classId.length >= 1 &&
+          data.gradeId.length >= 1 &&
           data.subjectId.length >= 1 &&
           !!data.examType
       )
@@ -55,7 +55,8 @@ export default function InformationContent() {
               ? {
                   title: data.title,
                   description: data.description ?? undefined,
-                  classId: data.classId,
+                  gradeId: data.gradeId,
+                  sectionId: data.sectionId,
                   subjectId: data.subjectId,
                   examType: data.examType as
                     | "MIDTERM"

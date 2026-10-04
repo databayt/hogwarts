@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { examReachesStudents } from "@/components/school-dashboard/exams/lib/roster"
 import { startExamSession } from "@/components/school-dashboard/exams/take/actions"
 
 const SCHOOL_ID = "clschool000000000000000001"
@@ -43,9 +44,14 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
 
+vi.mock("@/components/school-dashboard/exams/lib/roster", () => ({
+  examReachesStudents: vi.fn(),
+}))
+
 describe("Exam Take Actions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(examReachesStudents).mockResolvedValue(true)
   })
 
   describe("startExamSession", () => {
@@ -99,6 +105,28 @@ describe("Exam Take Actions", () => {
           }),
         })
       )
+    })
+
+    it("refuses a student the exam is not set for", async () => {
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
+        id: EXAM_ID,
+        schoolId: SCHOOL_ID,
+        status: "IN_PROGRESS",
+        maxAttempts: 3,
+        generatedExam: { questions: [] },
+      } as any)
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: "clstudent0000000000000001",
+      } as any)
+      vi.mocked(examReachesStudents).mockResolvedValue(false)
+
+      const result = await startExamSession({ examId: EXAM_ID })
+
+      expect(result.success).toBe(false)
+      expect(examReachesStudents).toHaveBeenCalledWith(SCHOOL_ID, EXAM_ID, [
+        "clstudent0000000000000001",
+      ])
+      expect(db.examSession.create).not.toHaveBeenCalled()
     })
   })
 })

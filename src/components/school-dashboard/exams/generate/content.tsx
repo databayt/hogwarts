@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -125,7 +126,13 @@ export default async function GenerateContent({
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {actionErrorMessage(
+              error,
+              dictionary,
+              dictionary?.common?.errors?.CREATE_FAILED ?? error
+            )}
+          </AlertDescription>
         </Alert>
       )}
 

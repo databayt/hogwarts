@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
@@ -29,8 +30,10 @@ export async function getGeneratedExamForWizard(
           select: {
             id: true,
             title: true,
-            classId: true,
+            gradeId: true,
+            sectionId: true,
             subjectId: true,
+            class: { select: { gradeId: true } },
             examDate: true,
             startTime: true,
             duration: true,
@@ -66,6 +69,11 @@ export async function getGeneratedExamForWizard(
 
     if (!genExam) return { success: false, error: "Generated exam not found" }
 
+    // A legacy exam opens on its class's grade; a fresh draft has no scope
+    // yet, and its placeholder subject is not a choice anyone made.
+    const examGradeId =
+      genExam.exam.gradeId ?? genExam.exam.class?.gradeId ?? ""
+
     return {
       success: true,
       data: {
@@ -90,8 +98,9 @@ export async function getGeneratedExamForWizard(
           genExam.paperConfig?.showPointsPerQuestion ?? true,
         // Exam details
         examTitle: genExam.exam.title,
-        examClassId: genExam.exam.classId,
-        examSubjectId: genExam.exam.subjectId,
+        examGradeId,
+        examSectionId: genExam.exam.sectionId,
+        examSubjectId: examGradeId ? genExam.exam.subjectId : "",
         examDate: genExam.exam.examDate,
         examStartTime: genExam.exam.startTime,
         examDuration: genExam.exam.duration,
@@ -128,17 +137,16 @@ export async function createDraftGeneratedExam(): Promise<
       return { success: false, error: "Missing school context" }
     }
 
-    // Find the first available class (which has a subjectId)
-    const firstClass = await db.class.findFirst({
-      where: { schoolId },
-      select: { id: true, subjectId: true },
+    // The column needs a subject before the exam step picks the real scope.
+    // The draft has no grade until then, so it reaches nobody.
+    const firstSelection = await db.subjectSelection.findFirst({
+      where: { schoolId, isActive: true },
+      orderBy: { createdAt: "asc" },
+      select: { catalogSubjectId: true },
     })
 
-    if (!firstClass) {
-      return {
-        success: false,
-        error: "No classes found. Create a class first.",
-      }
+    if (!firstSelection) {
+      return { success: false, error: ACTION_ERRORS.NO_SUBJECTS }
     }
 
     // Create a placeholder Exam record with wizardStep
@@ -146,8 +154,8 @@ export async function createDraftGeneratedExam(): Promise<
       data: {
         schoolId,
         title: "",
-        classId: firstClass.id,
-        subjectId: firstClass.subjectId,
+        subjectId: firstSelection.catalogSubjectId,
+        createdById: session.user.id ?? null,
         examDate: new Date(),
         startTime: "09:00",
         endTime: "10:00",

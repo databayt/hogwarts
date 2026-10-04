@@ -1,11 +1,13 @@
 "use server"
 
 import { auth } from "@/auth"
+import type { ExamType } from "@prisma/client"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveTeachingScope } from "@/components/school-dashboard/teaching-scope/resolve"
 
 import { validateDistribution } from "../validation"
 
@@ -20,13 +22,37 @@ interface AdoptExamResult {
   data?: { examId: string; generatedExamId: string }
 }
 
+/** Roles that schedule exams for a school. */
+const EXAM_AUTHOR_ROLES = new Set(["DEVELOPER", "ADMIN", "TEACHER"])
+
 /**
- * Adopt a catalog exam into the school.
+ * Catalog exam types are free strings (midterm, final, chapter_test,
+ * practice, quiz, diagnostic); a school exam takes the ExamType enum.
+ * Upper-casing them used to send CHAPTER_TEST to Prisma, so adopting any of
+ * the catalog's chapter tests failed.
+ */
+const CATALOG_EXAM_TYPES: Record<string, ExamType> = {
+  midterm: "MIDTERM",
+  final: "FINAL",
+  quiz: "QUIZ",
+  practice: "QUIZ",
+  chapter_test: "TEST",
+  diagnostic: "TEST",
+}
+
+function toSchoolExamType(catalogType: string): ExamType {
+  return CATALOG_EXAM_TYPES[catalogType.toLowerCase()] ?? "TEST"
+}
+
+/**
+ * Adopt a catalog exam into the school, set for a grade — one section of it
+ * or the whole grade (`sectionId: null`).
  * Creates school Exam + GeneratedExam + mirrors questions into school QBank.
  */
 export async function adoptExam(input: {
   catalogExamId: string
-  classId: string
+  gradeId: string
+  sectionId: string | null
   examDate: Date
   startTime: string
   endTime: string
@@ -38,6 +64,14 @@ export async function adoptExam(input: {
         success: false,
         error: "Unauthorized",
         code: "NO_SCHOOL_CONTEXT",
+      }
+    }
+
+    if (!EXAM_AUTHOR_ROLES.has(session.user.role ?? "")) {
+      return {
+        success: false,
+        error: ACTION_ERRORS.UNAUTHORIZED,
+        code: ACTION_ERRORS.UNAUTHORIZED,
       }
     }
 
@@ -90,18 +124,16 @@ export async function adoptExam(input: {
 
     const subject = subjectSelection.subject
 
-    // 3. Verify class belongs to school
-    const classExists = await db.class.findFirst({
-      where: { id: input.classId, schoolId },
+    // 3. The grade (and section) must be the school's and teach the subject
+    const resolved = await resolveTeachingScope(schoolId, {
+      gradeId: input.gradeId,
+      sectionId: input.sectionId,
+      subjectId: subject.id,
     })
-
-    if (!classExists) {
-      return {
-        success: false,
-        error: "Class not found in your school",
-        code: "INVALID_CLASS",
-      }
+    if (!resolved.ok) {
+      return { success: false, error: resolved.code, code: resolved.code }
     }
+    const { scope } = resolved
 
     // 4. Calculate duration from start/end time
     const [startH, startM] = input.startTime.split(":").map(Number)
@@ -117,15 +149,18 @@ export async function adoptExam(input: {
           schoolId,
           title: catalogExam.title,
           description: catalogExam.description,
-          classId: input.classId,
           subjectId: subject.id,
+          gradeId: scope.gradeId,
+          sectionId: scope.sectionId,
+          termId: scope.termId,
+          createdById: userId,
           examDate: input.examDate,
           startTime: input.startTime,
           endTime: input.endTime,
           duration,
           totalMarks: catalogExam.totalMarks || 100,
           passingMarks: catalogExam.passingMarks || 50,
-          examType: catalogExam.examType.toUpperCase() as any,
+          examType: toSchoolExamType(catalogExam.examType),
           status: "PLANNED",
           catalogChapterId: catalogExam.chapterId,
           catalogLessonId: catalogExam.lessonId,

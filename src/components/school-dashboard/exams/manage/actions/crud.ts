@@ -3,26 +3,41 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { after } from "next/server"
+import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
+import { examAudienceUserIds } from "@/components/school-dashboard/exams/lib/roster"
+import { resolveTeachingScope } from "@/components/school-dashboard/teaching-scope/resolve"
 import { prewarm } from "@/components/translation/prewarm"
 
 import { examCreateSchema, examUpdateSchema } from "../validation"
 import { checkExamConflicts } from "./conflict-detection"
 import type { ActionResponse } from "./types"
 
+/** Roles that set and change exams. */
+const EXAM_AUTHOR_ROLES = new Set(["DEVELOPER", "ADMIN", "TEACHER"])
+
+function unauthorized() {
+  return {
+    success: false as const,
+    error: ACTION_ERRORS.UNAUTHORIZED,
+    code: ACTION_ERRORS.UNAUTHORIZED,
+  }
+}
+
 /**
- * Creates a new exam
+ * Creates a new exam for a grade — one of its sections, or the whole grade.
  */
 export async function createExam(
   input: z.infer<typeof examCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
@@ -30,48 +45,26 @@ export async function createExam(
         code: "NO_SCHOOL_CONTEXT",
       }
     }
+    if (!EXAM_AUTHOR_ROLES.has(role ?? "")) return unauthorized()
+    const session = await auth()
 
     const parsed = examCreateSchema.parse(input)
 
-    // Check if class exists and belongs to school
-    const classExists = await db.class.findFirst({
-      where: {
-        id: parsed.classId,
-        schoolId,
-      },
-    })
-
-    if (!classExists) {
-      return {
-        success: false,
-        error: "Class not found or does not belong to your school",
-        code: "INVALID_CLASS",
-      }
+    // The grade, section and subject must be the school's, and the subject
+    // taught in that grade.
+    const resolved = await resolveTeachingScope(schoolId, parsed)
+    if (!resolved.ok) {
+      return { success: false, error: resolved.code, code: resolved.code }
     }
-
-    // Check if subject exists and belongs to school
-    const subjectExists = await db.subjectSelection.findFirst({
-      where: {
-        catalogSubjectId: parsed.subjectId,
-        schoolId,
-        isActive: true,
-      },
-    })
-
-    if (!subjectExists) {
-      return {
-        success: false,
-        error: "Subject not found or does not belong to your school",
-        code: "INVALID_SUBJECT",
-      }
-    }
+    const { scope } = resolved
 
     // Check for timetable conflicts
     const conflictCheck = await checkExamConflicts({
       examDate: parsed.examDate,
       startTime: parsed.startTime,
       endTime: parsed.endTime,
-      classId: parsed.classId,
+      gradeId: scope.gradeId,
+      sectionId: scope.sectionId,
     })
 
     if (!conflictCheck.success) {
@@ -107,8 +100,11 @@ export async function createExam(
         schoolId,
         title: parsed.title,
         description: parsed.description || null,
-        classId: parsed.classId,
-        subjectId: parsed.subjectId,
+        subjectId: scope.subjectId,
+        gradeId: scope.gradeId,
+        sectionId: scope.sectionId,
+        termId: scope.termId,
+        createdById: session?.user?.id ?? null,
         examDate: parsed.examDate,
         startTime: parsed.startTime,
         endTime: parsed.endTime,
@@ -126,11 +122,18 @@ export async function createExam(
     // `schoolExam`). Non-blocking and best-effort.
     after(() => prewarm("Exam", exam, { schoolId }))
 
-    // Notify students in the class about new exam (non-blocking)
-    const schoolPref = await db.school.findFirst({
-      where: { id: schoolId },
-      select: { preferredLanguage: true },
-    })
+    // Notify the students who sit it, and its teachers (non-blocking)
+    const [schoolPref, targetUserIds] = await Promise.all([
+      db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      }),
+      examAudienceUserIds(
+        schoolId,
+        { ...scope, classId: null },
+        { students: true, teachers: true }
+      ),
+    ])
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
@@ -144,8 +147,7 @@ export async function createExam(
         examDate: parsed.examDate.toISOString(),
         url: "/exams",
       },
-      targetScope: "class",
-      targetClassId: parsed.classId,
+      targetUserIds,
     }).catch((err) => console.error("[createExam] Notification error:", err))
 
     refreshPage("/exams")
@@ -179,7 +181,7 @@ export async function updateExam(
   input: z.infer<typeof examUpdateSchema>
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
@@ -187,6 +189,7 @@ export async function updateExam(
         code: "NO_SCHOOL_CONTEXT",
       }
     }
+    if (!EXAM_AUTHOR_ROLES.has(role ?? "")) return unauthorized()
 
     const parsed = examUpdateSchema.parse(input)
     const { id, ...rest } = parsed
@@ -222,8 +225,37 @@ export async function updateExam(
     if (typeof rest.title !== "undefined") data.title = rest.title
     if (typeof rest.description !== "undefined")
       data.description = rest.description || null
-    if (typeof rest.classId !== "undefined") data.classId = rest.classId
-    if (typeof rest.subjectId !== "undefined") data.subjectId = rest.subjectId
+
+    // A new grade, section or subject moves the exam to that scope — and off
+    // a legacy class, if it had one.
+    const scopeChanged =
+      rest.gradeId !== undefined ||
+      rest.sectionId !== undefined ||
+      rest.subjectId !== undefined
+    if (scopeChanged) {
+      const gradeId = rest.gradeId ?? examExists.gradeId
+      if (!gradeId) {
+        return {
+          success: false,
+          error: ACTION_ERRORS.GRADE_NOT_FOUND,
+          code: ACTION_ERRORS.GRADE_NOT_FOUND,
+        }
+      }
+      const resolved = await resolveTeachingScope(schoolId, {
+        gradeId,
+        sectionId:
+          rest.sectionId !== undefined ? rest.sectionId : examExists.sectionId,
+        subjectId: rest.subjectId ?? examExists.subjectId,
+      })
+      if (!resolved.ok) {
+        return { success: false, error: resolved.code, code: resolved.code }
+      }
+      data.classId = null
+      data.gradeId = resolved.scope.gradeId
+      data.sectionId = resolved.scope.sectionId
+      data.subjectId = resolved.scope.subjectId
+      if (!examExists.termId) data.termId = resolved.scope.termId
+    }
     if (typeof rest.examDate !== "undefined") data.examDate = rest.examDate
     if (typeof rest.startTime !== "undefined") data.startTime = rest.startTime
     if (typeof rest.endTime !== "undefined") data.endTime = rest.endTime
@@ -241,14 +273,23 @@ export async function updateExam(
       rest.examDate !== undefined ||
       rest.startTime !== undefined ||
       rest.endTime !== undefined ||
-      rest.classId !== undefined
+      scopeChanged
 
     if (isScheduleUpdate) {
       const examData = {
         examDate: rest.examDate || examExists.examDate,
         startTime: rest.startTime || examExists.startTime,
         endTime: rest.endTime || examExists.endTime,
-        classId: rest.classId || examExists.classId,
+        ...(scopeChanged
+          ? {
+              gradeId: data.gradeId as string,
+              sectionId: data.sectionId as string | null,
+            }
+          : {
+              classId: examExists.classId,
+              gradeId: examExists.gradeId,
+              sectionId: examExists.sectionId,
+            }),
         examId: id, // Pass exam ID to exclude it from conflict check
       }
 
@@ -323,7 +364,7 @@ export async function deleteExam(input: {
   id: string
 }): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
+    const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
@@ -331,6 +372,7 @@ export async function deleteExam(input: {
         code: "NO_SCHOOL_CONTEXT",
       }
     }
+    if (!EXAM_AUTHOR_ROLES.has(role ?? "")) return unauthorized()
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
@@ -370,11 +412,18 @@ export async function deleteExam(input: {
       where: { id, schoolId },
     })
 
-    // Notify students about exam cancellation (non-blocking)
-    const schoolPref2 = await db.school.findFirst({
-      where: { id: schoolId },
-      select: { preferredLanguage: true },
-    })
+    // Notify the students who sat it, and its teachers (non-blocking). The
+    // audience is resolved from the exam's keys, so it survives the delete.
+    const [schoolPref2, targetUserIds] = await Promise.all([
+      db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      }),
+      examAudienceUserIds(schoolId, examExists, {
+        students: true,
+        teachers: true,
+      }),
+    ])
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
@@ -387,8 +436,7 @@ export async function deleteExam(input: {
         examId: id,
         url: "/exams",
       },
-      targetScope: "class",
-      targetClassId: examExists.classId,
+      targetUserIds,
     }).catch((err) => console.error("[deleteExam] Notification error:", err))
 
     refreshPage("/exams")

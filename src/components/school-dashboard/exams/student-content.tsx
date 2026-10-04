@@ -17,6 +17,7 @@ import {
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -29,6 +30,11 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+  studentExamsWhere,
+} from "@/components/school-dashboard/exams/lib/audience"
 import {
   AppTileGrid,
   BrandBanner,
@@ -53,7 +59,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
 
   if (!schoolId || !userId) return null
 
-  // Get student record and enrolled classes
+  // Get the student record
   const student = await db.student.findFirst({
     where: { userId, schoolId },
     select: { id: true },
@@ -77,23 +83,8 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
     )
   }
 
-  // Get enrolled class IDs and subject IDs
-  const enrolledClasses = await db.studentClass.findMany({
-    where: { studentId: student.id, schoolId },
-    include: {
-      class: {
-        select: {
-          id: true,
-          subjectId: true,
-          subject: { select: { name: true, lang: true } },
-          name: true,
-          lang: true,
-        },
-      },
-    },
-  })
-
-  const classIds = enrolledClasses.map((sc) => sc.classId)
+  // Where the student sits: section, grade, and any legacy classes
+  const [scope] = await getStudentScopes(schoolId, [student.id])
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -103,12 +94,15 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
     db.schoolExam.findMany({
       where: {
         schoolId,
-        classId: { in: classIds },
+        wizardStep: null,
+        ...studentExamsWhere(
+          scope ?? { sectionId: null, gradeId: null, classIds: [] }
+        ),
         status: { in: ["PLANNED", "IN_PROGRESS"] },
         examDate: { gte: today },
       },
       include: {
-        class: { select: { name: true, lang: true } },
+        ...examAudienceInclude,
         subject: { select: { name: true, lang: true } },
       },
       orderBy: { examDate: "asc" },
@@ -126,7 +120,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
             examDate: true,
             totalMarks: true,
             subject: { select: { name: true, lang: true } },
-            class: { select: { name: true, lang: true } },
+            ...examAudienceInclude,
           },
         },
       },
@@ -146,7 +140,10 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
     ),
     getLabels(
       [
-        ...upcomingExams.flatMap((e) => [e.subject?.name, e.class?.name]),
+        ...upcomingExams.flatMap((e) => [
+          e.subject?.name,
+          examAudienceLabel(e),
+        ]),
         ...recentResults.map((r) => r.exam.subject?.name),
       ],
       lang,
@@ -486,9 +483,8 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
                 const name = exam.subject?.name
                   ? (labels.get(exam.subject.name) ?? exam.subject.name)
                   : ""
-                const className = exam.class?.name
-                  ? (labels.get(exam.class.name) ?? exam.class.name)
-                  : ""
+                const audience = examAudienceLabel(exam)
+                const className = labels.get(audience) ?? audience
 
                 return (
                   <Card

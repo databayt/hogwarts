@@ -12360,6 +12360,16 @@
       "generateAllHint": "Fills your template for every report card in the current filter, {size} at a time.",
       "generateAllProgress": "{done} of {total}",
       "noTemplate": "No template uploaded yet — add one under Templates."
+    },
+    "teachingScope": {
+      "grade": "Grade",
+      "selectGrade": "Select a grade",
+      "section": "Section",
+      "wholeGrade": "Whole grade",
+      "subject": "Subject",
+      "selectSubject": "Select a subject",
+      "noGrades": "No grade has subjects yet. Choose the school's subjects first.",
+      "noGradesForSubject": "No grade in your school teaches this subject."
     }
   },
   "finance": {

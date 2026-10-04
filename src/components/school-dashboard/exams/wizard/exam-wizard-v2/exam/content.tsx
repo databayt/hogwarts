@@ -38,12 +38,14 @@ export default function ExamContent() {
         <ExamForm
           ref={formRef}
           generatedExamId={generatedExamId}
+          fixedSubjectId={data?.templateSubjectId ?? undefined}
           initialData={
             data
               ? {
                   title: data.examTitle,
-                  classId: data.examClassId,
-                  subjectId: data.examSubjectId,
+                  gradeId: data.examGradeId,
+                  sectionId: data.examSectionId,
+                  subjectId: data.templateSubjectId || data.examSubjectId,
                   examDate: data.examDate,
                   startTime: data.examStartTime,
                   duration: data.examDuration,

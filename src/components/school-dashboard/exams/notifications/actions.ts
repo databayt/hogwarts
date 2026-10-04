@@ -16,6 +16,12 @@
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+  examRosterWhere,
+  type ExamAudience,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 import { DEFAULT_NOTIFICATION_LANG, formatExamNotification } from "./formatter"
 import type {
@@ -45,34 +51,9 @@ export async function sendExamNotification(
     throw new Error("Unauthorized")
   }
 
-  // Get exam details if not provided
   const exam = await db.schoolExam.findFirst({
     where: { id: data.examId, schoolId },
-    include: {
-      class: {
-        include: {
-          studentClasses: {
-            include: {
-              student: {
-                include: {
-                  user: true,
-                  studentGuardians: {
-                    include: {
-                      guardian: {
-                        include: {
-                          user: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      subject: true,
-    },
+    select: { id: true, classId: true, gradeId: true, sectionId: true },
   })
 
   if (!exam) {
@@ -82,7 +63,8 @@ export async function sendExamNotification(
   const lang = await getSchoolLang(schoolId)
 
   // Determine recipients if not provided
-  const targetRecipients = recipients ?? getDefaultRecipients(data.type, exam)
+  const targetRecipients =
+    recipients ?? (await getDefaultRecipients(schoolId, data.type, exam))
 
   // Create notifications
   const notifications = await Promise.all(
@@ -121,7 +103,7 @@ export async function notifyExamScheduled(examId: string) {
     where: { id: examId, schoolId },
     include: {
       subject: true,
-      class: true,
+      ...examAudienceInclude,
     },
   })
 
@@ -134,7 +116,7 @@ export async function notifyExamScheduled(examId: string) {
     examId,
     examTitle: exam.title,
     name: exam.subject.name,
-    className: exam.class.name,
+    className: examAudienceLabel(exam),
     examDate: exam.examDate,
     duration: exam.duration,
     totalMarks: exam.totalMarks,
@@ -158,7 +140,7 @@ export async function notifyExamReminder(examId: string, hoursUntil: number) {
     where: { id: examId, schoolId },
     include: {
       subject: true,
-      class: true,
+      ...examAudienceInclude,
     },
   })
 
@@ -171,7 +153,7 @@ export async function notifyExamReminder(examId: string, hoursUntil: number) {
     examId,
     examTitle: exam.title,
     name: exam.subject.name,
-    className: exam.class.name,
+    className: examAudienceLabel(exam),
     examDate: exam.examDate,
     hoursUntil,
   }
@@ -203,7 +185,7 @@ export async function notifyResultsPublished(
       exam: {
         include: {
           subject: true,
-          class: true,
+          ...examAudienceInclude,
         },
       },
       student: {
@@ -252,7 +234,7 @@ export async function notifyResultsPublished(
     examId,
     examTitle: result.exam.title,
     name: result.exam.subject.name,
-    className: result.exam.class.name,
+    className: examAudienceLabel(result.exam),
     percentage,
     grade: result.grade ?? "N/A",
     classAverage:
@@ -304,7 +286,7 @@ export async function notifyRetakeAvailable(
     where: { id: examId, schoolId },
     include: {
       subject: true,
-      class: true,
+      ...examAudienceInclude,
     },
   })
 
@@ -329,7 +311,7 @@ export async function notifyRetakeAvailable(
     examId,
     examTitle: exam.title,
     name: exam.subject.name,
-    className: exam.class.name,
+    className: examAudienceLabel(exam),
     attemptNumber,
     maxAttempts: exam.maxAttempts,
     previousScore: previousResult
@@ -379,48 +361,39 @@ export async function notifyAllResultsPublished(examId: string) {
 
 // Helper functions
 
-function getDefaultRecipients(
+/** The exam's students, plus their guardians for the types parents get. */
+async function getDefaultRecipients(
+  schoolId: string,
   type: ExamNotificationType,
-  exam: {
-    class: {
-      studentClasses: Array<{
-        student: {
-          user: { id: string } | null
-          studentGuardians: Array<{
-            guardian: {
-              user: { id: string } | null
-            }
-          }>
-        }
-      }>
-    }
-  }
-): { userId: string; type: RecipientType }[] {
+  exam: Pick<ExamAudience, "classId" | "gradeId" | "sectionId">
+): Promise<{ userId: string; type: RecipientType }[]> {
+  const withParents = [
+    "EXAM_SCHEDULED",
+    "RESULTS_PUBLISHED",
+    "RETAKE_AVAILABLE",
+  ].includes(type)
+  const students = await db.student.findMany({
+    where: examRosterWhere(schoolId, exam),
+    select: {
+      userId: true,
+      studentGuardians: {
+        where: { schoolId },
+        select: { guardian: { select: { userId: true } } },
+      },
+    },
+  })
+
   const recipients: { userId: string; type: RecipientType }[] = []
-
-  for (const sc of exam.class.studentClasses) {
-    // Add student
-    if (sc.student.user?.id) {
-      recipients.push({
-        userId: sc.student.user.id,
-        type: "STUDENT",
-      })
+  for (const student of students) {
+    if (student.userId) {
+      recipients.push({ userId: student.userId, type: "STUDENT" })
     }
-
-    // Add parents for certain notification types
-    if (
-      ["EXAM_SCHEDULED", "RESULTS_PUBLISHED", "RETAKE_AVAILABLE"].includes(type)
-    ) {
-      for (const sg of sc.student.studentGuardians) {
-        if (sg.guardian.user?.id) {
-          recipients.push({
-            userId: sg.guardian.user.id,
-            type: "PARENT",
-          })
-        }
+    if (!withParents) continue
+    for (const sg of student.studentGuardians) {
+      if (sg.guardian.userId) {
+        recipients.push({ userId: sg.guardian.userId, type: "PARENT" })
       }
     }
   }
-
   return recipients
 }

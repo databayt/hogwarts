@@ -16,10 +16,12 @@ import {
   getSchoolSubjectOptions,
   subjectOptionLabel,
 } from "@/lib/school-subjects"
+import { getTeacherSubjectIds } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { getEnrolledSubjectIds } from "../lib/scope"
 import type { QuestionBankRow } from "./columns"
 import { questionBankSearchParams } from "./list-params"
 import PracticeContent from "./practice-content"
@@ -79,43 +81,10 @@ export default async function QuestionBankContent({
 
   // For students/guardians/teachers, scope questions to enrolled/assigned subjects
   let enrolledSubjectIds: string[] | null = null
-  if (schoolId && role === "STUDENT") {
-    const student = await db.student.findFirst({
-      where: { userId: session?.user?.id, schoolId },
-      select: { id: true },
-    })
-    if (student) {
-      const classes = await db.studentClass.findMany({
-        where: { studentId: student.id, schoolId },
-        include: { class: { select: { subjectId: true } } },
-      })
-      enrolledSubjectIds = classes
-        .map((sc) => sc.class.subjectId)
-        .filter(Boolean) as string[]
-    }
-  } else if (schoolId && role === "GUARDIAN") {
-    const guardian = await db.guardian.findFirst({
-      where: { userId: session?.user?.id, schoolId },
-      select: { id: true },
-    })
-    if (guardian) {
-      const sgs = await db.studentGuardian.findMany({
-        where: { guardianId: guardian.id, schoolId },
-        select: { studentId: true },
-      })
-      const classes = await db.studentClass.findMany({
-        where: {
-          studentId: { in: sgs.map((sg) => sg.studentId) },
-          schoolId,
-        },
-        include: { class: { select: { subjectId: true } } },
-      })
-      enrolledSubjectIds = [
-        ...new Set(
-          classes.map((sc) => sc.class.subjectId).filter(Boolean) as string[]
-        ),
-      ]
-    }
+  if (schoolId && (role === "STUDENT" || role === "GUARDIAN")) {
+    // Their grade's subjects (and legacy classes'); none means no questions
+    enrolledSubjectIds =
+      (await getEnrolledSubjectIds(role, session?.user?.id, schoolId)) ?? []
   } else if (schoolId && role === "TEACHER") {
     // Teacher sees questions from subjects they teach
     const teacher = await db.teacher.findFirst({
@@ -123,15 +92,7 @@ export default async function QuestionBankContent({
       select: { id: true },
     })
     if (teacher) {
-      const teacherClasses = await db.class.findMany({
-        where: { teacherId: teacher.id, schoolId },
-        select: { subjectId: true },
-      })
-      enrolledSubjectIds = [
-        ...new Set(
-          teacherClasses.map((c) => c.subjectId).filter(Boolean) as string[]
-        ),
-      ]
+      enrolledSubjectIds = await getTeacherSubjectIds(schoolId, teacher.id)
     }
   }
 

@@ -9,6 +9,8 @@
 import React from "react"
 import { Image, StyleSheet, Text, View } from "@react-pdf/renderer"
 
+import { examAudienceLabel } from "@/components/school-dashboard/exams/lib/audience"
+
 import type { ExamWithDetails, SchoolForPaper } from "../../types"
 
 interface HeaderProps {
@@ -170,7 +172,7 @@ export function Header({
 
   const schoolName = school.name
   const name = exam.subject.name
-  const className = exam.class.name
+  const className = examAudienceLabel(exam)
   const examDate = formatExamDate(exam, locale)
   const academicYear = getAcademicYear()
 

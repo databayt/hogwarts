@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect, useState, useTransition } from "react"
+import React, { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Download, Loader2 } from "lucide-react"
 
@@ -18,27 +18,22 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
-import { getClassOptions } from "@/components/school-dashboard/exams/wizard/exam-wizard-v2/exam/actions"
+import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scope/picker"
+import {
+  EMPTY_TEACHING_SCOPE,
+  type TeachingScopeValue,
+} from "@/components/school-dashboard/teaching-scope/validation"
 
 import { adoptExam } from "./actions/catalog-adopt"
 
 const L = {
   title: { en: "Adopt exam", ar: "تبنّي الاختبار" },
   description: {
-    en: "Schedule it for a class — questions are copied into your bank.",
-    ar: "جدوله لفصل — تُنسخ الأسئلة إلى بنك أسئلتك.",
+    en: "Schedule it for a grade or one of its sections — questions are copied into your bank.",
+    ar: "جدوله لصف أو لأحد فصوله — تُنسخ الأسئلة إلى بنك أسئلتك.",
   },
-  class: { en: "Class", ar: "الفصل" },
-  selectClass: { en: "Select a class", ar: "اختر فصلًا" },
   date: { en: "Exam date", ar: "تاريخ الاختبار" },
   start: { en: "Start", ar: "البداية" },
   end: { en: "End", ar: "النهاية" },
@@ -49,12 +44,15 @@ const L = {
 
 interface AdoptExamDialogProps {
   examId: string | null
+  /** The catalog exam's subject — fixes the subject of the scope. */
+  subjectId: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 export function AdoptExamDialog({
   examId,
+  subjectId,
   open,
   onOpenChange,
 }: AdoptExamDialogProps) {
@@ -63,21 +61,18 @@ export function AdoptExamDialog({
   const lang = locale === "ar" ? "ar" : "en"
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [classes, setClasses] = useState<{ id: string; name: string }[]>([])
-  const [classId, setClassId] = useState("")
+  // Mounted per exam (keyed by the caller), so the scope starts empty with
+  // that exam's subject.
+  const [scope, setScope] = useState<TeachingScopeValue>(() => ({
+    ...EMPTY_TEACHING_SCOPE,
+    subjectId: subjectId ?? "",
+  }))
   const [date, setDate] = useState("")
   const [startTime, setStartTime] = useState("09:00")
   const [endTime, setEndTime] = useState("10:00")
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!open) return
-    getClassOptions().then((result) => {
-      if (result.success && result.data) setClasses(result.data)
-    })
-  }, [open])
-
-  const canSubmit = !!examId && !!classId && !!date && !isPending
+  const canSubmit = !!examId && !!scope.gradeId && !!date && !isPending
 
   const handleAdopt = () => {
     if (!examId) return
@@ -85,7 +80,8 @@ export function AdoptExamDialog({
     startTransition(async () => {
       const result = await adoptExam({
         catalogExamId: examId,
-        classId,
+        gradeId: scope.gradeId,
+        sectionId: scope.sectionId,
         examDate: new Date(date),
         startTime,
         endTime,
@@ -112,21 +108,12 @@ export function AdoptExamDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>{L.class[lang]}</Label>
-            <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger>
-                <SelectValue placeholder={L.selectClass[lang]} />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <TeachingScopePicker
+            value={scope}
+            onChange={setScope}
+            subjectId={subjectId ?? undefined}
+            disabled={isPending}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="adopt-date">{L.date[lang]}</Label>

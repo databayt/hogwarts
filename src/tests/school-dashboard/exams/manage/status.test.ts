@@ -27,6 +27,9 @@ vi.mock("@/lib/db", () => ({
     examResult: {
       findFirst: vi.fn(),
     },
+    student: {
+      count: vi.fn().mockResolvedValue(25),
+    },
     school: {
       findFirst: vi.fn().mockResolvedValue({ preferredLanguage: "en" }),
     },
@@ -39,6 +42,10 @@ vi.mock("@/lib/dispatch-notification", () => ({
 
 vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
+}))
+
+vi.mock("@/components/school-dashboard/exams/lib/roster", () => ({
+  examAudienceUserIds: vi.fn().mockResolvedValue([]),
 }))
 
 vi.mock("next/cache", () => ({
@@ -165,8 +172,10 @@ describe("Exam Status Actions — defense-in-depth", () => {
       vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_ID,
-        _count: { results: 25 },
-        class: { _count: { studentClasses: 25 } },
+        classId: null,
+        gradeId: "grade-7",
+        sectionId: "section-7a",
+        _count: { examResults: 25 },
       } as any)
       vi.mocked(db.schoolExam.updateMany).mockResolvedValue({ count: 1 })
 

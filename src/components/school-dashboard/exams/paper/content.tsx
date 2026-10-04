@@ -27,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { examAudienceLabel } from "@/components/school-dashboard/exams/lib/audience"
 
 import { GenerateWithTemplateButton } from "../../documents/generate-with-template-button"
 import { getOrCreatePaperConfig, getPaperData } from "./actions"
@@ -138,7 +139,7 @@ export async function Content({
           </CardTitle>
           <CardDescription>
             {config.generatedExam.exam.subject.name} -{" "}
-            {config.generatedExam.exam.class.name}
+            {examAudienceLabel(config.generatedExam.exam)}
           </CardDescription>
         </CardHeader>
         <CardContent>

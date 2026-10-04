@@ -43,7 +43,7 @@ vi.mock("@/lib/db", () => ({
         schoolType: "K12",
       }),
     },
-    studentClass: {
+    student: {
       count: vi.fn().mockResolvedValue(0),
     },
   },
@@ -73,7 +73,7 @@ describe("Paper Config Actions — multi-tenant safety", () => {
       timetableStructure: "STANDARD",
       schoolType: "K12",
     } as any)
-    vi.mocked(db.studentClass.count).mockResolvedValue(0)
+    vi.mocked(db.student.count).mockResolvedValue(0)
   })
 
   describe("createPaperConfig", () => {
@@ -130,15 +130,20 @@ describe("Paper Config Actions — multi-tenant safety", () => {
       expect(db.examPaperConfig.create).not.toHaveBeenCalled()
     })
 
-    it("counts enrollment scoped to school for recommendedCopies", async () => {
+    it("counts the exam's students, scoped to school, for recommendedCopies", async () => {
       vi.mocked(db.examPaperConfig.findFirst).mockResolvedValue(null)
       vi.mocked(db.generatedExam.findFirst).mockResolvedValue({
         id: "ge-1",
         schoolId: SCHOOL_ID,
-        exam: { classId: "class-1", class: {}, subject: {} },
+        exam: {
+          classId: null,
+          gradeId: "grade-7",
+          sectionId: "section-7a",
+          subject: {},
+        },
         questions: [],
       } as any)
-      vi.mocked(db.studentClass.count).mockResolvedValue(28)
+      vi.mocked(db.student.count).mockResolvedValue(28)
       vi.mocked(db.examPaperConfig.create).mockResolvedValue({
         id: "cfg-1",
       } as any)
@@ -148,8 +153,8 @@ describe("Paper Config Actions — multi-tenant safety", () => {
         spareCopies: 2,
       } as any)
 
-      expect(db.studentClass.count).toHaveBeenCalledWith({
-        where: { classId: "class-1", schoolId: SCHOOL_ID },
+      expect(db.student.count).toHaveBeenCalledWith({
+        where: { schoolId: SCHOOL_ID, sectionId: "section-7a" },
       })
     })
   })

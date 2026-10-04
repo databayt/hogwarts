@@ -22,6 +22,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
+import { examReachesStudents } from "../lib/roster"
 import { finalizeStudentExam } from "../mark/actions/finalize"
 import type {
   ExamData,
@@ -124,6 +125,11 @@ export async function startExamSession(input: StartExamSessionInput) {
     })
 
     if (!student) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    // Only the students the exam is set for may sit it.
+    if (!(await examReachesStudents(schoolId, examId, [student.id]))) {
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
@@ -622,6 +628,20 @@ export async function getExamForPlayer(examId: string): Promise<
     const isStaff = ["ADMIN", "TEACHER", "DEVELOPER"].includes(role)
     if (!isStaff && exam.status !== "IN_PROGRESS") {
       return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    // …and only an exam set for their section, grade or class.
+    if (!isStaff) {
+      const taker = await db.student.findFirst({
+        where: { userId, schoolId },
+        select: { id: true },
+      })
+      if (
+        !taker ||
+        !(await examReachesStudents(schoolId, examId, [taker.id]))
+      ) {
+        return actionError(ACTION_ERRORS.NOT_FOUND)
+      }
     }
 
     const generated = await db.generatedExam.findFirst({

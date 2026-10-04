@@ -19,7 +19,7 @@ describe("Exam Validation Schemas", () => {
       const validData = {
         title: "Midterm Mathematics Exam",
         description: "Chapters 1-5",
-        classId: "class-123",
+        gradeId: "grade-123",
         subjectId: "subject-123",
         examDate: futureDate,
         startTime: "09:00",
@@ -35,9 +35,9 @@ describe("Exam Validation Schemas", () => {
       expect(result.success).toBe(true)
     })
 
-    it("requires title, classId, subjectId, examDate, startTime, endTime, duration, totalMarks, passingMarks, examType", () => {
+    it("requires title, gradeId, subjectId, examDate, startTime, endTime, duration, totalMarks, passingMarks, examType", () => {
       const missingTitle = {
-        classId: "class-123",
+        gradeId: "grade-123",
         subjectId: "subject-123",
         examDate: futureDate,
         startTime: "09:00",
@@ -67,7 +67,7 @@ describe("Exam Validation Schemas", () => {
     it("validates total marks is positive", () => {
       const base = {
         title: "Exam",
-        classId: "c1",
+        gradeId: "g1",
         subjectId: "s1",
         examDate: futureDate,
         startTime: "09:00",
@@ -91,7 +91,7 @@ describe("Exam Validation Schemas", () => {
     it("validates passing marks does not exceed total", () => {
       const base = {
         title: "Exam",
-        classId: "c1",
+        gradeId: "g1",
         subjectId: "s1",
         examDate: futureDate,
         startTime: "09:00",
@@ -127,7 +127,7 @@ describe("Exam Validation Schemas", () => {
 
       const base = {
         title: "Exam",
-        classId: "c1",
+        gradeId: "g1",
         subjectId: "s1",
         examDate: futureDate,
         startTime: "09:00",
@@ -158,7 +158,7 @@ describe("Exam Validation Schemas", () => {
     it("validates duration range (1-480 minutes)", () => {
       const base = {
         title: "Exam",
-        classId: "c1",
+        gradeId: "g1",
         subjectId: "s1",
         examDate: futureDate,
         startTime: "09:00",
@@ -182,7 +182,7 @@ describe("Exam Validation Schemas", () => {
     it("validates end time is after start time", () => {
       const base = {
         title: "Exam",
-        classId: "c1",
+        gradeId: "g1",
         subjectId: "s1",
         examDate: futureDate,
         duration: 120,
@@ -210,7 +210,7 @@ describe("Exam Validation Schemas", () => {
     it("validates passing marks percentage is realistic (10%-90%)", () => {
       const base = {
         title: "Exam",
-        classId: "c1",
+        gradeId: "g1",
         subjectId: "s1",
         examDate: futureDate,
         startTime: "09:00",
@@ -237,7 +237,7 @@ describe("Exam Validation Schemas", () => {
     it("applies proctoring defaults", () => {
       const minimal = {
         title: "Exam",
-        classId: "c1",
+        gradeId: "g1",
         subjectId: "s1",
         examDate: futureDate,
         startTime: "09:00",
@@ -304,7 +304,7 @@ describe("Exam Validation Schemas", () => {
 
     it("accepts filter parameters", () => {
       const withFilters = {
-        classId: "class-123",
+        gradeId: "grade-123",
         subjectId: "subject-123",
         examType: "MIDTERM",
         status: "PLANNED",

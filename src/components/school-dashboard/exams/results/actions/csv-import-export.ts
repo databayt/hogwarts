@@ -19,6 +19,11 @@ import { z } from "zod"
 import { cacheKeys, gradeBoundaryCache } from "@/lib/cache/exam-cache"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+  examRosterWhere,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 // Validation schemas
 const exportResultsSchema = z.object({
@@ -109,11 +114,7 @@ export async function exportExamResultsToCSV(
         schoolId,
       },
       include: {
-        class: {
-          select: {
-            name: true,
-          },
-        },
+        ...examAudienceInclude,
         subject: {
           select: {
             name: true,
@@ -185,7 +186,7 @@ export async function exportExamResultsToCSV(
       const row = [
         result.student.studentId || "",
         `"${studentName}"`,
-        `"${exam.class.name}"`,
+        `"${examAudienceLabel(exam)}"`,
         `"${exam.subject.name}"`,
         `"${exam.title}"`,
         exam.examDate.toISOString().split("T")[0],
@@ -269,7 +270,7 @@ export async function exportExamResultsToCSV(
         rowCount: exam.examResults.length,
         metadata: {
           examTitle: exam.title,
-          className: exam.class.name,
+          className: examAudienceLabel(exam),
           name: exam.subject.name,
           examDate: exam.examDate,
         },
@@ -518,15 +519,7 @@ export async function generateResultImportTemplate(examId: string): Promise<{
         schoolId,
       },
       include: {
-        class: {
-          include: {
-            studentClasses: {
-              include: {
-                student: true,
-              },
-            },
-          },
-        },
+        ...examAudienceInclude,
         subject: true,
       },
     })
@@ -535,11 +528,23 @@ export async function generateResultImportTemplate(examId: string): Promise<{
       return { success: false, error: "Exam not found" }
     }
 
+    // The students who sit the exam: its section, its grade, or its class
+    const students = await db.student.findMany({
+      where: examRosterWhere(schoolId, exam),
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+      select: {
+        studentId: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+      },
+    })
+
     // Generate template with student list
     const rows = [
       "Student ID,Student Name,Marks Obtained,Absent,Remarks",
       `# Exam: ${exam.title}`,
-      `# Class: ${exam.class.name}`,
+      `# Class: ${examAudienceLabel(exam)}`,
       `# Subject: ${exam.subject.name}`,
       `# Total Marks: ${exam.totalMarks}`,
       `# Passing Marks: ${exam.passingMarks}`,
@@ -547,13 +552,12 @@ export async function generateResultImportTemplate(examId: string): Promise<{
     ]
 
     // Add student rows
-    for (const sc of exam.class.studentClasses) {
-      const studentName =
-        `${sc.student.firstName} ${sc.student.middleName || ""} ${
-          sc.student.lastName
-        }`.trim()
+    for (const student of students) {
+      const studentName = `${student.firstName} ${student.middleName || ""} ${
+        student.lastName
+      }`.trim()
 
-      rows.push(`${sc.student.studentId || ""},"${studentName}",0,No,`)
+      rows.push(`${student.studentId || ""},"${studentName}",0,No,`)
     }
 
     const csv = rows.join("\n")

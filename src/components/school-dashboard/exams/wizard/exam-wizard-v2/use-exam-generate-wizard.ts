@@ -27,7 +27,10 @@ export interface ExamGenerateWizardData {
   showPointsPerQuestion: boolean
   // Exam details (from linked Exam)
   examTitle: string
-  examClassId: string
+  /** "" until the exam step picks a grade. */
+  examGradeId: string
+  /** null = the whole grade. */
+  examSectionId: string | null
   examSubjectId: string
   examDate: Date
   examStartTime: string

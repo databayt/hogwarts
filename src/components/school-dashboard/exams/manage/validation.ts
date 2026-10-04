@@ -7,7 +7,9 @@ import { z } from "zod"
 const examBaseObjectSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  classId: z.string().min(1, "Class is required"),
+  // Who sits it: a grade, and one of its sections or the whole grade (null).
+  gradeId: z.string().min(1, "Grade is required"),
+  sectionId: z.string().min(1).nullable().optional(),
   subjectId: z.string().min(1, "Subject is required"),
   examDate: z.date(),
   startTime: z.string().min(1, "Start time is required"),

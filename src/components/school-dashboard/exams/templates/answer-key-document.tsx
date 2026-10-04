@@ -194,7 +194,7 @@ export function AnswerKeyDocument({
               {labels.subject}: {exam.subject.name}
             </Text>
             <Text>
-              {labels.class}: {exam.class.name}
+              {labels.class}: {exam.audience.name}
             </Text>
             {versionCode && (
               <Text>

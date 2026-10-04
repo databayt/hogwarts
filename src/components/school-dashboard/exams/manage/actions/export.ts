@@ -7,6 +7,11 @@ import { z } from "zod"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+  examAudienceSelect,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 import { getExamsSchema } from "../validation"
 import type { ActionResponse, ExamExportData } from "./types"
@@ -44,11 +49,7 @@ export async function getExamsCSV(
     const exams = await db.schoolExam.findMany({
       where,
       include: {
-        class: {
-          select: {
-            name: true,
-          },
-        },
+        ...examAudienceInclude,
         subject: {
           select: {
             name: true,
@@ -68,7 +69,7 @@ export async function getExamsCSV(
       examId: exam.id,
       title: exam.title || "",
       description: exam.description || "",
-      class: exam.class?.name || "",
+      class: examAudienceLabel(exam) || "",
       subject: exam.subject?.name || "",
       examDate: exam.examDate
         ? new Date(exam.examDate).toISOString().split("T")[0]
@@ -135,7 +136,7 @@ export async function getExamResultsCSV(input: {
       where: { id: examId, schoolId },
       select: {
         title: true,
-        class: { select: { name: true } },
+        ...examAudienceSelect,
         subject: { select: { name: true } },
       },
     })
@@ -198,7 +199,7 @@ export async function getExamResultsCSV(input: {
     const header =
       `Exam Results Export\n` +
       `Exam: ${exam.title}\n` +
-      `Class: ${exam.class?.name || ""}\n` +
+      `Class: ${examAudienceLabel(exam) || ""}\n` +
       `Subject: ${exam.subject?.name || ""}\n` +
       `Date: ${new Date().toISOString().split("T")[0]}\n\n`
 
@@ -256,7 +257,7 @@ export async function getAnalyticsCSV(input: {
     const exams = await db.schoolExam.findMany({
       where,
       include: {
-        class: { select: { name: true } },
+        ...examAudienceInclude,
         subject: { select: { name: true } },
         examResults: {
           select: {
@@ -290,7 +291,7 @@ export async function getAnalyticsCSV(input: {
 
       return {
         examTitle: exam.title,
-        className: exam.class?.name || "",
+        className: examAudienceLabel(exam) || "",
         name: exam.subject?.name || "",
         examDate: exam.examDate
           ? new Date(exam.examDate).toISOString().split("T")[0]
@@ -391,11 +392,7 @@ export async function getExamsExportData(
     const exams = await db.schoolExam.findMany({
       where,
       include: {
-        class: {
-          select: {
-            name: true,
-          },
-        },
+        ...examAudienceInclude,
         subject: {
           select: {
             name: true,
@@ -434,7 +431,7 @@ export async function getExamsExportData(
         title: exam.title,
         description: exam.description,
         name: exam.subject?.name || null,
-        className: exam.class?.name || null,
+        className: examAudienceLabel(exam) || null,
         examDate: exam.examDate,
         startTime: exam.startTime,
         endTime: exam.endTime,

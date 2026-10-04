@@ -16,6 +16,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+} from "@/components/school-dashboard/exams/lib/audience"
+import { teacherUserExamsWhere } from "@/components/school-dashboard/exams/lib/roster"
 import { localize } from "@/components/translation/localize"
 import { getLabels } from "@/components/translation/person"
 
@@ -113,7 +118,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
             examDate: true,
             totalMarks: true,
             subject: { select: { name: true, lang: true } },
-            class: { select: { name: true, lang: true } },
+            ...examAudienceInclude,
           },
         },
       },
@@ -274,21 +279,11 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
   }
 
   // Admin/Teacher view
-  // Teacher sees only their classes; Admin sees all
-  let teacherClassIds: string[] | null = null
-  if (schoolId && role === "TEACHER") {
-    const teacher = await db.teacher.findFirst({
-      where: { userId: session?.user?.id, schoolId },
-      select: { id: true },
-    })
-    if (teacher) {
-      const classes = await db.class.findMany({
-        where: { teacherId: teacher.id, schoolId },
-        select: { id: true },
-      })
-      teacherClassIds = classes.map((c) => c.id)
-    }
-  }
+  // A teacher sees the exams they may open (teacherExamsWhere); Admin sees all
+  const teacherFilter =
+    schoolId && role === "TEACHER"
+      ? await teacherUserExamsWhere(schoolId, session?.user?.id ?? "")
+      : null
 
   let examsWithResults: Array<{
     id: string
@@ -307,10 +302,10 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
         schoolId,
         status: "COMPLETED",
         // Teacher scoping
-        ...(teacherClassIds ? { classId: { in: teacherClassIds } } : {}),
+        ...(teacherFilter ?? {}),
       },
       include: {
-        class: { select: { name: true, lang: true } },
+        ...examAudienceInclude,
         subject: { select: { name: true, lang: true } },
         examResults: {
           select: {
@@ -324,10 +319,10 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       take: 20,
     })
 
-    // Batched label translation for class + subject names.
+    // Batched label translation for audience + subject names.
     const displayLang = lang === "en" ? ("en" as const) : ("ar" as const)
     const classLabels = await getLabels(
-      completedExams.map((e) => e.class.name).filter(Boolean) as string[],
+      completedExams.map((e) => examAudienceLabel(e)).filter(Boolean),
       displayLang,
       schoolId!
     )
@@ -359,7 +354,8 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
         id: exam.id,
         title: examTitleByIdAdmin.get(exam.id) ?? exam.title,
         examDate: exam.examDate,
-        className: classLabels.get(exam.class.name) ?? exam.class.name,
+        className:
+          classLabels.get(examAudienceLabel(exam)) ?? examAudienceLabel(exam),
         name: subjectLabelsAdmin.get(exam.subject.name) ?? exam.subject.name,
         totalStudents,
         resultsGenerated: totalStudents,

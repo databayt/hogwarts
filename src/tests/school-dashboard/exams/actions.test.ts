@@ -11,6 +11,7 @@ import {
   getExams,
   updateExam,
 } from "@/components/school-dashboard/exams/manage/actions"
+import { resolveTeachingScope } from "@/components/school-dashboard/teaching-scope/resolve"
 import { prewarm } from "@/components/translation/prewarm"
 
 vi.mock("@/lib/db", () => ({
@@ -51,6 +52,20 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/dispatch-notification", () => ({
   dispatchNotificationsToAudience: vi.fn().mockResolvedValue({ count: 0 }),
+}))
+
+vi.mock("@/auth", () => ({
+  auth: vi.fn().mockResolvedValue({
+    user: { id: "user-1", schoolId: "school-123", role: "TEACHER" },
+  }),
+}))
+
+vi.mock("@/components/school-dashboard/exams/lib/roster", () => ({
+  examAudienceUserIds: vi.fn().mockResolvedValue([]),
+}))
+
+vi.mock("@/components/school-dashboard/teaching-scope/resolve", () => ({
+  resolveTeachingScope: vi.fn(),
 }))
 
 vi.mock("@/lib/tenant-context", () => ({
@@ -94,7 +109,16 @@ describe("Exam Actions", () => {
       subdomain: "test-school",
       role: "TEACHER",
       locale: "en",
-    })
+    } as any)
+    vi.mocked(resolveTeachingScope).mockImplementation(async (_s, input) => ({
+      ok: true,
+      scope: {
+        gradeId: input.gradeId,
+        sectionId: input.sectionId ?? null,
+        subjectId: input.subjectId,
+        termId: "term-1",
+      },
+    }))
   })
 
   describe("createExam", () => {
@@ -102,7 +126,7 @@ describe("Exam Actions", () => {
       const mockExam = {
         id: "exam-1",
         title: "Midterm Exam",
-        classId: "class-1",
+        gradeId: "grade-7",
         subjectId: "subject-1",
         schoolId: mockSchoolId,
       }
@@ -122,7 +146,8 @@ describe("Exam Actions", () => {
 
       const result = await createExam({
         title: "Midterm Exam",
-        classId: "class-1",
+        gradeId: "grade-7",
+        sectionId: "section-7a",
         subjectId: "subject-1",
         examDate: futureDate,
         startTime: "09:00",
@@ -134,6 +159,39 @@ describe("Exam Actions", () => {
       })
 
       expect(result.success).toBe(true)
+      const data = vi.mocked(db.schoolExam.create).mock.calls[0][0].data
+      expect(data).toMatchObject({
+        schoolId: mockSchoolId,
+        gradeId: "grade-7",
+        sectionId: "section-7a",
+        subjectId: "subject-1",
+        termId: "term-1",
+        createdById: "user-1",
+      })
+      expect(data).not.toHaveProperty("classId")
+    })
+
+    it("refuses roles that don't set exams", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: mockSchoolId,
+        role: "STUDENT",
+      } as any)
+
+      const result = await createExam({
+        title: "Exam",
+        gradeId: "grade-7",
+        subjectId: "subject-1",
+        examDate: futureDate,
+        startTime: "09:00",
+        endTime: "11:00",
+        duration: 120,
+        totalMarks: 100,
+        passingMarks: 40,
+        examType: "MIDTERM",
+      })
+
+      expect(result.success).toBe(false)
+      expect(db.schoolExam.create).not.toHaveBeenCalled()
     })
 
     it("returns error when not authenticated", async () => {
@@ -146,7 +204,8 @@ describe("Exam Actions", () => {
 
       const result = await createExam({
         title: "Exam",
-        classId: "class-1",
+        gradeId: "grade-7",
+        sectionId: "section-7a",
         subjectId: "subject-1",
         examDate: futureDate,
         startTime: "09:00",
@@ -160,12 +219,16 @@ describe("Exam Actions", () => {
       expect(result.success).toBe(false)
     })
 
-    it("returns error when class does not belong to school", async () => {
-      vi.mocked(db.class.findFirst).mockResolvedValue(null)
+    it("refuses a grade, section or subject outside the school", async () => {
+      vi.mocked(resolveTeachingScope).mockResolvedValueOnce({
+        ok: false,
+        code: "INVALID_SECTION",
+      })
 
       const result = await createExam({
         title: "Exam",
-        classId: "invalid-class",
+        gradeId: "grade-7",
+        sectionId: "other-school-section",
         subjectId: "subject-1",
         examDate: futureDate,
         startTime: "09:00",
@@ -178,8 +241,9 @@ describe("Exam Actions", () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.code).toBe("INVALID_CLASS")
+        expect(result.code).toBe("INVALID_SECTION")
       }
+      expect(db.schoolExam.create).not.toHaveBeenCalled()
     })
   })
 
@@ -309,7 +373,8 @@ describe("Exam Actions", () => {
       const result = await createExam({
         title: "Midterm Exam",
         description: "Covers chapters 1-5",
-        classId: "class-1",
+        gradeId: "grade-7",
+        sectionId: "section-7a",
         subjectId: "subject-1",
         examDate: futureDate,
         startTime: "09:00",
@@ -363,7 +428,8 @@ describe("Exam Actions", () => {
 
       const result = await createExam({
         title: "Midterm Exam",
-        classId: "class-1",
+        gradeId: "grade-7",
+        sectionId: "section-7a",
         subjectId: "subject-1",
         examDate: futureDate,
         startTime: "09:00",

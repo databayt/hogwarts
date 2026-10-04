@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { teacherUserExamsWhere } from "@/components/school-dashboard/exams/lib/roster"
 
 import { BulkAutoGradeDialog } from "./bulk-auto-grade-dialog"
 import { CSVImportDialog } from "./csv-import-dialog"
@@ -37,28 +38,17 @@ export async function MarkingContent({
     return <div>{dictionary.common?.unauthorized || "Unauthorized"}</div>
   }
 
-  // TEACHER scoping: only see submissions for their classes
-  let teacherClassIds: string[] | null = null
-  if (role === "TEACHER") {
-    const teacher = await db.teacher.findFirst({
-      where: { userId: session?.user?.id, schoolId },
-      select: { id: true },
-    })
-    if (teacher) {
-      const classes = await db.class.findMany({
-        where: { teacherId: teacher.id, schoolId },
-        select: { id: true },
-      })
-      teacherClassIds = classes.map((c) => c.id)
-    }
-  }
+  // TEACHER scoping: only submissions for exams they may open
+  const teacherExams =
+    role === "TEACHER"
+      ? await teacherUserExamsWhere(schoolId, session?.user?.id ?? "")
+      : null
 
   // Build scoped query
   const where: Prisma.StudentAnswerWhereInput = {
     schoolId,
     ...(examId ? { examId } : {}),
-    // Teacher sees only their classes' exam submissions
-    ...(teacherClassIds ? { exam: { classId: { in: teacherClassIds } } } : {}),
+    ...(teacherExams ? { exam: teacherExams } : {}),
   }
 
   // Fetch submissions scoped by role. The marking queue is intentionally

@@ -8,7 +8,43 @@ maturity: Built+Polish
 completion: 78
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-08-29
+last_audited: 2026-10-04
+---
+
+## 2026-10-04 — exams without classes (LOCAL, not pushed) · #429 #428
+
+New schools have no `Class` rows, so exam creation died in three places: the catalog
+Adopt dialog listed no classes (#429), "schedule a blank exam" silently did nothing
+because `createDraftExam` needed a class (#428), and the exam modal's class and subject
+pickers were hardcoded placeholders ("Class 1", "Mathematics") that could never save.
+
+- **Scope instead of class.** `SchoolExam.classId` is optional; new exams carry
+  `gradeId` + `sectionId` (null = the whole grade) + `termId` + `createdById`
+  (migration `20261004130000_exam_scope`, applied locally — **owed on prod**).
+- **One picker for every create path** — `teaching-scope/picker.tsx`
+  (grade → section or whole grade → subject), checked server-side by
+  `teaching-scope/resolve.ts`. Wired into the Adopt dialog, both wizards, the
+  modal form and the blueprint paper dialog; all six create actions set the scope.
+- **Audience helpers** — `lib/audience.ts` (pure: roster, student/teacher filters,
+  label) and `lib/roster.ts` (users to notify, `examReachesStudents`). Notifications,
+  reminders, conflict detection, papers, results, CSV, marking queue and the
+  student/guardian/teacher/upcoming views read the audience, legacy class included.
+- **Students only sit their own exams** — `startExamSession` / `getExamForPlayer`
+  refuse an exam not set for the student's section, grade or class (before, any
+  student could open any IN_PROGRESS exam in the school).
+- **Catalog exam types map to ExamType** — `chapter_test` used to be upper-cased
+  into an invalid enum, so adopting any chapter test failed.
+- Deleted `manage/actions/secured-crud.ts` (unused duplicate of `crud.ts`).
+
+Open:
+
+- [ ] **Gradebook** — `Result.classId` is still required, so finalize writes the
+      gradebook row only for legacy class exams. S5 moves Result to section +
+      subject and must backfill Result from ExamResult for class-less exams.
+- [ ] Analytics (`getClassPerformance`), `progress/*`, `quick/*` still read classes (S6/S9).
+- [ ] Paper preview stays blank locally: react-pdf's Rubik font URL 404s (pre-existing).
+- [ ] Close #429 / #428 after deploy + prod DDL.
+
 ---
 
 ## 2026-09-13 — phone pass (LOCAL, not pushed)

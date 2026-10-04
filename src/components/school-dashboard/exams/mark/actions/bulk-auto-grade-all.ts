@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
+import { teacherUserExamsWhere } from "@/components/school-dashboard/exams/lib/roster"
 
 import { isAutoGradable } from "../utils"
 import { autoGradeAnswer } from "./auto-mark"
@@ -37,21 +38,11 @@ export async function bulkAutoGradeAll(): Promise<
       }
     }
 
-    // For TEACHER, scope to their classes
-    let classFilter = {}
-    if (role === "TEACHER") {
-      const teacher = await db.teacher.findFirst({
-        where: { userId: session.user.id, schoolId },
-        select: { id: true },
-      })
-      if (teacher) {
-        const classes = await db.class.findMany({
-          where: { teacherId: teacher.id, schoolId },
-          select: { id: true },
-        })
-        classFilter = { exam: { classId: { in: classes.map((c) => c.id) } } }
-      }
-    }
+    // For TEACHER, scope to the exams they may open
+    const classFilter =
+      role === "TEACHER"
+        ? { exam: await teacherUserExamsWhere(schoolId, session.user.id ?? "") }
+        : {}
 
     // Get all ungraded submissions for auto-gradable question types
     const answers = await db.studentAnswer.findMany({

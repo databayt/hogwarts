@@ -159,18 +159,22 @@ export async function finalizeExamResults(
         totalMarks,
         boundaries,
       })
-      await upsertGradebookResult({
-        schoolId,
-        studentId,
-        classId: exam.classId,
-        subjectId: exam.subjectId,
-        examId,
-        score: marksObtained,
-        maxScore: totalMarks,
-        title: exam.title,
-        gradedBy: userId,
-        boundaries,
-      })
+      // The gradebook (Result) still keys on a class; exams set for a
+      // section or grade reach it when the gradebook moves to sections.
+      if (exam.classId) {
+        await upsertGradebookResult({
+          schoolId,
+          studentId,
+          classId: exam.classId,
+          subjectId: exam.subjectId,
+          examId,
+          score: marksObtained,
+          maxScore: totalMarks,
+          title: exam.title,
+          gradedBy: userId,
+          boundaries,
+        })
+      }
       studentsGraded++
     }
 
@@ -299,18 +303,21 @@ export async function finalizeStudentExam(
       totalMarks,
       boundaries,
     })
-    await upsertGradebookResult({
-      schoolId,
-      studentId,
-      classId: exam.classId,
-      subjectId: exam.subjectId,
-      examId,
-      score: marksObtained,
-      maxScore: totalMarks,
-      title: exam.title,
-      gradedBy: userId,
-      boundaries,
-    })
+    // See finalizeExamResults: class-less exams skip the gradebook for now.
+    if (exam.classId) {
+      await upsertGradebookResult({
+        schoolId,
+        studentId,
+        classId: exam.classId,
+        subjectId: exam.subjectId,
+        examId,
+        score: marksObtained,
+        maxScore: totalMarks,
+        title: exam.title,
+        gradedBy: userId,
+        boundaries,
+      })
+    }
 
     if (opts.notify) {
       await notifyResultsPublished(

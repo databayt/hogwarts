@@ -117,7 +117,6 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     examDate: Date
     duration: number
     subject: { name: string; lang: string | null }
-    class: { name: string; lang: string | null }
   } | null = null
 
   if (schoolId) {
@@ -183,7 +182,6 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         examDate: true,
         duration: true,
         subject: { select: { name: true, lang: true } },
-        class: { select: { name: true, lang: true } },
       },
     })
 
@@ -191,20 +189,12 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     if (nextExam) {
       const [localized, labels] = await Promise.all([
         localizeOne("Exam", nextExam, { schoolId, lang }),
-        getLabels(
-          [nextExam.subject?.name, nextExam.class?.name],
-          lang,
-          schoolId
-        ),
+        getLabels([nextExam.subject?.name], lang, schoolId),
       ])
       if (localized) nextExam = localized
       if (nextExam.subject?.name) {
         nextExam.subject.name =
           labels.get(nextExam.subject.name) ?? nextExam.subject.name
-      }
-      if (nextExam.class?.name) {
-        nextExam.class.name =
-          labels.get(nextExam.class.name) ?? nextExam.class.name
       }
     }
   }
@@ -527,7 +517,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             subtitle={nextExam?.title || d?.createExam || "Schedule an exam"}
             description={
               nextExam
-                ? `${nextExam.subject?.name || ""} - ${nextExam.class?.name || ""}`
+                ? nextExam.subject?.name || ""
                 : d?.createDescription || "Create a new examination"
             }
             examDetails={

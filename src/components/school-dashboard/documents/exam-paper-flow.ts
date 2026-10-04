@@ -9,6 +9,11 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  examAudienceLabel,
+  examAudienceSelect,
+} from "@/components/school-dashboard/exams/lib/audience"
+import { resolveTeachingScope } from "@/components/school-dashboard/teaching-scope/resolve"
 
 import { autoGenerateExamQuestions } from "../exams/wizard/exam-wizard-v2/questions/auto-generate"
 import { generateDocument } from "./generate"
@@ -35,11 +40,6 @@ export interface BlueprintOption {
   subjectName: string
   duration: number
   totalMarks: number
-}
-
-export interface ClassOption {
-  id: string
-  name: string
 }
 
 type Guard =
@@ -81,7 +81,7 @@ export async function listExamOptions(): Promise<ActionResponse<ExamOption[]>> {
           title: true,
           examDate: true,
           subject: { select: { name: true } },
-          class: { select: { name: true } },
+          ...examAudienceSelect,
         },
       },
     },
@@ -93,7 +93,7 @@ export async function listExamOptions(): Promise<ActionResponse<ExamOption[]>> {
       id: r.id,
       title: r.exam.title,
       subjectName: r.exam.subject?.name ?? "",
-      className: r.exam.class?.name ?? "",
+      className: examAudienceLabel(r.exam),
       examDate: r.exam.examDate.toISOString(),
       questionCount: r.totalQuestions,
     })),
@@ -133,20 +133,6 @@ export async function listBlueprintOptions(): Promise<
   }
 }
 
-export async function listClassOptions(): Promise<
-  ActionResponse<ClassOption[]>
-> {
-  const ctx = await guard()
-  if (!ctx.ok) return ctx.response
-
-  const rows = await db.class.findMany({
-    where: { schoolId: ctx.schoolId },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  })
-  return { success: true, data: rows }
-}
-
 const schema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("existing"),
@@ -157,7 +143,9 @@ const schema = z.discriminatedUnion("mode", [
     mode: z.literal("blueprint"),
     documentTemplateId: z.string().min(1),
     blueprintId: z.string().min(1),
-    classId: z.string().min(1),
+    // Who sits it: a grade, and one of its sections or the whole grade.
+    gradeId: z.string().min(1),
+    sectionId: z.string().min(1).nullable(),
     title: z.string().min(1).max(200),
     examDate: z.string().min(1),
     examType: z
@@ -222,11 +210,14 @@ export async function generateExamPaperFromTemplate(
   })
   if (!blueprint) return actionError(ACTION_ERRORS.TEMPLATE_NOT_FOUND)
 
-  const klass = await db.class.findFirst({
-    where: { id: input.classId, schoolId },
-    select: { id: true },
+  // The grade must be the school's and teach the blueprint's subject.
+  const resolved = await resolveTeachingScope(schoolId, {
+    gradeId: input.gradeId,
+    sectionId: input.sectionId,
+    subjectId: blueprint.subjectId,
   })
-  if (!klass) return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
+  if (!resolved.ok) return actionError(resolved.code)
+  const { scope } = resolved
 
   const totalMarks = Math.round(Number(blueprint.totalMarks)) || 100
 
@@ -240,8 +231,11 @@ export async function generateExamPaperFromTemplate(
       data: {
         schoolId,
         title: input.title,
-        classId: input.classId,
-        subjectId: blueprint.subjectId,
+        subjectId: scope.subjectId,
+        gradeId: scope.gradeId,
+        sectionId: scope.sectionId,
+        termId: scope.termId,
+        createdById: userId,
         examDate: new Date(input.examDate),
         startTime: "08:00",
         endTime: "09:00",

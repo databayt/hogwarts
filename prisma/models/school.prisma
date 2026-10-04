@@ -609,6 +609,7 @@ model Term {
   schoolWeekConfigs SchoolWeekConfig[]
   reportCards       ReportCard[]
   subjectTeachers   SubjectTeacher[]
+  schoolExams       SchoolExam[]
 
   // Timetable optimization relations
   teacherConstraints   TeacherConstraint[]

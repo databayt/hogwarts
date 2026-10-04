@@ -12,8 +12,13 @@
  */
 
 import { auth } from "@/auth"
+import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getStudentScopes, getTeacherPairs } from "@/lib/teaching-scope"
+
+import { studentExamsWhere, teacherExamsWhere } from "./audience"
+import { examReachesStudents } from "./roster"
 
 // Permission types
 export type Permission =
@@ -257,6 +262,72 @@ export function hasPermission(
   return rolePermissions.includes(permission)
 }
 
+/** Exams a teacher may open — see `teacherExamsWhere`. */
+async function teacherExamFilter(
+  context: PermissionContext
+): Promise<Prisma.SchoolExamWhereInput> {
+  const pairs = await getTeacherPairs(context.schoolId, context.teacherId!)
+  return teacherExamsWhere({
+    teacherId: context.teacherId!,
+    userId: context.userId,
+    pairs,
+  })
+}
+
+/** The teacher teaches this subject: a legacy class or an assignment. */
+async function teacherTeachesSubject(
+  context: PermissionContext,
+  subjectId: string
+): Promise<boolean> {
+  const [assigned, legacy] = await Promise.all([
+    db.subjectTeacher.findFirst({
+      where: {
+        schoolId: context.schoolId,
+        teacherId: context.teacherId!,
+        subjectId,
+      },
+      select: { id: true },
+    }),
+    db.class.findFirst({
+      where: {
+        schoolId: context.schoolId,
+        teacherId: context.teacherId!,
+        subjectId,
+      },
+      select: { id: true },
+    }),
+  ])
+  return !!(assigned || legacy)
+}
+
+/** The student is in a section the teacher teaches, or a legacy class of theirs. */
+async function teacherTeachesStudent(
+  context: PermissionContext,
+  studentId: string
+): Promise<boolean> {
+  const pairs = await getTeacherPairs(context.schoolId, context.teacherId!)
+  const sectionIds = [...new Set(pairs.map((p) => p.sectionId))]
+  const student = await db.student.findFirst({
+    where: {
+      id: studentId,
+      schoolId: context.schoolId,
+      OR: [
+        ...(sectionIds.length > 0 ? [{ sectionId: { in: sectionIds } }] : []),
+        {
+          studentClasses: {
+            some: {
+              schoolId: context.schoolId,
+              class: { teacherId: context.teacherId! },
+            },
+          },
+        },
+      ],
+    },
+    select: { id: true },
+  })
+  return !!student
+}
+
 /**
  * Check if user can access an exam
  */
@@ -280,38 +351,37 @@ export async function canAccessExam(
   // Admins can access all exams in their school
   if (context.userRole === "ADMIN") return true
 
-  // Teachers can access exams for their classes/subjects
+  // Teachers: exams of a class they teach, exams they wrote, and exams for
+  // a section or grade where they teach the subject.
   if (context.isTeacher && context.teacherId) {
-    const teacherClass = await db.class.findFirst({
+    const covered = await db.schoolExam.findFirst({
       where: {
-        id: exam.classId,
-        teacherId: context.teacherId,
+        id: examId,
         schoolId: context.schoolId,
+        ...(await teacherExamFilter(context)),
       },
+      select: { id: true },
     })
-    if (teacherClass) return true
+    if (covered) return true
   }
 
-  // Students can access published exam results
-  if (context.isStudent) {
-    return exam.status === "COMPLETED"
+  // Students see the published results of exams they sat.
+  if (context.isStudent && context.studentId) {
+    if (exam.status !== "COMPLETED") return false
+    return examReachesStudents(context.schoolId, examId, [context.studentId])
   }
 
-  // Guardians can access their children's exams
+  // Guardians: exams their children sit.
   if (context.isGuardian && context.guardianId) {
-    const studentGuardian = await db.studentGuardian.findFirst({
-      where: {
-        guardianId: context.guardianId,
-        student: {
-          studentClasses: {
-            some: {
-              classId: exam.classId,
-            },
-          },
-        },
-      },
+    const children = await db.studentGuardian.findMany({
+      where: { guardianId: context.guardianId, schoolId: context.schoolId },
+      select: { studentId: true },
     })
-    return !!studentGuardian
+    return examReachesStudents(
+      context.schoolId,
+      examId,
+      children.map((c) => c.studentId)
+    )
   }
 
   // Staff can view completed exams
@@ -334,16 +404,15 @@ export async function canModifyExam(
   // Developers and Admins can modify any exam
   if (["DEVELOPER", "ADMIN"].includes(context.userRole)) return true
 
-  // Teachers can only modify their own exams
+  // Teachers modify the exams they may open (see canAccessExam).
   if (context.isTeacher && context.teacherId) {
     const exam = await db.schoolExam.findFirst({
       where: {
         id: examId,
         schoolId: context.schoolId,
-        class: {
-          teacherId: context.teacherId,
-        },
+        ...(await teacherExamFilter(context)),
       },
+      select: { id: true },
     })
     return !!exam
   }
@@ -362,18 +431,9 @@ export async function canAccessStudentResult(
   // Developers and Admins have full access
   if (["DEVELOPER", "ADMIN"].includes(context.userRole)) return true
 
-  // Teachers can access results for students in their classes
+  // Teachers: students of a class they teach or of a section they teach.
   if (context.isTeacher && context.teacherId) {
-    const studentClass = await db.studentClass.findFirst({
-      where: {
-        studentId,
-        class: {
-          teacherId: context.teacherId,
-          schoolId: context.schoolId,
-        },
-      },
-    })
-    if (studentClass) return true
+    if (await teacherTeachesStudent(context, studentId)) return true
   }
 
   // Students can only access their own results
@@ -409,14 +469,7 @@ export async function canManageQuestions(
 
   // Teachers can manage questions for their subjects
   if (context.isTeacher && context.teacherId && subjectId) {
-    const teacherSubject = await db.class.findFirst({
-      where: {
-        teacherId: context.teacherId,
-        subjectId,
-        schoolId: context.schoolId,
-      },
-    })
-    return !!teacherSubject
+    return teacherTeachesSubject(context, subjectId)
   }
 
   return false
@@ -454,14 +507,7 @@ export async function canAccessAnalytics(
     case "subject":
       // Teachers can see analytics for their subjects
       if (context.isTeacher && context.teacherId && resourceId) {
-        const teacherSubject = await db.class.findFirst({
-          where: {
-            subjectId: resourceId,
-            teacherId: context.teacherId,
-            schoolId: context.schoolId,
-          },
-        })
-        return !!teacherSubject
+        return teacherTeachesSubject(context, resourceId)
       }
       return ["DEVELOPER", "ADMIN"].includes(context.userRole)
 
@@ -480,18 +526,9 @@ export async function canAccessAnalytics(
         })
         return !!studentGuardian
       }
-      // Teachers can see analytics for students in their classes
+      // Teachers can see analytics for students they teach
       if (context.isTeacher && context.teacherId && resourceId) {
-        const studentClass = await db.studentClass.findFirst({
-          where: {
-            studentId: resourceId,
-            class: {
-              teacherId: context.teacherId,
-              schoolId: context.schoolId,
-            },
-          },
-        })
-        return !!studentClass
+        return teacherTeachesStudent(context, resourceId)
       }
       return ["DEVELOPER", "ADMIN"].includes(context.userRole)
   }
@@ -513,23 +550,31 @@ export async function applyPermissionFilters(
   switch (resource) {
     case "exam":
       if (context.isTeacher && context.teacherId) {
-        baseFilter.class = {
-          teacherId: context.teacherId,
-        }
+        Object.assign(baseFilter, await teacherExamFilter(context))
       }
       if (context.isStudent) {
         baseFilter.status = "COMPLETED"
+        const scopes = context.studentId
+          ? await getStudentScopes(context.schoolId, [context.studentId])
+          : []
+        Object.assign(baseFilter, studentExamsWhere(scopes))
       }
       break
 
     case "question":
       if (context.isTeacher && context.teacherId) {
         baseFilter.subject = {
-          classes: {
-            some: {
-              teacherId: context.teacherId,
+          OR: [
+            { classes: { some: { teacherId: context.teacherId } } },
+            {
+              subjectTeachers: {
+                some: {
+                  teacherId: context.teacherId,
+                  schoolId: context.schoolId,
+                },
+              },
             },
-          },
+          ],
         }
       }
       break

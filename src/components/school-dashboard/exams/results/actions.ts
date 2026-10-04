@@ -18,6 +18,10 @@ import {
 } from "@/lib/cache/exam-cache"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 import {
   calculateClassAverage,
@@ -69,7 +73,7 @@ export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
     const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
-        class: { select: { name: true } },
+        ...examAudienceInclude,
         subject: { select: { name: true } },
         examResults: {
           where: includeAbsent ? {} : { isAbsent: false },
@@ -236,7 +240,7 @@ export async function getExamAnalytics(
     const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
-        class: { select: { name: true } },
+        ...examAudienceInclude,
         subject: { select: { name: true } },
         examResults: {
           where: { isAbsent: false },
@@ -328,7 +332,7 @@ export async function getExamAnalytics(
       examId: exam.id,
       examTitle: exam.title,
       examDate: exam.examDate,
-      className: exam.class.name,
+      className: examAudienceLabel(exam),
       name: exam.subject.name,
       totalMarks: exam.totalMarks,
       passingMarks: exam.passingMarks,
@@ -467,7 +471,7 @@ export async function generateStudentPDF(
       db.schoolExam.findFirst({
         where: { id: parsed.examId, schoolId },
         include: {
-          class: { select: { name: true } },
+          ...examAudienceInclude,
           subject: { select: { name: true } },
           examResults: {
             where: {
@@ -660,7 +664,7 @@ export async function generateStudentPDF(
       exam: {
         title: examData.title,
         date: examData.examDate,
-        className: examData.class.name,
+        className: examAudienceLabel(examData),
         name: examData.subject.name,
         totalMarks: examData.totalMarks,
         passingMarks: examData.passingMarks,

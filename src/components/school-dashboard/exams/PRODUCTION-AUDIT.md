@@ -374,7 +374,7 @@ Only `notifications/__tests__/actions.test.ts` declares a `SCHOOL_B` constant â€
 
 **Highest-risk action files (read in this audit):**
 
-- `manage/actions/{read,crud,results,analytics,marks-entry,conflict-detection,status,secured-crud}.ts`
+- `manage/actions/{read,crud,results,analytics,marks-entry,conflict-detection,status}.ts`
 - `qbank/actions/{question-crud,catalog-browse,generation,standards,ai-generation}.ts`
 - `mark/actions/{auto-mark,auto-mark-with-key,bulk-operations,ai-grade}.ts`
 - `take/actions.ts`

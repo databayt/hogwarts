@@ -27,6 +27,7 @@ export interface ExamRow {
   usageCount: number
   averageScore: number
   visibility: string
+  catalogSubjectId: string
   catalogSubjectName: string | null
   catalogChapterName: string | null
   contributedSchoolId: string | null
@@ -101,6 +102,7 @@ export async function browseExams(
       usageCount: e.usageCount,
       averageScore: e.averageScore,
       visibility: e.visibility,
+      catalogSubjectId: e.subjectId,
       catalogSubjectName: e.subject?.name ?? null,
       catalogChapterName: e.chapter?.name ?? null,
       contributedSchoolId: e.contributedSchoolId,
@@ -228,6 +230,7 @@ export interface ExamDetail {
   averageScore: number
   qualityScore: number
   ratingCount: number
+  catalogSubjectId: string
   catalogSubjectName: string | null
   catalogChapterName: string | null
   variantOf: string | null
@@ -302,6 +305,7 @@ export async function getExamDetail(
     averageScore: exam.averageScore,
     qualityScore: exam.qualityScore,
     ratingCount: exam.ratingCount,
+    catalogSubjectId: exam.subjectId,
     catalogSubjectName: exam.subject?.name ?? null,
     catalogChapterName: exam.chapter?.name ?? null,
     variantOf: exam.variantOf,

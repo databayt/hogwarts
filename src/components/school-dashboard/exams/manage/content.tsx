@@ -22,6 +22,15 @@ interface Props {
   lang: Locale
 }
 
+/** The list's grade column: the exam's section, its grade, or a legacy class's grade. */
+function gradeColumnOf(exam: {
+  section?: { name: string } | null
+  grade?: { name: string } | null
+  class?: { grade?: { name: string } | null } | null
+}): string {
+  return exam.section?.name ?? exam.grade?.name ?? exam.class?.grade?.name ?? ""
+}
+
 export default async function ExamsContent({
   searchParams,
   dictionary,
@@ -66,6 +75,8 @@ export default async function ExamsContent({
               grade: { select: { name: true } },
             },
           },
+          section: { select: { name: true } },
+          grade: { select: { name: true } },
           subject: {
             select: { name: true, lang: true },
           },
@@ -77,7 +88,7 @@ export default async function ExamsContent({
     const displayLang = lang === "en" ? ("en" as const) : ("ar" as const)
     const [gradeLabels, subjectLabels, localizedTitles] = await Promise.all([
       getLabels(
-        rows.map((e) => e.class?.grade?.name).filter(Boolean) as string[],
+        rows.map((e) => gradeColumnOf(e)).filter(Boolean),
         displayLang,
         schoolId!
       ),
@@ -97,8 +108,8 @@ export default async function ExamsContent({
     data = rows.map((e) => ({
       id: e.id,
       title: examTitleById.get(e.id) ?? e.title,
-      grade: e.class?.grade?.name
-        ? (gradeLabels.get(e.class.grade.name) ?? e.class.grade.name)
+      grade: gradeColumnOf(e)
+        ? (gradeLabels.get(gradeColumnOf(e)) ?? gradeColumnOf(e))
         : "—",
       subjectName: e.subject?.name
         ? (subjectLabels.get(e.subject.name) ?? e.subject.name)

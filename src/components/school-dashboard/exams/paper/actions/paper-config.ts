@@ -12,6 +12,10 @@ import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  examAudienceInclude,
+  examRosterWhere,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 import { detectRegionPreset } from "../../templates/presets"
 import { DEFAULT_PAPER_CONFIG } from "../config"
@@ -58,7 +62,7 @@ export async function createPaperConfig(
       include: {
         exam: {
           include: {
-            class: { select: { name: true, id: true } },
+            ...examAudienceInclude,
             subject: { select: { name: true, id: true } },
           },
         },
@@ -84,12 +88,9 @@ export async function createPaperConfig(
     })
     const autoPreset = school ? detectRegionPreset(school) : undefined
 
-    // Calculate recommended copies from class enrollment
-    const enrolledCount = await db.studentClass.count({
-      where: {
-        classId: generatedExam.exam.classId,
-        schoolId,
-      },
+    // One copy per student who sits the exam, plus spares
+    const enrolledCount = await db.student.count({
+      where: examRosterWhere(schoolId, generatedExam.exam),
     })
     const spareCopies = input.spareCopies ?? 2
     const recommendedCopies = enrolledCount + spareCopies
@@ -145,7 +146,7 @@ export async function createPaperConfig(
           include: {
             exam: {
               include: {
-                class: { select: { name: true, id: true } },
+                ...examAudienceInclude,
                 subject: { select: { name: true, id: true } },
               },
             },
@@ -212,7 +213,7 @@ export async function getPaperConfig(
           include: {
             exam: {
               include: {
-                class: { select: { name: true, id: true } },
+                ...examAudienceInclude,
                 subject: { select: { name: true, id: true } },
               },
             },
@@ -315,7 +316,7 @@ export async function updatePaperConfig(
           include: {
             exam: {
               include: {
-                class: { select: { name: true, id: true } },
+                ...examAudienceInclude,
                 subject: { select: { name: true, id: true } },
               },
             },

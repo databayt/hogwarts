@@ -2,12 +2,14 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { getStudentScopes } from "@/lib/teaching-scope"
 
 /**
  * Get catalog subject IDs that a student (or guardian's children) are enrolled in.
  * Used to scope catalog-level content (quiz, mock) to relevant subjects.
  *
- * Chain: Student → StudentClass → Class → Subject (id)
+ * A student studies the subjects their grade teaches (SubjectSelection), plus
+ * the subjects of any legacy classes they were enrolled in.
  */
 export async function getEnrolledSubjectIds(
   role: string | undefined,
@@ -42,22 +44,32 @@ export async function getEnrolledSubjectIds(
 
   if (studentIds.length === 0) return null
 
-  // Get class enrollments → subjects (now Subject directly)
-  const classes = await db.studentClass.findMany({
-    where: { studentId: { in: studentIds }, schoolId },
-    include: {
-      class: {
-        select: {
-          subjectId: true,
-        },
-      },
-    },
-  })
+  const scopes = await getStudentScopes(schoolId, studentIds)
+  const gradeIds = [
+    ...new Set(scopes.map((s) => s.gradeId).filter((id): id is string => !!id)),
+  ]
+  const classIds = [...new Set(scopes.flatMap((s) => s.classIds))]
+
+  const [selections, classes] = await Promise.all([
+    gradeIds.length > 0
+      ? db.subjectSelection.findMany({
+          where: { schoolId, gradeId: { in: gradeIds }, isActive: true },
+          select: { catalogSubjectId: true },
+        })
+      : Promise.resolve([]),
+    classIds.length > 0
+      ? db.class.findMany({
+          where: { schoolId, id: { in: classIds } },
+          select: { subjectId: true },
+        })
+      : Promise.resolve([]),
+  ])
 
   const catalogSubjectIds = [
-    ...new Set(
-      classes.map((sc) => sc.class.subjectId).filter(Boolean) as string[]
-    ),
+    ...new Set([
+      ...selections.map((s) => s.catalogSubjectId),
+      ...classes.map((c) => c.subjectId),
+    ]),
   ]
 
   return catalogSubjectIds.length > 0 ? catalogSubjectIds : null

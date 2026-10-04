@@ -239,7 +239,7 @@ export function MinistryCover({
 
   const metaRows: MetaEntry[] = [
     { label: labels.subject, value: exam.subject.name },
-    { label: labels.class, value: exam.class.name },
+    { label: labels.class, value: exam.audience.name },
     {
       label: labels.duration,
       value: `${metadata.duration} ${labels.minutes}`,
@@ -285,7 +285,7 @@ export function MinistryCover({
       {/* Exam title */}
       <Text style={styles.examTitle}>{exam.title}</Text>
       <Text style={styles.examSubtitle}>
-        {exam.subject.name} - {exam.class.name}
+        {exam.subject.name} - {exam.audience.name}
       </Text>
 
       {/* Formal metadata table */}

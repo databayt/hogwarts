@@ -7,10 +7,20 @@
 
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getStudentScopes, getTeacherPairs } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveActiveTerm } from "@/lib/term-resolver"
+import {
+  examAudienceLabel,
+  examAudienceSelect,
+  examRosterWhere,
+  pairExamsWhere,
+  studentExamsWhere,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 import type { ActionResponse } from "./types"
 
@@ -39,19 +49,26 @@ export interface AvailableSlot {
   reasons: string[]
 }
 
+// Who sits the exam: a grade, one of its sections, or — legacy — a class.
+const audienceFields = {
+  classId: z.string().nullish(),
+  gradeId: z.string().nullish(),
+  sectionId: z.string().nullish(),
+}
+
 // Validation schemas
 const checkConflictSchema = z.object({
   examDate: z.date(),
   startTime: z.string().regex(/^\d{2}:\d{2}$/),
   endTime: z.string().regex(/^\d{2}:\d{2}$/),
-  classId: z.string(),
+  ...audienceFields,
   classroomId: z.string().optional(),
   teacherId: z.string().optional(),
   examId: z.string().optional(),
 })
 
 const findAvailableSlotsSchema = z.object({
-  classId: z.string(),
+  ...audienceFields,
   date: z.date(),
   duration: z.number().min(30).max(480),
   preferredPeriod: z.enum(["morning", "afternoon", "evening"]).optional(),
@@ -97,6 +114,61 @@ function dateTimeToTimeString(date: Date): string {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
 }
 
+type Audience = {
+  classId: string | null
+  gradeId: string | null
+  sectionId: string | null
+}
+
+function toAudience(input: {
+  classId?: string | null
+  gradeId?: string | null
+  sectionId?: string | null
+}): Audience {
+  return {
+    classId: input.classId ?? null,
+    gradeId: input.gradeId ?? null,
+    sectionId: input.sectionId ?? null,
+  }
+}
+
+/** The audience's own timetable periods (this term's regular week). */
+function audienceSlotsWhere(a: Audience): Prisma.TimetableWhereInput | null {
+  if (a.sectionId) return { sectionId: a.sectionId }
+  if (a.gradeId) return { section: { gradeId: a.gradeId } }
+  if (a.classId) return { classId: a.classId }
+  return null
+}
+
+/**
+ * Exams set for (part of) the same audience: the same section or its whole
+ * grade, any section of a whole-grade exam's grade, or the same class.
+ */
+function sameAudienceExamsWhere(
+  a: Audience
+): Prisma.SchoolExamWhereInput | null {
+  if (a.sectionId) {
+    return {
+      OR: [
+        { sectionId: a.sectionId },
+        ...(a.gradeId ? [{ sectionId: null, gradeId: a.gradeId }] : []),
+      ],
+    }
+  }
+  if (a.gradeId) return { gradeId: a.gradeId }
+  if (a.classId) return { classId: a.classId }
+  return null
+}
+
+/** Section or class name for a timetable period. */
+function slotLabel(entry: {
+  section?: { name: string } | null
+  class?: { name: string } | null
+  subject?: { name: string } | null
+}): string {
+  return entry.section?.name ?? entry.class?.name ?? entry.subject?.name ?? ""
+}
+
 /**
  * Check for exam scheduling conflicts
  */
@@ -111,15 +183,9 @@ export async function checkExamConflicts(
 > {
   try {
     const validated = checkConflictSchema.parse(input)
-    const {
-      examDate,
-      startTime,
-      endTime,
-      classId,
-      classroomId,
-      teacherId,
-      examId,
-    } = validated
+    const { examDate, startTime, endTime, classroomId, teacherId, examId } =
+      validated
+    const audience = toAudience(validated)
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -128,62 +194,71 @@ export async function checkExamConflicts(
 
     const conflicts: ConflictDetail[] = []
     const dayOfWeek = getDayOfWeek(examDate)
+    const { term } = await resolveActiveTerm(schoolId)
+    const termWhere = term ? { termId: term.id, weekOffset: 0 } : {}
+    const notThisExam = examId ? { NOT: { id: examId } } : {}
+    const slotInclude = {
+      period: true,
+      class: { select: { name: true } },
+      section: { select: { name: true } },
+      subject: { select: { name: true } },
+    } as const
 
-    // 1. Check timetable conflicts for the class on this day
-    const timetableEntries = await db.timetable.findMany({
-      where: {
-        schoolId,
-        classId,
-        dayOfWeek,
-      },
-      include: {
-        period: true,
-        class: true,
-        teacher: true,
-        classroom: true,
-      },
-    })
+    // 1. The audience's own timetable periods on this day
+    const ownSlots = audienceSlotsWhere(audience)
+    if (ownSlots) {
+      const timetableEntries = await db.timetable.findMany({
+        where: { schoolId, dayOfWeek, ...termWhere, ...ownSlots },
+        include: slotInclude,
+      })
 
-    for (const entry of timetableEntries) {
-      const periodStart = dateTimeToTimeString(entry.period.startTime)
-      const periodEnd = dateTimeToTimeString(entry.period.endTime)
+      for (const entry of timetableEntries) {
+        const periodStart = dateTimeToTimeString(entry.period.startTime)
+        const periodEnd = dateTimeToTimeString(entry.period.endTime)
 
-      if (timeRangesOverlap(startTime, endTime, periodStart, periodEnd)) {
-        conflicts.push({
-          type: "class",
-          entityId: entry.classId ?? "",
-          entityName: entry.class?.name ?? "",
-          conflictingEvent: `Scheduled class period: ${entry.period.name}`,
-          conflictTime: `${periodStart} - ${periodEnd}`,
-          severity: "high",
-        })
+        if (timeRangesOverlap(startTime, endTime, periodStart, periodEnd)) {
+          conflicts.push({
+            type: "class",
+            entityId: entry.sectionId ?? entry.classId ?? "",
+            entityName: slotLabel(entry),
+            conflictingEvent: `Scheduled class period: ${entry.period.name}`,
+            conflictTime: `${periodStart} - ${periodEnd}`,
+            severity: "high",
+          })
+        }
       }
     }
 
-    // 2. Check for overlapping exams for the same class
-    const classExams = await db.schoolExam.findMany({
-      where: {
-        schoolId,
-        classId,
-        examDate,
-        ...(examId ? { NOT: { id: examId } } : {}),
-      },
-      include: {
-        class: true,
-        subject: true,
-      },
-    })
+    // 2. Overlapping exams for the same audience
+    const sameAudience = sameAudienceExamsWhere(audience)
+    const reported = new Set<string>()
+    if (sameAudience) {
+      const audienceExams = await db.schoolExam.findMany({
+        where: { schoolId, examDate, ...notThisExam, ...sameAudience },
+        select: {
+          id: true,
+          title: true,
+          startTime: true,
+          endTime: true,
+          subject: { select: { name: true } },
+          ...examAudienceSelect,
+        },
+      })
 
-    for (const exam of classExams) {
-      if (timeRangesOverlap(startTime, endTime, exam.startTime, exam.endTime)) {
-        conflicts.push({
-          type: "class",
-          entityId: exam.classId,
-          entityName: exam.class.name,
-          conflictingEvent: `${exam.subject.name} exam: ${exam.title}`,
-          conflictTime: `${exam.startTime} - ${exam.endTime}`,
-          severity: "high",
-        })
+      for (const exam of audienceExams) {
+        if (
+          timeRangesOverlap(startTime, endTime, exam.startTime, exam.endTime)
+        ) {
+          reported.add(exam.id)
+          conflicts.push({
+            type: "class",
+            entityId: exam.sectionId ?? exam.gradeId ?? exam.classId ?? "",
+            entityName: examAudienceLabel(exam),
+            conflictingEvent: `${exam.subject.name} exam: ${exam.title}`,
+            conflictTime: `${exam.startTime} - ${exam.endTime}`,
+            severity: "high",
+          })
+        }
       }
     }
 
@@ -191,16 +266,8 @@ export async function checkExamConflicts(
     if (teacherId) {
       // Check teacher's timetable on this day
       const teacherTimetable = await db.timetable.findMany({
-        where: {
-          schoolId,
-          teacherId,
-          dayOfWeek,
-        },
-        include: {
-          period: true,
-          teacher: true,
-          class: true,
-        },
+        where: { schoolId, teacherId, dayOfWeek, ...termWhere },
+        include: { ...slotInclude, teacher: true },
       })
 
       for (const entry of teacherTimetable) {
@@ -214,36 +281,31 @@ export async function checkExamConflicts(
             entityName: entry.teacher
               ? `${entry.teacher.firstName} ${entry.teacher.lastName}`
               : "",
-            conflictingEvent: `Teaching ${entry.class?.name ?? "Unknown"} - ${entry.period.name}`,
+            conflictingEvent: `Teaching ${slotLabel(entry) || "Unknown"} - ${entry.period.name}`,
             conflictTime: `${periodStart} - ${periodEnd}`,
             severity: "medium",
           })
         }
       }
 
-      // Check teacher's other exams on same date
+      // The teacher's other exams that day: a legacy class they co-teach, or
+      // a section / grade where they teach the exam's subject.
+      const pairs = await getTeacherPairs(schoolId, teacherId)
       const teacherExams = await db.schoolExam.findMany({
         where: {
           schoolId,
           examDate,
-          class: {
-            classTeachers: {
-              some: { teacherId },
-            },
-          },
-          ...(examId ? { NOT: { id: examId } } : {}),
+          ...notThisExam,
+          OR: [
+            { class: { classTeachers: { some: { teacherId } } } },
+            ...pairExamsWhere(pairs),
+          ],
         },
-        include: {
-          class: {
-            select: {
-              name: true,
-            },
-          },
-          subject: {
-            select: {
-              name: true,
-            },
-          },
+        select: {
+          startTime: true,
+          endTime: true,
+          subject: { select: { name: true } },
+          ...examAudienceSelect,
         },
       })
 
@@ -255,7 +317,7 @@ export async function checkExamConflicts(
             type: "teacher",
             entityId: teacherId,
             entityName: "Teacher", // Would need to fetch teacher separately for name
-            conflictingEvent: `Proctoring ${exam.class.name} - ${exam.subject.name}`,
+            conflictingEvent: `Proctoring ${examAudienceLabel(exam)} - ${exam.subject.name}`,
             conflictTime: `${exam.startTime} - ${exam.endTime}`,
             severity: "medium",
           })
@@ -267,16 +329,8 @@ export async function checkExamConflicts(
     if (classroomId) {
       // Check classroom timetable on this day
       const classroomTimetable = await db.timetable.findMany({
-        where: {
-          schoolId,
-          classroomId,
-          dayOfWeek,
-        },
-        include: {
-          period: true,
-          classroom: true,
-          class: true,
-        },
+        where: { schoolId, classroomId, dayOfWeek, ...termWhere },
+        include: { ...slotInclude, classroom: true },
       })
 
       for (const entry of classroomTimetable) {
@@ -288,26 +342,26 @@ export async function checkExamConflicts(
             type: "classroom",
             entityId: entry.classroomId,
             entityName: entry.classroom.roomName,
-            conflictingEvent: `Occupied by ${entry.class?.name ?? "Unknown"} - ${entry.period.name}`,
+            conflictingEvent: `Occupied by ${slotLabel(entry) || "Unknown"} - ${entry.period.name}`,
             conflictTime: `${periodStart} - ${periodEnd}`,
             severity: "medium",
           })
         }
       }
 
-      // Check classroom's other exams on same date
+      // The room's other exams that day: sections (or classes) homed there.
       const classroomExams = await db.schoolExam.findMany({
         where: {
           schoolId,
           examDate,
-          class: {
-            classroomId,
-          },
-          ...(examId ? { NOT: { id: examId } } : {}),
+          ...notThisExam,
+          OR: [{ section: { classroomId } }, { class: { classroomId } }],
         },
-        include: {
-          class: true,
-          subject: true,
+        select: {
+          startTime: true,
+          endTime: true,
+          subject: { select: { name: true } },
+          ...examAudienceSelect,
         },
       })
 
@@ -319,7 +373,7 @@ export async function checkExamConflicts(
             type: "classroom",
             entityId: classroomId,
             entityName: "Classroom",
-            conflictingEvent: `${exam.class.name} - ${exam.subject.name} exam`,
+            conflictingEvent: `${examAudienceLabel(exam)} - ${exam.subject.name} exam`,
             conflictTime: `${exam.startTime} - ${exam.endTime}`,
             severity: "medium",
           })
@@ -327,66 +381,54 @@ export async function checkExamConflicts(
       }
     }
 
-    // 5. Check student cross-class conflicts
-    // Find students enrolled in this class, check their other class enrollments for overlapping exams
-    const studentClasses = await db.studentClass.findMany({
-      where: {
-        schoolId,
-        classId,
-      },
-      select: { studentId: true },
+    // 5. Students who sit this exam and another one at the same time
+    const roster = await db.student.findMany({
+      where: examRosterWhere(schoolId, audience),
+      select: { id: true },
     })
 
-    if (studentClasses.length > 0) {
-      const studentIds = studentClasses.map((sc) => sc.studentId)
-
-      // Find other classes these students are in
-      const otherEnrollments = await db.studentClass.findMany({
+    if (roster.length > 0) {
+      const scopes = await getStudentScopes(
+        schoolId,
+        roster.map((s) => s.id)
+      )
+      const otherExams = await db.schoolExam.findMany({
         where: {
           schoolId,
-          studentId: { in: studentIds },
-          classId: { not: classId },
+          examDate,
+          ...notThisExam,
+          ...(reported.size > 0 ? { id: { notIn: [...reported] } } : {}),
+          ...studentExamsWhere(scopes),
         },
-        select: { classId: true, studentId: true },
+        select: {
+          id: true,
+          title: true,
+          startTime: true,
+          endTime: true,
+          subject: { select: { name: true } },
+          ...examAudienceSelect,
+        },
       })
 
-      if (otherEnrollments.length > 0) {
-        const otherClassIds = [
-          ...new Set(otherEnrollments.map((e) => e.classId)),
-        ]
+      for (const exam of otherExams) {
+        if (
+          timeRangesOverlap(startTime, endTime, exam.startTime, exam.endTime)
+        ) {
+          const affectedStudents = scopes.filter(
+            (s) =>
+              (exam.classId && s.classIds.includes(exam.classId)) ||
+              (exam.sectionId && s.sectionId === exam.sectionId) ||
+              (!exam.sectionId && exam.gradeId && s.gradeId === exam.gradeId)
+          ).length
 
-        // Check for exams in those other classes on the same date
-        const otherExams = await db.schoolExam.findMany({
-          where: {
-            schoolId,
-            classId: { in: otherClassIds },
-            examDate,
-            ...(examId ? { NOT: { id: examId } } : {}),
-          },
-          include: {
-            class: true,
-            subject: true,
-          },
-        })
-
-        for (const exam of otherExams) {
-          if (
-            timeRangesOverlap(startTime, endTime, exam.startTime, exam.endTime)
-          ) {
-            // Count affected students
-            const affectedStudents = otherEnrollments.filter(
-              (e) => e.classId === exam.classId
-            ).length
-
-            conflicts.push({
-              type: "student",
-              entityId: exam.classId,
-              entityName: `${affectedStudents} student(s) in ${exam.class.name}`,
-              conflictingEvent: `${exam.subject.name}: ${exam.title}`,
-              conflictTime: `${exam.startTime} - ${exam.endTime}`,
-              severity: "low",
-            })
-          }
+          conflicts.push({
+            type: "student",
+            entityId: exam.sectionId ?? exam.gradeId ?? exam.classId ?? "",
+            entityName: `${affectedStudents} student(s) in ${examAudienceLabel(exam)}`,
+            conflictingEvent: `${exam.subject.name}: ${exam.title}`,
+            conflictTime: `${exam.startTime} - ${exam.endTime}`,
+            severity: "low",
+          })
         }
       }
     }
@@ -422,7 +464,8 @@ export async function findAvailableExamSlots(
 ): Promise<ActionResponse<AvailableSlot[]>> {
   try {
     const validated = findAvailableSlotsSchema.parse(input)
-    const { classId, date, duration, preferredPeriod } = validated
+    const { date, duration, preferredPeriod } = validated
+    const audience = toAudience(validated)
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -430,31 +473,30 @@ export async function findAvailableExamSlots(
     }
 
     const dayOfWeek = getDayOfWeek(date)
+    const { term } = await resolveActiveTerm(schoolId)
+    const ownSlots = audienceSlotsWhere(audience)
+    const sameAudience = sameAudienceExamsWhere(audience)
 
-    // Get existing timetable entries for the class on this day
-    const timetableEntries = await db.timetable.findMany({
-      where: {
-        schoolId,
-        classId,
-        dayOfWeek,
-      },
-      include: {
-        period: true,
-      },
-    })
+    // The audience's timetable periods on this day
+    const timetableEntries = ownSlots
+      ? await db.timetable.findMany({
+          where: {
+            schoolId,
+            dayOfWeek,
+            ...(term ? { termId: term.id, weekOffset: 0 } : {}),
+            ...ownSlots,
+          },
+          include: { period: true },
+        })
+      : []
 
-    // Get existing exams for the class on this date
-    const existingExams = await db.schoolExam.findMany({
-      where: {
-        schoolId,
-        classId,
-        examDate: date,
-      },
-      select: {
-        startTime: true,
-        endTime: true,
-      },
-    })
+    // The audience's other exams on this date
+    const existingExams = sameAudience
+      ? await db.schoolExam.findMany({
+          where: { schoolId, examDate: date, ...sameAudience },
+          select: { startTime: true, endTime: true },
+        })
+      : []
 
     // Generate potential time slots (08:00 to 16:00 in 30-minute increments)
     const startHour = 8

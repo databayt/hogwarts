@@ -94,7 +94,10 @@ export function ExamBrowseTab() {
   const [previewExam, setPreviewExam] = useState<ExamDetail | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [loadingPreview, setLoadingPreview] = useState(false)
-  const [adoptExamId, setAdoptExamId] = useState<string | null>(null)
+  const [adoptTarget, setAdoptTarget] = useState<{
+    examId: string
+    subjectId: string
+  } | null>(null)
   const [adoptOpen, setAdoptOpen] = useState(false)
 
   const fetchExams = useCallback(() => {
@@ -124,9 +127,9 @@ export function ExamBrowseTab() {
     }
   }
 
-  const openAdopt = (examId: string) => {
+  const openAdopt = (examId: string, subjectId: string) => {
     setPreviewOpen(false)
-    setAdoptExamId(examId)
+    setAdoptTarget({ examId, subjectId })
     setAdoptOpen(true)
   }
 
@@ -292,7 +295,7 @@ export function ExamBrowseTab() {
                     <Button
                       size="sm"
                       className="flex-1 max-md:h-9 max-md:flex-none max-md:rounded-full max-md:px-4"
-                      onClick={() => openAdopt(exam.id)}
+                      onClick={() => openAdopt(exam.id, exam.catalogSubjectId)}
                     >
                       <Download className="me-1 size-4" />
                       {t?.adopt ?? "Adopt"}
@@ -457,7 +460,11 @@ export function ExamBrowseTab() {
                   {t?.close ?? "Close"}
                 </Button>
                 {!previewExam.isAdopted && (
-                  <Button onClick={() => openAdopt(previewExam.id)}>
+                  <Button
+                    onClick={() =>
+                      openAdopt(previewExam.id, previewExam.catalogSubjectId)
+                    }
+                  >
                     <Download className="me-1 size-4" />
                     {t?.adoptThisExam ?? "Adopt This Exam"}
                   </Button>
@@ -470,7 +477,9 @@ export function ExamBrowseTab() {
 
       {/* Adopt scheduling dialog */}
       <AdoptExamDialog
-        examId={adoptExamId}
+        key={adoptTarget?.examId ?? "none"}
+        examId={adoptTarget?.examId ?? null}
+        subjectId={adoptTarget?.subjectId ?? null}
         open={adoptOpen}
         onOpenChange={setAdoptOpen}
       />

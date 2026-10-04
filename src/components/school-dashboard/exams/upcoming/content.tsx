@@ -4,6 +4,7 @@
 import type { ElementType } from "react"
 import Link from "next/link"
 import { auth } from "@/auth"
+import type { Prisma } from "@prisma/client"
 import { addDays, differenceInDays } from "date-fns"
 import {
   BookOpen,
@@ -15,6 +16,7 @@ import {
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,6 +29,11 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+  studentExamsWhere,
+} from "@/components/school-dashboard/exams/lib/audience"
 import { getLabels } from "@/components/translation/person"
 
 import type { CalendarExam } from "./calendar-view"
@@ -59,39 +66,32 @@ export default async function UpcomingExamsContent({
   const session = await auth()
   const role = session?.user?.role
 
-  // For students/guardians, scope to enrolled classes
-  let enrolledClassIds: string[] | null = null
-  if (schoolId && role === "STUDENT") {
-    const student = await db.student.findFirst({
-      where: { userId: session?.user?.id, schoolId },
-      select: { id: true },
-    })
-    if (student) {
-      const classes = await db.studentClass.findMany({
-        where: { studentId: student.id, schoolId },
-        select: { classId: true },
+  // Students and guardians see the exams they — or their children — sit
+  let audienceFilter: Prisma.SchoolExamWhereInput | null = null
+  if (schoolId && (role === "STUDENT" || role === "GUARDIAN")) {
+    let studentIds: string[] = []
+    if (role === "STUDENT") {
+      const student = await db.student.findFirst({
+        where: { userId: session?.user?.id, schoolId },
+        select: { id: true },
       })
-      enrolledClassIds = classes.map((c) => c.classId)
+      studentIds = student ? [student.id] : []
+    } else {
+      const guardian = await db.guardian.findFirst({
+        where: { userId: session?.user?.id, schoolId },
+        select: { id: true },
+      })
+      const sgs = guardian
+        ? await db.studentGuardian.findMany({
+            where: { guardianId: guardian.id, schoolId },
+            select: { studentId: true },
+          })
+        : []
+      studentIds = sgs.map((sg) => sg.studentId)
     }
-  } else if (schoolId && role === "GUARDIAN") {
-    const guardian = await db.guardian.findFirst({
-      where: { userId: session?.user?.id, schoolId },
-      select: { id: true },
-    })
-    if (guardian) {
-      const sgs = await db.studentGuardian.findMany({
-        where: { guardianId: guardian.id, schoolId },
-        select: { studentId: true },
-      })
-      const classes = await db.studentClass.findMany({
-        where: {
-          studentId: { in: sgs.map((sg) => sg.studentId) },
-          schoolId,
-        },
-        select: { classId: true },
-      })
-      enrolledClassIds = [...new Set(classes.map((c) => c.classId))]
-    }
+    audienceFilter = studentExamsWhere(
+      await getStudentScopes(schoolId, studentIds)
+    )
   }
 
   let upcomingExams: Array<{
@@ -119,11 +119,12 @@ export default async function UpcomingExamsContent({
         schoolId,
         status: { in: ["PLANNED", "IN_PROGRESS"] },
         examDate: { gte: today },
+        wizardStep: null,
         ...(catalogSubjectId ? { catalogSubjectId } : {}),
-        ...(enrolledClassIds ? { classId: { in: enrolledClassIds } } : {}),
+        ...(audienceFilter ?? {}),
       },
       include: {
-        class: { select: { name: true, lang: true } },
+        ...examAudienceInclude,
         subject: { select: { name: true, lang: true } },
       },
       orderBy: { examDate: "asc" },
@@ -133,7 +134,7 @@ export default async function UpcomingExamsContent({
     const displayLang = lang === "en" ? ("en" as const) : ("ar" as const)
     const [classLabels, subjectLabels] = await Promise.all([
       getLabels(
-        exams.map((e) => e.class?.name).filter(Boolean) as string[],
+        exams.map((e) => examAudienceLabel(e)).filter(Boolean),
         displayLang,
         schoolId!
       ),
@@ -155,9 +156,10 @@ export default async function UpcomingExamsContent({
       totalMarks: exam.totalMarks,
       examType: exam.examType,
       status: exam.status,
-      className: exam.class?.name
-        ? (classLabels.get(exam.class.name) ?? exam.class.name)
-        : "Unknown",
+      className:
+        classLabels.get(examAudienceLabel(exam)) ||
+        examAudienceLabel(exam) ||
+        "—",
       name: exam.subject?.name
         ? (subjectLabels.get(exam.subject.name) ?? exam.subject.name)
         : "Unknown",

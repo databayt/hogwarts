@@ -97,10 +97,10 @@ Only the first is rejected; the rest are stored so you can still use the templat
 
 An uploaded exam-paper template is bound to real exam data through **Use template**, which offers two sources:
 
-| Source           | What you pick                                        | What happens                                                                                              |
-| ---------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| An existing exam | A `GeneratedExam` that already has questions         | Fills your layout directly                                                                                |
-| Build one now    | A blueprint + class + paper title + date + exam type | Creates the `SchoolExam` + `GeneratedExam`, auto-selects questions from the bank per the blueprint, fills |
+| Source           | What you pick                                                             | What happens                                                                                              |
+| ---------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| An existing exam | A `GeneratedExam` that already has questions                              | Fills your layout directly                                                                                |
+| Build one now    | A blueprint + grade (one section or all) + paper title + date + exam type | Creates the `SchoolExam` + `GeneratedExam`, auto-selects questions from the bank per the blueprint, fills |
 
 Before generating, the dialog shows **coverage** — every tag detected in your template, marked as either fillable or unsupported — so a mismatch is visible before you download rather than as a blank in the printed paper. Output is `.docx`; PDF conversion is deferred.
 
@@ -142,7 +142,7 @@ Smart selection: group by type and difficulty, fill distribution, apply Bloom di
 
 `manage/calendar.tsx` — visual schedule. `manage/conflict-display.tsx` — overlap warnings. `manage/analytics-dashboard.tsx` — school-wide stats, standards coverage, quick paper-gen, export.
 
-The `/exams/manage` list (`manage/columns.tsx`) shows seven columns: **Title** (row anchor), **Grade** (the exam's `class.grade`, not the course-offering name), **Subject**, **Type**, **When** (date · start time · duration, merged into one), **Marks**, and **Status**. Exams are scoped to a `Class` (course offering) which carries `gradeId` and `classroomId` — there is no direct `Section` link, so the list cannot show a section without a schema change.
+The `/exams/manage` list (`manage/columns.tsx`) shows seven columns: **Title** (row anchor), **Grade** (the exam's section, else its grade, else a legacy class's grade), **Subject**, **Type**, **When** (date · start time · duration, merged into one), **Marks**, and **Status**. An exam is set for a grade — one section of it or the whole grade — and a subject; exams created before classes were retired keep their `classId`.
 
 ## Paper generation
 

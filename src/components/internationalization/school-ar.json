@@ -12376,6 +12376,16 @@
       "generateAllHint": "يملأ قالبك لكل بطاقات النتائج في التصفية الحالية، {size} في كل دفعة.",
       "generateAllProgress": "{done} من {total}",
       "noTemplate": "لم يتم رفع قالب بعد — أضف واحداً من صفحة القوالب."
+    },
+    "teachingScope": {
+      "grade": "الصف",
+      "selectGrade": "اختر الصف",
+      "section": "الفصل",
+      "wholeGrade": "الصف كاملًا",
+      "subject": "المادة",
+      "selectSubject": "اختر المادة",
+      "noGrades": "لا توجد صفوف لها مواد بعد. اختر مواد المدرسة أولًا.",
+      "noGradesForSubject": "لا يوجد صف في مدرستك يدرّس هذه المادة."
     }
   },
   "finance": {

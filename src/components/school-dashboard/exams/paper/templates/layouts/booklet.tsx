@@ -9,6 +9,8 @@
 import React from "react"
 import { Image, StyleSheet, Text, View } from "@react-pdf/renderer"
 
+import { examAudienceLabel } from "@/components/school-dashboard/exams/lib/audience"
+
 import type {
   ExamPaperData,
   ExamWithDetails,
@@ -206,7 +208,7 @@ export function BookletCoverPage({
       {/* Exam Title */}
       <Text style={styles.examTitle}>{exam.title}</Text>
       <Text style={styles.examSubtitle}>
-        {exam.subject.name} - {exam.class.name}
+        {exam.subject.name} - {examAudienceLabel(exam)}
       </Text>
 
       {/* Metadata */}

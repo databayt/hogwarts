@@ -41,7 +41,8 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
     defaultValues: {
       title: "",
       description: "",
-      classId: "",
+      gradeId: "",
+      sectionId: null,
       subjectId: "",
       examDate: new Date(),
       startTime: "",
@@ -80,7 +81,9 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
       form.reset({
         title: e.title ?? "",
         description: e.description ?? "",
-        classId: e.classId ?? "",
+        // A legacy exam opens on its class's grade.
+        gradeId: e.gradeId ?? e.class?.gradeId ?? "",
+        sectionId: e.sectionId ?? null,
         subjectId: e.subjectId ?? "",
         examDate: e.examDate ? new Date(e.examDate) : new Date(),
         startTime: e.startTime ?? "",
@@ -131,7 +134,7 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
     if (currentStep === 1) {
       const step1Fields = [
         "title",
-        "classId",
+        "gradeId",
         "subjectId",
         "examType",
       ] as Array<keyof ExamFormData>
@@ -162,7 +165,7 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
       // For editing, save current step data
       const currentStepFields = (
         currentStep === 1
-          ? ["title", "classId", "subjectId", "examType"]
+          ? ["title", "gradeId", "subjectId", "examType"]
           : currentStep === 2
             ? [
                 "examDate",

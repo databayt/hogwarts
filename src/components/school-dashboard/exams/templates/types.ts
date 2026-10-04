@@ -98,7 +98,8 @@ export interface ExamWithDetails {
   startTime?: string | null
   duration: number
   totalMarks: number
-  class: { name: string; id: string }
+  /** Who sits it: the section, the whole grade, or a legacy class. */
+  audience: { name: string; id: string }
   subject: { name: string; id: string }
 }
 

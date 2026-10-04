@@ -21,6 +21,9 @@ vi.mock("@/lib/db", () => ({
     schoolExam: {
       findFirst: vi.fn(),
     },
+    student: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     examResult: {
       findFirst: vi.fn(),
       aggregate: vi.fn(),

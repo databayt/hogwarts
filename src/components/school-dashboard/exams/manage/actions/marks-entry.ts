@@ -7,6 +7,11 @@ import { z } from "zod"
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  examAudienceLabel,
+  examAudienceSelect,
+  examRosterWhere,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 import type {
   ActionResponse,
@@ -33,23 +38,7 @@ export async function getExamWithStudents(input: { examId: string }): Promise<{
     const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
-        class: {
-          include: {
-            studentClasses: {
-              include: {
-                student: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    middleName: true,
-                    lastName: true,
-                    studentId: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+        ...examAudienceSelect,
         examResults: true,
       },
     })
@@ -58,14 +47,28 @@ export async function getExamWithStudents(input: { examId: string }): Promise<{
       return { exam: null, students: [] }
     }
 
+    // Everyone who sits the exam: its section / whole grade, or a legacy
+    // class's enrollments.
+    const roster = await db.student.findMany({
+      where: examRosterWhere(schoolId, exam),
+      select: {
+        id: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        studentId: true,
+      },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+    })
+
     // Map students with their existing results
-    const students: ExamStudent[] = exam.class.studentClasses.map((sc) => {
-      const result = exam.examResults.find((r) => r.studentId === sc.student.id)
+    const students: ExamStudent[] = roster.map((student) => {
+      const result = exam.examResults.find((r) => r.studentId === student.id)
       return {
-        id: sc.student.id,
-        studentId: sc.student.studentId,
-        name: `${sc.student.firstName} ${sc.student.middleName || ""} ${
-          sc.student.lastName
+        id: student.id,
+        studentId: student.studentId,
+        name: `${student.firstName} ${student.middleName || ""} ${
+          student.lastName
         }`.trim(),
         marksObtained: result?.marksObtained ?? null,
         isAbsent: result?.isAbsent ?? false,
@@ -78,7 +81,7 @@ export async function getExamWithStudents(input: { examId: string }): Promise<{
       title: exam.title,
       totalMarks: exam.totalMarks,
       passingMarks: exam.passingMarks,
-      className: exam.class.name,
+      className: examAudienceLabel(exam),
     }
 
     return {
