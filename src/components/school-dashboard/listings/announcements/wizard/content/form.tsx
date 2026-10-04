@@ -2,13 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useState,
-  useTransition,
-} from "react"
+import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -22,22 +16,10 @@ import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
+import { useAnnouncementScopeOptions } from "../../use-scope-options"
 import { completeAnnouncementWizard } from "../actions"
-import { getClassesForAnnouncement } from "../targeting/actions"
 import { updateAnnouncementContent } from "./actions"
 import { createContentSchema, type ContentFormData } from "./validation"
-
-/**
- * Class options are the same for every announcement in the school and never
- * change mid-session, so resolve them once per page load instead of on every
- * mount — reopening the modal is then free.
- */
-let classOptionsCache: Promise<{ label: string; value: string }[]> | null = null
-
-function loadClassOptions() {
-  classOptionsCache ??= getClassesForAnnouncement()
-  return classOptionsCache
-}
 
 interface ContentFormProps {
   /** Omitted when creating: the row does not exist until submit. */
@@ -57,10 +39,6 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
     const { dictionary } = useDictionary()
     const { locale } = useLocale()
     const isAr = locale === "ar"
-
-    const [classOptions, setClassOptions] = useState<
-      { label: string; value: string }[]
-    >([])
 
     const wc = (dictionary?.school?.announcements as any)?.wizard?.content as
       | Record<string, string>
@@ -90,7 +68,11 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
         label: wt?.scopeSchool || (isAr ? "المدرسة" : "School"),
         value: "school",
       },
-      { label: wt?.scopeClass || (isAr ? "الصف" : "Class"), value: "class" },
+      { label: wt?.scopeGrade || (isAr ? "الصف" : "Grade"), value: "grade" },
+      {
+        label: wt?.scopeSection || (isAr ? "الفصل" : "Section"),
+        value: "section",
+      },
       { label: wt?.scopeRole || (isAr ? "الدور" : "Role"), value: "role" },
     ]
 
@@ -130,7 +112,8 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
         lang: initialData?.lang || "ar",
         priority: initialData?.priority || "normal",
         scope: initialData?.scope || "school",
-        classId: initialData?.classId,
+        gradeId: initialData?.gradeId,
+        sectionId: initialData?.sectionId,
         role: initialData?.role,
       },
     })
@@ -139,28 +122,23 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
     const body = form.watch("body") || ""
     const priority = form.watch("priority")
     const scope = form.watch("scope")
-    const classId = form.watch("classId")
+    const gradeId = form.watch("gradeId")
+    const sectionId = form.watch("sectionId")
     const role = form.watch("role")
 
-    // School-wide is the common case, so don't spend a round-trip on the class
-    // list until a class-scoped announcement is actually being written.
-    useEffect(() => {
-      if (scope !== "class") return
-      let active = true
-      loadClassOptions().then((opts) => {
-        if (active) setClassOptions(opts)
-      })
-      return () => {
-        active = false
-      }
-    }, [scope])
+    // School-wide is the common case: grades and sections load only once a
+    // grade or section announcement is being written
+    const { gradeOptions, sectionOptions } = useAnnouncementScopeOptions(
+      scope === "grade" || scope === "section"
+    )
 
     const validationContext = useWizardValidationOptional()
     const setFieldProgress = validationContext?.setFieldProgress
 
     React.useEffect(() => {
       let isValid = title.trim().length >= 1 && body.trim().length >= 1
-      if (scope === "class" && !classId) isValid = false
+      if (scope === "grade" && !gradeId) isValid = false
+      if (scope === "section" && !sectionId) isValid = false
       if (scope === "role" && !role) isValid = false
       onValidChange?.(isValid)
 
@@ -170,8 +148,10 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
       if (title.trim().length >= 1) completedFields++
       if (body.trim().length >= 1) completedFields++
       if (priority) completedFields++
-      if (scope === "class") {
-        if (classId) completedFields++
+      if (scope === "grade") {
+        if (gradeId) completedFields++
+      } else if (scope === "section") {
+        if (sectionId) completedFields++
       } else if (scope === "role") {
         if (role) completedFields++
       } else if (scope) {
@@ -185,7 +165,8 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
       body,
       priority,
       scope,
-      classId,
+      gradeId,
+      sectionId,
       role,
       onValidChange,
       setFieldProgress,
@@ -293,11 +274,21 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
             />
           </div>
 
-          {scope === "class" && (
+          {scope === "grade" && (
             <SelectField
-              name="classId"
-              label={wt?.classLabel || (isAr ? "الصف" : "Class")}
-              options={[...classOptions]}
+              name="gradeId"
+              label={wt?.gradeLabel || (isAr ? "الصف" : "Grade")}
+              options={gradeOptions}
+              required
+              disabled={isPending}
+            />
+          )}
+
+          {scope === "section" && (
+            <SelectField
+              name="sectionId"
+              label={wt?.sectionLabel || (isAr ? "الفصل" : "Section")}
+              options={sectionOptions}
               required
               disabled={isPending}
             />

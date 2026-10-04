@@ -11,6 +11,7 @@ import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
 import { prewarm } from "@/components/translation/prewarm"
 
+import { resolveAnnouncementAudience } from "../audience"
 import { checkAnnouncementPermission, getAllowedScopes } from "../authorization"
 import { guardAnnouncement, resolveContext } from "../guard"
 import { contentSchema, type ContentFormData } from "./content/validation"
@@ -38,7 +39,8 @@ export async function getAnnouncementForWizard(
         lang: true,
         priority: true,
         scope: true,
-        classId: true,
+        gradeId: true,
+        sectionId: true,
         role: true,
         published: true,
         scheduledFor: true,
@@ -70,7 +72,7 @@ export async function createDraftAnnouncement(): Promise<
 
     // Seed the draft with the caller's broadest allowed scope rather than a
     // blanket "school": an empty list means the role may not author at all,
-    // and a TEACHER's draft must start out class-scoped.
+    // and a TEACHER's draft must start out section-scoped.
     const allowedScopes = getAllowedScopes(authContext.role)
     if (allowedScopes.length === 0) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
@@ -119,7 +121,6 @@ export async function submitAnnouncementWizard(
       lang: parsed.lang,
       priority: parsed.priority ?? "normal",
       scope: parsed.scope,
-      classId: parsed.scope === "class" ? (parsed.classId ?? null) : null,
       role:
         parsed.scope === "role" ? ((parsed.role as UserRole) ?? null) : null,
       // Completing the wizard is what clears the step marker.
@@ -135,10 +136,21 @@ export async function submitAnnouncementWizard(
       if (!getAllowedScopes(authContext.role).includes(parsed.scope)) {
         return actionError(ACTION_ERRORS.UNAUTHORIZED)
       }
+      const audience = await resolveAnnouncementAudience(
+        schoolId,
+        authContext,
+        parsed
+      )
+      if (!audience.ok) return { success: false, error: audience.code }
 
       await db.announcement.updateMany({
         where: { id, schoolId },
-        data: fields,
+        data: {
+          ...fields,
+          gradeId: audience.gradeId,
+          sectionId: audience.sectionId,
+          classId: null,
+        },
       })
 
       after(() =>
@@ -159,7 +171,8 @@ export async function submitAnnouncementWizard(
 
     // Both checks matter: getAllowedScopes() covers which scopes the role may
     // ever address, checkAnnouncementPermission() covers the create right
-    // itself (a TEACHER passes only for a class-scoped announcement).
+    // itself (a TEACHER passes only for a section-scoped announcement — and
+    // the audience check below makes it one of their own sections).
     if (
       !getAllowedScopes(authContext.role).includes(parsed.scope) ||
       !checkAnnouncementPermission(authContext, "create", {
@@ -169,10 +182,18 @@ export async function submitAnnouncementWizard(
     ) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+    const audience = await resolveAnnouncementAudience(
+      schoolId,
+      authContext,
+      parsed
+    )
+    if (!audience.ok) return { success: false, error: audience.code }
 
     const created = await db.announcement.create({
       data: {
         ...fields,
+        gradeId: audience.gradeId,
+        sectionId: audience.sectionId,
         schoolId,
         // Without this the ownership checks in checkAnnouncementPermission()
         // can never pass, so teachers lose access to their own announcements.

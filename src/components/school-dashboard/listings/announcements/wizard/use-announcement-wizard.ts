@@ -13,7 +13,8 @@ export interface AnnouncementWizardData {
   lang: string
   priority: string
   scope: string
-  classId: string | null
+  gradeId: string | null
+  sectionId: string | null
   role: string | null
   published: boolean
   scheduledFor: Date | null

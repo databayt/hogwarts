@@ -23,11 +23,9 @@ import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
+import { useAnnouncementScopeOptions } from "../../use-scope-options"
 import { completeAnnouncementWizard } from "../actions"
-import {
-  getClassesForAnnouncement,
-  updateAnnouncementTargeting,
-} from "./actions"
+import { updateAnnouncementTargeting } from "./actions"
 import { createTargetingSchema, type TargetingFormData } from "./validation"
 
 interface TargetingFormProps {
@@ -41,9 +39,6 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
   ({ announcementId, initialData, onValidChange, onTabChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
-    const [classOptions, setClassOptions] = useState<
-      { label: string; value: string }[]
-    >([])
     const { dictionary } = useDictionary()
     const { locale } = useLocale()
     const wt = (dictionary?.school?.announcements as any)?.wizard?.targeting as
@@ -55,7 +50,8 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
 
     const SCOPE_OPTIONS = [
       { label: wt?.scopeSchool || "School", value: "school" },
-      { label: wt?.scopeClass || "Class", value: "class" },
+      { label: wt?.scopeGrade || "Grade", value: "grade" },
+      { label: wt?.scopeSection || "Section", value: "section" },
       { label: wt?.scopeRole || "Role", value: "role" },
     ]
 
@@ -73,11 +69,6 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
       { id: "publishing", label: wt?.publishing || "Publishing" },
     ]
 
-    // Fetch class options on mount
-    useEffect(() => {
-      getClassesForAnnouncement().then(setClassOptions)
-    }, [])
-
     const schema = React.useMemo(() => {
       const messages = dictionary?.messages
       if (!messages) return createTargetingSchema()
@@ -89,7 +80,8 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
       resolver: zodResolver(schema) as any,
       defaultValues: {
         scope: initialData?.scope || "school",
-        classId: initialData?.classId,
+        gradeId: initialData?.gradeId,
+        sectionId: initialData?.sectionId,
         role: initialData?.role,
         published: initialData?.published ?? false,
         scheduledFor: initialData?.scheduledFor,
@@ -102,15 +94,22 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
     // Watch scope to show/hide conditional fields
     const scope = form.watch("scope")
 
+    // Grades and sections load once a grade or section audience is picked
+    const { gradeOptions, sectionOptions } = useAnnouncementScopeOptions(
+      scope === "grade" || scope === "section"
+    )
+
     // Notify parent of validity changes
-    const classId = form.watch("classId")
+    const gradeId = form.watch("gradeId")
+    const sectionId = form.watch("sectionId")
     const role = form.watch("role")
     React.useEffect(() => {
       let isValid = true
-      if (scope === "class" && !classId) isValid = false
+      if (scope === "grade" && !gradeId) isValid = false
+      if (scope === "section" && !sectionId) isValid = false
       if (scope === "role" && !role) isValid = false
       onValidChange?.(isValid)
-    }, [scope, classId, role, onValidChange])
+    }, [scope, gradeId, sectionId, role, onValidChange])
 
     useImperativeHandle(ref, () => ({
       saveAndNext: () =>
@@ -173,11 +172,20 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
                     required
                     disabled={isPending}
                   />
-                  {scope === "class" && (
+                  {scope === "grade" && (
                     <SelectField
-                      name="classId"
-                      label={wt?.classLabel || "Class"}
-                      options={[...classOptions]}
+                      name="gradeId"
+                      label={wt?.gradeLabel || "Grade"}
+                      options={gradeOptions}
+                      required
+                      disabled={isPending}
+                    />
+                  )}
+                  {scope === "section" && (
+                    <SelectField
+                      name="sectionId"
+                      label={wt?.sectionLabel || "Section"}
+                      options={sectionOptions}
                       required
                       disabled={isPending}
                     />

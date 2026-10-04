@@ -59,6 +59,7 @@ model AcademicGrade {
   results           Result[]
   quickAssessments        QuickAssessment[]
   progressReportSchedules ProgressReportSchedule[]
+  announcements           Announcement[]
   classrooms        Classroom[]
   sections          Section[]
   bookSelections    BookSelection[]

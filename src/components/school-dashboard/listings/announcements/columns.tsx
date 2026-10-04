@@ -93,7 +93,9 @@ export const getAnnouncementColumns = (
         const scope = getValue<string>()
         const labels: Record<string, string> = {
           school: t.schoolWide,
-          class: t.classSpecific,
+          grade: t.gradeSpecific,
+          section: t.sectionSpecific,
+          class: t.classSpecific, // legacy
           role: t.roleSpecific,
         }
         return <span className="text-sm">{labels[scope] || scope}</span>
@@ -103,7 +105,8 @@ export const getAnnouncementColumns = (
         variant: "select",
         options: [
           { label: t.schoolWide, value: "school" },
-          { label: t.classSpecific, value: "class" },
+          { label: t.gradeSpecific, value: "grade" },
+          { label: t.sectionSpecific, value: "section" },
           { label: t.roleSpecific, value: "role" },
         ],
       },

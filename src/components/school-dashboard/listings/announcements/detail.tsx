@@ -33,6 +33,8 @@ interface AnnouncementDetailResult {
   scope: string
   priority: string
   classId: string | null
+  gradeId: string | null
+  sectionId: string | null
   role: string | null
   published: boolean
   createdBy: string | null
@@ -73,6 +75,8 @@ export function AnnouncementDetailContent({
     notFound: d?.notFound || "Announcement not found",
     schoolWide: d?.schoolWide || "School-wide",
     classSpecific: d?.classSpecific || "Class-specific",
+    gradeSpecific: d?.gradeSpecific || "Grade",
+    sectionSpecific: d?.sectionSpecific || "Section",
     roleSpecific: d?.roleSpecific || "Role-specific",
     high: d?.high || "High",
     medium: d?.medium || "Medium",
@@ -119,7 +123,11 @@ export function AnnouncementDetailContent({
     switch (scope) {
       case "school":
         return t.schoolWide
-      case "class":
+      case "grade":
+        return t.gradeSpecific
+      case "section":
+        return t.sectionSpecific
+      case "class": // legacy
         return t.classSpecific
       case "role":
         return t.roleSpecific

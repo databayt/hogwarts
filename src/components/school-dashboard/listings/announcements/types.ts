@@ -12,9 +12,11 @@ export type AnnouncementDTO = {
   title: string
   body: string
   language: "en" | "ar"
-  scope: "school" | "class" | "role"
+  scope: "school" | "class" | "grade" | "section" | "role"
+  /** Legacy (scope "class"). */
   classId: string | null
-  class?: { id: string; name: string } | null
+  gradeId: string | null
+  sectionId: string | null
   role: string | null
   published: boolean
   createdAt: Date

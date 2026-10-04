@@ -15,6 +15,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { getTeacherSectionIds } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   createDraftAnnouncement,
@@ -33,8 +34,12 @@ vi.mock("@/lib/db", () => ({
       updateMany: vi.fn(),
       deleteMany: vi.fn(),
     },
+    section: { findFirst: vi.fn() },
+    academicGrade: { findFirst: vi.fn() },
   },
 }))
+
+vi.mock("@/lib/teaching-scope", () => ({ getTeacherSectionIds: vi.fn() }))
 
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 
@@ -81,6 +86,12 @@ describe("announcement wizard authorization", () => {
     vi.clearAllMocks()
     vi.mocked(db.announcement.create).mockResolvedValue({ id: "ann-1" } as any)
     vi.mocked(db.announcement.updateMany).mockResolvedValue({ count: 1 })
+    // Section 7-A of grade 7 is this school's and teacher-1's
+    vi.mocked(db.section.findFirst).mockResolvedValue({
+      id: "7a",
+      gradeId: "g7",
+    } as never)
+    vi.mocked(getTeacherSectionIds).mockResolvedValue(["7a"])
   })
 
   describe("createDraftAnnouncement", () => {
@@ -122,7 +133,7 @@ describe("announcement wizard authorization", () => {
       )
     })
 
-    it("seeds a TEACHER draft as class-scoped, not school-wide", async () => {
+    it("seeds a TEACHER draft as section-scoped, not school-wide", async () => {
       signInAs("TEACHER", "teacher-1")
 
       const result = await createDraftAnnouncement()
@@ -130,7 +141,7 @@ describe("announcement wizard authorization", () => {
       expect(result.success).toBe(true)
       expect(db.announcement.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ scope: "class" }),
+          data: expect.objectContaining({ scope: "section" }),
         })
       )
     })
@@ -187,9 +198,9 @@ describe("announcement wizard authorization", () => {
       expect(db.announcement.updateMany).not.toHaveBeenCalled()
     })
 
-    it("refuses a TEACHER widening their own class draft to school scope", async () => {
+    it("refuses a TEACHER widening their own section draft to school scope", async () => {
       signInAs("TEACHER", "teacher-1")
-      existingAnnouncement({ createdBy: "teacher-1", scope: "class" })
+      existingAnnouncement({ createdBy: "teacher-1", scope: "section" })
 
       const result = await updateAnnouncementTargeting(
         "ann-1",
@@ -200,13 +211,13 @@ describe("announcement wizard authorization", () => {
       expect(db.announcement.updateMany).not.toHaveBeenCalled()
     })
 
-    it("lets a TEACHER publish to their own class", async () => {
+    it("lets a TEACHER publish to their own section", async () => {
       signInAs("TEACHER", "teacher-1")
-      existingAnnouncement({ createdBy: "teacher-1", scope: "class" })
+      existingAnnouncement({ createdBy: "teacher-1", scope: "section" })
 
       const result = await updateAnnouncementTargeting("ann-1", {
-        scope: "class",
-        classId: "class-1",
+        scope: "section",
+        sectionId: "7a",
         published: true,
         pinned: false,
         featured: false,
@@ -216,8 +227,52 @@ describe("announcement wizard authorization", () => {
       expect(db.announcement.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ id: "ann-1", schoolId: SCHOOL }),
+          data: expect.objectContaining({
+            scope: "section",
+            sectionId: "7a",
+            gradeId: "g7",
+            classId: null,
+          }),
         })
       )
+    })
+
+    it("refuses a TEACHER publishing to a section that isn't theirs", async () => {
+      signInAs("TEACHER", "teacher-1")
+      existingAnnouncement({ createdBy: "teacher-1", scope: "section" })
+      vi.mocked(getTeacherSectionIds).mockResolvedValue(["8b"])
+
+      const result = await updateAnnouncementTargeting("ann-1", {
+        scope: "section",
+        sectionId: "7a",
+        published: true,
+        pinned: false,
+        featured: false,
+      } as any)
+
+      expect(result.success).toBe(false)
+      expect(db.announcement.updateMany).not.toHaveBeenCalled()
+    })
+
+    it("refuses a section of another school", async () => {
+      signInAs("ADMIN", "admin-1")
+      existingAnnouncement({ createdBy: "admin-1" })
+      vi.mocked(db.section.findFirst).mockResolvedValue(null)
+
+      const result = await updateAnnouncementTargeting("ann-1", {
+        scope: "section",
+        sectionId: "other-school-section",
+        published: false,
+        pinned: false,
+        featured: false,
+      } as any)
+
+      expect(result.success).toBe(false)
+      expect(db.section.findFirst).toHaveBeenCalledWith({
+        where: { id: "other-school-section", schoolId: SCHOOL },
+        select: { id: true, gradeId: true },
+      })
+      expect(db.announcement.updateMany).not.toHaveBeenCalled()
     })
 
     it("lets an ADMIN publish school-wide", async () => {
@@ -278,13 +333,13 @@ describe("announcement wizard authorization", () => {
       expect(db.announcement.create).not.toHaveBeenCalled()
     })
 
-    it("lets a TEACHER create a class-scoped announcement they own", async () => {
+    it("lets a TEACHER create a section-scoped announcement they own", async () => {
       signInAs("TEACHER", "teacher-1")
 
       const result = await submitAnnouncementWizard({
         ...content,
-        scope: "class",
-        classId: "class-1",
+        scope: "section",
+        sectionId: "7a",
       })
 
       expect(result.success).toBe(true)
@@ -292,8 +347,9 @@ describe("announcement wizard authorization", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             schoolId: SCHOOL,
-            scope: "class",
-            classId: "class-1",
+            scope: "section",
+            sectionId: "7a",
+            gradeId: "g7",
             createdBy: "teacher-1",
             // Submitting IS completing — nothing is left half-finished.
             wizardStep: null,
@@ -320,19 +376,24 @@ describe("announcement wizard authorization", () => {
       )
     })
 
-    it("drops classId/role that do not belong to the chosen scope", async () => {
+    it("drops a grade, section or role that doesn't belong to the chosen scope", async () => {
       signInAs("ADMIN", "admin-1")
 
       await submitAnnouncementWizard({
         ...content,
         scope: "school",
-        classId: "class-1",
+        gradeId: "g7",
+        sectionId: "7a",
         role: "STUDENT",
       })
 
       expect(db.announcement.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ classId: null, role: null }),
+          data: expect.objectContaining({
+            gradeId: null,
+            sectionId: null,
+            role: null,
+          }),
         })
       )
     })

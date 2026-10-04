@@ -8,8 +8,9 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
+import { resolveAnnouncementAudience } from "../../audience"
 import { getAllowedScopes } from "../../authorization"
-import { guardAnnouncement, resolveContext } from "../../guard"
+import { guardAnnouncement } from "../../guard"
 import { targetingSchema, type TargetingFormData } from "./validation"
 
 export async function getAnnouncementTargeting(
@@ -24,7 +25,8 @@ export async function getAnnouncementTargeting(
       where: { id: announcementId, schoolId },
       select: {
         scope: true,
-        classId: true,
+        gradeId: true,
+        sectionId: true,
         role: true,
         published: true,
         scheduledFor: true,
@@ -41,8 +43,14 @@ export async function getAnnouncementTargeting(
     return {
       success: true,
       data: {
-        scope: announcement.scope as "school" | "class" | "role",
-        classId: announcement.classId ?? undefined,
+        // A legacy class announcement opens as "section" with none picked,
+        // so saving asks for a section rather than silently widening it
+        scope:
+          announcement.scope === "class"
+            ? "section"
+            : (announcement.scope as "school" | "grade" | "section" | "role"),
+        gradeId: announcement.gradeId ?? undefined,
+        sectionId: announcement.sectionId ?? undefined,
         role: announcement.role ?? undefined,
         published: announcement.published,
         scheduledFor: announcement.scheduledFor ?? undefined,
@@ -69,10 +77,16 @@ export async function updateAnnouncementTargeting(
 
     // This step is where scope is chosen and the announcement goes live, so the
     // caller's role has to permit both the target scope and the publish itself
-    // — a TEACHER may only ever address their own class.
+    // — a TEACHER may only ever address their own section.
     if (!getAllowedScopes(authContext.role).includes(parsed.scope)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+    const audience = await resolveAnnouncementAudience(
+      schoolId,
+      authContext,
+      parsed
+    )
+    if (!audience.ok) return { success: false, error: audience.code }
 
     if (parsed.published) {
       const canPublish = await guardAnnouncement(announcementId, "publish")
@@ -83,7 +97,9 @@ export async function updateAnnouncementTargeting(
       where: { id: announcementId, schoolId },
       data: {
         scope: parsed.scope,
-        classId: parsed.scope === "class" ? (parsed.classId ?? null) : null,
+        gradeId: audience.gradeId,
+        sectionId: audience.sectionId,
+        classId: null,
         role:
           parsed.scope === "role" ? ((parsed.role as UserRole) ?? null) : null,
         published: parsed.published,
@@ -97,24 +113,5 @@ export async function updateAnnouncementTargeting(
     return { success: true }
   } catch {
     return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
-}
-
-export async function getClassesForAnnouncement(): Promise<
-  { label: string; value: string }[]
-> {
-  try {
-    const ctx = await resolveContext()
-    if (!ctx.ok) return []
-    const { schoolId } = ctx.value
-
-    const classes = await db.class.findMany({
-      where: { schoolId },
-      select: { id: true, name: true },
-    })
-
-    return classes.map((c) => ({ label: c.name, value: c.id }))
-  } catch {
-    return []
   }
 }

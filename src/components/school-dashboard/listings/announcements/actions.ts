@@ -92,10 +92,12 @@ import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveAnnouncementAudience } from "@/components/school-dashboard/listings/announcements/audience"
 import {
   assertAnnouncementPermission,
   getAuthContext,
   validateAnnouncementScope,
+  type AnnouncementScopeValue,
 } from "@/components/school-dashboard/listings/announcements/authorization"
 import {
   buildViewerAudienceWhere,
@@ -132,6 +134,8 @@ type AnnouncementSelectResult = {
   scope: string
   priority: string
   classId: string | null
+  gradeId: string | null
+  sectionId: string | null
   role: string | null
   published: boolean
   createdBy: string | null
@@ -203,6 +207,13 @@ export async function createAnnouncement(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    const audience = await resolveAnnouncementAudience(
+      schoolId,
+      authContext,
+      parsed
+    )
+    if (!audience.ok) return { success: false, error: audience.code }
+
     // Create announcement with audit trail - single-language fields
     const row = await db.announcement.create({
       data: {
@@ -211,8 +222,9 @@ export async function createAnnouncement(
         body: parsed.body || null,
         lang: parsed.lang || "ar",
         scope: parsed.scope,
-        classId: parsed.classId || null,
-        role: (parsed.role as any) || null,
+        gradeId: audience.gradeId,
+        sectionId: audience.sectionId,
+        role: parsed.scope === "role" ? (parsed.role as any) || null : null,
         published: parsed.published,
         priority: parsed.priority || "normal",
         scheduledFor: parsed.scheduledFor
@@ -238,7 +250,8 @@ export async function createAnnouncement(
         // content — which the notification layer localizes per reader.
         title: parsed.title!,
         scope: parsed.scope,
-        classId: parsed.classId || undefined,
+        gradeId: audience.gradeId ?? undefined,
+        sectionId: audience.sectionId ?? undefined,
         role: parsed.role || undefined,
       }).catch((err) =>
         console.error("[createAnnouncement] Notification dispatch failed:", err)
@@ -301,6 +314,8 @@ export async function updateAnnouncement(
         createdBy: true,
         schoolId: true,
         scope: true,
+        gradeId: true,
+        sectionId: true,
         published: true,
       },
     })
@@ -315,7 +330,7 @@ export async function updateAnnouncement(
         id: existing.id,
         createdBy: existing.createdBy,
         schoolId: existing.schoolId,
-        scope: existing.scope as "school" | "class" | "role",
+        scope: existing.scope as AnnouncementScopeValue,
       })
     } catch {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
@@ -326,12 +341,33 @@ export async function updateAnnouncement(
     if (typeof rest.title !== "undefined") data.title = rest.title
     if (typeof rest.body !== "undefined") data.body = rest.body
     if (typeof rest.lang !== "undefined") data.lang = rest.lang
-    if (typeof rest.scope !== "undefined") data.scope = rest.scope
-    if (typeof rest.classId !== "undefined") {
-      // Use Prisma relation API instead of foreign key
-      data.class = rest.classId
-        ? { connect: { id: rest.classId } }
-        : { disconnect: true }
+    // A change of audience is re-checked as a whole and replaces the old one
+    // (a legacy class included)
+    if (
+      typeof rest.scope !== "undefined" ||
+      typeof rest.gradeId !== "undefined" ||
+      typeof rest.sectionId !== "undefined"
+    ) {
+      const scope = rest.scope ?? existing.scope
+      try {
+        validateAnnouncementScope(authContext, scope as AnnouncementScopeValue)
+      } catch {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+      const audience = await resolveAnnouncementAudience(
+        schoolId,
+        authContext,
+        {
+          scope,
+          gradeId: rest.gradeId ?? existing.gradeId ?? undefined,
+          sectionId: rest.sectionId ?? existing.sectionId ?? undefined,
+        }
+      )
+      if (!audience.ok) return { success: false, error: audience.code }
+      data.scope = scope
+      data.gradeId = audience.gradeId
+      data.sectionId = audience.sectionId
+      data.classId = null
     }
     if (typeof rest.role !== "undefined") data.role = rest.role || null
     if (typeof rest.published !== "undefined") {
@@ -432,7 +468,7 @@ export async function deleteAnnouncement(input: {
         id: existing.id,
         createdBy: existing.createdBy,
         schoolId: existing.schoolId,
-        scope: existing.scope as "school" | "class" | "role",
+        scope: existing.scope as AnnouncementScopeValue,
       })
     } catch {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
@@ -501,6 +537,10 @@ export async function toggleAnnouncementPublish(input: {
         createdBy: true,
         schoolId: true,
         scope: true,
+        classId: true,
+        gradeId: true,
+        sectionId: true,
+        role: true,
         published: true,
       },
     })
@@ -515,7 +555,7 @@ export async function toggleAnnouncementPublish(input: {
         id: existing.id,
         createdBy: existing.createdBy,
         schoolId: existing.schoolId,
-        scope: existing.scope as "school" | "class" | "role",
+        scope: existing.scope as AnnouncementScopeValue,
       })
     } catch {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
@@ -542,7 +582,11 @@ export async function toggleAnnouncementPublish(input: {
         // The title is real content; the notification layer localizes it per
         // reader. A hardcoded English placeholder never would.
         title: existing.title!,
-        scope: existing.scope as "school" | "class" | "role",
+        scope: existing.scope as AnnouncementScopeValue,
+        classId: existing.classId ?? undefined,
+        gradeId: existing.gradeId ?? undefined,
+        sectionId: existing.sectionId ?? undefined,
+        role: existing.role ?? undefined,
       }).catch((err) =>
         console.error(
           "[toggleAnnouncementPublish] Notification dispatch failed:",
@@ -625,6 +669,8 @@ export async function getAnnouncement(input: {
         scope: true,
         priority: true,
         classId: true,
+        gradeId: true,
+        sectionId: true,
         role: true,
         published: true,
         createdBy: true,
@@ -1079,8 +1125,10 @@ async function dispatchAnnouncementNotifications(
   schoolId: string,
   params: {
     title: string
-    scope: "school" | "class" | "role"
+    scope: AnnouncementScopeValue
     classId?: string
+    gradeId?: string
+    sectionId?: string
     role?: string
   }
 ) {
@@ -1099,6 +1147,8 @@ async function dispatchAnnouncementNotifications(
     },
     targetScope: params.scope,
     targetClassId: params.classId,
+    targetGradeId: params.gradeId,
+    targetSectionId: params.sectionId,
     targetRole: params.role,
   })
 }

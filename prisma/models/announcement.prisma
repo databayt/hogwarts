@@ -2,8 +2,10 @@
 
 enum AnnouncementScope {
   school
-  class
+  class // Legacy: a class's students. New announcements use grade or section.
   role
+  grade // A grade: its students (every section, and those not yet in one) and their guardians
+  section // One section: its students and their guardians
 }
 
 enum AnnouncementPriority {
@@ -30,9 +32,13 @@ model Announcement {
   creator   User?   @relation("AnnouncementCreator", fields: [createdBy], references: [id])
 
   // Scope targeting
-  classId String?
-  class   Class?    @relation(fields: [classId], references: [id], onDelete: Cascade)
-  role    UserRole? // Now type-safe with UserRole enum
+  classId   String? // Legacy (scope "class")
+  class     Class?         @relation(fields: [classId], references: [id], onDelete: Cascade)
+  gradeId   String? // scope "grade" (and the section's grade for scope "section")
+  grade     AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  sectionId String? // scope "section"
+  section   Section?       @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  role      UserRole? // Now type-safe with UserRole enum
 
   // Publishing workflow (CRITICAL for scheduling)
   published    Boolean   @default(false)
@@ -59,6 +65,8 @@ model Announcement {
   @@index([schoolId, scope])
   @@index([schoolId, published, createdAt])
   @@index([schoolId, classId])
+  @@index([schoolId, gradeId])
+  @@index([schoolId, sectionId])
   @@index([schoolId, role])
   @@index([schoolId, pinned, createdAt])
   @@index([createdBy])
@@ -136,10 +144,12 @@ model AnnouncementTemplate {
   lang  String  @default("ar") // Content language
 
   // Preset configurations
-  scope    AnnouncementScope    @default(school)
-  priority AnnouncementPriority @default(normal)
-  classId  String?
-  role     UserRole?
+  scope     AnnouncementScope    @default(school)
+  priority  AnnouncementPriority @default(normal)
+  classId   String? // Legacy
+  gradeId   String?
+  sectionId String?
+  role      UserRole?
 
   // Ownership
   isSystem  Boolean @default(false)

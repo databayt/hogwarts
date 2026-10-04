@@ -5300,7 +5300,11 @@
           "roleStudent": "طالب",
           "roleGuardian": "ولي أمر",
           "roleStaff": "موظف",
-          "roleAccountant": "محاسب"
+          "roleAccountant": "محاسب",
+          "scopeGrade": "الصف",
+          "scopeSection": "الفصل",
+          "gradeLabel": "الصف",
+          "sectionLabel": "الفصل"
         },
         "failedToSave": "فشل الحفظ",
         "failedToComplete": "فشل الإكمال",
@@ -5320,7 +5324,15 @@
         "yes": "نعم",
         "no": "لا"
       },
-      "failedToCreateDraft": "فشل الإنشاء"
+      "failedToCreateDraft": "فشل الإنشاء",
+      "grade": "الصف",
+      "section": "الفصل",
+      "gradeLabel": "الصف",
+      "gradePlaceholder": "اختر الصف",
+      "sectionLabel": "الفصل",
+      "sectionPlaceholder": "اختر الفصل",
+      "gradeSpecific": "صف",
+      "sectionSpecific": "فصل"
     },
     "liveClasses": {
       "title": "مباشر",

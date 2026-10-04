@@ -22,11 +22,19 @@ export interface AuthContext {
   schoolId: string | null
 }
 
+/** `class` is legacy (read-only); new announcements use grade or section. */
+export type AnnouncementScopeValue =
+  | "school"
+  | "class"
+  | "grade"
+  | "section"
+  | "role"
+
 export interface AnnouncementContext {
   id?: string
   createdBy?: string | null
   schoolId?: string
-  scope?: "school" | "class" | "role"
+  scope?: AnnouncementScopeValue
 }
 
 /**
@@ -63,8 +71,9 @@ export function checkAnnouncementPermission(
   // TEACHER can create and manage their own announcements
   if (role === "TEACHER") {
     if (action === "create") {
-      // Teachers can only create CLASS-scoped announcements
-      return announcement?.scope === "class"
+      // Teachers write to a section — one of their own, which the action
+      // checks against the database
+      return announcement?.scope === "section"
     }
 
     if (action === "update" || action === "delete" || action === "publish") {
@@ -141,11 +150,11 @@ export function canCreateSchoolAnnouncement(role: UserRole): boolean {
 }
 
 /**
- * Check if user can create class-scoped announcements
+ * Check if user can create section-scoped announcements
  * @param role - User role
- * @returns true if user can create class-scoped announcements
+ * @returns true if user can create section-scoped announcements
  */
-export function canCreateClassAnnouncement(role: UserRole): boolean {
+export function canCreateSectionAnnouncement(role: UserRole): boolean {
   return role === "DEVELOPER" || role === "ADMIN" || role === "TEACHER"
 }
 
@@ -163,15 +172,13 @@ export function canCreateRoleAnnouncement(role: UserRole): boolean {
  * @param role - User role
  * @returns Array of allowed announcement scopes
  */
-export function getAllowedScopes(
-  role: UserRole
-): ("school" | "class" | "role")[] {
+export function getAllowedScopes(role: UserRole): AnnouncementScopeValue[] {
   switch (role) {
     case "DEVELOPER":
     case "ADMIN":
-      return ["school", "class", "role"]
+      return ["school", "grade", "section", "role"]
     case "TEACHER":
-      return ["class"]
+      return ["section"]
     default:
       return []
   }
@@ -185,7 +192,7 @@ export function getAllowedScopes(
  */
 export function validateAnnouncementScope(
   auth: AuthContext,
-  scope: "school" | "class" | "role"
+  scope: AnnouncementScopeValue
 ): void {
   const allowedScopes = getAllowedScopes(auth.role)
 

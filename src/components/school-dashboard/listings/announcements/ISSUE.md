@@ -6,6 +6,25 @@
 
 ---
 
+## 2026-10-04 — classes retired (class removal S10, local, not pushed)
+
+- Scope `grade` and `section` replace `class` (enum values added; `class` stays for
+  existing rows). `Announcement` / `AnnouncementTemplate` gain `gradeId` + `sectionId`,
+  `NotificationBatch` `targetGradeId` + `targetSectionId` (migration
+  `20261004180000_announcement_scope` — **owed on prod**; run it with plain `psql -f`,
+  no transaction, because of `ALTER TYPE … ADD VALUE`).
+- Teachers post to their own sections (was: class-scoped only, so a teacher in a
+  school without classes could post nothing). `audience.ts` checks the grade/section
+  against the school before every write — create/update accepted any `classId` before.
+- Fixed on the way: publishing from the list toggle sent only the scope, so class and
+  role announcements notified nobody; the dispatcher's class branch looked the class
+  up by id alone (another school's class would have worked).
+- Students and guardians read grade/section notices of their own students
+  (`viewerAudienceScope`). Removed the unused `getClassAnnouncements` and the
+  class option loader `getClassesForAnnouncement`.
+
+---
+
 ## 2026-09-13 — phone pass (local, not pushed)
 
 - The listing opens on a card grid on phones (`4691844fd`): grey `ItemCard`s two across with

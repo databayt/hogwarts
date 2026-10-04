@@ -26,7 +26,6 @@ export {
   markAttendance,
   markSingleAttendance,
   getAttendanceList,
-  getClassesForSelection,
   getSectionsForSelection,
   checkOutStudent,
   bulkCheckOut,

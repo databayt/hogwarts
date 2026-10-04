@@ -5284,7 +5284,11 @@
           "roleStudent": "Student",
           "roleGuardian": "Guardian",
           "roleStaff": "Staff",
-          "roleAccountant": "Accountant"
+          "roleAccountant": "Accountant",
+          "scopeGrade": "Grade",
+          "scopeSection": "Section",
+          "gradeLabel": "Grade",
+          "sectionLabel": "Section"
         },
         "failedToSave": "Failed to save",
         "failedToComplete": "Failed to complete",
@@ -5304,7 +5308,15 @@
         "yes": "Yes",
         "no": "No"
       },
-      "failedToCreateDraft": "Failed to create"
+      "failedToCreateDraft": "Failed to create",
+      "grade": "Grade",
+      "section": "Section",
+      "gradeLabel": "Grade",
+      "gradePlaceholder": "Select grade",
+      "sectionLabel": "Section",
+      "sectionPlaceholder": "Select section",
+      "gradeSpecific": "Grade",
+      "sectionSpecific": "Section"
     },
     "liveClasses": {
       "title": "Live",

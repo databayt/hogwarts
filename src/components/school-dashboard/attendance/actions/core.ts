@@ -16,7 +16,6 @@ import { getTenantContext } from "@/lib/tenant-context"
 import {
   canMarkAttendance,
   isAdminRole,
-  isStaffRole,
 } from "@/components/school-dashboard/attendance/authorization"
 import { markAttendanceSchema } from "@/components/school-dashboard/attendance/validation"
 import { getNames } from "@/components/translation/person"
@@ -702,109 +701,6 @@ export async function getSectionsForSelection(gradeId?: string): Promise<
         error instanceof Error
           ? error.message
           : "Failed to get sections for selection",
-    }
-  }
-}
-
-/**
- * Get classes for selection dropdown.
- * Teachers see only their assigned classes; admins see all.
- * Accepts optional gradeId/termId for filtering.
- *
- * Legacy: classes are being retired. The announcements class scope is the
- * last caller and goes with it; attendance itself picks sections
- * (`getSectionsForSelection`).
- */
-export async function getClassesForSelection(input?: {
-  gradeId?: string
-  termId?: string
-}): Promise<
-  ActionResponse<{
-    classes: Array<{
-      id: string
-      name: string
-      teacher: string | null
-      gradeId: string | null
-      gradeName: string | null
-    }>
-  }>
-> {
-  try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const session = await auth()
-    if (!session?.user?.id || !session.user.role) {
-      return { success: false, error: "Authentication required" }
-    }
-
-    if (!isStaffRole(session.user.role as any)) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    const where: Prisma.ClassWhereInput = { schoolId }
-
-    // Teacher scoping: only the classes they teach or co-teach
-    if (session.user.role === "TEACHER") {
-      const teacher = await db.teacher.findFirst({
-        where: { userId: session.user.id, schoolId },
-        select: { id: true },
-      })
-      if (!teacher) return { success: true, data: { classes: [] } }
-      where.OR = [
-        { teacherId: teacher.id },
-        { classTeachers: { some: { schoolId, teacherId: teacher.id } } },
-      ]
-    }
-
-    // Optional grade filter
-    if (input?.gradeId) {
-      where.gradeId = input.gradeId
-    }
-
-    // Optional term filter
-    if (input?.termId) {
-      where.termId = input.termId
-    }
-
-    const classes = await db.class.findMany({
-      where,
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-        gradeId: true,
-        grade: { select: { name: true } },
-        teacher: {
-          select: { firstName: true, lastName: true },
-        },
-      },
-    })
-
-    return {
-      success: true,
-      data: {
-        classes: classes.map((c) => ({
-          id: c.id,
-          name: c.name,
-          teacher: c.teacher
-            ? `${c.teacher.firstName} ${c.teacher.lastName}`
-            : null,
-          gradeId: c.gradeId,
-          gradeName: c.grade?.name ?? null,
-        })),
-      },
-    }
-  } catch (error) {
-    console.error("[getClassesForSelection] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to get classes for selection",
     }
   }
 }

@@ -17,13 +17,15 @@ export function createContentSchema(v?: ValidationHelper) {
       body: z.string().min(1, v?.required() || "Body is required"),
       lang: z.enum(["ar", "en"]).default("ar"),
       priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
-      scope: z.enum(["school", "class", "role"]).default("school"),
-      classId: z.string().optional().nullable(),
+      scope: z.enum(["school", "grade", "section", "role"]).default("school"),
+      gradeId: z.string().optional().nullable(),
+      sectionId: z.string().optional().nullable(),
       role: z.string().optional().nullable(),
     })
     .refine(
       (data) => {
-        if (data.scope === "class") return !!data.classId
+        if (data.scope === "grade") return !!data.gradeId
+        if (data.scope === "section") return !!data.sectionId
         if (data.scope === "role") return !!data.role
         return true
       },

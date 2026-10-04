@@ -10,6 +10,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { prewarm } from "@/components/translation/prewarm"
 
+import { resolveAnnouncementAudience } from "../../audience"
 import { getAllowedScopes } from "../../authorization"
 import { guardAnnouncement } from "../../guard"
 import { contentSchema, type ContentFormData } from "./validation"
@@ -30,7 +31,8 @@ export async function getAnnouncementContent(
         lang: true,
         priority: true,
         scope: true,
-        classId: true,
+        gradeId: true,
+        sectionId: true,
         role: true,
       },
     })
@@ -51,8 +53,18 @@ export async function getAnnouncementContent(
           | "high"
           | "urgent"
           | undefined,
-        scope: (announcement.scope as "school" | "class" | "role") ?? "school",
-        classId: announcement.classId ?? undefined,
+        // A legacy class announcement opens as "section" with none picked,
+        // so saving asks for a section rather than silently widening it
+        scope:
+          announcement.scope === "class"
+            ? "section"
+            : ((announcement.scope as
+                | "school"
+                | "grade"
+                | "section"
+                | "role") ?? "school"),
+        gradeId: announcement.gradeId ?? undefined,
+        sectionId: announcement.sectionId ?? undefined,
         role: announcement.role ?? undefined,
       },
     }
@@ -75,6 +87,12 @@ export async function updateAnnouncementContent(
     if (!getAllowedScopes(authContext.role).includes(parsed.scope)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+    const audience = await resolveAnnouncementAudience(
+      schoolId,
+      authContext,
+      parsed
+    )
+    if (!audience.ok) return { success: false, error: audience.code }
 
     await db.announcement.updateMany({
       where: { id: announcementId, schoolId },
@@ -84,7 +102,9 @@ export async function updateAnnouncementContent(
         lang: parsed.lang,
         priority: parsed.priority ?? "normal",
         scope: parsed.scope,
-        classId: parsed.scope === "class" ? (parsed.classId ?? null) : null,
+        gradeId: audience.gradeId,
+        sectionId: audience.sectionId,
+        classId: null,
         // Announcement.role is the UserRole enum; the form validates it as a
         // plain string, so the cast is what makes the write type-check.
         role:

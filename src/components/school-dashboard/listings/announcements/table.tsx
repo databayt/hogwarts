@@ -303,14 +303,14 @@ function AnnouncementsTableInner({
     setSearchInput(value)
   }, [])
 
-  const scopeLabel = (scope: string) =>
-    scope === "school"
-      ? t.schoolWide
-      : scope === "class"
-        ? t.classSpecific
-        : scope === "role"
-          ? t.roleSpecific
-          : scope
+  const scopeLabels: Record<string, string> = {
+    school: t.schoolWide,
+    grade: t.gradeSpecific,
+    section: t.sectionSpecific,
+    class: t.classSpecific, // legacy
+    role: t.roleSpecific,
+  }
+  const scopeLabel = (scope: string) => scopeLabels[scope] ?? scope
 
   const priorityLabel = (priority: string) => {
     const levels = t.priority as

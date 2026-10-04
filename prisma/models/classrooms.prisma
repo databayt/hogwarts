@@ -62,6 +62,7 @@ model Section {
   competitionEntries      ClassCompetitionEntry[]
   quickAssessments        QuickAssessment[]
   progressReportSchedules ProgressReportSchedule[]
+  announcements           Announcement[]
   whatsappGroups  WhatsAppGroup[]
   conferences     Conference[]
   conferenceLinks ConferenceLink[]

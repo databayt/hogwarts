@@ -13,6 +13,7 @@
 import { Prisma, type UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getStudentScopes } from "@/lib/teaching-scope"
 
 // ============================================================================
 // Types
@@ -24,7 +25,8 @@ export type AnnouncementListFilters = {
   published?: string
   priority?: string
   createdBy?: string
-  classId?: string
+  gradeId?: string
+  sectionId?: string
   role?: string
 }
 
@@ -109,8 +111,12 @@ export function buildAnnouncementWhere(
     where.createdBy = filters.createdBy
   }
 
-  if (filters.classId) {
-    where.classId = filters.classId
+  if (filters.gradeId) {
+    where.gradeId = filters.gradeId
+  }
+
+  if (filters.sectionId) {
+    where.sectionId = filters.sectionId
   }
 
   if (filters.role) {
@@ -168,57 +174,57 @@ export function isAudienceOnlyRole(role: UserRole | null | undefined): boolean {
 }
 
 /**
- * Every class the viewer belongs to, whichever way they belong to one.
- * Class-scoped announcements are matched against this set.
+ * Where the viewer's students sit — a student's own, a guardian's children:
+ * their sections, their grades (a section's, or the grade of a student not
+ * yet in one) and any legacy class enrollments. Grade, section and legacy
+ * class announcements are matched against these.
  */
-export async function viewerClassIds(
+export async function viewerAudienceScope(
   schoolId: string,
   userId: string,
   role: UserRole
-): Promise<string[]> {
+): Promise<{ sectionIds: string[]; gradeIds: string[]; classIds: string[] }> {
+  let studentIds: string[] = []
   if (role === "STUDENT") {
-    const rows = await db.studentClass.findMany({
-      where: { schoolId, student: { userId } },
-      select: { classId: true },
-    })
-    return rows.map((r) => r.classId)
-  }
-
-  if (role === "TEACHER") {
-    const rows = await db.class.findMany({
-      where: { schoolId, teacher: { userId } },
+    const rows = await db.student.findMany({
+      where: { schoolId, userId },
       select: { id: true },
     })
-    return rows.map((r) => r.id)
-  }
-
-  if (role === "GUARDIAN") {
-    const rows = await db.studentClass.findMany({
-      where: {
-        schoolId,
-        student: {
-          studentGuardians: { some: { guardian: { userId } } },
-        },
-      },
-      select: { classId: true },
+    studentIds = rows.map((r) => r.id)
+  } else if (role === "GUARDIAN") {
+    const rows = await db.studentGuardian.findMany({
+      where: { schoolId, guardian: { userId } },
+      select: { studentId: true },
     })
-    return rows.map((r) => r.classId)
+    studentIds = rows.map((r) => r.studentId)
   }
-
-  return []
+  const scopes = await getStudentScopes(schoolId, studentIds)
+  const uniq = (xs: Array<string | null>) => [
+    ...new Set(xs.filter((x): x is string => !!x)),
+  ]
+  return {
+    sectionIds: uniq(scopes.map((s) => s.sectionId)),
+    gradeIds: uniq(scopes.map((s) => s.gradeId)),
+    classIds: uniq(scopes.flatMap((s) => s.classIds)),
+  }
 }
 
 /**
  * Announcements this viewer is an audience for: published, complete, not
- * expired, and school-wide, addressed to their role, or attached to one of
- * their classes. Both OR groups sit under AND so neither overwrites the other.
+ * expired, and school-wide, addressed to their role, or to one of their
+ * grades or sections (or a legacy class of theirs). Both OR groups sit under
+ * AND so neither overwrites the other.
  */
 export async function buildViewerAudienceWhere(
   schoolId: string,
   userId: string,
   role: UserRole
 ): Promise<Prisma.AnnouncementWhereInput> {
-  const classIds = await viewerClassIds(schoolId, userId, role)
+  const { sectionIds, gradeIds, classIds } = await viewerAudienceScope(
+    schoolId,
+    userId,
+    role
+  )
   return {
     published: true,
     wizardStep: null,
@@ -228,6 +234,8 @@ export async function buildViewerAudienceWhere(
         OR: [
           { scope: "school" },
           { scope: "role", role },
+          { scope: "grade", gradeId: { in: gradeIds } },
+          { scope: "section", sectionId: { in: sectionIds } },
           { scope: "class", classId: { in: classIds } },
         ],
       },
@@ -294,34 +302,6 @@ export async function getAnnouncementsList<
     rows: rows as unknown as Prisma.AnnouncementGetPayload<{ select: S }>[],
     count,
   }
-}
-
-/**
- * Get announcements for a specific class
- * @param schoolId - School ID
- * @param classId - Class ID
- * @param includeSchoolWide - Include school-wide announcements
- * @returns Promise with announcements
- */
-export async function getClassAnnouncements(
-  schoolId: string,
-  classId: string,
-  includeSchoolWide = true
-) {
-  const where: Prisma.AnnouncementWhereInput = {
-    schoolId,
-    published: true,
-    OR: [
-      { scope: "class", classId },
-      ...(includeSchoolWide ? [{ scope: "school" as const }] : []),
-    ],
-  }
-
-  return db.announcement.findMany({
-    where,
-    orderBy: buildAnnouncementOrderBy(),
-    select: announcementListSelect,
-  })
 }
 
 /**

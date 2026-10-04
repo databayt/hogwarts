@@ -27,7 +27,8 @@ export interface TemplateInput {
   lang?: string
   scope?: AnnouncementScope
   priority?: AnnouncementPriority
-  classId?: string
+  gradeId?: string
+  sectionId?: string
   role?: UserRole
 }
 
@@ -111,6 +112,9 @@ export async function createTemplate(input: TemplateInput) {
   if (!canManageTemplates(authContext.role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
+  // Classes are retired: a template presets a grade or a section instead
+  if (input.scope === "class")
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
   try {
     const template = await db.announcementTemplate.create({
@@ -124,7 +128,8 @@ export async function createTemplate(input: TemplateInput) {
         lang: input.lang || "ar",
         scope: input.scope || "school",
         priority: input.priority || "normal",
-        classId: input.classId,
+        gradeId: input.gradeId,
+        sectionId: input.sectionId,
         role: input.role,
         isSystem: false,
         createdBy: authContext.userId,
@@ -159,6 +164,8 @@ export async function updateTemplate(
   if (!canManageTemplates(authContext.role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
+  if (input.scope === "class")
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
   try {
     // Scope the write itself rather than gating it on a prior read — updateMany
@@ -174,7 +181,11 @@ export async function updateTemplate(
         lang: input.lang,
         scope: input.scope,
         priority: input.priority,
-        classId: input.classId,
+        gradeId: input.gradeId,
+        sectionId: input.sectionId,
+        ...(input.gradeId !== undefined || input.sectionId !== undefined
+          ? { classId: null }
+          : {}),
         role: input.role,
       },
     })

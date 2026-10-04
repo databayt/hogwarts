@@ -32,7 +32,10 @@ import {
 import { Switch } from "@/components/ui/switch"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getClassesForSelection } from "@/components/school-dashboard/attendance/actions"
+import {
+  getTeachingScopeOptions,
+  type TeachingScopeGrade,
+} from "@/components/school-dashboard/teaching-scope/actions"
 
 import { AnnouncementFormStepProps } from "./types"
 import { announcementCreateSchema } from "./validation"
@@ -43,9 +46,7 @@ interface ScopeStepProps extends AnnouncementFormStepProps {
 }
 
 export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
-  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
-    []
-  )
+  const [grades, setGrades] = useState<TeachingScopeGrade[]>([])
   const scope = form.watch("scope")
   const t = dictionary
   const p = t?.priority as unknown as
@@ -87,7 +88,8 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
 
   const scopeOptions = [
     { label: t.school, value: "school" },
-    { label: t.class, value: "class" },
+    { label: t.grade, value: "grade" },
+    { label: t.section, value: "section" },
     { label: t.role, value: "role" },
   ]
 
@@ -100,18 +102,13 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
     { label: t.roleAccountant, value: "ACCOUNTANT" },
   ]
 
+  // Grades in order, each with its sections
   useEffect(() => {
-    const loadClasses = async () => {
-      try {
-        const res = await getClassesForSelection()
-        if (res.success && res.data) {
-          setClasses(res.data.classes || [])
-        }
-      } catch (error) {
-        console.error("Failed to load classes:", error)
-      }
-    }
-    loadClasses()
+    getTeachingScopeOptions()
+      .then((res) => {
+        if (res.success && res.data) setGrades(res.data.grades)
+      })
+      .catch((error) => console.error("Failed to load grades:", error))
   }, [])
 
   return (
@@ -145,13 +142,13 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
         )}
       />
 
-      {scope === "class" && (
+      {scope === "grade" && (
         <FormField
           control={form.control}
-          name="classId"
+          name="gradeId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t.classLabel}</FormLabel>
+              <FormLabel>{t.gradeLabel}</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 value={field.value || ""}
@@ -159,15 +156,48 @@ export function ScopeStep({ form, isView, dictionary, lang }: ScopeStepProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t.classPlaceholder} />
+                    <SelectValue placeholder={t.gradePlaceholder} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {classes.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name}
+                  {grades.map((grade) => (
+                    <SelectItem key={grade.id} value={grade.id}>
+                      {grade.name}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      {scope === "section" && (
+        <FormField
+          control={form.control}
+          name="sectionId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t.sectionLabel}</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value || ""}
+                disabled={isView}
+              >
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t.sectionPlaceholder} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {grades.flatMap((grade) =>
+                    grade.sections.map((section) => (
+                      <SelectItem key={section.id} value={section.id}>
+                        {section.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />

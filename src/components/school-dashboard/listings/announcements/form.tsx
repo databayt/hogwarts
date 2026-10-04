@@ -62,7 +62,8 @@ export function AnnouncementCreateForm({
       body: "",
       lang: lang === "ar" ? "ar" : "en",
       scope: "school",
-      classId: "",
+      gradeId: "",
+      sectionId: "",
       role: "",
       published: false,
       priority: "normal",
@@ -86,8 +87,15 @@ export function AnnouncementCreateForm({
         title: a.title ?? "",
         body: a.body ?? "",
         lang: (a.lang as "ar" | "en") ?? "ar",
-        scope: (a.scope as "school" | "class" | "role") ?? "school",
-        classId: a.classId ?? "",
+        // A legacy class announcement opens as "section" with none picked:
+        // saving asks for a section rather than silently widening it
+        scope:
+          a.scope === "class"
+            ? "section"
+            : ((a.scope as "school" | "grade" | "section" | "role") ??
+              "school"),
+        gradeId: a.gradeId ?? "",
+        sectionId: a.sectionId ?? "",
         role: a.role ?? "",
         published: a.published ?? false,
         priority:

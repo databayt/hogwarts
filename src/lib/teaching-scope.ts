@@ -16,6 +16,37 @@
 
 import { db } from "@/lib/db"
 import { audienceRosterWhere, type Audience } from "@/lib/teaching-audience"
+import { resolveActiveTerm } from "@/lib/term-resolver"
+
+/**
+ * The sections a teacher works with: their homeroom, a section they hold a
+ * timetable period with, or one they are assigned a subject in (which can
+ * exist before the term's timetable does). A user with no teacher record
+ * gets none — never "the whole school".
+ */
+export async function getTeacherSectionIds(
+  schoolId: string,
+  userId: string
+): Promise<string[]> {
+  const teacher = await db.teacher.findFirst({
+    where: { userId, schoolId },
+    select: { id: true },
+  })
+  if (!teacher) return []
+
+  const sections = await db.section.findMany({
+    where: {
+      schoolId,
+      OR: [
+        { homeroomTeacherId: teacher.id },
+        { timetables: { some: { schoolId, teacherId: teacher.id } } },
+        { subjectTeachers: { some: { schoolId, teacherId: teacher.id } } },
+      ],
+    },
+    select: { id: true },
+  })
+  return sections.map((s) => s.id)
+}
 
 export interface TeachingPair {
   sectionId: string
@@ -112,10 +143,12 @@ export async function getStudentScopes(
 }
 
 /**
- * User ids for a piece of work's audience (an exam, an assignment): the
- * students it's for, optionally their guardians, and the teachers who teach
- * it — the legacy class's teacher, or the subject's teachers in its section
- * or grade (that term's, when the work names one).
+ * User ids for a piece of work's audience (an exam, an assignment, a
+ * notice): the students it's for, optionally their guardians, and the
+ * teachers who teach it — the legacy class's teacher; for work with a
+ * subject, that subject's teachers in its section or grade (that term's,
+ * when the work names one); for a notice with no subject, the section's or
+ * grade's homeroom and subject teachers this term.
  */
 export async function audienceUserIds(
   schoolId: string,
@@ -155,7 +188,7 @@ async function audienceTeacherUserIds(
   schoolId: string,
   work: Audience & { subjectId?: string | null; termId?: string | null }
 ): Promise<string[]> {
-  const [legacy, assigned] = await Promise.all([
+  const [legacy, assigned, staffed] = await Promise.all([
     work.classId
       ? db.class.findFirst({
           where: { id: work.classId, schoolId },
@@ -175,8 +208,41 @@ async function audienceTeacherUserIds(
           select: { teacher: { select: { userId: true } } },
         })
       : Promise.resolve([]),
+    !work.subjectId && (work.sectionId || work.gradeId)
+      ? sectionsTeacherUserIds(schoolId, work)
+      : Promise.resolve([]),
   ])
-  const ids = assigned.map((a) => a.teacher.userId)
+  const ids = [...assigned.map((a) => a.teacher.userId), ...staffed]
   if (legacy?.teacher?.userId) ids.push(legacy.teacher.userId)
   return [...new Set(ids.filter((id): id is string => !!id))]
+}
+
+/** A section's (or a grade's sections') homeroom and this term's subject teachers. */
+async function sectionsTeacherUserIds(
+  schoolId: string,
+  work: {
+    sectionId: string | null
+    gradeId: string | null
+    termId?: string | null
+  }
+): Promise<string[]> {
+  const termId = work.termId ?? (await resolveActiveTerm(schoolId)).term?.id
+  const sections = await db.section.findMany({
+    where: work.sectionId
+      ? { id: work.sectionId, schoolId }
+      : { gradeId: work.gradeId!, schoolId },
+    select: {
+      homeroomTeacher: { select: { userId: true } },
+      subjectTeachers: {
+        where: { schoolId, ...(termId ? { termId } : {}) },
+        select: { teacher: { select: { userId: true } } },
+      },
+    },
+  })
+  return sections
+    .flatMap((s) => [
+      s.homeroomTeacher?.userId ?? null,
+      ...s.subjectTeachers.map((t) => t.teacher.userId),
+    ])
+    .filter((id): id is string => !!id)
 }

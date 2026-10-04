@@ -31,11 +31,13 @@ export default function AnnouncementContentContent() {
       const isTitleValid = (data.title?.trim().length ?? 0) >= 1
       const isBodyValid = (data.body?.trim().length ?? 0) >= 1
       const isScopeValid =
-        data.scope === "class"
-          ? !!data.classId
-          : data.scope === "role"
-            ? !!data.role
-            : true
+        data.scope === "grade"
+          ? !!data.gradeId
+          : data.scope === "section"
+            ? !!data.sectionId
+            : data.scope === "role"
+              ? !!data.role
+              : data.scope !== "class" // legacy: pick a section
       setIsValid(isTitleValid && isBodyValid && isScopeValid)
     }
   }, [data])
@@ -72,8 +74,15 @@ export default function AnnouncementContentContent() {
                     | "urgent"
                     | undefined,
                   scope:
-                    (data.scope as "school" | "class" | "role") ?? "school",
-                  classId: data.classId ?? undefined,
+                    data.scope === "class"
+                      ? "section"
+                      : ((data.scope as
+                          | "school"
+                          | "grade"
+                          | "section"
+                          | "role") ?? "school"),
+                  gradeId: data.gradeId ?? undefined,
+                  sectionId: data.sectionId ?? undefined,
                   role: data.role ?? undefined,
                 }
               : undefined

@@ -65,7 +65,14 @@ export function AnnouncementConfigForm({
   const form = useForm<AnnouncementConfigFormValues>({
     resolver: zodResolver(announcementConfigSchema),
     defaultValues: {
-      defaultScope: initialConfig.defaultScope as "school" | "class" | "role",
+      // A legacy "class" default reads as "section" (classes are retired)
+      defaultScope: (initialConfig.defaultScope === "class"
+        ? "section"
+        : initialConfig.defaultScope) as
+        | "school"
+        | "grade"
+        | "section"
+        | "role",
       defaultPriority: initialConfig.defaultPriority as
         | "low"
         | "normal"
@@ -149,7 +156,8 @@ export function AnnouncementConfigForm({
     saving: cfg?.saving || "Saving...",
     comingSoon: cfg?.comingSoon || "Coming Soon",
     school: ann?.school || "School",
-    class: ann?.class || "Class",
+    grade: ann?.grade || "Grade",
+    section: ann?.section || "Section",
     role: ann?.role || "Role",
     low: ann?.low || "Low",
     normal: ann?.normal || "Normal",
@@ -220,7 +228,8 @@ export function AnnouncementConfigForm({
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="school">{d.school}</SelectItem>
-                        <SelectItem value="class">{d.class}</SelectItem>
+                        <SelectItem value="grade">{d.grade}</SelectItem>
+                        <SelectItem value="section">{d.section}</SelectItem>
                         <SelectItem value="role">{d.role}</SelectItem>
                       </SelectContent>
                     </Select>

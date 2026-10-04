@@ -13,8 +13,9 @@ import type { ValidationHelper } from "@/components/internationalization/helpers
 export function createTargetingSchema(v?: ValidationHelper) {
   return z
     .object({
-      scope: z.enum(["school", "class", "role"]),
-      classId: z.string().optional(),
+      scope: z.enum(["school", "grade", "section", "role"]),
+      gradeId: z.string().optional(),
+      sectionId: z.string().optional(),
       role: z.string().optional(),
       published: z.boolean().default(false),
       scheduledFor: z.coerce.date().optional(),
@@ -22,9 +23,13 @@ export function createTargetingSchema(v?: ValidationHelper) {
       pinned: z.boolean().optional(),
       featured: z.boolean().optional(),
     })
-    .refine((data) => (data.scope === "class" ? !!data.classId : true), {
-      message: v?.required() || "Class is required when scope is class",
-      path: ["classId"],
+    .refine((data) => (data.scope === "grade" ? !!data.gradeId : true), {
+      message: v?.required() || "Grade is required when scope is grade",
+      path: ["gradeId"],
+    })
+    .refine((data) => (data.scope === "section" ? !!data.sectionId : true), {
+      message: v?.required() || "Section is required when scope is section",
+      path: ["sectionId"],
     })
     .refine((data) => (data.scope === "role" ? !!data.role : true), {
       message: v?.required() || "Role is required when scope is role",

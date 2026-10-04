@@ -52,7 +52,9 @@ export default function TargetingContent() {
   useEffect(() => {
     if (data) {
       let valid = true
-      if (data.scope === "class" && !data.classId) valid = false
+      if (data.scope === "grade" && !data.gradeId) valid = false
+      if (data.scope === "section" && !data.sectionId) valid = false
+      if (data.scope === "class") valid = false // legacy: pick a section
       if (data.scope === "role" && !data.role) valid = false
       setIsValid(valid)
     }
@@ -74,8 +76,12 @@ export default function TargetingContent() {
           initialData={
             data
               ? {
-                  scope: data.scope as "school" | "class" | "role",
-                  classId: data.classId ?? undefined,
+                  scope:
+                    data.scope === "class"
+                      ? "section"
+                      : (data.scope as "school" | "grade" | "section" | "role"),
+                  gradeId: data.gradeId ?? undefined,
+                  sectionId: data.sectionId ?? undefined,
                   role: data.role ?? undefined,
                   published: data.published,
                   scheduledFor: data.scheduledFor ?? undefined,

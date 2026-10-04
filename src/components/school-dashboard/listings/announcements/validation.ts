@@ -19,8 +19,11 @@ export function createAnnouncementSchema(v?: ValidationHelper) {
       title: z.string().optional(),
       body: z.string().optional(),
       lang: z.enum(["ar", "en"]).default("ar"),
-      scope: z.enum(["school", "class", "role"]),
-      classId: z.string().optional(),
+      // Who it's for. ("class" is legacy: existing announcements keep it,
+      // new ones pick a grade or a section.)
+      scope: z.enum(["school", "grade", "section", "role"]),
+      gradeId: z.string().optional(),
+      sectionId: z.string().optional(),
       role: z.string().optional(),
       published: z.boolean(),
       priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
@@ -46,11 +49,18 @@ export function createAnnouncementSchema(v?: ValidationHelper) {
           path: ["body"],
         })
       }
-      if (val.scope === "class" && !val.classId) {
+      if (val.scope === "grade" && !val.gradeId) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: v?.required() || "Class is required when scope is class",
-          path: ["classId"],
+          message: v?.required() || "Grade is required when scope is grade",
+          path: ["gradeId"],
+        })
+      }
+      if (val.scope === "section" && !val.sectionId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: v?.required() || "Section is required when scope is section",
+          path: ["sectionId"],
         })
       }
       if (val.scope === "role" && !val.role) {
@@ -138,7 +148,7 @@ export const getAnnouncementsSchema = z.object({
 
 export const announcementConfigSchema = z.object({
   // Publishing Defaults
-  defaultScope: z.enum(["school", "class", "role"]),
+  defaultScope: z.enum(["school", "grade", "section", "role"]),
   defaultPriority: z.enum(["low", "normal", "high", "urgent"]),
   autoPublish: z.boolean(),
   defaultExpiryDays: z.number().int().min(1).max(365),

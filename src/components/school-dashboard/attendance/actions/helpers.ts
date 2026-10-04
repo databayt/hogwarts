@@ -101,35 +101,8 @@ export async function getOwnedStudentIds(
   return null
 }
 
-/**
- * The sections a teacher's attendance covers: their homeroom, a section they
- * have a timetable period with, or one they are assigned a subject in (which
- * can exist before the term's timetable does). A TEACHER-role user with no
- * teacher record covers none — never "the whole school".
- */
-export async function getTeacherSectionIds(
-  schoolId: string,
-  userId: string
-): Promise<string[]> {
-  const teacher = await db.teacher.findFirst({
-    where: { userId, schoolId },
-    select: { id: true },
-  })
-  if (!teacher) return []
-
-  const sections = await db.section.findMany({
-    where: {
-      schoolId,
-      OR: [
-        { homeroomTeacherId: teacher.id },
-        { timetables: { some: { schoolId, teacherId: teacher.id } } },
-        { subjectTeachers: { some: { schoolId, teacherId: teacher.id } } },
-      ],
-    },
-    select: { id: true },
-  })
-  return sections.map((s) => s.id)
-}
+/** A teacher's sections (homeroom ∪ timetable ∪ subject assignment). */
+export { getTeacherSectionIds } from "@/lib/teaching-scope"
 
 /**
  * The attendance rows a viewer may read by section: a teacher's sections,

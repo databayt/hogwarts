@@ -2,13 +2,13 @@
 
 ### Overview
 
-The Announcements feature enables administrators to broadcast messages to the school, specific classes, or role-based groups. It supports scheduled publishing, CSV export, and on-demand translation between Arabic and English. Built with full multi-tenant isolation and RBAC.
+The Announcements feature enables administrators to broadcast messages to the school, a grade, a section, or role-based groups. It supports scheduled publishing, CSV export, and on-demand translation between Arabic and English. Built with full multi-tenant isolation and RBAC.
 
 Create and edit run in a **modal** (`wizard/modal.tsx`) opened from the table,
 not a route. It renders the same component stack the `/add` route renders, but
 in place: opening costs no server round-trip and submitting costs exactly one
 (`submitAnnouncementWizard`, which creates-or-updates and completes together).
-The wizard is a single step — the content form absorbed the scope/class/role
+The wizard is a single step — the content form absorbed the scope/grade/section/role
 fields, so `wizard/targeting/` is unreachable legacy. See `ISSUE.md` (2026-07-20).
 
 > Read-receipt tracking, unread badges, and bulk operations are **not built** —
@@ -18,14 +18,23 @@ fields, so `wizard/targeting/` is unreachable legacy. See `ISSUE.md` (2026-07-20
 
 Enforced by `authorization.ts` + `guard.ts`, not by which buttons the UI renders.
 
-- **Admin**: Full CRUD, publish/unpublish, target by any scope (school/class/role), schedule, export, config
-- **Teacher**: Create/publish **class-scoped announcements only**, and only ones they authored (`createdBy`)
+- **Admin**: Full CRUD, publish/unpublish, target by any scope (school/grade/section/role), schedule, export, config
+- **Teacher**: Create/publish **section-scoped announcements only** — to their own sections (homeroom, a timetable period or a subject assignment; `audience.ts` checks it) — and only ones they authored (`createdBy`)
 - **Student / Guardian / Accountant / Staff**: Read only — no create, update, publish, or delete
 - **Developer**: Full access across schools
 
 `getAllowedScopes(role)` is the single source of truth for which scopes a role may
 address; a role with no allowed scopes may not author announcements or manage
-templates at all.
+templates at all. `audience.ts` (`resolveAnnouncementAudience`) checks the grade or
+section against the school (and a teacher's own sections) before every write —
+create, update, the wizard steps — and a new scope always clears a legacy class.
+
+**Who it reaches** (2026-10-04, classes retired): a grade's students (every section,
+and those not yet in one) and their guardians and teachers; a section's the same;
+`class` is a legacy scope existing rows keep (not offered for new ones — editing one
+asks for a section). Students and guardians see grade/section notices of their own
+(`buildViewerAudienceWhere`); notifications fan out through
+`dispatchNotificationsToAudience` (`targetScope: "grade" | "section"`).
 
 ### Routes
 
@@ -61,14 +70,16 @@ announcements/
   scope.tsx                # DEAD - only form.tsx imported it
   template-actions.ts      # Announcement template management
   config-form.tsx          # Configuration form
+  audience.ts              # resolveAnnouncementAudience — grade/section checked server-side
+  use-scope-options.ts     # grade + section choices for the forms (loaded once per page)
   wizard/
     modal.tsx                   # Create/edit modal - the live entry point
     config.ts                   # Wizard config (1 step: content)
     actions.ts                  # submitAnnouncementWizard (single round-trip) + draft helpers
     use-announcement-wizard.ts  # Wizard state hook (legacy route only)
-    content/                    # title, body, priority, scope, class/role
+    content/                    # title, body, priority, scope, grade/section/role
       content.tsx, form.tsx, validation.ts, actions.ts
-    targeting/                  # LEGACY - unreachable; only getClassesForAnnouncement is still used
+    targeting/                  # LEGACY - routed at /add/[id]/targeting, not in the wizard config
       content.tsx, form.tsx, validation.ts, actions.ts
 ```
 
@@ -113,7 +124,7 @@ labels in the page; two routes render this form and per-page maps drift.
 
 ### Integration Points
 
-- Classes (class-specific targeting)
+- Grades and sections (audience; choices from `teaching-scope/actions.ts`, teacher sections from `src/lib/teaching-scope.ts`)
 - Dashboard widgets (recent announcements)
 - Parent portal (`/{lang}/parent/announcements`)
 - Translation system (`@/components/translation` — `localize`/`localizeOne`/`prewarm`)

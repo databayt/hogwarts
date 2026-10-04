@@ -11,6 +11,7 @@ import { Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
 import { renderTemplate } from "@/lib/notifications/render-template"
 import { tenantOriginForHost, tenantOriginForRoot } from "@/lib/root-domain"
+import { audienceUserIds } from "@/lib/teaching-scope"
 import { NOTIFICATION_EXPIRATION } from "@/components/school-dashboard/notifications/config"
 import { prewarm } from "@/components/translation/prewarm"
 import { detectScript } from "@/components/translation/util"
@@ -350,8 +351,11 @@ export async function dispatchNotificationsToAudience(params: {
   actorId?: string
   channels?: NotificationChannel[]
   metadata?: Record<string, unknown>
-  targetScope?: "school" | "class" | "role"
+  /** `class` is legacy; new audiences are a grade or a section. */
+  targetScope?: "school" | "class" | "grade" | "section" | "role"
   targetClassId?: string
+  targetGradeId?: string
+  targetSectionId?: string
   targetRole?: string
   /** BUG-7/BUG-10 support: pass multiple roles to notify (e.g. ["ADMIN","STAFF"]). */
   targetRoles?: string[]
@@ -398,7 +402,11 @@ export async function dispatchNotificationsToAudience(params: {
         userIds = await resolveTargetUsers(
           params.schoolId,
           params.targetScope,
-          params.targetClassId,
+          {
+            classId: params.targetClassId,
+            gradeId: params.targetGradeId,
+            sectionId: params.targetSectionId,
+          },
           rolesToQuery?.[0] ?? params.targetRole
         )
       }
@@ -498,8 +506,8 @@ export async function dispatchNotificationsToAudience(params: {
  */
 async function resolveTargetUsers(
   schoolId: string,
-  scope: "school" | "class" | "role",
-  classId?: string,
+  scope: "school" | "class" | "grade" | "section" | "role",
+  target: { classId?: string; gradeId?: string; sectionId?: string },
   role?: string
 ): Promise<string[]> {
   switch (scope) {
@@ -511,23 +519,29 @@ async function resolveTargetUsers(
       return users.map((u) => u.id)
     }
     case "class": {
-      if (!classId) return []
-      // Resolve User IDs via Student/Teacher relations (not their model IDs)
-      const classData = await db.class.findUnique({
-        where: { id: classId },
-        select: {
-          teacher: { select: { userId: true } },
-          studentClasses: {
-            select: { student: { select: { userId: true } } },
-          },
+      // Legacy: the class's students and its teacher — this school's class
+      // only (the old lookup went by id alone)
+      if (!target.classId) return []
+      return audienceUserIds(
+        schoolId,
+        { classId: target.classId, gradeId: null, sectionId: null },
+        { students: true, teachers: true }
+      )
+    }
+    case "grade":
+    case "section": {
+      // The grade's (or section's) students, their guardians and teachers
+      const sectionId = scope === "section" ? target.sectionId : undefined
+      if (scope === "section" ? !sectionId : !target.gradeId) return []
+      return audienceUserIds(
+        schoolId,
+        {
+          classId: null,
+          gradeId: target.gradeId ?? null,
+          sectionId: sectionId ?? null,
         },
-      })
-      if (!classData) return []
-      const ids: string[] = classData.studentClasses
-        .map((sc) => sc.student.userId)
-        .filter((id): id is string => id !== null)
-      if (classData.teacher?.userId) ids.push(classData.teacher.userId)
-      return [...new Set(ids)]
+        { students: true, guardians: true, teachers: true }
+      )
     }
     case "role": {
       if (!role) return []

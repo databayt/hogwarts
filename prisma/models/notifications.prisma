@@ -206,9 +206,11 @@ model NotificationBatch {
   body  String           @db.Text
 
   // Targeting
-  targetRole    UserRole? // Send to all users with this role
-  targetClassId String? // Send to all students in this class
-  targetUserIds String[] // Specific user IDs
+  targetRole      UserRole? // Send to all users with this role
+  targetClassId   String? // Legacy: all students in this class
+  targetGradeId   String? // All students of this grade (and their guardians)
+  targetSectionId String? // All students of this section (and their guardians)
+  targetUserIds   String[] // Specific user IDs
 
   // Processing status
   status      String @default("pending") // pending, processing, completed, failed
