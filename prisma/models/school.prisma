@@ -612,6 +612,7 @@ model Term {
   schoolExams       SchoolExam[]
   schoolAssignments SchoolAssignment[]
   results           Result[]
+  quickAssessments  QuickAssessment[]
 
   // Timetable optimization relations
   teacherConstraints   TeacherConstraint[]

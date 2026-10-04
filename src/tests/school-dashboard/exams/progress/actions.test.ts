@@ -30,7 +30,10 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       findMany: vi.fn(),
     },
-    class: {
+    section: {
+      findFirst: vi.fn(),
+    },
+    academicGrade: {
       findFirst: vi.fn(),
     },
   },
@@ -47,7 +50,7 @@ vi.mock("next/cache", () => ({
 const SCHOOL_ID = "school-prog-1"
 const USER_ID = "user-prog-1"
 const VALID_INPUT = {
-  classId: "class-1",
+  sectionId: "7a",
   frequency: "WEEKLY" as const,
   includeExamResults: true,
   includeAttendance: true,
@@ -63,13 +66,13 @@ describe("Progress Schedule Actions — multi-tenant safety", () => {
     vi.mocked(auth).mockResolvedValue({
       user: { id: USER_ID, schoolId: SCHOOL_ID, role: "ADMIN" },
       expires: new Date(Date.now() + 86400000).toISOString(),
-    } as any)
+    } as never)
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: SCHOOL_ID,
       requestId: "req-1",
       role: "ADMIN",
       isPlatformAdmin: false,
-    } as any)
+    } as never)
   })
 
   describe("createProgressSchedule", () => {
@@ -79,7 +82,7 @@ describe("Progress Schedule Actions — multi-tenant safety", () => {
         requestId: "req-1",
         role: "ADMIN",
         isPlatformAdmin: false,
-      } as any)
+      } as never)
 
       const result = await createProgressSchedule(VALID_INPUT)
 
@@ -87,53 +90,83 @@ describe("Progress Schedule Actions — multi-tenant safety", () => {
       expect(db.progressReportSchedule.create).not.toHaveBeenCalled()
     })
 
-    it("validates classId belongs to the school", async () => {
-      vi.mocked(db.class.findFirst).mockResolvedValue(null)
+    it("validates the section belongs to the school", async () => {
+      vi.mocked(db.section.findFirst).mockResolvedValue(null)
 
       const result = await createProgressSchedule(VALID_INPUT)
 
       expect(result.success).toBe(false)
-      expect(db.class.findFirst).toHaveBeenCalledWith({
-        where: { id: "class-1", schoolId: SCHOOL_ID },
+      expect(db.section.findFirst).toHaveBeenCalledWith({
+        where: { id: "7a", schoolId: SCHOOL_ID },
+        select: { id: true, gradeId: true },
       })
       expect(db.progressReportSchedule.create).not.toHaveBeenCalled()
     })
 
-    it("creates schedule with schoolId in payload", async () => {
-      vi.mocked(db.class.findFirst).mockResolvedValue({
-        id: "class-1",
-        schoolId: SCHOOL_ID,
-      } as any)
+    it("creates schedule with schoolId and the section's scope", async () => {
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        id: "7a",
+        gradeId: "g7",
+      } as never)
       vi.mocked(db.progressReportSchedule.create).mockResolvedValue({
         id: "sched-1",
-      } as any)
+      } as never)
 
       const result = await createProgressSchedule(VALID_INPUT)
 
       expect(result.success).toBe(true)
-      expect(db.progressReportSchedule.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            schoolId: SCHOOL_ID,
-            createdBy: USER_ID,
-          }),
-        })
-      )
+      const data = vi.mocked(db.progressReportSchedule.create).mock.calls[0][0]
+        .data
+      expect(data).toMatchObject({
+        schoolId: SCHOOL_ID,
+        createdBy: USER_ID,
+        gradeId: "g7",
+        sectionId: "7a",
+      })
+      expect(data).not.toHaveProperty("classId")
+    })
+
+    it("a schedule with no scope covers the whole school", async () => {
+      vi.mocked(db.progressReportSchedule.create).mockResolvedValue({
+        id: "sched-2",
+      } as never)
+
+      const result = await createProgressSchedule({
+        ...VALID_INPUT,
+        sectionId: undefined,
+      })
+
+      expect(result.success).toBe(true)
+      expect(
+        vi.mocked(db.progressReportSchedule.create).mock.calls[0][0].data
+      ).toMatchObject({ gradeId: null, sectionId: null })
+      expect(db.section.findFirst).not.toHaveBeenCalled()
+    })
+
+    it("refuses a student", async () => {
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: USER_ID, schoolId: SCHOOL_ID, role: "STUDENT" },
+      } as never)
+
+      const result = await createProgressSchedule(VALID_INPUT)
+
+      expect(result.success).toBe(false)
+      expect(db.progressReportSchedule.create).not.toHaveBeenCalled()
     })
 
     it("calculates correct nextRunAt for WEEKLY frequency", async () => {
-      vi.mocked(db.class.findFirst).mockResolvedValue({
-        id: "class-1",
-        schoolId: SCHOOL_ID,
-      } as any)
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        id: "7a",
+        gradeId: "g7",
+      } as never)
       vi.mocked(db.progressReportSchedule.create).mockResolvedValue({
         id: "sched-1",
-      } as any)
+      } as never)
 
       await createProgressSchedule(VALID_INPUT)
 
       const call = vi.mocked(db.progressReportSchedule.create).mock.calls[0][0]
-      const nextRun = (call.data as any).nextRunAt as Date
+      const nextRun = (call.data as never).nextRunAt as Date
       const expected = new Date()
       expected.setDate(expected.getDate() + 7)
       const diffMs = Math.abs(nextRun.getTime() - expected.getTime())
@@ -161,7 +194,7 @@ describe("Progress Schedule Actions — multi-tenant safety", () => {
         requestId: "req-1",
         role: "ADMIN",
         isPlatformAdmin: false,
-      } as any)
+      } as never)
 
       const result = await getProgressSchedules()
 

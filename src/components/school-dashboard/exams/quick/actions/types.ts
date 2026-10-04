@@ -10,7 +10,10 @@ export interface QuickAssessmentSummary {
   title: string
   type: string
   status: string
-  classId: string
+  gradeId: string | null
+  /** null = the whole grade. */
+  sectionId: string | null
+  /** The audience as people say it (section, grade, or a legacy class). */
   className: string
   subjectId: string
   name: string

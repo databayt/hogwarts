@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
+import { audienceLabel, audienceRosterWhere } from "@/lib/teaching-audience"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type {
@@ -32,9 +33,50 @@ async function getSchoolId(): Promise<string | null> {
   return schoolId
 }
 
-async function getUserId(): Promise<string | null> {
-  const session = await auth()
-  return session?.user?.id ?? null
+/** Who may manage schedules (matches the page's canManage). */
+const MANAGER_ROLES = ["DEVELOPER", "ADMIN", "TEACHER"]
+
+async function getManager(): Promise<{
+  schoolId: string
+  userId: string
+} | null> {
+  const [session, schoolId] = await Promise.all([auth(), getSchoolId()])
+  const userId = session?.user?.id
+  const role = session?.user?.role
+  if (!schoolId || !userId || !role || !MANAGER_ROLES.includes(role)) {
+    return null
+  }
+  return { schoolId, userId }
+}
+
+/**
+ * A schedule's scope: a section (its grade comes with it), a whole grade,
+ * or neither — the whole school. Both must be this school's.
+ */
+async function resolveScheduleScope(
+  schoolId: string,
+  input: { gradeId?: string | null; sectionId?: string | null }
+): Promise<
+  | { ok: true; gradeId: string | null; sectionId: string | null }
+  | { ok: false; code: string }
+> {
+  if (input.sectionId) {
+    const section = await db.section.findFirst({
+      where: { id: input.sectionId, schoolId },
+      select: { id: true, gradeId: true },
+    })
+    if (!section) return { ok: false, code: ACTION_ERRORS.INVALID_SECTION }
+    return { ok: true, gradeId: section.gradeId, sectionId: section.id }
+  }
+  if (input.gradeId) {
+    const grade = await db.academicGrade.findFirst({
+      where: { id: input.gradeId, schoolId },
+      select: { id: true },
+    })
+    if (!grade) return { ok: false, code: ACTION_ERRORS.GRADE_NOT_FOUND }
+    return { ok: true, gradeId: grade.id, sectionId: null }
+  }
+  return { ok: true, gradeId: null, sectionId: null }
 }
 
 function calculateNextRunAt(frequency: string, from: Date = new Date()): Date {
@@ -64,31 +106,25 @@ export async function createProgressSchedule(
   input: unknown
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const schoolId = await getSchoolId()
-    const userId = await getUserId()
-
-    if (!schoolId || !userId) {
+    const manager = await getManager()
+    if (!manager) {
       return { ...actionError(ACTION_ERRORS.UNAUTHORIZED), code: "NO_SCHOOL" }
     }
+    const { schoolId, userId } = manager
 
     const parsed = progressScheduleCreateSchema.parse(input)
 
-    // Validate classId if provided
-    if (parsed.classId) {
-      const classExists = await db.class.findFirst({
-        where: { id: parsed.classId, schoolId },
-      })
-      if (!classExists) {
-        return { ...actionError(ACTION_ERRORS.CLASS_NOT_FOUND) }
-      }
-    }
+    const scope = await resolveScheduleScope(schoolId, parsed)
+    if (!scope.ok)
+      return { success: false, error: scope.code, code: scope.code }
 
     const nextRunAt = calculateNextRunAt(parsed.frequency)
 
     const schedule = await db.progressReportSchedule.create({
       data: {
         schoolId,
-        classId: parsed.classId ?? null,
+        gradeId: scope.gradeId,
+        sectionId: scope.sectionId,
         frequency: parsed.frequency,
         includeExamResults: parsed.includeExamResults,
         includeAttendance: parsed.includeAttendance,
@@ -119,9 +155,9 @@ export async function getProgressSchedules(): Promise<
     const schedules = await db.progressReportSchedule.findMany({
       where: { schoolId },
       include: {
-        class: {
-          select: { name: true },
-        },
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
+        class: { select: { name: true } },
         _count: {
           select: { reports: true },
         },
@@ -131,8 +167,10 @@ export async function getProgressSchedules(): Promise<
 
     return schedules.map((s) => ({
       id: s.id,
-      classId: s.classId,
-      className: s.class?.name ?? null,
+      gradeId: s.gradeId,
+      sectionId: s.sectionId,
+      // The scope as people say it; null = the whole school
+      className: audienceLabel(s) || null,
       frequency: s.frequency,
       isActive: s.isActive,
       includeExamResults: s.includeExamResults,
@@ -160,9 +198,9 @@ export async function getProgressSchedule(id: string) {
     return await db.progressReportSchedule.findFirst({
       where: { id, schoolId },
       include: {
-        class: {
-          select: { name: true },
-        },
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
+        class: { select: { name: true } },
         _count: {
           select: { reports: true },
         },
@@ -178,13 +216,14 @@ export async function updateProgressSchedule(
   input: unknown
 ): Promise<ActionResponse> {
   try {
-    const schoolId = await getSchoolId()
-    if (!schoolId) {
+    const manager = await getManager()
+    if (!manager) {
       return { ...actionError(ACTION_ERRORS.UNAUTHORIZED), code: "NO_SCHOOL" }
     }
+    const { schoolId } = manager
 
     const parsed = progressScheduleUpdateSchema.parse(input)
-    const { id, ...data } = parsed
+    const { id, gradeId, sectionId, ...data } = parsed
 
     const existing = await db.progressReportSchedule.findFirst({
       where: { id, schoolId },
@@ -194,21 +233,22 @@ export async function updateProgressSchedule(
       return { success: false, error: "Schedule not found", code: "NOT_FOUND" }
     }
 
-    // Validate classId if provided
-    if (data.classId) {
-      const classExists = await db.class.findFirst({
-        where: { id: data.classId, schoolId },
-      })
-      if (!classExists) {
-        return { ...actionError(ACTION_ERRORS.CLASS_NOT_FOUND) }
-      }
-    }
-
     const updateData: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(data)) {
       if (value !== undefined) {
         updateData[key] = value
       }
+    }
+
+    // A new scope replaces the old one, legacy class included
+    if (gradeId !== undefined || sectionId !== undefined) {
+      const scope = await resolveScheduleScope(schoolId, { gradeId, sectionId })
+      if (!scope.ok) {
+        return { success: false, error: scope.code, code: scope.code }
+      }
+      updateData.gradeId = scope.gradeId
+      updateData.sectionId = scope.sectionId
+      updateData.classId = null
     }
 
     // Recalculate nextRunAt if frequency changed
@@ -236,10 +276,11 @@ export async function deleteProgressSchedule(
   id: string
 ): Promise<ActionResponse> {
   try {
-    const schoolId = await getSchoolId()
-    if (!schoolId) {
+    const manager = await getManager()
+    if (!manager) {
       return { ...actionError(ACTION_ERRORS.UNAUTHORIZED), code: "NO_SCHOOL" }
     }
+    const { schoolId } = manager
 
     const existing = await db.progressReportSchedule.findFirst({
       where: { id, schoolId },
@@ -267,10 +308,11 @@ export async function generateProgressReports(
   scheduleId: string
 ): Promise<ActionResponse<GenerateReportsOutput>> {
   try {
-    const schoolId = await getSchoolId()
-    if (!schoolId) {
+    const manager = await getManager()
+    if (!manager) {
       return { ...actionError(ACTION_ERRORS.UNAUTHORIZED), code: "NO_SCHOOL" }
     }
+    const { schoolId } = manager
 
     const schedule = await db.progressReportSchedule.findFirst({
       where: { id: scheduleId, schoolId, isActive: true },
@@ -284,18 +326,18 @@ export async function generateProgressReports(
       }
     }
 
-    // Get students based on scope
+    // The scope's students: a section, a whole grade, a legacy class — or,
+    // with none, the whole school
+    const scoped =
+      schedule.sectionId || schedule.gradeId || schedule.classId
+        ? audienceRosterWhere(schoolId, {
+            classId: schedule.classId,
+            gradeId: schedule.gradeId,
+            sectionId: schedule.sectionId,
+          })
+        : { schoolId }
     const students = await db.student.findMany({
-      where: {
-        schoolId,
-        ...(schedule.classId
-          ? {
-              studentClasses: {
-                some: { classId: schedule.classId },
-              },
-            }
-          : {}),
-      },
+      where: scoped,
       select: {
         id: true,
         firstName: true,

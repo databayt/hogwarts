@@ -41,7 +41,8 @@ Open:
 - [x] **Gradebook** — done in S5: `Result` carries section, grade and term, and
       finalize writes it for every exam (see the grades ISSUE). No class-less
       exam was finalized before S5, so nothing needed backfilling from ExamResult.
-- [ ] Analytics (`getClassPerformance`), `progress/*`, `quick/*` still read classes (S6/S9).
+- [x] `quick/*` and `progress/*` (S9, 2026-10-04): a quick assessment names an audience like an exam (grade + section or whole grade + subject + term; migration `20261004170000_s9_scope`, **owed on prod**); students see and answer only their audience's; the gradebook row takes the student's section/grade/term. Progress schedules are a section, a whole grade or the school. Both gained the role checks they lacked: any signed-in user could create, launch or close a quick assessment, or create, delete or run a progress schedule. Still open: neither create form is routed (`/exams/quick/new` 404s from the "New Assessment" button; `ProgressReportForm` is mounted nowhere).
+- [ ] Analytics (`getClassPerformance`) still reads classes (S14 dashboards).
 - [ ] Paper preview stays blank locally: react-pdf's Rubik font URL 404s (pre-existing).
 - [ ] Close #429 / #428 after deploy + prod DDL.
 

@@ -211,6 +211,12 @@ reportSecurityFlag(input: ReportSecurityFlagInput)
 submitExamAnswers(input: SubmitExamAnswersInput)
 ```
 
+## Quick assessments and progress reports
+
+A quick assessment (exit ticket, poll, warm-up, check-in) is set for an audience like an exam: a grade, one of its sections or the whole grade, and a subject, picked with the shared `TeachingScopePicker` and checked by `resolveTeachingScope`. Only teachers and admins write, launch and close them; a student sees and answers only their audience's, and an identified answer lands in the gradebook under the student's section, grade and term. Assessments made before classes were retired keep their class.
+
+A progress-report schedule covers a section, a whole grade, or — with neither — the whole school; deleting the grade or section deletes its schedule rather than widening it. Only teachers and admins manage schedules or run them.
+
 ## Marking
 
 `NOT_STARTED` → `AUTO_GRADED` | `AI_GRADED` | `IN_PROGRESS` → `REVIEWED` → `COMPLETED`. Override supported at any point.
@@ -257,17 +263,17 @@ shareCertificate(id)
 
 ## Server actions
 
-| Module             | Path                         | Surface                                                                                                         |
-| ------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Question analytics | `qbank/analytics/actions.ts` | `getQuestionAnalytics`, `getQuestionPsychometrics`                                                              |
-| Generation         | `generate/actions.ts`        | `createTemplate`, `updateTemplate`, `deleteTemplate`, `generateExam`, `previewExamGeneration`, `regenerateExam` |
-| Management         | `manage/actions.ts`          | `createExam`, `updateExam`, `deleteExam`, `getExams`, `getExamDetails`                                          |
-| Paper              | `paper/actions/`             | `createPaperConfig`, `updatePaperConfig`, `generatePaperPDF`                                                    |
-| Marking            | `mark/actions.ts`            | see above                                                                                                       |
-| Results            | `results/actions.ts`         | `getExamResults`, `getExamAnalytics`, `generateSinglePDF`, `generateBatchPDFs`, `exportResultsToCSV`            |
-| Quick exams        | `quick/actions/`             | `createQuickExam`, `getQuickExams`, `submitQuickExamAnswers`                                                    |
-| Grading            | `grading/actions.ts`         | `getGradeBoundaries`, `updateGradeBoundaries`, `calculateCGPA`, `manageRetake`                                  |
-| Progress           | `progress/actions.ts`        | `getExamProgress`, `updateProgressSchedule`                                                                     |
+| Module             | Path                         | Surface                                                                                                                     |
+| ------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Question analytics | `qbank/analytics/actions.ts` | `getQuestionAnalytics`, `getQuestionPsychometrics`                                                                          |
+| Generation         | `generate/actions.ts`        | `createTemplate`, `updateTemplate`, `deleteTemplate`, `generateExam`, `previewExamGeneration`, `regenerateExam`             |
+| Management         | `manage/actions.ts`          | `createExam`, `updateExam`, `deleteExam`, `getExams`, `getExamDetails`                                                      |
+| Paper              | `paper/actions/`             | `createPaperConfig`, `updatePaperConfig`, `generatePaperPDF`                                                                |
+| Marking            | `mark/actions.ts`            | see above                                                                                                                   |
+| Results            | `results/actions.ts`         | `getExamResults`, `getExamAnalytics`, `generateSinglePDF`, `generateBatchPDFs`, `exportResultsToCSV`                        |
+| Quick assessments  | `quick/actions/`             | `createQuickAssessment`, `getQuickAssessments`, `launchQuickAssessment`, `submitQuickResponse`, `getQuickAssessmentResults` |
+| Grading            | `grading/actions.ts`         | `getGradeBoundaries`, `updateGradeBoundaries`, `calculateCGPA`, `manageRetake`                                              |
+| Progress           | `progress/actions.ts`        | `createProgressSchedule`, `getProgressSchedules`, `updateProgressSchedule`, `generateProgressReports`                       |
 
 ## Seed
 

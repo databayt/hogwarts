@@ -4,7 +4,9 @@
 import { z } from "zod"
 
 export const progressScheduleCreateSchema = z.object({
-  classId: z.string().optional(),
+  // Scope: a section, or a whole grade; neither = the whole school
+  gradeId: z.string().nullable().optional(),
+  sectionId: z.string().nullable().optional(),
   frequency: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY", "TERM_END"]),
   includeExamResults: z.boolean().default(true),
   includeAttendance: z.boolean().default(true),

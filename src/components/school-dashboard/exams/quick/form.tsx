@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
@@ -30,19 +30,13 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { TeachingScopePicker } from "@/components/school-dashboard/teaching-scope/picker"
+import type { TeachingScopeValue } from "@/components/school-dashboard/teaching-scope/validation"
 
 import { createQuickAssessment } from "./actions"
 import { quickAssessmentCreateSchema } from "./validation"
 
-interface QuickAssessmentFormProps {
-  classes: Array<{ id: string; name: string }>
-  subjects: Array<{ id: string; name: string }>
-}
-
-export function QuickAssessmentForm({
-  classes,
-  subjects,
-}: QuickAssessmentFormProps) {
+export function QuickAssessmentForm() {
   const router = useRouter()
   const { toast } = useToast()
   const { dictionary } = useDictionary()
@@ -55,7 +49,8 @@ export function QuickAssessmentForm({
     resolver: zodResolver(quickAssessmentCreateSchema) as any,
     defaultValues: {
       title: "",
-      classId: "",
+      gradeId: "",
+      sectionId: null,
       subjectId: "",
       type: "EXIT_TICKET" as const,
       questionIds: [],
@@ -64,6 +59,20 @@ export function QuickAssessmentForm({
       showResults: true,
     },
   })
+
+  // Who it's for: grade → section (or the whole grade) → subject
+  const gradeId = form.watch("gradeId")
+  const sectionId = form.watch("sectionId")
+  const subjectId = form.watch("subjectId")
+  const setScope = useCallback(
+    (scope: TeachingScopeValue) => {
+      const opts = { shouldValidate: true, shouldDirty: true }
+      form.setValue("gradeId", scope.gradeId, opts)
+      form.setValue("sectionId", scope.sectionId, opts)
+      form.setValue("subjectId", scope.subjectId, opts)
+    },
+    [form]
+  )
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true)
@@ -187,67 +196,11 @@ export function QuickAssessmentForm({
           />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="classId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t?.form?.class ?? "Class"}</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t?.form?.selectClass ?? "Select class"}
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {classes.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="subjectId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t?.form?.subject ?? "Subject"}</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t?.form?.selectSubject ?? "Select subject"}
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {subject.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <TeachingScopePicker
+          value={{ gradeId, sectionId, subjectId }}
+          onChange={setScope}
+          disabled={isSubmitting}
+        />
 
         <FormField
           control={form.control}

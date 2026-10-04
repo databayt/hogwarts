@@ -16,8 +16,11 @@ model ProgressReportSchedule {
   id       String @id @default(cuid())
   schoolId String
 
-  // Scope (null classId = all classes)
-  classId String?
+  // Scope: a grade, or one section of it; neither = the whole school.
+  // classId is legacy (schedules made before classes were retired).
+  classId   String?
+  gradeId   String?
+  sectionId String?
 
   // Schedule configuration
   frequency ProgressReportFrequency
@@ -43,6 +46,10 @@ model ProgressReportSchedule {
   // Relations
   school  School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   class   Class?                    @relation(fields: [classId], references: [id], onDelete: SetNull)
+  // Deleting the grade or section deletes its schedule — never let it fall
+  // back to reporting on the whole school.
+  grade   AcademicGrade?            @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  section Section?                  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   reports GeneratedProgressReport[]
 
   createdAt DateTime @default(now())
@@ -51,6 +58,8 @@ model ProgressReportSchedule {
   @@index([schoolId])
   @@index([schoolId, isActive])
   @@index([schoolId, classId])
+  @@index([schoolId, gradeId])
+  @@index([schoolId, sectionId])
   @@index([nextRunAt])
   @@map("progress_report_schedules")
 }

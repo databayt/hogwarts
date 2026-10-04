@@ -7,8 +7,14 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
+import { audienceLabel, studentAudienceWhere } from "@/lib/teaching-audience"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
-import { upsertGradebookResult } from "@/components/school-dashboard/grades/lib/gradebook"
+import {
+  resolveStudentSubjectContext,
+  upsertGradebookResult,
+} from "@/components/school-dashboard/grades/lib/gradebook"
+import { resolveTeachingScope } from "@/components/school-dashboard/teaching-scope/resolve"
 import { prewarm } from "@/components/translation/prewarm"
 
 import {
@@ -34,9 +40,52 @@ async function getSchoolId(): Promise<string | null> {
   return schoolId
 }
 
-async function getUserId(): Promise<string | null> {
+/** Who may write, launch and close quick assessments. */
+const AUTHOR_ROLES = ["DEVELOPER", "ADMIN", "TEACHER"]
+
+async function getAuthor(): Promise<{
+  schoolId: string
+  userId: string
+} | null> {
+  const [session, schoolId] = await Promise.all([auth(), getSchoolId()])
+  const userId = session?.user?.id
+  const role = session?.user?.role
+  if (!schoolId || !userId || !role || !AUTHOR_ROLES.includes(role)) {
+    return null
+  }
+  return { schoolId, userId }
+}
+
+/**
+ * The assessments a viewer may see: a student their audience's (section,
+ * whole grade, or a legacy class), a guardian their children's; staff the
+ * school's.
+ */
+async function viewerAudienceWhere(
+  schoolId: string
+): Promise<Record<string, unknown>> {
   const session = await auth()
-  return session?.user?.id ?? null
+  const userId = session?.user?.id
+  const role = session?.user?.role
+  if (!userId) return { id: { in: [] } }
+  if (role === "STUDENT" || role === "GUARDIAN") {
+    const studentIds =
+      role === "STUDENT"
+        ? (
+            await db.student.findMany({
+              where: { schoolId, userId },
+              select: { id: true },
+            })
+          ).map((s) => s.id)
+        : (
+            await db.studentGuardian.findMany({
+              where: { schoolId, guardian: { userId } },
+              select: { studentId: true },
+            })
+          ).map((g) => g.studentId)
+    return studentAudienceWhere(await getStudentScopes(schoolId, studentIds))
+  }
+  return {}
 }
 
 // ============================================================================
@@ -47,19 +96,29 @@ export async function createQuickAssessment(
   input: unknown
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const schoolId = await getSchoolId()
-    const userId = await getUserId()
-    if (!schoolId || !userId) {
+    const author = await getAuthor()
+    if (!author) {
       return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
     }
+    const { schoolId, userId } = author
 
     const parsed = quickAssessmentCreateSchema.parse(input)
+
+    // A grade of this school, a section of that grade (or the whole grade),
+    // a subject the grade studies — and the active term
+    const resolved = await resolveTeachingScope(schoolId, parsed)
+    if (!resolved.ok) {
+      return { success: false, error: resolved.code, code: resolved.code }
+    }
+    const { scope } = resolved
 
     const assessment = await db.quickAssessment.create({
       data: {
         schoolId,
-        classId: parsed.classId,
-        subjectId: parsed.subjectId,
+        gradeId: scope.gradeId,
+        sectionId: scope.sectionId,
+        termId: scope.termId,
+        subjectId: scope.subjectId,
         title: parsed.title,
         type: parsed.type,
         status: "DRAFT",
@@ -88,10 +147,11 @@ export async function launchQuickAssessment(
   id: string
 ): Promise<ActionResponse> {
   try {
-    const schoolId = await getSchoolId()
-    if (!schoolId) {
+    const author = await getAuthor()
+    if (!author) {
       return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
     }
+    const { schoolId } = author
 
     const existing = await db.quickAssessment.findFirst({
       where: { id, schoolId },
@@ -126,10 +186,11 @@ export async function closeQuickAssessment(
   id: string
 ): Promise<ActionResponse> {
   try {
-    const schoolId = await getSchoolId()
-    if (!schoolId) {
+    const author = await getAuthor()
+    if (!author) {
       return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
     }
+    const { schoolId } = author
 
     const existing = await db.quickAssessment.findFirst({
       where: { id, schoolId },
@@ -161,19 +222,24 @@ export async function closeQuickAssessment(
 }
 
 export async function getQuickAssessments(filters?: {
-  classId?: string
+  sectionId?: string
 }): Promise<QuickAssessmentSummary[]> {
   try {
     const schoolId = await getSchoolId()
     if (!schoolId) return []
 
-    const where: Record<string, unknown> = { schoolId }
-    if (filters?.classId) where.classId = filters.classId
+    const where: Record<string, unknown> = {
+      schoolId,
+      ...(await viewerAudienceWhere(schoolId)),
+    }
+    if (filters?.sectionId) where.sectionId = filters.sectionId
 
     const assessments = await db.quickAssessment.findMany({
       where,
       include: {
-        class: true,
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
+        class: { select: { name: true } },
         subject: true,
         _count: { select: { responses: true } },
       },
@@ -185,8 +251,10 @@ export async function getQuickAssessments(filters?: {
       title: a.title,
       type: a.type,
       status: a.status,
-      classId: a.classId,
-      className: a.class.name || "",
+      gradeId: a.gradeId,
+      sectionId: a.sectionId,
+      // The audience as people say it: section, whole grade or legacy class
+      className: audienceLabel(a),
       subjectId: a.subjectId,
       name: a.subject.name || "",
       questionCount: a.questionIds.length,
@@ -206,9 +274,11 @@ export async function getQuickAssessment(id: string) {
     if (!schoolId) return null
 
     return await db.quickAssessment.findFirst({
-      where: { id, schoolId },
+      where: { id, schoolId, ...(await viewerAudienceWhere(schoolId)) },
       include: {
-        class: true,
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
+        class: { select: { name: true } },
         subject: true,
         _count: { select: { responses: true } },
       },
@@ -235,9 +305,25 @@ export async function submitQuickResponse(
 
     const parsed = submitQuickResponseSchema.parse(input)
 
-    // Get assessment to check if anonymous
+    // Only a student of the assessment's audience answers it
+    const student = session?.user?.id
+      ? await db.student.findFirst({
+          where: { userId: session.user.id, schoolId },
+          select: { id: true },
+        })
+      : null
+    if (!student) {
+      return { success: false, error: "Unauthorized", code: "NOT_A_STUDENT" }
+    }
+    const scopes = await getStudentScopes(schoolId, [student.id])
+
     const assessment = await db.quickAssessment.findFirst({
-      where: { id: parsed.assessmentId, schoolId, status: "ACTIVE" },
+      where: {
+        id: parsed.assessmentId,
+        schoolId,
+        status: "ACTIVE",
+        ...studentAudienceWhere(scopes),
+      },
     })
 
     if (!assessment) {
@@ -248,18 +334,8 @@ export async function submitQuickResponse(
       }
     }
 
-    // Get studentId from database based on user if not anonymous
-    let studentId: string | null = null
-    if (!assessment.isAnonymous && session?.user?.id) {
-      const student = await db.student.findFirst({
-        where: {
-          userId: session.user.id,
-          schoolId,
-        },
-        select: { id: true },
-      })
-      studentId = student?.id || null
-    }
+    // An anonymous assessment keeps no student on the response
+    const studentId: string | null = assessment.isAnonymous ? null : student.id
 
     // Check if student already submitted (if not anonymous)
     if (studentId) {
@@ -303,12 +379,21 @@ export async function submitQuickResponse(
         // Only grade if at least one response carries an isCorrect flag.
         const hasCorrectFlags = responses.some((r) => r.isCorrect !== undefined)
         const max = responses.length
-        if (hasCorrectFlags && max > 0) {
+        // Filed under the student's section, grade and term for the subject
+        const ctx = await resolveStudentSubjectContext(
+          schoolId,
+          studentId,
+          assessment.subjectId
+        )
+        if (hasCorrectFlags && max > 0 && ctx) {
           const correct = responses.filter((r) => r.isCorrect === true).length
           await upsertGradebookResult({
             schoolId,
             studentId,
-            classId: assessment.classId,
+            classId: ctx.classId,
+            sectionId: ctx.sectionId,
+            academicGradeId: ctx.academicGradeId,
+            termId: ctx.termId ?? assessment.termId,
             subjectId: assessment.subjectId,
             score: correct,
             maxScore: max,
@@ -342,10 +427,11 @@ export async function getQuickAssessmentResults(
   id: string
 ): Promise<ActionResponse<QuickAssessmentResults>> {
   try {
-    const schoolId = await getSchoolId()
-    if (!schoolId) {
+    const author = await getAuthor()
+    if (!author) {
       return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
     }
+    const { schoolId } = author
 
     const assessment = await db.quickAssessment.findFirst({
       where: { id, schoolId },

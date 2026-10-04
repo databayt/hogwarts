@@ -7076,7 +7076,11 @@
         "deliveryChannels": "Delivery Channels",
         "updateSchedule": "Update Schedule",
         "createSchedule": "Create Schedule",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "scopeOptional": "Grade or section (optional)",
+        "wholeSchool": "Whole school",
+        "wholeGrade": "{grade} — whole grade",
+        "leaveEmptyForSchool": "Leave empty to report on the whole school"
       },
       "scheduleList": {
         "noSchedulesDescription": "Create a schedule to start generating automated progress reports.",

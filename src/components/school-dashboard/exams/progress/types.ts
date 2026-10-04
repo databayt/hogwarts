@@ -7,7 +7,9 @@ export type ActionResponse<T = void> =
 
 export interface ProgressScheduleSummary {
   id: string
-  classId: string | null
+  gradeId: string | null
+  sectionId: string | null
+  /** The scope's name (section, grade, or a legacy class); null = school. */
   className: string | null
   frequency: string
   isActive: boolean

@@ -7092,7 +7092,11 @@
         "deliveryChannels": "قنوات التسليم",
         "updateSchedule": "تحديث الجدول",
         "createSchedule": "إنشاء جدول",
-        "cancel": "إلغاء"
+        "cancel": "إلغاء",
+        "scopeOptional": "الصف أو الفصل (اختياري)",
+        "wholeSchool": "المدرسة كلها",
+        "wholeGrade": "{grade} — الصف كاملًا",
+        "leaveEmptyForSchool": "اتركه فارغًا ليشمل التقرير المدرسة كلها"
       },
       "scheduleList": {
         "noSchedulesDescription": "أنشئ جدولاً لبدء إنشاء تقارير التقدم التلقائية.",

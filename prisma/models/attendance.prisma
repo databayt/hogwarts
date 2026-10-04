@@ -605,7 +605,9 @@ model ClassCompetitionEntry {
   id            String @id @default(cuid())
   schoolId      String
   competitionId String
-  classId       String
+  // Legacy: a class competing. New entries are sections.
+  classId       String?
+  sectionId     String?
 
   // Tracked metrics
   totalStudents  Int   @default(0)
@@ -619,15 +621,18 @@ model ClassCompetitionEntry {
 
   school      School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   competition AttendanceCompetition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  class       Class                 @relation(fields: [classId], references: [id], onDelete: Cascade)
+  class       Class?                @relation(fields: [classId], references: [id], onDelete: Cascade)
+  section     Section?              @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([competitionId, classId])
+  @@unique([competitionId, sectionId])
   @@index([schoolId])
   @@index([competitionId])
   @@index([classId])
+  @@index([schoolId, sectionId])
   @@index([attendanceRate])
   @@map("class_competition_entries")
 }

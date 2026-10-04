@@ -575,22 +575,19 @@ export async function createCompetition(
       },
     })
 
-    // Create entries for each class
-    for (const classId of validated.classIds) {
-      // Get student count for the class
-      const studentCount = await db.studentClass.count({
-        where: { schoolId, classId },
-      })
-
-      await db.classCompetitionEntry.create({
-        data: {
-          schoolId,
-          competitionId: competition.id,
-          classId,
-          totalStudents: studentCount,
-        },
-      })
-    }
+    // One entry per section — this school's only, with its student count
+    const sections = await db.section.findMany({
+      where: { schoolId, id: { in: validated.sectionIds } },
+      select: { id: true, _count: { select: { students: true } } },
+    })
+    await db.classCompetitionEntry.createMany({
+      data: sections.map((section) => ({
+        schoolId,
+        competitionId: competition.id,
+        sectionId: section.id,
+        totalStudents: section._count.students,
+      })),
+    })
 
     refreshPage("/attendance/gamification")
 
@@ -627,6 +624,9 @@ export async function getActiveCompetitions(
       include: {
         entries: {
           include: {
+            section: {
+              select: { id: true, name: true, lang: true },
+            },
             class: {
               select: { id: true, name: true, lang: true },
             },
@@ -636,14 +636,19 @@ export async function getActiveCompetitions(
       },
     })
 
-    // Translate competition and class names — one batched, deduped
-    // resolution across names/descriptions/class names (no per-row N+1).
+    // Who an entry is: its section, or the class of an entry kept from
+    // before sections
+    const entrant = (e: (typeof competitions)[number]["entries"][number]) =>
+      e.section ?? e.class
+
+    // Translate competition and entrant names — one batched, deduped
+    // resolution across names/descriptions/entrant names (no per-row N+1).
     const lang = displayLang || "ar"
     const labels = await getLabels(
       competitions.flatMap((c) => [
         c.name,
         c.description,
-        ...c.entries.map((e) => e.class.name),
+        ...c.entries.map((e) => entrant(e)?.name ?? ""),
       ]),
       lang,
       schoolId!
@@ -660,9 +665,11 @@ export async function getActiveCompetitions(
       winnerReward: c.winnerReward,
       entries: c.entries.map((e, index) => ({
         rank: index + 1,
-        classId: e.classId,
-        className: labels.get(e.class.name) ?? e.class.name,
-        classLang: e.class.lang,
+        id: e.id,
+        sectionId: e.sectionId,
+        sectionName:
+          labels.get(entrant(e)?.name ?? "") ?? entrant(e)?.name ?? "",
+        sectionLang: entrant(e)?.lang ?? "ar",
         attendanceRate: e.attendanceRate,
         totalStudents: e.totalStudents,
         presentDays: e.presentDays,
@@ -704,12 +711,16 @@ export async function updateCompetitionStandings(
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    // Update each class's stats
+    // Update each entrant's stats: a section's days, or (an entry kept from
+    // before sections) its class's
     for (const entry of competition.entries) {
+      if (!entry.sectionId && !entry.classId) continue
       const attendances = await db.attendance.findMany({
         where: {
           schoolId,
-          classId: entry.classId,
+          ...(entry.sectionId
+            ? { sectionId: entry.sectionId, periodId: null }
+            : { classId: entry.classId }),
           date: {
             gte: competition.startDate,
             lte: competition.endDate,

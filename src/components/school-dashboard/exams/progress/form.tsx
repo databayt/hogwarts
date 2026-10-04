@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
@@ -27,13 +27,24 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import {
+  getTeachingScopeOptions,
+  type TeachingScopeGrade,
+} from "@/components/school-dashboard/teaching-scope/actions"
 
 import { createProgressSchedule, updateProgressSchedule } from "./actions"
 import type { ProgressScheduleSummary } from "./types"
 
 interface ProgressReportFormProps {
   schedule?: ProgressScheduleSummary
-  classes?: Array<{ id: string; name: string }>
+}
+
+/** The scope select's value: the whole school, a grade, or a section. */
+const WHOLE_SCHOOL = "__school__"
+function scopeValue(s?: ProgressScheduleSummary): string {
+  if (s?.sectionId) return `s:${s.sectionId}`
+  if (s?.gradeId) return `g:${s.gradeId}`
+  return WHOLE_SCHOOL
 }
 
 const FREQUENCIES = [
@@ -55,10 +66,7 @@ const CHANNELS = [
   { value: "sms", label: "SMS", key: "sms" },
 ]
 
-export function ProgressReportForm({
-  schedule,
-  classes = [],
-}: ProgressReportFormProps) {
+export function ProgressReportForm({ schedule }: ProgressReportFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -66,8 +74,15 @@ export function ProgressReportForm({
   const t = dictionary?.school?.exams?.progress
   const pf = dictionary?.school?.exams?.progressForm
 
+  const [grades, setGrades] = useState<TeachingScopeGrade[]>([])
+  useEffect(() => {
+    getTeachingScopeOptions().then((res) => {
+      if (res.success && res.data) setGrades(res.data.grades)
+    })
+  }, [])
+
   const [formData, setFormData] = useState({
-    classId: schedule?.classId || "",
+    scope: scopeValue(schedule),
     frequency: schedule?.frequency || "MONTHLY",
     includeExamResults: schedule?.includeExamResults ?? true,
     includeAttendance: schedule?.includeAttendance ?? true,
@@ -82,9 +97,11 @@ export function ProgressReportForm({
     setIsSubmitting(true)
 
     try {
+      const { scope, ...rest } = formData
       const data = {
-        ...formData,
-        classId: formData.classId || undefined,
+        ...rest,
+        gradeId: scope.startsWith("g:") ? scope.slice(2) : null,
+        sectionId: scope.startsWith("s:") ? scope.slice(2) : null,
       }
 
       const result = schedule
@@ -140,31 +157,40 @@ export function ProgressReportForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="class" className="text-sm font-medium">
-            {pf?.classOptional ?? "Class (Optional)"}
+          <label htmlFor="scope" className="text-sm font-medium">
+            {pf?.scopeOptional ?? "Grade or section (optional)"}
           </label>
           <Select
-            value={formData.classId}
+            value={formData.scope}
             onValueChange={(value) =>
-              setFormData((prev) => ({ ...prev, classId: value }))
+              setFormData((prev) => ({ ...prev, scope: value }))
             }
           >
-            <SelectTrigger>
-              <SelectValue placeholder={t?.form?.allClasses ?? "All classes"} />
+            <SelectTrigger id="scope">
+              <SelectValue placeholder={pf?.wholeSchool ?? "Whole school"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">
-                {t?.form?.allClasses ?? "All classes"}
+              <SelectItem value={WHOLE_SCHOOL}>
+                {pf?.wholeSchool ?? "Whole school"}
               </SelectItem>
-              {classes.map((cls) => (
-                <SelectItem key={cls.id} value={cls.id}>
-                  {cls.name}
-                </SelectItem>
-              ))}
+              {grades.flatMap((grade) => [
+                <SelectItem key={grade.id} value={`g:${grade.id}`}>
+                  {(pf?.wholeGrade ?? "{grade} — whole grade").replace(
+                    "{grade}",
+                    grade.name
+                  )}
+                </SelectItem>,
+                ...grade.sections.map((section) => (
+                  <SelectItem key={section.id} value={`s:${section.id}`}>
+                    {section.name}
+                  </SelectItem>
+                )),
+              ])}
             </SelectContent>
           </Select>
           <p className="text-muted-foreground text-xs">
-            {pf?.leaveEmptyForAll ?? "Leave empty to include all classes"}
+            {pf?.leaveEmptyForSchool ??
+              "Leave empty to report on the whole school"}
           </p>
         </div>
 

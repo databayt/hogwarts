@@ -138,7 +138,7 @@ export const createCompetitionSchema = z.object({
   description: z.string().optional(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
-  classIds: z.array(z.string()).min(2, "At least 2 classes required"),
+  sectionIds: z.array(z.string()).min(2, "At least 2 sections required"),
   winnerReward: z.string().optional(),
   participantPoints: z.number().int().min(0).default(0),
   winnerPoints: z.number().int().min(0).default(100),
@@ -175,8 +175,8 @@ export interface LeaderboardEntry {
 
 export interface ClassLeaderboardEntry {
   rank: number
-  classId: string
-  className: string
+  sectionId: string
+  sectionName: string
   attendanceRate: number
   totalStudents: number
   presentDays: number

@@ -17,11 +17,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SkeletonList } from "@/components/atom/loading"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { phone } from "../shared/phone"
 import { AttendancePageSkeleton } from "../loading-skeleton"
-import { SkeletonList } from "@/components/atom/loading"
+import { phone } from "../shared/phone"
 import {
   getActiveCompetitions,
   getLeaderboard,
@@ -39,9 +39,10 @@ interface Competition {
   winnerReward: string | null
   entries: {
     rank: number
-    classId: string
-    className: string
-    classLang: string
+    id: string
+    sectionId: string | null
+    sectionName: string
+    sectionLang: string
     attendanceRate: number
     totalStudents: number
     presentDays: number
@@ -310,7 +311,7 @@ function CompetitionsSection({
               <div className="space-y-3">
                 {competition.entries.map((entry) => (
                   <div
-                    key={entry.classId}
+                    key={entry.id}
                     className={cn(
                       "rounded-lg p-3",
                       entry.rank === 1 &&
@@ -329,7 +330,7 @@ function CompetitionsSection({
                         >
                           #{entry.rank}
                         </span>
-                        <span className="font-medium">{entry.className}</span>
+                        <span className="font-medium">{entry.sectionName}</span>
                       </div>
                       <span className="text-primary text-xl font-bold">
                         {entry.attendanceRate.toFixed(1)}%
