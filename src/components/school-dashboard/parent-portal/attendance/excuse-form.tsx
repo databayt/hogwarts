@@ -92,7 +92,8 @@ interface Absence {
   id: string
   studentId: string
   studentName: string
-  classId: string
+  sectionId: string | null
+  /** The section's name (or a legacy class's). */
   className: string
   date: string
   status: string

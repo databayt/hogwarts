@@ -228,7 +228,7 @@ export function getMethodDisplayName(method: AttendanceMethod): string {
  * Generate a unique QR code payload
  */
 export function generateQRPayload(
-  classId: string,
+  sectionId: string,
   validFor: number = 60
 ): string {
   const timestamp = Date.now()
@@ -236,7 +236,7 @@ export function generateQRPayload(
   const random = Math.random().toString(36).substring(7)
 
   const payload = {
-    classId,
+    sectionId,
     timestamp,
     expiresAt,
     nonce: random,
@@ -250,14 +250,14 @@ export function generateQRPayload(
  */
 export function validateQRPayload(payload: string): {
   valid: boolean
-  classId?: string
+  sectionId?: string
   error?: string
 } {
   try {
     const decoded = JSON.parse(atob(payload))
     const now = Date.now()
 
-    if (!decoded.classId || !decoded.expiresAt) {
+    if (!decoded.sectionId || !decoded.expiresAt) {
       return { valid: false, error: "Invalid QR code format" }
     }
 
@@ -265,7 +265,7 @@ export function validateQRPayload(payload: string): {
       return { valid: false, error: "QR code has expired" }
     }
 
-    return { valid: true, classId: decoded.classId }
+    return { valid: true, sectionId: decoded.sectionId }
   } catch (error) {
     return { valid: false, error: "Invalid QR code" }
   }

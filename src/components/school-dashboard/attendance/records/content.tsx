@@ -57,7 +57,9 @@ export function RecordsContent({ locale }: Props) {
               id: a.id,
               date: new Date(a.date),
               status: a.status,
-              classId: a.classId || "",
+              // The view's class filter has no options in the section
+              // model (parent portal, class removal S14).
+              classId: "",
               className: a.className,
               notes: a.notes,
             })),
@@ -80,7 +82,7 @@ export function RecordsContent({ locale }: Props) {
               id: r.id,
               date: new Date(r.date),
               status: r.status,
-              classId: r.classId || "",
+              classId: "",
               className: r.className || "",
               notes: r.notes,
             })),

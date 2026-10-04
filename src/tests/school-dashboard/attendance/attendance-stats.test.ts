@@ -10,8 +10,8 @@ import {
   getAtRiskStudents,
   getAttendanceTrends,
   getBulkAttendanceStats,
-  getClassAttendanceStats,
   getPerfectAttendance,
+  getSectionAttendanceStats,
 } from "@/components/school-dashboard/attendance/attendance-stats"
 
 vi.mock("@/lib/db", () => ({
@@ -25,11 +25,7 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       findFirst: vi.fn(),
     },
-    studentClass: {
-      findMany: vi.fn(),
-    },
-    class: {
-      findUnique: vi.fn(),
+    section: {
       findFirst: vi.fn(),
     },
   },
@@ -172,47 +168,51 @@ describe("attendance-stats utility", () => {
     })
   })
 
-  describe("getClassAttendanceStats", () => {
+  describe("getSectionAttendanceStats", () => {
     it("throws on missing schoolId", async () => {
       mockContext(null)
 
       await expect(
-        getClassAttendanceStats({ classId: "c1", date: "2026-06-01" })
+        getSectionAttendanceStats({ sectionId: "7a", date: "2026-06-01" })
       ).rejects.toThrow("MISSING_SCHOOL")
     })
 
-    it("returns 0 totals when no enrollments", async () => {
-      vi.mocked(db.studentClass.findMany).mockResolvedValue([])
+    it("returns 0 totals for a section of another school", async () => {
+      vi.mocked(db.section.findFirst).mockResolvedValue(null)
       vi.mocked(db.attendance.findMany).mockResolvedValue([])
-      vi.mocked(db.class.findFirst).mockResolvedValue(null)
 
-      const result = await getClassAttendanceStats({
-        classId: "c1",
+      const result = await getSectionAttendanceStats({
+        sectionId: "7a",
         date: "2026-06-01",
       })
 
+      expect(vi.mocked(db.section.findFirst).mock.calls[0][0]!.where).toEqual({
+        id: "7a",
+        schoolId: SCHOOL,
+      })
       expect(result.totalStudents).toBe(0)
       expect(result.attendanceRate).toBe(0)
     })
 
-    it("counts PRESENT + LATE as present", async () => {
-      vi.mocked(db.studentClass.findMany).mockResolvedValue([
-        { studentId: "s1" },
-        { studentId: "s2" },
-      ] as any)
+    it("counts PRESENT + LATE as present, over the section's students", async () => {
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        name: "7-A",
+        students: [{ id: "s1" }, { id: "s2" }],
+      } as never)
       vi.mocked(db.attendance.findMany).mockResolvedValue([
         { studentId: "s1", status: "PRESENT" },
         { studentId: "s2", status: "LATE" },
-      ] as any)
-      vi.mocked(db.class.findFirst).mockResolvedValue({
-        name: "Class 10A",
-      } as any)
+      ] as never)
 
-      const result = await getClassAttendanceStats({
-        classId: "c1",
+      const result = await getSectionAttendanceStats({
+        sectionId: "7a",
         date: "2026-06-01",
       })
 
+      expect(
+        vi.mocked(db.attendance.findMany).mock.calls[0][0]!.where
+      ).toMatchObject({ schoolId: SCHOOL, sectionId: "7a", periodId: null })
+      expect(result.sectionName).toBe("7-A")
       expect(result.presentCount).toBe(2) // PRESENT + LATE both count
       expect(result.lateCount).toBe(1)
       expect(result.totalStudents).toBe(2)
@@ -278,14 +278,14 @@ describe("attendance-stats utility", () => {
       expect((call?.where as any)?.deletedAt).toBeNull()
     })
 
-    it("getClassAttendanceStats filters deletedAt: null", async () => {
-      vi.mocked(db.studentClass.findMany).mockResolvedValue([
-        { studentId: "s1" },
-      ] as any)
+    it("getSectionAttendanceStats filters deletedAt: null", async () => {
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        name: "7-A",
+        students: [{ id: "s1" }],
+      } as never)
       vi.mocked(db.attendance.findMany).mockResolvedValue([])
-      vi.mocked(db.class.findFirst).mockResolvedValue({ name: "C" } as any)
 
-      await getClassAttendanceStats({ classId: "c1", date: "2026-06-01" })
+      await getSectionAttendanceStats({ sectionId: "7a", date: "2026-06-01" })
 
       const call = vi.mocked(db.attendance.findMany).mock.calls[0]?.[0]
       expect((call?.where as any)?.deletedAt).toBeNull()

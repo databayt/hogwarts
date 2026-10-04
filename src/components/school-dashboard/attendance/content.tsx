@@ -40,9 +40,15 @@ import { AttendanceTable, type AttendanceRow } from "./table"
 interface Props {
   dictionary?: Dictionary["school"]
   lang?: string
+  /** Open on this section (e.g. from the overview's unmarked list). */
+  initialSectionId?: string
 }
 
-export function AttendanceContent({ dictionary: dictionaryProp, lang }: Props) {
+export function AttendanceContent({
+  dictionary: dictionaryProp,
+  lang,
+  initialSectionId,
+}: Props) {
   // The school dictionary comes from LocaleDictionaryProvider unless passed;
   // as a prop it was ~600 KB serialized into the manual-attendance page.
   const fullDictionary = useDictionaryFallback()
@@ -109,8 +115,13 @@ export function AttendanceContent({ dictionary: dictionaryProp, lang }: Props) {
         if (!sectionsRes.success || !sectionsRes.data) return
         setSections(sectionsRes.data.sections)
 
-        // Smart selection: Use current period's section if available
+        // A section asked for by the link wins, when it's one of theirs
         if (
+          initialSectionId &&
+          sectionsRes.data.sections.some((s) => s.id === initialSectionId)
+        ) {
+          setSectionId(initialSectionId)
+        } else if (
           periodRes.success &&
           periodRes.data?.currentPeriod?.sectionId &&
           sectionsRes.data.sections.some(
@@ -124,15 +135,17 @@ export function AttendanceContent({ dictionary: dictionaryProp, lang }: Props) {
             name: periodRes.data.currentPeriod.name,
             isAutoSelected: true,
           })
-        } else if (!sectionId && sectionsRes.data.sections[0]) {
-          // Fallback to first section if no current period
-          setSectionId(sectionsRes.data.sections[0].id)
+        } else if (sectionsRes.data.sections[0]) {
+          // Fallback to first section if no current period (keeping one
+          // already chosen)
+          const first = sectionsRes.data.sections[0].id
+          setSectionId((current) => current || first)
         }
       } finally {
         setSectionsLoading(false)
       }
     })()
-  }, [])
+  }, [initialSectionId])
   const [changed, setChanged] = useState<
     Record<string, AttendanceRow["status"]>
   >({})

@@ -12,15 +12,15 @@ import { guardAttendance } from "./actions/helpers"
 // Input validation schemas
 const attendanceStatsSchema = z.object({
   studentId: z.string().optional(),
-  classId: z.string().optional(),
+  sectionId: z.string().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
-  groupBy: z.enum(["student", "class", "date", "status"]).optional(),
+  groupBy: z.enum(["student", "section", "date", "status"]).optional(),
 })
 
 const attendancePercentageSchema = z.object({
   studentId: z.string().min(1),
-  classId: z.string().optional(),
+  sectionId: z.string().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
 })
@@ -43,9 +43,9 @@ export interface StudentAttendanceReport {
   stats: AttendanceStats
 }
 
-export interface ClassAttendanceReport {
-  classId: string
-  className: string
+export interface SectionAttendanceReport {
+  sectionId: string
+  sectionName: string
   date: Date
   totalStudents: number
   presentCount: number
@@ -143,8 +143,8 @@ export async function calculateAttendancePercentage(
     deletedAt: null,
   }
 
-  if (validated.classId) {
-    where.classId = validated.classId
+  if (validated.sectionId) {
+    where.sectionId = validated.sectionId
   }
 
   if (validated.from || validated.to) {
@@ -222,33 +222,32 @@ export async function getBulkAttendanceStats(input: {
 }
 
 /**
- * Get class-level attendance statistics
+ * Get a section's attendance statistics for a day
  */
-export async function getClassAttendanceStats(input: {
-  classId: string
+export async function getSectionAttendanceStats(input: {
+  sectionId: string
   date: string
-}) {
+}): Promise<SectionAttendanceReport> {
   const g = await guardAttendance("view_analytics")
   if (!g.ok) throw new Error(g.error.error)
   const { schoolId } = g
 
-  // Get all enrolled students
-  const enrollments = await db.studentClass.findMany({
-    where: {
-      schoolId,
-      classId: input.classId,
-    },
-    select: { studentId: true },
+  // The section's students — MULTI-TENANT: scoped by schoolId, so another
+  // school's section reads as empty
+  const section = await db.section.findFirst({
+    where: { id: input.sectionId, schoolId },
+    select: { name: true, students: { select: { id: true } } },
   })
 
-  const studentIds = enrollments.map((e) => e.studentId)
+  const studentIds = section?.students.map((e) => e.id) ?? []
 
-  // Get attendance for the date
+  // Get the day's attendance (the daily mark, not each period's)
   const attendanceRecords = await db.attendance.findMany({
     where: {
       schoolId,
-      classId: input.classId,
+      sectionId: input.sectionId,
       date: new Date(input.date),
+      periodId: null,
       studentId: { in: studentIds },
       deletedAt: null,
     },
@@ -278,16 +277,9 @@ export async function getClassAttendanceStats(input: {
       ? Math.round((statusCounts.present / totalStudents) * 100)
       : 0
 
-  // Get class name — MULTI-TENANT: scope by schoolId (was a bare findUnique by
-  // id, which let any caller read class names from another school).
-  const classData = await db.class.findFirst({
-    where: { id: input.classId, schoolId },
-    select: { name: true },
-  })
-
   return {
-    classId: input.classId,
-    className: classData?.name || "Unknown Class",
+    sectionId: input.sectionId,
+    sectionName: section?.name ?? "",
     date: new Date(input.date),
     totalStudents,
     presentCount: statusCounts.present,
@@ -301,7 +293,7 @@ export async function getClassAttendanceStats(input: {
  * Get attendance trends over time
  */
 export async function getAttendanceTrends(input: {
-  classId?: string
+  sectionId?: string
   studentId?: string
   days?: number
 }) {
@@ -319,7 +311,7 @@ export async function getAttendanceTrends(input: {
     deletedAt: null,
   }
 
-  if (input.classId) where.classId = input.classId
+  if (input.sectionId) where.sectionId = input.sectionId
   if (input.studentId) where.studentId = input.studentId
 
   const records = await db.attendance.groupBy({
@@ -374,7 +366,7 @@ export async function getAttendanceTrends(input: {
  * Identify at-risk students (attendance < threshold)
  */
 export async function getAtRiskStudents(input: {
-  classId?: string
+  sectionId?: string
   threshold?: number
   days?: number
 }) {
@@ -385,22 +377,17 @@ export async function getAtRiskStudents(input: {
   const threshold = input.threshold || 80 // Default 80% attendance
   const days = input.days || 30
 
-  // Get all students
+  // The section's students, or the school's
   let studentIds: string[]
 
-  if (input.classId) {
-    const enrollments = await db.studentClass.findMany({
-      where: { schoolId, classId: input.classId },
-      select: { studentId: true },
-    })
-    studentIds = enrollments.map((e) => e.studentId)
-  } else {
-    const students = await db.student.findMany({
-      where: { schoolId },
-      select: { id: true },
-    })
-    studentIds = students.map((s) => s.id)
-  }
+  const students = await db.student.findMany({
+    where: {
+      schoolId,
+      ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+    },
+    select: { id: true },
+  })
+  studentIds = students.map((s) => s.id)
 
   // Calculate attendance for each student
   const from = new Date()
@@ -461,7 +448,7 @@ function calculateStreak(records: Array<{ date: Date; status: string }>) {
  * Get perfect attendance students
  */
 export async function getPerfectAttendance(input: {
-  classId?: string
+  sectionId?: string
   from?: string
   to?: string
 }) {
@@ -469,22 +456,17 @@ export async function getPerfectAttendance(input: {
   if (!g.ok) throw new Error(g.error.error)
   const { schoolId } = g
 
-  // Get all students
+  // The section's students, or the school's
   let studentIds: string[]
 
-  if (input.classId) {
-    const enrollments = await db.studentClass.findMany({
-      where: { schoolId, classId: input.classId },
-      select: { studentId: true },
-    })
-    studentIds = enrollments.map((e) => e.studentId)
-  } else {
-    const students = await db.student.findMany({
-      where: { schoolId },
-      select: { id: true },
-    })
-    studentIds = students.map((s) => s.id)
-  }
+  const students = await db.student.findMany({
+    where: {
+      schoolId,
+      ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+    },
+    select: { id: true },
+  })
+  studentIds = students.map((s) => s.id)
 
   // Get attendance stats
   const stats = await getBulkAttendanceStats({

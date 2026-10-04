@@ -18,7 +18,10 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
 import { refreshPage } from "@/lib/refresh-page"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { getOwnedStudentIds } from "../actions/helpers"
+import {
+  getOwnedStudentIds,
+  sectionTeacherUserIds,
+} from "../actions/helpers"
 import { isStaffRole } from "../authorization"
 import {
   filterIntentionsSchema,
@@ -539,15 +542,7 @@ async function notifyIntentionSubmission(
           select: {
             firstName: true,
             lastName: true,
-            studentClasses: {
-              include: {
-                class: {
-                  include: {
-                    teacher: { select: { userId: true } },
-                  },
-                },
-              },
-            },
+            sectionId: true,
           },
         },
       },
@@ -567,13 +562,14 @@ async function notifyIntentionSubmission(
     const dateRange =
       intention.daysCount === 1 ? dateFrom : `${dateFrom} - ${dateTo}`
 
-    // Notify homeroom teachers if enabled
-    if (intention.notifyTeachers) {
-      const teacherUserIds = intention.student.studentClasses
-        .map((sc) => sc.class.teacher?.userId)
-        .filter((id): id is string => !!id)
+    // Notify the section's teachers (homeroom + subjects) if enabled
+    if (intention.notifyTeachers && intention.student.sectionId) {
+      const teacherUserIds = await sectionTeacherUserIds(
+        schoolId,
+        intention.student.sectionId
+      )
 
-      for (const userId of new Set(teacherUserIds)) {
+      for (const userId of teacherUserIds) {
         await dispatchNotification({
           schoolId,
           userId,

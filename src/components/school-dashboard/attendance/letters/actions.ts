@@ -68,10 +68,7 @@ export async function generateLetter(
             guardian: true,
           },
         },
-        studentClasses: {
-          include: { class: true },
-          take: 1,
-        },
+        section: { select: { name: true } },
         attendances: {
           where: {
             deletedAt: null,
@@ -117,7 +114,8 @@ export async function generateLetter(
 
     // Build data for template
     const guardian = student.studentGuardians[0]?.guardian
-    const className = student.studentClasses[0]?.class?.name || "N/A"
+    // The letter's "class" line names the student's section
+    const className = student.section?.name || "N/A"
 
     const templateData: Record<string, string> = {
       studentName: `${student.firstName} ${student.lastName}`,
@@ -474,10 +472,7 @@ export async function previewLetter(
           where: { isPrimary: true },
           include: { guardian: true },
         },
-        studentClasses: {
-          include: { class: true },
-          take: 1,
-        },
+        section: { select: { name: true } },
         attendances: {
           where: {
             deletedAt: null,
@@ -523,7 +518,7 @@ export async function previewLetter(
       guardianName: guardian
         ? `${guardian.firstName} ${guardian.lastName}`
         : "Parent/Guardian",
-      className: student.studentClasses[0]?.class?.name || "N/A",
+      className: student.section?.name || "N/A",
       absenceRate: absenceRate.toFixed(1),
       absentDays: absentDays.toString(),
       totalDays: totalDays.toString(),

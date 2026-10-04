@@ -71,7 +71,7 @@ interface UnexcusedAbsence {
   id: string
   studentId: string
   studentName: string
-  classId: string
+  sectionId: string | null
   className: string
   date: string
   status: string

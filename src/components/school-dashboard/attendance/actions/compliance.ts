@@ -30,9 +30,9 @@ interface ComplianceDashboard {
 }
 
 interface ComplianceReport {
-  byClass: Array<{
-    classId: string
-    className: string
+  bySection: Array<{
+    sectionId: string
+    sectionName: string
     totalStudents: number
     attendanceRate: number
     absentCount: number
@@ -217,12 +217,12 @@ export async function getComplianceDashboard(): Promise<
 
 /**
  * Get detailed compliance report with optional filters
- * Returns data by class, at-risk students, and policy compliance stats
+ * Returns data by section, at-risk students, and policy compliance stats
  */
 export async function getComplianceReport(input?: {
   dateFrom?: string
   dateTo?: string
-  classId?: string
+  sectionId?: string
 }): Promise<ActionResponse<ComplianceReport>> {
   try {
     const { schoolId } = await getTenantContext()
@@ -261,7 +261,7 @@ export async function getComplianceReport(input?: {
     const whereClause: {
       schoolId: string
       date?: { gte?: Date; lte?: Date }
-      classId?: string
+      sectionId?: string
       deletedAt: null
       periodId: null
     } = {
@@ -274,55 +274,41 @@ export async function getComplianceReport(input?: {
       whereClause.date = dateFilter
     }
 
-    if (input?.classId) {
-      whereClause.classId = input.classId
+    if (input?.sectionId) {
+      whereClause.sectionId = input.sectionId
     }
 
-    // 1. Get attendance by class
-    const attendanceByClass = await db.attendance.groupBy({
-      by: ["classId", "status"],
+    // 1. Get attendance by section
+    const attendanceBySection = await db.attendance.groupBy({
+      by: ["sectionId", "status"],
       where: whereClause,
       _count: true,
     })
 
-    // Get class names
-    const classIds = [
-      ...new Set(attendanceByClass.map((a) => a.classId)),
+    // Section names and student counts
+    const sectionIds = [
+      ...new Set(attendanceBySection.map((a) => a.sectionId)),
     ].filter((id): id is string => id !== null)
-    const classes = await db.class.findMany({
-      where: { id: { in: classIds }, schoolId },
-      select: { id: true, name: true },
+    const sections = await db.section.findMany({
+      where: { id: { in: sectionIds }, schoolId },
+      select: { id: true, name: true, _count: { select: { students: true } } },
     })
 
-    const classMap = new Map(classes.map((c) => [c.id, c.name]))
+    const sectionMap = new Map(sections.map((c) => [c.id, c]))
 
-    // Get student counts per class
-    const studentCounts = await db.studentClass.groupBy({
-      by: ["classId"],
-      where: { classId: { in: classIds }, schoolId },
-      _count: { studentId: true },
-    })
-
-    const studentCountMap = new Map(
-      studentCounts.map((s) => [
-        s.classId,
-        typeof s._count === "object" ? s._count.studentId : 0,
-      ])
-    )
-
-    // Calculate class statistics
-    const classSummary = new Map<
+    // Calculate section statistics
+    const sectionSummary = new Map<
       string,
       { total: number; present: number; absent: number }
     >()
 
-    attendanceByClass.forEach((record) => {
-      const classId = record.classId
-      if (!classId) return
-      if (!classSummary.has(classId)) {
-        classSummary.set(classId, { total: 0, present: 0, absent: 0 })
+    attendanceBySection.forEach((record) => {
+      const sectionId = record.sectionId
+      if (!sectionId) return
+      if (!sectionSummary.has(sectionId)) {
+        sectionSummary.set(sectionId, { total: 0, present: 0, absent: 0 })
       }
-      const summary = classSummary.get(classId)!
+      const summary = sectionSummary.get(sectionId)!
       summary.total += record._count
       if (record.status === "PRESENT") {
         summary.present += record._count
@@ -331,11 +317,11 @@ export async function getComplianceReport(input?: {
       }
     })
 
-    const byClass = Array.from(classSummary.entries()).map(
-      ([classId, stats]) => ({
-        classId,
-        className: classMap.get(classId) || "Unknown Class",
-        totalStudents: studentCountMap.get(classId) || 0,
+    const bySection = Array.from(sectionSummary.entries()).map(
+      ([sectionId, stats]) => ({
+        sectionId,
+        sectionName: sectionMap.get(sectionId)?.name ?? "",
+        totalStudents: sectionMap.get(sectionId)?._count.students ?? 0,
         attendanceRate:
           stats.total > 0
             ? Math.round((stats.present / stats.total) * 1000) / 10
@@ -424,7 +410,7 @@ export async function getComplianceReport(input?: {
     return {
       success: true,
       data: {
-        byClass,
+        bySection,
         atRiskStudents,
         policyCompliance: {
           totalTriggers,

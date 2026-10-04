@@ -353,7 +353,7 @@ export function useAutoSave<T>(
  * Hook for real-time updates via WebSocket or polling
  */
 export function useRealTimeAttendance(
-  classId: string,
+  sectionId: string,
   method: "websocket" | "polling" = "polling"
 ) {
   const [updates, setUpdates] = useState<AttendanceRecord[]>([])
@@ -367,7 +367,7 @@ export function useRealTimeAttendance(
       const fetchUpdates = async () => {
         try {
           // API call would go here
-          console.log("Fetching attendance updates for class:", classId)
+          console.log("Fetching attendance updates for section:", sectionId)
         } catch (err) {
           console.error("Failed to fetch updates:", err)
         }
@@ -384,7 +384,9 @@ export function useRealTimeAttendance(
     } else {
       // WebSocket implementation
       try {
-        const ws = new WebSocket(`wss://api.example.com/attendance/${classId}`)
+        const ws = new WebSocket(
+          `wss://api.example.com/attendance/${sectionId}`
+        )
         wsRef.current = ws
 
         ws.onopen = () => {
@@ -413,7 +415,7 @@ export function useRealTimeAttendance(
         console.error("Failed to connect WebSocket:", err)
       }
     }
-  }, [classId, method])
+  }, [sectionId, method])
 
   return { updates, connected }
 }

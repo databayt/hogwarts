@@ -35,6 +35,7 @@ vi.mock("@/lib/db", () => ({
     student: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     schoolComplianceConfig: {
       findFirst: vi.fn(),
@@ -68,6 +69,7 @@ vi.mock("@/lib/action-errors", () => ({
   ACTION_ERRORS: {
     MISSING_SCHOOL: "Missing school context",
     UNAUTHORIZED: "Unauthorized",
+    STUDENT_NOT_FOUND: "STUDENT_NOT_FOUND",
   },
   actionError: (msg: string) => ({ success: false, error: msg }),
 }))
@@ -103,13 +105,38 @@ describe("Attendance Actions", () => {
   })
 
   describe("markAttendance", () => {
+    beforeEach(() => {
+      // Every submitted student is in the section
+      vi.mocked(db.student.count).mockResolvedValue(1)
+    })
+
+    it("refuses a student who is not in the section", async () => {
+      vi.mocked(db.student.count).mockResolvedValue(0)
+
+      const result = await markAttendance({
+        sectionId: "s1",
+        date: new Date().toISOString(),
+        records: [{ studentId: "other-school-student", status: "present" }],
+      })
+
+      expect(result.success).toBe(false)
+      expect(db.student.count).toHaveBeenCalledWith({
+        where: {
+          schoolId: mockSchoolId,
+          sectionId: "s1",
+          id: { in: ["other-school-student"] },
+        },
+      })
+      expect(db.attendance.createMany).not.toHaveBeenCalled()
+    })
+
     it("creates new attendance with schoolId when no existing record", async () => {
       vi.mocked(db.absenceIntention.findMany).mockResolvedValue([])
       vi.mocked(db.attendance.findMany).mockResolvedValue([])
       vi.mocked(db.attendance.createMany).mockResolvedValue({ count: 1 })
 
       const result = await markAttendance({
-        classId: "c1",
+        sectionId: "s1",
         date: new Date().toISOString(),
         records: [{ studentId: "a", status: "present" }],
       })
@@ -120,6 +147,7 @@ describe("Attendance Actions", () => {
           data: expect.arrayContaining([
             expect.objectContaining({
               schoolId: mockSchoolId,
+              sectionId: "s1",
               status: "PRESENT",
             }),
           ]),
@@ -135,7 +163,7 @@ describe("Attendance Actions", () => {
       vi.mocked(db.attendance.updateMany).mockResolvedValue({ count: 1 })
 
       const result = await markAttendance({
-        classId: "c1",
+        sectionId: "s1",
         date: new Date().toISOString(),
         records: [{ studentId: "a", status: "late" }],
       })
@@ -160,7 +188,7 @@ describe("Attendance Actions", () => {
       vi.mocked(db.attendance.updateMany).mockResolvedValue({ count: 1 })
 
       const result = await markAttendance({
-        classId: "c1",
+        sectionId: "s1",
         date: new Date().toISOString(),
         records: [{ studentId: "a", status: "present" }],
       })
@@ -180,22 +208,24 @@ describe("Attendance Actions", () => {
         {
           date: new Date("2024-01-01"),
           studentId: "stu1",
-          classId: "c1",
+          sectionId: "s1",
           status: "PRESENT",
           method: "MANUAL",
           checkInTime: null,
           checkOutTime: null,
           notes: null,
           student: { firstName: "Test", lastName: "Student" },
-          class: { name: "Math 101" },
+          section: { name: "7-A" },
+          class: null,
         },
       ] as any)
 
-      const csv = await getAttendanceReportCsv({ classId: "c1" })
+      const csv = await getAttendanceReportCsv({ sectionId: "s1" })
 
       expect(csv).toContain("date")
       expect(csv).toContain("studentId")
       expect(csv).toContain("stu1")
+      expect(csv).toContain('"7-A"')
     })
   })
 
@@ -284,7 +314,7 @@ describe("Attendance Actions", () => {
 
       const result = await checkOutStudent({
         studentId: "student-1",
-        classId: "class-1",
+        sectionId: "section-1",
         date: new Date().toISOString(),
       })
 
@@ -310,7 +340,7 @@ describe("Attendance Actions", () => {
 
       const result = await checkOutStudent({
         studentId: "student-1",
-        classId: "class-1",
+        sectionId: "section-1",
         date: new Date().toISOString(),
       })
 

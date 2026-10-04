@@ -478,7 +478,7 @@ export function AttendanceOverviewContent({
             {unmarkedClasses.map((cls) => (
               <Link
                 key={cls.id}
-                href={`${basePath}/manual?classId=${cls.id}`}
+                href={`${basePath}/manual?sectionId=${cls.id}`}
                 className="bg-muted hover:bg-muted/70 inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors"
               >
                 <span
@@ -515,7 +515,7 @@ export function AttendanceOverviewContent({
                   asChild
                   className="dark:bg-background bg-white"
                 >
-                  <Link href={`${basePath}/manual?classId=${cls.id}`}>
+                  <Link href={`${basePath}/manual?sectionId=${cls.id}`}>
                     {cls.name}
                     <span className="text-muted-foreground ms-1 text-xs">
                       ({cls.studentCount})

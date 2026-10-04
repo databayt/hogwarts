@@ -168,14 +168,14 @@ describe("Attendance Shared Utils", () => {
 
   describe("validateQRPayload", () => {
     it("validates a fresh payload", () => {
-      const payload = generateQRPayload("class-1", 60)
+      const payload = generateQRPayload("section-1", 60)
       const result = validateQRPayload(payload)
       expect(result.valid).toBe(true)
-      expect(result.classId).toBe("class-1")
+      expect(result.sectionId).toBe("section-1")
     })
 
     it("rejects expired payload", () => {
-      const payload = generateQRPayload("class-1", -1) // already expired
+      const payload = generateQRPayload("section-1", -1) // already expired
       const result = validateQRPayload(payload)
       expect(result.valid).toBe(false)
       expect(result.error).toContain("expired")
@@ -186,7 +186,7 @@ describe("Attendance Shared Utils", () => {
       expect(result.valid).toBe(false)
     })
 
-    it("rejects payload missing classId", () => {
+    it("rejects payload missing sectionId", () => {
       const payload = btoa(JSON.stringify({ expiresAt: Date.now() + 60_000 }))
       const result = validateQRPayload(payload)
       expect(result.valid).toBe(false)

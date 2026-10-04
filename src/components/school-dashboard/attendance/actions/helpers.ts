@@ -7,6 +7,7 @@ import type { UserRole } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 import {
   checkAttendancePermission,
   getAuthContext,
@@ -156,4 +157,32 @@ export function sectionScopeWhere(input: {
   }
   if (gradeId) where.section = { gradeId }
   return where
+}
+
+/**
+ * The teachers of a section, as user ids: its homeroom teacher and the
+ * teachers assigned its subjects this term. Who hears about a student's
+ * absence or planned absence.
+ */
+export async function sectionTeacherUserIds(
+  schoolId: string,
+  sectionId: string
+): Promise<string[]> {
+  const { term } = await resolveActiveTerm(schoolId)
+  const section = await db.section.findFirst({
+    where: { id: sectionId, schoolId },
+    select: {
+      homeroomTeacher: { select: { userId: true } },
+      subjectTeachers: {
+        where: { schoolId, ...(term ? { termId: term.id } : {}) },
+        select: { teacher: { select: { userId: true } } },
+      },
+    },
+  })
+  const ids = new Set<string>()
+  if (section?.homeroomTeacher?.userId) ids.add(section.homeroomTeacher.userId)
+  for (const st of section?.subjectTeachers ?? []) {
+    if (st.teacher.userId) ids.add(st.teacher.userId)
+  }
+  return [...ids]
 }

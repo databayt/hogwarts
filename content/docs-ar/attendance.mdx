@@ -76,7 +76,7 @@ description: حضور متعدّد الطرق — يدوي، QR، باركود،
 
 `triggerAbsenceNotification()` يُطلَق عند الغياب: داخل التطبيق (أولوية عالية)، SMS عبر Twilio (إن كان مهيّأً)، بريد. يستخدم `preferredLanguage` للمدرسة.
 
-أسباب العذر: طبّي، طارئ عائلي، ديني، نشاط مدرسي، نقل، طقس، أخرى. معتمَد → `EXCUSED`؛ مرفوض → غير معذور.
+أسباب العذر: طبّي، طارئ عائلي، ديني، نشاط مدرسي، نقل، طقس، أخرى. معتمَد → `EXCUSED`؛ مرفوض → غير معذور. العذر المقدَّم — وكذلك نيّة الغياب إذا فُعِّل "إشعار المعلمين" — يصل إلى رائد الفصل والمعلمين المسنَدة إليهم مواده هذا الفصل الدراسي (`sectionTeacherUserIds`). وقائمة المراجعة لدى المعلم هي أعذار فصوله فقط.
 
 عرض الطالب / ولي الأمر: نسبة + اتجاه، تقويم تاريخي، تفصيل الحالات، تقديم عذر للغيابات غير المعذورة.
 
@@ -133,9 +133,10 @@ markAttendance(input: {
 })
 
 markPeriodAttendance(input: {
-  classId: string
+  sectionId: string     // فصل المعلم نفسه؛ وكل طالب يجب أن يكون منه
   date: string
   periodId: string
+  timetableId?: string  // يجب أن تكون حصة هذا الفصل
   records: Array<{ studentId: string; status: 'PRESENT' | 'ABSENT' | 'LATE'; notes?: string }>
 })
 

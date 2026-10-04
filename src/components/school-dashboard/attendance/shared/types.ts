@@ -231,7 +231,7 @@ export interface AttendanceValidation {
 
 // Method-specific payloads
 export interface ManualAttendancePayload {
-  classId: string
+  sectionId: string
   date: string
   records: Array<{
     studentId: string

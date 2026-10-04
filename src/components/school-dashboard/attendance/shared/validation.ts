@@ -73,7 +73,8 @@ export const attendanceRecordSchema = z.object({
   id: z.string().optional(),
   schoolId: z.string().min(1, "School ID is required"),
   studentId: z.string().min(1, "Student ID is required"),
-  classId: z.string().min(1, "Class ID is required"),
+  /** The section the mark is kept on. */
+  sectionId: z.string().min(1, "Section is required"),
   date: z.string().or(z.date()),
   status: attendanceStatusSchema,
   method: attendanceMethodSchema,
@@ -95,7 +96,7 @@ export const attendanceRecordSchema = z.object({
 
 // Manual attendance payload schema
 export const manualAttendanceSchema = z.object({
-  classId: z.string().min(1, "Class is required"),
+  sectionId: z.string().min(1, "Section is required"),
   date: z.string().min(1, "Date is required"),
   records: z
     .array(

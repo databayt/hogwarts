@@ -198,7 +198,7 @@ export async function getMasterAttendanceForDay(input: {
  * Returns students who are present at school (for teacher to mark period attendance)
  */
 export async function getPrefillFromMaster(input: {
-  classId: string
+  sectionId: string
   date: string
 }): Promise<
   ActionResponse<{
@@ -231,21 +231,14 @@ export async function getPrefillFromMaster(input: {
 
     const dateObj = new Date(input.date)
 
-    // Get students enrolled in this class
-    const enrolledStudents = await db.studentClass.findMany({
-      where: {
-        schoolId,
-        classId: input.classId,
-      },
-      include: {
-        student: {
-          select: { id: true, firstName: true, lastName: true },
-        },
-      },
+    // The section's students
+    const sectionStudents = await db.student.findMany({
+      where: { schoolId, sectionId: input.sectionId },
+      select: { id: true, firstName: true, lastName: true },
     })
 
     // Get master attendance for these students today
-    const studentIds = enrolledStudents.map((e) => e.student.id)
+    const studentIds = sectionStudents.map((s) => s.id)
     const masterRecords = await db.masterAttendance.findMany({
       where: {
         schoolId,
@@ -268,8 +261,7 @@ export async function getPrefillFromMaster(input: {
       studentName: string
     }> = []
 
-    for (const enrolled of enrolledStudents) {
-      const student = enrolled.student
+    for (const student of sectionStudents) {
       const master = masterMap.get(student.id)
 
       if (!master || master.status === "ABSENT") {
@@ -292,7 +284,7 @@ export async function getPrefillFromMaster(input: {
       data: {
         presentStudents,
         absentStudents,
-        totalEnrolled: enrolledStudents.length,
+        totalEnrolled: sectionStudents.length,
       },
     }
   } catch (error) {

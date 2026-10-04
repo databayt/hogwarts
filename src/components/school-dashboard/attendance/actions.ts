@@ -85,7 +85,7 @@ export {
 
 // Period-by-period tracking
 export {
-  getPeriodsForClass,
+  getPeriodsForSection,
   getCurrentPeriod,
   markPeriodAttendance,
   getPeriodAttendanceAnalytics,

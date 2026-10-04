@@ -472,12 +472,7 @@ export async function getActiveInterventions(input?: {
             id: true,
             firstName: true,
             lastName: true,
-            studentClasses: {
-              include: {
-                class: { select: { name: true } },
-              },
-              take: 1,
-            },
+            section: { select: { name: true } },
             attendances: {
               where: {
                 date: {
@@ -526,8 +521,7 @@ export async function getActiveInterventions(input?: {
             id: intervention.id,
             studentId: intervention.studentId,
             studentName: `${intervention.student.firstName} ${intervention.student.lastName}`,
-            className:
-              intervention.student.studentClasses[0]?.class.name || null,
+            className: intervention.student.section?.name ?? null,
             type: intervention.type,
             title: intervention.title,
             status: intervention.status,
@@ -665,12 +659,7 @@ export async function getAllInterventions(input?: {
             id: true,
             firstName: true,
             lastName: true,
-            studentClasses: {
-              include: {
-                class: { select: { name: true } },
-              },
-              take: 1,
-            },
+            section: { select: { name: true } },
             attendances: {
               where: {
                 date: {
@@ -720,8 +709,7 @@ export async function getAllInterventions(input?: {
             id: intervention.id,
             studentId: intervention.studentId,
             studentName: `${intervention.student.firstName} ${intervention.student.lastName}`,
-            className:
-              intervention.student.studentClasses[0]?.class.name || null,
+            className: intervention.student.section?.name ?? null,
             type: intervention.type,
             title: intervention.title,
             description: intervention.description,

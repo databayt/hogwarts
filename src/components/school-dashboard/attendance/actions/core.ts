@@ -43,10 +43,9 @@ export type ActionResponse<T = void> =
 async function triggerAbsenceNotification(
   schoolId: string,
   studentId: string,
-  classId: string | null,
+  sectionId: string,
   date: Date,
-  markedBy?: string,
-  sectionId?: string | null
+  markedBy?: string
 ): Promise<void> {
   try {
     // Get student info with guardians (including phone for SMS)
@@ -78,32 +77,22 @@ async function triggerAbsenceNotification(
       return
     }
 
-    // Get class, school info, and compliance config (extra channels = ADEK 2h SLA)
-    // Section-based marking passes a sectionId (not a classId) — resolve the
-    // display name from whichever is present so the alert isn't "Unknown class".
-    const [classInfo, sectionInfo, schoolInfo, complianceConfig] =
-      await Promise.all([
-        classId
-          ? db.class.findFirst({
-              where: { id: classId, schoolId },
-              select: { name: true },
-            })
-          : Promise.resolve(null),
-        sectionId
-          ? db.section.findFirst({
-              where: { id: sectionId, schoolId },
-              select: { name: true },
-            })
-          : Promise.resolve(null),
-        db.school.findFirst({
-          where: { id: schoolId },
-          select: { name: true, preferredLanguage: true },
-        }),
-        db.schoolComplianceConfig.findFirst({
-          where: { schoolId, enabled: true },
-          select: { parentContactSlaMinutes: true },
-        }),
-      ])
+    // Get the section, school info, and compliance config (extra channels =
+    // ADEK 2h SLA)
+    const [sectionInfo, schoolInfo, complianceConfig] = await Promise.all([
+      db.section.findFirst({
+        where: { id: sectionId, schoolId },
+        select: { name: true },
+      }),
+      db.school.findFirst({
+        where: { id: schoolId },
+        select: { name: true, preferredLanguage: true },
+      }),
+      db.schoolComplianceConfig.findFirst({
+        where: { schoolId, enabled: true },
+        select: { parentContactSlaMinutes: true },
+      }),
+    ])
 
     // When compliance is enabled, the email + WhatsApp crons must drain the
     // notification row so we have multi-channel attempt evidence for the ADEK
@@ -113,7 +102,7 @@ async function triggerAbsenceNotification(
       : []
 
     const studentName = `${student.firstName} ${student.lastName}`
-    const className = classInfo?.name || sectionInfo?.name || "Unknown class"
+    const className = sectionInfo?.name || "Unknown class"
     const schoolName = schoolInfo?.name || "School"
     const dateStrAr = date.toLocaleDateString("ar-SA", {
       weekday: "long",
@@ -162,7 +151,7 @@ async function triggerAbsenceNotification(
         metadata: {
           studentId,
           studentName,
-          classId,
+          sectionId,
           className,
           date: date.toISOString(),
           dateFormatted: dateStrAr,
@@ -212,7 +201,7 @@ async function triggerAbsenceNotification(
 // ============================================================================
 
 /**
- * Mark attendance for multiple students in a class
+ * Mark a section's day for its students
  */
 export async function markAttendance(
   input: z.infer<typeof markAttendanceSchema>
@@ -228,6 +217,20 @@ export async function markAttendance(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
     const parsed = markAttendanceSchema.parse(input)
+
+    // Every student must be this school's and in the section — a mark is kept
+    // on the section, and an id from another school must never get a row here
+    const allStudentIds = parsed.records.map((r) => r.studentId)
+    const members = await db.student.count({
+      where: {
+        schoolId,
+        sectionId: parsed.sectionId,
+        id: { in: [...new Set(allStudentIds)] },
+      },
+    })
+    if (members !== new Set(allStudentIds).size) {
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+    }
 
     const statusMap: Record<"present" | "absent" | "late", AttendanceStatus> = {
       present: "PRESENT",
@@ -255,14 +258,11 @@ export async function markAttendance(
     )
 
     // Batch fetch all existing daily attendance records (1 query instead of N)
-    const allStudentIds = parsed.records.map((r) => r.studentId)
     const existingRecords = await db.attendance.findMany({
       where: {
         schoolId,
         studentId: { in: allStudentIds },
-        ...(parsed.sectionId
-          ? { sectionId: parsed.sectionId }
-          : { classId: parsed.classId }),
+        sectionId: parsed.sectionId,
         date: attendanceDate,
         periodId: null,
       },
@@ -288,8 +288,7 @@ export async function markAttendance(
         toCreate.push({
           schoolId,
           studentId: rec.studentId,
-          classId: parsed.classId || undefined,
-          sectionId: parsed.sectionId || undefined,
+          sectionId: parsed.sectionId,
           date: attendanceDate,
           status: finalStatus,
           method: "MANUAL",
@@ -344,10 +343,9 @@ export async function markAttendance(
         triggerAbsenceNotification(
           schoolId,
           studentId,
-          parsed.classId || null,
+          parsed.sectionId,
           attendanceDate,
-          session?.user?.id,
-          parsed.sectionId || null
+          session?.user?.id
         )
       )
     ).catch((err) => console.error("[markAttendance] Notification error:", err))
@@ -464,10 +462,9 @@ export async function markSingleAttendance(input: {
       triggerAbsenceNotification(
         schoolId,
         input.studentId,
-        null,
+        input.sectionId,
         new Date(input.date),
-        session?.user?.id,
-        input.sectionId
+        session?.user?.id
       ).catch((err) =>
         console.error("[markSingleAttendance] Notification error:", err)
       )
@@ -489,11 +486,10 @@ export async function markSingleAttendance(input: {
 }
 
 /**
- * Get attendance list for a section (or legacy class) on a specific date
+ * Get a section's attendance list on a specific date
  */
 export async function getAttendanceList(input: {
-  classId?: string
-  sectionId?: string
+  sectionId: string
   date: string
   lang?: string
 }): Promise<
@@ -517,59 +513,25 @@ export async function getAttendanceList(input: {
 
     const parsed = z
       .object({
-        classId: z.string().optional(),
-        sectionId: z.string().optional(),
+        sectionId: z.string().min(1),
         date: z.string().min(1),
         lang: z.string().optional(),
       })
-      .refine((data) => data.classId || data.sectionId, {
-        message: "Either classId or sectionId must be provided",
-      })
       .parse(input)
 
-    // Dual path: section-based (preferred) or legacy class-based
-    let students: Array<{
-      id: string
-      firstName: string
-      lastName: string
-      userId: string | null
-    }>
+    // The section's students
+    const students = await db.student.findMany({
+      where: { schoolId, sectionId: parsed.sectionId },
+      select: { id: true, firstName: true, lastName: true, userId: true },
+      orderBy: { firstName: "asc" },
+    })
 
-    if (parsed.sectionId) {
-      // Section-based: query students directly from section
-      students = await db.student.findMany({
-        where: { schoolId, sectionId: parsed.sectionId },
-        select: { id: true, firstName: true, lastName: true, userId: true },
-        orderBy: { firstName: "asc" },
-      })
-    } else if (parsed.classId) {
-      // Legacy: query through StudentClass join table
-      const enrollments = await db.studentClass.findMany({
-        where: { schoolId, classId: parsed.classId },
-        include: {
-          student: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              userId: true,
-            },
-          },
-        },
-      })
-      students = enrollments.map((e) => e.student)
-    } else {
-      return { success: true, data: { rows: [] } }
-    }
-
-    // Fetch attendance marks using sectionId or classId
+    // The section's marks for the day
     const [marks, school] = await Promise.all([
       db.attendance.findMany({
         where: {
           schoolId,
-          ...(parsed.sectionId
-            ? { sectionId: parsed.sectionId }
-            : { classId: parsed.classId }),
+          sectionId: parsed.sectionId,
           date: new Date(parsed.date),
           deletedAt: null, // Exclude soft-deleted records
         },

@@ -78,7 +78,7 @@ Hall passes (`/hall-pass`) are issued on the student's own section, so issuing o
 
 `triggerAbsenceNotification()` fires on absent: in-app (high priority), SMS via Twilio (if configured), email. Uses school `preferredLanguage`.
 
-Excuse reasons: Medical, Family Emergency, Religious, School Activity, Transportation, Weather, Other. Approved → `EXCUSED`; rejected → unexcused.
+Excuse reasons: Medical, Family Emergency, Religious, School Activity, Transportation, Weather, Other. Approved → `EXCUSED`; rejected → unexcused. A submitted excuse — and an absence intention with "notify teachers" on — reaches the section's homeroom teacher and the teachers assigned its subjects this term (`sectionTeacherUserIds`). A teacher's review queue is their own sections' excuses.
 
 Student / guardian view: percentage + trend, calendar history, status breakdown, excuse submission for unexcused absences.
 
@@ -135,9 +135,10 @@ markAttendance(input: {
 })
 
 markPeriodAttendance(input: {
-  classId: string
+  sectionId: string     // a teacher's own section; every student must be in it
   date: string
   periodId: string
+  timetableId?: string  // must be the section's slot
   records: Array<{ studentId: string; status: 'PRESENT' | 'ABSENT' | 'LATE'; notes?: string }>
 })
 

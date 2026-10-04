@@ -9,7 +9,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import {
   getCurrentPeriod,
   getPeriodAttendanceAnalytics,
-  getPeriodsForClass,
+  getPeriodsForSection,
   getStudentDayAttendance,
   markPeriodAttendance,
 } from "@/components/school-dashboard/attendance/actions/periods"
@@ -35,10 +35,11 @@ vi.mock("@/lib/db", () => {
       findFirst: vi.fn(),
       findMany: vi.fn(),
     },
-    class: { findFirst: vi.fn(), findUnique: vi.fn() },
+    section: { findFirst: vi.fn(), findMany: vi.fn() },
+    teacher: { findFirst: vi.fn() },
     student: { findMany: vi.fn(), findFirst: vi.fn() },
-    studentClass: { findMany: vi.fn() },
     user: { findMany: vi.fn() },
+    school: { findUnique: vi.fn() },
   }
   // Transaction runs its callback against the same mocked client (tx === db).
   db.$transaction = vi.fn(async (cb: (tx: any) => unknown) => cb(db))
@@ -73,24 +74,34 @@ describe("period attendance actions", () => {
     mockAuth("TEACHER")
   })
 
-  describe("getPeriodsForClass", () => {
+  describe("getPeriodsForSection", () => {
     it("denies when schoolId missing", async () => {
       mockAuth("TEACHER", null)
 
-      const result = await getPeriodsForClass({ classId: "c1" })
+      const result = await getPeriodsForSection({
+        sectionId: "sec-1",
+        date: "2026-06-01",
+      })
 
       expect(result.success).toBe(false)
     })
 
-    it("returns a result (success or error) without crashing on valid inputs", async () => {
+    it("reads the section's timetable for the day", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        name: "Demo",
+      } as never)
       vi.mocked(db.timetable.findMany).mockResolvedValue([])
-      vi.mocked(db.period.findMany).mockResolvedValue([])
-      vi.mocked(db.class.findFirst).mockResolvedValue(null)
+      vi.mocked(db.attendance.findMany).mockResolvedValue([])
 
-      const result = await getPeriodsForClass({ classId: "c1" })
+      const result = await getPeriodsForSection({
+        sectionId: "sec-1",
+        date: "2026-06-01",
+      })
 
-      expect(result).toBeDefined()
-      expect(result).toHaveProperty("success")
+      expect(result.success).toBe(true)
+      expect(
+        vi.mocked(db.timetable.findMany).mock.calls[0][0]!.where
+      ).toMatchObject({ schoolId: SCHOOL, sectionId: "sec-1" })
     })
   })
 
@@ -109,7 +120,7 @@ describe("period attendance actions", () => {
       mockAuth("STUDENT")
 
       const result = await markPeriodAttendance({
-        classId: "c1",
+        sectionId: "sec-1",
         date: "2026-06-01",
         periodId: "p1",
         records: [{ studentId: "s1", status: "present" }],
@@ -122,7 +133,7 @@ describe("period attendance actions", () => {
       mockAuth("TEACHER", null)
 
       const result = await markPeriodAttendance({
-        classId: "c1",
+        sectionId: "sec-1",
         date: "2026-06-01",
         periodId: "p1",
         records: [{ studentId: "s1", status: "present" }],
@@ -131,98 +142,113 @@ describe("period attendance actions", () => {
       expect(result.success).toBe(false)
     })
 
-    it("resolves sectionId from timetableId and writes it on create", async () => {
-      vi.mocked(db.class.findFirst).mockResolvedValue({ id: "c1" } as any)
-      vi.mocked(db.period.findFirst).mockResolvedValue({
-        id: "p1",
-        name: "Period 1",
-      } as any)
-      // timetable lookup by timetableId returns sectionId
-      vi.mocked(db.timetable.findFirst).mockResolvedValue({
-        sectionId: "sec-1",
-      } as any)
-      // submitted students belong to the school (multi-tenant validation)
-      vi.mocked(db.student.findMany).mockResolvedValue([{ id: "s1" }] as any)
-      // no existing rows → create path (prefetch is a single findMany)
-      vi.mocked(db.attendance.findMany).mockResolvedValue([] as any)
-      vi.mocked(db.attendance.createMany).mockResolvedValue({ count: 1 } as any)
-
-      const result = await markPeriodAttendance({
-        classId: "c1",
-        date: "2026-06-01",
-        periodId: "p1",
-        timetableId: "tt-1",
-        records: [{ studentId: "s1", status: "PRESENT" }],
+    describe("on a section", () => {
+      beforeEach(() => {
+        vi.mocked(db.section.findFirst).mockResolvedValue({
+          id: "sec-1",
+        } as never)
+        vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
+        // the teacher's own sections
+        vi.mocked(db.section.findMany).mockResolvedValue([
+          { id: "sec-1" },
+        ] as never)
+        vi.mocked(db.period.findFirst).mockResolvedValue({
+          id: "p1",
+          name: "Period 1",
+        } as never)
+        vi.mocked(db.timetable.findFirst).mockResolvedValue({
+          id: "tt-1",
+        } as never)
+        // submitted students are in the section
+        vi.mocked(db.student.findMany).mockResolvedValue([
+          { id: "s1" },
+        ] as never)
       })
 
-      expect(result.success).toBe(true)
-      // timetable was queried with the supplied timetableId
-      expect(vi.mocked(db.timetable.findFirst)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ id: "tt-1", schoolId: SCHOOL }),
-          select: { sectionId: true },
+      it("writes the period's marks on the section", async () => {
+        vi.mocked(db.attendance.findMany).mockResolvedValue([] as never)
+        vi.mocked(db.attendance.createMany).mockResolvedValue({
+          count: 1,
+        } as never)
+
+        const result = await markPeriodAttendance({
+          sectionId: "sec-1",
+          date: "2026-06-01",
+          periodId: "p1",
+          timetableId: "tt-1",
+          records: [{ studentId: "s1", status: "PRESENT" }],
         })
-      )
-      // sectionId was written in the batched createMany payload
-      const createCall = vi.mocked(db.attendance.createMany).mock.calls[0][0]
-      expect(createCall.data[0]).toMatchObject({ sectionId: "sec-1" })
-    })
 
-    it("writes sectionId on update when resolved from timetableId", async () => {
-      vi.mocked(db.class.findFirst).mockResolvedValue({ id: "c1" } as any)
-      vi.mocked(db.period.findFirst).mockResolvedValue({
-        id: "p1",
-        name: "Period 1",
-      } as any)
-      vi.mocked(db.timetable.findFirst).mockResolvedValue({
-        sectionId: "sec-1",
-      } as any)
-      vi.mocked(db.student.findMany).mockResolvedValue([{ id: "s1" }] as any)
-      // existing row for this student — triggers update path
-      vi.mocked(db.attendance.findMany).mockResolvedValue([
-        { id: "att-1", studentId: "s1" },
-      ] as any)
-      vi.mocked(db.attendance.update).mockResolvedValue({} as any)
-
-      const result = await markPeriodAttendance({
-        classId: "c1",
-        date: "2026-06-01",
-        periodId: "p1",
-        timetableId: "tt-1",
-        records: [{ studentId: "s1", status: "ABSENT" }],
+        expect(result.success).toBe(true)
+        // a given slot must be this section's
+        expect(vi.mocked(db.timetable.findFirst)).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { id: "tt-1", schoolId: SCHOOL, sectionId: "sec-1" },
+          })
+        )
+        const createCall = vi.mocked(db.attendance.createMany).mock
+          .calls[0][0]
+        expect(createCall.data[0]).toMatchObject({
+          sectionId: "sec-1",
+          periodId: "p1",
+          timetableId: "tt-1",
+        })
+        expect(createCall.data[0]).not.toHaveProperty("classId")
       })
 
-      expect(result.success).toBe(true)
-      const updateCall = vi.mocked(db.attendance.update).mock.calls[0][0]
-      expect(updateCall.data).toMatchObject({ sectionId: "sec-1" })
-    })
+      it("updates a period mark it finds, reviving a removed one", async () => {
+        vi.mocked(db.attendance.findMany).mockResolvedValue([
+          { id: "att-1", studentId: "s1" },
+        ] as never)
+        vi.mocked(db.attendance.update).mockResolvedValue({} as never)
 
-    it("writes record with null sectionId when timetableId absent and slot unresolvable", async () => {
-      vi.mocked(db.class.findFirst).mockResolvedValue({ id: "c1" } as any)
-      vi.mocked(db.period.findFirst).mockResolvedValue({
-        id: "p1",
-        name: "Period 1",
-      } as any)
-      // no timetable slot found — fallback returns null
-      vi.mocked(db.timetable.findFirst).mockResolvedValue(null)
-      vi.mocked(db.student.findMany).mockResolvedValue([{ id: "s1" }] as any)
-      vi.mocked(db.attendance.findMany).mockResolvedValue([] as any)
-      vi.mocked(db.attendance.createMany).mockResolvedValue({ count: 1 } as any)
+        const result = await markPeriodAttendance({
+          sectionId: "sec-1",
+          date: "2026-06-01",
+          periodId: "p1",
+          records: [{ studentId: "s1", status: "ABSENT" }],
+        })
 
-      const result = await markPeriodAttendance({
-        classId: "c1",
-        date: "2026-06-01",
-        periodId: "p1",
-        // no timetableId
-        records: [{ studentId: "s1", status: "PRESENT" }],
+        expect(result.success).toBe(true)
+        const updateCall = vi.mocked(db.attendance.update).mock.calls[0][0]
+        expect(updateCall.data).toMatchObject({
+          status: "ABSENT",
+          deletedAt: null,
+        })
       })
 
-      expect(result.success).toBe(true)
-      // record is still created via batched createMany (no regression)
-      expect(vi.mocked(db.attendance.createMany)).toHaveBeenCalled()
-      // sectionId is undefined/absent (not forced to a wrong value)
-      const createCall = vi.mocked(db.attendance.createMany).mock.calls[0][0]
-      expect(createCall.data[0].sectionId).toBeUndefined()
+      it("refuses a teacher's mark on another teacher's section", async () => {
+        vi.mocked(db.section.findMany).mockResolvedValue([
+          { id: "sec-9" },
+        ] as never)
+
+        const result = await markPeriodAttendance({
+          sectionId: "sec-1",
+          date: "2026-06-01",
+          periodId: "p1",
+          records: [{ studentId: "s1", status: "PRESENT" }],
+        })
+
+        expect(result.success).toBe(false)
+        expect(db.attendance.createMany).not.toHaveBeenCalled()
+      })
+
+      it("refuses a student who is not in the section", async () => {
+        vi.mocked(db.student.findMany).mockResolvedValue([] as never)
+
+        const result = await markPeriodAttendance({
+          sectionId: "sec-1",
+          date: "2026-06-01",
+          periodId: "p1",
+          records: [{ studentId: "s-other", status: "PRESENT" }],
+        })
+
+        expect(result.success).toBe(false)
+        expect(
+          vi.mocked(db.student.findMany).mock.calls[0][0]!.where
+        ).toMatchObject({ schoolId: SCHOOL, sectionId: "sec-1" })
+        expect(db.attendance.createMany).not.toHaveBeenCalled()
+      })
     })
   })
 
@@ -240,7 +266,7 @@ describe("period attendance actions", () => {
       vi.mocked(db.attendance.groupBy).mockResolvedValue([] as any)
       vi.mocked(db.attendance.findMany).mockResolvedValue([])
 
-      await getPeriodAttendanceAnalytics({ classId: "c1" })
+      await getPeriodAttendanceAnalytics({ sectionId: "sec-1" })
 
       const calls = [
         ...vi.mocked(db.attendance.groupBy).mock.calls,
@@ -304,7 +330,9 @@ describe("period attendance actions", () => {
           notes: null,
           markedAt: new Date(),
           markedBy: "marker-1",
-          class: { name: "Math", subject: { name: "Math" } },
+          timetableId: null,
+          section: { name: "7-A" },
+          class: null,
         },
       ] as any)
       vi.mocked(db.user.findMany).mockResolvedValue([

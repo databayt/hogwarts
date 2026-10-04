@@ -26,10 +26,11 @@ export async function generateMetadata({
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+  searchParams: Promise<{ sectionId?: string }>
 }
 
-export default async function Page({ params }: Props) {
-  const { lang } = await params
+export default async function Page({ params, searchParams }: Props) {
+  const [{ lang }, { sectionId }] = await Promise.all([params, searchParams])
   const session = await auth()
 
   // Check permissions - staff only
@@ -40,7 +41,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <AttendanceProvider initialMethod="MANUAL">
-      <AttendanceContent lang={lang} />
+      <AttendanceContent lang={lang} initialSectionId={sectionId} />
     </AttendanceProvider>
   )
 }

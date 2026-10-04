@@ -9,19 +9,20 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 /**
- * A live-class-synced row (`AttendanceMethod.VIRTUAL`, written by
- * `syncLiveAttendance`) carries no `classId` unless the timetable slot it
- * synced from had a legacy subject-class link — `class` then resolves to
- * `null`. Fall back to the period name (+ section, when both are known) so
- * the student/guardian record view still names the period instead of
- * showing a blank class for a live-synced row.
+ * How a record names where it was taken: a period mark as "period -
+ * section", a day's mark as the section, and a mark kept from before
+ * sections as "subject - class".
  */
-function fallbackClassLabel(
-  periodName: string | null,
-  sectionName: string | null | undefined
-): string | null {
-  if (!periodName) return null
-  return sectionName ? `${periodName} - ${sectionName}` : periodName
+function recordLabel(r: {
+  periodName: string | null
+  section: { name: string } | null
+  class: { name: string; subject: { name: string } | null } | null
+}): string | null {
+  if (r.class) return `${r.class.subject?.name ?? ""} - ${r.class.name}`
+  if (r.periodName) {
+    return r.section ? `${r.periodName} - ${r.section.name}` : r.periodName
+  }
+  return r.section?.name ?? null
 }
 
 /**
@@ -33,7 +34,7 @@ export async function getStudentOwnAttendance(): Promise<
       id: string
       date: Date | string
       status: string
-      classId: string | null
+      sectionId: string | null
       className: string | null
       notes: string | null
     }>
@@ -89,13 +90,8 @@ export async function getStudentOwnAttendance(): Promise<
         id: true,
         date: true,
         status: true,
-        classId: true,
+        sectionId: true,
         notes: true,
-        // A live-class-synced row (method VIRTUAL) never carries a classId —
-        // `class` resolves to null for it. periodName + the section name are
-        // the fallback so the student's own view still names the period
-        // rather than showing a blank class for every attendance row synced
-        // from a live session.
         periodName: true,
         section: { select: { name: true } },
         class: {
@@ -123,10 +119,8 @@ export async function getStudentOwnAttendance(): Promise<
           id: r.id,
           date: r.date,
           status: r.status,
-          classId: r.classId,
-          className: r.class
-            ? `${r.class.subject?.name ?? ""} - ${r.class.name}`
-            : fallbackClassLabel(r.periodName, r.section?.name),
+          sectionId: r.sectionId,
+          className: recordLabel(r),
           notes: r.notes,
         })),
         stats: { totalDays, present, absent, late, excused, attendanceRate },
@@ -153,6 +147,7 @@ export async function getGuardianChildrenAttendance(): Promise<
       id: string
       name: string
       email: string | null
+      /** Filter options for the records view; none in the section model. */
       classes: Array<{
         id: string
         name: string
@@ -162,7 +157,7 @@ export async function getGuardianChildrenAttendance(): Promise<
         id: string
         date: Date | string
         status: string
-        classId: string | null
+        sectionId: string | null
         className: string
         notes: string | null
       }>
@@ -191,22 +186,6 @@ export async function getGuardianChildrenAttendance(): Promise<
                 firstName: true,
                 middleName: true,
                 lastName: true,
-                studentClasses: {
-                  include: {
-                    class: {
-                      include: {
-                        subject: true,
-                        teacher: {
-                          select: {
-                            id: true,
-                            firstName: true,
-                            lastName: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
                 attendances: {
                   where: { schoolId, deletedAt: null },
                   orderBy: { date: "desc" },
@@ -215,19 +194,14 @@ export async function getGuardianChildrenAttendance(): Promise<
                     id: true,
                     date: true,
                     status: true,
-                    classId: true,
+                    sectionId: true,
                     notes: true,
-                    // See `fallbackClassLabel` — a VIRTUAL row's `class` can
-                    // resolve to null; periodName + section name cover it.
                     periodName: true,
                     section: { select: { name: true } },
                     class: {
                       select: {
-                        id: true,
                         name: true,
-                        subject: {
-                          select: { id: true, name: true },
-                        },
+                        subject: { select: { name: true } },
                       },
                     },
                   },
@@ -247,22 +221,13 @@ export async function getGuardianChildrenAttendance(): Promise<
       id: sg.student.id,
       name: `${sg.student.firstName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.lastName}`,
       email: null as string | null,
-      classes: sg.student.studentClasses.map((sc) => ({
-        id: sc.class.id,
-        name: `${sc.class.subject.name} - ${sc.class.name}`,
-        teacher: sc.class.teacher
-          ? `${sc.class.teacher.firstName} ${sc.class.teacher.lastName}`
-          : "N/A",
-      })),
+      classes: [],
       attendances: sg.student.attendances.map((a) => ({
         id: a.id,
         date: a.date,
         status: a.status,
-        classId: a.classId,
-        className:
-          a.class?.subject?.name ??
-          fallbackClassLabel(a.periodName, a.section?.name) ??
-          "",
+        sectionId: a.sectionId,
+        className: recordLabel(a) ?? "",
         notes: a.notes,
       })),
     }))

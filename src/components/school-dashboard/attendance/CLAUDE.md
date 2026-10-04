@@ -46,7 +46,14 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
   overview read uses them. Rows recorded against a class got the student's
   section by backfill (`prisma/sql/class-removal/02-attendance-scope.sql`,
   same-grade only); display reads fall back to the class name for the rest.
-  Legacy QR sessions and passes keep `classId` (now nullable).
+  Legacy QR sessions and passes keep `classId` (now nullable). Every write
+  is section-keyed and roster-checked: `markAttendance`, `markSingleAttendance`
+  and `markPeriodAttendance` refuse a student who isn't in the section (no
+  more rows for another school's student id); `markPeriodAttendance` also
+  limits a teacher to their own sections and a given `timetableId` to the
+  section's slot. Excuse and absence-intention notices go to the section's
+  teachers (`sectionTeacherUserIds`: homeroom + this term's subject
+  teachers); legacy class-recorded excuses fall back to the class teachers.
   `markPeriodAttendance` resolves and writes `sectionId` best-effort from the
   timetable slot.
 - **Daily attendance has NO DB-unique dedupe for `periodId = null`.** Postgres

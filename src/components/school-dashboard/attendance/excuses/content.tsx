@@ -64,7 +64,7 @@ type UnexcusedAbsence = {
   id: string
   studentId: string
   studentName: string
-  classId: string
+  sectionId: string | null
   className: string
   date: string
   status: string
@@ -214,7 +214,7 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
                   id: absence.id,
                   studentId: absence.studentId,
                   studentName: absence.studentName,
-                  classId: absence.classId,
+                  sectionId: absence.sectionId,
                   className: absence.className,
                   date: absence.date,
                   status: absence.status,
@@ -287,7 +287,7 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
             id: selectedAbsence.id,
             studentId: selectedAbsence.studentId,
             studentName: selectedAbsence.studentName,
-            classId: selectedAbsence.classId,
+            sectionId: selectedAbsence.sectionId,
             className: selectedAbsence.className,
             date: selectedAbsence.date,
             status: selectedAbsence.status,

@@ -90,12 +90,13 @@ interface PendingExcuse {
 }
 
 interface ExcuseReviewListProps {
-  classId?: string
+  /** Only this section's excuses (within the teacher's own). */
+  sectionId?: string
   locale?: string
 }
 
 export function ExcuseReviewList({
-  classId,
+  sectionId,
   locale = "en",
 }: ExcuseReviewListProps) {
   const [excuses, setExcuses] = useState<PendingExcuse[]>([])
@@ -118,14 +119,14 @@ export function ExcuseReviewList({
   useEffect(() => {
     const fetchExcuses = async () => {
       setIsLoading(true)
-      const result = await getPendingExcuses({ classId })
+      const result = await getPendingExcuses({ sectionId })
       if (result.success && result.data) {
         setExcuses(result.data.excuses)
       }
       setIsLoading(false)
     }
     fetchExcuses()
-  }, [classId])
+  }, [sectionId])
 
   const handleReview = (excuse: PendingExcuse) => {
     setSelectedExcuse(excuse)

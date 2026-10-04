@@ -64,7 +64,7 @@ type StudentRecord = {
   id: string
   date: Date | string
   status: string
-  classId: string | null
+  sectionId: string | null
   className: string | null
   notes: string | null
 }
