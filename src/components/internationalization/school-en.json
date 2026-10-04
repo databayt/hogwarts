@@ -4958,7 +4958,9 @@
           "Tenth period"
         ],
         "enter": "Enter"
-      }
+      },
+      "needsTeacher": "Needs teacher",
+      "needsTeacherCount": "{count} periods need a teacher"
     },
     "announcements": {
       "title": "Announcements",
@@ -10078,7 +10080,7 @@
         "invoiceGenerationFailed": "Invoice generation failed — create the invoice manually.",
         "guardianCreateFailed": "Guardian creation failed — add the guardian manually.",
         "registrationFeeNoStructure": "Registration fee was paid but no matching fee structure was found — record the payment manually in Finance > Fees.",
-        "noClassesForGrade": "The student has a seat, but this grade has no classes yet — no timetable or attendance roster. Generate classes from Classrooms > Configure."
+        "noClassesForGrade": "The student is placed, but this section has no timetable yet. Build it from Timetable › Generate."
       },
       "settings": {
         "title": "Admission Settings",
