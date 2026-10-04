@@ -22,14 +22,15 @@ import {
   useState,
   useTransition,
 } from "react"
+import { Check } from "lucide-react"
 
 import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BlurImage } from "@/components/atom/blur-image"
 import {
   confirmDeleteDialog,
   ErrorToast,
@@ -43,6 +44,7 @@ import {
 } from "@/components/school-dashboard/timetable/assignments/actions"
 import type { TeacherEditorData } from "@/components/school-dashboard/timetable/assignments/queries"
 
+import { getSubjectImage } from "../../subjects/image-map"
 import { useTakePrefetchedSubjects } from "./prefetch"
 
 type Labels = Record<string, string> & {
@@ -85,7 +87,7 @@ export const TeacherSubjectsEditor = forwardRef<
   const [data, setData] = useState<TeacherEditorData | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [shownGrades, setShownGrades] = useState<Set<string>>(new Set())
+  const [activeGrade, setActiveGrade] = useState<string | null>(null)
   const [residual, setResidual] = useState<AssignmentSummary["residual"]>([])
   const [isPending, startTransition] = useTransition()
 
@@ -104,22 +106,22 @@ export const TeacherSubjectsEditor = forwardRef<
         .filter(([, h]) => h?.teacherId === teacherId)
         .map(([k]) => k)
     )
-    // Show the grades the teacher already teaches in, else the grades of
-    // the subjects they're qualified for.
-    const grades = new Set<string>()
-    for (const g of d.grades) {
-      const teachesHere = g.sections.some((s) =>
+    // Open on the first grade the teacher teaches in, else one with a
+    // subject they're qualified for, else the first grade with subjects.
+    const teaches = (g: TeacherEditorData["grades"][number]) =>
+      g.sections.some((s) =>
         g.subjects.some((sub) => mine.has(key(s.sectionId, sub.subjectId)))
       )
-      const qualifiedHere = g.subjects.some((sub) =>
-        d.teacher.subjectIds.includes(sub.subjectId)
-      )
-      if (teachesHere || (mine.size === 0 && qualifiedHere))
-        grades.add(g.gradeId)
-    }
+    const qualified = (g: TeacherEditorData["grades"][number]) =>
+      g.subjects.some((sub) => d.teacher.subjectIds.includes(sub.subjectId))
+    const first =
+      d.grades.find(teaches) ??
+      d.grades.find(qualified) ??
+      d.grades.find((g) => g.subjects.length > 0)
     setData(d)
     setSelected(mine)
-    setShownGrades(grades)
+    // A reload after saving keeps the grade the admin is on.
+    setActiveGrade((prev) => prev ?? first?.gradeId ?? null)
     setLoadError(null)
   }, [teacherId, dictionary, takePrefetched])
 
@@ -266,133 +268,136 @@ export const TeacherSubjectsEditor = forwardRef<
     )
   }
 
+  const grade =
+    data.grades.find((g) => g.gradeId === activeGrade) ?? data.grades[0]
   const cap = data.teacher.cap
   const over = projected > cap
   const days = t?.days ?? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
   return (
     <div className="space-y-6">
-      {/* Grade filter */}
-      <div className="space-y-2">
-        <p className="text-muted-foreground text-xs">
-          {t?.gradesHint ?? "Show the grades this teacher teaches in"}
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {data.grades.map((g) => (
+      {/* Grade picker — one grade at a time; a dot marks grades with work */}
+      <div className="flex flex-wrap gap-1.5">
+        {data.grades.map((g) => {
+          const hasWork = g.sections.some((s) =>
+            g.subjects.some((sub) =>
+              selected.has(key(s.sectionId, sub.subjectId))
+            )
+          )
+          return (
             <button
               key={g.gradeId}
               type="button"
+              title={g.name}
               disabled={isPending}
-              onClick={() =>
-                setShownGrades((prev) => {
-                  const next = new Set(prev)
-                  if (next.has(g.gradeId)) next.delete(g.gradeId)
-                  else next.add(g.gradeId)
-                  return next
-                })
-              }
+              onClick={() => setActiveGrade(g.gradeId)}
               className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                shownGrades.has(g.gradeId)
+                "relative min-w-10 rounded-full border px-3 py-1 text-xs font-medium tabular-nums transition-colors",
+                g.gradeId === grade?.gradeId
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-muted/50 hover:bg-muted border-border"
               )}
             >
-              {g.name}
+              {fill(t?.gradeShort ?? "G{n}", { n: g.gradeNumber })}
+              {hasWork && g.gradeId !== grade?.gradeId && (
+                <span className="bg-primary absolute -end-0.5 -top-0.5 size-2 rounded-full" />
+              )}
             </button>
-          ))}
-        </div>
+          )
+        })}
       </div>
 
-      {shownGrades.size === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {t?.noGrades ?? "Pick a grade to see its subjects."}
-        </p>
-      ) : (
-        data.grades
-          .filter((g) => shownGrades.has(g.gradeId))
-          .map((g) => (
-            <section key={g.gradeId} className="space-y-2">
-              <h4 className="text-sm font-semibold">{g.name}</h4>
-              <ul className="divide-border divide-y rounded-lg border">
-                {g.subjects.map((sub) => {
-                  const keys = g.sections.map((s) =>
-                    key(s.sectionId, sub.subjectId)
-                  )
-                  const on = keys.filter((k) => selected.has(k)).length
-                  const state =
-                    on === 0
-                      ? false
-                      : on === keys.length
-                        ? true
-                        : "indeterminate"
-                  return (
-                    <li
-                      key={sub.subjectId}
-                      className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2"
-                    >
-                      <label className="flex min-w-44 flex-1 cursor-pointer items-center gap-2 text-sm">
-                        <Checkbox
-                          checked={state}
-                          disabled={isPending}
-                          onCheckedChange={() =>
-                            toggleSubject(
-                              g.sections.map((s) => s.sectionId),
-                              sub.subjectId
-                            )
-                          }
-                        />
-                        <span className="font-medium">{sub.name}</span>
-                        {sub.weeklyPeriods > 0 && (
-                          <span className="text-muted-foreground text-xs">
-                            {fill(t?.perWeek ?? "{count}/wk", {
-                              count: sub.weeklyPeriods,
-                            })}
-                          </span>
-                        )}
-                      </label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {g.sections.map((s) => {
-                          const k = key(s.sectionId, sub.subjectId)
-                          const holder = data.holders[k]
-                          const otherHolder =
-                            holder && holder.teacherId !== teacherId
-                              ? holder
-                              : null
-                          const isOn = selected.has(k)
-                          return (
-                            <button
-                              key={s.sectionId}
-                              type="button"
-                              title={s.name}
-                              disabled={isPending}
-                              onClick={() => toggleSection(k)}
-                              className={cn(
-                                "rounded-md border px-2 py-0.5 text-xs transition-colors",
-                                isOn
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-background hover:bg-muted border-border",
-                                otherHolder && !isOn && "border-dashed"
-                              )}
-                            >
-                              {s.letter || s.name}
-                              {otherHolder && !isOn && (
-                                <span className="text-muted-foreground ms-1">
-                                  {fill(t?.takenBy ?? "{name}", {
-                                    name: otherHolder.name,
-                                  })}
-                                </span>
-                              )}
-                            </button>
-                          )
+      {/* Subjects — one swipeable row of cards */}
+      {grade && (
+        <div className="no-scrollbar -mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1">
+          {grade.subjects.map((sub) => {
+            const keys = grade.sections.map((s) =>
+              key(s.sectionId, sub.subjectId)
+            )
+            const on = keys.filter((k) => selected.has(k)).length
+            const all = on > 0 && on === keys.length
+            return (
+              <div
+                key={sub.subjectId}
+                className={cn(
+                  "bg-card w-36 shrink-0 snap-start overflow-hidden rounded-xl border transition-shadow",
+                  all && "ring-primary ring-2",
+                  on > 0 && !all && "ring-primary/50 ring-2"
+                )}
+              >
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() =>
+                    toggleSubject(
+                      grade.sections.map((s) => s.sectionId),
+                      sub.subjectId
+                    )
+                  }
+                  className="block w-full text-start"
+                >
+                  <div className="bg-muted relative aspect-[4/3] overflow-hidden">
+                    <BlurImage
+                      src={sub.imageUrl ?? getSubjectImage(sub.name)}
+                      alt={sub.name}
+                      fill
+                      sizes="144px"
+                      className="object-cover"
+                    />
+                    {on > 0 && (
+                      <span className="bg-primary text-primary-foreground absolute end-1.5 top-1.5 flex size-5 items-center justify-center rounded-full">
+                        <Check className="size-3.5" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="px-2.5 pt-2">
+                    <p className="truncate text-sm font-medium">{sub.name}</p>
+                    {sub.weeklyPeriods > 0 && (
+                      <p className="text-muted-foreground text-xs">
+                        {fill(t?.perWeek ?? "{count}/wk", {
+                          count: sub.weeklyPeriods,
                         })}
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
-            </section>
-          ))
+                      </p>
+                    )}
+                  </div>
+                </button>
+                <div className="flex flex-wrap gap-1 px-2.5 pt-2 pb-2.5">
+                  {grade.sections.map((s) => {
+                    const k = key(s.sectionId, sub.subjectId)
+                    const holder = data.holders[k]
+                    const otherHolder =
+                      holder && holder.teacherId !== teacherId ? holder : null
+                    const isOn = selected.has(k)
+                    return (
+                      <button
+                        key={s.sectionId}
+                        type="button"
+                        title={
+                          otherHolder && !isOn
+                            ? `${s.name} · ${fill(t?.takenBy ?? "{name}", { name: otherHolder.name })}`
+                            : s.name
+                        }
+                        disabled={isPending}
+                        onClick={() => toggleSection(k)}
+                        className={cn(
+                          "min-w-7 rounded-md border px-1.5 py-0.5 text-xs transition-colors",
+                          isOn
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background hover:bg-muted border-border",
+                          otherHolder &&
+                            !isOn &&
+                            "text-muted-foreground border-dashed"
+                        )}
+                      >
+                        {s.letter || s.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       )}
 
       {/* Weekly load */}

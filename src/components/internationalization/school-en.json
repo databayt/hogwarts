@@ -3523,6 +3523,8 @@
         "departments": "Departments"
       },
       "subjectsEditor": {
+        "teacherTitle": "Teacher {name}",
+        "gradeShort": "G{n}",
         "title": "Subjects & sections",
         "description": "Pick the subjects this teacher teaches and in which sections. Those periods in the timetable get this teacher.",
         "action": "Assign subjects",

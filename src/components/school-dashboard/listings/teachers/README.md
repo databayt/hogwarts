@@ -61,3 +61,14 @@ src/components/school-dashboard/listings/teachers/
 - **Subjects**: Subject specialization tracking
 - **Timetable**: Teaching schedule generated from assignments
 - **Attendance**: Teacher attendance and leave management (planned)
+
+### Assign subjects (row menu → dialog)
+
+Every row's ⋯ menu has **Assign subjects**, incomplete profiles included. It opens
+`subjects/dialog.tsx` titled "Teacher {name}" (`subjectsEditor.teacherTitle`). The
+shared `subjects/editor.tsx` (also the wizard's step) shows G1…G12 chips
+(`subjectsEditor.gradeShort`); you pick one grade at a time, and a dot marks grades that
+already have work. The grade's subjects show as one swipeable row of thumbnail cards
+(`no-scrollbar`), with the catalog thumbnail first and `subjects/image-map` as the fallback.
+Tapping a card takes every free section; the أ/ب chips hand over single sections. A dashed
+chip means another teacher holds that section.

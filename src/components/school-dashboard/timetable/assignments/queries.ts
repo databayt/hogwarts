@@ -10,6 +10,7 @@
  */
 
 import { db } from "@/lib/db"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { getLabels, getNames } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
@@ -21,6 +22,8 @@ export interface AssignmentSubject {
   subjectId: string
   name: string
   weeklyPeriods: number
+  /** Catalog thumbnail (CDN), null when the subject has none. */
+  imageUrl: string | null
 }
 
 export interface AssignmentSection {
@@ -102,7 +105,7 @@ export async function getAssignmentBoardData(params: {
           catalogSubjectId: true,
           customName: true,
           weeklyPeriods: true,
-          subject: { select: { name: true } },
+          subject: { select: { name: true, thumbnail: true } },
         },
       }),
       db.subjectTeacher.findMany({
@@ -149,6 +152,8 @@ export async function getAssignmentBoardData(params: {
       subjectId: sel.catalogSubjectId,
       name: prev?.name || name,
       weeklyPeriods: Math.max(prev?.weeklyPeriods ?? 0, sel.weeklyPeriods ?? 0),
+      imageUrl:
+        prev?.imageUrl ?? getCatalogImageUrl(sel.subject?.thumbnail, "sm"),
     })
     subjectsByGrade.set(sel.gradeId, bySubject)
   }

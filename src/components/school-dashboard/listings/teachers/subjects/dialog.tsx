@@ -34,10 +34,10 @@ export function AssignSubjectsDialog() {
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {t?.title || "Subjects & sections"}
-            {name ? ` — ${name}` : ""}
+            {(t?.teacherTitle || "Teacher {name}").replace("{name}", name)}
           </DialogTitle>
-          <DialogDescription>
+          {/* Screen readers only: the title says it all on screen. */}
+          <DialogDescription className="sr-only">
             {t?.description ||
               "Pick the subjects this teacher teaches and in which sections. Those periods in the timetable get this teacher."}
           </DialogDescription>

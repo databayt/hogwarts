@@ -3523,6 +3523,8 @@
         "departments": "الأقسام"
       },
       "subjectsEditor": {
+        "teacherTitle": "المعلم {name}",
+        "gradeShort": "G{n}",
         "title": "المواد والفصول",
         "description": "اختر المواد التي يدرّسها المعلم وفي أي فصول. تُسند إليه حصصها في الجدول.",
         "action": "إسناد المواد",
