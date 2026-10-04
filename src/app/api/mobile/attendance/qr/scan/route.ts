@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
         id: true,
         schoolId: true,
         classId: true,
+        sectionId: true,
         isActive: true,
         expiresAt: true,
         scanCount: true,
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     // Find the student linked to this user
     const student = await db.student.findFirst({
       where: { schoolId: auth.schoolId, userId: auth.userId },
-      select: { id: true },
+      select: { id: true, sectionId: true },
     })
 
     if (!student) {
@@ -84,19 +85,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify the student is enrolled in the class this QR was issued for.
-    // Without this check, a student in class A could scan class B's QR
-    // and have a fake PRESENT row attached to class B.
-    const enrolled = await db.studentClass.findFirst({
-      where: { studentId: student.id, classId: session.classId },
-      select: { id: true },
-    })
+    // Verify the student belongs to the section (or legacy class) this QR
+    // was issued for. Without this check, a student of section A could scan
+    // section B's QR and have a fake PRESENT row attached to section B.
+    const enrolled = session.sectionId
+      ? student.sectionId === session.sectionId
+      : !!(
+          session.classId &&
+          (await db.studentClass.findFirst({
+            where: { studentId: student.id, classId: session.classId },
+            select: { id: true },
+          }))
+        )
     if (!enrolled) {
       return NextResponse.json(
-        { error: "Student is not enrolled in this class" },
+        { error: "Student is not in this section" },
         { status: 403 }
       )
     }
+    const dailyKey = session.sectionId
+      ? { sectionId: session.sectionId }
+      : { classId: session.classId }
 
     // Check if student already scanned this session
     const scannedBy = session.scannedBy as string[]
@@ -119,7 +128,7 @@ export async function POST(request: NextRequest) {
       where: {
         schoolId: auth.schoolId,
         studentId: student.id,
-        classId: session.classId,
+        ...dailyKey,
         date: today,
         periodId: null,
       },
@@ -143,7 +152,7 @@ export async function POST(request: NextRequest) {
           data: {
             schoolId: auth.schoolId,
             studentId: student.id,
-            classId: session.classId,
+            ...dailyKey,
             date: today,
             periodId: null,
             status: "PRESENT",

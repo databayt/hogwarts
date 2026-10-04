@@ -69,14 +69,15 @@ export async function createHallPass(
   const { schoolId, userId } = guard
 
   try {
-    const {
-      studentId,
-      classId,
-      destination,
-      destinationNote,
-      expectedDuration,
-      notes,
-    } = input
+    const { studentId, destination, destinationNote, expectedDuration, notes } =
+      input
+
+    // The student must be this school's; the pass records their section.
+    const student = await db.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: { sectionId: true },
+    })
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
 
     // Check for active passes for this student
     const existingPass = await db.hallPass.findFirst({
@@ -115,7 +116,7 @@ export async function createHallPass(
       data: {
         schoolId,
         studentId,
-        classId,
+        sectionId: student.sectionId,
         destination: destination as HallPassDestination,
         destinationNote,
         issuedBy: userId,
@@ -132,6 +133,9 @@ export async function createHallPass(
         class: {
           select: { name: true },
         },
+        section: {
+          select: { name: true },
+        },
       },
     })
 
@@ -142,7 +146,7 @@ export async function createHallPass(
       data: {
         id: hallPass.id,
         studentName: `${hallPass.student.firstName} ${hallPass.student.lastName}`,
-        className: hallPass.class.name,
+        className: hallPass.section?.name ?? hallPass.class?.name ?? "",
         destination: hallPass.destination,
         expectedReturn: hallPass.expectedReturn,
         hasConflict: !!hallPass.conflictWith,
@@ -289,6 +293,9 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
         class: {
           select: { id: true, name: true },
         },
+        section: {
+          select: { id: true, name: true },
+        },
       },
       orderBy: { issuedAt: "desc" },
     })
@@ -302,7 +309,8 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
           name: `${pass.student.firstName} ${pass.student.lastName}`,
           photoUrl: pass.student.profilePhotoUrl,
         },
-        class: pass.class,
+        // Where the student left from: their section, or a legacy class.
+        class: pass.section ?? pass.class ?? { id: "", name: "" },
         destination: pass.destination,
         destinationNote: pass.destinationNote,
         issuedAt: pass.issuedAt,
@@ -340,6 +348,7 @@ export async function getStudentHallPassHistory(
       },
       include: {
         class: { select: { name: true } },
+        section: { select: { name: true } },
       },
       orderBy: { issuedAt: "desc" },
       take: limit,
@@ -349,7 +358,7 @@ export async function getStudentHallPassHistory(
       success: true,
       data: passes.map((pass) => ({
         id: pass.id,
-        className: pass.class.name,
+        className: pass.section?.name ?? pass.class?.name ?? "",
         destination: pass.destination,
         issuedAt: pass.issuedAt,
         returnedAt: pass.returnedAt,
@@ -372,7 +381,7 @@ export async function getStudentHallPassHistory(
  * Get hall pass statistics for a class or school
  */
 export async function getHallPassStats(
-  classId?: string
+  sectionId?: string
 ): Promise<ActionResult> {
   const guard = await requireStaff()
   if (!guard.ok) return guard.result
@@ -386,7 +395,7 @@ export async function getHallPassStats(
 
     const where = {
       schoolId,
-      ...(classId ? { classId } : {}),
+      ...(sectionId ? { sectionId } : {}),
       issuedAt: { gte: today, lt: tomorrow },
     }
 

@@ -227,27 +227,17 @@ export async function processKioskCheck(
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    // Get student with their current class (scoped by schoolId)
+    // The day is recorded on the student's own section (scoped by schoolId)
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
-      include: {
-        studentClasses: {
-          where: { schoolId },
-          include: { class: true },
-          take: 1,
-        },
-      },
+      select: { sectionId: true },
     })
 
     if (!student) {
       return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
-    const classId = student.studentClasses[0]?.classId
-
-    if (!classId) {
-      return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
-    }
+    const sectionId = student.sectionId
 
     // Determine attendance status
     let status: "PRESENT" | "LATE" = "PRESENT"
@@ -265,11 +255,12 @@ export async function processKioskCheck(
       where: {
         schoolId,
         studentId,
-        classId,
+        sectionId,
         date: {
           gte: today,
           lt: tomorrow,
         },
+        periodId: null,
       },
     })
 
@@ -294,7 +285,7 @@ export async function processKioskCheck(
           data: {
             schoolId,
             studentId,
-            classId,
+            sectionId,
             date: today,
             status,
             method: "KIOSK",

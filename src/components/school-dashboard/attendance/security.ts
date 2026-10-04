@@ -288,14 +288,14 @@ function getQRSecret(): string {
 export function generateQRSignature(data: {
   sessionId: string
   schoolId: string
-  classId: string
+  sectionId: string
   expiresAt: number
 }): string {
   const secret = getQRSecret()
   const payload = JSON.stringify({
     sessionId: data.sessionId,
     schoolId: data.schoolId,
-    classId: data.classId,
+    sectionId: data.sectionId,
     expiresAt: data.expiresAt,
   })
 
@@ -312,7 +312,7 @@ export function verifyQRSignature(
   data: {
     sessionId: string
     schoolId: string
-    classId: string
+    sectionId: string
     expiresAt: number
   },
   signature: string
@@ -328,17 +328,17 @@ export function verifyQRSignature(
  * Generate secure QR code payload
  * @param sessionId QR session ID
  * @param schoolId School ID
- * @param classId Class ID
+ * @param sectionId Section the session is for
  * @param expiresAt Expiration timestamp (ms)
  * @returns Signed QR code payload
  */
 export function generateSecureQRPayload(
   sessionId: string,
   schoolId: string,
-  classId: string,
+  sectionId: string,
   expiresAt: number
 ): string {
-  const data = { sessionId, schoolId, classId, expiresAt }
+  const data = { sessionId, schoolId, sectionId, expiresAt }
   const signature = generateQRSignature(data)
 
   return JSON.stringify({
@@ -355,19 +355,19 @@ export function generateSecureQRPayload(
 export function parseSecureQRPayload(payload: string): {
   sessionId: string
   schoolId: string
-  classId: string
+  sectionId: string
   expiresAt: number
 } | null {
   try {
     const parsed = JSON.parse(payload)
-    const { sessionId, schoolId, classId, expiresAt, sig } = parsed
+    const { sessionId, schoolId, sectionId, expiresAt, sig } = parsed
 
-    if (!sessionId || !schoolId || !classId || !expiresAt || !sig) {
+    if (!sessionId || !schoolId || !sectionId || !expiresAt || !sig) {
       return null
     }
 
     const isValid = verifyQRSignature(
-      { sessionId, schoolId, classId, expiresAt },
+      { sessionId, schoolId, sectionId, expiresAt },
       sig
     )
 
@@ -380,7 +380,7 @@ export function parseSecureQRPayload(payload: string): {
       return null
     }
 
-    return { sessionId, schoolId, classId, expiresAt }
+    return { sessionId, schoolId, sectionId, expiresAt }
   } catch {
     return null
   }

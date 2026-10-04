@@ -43,7 +43,8 @@ import { useCamera } from "../shared/hooks"
 import { processBarcodeScan } from "./actions"
 
 interface BarcodeScannerProps {
-  classId: string
+  /** Optional: take only this section's students. Scans record each student's own section. */
+  sectionId?: string
   onScanSuccess?: (data: any) => void
   onScanError?: (error: string) => void
   dictionary?: Dictionary
@@ -51,7 +52,7 @@ interface BarcodeScannerProps {
 }
 
 export function BarcodeScanner({
-  classId,
+  sectionId,
   onScanSuccess,
   onScanError,
   dictionary,
@@ -159,7 +160,7 @@ export function BarcodeScanner({
         // Server action handles authentication, finds student by barcode, and marks attendance
         const scanResult = await processBarcodeScan({
           barcode: code,
-          classId,
+          sectionId,
           scannedAt: new Date().toISOString(),
           deviceId: navigator.userAgent,
         })
@@ -214,7 +215,7 @@ export function BarcodeScanner({
         setProcessing(false)
       }
     },
-    [classId, lastScan, processing, soundEnabled, onScanSuccess, onScanError]
+    [sectionId, lastScan, processing, soundEnabled, onScanSuccess, onScanError]
   )
 
   // Handle processed frames (for UI feedback)
@@ -283,7 +284,7 @@ export function BarcodeScanner({
       // Server action handles authentication, finds student by barcode, and marks attendance
       const result = await processBarcodeScan({
         barcode: manualInput,
-        classId,
+        sectionId,
         scannedAt: new Date().toISOString(),
         deviceId: navigator.userAgent,
       })

@@ -193,7 +193,9 @@ export interface BulkAttendanceResult {
 // Filter Types for Reports
 export interface AttendanceFilters {
   schoolId: string
+  /** Legacy class filter. */
   classId?: string
+  sectionId?: string
   studentId?: string
   dateFrom?: Date | string
   dateTo?: Date | string

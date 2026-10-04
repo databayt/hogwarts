@@ -37,7 +37,8 @@ export type HallPassStatus = (typeof hallPassStatuses)[number]
  */
 export const createHallPassSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
-  classId: z.string().min(1, "Class is required"),
+  /** Legacy: the class the student left. The pass takes the student's section. */
+  classId: z.string().optional(),
   destination: z.enum(hallPassDestinations),
   destinationNote: z.string().optional(),
   expectedDuration: z.number().int().min(1).max(30).default(5), // 1-30 minutes

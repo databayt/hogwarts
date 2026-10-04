@@ -63,15 +63,18 @@ The **roster unit is the section** — `Section.students` defines who is in the 
 
 ## Capture methods
 
-| Method      | Route                  | Notes                                                            |
-| ----------- | ---------------------- | ---------------------------------------------------------------- |
-| Manual      | `/manual`              | Per-student dropdown + bulk buttons                              |
-| Period      | `/manual` (per-period) | `getCurrentPeriod()`, period analytics                           |
-| QR          | `/qr-code`             | Default 30-min validity; enrollment validated, dedup             |
-| Barcode     | `/barcode`             | Looks up `StudentIdentifier`                                     |
-| Bulk upload | `/bulk-upload`         | CSV: `studentId, date, status, checkInTime, checkOutTime, notes` |
-| Geofence    | `/geo`                 | Location tracker (students), zones (admins)                      |
-| Master gate | server actions         | `recordMasterAttendance()`, `getPrefillFromMaster()`             |
+| Method      | Route                  | Notes                                                                                                     |
+| ----------- | ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| Manual      | `/manual`              | Per-student dropdown + bulk buttons                                                                       |
+| Period      | `/manual` (per-period) | `getCurrentPeriod()`, period analytics                                                                    |
+| QR          | `/qr-code`             | Generated for a section — only its students can scan; default 30-min validity, dedup                      |
+| Barcode     | `/barcode`             | Looks up `StudentIdentifier`; the scan records the student's own section, so the desk picks nothing first |
+| Kiosk       | `/kiosk`               | Check-in records the student's own section                                                                |
+| Bulk upload | `/bulk-upload`         | CSV: `studentId, date, status, checkInTime, checkOutTime, notes`                                          |
+| Geofence    | `/geo`                 | Location tracker (students), zones (admins)                                                               |
+| Master gate | server actions         | `recordMasterAttendance()`, `getPrefillFromMaster()`                                                      |
+
+Hall passes (`/hall-pass`) are issued on the student's own section, so issuing one asks for the student and destination only.
 
 ## Parent engagement
 
@@ -260,7 +263,7 @@ A new `NotificationType.absence_unreported_followup` covers the 2h SLA path.
 
 Quick attendance (`/attendance` for teachers) works without a connection. The mark goes to the device outbox (kind `attendance`, one pending item per section and day) and is replayed through `POST /api/offline/sync` → `actions/quick-core.ts`, the same code the online action runs. A newer mark already on the server wins and the replay is dropped as a duplicate. Guardian absence notifications fire when the replay lands. See [Offline](/docs/offline).
 
-Try it on a phone: open *Attendance → Quick*, switch on airplane mode, mark a section and save — the panel confirms the marks are saved on the device and the sync banner shows one pending item. Switch the network back on and the banner drains; the marks are on the server within seconds. Marking the same section again replays as a duplicate and the newer mark wins. Installing the app first (the welcome sheet's Continue button) is not required for offline marking, but it is required on iPhone for push notifications.
+Try it on a phone: open _Attendance → Quick_, switch on airplane mode, mark a section and save — the panel confirms the marks are saved on the device and the sync banner shows one pending item. Switch the network back on and the banner drains; the marks are on the server within seconds. Marking the same section again replays as a duplicate and the newer mark wins. Installing the app first (the welcome sheet's Continue button) is not required for offline marking, but it is required on iPhone for push notifications.
 
 ## See also
 

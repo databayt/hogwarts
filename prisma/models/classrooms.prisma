@@ -57,6 +57,8 @@ model Section {
   schoolAssignments SchoolAssignment[]
   results         Result[]
   attendances     Attendance[]
+  qrCodeSessions  QRCodeSession[]
+  hallPasses      HallPass[]
   whatsappGroups  WhatsAppGroup[]
   conferences     Conference[]
   conferenceLinks ConferenceLink[]

@@ -44,7 +44,7 @@ export async function processBarcodeScan(
       throw new Error("Insufficient permissions to scan barcodes")
     }
 
-    const { barcode, classId, format, scannedAt, deviceId } = data
+    const { barcode, sectionId, format, scannedAt, deviceId } = data
     const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
@@ -62,18 +62,6 @@ export async function processBarcodeScan(
         error: `Too many failed scan attempts. Please wait ${minutesRemaining} minute(s) before trying again.`,
         rateLimited: true,
       }
-    }
-
-    // Validate that the class exists and belongs to the school
-    const classExists = await db.class.findFirst({
-      where: {
-        id: classId,
-        schoolId,
-      },
-    })
-
-    if (!classExists) {
-      throw new Error("Invalid class ID or class not found")
     }
 
     // Find student by barcode
@@ -106,7 +94,7 @@ export async function processBarcodeScan(
           schoolId,
           barcode,
           format,
-          classId,
+          sectionId,
           scannerUserId: session.user.id,
           remainingAttempts: failureResult.remainingAttempts,
         }
@@ -133,6 +121,13 @@ export async function processBarcodeScan(
       throw new Error("Card has expired")
     }
 
+    // The day is recorded on the student's own section. A scanner set to a
+    // section takes only that section's students.
+    const studentSectionId = studentIdentifier.student.sectionId
+    if (sectionId && studentSectionId !== sectionId) {
+      throw new Error("This student belongs to another section")
+    }
+
     // Check if attendance already marked today. Find soft-deleted rows too: the
     // unique tuple still reserves their key, so a create() would collide — we
     // revive the row instead of falsely reporting "already marked".
@@ -141,8 +136,9 @@ export async function processBarcodeScan(
       where: {
         schoolId,
         studentId: studentIdentifier.studentId,
-        classId,
+        sectionId: studentSectionId,
         date: today,
+        periodId: null,
       },
       select: { id: true, deletedAt: true },
     })
@@ -171,7 +167,7 @@ export async function processBarcodeScan(
           data: {
             schoolId,
             studentId: studentIdentifier.studentId,
-            classId,
+            sectionId: studentSectionId,
             date: today,
             status: "PRESENT",
             method: "BARCODE",
@@ -220,7 +216,7 @@ export async function processBarcodeScan(
       entityId: attendance.id,
       newValue: {
         studentId: studentIdentifier.studentId,
-        classId,
+        sectionId: studentSectionId,
         status: "PRESENT",
         method: "BARCODE",
       },

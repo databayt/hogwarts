@@ -12,7 +12,9 @@ import { hasRole } from "../../lib/roles"
 /**
  * POST /api/mobile/attendance/qr — create a QR code session
  *
- * Body: { class_id, duration_minutes?, max_scans? }
+ * Body: { section_id (or legacy class_id), duration_minutes?, max_scans? }
+ * `class_id` from older app builds is read as a section id first, then as a
+ * legacy class.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -26,25 +28,38 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { class_id, duration_minutes = 15, max_scans } = body
+    const { section_id, class_id, duration_minutes = 15, max_scans } = body
+    const targetId: string | undefined = section_id ?? class_id
 
-    if (!class_id) {
-      return NextResponse.json({ error: "class_id required" }, { status: 400 })
+    if (!targetId) {
+      return NextResponse.json(
+        { error: "section_id required" },
+        { status: 400 }
+      )
     }
 
-    // Verify the class belongs to this tenant. Without this, a teacher
-    // could pass another school's classId and create a QR session in
-    // their own school with an FK pointing across tenants.
-    const classExists = await db.class.findFirst({
-      where: { id: class_id, schoolId: auth.schoolId },
-      select: { id: true },
-    })
-    if (!classExists) {
+    // The target must belong to this tenant — a section, or a legacy class.
+    // Without this a teacher could pass another school's id and create a QR
+    // session in their own school with an FK pointing across tenants.
+    const [section, legacyClass] = await Promise.all([
+      db.section.findFirst({
+        where: { id: targetId, schoolId: auth.schoolId },
+        select: { id: true },
+      }),
+      db.class.findFirst({
+        where: { id: targetId, schoolId: auth.schoolId },
+        select: { id: true },
+      }),
+    ])
+    if (!section && !legacyClass) {
       return NextResponse.json(
-        { error: "class_id is not a member of this school" },
+        { error: "section_id is not a member of this school" },
         { status: 404 }
       )
     }
+    const target = section
+      ? { sectionId: section.id }
+      : { classId: legacyClass!.id }
 
     const code = randomBytes(16).toString("hex")
     const now = new Date()
@@ -53,9 +68,9 @@ export async function POST(request: NextRequest) {
     const session = await db.qRCodeSession.create({
       data: {
         schoolId: auth.schoolId,
-        classId: class_id,
+        ...target,
         code,
-        payload: { classId: class_id, generatedAt: now.toISOString() },
+        payload: { ...target, generatedAt: now.toISOString() },
         generatedBy: auth.userId,
         generatedAt: now,
         expiresAt,
@@ -66,6 +81,7 @@ export async function POST(request: NextRequest) {
         id: true,
         code: true,
         classId: true,
+        sectionId: true,
         expiresAt: true,
         maxScans: true,
       },
@@ -75,7 +91,9 @@ export async function POST(request: NextRequest) {
       {
         id: session.id,
         code: session.code,
-        class_id: session.classId,
+        section_id: session.sectionId,
+        // Older app builds read class_id; it carries whichever id was given.
+        class_id: session.sectionId ?? session.classId,
         expires_at: session.expiresAt.toISOString(),
         max_scans: session.maxScans,
       },

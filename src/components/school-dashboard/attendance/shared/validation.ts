@@ -123,7 +123,8 @@ export const qrCodeScanSchema = z.object({
 
 // QR Code generation schema
 export const qrCodeGenerationSchema = z.object({
-  classId: z.string().min(1),
+  /** The section whose students may scan it. */
+  sectionId: z.string().min(1),
   validFor: z.number().min(30).max(600).default(60), // seconds
   includeLocation: z.boolean().default(false),
   secret: z.string().optional(),
@@ -132,7 +133,8 @@ export const qrCodeGenerationSchema = z.object({
 // Barcode scan schema
 export const barcodeScanSchema = z.object({
   barcode: z.string().min(1, "Barcode is required"),
-  classId: z.string().min(1, "Class ID is required"),
+  /** Optional: the section being scanned in; the student must belong to it. */
+  sectionId: z.string().optional(),
   format: z.string().optional(),
   scannedAt: z.string().or(z.date()),
   deviceId: z.string().min(1),

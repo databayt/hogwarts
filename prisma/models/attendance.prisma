@@ -144,7 +144,9 @@ model StudentIdentifier {
 model QRCodeSession {
   id            String    @id @default(cuid())
   schoolId      String
-  classId       String
+  // Legacy: the class it was generated for. New sessions name a section.
+  classId       String?
+  sectionId     String?
   code          String    @unique
   payload       Json // Encrypted payload data
   generatedBy   String // User ID who generated
@@ -158,10 +160,12 @@ model QRCodeSession {
   invalidatedAt DateTime?
   invalidatedBy String?
 
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class  Class  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  school  School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class   Class?   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  section Section? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   @@index([classId])
+  @@index([schoolId, sectionId])
   @@index([expiresAt])
   @@index([isActive])
   @@map("qr_code_sessions")
@@ -329,7 +333,9 @@ model HallPass {
   id               String              @id @default(cuid())
   schoolId         String
   studentId        String
-  classId          String // Class the student left from
+  // Legacy: the class the student left. New passes name the section.
+  classId          String?
+  sectionId        String?
   destination      HallPassDestination
   destinationNote  String? // Additional details for "OTHER" destination
   issuedBy         String // Teacher ID who issued the pass
@@ -347,8 +353,9 @@ model HallPass {
   photoUrl String? // Optional photo capture on departure
 
   school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class?   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  section Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -356,6 +363,7 @@ model HallPass {
   @@index([schoolId])
   @@index([studentId])
   @@index([classId])
+  @@index([schoolId, sectionId])
   @@index([status])
   @@index([issuedAt])
   @@index([schoolId, status])

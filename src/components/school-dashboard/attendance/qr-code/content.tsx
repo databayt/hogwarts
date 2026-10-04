@@ -34,7 +34,7 @@ import { toast } from "@/components/ui/use-toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { getClassesForSelection } from "../actions"
+import { getSectionsForSelection } from "../actions"
 import { useAttendanceContext } from "../core/attendance-context"
 import { AttendanceStats } from "../core/attendance-stats"
 import { phone } from "../shared/phone"
@@ -66,52 +66,46 @@ export default function QRCodeAttendanceContent({
     "generate"
   )
   const [isTeacherMode, setIsTeacherMode] = useState(true) // Should come from auth/role
+  // QR sessions are for a section: its students are the ones who may scan.
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
     []
   )
   const [loadingClasses, setLoadingClasses] = useState(true)
+  const [selectedClass, setSelectedClass] = useState<string | null>(null)
 
-  const {
-    selectedClass,
-    setSelectedClass,
-    selectedDate,
-    attendance,
-    stats,
-    fetchAttendance,
-    setCurrentMethod,
-  } = useAttendanceContext()
+  const { selectedDate, attendance, stats, fetchAttendance, setCurrentMethod } =
+    useAttendanceContext()
 
   useEffect(() => {
     // Set the current method to QR_CODE when component mounts
     setCurrentMethod("QR_CODE")
   }, [setCurrentMethod])
 
-  // Fetch available classes and auto-select the first class if none selected
+  // Load the sections and open on the first one
   useEffect(() => {
-    async function loadClasses() {
-      try {
-        const res = await getClassesForSelection()
-        if (res.success && res.data?.classes) {
-          setClasses(res.data.classes)
-          if (!selectedClass && res.data.classes.length > 0) {
-            setSelectedClass(res.data.classes[0].id)
-          }
-        }
-      } catch (e) {
-        console.error("Failed to load classes for selection:", e)
-      } finally {
-        setLoadingClasses(false)
-      }
+    let alive = true
+    getSectionsForSelection()
+      .then((res) => {
+        if (!alive || !res.success || !res.data?.sections) return
+        const sections = res.data.sections
+        setClasses(sections)
+        setSelectedClass((current) => current ?? sections[0]?.id ?? null)
+      })
+      .catch((e) => console.error("Failed to load sections for QR:", e))
+      .finally(() => {
+        if (alive) setLoadingClasses(false)
+      })
+    return () => {
+      alive = false
     }
-    loadClasses()
-  }, [selectedClass, setSelectedClass])
+  }, [])
 
   useEffect(() => {
-    // Fetch attendance when class or date changes
+    // Fetch attendance when the section or date changes
     if (selectedClass && selectedDate) {
       fetchAttendance({
         schoolId,
-        classId: selectedClass,
+        sectionId: selectedClass,
         dateFrom: selectedDate,
         dateTo: selectedDate,
       })
@@ -238,7 +232,10 @@ export default function QRCodeAttendanceContent({
             </Card>
           ) : (
             <QRGenerator
-              classId={selectedClass}
+              sectionId={selectedClass}
+              sectionName={
+                classes.find((c) => c.id === selectedClass)?.name ?? ""
+              }
               dictionary={activeDict || undefined}
               locale={locale}
             />

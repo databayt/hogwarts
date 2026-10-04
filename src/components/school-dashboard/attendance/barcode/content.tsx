@@ -5,7 +5,6 @@
 import React, { useEffect, useState } from "react"
 import {
   Barcode,
-  CircleAlert,
   CreditCard,
   Scan,
   Settings,
@@ -56,29 +55,24 @@ export default function BarcodeAttendanceContent({
   const [activeTab, setActiveTab] = useState<"scan" | "cards" | "manage">(
     "scan"
   )
-  const {
-    selectedClass,
-    selectedDate,
-    attendance,
-    stats,
-    fetchAttendance,
-    setCurrentMethod,
-  } = useAttendanceContext()
+  const { selectedDate, attendance, stats, fetchAttendance, setCurrentMethod } =
+    useAttendanceContext()
 
   useEffect(() => {
     setCurrentMethod("BARCODE")
   }, [setCurrentMethod])
 
+  // A card names its student, and the scan records that student's own
+  // section — so the desk scans any student and the page lists the day.
   useEffect(() => {
-    if (selectedClass && selectedDate) {
+    if (selectedDate) {
       fetchAttendance({
         schoolId,
-        classId: selectedClass,
         dateFrom: selectedDate,
         dateTo: selectedDate,
       })
     }
-  }, [selectedClass, selectedDate, schoolId, fetchAttendance])
+  }, [selectedDate, schoolId, fetchAttendance])
 
   return (
     <div className="space-y-6">
@@ -132,38 +126,18 @@ export default function BarcodeAttendanceContent({
 
         {/* Scan Tab */}
         <TabsContent value="scan" className="space-y-4">
-          {!selectedClass ? (
-            <Card className={phone.card}>
-              <CardHeader>
-                <CardTitle>
-                  {t?.noClassSelected || "No Class Selected"}
-                </CardTitle>
-                <CardDescription>
-                  {t?.selectClassMessage ||
-                    "Please select a class to start scanning"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="py-4 text-center">
-                  <CircleAlert className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <BarcodeScanner
-              classId={selectedClass}
-              onScanSuccess={(data) => {
-                toast({
-                  title: t?.cardScanned || "Card Scanned",
-                  description:
-                    t?.studentCheckedIn ||
-                    "Student has been checked in successfully",
-                })
-              }}
-              dictionary={dictionary}
-              locale={locale}
-            />
-          )}
+          <BarcodeScanner
+            onScanSuccess={(data) => {
+              toast({
+                title: t?.cardScanned || "Card Scanned",
+                description:
+                  t?.studentCheckedIn ||
+                  "Student has been checked in successfully",
+              })
+            }}
+            dictionary={dictionary}
+            locale={locale}
+          />
         </TabsContent>
 
         {/* Card Management Tab */}

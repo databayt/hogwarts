@@ -17,11 +17,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { phone } from "../shared/phone"
 import {
   AttendanceCardSkeleton,
   AttendancePageSkeleton,
 } from "../loading-skeleton"
+import { phone } from "../shared/phone"
 import { cancelHallPass, getActiveHallPasses, returnHallPass } from "./actions"
 import { IssuePassDialog } from "./issue-dialog"
 import type { HallPassDestination } from "./validation"
@@ -83,10 +83,9 @@ const destinationIcons: Record<HallPassDestination, string> = {
 
 interface HallPassContentProps {
   locale: string
-  classId?: string
 }
 
-export function HallPassContent({ locale, classId }: HallPassContentProps) {
+export function HallPassContent({ locale }: HallPassContentProps) {
   const { dictionary } = useDictionary()
   const t = (dictionary?.school?.attendance as any)?.hallPass
   const destinations = t?.destinations as Record<string, string> | undefined
@@ -339,7 +338,6 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
       <IssuePassDialog
         open={isIssueDialogOpen}
         onOpenChange={setIsIssueDialogOpen}
-        classId={classId}
         locale={locale}
         onSuccess={loadPasses}
       />

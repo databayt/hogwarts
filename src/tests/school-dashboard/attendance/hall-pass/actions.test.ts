@@ -27,12 +27,11 @@ vi.mock("@/lib/db", () => ({
       groupBy: vi.fn(),
     },
     student: { findFirst: vi.fn() },
-    class: { findFirst: vi.fn() },
   },
 }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), refresh: vi.fn() }))
 
 const SCHOOL = "school-1"
 const USER = "user-1"
@@ -58,10 +57,51 @@ describe("hall-pass actions", () => {
   describe("createHallPass", () => {
     const valid = {
       studentId: "s1",
-      classId: "c1",
       destination: "BATHROOM" as const,
       expectedDuration: 10,
     }
+
+    it("issues the pass on the student's own section", async () => {
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        sectionId: "7a",
+      } as never)
+      vi.mocked(db.hallPass.findFirst).mockResolvedValue(null)
+      vi.mocked(db.hallPass.findMany).mockResolvedValue([])
+      vi.mocked(db.hallPass.create).mockResolvedValue({
+        id: "h1",
+        student: { firstName: "Sara", lastName: "Ali" },
+        class: null,
+        section: { name: "7-A" },
+        destination: "BATHROOM",
+        expectedReturn: new Date(),
+        conflictWith: null,
+      } as never)
+
+      const result = await createHallPass(valid)
+
+      expect(db.student.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: "s1", schoolId: SCHOOL } })
+      )
+      const data = vi.mocked(db.hallPass.create).mock.calls[0][0].data
+      expect(data).toMatchObject({
+        schoolId: SCHOOL,
+        studentId: "s1",
+        sectionId: "7a",
+      })
+      expect(data).not.toHaveProperty("classId")
+      expect(result.success).toBe(true)
+      expect(result.data).toMatchObject({ className: "7-A" })
+    })
+
+    it("refuses a student of another school", async () => {
+      vi.mocked(db.student.findFirst).mockResolvedValue(null)
+
+      const result = await createHallPass(valid)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("STUDENT_NOT_FOUND")
+      expect(db.hallPass.create).not.toHaveBeenCalled()
+    })
 
     it("denies STUDENT role (only staff can issue)", async () => {
       mockAuth("STUDENT")

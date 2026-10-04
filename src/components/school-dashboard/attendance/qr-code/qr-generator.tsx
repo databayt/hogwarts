@@ -46,13 +46,16 @@ import type { QRCodeConfig } from "../shared/types"
 import { generateAttendanceQR } from "./actions"
 
 interface QRGeneratorProps {
-  classId: string
+  /** The section whose students may scan the code. */
+  sectionId: string
+  sectionName: string
   dictionary?: Dictionary
   locale?: string
 }
 
 export function QRGenerator({
-  classId,
+  sectionId,
+  sectionName,
   dictionary,
   locale = "en",
 }: QRGeneratorProps) {
@@ -88,7 +91,7 @@ export function QRGenerator({
     try {
       // Call server action to create QR session in database
       const result = await generateAttendanceQR({
-        classId,
+        sectionId,
         validFor: config.refreshInterval,
         includeLocation: config.includeLocation,
       })
@@ -146,7 +149,7 @@ export function QRGenerator({
     } finally {
       setIsGenerating(false)
     }
-  }, [classId, config, resetTimer, t])
+  }, [sectionId, config, resetTimer, t])
 
   useEffect(() => {
     generateNewQR()
@@ -157,7 +160,7 @@ export function QRGenerator({
 
     const link = document.createElement("a")
     link.href = qrCode
-    link.download = `attendance-qr-${classId}-${Date.now()}.png`
+    link.download = `attendance-qr-${sectionId}-${Date.now()}.png`
     link.click()
 
     toast({
@@ -196,7 +199,7 @@ export function QRGenerator({
         text: (
           t?.shareText ||
           "Scan this QR code to mark attendance for class {classId}"
-        ).replace("{classId}", classId),
+        ).replace("{classId}", sectionName),
         files: [file],
       })
     } catch (error) {
@@ -284,7 +287,7 @@ export function QRGenerator({
                 <QrCode className="me-1 h-3 w-3" />
                 {(t?.classLabel || "Class: {classId}").replace(
                   "{classId}",
-                  classId
+                  sectionName
                 )}
               </Badge>
             </div>
@@ -494,7 +497,7 @@ export function QRGenerator({
                   <p className="text-lg">
                     {(t?.classLabel || "Class: {classId}").replace(
                       "{classId}",
-                      classId
+                      sectionName
                     )}
                   </p>
                   <Badge variant="secondary" className="px-4 py-2 text-lg">

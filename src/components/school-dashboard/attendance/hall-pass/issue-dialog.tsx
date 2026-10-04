@@ -66,7 +66,6 @@ interface Student {
 interface IssuePassDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  classId?: string
   locale: string
   onSuccess: () => void
   students?: Student[]
@@ -75,7 +74,6 @@ interface IssuePassDialogProps {
 export function IssuePassDialog({
   open,
   onOpenChange,
-  classId,
   locale,
   onSuccess,
   students = [],
@@ -106,7 +104,7 @@ export function IssuePassDialog({
   }, [open])
 
   const handleSubmit = async () => {
-    if (!studentId || !destination || !classId) {
+    if (!studentId || !destination) {
       setError(t?.all_fields_required || "All fields are required")
       return
     }
@@ -117,7 +115,6 @@ export function IssuePassDialog({
     try {
       const result = await createHallPass({
         studentId,
-        classId,
         destination,
         destinationNote: destination === "OTHER" ? destinationNote : undefined,
         expectedDuration: duration,

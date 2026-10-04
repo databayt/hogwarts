@@ -39,7 +39,7 @@ vi.mock("next/cache", () => ({
 describe("Kiosk Actions - schoolId scoping", () => {
   const mockSchoolId = "school-123"
   const mockStudentId = "student-789"
-  const mockClassId = "class-456"
+  const mockSectionId = "section-456"
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -54,9 +54,8 @@ describe("Kiosk Actions - schoolId scoping", () => {
   describe("processKioskCheck", () => {
     it("looks up student with schoolId scope (findFirst)", async () => {
       vi.mocked(db.student.findFirst).mockResolvedValue({
-        id: mockStudentId,
-        studentClasses: [{ classId: mockClassId }],
-      } as any)
+        sectionId: mockSectionId,
+      } as never)
       vi.mocked(db.attendance.findFirst).mockResolvedValue(null)
       vi.mocked(db.attendance.create).mockResolvedValue({
         id: "att-001",
@@ -78,6 +77,45 @@ describe("Kiosk Actions - schoolId scoping", () => {
           where: { id: mockStudentId, schoolId: mockSchoolId },
         })
       )
+    })
+
+    it("records the day on the student's own section", async () => {
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        sectionId: mockSectionId,
+      } as never)
+      vi.mocked(db.attendance.findFirst).mockResolvedValue(null)
+      vi.mocked(db.attendance.create).mockResolvedValue({
+        id: "att-002",
+      } as never)
+      vi.mocked(db.kioskLog.create).mockResolvedValue({} as never)
+      vi.mocked(db.kioskSession.updateMany).mockResolvedValue({
+        count: 1,
+      } as never)
+
+      const result = await processKioskCheck({
+        kioskId: "kiosk-1",
+        studentId: mockStudentId,
+        action: "CHECK_IN",
+        method: "BARCODE",
+      })
+
+      expect(result.success).toBe(true)
+      expect(
+        vi.mocked(db.attendance.findFirst).mock.calls[0][0]!.where
+      ).toMatchObject({
+        schoolId: mockSchoolId,
+        studentId: mockStudentId,
+        sectionId: mockSectionId,
+        periodId: null,
+      })
+      const data = vi.mocked(db.attendance.create).mock.calls[0][0].data
+      expect(data).toMatchObject({
+        schoolId: mockSchoolId,
+        studentId: mockStudentId,
+        sectionId: mockSectionId,
+        method: "KIOSK",
+      })
+      expect(data).not.toHaveProperty("classId")
     })
 
     it("returns error for student not in school", async () => {

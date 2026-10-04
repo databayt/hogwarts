@@ -534,6 +534,7 @@ export function AttendanceProvider({
         const result = await getRecentAttendance({
           limit: 100,
           classId: filters?.classId,
+          sectionId: filters?.sectionId,
         })
 
         const records: AttendanceRecord[] = result.records.map((r) => ({
@@ -554,6 +555,7 @@ export function AttendanceProvider({
         // Refresh stats
         const statsResult = await getAttendanceStats({
           classId: filters?.classId,
+          sectionId: filters?.sectionId,
           dateFrom: filters?.dateFrom ? String(filters.dateFrom) : undefined,
           dateTo: filters?.dateTo ? String(filters.dateTo) : undefined,
         })

@@ -49,34 +49,32 @@ export async function generateAttendanceQR(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
-    const { classId, validFor = 60, includeLocation = false, secret } = data
+    const { sectionId, validFor = 60, includeLocation = false, secret } = data
     const schoolId = session.user.schoolId
 
     if (!schoolId) {
       throw new Error("School ID not found in session")
     }
 
-    // Validate that the class exists and belongs to the school
-    const classExists = await db.class.findFirst({
-      where: {
-        id: classId,
-        schoolId,
-      },
+    // The section must be this school's
+    const section = await db.section.findFirst({
+      where: { id: sectionId, schoolId },
+      select: { id: true },
     })
 
-    if (!classExists) {
-      throw new Error("Class not found")
+    if (!section) {
+      return actionError(ACTION_ERRORS.INVALID_SECTION)
     }
 
     // Generate unique QR code payload with HMAC signature
-    const sessionId = `${classId}-${Date.now()}-${Math.random().toString(36).substring(7)}`
+    const sessionId = `${sectionId}-${Date.now()}-${Math.random().toString(36).substring(7)}`
     const expiresAt = new Date(Date.now() + validFor * 1000)
 
     // Generate secure payload with HMAC signature
     const securePayload = generateSecureQRPayload(
       sessionId,
       schoolId,
-      classId,
+      sectionId,
       expiresAt.getTime()
     )
 
@@ -84,10 +82,10 @@ export async function generateAttendanceQR(
     const qrSession = await db.qRCodeSession.create({
       data: {
         schoolId,
-        classId,
+        sectionId,
         code: sessionId,
         payload: {
-          classId,
+          sectionId,
           timestamp: Date.now(),
           expiresAt: expiresAt.getTime(),
           includeLocation,
@@ -112,7 +110,7 @@ export async function generateAttendanceQR(
       entityType: "QRSession",
       entityId: qrSession.id,
       newValue: {
-        classId,
+        sectionId,
         validFor,
         expiresAt: expiresAt.toISOString(),
       },
@@ -168,7 +166,7 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
     // Resolve User.id → Student.id within this tenant.
     const student = await db.student.findFirst({
       where: { userId: session.user.id, schoolId },
-      select: { id: true },
+      select: { id: true, sectionId: true },
     })
 
     if (!student) {
@@ -242,6 +240,21 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       )
     }
 
+    // Only the session's students: its section, or (legacy) its class.
+    const isMember = qrSession.sectionId
+      ? student.sectionId === qrSession.sectionId
+      : !!(
+          qrSession.classId &&
+          (await db.studentClass.findFirst({
+            where: { schoolId, studentId, classId: qrSession.classId },
+            select: { id: true },
+          }))
+        )
+    if (!isMember) {
+      recordScanFailure(rateLimitId)
+      throw new Error("This QR code is for another section")
+    }
+
     // Check if student already scanned this QR
     const scannedBy = (qrSession.scannedBy as string[]) || []
     if (scannedBy.includes(studentId)) {
@@ -266,11 +279,15 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
     // Upsert lookup must find soft-deleted rows too: the unique tuple still
     // reserves their key, so filtering `deletedAt: null` here would fall through
     // to create() and hit a unique-constraint error. Instead we revive on update.
+    // A section session keys the day on the section; a legacy one on its class.
+    const dailyKey = qrSession.sectionId
+      ? { sectionId: qrSession.sectionId }
+      : { classId: qrSession.classId }
     const existingDaily = await db.attendance.findFirst({
       where: {
         schoolId,
         studentId,
-        classId: qrSession.classId,
+        ...dailyKey,
         date: attendanceDate,
         periodId: null,
       },
@@ -293,7 +310,7 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
           data: {
             schoolId,
             studentId,
-            classId: qrSession.classId,
+            ...dailyKey,
             date: attendanceDate,
             status: "PRESENT",
             method: "QR_CODE",
@@ -331,6 +348,7 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
           : undefined,
         metadata: {
           qrSessionId: qrSession.id,
+          sectionId: qrSession.sectionId,
           classId: qrSession.classId,
           secureQR: !!secureData, // Track if secure QR was used
         },
@@ -348,6 +366,7 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       entityType: "Attendance",
       entityId: attendance.id,
       newValue: {
+        sectionId: qrSession.sectionId,
         classId: qrSession.classId,
         status: "PRESENT",
         method: "QR_CODE",
@@ -413,9 +432,9 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
 }
 
 /**
- * Get active QR sessions for a class
+ * Get active QR sessions for a section
  */
-export async function getActiveQRSessions(classId: string) {
+export async function getActiveQRSessions(sectionId: string) {
   try {
     const session = await auth()
     if (!session?.user) {
@@ -434,7 +453,7 @@ export async function getActiveQRSessions(classId: string) {
 
     const qrSessions = await db.qRCodeSession.findMany({
       where: {
-        classId,
+        sectionId,
         schoolId,
         isActive: true,
         expiresAt: {
@@ -608,10 +627,10 @@ export async function getStudentQRScans(studentId?: string) {
 }
 
 /**
- * Get QR code statistics for a class
+ * Get QR code statistics for a section
  */
 export async function getQRCodeStats(
-  classId: string,
+  sectionId: string,
   dateFrom?: Date,
   dateTo?: Date
 ) {
@@ -634,7 +653,7 @@ export async function getQRCodeStats(
     const stats = await db.attendance.groupBy({
       by: ["status"],
       where: {
-        classId,
+        sectionId,
         schoolId,
         date: {
           gte: dateFrom || new Date(new Date().setHours(0, 0, 0, 0)),

@@ -120,7 +120,7 @@ describe("Attendance Security — QR HMAC Signatures", () => {
   const data = {
     sessionId: "sess-1",
     schoolId: "school-1",
-    classId: "class-1",
+    sectionId: "section-1",
     expiresAt: Date.now() + 60_000,
   }
 
@@ -172,11 +172,11 @@ describe("Attendance Security — QR HMAC Signatures", () => {
       expect(verifyQRSignature(data, tampered)).toBe(false)
     })
 
-    it("rejects when classId differs (cross-class spoof)", () => {
+    it("rejects when sectionId differs (cross-section spoof)", () => {
       const sig = generateQRSignature(data)
-      expect(verifyQRSignature({ ...data, classId: "wrong-class" }, sig)).toBe(
-        false
-      )
+      expect(
+        verifyQRSignature({ ...data, sectionId: "wrong-section" }, sig)
+      ).toBe(false)
     })
 
     it("rejects when schoolId differs (cross-tenant spoof)", () => {
@@ -193,14 +193,14 @@ describe("Attendance Security — QR HMAC Signatures", () => {
       const payload = generateSecureQRPayload(
         "sess-2",
         "school-1",
-        "class-1",
+        "section-1",
         future
       )
       const parsed = parseSecureQRPayload(payload)
       expect(parsed).toEqual({
         sessionId: "sess-2",
         schoolId: "school-1",
-        classId: "class-1",
+        sectionId: "section-1",
         expiresAt: future,
       })
     })
@@ -213,7 +213,7 @@ describe("Attendance Security — QR HMAC Signatures", () => {
       const payload = JSON.stringify({
         sessionId: "x",
         schoolId: "x",
-        classId: "x",
+        sectionId: "x",
         expiresAt: Date.now() + 1000,
       })
       expect(parseSecureQRPayload(payload)).toBeNull()
@@ -223,7 +223,7 @@ describe("Attendance Security — QR HMAC Signatures", () => {
       const payload = JSON.stringify({
         sessionId: "x",
         schoolId: "x",
-        classId: "x",
+        sectionId: "x",
         expiresAt: Date.now() + 1000,
         sig: "0".repeat(64),
       })
@@ -240,7 +240,7 @@ describe("Attendance Security — QR HMAC Signatures", () => {
       const future = Date.now() + 60_000
       const payload = generateSecureQRPayload("s", "school", "class", future)
       const obj = JSON.parse(payload)
-      obj.classId = "wrong-class" // Tamper
+      obj.sectionId = "wrong-section" // Tamper
       expect(parseSecureQRPayload(JSON.stringify(obj))).toBeNull()
     })
   })

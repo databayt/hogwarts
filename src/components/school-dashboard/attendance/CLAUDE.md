@@ -32,9 +32,15 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
   the Student rows a STUDENT/GUARDIAN owns). New server actions call one of these
   instead of re-implementing the check. Returns a discriminated union:
   `if (!g.ok) return g.error` then use `g.schoolId` / `g.userId` / `g.role`.
-- **Section-based, but QR/manual flows are still class-based.** Attendance roster
-  for marking comes from `Section.students`; QR sessions, `quickMarkAllPresent`
-  and bulk upload still key on `classId` + the `StudentClass` join.
+- **Section-based; the class-keyed flows are being retired** (class removal,
+  2026-10-04 — `~/.claude/plans/i-asked-in-a-cryptic-panda.md` S8). The marking
+  roster comes from `Section.students`. A QR session names a `sectionId`: only
+  that section's students may scan, and the section is signed into the HMAC
+  payload (`security.ts`). Barcode, kiosk and hall passes record the student's
+  own `Student.sectionId` — no section to pick; a barcode scanner set to a
+  section refuses another section's student. `quickMarkAllPresent` and bulk
+  upload still key on `classId` until the next S8 step. Legacy QR sessions and
+  passes keep `classId` (now nullable); reads fall back to it.
   `markPeriodAttendance` resolves and writes `sectionId` best-effort from the
   timetable slot.
 - **Daily attendance has NO DB-unique dedupe for `periodId = null`.** Postgres

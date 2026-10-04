@@ -24,22 +24,26 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const {
-      student_id,
-      class_id,
-      destination,
-      destination_note,
-      expected_duration,
-    } = body
+    const { student_id, destination, destination_note, expected_duration } =
+      body
 
-    if (!student_id || !class_id || !destination || !expected_duration) {
+    // class_id from older app builds is ignored: the pass records the
+    // student's section.
+    if (!student_id || !destination || !expected_duration) {
       return NextResponse.json(
         {
-          error:
-            "student_id, class_id, destination, and expected_duration required",
+          error: "student_id, destination, and expected_duration required",
         },
         { status: 400 }
       )
+    }
+
+    const student = await db.student.findFirst({
+      where: { id: student_id, schoolId: auth.schoolId },
+      select: { sectionId: true },
+    })
+    if (!student) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 })
     }
 
     const now = new Date()
@@ -51,7 +55,7 @@ export async function POST(request: NextRequest) {
       data: {
         schoolId: auth.schoolId,
         studentId: student_id,
-        classId: class_id,
+        sectionId: student.sectionId,
         destination: destination as HallPassDestination,
         destinationNote: destination_note || null,
         issuedBy: auth.userId,
@@ -64,6 +68,7 @@ export async function POST(request: NextRequest) {
         id: true,
         studentId: true,
         classId: true,
+        sectionId: true,
         destination: true,
         destinationNote: true,
         issuedBy: true,
@@ -78,7 +83,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       id: pass.id,
       student_id: pass.studentId,
-      class_id: pass.classId,
+      section_id: pass.sectionId,
+      class_id: pass.sectionId ?? pass.classId,
       destination: pass.destination,
       destination_note: pass.destinationNote,
       issued_by: pass.issuedBy,
@@ -117,6 +123,7 @@ export async function GET(request: NextRequest) {
         id: true,
         studentId: true,
         classId: true,
+        sectionId: true,
         destination: true,
         destinationNote: true,
         issuedBy: true,
@@ -135,7 +142,8 @@ export async function GET(request: NextRequest) {
       id: p.id,
       student_id: p.studentId,
       student_name: `${p.student.firstName} ${p.student.lastName}`,
-      class_id: p.classId,
+      section_id: p.sectionId,
+      class_id: p.sectionId ?? p.classId,
       destination: p.destination,
       destination_note: p.destinationNote,
       issued_by: p.issuedBy,
