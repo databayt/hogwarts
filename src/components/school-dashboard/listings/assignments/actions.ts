@@ -9,7 +9,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { getModelOrThrow } from "@/lib/prisma-guards"
+import { db } from "@/lib/db"
 import { audienceLabel } from "@/lib/teaching-audience"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
@@ -68,7 +68,7 @@ export async function createAssignment(
 
     const parsed = assignmentCreateSchema.parse(input)
 
-    const assignmentModel = getModelOrThrow("assignment")
+    const assignmentModel = db.schoolAssignment
     const row = await assignmentModel.create({
       data: {
         schoolId,
@@ -123,7 +123,7 @@ export async function updateAssignment(
     const { id, ...rest } = parsed
 
     // Verify assignment exists
-    const assignmentModel = getModelOrThrow("assignment")
+    const assignmentModel = db.schoolAssignment
     const existing = await assignmentModel.findFirst({
       where: { id, schoolId },
       select: { id: true },
@@ -187,7 +187,7 @@ export async function deleteAssignment(input: {
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Verify assignment exists
-    const assignmentModel = getModelOrThrow("assignment")
+    const assignmentModel = db.schoolAssignment
     const existing = await assignmentModel.findFirst({
       where: { id, schoolId },
       select: { id: true },
@@ -289,7 +289,7 @@ export async function getAssignment(input: {
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    const assignmentModel = getModelOrThrow("assignment")
+    const assignmentModel = db.schoolAssignment
     const assignment = await assignmentModel.findFirst({
       where: { id, schoolId },
       select: {
@@ -341,7 +341,7 @@ export async function getAssignments(
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
-    const assignmentModel = getModelOrThrow("assignment")
+    const assignmentModel = db.schoolAssignment
     const where: any = {
       schoolId,
       ...(sp.title
@@ -412,7 +412,7 @@ export async function getAssignmentsCSV(
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
-    const assignmentModel = getModelOrThrow("assignment")
+    const assignmentModel = db.schoolAssignment
     // Build where clause with filters
     const where: any = {
       schoolId,
@@ -432,7 +432,7 @@ export async function getAssignmentsCSV(
         subject: { select: { name: true } },
         _count: {
           select: {
-            assignmentSubmissions: true,
+            submissions: true,
           },
         },
       },
@@ -453,7 +453,7 @@ export async function getAssignmentsCSV(
         ? new Date(assignment.dueDate).toISOString().split("T")[0]
         : "",
       status: assignment.status || "",
-      submissions: assignment._count.assignmentSubmissions,
+      submissions: assignment._count.submissions,
       createdAt: new Date(assignment.createdAt).toISOString().split("T")[0],
     }))
 
@@ -521,7 +521,7 @@ export async function getAssignmentsExportData(
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
-    const assignmentModel = getModelOrThrow("assignment")
+    const assignmentModel = db.schoolAssignment
     // Build where clause with filters
     const where: any = {
       schoolId,
@@ -541,10 +541,10 @@ export async function getAssignmentsExportData(
         subject: { select: { name: true } },
         _count: {
           select: {
-            assignmentSubmissions: true,
+            submissions: true,
           },
         },
-        assignmentSubmissions: {
+        submissions: {
           select: {
             gradedAt: true,
           },
@@ -564,9 +564,9 @@ export async function getAssignmentsExportData(
       dueDate: assignment.dueDate as Date | null,
       totalPoints: assignment.totalPoints as number | null,
       status: assignment.status as string,
-      submissionCount: assignment._count.assignmentSubmissions as number,
+      submissionCount: assignment._count.submissions as number,
       gradedCount:
-        assignment.assignmentSubmissions?.filter(
+        assignment.submissions?.filter(
           (s: any) => s.gradedAt !== null
         ).length || 0,
       createdAt: assignment.createdAt as Date,

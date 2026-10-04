@@ -20,9 +20,8 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    // `getModelOrThrow("assignment")` resolves to `db.assignment` (it must
-    // expose `findFirst` to be recognized as a model delegate).
-    assignment: {
+    // The listings read the school's own assignments (`db.schoolAssignment`).
+    schoolAssignment: {
       create: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
@@ -88,7 +87,7 @@ describe("Assignment Actions", () => {
 
   describe("createAssignment", () => {
     it("creates assignment with schoolId for multi-tenant isolation", async () => {
-      vi.mocked(db.assignment.create).mockResolvedValue({
+      vi.mocked(db.schoolAssignment.create).mockResolvedValue({
         id: "assignment-1",
         title: "Homework 1",
         schoolId: mockSchoolId,
@@ -97,7 +96,7 @@ describe("Assignment Actions", () => {
       const result = await createAssignment(VALID_CREATE_INPUT)
 
       expect(result.success).toBe(true)
-      expect(db.assignment.create).toHaveBeenCalledWith({
+      expect(db.schoolAssignment.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           schoolId: mockSchoolId,
           title: "Homework 1",
@@ -121,10 +120,10 @@ describe("Assignment Actions", () => {
 
   describe("updateAssignment", () => {
     it("updates assignment with schoolId scope", async () => {
-      vi.mocked(db.assignment.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolAssignment.findFirst).mockResolvedValue({
         id: "assignment-1",
       } as any)
-      vi.mocked(db.assignment.updateMany).mockResolvedValue({
+      vi.mocked(db.schoolAssignment.updateMany).mockResolvedValue({
         count: 1,
       } as any)
 
@@ -134,7 +133,7 @@ describe("Assignment Actions", () => {
       })
 
       expect(result.success).toBe(true)
-      expect(db.assignment.updateMany).toHaveBeenCalledWith({
+      expect(db.schoolAssignment.updateMany).toHaveBeenCalledWith({
         where: { id: "assignment-1", schoolId: mockSchoolId },
         data: expect.objectContaining({ title: "Updated Homework" }),
       })
@@ -143,10 +142,10 @@ describe("Assignment Actions", () => {
 
   describe("deleteAssignment", () => {
     it("deletes assignment with schoolId scope", async () => {
-      vi.mocked(db.assignment.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolAssignment.findFirst).mockResolvedValue({
         id: "assignment-1",
       } as any)
-      vi.mocked(db.assignment.deleteMany).mockResolvedValue({
+      vi.mocked(db.schoolAssignment.deleteMany).mockResolvedValue({
         count: 1,
       } as any)
 
@@ -159,7 +158,7 @@ describe("Assignment Actions", () => {
   describe("getAssignments", () => {
     it("fetches assignments scoped to schoolId", async () => {
       const now = new Date()
-      vi.mocked(db.assignment.findMany).mockResolvedValue([
+      vi.mocked(db.schoolAssignment.findMany).mockResolvedValue([
         {
           id: "1",
           title: "Assignment 1",
@@ -177,12 +176,12 @@ describe("Assignment Actions", () => {
           createdAt: now,
         },
       ] as any)
-      vi.mocked(db.assignment.count).mockResolvedValue(2)
+      vi.mocked(db.schoolAssignment.count).mockResolvedValue(2)
 
       const result = await getAssignments({})
 
       expect(result.success).toBe(true)
-      expect(db.assignment.findMany).toHaveBeenCalledWith(
+      expect(db.schoolAssignment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ schoolId: mockSchoolId }),
         })
@@ -192,7 +191,7 @@ describe("Assignment Actions", () => {
 
   describe("translation cache prewarm", () => {
     it("prewarms Assignment on successful create", async () => {
-      vi.mocked(db.assignment.create).mockResolvedValue({
+      vi.mocked(db.schoolAssignment.create).mockResolvedValue({
         id: "assignment-1",
         title: "Homework 1",
         description: "Complete exercises 1-10",
@@ -210,10 +209,10 @@ describe("Assignment Actions", () => {
     })
 
     it("prewarms Assignment on successful update", async () => {
-      vi.mocked(db.assignment.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolAssignment.findFirst).mockResolvedValue({
         id: "assignment-1",
       } as any)
-      vi.mocked(db.assignment.updateMany).mockResolvedValue({
+      vi.mocked(db.schoolAssignment.updateMany).mockResolvedValue({
         count: 1,
       } as any)
 

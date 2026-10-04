@@ -1,10 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Prisma } from "@prisma/client"
 import { SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
-import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -34,7 +34,7 @@ export default async function AssignmentsContent({
   const permissions = getUIConfigForRole(role as Role | null | undefined)
   let data: AssignmentRow[] = []
   let total = 0
-  const assignmentModel = getModel("assignment")
+  const assignmentModel = db.schoolAssignment
   if (schoolId && assignmentModel) {
     // Bilingual title search: matches storage lang and its cached translations.
     let titleFilter: object = {}
@@ -59,9 +59,11 @@ export default async function AssignmentsContent({
     }
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
-    const orderBy =
+    const orderBy: Prisma.SchoolAssignmentOrderByWithRelationInput[] =
       sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+        ? sp.sort.map((s: { id: string; desc: boolean }) => ({
+            [s.id]: s.desc ? "desc" : "asc",
+          }))
         : [{ createdAt: "desc" }]
     const [rows, count] = await Promise.all([
       assignmentModel.findMany({
