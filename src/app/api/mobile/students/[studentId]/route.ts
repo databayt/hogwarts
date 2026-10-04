@@ -155,7 +155,28 @@ export async function PUT(
     if (body.given_name !== undefined) updateData.firstName = body.given_name
     if (body.family_name !== undefined) updateData.lastName = body.family_name
     if (body.gender !== undefined) updateData.gender = body.gender
-    if (body.section_id !== undefined) updateData.sectionId = body.section_id
+    if (body.section_id !== undefined) {
+      // Section ids are global CUIDs: only accept one of this school's
+      // sections (or null to unplace) — anything else is a cross-tenant link.
+      if (body.section_id === null) {
+        updateData.sectionId = null
+      } else {
+        const section =
+          typeof body.section_id === "string"
+            ? await db.section.findFirst({
+                where: { id: body.section_id, schoolId: auth.schoolId },
+                select: { id: true },
+              })
+            : null
+        if (!section) {
+          return NextResponse.json(
+            { error: "Section not found" },
+            { status: 400 }
+          )
+        }
+        updateData.sectionId = section.id
+      }
+    }
     if (body.status !== undefined) updateData.status = body.status
 
     const student = await db.student.update({

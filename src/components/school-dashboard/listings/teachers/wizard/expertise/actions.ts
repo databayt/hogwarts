@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cookies } from "next/headers"
+import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
@@ -11,6 +12,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
+import { checkTeacherPermission, getAuthContext } from "../../authorization"
 import { expertiseSchema, type ExpertiseFormData } from "./validation"
 
 async function getDisplayLocale(schoolId: string) {
@@ -60,10 +62,57 @@ export async function updateTeacherExpertise(
   input: ExpertiseFormData
 ): Promise<ActionResponse> {
   try {
+    const authContext = getAuthContext(await auth())
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
+    // This used to run for anyone who could reach the endpoint, for any
+    // teacher id. Server actions are public POST endpoints: check the role,
+    // and that the teacher is this school's.
+    const teacher = await db.teacher.findFirst({
+      where: { id: teacherId, schoolId },
+      select: { id: true, userId: true },
+    })
+    if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
+    if (
+      !checkTeacherPermission(authContext, "update", {
+        id: teacher.id,
+        schoolId,
+        userId: teacher.userId,
+      })
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const parsed = expertiseSchema.parse(input)
+
+    // Only subjects the school teaches (or the teacher already holds — a
+    // subject the school later switched off must not block the save).
+    const subjectIds = [
+      ...new Set(parsed.subjectExpertise.map((e) => e.subjectId)),
+    ]
+    if (subjectIds.length > 0) {
+      const [offered, held] = await Promise.all([
+        db.subjectSelection.findMany({
+          where: { schoolId, catalogSubjectId: { in: subjectIds } },
+          select: { catalogSubjectId: true },
+          distinct: ["catalogSubjectId"],
+        }),
+        db.teacherSubjectExpertise.findMany({
+          where: { schoolId, teacherId, subjectId: { in: subjectIds } },
+          select: { subjectId: true },
+        }),
+      ])
+      const known = new Set([
+        ...offered.map((o) => o.catalogSubjectId),
+        ...held.map((h) => h.subjectId),
+      ])
+      if (subjectIds.some((id) => !known.has(id))) {
+        return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+      }
+    }
 
     await db.$transaction(
       async (tx) => {
