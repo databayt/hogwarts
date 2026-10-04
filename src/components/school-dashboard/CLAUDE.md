@@ -17,8 +17,9 @@ Admin control center for individual schools (30+ sub-features, 85% complete). Ev
 - `config.ts` at root defines sidebar navigation for all sub-features
 - RBAC is per-feature via `authorization.ts` files -- each sub-feature defines its own permission matrix
 - `getTenantContext()` is mandatory in every server action for `schoolId` resolution
-- Listings (students, teachers, classes, etc.) share a common DataTable atom pattern with `list-params.ts` for URL state
+- Listings (students, teachers, classrooms, etc.) share a common DataTable atom pattern with `list-params.ts` for URL state
 - **Timetable and Attendance are section-based**: Sections (Grade 1-A) are the operational unit. Timetable slots have `sectionId` + `subjectId`. Attendance roster comes from `Section.students` (not `StudentClass`)
+- **Classes are being retired (2026-10-04, Abdout)**: teaching is `SubjectTeacher` (section × subject → teacher, per term — `timetable/assignments/`). Work is set for a grade, one of its sections or the whole grade, plus a subject: pick it with `teaching-scope/picker.tsx` and check it server-side with `teaching-scope/resolve.ts`. Read "what a teacher teaches / where a student sits" through `src/lib/teaching-scope.ts` (`getTeacherPairs`, `getStudentScopes`, `getTeacherSubjectIds`). Legacy `classId` rows stay readable until Phase 4 drops them; never add a new Class-based read or write. Plan: `~/.claude/plans/i-asked-in-a-cryptic-panda.md`.
 
 ## Danger Zones
 

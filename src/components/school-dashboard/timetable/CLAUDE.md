@@ -26,6 +26,35 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
 
 ## Key Decisions
 
+- **Teaching is `SubjectTeacher`, not `Class`** (2026-10-04, Abdout): one row
+  per (term, section, subject) → teacher, created only when someone is assigned.
+  "Waiting for a teacher" is DERIVED (a grade subject with no row) — never store
+  it. One teacher per subject per section (co-teaching dropped on purpose).
+  Classes are being retired; never add a Class-based read or write here.
+- **Every assignment goes through the engine** (2026-10-04):
+  `assignments/plan.ts` is pure (teacher's free periods first, then swap
+  inside the SAME section or move into an empty period — never touch another
+  section) and `assignments/apply.ts` writes under
+  `pg_advisory_xact_lock(hashtext(school:term))`.
+  Changed rows are PARKED at `weekOffset -1` first, then written with final
+  values — writing moves in any order trips the slot unique index mid-batch.
+  Fixed slots (live/upcoming conference, PENDING/CONFIRMED substitution) never
+  move. Several assignments at once (`applyAssignmentsBatch`: suggest, derive,
+  carry-forward) load the term once and chain plans in memory — one lock, one
+  write. The slot editor's "all periods of this subject" calls `assignTeacher`;
+  its single-period path stays a plain slot edit.
+- **The generator pins assigned teachers** (2026-10-04): `buildGenerationInputs`
+  defaults to `pinSource: "assignments"` — an assigned subject keeps exactly its
+  teacher, only unassigned subjects get placeholders. `"expertise"` (any
+  qualified teacher) survives for callers that want the old behaviour.
+- **Terms carry forward; teachers release** (2026-10-04): activating a term
+  (`setActiveTerm`, `createTerm`/`updateTerm` with `isActive`) runs `prepareTerm`
+  — copy last term's assignments (active teachers only), then copy slots (same
+  year) or regenerate (new year). Deactivating or deleting a teacher releases
+  their assignments and empties their periods, inside the same transaction.
+- **The board is `/timetable/teachers`** — renamed from `/assignments` because
+  the breadcrumb rendered «التخصيصات». The page checks admin itself; the edge
+  wildcard admits TEACHER.
 - **Placeholder teachers keep parallel sections apart** (2026-10-04): the
   generator only separates two sections when one teacher must teach both, and
   onboarding builds the timetable before anyone is hired. `teacher-plan.ts`
@@ -143,8 +172,9 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   (`OR: [{ classId: { in } }, { sectionId }]`). Dropping either arm makes one
   generation of data invisible.
 - **Timetable before people**: auto-generation emits teacher-less slots
-  (`teacherId: null`); the slot editor is where teachers get attached. Don't
-  make teacherId required anywhere in the generation path.
+  (`teacherId: null`); assigning a teacher to a subject (the engine above) is
+  how teachers get attached, the slot editor for one-off periods. Don't make
+  teacherId required anywhere in the generation path.
 - **Terms come from calendars**: `calendars.ts` (`ACADEMIC_CALENDARS` +
   `resolveAcademicCalendar` + `computeTermDates`) derives N terms from
   country/structure/date — `computeTermDates` guarantees exactly one

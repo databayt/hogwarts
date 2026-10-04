@@ -2,9 +2,27 @@
 
 **Status:** :yellow_circle: IN PROGRESS
 **Completion:** 85%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-10-04
 
 ---
+
+## 2026-10-04 — Retiring classes (LOCAL, not pushed)
+
+New schools never have `Class` rows, yet exams, grades and teacher reads needed one (#429, #428).
+Done so far, per the plan in `~/.claude/plans/i-asked-in-a-cryptic-panda.md`:
+
+- **Timetable** — generator keeps parallel sections apart; `SubjectTeacher` + assignment engine +
+  three assignment UIs; carry-forward on term activation (see `timetable/ISSUE.md`).
+- **Exams** — set for a grade or section + subject; audience helpers; students take only their own
+  exams (see `exams/ISSUE.md`).
+- **Grades** — `Result` carries section, grade and term; report cards by subject; grade wizard by
+  student + subject (see `grades/ISSUE.md`).
+- **Owed at deploy:** migrations `20261004120000_subject_teachers`, `20261004130000_exam_scope`,
+  `20261004140000_result_scope`, then `prisma/sql/class-removal/01-results-scope.sql` (approval +
+  Neon restore point).
+- **Next:** assignments (S7), attendance (S8), quick assessments / progress (S9), announcements and
+  notifications (S10), messaging (S11), fees by grade (S12), LMS enrolment (S13), remaining reads
+  (S14), dead class UI (S15), then the approval-gated drops (Phase 4).
 
 ## MVP Checklist
 

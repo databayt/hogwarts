@@ -8,7 +8,7 @@ maturity: Production-Ready
 completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-09-03
+last_audited: 2026-10-04
 ---
 
 # Timetable -- Production Readiness Tracker
@@ -20,6 +20,10 @@ last_audited: 2026-09-03
 ---
 
 ## Log
+
+- 2026-10-04 — **Teachers are assigned to subjects and sections; the timetable follows** (`bd2fc67ba`, `8e7745238`, `d2b4afdef`, `4d0a04045`, `23ab030e5`, `26954a1e4`, `157a4e6da`). New `SubjectTeacher` (section × subject → teacher, per term; migration `20261004120000_subject_teachers` — **owed on prod**). The engine in `assignments/` plans an assignment purely (`plan.ts`: the teacher's free periods first, then swaps inside the section or a move into an empty period), then writes it in one transaction under an advisory lock (`apply.ts`; changed rows park at `weekOffset -1` so the unique index never trips mid-write). Fixed slots — a live or upcoming conference, a pending substitution — never move; caps and double-booking hold; what can't be placed returns as residuals with a reason. Three ways in: the Add Teacher wizard's "Subjects & sections" step and the /teachers row dialog (one shared editor, `listings/teachers/subjects/`), and the school-wide board at `/timetable/teachers` (grade tables, per-teacher load, Suggest from qualifications, over-cap confirm). The generator now pins each subject to its assigned teacher and gives only unstaffed subjects a placeholder; the slot editor's "all periods of this subject" calls `assignTeacher`. A new term inherits last term's teachers and timetable (`carry.ts`, run on term activation); deactivating or deleting a teacher releases their subjects. Teacher reads (dashboard, profile, attendance, mobile `/teacher/classes`, workload) include assignments. `derive.ts` + `prisma/scripts/subject-teachers-backfill.ts` backfill schools that predate assignments (demo from slots: 200 assignments, 666 periods, 0 double-bookings).
+  - **Owed at deploy (approval-gated):** the DDL, then `subject-teachers-backfill.ts --domain kingfahd --from-classes` and `--domain demo --from-slots`.
+  - **Open:** one teacher per subject per section — co-teaching is dropped on purpose.
 
 - 2026-10-04 — **Parallel sections stop mirroring; periods waiting for a teacher are visible** (`e07eb12a0`, `4025cf58d`, `ef42a3963`). The timetable is built before any teacher exists, and the generator only separated two sections when one teacher had to teach both, so every new school got sections A and B as copies. Prod alabidae: all 680 slots had 7-A and 7-B on the same subject at the same period, so one teacher taking a subject for both sections clashed every period. `generate/teacher-plan.ts` gives each (grade, subject) a placeholder teacher shared by the grade's sections (split past the weekly cap), stripped to `teacherId = null` before saving. `generate/inputs.ts` is now the one loader for onboarding and the Generate page, with stable section order. `placeSectionSubject` tries every day for a real teacher, then a placeholder, before a teacher-less period. Staffed subjects are placed first, and a 2-period subject is no longer limited to the first three days. Tests: two sections per grade go from 120 clashes to 0, everything is placed, and a real teacher gets 10/10 periods instead of 6. The admin room grid labels unassigned periods «بانتظار معلم» with a per-room count (admin-only). `applyGeneratedTimetable` rejects foreign term/slot ids.
   - **Open:** grades whose selections exceed the week still leave a few clashes and unplaced periods. Local alabidae grades 10–12 list every stream's subjects (73–94 periods against 35 slots) because sections have no stream, and grade 5 has 14 subjects. That is a curriculum-data/stream problem, not the generator.

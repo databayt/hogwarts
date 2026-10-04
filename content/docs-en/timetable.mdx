@@ -30,7 +30,7 @@ Every role except `USER` can export. `manage_substitutions` is granted to ADMIN 
 
 ## Routes
 
-`layout.tsx` renders role-based tabs via `PageNav`, each tab individually permission-gated. Admins see **Overview, Analytics, Generate, Conflicts, Settings**. Teachers and guardians see **Today** and **Full**; the **Analytics** tab additionally appears for any role with `view_analytics` (teacher, accountant). **Students see no tabs at all** — a student has one schedule, so Today and Full were the same data twice; `/timetable` renders the week grid directly. The strip is skipped rather than rendered empty, because `PageNav` still paints its bottom border when every item is hidden.
+`layout.tsx` renders role-based tabs via `PageNav`, each tab individually permission-gated. Admins see **Overview, Teachers, Analytics, Generate, Conflicts, Settings**. Teachers and guardians see **Today** and **Full**; the **Analytics** tab additionally appears for any role with `view_analytics` (teacher, accountant). **Students see no tabs at all** — a student has one schedule, so Today and Full were the same data twice; `/timetable` renders the week grid directly. The strip is skipped rather than rendered empty, because `PageNav` still paints its bottom border when every item is hidden.
 
 There is no separate `/my-timetable` route — the name survives in the `roleRoutes` matrix with no page behind it. Guardians and teachers use `/timetable` and `/timetable/full`, which both render `TimetableContent` and differ only by `defaultTab` (`"today"` vs `"full"`); `RoleRouter` dispatches to the correct view by role. `StudentView` ignores `defaultTab` and always renders the grid, so `/timetable/full` is simply a duplicate for a student.
 
@@ -44,6 +44,7 @@ Access is decided at the **edge**, in `src/routes.ts` — these pages carry no g
 | `/timetable/generate`  | `GenerateTimetableContent`  | Yes — Generate       |
 | `/timetable/conflicts` | `TimetableConflictsContent` | Yes — Conflicts      |
 | `/timetable/settings`  | `TimetableSettingsContent`  | Yes — Settings       |
+| `/timetable/teachers`  | `AssignmentsContent`        | Yes — Teachers       |
 
 Earlier builds carried standalone `by-class`, `by-teacher`, `by-room`, and `templates` routes that nothing linked to. They were removed: the admin already sees a single role-routed grid (`AdminView`) whose **classroom / teacher selection is a cookie-persistent filter** — one route serves every admin axis, and the choice survives refresh and navigation. (The template _actions_ remain in `actions.ts`; only the unreached UI was deleted.)
 
@@ -261,6 +262,36 @@ is accepted.
 In the admin room view, a period with no teacher reads **«بانتظار معلم» / Needs
 teacher**, with a count of how many periods in the room are still waiting.
 Students and guardians don't see the label.
+
+### Assigning teachers to subjects
+
+Who teaches what is one fact per section and subject: **SubjectTeacher**
+(section × subject → teacher, per term). There are no classes to create — a
+subject a grade teaches is already in each of its sections' timetables, waiting
+for a teacher until someone is assigned. An admin assigns a teacher in three
+places, all backed by the same engine:
+
+- the **Subjects & sections** step of the Add Teacher wizard;
+- **Assign subjects** in the row menu on `/teachers` (next to View and Generate
+  credentials);
+- the **Teachers** tab, `/timetable/teachers` — every grade as a table of
+  sections × subjects, each cell a teacher picker, with each teacher's weekly
+  load against their cap and a **Suggest** button that proposes qualified
+  teachers for the waiting subjects.
+
+When a teacher takes a subject, the timetable follows: every period of that
+subject in those sections gets the teacher, and where the teacher is already
+busy, periods **swap inside the same section** (or move into an empty period).
+Another section is never touched, a live or upcoming online class and a pending
+substitution never move, and the teacher's daily and weekly limits hold —
+assigning past the weekly limit asks first. Anything that still can't be placed
+is listed with the reason. In the slot editor, changing a period's teacher can
+apply to all periods of that subject in the section.
+
+A new term starts with last term's teachers and timetable. A teacher who is
+deactivated or deleted gives their subjects back — those periods wait for a
+teacher again. Regenerating the timetable keeps every assigned teacher on their
+subjects.
 
 `detectTimetableConflicts()` backs the **Conflicts** tab — teacher, room, and section double-booking — and `suggestFreeSlots()` powers the slot editor's free-period suggestions. `getTimetableAnalytics()` backs the **Analytics** tab.
 

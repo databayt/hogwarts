@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 85
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-08-28
+last_audited: 2026-10-04
 ---
 
 ## Exams -- Examination Management System
@@ -55,6 +55,9 @@ Landing copy for student/guardian/teacher lives in `results.examsHome`.
 src/components/school-dashboard/exams/
 ├── content.tsx                  # Main exam dashboard (server component)
 ├── teacher-content.tsx          # Teacher-specific dashboard
+├── lib/audience.ts              # Who sits an exam (pure): roster, student/teacher
+│                                #   filters, label — grade/section or legacy class
+├── lib/roster.ts                # Users to notify, examReachesStudents, teacher filter
 ├── error-boundary.tsx           # Error handling
 ├── overview-filters.tsx         # Dashboard filters
 ├── manage/                      # Exam lifecycle management (21 files)
@@ -92,7 +95,7 @@ Template (distribution) → Auto-Generate (wizard button)
   → Student submits exam session
   → submitExamSession: instant-grade if fully objective
   → finalizeExamResults: aggregate MarkingResult → ExamResult + unified Result
-  → dispatchNotification: results-published to class audience
+  → dispatchNotification: results-published to the exam's students + guardians
   → Exam-reminders cron: notify students/teachers N hours before exam
 ```
 
@@ -105,9 +108,10 @@ Key files:
 
 ### Integration Points
 
-- **Classes**: Exams assigned to classes for student roster
+- **Sections / grades**: an exam is set for a grade — one section of it or the whole grade — and a subject (`TeachingScopePicker` in `../teaching-scope/`, checked by `resolveTeachingScope`). Exams from before classes were retired keep their `classId`; `lib/audience.ts` answers for both.
+- **Teachers**: a teacher opens the exams of a class they teach, the exams they wrote, and the exams of a subject they're assigned (`SubjectTeacher`) in the exam's section or grade
 - **Subjects**: Questions and exams organized by subject
-- **Timetable**: Conflict detection with scheduled classes
+- **Timetable**: Conflict detection against the audience's timetable periods and other exams for the same students
 - **Students**: Results linked to student profiles
 - **Grades**: Exam results now write to unified `Result` table via `grades/lib/gradebook.ts`
 - **Notifications**: Results-published + exam-reminders now dispatched via `dispatchNotification`

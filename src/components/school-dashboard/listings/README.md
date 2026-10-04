@@ -36,14 +36,35 @@ The three add wizards opt into the wizard runtime (`form/wizard/wizard-runtime.t
 - **Activity rule:** a hidden step re-runs its effects when shown again. An effect that initialises
   from the loaded row must run once per record (`validityFromRef` keyed on `data.id`), or it
   overrides what the user typed.
-- Teacher expertise loads its grade catalogue when the wizard opens (`expertise/resources.tsx`,
-  read with `use()`). The request starts in an effect: a Server Action called during render loops.
+- The teacher wizard's subjects step prefetches the editor's data when the wizard opens
+  (`teachers/subjects/prefetch.tsx`, wrapped around `teachers/add/[id]/layout.tsx`). The request
+  starts in an effect: a Server Action called during render loops.
 - Dev measurements, 2026-10-03: Next 50–175 ms with 0 blocking requests (was a save, a locale
   redirect and an RSC fetch in series). Back 1–90 ms. Fresh drafts make no `get*ForWizard`,
   attachments or guardians load.
 
 Known, not fixed: re-saving the student personal step creates a second father/mother when no email
 or phone was entered (`createOrLinkGuardian` has nothing to match on). Pre-existing.
+
+## Teacher subjects & sections (2026-10-04)
+
+A teacher is assigned to subjects in sections — there are no classes to create. One editor,
+`teachers/subjects/editor.tsx` (`TeacherSubjectsEditor`), serves two entry points: the wizard's
+"Subjects & sections" step (slug `expertise`, unchanged) and the **Assign subjects** row action on
+`/teachers` (`subjects/dialog.tsx`, opened through the `subjects/store.ts` module store like the
+credentials dialog, mounted once in `table.tsx`). Pick grades, tick a subject — all its free sections
+come ticked — or toggle sections one by one; a section someone else teaches shows who. The weekly
+load is projected against the teacher's cap, past which saving asks first; periods the timetable
+couldn't place come back as an alert with reasons. Saves go through the timetable assignment engine
+(`timetable/assignments/actions.ts → saveTeacherSubjects`), which also records the subject as the
+teacher's PRIMARY expertise. Deactivating or deleting a teacher releases their subjects.
+
+## Grade entry (2026-10-04)
+
+The grade wizard selects **student → subject → optional exam / assignment**. The subjects are the
+student's grade's (`SubjectSelection`) plus any legacy class's; the row takes its section, grade and
+term from the student (`resolveStudentSubjectContext`), so no class is needed and a draft needs only a
+student. The list, detail, CSV and certificate name the section, falling back to a legacy class.
 
 ## Empty drafts
 

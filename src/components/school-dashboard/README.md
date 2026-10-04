@@ -80,9 +80,10 @@ Core CRUD for all listing entities (students, teachers, classes, subjects, grade
 ### Integration Points
 
 - [Dashboard](./dashboard/README.md) -- Role-based landing pages
-- [Listings](./listings/) -- Core entity CRUD (students, teachers, classes, etc.)
+- [Listings](./listings/) -- Core entity CRUD (students, teachers, classrooms, etc.)
+- [Teaching scope](./teaching-scope/) -- Grade → section (or whole grade) → subject picker and its server check; replaces "pick a class" for exams and grades
 - [Attendance](./attendance/README.md) -- Daily/period tracking
-- [Timetable](./timetable/README.md) -- Schedule builder
+- [Timetable](./timetable/README.md) -- Schedule builder, and who teaches which subject in which section (`SubjectTeacher`, `/timetable/teachers`)
 - [Exams](./exams/) -- Assessment system
 - [Admission](./admission/) -- Application processing
 - [Finance](./finance/) -- Fee collection, payroll, banking
