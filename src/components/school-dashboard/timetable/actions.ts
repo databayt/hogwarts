@@ -84,6 +84,7 @@ import { getDisplayLang } from "@/components/translation/locale"
 import { getLabels, getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
+import { prepareTerm } from "./assignments/carry"
 // Constants imported from ./constants.ts to avoid "use server" export restrictions
 import { ABSENCE_TYPES, DRAFT_TERM_ID, SUBSTITUTION_STATUS } from "./config"
 // ============================================================================
@@ -3293,6 +3294,12 @@ export async function setActiveTerm(input: { termId: string }) {
     changes: { isActive: true },
   })
 
+  // Carry teachers and the timetable into the newly active term. Never
+  // fails the activation itself.
+  await prepareTerm(schoolId, termId).catch((err) =>
+    console.error("[setActiveTerm] prepareTerm failed:", err)
+  )
+
   return { success: true }
 }
 
@@ -4726,7 +4733,9 @@ export async function applyGeneratedTimetable(rawInput: {
   if (!term) {
     return { success: false, createdCount, errors: [ACTION_ERRORS.NOT_FOUND] }
   }
-  if (!(await generatedSlotsBelongToSchool(schoolId, term.yearId, input.slots))) {
+  if (
+    !(await generatedSlotsBelongToSchool(schoolId, term.yearId, input.slots))
+  ) {
     return {
       success: false,
       createdCount,

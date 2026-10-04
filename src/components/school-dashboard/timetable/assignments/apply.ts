@@ -21,6 +21,7 @@ import {
   type PlanSlot,
   type PlanState,
   type ResidualReason,
+  type SlotPatch,
   type TeacherRules,
 } from "./plan"
 
@@ -86,6 +87,57 @@ export interface AssignmentInput {
 /** Serializes timetable writes for one school's term. */
 async function lockTerm(tx: Tx, schoolId: string, termId: string) {
   await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`timetable:${schoolId}:${termId}`})) IS NULL AS locked`
+}
+
+/**
+ * Writes planner patches safely. Every changed row is first parked at
+ * weekOffset -1 — outside the (section/room × day × period × weekOffset)
+ * unique indexes — and then written with its final values. Moves and lesson
+ * swaps can chain (A leaves a period B then takes; two lessons trade places),
+ * and no write order alone avoids a transient unique clash; parking does.
+ */
+async function writePatches(tx: Tx, schoolId: string, patches: SlotPatch[]) {
+  if (patches.length === 0) return
+  await tx.timetable.updateMany({
+    where: { schoolId, id: { in: patches.map((p) => p.id) } },
+    data: { weekOffset: -1 },
+  })
+  for (const { id, ...data } of patches) {
+    await tx.timetable.update({
+      where: { id },
+      data: { ...data, weekOffset: 0 },
+    })
+  }
+}
+
+/** The planner's result applied to a state, for chaining plans in memory. */
+function applyPatches(state: PlanState, patches: SlotPatch[]): PlanState {
+  if (patches.length === 0) return state
+  const byId = new Map(patches.map((p) => [p.id, p]))
+  return {
+    ...state,
+    slots: state.slots.map((slot) => {
+      const p = byId.get(slot.id)
+      return p ? { ...slot, ...p } : slot
+    }),
+  }
+}
+
+/** Final diff of `after` against `before`, one patch per changed row. */
+function diffStates(before: PlanState, after: PlanState): SlotPatch[] {
+  const original = new Map(before.slots.map((s) => [s.id, s]))
+  const out: SlotPatch[] = []
+  for (const s of after.slots) {
+    const o = original.get(s.id)!
+    const p: SlotPatch = { id: s.id }
+    if (s.dayOfWeek !== o.dayOfWeek) p.dayOfWeek = s.dayOfWeek
+    if (s.periodId !== o.periodId) p.periodId = s.periodId
+    if (s.subjectId !== o.subjectId) p.subjectId = s.subjectId
+    if (s.teacherId !== o.teacherId) p.teacherId = s.teacherId
+    if (s.classroomId !== o.classroomId) p.classroomId = s.classroomId
+    if (Object.keys(p).length > 1) out.push(p)
+  }
+  return out
 }
 
 /** The term's timetable as the pure planner sees it. */
@@ -336,21 +388,7 @@ export async function applyAssignment(
       }
       if (input.dryRun) return outcome
 
-      // Slot writes. Lesson swaps exchange content between two rows, so they
-      // never trip the (section/room × day × period) unique indexes; only a
-      // move changes a row's position, and moves are applied in the order the
-      // planner made them (a later move may take a period an earlier one
-      // freed).
-      const moveOrder = new Map(plan.moveOrder.map((id, i) => [id, i]))
-      const ordered = [...plan.patches].sort((a, b) => {
-        const am = a.dayOfWeek !== undefined || a.periodId !== undefined
-        const bm = b.dayOfWeek !== undefined || b.periodId !== undefined
-        if (am !== bm) return am ? 1 : -1
-        return (moveOrder.get(a.id) ?? 0) - (moveOrder.get(b.id) ?? 0)
-      })
-      for (const { id, ...data } of ordered) {
-        await tx.timetable.update({ where: { id }, data })
-      }
+      await writePatches(tx, schoolId, plan.patches)
 
       // Scheduled online classes on changed periods were set up for the old
       // teacher, subject or time — cancel them; the daily sweep re-creates
@@ -512,4 +550,212 @@ export async function releaseTeacher(
   return "$transaction" in client
     ? (client as PrismaClient).$transaction(run)
     : run(client as Tx)
+}
+
+/**
+ * Many assignments at once in ONE transaction: the term is loaded and locked
+ * once, every request is planned in memory against the result of the ones
+ * before it, and the combined change is written once. Used when a new term
+ * inherits last term's teachers (carry.ts) and by the board's Suggest.
+ * Requests that fail validation are skipped and reported, never fatal.
+ * No weekly-cap refusal: callers that care check first.
+ */
+export async function applyAssignmentsBatch(
+  input: {
+    schoolId: string
+    termId: string
+    requests: Array<{
+      teacherId: string
+      subjectId: string
+      sectionIds: string[]
+    }>
+    assignedById?: string | null
+  },
+  client: PrismaClient = defaultDb
+): Promise<{ outcomes: AssignmentOutcome[]; skipped: number }> {
+  const { schoolId, termId } = input
+  if (input.requests.length === 0) return { outcomes: [], skipped: 0 }
+
+  return client.$transaction(
+    async (tx) => {
+      await lockTerm(tx, schoolId, termId)
+      const term = await tx.term.findFirst({
+        where: { id: termId, schoolId },
+        select: { yearId: true },
+      })
+      if (!term) return { outcomes: [], skipped: input.requests.length }
+
+      const teacherIds = [...new Set(input.requests.map((r) => r.teacherId))]
+      const sectionIds = [
+        ...new Set(input.requests.flatMap((r) => r.sectionIds)),
+      ]
+      const [teachers, sections, selections] = await Promise.all([
+        tx.teacher.findMany({
+          where: {
+            id: { in: teacherIds },
+            schoolId,
+            employmentStatus: "ACTIVE",
+          },
+          select: { id: true },
+        }),
+        tx.section.findMany({
+          where: { id: { in: sectionIds }, schoolId },
+          select: { id: true, gradeId: true },
+        }),
+        tx.subjectSelection.findMany({
+          where: { schoolId, isActive: true },
+          select: { gradeId: true, catalogSubjectId: true },
+        }),
+      ])
+      const activeTeachers = new Set(teachers.map((t) => t.id))
+      const gradeOf = new Map(sections.map((x) => [x.id, x.gradeId]))
+      const taught = new Set(
+        selections.map((x) => `${x.gradeId}|${x.catalogSubjectId}`)
+      )
+
+      const initial = await loadPlanState(tx, schoolId, termId, term.yearId)
+      // Batch callers vet load themselves; no per-request cap here.
+      let state: PlanState = {
+        ...initial,
+        rules: new Map(
+          [...teacherIds].map((id) => [
+            id,
+            {
+              ...(initial.rules.get(id) ?? initial.defaultRules),
+              maxPerWeek: Number.POSITIVE_INFINITY,
+            },
+          ])
+        ),
+      }
+      for (const [id, r] of initial.rules) {
+        if (!state.rules.has(id))
+          (state.rules as Map<string, TeacherRules>).set(id, r)
+      }
+
+      const outcomes: AssignmentOutcome[] = []
+      const saved: Array<{
+        teacherId: string
+        subjectId: string
+        sectionId: string
+      }> = []
+      let skipped = 0
+      for (const req of input.requests) {
+        const valid =
+          activeTeachers.has(req.teacherId) &&
+          req.sectionIds.length > 0 &&
+          req.sectionIds.every((id) => {
+            const g = gradeOf.get(id)
+            return !!g && taught.has(`${g}|${req.subjectId}`)
+          })
+        if (!valid) {
+          skipped++
+          continue
+        }
+        const before = new Map(state.slots.map((x) => [x.id, x]))
+        const plan = planAssignment(state, req)
+        state = applyPatches(state, plan.patches)
+        for (const sectionId of req.sectionIds) {
+          saved.push({
+            teacherId: req.teacherId,
+            subjectId: req.subjectId,
+            sectionId,
+          })
+        }
+        outcomes.push({
+          ok: true,
+          termId,
+          teacherId: req.teacherId,
+          subjectId: req.subjectId,
+          assigned: plan.assigned.length,
+          scheduled: [...before.values()].filter(
+            (x) =>
+              x.subjectId === req.subjectId &&
+              !!x.sectionId &&
+              req.sectionIds.includes(x.sectionId)
+          ).length,
+          moved: plan.moved.length,
+          released: plan.released.length,
+          residual: plan.residual.map((r) => {
+            const slot = before.get(r.slotId)!
+            return {
+              slotId: r.slotId,
+              sectionId: slot.sectionId!,
+              dayOfWeek: slot.dayOfWeek,
+              periodId: slot.periodId,
+              reason: r.reason,
+            }
+          }),
+          load: {
+            periodsPerWeek: state.slots.filter(
+              (x) => x.teacherId === req.teacherId
+            ).length,
+            cap: (initial.rules.get(req.teacherId) ?? initial.defaultRules)
+              .maxPerWeek,
+          },
+          affectedTeacherIds: [
+            ...new Set(
+              plan.moved
+                .map((id) => before.get(id)?.teacherId)
+                .filter((t): t is string => !!t && t !== req.teacherId)
+            ),
+          ],
+          dryRun: false,
+        })
+      }
+
+      const patches = diffStates(initial, state)
+      await writePatches(tx, schoolId, patches)
+      if (patches.length > 0) {
+        await tx.conference.updateMany({
+          where: {
+            schoolId,
+            timetableId: { in: patches.map((p) => p.id) },
+            status: "scheduled",
+            scheduledStart: { gt: new Date() },
+          },
+          data: { status: "cancelled" },
+        })
+      }
+      for (const a of saved) {
+        await tx.subjectTeacher.upsert({
+          where: {
+            schoolId_termId_sectionId_subjectId: {
+              schoolId,
+              termId,
+              sectionId: a.sectionId,
+              subjectId: a.subjectId,
+            },
+          },
+          create: {
+            schoolId,
+            termId,
+            sectionId: a.sectionId,
+            subjectId: a.subjectId,
+            teacherId: a.teacherId,
+            assignedById: input.assignedById ?? null,
+          },
+          update: {
+            teacherId: a.teacherId,
+            assignedById: input.assignedById ?? null,
+          },
+        })
+      }
+      const qualified = new Set(
+        saved.map((a) => `${a.teacherId}|${a.subjectId}`)
+      )
+      for (const key of qualified) {
+        const [teacherId, subjectId] = key.split("|")
+        await tx.teacherSubjectExpertise.upsert({
+          where: {
+            schoolId_teacherId_subjectId: { schoolId, teacherId, subjectId },
+          },
+          create: { schoolId, teacherId, subjectId, expertiseLevel: "PRIMARY" },
+          update: {},
+        })
+      }
+
+      return { outcomes, skipped }
+    },
+    { timeout: 60000, maxWait: 10000 }
+  )
 }

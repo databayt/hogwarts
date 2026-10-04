@@ -9,6 +9,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prepareTerm } from "@/components/school-dashboard/timetable/assignments/carry"
 
 import type { TermDetail, TermRow } from "./types"
 import {
@@ -72,6 +73,12 @@ export async function createTerm(
         isActive: parsed.isActive,
       },
     })
+
+    if (parsed.isActive) {
+      await prepareTerm(schoolId, row.id).catch((err) =>
+        console.error("[createTerm] prepareTerm failed:", err)
+      )
+    }
 
     revalidatePath(ACADEMIC_PATH)
     return { success: true, data: { id: row.id } }
@@ -142,6 +149,12 @@ export async function updateTerm(
     if (typeof rest.isActive !== "undefined") data.isActive = rest.isActive
 
     await db.term.updateMany({ where: { id, schoolId }, data })
+
+    if (rest.isActive === true) {
+      await prepareTerm(schoolId, id).catch((err) =>
+        console.error("[updateTerm] prepareTerm failed:", err)
+      )
+    }
 
     revalidatePath(ACADEMIC_PATH)
     return { success: true, data: undefined }
@@ -254,6 +267,11 @@ export async function setActiveTerm(input: {
       where: { id, schoolId },
       data: { isActive: true },
     })
+
+    // Carry teachers and the timetable into it (never fails activation).
+    await prepareTerm(schoolId, id).catch((err) =>
+      console.error("[setActiveTerm] prepareTerm failed:", err)
+    )
 
     revalidatePath(ACADEMIC_PATH)
     return { success: true, data: undefined }

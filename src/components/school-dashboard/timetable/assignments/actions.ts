@@ -23,7 +23,12 @@ import type { Lang } from "@/components/translation/types"
 
 import { logTimetableAction } from "../permissions"
 import { canModifyTimetable, type TimetableRole } from "../permissions-config"
-import { applyAssignment, unassignPairs, type AssignmentOutcome } from "./apply"
+import {
+  applyAssignment,
+  applyAssignmentsBatch,
+  unassignPairs,
+  type AssignmentOutcome,
+} from "./apply"
 import { cellKey } from "./keys"
 import type { ResidualReason } from "./plan"
 import {
@@ -508,19 +513,14 @@ export async function suggestTeacherAssignments(): Promise<
       }))
     )
 
-    const outcomes: AssignmentOutcome[] = []
-    for (const s of suggestions) {
-      const result = await applyAssignment({
-        schoolId: ctx.schoolId,
-        termId: ctx.termId,
-        teacherId: s.teacherId,
-        subjectId: s.subjectId,
-        sectionIds: s.sectionIds,
-        assignedById: ctx.userId,
-        respectCap: true,
-      })
-      if (result.ok) outcomes.push(result)
-    }
+    // One transaction for every suggestion (suggest.ts already kept each
+    // teacher under their cap).
+    const { outcomes } = await applyAssignmentsBatch({
+      schoolId: ctx.schoolId,
+      termId: ctx.termId,
+      requests: suggestions,
+      assignedById: ctx.userId,
+    })
 
     if (outcomes.length > 0) {
       await logTimetableAction("assign_teacher", {

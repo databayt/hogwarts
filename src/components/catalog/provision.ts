@@ -351,7 +351,9 @@ export async function autoProvisionSections(schoolId: string) {
  * Idempotent via createMany({ skipDuplicates: true }).
  */
 export async function autoGenerateTimetableForSchool(
-  schoolId: string
+  schoolId: string,
+  /** Build this term instead of the active one (prepareTerm passes it). */
+  opts?: { termId?: string }
 ): Promise<{ success: boolean; slotsCreated: number; warnings: string[] }> {
   const [
     { generateSectionTimetable },
@@ -370,11 +372,18 @@ export async function autoGenerateTimetableForSchool(
   //    `findFirst({ isActive: true })` here could pick a different active term
   //    than the grid when legacy data has duplicates (the demo's 2 active
   //    terms), generating slots under a year the grid never displays.
-  const { resolveActiveTerm } = await import("@/lib/term-resolver")
-  const resolved = await resolveActiveTerm(schoolId)
-  const activeTerm = resolved.term
-    ? { id: resolved.term.id, yearId: resolved.term.yearId }
-    : null
+  const activeTerm = opts?.termId
+    ? await db.term.findFirst({
+        where: { id: opts.termId, schoolId },
+        select: { id: true, yearId: true },
+      })
+    : await (async () => {
+        const { resolveActiveTerm } = await import("@/lib/term-resolver")
+        const resolved = await resolveActiveTerm(schoolId)
+        return resolved.term
+          ? { id: resolved.term.id, yearId: resolved.term.yearId }
+          : null
+      })()
   if (!activeTerm) {
     console.warn(`${tag} BAIL: No active term`)
     return { success: false, slotsCreated: 0, warnings: ["No active term"] }
