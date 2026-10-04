@@ -45,6 +45,7 @@ model Teacher {
   experiences      TeacherExperience[]
   subjectExpertise TeacherSubjectExpertise[]
   classTeachers    ClassTeacher[] // Co-teaching assignments
+  subjectTeachers  SubjectTeacher[] // Subjects taught per section
 
   // Timetable constraint relations
   constraints TeacherConstraint[]

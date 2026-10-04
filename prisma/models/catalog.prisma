@@ -212,6 +212,7 @@ model Subject {
 
   // === School-scoped reverse relations ===
   timetableSlots         Timetable[]
+  subjectTeachers        SubjectTeacher[]
   schoolClasses          Class[]
   schoolExams            SchoolExam[]
   schoolExamTemplates    SchoolExamTemplate[]

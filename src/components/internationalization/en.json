@@ -430,7 +430,12 @@
       "TEMPLATE_NOT_FOUND": "Template not found",
       "TEMPLATE_INVALID": "This template's merge tags are broken, so it cannot be filled",
       "QUESTION_BANK_EMPTY": "The question bank has no questions matching this blueprint",
-      "DISTRIBUTION_INVALID": "This blueprint's question distribution is not valid, so it cannot select questions"
+      "DISTRIBUTION_INVALID": "This blueprint's question distribution is not valid, so it cannot select questions",
+      "NO_ACTIVE_TERM": "No active term. Set one in the timetable settings first.",
+      "INVALID_SECTION": "One of the sections no longer exists.",
+      "SUBJECT_NOT_IN_GRADE": "This subject isn't taught in that grade.",
+      "TEACHER_OVER_CAP": "This would take the teacher past their weekly limit.",
+      "ASSIGNMENT_FAILED": "Couldn't save the assignment. Try again."
     },
     "tryAgain": "Try again"
   },

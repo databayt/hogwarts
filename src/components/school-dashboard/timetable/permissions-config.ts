@@ -58,6 +58,9 @@ export type TimetableAction =
   | "respond_substitution"
   | "cancel_substitution"
   | "apply_structure"
+  // Subject-teacher assignment audit log actions
+  | "assign_teacher"
+  | "unassign_teacher"
 
 export type AccessLevel = "none" | "read" | "write" | "admin"
 

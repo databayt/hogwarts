@@ -215,6 +215,7 @@ export async function logTimetableAction(
       | "import"
       | "teacherAbsence"
       | "substitution"
+      | "assignment"
     changes?: Record<string, unknown>
     metadata?: Record<string, unknown>
   }

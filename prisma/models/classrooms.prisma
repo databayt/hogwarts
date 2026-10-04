@@ -52,6 +52,7 @@ model Section {
   classroom       Classroom?       @relation(fields: [classroomId], references: [id], onDelete: SetNull)
   students        Student[]
   timetables      Timetable[]
+  subjectTeachers SubjectTeacher[]
   attendances     Attendance[]
   whatsappGroups  WhatsAppGroup[]
   conferences     Conference[]

@@ -1,0 +1,36 @@
+// Subject teachers — who teaches which subject to which section.
+//
+// A school's grades already say which subjects they take (SubjectSelection)
+// and how many sections they have (Section), so every "Math · 7-A" is derived,
+// never stored. The one fact that has to be stored is the teacher: a row here
+// exists only once a subject in a section has one. A selection pair with no
+// row is "waiting for a teacher" (بانتظار معلم).
+//
+// Replaces the Class model's teacher role (classes are being retired). Per term
+// so a new term can start from last term's assignments; the homeroom teacher
+// stays on Section.homeroomTeacherId.
+
+model SubjectTeacher {
+  id           String  @id @default(cuid())
+  schoolId     String
+  termId       String
+  sectionId    String
+  subjectId    String // catalog Subject — same id space as SubjectSelection.catalogSubjectId / Timetable.subjectId
+  teacherId    String
+  assignedById String? // User who made the assignment (audit only)
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  term    Term    @relation(fields: [termId], references: [id], onDelete: Cascade)
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  // Deleting a teacher returns their subjects to "waiting for a teacher".
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, termId, sectionId, subjectId]) // one teacher per subject per section per term
+  @@index([schoolId, termId, teacherId])
+  @@index([schoolId, sectionId])
+  @@map("subject_teachers")
+}

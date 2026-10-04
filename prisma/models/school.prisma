@@ -163,6 +163,7 @@ model School {
   classes                   Class[]
   studentClasses            StudentClass[]
   classTeachers             ClassTeacher[]
+  subjectTeachers           SubjectTeacher[]
   scoreRanges               ScoreRange[]
   schoolAssignments         SchoolAssignment[]
   assignmentSubmissions     AssignmentSubmission[]
@@ -607,6 +608,7 @@ model Term {
   timetables        Timetable[]
   schoolWeekConfigs SchoolWeekConfig[]
   reportCards       ReportCard[]
+  subjectTeachers   SubjectTeacher[]
 
   // Timetable optimization relations
   teacherConstraints   TeacherConstraint[]
