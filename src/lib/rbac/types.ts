@@ -1,38 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { PrismaAbility, Subjects } from "@casl/prisma"
-import type {
-  Announcement,
-  Assignment,
-  Attendance,
-  BankAccount,
-  Budget,
-  Subject as CatalogSubject,
-  Chapter,
-  Class,
-  Classroom,
-  Enrollment,
-  Event,
-  ExamResult,
-  Expense,
-  FinancePermission,
-  Guardian,
-  Invoice,
-  Lesson,
-  LessonProgress,
-  Message,
-  Payment,
-  SalarySlip,
-  Scholarship,
-  School,
-  Section,
-  StaffMember,
-  Student,
-  Teacher,
-  Timetable,
-  UserRole,
-} from "@prisma/client"
+import type { UserRole } from "@prisma/client"
 
 // ---------------------------------------------------------------------------
 // Roles — mirror of Prisma UserRole enum, kept as string-literal union so
@@ -86,74 +55,6 @@ export interface PolicyContext {
   // Resolved for STAFF / ACCOUNTANT (both use StaffMember table)
   staffMemberId?: string
 }
-
-// ---------------------------------------------------------------------------
-// Actions — coarse verbs. CASL expands "manage" to cover all others.
-// "read", "create", "update", "delete" cover 99% of cases; "export" and
-// "import" gate CSV/bulk flows that often have stricter rules than plain
-// reads/writes.
-// ---------------------------------------------------------------------------
-
-export type AppAction =
-  | "read"
-  | "create"
-  | "update"
-  | "delete"
-  | "export"
-  | "import"
-  | "manage"
-
-// ---------------------------------------------------------------------------
-// Subjects — Prisma model types wired into CASL. Names match Prisma model
-// names (PascalCase) so that `accessibleBy(ability).Student` lines up with
-// `db.student.findMany({ where: accessibleBy(ability).Student })`.
-//
-// IMPORTANT: every subject that can appear in a rule condition must be
-// listed here. If you add a new Prisma model and want to gate access to it,
-// add the import above and the entry here in the same PR.
-// ---------------------------------------------------------------------------
-
-export type AppSubjects =
-  | Subjects<{
-      // Identity / directory
-      Student: Student
-      Teacher: Teacher
-      Guardian: Guardian
-      StaffMember: StaffMember
-      // Academic structure
-      Class: Class
-      Classroom: Classroom
-      Section: Section
-      Subject: CatalogSubject
-      // Academic work
-      Assignment: Assignment
-      Attendance: Attendance
-      ExamResult: ExamResult
-      Timetable: Timetable
-      // Content / LMS
-      Chapter: Chapter
-      Lesson: Lesson
-      Enrollment: Enrollment
-      LessonProgress: LessonProgress
-      // Communication
-      Announcement: Announcement
-      Event: Event
-      Message: Message
-      // Finance
-      Invoice: Invoice
-      Payment: Payment
-      Scholarship: Scholarship
-      Expense: Expense
-      Budget: Budget
-      BankAccount: BankAccount
-      SalarySlip: SalarySlip
-      FinancePermission: FinancePermission
-      // Platform
-      School: School
-    }>
-  | "all"
-
-export type AppAbility = PrismaAbility<[AppAction, AppSubjects]>
 
 // ---------------------------------------------------------------------------
 // Error codes — client maps these via ErrorHelper in the dictionary system.

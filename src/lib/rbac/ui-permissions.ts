@@ -7,9 +7,8 @@ import type { Role } from "./types"
 
 /**
  * UI-level permission flags consumed by client components (toolbars, columns).
- * Mirrors role policy from src/lib/rbac/policies/*. Server still enforces
- * via CASL `requireCan`; this exists so the UI does not lie about what the
- * user can do.
+ * Server actions enforce their own checks (auth → tenant → permission); this
+ * exists so the UI does not offer what the user cannot do.
  */
 export interface UIPermissions {
   showAddButton: boolean
