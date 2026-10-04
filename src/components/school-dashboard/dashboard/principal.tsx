@@ -86,7 +86,8 @@ export async function PrincipalDashboard({
         const [students, teachers, classes, announcements] = await Promise.all([
           db.student.count({ where: { schoolId: user.schoolId } }),
           db.teacher.count({ where: { schoolId: user.schoolId } }),
-          db.class.count({ where: { schoolId: user.schoolId } }),
+          // "Classes" are sections (Grade 7-A) — subject-courses are retired
+          db.section.count({ where: { schoolId: user.schoolId } }),
           db.announcement.findMany({
             where: { schoolId: user.schoolId, published: true },
             take: 5,

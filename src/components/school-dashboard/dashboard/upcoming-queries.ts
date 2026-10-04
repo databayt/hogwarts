@@ -15,6 +15,9 @@ import { subDays } from "date-fns"
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { studentAudienceWhere } from "@/lib/teaching-audience"
+import { getStudentScopes, getTeacherPairs } from "@/lib/teaching-scope"
+import { teacherAssignmentsWhere } from "@/components/school-dashboard/listings/assignments/queries"
 
 import type { EmergencyAlert } from "./actions"
 
@@ -56,29 +59,29 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const studentClasses = await db.studentClass.findMany({
-    where: { studentId: student.id, schoolId },
-    select: { classId: true },
-  })
-  const classIds = studentClasses.map((sc) => sc.classId)
+  const [scope] = await getStudentScopes(schoolId, [student.id])
+  const classIds = scope?.classIds ?? []
 
-  // Get assignments with status
-  const assignments = await db.schoolAssignment.findMany({
-    where: {
-      schoolId,
-      classId: { in: classIds },
-      status: "PUBLISHED",
-    },
-    include: {
-      class: { select: { subject: { select: { name: true } } } },
-      submissions: {
-        where: { studentId: student.id },
-        select: { status: true },
-      },
-    },
-    orderBy: { dueDate: "asc" },
-    take: 5,
-  })
+  // Work set for the student's section, their whole grade, or a legacy class
+  const assignments = scope
+    ? await db.schoolAssignment.findMany({
+        where: {
+          schoolId,
+          ...studentAudienceWhere(scope),
+          status: "PUBLISHED",
+        },
+        include: {
+          class: { select: { subject: { select: { name: true } } } },
+          subject: { select: { name: true } },
+          submissions: {
+            where: { studentId: student.id },
+            select: { status: true },
+          },
+        },
+        orderBy: { dueDate: "asc" },
+        take: 5,
+      })
+    : []
 
   // Get next class
   const dayOfWeek = today.getDay()
@@ -105,7 +108,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
     assignments: assignments.map((a) => ({
       id: a.id,
       title: a.title,
-      subject: a.class?.subject?.name || "Unknown",
+      subject: a.subject?.name || a.class?.subject?.name || "Unknown",
       dueDate: a.dueDate < today ? "Overdue" : formatDate(a.dueDate, "ar"),
       isOverdue: a.dueDate < today,
       status: (a.submissions[0]?.status?.toLowerCase() || "not_submitted") as
@@ -174,31 +177,41 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
     orderBy: { period: { startTime: "asc" } },
   })
 
-  // Get pending grading count
-  const pendingGrading = await db.assignmentSubmission.count({
-    where: {
-      schoolId,
-      status: "SUBMITTED",
-      assignment: { class: { teacherId: teacher.id } },
-    },
-  })
-
-  // Get attendance due count
-  const attendanceDue = await db.class.count({
-    where: {
-      teacherId: teacher.id,
-      schoolId,
-      NOT: {
-        studentClasses: {
-          every: {
-            student: {
-              attendances: { some: { date: { gte: today, lt: tomorrow } } },
-            },
-          },
-        },
+  // Submissions waiting on work the teacher teaches, and today's sections
+  // with no attendance mark yet
+  const todaySectionIds = [
+    ...new Set(
+      todaysClasses
+        .map((slot) => slot.sectionId)
+        .filter((id): id is string => !!id)
+    ),
+  ]
+  const pairs = await getTeacherPairs(schoolId, teacher.id)
+  const [pendingGrading, markedSections] = await Promise.all([
+    db.assignmentSubmission.count({
+      where: {
+        schoolId,
+        status: "SUBMITTED",
+        assignment: teacherAssignmentsWhere({
+          teacherId: teacher.id,
+          userId,
+          pairs,
+        }),
       },
-    },
-  })
+    }),
+    todaySectionIds.length === 0
+      ? Promise.resolve([])
+      : db.attendance.findMany({
+          where: {
+            schoolId,
+            sectionId: { in: todaySectionIds },
+            date: { gte: today, lt: tomorrow },
+          },
+          distinct: ["sectionId"],
+          select: { sectionId: true },
+        }),
+  ])
+  const attendanceDue = todaySectionIds.length - markedSections.length
 
   const nextClass = todaysClasses[0]
 
@@ -206,6 +219,7 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
     nextClass: nextClass
       ? {
           subject:
+            nextClass.subject?.name ||
             nextClass.class?.subject?.name ||
             nextClass.class?.name ||
             "Unknown",
@@ -216,7 +230,10 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
               })
             : "TBA",
           room: nextClass.classroom?.roomName || "TBA",
-          students: nextClass.class?._count?.studentClasses || 0,
+          students:
+            nextClass.section?._count.students ??
+            nextClass.class?._count?.studentClasses ??
+            0,
         }
       : undefined,
     pendingGrading,
@@ -246,19 +263,26 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  const scopes = new Map(
+    (
+      await getStudentScopes(
+        schoolId,
+        studentGuardians.map((sg) => sg.student.id)
+      )
+    ).map((scope) => [scope.studentId, scope])
+  )
+
   const children = await Promise.all(
     studentGuardians.map(async (sg) => {
-      const studentClasses = await db.studentClass.findMany({
-        where: { studentId: sg.student.id, schoolId },
-        select: { classId: true },
-      })
-      const classIds = studentClasses.map((sc) => sc.classId)
+      // Work set for the child's section, their whole grade, or a legacy class
+      const scope = scopes.get(sg.student.id)
+      const audience = scope ? studentAudienceWhere(scope) : { id: { in: [] } }
 
       const [pendingAssignments, overdueAssignments] = await Promise.all([
         db.schoolAssignment.count({
           where: {
             schoolId,
-            classId: { in: classIds },
+            ...audience,
             status: "PUBLISHED",
             dueDate: { gte: today },
             submissions: {
@@ -272,7 +296,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
         db.schoolAssignment.count({
           where: {
             schoolId,
-            classId: { in: classIds },
+            ...audience,
             status: "PUBLISHED",
             dueDate: { lt: today },
             submissions: {

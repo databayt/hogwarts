@@ -64,8 +64,13 @@ import {
 
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
+import { audienceLabel, studentAudienceWhere } from "@/lib/teaching-audience"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
+import { teacherExamsWhere } from "@/components/school-dashboard/exams/lib/audience"
+import { buildViewerAudienceWhere } from "@/components/school-dashboard/listings/announcements/queries"
+import { teacherAssignmentsWhere } from "@/components/school-dashboard/listings/assignments/queries"
 import { schoolDayOfWeek } from "@/components/school-dashboard/live/day-window"
 import { attachLiveClasses } from "@/components/school-dashboard/timetable/live-class-join"
 import { getText } from "@/components/translation/display"
@@ -445,8 +450,10 @@ export async function getAnnouncementsMetrics(): Promise<AnnouncementsMetrics> {
 async function getClassesMetricsInternal(
   schoolId: string
 ): Promise<ClassesMetrics> {
+  // A "class" on the dashboard is a section (Grade 7-A) — classes as
+  // subject-courses are retired.
   const [totalClasses, students, teachers] = await Promise.all([
-    db.class.count({ where: { schoolId } }),
+    db.section.count({ where: { schoolId } }),
     db.student.count({ where: { schoolId } }),
     db.teacher.count({ where: { schoolId } }),
   ])
@@ -625,6 +632,30 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
 
+  // What this teacher teaches: their (section, subject) assignments. Work
+  // they see is the work those pairs cover, what they set themselves, and
+  // legacy classes they lead — the same rules as the exam and assignment
+  // lists.
+  const assigned = await db.subjectTeacher.findMany({
+    where: { schoolId, teacherId: teacher.id },
+    select: {
+      sectionId: true,
+      subjectId: true,
+      termId: true,
+      section: { select: { gradeId: true, name: true } },
+      subject: { select: { name: true } },
+    },
+  })
+  const pairs = assigned.map((a) => ({
+    sectionId: a.sectionId,
+    subjectId: a.subjectId,
+    gradeId: a.section.gradeId,
+  }))
+  const termPairs = teacherTerm
+    ? assigned.filter((a) => a.termId === teacherTerm.id)
+    : assigned
+  const teaches = { teacherId: teacher.id, userId, pairs }
+
   // Today's periods — the same read the student dashboard does, for the same
   // reasons. The weekday used to come off the server clock (UTC on the
   // container), so for a school whose local day straddles the UTC boundary the
@@ -638,9 +669,8 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
 
   const [
     todaysClasses,
-    classes,
+    performance,
     pendingGradingCount,
-    attendanceDueCount,
     pendingAssignments,
     upcomingExams,
     assignedStudents,
@@ -697,53 +727,42 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
               liveClass: null,
             }))
       ),
-    // One read for both the student total and the per-class averages (these
-    // were two findMany calls over the same classes).
-    db.class.findMany({
-      where: { teacherId: teacher.id, schoolId },
-      select: {
-        name: true,
-        _count: { select: { studentClasses: true } },
-        schoolExams: {
-          select: { results: { select: { percentage: true } } },
-        },
-      },
-    }),
+    // The term's average score in each section·subject the teacher teaches
+    termPairs.length === 0
+      ? Promise.resolve([])
+      : db.result.groupBy({
+          by: ["sectionId", "subjectId"],
+          where: {
+            schoolId,
+            ...(teacherTerm ? { termId: teacherTerm.id } : {}),
+            OR: termPairs.map((p) => ({
+              sectionId: p.sectionId,
+              subjectId: p.subjectId,
+            })),
+          },
+          _avg: { percentage: true },
+        }),
     db.assignmentSubmission.count({
       where: {
         schoolId,
         status: "SUBMITTED",
-        assignment: { class: { teacherId: teacher.id } },
-      },
-    }),
-    db.class.count({
-      where: {
-        teacherId: teacher.id,
-        schoolId,
-        NOT: {
-          studentClasses: {
-            every: {
-              student: {
-                attendances: {
-                  some: { date: { gte: today, lt: tomorrow } },
-                },
-              },
-            },
-          },
-        },
+        assignment: teacherAssignmentsWhere(teaches),
       },
     }),
     db.schoolAssignment.findMany({
       where: {
         schoolId,
         status: "PUBLISHED",
-        class: { teacherId: teacher.id },
+        ...teacherAssignmentsWhere(teaches),
       },
       select: {
         id: true,
         title: true,
         dueDate: true,
         class: { select: { name: true } },
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
+        subject: { select: { name: true } },
         // Only the count is shown — no need to ship every submission row.
         _count: {
           select: { submissions: { where: { status: "SUBMITTED" } } },
@@ -755,7 +774,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     db.schoolExam.findMany({
       where: {
         schoolId,
-        class: { teacherId: teacher.id },
+        ...teacherExamsWhere(teaches),
         examDate: { gte: today },
         status: "PLANNED",
       },
@@ -764,6 +783,8 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
         title: true,
         examDate: true,
         class: { select: { name: true } },
+        section: { select: { name: true } },
+        grade: { select: { name: true } },
       },
       orderBy: { examDate: "asc" },
       take: 5,
@@ -787,27 +808,46 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     }),
   ])
 
-  const totalStudents =
-    assignedStudents > 0
-      ? assignedStudents
-      : classes.reduce((sum, cls) => sum + cls._count.studentClasses, 0)
+  const totalStudents = assignedStudents
 
-  const classPerformance = classes.map((cls) => {
-    const allResults = cls.schoolExams.flatMap((exam) => exam.results)
-    const average =
-      allResults.length > 0
-        ? allResults.reduce((sum, r) => sum + r.percentage, 0) /
-          allResults.length
-        : 0
-    return {
-      className: cls.name,
-      average: Math.round(average * 100) / 100,
-    }
-  })
+  // Attendance still to take today: the sections on today's timetable with
+  // no mark yet (a daily or a period mark both count).
+  const todaySectionIds = [
+    ...new Set(
+      todaysClasses
+        .map((slot) => slot.sectionId)
+        .filter((id): id is string => !!id)
+    ),
+  ]
+  const markedSections =
+    todaySectionIds.length === 0
+      ? []
+      : await db.attendance.findMany({
+          where: {
+            schoolId,
+            sectionId: { in: todaySectionIds },
+            date: { gte: today, lt: tomorrow },
+          },
+          distinct: ["sectionId"],
+          select: { sectionId: true },
+        })
+  const attendanceDueCount = todaySectionIds.length - markedSections.length
+
+  const pairLabel = new Map(
+    termPairs.map((p) => [
+      `${p.sectionId}|${p.subjectId}`,
+      `${p.subject.name} · ${p.section.name}`,
+    ])
+  )
+  const classPerformance = performance.map((row) => ({
+    className:
+      pairLabel.get(`${row.sectionId}|${row.subjectId}`) ?? "Unknown Class",
+    average: Math.round((row._avg.percentage ?? 0) * 100) / 100,
+  }))
 
   const upcomingDeadlines = upcomingExams.map((exam) => ({
     id: exam.id,
-    task: `${exam.title} - ${exam.class?.name || "Unknown Class"}`,
+    task: `${exam.title} - ${audienceLabel(exam) || "Unknown Class"}`,
     dueDate: exam.examDate.toISOString(),
     type: "exam" as const,
   }))
@@ -835,7 +875,10 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     pendingAssignments: pendingAssignments.map((assignment) => ({
       id: assignment.id,
       title: assignment.title,
-      className: assignment.class?.name || "Unknown Class",
+      className:
+        [assignment.subject?.name, audienceLabel(assignment)]
+          .filter(Boolean)
+          .join(" · ") || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
       submissionsCount: assignment._count.submissions,
     })),
@@ -886,20 +929,17 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   // generator writes section-based slots with NO classId, so the card was
   // empty for every section-placed student — which is every student. It also
   // read the weekday from the server clock (UTC on Vercel), not the school's.
-  const [schoolRow, { term: activeTerm }, studentClasses] = await Promise.all([
+  const [schoolRow, { term: activeTerm }, [scope]] = await Promise.all([
     db.school.findUnique({
       where: { id: schoolId },
       select: { timezone: true },
     }),
     resolveActiveTerm(schoolId),
-    db.studentClass.findMany({
-      where: { studentId: student.id, schoolId },
-      select: { classId: true },
-    }),
+    getStudentScopes(schoolId, [student.id]),
   ])
   const now = new Date()
   const dayOfWeek = schoolDayOfWeek(schoolRow?.timezone ?? "UTC", now)
-  const classIds = studentClasses.map((sc) => sc.classId)
+  const classIds = scope?.classIds ?? []
   const orClauses: Array<Record<string, unknown>> = []
   if (classIds.length > 0) orClauses.push({ classId: { in: classIds } })
   if (student.sectionId) orClauses.push({ sectionId: student.sectionId })
@@ -950,28 +990,34 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         liveClass: null,
       }))
 
-  const upcomingAssignments = await db.schoolAssignment.findMany({
-    where: {
-      schoolId,
-      classId: { in: classIds },
-      dueDate: { gte: today },
-      status: "PUBLISHED",
-    },
-    include: {
-      class: {
-        select: {
-          name: true,
-          subject: { select: { name: true } },
+  // Work set for the student's section, their whole grade, or a legacy class
+  const upcomingAssignments = scope
+    ? await db.schoolAssignment.findMany({
+        where: {
+          schoolId,
+          ...studentAudienceWhere(scope),
+          dueDate: { gte: today },
+          status: "PUBLISHED",
         },
-      },
-      submissions: {
-        where: { studentId: student.id },
-        select: { status: true },
-      },
-    },
-    orderBy: { dueDate: "asc" },
-    take: 5,
-  })
+        include: {
+          class: {
+            select: {
+              name: true,
+              subject: { select: { name: true } },
+            },
+          },
+          section: { select: { name: true } },
+          grade: { select: { name: true } },
+          subject: { select: { name: true } },
+          submissions: {
+            where: { studentId: student.id },
+            select: { status: true },
+          },
+        },
+        orderBy: { dueDate: "asc" },
+        take: 5,
+      })
+    : []
 
   const recentGrades = await db.examResult.findMany({
     where: { studentId: student.id, schoolId },
@@ -988,11 +1034,11 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     take: 5,
   })
 
+  // Notices for the school, the student's grade or section, or their role
   const announcements = await db.announcement.findMany({
     where: {
       schoolId,
-      published: true,
-      OR: [{ scope: "school" }, { scope: "class", classId: { in: classIds } }],
+      ...(await buildViewerAudienceWhere(schoolId, userId, "STUDENT")),
     },
     orderBy: { createdAt: "desc" },
     take: 5,
@@ -1032,8 +1078,11 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     upcomingAssignments: upcomingAssignments.map((assignment) => ({
       id: assignment.id,
       title: assignment.title,
-      subject: assignment.class?.subject?.name || "Unknown Subject",
-      className: assignment.class?.name || "Unknown Class",
+      subject:
+        assignment.subject?.name ||
+        assignment.class?.subject?.name ||
+        "Unknown Subject",
+      className: audienceLabel(assignment) || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
       status: assignment.submissions[0]?.status || "NOT_SUBMITTED",
       totalPoints: assignment.totalPoints
@@ -1069,10 +1118,10 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
 
 export async function getParentDashboardData(): Promise<ParentDashboardData> {
   const session = await auth()
-  const guardianId = session?.user?.id
+  const userId = session?.user?.id
   const schoolId = session?.user?.schoolId
 
-  if (!guardianId || !schoolId) {
+  if (!userId || !schoolId) {
     return {
       children: [],
       recentGrades: [],
@@ -1084,8 +1133,14 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
     }
   }
 
+  // StudentGuardian points at the Guardian record, not the user — matching
+  // the user id here found no children for any parent.
+  const guardian = await db.guardian.findFirst({
+    where: { userId, schoolId },
+    select: { id: true },
+  })
   const studentGuardians = await db.studentGuardian.findMany({
-    where: { guardianId, schoolId },
+    where: { guardianId: guardian?.id ?? "", schoolId },
     include: {
       student: {
         select: {
@@ -1133,37 +1188,39 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
     take: 5,
   })
 
-  const studentClasses = await db.studentClass.findMany({
-    where: { studentId: firstChild.id, schoolId },
-    select: { classId: true },
-  })
-  const classIds = studentClasses.map((sc) => sc.classId)
+  const [childScope] = await getStudentScopes(schoolId, [firstChild.id])
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const upcomingAssignments = await db.schoolAssignment.findMany({
-    where: {
-      schoolId,
-      classId: { in: classIds },
-      dueDate: { gte: today },
-      status: "PUBLISHED",
-    },
-    include: {
-      class: {
-        select: {
-          name: true,
-          subject: { select: { name: true } },
+  // Work set for the child's section, their whole grade, or a legacy class
+  const upcomingAssignments = childScope
+    ? await db.schoolAssignment.findMany({
+        where: {
+          schoolId,
+          ...studentAudienceWhere(childScope),
+          dueDate: { gte: today },
+          status: "PUBLISHED",
         },
-      },
-      submissions: {
-        where: { studentId: firstChild.id },
-        select: { status: true, score: true },
-      },
-    },
-    orderBy: { dueDate: "asc" },
-    take: 5,
-  })
+        include: {
+          class: {
+            select: {
+              name: true,
+              subject: { select: { name: true } },
+            },
+          },
+          section: { select: { name: true } },
+          grade: { select: { name: true } },
+          subject: { select: { name: true } },
+          submissions: {
+            where: { studentId: firstChild.id },
+            select: { status: true, score: true },
+          },
+        },
+        orderBy: { dueDate: "asc" },
+        take: 5,
+      })
+    : []
 
   const totalDays = await db.attendance.count({
     where: { studentId: firstChild.id, schoolId },
@@ -1174,11 +1231,11 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
   const attendancePercentage =
     totalDays > 0 ? (presentDays / totalDays) * 100 : 0
 
+  // Notices for the school, any child's grade or section, or the role
   const announcements = await db.announcement.findMany({
     where: {
       schoolId,
-      published: true,
-      OR: [{ scope: "school" }, { scope: "class", classId: { in: classIds } }],
+      ...(await buildViewerAudienceWhere(schoolId, userId, "GUARDIAN")),
     },
     orderBy: { createdAt: "desc" },
     take: 5,
@@ -1249,8 +1306,11 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
     upcomingAssignments: upcomingAssignments.map((assignment) => ({
       id: assignment.id,
       title: assignment.title,
-      subject: assignment.class?.subject?.name || "Unknown Subject",
-      className: assignment.class?.name || "Unknown Class",
+      subject:
+        assignment.subject?.name ||
+        assignment.class?.subject?.name ||
+        "Unknown Subject",
+      className: audienceLabel(assignment) || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
       status: assignment.submissions[0]?.status || "NOT_SUBMITTED",
       score: assignment.submissions[0]?.score

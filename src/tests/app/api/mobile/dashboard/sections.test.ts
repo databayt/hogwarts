@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { getTeacherSectionIds } from "@/lib/teaching-scope"
 
 // The real dashboard/queries.ts runs against a mocked db, so the route is
 // tested through the same loaders the web's ResourceUsageSection and
@@ -29,6 +30,11 @@ vi.mock("@/lib/db", () => ({
     feeAssignment: { aggregate: vi.fn() },
     payment: { aggregate: vi.fn() },
   },
+}))
+
+vi.mock("@/lib/teaching-scope", () => ({
+  getTeacherSectionIds: vi.fn().mockResolvedValue([]),
+  getTeacherPairs: vi.fn().mockResolvedValue([]),
 }))
 
 vi.mock("@/app/api/mobile/lib/authenticate", () => ({
@@ -215,9 +221,9 @@ describe("GET /api/mobile/dashboard/sections", () => {
   it("TEACHER: the workload rows and expense claims", async () => {
     await authAs("TEACHER")
     vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
-    vi.mocked(db.class.findMany).mockResolvedValue([{ id: "c1" }] as never)
+    vi.mocked(getTeacherSectionIds).mockResolvedValue(["7a", "7b", "8a"])
     vi.mocked(db.assignmentSubmission.count).mockResolvedValue(10)
-    vi.mocked(db.studentClass.count).mockResolvedValue(90)
+    vi.mocked(db.student.count).mockResolvedValue(90)
     vi.mocked(db.attendance.count).mockResolvedValue(225)
     vi.mocked(db.expense.findMany).mockResolvedValue([
       {
@@ -245,6 +251,11 @@ describe("GET /api/mobile/dashboard/sections", () => {
       used: 50,
       limit: 100,
       percent: 50,
+    })
+    // Students and marks come from the teacher's sections, not classes
+    expect(vi.mocked(db.student.count).mock.calls.at(-1)![0]!.where).toEqual({
+      schoolId: SCHOOL,
+      sectionId: { in: ["7a", "7b", "8a"] },
     })
     expect(body.invoices).toEqual([
       {

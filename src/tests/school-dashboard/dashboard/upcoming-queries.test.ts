@@ -4,18 +4,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import { loadUpcomingData } from "@/components/school-dashboard/dashboard/upcoming-queries"
 
 vi.mock("@/lib/db", () => ({
   db: {
     studentGuardian: { findMany: vi.fn() },
-    studentClass: { findMany: vi.fn() },
     schoolAssignment: { count: vi.fn() },
     announcement: { findMany: vi.fn(), count: vi.fn() },
     student: { count: vi.fn() },
     attendance: { count: vi.fn() },
     userInvoice: { count: vi.fn(), aggregate: vi.fn() },
   },
+}))
+
+vi.mock("@/lib/teaching-scope", () => ({
+  getStudentScopes: vi.fn(),
+  getTeacherPairs: vi.fn().mockResolvedValue([]),
 }))
 
 beforeEach(() => {
@@ -27,9 +32,9 @@ describe("loadUpcomingData", () => {
     vi.mocked(db.studentGuardian.findMany).mockResolvedValue([
       { student: { id: "s1", firstName: "Khadija", lastName: "Alnoor" } },
     ] as never)
-    vi.mocked(db.studentClass.findMany).mockResolvedValue([
-      { classId: "c1" },
-    ] as never)
+    vi.mocked(getStudentScopes).mockResolvedValue([
+      { studentId: "s1", sectionId: "7a", gradeId: "g7", classIds: [] },
+    ])
     vi.mocked(db.schoolAssignment.count)
       .mockResolvedValueOnce(2)
       .mockResolvedValueOnce(1)
@@ -50,6 +55,16 @@ describe("loadUpcomingData", () => {
           pendingAssignments: 2,
           overdueAssignments: 1,
         },
+      ],
+    })
+    // Work set for the child's section or whole grade — not a class
+    expect(
+      vi.mocked(db.schoolAssignment.count).mock.calls[0][0]!.where
+    ).toMatchObject({
+      schoolId: "school-1",
+      OR: [
+        { sectionId: { in: ["7a"] } },
+        { sectionId: null, gradeId: { in: ["g7"] } },
       ],
     })
   })

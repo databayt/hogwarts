@@ -385,7 +385,7 @@ Current temp, humidity, wind, rain chance + 6-day forecast. Refresh button. Fall
 | `getStaffMetrics()`               | Teacher counts           | Admin, Principal          |
 | `getAcademicPerformanceMetrics()` | GPA, exams, assignments  | Principal, Teacher        |
 | `getAnnouncementsMetrics()`       | Announcement counts      | All                       |
-| `getClassesMetrics()`             | Class counts, ratios     | Admin, Principal          |
+| `getClassesMetrics()`             | Section counts, ratios   | Admin, Principal          |
 | `getRecentActivities()`           | Activity feed            | Admin                     |
 | `getQuickActionsByRole()`         | Role-specific actions    | All                       |
 | `getUpcomingDataByRole()`         | Role-specific upcoming   | All                       |
@@ -396,6 +396,19 @@ Current temp, humidity, wind, rain chance + 6-day forecast. Refresh button. Fall
 | `getStudentDashboardData()`       | Student-specific         | Student                   |
 | `getParentDashboardData()`        | Parent-specific          | Parent                    |
 | `getPrincipalDashboardData()`     | Principal-specific       | Principal                 |
+
+### What the role figures count
+
+Since 2026-10-04 no figure reads a class. A teacher's grading queue, upcoming
+exams, deadlines and per-subject averages come from what they teach — their
+(section, subject) assignments, the work they set themselves, and legacy
+classes they led — the same rules as the exam and assignment lists. "Attendance
+due" is the sections on today's timetable with no mark yet; "students" are the
+teacher's sections' students. A student's (and a guardian's child's) work is
+whatever is set for their section, their whole grade, or a legacy class; notices
+follow the announcement audience rules. A guardian's children come through
+their `Guardian` record — the dashboard used to match the user id against it
+and showed every parent "No children found".
 
 ## Render pattern
 

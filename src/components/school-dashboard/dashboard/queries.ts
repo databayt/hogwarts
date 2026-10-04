@@ -18,6 +18,8 @@
 import { startOfYear } from "date-fns"
 
 import { db } from "@/lib/db"
+import { getTeacherPairs, getTeacherSectionIds } from "@/lib/teaching-scope"
+import { teacherAssignmentsWhere } from "@/components/school-dashboard/listings/assignments/queries"
 
 /** A row of the web's `DetailedUsageTable`. */
 export interface ResourceUsageRow {
@@ -232,31 +234,35 @@ async function teacherResourceUsage(
   const weekEnd = new Date(weekStart)
   weekEnd.setDate(weekStart.getDate() + 7)
 
-  // Get teacher's classes
-  const teacherClasses = await db.class.findMany({
-    where: { teacherId: teacher.id, schoolId },
-    select: { id: true },
-  })
-  const classIds = teacherClasses.map((c) => c.id)
+  // The teacher's sections (homeroom, timetable, subject assignments) and
+  // the (section, subject) pairs they teach
+  const [sectionIds, pairs] = await Promise.all([
+    getTeacherSectionIds(schoolId, userId),
+    getTeacherPairs(schoolId, teacher.id),
+  ])
 
   const [ungradedWork, studentCount, attendanceMarked] = await Promise.all([
-    // Ungraded submissions
+    // Ungraded submissions on work the teacher teaches
     db.assignmentSubmission.count({
       where: {
         schoolId,
         status: "SUBMITTED",
-        assignment: { class: { teacherId: teacher.id } },
+        assignment: teacherAssignmentsWhere({
+          teacherId: teacher.id,
+          userId,
+          pairs,
+        }),
       },
     }),
-    // Total students in teacher's classes
-    db.studentClass.count({
-      where: { class: { teacherId: teacher.id, schoolId } },
+    // Students in the teacher's sections
+    db.student.count({
+      where: { schoolId, sectionId: { in: sectionIds } },
     }),
-    // Attendance records marked this week for teacher's classes
+    // Attendance marked this week in the teacher's sections
     db.attendance.count({
       where: {
         schoolId,
-        classId: { in: classIds },
+        sectionId: { in: sectionIds },
         date: { gte: weekStart, lt: weekEnd },
       },
     }),
