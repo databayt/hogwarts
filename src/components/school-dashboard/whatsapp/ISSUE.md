@@ -1,5 +1,13 @@
 # whatsapp — open items
 
+- [x] Classes retired (class removal S11, 2026-10-04): auto groups are a
+      section's parents only — the `class_parents` path (a raw "Class ID" box)
+      and `getGuardianPhonesForClass` are gone; existing `class_parents` groups
+      keep their type and label. A group tied to a section must be this
+      school's section (it wasn't checked). Test:
+      `src/tests/school-dashboard/whatsapp/groups.test.ts`.
+- [ ] The auto-group dialog still asks for a raw section ID — make it a
+      section picker.
 - [ ] **Pair the King Fahad line** — someone with the school's WhatsApp phone
       scans the QR from the dashboard (Connect). Until then the lane is built
       but idle. (2026-09-13)

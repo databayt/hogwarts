@@ -30,7 +30,7 @@ Parents live on WhatsApp, so the school does too — but from a secretary's pers
 2. On the school's phone they open WhatsApp, go to Linked Devices, and scan it. The page shows "Connected" and stays connected across updates.
 3. In any chat in Messages, a "W" switch in the header sends that conversation out on WhatsApp too, from the school's number; each bubble shows whether it was sent, delivered, read or failed.
 4. When the parent replies on WhatsApp, the reply lands in the same conversation in Balqalam.
-5. From the Groups tab the administrator can create a WhatsApp group of a class's or section's parents in one step, using the parent phone numbers already on file.
+5. From the Groups tab the administrator can create a WhatsApp group of a section's parents in one step, using the parent phone numbers already on file.
 6. The administrator can send one message to several groups at once, and keep ready-made message templates for attendance, fees, grades, events and emergencies.
 7. The page shows how many groups exist, how many messages went out today, and the daily limit.
 
@@ -50,7 +50,7 @@ Parents live on WhatsApp, so the school does too — but from a secretary's pers
 - A school links its own WhatsApp number by scanning a QR code from the dashboard, the same way you link WhatsApp to a computer. [dictionaries/en/whatsapp.json, docs-en/messages.mdx]
 - A chat in Balqalam can be sent out on WhatsApp from the school's number, and replies come back into the same conversation. [docs-en/messages.mdx]
 - Each message shows its WhatsApp status: sent, delivered, read or failed; failed sends are retried automatically. [README.md, docs-en/messages.mdx]
-- A WhatsApp group for a class's or section's parents can be created in one step from the parent numbers already in the system. [actions.ts]
+- A WhatsApp group for a section's parents can be created in one step from the parent numbers already in the system. [actions.ts]
 - Admins can keep reusable message templates by type — attendance, fees, grades, events, emergency and more. [dictionaries/en/whatsapp.json]
 - Sending is paced to protect the school's number: one message a second and up to 500 direct messages a day. [docs-en/messages.mdx]
 

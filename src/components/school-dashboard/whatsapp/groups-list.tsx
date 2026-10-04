@@ -84,11 +84,9 @@ export function GroupsList({
   const [participants, setParticipants] = useState("")
 
   // Auto group form state
-  const [autoType, setAutoType] = useState<"section_parents" | "class_parents">(
-    "section_parents"
-  )
+  // Auto groups are a section's parents (class groups are retired)
+  const autoType = "section_parents" as const
   const [autoSectionId, setAutoSectionId] = useState("")
-  const [autoClassId, setAutoClassId] = useState("")
 
   const activeGroups = useMemo(() => groups.filter((g) => g.isActive), [groups])
 
@@ -142,12 +140,7 @@ export function GroupsList({
     startTransition(async () => {
       const result = await createAutoGroup({
         type: autoType,
-        sectionId:
-          autoType === "section_parents"
-            ? autoSectionId || undefined
-            : undefined,
-        classId:
-          autoType === "class_parents" ? autoClassId || undefined : undefined,
+        sectionId: autoSectionId,
       })
 
       if (result.success) {
@@ -156,7 +149,6 @@ export function GroupsList({
         )
         setAutoDialogOpen(false)
         setAutoSectionId("")
-        setAutoClassId("")
       } else {
         const errorMessages: Record<string, string> = {
           NO_GUARDIAN_PHONES:
@@ -170,7 +162,7 @@ export function GroupsList({
         )
       }
     })
-  }, [autoType, autoSectionId, autoClassId, d, startTransition])
+  }, [autoType, autoSectionId, d, startTransition])
 
   const handleDeleteGroup = useCallback(
     (groupId: string) => {
@@ -223,57 +215,16 @@ export function GroupsList({
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      {d?.groups?.type || "Group Type"}
+                      {d?.groups?.sectionId || "Section ID"}
                     </label>
-                    <Select
-                      value={autoType}
-                      onValueChange={(v) =>
-                        setAutoType(v as "section_parents" | "class_parents")
+                    <Input
+                      value={autoSectionId}
+                      onChange={(e) => setAutoSectionId(e.target.value)}
+                      placeholder={
+                        d?.groups?.sectionIdPlaceholder || "Enter section ID"
                       }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="section_parents">
-                          {d?.groupTypes?.sectionParents || "Section Parents"}
-                        </SelectItem>
-                        <SelectItem value="class_parents">
-                          {d?.groupTypes?.classParents || "Class Parents"}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    />
                   </div>
-
-                  {autoType === "section_parents" && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        {d?.groups?.sectionId || "Section ID"}
-                      </label>
-                      <Input
-                        value={autoSectionId}
-                        onChange={(e) => setAutoSectionId(e.target.value)}
-                        placeholder={
-                          d?.groups?.sectionIdPlaceholder || "Enter section ID"
-                        }
-                      />
-                    </div>
-                  )}
-
-                  {autoType === "class_parents" && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        {d?.groups?.classId || "Class ID"}
-                      </label>
-                      <Input
-                        value={autoClassId}
-                        onChange={(e) => setAutoClassId(e.target.value)}
-                        placeholder={
-                          d?.groups?.classIdPlaceholder || "Enter class ID"
-                        }
-                      />
-                    </div>
-                  )}
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
@@ -347,9 +298,6 @@ export function GroupsList({
                       <SelectContent>
                         <SelectItem value="section_parents">
                           {d?.groupTypes?.sectionParents || "Section Parents"}
-                        </SelectItem>
-                        <SelectItem value="class_parents">
-                          {d?.groupTypes?.classParents || "Class Parents"}
                         </SelectItem>
                         <SelectItem value="teachers">
                           {d?.groupTypes?.teachers || "Teachers"}

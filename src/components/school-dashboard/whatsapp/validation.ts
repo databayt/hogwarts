@@ -22,16 +22,10 @@ export const createGroupSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(512).optional(),
   type: z
-    .enum([
-      "section_parents",
-      "class_parents",
-      "teachers",
-      "announcement",
-      "custom",
-    ])
+    // class_parents is legacy (existing groups keep it): classes are retired
+    .enum(["section_parents", "teachers", "announcement", "custom"])
     .default("custom"),
   sectionId: z.string().optional(),
-  classId: z.string().optional(),
   participants: z.array(phoneSchema).min(1),
 })
 
@@ -60,7 +54,6 @@ export const sendBroadcastSchema = z.object({
 })
 
 export const autoGroupSchema = z.object({
-  sectionId: z.string().optional(),
-  classId: z.string().optional(),
-  type: z.enum(["section_parents", "class_parents"]),
+  sectionId: z.string().min(1),
+  type: z.enum(["section_parents"]),
 })

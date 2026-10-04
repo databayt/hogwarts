@@ -11,10 +11,7 @@ import * as evolution from "@/lib/whatsapp/evolution-client"
 import { checkAndConsumeRateLimit } from "@/lib/whatsapp/rate-limiter"
 
 import { canPerformWhatsAppAction } from "./authorization"
-import {
-  getGuardianPhonesForClass,
-  getGuardianPhonesForSection,
-} from "./queries"
+import { getGuardianPhonesForSection } from "./queries"
 import {
   addParticipantsSchema,
   autoGroupSchema,
@@ -415,10 +412,18 @@ export async function createWhatsAppGroup(
     return { success: false, code: "VALIDATION_ERROR" }
   }
 
-  const { name, description, type, sectionId, classId, participants } =
-    parsed.data
+  const { name, description, type, sectionId, participants } = parsed.data
 
   try {
+    // A section the group belongs to must be this school's
+    if (sectionId) {
+      const section = await db.section.findFirst({
+        where: { id: sectionId, schoolId },
+        select: { id: true },
+      })
+      if (!section) return { success: false, code: "SECTION_NOT_FOUND" }
+    }
+
     const session = await db.whatsAppSession.findUnique({
       where: { schoolId },
     })
@@ -452,7 +457,6 @@ export async function createWhatsAppGroup(
         description,
         type,
         sectionId: sectionId ?? null,
-        classId: classId ?? null,
         memberCount: participants.length,
       },
     })
@@ -634,7 +638,7 @@ export async function createAutoGroup(
     return { success: false, code: "VALIDATION_ERROR" }
   }
 
-  const { sectionId, classId, type } = parsed.data
+  const { sectionId, type } = parsed.data
 
   try {
     const session = await db.whatsAppSession.findUnique({
@@ -662,15 +666,6 @@ export async function createAutoGroup(
 
       groupName = `${section.name} - Parents`
       guardianPhones = await getGuardianPhonesForSection(schoolId, sectionId)
-    } else if (type === "class_parents" && classId) {
-      const cls = await db.class.findFirst({
-        where: { id: classId, schoolId },
-        select: { name: true },
-      })
-      if (!cls) return { success: false, code: "CLASS_NOT_FOUND" }
-
-      groupName = `${cls.name} - Parents`
-      guardianPhones = await getGuardianPhonesForClass(schoolId, classId)
     } else {
       return { success: false, code: "INVALID_AUTO_GROUP_CONFIG" }
     }
@@ -682,12 +677,11 @@ export async function createAutoGroup(
     // Deduplicate phones
     const uniquePhones = [...new Set(guardianPhones.map((gp) => gp.phone))]
 
-    // Check if group already exists for this section/class
+    // Check if group already exists for this section
     const existingGroup = await db.whatsAppGroup.findFirst({
       where: {
         schoolId,
-        ...(sectionId ? { sectionId } : {}),
-        ...(classId ? { classId } : {}),
+        sectionId,
         type,
         isActive: true,
       },
@@ -713,7 +707,6 @@ export async function createAutoGroup(
         name: groupName,
         type,
         sectionId: sectionId ?? null,
-        classId: classId ?? null,
         memberCount: uniquePhones.length,
       },
     })
