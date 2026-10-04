@@ -454,3 +454,62 @@ export async function unassignPairs(
     return { cleared: ids.length }
   })
 }
+
+/**
+ * A teacher leaves (deactivated) or is deleted: their periods go back to
+ * "waiting for a teacher" and their assignments are dropped — for the
+ * current and future terms, or every term when `allTerms` (deletion: the
+ * timetable's teacher FK would otherwise refuse the delete). Past terms keep
+ * their history otherwise. Scheduled online classes on freed periods are
+ * cancelled.
+ */
+export async function releaseTeacher(
+  input: { schoolId: string; teacherId: string; allTerms?: boolean },
+  client: PrismaClient | Tx = defaultDb
+): Promise<{ periods: number; pairs: number }> {
+  const { schoolId, teacherId } = input
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+
+  const run = async (tx: Tx) => {
+    const terms = await tx.term.findMany({
+      where: {
+        schoolId,
+        ...(input.allTerms ? {} : { endDate: { gte: startOfToday } }),
+      },
+      select: { id: true },
+    })
+    const termIds = terms.map((t) => t.id)
+    if (termIds.length === 0) return { periods: 0, pairs: 0 }
+
+    const slots = await tx.timetable.findMany({
+      where: { schoolId, teacherId, termId: { in: termIds } },
+      select: { id: true },
+    })
+    const slotIds = slots.map((s) => s.id)
+    if (slotIds.length > 0) {
+      await tx.timetable.updateMany({
+        where: { schoolId, id: { in: slotIds } },
+        data: { teacherId: null },
+      })
+      await tx.conference.updateMany({
+        where: {
+          schoolId,
+          timetableId: { in: slotIds },
+          status: "scheduled",
+          scheduledStart: { gt: new Date() },
+        },
+        data: { status: "cancelled" },
+      })
+    }
+    const pairs = await tx.subjectTeacher.deleteMany({
+      where: { schoolId, teacherId, termId: { in: termIds } },
+    })
+    return { periods: slotIds.length, pairs: pairs.count }
+  }
+
+  // Inside a caller's transaction, or our own.
+  return "$transaction" in client
+    ? (client as PrismaClient).$transaction(run)
+    : run(client as Tx)
+}

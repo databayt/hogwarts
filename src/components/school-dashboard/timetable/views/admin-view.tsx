@@ -22,6 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { confirmDeleteDialog } from "@/components/atom/toast"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -35,6 +36,7 @@ import {
   getTimetableByTeacher,
   upsertTimetableSlot,
 } from "../actions"
+import { assignTeacher } from "../assignments/actions"
 import { SlotEditorDialog } from "../slot-editor-dialog"
 import type {
   ClassroomInfo,
@@ -296,7 +298,17 @@ export default function AdminView({
   )
 
   const handleSlotSave = useCallback(
-    async (data: Partial<TimetableSlot>) => {
+    async (data: Partial<TimetableSlot>, opts?: { applyToAll?: boolean }) => {
+      // "All periods of this subject in this section": save the period's
+      // subject/position, then hand the subject to the teacher through the
+      // assignment engine (records the assignment and the qualification, and
+      // fills or rearranges the section's other periods of it).
+      const assignAll =
+        !!opts?.applyToAll &&
+        !!data.teacherId &&
+        !!data.sectionId &&
+        !!data.subjectId
+
       await upsertTimetableSlot({
         // Editing an existing slot (incl. legacy classId rows) updates by id —
         // the server backfills sectionId/subjectId, migrating the row in place.
@@ -306,14 +318,49 @@ export default function AdminView({
         periodId: data.periodId!,
         sectionId: data.sectionId!,
         subjectId: data.subjectId!,
-        teacherId: data.teacherId!,
+        teacherId: assignAll ? undefined : data.teacherId!,
         classroomId: data.classroomId!,
         weekOffset: data.weekOffset ?? 0,
       })
 
+      if (assignAll) {
+        const attempt = async (overrideCap: boolean) => {
+          const res = await assignTeacher({
+            teacherId: data.teacherId!,
+            subjectId: data.subjectId!,
+            sectionIds: [data.sectionId!],
+            overrideCap,
+          })
+          if (res.success) return
+          if (res.error === "TEACHER_OVER_CAP" && !overrideCap) {
+            const [load, cap] = (res.details ?? "").split("/")
+            const te = (
+              (dictionary as Record<string, unknown>)?.teachers as
+                | Record<string, unknown>
+                | undefined
+            )?.subjectsEditor as Record<string, string> | undefined
+            const go = await confirmDeleteDialog(undefined, {
+              title: te?.overCapTitle ?? "Over the weekly limit",
+              description: (
+                te?.overCapBody ??
+                "This gives the teacher {load} periods a week; the limit is {cap}. Assign anyway?"
+              )
+                .replace("{load}", load ?? "?")
+                .replace("{cap}", cap ?? "?"),
+              confirmText: te?.assignAnyway ?? "Assign anyway",
+              cancelText: te?.cancel ?? "Cancel",
+            })
+            if (go) await attempt(true)
+            return
+          }
+          throw new Error(res.error ?? "ASSIGNMENT_FAILED")
+        }
+        await attempt(false)
+      }
+
       await loadTimetable()
     },
-    [termId, loadTimetable]
+    [termId, loadTimetable, dictionary]
   )
 
   // AdminView deliberately renders NO join overlay: its cells are already a

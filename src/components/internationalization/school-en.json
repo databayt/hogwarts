@@ -4711,7 +4711,9 @@
         "classroomRequired": "Classroom is required",
         "suggestFreeSlots": "Suggested free slots",
         "suggest": "Suggest",
-        "saveSlot": "Save slot"
+        "saveSlot": "Save slot",
+        "applyToAll": "All periods of this subject in this section",
+        "applyToAllHint": "The teacher takes the subject here; periods move if needed."
       },
       "analyticsReports": {
         "totalSlots": "Total Slots",

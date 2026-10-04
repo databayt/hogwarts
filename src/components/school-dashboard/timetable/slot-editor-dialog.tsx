@@ -10,6 +10,7 @@ import * as z from "zod"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -97,7 +98,14 @@ interface SlotEditorDialogProps {
   sections: SectionForTimetable[]
   existingSlots: TimetableSlot[]
   workingDays: number[]
-  onSave: (data: Partial<TimetableSlot>) => Promise<void>
+  /**
+   * `applyToAll`: the chosen teacher takes this subject in this section — all
+   * its periods, recorded as an assignment — instead of this period only.
+   */
+  onSave: (
+    data: Partial<TimetableSlot>,
+    opts?: { applyToAll?: boolean }
+  ) => Promise<void>
   dictionary?: any
 }
 
@@ -123,6 +131,9 @@ export function SlotEditorDialog({
   const t = dict?.school?.timetable?.slotEditor
   const [isLoading, setIsLoading] = useState(false)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  // On by default: picking a teacher here usually means "this teacher teaches
+  // this subject in this section". Off = a one-off for this period only.
+  const [applyToAll, setApplyToAll] = useState(true)
   const [selectedSubject, setSelectedSubject] = useState<SubjectInfo | null>(
     null
   )
@@ -241,7 +252,12 @@ export function SlotEditorDialog({
         return
       }
 
-      await onSave({ ...data, id: slot?.id })
+      const teacherChanged =
+        !!data.teacherId && data.teacherId !== (slot?.teacherId ?? "")
+      await onSave(
+        { ...data, id: slot?.id },
+        { applyToAll: teacherChanged && applyToAll }
+      )
 
       onOpenChange(false)
       form.reset()
@@ -430,6 +446,28 @@ export function SlotEditorDialog({
                 </FormItem>
               )}
             />
+
+            {/* Teacher change: whole subject in this section, or this period */}
+            {!!form.watch("teacherId") &&
+              form.watch("teacherId") !== (slot?.teacherId ?? "") &&
+              !!form.watch("sectionId") &&
+              !!form.watch("subjectId") && (
+                <label className="flex cursor-pointer items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={applyToAll}
+                    onCheckedChange={(v) => setApplyToAll(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    {t?.applyToAll ??
+                      "All periods of this subject in this section"}
+                    <span className="text-muted-foreground block text-xs">
+                      {t?.applyToAllHint ??
+                        "The teacher takes the subject here; periods move if needed."}
+                    </span>
+                  </span>
+                </label>
+              )}
 
             {/* Classroom picker — only when not auto-detected (teacher view) */}
             {!classroomKnown && (

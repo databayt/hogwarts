@@ -84,6 +84,7 @@ import {
   teacherCreateSchema,
   teacherUpdateSchema,
 } from "@/components/school-dashboard/listings/teachers/validation"
+import { releaseTeacher } from "@/components/school-dashboard/timetable/assignments/apply"
 import { getText } from "@/components/translation/display"
 import { getNames } from "@/components/translation/person"
 import { search } from "@/components/translation/search"
@@ -387,6 +388,15 @@ export async function updateTeacher(
       }
     })
 
+    // A teacher who stops being ACTIVE gives their subjects back: their
+    // current and future periods return to "waiting for a teacher".
+    if (
+      typeof rest.employmentStatus !== "undefined" &&
+      rest.employmentStatus !== "ACTIVE"
+    ) {
+      await releaseTeacher({ schoolId, teacherId: id })
+    }
+
     // Revalidate cache
     revalidatePath(TEACHERS_PATH)
 
@@ -442,38 +452,25 @@ export async function deleteTeacher(input: {
     // Parse and validate input
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    // Cascade validation: check for dependencies before deletion
-    const [classCount, classTeacherCount, timetableCount] = await Promise.all([
-      db.class.count({ where: { teacherId: id, schoolId } }),
-      db.classTeacher.count({ where: { teacherId: id, schoolId } }),
-      db.timetable.count({ where: { teacherId: id, schoolId } }),
-    ])
-
+    // Legacy classes still block deletion (classes are being retired).
+    const classCount = await db.class.count({
+      where: { teacherId: id, schoolId },
+    })
     if (classCount > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${classCount} class(es) assigned. Reassign classes first.`,
-      }
-    }
-    if (timetableCount > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${timetableCount} timetable slot(s) exist. Remove from timetable first.`,
-      }
+      return actionError(
+        ACTION_ERRORS.HAS_DEPENDENCIES,
+        `classes:${classCount}`
+      )
     }
 
-    // Auto-clean ClassTeacher (co-teaching) records in the same transaction
-    const teacherModel = getModelOrThrow("teacher")
-    if (classTeacherCount > 0) {
-      await db.$transaction(async (tx) => {
-        await tx.classTeacher.deleteMany({
-          where: { teacherId: id, schoolId },
-        })
-        await teacherModel.deleteMany({ where: { id, schoolId } })
-      })
-    } else {
-      await teacherModel.deleteMany({ where: { id, schoolId } })
-    }
+    // Timetable periods no longer block deletion: they go back to "waiting
+    // for a teacher" (and the teacher's assignments go) in the same
+    // transaction — the timetable's teacher FK is RESTRICT.
+    await db.$transaction(async (tx) => {
+      await releaseTeacher({ schoolId, teacherId: id, allTerms: true }, tx)
+      await tx.classTeacher.deleteMany({ where: { teacherId: id, schoolId } })
+      await tx.teacher.deleteMany({ where: { id, schoolId } })
+    })
 
     // Revalidate cache
     revalidatePath(TEACHERS_PATH)
@@ -1312,27 +1309,28 @@ export async function bulkDeleteTeachers(input: {
     })
     const validIds = existing.map((t: any) => t.id)
 
-    // Cascade validation: check for dependencies before bulk deletion
-    const [classCount, timetableCount] = await Promise.all([
-      db.class.count({ where: { teacherId: { in: validIds }, schoolId } }),
-      db.timetable.count({
-        where: { teacherId: { in: validIds }, schoolId },
-      }),
-    ])
-    if (classCount > 0 || timetableCount > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${classCount} class(es) and ${timetableCount} timetable slot(s) depend on selected teachers. Reassign them first.`,
-      }
-    }
-
-    // Auto-clean ClassTeacher records
-    await db.classTeacher.deleteMany({
+    // Legacy classes still block deletion (classes are being retired);
+    // timetable periods are released to "waiting" instead.
+    const classCount = await db.class.count({
       where: { teacherId: { in: validIds }, schoolId },
     })
+    if (classCount > 0) {
+      return actionError(
+        ACTION_ERRORS.HAS_DEPENDENCIES,
+        `classes:${classCount}`
+      )
+    }
 
-    const result = await teacherModel.deleteMany({
-      where: { id: { in: validIds }, schoolId },
+    const result = await db.$transaction(async (tx) => {
+      for (const teacherId of validIds as string[]) {
+        await releaseTeacher({ schoolId, teacherId, allTerms: true }, tx)
+      }
+      await tx.classTeacher.deleteMany({
+        where: { teacherId: { in: validIds }, schoolId },
+      })
+      return tx.teacher.deleteMany({
+        where: { id: { in: validIds }, schoolId },
+      })
     })
 
     refreshPage("/teachers")

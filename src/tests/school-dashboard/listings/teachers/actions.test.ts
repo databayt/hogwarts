@@ -38,6 +38,18 @@ vi.mock("@/lib/db", () => ({
     },
     timetable: {
       count: vi.fn().mockResolvedValue(0),
+      findMany: vi.fn().mockResolvedValue([]),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
+    // releaseTeacher (delete / deactivate) frees the teacher's periods.
+    term: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    conference: {
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
+    subjectTeacher: {
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
     user: {
       findFirst: vi.fn(),
@@ -243,6 +255,51 @@ describe("Teacher Actions", () => {
   })
 
   describe("deleteTeacher", () => {
+    beforeEach(() => {
+      // Delete runs in an interactive transaction; run the callback against
+      // the mocked db as its tx.
+      vi.mocked(db.$transaction).mockImplementation(((fn: unknown) =>
+        (fn as (tx: typeof db) => unknown)(db)) as never)
+    })
+
+    it("frees the teacher's periods before deleting, instead of refusing", async () => {
+      vi.mocked(db.term.findMany).mockResolvedValue([{ id: "term-1" }] as never)
+      vi.mocked(db.timetable.findMany).mockResolvedValue([
+        { id: "slot-1" },
+        { id: "slot-2" },
+      ] as never)
+      vi.mocked(db.teacher.deleteMany).mockResolvedValue({ count: 1 })
+
+      const result = await deleteTeacher({ id: "teacher-1" })
+
+      expect(result.success).toBe(true)
+      expect(db.timetable.updateMany).toHaveBeenCalledWith({
+        where: { schoolId: mockSchoolId, id: { in: ["slot-1", "slot-2"] } },
+        data: { teacherId: null },
+      })
+      expect(db.subjectTeacher.deleteMany).toHaveBeenCalledWith({
+        where: {
+          schoolId: mockSchoolId,
+          teacherId: "teacher-1",
+          termId: { in: ["term-1"] },
+        },
+      })
+      const releaseOrder = vi.mocked(db.timetable.updateMany).mock
+        .invocationCallOrder[0]
+      const deleteOrder = vi.mocked(db.teacher.deleteMany).mock
+        .invocationCallOrder[0]
+      expect(releaseOrder).toBeLessThan(deleteOrder)
+    })
+
+    it("still refuses while legacy classes reference the teacher", async () => {
+      vi.mocked(db.class.count).mockResolvedValue(2)
+
+      const result = await deleteTeacher({ id: "teacher-1" })
+
+      expect(result).toMatchObject({ success: false, error: "HAS_DEPENDENCIES" })
+      expect(db.teacher.deleteMany).not.toHaveBeenCalled()
+    })
+
     it("deletes teacher with schoolId scope", async () => {
       // deleteTeacher uses getModelOrThrow which returns db.teacher directly
       vi.mocked(db.teacher.deleteMany).mockResolvedValue({ count: 1 })

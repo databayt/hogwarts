@@ -4727,7 +4727,9 @@
         "classroomRequired": "القاعة مطلوبة",
         "suggestFreeSlots": "حصص شاغرة مقترحة",
         "suggest": "اقتراح",
-        "saveSlot": "حفظ الحصة"
+        "saveSlot": "حفظ الحصة",
+        "applyToAll": "كل حصص هذه المادة في هذا الفصل",
+        "applyToAllHint": "يتولى المعلم المادة في هذا الفصل، وتُنقل الحصص عند الحاجة."
       },
       "analyticsReports": {
         "totalSlots": "إجمالي الحصص",
