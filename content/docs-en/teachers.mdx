@@ -161,7 +161,7 @@ Detail view's "Edit" links to `/{lang}/teachers/add/{teacherId}/information` —
 | CSV import           | `"employment"` | Name, email, phone, department              |
 | Internal onboarding  | `"employment"` | Name, email, phone, qualification, subjects |
 
-Main list filters `wizardStep: null` by default. Toggle "Show Incomplete" or use status filter to see drafts. Incomplete records show amber "Incomplete" badge. Action dropdown shows "Complete Profile" linking to wizard at the incomplete step.
+Main list filters `wizardStep: null` by default. Toggle "Show Incomplete" or use status filter to see drafts. Incomplete records show amber "Incomplete" badge. Action dropdown shows "Complete Profile" linking to wizard at the incomplete step. "Assign subjects" stays in the dropdown for incomplete records too, because the dialog only needs the teacher id.
 
 ```typescript
 buildTeacherWhere(schoolId, { includeDrafts: true })

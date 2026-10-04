@@ -12,6 +12,12 @@ sub-directory (`teachers/ISSUE.md`, …).
 - Create from the last step or the footer goes through `<entity>/wizard/finish.ts`. A failure toasts and stays put.
 - Errors are `ACTION_ERRORS` codes, translated in the form with `actionErrorMessage`.
 
+## Teachers: Assign subjects (2026-10-04)
+
+The ⋯ menu shows **Assign subjects** on every row, drafts included. The dialog is titled
+"Teacher {name}" and uses G1…G12 grade chips and a single row of thumbnail subject cards.
+Details: `teachers/README.md` → "Assign subjects".
+
 ## Location step (students, teachers)
 
 The step uses the shared location picker (`atom/mapbox-location-picker.tsx`). It opens around the school, which the tenant layout provides through `SchoolGeoProvider`, and shows the school as a reference marker. Since 2026-10-04 the pin is stored in `Student.latitude/longitude` and `Teacher.latitude/longitude`, which are `Float` so rows stay plain JSON for client components. Reopening a record therefore lands on its pin. Rows saved before then have address text only, and the map opens on the school.
