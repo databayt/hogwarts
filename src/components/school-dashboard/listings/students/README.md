@@ -26,7 +26,6 @@ The Students block manages the complete student lifecycle from enrollment to gra
 | `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/students/add/[id]/attachments`        | Add - Attachments | Ready       |
 | `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/students/add/[id]/photo`              | Add - Photo       | Ready       |
 | `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/students/manage`                      | Manage            | Ready       |
-| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/students/enroll`                      | Enroll            | Ready       |
 | `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/students/guardians`                   | Guardians         | Ready       |
 | `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/students/year-levels`                 | Year Levels       | Ready       |
 | `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/students/performance`                 | Performance       | In Progress |

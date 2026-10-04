@@ -73,16 +73,6 @@ test.describe("Students Module - ADMIN Access @students @rbac", () => {
     await assertNoSSE(page)
   })
 
-  test("STU-003: Admin can access students/enroll page", async ({ page }) => {
-    await page.goto(buildSchoolUrl("demo", "/students/enroll", "en", env), {
-      timeout: NAV_TIMEOUT,
-    })
-    await page.waitForLoadState("domcontentloaded")
-
-    expect(page.url()).toMatch(/\/students\/enroll/)
-    await assertNoSSE(page)
-  })
-
   test("STU-004: Admin can access students/performance page", async ({
     page,
   }) => {
@@ -248,16 +238,6 @@ test.describe("Students Module - TEACHER Access @students @rbac", () => {
     await page.waitForLoadState("domcontentloaded")
 
     expect(page.url()).toMatch(/\/students/)
-    await assertNoSSE(page)
-  })
-
-  test("STU-013: Teacher can access students/enroll", async ({ page }) => {
-    await page.goto(buildSchoolUrl("demo", "/students/enroll", "en", env), {
-      timeout: NAV_TIMEOUT,
-    })
-    await page.waitForLoadState("domcontentloaded")
-
-    expect(page.url()).toMatch(/\/students\/enroll/)
     await assertNoSSE(page)
   })
 })

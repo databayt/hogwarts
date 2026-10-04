@@ -88,7 +88,6 @@ export type SpotlightGroupKind =
   | "student"
   | "teacher"
   | "guardian"
-  | "class"
   | "classroom"
   | "subject"
   | "vehicle"

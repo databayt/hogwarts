@@ -17,7 +17,6 @@ import {
   bookWhere,
   buildEntityKindList,
   classroomWhere,
-  classWhere,
   driverWhere,
   eventWhere,
   guardianWhere,
@@ -31,9 +30,6 @@ import {
   type PredicateCtx,
 } from "./rbac-predicates"
 
-// "class" is not searched: classes are being retired in favour of section +
-// subject, and its results linked to `/classes/:id`, a page that never
-// existed. The case below stays only so an explicit `kinds` request is safe.
 const ALL_KINDS: SpotlightGroupKind[] = [
   "student",
   "teacher",
@@ -180,32 +176,6 @@ async function searchKind(
         label: joinName(r.firstName, r.lastName),
         secondaryLabel: r.emailAddress ?? undefined,
         href: `/parents/${r.id}`,
-        lang: normalizeLang(r.lang),
-      }))
-    }
-
-    case "class": {
-      const where = classWhere(c)
-      if (!where) return []
-      const rows = await db.class.findMany({
-        where,
-        take,
-        select: {
-          id: true,
-          name: true,
-          courseCode: true,
-          lang: true,
-          subject: { select: { name: true } },
-        },
-        orderBy: { name: "asc" },
-      })
-      return rows.map<SpotlightResult>((r) => ({
-        kind: "class",
-        id: r.id,
-        label: r.name,
-        secondaryLabel: r.courseCode ?? undefined,
-        href: `/classes/${r.id}`,
-        breadcrumb: r.subject?.name ? [r.subject.name] : undefined,
         lang: normalizeLang(r.lang),
       }))
     }

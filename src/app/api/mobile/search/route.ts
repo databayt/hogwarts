@@ -44,7 +44,6 @@ const KINDS: readonly SpotlightGroupKind[] = [
   "student",
   "teacher",
   "guardian",
-  "class",
   "classroom",
   "subject",
   "vehicle",

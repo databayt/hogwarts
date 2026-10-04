@@ -4,8 +4,6 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  bulkEnrollStudentsSchema,
-  generateClassesSchema,
   generateSectionsSchema,
   gradeConfigSchema,
 } from "@/components/school-dashboard/listings/classrooms/configure/validation"
@@ -72,43 +70,5 @@ describe("generateSectionsSchema", () => {
       ],
     })
     expect(result.success).toBe(false)
-  })
-})
-
-describe("generateClassesSchema", () => {
-  it("requires gradeIds and termId", () => {
-    expect(
-      generateClassesSchema.safeParse({ gradeIds: [], termId: "t1" }).success
-    ).toBe(false)
-    expect(
-      generateClassesSchema.safeParse({ gradeIds: ["g1"], termId: "" }).success
-    ).toBe(false)
-  })
-
-  it("accepts the happy path", () => {
-    expect(
-      generateClassesSchema.safeParse({ gradeIds: ["g1", "g2"], termId: "t1" })
-        .success
-    ).toBe(true)
-  })
-})
-
-describe("bulkEnrollStudentsSchema", () => {
-  it("requires gradeIds", () => {
-    expect(bulkEnrollStudentsSchema.safeParse({ gradeIds: [] }).success).toBe(
-      false
-    )
-  })
-
-  it("rejects empty grade ids", () => {
-    expect(
-      bulkEnrollStudentsSchema.safeParse({ gradeIds: ["g1", ""] }).success
-    ).toBe(false)
-  })
-
-  it("accepts a populated array", () => {
-    expect(
-      bulkEnrollStudentsSchema.safeParse({ gradeIds: ["g1"] }).success
-    ).toBe(true)
   })
 })

@@ -53,7 +53,6 @@ export function buildEntityKindList(
       "student",
       "teacher",
       "guardian",
-      "class",
       "classroom",
       "vehicle",
       "driver",
@@ -61,7 +60,7 @@ export function buildEntityKindList(
       "application",
     ].forEach((k) => allowed.add(k as SpotlightGroupKind))
   } else if (role === "TEACHER") {
-    ;["student", "teacher", "guardian", "class", "classroom"].forEach((k) =>
+    ;["student", "teacher", "guardian", "classroom"].forEach((k) =>
       allowed.add(k as SpotlightGroupKind)
     )
   } else if (role === "ACCOUNTANT") {
@@ -75,11 +74,11 @@ export function buildEntityKindList(
       "route",
     ].forEach((k) => allowed.add(k as SpotlightGroupKind))
   } else if (role === "STUDENT") {
-    ;["student", "guardian", "class"].forEach((k) =>
+    ;["student", "guardian"].forEach((k) =>
       allowed.add(k as SpotlightGroupKind)
     )
   } else if (role === "GUARDIAN") {
-    ;["student", "class"].forEach((k) => allowed.add(k as SpotlightGroupKind))
+    ;["student"].forEach((k) => allowed.add(k as SpotlightGroupKind))
   }
 
   return [...allowed].filter((k) => requested.includes(k))
@@ -208,41 +207,6 @@ export function guardianWhere(
       studentGuardians: { some: { student: teachesStudent(c.userId) } },
     }
   }
-  return null
-}
-
-export function classWhere(c: PredicateCtx): Prisma.ClassWhereInput | null {
-  const insensitive = Prisma.QueryMode.insensitive
-  const search: Prisma.ClassWhereInput = {
-    OR: [
-      { name: { contains: c.search, mode: insensitive } },
-      { courseCode: { contains: c.search, mode: insensitive } },
-    ],
-  }
-  const base: Prisma.ClassWhereInput = { schoolId: c.schoolId, ...search }
-
-  if (c.role === "TEACHER") {
-    return { ...base, teacher: { userId: c.userId } }
-  }
-  if (c.role === "STUDENT") {
-    return {
-      ...base,
-      studentClasses: { some: { student: { userId: c.userId } } },
-    }
-  }
-  if (c.role === "GUARDIAN") {
-    return {
-      ...base,
-      studentClasses: {
-        some: {
-          student: {
-            studentGuardians: { some: { guardian: { userId: c.userId } } },
-          },
-        },
-      },
-    }
-  }
-  if (ADMIN_ROLES.includes(c.role) || c.role === "STAFF") return base
   return null
 }
 

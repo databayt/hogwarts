@@ -1,19 +1,18 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import CreateClassContent from "@/components/school-dashboard/listings/classes/create/content"
+import { redirect } from "next/navigation"
 
-export const metadata = { title: "Dashboard: Create Class" }
+import { type Locale } from "@/components/internationalization/config"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
+// Rooms are added from the classrooms list. This route held a "Create New
+// Class" placeholder; the links that point here (setup guide, command menu,
+// attendance empty state) now land on the list.
 export default async function Page({ params }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
-
-  return <CreateClassContent dictionary={dictionary.school} lang={lang} />
+  redirect(`/${lang}/classrooms`)
 }

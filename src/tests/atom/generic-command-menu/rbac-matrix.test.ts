@@ -17,7 +17,6 @@ import {
   bookWhere,
   buildEntityKindList,
   classroomWhere,
-  classWhere,
   driverWhere,
   eventWhere,
   guardianWhere,
@@ -39,7 +38,6 @@ const ALL_KINDS: SpotlightGroupKind[] = [
   "student",
   "teacher",
   "guardian",
-  "class",
   "classroom",
   "subject",
   "vehicle",
@@ -84,11 +82,10 @@ describe("buildEntityKindList", () => {
     }
   })
 
-  it("STUDENT can search self/guardians/classes/subject/announcement/book/event", () => {
+  it("STUDENT can search self/guardians/subject/announcement/book/event", () => {
     const allowed = buildEntityKindList("STUDENT", ALL_KINDS)
     expect(allowed).toContain("student")
     expect(allowed).toContain("guardian")
-    expect(allowed).toContain("class")
     expect(allowed).toContain("announcement")
     expect(allowed).toContain("book")
     expect(allowed).toContain("event")
@@ -99,10 +96,9 @@ describe("buildEntityKindList", () => {
     expect(allowed).not.toContain("vehicle")
   })
 
-  it("GUARDIAN can search children/classes/subject/announcement/book/event", () => {
+  it("GUARDIAN can search children/subject/announcement/book/event", () => {
     const allowed = buildEntityKindList("GUARDIAN", ALL_KINDS)
     expect(allowed).toContain("student")
-    expect(allowed).toContain("class")
     expect(allowed).toContain("announcement")
     expect(allowed).toContain("event")
     expect(allowed).not.toContain("teacher")
@@ -120,12 +116,11 @@ describe("buildEntityKindList", () => {
     expect(allowed).not.toContain("teacher")
   })
 
-  it("TEACHER can search students/teachers (self)/guardians/classes/classroom", () => {
+  it("TEACHER can search students/teachers (self)/guardians/classroom", () => {
     const allowed = buildEntityKindList("TEACHER", ALL_KINDS)
     expect(allowed).toContain("student")
     expect(allowed).toContain("teacher")
     expect(allowed).toContain("guardian")
-    expect(allowed).toContain("class")
     expect(allowed).toContain("classroom")
     expect(allowed).not.toContain("payment")
     expect(allowed).not.toContain("vehicle")
@@ -227,29 +222,6 @@ describe("guardianWhere", () => {
 
   it("USER is denied", () => {
     expect(guardianWhere(ctx("USER"))).toBeNull()
-  })
-})
-
-describe("classWhere", () => {
-  it("STUDENT sees own classes", () => {
-    const where = classWhere(ctx("STUDENT"))
-    expect(where!.studentClasses).toBeDefined()
-  })
-
-  it("GUARDIAN sees children's classes", () => {
-    const where = classWhere(ctx("GUARDIAN"))
-    expect(where!.studentClasses).toBeDefined()
-  })
-
-  it("TEACHER sees only own classes", () => {
-    const where = classWhere(ctx("TEACHER"))
-    expect((where as { teacher?: { userId: string } }).teacher).toEqual({
-      userId: "user-1",
-    })
-  })
-
-  it("ACCOUNTANT is denied (not in role list)", () => {
-    expect(classWhere(ctx("ACCOUNTANT"))).toBeNull()
   })
 })
 
@@ -381,8 +353,7 @@ describe("cross-tenant safety", () => {
       studentWhere,
       teacherWhere,
       guardianWhere,
-      classWhere,
-      classroomWhere,
+          classroomWhere,
       announcementWhere,
       eventWhere,
       bookWhere,

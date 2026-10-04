@@ -228,12 +228,11 @@ model Class {
 
 ### Students
 
-- Course path: `Student → StudentClass → Class → Classroom`
-- Homeroom path: `Student → Section → Classroom` (schema only, no UI)
+- Homeroom: `Student → Section → Classroom` (the section's main room)
+- Per period: `Student → Section → Timetable → Classroom`
 
 ### Teachers
 
-- Home room: `Teacher → Class → Classroom` (assigned classes' default rooms)
 - Per-slot: `Teacher → Timetable → Classroom` (actual room per period)
 - Homeroom: `Teacher → Section → Classroom` (via `homeroomTeacherId`)
 
@@ -243,7 +242,7 @@ model Class {
 
 ### Exams
 
-No direct `classroomId` on `Exam`. Venue resolved via `Exam → Class → Classroom`. Conflict detection accepts optional `classroomId` and checks timetable + exam-to-exam conflicts.
+No direct `classroomId` on `Exam`. A section's exam sits in the section's room (`Exam → Section → Classroom`); a whole-grade exam has no single room. Legacy exams still resolve `Exam → Class → Classroom`. Conflict detection accepts optional `classroomId` and checks timetable + exam-to-exam conflicts.
 
 ### Dashboard / facility (gaps)
 
@@ -254,14 +253,13 @@ No direct `classroomId` on `Exam`. Venue resolved via `Exam → Class → Classr
 | Module           | Direct FK     | Path                                              | Status      |
 | ---------------- | ------------- | ------------------------------------------------- | ----------- |
 | Timetable        | `classroomId` | Direct                                            | Production  |
-| Class            | `classroomId` | Direct                                            | Production  |
+| Class (legacy)   | `classroomId` | Direct                                            | Retiring    |
 | Section          | `classroomId` | Direct                                            | Production  |
 | RoomConstraint   | `classroomId` | Direct                                            | Production  |
-| Teacher          | No            | Teacher → Class / Timetable / Section → Classroom | Indirect    |
-| Student          | No            | Student → StudentClass → Class → Classroom        | Indirect    |
-| Student homeroom | No            | Student → Section → Classroom                     | Schema only |
+| Teacher          | No            | Teacher → Timetable / Section → Classroom         | Indirect    |
+| Student          | No            | Student → Section → Classroom                     | Indirect    |
 | Parent portal    | No            | Guardian → Student → Timetable → Classroom        | Indirect    |
-| Exam             | No            | Exam → Class → Classroom                          | Indirect    |
+| Exam             | No            | Exam → Section → Classroom                        | Indirect    |
 | School config    | No            | `db.classroom.count()`                            | Read-only   |
 | CatalogSubject   | No            | No path                                           | Gap         |
 | Application      | No            | No connection                                     | Gap         |

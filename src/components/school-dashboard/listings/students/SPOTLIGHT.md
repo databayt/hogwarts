@@ -4,7 +4,7 @@ title: Students
 status: partial
 pillar: school-operations
 personas: [registrar, principal, owner, teacher, parent]
-routes: [/ar/s/{school}/students, /ar/s/{school}/students/add, /ar/s/{school}/students/enroll, /ar/s/{school}/students/archived, /ar/s/{school}/students/year-levels]
+routes: [/ar/s/{school}/students, /ar/s/{school}/students/add, /ar/s/{school}/students/archived, /ar/s/{school}/students/year-levels]
 screenshots: [demo-students-ar.png]
 readme: ./README.md
 docs: content/docs-en/students.mdx
@@ -96,7 +96,6 @@ The student register is a ledger in the office and a copy in someone's spreadshe
 - src/components/school-dashboard/listings/students/wizard/config.ts
 - src/components/school-dashboard/listings/students/wizard/attachments/content.tsx, extract-action.ts
 - src/components/school-dashboard/listings/students/{performance,reports,settings,guardians}/content.tsx
-- src/components/school-dashboard/listings/students/enroll/actions.ts
 - src/lib/student-access-code.ts
 - src/lib/student-provisioning-notify.ts
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/students/ (layout.tsx, page.tsx, [id]/page.tsx, performance, reports, settings, guardians, enroll, archived)

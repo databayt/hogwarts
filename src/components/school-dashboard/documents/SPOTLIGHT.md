@@ -78,7 +78,7 @@ Every school already has its mandated format: the ministry's certificate, the he
 
 - [Exams](../exams/SPOTLIGHT.md) — exam papers and certificates are filled from exam data and hosted under Exams.
 - [Grades](../grades/SPOTLIGHT.md) — report cards are filled from the grades and hosted under Grades.
-- [Classes](../listings/classes/SPOTLIGHT.md) — an exam paper built from a blueprint is set for a chosen class.
+- [Classrooms](../listings/classrooms/SPOTLIGHT.md) — an exam paper built from a blueprint is set for a section or a whole grade.
 
 ## Sources
 

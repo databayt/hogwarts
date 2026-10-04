@@ -96,7 +96,6 @@ None yet — capture with /record. Routes to capture (Arabic, admin login on the
 - src/components/school-dashboard/listings/classrooms/configure/actions.ts
 - src/components/school-dashboard/listings/classrooms/detail/room-detail.tsx
 - src/components/catalog/room-naming.ts
-- src/components/school-dashboard/listings/classes/create/content.tsx
 - src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/classrooms/ (layout, page, configure, create, [id])
 - src/components/template/platform-sidebar/config.ts
 - src/components/internationalization/school-ar.json, school-en.json (classrooms keys)

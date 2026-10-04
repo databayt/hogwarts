@@ -32,7 +32,6 @@ export const kindIconMap: Record<SpotlightGroupKind, LucideIcon> = {
   student: GraduationCap,
   teacher: UserCheck,
   guardian: Users,
-  class: ScrollText,
   classroom: DoorOpen,
   subject: ScrollText,
   vehicle: Bus,
