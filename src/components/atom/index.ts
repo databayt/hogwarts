@@ -34,5 +34,6 @@ export type {
 } from "./airbnb-hamburger-menu"
 
 // Image atoms
-export { BlurImage, NEUTRAL_BLUR } from "./blur-image"
+export { BlurImage } from "./blur-image"
+export { blurFromColor, NEUTRAL_BLUR } from "./blur-placeholder"
 export type { BlurImageProps } from "./blur-image"

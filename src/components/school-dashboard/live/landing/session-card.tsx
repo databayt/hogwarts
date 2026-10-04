@@ -2,11 +2,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 // Server component: pure prop composition, no client hooks or handlers.
 
-import { BlurImage, blurFromColor } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { Play } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { BlurImage } from "@/components/atom/blur-image"
+import { blurFromColor } from "@/components/atom/blur-placeholder"
 
 import type {
   LandingSectionProps,

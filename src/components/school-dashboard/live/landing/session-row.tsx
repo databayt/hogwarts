@@ -1,12 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Fragment, type ReactNode } from "react"
-import { BlurImage, blurFromColor } from "@/components/atom/blur-image"
 import Link from "next/link"
 import { Radio } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { BlurImage } from "@/components/atom/blur-image"
+import { blurFromColor } from "@/components/atom/blur-placeholder"
 
 import type {
   LandingSectionProps,

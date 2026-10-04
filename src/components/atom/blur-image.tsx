@@ -7,21 +7,11 @@ import Image, { type ImageProps } from "next/image"
 
 import { cn } from "@/lib/utils"
 
-/** Neutral 16×10 LQIP for images with no stored blur — reads fine in light + dark. */
-export const NEUTRAL_BLUR =
-  "data:image/webp;base64,UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoQAAwAA4BaJaQAA3AA/vEAgAA="
+// The placeholders are plain functions — they live in `./blur-placeholder` so
+// server components can call them; re-exported here for existing imports.
+import { NEUTRAL_BLUR } from "./blur-placeholder"
 
-/**
- * A solid-colour LQIP from a hex the data already carries — the catalog stores a
- * colour per subject/lesson, so the blur can start in the right hue for free
- * instead of the neutral grey. Cheaper than a stored LQIP and better than none.
- */
-export function blurFromColor(color: string | null | undefined) {
-  if (!color) return undefined
-  const hex = color.trim()
-  if (!/^#[0-9a-fA-F]{3,8}$/.test(hex)) return undefined
-  return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect width='1' height='1' fill='%23${hex.slice(1)}'/%3E%3C/svg%3E`
-}
+export { blurFromColor, NEUTRAL_BLUR } from "./blur-placeholder"
 
 export type BlurImageProps = ImageProps & {
   /** Skip the blur-up (fade only, no placeholder). Use for tiny icons and logos. */
@@ -63,10 +53,10 @@ export function BlurImage({
         "transition-[filter,scale,opacity] duration-700 ease-out",
         "motion-reduce:transition-none",
         loaded
-          ? "blur-none scale-100 opacity-100"
+          ? "scale-100 opacity-100 blur-none"
           : plain
             ? "opacity-0"
-            : "motion-reduce:blur-none scale-105 blur-xl motion-reduce:scale-100",
+            : "scale-105 blur-xl motion-reduce:scale-100 motion-reduce:blur-none",
         className
       )}
     />

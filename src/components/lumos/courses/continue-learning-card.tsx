@@ -1,10 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 // Server-composable: no hooks, no handlers, so it costs the page no hydration.
-import { BlurImage, blurFromColor } from "@/components/atom/blur-image"
 import Link from "next/link"
 
 import { Badge } from "@/components/ui/badge"
+import { BlurImage } from "@/components/atom/blur-image"
+import { blurFromColor } from "@/components/atom/blur-placeholder"
 import type { LessonInstructor } from "@/components/lumos/data/catalog/get-continue-watching"
 
 export interface LeadCardItem {
