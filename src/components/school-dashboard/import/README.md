@@ -2,6 +2,12 @@
 
 ### Overview
 
+> **2026-10-05:** the school-admin bulk import lives at `/school/bulk`
+> (`school-dashboard/school/bulk/`) — column mapping, review, background runs,
+> history, undo and logins. See `content/docs-en/bulk-import.mdx`. This block's
+> notes describe the older engine (`file/import/csv-import.ts`) that the
+> onboarding import still uses.
+
 Admin tool for bulk importing students, teachers, and other entities via CSV files. Includes template downloads, comprehensive field-level validation with helpful error messages, duplicate detection, and a reusable CSV export utility library. Enhanced error reporting shows exact row numbers, field names, and suggestions for fixes.
 
 ### File Structure

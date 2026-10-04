@@ -81,6 +81,31 @@ Dependencies and references:
 
 ---
 
+## Resolved (2026-10-05) — bulk import rebuilt: map → review → background run
+
+Docs: `content/docs-en/bulk-import.mdx`. Engine in `bulk/engine/`, history in
+`ImportBatch` / `ImportBatchRecord` (`prisma/models/import-batch.prisma`).
+
+- [x] Column mapping (Arabic/English aliases, manual override, required check,
+      wrong-file detection with a switch).
+- [x] Row-by-row review before any write; coded issues translated in ar/en
+      (the English row messages of 10-04 are gone from this page).
+- [x] Background run (`after()`), progress, resume after a restart without
+      double-writing the in-flight row; final counts from records.
+- [x] History, undo (keeps accounts that already changed their password),
+      logins CSV + printable QR slips minted on demand — no stored passwords.
+- [x] Father/mother columns on one row, update-existing mode, create missing
+      sections/departments, teacher subjects → TeacherSubjectExpertise.
+- [x] Teacher/staff email optional (`DROP NOT NULL`) — no `@school.local`.
+- [x] Verified on demo.localhost: Arabic xlsx family file, teachers, staff,
+      guardians, update, undo ×6, 500-row run (40 s), kill + resume, ar/en,
+      390 px.
+- [ ] **Prod DDL owed** before deploying: `prisma/sql/bulk-import/01-import-batches.sql`.
+- [ ] Onboarding import (`onboarding/import`) still on the old
+      `file/import/csv-import.ts` engine — move it to `bulk/engine` next.
+- [ ] Student rows with no date of birth still get provisionStudent's
+      2000-01-01 default.
+
 ## Resolved (2026-10-04) — /school/bulk is people import only
 
 - [x] Removed the Academic (years/terms/periods/levels/grading tables — they

@@ -1,0 +1,69 @@
+---
+title: Bulk import
+description: Add students, teachers, staff and guardians from a file — match columns, review every row, run in the background, undo, hand out logins.
+---
+
+`/school/bulk` (School → إدخال جماعي) is where a school brings its people in from a spreadsheet. Admins only (`ADMIN`, `DEVELOPER`).
+
+Source: `src/components/school-dashboard/school/bulk/`.
+
+## The flow
+
+1. **Upload** — click a card (Students, Teachers, Staff, Guardians) or drop a file on it. CSV (comma, semicolon or tab), Excel (`.xlsx`/`.xls` — the first sheet that has rows), JSON (array of objects) or Word (first table). Up to 10 MB and 5,000 rows.
+2. **Match columns** — headers are matched automatically in Arabic or English (`الاسم`, `رقم الطالب`, `هاتف الأب`, `Employee ID`, …). Any field can be pointed at another column by hand. Required fields must be matched before review. A file that looks like another type's (a teachers file dropped on Students) is flagged with a one-click switch.
+3. **Review** — every row is planned without writing anything: **New**, **Update**, **Skip** or **Error**, each with its reasons in the admin's language. The list opens on the errors when there are any.
+4. **Import** — runs in the background. The dialog shows progress and can be closed; the run shows in the history.
+
+### Options
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| Update people who already exist | off | Matched people get their changed fields written. Off: they are skipped. |
+| Create missing sections and departments | on | A section (`5-ج`) or department the school lacks is created. Off: the row goes in without it. |
+| Email families a welcome | off | Students only. Queued and drained by the email cron. |
+
+## What each file can carry
+
+| Type | Columns |
+| --- | --- |
+| Students | name (or first + last), student ID, grade, section, gender, date of birth, email, phone, guardian name/relation/phone/email, **father** name/phone/email, **mother** name/phone/email |
+| Teachers | name, employee ID, email, phone, gender, department, subjects (comma or `،` separated), qualification |
+| Staff | name, employee ID, email, phone, gender, position, department, employment type |
+| Guardians | name, phone, email, relation, student ID(s) |
+
+- **Grades** match the school's grade names, numbers or Arabic ordinals (`الصف الخامس`, `Grade 5`, `5`). A combined value (`5-B`, `الصف الخامس - ب`) sets grade and section.
+- **Sections** match `B`, `ب` or `2` as the same section.
+- **Families on one row**: siblings with the same parent phone/email share one father and one mother record.
+- **Teacher subjects** match the subjects the school teaches (`رياضيات` meets `الرياضيات`); unknown ones are reported and skipped.
+- **Values**: Arabic-Indic digits, `00` prefixes, day-first dates (`15/05/2015`) and `ذكر/أنثى/M/F` are understood. An unreadable optional value (phone, date, gender) is dropped with a warning; an invalid email is an error.
+- **Matching existing people** — students by student ID, email, or name + date of birth; teachers and staff by employee ID, email or phone; guardians by email or phone.
+- Teachers and staff may have no email; nothing is invented.
+
+## Logins
+
+Imported accounts are created **without a password**. From the finished import (or its history row):
+
+- **Download logins** — a CSV (Excel-safe, UTF-8) of name, email, username, password, role.
+- **Print login slips** — two per row, each with a QR code to the school's sign-in page.
+
+Both mint fresh passwords for every account of that import that has not signed in yet, and reuse them for the rest of the visit, so the CSV and the slips agree. Each later download replaces them. Every account must choose its own password at first sign-in. Passwords are never stored.
+
+## History, undo, resume
+
+Every run is an `ImportBatch`; what it created or changed is an `ImportBatchRecord`.
+
+- **Undo** removes the people it created (and the sections/departments it created, once empty) and restores the fields it updated. Accounts whose owner has already changed their password are kept and counted.
+- **Resume** — a run cut off by a deploy or restart shows as *Interrupted*. Resume continues from the last row; the row that was in flight is checked first so nobody is written twice.
+
+## Engine
+
+| File | Role |
+| --- | --- |
+| `fields.ts` | Field definitions, header aliases, auto-mapping, wrong-file detection, templates (client-safe) |
+| `read-file.ts` | Any accepted file → one table of strings |
+| `engine/normalize.ts` | Cell parsers: phone, date, gender, relation, section letters |
+| `engine/plan.ts` | Table + mapping → one decision per row, no writes |
+| `engine/run.ts` | Execute a batch, logins, undo |
+| `actions.ts` | `analyzeImportFile` → `previewImport` → `startImport` (+ `getImportBatch`, `listImportBatches`, `resumeImport`, `issueBatchLogins`, `undoImport`) |
+
+Students go through `provisionStudent` — the same core admission uses — so each gets a StudentYearLevel, a shadow Application (`BULK_IMPORT`) and fee assignment. The onboarding import (`onboarding/import`) still uses the older `file/import/csv-import.ts` engine.

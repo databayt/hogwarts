@@ -98,6 +98,7 @@
     "seeds",
     "safe-seeds",
     "accounts",
+    "bulk-import",
     "playwright",
     "prettier",
     "rebound",
