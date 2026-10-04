@@ -34,6 +34,9 @@ export interface DeriveResult {
   reconciled: { assigned: number; moved: number; residual: number }
 }
 
+/** Requests applied per transaction by `saveAndReconcile`. */
+const SAVE_CHUNK = 25
+
 /** Saves new pairs (skipping ones already assigned) and reconciles slots. */
 async function saveAndReconcile(
   client: PrismaClient,
@@ -69,11 +72,21 @@ async function saveAndReconcile(
   }
 
   // The batch apply writes the SubjectTeacher rows itself, together with the
-  // slot changes, in one transaction.
-  const { outcomes } = await applyAssignmentsBatch(
-    { schoolId, termId, requests: [...groups.values()] },
-    client
-  )
+  // slot changes. A few dozen requests per transaction: a school's worth in
+  // one (the demo's ~500) outran the 60 s transaction limit when run against
+  // a remote database. Requests are planned in turn either way, so chunking
+  // changes nothing but where each transaction ends.
+  const requests = [...groups.values()]
+  const outcomes: Awaited<
+    ReturnType<typeof applyAssignmentsBatch>
+  >["outcomes"] = []
+  for (let i = 0; i < requests.length; i += SAVE_CHUNK) {
+    const batch = await applyAssignmentsBatch(
+      { schoolId, termId, requests: requests.slice(i, i + SAVE_CHUNK) },
+      client
+    )
+    outcomes.push(...batch.outcomes)
+  }
   const after = await client.subjectTeacher.count({
     where: { schoolId, termId },
   })
