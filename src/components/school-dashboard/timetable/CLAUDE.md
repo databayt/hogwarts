@@ -26,6 +26,30 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
 
 ## Key Decisions
 
+- **Placeholder teachers keep parallel sections apart** (2026-10-04): the
+  generator only separates two sections when one teacher must teach both, and
+  onboarding builds the timetable before anyone is hired. `teacher-plan.ts`
+  therefore adds a placeholder teacher per (grade, subject), shared by that
+  grade's sections and split when the load passes the weekly cap, listed AFTER
+  the real qualified teachers. `stripPlaceholderTeachers` turns them back into
+  `teacherId = null` before anything is saved or returned to the browser, and
+  `applyGeneratedTimetable` refuses to persist one. Never let a `placeholder:` id
+  reach the database. `generate/inputs.ts` (`buildGenerationInputs`) is the ONE
+  loader for `autoGenerateTimetableForSchool` and `generateTimetablePreview`.
+  Don't fork it again; the two copies had drifted (one ignored constraints, and
+  neither ordered sections).
+- **Placement passes, best first** (2026-10-04): `placeSectionSubject` walks
+  the week for a real teacher, then for a placeholder, then accepts a
+  teacher-less period. A subject that nobody can teach yet counts as LEAST
+  constrained in the subject order. Counting it as "0 teachers = most
+  constrained" placed it first and left real teachers the leftovers (6/10
+  periods instead of 10/10). `selectDaysForSubject` returns every working day;
+  the old `ceil(hours × 1.5)` slice locked 2-period subjects into the first three
+  days, and they lost a period every week.
+- **Unassigned periods are labelled for admins only** (2026-10-04):
+  `SimpleGrid` takes `showNeedsTeacher`. The admin room view passes it, showing
+  «بانتظار معلم» plus a per-room count. Students and guardians never see the
+  label.
 - **The demo seed uses the PRODUCTION generator** (2026-07-16): both
   `prisma/seeds/index.ts` and `db:seed:single timetable` call
   `autoGenerateTimetableForSchool` — the same path a real school gets at

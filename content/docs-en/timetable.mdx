@@ -247,6 +247,21 @@ generation targets the same term the grid reads (`resolveActiveTerm`) so the two
 never disagree. A school that never picked a schedule structure still provisions
 — the doctor derives a country-recommended default and saves it.
 
+### Parallel sections and periods waiting for a teacher
+
+A new school's timetable exists before anyone is hired, so most periods start
+with no teacher. Generation still keeps parallel sections apart: every
+(grade, subject) gets a **placeholder teacher** shared by the grade's sections
+(`generate/teacher-plan.ts`), so 7-A and 7-B never have Math at the same period
+and one future teacher can take both. Placeholders are stripped to an empty
+teacher before anything is saved. Real qualified teachers always get first pick,
+and a subject is tried on every day for a teacher before a teacher-less period
+is accepted.
+
+In the admin room view, a period with no teacher reads **«بانتظار معلم» / Needs
+teacher**, with a count of how many periods in the room are still waiting.
+Students and guardians don't see the label.
+
 `detectTimetableConflicts()` backs the **Conflicts** tab — teacher, room, and section double-booking — and `suggestFreeSlots()` powers the slot editor's free-period suggestions. `getTimetableAnalytics()` backs the **Analytics** tab.
 
 ## Substitutions
