@@ -1472,9 +1472,90 @@ describe("Timetable Actions", () => {
 
   describe("applyGeneratedTimetable", () => {
     beforeEach(() => {
+      vi.mocked(db.term.findFirst).mockResolvedValue({
+        yearId: "year-1",
+      } as any)
       vi.mocked(db.timetable.deleteMany).mockResolvedValue({ count: 2 })
       vi.mocked(db.timetable.createMany).mockResolvedValue({ count: 0 })
       vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 1 })
+    })
+
+    const generatedSlot = {
+      dayOfWeek: 0,
+      periodId: CPERIOD1,
+      sectionId: CSECTION1,
+      subjectId: CSUBJECT1,
+      classId: "",
+      teacherId: CTEACHER1,
+      classroomId: CROOM1,
+      score: 50,
+      violations: [],
+    }
+
+    function mockOwnedRefs({ teacherOwned = true } = {}) {
+      vi.mocked(db.section.findMany).mockResolvedValue([
+        { id: CSECTION1 },
+      ] as any)
+      vi.mocked(db.subjectSelection.findMany).mockResolvedValue([
+        { catalogSubjectId: CSUBJECT1 },
+      ] as any)
+      vi.mocked(db.classroom.findMany).mockResolvedValue([
+        { id: CROOM1 },
+      ] as any)
+      vi.mocked(db.period.findMany).mockResolvedValue([{ id: CPERIOD1 }] as any)
+      vi.mocked(db.teacher.findMany).mockResolvedValue(
+        (teacherOwned ? [{ id: CTEACHER1 }] : []) as any
+      )
+    }
+
+    it("rejects a term that is not this school's", async () => {
+      vi.mocked(db.term.findFirst).mockResolvedValue(null)
+
+      const res = await applyGeneratedTimetable({
+        termId: CTERM1,
+        slots: [generatedSlot],
+      })
+
+      expect(res.success).toBe(false)
+      expect(res.errors).toEqual(["NOT_FOUND"])
+      expect(db.timetable.createMany).not.toHaveBeenCalled()
+    })
+
+    it("rejects slots that reference another school's teacher", async () => {
+      mockOwnedRefs({ teacherOwned: false })
+
+      const res = await applyGeneratedTimetable({
+        termId: CTERM1,
+        slots: [generatedSlot],
+        clearExisting: true,
+      })
+
+      expect(res.success).toBe(false)
+      expect(res.errors).toEqual(["VALIDATION_ERROR"])
+      expect(db.timetable.deleteMany).not.toHaveBeenCalled()
+      expect(db.timetable.createMany).not.toHaveBeenCalled()
+    })
+
+    it("writes owned slots and never persists a placeholder teacher", async () => {
+      mockOwnedRefs()
+
+      const res = await applyGeneratedTimetable({
+        termId: CTERM1,
+        slots: [
+          generatedSlot,
+          {
+            ...generatedSlot,
+            dayOfWeek: 1,
+            teacherId: "placeholder:grade:subject:0",
+          },
+        ],
+      })
+
+      expect(res.success).toBe(true)
+      const data = vi.mocked(db.timetable.createMany).mock.calls[0]?.[0]
+        ?.data as Array<{ teacherId?: string; classId?: string }>
+      expect(data.map((d) => d.teacherId)).toEqual([CTEACHER1, undefined])
+      expect(data.every((d) => d.classId === undefined)).toBe(true)
     })
 
     it("clearExisting cancels scheduled+future Conference rows anchored to the OLD slot ids before deleting them", async () => {

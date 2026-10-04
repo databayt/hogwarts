@@ -66,6 +66,7 @@
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
@@ -91,16 +92,15 @@ import { ABSENCE_TYPES, DRAFT_TERM_ID, SUBSTITUTION_STATUS } from "./config"
 
 import {
   generateSectionTimetable,
-  generateTimetable as runGenerationAlgorithm,
-  type ClassRequirement,
   type GeneratedSlot,
   type GenerationConfig,
   type GenerationResult,
-  type RoomAvailability,
-  type SectionRequirement,
-  type SubjectAllocation,
-  type TeacherAvailability,
 } from "./generate/algorithm"
+import { buildGenerationInputs } from "./generate/inputs"
+import {
+  isPlaceholderTeacherId,
+  stripPlaceholderTeachers,
+} from "./generate/teacher-plan"
 import {
   attachLiveClasses,
   getLiveClassIndicators,
@@ -4593,243 +4593,29 @@ export async function generateTimetablePreview(input: {
   })
   if (!term) throw new Error("INVALID_TERM")
 
-  // Get schedule config
-  const { config: scheduleConfig } = await getScheduleConfig({
+  // Periods, working days, sections, subjects, teachers (with placeholder
+  // teachers for unstaffed subjects) and rooms — the loader onboarding uses.
+  const inputs = await buildGenerationInputs({
+    schoolId,
     termId: input.termId,
-  })
-
-  // Get periods
-  const periods = await db.period.findMany({
-    where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: "asc" },
-    select: { id: true, name: true, isBreak: true },
-  })
-
-  // Build generation config
-  const generationConfig: GenerationConfig = {
-    workingDays: scheduleConfig.workingDays,
-    periodsPerDay: periods.filter((p) => !p.isBreak).map((p) => p.id),
-    constraints: {
-      enforceTeacherExpertise:
-        input.config?.constraints?.enforceTeacherExpertise ?? true,
-      enforceRoomCapacity:
-        input.config?.constraints?.enforceRoomCapacity ?? true,
-      maxTeacherPeriodsPerDay:
-        input.config?.constraints?.maxTeacherPeriodsPerDay ?? 6,
-      maxTeacherPeriodsPerWeek:
-        input.config?.constraints?.maxTeacherPeriodsPerWeek ?? 25,
-      maxConsecutivePeriods:
-        input.config?.constraints?.maxConsecutivePeriods ?? 3,
-      requireLunchBreak: input.config?.constraints?.requireLunchBreak ?? true,
-      preventBackToBack: input.config?.constraints?.preventBackToBack ?? false,
-    },
-    preferences: {
-      balanceSubjectDistribution:
-        input.config?.preferences?.balanceSubjectDistribution ?? true,
-      preferMorningForCore:
-        input.config?.preferences?.preferMorningForCore ?? true,
-      avoidLastPeriodForLab:
-        input.config?.preferences?.avoidLastPeriodForLab ?? true,
-      groupSameSubjectDays:
-        input.config?.preferences?.groupSameSubjectDays ?? false,
-    },
-  }
-
-  // Get sections with their grade and classroom
-  const sectionsData = await db.section.findMany({
-    where: { schoolId },
-    select: {
-      id: true,
-      name: true,
-      gradeId: true,
-      classroomId: true,
-      maxCapacity: true,
-      _count: { select: { students: true } },
-    },
-  })
-
-  // Get subject selections for each grade (links Subjects to grades with weeklyPeriods)
-  const subjectSelections = await db.subjectSelection.findMany({
-    where: { schoolId, isActive: true },
-    select: {
-      catalogSubjectId: true,
-      gradeId: true,
-      weeklyPeriods: true,
-      isRequired: true,
-      subject: { select: { id: true, name: true } },
-    },
-  })
-
-  // Build lookup: gradeId -> subject allocations
-  const gradeSubjectsMap = new Map<
-    string,
-    Array<{
-      subjectId: string
-      subjectName: string
-      hoursPerWeek: number
-      isRequired: boolean
-    }>
-  >()
-  for (const sel of subjectSelections) {
-    if (!sel.subject) continue
-    const list = gradeSubjectsMap.get(sel.gradeId) || []
-    list.push({
-      subjectId: sel.catalogSubjectId,
-      subjectName: sel.subject.name,
-      hoursPerWeek: sel.weeklyPeriods ?? 3,
-      isRequired: sel.isRequired,
-    })
-    gradeSubjectsMap.set(sel.gradeId, list)
-  }
-
-  // Get teacher expertise mapping (subjectId -> teacherIds[])
-  const teacherExpertise = await db.teacherSubjectExpertise.findMany({
-    where: { schoolId },
-    select: { teacherId: true, subjectId: true },
-  })
-
-  const subjectTeachers = new Map<string, string[]>()
-  for (const te of teacherExpertise) {
-    if (!subjectTeachers.has(te.subjectId)) {
-      subjectTeachers.set(te.subjectId, [])
-    }
-    subjectTeachers.get(te.subjectId)!.push(te.teacherId)
-  }
-
-  // Build SectionRequirement[] for the algorithm
-  const sectionRequirements: SectionRequirement[] = sectionsData.map((s) => {
-    const gradeSubjects = gradeSubjectsMap.get(s.gradeId) || []
-
-    const subjects: SubjectAllocation[] = gradeSubjects.map((gs) => ({
-      subjectId: gs.subjectId,
-      subjectName: gs.subjectName,
-      hoursPerWeek: gs.hoursPerWeek,
-      requiresLab: gs.subjectName.toLowerCase().includes("lab"),
-      preferredTeacherIds: subjectTeachers.get(gs.subjectId) || [],
-    }))
-
-    return {
-      sectionId: s.id,
-      sectionName: s.name,
-      gradeId: s.gradeId,
-      classroomId: s.classroomId,
-      studentCount: s._count.students,
-      subjects,
-    }
-  })
-
-  // Get teachers with constraints
-  const teachersData = await db.teacher.findMany({
-    where: { schoolId, employmentStatus: "ACTIVE" },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      subjectExpertise: {
-        where: { schoolId },
-        select: { subjectId: true },
-      },
-      constraints: {
-        where: { schoolId, OR: [{ termId: input.termId }, { termId: null }] },
-        orderBy: { termId: "desc" },
-        take: 1,
-        select: {
-          maxPeriodsPerDay: true,
-          maxPeriodsPerWeek: true,
-          maxConsecutivePeriods: true,
-          dayPreferences: true,
-          periodPreferences: true,
-          unavailableBlocks: {
-            select: { dayOfWeek: true, periodId: true },
-          },
-        },
-      },
-    },
-  })
-
-  const teachers: TeacherAvailability[] = teachersData.map((t) => {
-    const constraint = t.constraints[0]
-    const dayPrefs =
-      (constraint?.dayPreferences as Record<string, string>) || {}
-    const periodPrefs =
-      (constraint?.periodPreferences as Record<string, string>) || {}
-
-    return {
-      teacherId: t.id,
-      teacherName: `${t.firstName} ${t.lastName}`,
-      maxPeriodsPerDay: constraint?.maxPeriodsPerDay || 6,
-      maxPeriodsPerWeek: constraint?.maxPeriodsPerWeek || 25,
-      maxConsecutive: constraint?.maxConsecutivePeriods || 3,
-      subjectExpertise: t.subjectExpertise.map(
-        (e: { subjectId: string }) => e.subjectId
-      ),
-      unavailableBlocks: constraint?.unavailableBlocks || [],
-      preferredPeriods: Object.entries(periodPrefs)
-        .filter(([, v]) => v === "preferred")
-        .map(([periodId]) => ({ dayOfWeek: 0, periodId })),
-      avoidedPeriods: Object.entries(periodPrefs)
-        .filter(([, v]) => v === "avoid")
-        .map(([periodId]) => ({ dayOfWeek: 0, periodId })),
-    }
-  })
-
-  // Get rooms with constraints
-  const roomsData = await db.classroom.findMany({
-    where: { schoolId },
-    select: {
-      id: true,
-      roomName: true,
-      capacity: true,
-      classroomType: {
-        select: { name: true },
-      },
-      constraints: {
-        where: { schoolId, OR: [{ termId: input.termId }, { termId: null }] },
-        orderBy: { termId: "desc" },
-        take: 1,
-        select: {
-          allowedSubjectTypes: true,
-          reservedPeriods: true,
-        },
-      },
-    },
-  })
-
-  const rooms: RoomAvailability[] = roomsData.map((r) => {
-    const constraint = r.constraints[0]
-    const reserved =
-      (constraint?.reservedPeriods as Record<string, string[]>) || {}
-
-    const reservedBlocks: Array<{ dayOfWeek: number; periodId: string }> = []
-    for (const [dayStr, periodIds] of Object.entries(reserved)) {
-      for (const periodId of periodIds) {
-        reservedBlocks.push({ dayOfWeek: parseInt(dayStr), periodId })
-      }
-    }
-
-    return {
-      roomId: r.id,
-      roomName: r.roomName,
-      capacity: r.capacity || 30,
-      roomType: r.classroomType?.name || "regular",
-      allowedSubjectTypes: constraint?.allowedSubjectTypes || [],
-      reservedBlocks,
-      hasAccessibility: false,
-    }
+    yearId: term.yearId,
+    overrides: input.config,
   })
 
   // Run section-based generation algorithm
   const result = generateSectionTimetable(
-    sectionRequirements,
-    teachers,
-    rooms,
+    inputs.sections,
+    inputs.teachers,
+    inputs.rooms,
     {
       schoolId,
       termId: input.termId,
       yearId: term.yearId,
-      config: generationConfig,
+      config: inputs.config,
     }
   )
+  // Placeholder teachers never leave the server: they become unassigned slots.
+  const preview = stripPlaceholderTeachers(result.slots)
 
   await logTimetableAction("generate_preview", {
     entityType: "generation",
@@ -4841,26 +4627,79 @@ export async function generateTimetablePreview(input: {
     },
   })
 
-  // Build name lookup maps from the section requirements for the preview UI
-  const sectionNames: Record<string, string> = {}
-  const subjectNames: Record<string, string> = {}
-  for (const sec of sectionRequirements) {
-    sectionNames[sec.sectionId] = sec.sectionName
-    for (const sub of sec.subjects) {
-      subjectNames[sub.subjectId] = sub.subjectName
-    }
-  }
-
   return {
     success: result.success,
-    preview: result.slots,
+    preview,
     stats: result.stats,
     unplacedClasses: result.unplacedClasses,
     warnings: result.warnings,
     errors: result.errors,
-    sectionNames,
-    subjectNames,
+    sectionNames: inputs.sectionNames,
+    subjectNames: inputs.subjectNames,
   }
+}
+
+/**
+ * Checks that every id in a generated preview belongs to this school.
+ *
+ * The preview round-trips through the browser, so the slots that come back
+ * are client input: a crafted request could point a slot at another school's
+ * teacher, room or section (ids are global CUIDs). Returns false on any
+ * foreign reference — a genuine preview never contains one.
+ */
+async function generatedSlotsBelongToSchool(
+  schoolId: string,
+  yearId: string,
+  slots: GeneratedSlot[]
+): Promise<boolean> {
+  if (slots.length === 0) return true
+
+  const distinct = (values: Array<string | null | undefined>) => [
+    ...new Set(values.filter((v): v is string => !!v)),
+  ]
+  const sectionIds = distinct(slots.map((s) => s.sectionId))
+  const subjectIds = distinct(slots.map((s) => s.subjectId))
+  const roomIds = distinct(slots.map((s) => s.classroomId))
+  const periodIds = distinct(slots.map((s) => s.periodId))
+  const teacherIds = distinct(
+    slots.map((s) => (isPlaceholderTeacherId(s.teacherId) ? null : s.teacherId))
+  )
+
+  const [sections, subjects, rooms, periods, teachers] = await Promise.all([
+    db.section.findMany({
+      where: { schoolId, id: { in: sectionIds } },
+      select: { id: true },
+    }),
+    // Subjects are global catalog rows; a school "has" one through its
+    // SubjectSelection bridge.
+    db.subjectSelection.findMany({
+      where: { schoolId, catalogSubjectId: { in: subjectIds } },
+      select: { catalogSubjectId: true },
+      distinct: ["catalogSubjectId"],
+    }),
+    db.classroom.findMany({
+      where: { schoolId, id: { in: roomIds } },
+      select: { id: true },
+    }),
+    db.period.findMany({
+      where: { schoolId, yearId, id: { in: periodIds } },
+      select: { id: true },
+    }),
+    teacherIds.length > 0
+      ? db.teacher.findMany({
+          where: { schoolId, id: { in: teacherIds } },
+          select: { id: true },
+        })
+      : Promise.resolve([]),
+  ])
+
+  return (
+    sections.length === sectionIds.length &&
+    subjects.length === subjectIds.length &&
+    rooms.length === roomIds.length &&
+    periods.length === periodIds.length &&
+    teachers.length === teacherIds.length
+  )
 }
 
 /**
@@ -4879,6 +4718,21 @@ export async function applyGeneratedTimetable(rawInput: {
 
   const errors: string[] = []
   let createdCount = 0
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true },
+  })
+  if (!term) {
+    return { success: false, createdCount, errors: [ACTION_ERRORS.NOT_FOUND] }
+  }
+  if (!(await generatedSlotsBelongToSchool(schoolId, term.yearId, input.slots))) {
+    return {
+      success: false,
+      createdCount,
+      errors: [ACTION_ERRORS.VALIDATION_ERROR],
+    }
+  }
 
   try {
     // Clear existing slots if requested
@@ -4909,7 +4763,8 @@ export async function applyGeneratedTimetable(rawInput: {
       })
     }
 
-    // Batch insert all slots using createMany (skip duplicates)
+    // Batch insert all slots using createMany (skip duplicates). Section-based
+    // generation never produces a classId, so none is written.
     const slotData = input.slots.map((slot) => ({
       schoolId,
       termId: input.termId,
@@ -4917,8 +4772,9 @@ export async function applyGeneratedTimetable(rawInput: {
       periodId: slot.periodId,
       sectionId: slot.sectionId || undefined,
       subjectId: slot.subjectId || undefined,
-      classId: slot.classId || undefined, // Empty string → undefined for section-based
-      teacherId: slot.teacherId ?? undefined,
+      teacherId: isPlaceholderTeacherId(slot.teacherId)
+        ? undefined
+        : (slot.teacherId ?? undefined),
       classroomId: slot.classroomId,
       weekOffset: 0,
       constraintViolations: slot.violations,

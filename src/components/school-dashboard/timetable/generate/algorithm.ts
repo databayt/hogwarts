@@ -13,6 +13,8 @@
  * 3. Optimization - Balance workload and improve quality
  */
 
+import { isPlaceholderTeacherId } from "./teacher-plan"
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -187,18 +189,24 @@ export function generateSectionTimetable(
   )
 
   for (const section of sortedSections) {
-    // Sort subjects: most constrained first (fewer teachers, more hours, lab)
-    const sortedSubjects = [...section.subjects].sort((a, b) => {
-      const aScore =
-        a.preferredTeacherIds.length * 10 +
-        (a.requiresLab ? 100 : 0) +
-        (10 - a.hoursPerWeek)
-      const bScore =
-        b.preferredTeacherIds.length * 10 +
-        (b.requiresLab ? 100 : 0) +
-        (10 - b.hoursPerWeek)
-      return aScore - bScore
-    })
+    // Sort subjects: most constrained first (fewer real teachers, more hours,
+    // lab). A subject nobody can teach yet has no teacher to wait for, so it
+    // goes after every staffed subject — counting it as "0 teachers = most
+    // constrained" placed it first and left real teachers the leftovers.
+    // Placeholder teachers (teacher-plan.ts) don't count as staff.
+    const constraintScore = (subject: SubjectAllocation) => {
+      const realTeachers = subject.preferredTeacherIds.filter(
+        (id) => !isPlaceholderTeacherId(id)
+      ).length
+      return (
+        (realTeachers === 0 ? 90 : realTeachers * 10) +
+        (subject.requiresLab ? 100 : 0) +
+        (10 - subject.hoursPerWeek)
+      )
+    }
+    const sortedSubjects = [...section.subjects].sort(
+      (a, b) => constraintScore(a) - constraintScore(b)
+    )
 
     let totalNeeded = 0
     let totalPlaced = 0
@@ -349,81 +357,88 @@ function placeSectionSubject(
     config.preferences
   )
 
-  for (const day of daysToUse) {
-    if (placedCount >= targetHours) break
+  // Place AT MOST ONE period of this subject per day. Real timetables spread
+  // a subject across different days (Maths Sun/Tue/Thu), never stack it into
+  // several periods of the same day.
+  //
+  // Passes over the week, best first: periods a real qualified teacher can
+  // take, then periods a placeholder teacher can take (teacher-plan.ts — keeps
+  // parallel sections apart before anyone is hired), then whatever teacher-less
+  // period is left. Settling for a weaker option on Sunday while Tuesday had a
+  // better one wasted real teachers and put parallel sections back in step.
+  const realTeachers = qualifiedTeachers.filter(
+    (t) => !isPlaceholderTeacherId(t.teacherId)
+  )
+  const placeholderTeachers = qualifiedTeachers.filter((t) =>
+    isPlaceholderTeacherId(t.teacherId)
+  )
+  const usedDays = new Set<number>()
 
-    // Place AT MOST ONE period of this subject per day. Real timetables spread
-    // a subject across different days (Maths Sun/Tue/Thu), never stack it into
-    // several periods of the same day. `selectDaysForSubject` returns enough
-    // distinct days to cover `targetHours`.
-    //
-    // Within the day, PREFER a period where the section, a room, AND a
-    // qualified teacher are all free — then fall back to a teacher-less period
-    // only if no qualified teacher is free anywhere that day. (The old logic
-    // took the section's first free period and left the slot teacher-less
-    // whenever the teacher happened to be busy there, wasting teacher capacity.)
-    let bestWithTeacher: {
-      periodId: string
-      teacher: TeacherAvailability
-      room: RoomAvailability
-    } | null = null
-    let fallbackNoTeacher: { periodId: string; room: RoomAvailability } | null =
-      null
-
+  // `candidates` null = accept a teacher-less period.
+  const placeOnDay = (
+    day: number,
+    candidates: TeacherAvailability[] | null
+  ): boolean => {
     for (const periodId of config.periodsPerDay) {
       // Section can't be double-booked
       if (isSectionScheduled(section.sectionId, day, periodId, state)) continue
 
       // Find an available room
-      let assignedRoom: RoomAvailability | null = null
-      for (const room of suitableRooms) {
-        if (!isRoomAvailable(room, day, periodId, state)) continue
-        assignedRoom = room
+      let room: RoomAvailability | null = null
+      for (const candidate of suitableRooms) {
+        if (!isRoomAvailable(candidate, day, periodId, state)) continue
+        room = candidate
         break
       }
-      if (!assignedRoom) continue
+      if (!room) continue
 
-      // Find a free qualified teacher
-      let assignedTeacher: TeacherAvailability | null = null
-      for (const teacher of qualifiedTeachers) {
-        if (!isTeacherAvailable(teacher, day, periodId, state, config)) continue
-        assignedTeacher = teacher
-        break
-      }
-
-      if (assignedTeacher) {
-        bestWithTeacher = {
-          periodId,
-          teacher: assignedTeacher,
-          room: assignedRoom,
+      // Find a free teacher from this pass's candidates
+      let teacher: TeacherAvailability | null = null
+      if (candidates) {
+        for (const candidate of candidates) {
+          if (!isTeacherAvailable(candidate, day, periodId, state, config))
+            continue
+          teacher = candidate
+          break
         }
-        break
+        if (!teacher) continue
       }
-      if (!fallbackNoTeacher) {
-        fallbackNoTeacher = { periodId, room: assignedRoom }
-      }
+
+      addSlot(
+        {
+          dayOfWeek: day,
+          periodId,
+          sectionId: section.sectionId,
+          subjectId: subject.subjectId,
+          classId: "", // Section-based, no legacy classId
+          teacherId: teacher?.teacherId ?? null,
+          classroomId: room.roomId,
+          score: teacher
+            ? calculateSlotScore(day, periodId, subject, teacher, config)
+            : 30,
+          violations: teacher ? [] : ["unassigned_teacher"],
+        },
+        state
+      )
+      usedDays.add(day)
+      placedCount++
+      return true
     }
+    return false
+  }
 
-    const pick = bestWithTeacher ?? fallbackNoTeacher
-    if (!pick) continue
-
-    const teacher: TeacherAvailability | null = bestWithTeacher?.teacher ?? null
-    const slot: GeneratedSlot = {
-      dayOfWeek: day,
-      periodId: pick.periodId,
-      sectionId: section.sectionId,
-      subjectId: subject.subjectId,
-      classId: "", // Section-based, no legacy classId
-      teacherId: teacher?.teacherId ?? null,
-      classroomId: pick.room.roomId,
-      score: teacher
-        ? calculateSlotScore(day, pick.periodId, subject, teacher, config)
-        : 30,
-      violations: teacher ? [] : ["unassigned_teacher"],
+  const passes: Array<TeacherAvailability[] | null> = [
+    realTeachers,
+    placeholderTeachers,
+    null,
+  ]
+  for (const candidates of passes) {
+    if (candidates && candidates.length === 0) continue
+    for (const day of daysToUse) {
+      if (placedCount >= targetHours) break
+      if (usedDays.has(day)) continue
+      placeOnDay(day, candidates)
     }
-
-    addSlot(slot, state)
-    placedCount++
   }
 
   return placedCount
@@ -500,7 +515,10 @@ function selectDaysForSubject(
     days.push(...workingDays)
   }
 
-  return days.slice(0, Math.ceil(hoursNeeded * 1.5))
+  // Every working day stays a candidate, in preference order. The old cap of
+  // ceil(hours × 1.5) days locked a 2-period subject into the first three
+  // days, which are the first to fill up, so it lost a period every week.
+  return days
 }
 
 // ============================================================================
@@ -1044,8 +1062,13 @@ function calculateOverallScore(
 
 function calculateWorkloadBalance(
   state: AlgorithmState,
-  teachers: TeacherAvailability[]
+  allTeachers: TeacherAvailability[]
 ): number {
+  // Placeholder teachers stand in for staff not hired yet; their load says
+  // nothing about how evenly the real teachers are used.
+  const teachers = allTeachers.filter(
+    (t) => !isPlaceholderTeacherId(t.teacherId)
+  )
   if (teachers.length === 0) return 100
 
   const workloads: number[] = []

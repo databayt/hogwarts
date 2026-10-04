@@ -20,6 +20,7 @@ import {
   Wand2,
 } from "lucide-react"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -68,6 +69,7 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   applyGeneratedTimetable,
@@ -97,6 +99,8 @@ const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 export default function GenerateTimetableContent({ dictionary, lang }: Props) {
   const d = dictionary?.timetable
   const g = d?.generate as Record<string, string> | undefined
+  // Full dictionary: action error codes resolve against `common.errors`.
+  const { dictionary: fullDictionary } = useDictionary()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
 
@@ -237,7 +241,11 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
       } else {
         toast({
           title: d?.generate?.applicationFailed || "Application Failed",
-          description: result.errors.join(", "),
+          description: actionErrorMessage(
+            result.errors[0],
+            fullDictionary,
+            g?.errors ?? "Unknown error occurred"
+          ),
           variant: "destructive",
         })
       }

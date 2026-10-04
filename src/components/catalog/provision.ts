@@ -338,8 +338,14 @@ export async function autoProvisionSections(schoolId: string) {
 
 /**
  * Auto-generate timetable slots for a newly onboarded school.
- * Creates a complete schedule with subjects distributed across periods/rooms,
- * but with teacherId=null (teachers can be assigned later).
+ * Creates a complete schedule with subjects distributed across periods/rooms.
+ * Subjects with a qualified, free teacher get that teacher; the rest stay
+ * `teacherId = null` ("waiting for a teacher") until one is assigned.
+ *
+ * Parallel sections of a grade never share a subject's period: the shared
+ * loader gives every (grade, subject) a placeholder teacher during generation
+ * (see timetable/generate/teacher-plan.ts), so one future teacher can take
+ * the subject in every section without a clash.
  *
  * Requires: sections, subject selections, periods, terms, classrooms.
  * Idempotent via createMany({ skipDuplicates: true }).
@@ -347,8 +353,15 @@ export async function autoProvisionSections(schoolId: string) {
 export async function autoGenerateTimetableForSchool(
   schoolId: string
 ): Promise<{ success: boolean; slotsCreated: number; warnings: string[] }> {
-  const { generateSectionTimetable } =
-    await import("@/components/school-dashboard/timetable/generate/algorithm")
+  const [
+    { generateSectionTimetable },
+    { buildGenerationInputs },
+    { stripPlaceholderTeachers },
+  ] = await Promise.all([
+    import("@/components/school-dashboard/timetable/generate/algorithm"),
+    import("@/components/school-dashboard/timetable/generate/inputs"),
+    import("@/components/school-dashboard/timetable/generate/teacher-plan"),
+  ])
 
   const tag = `[autoGenerateTimetable:${schoolId.slice(-6)}]`
 
@@ -366,142 +379,29 @@ export async function autoGenerateTimetableForSchool(
     console.warn(`${tag} BAIL: No active term`)
     return { success: false, slotsCreated: 0, warnings: ["No active term"] }
   }
-  console.log(`${tag} Term: ${activeTerm.id}, Year: ${activeTerm.yearId}`)
 
-  // 2. Get periods (filter out breaks/lunch)
-  const periods = await db.period.findMany({
-    where: { schoolId, yearId: activeTerm.yearId },
-    orderBy: { startTime: "asc" },
-    select: { id: true, name: true, isBreak: true },
+  // 2. Load periods, working days, sections, subjects, teachers and rooms.
+  const inputs = await buildGenerationInputs({
+    schoolId,
+    termId: activeTerm.id,
+    yearId: activeTerm.yearId,
   })
-  // Read the column, not the name. The old English substring test meant a
-  // school naming its break «فسحة» had it classified as TEACHING time, and the
-  // generator scheduled classes straight into the break.
-  const teachingPeriodIds = periods.filter((p) => !p.isBreak).map((p) => p.id)
   console.log(
-    `${tag} Periods: ${periods.length} total, ${teachingPeriodIds.length} teaching`
+    `${tag} Term ${activeTerm.id}: ${inputs.config.periodsPerDay.length} teaching periods, ` +
+      `days [${inputs.config.workingDays.join(",")}], ${inputs.sections.length} sections, ` +
+      `${inputs.rooms.length} rooms, ${inputs.realTeacherCount} teachers, ` +
+      `${inputs.placeholderCount} placeholder teachers`
   )
-  if (teachingPeriodIds.length === 0) {
+
+  if (inputs.config.periodsPerDay.length === 0) {
     console.warn(`${tag} BAIL: No teaching periods`)
     return { success: false, slotsCreated: 0, warnings: ["No periods found"] }
   }
-
-  // 3. Get working days
-  const weekConfig = await db.schoolWeekConfig.findFirst({
-    where: { schoolId },
-    orderBy: { termId: "desc" },
-    select: { workingDays: true },
-  })
-  const workingDays: number[] =
-    Array.isArray(weekConfig?.workingDays) && weekConfig!.workingDays.length > 0
-      ? weekConfig!.workingDays
-      : [0, 1, 2, 3, 4]
-  console.log(`${tag} Working days: [${workingDays.join(",")}]`)
-
-  // 4. Get sections
-  const sectionsData = await db.section.findMany({
-    where: { schoolId },
-    select: {
-      id: true,
-      name: true,
-      gradeId: true,
-      classroomId: true,
-    },
-  })
-  console.log(`${tag} Sections: ${sectionsData.length}`)
-  if (sectionsData.length === 0) {
+  if (inputs.sections.length === 0) {
     console.warn(`${tag} BAIL: No sections`)
     return { success: false, slotsCreated: 0, warnings: ["No sections found"] }
   }
-
-  // 5. Get subject selections per grade
-  const subjectSelections = await db.subjectSelection.findMany({
-    where: { schoolId, isActive: true },
-    select: {
-      catalogSubjectId: true,
-      gradeId: true,
-      weeklyPeriods: true,
-      subject: { select: { id: true, name: true } },
-    },
-  })
-  console.log(`${tag} Subject selections: ${subjectSelections.length}`)
-  const gradeSubjectsMap = new Map<
-    string,
-    Array<{ subjectId: string; subjectName: string; hoursPerWeek: number }>
-  >()
-  for (const sel of subjectSelections) {
-    if (!sel.subject) continue
-    const list = gradeSubjectsMap.get(sel.gradeId) || []
-    list.push({
-      subjectId: sel.catalogSubjectId,
-      subjectName: sel.subject.name,
-      hoursPerWeek: sel.weeklyPeriods ?? 3,
-    })
-    gradeSubjectsMap.set(sel.gradeId, list)
-  }
-
-  // 5b. Teachers + their subject expertise → assign a qualified teacher to each
-  //     slot (was teacher-less). Build subjectId → [teacherId] so the algorithm
-  //     can pick an available qualified teacher; teachers with no expertise for
-  //     a subject are never offered it.
-  const teacherRows = await db.teacher.findMany({
-    where: { schoolId, employmentStatus: "ACTIVE" },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      subjectExpertise: { where: { schoolId }, select: { subjectId: true } },
-    },
-  })
-  const subjectTeachers = new Map<string, string[]>()
-  for (const t of teacherRows) {
-    for (const e of t.subjectExpertise) {
-      const list = subjectTeachers.get(e.subjectId) ?? []
-      list.push(t.id)
-      subjectTeachers.set(e.subjectId, list)
-    }
-  }
-  const teacherAvailability = teacherRows.map((t) => ({
-    teacherId: t.id,
-    teacherName: `${t.firstName ?? ""} ${t.lastName ?? ""}`.trim(),
-    maxPeriodsPerDay: 6,
-    maxPeriodsPerWeek: 25,
-    maxConsecutive: 3,
-    subjectExpertise: t.subjectExpertise.map((e) => e.subjectId),
-    unavailableBlocks: [] as Array<{ dayOfWeek: number; periodId: string }>,
-    preferredPeriods: [] as Array<{ dayOfWeek: number; periodId: string }>,
-    avoidedPeriods: [] as Array<{ dayOfWeek: number; periodId: string }>,
-  }))
-  console.log(
-    `${tag} Teachers: ${teacherAvailability.length}, subjects with a qualified teacher: ${subjectTeachers.size}`
-  )
-
-  // 6. Build SectionRequirement[]
-  const sectionRequirements = sectionsData.map((s) => {
-    const gradeSubjects = gradeSubjectsMap.get(s.gradeId) || []
-    return {
-      sectionId: s.id,
-      sectionName: s.name,
-      gradeId: s.gradeId,
-      classroomId: s.classroomId,
-      studentCount: 0,
-      subjects: gradeSubjects.map((gs) => ({
-        subjectId: gs.subjectId,
-        subjectName: gs.subjectName,
-        hoursPerWeek: gs.hoursPerWeek,
-        requiresLab: gs.subjectName.toLowerCase().includes("lab"),
-        preferredTeacherIds: subjectTeachers.get(gs.subjectId) ?? [],
-      })),
-    }
-  })
-
-  const sectionsWithSubjects = sectionRequirements.filter(
-    (s) => s.subjects.length > 0
-  ).length
-  console.log(
-    `${tag} Sections with subjects: ${sectionsWithSubjects}/${sectionRequirements.length}`
-  )
-  if (sectionsWithSubjects === 0) {
+  if (!inputs.sections.some((s) => s.subjects.length > 0)) {
     console.warn(`${tag} BAIL: No sections have subjects assigned`)
     return {
       success: false,
@@ -510,64 +410,22 @@ export async function autoGenerateTimetableForSchool(
     }
   }
 
-  // 7. Build RoomAvailability[] from classrooms
-  const classrooms = await db.classroom.findMany({
-    where: { schoolId },
-    select: {
-      id: true,
-      roomName: true,
-      capacity: true,
-      classroomType: { select: { name: true } },
-    },
-  })
-  const rooms = classrooms.map((r) => ({
-    roomId: r.id,
-    roomName: r.roomName,
-    capacity: r.capacity || 30,
-    roomType: r.classroomType?.name || "regular",
-    allowedSubjectTypes: [] as string[],
-    reservedBlocks: [] as Array<{ dayOfWeek: number; periodId: string }>,
-    hasAccessibility: false,
-  }))
-
-  console.log(`${tag} Rooms: ${rooms.length}`)
-
-  // 8. Run the algorithm with empty teachers
-  console.log(
-    `${tag} Running algorithm: ${sectionRequirements.length} sections, ${rooms.length} rooms, ${workingDays.length} days, ${teachingPeriodIds.length} periods`
-  )
+  // 3. Generate, then turn placeholder teachers back into unassigned slots.
   const result = generateSectionTimetable(
-    sectionRequirements,
-    teacherAvailability,
-    rooms,
+    inputs.sections,
+    inputs.teachers,
+    inputs.rooms,
     {
       schoolId,
       termId: activeTerm.id,
       yearId: activeTerm.yearId,
-      config: {
-        workingDays,
-        periodsPerDay: teachingPeriodIds,
-        constraints: {
-          enforceTeacherExpertise: true,
-          enforceRoomCapacity: true,
-          maxTeacherPeriodsPerDay: 6,
-          maxTeacherPeriodsPerWeek: 25,
-          maxConsecutivePeriods: 3,
-          requireLunchBreak: true,
-          preventBackToBack: false,
-        },
-        preferences: {
-          balanceSubjectDistribution: true,
-          preferMorningForCore: true,
-          avoidLastPeriodForLab: true,
-          groupSameSubjectDays: false,
-        },
-      },
+      config: inputs.config,
     }
   )
+  const slots = stripPlaceholderTeachers(result.slots)
 
   console.log(
-    `${tag} Algorithm result: ${result.slots.length} slots, ${result.slots.filter((s) => s.teacherId).length} with teacher, ${result.warnings.length} warnings, ${result.errors.length} errors`
+    `${tag} Algorithm result: ${slots.length} slots, ${slots.filter((s) => s.teacherId).length} with teacher, ${result.warnings.length} warnings, ${result.errors.length} errors`
   )
   if (result.errors.length > 0) {
     console.error(`${tag} Algorithm errors:`, result.errors)
@@ -576,7 +434,7 @@ export async function autoGenerateTimetableForSchool(
     console.warn(`${tag} Algorithm warnings:`, result.warnings)
   }
 
-  if (result.slots.length === 0) {
+  if (slots.length === 0) {
     return {
       success: false,
       slotsCreated: 0,
@@ -584,16 +442,15 @@ export async function autoGenerateTimetableForSchool(
     }
   }
 
-  // 9. Save slots
+  // 4. Save slots
   const created = await db.timetable.createMany({
-    data: result.slots.map((slot) => ({
+    data: slots.map((slot) => ({
       schoolId,
       termId: activeTerm.id,
       dayOfWeek: slot.dayOfWeek,
       periodId: slot.periodId,
       sectionId: slot.sectionId || undefined,
       subjectId: slot.subjectId || undefined,
-      classId: slot.classId || undefined,
       // Persist the teacher the algorithm assigned (was hardcoded undefined,
       // which discarded every assignment); stays null where none was free.
       teacherId: slot.teacherId ?? undefined,
