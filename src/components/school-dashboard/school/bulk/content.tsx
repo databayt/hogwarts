@@ -2,33 +2,23 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { Suspense, useCallback, useRef, useState } from "react"
+import React, { useCallback, useRef, useState } from "react"
 import {
   AlertCircle,
-  BookOpen,
-  Box,
-  Building,
-  Calendar,
   CheckCircle2,
-  ClipboardList,
-  Clock,
   Download,
-  FileText,
   GraduationCap,
   KeyRound,
-  Layers,
   Loader2,
   Shield,
-  Target,
+  Upload,
   UserCheck,
   Users,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Skeleton } from "@/components/ui/skeleton"
-import { ModalProvider } from "@/components/atom/modal/context"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import {
   downloadCredentialsCsv,
   ImportResultPanel,
@@ -37,11 +27,6 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { ScoreRangeTable } from "../academic/grading/table"
-import { YearLevelTable } from "../academic/level/table"
-import { PeriodTable } from "../academic/period/table"
-import { TermTable } from "../academic/term/table"
-import { SchoolYearTable } from "../academic/year/table"
 import { bulkParseAndValidate, bulkSmartImport } from "./actions"
 
 interface Props {
@@ -49,100 +34,9 @@ interface Props {
   lang: Locale
 }
 
-interface BulkCardItem {
-  id: string
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  description: string
-  placeholder?: boolean
-}
-
-function TableSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-10 w-32" />
-      </div>
-      <div className="space-y-2">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function BulkCard({
-  item,
-  isActive,
-  onClick,
-  soonLabel,
-}: {
-  item: BulkCardItem
-  isActive: boolean
-  onClick: () => void
-  soonLabel: string
-}) {
-  const Icon = item.icon
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
-      className={`hover:bg-muted/50 w-60 shrink-0 cursor-pointer space-y-2 rounded-lg border p-4 transition-colors ${
-        isActive ? "border-primary bg-muted/30" : ""
-      }`}
-    >
-      <div className="flex items-center gap-2">
-        <Icon className="text-muted-foreground h-5 w-5" />
-        {item.placeholder && (
-          <Badge variant="secondary" className="text-[10px]">
-            {soonLabel}
-          </Badge>
-        )}
-      </div>
-      <p className="text-sm font-medium">{item.title}</p>
-      <p className="text-muted-foreground text-xs">{item.description}</p>
-    </div>
-  )
-}
-
-function ScrollRow({
-  items,
-  activeId,
-  onSelect,
-  soonLabel,
-}: {
-  items: BulkCardItem[]
-  activeId: string | null
-  onSelect: (id: string) => void
-  soonLabel: string
-}) {
-  return (
-    <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1">
-      {items.map((item) => (
-        <BulkCard
-          key={item.id}
-          item={item}
-          isActive={activeId === item.id}
-          onClick={() => !item.placeholder && onSelect(item.id)}
-          soonLabel={soonLabel}
-        />
-      ))}
-    </div>
-  )
-}
-
-// ---------- People Import (one-click upload cards) ----------
-
 type ImportType = "students" | "teachers" | "staff" | "guardians"
 
 // Shared with the onboarding import — see `file/import/result-panel.tsx`.
-// This used to be a local interface that declared `credentials` but not
-// `warnings` / `accessCodes`, so those two were dropped between the server
-// action and the screen.
 type ImportResult = ImportResultData
 
 interface SectionState {
@@ -161,10 +55,11 @@ const initialSectionState: SectionState = {
 
 const ACCEPTED_FORMATS = ".csv,.xlsx,.xls,.json,.docx"
 
-interface DropZoneConfig {
+interface UploadConfig {
   type: ImportType
   icon: React.ComponentType<{ className?: string }>
   label: string
+  description: string
   templateContent: string
   templateFilename: string
 }
@@ -182,7 +77,10 @@ const GUARDIAN_TEMPLATE =
   "firstName,lastName,emailAddress,phoneNumber,guardianType,studentId\nMohammed,Ahmed,mohammed@example.com,+1234567890,father,STD001\nSara,Hassan,sara@example.com,+0987654321,mother,STD002"
 
 function downloadTemplate(content: string, filename: string) {
-  const blob = new Blob([content], { type: "text/csv" })
+  // BOM so Excel opens the file as UTF-8 (Arabic names stay readable).
+  const blob = new Blob(["﻿" + content], {
+    type: "text/csv;charset=utf-8",
+  })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url
@@ -193,103 +91,136 @@ function downloadTemplate(content: string, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-// One-click upload card. Click anywhere → file picker; drag a file onto it →
-// same. Status (busy / success / failure) shows as a small icon next to the
-// download-template button so the layout never grows a second row.
+// One upload card per person type. Click (or drop a file on) the body to
+// import; the footer carries the template download and, once an import has
+// minted accounts, the logins download.
 function UploadCard({
   config,
   state,
   t,
   onUpload,
 }: {
-  config: DropZoneConfig
+  config: UploadConfig
   state: SectionState
   t: Record<string, string>
   onUpload: (file: File) => void
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const [dragging, setDragging] = useState(false)
   const Icon = config.icon
   const busy = state.uploading || state.importing
-  const succeeded = !!state.result && !state.error && !state.importing
   const failed = !!state.error || (state.result?.failed ?? 0) > 0
+  const succeeded = !!state.result && !busy && !failed
 
   const openPicker = () => {
-    if (busy) return
-    inputRef.current?.click()
+    if (!busy) inputRef.current?.click()
   }
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
+    setDragging(false)
     const file = e.dataTransfer.files?.[0]
     if (file && !busy) onUpload(file)
   }
 
-  const description = state.error
+  const status = state.error
     ? state.error
-    : state.result
-      ? `${state.result.imported} ${state.importing ? t.importing : t.imported}${
-          state.result.failed > 0 ? ` · ${state.result.failed} ${t.failed}` : ""
-        }`
-      : (t[`${config.type}Desc`] ?? "")
+    : busy
+      ? t.importing
+      : state.result
+        ? `${state.result.imported} ${t.imported}${
+            state.result.skipped > 0
+              ? ` · ${state.result.skipped} ${t.skipped}`
+              : ""
+          }${state.result.failed > 0 ? ` · ${state.result.failed} ${t.failed}` : ""}`
+        : null
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={openPicker}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && openPicker()}
-      onDrop={handleDrop}
-      onDragOver={(e) => e.preventDefault()}
       className={cn(
-        "hover:bg-muted/50 focus-visible:ring-ring relative cursor-pointer space-y-2 rounded-lg border p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none",
-        busy && "pointer-events-none opacity-60",
+        "bg-card flex flex-col rounded-xl border transition-colors",
+        dragging && "border-primary bg-primary/5",
         succeeded && "border-green-500/40",
-        failed && "border-red-300/60"
+        failed && "border-destructive/40"
       )}
     >
-      <div className="flex items-center gap-2">
-        <Icon className="text-muted-foreground h-5 w-5" />
-      </div>
-      <p className="text-sm font-medium">{config.label}</p>
-      <p className="text-muted-foreground line-clamp-2 text-xs">
-        {description}
-      </p>
-
-      {/* Status / template controls — absolute so they don't add a second row */}
-      <div className="absolute end-2 top-2 flex items-center gap-1">
-        {busy && (
-          <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+      <div
+        role="button"
+        tabIndex={0}
+        aria-busy={busy}
+        onClick={openPicker}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            openPicker()
+          }
+        }}
+        onDrop={handleDrop}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragging(true)
+        }}
+        onDragLeave={() => setDragging(false)}
+        className={cn(
+          "hover:bg-muted/40 focus-visible:ring-ring flex flex-1 cursor-pointer flex-col gap-3 rounded-t-xl p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none",
+          busy && "cursor-wait"
         )}
-        {!busy && succeeded && (
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-        )}
-        {!busy && failed && <AlertCircle className="h-4 w-4 text-red-600" />}
-        {!busy && !!state.result?.credentials?.length && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              downloadCredentialsCsv(state.result!.credentials!, config.type)
-            }}
-            className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
-            title={t.downloadLogins}
-            aria-label={t.downloadLogins}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
+            <Icon className="text-foreground h-5 w-5" />
+          </div>
+          {busy ? (
+            <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+          ) : failed ? (
+            <AlertCircle className="text-destructive h-5 w-5" />
+          ) : succeeded ? (
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+          ) : (
+            <Upload className="text-muted-foreground h-5 w-5" />
+          )}
+        </div>
+        <div className="space-y-1">
+          <h3 className="font-medium">{config.label}</h3>
+          <p
+            className={cn(
+              "text-muted-foreground line-clamp-2 text-sm",
+              state.error && "text-destructive"
+            )}
           >
-            <KeyRound className="h-4 w-4" />
-          </button>
-        )}
-        <button
+            {status ?? config.description}
+          </p>
+        </div>
+        <p className="text-muted-foreground mt-auto text-xs">{t.dropHint}</p>
+      </div>
+
+      <div className="flex items-center justify-between gap-1 border-t px-2 py-1.5">
+        <Button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation()
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground h-8 gap-1.5 px-2"
+          onClick={() =>
             downloadTemplate(config.templateContent, config.templateFilename)
-          }}
-          className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
-          title={t.downloadTemplate}
-          aria-label={t.downloadTemplate}
+          }
         >
           <Download className="h-4 w-4" />
-        </button>
+          {t.template}
+        </Button>
+        {!busy && !!state.result?.credentials?.length && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 px-2"
+            onClick={() =>
+              downloadCredentialsCsv(state.result!.credentials!, config.type)
+            }
+          >
+            <KeyRound className="h-4 w-4" />
+            {t.logins}
+          </Button>
+        )}
       </div>
 
       <input
@@ -297,6 +228,8 @@ function UploadCard({
         type="file"
         accept={ACCEPTED_FORMATS}
         className="sr-only"
+        tabIndex={-1}
+        aria-label={config.label}
         onChange={(e) => {
           const file = e.target.files?.[0]
           if (file) onUpload(file)
@@ -307,15 +240,10 @@ function UploadCard({
   )
 }
 
-// ---------- Main Component ----------
-
 export default function BulkContent({ dictionary, lang }: Props) {
   const t = ((dictionary?.school as Record<string, unknown>)?.bulk ??
     {}) as Record<string, string>
-  const [activeAcademic, setActiveAcademic] = useState("years")
 
-  // Per-entity import state for the People upload cards (two-phase pattern:
-  // parse/validate then background DB write).
   const [sectionStates, setSectionStates] = useState<
     Record<ImportType, SectionState>
   >({
@@ -325,32 +253,36 @@ export default function BulkContent({ dictionary, lang }: Props) {
     guardians: initialSectionState,
   })
 
-  const dropZoneConfigs: DropZoneConfig[] = [
+  const configs: UploadConfig[] = [
     {
       type: "students",
       icon: GraduationCap,
-      label: t.students || "Students",
+      label: t.students,
+      description: t.studentsDesc,
       templateContent: STUDENT_TEMPLATE,
       templateFilename: "students-template.csv",
     },
     {
       type: "teachers",
       icon: UserCheck,
-      label: t.teachers || "Teachers",
+      label: t.teachers,
+      description: t.teachersDesc,
       templateContent: TEACHER_TEMPLATE,
       templateFilename: "teachers-template.csv",
     },
     {
       type: "staff",
       icon: Users,
-      label: t.staff || "Staff",
+      label: t.staff,
+      description: t.staffDesc,
       templateContent: STAFF_TEMPLATE,
       templateFilename: "staff-template.csv",
     },
     {
       type: "guardians",
       icon: Shield,
-      label: t.guardians || "Guardians",
+      label: t.guardians,
+      description: t.guardiansDesc,
       templateContent: GUARDIAN_TEMPLATE,
       templateFilename: "guardians-template.csv",
     },
@@ -365,10 +297,7 @@ export default function BulkContent({ dictionary, lang }: Props) {
   const handleUpload = useCallback(
     async (file: File, type: ImportType) => {
       const setState = (updater: (prev: SectionState) => SectionState) => {
-        setSectionStates((prev) => ({
-          ...prev,
-          [type]: updater(prev[type]),
-        }))
+        setSectionStates((prev) => ({ ...prev, [type]: updater(prev[type]) }))
       }
 
       setState(() => ({
@@ -379,14 +308,12 @@ export default function BulkContent({ dictionary, lang }: Props) {
       }))
 
       try {
-        // Phase 1: Fast parse + validate
+        // Phase 1: fast parse + validate (no DB writes)
         const formData = new FormData()
         formData.append("file", file)
         formData.append("type", type)
-
         const preview = await bulkParseAndValidate(formData)
 
-        // Show optimistic result immediately
         setState(() => ({
           uploading: false,
           importing: true,
@@ -399,23 +326,13 @@ export default function BulkContent({ dictionary, lang }: Props) {
           error: null,
         }))
 
-        // Phase 2: Background DB import
+        // Phase 2: the DB import
         const importData = new FormData()
         importData.append("csvContent", preview.csvContent)
         importData.append("type", type)
         importData.append("notifyFamilies", String(notifyFamilies))
-
-        bulkSmartImport(importData)
-          .then((result) => {
-            setState((prev) => ({ ...prev, result, importing: false }))
-          })
-          .catch((err) => {
-            setState((prev) => ({
-              ...prev,
-              error: err instanceof Error ? err.message : t.importFailed,
-              importing: false,
-            }))
-          })
+        const result = await bulkSmartImport(importData)
+        setState((prev) => ({ ...prev, result, importing: false }))
       } catch (err) {
         setState(() => ({
           uploading: false,
@@ -425,239 +342,75 @@ export default function BulkContent({ dictionary, lang }: Props) {
         }))
       }
     },
-    [notifyFamilies]
+    [notifyFamilies, t.importFailed]
   )
 
-  const academicCards: BulkCardItem[] = [
-    {
-      id: "years",
-      icon: Calendar,
-      title: t.academicYears || "Academic Years",
-      description: t.academicYearsDesc || "Create and manage school years",
-    },
-    {
-      id: "terms",
-      icon: Layers,
-      title: t.terms || "Terms",
-      description: t.termsDesc || "Define terms within the academic year",
-    },
-    {
-      id: "periods",
-      icon: Clock,
-      title: t.periods || "Periods",
-      description: t.periodsDesc || "Configure daily class periods",
-    },
-    {
-      id: "levels",
-      icon: GraduationCap,
-      title: t.yearLevels || "Year Levels",
-      description: t.yearLevelsDesc || "Define grades and year levels",
-    },
-    {
-      id: "grading",
-      icon: Target,
-      title: t.gradingScale || "Grading Scale",
-      description: t.gradingScaleDesc || "Configure grading and score ranges",
-    },
-  ]
-
-  const structureCards: BulkCardItem[] = [
-    {
-      id: "departments",
-      icon: Building,
-      title: t.departments || "Departments",
-      description: t.departmentsDesc || "Manage school departments",
-      placeholder: true,
-    },
-    {
-      id: "classrooms",
-      icon: Box,
-      title: t.classrooms || "Classrooms",
-      description: t.classroomsDesc || "Manage classroom assignments",
-      placeholder: true,
-    },
-  ]
-
-  const placeholderSections = [
-    {
-      title: t.attendance || "Attendance",
-      cards: [
-        {
-          id: "attendance",
-          icon: ClipboardList,
-          title: t.attendanceImport || "Attendance Import",
-          description: t.attendanceImportDesc || "Import attendance records",
-          placeholder: true,
-        },
-      ] satisfies BulkCardItem[],
-    },
-    {
-      title: t.timetable || "Timetable",
-      cards: [
-        {
-          id: "timetable",
-          icon: Clock,
-          title: t.timetableImport || "Timetable Import",
-          description: t.timetableImportDesc || "Import timetable schedule",
-          placeholder: true,
-        },
-      ] satisfies BulkCardItem[],
-    },
-    {
-      title: t.exams || "Exams",
-      cards: [
-        {
-          id: "exams",
-          icon: FileText,
-          title: t.examScoresImport || "Exam Scores Import",
-          description: t.examScoresImportDesc || "Import exam score records",
-          placeholder: true,
-        },
-      ] satisfies BulkCardItem[],
-    },
-    {
-      title: t.materials || "Materials",
-      cards: [
-        {
-          id: "materials",
-          icon: BookOpen,
-          title: t.materialsImport || "Materials Import",
-          description: t.materialsImportDesc || "Import educational materials",
-          placeholder: true,
-        },
-      ] satisfies BulkCardItem[],
-    },
-  ]
+  const withResults = configs.filter((c) => sectionStates[c.type].result)
 
   return (
-    <div className="space-y-10">
-      {/* People — one row of click-to-upload cards. Each card opens its own
-          file picker (or accepts a drop) and shows status inline; no second
-          row. */}
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">{t.people || "People"}</h2>
-          {/*
-            Off by default. Imported students and their guardians hear nothing
-            unless an admin deliberately asks — credentials still come back in
-            the result for the admin to hand out either way. When on, the mail
-            is queued and drained by the email cron, so a large file arrives
-            over a few hours rather than all at once.
-          */}
-          <label className="text-muted-foreground flex items-center gap-2 text-sm">
-            <Checkbox
-              checked={notifyFamilies}
-              onCheckedChange={(checked) => setNotifyFamilies(checked === true)}
-            />
-            {t.notifyFamilies || "Notify families by email"}
-          </label>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold">{t.title}</h2>
+          <p className="text-muted-foreground text-sm">{t.description}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {dropZoneConfigs.map((config) => (
-            <UploadCard
-              key={config.type}
-              config={config}
-              state={sectionStates[config.type]}
-              t={t}
-              onUpload={(file) => handleUpload(file, config.type)}
-            />
+        {/*
+          Off by default. Imported students and their guardians hear nothing
+          unless an admin deliberately asks — credentials still come back in
+          the result for the admin to hand out either way.
+        */}
+        <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm">
+          <Switch
+            checked={notifyFamilies}
+            onCheckedChange={setNotifyFamilies}
+          />
+          {t.notifyFamilies}
+        </label>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {configs.map((config) => (
+          <UploadCard
+            key={config.type}
+            config={config}
+            state={sectionStates[config.type]}
+            t={t}
+            onUpload={(file) => handleUpload(file, config.type)}
+          />
+        ))}
+      </div>
+
+      {/* Per-type details — row errors, warnings (why `imported` is lower
+          than the row count), parent access codes and the logins download. */}
+      {withResults.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {withResults.map((config) => (
+            <div
+              key={`${config.type}-result`}
+              className="space-y-3 rounded-xl border p-4"
+            >
+              <h3 className="font-medium">{config.label}</h3>
+              <ImportResultPanel
+                result={sectionStates[config.type].result!}
+                isImporting={sectionStates[config.type].importing}
+                entityLabel={config.type}
+                lang={lang}
+                t={{
+                  importing: t.importing,
+                  imported: t.imported,
+                  skipped: t.skipped,
+                  failed: t.failed,
+                  row: t.row,
+                  warnings: t.warnings,
+                  accessCodes: t.accessCodes,
+                  expires: t.expires,
+                  downloadLogins: t.downloadLogins,
+                }}
+              />
+            </div>
           ))}
         </div>
-
-        {/* Import details — the same panel the onboarding import renders. The
-            cards above stay one-line on purpose; the per-row errors, warnings
-            (why `imported` is lower than the row count), parent access codes
-            and the credentials download all live here. Before this strip
-            existed, /school/bulk showed counts only and silently dropped the
-            rest of what the server returned. */}
-        {dropZoneConfigs.some((c) => sectionStates[c.type].result) && (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {dropZoneConfigs
-              .filter((c) => sectionStates[c.type].result)
-              .map((config) => (
-                <div
-                  key={`${config.type}-result`}
-                  className="space-y-2 rounded-lg border p-4"
-                >
-                  <p className="text-sm font-medium">{config.label}</p>
-                  <ImportResultPanel
-                    result={sectionStates[config.type].result!}
-                    isImporting={sectionStates[config.type].importing}
-                    entityLabel={config.type}
-                    lang={lang}
-                    t={{
-                      importing: t.importing,
-                      imported: t.imported,
-                      skipped: t.skipped,
-                      failed: t.failed,
-                      row: t.row,
-                      warnings: t.warnings,
-                      accessCodes: t.accessCodes,
-                      expires: t.expires,
-                      downloadLogins: t.downloadLogins,
-                    }}
-                  />
-                </div>
-              ))}
-          </div>
-        )}
-      </section>
-
-      {/* Academic */}
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">{t.academic || "Academic"}</h2>
-        <ScrollRow
-          soonLabel={t.soon}
-          items={academicCards}
-          activeId={activeAcademic}
-          onSelect={setActiveAcademic}
-        />
-        <div className="pt-2">
-          <ModalProvider>
-            <Suspense fallback={<TableSkeleton />}>
-              {activeAcademic === "years" && (
-                <SchoolYearTable initialData={[]} total={0} lang={lang} />
-              )}
-              {activeAcademic === "terms" && (
-                <TermTable initialData={[]} total={0} lang={lang} />
-              )}
-              {activeAcademic === "periods" && (
-                <PeriodTable initialData={[]} total={0} lang={lang} />
-              )}
-              {activeAcademic === "levels" && (
-                <YearLevelTable initialData={[]} total={0} lang={lang} />
-              )}
-              {activeAcademic === "grading" && (
-                <ScoreRangeTable initialData={[]} total={0} lang={lang} />
-              )}
-            </Suspense>
-          </ModalProvider>
-        </div>
-      </section>
-
-      {/* Structure */}
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">{t.structure || "Structure"}</h2>
-        <ScrollRow
-          items={structureCards}
-          activeId={null}
-          onSelect={() => {}}
-          soonLabel={t.soon}
-        />
-      </section>
-
-      {/* Placeholder sections */}
-      {placeholderSections.map((section) => (
-        <section key={section.title} className="space-y-3">
-          <h2 className="text-lg font-semibold">{section.title}</h2>
-          <ScrollRow
-            soonLabel={t.soon}
-            items={section.cards}
-            activeId={null}
-            onSelect={() => {}}
-          />
-        </section>
-      ))}
+      )}
     </div>
   )
 }

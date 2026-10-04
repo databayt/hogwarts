@@ -238,15 +238,19 @@ class CsvImportService {
       const [existingStudents, existingUsers] = await Promise.all([
         db.student.findMany({
           where: { schoolId },
-          select: { studentId: true },
+          select: { studentId: true, admissionNumber: true },
         }),
         db.user.findMany({
           where: { schoolId },
           select: { email: true },
         }),
       ])
+      // A CSV studentId is stored as `admissionNumber`, so re-uploading the
+      // same file must be caught against both columns.
       const existingStudentIds = new Set(
-        existingStudents.map((s) => s.studentId).filter(Boolean)
+        existingStudents
+          .flatMap((s) => [s.studentId, s.admissionNumber])
+          .filter(Boolean)
       )
       const existingEmails = new Set(
         existingUsers.map((u) => u.email).filter(Boolean)
@@ -1207,7 +1211,6 @@ class CsvImportService {
             result.errors.push({
               row: rowNumber,
               error: error instanceof Error ? error.message : "Unknown error",
-              details: error instanceof Error ? error.stack : undefined,
               data: rows[i],
             })
           }
@@ -1362,8 +1365,19 @@ class CsvImportService {
 
           // Link to student if studentId provided
           if (validated.studentId) {
+            // The ID a school types is its own: the student import keeps a
+            // CSV `studentId` as `admissionNumber` and mints the login code
+            // (YYGGNNNN) into `studentId`. Match either, so the guardians file
+            // links to the students file it was written against.
             const student = await db.student.findFirst({
-              where: { schoolId, studentId: validated.studentId },
+              where: {
+                schoolId,
+                OR: [
+                  { studentId: validated.studentId },
+                  { admissionNumber: validated.studentId },
+                ],
+              },
+              select: { id: true },
             })
 
             if (student) {
@@ -1425,7 +1439,6 @@ class CsvImportService {
             result.errors.push({
               row: rowNumber,
               error: error instanceof Error ? error.message : "Unknown error",
-              details: error instanceof Error ? error.stack : undefined,
               data: rows[i],
             })
           }

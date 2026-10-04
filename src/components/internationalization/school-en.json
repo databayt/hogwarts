@@ -741,20 +741,23 @@
       }
     },
     "bulk": {
+      "title": "Bulk import",
+      "description": "Add students, teachers, staff and guardians in one go from a CSV, Excel, JSON or Word file.",
+      "studentsDesc": "Student accounts with grade and guardian",
+      "teachersDesc": "Teachers with department and subjects",
+      "staffDesc": "Administrative staff with position",
+      "guardiansDesc": "Guardians linked to their students",
+      "dropHint": "Click to upload or drop a file here",
+      "template": "Template",
+      "logins": "Logins",
       "people": "People",
       "notifyFamilies": "Notify families by email",
-      "academic": "Academic",
-      "structure": "Structure",
       "downloadTemplate": "Download Template",
-      "uploadAnother": "Upload another file",
       "warnings": "warning(s)",
       "accessCodes": "parent access code(s)",
       "expires": "expires",
       "downloadLogins": "Download logins",
-      "soon": "Soon",
       "importFailed": "Import failed",
-      "dropFile": "Drop",
-      "fileSuffix": "file or browse",
       "importing": "Importing...",
       "imported": "imported successfully",
       "skipped": "skipped (already exist)",
@@ -763,33 +766,7 @@
       "students": "Students",
       "teachers": "Teachers",
       "staff": "Staff",
-      "guardians": "Guardians",
-      "academicYears": "Academic Years",
-      "academicYearsDesc": "Create and manage school years",
-      "terms": "Terms",
-      "termsDesc": "Define terms within the academic year",
-      "periods": "Periods",
-      "periodsDesc": "Configure daily class periods",
-      "yearLevels": "Year Levels",
-      "yearLevelsDesc": "Define grades and year levels",
-      "gradingScale": "Grading Scale",
-      "gradingScaleDesc": "Configure grading and score ranges",
-      "departments": "Departments",
-      "departmentsDesc": "Manage school departments",
-      "classrooms": "Classrooms",
-      "classroomsDesc": "Manage classroom assignments",
-      "attendance": "Attendance",
-      "attendanceImport": "Attendance Import",
-      "attendanceImportDesc": "Import attendance records",
-      "timetable": "Timetable",
-      "timetableImport": "Timetable Import",
-      "timetableImportDesc": "Import timetable schedule",
-      "exams": "Exams",
-      "examScoresImport": "Exam Scores Import",
-      "examScoresImportDesc": "Import exam score records",
-      "materials": "Materials",
-      "materialsImport": "Materials Import",
-      "materialsImportDesc": "Import educational materials"
+      "guardians": "Guardians"
     },
     "attendance": {
       "title": "Attendance",
@@ -3549,7 +3526,15 @@
           "WEEKLY_CAP": "weekly limit reached",
           "NO_SWAP": "no free time to swap"
         },
-        "days": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        "days": [
+          "Sun",
+          "Mon",
+          "Tue",
+          "Wed",
+          "Thu",
+          "Fri",
+          "Sat"
+        ]
       }
     },
     "classes": {
@@ -4387,7 +4372,15 @@
         "saveSettings": "Save Settings"
       },
       "lunchBreak": "Lunch Break",
-      "days": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      "days": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ],
       "exceptionTypes": {
         "holiday": "Holiday",
         "event": "Event",
@@ -6353,7 +6346,15 @@
           "noExamsDate": "No exams scheduled for this date",
           "scheduleNewExam": "Schedule New Exam",
           "roomTBD": "Room TBD",
-          "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+          "weekDays": [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+          ]
         },
         "analytics": {
           "gradeDistribution": "Grade Distribution",

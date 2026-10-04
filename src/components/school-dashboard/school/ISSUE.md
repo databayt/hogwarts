@@ -81,6 +81,26 @@ Dependencies and references:
 
 ---
 
+## Resolved (2026-10-04) — /school/bulk is people import only
+
+- [x] Removed the Academic (years/terms/periods/levels/grading tables — they
+      duplicate `/school/academic`), Structure and four "Soon" placeholder
+      sections. The page is now the four people upload cards + result panels.
+- [x] UI: header + description, notify-families switch, cards with icon tile,
+      per-type description, drop hint, footer "Template" / "Logins" buttons,
+      drag-over state; template CSV carries a UTF-8 BOM for Excel. Breadcrumb
+      reads the translated title (was "Bulk").
+- [x] **Guardians file never linked to students** — `importGuardians` looked
+      up `Student.studentId` (the minted YYGGNNNN code) while the students
+      import stores the CSV `studentId` as `admissionNumber`. Now matches
+      either. Re-uploading a students file also dedupes against
+      `admissionNumber` (it re-created every student before).
+- [x] Verified on demo.localhost: students (grade resolved from "Grade 5" and
+      "الصف الثالث", guardian + login minted), teachers, staff, guardians
+      (linked), re-upload skipped, bad row reported.
+- [ ] Engine row messages ("Schema validation failed", "… already exists —
+      skipped") are still English — need error codes + dictionary keys.
+
 ## Resolved (2026-08-15) — bulk import parity with the onboarding import
 
 `/school/bulk` and the onboarding CSV step both call `importStudents`, but were
