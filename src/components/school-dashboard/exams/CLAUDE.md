@@ -37,8 +37,8 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~85% complete. See [R
   database side. New create paths take a scope from `TeachingScopePicker` and
   validate it with `resolveTeachingScope` (grade is the school's, section is in the
   grade, subject is taught there). A draft exam has no grade until its first step,
-  so it reaches nobody. The gradebook (`Result`) still needs a class — finalize
-  skips it for class-less exams until S5.
+  so it reaches nobody. Finalize writes the gradebook (`Result`) row for every
+  exam, scoped to the student's section and the exam's grade and term.
 - **Exam creation = 2-mode chooser; template-BUILD wizard removed (2026-07-18)** —
   `/exams/new` (`create/content.tsx`) is a one-screen chooser with **Adopt a template**
   (catalog browse/adopt + `AdoptExamDialog`) and **Generate with AI**

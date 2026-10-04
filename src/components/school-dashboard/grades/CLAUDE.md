@@ -28,7 +28,7 @@ Grades — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~94% complete. See [
 
 - **Gradebook spine is the single write path** — `grades/lib/gradebook.ts`
   exports `toPercentage`, `letterGradeFor`, `upsertExamResult`,
-  `upsertGradebookResult`, and `resolveStudentClassForSubject`. Every automated
+  `upsertGradebookResult`, and `resolveStudentSubjectContext`. Every automated
   scoring surface (exams, quick assessments, stream quizzes) MUST route through
   these helpers. Do not write directly to `ExamResult` or `Result` from outside
   this module.
@@ -43,9 +43,22 @@ Grades — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~94% complete. See [
 - **Report card publish triggers a notification** — `publishReportCards`
   dispatches `report_card_ready` to the class audience via
   `dispatchNotificationsToAudience`. Do not remove this call when refactoring.
-- **`resolveStudentClassForSubject` is best-effort** — it returns `null` when
-  the student can't be tied to a class. Callers (stream quiz, quick assessment)
-  must skip the gradebook write rather than error when null is returned.
+- **`resolveStudentSubjectContext` is best-effort** — it returns `null` when
+  the subject is neither taught in the student's grade nor in a legacy class of
+  theirs. Callers (stream quiz, the grade wizard) must skip the write rather
+  than error when null is returned — never fold the score into another subject.
+- **Results are scoped by section, grade and term, not class (2026-10-04)** —
+  `Result.classId` is optional; rows carry `sectionId`, `academicGradeId`
+  (`grade` is the letter grade) and `termId` (migration
+  `20261004140000_result_scope`, backfill
+  `prisma/sql/class-removal/01-results-scope.sql`). Report cards group scores
+  by (student, SUBJECT): a legacy row reaches its subject through its class
+  (the class wins — seeded rows carry mismatched `subjectId`s), a class-less
+  row through its own `subjectId` and `termId`. Credits only exist on legacy
+  classes; everything else weighs 1. `computeReportCards` is the aggregation
+  without writes — diff it against the old core before changing the rules
+  (it matched 871/876 demo cards; the rest gained a subject the student had
+  scores in but no enrollment for).
 - **Report-card template builder removed (2026-07-18)** — the 4-step
   `grades/template/` wizard is deleted. Schools upload a `.docx` (category
   `REPORT_CARD`) under `/documents` and fill it via "Generate (my template)" on the
@@ -95,7 +108,7 @@ Grades — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~94% complete. See [
 ## Related Blocks
 
 - **exams** (`src/components/school-dashboard/exams/`) — primary consumer of `gradebook.ts`; `finalizeExamResults` writes both `ExamResult` and `Result`.
-- **stream** (`src/components/lumos/`) — lesson quizzes use `upsertGradebookResult` via `resolveStudentClassForSubject`.
+- **stream** (`src/components/lumos/`) — lesson quizzes use `upsertGradebookResult` via `resolveStudentSubjectContext`.
 - **notifications** (`src/components/school-dashboard/notifications/`) — `publishReportCards` dispatches via `dispatchNotificationsToAudience`; exam results-published dispatches via `dispatchNotification`.
 - **quick assessments** — write to `Result` via the gradebook spine.
 

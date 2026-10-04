@@ -12,6 +12,7 @@ import React, {
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { SelectField } from "@/components/form"
@@ -19,11 +20,10 @@ import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
-  getAssignmentsForGrade,
-  getClassesForGrade,
-  getExamsForGrade,
+  getAssignmentsForStudent,
+  getExamsForStudent,
   getStudentsForGrade,
-  getSubjectsForGrade,
+  getSubjectsForStudent,
   updateGradeSelection,
 } from "./actions"
 import { selectionSchema, type SelectionFormData } from "./validation"
@@ -32,11 +32,6 @@ interface StudentOption {
   id: string
   firstName: string
   lastName: string
-}
-
-interface ClassOption {
-  id: string
-  name: string
 }
 
 interface AssignmentOption {
@@ -64,7 +59,6 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
   ({ resultId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const [students, setStudents] = useState<StudentOption[]>([])
-    const [classes, setClasses] = useState<ClassOption[]>([])
     const [assignments, setAssignments] = useState<AssignmentOption[]>([])
     const [exams, setExams] = useState<ExamOption[]>([])
     const [subjects, setSubjects] = useState<SubjectOption[]>([])
@@ -76,66 +70,61 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
       resolver: zodResolver(selectionSchema) as any,
       defaultValues: {
         studentId: initialData?.studentId || "",
-        classId: initialData?.classId || "",
+        subjectId: initialData?.subjectId || "",
         assignmentId: initialData?.assignmentId,
         examId: initialData?.examId,
-        subjectId: initialData?.subjectId,
       },
     })
 
     const studentId = form.watch("studentId")
-    const classId = form.watch("classId")
+    const subjectId = form.watch("subjectId")
 
     // Notify parent of validity changes
     React.useEffect(() => {
       const isValid =
-        studentId?.trim().length >= 1 && classId?.trim().length >= 1
+        studentId?.trim().length >= 1 && subjectId?.trim().length >= 1
       onValidChange?.(isValid)
-    }, [studentId, classId, onValidChange])
+    }, [studentId, subjectId, onValidChange])
 
-    // Load students, classes, and subjects on mount
+    // Load students on mount
     useEffect(() => {
-      async function loadOptions() {
-        const [studentsRes, classesRes, subjectsRes] = await Promise.all([
-          getStudentsForGrade(),
-          getClassesForGrade(),
-          getSubjectsForGrade(),
-        ])
-        if (studentsRes.success && studentsRes.data) {
-          setStudents(studentsRes.data)
-        }
-        if (classesRes.success && classesRes.data) {
-          setClasses(classesRes.data)
-        }
-        if (subjectsRes.success && subjectsRes.data) {
-          setSubjects(subjectsRes.data)
-        }
-      }
-      loadOptions()
+      getStudentsForGrade().then((res) => {
+        if (res.success && res.data) setStudents(res.data)
+      })
     }, [])
 
-    // Reload assignments and exams when classId changes
+    // The subjects the chosen student studies (their grade's)
     useEffect(() => {
-      if (!classId) {
-        setAssignments([])
-        setExams([])
-        return
+      if (!studentId) return
+      let alive = true
+      getSubjectsForStudent(studentId).then((res) => {
+        if (alive && res.success && res.data) setSubjects(res.data)
+      })
+      return () => {
+        alive = false
       }
+    }, [studentId])
 
-      async function loadClassDependents() {
-        const [assignmentsRes, examsRes] = await Promise.all([
-          getAssignmentsForGrade(classId),
-          getExamsForGrade(classId),
-        ])
-        if (assignmentsRes.success && assignmentsRes.data) {
-          setAssignments(assignmentsRes.data)
-        }
-        if (examsRes.success && examsRes.data) {
-          setExams(examsRes.data)
-        }
+    // Exams and assignments of that subject for that student
+    useEffect(() => {
+      if (!studentId || !subjectId) return
+      let alive = true
+      Promise.all([
+        getAssignmentsForStudent(studentId, subjectId),
+        getExamsForStudent(studentId, subjectId),
+      ]).then(([assignmentsRes, examsRes]) => {
+        if (!alive) return
+        setAssignments(
+          assignmentsRes.success && assignmentsRes.data
+            ? assignmentsRes.data
+            : []
+        )
+        setExams(examsRes.success && examsRes.data ? examsRes.data : [])
+      })
+      return () => {
+        alive = false
       }
-      loadClassDependents()
-    }, [classId])
+    }, [studentId, subjectId])
 
     useImperativeHandle(ref, () => ({
       saveAndNext: () =>
@@ -150,7 +139,9 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
               const data = form.getValues()
               const result = await updateGradeSelection(resultId, data)
               if (!result.success) {
-                ErrorToast(result.error || d?.failedToSave || "")
+                ErrorToast(
+                  actionErrorMessage(result.error, dict, d?.failedToSave || "")
+                )
                 reject(new Error(result.error))
                 return
               }
@@ -168,11 +159,6 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
     const studentOptions = students.map((s) => ({
       label: `${s.firstName} ${s.lastName}`,
       value: s.id,
-    }))
-
-    const classOptions = classes.map((c) => ({
-      label: c.name,
-      value: c.id,
     }))
 
     const assignmentOptions = assignments.map((a) => ({
@@ -201,29 +187,23 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
             disabled={isPending}
           />
           <SelectField
-            name="classId"
-            label={d?.class || "Class"}
-            options={classOptions}
+            name="subjectId"
+            label={d?.subject || "Subject"}
+            options={subjectOptions}
             required
-            disabled={isPending}
-          />
-          <SelectField
-            name="assignmentId"
-            label={d?.assignment || "Assignment"}
-            options={assignmentOptions}
-            disabled={isPending || !classId}
+            disabled={isPending || !studentId}
           />
           <SelectField
             name="examId"
             label={d?.exam || "Exam"}
             options={examOptions}
-            disabled={isPending || !classId}
+            disabled={isPending || !subjectId}
           />
           <SelectField
-            name="subjectId"
-            label={d?.subject || "Subject"}
-            options={subjectOptions}
-            disabled={isPending}
+            name="assignmentId"
+            label={d?.assignment || "Assignment"}
+            options={assignmentOptions}
+            disabled={isPending || !subjectId}
           />
         </form>
       </Form>

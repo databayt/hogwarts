@@ -673,10 +673,17 @@ model Result {
   id           String  @id @default(cuid())
   schoolId     String
   studentId    String
-  classId      String
+  // Legacy: the class the score was earned in. New rows carry the scope
+  // below instead — classes are retired.
+  classId      String?
   assignmentId String?
   examId       String?
   subjectId    String?
+  // Scope (new rows): the student's section and grade, and the term.
+  // (`grade` below is the letter grade, hence `academicGradeId`.)
+  sectionId       String?
+  academicGradeId String?
+  termId          String?
 
   score      Decimal @db.Decimal(6, 2)
   maxScore   Decimal @db.Decimal(6, 2)
@@ -695,7 +702,10 @@ model Result {
 
   school     School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student    Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class      Class             @relation(fields: [classId], references: [id], onDelete: Cascade)
+  class      Class?            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  section    Section?          @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  academicGrade AcademicGrade? @relation(fields: [academicGradeId], references: [id], onDelete: SetNull)
+  term       Term?             @relation(fields: [termId], references: [id], onDelete: SetNull)
   assignment SchoolAssignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   exam       SchoolExam?       @relation(fields: [examId], references: [id], onDelete: Cascade)
   subject    Subject?          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
@@ -714,6 +724,9 @@ model Result {
   @@index([schoolId, yearLevelId])
   @@index([schoolId, studentId, subjectId])
   @@index([schoolId, classId, subjectId])
+  @@index([schoolId, termId, studentId])
+  @@index([schoolId, sectionId])
+  @@index([schoolId, academicGradeId])
   @@index([percentage])
   @@index([grade])
   @@map("results")

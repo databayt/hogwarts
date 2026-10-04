@@ -5,7 +5,7 @@ import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import {
-  resolveStudentClassForSubject,
+  resolveStudentSubjectContext,
   upsertGradebookResult,
 } from "@/components/school-dashboard/grades/lib/gradebook"
 
@@ -125,13 +125,13 @@ export async function submitLessonQuizCore(input: {
       })
 
       if (student) {
-        const classId = await resolveStudentClassForSubject(
+        const context = await resolveStudentSubjectContext(
           schoolId,
           student.id,
           subjectId
         )
 
-        if (classId) {
+        if (context) {
           // TWO rules govern this write, both learned from the old version:
           //
           //  1. The title is PER LESSON. `upsertGradebookResult` matches on
@@ -146,7 +146,7 @@ export async function submitLessonQuizCore(input: {
           const written = await upsertGradebookResult({
             schoolId,
             studentId: student.id,
-            classId,
+            ...context,
             subjectId,
             score,
             maxScore: total,

@@ -44,7 +44,7 @@ type ResultSelectResult = {
   schoolId: string
   studentId: string
   assignmentId: string | null
-  classId: string
+  classId: string | null
   score: number
   maxScore: number
   percentage: number
@@ -688,7 +688,7 @@ export async function getResultsCSV(
         r.id,
         `"${r.student ? `${r.student.firstName} ${r.student.lastName}` : "Unknown"}"`,
         `"${(r.assignment?.title || r.exam?.title || "").replace(/"/g, '""')}"`,
-        `"${(r.class?.name || "").replace(/"/g, '""')}"`,
+        `"${(r.section?.name || r.class?.name || "").replace(/"/g, '""')}"`,
         Number(r.score),
         Number(r.maxScore),
         r.percentage?.toFixed(1) || "0",

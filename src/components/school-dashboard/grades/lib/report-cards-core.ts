@@ -18,9 +18,17 @@
  * below reads the whole cohort in a fixed handful of queries and writes in
  * chunks, so cost scales with rows, not with students × classes.
  *
+ * Scores are grouped by (student, SUBJECT). Legacy rows reach a subject
+ * through their class; rows written since classes were retired carry the term
+ * and the subject themselves (exams set for a grade or section). Grouping by
+ * class used to emit one row per class, so a student enrolled in two classes
+ * of one subject lost one of them to the (reportCard, subject) unique key.
+ *
  * NOTE: no `revalidatePath` here. The core runs outside a request scope (cron,
  * seed) where it would throw; the action wrapper revalidates.
  */
+import type { Prisma } from "@prisma/client"
+
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
@@ -83,7 +91,301 @@ function chunk<T>(items: T[], size: number): T[][] {
 export interface GenerateReportCardsInput {
   termId: string
   gradeId?: string
+  sectionId?: string
+  /** Legacy: only the students of one class. */
   classId?: string
+}
+
+export interface ComputedReportCard {
+  studentId: string
+  overallGrade: string
+  gpa: number
+  daysPresent: number
+  daysAbsent: number
+  daysLate: number
+  yearLevelId: string | null
+  subjectGrades: SubjectGradeData[]
+}
+
+/**
+ * The aggregation without the writes — what `generateReportCardsCore` would
+ * store for the term. `skipped` counts students with no score in any subject.
+ */
+export async function computeReportCards(
+  schoolId: string,
+  input: GenerateReportCardsInput
+): Promise<
+  | { ok: true; computed: ComputedReportCard[]; skipped: number }
+  | { ok: false; error: string }
+> {
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { id: true, startDate: true, endDate: true },
+  })
+  if (!term) return { ok: false, error: "Term not found" }
+
+  const gradingConfig = await db.schoolGradingConfig.findUnique({
+    where: { schoolId },
+  })
+  const boundaries = gradingConfig?.customBoundaries
+    ? (gradingConfig.customBoundaries as unknown as GradeBoundary[])
+    : DEFAULT_BOUNDARIES
+
+  // ---- Scope --------------------------------------------------------
+  // Legacy classes carry the term; newer rows carry it themselves. A school
+  // with no classes simply has an empty legacy list.
+  const classes = await db.class.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      ...(input.classId ? { id: input.classId } : {}),
+    },
+    select: { id: true, subjectId: true, credits: true },
+  })
+  const classIds = classes.map((c) => c.id)
+  const classById = new Map(classes.map((c) => [c.id, c]))
+
+  const studentWhere: Prisma.StudentWhereInput = { schoolId }
+  if (input.classId) {
+    studentWhere.studentClasses = { some: { classId: input.classId } }
+  } else if (input.sectionId) {
+    studentWhere.sectionId = input.sectionId
+  } else if (input.gradeId) {
+    studentWhere.OR = [
+      { section: { gradeId: input.gradeId } },
+      { sectionId: null, academicGradeId: input.gradeId },
+    ]
+  }
+
+  const students = await db.student.findMany({
+    where: studentWhere,
+    select: {
+      id: true,
+      academicGradeId: true,
+      section: { select: { gradeId: true } },
+    },
+  })
+  if (students.length === 0) return { ok: true, computed: [], skipped: 0 }
+  const studentIds = students.map((s) => s.id)
+  // Only narrow by student when a filter is actually active — an unfiltered
+  // run would otherwise ship every id in the school as an `IN` list.
+  const filtered = !!(input.classId || input.sectionId || input.gradeId)
+  const studentScope = filtered ? { studentId: { in: studentIds } } : {}
+
+  // A score counts for the term when its legacy class is in the term, or
+  // when the row (or its exam) names the term.
+  const inTermResult: Prisma.ResultWhereInput = {
+    OR: [
+      ...(classIds.length > 0 ? [{ classId: { in: classIds } }] : []),
+      { termId: input.termId },
+    ],
+  }
+  const inTermExam: Prisma.SchoolExamWhereInput = {
+    OR: [
+      ...(classIds.length > 0 ? [{ classId: { in: classIds } }] : []),
+      { termId: input.termId },
+    ],
+  }
+
+  // ---- Reads (one query per source, whole cohort) --------------------
+  const [examResults, gradebookResults, attendance, academic] =
+    await Promise.all([
+      db.examResult.findMany({
+        where: { schoolId, exam: inTermExam, ...studentScope },
+        select: {
+          studentId: true,
+          examId: true,
+          marksObtained: true,
+          totalMarks: true,
+          exam: { select: { classId: true, subjectId: true } },
+        },
+      }),
+      db.result.findMany({
+        where: { schoolId, ...inTermResult, ...studentScope },
+        select: {
+          studentId: true,
+          classId: true,
+          subjectId: true,
+          examId: true,
+          score: true,
+          maxScore: true,
+        },
+      }),
+      db.attendance.groupBy({
+        by: ["studentId", "status"],
+        where: {
+          schoolId,
+          deletedAt: null,
+          date: { gte: term.startDate, lte: term.endDate },
+          ...studentScope,
+        },
+        _count: { status: true },
+      }),
+      db.academicGrade.findMany({
+        where: { schoolId },
+        select: { id: true, yearLevelId: true },
+      }),
+    ])
+
+  const yearLevelByGrade = new Map(
+    academic.map((a) => [a.id, a.yearLevelId ?? null])
+  )
+  const inCohort = new Set(studentIds)
+
+  /**
+   * A legacy row was earned in a class, so the class decides its subject —
+   * seeded rows carry a `subjectId` that disagrees with their class's.
+   * Rows without a class carry the subject themselves.
+   */
+  const subjectOf = (row: {
+    subjectId: string | null
+    classId: string | null
+  }): string | null =>
+    (row.classId ? classById.get(row.classId)?.subjectId : undefined) ??
+    row.subjectId
+
+  // Credits only exist on legacy classes; everything else weighs 1.
+  const creditsBySubject = new Map<string, number>()
+  for (const c of classes) {
+    if (c.subjectId && c.credits) {
+      creditsBySubject.set(
+        c.subjectId,
+        Math.max(creditsBySubject.get(c.subjectId) ?? 0, Number(c.credits))
+      )
+    }
+  }
+
+  const key = (studentId: string, subjectId: string) =>
+    `${studentId}:${subjectId}`
+
+  // Result rows win over ExamResult rows for the same exam — they may carry
+  // richer weighting written by `upsertGradebookResult`. Collect the covered
+  // exam ids per (student, subject) so each exam contributes exactly once.
+  const scoresByPair = new Map<string, { score: number; maxScore: number }[]>()
+  const subjectsByStudent = new Map<string, Set<string>>()
+  const coveredExams = new Map<string, Set<string>>()
+
+  const add = (
+    studentId: string,
+    subjectId: string,
+    entry: { score: number; maxScore: number }
+  ) => {
+    const k = key(studentId, subjectId)
+    const bucket = scoresByPair.get(k)
+    if (bucket) bucket.push(entry)
+    else scoresByPair.set(k, [entry])
+    const subjects = subjectsByStudent.get(studentId) ?? new Set<string>()
+    subjects.add(subjectId)
+    subjectsByStudent.set(studentId, subjects)
+  }
+
+  for (const r of gradebookResults) {
+    if (!inCohort.has(r.studentId)) continue
+    const subjectId = subjectOf(r)
+    if (!subjectId) continue
+    add(r.studentId, subjectId, {
+      score: Number(r.score),
+      maxScore: Number(r.maxScore),
+    })
+    if (r.examId) {
+      const k = key(r.studentId, subjectId)
+      const seen = coveredExams.get(k)
+      if (seen) seen.add(r.examId)
+      else coveredExams.set(k, new Set([r.examId]))
+    }
+  }
+
+  for (const er of examResults) {
+    if (!inCohort.has(er.studentId) || !er.exam) continue
+    const subjectId = subjectOf(er.exam)
+    if (!subjectId) continue
+    if (coveredExams.get(key(er.studentId, subjectId))?.has(er.examId)) {
+      continue
+    }
+    add(er.studentId, subjectId, {
+      score: er.marksObtained,
+      maxScore: er.totalMarks || 100,
+    })
+  }
+
+  const attendanceByStudent = new Map<
+    string,
+    { present: number; absent: number; late: number }
+  >()
+  for (const a of attendance) {
+    const cur = attendanceByStudent.get(a.studentId) ?? {
+      present: 0,
+      absent: 0,
+      late: 0,
+    }
+    const n = a._count.status
+    if (a.status === "PRESENT") cur.present += n
+    else if (a.status === "ABSENT") cur.absent += n
+    else if (a.status === "LATE") cur.late += n
+    attendanceByStudent.set(a.studentId, cur)
+  }
+
+  // ---- Aggregate ----------------------------------------------------
+  const computed: ComputedReportCard[] = []
+  let skipped = 0
+
+  for (const student of students) {
+    const subjectGrades: SubjectGradeData[] = []
+
+    for (const subjectId of subjectsByStudent.get(student.id) ?? []) {
+      const scores = scoresByPair.get(key(student.id, subjectId))
+      if (!scores?.length) continue
+
+      const totalScore = scores.reduce((sum, s) => sum + s.score, 0)
+      const totalMax = scores.reduce((sum, s) => sum + s.maxScore, 0)
+      const pct = totalMax > 0 ? (totalScore / totalMax) * 100 : 0
+      const { grade } = percentageToGrade(pct, boundaries)
+
+      subjectGrades.push({
+        subjectId,
+        score: totalScore,
+        maxScore: totalMax,
+        percentage: Math.round(pct * 100) / 100,
+        grade,
+        credits: creditsBySubject.get(subjectId) ?? 1,
+      })
+    }
+
+    if (subjectGrades.length === 0) {
+      skipped++
+      continue
+    }
+
+    const totalCredits = subjectGrades.reduce((sum, sg) => sum + sg.credits, 0)
+    const weightedGPA =
+      totalCredits > 0
+        ? subjectGrades.reduce((sum, sg) => {
+            const { gpa } = percentageToGrade(sg.percentage, boundaries)
+            return sum + gpa * sg.credits
+          }, 0) / totalCredits
+        : 0
+
+    const overallPct =
+      subjectGrades.reduce((sum, sg) => sum + sg.percentage, 0) /
+      subjectGrades.length
+    const { grade: overallGrade } = percentageToGrade(overallPct, boundaries)
+
+    const att = attendanceByStudent.get(student.id)
+    const gradeId = student.section?.gradeId ?? student.academicGradeId
+
+    computed.push({
+      studentId: student.id,
+      overallGrade,
+      gpa: weightedGPA,
+      daysPresent: att?.present ?? 0,
+      daysAbsent: att?.absent ?? 0,
+      daysLate: att?.late ?? 0,
+      yearLevelId: gradeId ? (yearLevelByGrade.get(gradeId) ?? null) : null,
+      subjectGrades,
+    })
+  }
+
+  return { ok: true, computed, skipped }
 }
 
 /**
@@ -98,249 +400,9 @@ export async function generateReportCardsCore(
   ActionResponse<{ created: number; updated: number; skipped: number }>
 > {
   try {
-    const term = await db.term.findFirst({
-      where: { id: input.termId, schoolId },
-      select: { id: true, startDate: true, endDate: true },
-    })
-    if (!term) {
-      return { success: false, error: "Term not found" }
-    }
-
-    const gradingConfig = await db.schoolGradingConfig.findUnique({
-      where: { schoolId },
-    })
-    const boundaries = gradingConfig?.customBoundaries
-      ? (gradingConfig.customBoundaries as unknown as GradeBoundary[])
-      : DEFAULT_BOUNDARIES
-
-    // ---- Scope --------------------------------------------------------
-    // Classes carry the term, so they are the tightest handle on "what
-    // counts this term". Everything else hangs off this id list.
-    const classes = await db.class.findMany({
-      where: {
-        schoolId,
-        termId: input.termId,
-        ...(input.classId ? { id: input.classId } : {}),
-      },
-      select: { id: true, subjectId: true, credits: true },
-    })
-    if (classes.length === 0) {
-      return { success: true, data: { created: 0, updated: 0, skipped: 0 } }
-    }
-    const classIds = classes.map((c) => c.id)
-    const classById = new Map(classes.map((c) => [c.id, c]))
-
-    const studentWhere: Record<string, unknown> = { schoolId }
-    if (input.classId) {
-      studentWhere.studentClasses = { some: { classId: input.classId } }
-    } else if (input.gradeId) {
-      studentWhere.academicGradeId = input.gradeId
-    }
-
-    const students = await db.student.findMany({
-      where: studentWhere,
-      select: { id: true, academicGradeId: true },
-    })
-    if (students.length === 0) {
-      return { success: true, data: { created: 0, updated: 0, skipped: 0 } }
-    }
-    const studentIds = students.map((s) => s.id)
-    // Only narrow by student when a filter is actually active — an unfiltered
-    // run would otherwise ship every id in the school as an `IN` list.
-    const studentScope =
-      input.classId || input.gradeId ? { studentId: { in: studentIds } } : {}
-
-    // ---- Reads (one query per source, whole cohort) --------------------
-    const [enrollments, examResults, gradebookResults, attendance, academic] =
-      await Promise.all([
-        db.studentClass.findMany({
-          where: { schoolId, classId: { in: classIds }, ...studentScope },
-          select: { studentId: true, classId: true },
-        }),
-        db.examResult.findMany({
-          where: {
-            schoolId,
-            exam: { classId: { in: classIds } },
-            ...studentScope,
-          },
-          select: {
-            studentId: true,
-            examId: true,
-            marksObtained: true,
-            totalMarks: true,
-            exam: { select: { classId: true } },
-          },
-        }),
-        db.result.findMany({
-          where: { schoolId, classId: { in: classIds }, ...studentScope },
-          select: {
-            studentId: true,
-            classId: true,
-            examId: true,
-            score: true,
-            maxScore: true,
-          },
-        }),
-        db.attendance.groupBy({
-          by: ["studentId", "status"],
-          where: {
-            schoolId,
-            deletedAt: null,
-            date: { gte: term.startDate, lte: term.endDate },
-            ...studentScope,
-          },
-          _count: { status: true },
-        }),
-        db.academicGrade.findMany({
-          where: { schoolId },
-          select: { id: true, yearLevelId: true },
-        }),
-      ])
-
-    const yearLevelByGrade = new Map(
-      academic.map((a) => [a.id, a.yearLevelId ?? null])
-    )
-
-    const key = (studentId: string, classId: string) =>
-      `${studentId}:${classId}`
-
-    // Result rows win over ExamResult rows for the same exam — they may carry
-    // richer weighting written by `upsertGradebookResult`. Collect the covered
-    // exam ids per (student, class) so each exam contributes exactly once.
-    const scoresByPair = new Map<
-      string,
-      { score: number; maxScore: number }[]
-    >()
-    const coveredExams = new Map<string, Set<string>>()
-
-    for (const r of gradebookResults) {
-      const k = key(r.studentId, r.classId)
-      const bucket = scoresByPair.get(k)
-      const entry = { score: Number(r.score), maxScore: Number(r.maxScore) }
-      if (bucket) bucket.push(entry)
-      else scoresByPair.set(k, [entry])
-      if (r.examId) {
-        const seen = coveredExams.get(k)
-        if (seen) seen.add(r.examId)
-        else coveredExams.set(k, new Set([r.examId]))
-      }
-    }
-
-    for (const er of examResults) {
-      const classId = er.exam?.classId
-      if (!classId) continue
-      const k = key(er.studentId, classId)
-      if (coveredExams.get(k)?.has(er.examId)) continue
-      const entry = {
-        score: er.marksObtained,
-        maxScore: er.totalMarks || 100,
-      }
-      const bucket = scoresByPair.get(k)
-      if (bucket) bucket.push(entry)
-      else scoresByPair.set(k, [entry])
-    }
-
-    const attendanceByStudent = new Map<
-      string,
-      { present: number; absent: number; late: number }
-    >()
-    for (const a of attendance) {
-      const cur = attendanceByStudent.get(a.studentId) ?? {
-        present: 0,
-        absent: 0,
-        late: 0,
-      }
-      const n = a._count.status
-      if (a.status === "PRESENT") cur.present += n
-      else if (a.status === "ABSENT") cur.absent += n
-      else if (a.status === "LATE") cur.late += n
-      attendanceByStudent.set(a.studentId, cur)
-    }
-
-    const classesByStudent = new Map<string, string[]>()
-    for (const e of enrollments) {
-      const list = classesByStudent.get(e.studentId)
-      if (list) list.push(e.classId)
-      else classesByStudent.set(e.studentId, [e.classId])
-    }
-
-    // ---- Aggregate ----------------------------------------------------
-    interface Computed {
-      studentId: string
-      overallGrade: string
-      gpa: number
-      daysPresent: number
-      daysAbsent: number
-      daysLate: number
-      yearLevelId: string | null
-      subjectGrades: SubjectGradeData[]
-    }
-
-    const computed: Computed[] = []
-    let skipped = 0
-
-    for (const student of students) {
-      const subjectGrades: SubjectGradeData[] = []
-
-      for (const classId of classesByStudent.get(student.id) ?? []) {
-        const cls = classById.get(classId)
-        if (!cls?.subjectId) continue
-
-        const scores = scoresByPair.get(key(student.id, classId))
-        if (!scores?.length) continue
-
-        const totalScore = scores.reduce((sum, s) => sum + s.score, 0)
-        const totalMax = scores.reduce((sum, s) => sum + s.maxScore, 0)
-        const pct = totalMax > 0 ? (totalScore / totalMax) * 100 : 0
-        const { grade } = percentageToGrade(pct, boundaries)
-
-        subjectGrades.push({
-          subjectId: cls.subjectId,
-          score: totalScore,
-          maxScore: totalMax,
-          percentage: Math.round(pct * 100) / 100,
-          grade,
-          credits: cls.credits ? Number(cls.credits) : 1,
-        })
-      }
-
-      if (subjectGrades.length === 0) {
-        skipped++
-        continue
-      }
-
-      const totalCredits = subjectGrades.reduce(
-        (sum, sg) => sum + sg.credits,
-        0
-      )
-      const weightedGPA =
-        totalCredits > 0
-          ? subjectGrades.reduce((sum, sg) => {
-              const { gpa } = percentageToGrade(sg.percentage, boundaries)
-              return sum + gpa * sg.credits
-            }, 0) / totalCredits
-          : 0
-
-      const overallPct =
-        subjectGrades.reduce((sum, sg) => sum + sg.percentage, 0) /
-        subjectGrades.length
-      const { grade: overallGrade } = percentageToGrade(overallPct, boundaries)
-
-      const att = attendanceByStudent.get(student.id)
-
-      computed.push({
-        studentId: student.id,
-        overallGrade,
-        gpa: weightedGPA,
-        daysPresent: att?.present ?? 0,
-        daysAbsent: att?.absent ?? 0,
-        daysLate: att?.late ?? 0,
-        yearLevelId: student.academicGradeId
-          ? (yearLevelByGrade.get(student.academicGradeId) ?? null)
-          : null,
-        subjectGrades,
-      })
-    }
+    const result = await computeReportCards(schoolId, input)
+    if (!result.ok) return { success: false, error: result.error }
+    const { computed, skipped } = result
 
     if (computed.length === 0) {
       return { success: true, data: { created: 0, updated: 0, skipped } }
@@ -363,7 +425,7 @@ export async function generateReportCardsCore(
     })
     const existingByStudent = new Map(existing.map((e) => [e.studentId, e.id]))
 
-    const cardData = (c: Computed) => ({
+    const cardData = (c: ComputedReportCard) => ({
       overallGrade: c.overallGrade,
       overallGPA: Math.round(c.gpa * 100) / 100,
       rank: rankByStudent.get(c.studentId) ?? null,

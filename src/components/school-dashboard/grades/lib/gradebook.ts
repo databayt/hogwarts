@@ -18,6 +18,7 @@
  * actions. Marking it "use server" would expose each as an HTTP endpoint.
  */
 import { db } from "@/lib/db"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 import {
   calculateGrade,
   getSchoolGradingScheme,
@@ -123,7 +124,12 @@ export type GradebookSource = "exam" | "assignment" | "quiz" | "lms"
 export async function upsertGradebookResult(params: {
   schoolId: string
   studentId: string
-  classId: string
+  /** Legacy class; new rows leave it null and carry the scope below. */
+  classId?: string | null
+  /** The student's section and grade, and the term the score was earned in. */
+  sectionId?: string | null
+  academicGradeId?: string | null
+  termId?: string | null
   score: number
   maxScore: number
   subjectId?: string | null
@@ -178,16 +184,30 @@ export async function upsertGradebookResult(params: {
     submittedAt: params.submittedAt ?? undefined,
   }
 
+  // Only the scope fields the caller named — a re-run that knows the term
+  // fills it in, one that doesn't leaves the row alone.
+  const scope = {
+    ...(params.classId !== undefined ? { classId: params.classId } : {}),
+    ...(params.sectionId !== undefined ? { sectionId: params.sectionId } : {}),
+    ...(params.academicGradeId !== undefined
+      ? { academicGradeId: params.academicGradeId }
+      : {}),
+    ...(params.termId !== undefined ? { termId: params.termId } : {}),
+  }
+
   if (existing) {
     if (params.onlyIfAbsent) return null
-    return db.result.update({ where: { id: existing.id }, data: common })
+    return db.result.update({
+      where: { id: existing.id },
+      data: { ...common, ...scope },
+    })
   }
 
   return db.result.create({
     data: {
       schoolId: params.schoolId,
       studentId: params.studentId,
-      classId: params.classId,
+      ...scope,
       subjectId: params.subjectId ?? undefined,
       examId: params.examId ?? undefined,
       assignmentId: params.assignmentId ?? undefined,
@@ -197,40 +217,77 @@ export async function upsertGradebookResult(params: {
   })
 }
 
+export interface StudentSubjectContext {
+  /** A legacy class the student is enrolled in for the subject, if any. */
+  classId: string | null
+  sectionId: string | null
+  academicGradeId: string | null
+  /** The active term, when the school has one. */
+  termId: string | null
+}
+
 /**
- * Resolve the class a student belongs to FOR A GIVEN SUBJECT, used by quiz/LMS
- * surfaces that aren't already class-scoped. Returns null when the student
- * can't be tied to a class for that subject — the caller must then skip the
- * gradebook write.
+ * Where a student studies a subject, for quiz/LMS surfaces that aren't
+ * already scoped: their section, grade and the active term, plus a legacy
+ * class when one exists. Returns null when the subject is neither taught in
+ * the student's grade (an active SubjectSelection) nor in a class they're
+ * enrolled in — the caller must then skip the gradebook write.
  *
  * **The match is subject-strict, and that is load-bearing.** Until 2026-08-29
- * this fell back to `studentClass.findFirst({ schoolId, studentId })` — ANY
- * class the student was in, with no `orderBy` — whenever no subject-matched
- * class existed. That looked like a graceful degradation and was in fact silent
- * data corruption, because `report-cards-core.ts` buckets `Result` rows by
- * `(studentId, classId)` and labels each bucket with `cls.subjectId`: it never
- * reads `Result.subjectId`. So a Grade-7 Mathematics lesson quiz taken at a
- * school with no timetabled Maths class for that student was added to whichever
- * class `findFirst` happened to return — their Arabic grade, say — and the
- * absent `orderBy` made the victim subject non-deterministic between calls.
- * Lumos courses map to catalog subjects (~120 selections for a 12-grade school)
- * while `Class` rows exist only for subjects actually timetabled WITH THAT
- * STUDENT, so the mismatch was the common case, not the edge.
+ * the class lookup fell back to `studentClass.findFirst({ schoolId, studentId })`
+ * — ANY class the student was in, with no `orderBy` — whenever no
+ * subject-matched class existed. That looked like a graceful degradation and
+ * was in fact silent data corruption: report cards bucketed `Result` rows by
+ * class and labelled each bucket with the class's subject, so a Mathematics
+ * lesson quiz was added to whichever class `findFirst` returned — the
+ * student's Arabic grade, say — non-deterministically between calls.
  *
  * Recording nothing is the correct failure: the lumos quiz already surfaces
  * `recorded: false` to the student, and a missing score is recoverable in a way
  * that a score silently folded into an unrelated subject is not.
  */
-export async function resolveStudentClassForSubject(
+export async function resolveStudentSubjectContext(
   schoolId: string,
   studentId: string,
   subjectId?: string | null
-): Promise<string | null> {
+): Promise<StudentSubjectContext | null> {
   if (!subjectId) return null
 
-  const bySubject = await db.class.findFirst({
-    where: { schoolId, subjectId, studentClasses: { some: { studentId } } },
-    select: { id: true },
-  })
-  return bySubject?.id ?? null
+  const [student, legacy, { term }] = await Promise.all([
+    db.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: {
+        sectionId: true,
+        academicGradeId: true,
+        section: { select: { gradeId: true } },
+      },
+    }),
+    db.class.findFirst({
+      where: { schoolId, subjectId, studentClasses: { some: { studentId } } },
+      select: { id: true },
+    }),
+    resolveActiveTerm(schoolId),
+  ])
+  if (!student) return null
+
+  const academicGradeId = student.section?.gradeId ?? student.academicGradeId
+  const taught = academicGradeId
+    ? await db.subjectSelection.findFirst({
+        where: {
+          schoolId,
+          gradeId: academicGradeId,
+          catalogSubjectId: subjectId,
+          isActive: true,
+        },
+        select: { id: true },
+      })
+    : null
+  if (!taught && !legacy) return null
+
+  return {
+    classId: legacy?.id ?? null,
+    sectionId: student.sectionId,
+    academicGradeId,
+    termId: term?.id ?? null,
+  }
 }

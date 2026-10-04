@@ -85,6 +85,12 @@ export const resultListSelect = {
       lang: true,
     },
   },
+  section: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
   assignment: {
     select: {
       id: true,
@@ -143,6 +149,13 @@ export const resultDetailSelect = {
       name: true,
     },
   },
+  section: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  sectionId: true,
   assignment: {
     select: {
       id: true,
@@ -685,21 +698,25 @@ export async function getStudentGradeHistory(
  */
 export async function getClassGradeStats(
   schoolId: string,
-  classId: string,
-  assignmentId?: string | null,
-  examId?: string | null
+  peers: {
+    classId?: string | null
+    sectionId?: string | null
+    subjectId?: string | null
+    assignmentId?: string | null
+    examId?: string | null
+  }
 ) {
-  const where: Prisma.ResultWhereInput = {
-    schoolId,
-    classId,
-  }
-
-  // Filter by specific assignment or exam if provided
-  if (assignmentId) {
-    where.assignmentId = assignmentId
-  } else if (examId) {
-    where.examId = examId
-  }
+  // The student's peers for this score: everyone graded on the same exam or
+  // assignment, else the same legacy class, else the same section and
+  // subject. A row with none of those is compared with nobody.
+  const where: Prisma.ResultWhereInput = { schoolId, wizardStep: null }
+  if (peers.examId) where.examId = peers.examId
+  else if (peers.assignmentId) where.assignmentId = peers.assignmentId
+  else if (peers.classId) where.classId = peers.classId
+  else if (peers.sectionId && peers.subjectId) {
+    where.sectionId = peers.sectionId
+    where.subjectId = peers.subjectId
+  } else where.id = { in: [] }
 
   const [results, gradeDistribution] = await Promise.all([
     db.result.findMany({
@@ -913,7 +930,7 @@ export function formatResultRow(
     studentName: formatStudentName(result),
     assignmentTitle:
       result.assignment?.title || result.exam?.title || "Unknown",
-    className: result.class?.name || "Unknown",
+    className: result.section?.name || result.class?.name || "—",
     score: Number(result.score),
     maxScore: Number(result.maxScore),
     percentage: result.percentage,

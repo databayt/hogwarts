@@ -29,7 +29,7 @@ export async function getGradeForWizard(
           select: { id: true, firstName: true, lastName: true },
         },
         class: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, subjectId: true },
         },
         assignment: {
           select: { id: true, title: true },
@@ -52,7 +52,11 @@ export async function getGradeForWizard(
         score: Number(result.score),
         maxScore: Number(result.maxScore),
         class: result.class
-          ? { id: result.class.id, className: result.class.name }
+          ? {
+              id: result.class.id,
+              name: result.class.name,
+              subjectId: result.class.subjectId,
+            }
           : null,
       } as GradeWizardData,
     }
@@ -76,27 +80,19 @@ export async function createDraftResult(): Promise<
 
     const session = await auth()
 
+    // A draft names a student; the selection step adds the subject, and
+    // with it the section, grade and term. No class is needed.
     const firstStudent = await db.student.findFirst({
       where: { schoolId },
       select: { id: true },
     })
-    const firstClass = await db.class.findFirst({
-      where: { schoolId },
-      select: { id: true },
-    })
 
-    if (!firstStudent || !firstClass) {
-      return {
-        success: false,
-        error: "Students and classes are required before adding grades",
-      }
-    }
+    if (!firstStudent) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
 
     const result = await db.result.create({
       data: {
         schoolId,
         studentId: firstStudent.id,
-        classId: firstClass.id,
         score: 0,
         maxScore: 100,
         percentage: 0,

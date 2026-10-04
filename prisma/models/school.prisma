@@ -610,6 +610,7 @@ model Term {
   reportCards       ReportCard[]
   subjectTeachers   SubjectTeacher[]
   schoolExams       SchoolExam[]
+  results           Result[]
 
   // Timetable optimization relations
   teacherConstraints   TeacherConstraint[]

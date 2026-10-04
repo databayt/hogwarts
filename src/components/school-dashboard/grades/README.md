@@ -44,7 +44,7 @@ src/components/school-dashboard/grades/
 ├── lib/
 │   ├── gradebook.ts          # Shared write path (toPercentage, letterGradeFor,
 │   │                         #   upsertExamResult, upsertGradebookResult,
-│   │                         #   resolveStudentClassForSubject). NOT "use server".
+│   │                         #   resolveStudentSubjectContext). NOT "use server".
 │   ├── report-cards-core.ts  # Set-based term aggregation → ReportCard +
 │   │                         #   ReportCardGrade + rank. Cron/seed callable.
 │   └── paths.ts              # gradesPath()/parentPath() for revalidatePath("…","page")

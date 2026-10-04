@@ -19,6 +19,7 @@ import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { refreshPage } from "@/lib/refresh-page"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import {
   getGradeBoundaries,
   upsertExamResult,
@@ -74,6 +75,8 @@ export async function finalizeExamResults(
         id: true,
         title: true,
         classId: true,
+        gradeId: true,
+        termId: true,
         subjectId: true,
         totalMarks: true,
         school: { select: { preferredLanguage: true } },
@@ -146,7 +149,11 @@ export async function finalizeExamResults(
       ...answered.map((a) => a.studentId),
     ])
 
-    const boundaries = await getGradeBoundaries(schoolId)
+    const [boundaries, scopes] = await Promise.all([
+      getGradeBoundaries(schoolId),
+      getStudentScopes(schoolId, [...studentIds]),
+    ])
+    const scopeOf = new Map(scopes.map((sc) => [sc.studentId, sc]))
 
     let studentsGraded = 0
     for (const studentId of studentIds) {
@@ -159,22 +166,22 @@ export async function finalizeExamResults(
         totalMarks,
         boundaries,
       })
-      // The gradebook (Result) still keys on a class; exams set for a
-      // section or grade reach it when the gradebook moves to sections.
-      if (exam.classId) {
-        await upsertGradebookResult({
-          schoolId,
-          studentId,
-          classId: exam.classId,
-          subjectId: exam.subjectId,
-          examId,
-          score: marksObtained,
-          maxScore: totalMarks,
-          title: exam.title,
-          gradedBy: userId,
-          boundaries,
-        })
-      }
+      await upsertGradebookResult({
+        schoolId,
+        studentId,
+        classId: exam.classId,
+        sectionId: scopeOf.get(studentId)?.sectionId ?? null,
+        academicGradeId:
+          exam.gradeId ?? scopeOf.get(studentId)?.gradeId ?? null,
+        termId: exam.termId,
+        subjectId: exam.subjectId,
+        examId,
+        score: marksObtained,
+        maxScore: totalMarks,
+        title: exam.title,
+        gradedBy: userId,
+        boundaries,
+      })
       studentsGraded++
     }
 
@@ -240,6 +247,8 @@ export async function finalizeStudentExam(
         id: true,
         title: true,
         classId: true,
+        gradeId: true,
+        termId: true,
         subjectId: true,
         totalMarks: true,
         school: { select: { preferredLanguage: true } },
@@ -294,7 +303,10 @@ export async function finalizeStudentExam(
       ) ?? 0
     const totalMarks = paperTotal > 0 ? paperTotal : exam.totalMarks
 
-    const boundaries = await getGradeBoundaries(schoolId)
+    const [boundaries, [scope]] = await Promise.all([
+      getGradeBoundaries(schoolId),
+      getStudentScopes(schoolId, [studentId]),
+    ])
     await upsertExamResult({
       schoolId,
       examId,
@@ -303,21 +315,21 @@ export async function finalizeStudentExam(
       totalMarks,
       boundaries,
     })
-    // See finalizeExamResults: class-less exams skip the gradebook for now.
-    if (exam.classId) {
-      await upsertGradebookResult({
-        schoolId,
-        studentId,
-        classId: exam.classId,
-        subjectId: exam.subjectId,
-        examId,
-        score: marksObtained,
-        maxScore: totalMarks,
-        title: exam.title,
-        gradedBy: userId,
-        boundaries,
-      })
-    }
+    await upsertGradebookResult({
+      schoolId,
+      studentId,
+      classId: exam.classId,
+      sectionId: scope?.sectionId ?? null,
+      academicGradeId: exam.gradeId ?? scope?.gradeId ?? null,
+      termId: exam.termId,
+      subjectId: exam.subjectId,
+      examId,
+      score: marksObtained,
+      maxScore: totalMarks,
+      title: exam.title,
+      gradedBy: userId,
+      boundaries,
+    })
 
     if (opts.notify) {
       await notifyResultsPublished(

@@ -2,10 +2,17 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { auth } from "@/auth"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { getStudentScopes } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
+import { studentExamsWhere } from "@/components/school-dashboard/exams/lib/audience"
+import { resolveStudentSubjectContext } from "@/components/school-dashboard/grades/lib/gradebook"
+import { getDisplayLang } from "@/components/translation/locale"
+import { getLabels } from "@/components/translation/person"
 
 import { selectionSchema, type SelectionFormData } from "./validation"
 
@@ -20,10 +27,10 @@ export async function getGradeSelection(
       where: { id: resultId, schoolId },
       select: {
         studentId: true,
-        classId: true,
         assignmentId: true,
         examId: true,
         subjectId: true,
+        class: { select: { subjectId: true } },
       },
     })
 
@@ -33,10 +40,10 @@ export async function getGradeSelection(
       success: true,
       data: {
         studentId: result.studentId,
-        classId: result.classId,
+        // A legacy row may only name its class.
+        subjectId: result.subjectId ?? result.class?.subjectId ?? "",
         assignmentId: result.assignmentId ?? undefined,
         examId: result.examId ?? undefined,
-        subjectId: result.subjectId ?? undefined,
       },
     }
   } catch (error) {
@@ -52,19 +59,33 @@ export async function updateGradeSelection(
   input: SelectionFormData
 ): Promise<ActionResponse> {
   try {
+    const session = await auth()
+    if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const parsed = selectionSchema.parse(input)
+    const parsed = selectionSchema.safeParse(input)
+    if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    const { studentId, subjectId, assignmentId, examId } = parsed.data
+
+    // The student studies the subject — in their grade, or a legacy class —
+    // and that decides the row's section, grade, term and class.
+    const context = await resolveStudentSubjectContext(
+      schoolId,
+      studentId,
+      subjectId
+    )
+    if (!context) return actionError(ACTION_ERRORS.SUBJECT_NOT_IN_GRADE)
 
     await db.result.updateMany({
       where: { id: resultId, schoolId },
       data: {
-        studentId: parsed.studentId,
-        classId: parsed.classId,
-        assignmentId: parsed.assignmentId ?? null,
-        examId: parsed.examId ?? null,
-        subjectId: parsed.subjectId ?? null,
+        studentId,
+        subjectId,
+        ...context,
+        assignmentId: assignmentId ?? null,
+        examId: examId ?? null,
       },
     })
 
@@ -100,65 +121,83 @@ export async function getStudentsForGrade(): Promise<
   }
 }
 
-/** Get classes for the grade selection dropdown */
-export async function getClassesForGrade(): Promise<
-  ActionResponse<{ id: string; name: string }[]>
-> {
+/** The subjects a student studies: their grade's, plus any legacy class's. */
+export async function getSubjectsForStudent(
+  studentId: string
+): Promise<ActionResponse<{ id: string; name: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const classes = await db.class.findMany({
-      where: { schoolId },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    })
+    const [scope] = await getStudentScopes(schoolId, [studentId])
+    if (!scope) return { success: true, data: [] }
 
-    return { success: true, data: classes }
+    const [selections, classes, lang] = await Promise.all([
+      scope.gradeId
+        ? db.subjectSelection.findMany({
+            where: { schoolId, gradeId: scope.gradeId, isActive: true },
+            select: {
+              catalogSubjectId: true,
+              customName: true,
+              subject: { select: { name: true } },
+            },
+          })
+        : Promise.resolve([]),
+      scope.classIds.length > 0
+        ? db.class.findMany({
+            where: { schoolId, id: { in: scope.classIds } },
+            select: { subject: { select: { id: true, name: true } } },
+          })
+        : Promise.resolve([]),
+      getDisplayLang(),
+    ])
+
+    const byId = new Map<string, string>()
+    for (const s of selections) {
+      if (!byId.has(s.catalogSubjectId)) {
+        byId.set(s.catalogSubjectId, s.customName || s.subject?.name || "")
+      }
+    }
+    for (const c of classes) {
+      if (c.subject && !byId.has(c.subject.id)) {
+        byId.set(c.subject.id, c.subject.name)
+      }
+    }
+    const labels = await getLabels([...byId.values()], lang, schoolId)
+
+    return {
+      success: true,
+      data: [...byId.entries()]
+        .map(([id, name]) => ({ id, name: labels.get(name) ?? name }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to load classes",
+      error: error instanceof Error ? error.message : "Failed to load subjects",
     }
   }
 }
 
-/** Get assignments for a specific class */
-export async function getAssignmentsForGrade(
-  classId: string
+/** Exams the student sits in this subject (their section, grade or class). */
+export async function getExamsForStudent(
+  studentId: string,
+  subjectId: string
 ): Promise<ActionResponse<{ id: string; title: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const assignments = await db.schoolAssignment.findMany({
-      where: { schoolId, classId },
-      select: { id: true, title: true },
-      orderBy: { title: "asc" },
-    })
-
-    return { success: true, data: assignments }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to load assignments",
-    }
-  }
-}
-
-/** Get exams for a specific class */
-export async function getExamsForGrade(
-  classId: string
-): Promise<ActionResponse<{ id: string; title: string }[]>> {
-  try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-
+    const scopes = await getStudentScopes(schoolId, [studentId])
     const exams = await db.schoolExam.findMany({
-      where: { schoolId, classId },
+      where: {
+        schoolId,
+        subjectId,
+        wizardStep: null,
+        ...studentExamsWhere(scopes),
+      },
       select: { id: true, title: true },
-      orderBy: { title: "asc" },
+      orderBy: { examDate: "desc" },
     })
 
     return { success: true, data: exams }
@@ -170,25 +209,36 @@ export async function getExamsForGrade(
   }
 }
 
-/** Get subjects for the grade selection dropdown */
-export async function getSubjectsForGrade(): Promise<
-  ActionResponse<{ id: string; name: string }[]>
-> {
+/** Assignments in this subject from the student's classes. */
+export async function getAssignmentsForStudent(
+  studentId: string,
+  subjectId: string
+): Promise<ActionResponse<{ id: string; title: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const { getSchoolSubjectOptions } = await import("@/lib/school-subjects")
-    const subjects = await getSchoolSubjectOptions(schoolId)
-
-    return {
-      success: true,
-      data: subjects.map((s) => ({ id: s.id, name: s.name })),
+    const [scope] = await getStudentScopes(schoolId, [studentId])
+    if (!scope || scope.classIds.length === 0) {
+      return { success: true, data: [] }
     }
+
+    const assignments = await db.schoolAssignment.findMany({
+      where: {
+        schoolId,
+        classId: { in: scope.classIds },
+        class: { subjectId },
+      },
+      select: { id: true, title: true },
+      orderBy: { title: "asc" },
+    })
+
+    return { success: true, data: assignments }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to load subjects",
+      error:
+        error instanceof Error ? error.message : "Failed to load assignments",
     }
   }
 }

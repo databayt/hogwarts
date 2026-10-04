@@ -32,7 +32,12 @@ vi.mock("@/components/lumos/lib/lesson-quiz", async (importActual) => {
   return { ...actual, fetchLessonQuizQuestions: vi.fn() }
 })
 vi.mock("@/components/school-dashboard/grades/lib/gradebook", () => ({
-  resolveStudentClassForSubject: vi.fn().mockResolvedValue("class-1"),
+  resolveStudentSubjectContext: vi.fn().mockResolvedValue({
+    classId: null,
+    sectionId: "section-1",
+    academicGradeId: "grade-1",
+    termId: "term-1",
+  }),
   upsertGradebookResult: vi.fn().mockResolvedValue({ id: "res-1" }),
 }))
 

@@ -13,6 +13,7 @@ import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
 } from "@/lib/rbac/ui-permissions"
+import { actionErrorMessage } from "@/lib/resolve-action-error"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -23,6 +24,7 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   GridCard,
   GridContainer,
@@ -55,6 +57,7 @@ function ResultsTableInner({
 }: ResultsTableProps) {
   const router = useRouter()
   const t = dictionary
+  const { dictionary: fullDictionary } = useDictionary()
 
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
@@ -163,9 +166,11 @@ function ResultsTableInner({
     if (result.success && result.data) {
       router.push(`/${lang}/grades/add/${result.data.id}/selection`)
     } else {
-      ErrorToast(result.error || t.failedToCreateResult)
+      ErrorToast(
+        actionErrorMessage(result.error, fullDictionary, t.failedToCreateResult)
+      )
     }
-  }, [router, lang])
+  }, [router, lang, fullDictionary, t.failedToCreateResult])
 
   // Handle edit
   const handleEdit = useCallback(

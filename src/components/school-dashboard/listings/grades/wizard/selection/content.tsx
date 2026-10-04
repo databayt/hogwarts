@@ -26,7 +26,8 @@ export default function SelectionContent() {
   useEffect(() => {
     if (data) {
       setIsValid(
-        data.studentId.trim().length >= 1 && data.classId.trim().length >= 1
+        data.studentId.trim().length >= 1 &&
+          (data.subjectId ?? data.class?.subjectId ?? "").length >= 1
       )
     }
   }, [data])
@@ -44,7 +45,7 @@ export default function SelectionContent() {
           title={d?.wizardSelectionTitle || "Student & Assignment"}
           description={
             d?.wizardSelectionDescription ||
-            "Select the student, class, and optionally an assignment or exam."
+            "Select the student, the subject, and optionally an exam or assignment."
           }
         />
         <SelectionForm
@@ -54,10 +55,9 @@ export default function SelectionContent() {
             data
               ? {
                   studentId: data.studentId,
-                  classId: data.classId,
+                  subjectId: data.subjectId ?? data.class?.subjectId ?? "",
                   assignmentId: data.assignmentId ?? undefined,
                   examId: data.examId ?? undefined,
-                  subjectId: data.subjectId ?? undefined,
                 }
               : undefined
           }

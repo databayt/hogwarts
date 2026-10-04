@@ -315,11 +315,20 @@ describe("formatResultRow", () => {
     expect(row.assignmentTitle).toBe("Unknown")
   })
 
-  it("returns 'Unknown' for missing class", () => {
+  it("shows a dash when the row has neither section nor class", () => {
     const row = formatResultRow({
       ...baseRow,
       class: null,
+      section: null,
     } as unknown as Parameters<typeof formatResultRow>[0])
-    expect(row.className).toBe("Unknown")
+    expect(row.className).toBe("—")
+  })
+
+  it("names the section ahead of a legacy class", () => {
+    const row = formatResultRow({
+      ...baseRow,
+      section: { id: "sec-1", name: "Grade 7 - A" },
+    } as unknown as Parameters<typeof formatResultRow>[0])
+    expect(row.className).toBe("Grade 7 - A")
   })
 })

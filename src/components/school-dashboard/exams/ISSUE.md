@@ -38,9 +38,9 @@ pickers were hardcoded placeholders ("Class 1", "Mathematics") that could never 
 
 Open:
 
-- [ ] **Gradebook** — `Result.classId` is still required, so finalize writes the
-      gradebook row only for legacy class exams. S5 moves Result to section +
-      subject and must backfill Result from ExamResult for class-less exams.
+- [x] **Gradebook** — done in S5: `Result` carries section, grade and term, and
+      finalize writes it for every exam (see the grades ISSUE). No class-less
+      exam was finalized before S5, so nothing needed backfilling from ExamResult.
 - [ ] Analytics (`getClassPerformance`), `progress/*`, `quick/*` still read classes (S6/S9).
 - [ ] Paper preview stays blank locally: react-pdf's Rubik font URL 404s (pre-existing).
 - [ ] Close #429 / #428 after deploy + prod DDL.

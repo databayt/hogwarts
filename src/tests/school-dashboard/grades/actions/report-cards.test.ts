@@ -77,14 +77,83 @@ describe("generateReportCards", () => {
     expect(r.success).toBe(false)
   })
 
-  it("returns zero counts when the term has no classes", async () => {
+  it("returns zero counts for a school with no classes and no students", async () => {
     vi.mocked(db.term.findFirst).mockResolvedValue({ id: "term-1" } as never)
     vi.mocked(db.schoolGradingConfig.findUnique).mockResolvedValue(null)
     vi.mocked(db.class.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.student.findMany).mockResolvedValue([] as never)
     const r = await generateReportCards({ termId: "term-1" })
     expect(r.success).toBe(true)
     if (r.success)
       expect(r.data).toEqual({ created: 0, updated: 0, skipped: 0 })
+  })
+
+  it("cards a school without classes from rows that carry the term", async () => {
+    vi.mocked(db.term.findFirst).mockResolvedValue({
+      id: "term-1",
+      startDate: new Date("2026-01-01"),
+      endDate: new Date("2026-04-01"),
+    } as never)
+    vi.mocked(db.schoolGradingConfig.findUnique).mockResolvedValue(null)
+    vi.mocked(db.class.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.student.findMany).mockResolvedValue([
+      { id: "stu-1", academicGradeId: null, section: { gradeId: "ag-1" } },
+    ] as never)
+    // A score from an exam set for the section: no class, subject on the row.
+    vi.mocked(db.result.findMany).mockResolvedValue([
+      {
+        studentId: "stu-1",
+        classId: null,
+        subjectId: "sub-math",
+        examId: "ex-1",
+        score: 45,
+        maxScore: 50,
+      },
+    ] as never)
+    // The same exam's ExamResult must not count twice.
+    vi.mocked(db.examResult.findMany).mockResolvedValue([
+      {
+        studentId: "stu-1",
+        examId: "ex-1",
+        marksObtained: 45,
+        totalMarks: 50,
+        exam: { classId: null, subjectId: "sub-math" },
+      },
+    ] as never)
+    vi.mocked(db.attendance.groupBy).mockResolvedValue([] as never)
+    vi.mocked(db.academicGrade.findMany).mockResolvedValue([
+      { id: "ag-1", yearLevelId: "yl-1" },
+    ] as never)
+    vi.mocked(db.reportCard.findMany)
+      .mockResolvedValueOnce([] as never)
+      .mockResolvedValueOnce([{ id: "rc-1", studentId: "stu-1" }] as never)
+    vi.mocked(db.reportCard.createMany).mockResolvedValue({} as never)
+    vi.mocked(db.reportCardGrade.deleteMany).mockResolvedValue({} as never)
+    vi.mocked(db.reportCardGrade.createMany).mockResolvedValue({} as never)
+
+    const r = await generateReportCards({ termId: "term-1" })
+
+    expect(r.success).toBe(true)
+    if (r.success)
+      expect(r.data).toEqual({ created: 1, updated: 0, skipped: 0 })
+    const resultWhere = vi.mocked(db.result.findMany).mock.calls[0][0] as {
+      where: { OR: unknown[] }
+    }
+    expect(resultWhere.where.OR).toEqual([{ termId: "term-1" }])
+    const gradeArg = vi.mocked(db.reportCardGrade.createMany).mock
+      .calls[0][0] as { data: Array<Record<string, unknown>> }
+    expect(gradeArg.data).toHaveLength(1)
+    expect(gradeArg.data[0]).toMatchObject({
+      subjectId: "sub-math",
+      score: 45,
+      maxScore: 50,
+      percentage: 90,
+    })
+    const cardArg = vi.mocked(db.reportCard.createMany).mock.calls[0][0] as {
+      data: Array<Record<string, unknown>>
+    }
+    // The year level comes from the section's grade.
+    expect(cardArg.data[0]).toMatchObject({ yearLevelId: "yl-1" })
   })
 
   it("returns zero counts when no students match", async () => {
@@ -212,7 +281,6 @@ describe("generateReportCards", () => {
     for (const call of [
       vi.mocked(db.class.findMany).mock.calls[0][0],
       vi.mocked(db.student.findMany).mock.calls[0][0],
-      vi.mocked(db.studentClass.findMany).mock.calls[0][0],
       vi.mocked(db.examResult.findMany).mock.calls[0][0],
       vi.mocked(db.result.findMany).mock.calls[0][0],
       vi.mocked(db.attendance.groupBy).mock.calls[0][0],

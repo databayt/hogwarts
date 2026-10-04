@@ -8,10 +8,37 @@ maturity: Built+Polish
 completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-08-14
+last_audited: 2026-10-04
 ---
 
 # Grades — Production Readiness Tracker
+
+## 2026-10-04 — gradebook without classes (LOCAL, not pushed)
+
+Schools created by onboarding have no `Class` rows, so the gradebook could not
+hold their scores: `Result.classId` was required, report cards started from the
+term's classes (zero cards), and "Add grade" refused to start ("Students and
+classes are required").
+
+- `Result` carries `sectionId` / `academicGradeId` / `termId`; `classId` optional
+  (migration `20261004140000_result_scope` — **owed on prod**, then the
+  backfill `prisma/sql/class-removal/01-results-scope.sql`).
+- Finalized exams write the gradebook row for every exam, scoped to the
+  student's section and the exam's grade and term.
+- Report cards aggregate by (student, subject) from term-scoped rows and legacy
+  class rows alike — `computeReportCards` (no writes) + `generateReportCardsCore`.
+- Lumos quizzes record through `resolveStudentSubjectContext` (grade subjects,
+  not just enrolled classes).
+- The grade wizard picks student → subject (their grade's) → optional exam /
+  assignment; drafts need no class. The list, detail, CSV and certificate show
+  the section, falling back to the class.
+
+Open:
+
+- [ ] Reconcile seeded `Result.subjectId` that disagrees with the class before
+      Phase 4 drops `classId`.
+- [ ] Quick assessments still write a class (S9); assignments still class-based (S7).
+- [ ] `ResultCreateForm` / `student-assignment.tsx` are unused class-era UI (S15).
 
 **Status:** BUILT — gradebook spine live, report-card PDF deferred
 **Completion:** ~94%

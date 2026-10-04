@@ -9,7 +9,8 @@ export interface GradeWizardData {
   id: string
   schoolId: string
   studentId: string
-  classId: string
+  /** Legacy class; new rows are scoped by section, grade and term. */
+  classId: string | null
   assignmentId: string | null
   examId: string | null
   subjectId: string | null
@@ -26,7 +27,7 @@ export interface GradeWizardData {
   yearLevelId: string | null
   wizardStep: string | null
   student: { id: string; firstName: string; lastName: string } | null
-  class: { id: string; name: string } | null
+  class: { id: string; name: string; subjectId: string } | null
   assignment: { id: string; title: string } | null
   exam: { id: string; title: string } | null
   subject: { id: string; name: string } | null

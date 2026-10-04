@@ -38,12 +38,13 @@ export default async function GradeDetailPage({ params }: Props) {
   // Fetch analytics data in parallel
   const [history, classStats] = await Promise.all([
     getStudentGradeHistory(schoolId, grade.studentId),
-    getClassGradeStats(
-      schoolId,
-      grade.classId,
-      grade.assignmentId,
-      grade.examId
-    ),
+    getClassGradeStats(schoolId, {
+      classId: grade.classId,
+      sectionId: grade.sectionId,
+      subjectId: grade.subjectId,
+      assignmentId: grade.assignmentId,
+      examId: grade.examId,
+    }),
   ])
 
   // Calculate student rank

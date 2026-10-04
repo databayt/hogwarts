@@ -3,12 +3,12 @@
 
 import { z } from "zod"
 
+/** A grade is for a student in a subject, optionally against an exam or assignment. */
 export const selectionSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
-  classId: z.string().min(1, "Class is required"),
+  subjectId: z.string().min(1, "Subject is required"),
   assignmentId: z.string().optional(),
   examId: z.string().optional(),
-  subjectId: z.string().optional(),
 })
 
 export type SelectionFormData = z.infer<typeof selectionSchema>
