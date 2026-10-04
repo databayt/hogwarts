@@ -23,6 +23,11 @@ import {
 } from "@/lib/cache/exam-cache"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+  type ExamAudience,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 import type { ActionResponse } from "../../manage/actions/types"
 import { generatePDF } from "../lib/pdf-generator"
@@ -53,7 +58,10 @@ const batchPDFSchema = z.object({
 
 const termReportCardSchema = z.object({
   termId: z.string().min(1, "Term ID is required"),
+  /** Legacy: one class's students. Prefer sectionId / gradeId. */
   classId: z.string().optional(),
+  sectionId: z.string().optional(),
+  gradeId: z.string().optional(),
   studentIds: z.array(z.string()).optional(),
   template: z
     .enum(["classic", "modern", "minimal"])
@@ -114,9 +122,7 @@ export async function generateBatchExamPDFs(
         schoolId,
       },
       include: {
-        class: {
-          select: { name: true },
-        },
+        ...examAudienceInclude,
         subject: {
           select: { name: true },
         },
@@ -205,7 +211,14 @@ export async function generateBatchExamPDFs(
  */
 async function processBatchPDFGeneration(
   batchId: string,
-  exam: any,
+  exam: ExamAudience & {
+    id: string
+    title: string
+    examDate: Date
+    totalMarks: number
+    passingMarks: number
+    subject: { name: string }
+  },
   studentIds: string[],
   options: any,
   schoolId: string
@@ -311,7 +324,7 @@ async function processBatchPDFGeneration(
         exam: {
           title: exam.title,
           date: exam.examDate,
-          className: exam.class.name,
+          className: examAudienceLabel(exam),
           name: exam.subject.name,
           totalMarks: exam.totalMarks,
           passingMarks: exam.passingMarks,
@@ -504,7 +517,14 @@ export async function generateBatchReportCards(
     if (parsed.studentIds && parsed.studentIds.length > 0) {
       studentFilter.id = { in: parsed.studentIds }
     }
-    if (parsed.classId) {
+    if (parsed.sectionId) {
+      studentFilter.sectionId = parsed.sectionId
+    } else if (parsed.gradeId) {
+      studentFilter.OR = [
+        { section: { gradeId: parsed.gradeId } },
+        { sectionId: null, academicGradeId: parsed.gradeId },
+      ]
+    } else if (parsed.classId) {
       studentFilter.studentClasses = {
         some: {
           classId: parsed.classId,

@@ -5,6 +5,12 @@ import { NextRequest, NextResponse } from "next/server"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getStudentScopes } from "@/lib/teaching-scope"
+import {
+  examAudienceInclude,
+  examAudienceLabel,
+  studentExamsWhere,
+} from "@/components/school-dashboard/exams/lib/audience"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
 
@@ -23,8 +29,35 @@ export async function GET(request: NextRequest) {
     const perPage = parseInt(searchParams.get("per_page") || "30")
     const skip = (page - 1) * perPage
 
+    // Students and guardians see the exams they — or their children — sit.
+    let audience: Prisma.SchoolExamWhereInput = {}
+    if (auth.role === "STUDENT" || auth.role === "GUARDIAN") {
+      let studentIds: string[] = []
+      if (auth.role === "STUDENT") {
+        const student = await db.student.findFirst({
+          where: { userId: auth.userId, schoolId: auth.schoolId },
+          select: { id: true },
+        })
+        studentIds = student ? [student.id] : []
+      } else {
+        const links = await db.studentGuardian.findMany({
+          where: {
+            schoolId: auth.schoolId,
+            guardian: { userId: auth.userId },
+          },
+          select: { studentId: true },
+        })
+        studentIds = links.map((l) => l.studentId)
+      }
+      audience = studentExamsWhere(
+        await getStudentScopes(auth.schoolId, studentIds)
+      )
+    }
+
     const where: Prisma.SchoolExamWhereInput = {
       schoolId: auth.schoolId,
+      wizardStep: null,
+      ...audience,
       ...(status ? { status: status as Prisma.EnumExamStatusFilter } : {}),
       ...(upcoming
         ? {
@@ -42,6 +75,7 @@ export async function GET(request: NextRequest) {
         take: perPage,
         include: {
           subject: { select: { id: true, name: true } },
+          ...examAudienceInclude,
         },
       }),
       db.schoolExam.count({ where }),
@@ -61,6 +95,11 @@ export async function GET(request: NextRequest) {
       status: e.status,
       instructions: e.instructions,
       subject_name: e.subject?.name || null,
+      // Who sits it. class_* stays for app builds that still read it.
+      grade_id: e.gradeId,
+      section_id: e.sectionId,
+      class_id: e.classId,
+      class_name: examAudienceLabel(e) || null,
     }))
 
     return NextResponse.json({ data, total, page, per_page: perPage })

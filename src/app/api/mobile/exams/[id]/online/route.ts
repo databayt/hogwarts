@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { examReachesStudents } from "@/components/school-dashboard/exams/lib/roster"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
 
@@ -49,7 +50,11 @@ export async function GET(
       },
     })
 
-    if (!exam) {
+    // Only the students the exam is set for may sit it (as on the web).
+    if (
+      !exam ||
+      !(await examReachesStudents(auth.schoolId, examId, [student.id]))
+    ) {
       return NextResponse.json({ error: "Exam not found" }, { status: 404 })
     }
 
