@@ -6,6 +6,13 @@
 
 ---
 
+## 2026-10-04 — whose subjects
+
+`getSubjectIdsForTeacher` never read SubjectTeacher, so a teacher assigned a
+subject (with no class, slot or expertise for it) didn't see it; it does now.
+`getSubjectIdsForStudent` gates by the section's grade (it used the placed
+grade, which promotion could leave behind) and honours the student's stream.
+
 ## 2026-10-04 — a new subject reaches the grade's students in Lumos
 
 Adding a subject to a grade, or bringing one back (`createSubject`,

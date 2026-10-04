@@ -20,41 +20,57 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { generateReportCards } from "@/components/school-dashboard/grades/actions/report-cards"
 
 interface GenerateButtonProps {
   termId: string
-  classes: { id: string; name: string }[]
+  /** Grades in order, each with its sections — generate one or the other. */
+  grades: Array<{
+    id: string
+    name: string
+    sections: Array<{ id: string; name: string }>
+  }>
+  copy: Dictionary["results"]["reportCards"]
 }
 
-export function GenerateButton({ termId, classes }: GenerateButtonProps) {
+export function GenerateButton({ termId, grades, copy }: GenerateButtonProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [classId, setClassId] = useState<string>("all")
+  // "all", "g:<gradeId>" or "s:<sectionId>"
+  const [scope, setScope] = useState<string>("all")
   const [isGenerating, setIsGenerating] = useState(false)
+  const t = copy.generateDialog
 
   const handleGenerate = useCallback(async () => {
     setIsGenerating(true)
 
     const result = await generateReportCards({
       termId,
-      classId: classId === "all" ? undefined : classId,
+      gradeId: scope.startsWith("g:") ? scope.slice(2) : undefined,
+      sectionId: scope.startsWith("s:") ? scope.slice(2) : undefined,
     })
 
     if (result.success && result.data) {
-      // Rich pipeline returns {created, updated, skipped}. To match the
-      // old "generated" UX, treat created + updated as the count of
-      // cards now in good shape (skipped = no grades to aggregate).
+      // Rich pipeline returns {created, updated, skipped}: created + updated
+      // is the count of cards now in good shape (skipped = no grades).
       const generated = result.data.created + result.data.updated
       toast.success(
-        `Generated ${generated} report card${generated !== 1 ? "s" : ""}` +
-          (result.data.skipped > 0
-            ? ` (${result.data.skipped} skipped — no grades to aggregate)`
-            : "")
+        t.generated.replace("{count}", String(generated)),
+        result.data.skipped > 0
+          ? {
+              description: t.skipped.replace(
+                "{count}",
+                String(result.data.skipped)
+              ),
+            }
+          : undefined
       )
       setOpen(false)
       router.refresh()
@@ -63,39 +79,43 @@ export function GenerateButton({ termId, classes }: GenerateButtonProps) {
     }
 
     setIsGenerating(false)
-  }, [termId, classId, router])
+  }, [termId, scope, router, t])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Sparkles className="h-4 w-4" />
-          Generate Report Cards
+          {copy.actions.generate}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Generate Report Cards</DialogTitle>
-          <DialogDescription>
-            Generate report cards from exam results for the selected term. This
-            will aggregate all exam scores by subject and create a PDF report
-            card for each student.
-          </DialogDescription>
+          <DialogTitle>{t.title}</DialogTitle>
+          <DialogDescription>{t.description}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Class (optional)</label>
-            <Select value={classId} onValueChange={setClassId}>
+            <label className="text-sm font-medium">{t.scope}</label>
+            <Select value={scope} onValueChange={setScope}>
               <SelectTrigger>
-                <SelectValue placeholder="All classes" />
+                <SelectValue placeholder={copy.filters.allGrades} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {classes.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
+                <SelectItem value="all">{copy.filters.allGrades}</SelectItem>
+                {grades.map((grade) => (
+                  <SelectGroup key={grade.id}>
+                    <SelectLabel>{grade.name}</SelectLabel>
+                    <SelectItem value={`g:${grade.id}`}>
+                      {t.wholeGrade.replace("{grade}", grade.name)}
+                    </SelectItem>
+                    {grade.sections.map((section) => (
+                      <SelectItem key={section.id} value={`s:${section.id}`}>
+                        {section.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
@@ -111,10 +131,10 @@ export function GenerateButton({ termId, classes }: GenerateButtonProps) {
             {isGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Generating...
+                {copy.actions.generating}
               </>
             ) : (
-              "Generate"
+              t.generate
             )}
           </Button>
         </DialogFooter>

@@ -31,6 +31,9 @@ vi.mock("@/lib/db", () => ({
     classTeacher: {
       findMany: vi.fn(),
     },
+    subjectTeacher: {
+      findMany: vi.fn(),
+    },
     teacherSubjectExpertise: {
       findMany: vi.fn(),
     },
@@ -102,6 +105,35 @@ describe("Subject Queries - Student & Teacher Filtering", () => {
   })
 
   describe("getSubjectIdsForStudent", () => {
+    it("gates by the section's grade and the student's stream", async () => {
+      const { db } = await import("@/lib/db")
+      vi.mocked(db.studentClass.findMany).mockResolvedValue([])
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        sectionId: "8a",
+        academicGradeId: "grade-7",
+        academicStreamId: "sci",
+        academicGrade: { gradeNumber: 7 },
+        section: { gradeId: "grade-8", grade: { gradeNumber: 8 } },
+      } as never)
+      vi.mocked(db.timetable.findMany).mockResolvedValue([])
+      vi.mocked(db.subjectSelection.findMany).mockResolvedValue([
+        { catalogSubjectId: "math", streamId: null },
+        { catalogSubjectId: "physics", streamId: "sci" },
+        { catalogSubjectId: "history", streamId: "arts" },
+      ] as never)
+      vi.mocked(db.class.findMany).mockResolvedValue([])
+
+      const subjectIds = await getSubjectIdsForStudent(
+        mockSchoolId,
+        mockStudentId
+      )
+
+      expect(
+        vi.mocked(db.subjectSelection.findMany).mock.calls[0][0]!.where
+      ).toEqual({ schoolId: mockSchoolId, gradeId: "grade-8", isActive: true })
+      expect([...subjectIds].sort()).toEqual(["math", "physics"])
+    })
+
     it("returns the grade curriculum plus attachments the catalog places in that grade", async () => {
       const { db } = await import("@/lib/db")
       vi.mocked(db.studentClass.findMany).mockResolvedValue([
@@ -212,8 +244,11 @@ describe("Subject Queries - Student & Teacher Filtering", () => {
   })
 
   describe("getSubjectIdsForTeacher", () => {
-    it("aggregates subjects from classes, co-teaching, timetable, and expertise", async () => {
+    it("aggregates subjects from assignments, classes, co-teaching, timetable, and expertise", async () => {
       const { db } = await import("@/lib/db")
+      vi.mocked(db.subjectTeacher.findMany).mockResolvedValue([
+        { subjectId: "subj-assigned" },
+      ] as never)
       vi.mocked(db.class.findMany).mockResolvedValue([
         { subjectId: "subj-primary" },
       ] as any)
@@ -235,7 +270,9 @@ describe("Subject Queries - Student & Teacher Filtering", () => {
       expect(subjectIds.has("subj-coteach")).toBe(true)
       expect(subjectIds.has("subj-timetable")).toBe(true)
       expect(subjectIds.has("subj-expertise")).toBe(true)
-      expect(subjectIds.size).toBe(4)
+      // A subject assigned to them in a section (SubjectTeacher)
+      expect(subjectIds.has("subj-assigned")).toBe(true)
+      expect(subjectIds.size).toBe(5)
     })
   })
 })

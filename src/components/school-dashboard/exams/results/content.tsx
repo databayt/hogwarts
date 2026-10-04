@@ -33,12 +33,12 @@ interface Props {
   searchParams: Promise<SearchParams>
 }
 
-// Helper to get student IDs for the current user (student or guardian)
+// The students whose results the viewer sees: themselves, or their children
 async function getStudentScope(
   role: string | undefined,
   userId: string | undefined,
   schoolId: string
-): Promise<{ studentIds: string[]; classIds: string[] } | null> {
+): Promise<{ studentIds: string[] } | null> {
   if (!userId) return null
 
   if (role === "STUDENT") {
@@ -47,14 +47,7 @@ async function getStudentScope(
       select: { id: true },
     })
     if (!student) return null
-    const classes = await db.studentClass.findMany({
-      where: { studentId: student.id, schoolId },
-      select: { classId: true },
-    })
-    return {
-      studentIds: [student.id],
-      classIds: classes.map((c) => c.classId),
-    }
+    return { studentIds: [student.id] }
   }
 
   if (role === "GUARDIAN") {
@@ -67,15 +60,7 @@ async function getStudentScope(
       where: { guardianId: guardian.id, schoolId },
       select: { studentId: true },
     })
-    const childIds = studentGuardians.map((sg) => sg.studentId)
-    const classes = await db.studentClass.findMany({
-      where: { studentId: { in: childIds }, schoolId },
-      select: { classId: true },
-    })
-    return {
-      studentIds: childIds,
-      classIds: [...new Set(classes.map((c) => c.classId))],
-    }
+    return { studentIds: studentGuardians.map((sg) => sg.studentId) }
   }
 
   return null

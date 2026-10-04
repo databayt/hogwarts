@@ -14,6 +14,7 @@
 
 import { db } from "@/lib/db"
 import { getSchoolSubjects } from "@/lib/school-subjects"
+import { offeredToStream } from "@/lib/teaching-audience"
 
 // ============================================================================
 // Types
@@ -100,10 +101,16 @@ export async function getSubjectIdsForStudent(
       select: {
         sectionId: true,
         academicGradeId: true,
+        academicStreamId: true,
         academicGrade: { select: { gradeNumber: true } },
+        section: {
+          select: { gradeId: true, grade: { select: { gradeNumber: true } } },
+        },
       },
     }),
   ])
+  // The section's grade wins over the grade the student was placed in
+  const gradeId = student?.section?.gradeId ?? student?.academicGradeId
 
   // Subjects this student is directly attached to.
   const attached = new Set<string>()
@@ -132,12 +139,12 @@ export async function getSubjectIdsForStudent(
   }
 
   // Without a grade there is nothing to gate against.
-  if (!student?.academicGradeId) return attached
+  if (!student || !gradeId) return attached
 
   // Nothing attached yet — fall back to every class registered for the grade.
   if (attached.size === 0) {
     const gradeClasses = await db.class.findMany({
-      where: { schoolId, gradeId: student.academicGradeId },
+      where: { schoolId, gradeId },
       select: { subjectId: true },
       distinct: ["subjectId"],
     })
@@ -146,17 +153,24 @@ export async function getSubjectIdsForStudent(
     }
   }
 
+  // The grade's subjects for the student's stream (all of them without one)
   const gradeSelections = await db.subjectSelection.findMany({
-    where: { schoolId, gradeId: student.academicGradeId, isActive: true },
-    select: { catalogSubjectId: true },
+    where: { schoolId, gradeId, isActive: true },
+    select: { catalogSubjectId: true, streamId: true },
   })
-  const subjectIds = new Set(gradeSelections.map((s) => s.catalogSubjectId))
+  const subjectIds = new Set(
+    gradeSelections
+      .filter((s) => offeredToStream(s.streamId, student.academicStreamId))
+      .map((s) => s.catalogSubjectId)
+  )
 
   // Keep an attachment only when the catalog agrees it belongs to this grade.
   // A subject that declares no grades at all stays in — there is nothing to
   // check it against.
   const unvetted = Array.from(attached).filter((id) => !subjectIds.has(id))
-  const gradeNumber = student.academicGrade?.gradeNumber
+  const gradeNumber = student.section
+    ? student.section.grade?.gradeNumber
+    : student.academicGrade?.gradeNumber
 
   if (unvetted.length > 0) {
     if (gradeNumber == null) {
@@ -180,10 +194,10 @@ export async function getSubjectIdsForStudent(
 /**
  * Resolve all catalog subject IDs associated with a teacher in a school.
  * Considers:
- * 1. Primary classes taught (Class.teacherId)
- * 2. Co-teaching classes (ClassTeacher.teacherId)
- * 3. Timetable slots assigned (Timetable.teacherId)
- * 4. Teacher subject expertise (TeacherSubjectExpertise.teacherId)
+ * 1. Subjects assigned to them in any section (SubjectTeacher)
+ * 2. Timetable slots assigned (Timetable.teacherId)
+ * 3. Teacher subject expertise (TeacherSubjectExpertise.teacherId)
+ * 4. Legacy classes they led or co-taught (Class / ClassTeacher)
  */
 export async function getSubjectIdsForTeacher(
   schoolId: string,
@@ -191,8 +205,13 @@ export async function getSubjectIdsForTeacher(
 ): Promise<Set<string>> {
   const subjectIds = new Set<string>()
 
-  const [teacherClasses, coTaughtClasses, timetableSlots, expertise] =
+  const [assigned, teacherClasses, coTaughtClasses, timetableSlots, expertise] =
     await Promise.all([
+      db.subjectTeacher.findMany({
+        where: { schoolId, teacherId },
+        select: { subjectId: true },
+        distinct: ["subjectId"],
+      }),
       db.class.findMany({
         where: { schoolId, teacherId },
         select: { subjectId: true },
@@ -213,6 +232,7 @@ export async function getSubjectIdsForTeacher(
       }),
     ])
 
+  for (const a of assigned) subjectIds.add(a.subjectId)
   for (const c of teacherClasses) {
     if (c.subjectId) subjectIds.add(c.subjectId)
   }

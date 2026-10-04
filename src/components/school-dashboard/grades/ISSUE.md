@@ -13,6 +13,14 @@ last_audited: 2026-10-04
 
 # Grades — Production Readiness Tracker
 
+## 2026-10-04 — report cards generate by grade or section (LOCAL, not pushed)
+
+The Generate dialog on `/exams/report-cards` offered only the term's classes
+(nothing in a new school), so a school could generate for everyone or no one.
+It offers each grade (whole) and its sections — the core has taken
+`gradeId` / `sectionId` since the gradebook switch — and the dialog's copy
+moved to `results.reportCards.generateDialog` (it was hardcoded English).
+
 ## 2026-10-04 — promotion: admins decide, sections follow (LOCAL, not pushed)
 
 - [x] **P0 — any signed-in school user could run promotion.** Every action

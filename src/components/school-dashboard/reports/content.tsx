@@ -88,11 +88,19 @@ export async function ReportCardsContent({
   const published = reportCards.filter((r) => r.isPublished).length
   const withPdf = reportCards.filter((r) => r.pdfUrl).length
 
-  // Fetch classes for this term (for generation)
-  const classes = await db.class.findMany({
-    where: { schoolId, termId: activeTerm.id },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
+  // Grades and their sections — generation can be narrowed to either
+  const grades = await db.academicGrade.findMany({
+    where: { schoolId },
+    select: {
+      id: true,
+      name: true,
+      sections: {
+        where: { schoolId },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      },
+    },
+    orderBy: { gradeNumber: "asc" },
   })
 
   const termName = (t: (typeof terms)[number], template?: string) =>
@@ -171,7 +179,13 @@ export async function ReportCardsContent({
       {/* Actions */}
       {canManage && (
         <div className="flex flex-wrap items-center gap-2 max-md:[&_button]:h-10 max-md:[&_button]:rounded-full max-md:[&_button]:px-5">
-          <GenerateButton termId={activeTerm.id} classes={classes} />
+          {copy && (
+            <GenerateButton
+              termId={activeTerm.id}
+              grades={grades}
+              copy={copy}
+            />
+          )}
           {total > 0 && published < total && (
             <PublishButton
               reportCardIds={reportCards

@@ -149,17 +149,6 @@ export const assignmentDetailSelect = {
           name: true,
         },
       },
-      studentClasses: {
-        include: {
-          student: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-      },
     },
   },
   submissions: {

@@ -267,6 +267,15 @@
       "generating": "Generating...",
       "publish": "Publish"
     },
+    "generateDialog": {
+      "title": "Generate Report Cards",
+      "description": "Aggregate this term's results by subject into a report card for each student.",
+      "scope": "Grade or section (optional)",
+      "wholeGrade": "{grade} — whole grade",
+      "generate": "Generate",
+      "generated": "Generated {count} report cards",
+      "skipped": "{count} skipped — no grades to aggregate"
+    },
     "count": "report cards",
     "columns": {
       "rank": "Rank",
