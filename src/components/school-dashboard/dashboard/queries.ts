@@ -241,32 +241,42 @@ async function teacherResourceUsage(
     getTeacherPairs(schoolId, teacher.id),
   ])
 
-  const [ungradedWork, studentCount, attendanceMarked] = await Promise.all([
-    // Ungraded submissions on work the teacher teaches
-    db.assignmentSubmission.count({
-      where: {
-        schoolId,
-        status: "SUBMITTED",
-        assignment: teacherAssignmentsWhere({
+  const [ungradedWork, studentCount, attendanceMarked, lessonsThisWeek] =
+    await Promise.all([
+      // Ungraded submissions on work the teacher teaches
+      db.assignmentSubmission.count({
+        where: {
+          schoolId,
+          status: "SUBMITTED",
+          assignment: teacherAssignmentsWhere({
+            teacherId: teacher.id,
+            userId,
+            pairs,
+          }),
+        },
+      }),
+      // Students in the teacher's sections
+      db.student.count({
+        where: { schoolId, sectionId: { in: sectionIds } },
+      }),
+      // Attendance marked this week in the teacher's sections
+      db.attendance.count({
+        where: {
+          schoolId,
+          sectionId: { in: sectionIds },
+          date: { gte: weekStart, lt: weekEnd },
+        },
+      }),
+      // The teacher's periods in this week's timetable (active term)
+      db.timetable.count({
+        where: {
+          schoolId,
           teacherId: teacher.id,
-          userId,
-          pairs,
-        }),
-      },
-    }),
-    // Students in the teacher's sections
-    db.student.count({
-      where: { schoolId, sectionId: { in: sectionIds } },
-    }),
-    // Attendance marked this week in the teacher's sections
-    db.attendance.count({
-      where: {
-        schoolId,
-        sectionId: { in: sectionIds },
-        date: { gte: weekStart, lt: weekEnd },
-      },
-    }),
-  ])
+          weekOffset: 0,
+          term: { isActive: true },
+        },
+      }),
+    ])
 
   // Estimate attendance completion
   const expectedAttendance = studentCount * 5 // Approximate: 5 school days
@@ -279,7 +289,7 @@ async function teacherResourceUsage(
     {
       key: "lessonsThisWeek",
       name: "Lessons This Week",
-      used: 0,
+      used: lessonsThisWeek,
       limit: 24,
       unit: "lessons",
     },

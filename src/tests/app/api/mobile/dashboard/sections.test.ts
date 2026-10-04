@@ -24,6 +24,7 @@ vi.mock("@/lib/db", () => ({
     examResult: { findMany: vi.fn() },
     schoolExam: { findFirst: vi.fn() },
     attendance: { count: vi.fn() },
+    timetable: { count: vi.fn() },
     event: { count: vi.fn() },
     userInvoice: { findMany: vi.fn(), count: vi.fn(), aggregate: vi.fn() },
     expense: { findMany: vi.fn() },
@@ -225,6 +226,7 @@ describe("GET /api/mobile/dashboard/sections", () => {
     vi.mocked(db.assignmentSubmission.count).mockResolvedValue(10)
     vi.mocked(db.student.count).mockResolvedValue(90)
     vi.mocked(db.attendance.count).mockResolvedValue(225)
+    vi.mocked(db.timetable.count).mockResolvedValue(18)
     vi.mocked(db.expense.findMany).mockResolvedValue([
       {
         id: "e1",
@@ -244,6 +246,8 @@ describe("GET /api/mobile/dashboard/sections", () => {
       "classCoverage",
       "attendanceMarked",
     ])
+    // 18 periods this week against the 24-lesson guide = 75%
+    expect(body.resource_usage[0]).toMatchObject({ used: 18, percent: 75 })
     expect(body.resource_usage[1]).toMatchObject({ used: 10, percent: 20 })
     expect(body.resource_usage[2]).toMatchObject({ used: 90, percent: 50 })
     // 225 marks against 90 students × 5 days = 50%.
