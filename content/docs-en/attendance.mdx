@@ -155,7 +155,6 @@ model Attendance {
   schoolId     String
   studentId    String
   sectionId    String?          // the section the mark is kept on
-  classId      String?          // legacy: marks from before sections
   date         DateTime         @db.Date
   status       AttendanceStatus
   method       AttendanceMethod @default(MANUAL)
@@ -171,7 +170,6 @@ model Attendance {
   periodName  String?
 
   @@unique([schoolId, studentId, sectionId, date, periodId])
-  @@unique([schoolId, studentId, classId, date, periodId]) // legacy
   @@index([schoolId, date, periodId])
 }
 ```

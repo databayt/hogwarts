@@ -108,9 +108,9 @@ Section          → the student cohort that occupies that classroom
 
 **Labs and common spaces are a different thing** — not grade-owned, never set as a section's main classroom; created with their own `ClassroomType` (Lab, Computer Room, Library) and reached **per-period through the timetable** (`Timetable.classroomId`), available to the generator for lab-flagged subjects.
 
-### The course axis (`Class` records)
+### No course axis (`Class` removed)
 
-Separate from sections, a `Class` is one **subject-course** (`Math – Grade 7`, per term) — the de-emphasized grouping axis the grade-book needs. The standalone "Generate Classes from Catalog" / "Enroll Students" actions were **removed from Classrooms › Configure** (2026-06-18): classrooms stays lean (grades → sections → one main classroom), and because the grade + curriculum already imply the subjects, `Class`/`StudentClass` are maintained in the Classes module rather than provisioned from the rooms page. Since 2026-10-04 nothing requires one: the timetable, exams, results, assignments and attendance are set per section (or whole grade) and subject, teaching is `SubjectTeacher`, and `Class` is being retired — legacy rows stay readable until it is dropped (see the [legacy classId policy](/docs/provision#legacy-classid-policy)).
+There is no separate course record. A grade has **subjects** (`SubjectSelection`, with weekly periods) and **sections**; the timetable, exams, results, assignments and attendance are set per section (or the whole grade) and subject, and teaching is `SubjectTeacher`. The `Class`, `StudentClass` and `ClassTeacher` models, and every `classId` column, were removed on 2026-10-04 (see the [classes-removed note](/docs/provision#classes-were-removed)).
 
 ## Layer 7 — Timetable
 
@@ -123,12 +123,11 @@ Timetable {
   subjectId,   // what
   classroomId, // where
   teacherId,   // who teaches — nullable, assigned later
-  classId,     // legacy rows only — backfilled to sectionId on edit
   weekOffset
 }
 ```
 
-Three unique constraints prevent double-booking (section, classroom, and legacy-class per period-slot). Auto-generation distributes each grade's subjects (`weeklyPeriods` each) across working days × teaching periods into the section's paired room, **teacher-less**. Manual editing in the grid is also section-first: pick section + subject (+ teacher when known).
+Unique constraints prevent double-booking (school, term, day, period, section, week offset — and the same for the classroom). Auto-generation distributes each grade's subjects (`weeklyPeriods` each) across working days × teaching periods into the section's paired room, **teacher-less**. Manual editing in the grid is also section-first: pick section + subject (+ teacher when known).
 
 `getRecommendedStructures` ranks layouts at onboarding; if no terms exist yet, the grid renders a non-persisting draft schedule with an admin CTA to provision for real.
 
@@ -142,9 +141,9 @@ Teachers attach to **subjects**, then to **slots**:
 | Slot teacher             | `Timetable.teacherId`              | Who teaches this section-period              |
 | Homeroom teacher         | `Section.homeroomTeacherId`        | Pastoral, per section                        |
 | Department member / head | `TeacherDepartment`                | `isPrimary`, `isDepartmentHead`              |
-| Course teacher           | `Class.teacherId` + `ClassTeacher` | The course axis (grade-book, co-teaching)    |
+| Subject teacher          | `SubjectTeacher`                   | One teacher per section × subject per term   |
 
-`deleteTeacher` blocks while `Class.teacherId` or `Timetable` references exist; `deleteSubject` blocks on expertise, class, exam, or question-bank references.
+`deleteTeacher` blocks while `SubjectTeacher` or `Timetable` references exist; `deleteSubject` blocks on expertise, exam, or question-bank references. A section × subject pair with no teacher shows as "Needs teacher" in the timetable; assign one from the Add-teacher wizard, the `/teachers` row menu ("Assign subjects"), or the board at `/timetable/assignments`.
 
 ## Layer 8b — Student placement
 
@@ -156,18 +155,18 @@ The 5-step admission wizard ends in `ADMITTED` → placement:
 
 ## Layer 9 — Attendance
 
-Attendance is **section-based**: the roster is `Student.sectionId` (not `StudentClass`), and period-mode lights up directly from the timetable —
+Attendance is **section-based**: the roster is `Student.sectionId` (there is no class roster), and period-mode lights up directly from the timetable —
 
 - Teacher scoping: a teacher can mark sections they have timetable slots in (or homeroom).
 - Current-period auto-selection: the active `Period` × the teacher's slot resolves the section automatically.
 - Period marking writes `sectionId` + `periodId` + `timetableId`; whole-day marking works with no timetable at all.
-- Legacy `classId` rows remain as read-only history.
+- Sessions, hall passes and competition entries are per section too; there is no `classId` anywhere.
 
 Status: ~92%, production-hardened (security pass 2026-06-02, 575 tests green). Compliance (ADEK eSIS) exports daily-mode records. Full reference: [Attendance](/docs/attendance).
 
 ## Layer 10 — Exams
 
-The assessment stack runs on the **course axis** (`classId` + `subjectId`):
+The assessment stack is set for a grade plus one of its sections (or the whole grade) + subject + term:
 
 ```
 SchoolExam → ExamSession → StudentAnswer → MarkingResult → ExamResult
@@ -202,8 +201,8 @@ Each block consumes a different axis of the academic core:
 | Transportation       | `studentId` only (routes, boarding)                                            | Decoupled from sections/timetable |
 | LMS (Lumos)          | `catalogSubjectId` (enrollment per catalog subject)                            | Catalog-based, not section-based  |
 | Library              | `schoolId` only (global-first book adoption)                                   | Fully decoupled                   |
-| Finance              | `studentId` (fee assignment), `classId?` optional grouping                     | Student-based                     |
-| Messaging / WhatsApp | `Section` groups + `Class` groups                                              | Both axes                         |
+| Finance              | `studentId` (fee assignment), optional grade grouping                        | Student-based                     |
+| Messaging / WhatsApp | `Section` groups                                                               | Section-based                     |
 
 None of these block the academic chain; they activate independently as their own setup completes.
 
@@ -217,7 +216,7 @@ None of these block the academic chain; they activate independently as their own
 | Sections           | Timetable generation, attendance rosters, placement                   |
 | `SubjectSelection` | Timetable generation (`No sections have subjects`)                    |
 | Timetable slots    | Attendance period-mode, teacher section-scoping, conference-from-slot |
-| `StudentClass`     | Legacy — read for history only; nothing writes it since 2026-10-04    |
+| `SubjectTeacher`   | Timetable slots show "Needs teacher"                                  |
 | Exams / Results    | Report cards, transcripts                                             |
 | Report cards       | Promotion (GPA required)                                              |
 

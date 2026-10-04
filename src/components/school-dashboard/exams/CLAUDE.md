@@ -1,3 +1,8 @@
+> **2026-10-04 — Classes removed (Phase 4, `e85e1f75e`).** `Class`, `StudentClass`, `ClassTeacher`
+> and every `classId` column no longer exist. Any "legacy class arm", `StudentClass` OR-branch or
+> `class` include described below is history: reads are section / grade + subject only, teaching
+> is `SubjectTeacher`. Plan: `~/.claude/plans/i-asked-in-a-cryptic-panda.md`.
+
 ---
 epic: 03
 sprint: Q3-2026

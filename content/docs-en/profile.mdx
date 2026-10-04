@@ -83,7 +83,7 @@ page.tsx ──> getProfileView(targetId, lang)            // queries.ts (typed,
             ├─ ContributionGraph(SWR → getContributionData; empty grid when none)
             ├─ ContributionActivity (real UserActivity grouped by month)
             ├─ AchievementsGrid    (achievements tab: earned-badge grid)
-            └─ Student/Teacher/Parent/Staff dashboards (real subjects/classes/children/orgs)
+            └─ Student/Teacher/Parent/Staff dashboards (real subjects/sections/children/orgs)
 ```
 
 `queries.ts` is intentionally **not** `"use server"` so callers can wrap it in
@@ -116,7 +116,7 @@ idempotent `profile-activity` seed (part of `seedMain`) creates, for the demo
 school: current-year attendance for the demo student's section (marked by the
 demo teacher — lights both graphs and earns the attendance badges), an
 Arabic activity feed for demo accounts + roster/teacher/guardian users,
-role-appropriate pinned items derived from real subjects/classes/children/
+role-appropriate pinned items derived from real subjects/sections/children/
 organizations, a parent↔teacher conversation whose parent-sent messages light
 the parent graph, expense approvals spread across admin/staff/accountant (staff
 graph), demo-student achievements in distinct categories, and the GitHub-style
@@ -174,7 +174,7 @@ Reads are in `queries.ts` (`getProfileView`); self-edit entity data in
 
 Every surface is DB-backed:
 
-- **Stats** — counts of the user's subjects / classes / students / children
+- **Stats** — counts of the user's subjects / sections / students / children
 - **Activity** — real `UserActivity` rows (no `Math.random()`)
 - **Badges** — earned via the engine from real attendance/results/merit
 - **Organizations** — real memberships (+ a teacher's primary department)

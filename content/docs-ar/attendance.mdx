@@ -153,7 +153,6 @@ model Attendance {
   schoolId     String
   studentId    String
   sectionId    String?          // الفصل الذي يُحفظ عليه الحضور
-  classId      String?          // قديم: سجلات ما قبل الفصول
   date         DateTime         @db.Date
   status       AttendanceStatus
   method       AttendanceMethod @default(MANUAL)
@@ -169,7 +168,6 @@ model Attendance {
   periodName  String?
 
   @@unique([schoolId, studentId, sectionId, date, periodId])
-  @@unique([schoolId, studentId, classId, date, periodId]) // قديم
   @@index([schoolId, date, periodId])
 }
 ```

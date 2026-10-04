@@ -24,7 +24,7 @@ File-system path: `src/app/[lang]/s/[subdomain]/(school-messaging)/messages/page
 | -------------- | ---------------------------- | --------------------------- | --------------------------------- |
 | `direct`       | 1-to-1 private               | both users                  | `directParticipant1Id`, `2Id`     |
 | `group`        | Multi-user group             | creator as owner            | `title`, `description`, `avatar`  |
-| `class`        | Class-bound (teacher-scoped) | teacher + enrolled students | `classId`                         |
+| `class`        | Label only (no `classId`)    | —                           | —                                 |
 | `department`   | Department-wide channel      | department members          | `departmentId`                    |
 | `announcement` | Admin / DEVELOPER broadcast  | all school members          | `title`, read-only for non-admins |
 
@@ -50,7 +50,7 @@ System messages auto-generate for lifecycle events: `participant_joined`, `parti
 | STUDENT    |   Y    | Y (create) |    —    |     —      |      —       |
 | GUARDIAN   |   Y    |     —      |    —    |     —      |      —       |
 
-Teachers can only access `class` conversations for their own classes (`Class.teacherId` + `ClassTeacher` bridge).
+The `class` type remains only as a label: classes were removed on 2026-10-04 and conversations carry no `classId`.
 
 ### Participant role within a conversation
 
@@ -262,7 +262,6 @@ createConversation(input: {
   type: "direct" | "group" | "class" | "department" | "announcement"
   title?: string
   participantIds?: string[]
-  classId?: string
   departmentId?: string
 })
 ```
@@ -275,7 +274,7 @@ createConversation(input: {
 
 Indexes:
 
-- `Conversation` — `[schoolId, type, lastMessageAt desc]`, `[schoolId, classId]`, `[schoolId, departmentId]`, `[directParticipant1Id, directParticipant2Id, type]`
+- `Conversation` — `[schoolId, type, lastMessageAt desc]`, `[schoolId, departmentId]`, `[directParticipant1Id, directParticipant2Id, type]`
 - `Message` — `[conversationId, createdAt desc]`, `[senderId, createdAt]`, `[replyToId]`, `[conversationId, isSystem]`, `[whatsappMessageId]`, `[forwardedFromId]`
 - `ConversationParticipant` — `@@unique([conversationId, userId])`, `[userId, isActive]`, `[conversationId, role]`
 - `TypingIndicator` — `[schoolId]`, `[conversationId, expiresAt]`
@@ -305,7 +304,7 @@ The mobile view has five tabs, all live:
 | Tab | What it shows |
 | --- | --- |
 | Chats | the conversation list |
-| Updates | announcements the reader is an audience for — school-wide, their role, their classes |
+| Updates | announcements the reader is an audience for — school-wide, their role, their section or grade |
 | Calls | the reader's own live classes, marked attended, missed, upcoming or live |
 | Communities | the school as one community, with its class and department rooms |
 | Settings | the reader's profile over links to profile, notifications and the dashboard |

@@ -162,18 +162,16 @@ Missing-stage rules worth knowing:
 
 `repairProvisioning(schoolId)` runs the missing stages with per-stage `try/catch`, returns `{ repaired, failed, healthy, status }`, and is safe to call on a fully healthy school (no-op).
 
-## Legacy `classId` policy
+## Classes were removed
 
-The platform is converging on **Section as the operational unit**:
+The `Class`, `StudentClass` and `ClassTeacher` models, the `EvaluationType` enum and every `classId` column were removed on 2026-10-04. **Section (or the whole grade) + subject** is now the operational unit everywhere:
 
-| Domain                        | Axis                                          | Status                                                                 |
-| ----------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
-| Timetable                     | `sectionId` + `subjectId`                     | Primary — generation and manual editing                                |
-| Attendance                    | `sectionId` (roster from `Student.sectionId`) | Primary — `classId` on old rows is read-only history                   |
-| Student placement             | `Student.sectionId`                           | Primary (admission placement)                                          |
-| Exams / Results / Assignments | `classId` (subject-class)                     | **Kept by design** — grade-book grouping needs the subject-course axis |
-
-`Timetable.classId` remains on legacy rows for history; editing such a slot backfills `sectionId`/`subjectId`, migrating it in place. No new classId-based timetable data is created.
+| Domain                        | Axis                                          | Status                                                          |
+| ----------------------------- | --------------------------------------------- | --------------------------------------------------------------- |
+| Timetable                     | `sectionId` + `subjectId`                     | Generation and manual editing; teaching is `SubjectTeacher`     |
+| Attendance                    | `sectionId` (roster from `Student.sectionId`) | Per section                                                     |
+| Student placement             | `Student.sectionId`                           | Admission placement                                             |
+| Exams / Results / Assignments | grade + `sectionId` (null = whole grade) + subject + term | Set per audience, with `createdById`                |
 
 ## Failure modes
 

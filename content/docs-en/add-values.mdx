@@ -14,7 +14,7 @@ Each milestone is a concrete moment where the platform delivers usable value to 
 | 3   | First Announcement |   ~97% | Post visible to all members                        | School Online                |
 | 4   | Team Onboard       |   ~88% | Add teachers manually or via CSV                   | School Online                |
 | 5   | Students In        |   ~93% | Add students manually, CSV, or admission           | School Online                |
-| 6   | Classes Formed     |   ~90% | Class = teacher + subject + students               | Team + Students              |
+| 6   | Teaching Assigned  |   ~90% | Teacher per section × subject per term             | Team + Students              |
 | 7   | Timetable Running  |   ~95% | Weekly schedule for all classes                    | Classes                      |
 | 8   | Attendance Tracked |   ~95% | Mark daily attendance per class                    | Classes + Timetable          |
 | 9   | Grades Recorded    |   ~90% | Exams, marks, report cards                         | Classes + Students           |
@@ -81,9 +81,9 @@ Full CRUD (7-step registration), CSV/XLSX/JSON bulk import, admission pipeline (
 
 No critical MVP gaps.
 
-### 6. Classes Formed — ~90%
+### 6. Teaching Assigned — ~90%
 
-`Class = Subject + Teacher + Grade + Term + Classroom + Students`. Full CRUD (~65KB actions), `StudentClass` bridge with capacity, subject-teacher roles (`PRIMARY`, `CO_TEACHER`, `ASSISTANT`), catalog subject linking, CSV export.
+The `Class` model was removed on 2026-10-04. A grade has subjects and sections; teaching is `SubjectTeacher` — one teacher per section × subject per term, assigned from the Add-teacher wizard, the `/teachers` row menu, or the `/timetable/assignments` board. Catalog subject linking and CSV export carry over.
 
 | Gap                                                              | Effort | Impact         |
 | ---------------------------------------------------------------- | ------ | -------------- |
