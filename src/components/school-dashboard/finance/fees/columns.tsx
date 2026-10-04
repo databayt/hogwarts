@@ -47,8 +47,8 @@ export const getFeeStructureColumns = (
   const t = {
     name: col?.name || "Name",
     academicYear: col?.academicYear || "Academic Year",
-    class: col?.class || "Class",
-    allClasses: col?.allClasses || "All Classes",
+    class: col?.grade || "Grade",
+    allClasses: col?.allGrades || "All grades",
     totalAmount: col?.totalAmount || "Total Amount",
     installments: col?.installments || "Installments",
     assignments: col?.assignments || "Assignments",

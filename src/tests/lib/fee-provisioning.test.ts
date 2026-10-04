@@ -112,8 +112,8 @@ describe("provisionSchoolFees", () => {
   it("creates one FeeStructure per grade when no existing rows", async () => {
     setupSchool(5000)
     vi.mocked(db.academicGrade.findMany).mockResolvedValue([
-      { id: "g1", name: "Grade 1", gradeNumber: 1, classes: [{ id: "c1" }] },
-      { id: "g2", name: "Grade 2", gradeNumber: 2, classes: [{ id: "c2" }] },
+      { id: "g1", name: "Grade 1", gradeNumber: 1 },
+      { id: "g2", name: "Grade 2", gradeNumber: 2 },
     ] as never)
 
     const result = await provisionSchoolFees(SCHOOL_ID)
@@ -121,6 +121,13 @@ describe("provisionSchoolFees", () => {
     expect(result.created).toBe(2)
     expect(result.updated).toBe(0)
     expect(db.feeStructure.create).toHaveBeenCalledTimes(2)
+    // Each structure charges its grade — no class needed
+    const data = vi.mocked(db.feeStructure.create).mock.calls[0][0].data
+    expect(data).toMatchObject({
+      schoolId: SCHOOL_ID,
+      gradeId: "g1",
+      classId: null,
+    })
   })
 
   it("updates unlocked auto-generated rows in recompute mode", async () => {

@@ -677,7 +677,9 @@
       "lockedTitle": "مقفل — يتجاهله المزامن",
       "lock": "قفل عن المزامنة",
       "unlock": "إلغاء القفل",
-      "openMenu": "فتح القائمة"
+      "openMenu": "فتح القائمة",
+      "grade": "الصف",
+      "allGrades": "جميع الصفوف"
     },
     "csvHeaders": {
       "paymentNumber": "رقم الدفعة",

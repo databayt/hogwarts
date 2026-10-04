@@ -31,6 +31,7 @@ Defined under Finance → Fees → Fee Structures.
 | Amount           | Total fee amount                                                          |
 | Category         | TUITION, TRANSPORT, UNIFORM, EXAM, ACTIVITY, LIBRARY, LAB, HOSTEL, OTHERS |
 | Academic year    | "2025-2026"                                                               |
+| Grade            | Optional — the grade it charges; empty = every grade (school-wide)        |
 | Installments     | Number of installments (default 1)                                        |
 | Payment schedule | Optional — exact dates and amounts                                        |
 | Late fee         | Optional — FIXED, PERCENTAGE, DAILY, MONTHLY                              |
@@ -41,9 +42,11 @@ Defined under Finance → Fees → Fee Structures.
 Two modes:
 
 - **Individual** — select student → pick structure → optional custom amount → assign
-- **Bulk** — select class / grade → pick structure → assign to all
+- **Bulk** — tick students (or select all) → pick structure → assign
 
 On assignment: `FeeAssignment` row created with status `PENDING`, student + all guardians get `fee_due` notification (in-app + email), sibling discount auto-calculated (e.g. 2nd child 10%, 3rd child 20%).
+
+**Automatic.** A student placed in a grade — through admission, the add-student wizard, or an edit that changes the grade — gets every structure of the year that charges their grade, plus the school-wide ones. A structure charges a grade, never a class (since 2026-10-04); older class-linked structures were moved to their class's grade.
 
 ## Payment
 

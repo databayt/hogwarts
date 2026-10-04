@@ -60,6 +60,7 @@ model AcademicGrade {
   quickAssessments        QuickAssessment[]
   progressReportSchedules ProgressReportSchedule[]
   announcements           Announcement[]
+  feeStructures           FeeStructure[]
   classrooms        Classroom[]
   sections          Section[]
   bookSelections    BookSelection[]

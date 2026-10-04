@@ -125,6 +125,7 @@ export async function getFeeStructures(
     const feeStructures = await db.feeStructure.findMany({
       where: buildFeeStructureWhere(ctx.schoolId, search ? { search } : {}),
       include: {
+        grade: { select: { id: true, name: true } },
         class: { select: { id: true, name: true } },
         _count: { select: { feeAssignments: true } },
       },
@@ -154,7 +155,7 @@ export async function createFeeStructure(
     const parsed = feeStructureSchema.safeParse({
       name: raw.name,
       academicYear: raw.academicYear,
-      classId: raw.classId || null,
+      gradeId: raw.gradeId || null,
       stream: raw.stream || null,
       description: raw.description || null,
       tuitionFee: parseFloat(raw.tuitionFee as string),
@@ -197,6 +198,15 @@ export async function createFeeStructure(
         ACTION_ERRORS.VALIDATION_ERROR,
         parsed.error.issues.map((issue) => issue.message).join(", ")
       )
+    }
+
+    // A grade the structure charges must be this school's
+    if (parsed.data.gradeId) {
+      const grade = await db.academicGrade.findFirst({
+        where: { id: parsed.data.gradeId, schoolId: ctx.schoolId },
+        select: { id: true },
+      })
+      if (!grade) return actionError(ACTION_ERRORS.GRADE_NOT_FOUND)
     }
 
     const feeStructure = await db.feeStructure.create({
@@ -299,6 +309,16 @@ export async function updateFeeStructure(
     const newTotalAmount = parseFloat(formData.totalAmount as string)
     const newInstallments = parseInt(formData.installments as string, 10) || 4
 
+    // The grade it charges (none = school-wide) must be this school's
+    const gradeId = (formData.gradeId as string) || null
+    if (gradeId) {
+      const grade = await db.academicGrade.findFirst({
+        where: { id: gradeId, schoolId: ctx.schoolId },
+        select: { id: true },
+      })
+      if (!grade) return actionError(ACTION_ERRORS.GRADE_NOT_FOUND)
+    }
+
     // B4: auto-build quarterly schedule when installments > 1 and no explicit schedule given
     let paymentScheduleValue: Prisma.InputJsonValue | undefined = undefined
     if (formData.paymentSchedule) {
@@ -316,7 +336,8 @@ export async function updateFeeStructure(
       data: {
         name: formData.name as string,
         academicYear: formData.academicYear as string,
-        classId: (formData.classId as string) || null,
+        gradeId,
+        classId: null,
         stream: (formData.stream as string) || null,
         description: (formData.description as string) || null,
         tuitionFee: parseFloat(formData.tuitionFee as string),

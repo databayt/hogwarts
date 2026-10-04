@@ -5,6 +5,20 @@
 > Last updated: 2026-06-13
 > Aldar UAE source of truth: [hogwarts#356](https://github.com/databayt/hogwarts/issues/356)
 
+## 2026-10-04 — fees by grade (class removal S12, local, not pushed)
+
+- A fee structure charges a grade: `FeeStructure.gradeId` (migration
+  `20261004190000_fee_grade`, **owed on prod**, then backfill
+  `prisma/sql/class-removal/03-fee-structures-grade.sql` — auto rows from
+  `sourceSignals.gradeId`, class-linked rows from their class's grade; 12 of 12
+  locally). Provisioning writes the grade and drops the class link on re-sync;
+  it no longer needs a class in the grade.
+- Matching (auto-assign, previews, the admission offer): school-wide = no grade
+  and no class; admin rows for the student's grade; auto rows by
+  `sourceSignals.gradeId`. No class lookups left.
+- Fee admin create/update take `gradeId` and check it is this school's (a
+  `classId` was written unchecked before). The list's column shows the grade.
+
 ## 2026-09-13 — phone grid + school currency (local, not pushed)
 
 - Structures, assignments, payments, fines and scholarships had a table/grid toggle that switched

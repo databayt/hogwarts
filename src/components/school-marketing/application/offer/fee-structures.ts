@@ -7,8 +7,9 @@
  * Student exists.
  *
  * Three sources match an applicant's grade, mirroring the enrollment side:
- *   1. admin-created school-wide structures (classId null, not auto-generated)
- *   2. class-linked structures whose class belongs to the grade
+ *   1. admin-created school-wide structures (no grade, no class, not
+ *      auto-generated)
+ *   2. admin-created structures for the grade (FeeStructure.gradeId)
  *   3. auto-generated per-grade structures (sourceSignals.gradeId) — a
  *      MUTUALLY-EXCLUSIVE variant group (base + per-stream / per-type prices
  *      of the same grade fee), of which enrollment assigns exactly ONE.

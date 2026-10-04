@@ -99,7 +99,8 @@ function FeeStructuresTableInner({
         id: fs.id,
         name: fs.name,
         academicYear: fs.academicYear,
-        className: fs.class?.name || null,
+        // The grade it charges (or a legacy class); null = school-wide
+        className: fs.grade?.name || fs.class?.name || null,
         totalAmount: Number(fs.totalAmount),
         installments: fs.installments,
         assignmentCount: fs._count?.feeAssignments || 0,

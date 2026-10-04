@@ -677,7 +677,9 @@
       "lockedTitle": "Locked — ignored by sync",
       "lock": "Lock from sync",
       "unlock": "Unlock",
-      "openMenu": "Open menu"
+      "openMenu": "Open menu",
+      "grade": "Grade",
+      "allGrades": "All grades"
     },
     "csvHeaders": {
       "paymentNumber": "Payment #",

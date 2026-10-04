@@ -23,7 +23,7 @@ export type FeeListFilters = {
   search?: string
   status?: string
   academicYear?: string
-  classId?: string
+  gradeId?: string
   isActive?: boolean
 }
 
@@ -70,6 +70,12 @@ export const feeStructureListSelect = {
   lastSyncedAt: true,
   createdAt: true,
   updatedAt: true,
+  grade: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
   class: {
     select: {
       id: true,
@@ -244,8 +250,8 @@ export function buildFeeStructureWhere(
     where.academicYear = filters.academicYear
   }
 
-  if (filters.classId) {
-    where.classId = filters.classId
+  if (filters.gradeId) {
+    where.gradeId = filters.gradeId
   }
 
   if (filters.isActive !== undefined) {

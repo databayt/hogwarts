@@ -19,7 +19,8 @@ export const createFeeStructureSchema = (v: ValidationHelper) =>
   z.object({
     name: z.string().min(1, v.required()).max(100),
     academicYear: z.string().min(1, v.required()),
-    classId: z.string().optional().nullable(),
+    // The grade it charges; none = school-wide
+    gradeId: z.string().optional().nullable(),
     stream: z.string().optional().nullable(),
     description: z.string().optional().nullable(),
     tuitionFee: z.number().min(0, v.min(0)),
@@ -179,7 +180,8 @@ export const createBulkFeeAssignmentSchema = (v: ValidationHelper) =>
 export const feeStructureSchema = z.object({
   name: z.string().min(1, "Fee name is required").max(100),
   academicYear: z.string().min(1, "Academic year is required"),
-  classId: z.string().optional().nullable(),
+  // The grade it charges; none = school-wide
+  gradeId: z.string().optional().nullable(),
   stream: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   tuitionFee: z.number().min(0, "Tuition fee must be non-negative"),
