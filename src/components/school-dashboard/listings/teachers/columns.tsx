@@ -403,17 +403,15 @@ export const getTeacherColumns = (
               </DropdownMenuItem>
             )}
 
-            {permissions.showEditAction &&
-              callbacks?.onAssignSubjects &&
-              !teacher.wizardStep && (
-                // No preventDefault: the menu should close. The dialog lives
-                // in a module store, so the table re-rendering can't close it.
-                <DropdownMenuItem
-                  onSelect={() => callbacks.onAssignSubjects?.(teacher)}
-                >
-                  {t.assignSubjects}
-                </DropdownMenuItem>
-              )}
+            {permissions.showEditAction && callbacks?.onAssignSubjects && (
+              // No preventDefault: the menu should close. The dialog lives
+              // in a module store, so the table re-rendering can't close it.
+              <DropdownMenuItem
+                onSelect={() => callbacks.onAssignSubjects?.(teacher)}
+              >
+                {t.assignSubjects}
+              </DropdownMenuItem>
+            )}
 
             {permissions.showToggleStatus && (
               <>
