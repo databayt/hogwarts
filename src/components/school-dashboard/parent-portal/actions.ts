@@ -9,6 +9,7 @@ import { getPolicyContext, PolicyContextError } from "@/lib/rbac/context"
 import { POLICY_ERROR_CODES } from "@/lib/rbac/types"
 import { audienceLabel, studentAudienceWhere } from "@/lib/teaching-audience"
 import { getStudentScopes } from "@/lib/teaching-scope"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 
 // Resolve the guardian's Guardian.id (not session.user.id) and the schoolId
 // for every parent-portal action. Before this helper, each action used
@@ -82,22 +83,31 @@ export async function getChildGrades(input: { studentId: string }) {
     orderBy: { createdAt: "desc" },
   })
 
-  // Get class scores for the student
-  const classScores = await db.studentClass.findMany({
-    where: { studentId, schoolId },
-    include: {
-      class: {
-        select: {
-          name: true,
-          subject: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  })
+  // The child's standing in each subject: the average of their gradebook
+  // results (exams and assignments). Class scores went with classes.
+  const [subjectRows, child] = await Promise.all([
+    db.result.groupBy({
+      by: ["subjectId"],
+      where: { schoolId, studentId, subjectId: { not: null } },
+      _avg: { percentage: true },
+    }),
+    db.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: { section: { select: { name: true } } },
+    }),
+  ])
+  const subjectIds = subjectRows
+    .map((row) => row.subjectId)
+    .filter((id): id is string => !!id)
+  const subjectNames = new Map(
+    (subjectIds.length > 0
+      ? await db.subject.findMany({
+          where: { id: { in: subjectIds } },
+          select: { id: true, name: true },
+        })
+      : []
+    ).map((subject) => [subject.id, subject.name])
+  )
 
   const grades = {
     examResults: examResults.map((result) => ({
@@ -112,11 +122,14 @@ export async function getChildGrades(input: { studentId: string }) {
       grade: result.grade,
       isAbsent: result.isAbsent,
     })),
-    classScores: classScores.map((sc) => ({
-      id: sc.id,
-      className: sc.class.name,
-      name: sc.class.subject.name,
-      score: sc.score ? Number(sc.score) : null,
+    classScores: subjectRows.map((row) => ({
+      id: row.subjectId ?? "",
+      className: child?.section?.name ?? "",
+      name: subjectNames.get(row.subjectId ?? "") ?? "",
+      score:
+        row._avg.percentage !== null
+          ? Math.round(row._avg.percentage * 10) / 10
+          : null,
     })),
   }
 
@@ -214,21 +227,34 @@ export async function getChildTimetable(input: { studentId: string }) {
     throw new Error("Unauthorized access to student data")
   }
 
-  // Get student's classes
-  const studentClasses = await db.studentClass.findMany({
-    where: { studentId, schoolId },
-    select: { classId: true },
-  })
+  // The child's week: their section's slots (and any legacy class's) in the
+  // active term. Reading classes only left every section-placed child —
+  // every child of a new school — with an empty week, and no term filter
+  // mixed in other terms' slots.
+  const [[scope], { term }] = await Promise.all([
+    getStudentScopes(schoolId, [studentId]),
+    resolveActiveTerm(schoolId),
+  ])
+  const axes = [
+    ...(scope?.sectionId ? [{ sectionId: scope.sectionId }] : []),
+    ...(scope && scope.classIds.length > 0
+      ? [{ classId: { in: scope.classIds } }]
+      : []),
+  ]
+  if (!term || axes.length === 0) return { timetable: [] }
 
-  const classIds = studentClasses.map((sc) => sc.classId)
-
-  // Get timetable entries for student's classes
   const timetableEntries = await db.timetable.findMany({
     where: {
-      classId: { in: classIds },
       schoolId,
+      termId: term.id,
+      weekOffset: 0,
+      OR: axes,
     },
     include: {
+      section: { select: { name: true } },
+      subject: { select: { name: true } },
+      teacher: { select: { firstName: true, lastName: true } },
+      classroom: { select: { roomName: true } },
       class: {
         select: {
           name: true,
@@ -268,12 +294,14 @@ export async function getChildTimetable(input: { studentId: string }) {
       periodName: entry.period.name,
       startTime: entry.period.startTime.toISOString(),
       endTime: entry.period.endTime.toISOString(),
-      className: entry.class?.name ?? "",
-      name: entry.class?.subject?.name ?? "",
-      teacherName: entry.class?.teacher
-        ? `${entry.class.teacher.firstName} ${entry.class.teacher.lastName}`
-        : "",
-      roomName: entry.class?.classroom?.roomName || "TBA",
+      className: entry.section?.name ?? entry.class?.name ?? "",
+      name: entry.subject?.name ?? entry.class?.subject?.name ?? "",
+      teacherName: (() => {
+        const teacher = entry.teacher ?? entry.class?.teacher
+        return teacher ? `${teacher.firstName} ${teacher.lastName}` : ""
+      })(),
+      roomName:
+        entry.classroom?.roomName || entry.class?.classroom?.roomName || "TBA",
     })),
   }
 }

@@ -4,26 +4,12 @@
 import type { PrismaClient } from "@prisma/client"
 
 import { db } from "@/lib/db"
-import { audienceRosterWhere } from "@/lib/teaching-audience"
+import { audienceRosterWhere, offeredToStream } from "@/lib/teaching-audience"
 
 type EnrollmentClient = Pick<
   PrismaClient,
   "student" | "subjectSelection" | "enrollment"
 >
-
-/** A subject offered to every stream, or to the student's own; a student
- * with no stream yet takes every stream's subjects, so a missing stream
- * never empties their list. */
-function offeredTo(
-  selectionStreamId: string | null,
-  studentStreamId: string | null
-): boolean {
-  return (
-    !selectionStreamId ||
-    !studentStreamId ||
-    selectionStreamId === studentStreamId
-  )
-}
 
 /**
  * LMS access follows placement: a student gets an active Enrollment in every
@@ -63,7 +49,7 @@ export async function syncStudentSubjectEnrollments(
     const subjectIds = [
       ...new Set(
         selections
-          .filter((s) => offeredTo(s.streamId, student.academicStreamId))
+          .filter((s) => offeredToStream(s.streamId, student.academicStreamId))
           .map((s) => s.catalogSubjectId)
       ),
     ]
@@ -132,7 +118,8 @@ export async function syncGradeSubjectEnrollments(
     for (const student of students) {
       if (!student.userId) continue
       for (const selection of selections) {
-        if (!offeredTo(selection.streamId, student.academicStreamId)) continue
+        if (!offeredToStream(selection.streamId, student.academicStreamId))
+          continue
         rows.set(`${student.userId}|${selection.catalogSubjectId}`, {
           userId: student.userId,
           catalogSubjectId: selection.catalogSubjectId,

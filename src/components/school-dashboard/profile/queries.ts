@@ -18,6 +18,7 @@
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getStudentSubjects } from "@/lib/teaching-scope"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import { getLabels } from "@/components/translation/person"
@@ -237,10 +238,10 @@ export async function getProfileView(
               status: true,
             },
           },
+          sectionId: true,
           section: {
             select: { name: true, grade: { select: { name: true } } },
           },
-          _count: { select: { studentClasses: true } },
         },
       },
       teacher: {
@@ -358,14 +359,12 @@ async function buildFromUser(
   // ---- real stats ----------------------------------------------------------
   const stats: ProfileStatValue[] = []
   if (role === "student" && user.student) {
-    stats.push({ key: "subjects", value: user.student._count.studentClasses })
-    const classmates = user.student.section
+    // The grade's subjects — class enrollments are retired
+    const subjects = await getStudentSubjects(schoolId, user.student.id)
+    stats.push({ key: "subjects", value: subjects.length })
+    const classmates = user.student.sectionId
       ? await db.student.count({
-          where: {
-            schoolId,
-            sectionId: { not: null },
-            section: { name: user.student.section.name },
-          },
+          where: { schoolId, sectionId: user.student.sectionId },
         })
       : 0
     if (classmates > 0)
@@ -482,7 +481,6 @@ async function buildFromOrphanEntity(
         },
       },
       section: { select: { name: true, grade: { select: { name: true } } } },
-      _count: { select: { studentClasses: true } },
     },
   })
 
@@ -539,7 +537,12 @@ async function buildFromOrphanEntity(
       sectionName,
       enrollmentDate: student.enrollmentDate ?? null,
       application: student.application ?? null,
-      stats: [{ key: "subjects", value: student._count.studentClasses }],
+      stats: [
+        {
+          key: "subjects",
+          value: (await getStudentSubjects(schoolId, student.id)).length,
+        },
+      ],
     })
   }
 
@@ -861,19 +864,11 @@ async function fetchRoleDetail(
   const empty: ProfileRoleDetail = { subjects: [], classes: [], children: [] }
 
   if (role === "student") {
-    const rows = await db.studentClass.findMany({
-      where: { schoolId, studentId: entityId },
-      take: 24,
-      select: {
-        class: { select: { subject: { select: { id: true, name: true } } } },
-      },
-    })
-    const seen = new Map<string, ProfileSubjectView>()
-    for (const r of rows) {
-      const s = r.class?.subject
-      if (s && !seen.has(s.id)) seen.set(s.id, { id: s.id, name: s.name })
-    }
-    return { ...empty, subjects: Array.from(seen.values()) }
+    // The grade's subjects (stream-filtered) — class enrollments are retired
+    const subjects: ProfileSubjectView[] = (
+      await getStudentSubjects(schoolId, entityId)
+    ).slice(0, 24)
+    return { ...empty, subjects }
   }
 
   if (role === "teacher") {

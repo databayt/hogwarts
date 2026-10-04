@@ -15,7 +15,11 @@
  */
 
 import { db } from "@/lib/db"
-import { audienceRosterWhere, type Audience } from "@/lib/teaching-audience"
+import {
+  audienceRosterWhere,
+  offeredToStream,
+  type Audience,
+} from "@/lib/teaching-audience"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 
 /**
@@ -140,6 +144,47 @@ export async function getStudentScopes(
     gradeId: r.section?.gradeId ?? r.academicGradeId,
     classIds: r.studentClasses.map((c) => c.classId),
   }))
+}
+
+/**
+ * The subjects a student studies: their grade's active subjects (the
+ * section's grade, else the grade they were placed in), filtered by stream.
+ * The school's own name for a subject wins over the catalog's.
+ */
+export async function getStudentSubjects(
+  schoolId: string,
+  studentId: string
+): Promise<Array<{ id: string; name: string }>> {
+  const student = await db.student.findFirst({
+    where: { id: studentId, schoolId },
+    select: {
+      academicGradeId: true,
+      academicStreamId: true,
+      section: { select: { gradeId: true } },
+    },
+  })
+  const gradeId = student?.section?.gradeId ?? student?.academicGradeId
+  if (!student || !gradeId) return []
+
+  const rows = await db.subjectSelection.findMany({
+    where: { schoolId, gradeId, isActive: true },
+    select: {
+      streamId: true,
+      customName: true,
+      subject: { select: { id: true, name: true } },
+    },
+    orderBy: { subject: { name: "asc" } },
+  })
+  const subjects = new Map<string, { id: string; name: string }>()
+  for (const row of rows) {
+    if (!offeredToStream(row.streamId, student.academicStreamId)) continue
+    if (subjects.has(row.subject.id)) continue
+    subjects.set(row.subject.id, {
+      id: row.subject.id,
+      name: row.customName || row.subject.name,
+    })
+  }
+  return [...subjects.values()]
 }
 
 /**

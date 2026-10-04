@@ -13,6 +13,22 @@
 
 import type { Prisma } from "@prisma/client"
 
+/**
+ * Whether a grade subject reaches a student: offered to every stream, or to
+ * the student's own. A student with no stream yet takes every stream's
+ * subjects, so a missing stream never empties their list.
+ */
+export function offeredToStream(
+  selectionStreamId: string | null,
+  studentStreamId: string | null
+): boolean {
+  return (
+    !selectionStreamId ||
+    !studentStreamId ||
+    selectionStreamId === studentStreamId
+  )
+}
+
 export interface Audience {
   classId: string | null
   gradeId: string | null

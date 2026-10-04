@@ -2,9 +2,19 @@
 
 **Status:** READY
 **Completion:** ~98%
-**Last Updated:** 2026-09-12
+**Last Updated:** 2026-10-04
 
 ---
+
+## 2026-10-04 — a student's subjects are their grade's
+
+The student profile counted and listed subjects from class enrollments, which a
+new school never has, so the "subjects" stat read 0 and the role tab was empty.
+Both read `getStudentSubjects` (`src/lib/teaching-scope.ts`): the active
+subjects of the section's grade (else the placed grade), stream-filtered, the
+school's name for a subject first. "Classmates" counts the student's own
+section — it matched every section with the same name.
+
 
 ## 2026-09-12 — a demo year that looks lived-in
 

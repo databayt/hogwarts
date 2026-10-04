@@ -4,6 +4,15 @@
 **Completion:** 95% (deferrals listed below)
 **Last Updated:** 2026-10-04
 
+> **2026-10-04 (S14):** the child's **weekly timetable** read class slots only,
+> so every section-placed child — every child of a new school — had an empty
+> week; it reads their section (plus any legacy class) in the active term (no
+> term filter before, so other terms' slots mixed in). **Class scores** are the
+> child's per-subject averages from the gradebook. The **attendance filter**
+> offers the child's subjects (taught in their section this term, plus any a
+> mark names) and labels each period mark by its timetable slot's subject.
+> `src/tests/school-dashboard/parent-portal/child-reads.test.ts`.
+>
 > **2026-10-04:** a child's assignments are the ones set for their section,
 > grade or a legacy class (`studentAudienceWhere`), so a school without classes
 > shows them too. Announcements use the announcements block's audience
