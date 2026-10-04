@@ -69,7 +69,6 @@ export interface AssignmentBoardData {
   waitingPeriods: number
 }
 
-
 /**
  * Grades → sections + subjects, who teaches each pair, and every teacher's
  * load. Names come back in the display language.
