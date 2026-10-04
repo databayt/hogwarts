@@ -88,8 +88,15 @@ export function buildTeacherPlan(input: {
   sections: SectionRequirement[]
   teachers: TeacherAvailability[]
   cap: TeacherCap
+  /**
+   * "all" (default): every subject gets a placeholder after its real
+   * teachers. "unstaffed": only subjects with no real teacher do — an
+   * assigned subject keeps exactly its assigned teacher.
+   */
+  placeholdersFor?: "all" | "unstaffed"
 }): TeacherPlan {
   const { sections, teachers, cap } = input
+  const unstaffedOnly = input.placeholdersFor === "unstaffed"
 
   // gradeId → subjectId → [{ sectionId, hours }] in section order
   const demand = new Map<
@@ -103,6 +110,7 @@ export function buildTeacherPlan(input: {
       demand.set(section.gradeId, bySubject)
     }
     for (const subject of section.subjects) {
+      if (unstaffedOnly && subject.preferredTeacherIds.length > 0) continue
       const list = bySubject.get(subject.subjectId) ?? []
       list.push({ sectionId: section.sectionId, hours: subject.hoursPerWeek })
       bySubject.set(subject.subjectId, list)

@@ -5009,7 +5009,12 @@
         "load": "Teacher load",
         "noTeachers": "Add teachers first, then assign them here.",
         "noSections": "This school has no sections yet.",
-        "unauthorized": "Only school admins can assign teachers."
+        "unauthorized": "Only school admins can assign teachers.",
+        "suggest": "Suggest from teachers' subjects",
+        "suggestBody": "Each subject waiting for a teacher goes to a teacher qualified for it who has room this week. Subjects that already have a teacher don't change.",
+        "suggestConfirm": "Suggest and assign",
+        "suggestNone": "No qualified teacher has room for the subjects still waiting.",
+        "suggestDone": "{pairs} subjects assigned — {assigned} periods, {moved} moved to make room."
       }
     },
     "announcements": {

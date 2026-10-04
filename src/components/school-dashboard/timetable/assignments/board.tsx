@@ -41,7 +41,11 @@ import {
 } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { assignTeacher, unassignTeacher } from "./actions"
+import {
+  assignTeacher,
+  suggestTeacherAssignments,
+  unassignTeacher,
+} from "./actions"
 import { cellKey } from "./keys"
 import type { AssignmentBoardData, AssignmentTeacher } from "./queries"
 
@@ -124,6 +128,42 @@ export function AssignmentBoard({ data }: Props) {
       await attempt(false)
     })
 
+  const suggest = () =>
+    startTransition(async () => {
+      const go = await confirmDeleteDialog(undefined, {
+        title: t?.suggest ?? "Suggest from teachers' subjects",
+        description:
+          t?.suggestBody ??
+          "Each subject waiting for a teacher goes to a teacher qualified for it who has room this week. Subjects that already have a teacher don't change.",
+        confirmText: t?.suggestConfirm ?? "Suggest and assign",
+        cancelText: te?.cancel ?? "Cancel",
+      })
+      if (!go) return
+      const res = await suggestTeacherAssignments()
+      if (!res.success || !res.data) {
+        ErrorToast(actionErrorMessage(res.error, dictionary, "Failed"))
+        return
+      }
+      if (res.data.pairs === 0) {
+        WarningToast(
+          t?.suggestNone ??
+            "No qualified teacher has room for the subjects still waiting."
+        )
+        return
+      }
+      SuccessToast(
+        fill(
+          t?.suggestDone ??
+            "{pairs} subjects assigned — {assigned} periods, {moved} moved to make room.",
+          {
+            pairs: res.data.pairs,
+            assigned: res.data.assigned,
+            moved: res.data.moved,
+          }
+        )
+      )
+    })
+
   if (data.teachers.length === 0) {
     return (
       <p className="text-muted-foreground text-sm">
@@ -167,6 +207,17 @@ export function AssignmentBoard({ data }: Props) {
           <Badge variant="secondary">
             {t?.allStaffed ?? "Every subject has a teacher."}
           </Badge>
+        )}
+        {data.waitingPairs > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="ms-auto"
+            disabled={isPending}
+            onClick={suggest}
+          >
+            {t?.suggest ?? "Suggest from teachers' subjects"}
+          </Button>
         )}
       </div>
 

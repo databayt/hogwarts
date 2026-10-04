@@ -49,8 +49,17 @@ export async function buildGenerationInputs(params: {
   termId: string
   yearId: string
   overrides?: GenerationOverrides
+  /**
+   * Who may teach a subject in a section:
+   * - "assignments" (default) — only the teacher assigned to that subject in
+   *   that section (SubjectTeacher); an unassigned pair waits for a teacher.
+   * - "expertise" — any active teacher qualified for the subject (the
+   *   pre-assignment behaviour, kept for callers that want it).
+   */
+  pinSource?: "assignments" | "expertise"
 }): Promise<GenerationInputs> {
   const { schoolId, termId, yearId, overrides } = params
+  const pinSource = params.pinSource ?? "assignments"
 
   const [
     periods,
@@ -60,6 +69,7 @@ export async function buildGenerationInputs(params: {
     selections,
     teacherRows,
     roomRows,
+    assignments,
   ] = await Promise.all([
     db.period.findMany({
       where: { schoolId, yearId },
@@ -135,6 +145,12 @@ export async function buildGenerationInputs(params: {
         },
       },
     }),
+    pinSource === "assignments"
+      ? db.subjectTeacher.findMany({
+          where: { schoolId, termId },
+          select: { sectionId: true, subjectId: true, teacherId: true },
+        })
+      : Promise.resolve([]),
   ])
 
   const constraints = overrides?.constraints
@@ -190,7 +206,8 @@ export async function buildGenerationInputs(params: {
     gradeSubjects.set(sel.gradeId, bySubject)
   }
 
-  // Qualified real teachers per subject (active teachers only).
+  // Qualified real teachers per subject (active teachers only) — used in
+  // "expertise" mode.
   const qualified = new Map<string, string[]>()
   for (const t of teacherRows) {
     for (const e of t.subjectExpertise) {
@@ -198,6 +215,19 @@ export async function buildGenerationInputs(params: {
       list.push(t.id)
       qualified.set(e.subjectId, list)
     }
+  }
+  // The assigned teacher per (section, subject) — "assignments" mode. Only
+  // active teachers: an inactive one's subjects wait for a new teacher.
+  const activeIds = new Set(teacherRows.map((t) => t.id))
+  const assigned = new Map(
+    assignments
+      .filter((a) => activeIds.has(a.teacherId))
+      .map((a) => [`${a.sectionId}:${a.subjectId}`, a.teacherId])
+  )
+  const teachersFor = (sectionId: string, subjectId: string): string[] => {
+    if (pinSource === "expertise") return qualified.get(subjectId) ?? []
+    const teacherId = assigned.get(`${sectionId}:${subjectId}`)
+    return teacherId ? [teacherId] : []
   }
 
   const teachers: TeacherAvailability[] = teacherRows.map((t) => {
@@ -246,12 +276,17 @@ export async function buildGenerationInputs(params: {
         requiresLab: (subjectNames[subjectId] ?? "")
           .toLowerCase()
           .includes("lab"),
-        preferredTeacherIds: qualified.get(subjectId) ?? [],
+        preferredTeacherIds: teachersFor(s.id, subjectId),
       })),
     }
   })
 
-  const plan = buildTeacherPlan({ sections: baseSections, teachers, cap })
+  const plan = buildTeacherPlan({
+    sections: baseSections,
+    teachers,
+    cap,
+    placeholdersFor: pinSource === "assignments" ? "unstaffed" : "all",
+  })
 
   const rooms: RoomAvailability[] = roomRows.map((r) => {
     const c = r.constraints[0]

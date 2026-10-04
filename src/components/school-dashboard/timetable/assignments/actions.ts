@@ -24,14 +24,15 @@ import type { Lang } from "@/components/translation/types"
 import { logTimetableAction } from "../permissions"
 import { canModifyTimetable, type TimetableRole } from "../permissions-config"
 import { applyAssignment, unassignPairs, type AssignmentOutcome } from "./apply"
-import type { ResidualReason } from "./plan"
 import { cellKey } from "./keys"
+import type { ResidualReason } from "./plan"
 import {
   getAssignmentBoardData,
   getTeacherEditorData,
   type AssignmentBoardData,
   type TeacherEditorData,
 } from "./queries"
+import { suggestAssignments, type WaitingPair } from "./suggest"
 import {
   assignTeacherSchema,
   saveTeacherSubjectsSchema,
@@ -457,6 +458,98 @@ export async function saveTeacherSubjects(
     return { success: true, data: summary }
   } catch (error) {
     console.error("[assignments] save teacher subjects", error)
+    return actionError(ACTION_ERRORS.ASSIGNMENT_FAILED)
+  }
+}
+
+/**
+ * Board "Suggest": every subject still waiting for a teacher goes to a
+ * teacher qualified for it who has room (suggest.ts), and is assigned right
+ * away. Never touches a subject that already has a teacher.
+ */
+export async function suggestTeacherAssignments(): Promise<
+  ActionResponse<{
+    pairs: number
+    assigned: number
+    moved: number
+    residual: number
+  }>
+> {
+  try {
+    const authz = await authorize()
+    if (!authz.ok) return authz.response
+    const { ctx } = authz
+
+    const board = await getAssignmentBoardData(ctx)
+    const waiting: WaitingPair[] = []
+    for (const grade of board.grades) {
+      for (const section of grade.sections) {
+        for (const subject of grade.subjects) {
+          const cell =
+            board.cells[cellKey(section.sectionId, subject.subjectId)]
+          if (cell?.teacherId) continue
+          waiting.push({
+            sectionId: section.sectionId,
+            gradeId: grade.gradeId,
+            subjectId: subject.subjectId,
+            periods: cell?.scheduled || subject.weeklyPeriods || 0,
+          })
+        }
+      }
+    }
+
+    const suggestions = suggestAssignments(
+      waiting,
+      board.teachers.map((t) => ({
+        teacherId: t.teacherId,
+        subjectIds: t.subjectIds,
+        load: t.load,
+        cap: t.cap,
+      }))
+    )
+
+    const outcomes: AssignmentOutcome[] = []
+    for (const s of suggestions) {
+      const result = await applyAssignment({
+        schoolId: ctx.schoolId,
+        termId: ctx.termId,
+        teacherId: s.teacherId,
+        subjectId: s.subjectId,
+        sectionIds: s.sectionIds,
+        assignedById: ctx.userId,
+        respectCap: true,
+      })
+      if (result.ok) outcomes.push(result)
+    }
+
+    if (outcomes.length > 0) {
+      await logTimetableAction("assign_teacher", {
+        entityType: "assignment",
+        metadata: { suggested: outcomes.length },
+      })
+      await notifyMoved(ctx, [
+        ...new Set(outcomes.flatMap((o) => o.affectedTeacherIds)),
+      ])
+      refresh()
+    }
+
+    return {
+      success: true,
+      data: {
+        pairs: suggestions
+          .filter((s) =>
+            outcomes.some(
+              (o) => o.teacherId === s.teacherId && o.subjectId === s.subjectId
+            )
+          )
+          .reduce((n, s) => n + s.sectionIds.length, 0),
+        assigned: outcomes.reduce((n, o) => n + o.assigned, 0),
+        moved: outcomes.reduce((n, o) => n + o.moved, 0),
+        residual: outcomes.reduce((n, o) => n + o.residual.length, 0),
+      },
+    }
+  } catch (error) {
+    console.error("[assignments] suggest", error)
     return actionError(ACTION_ERRORS.ASSIGNMENT_FAILED)
   }
 }

@@ -153,6 +153,26 @@ describe("buildTeacherPlan", () => {
     expect(groups.size).toBe(2) // 36 periods > 25 → two placeholders
   })
 
+  it("in unstaffed mode keeps an assigned subject to exactly its teacher", () => {
+    const plan = buildTeacherPlan({
+      sections: [
+        section("7A", "g7", [
+          ["math", 5, ["t-math"]],
+          ["arabic", 5],
+        ]),
+      ],
+      teachers: [realTeacher("t-math", ["math"])],
+      cap: CAP,
+      placeholdersFor: "unstaffed",
+    })
+
+    const [math, arabic] = plan.sections[0].subjects
+    expect(math.preferredTeacherIds).toEqual(["t-math"])
+    expect(arabic.preferredTeacherIds).toHaveLength(1)
+    expect(isPlaceholderTeacherId(arabic.preferredTeacherIds[0])).toBe(true)
+    expect(plan.placeholderCount).toBe(1)
+  })
+
   it("is deterministic for the same input", () => {
     const input = {
       sections: [section("7A", "g7", [["math", 5]])],
