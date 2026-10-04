@@ -132,20 +132,25 @@ export async function loadTodaySchedule(input: {
         },
         ...(covering.length ? [{ id: { in: covering } }] : []),
       ]
+    } else {
+      // No teacher record → no day (never the whole school's)
+      where.OR = [{ id: { in: [] } }]
     }
   } else if (role === "STUDENT") {
+    // Section-based slots (primary) + legacy class enrollments; a student
+    // with neither — or no student record — has no day yet, never the whole
+    // school's
+    const orClauses: Array<Record<string, unknown>> = []
     if (student) {
       const enrollments = await db.studentClass.findMany({
         where: { studentId: student.id, schoolId },
         select: { classId: true },
       })
       const classIds = enrollments.map((e) => e.classId)
-      // Section-based slots (primary) + legacy class enrollments
-      const orClauses: Array<Record<string, unknown>> = []
       if (classIds.length > 0) orClauses.push({ classId: { in: classIds } })
       if (student.sectionId) orClauses.push({ sectionId: student.sectionId })
-      if (orClauses.length > 0) where.OR = orClauses
     }
+    where.OR = orClauses.length > 0 ? orClauses : [{ id: { in: [] } }]
   }
 
   const slots = await db.timetable.findMany({

@@ -15,9 +15,32 @@ last_audited: 2026-10-04
 
 **Status:** PRODUCTION-READY
 **Completion:** 95%
-**Last Updated:** 2026-06-13
+**Last Updated:** 2026-10-04
 
 ---
+
+## 2026-10-04 — reads without classes; scope leaks closed (LOCAL, not pushed)
+
+- [x] **P1 — a student with no section and no class saw the whole school.**
+      `getTimetableByStudentGrade` (the student view) and `loadTodaySchedule`
+      (today's cards, web + mobile dashboard) applied NO slot filter when the
+      student had neither, so a newly admitted, unplaced student got every
+      section's week. The same for a STUDENT / TEACHER account with no student
+      or teacher record. All now get an empty week
+      (`src/tests/school-dashboard/timetable/today-schedule-scope.test.ts`).
+- [x] `getTimetableByTeacher` workload: "classes teaching" counted distinct
+      `classId`, folding every section slot (classId null) into one; it counts
+      section·subject pairs.
+- [x] `getGuardianChildren` labels a child by their section (a legacy class
+      only without one); `getPersonalizedTimetable`'s student branch dropped an
+      unused StudentClass read.
+- Dead, no callers — delete in S15: the templates (`listTimetableTemplates`,
+  `createTemplateFromTerm`, `applyTemplateToTerm` and the timetable
+  `deleteTemplate` / `setDefaultTemplate` — class-only patterns),
+  `importTimetableSlots` (class-only), `getWeeklyTimetable`,
+  `getTimetableByGradeLevel`, `getTimetableByClass` + `getClassesForSelection`
+  (only the unrendered `TimetablePreview` and `/api/classes`), and
+  `filterTimetableByRole`.
 
 ## Log
 

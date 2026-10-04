@@ -1759,9 +1759,10 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
         where: { userId, schoolId },
         select: { id: true },
       })
-      if (teacher) {
-        whereBase.teacherId = teacher.id
-      }
+      // No teacher record → no schedule (never the whole school's)
+      whereBase.teacherId = teacher?.id ?? ""
+    } else {
+      whereBase.teacherId = ""
     }
   } else if (role === "STUDENT") {
     // Student can only view their own timetable.
@@ -1783,15 +1784,18 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
         const classIds = enrollments.map((e) => e.classId)
         const sectionId = studentRecord.sectionId
 
-        // Build an OR that covers both slot types
+        // Build an OR that covers both slot types; a student with neither
+        // a section nor a class sees no schedule — never the whole school's
         const orClauses: any[] = []
         if (classIds.length > 0) orClauses.push({ classId: { in: classIds } })
         if (sectionId) orClauses.push({ sectionId })
 
-        if (orClauses.length > 0) {
-          whereBase.OR = orClauses
-        }
+        whereBase.OR = orClauses.length > 0 ? orClauses : [{ id: { in: [] } }]
+      } else {
+        whereBase.OR = [{ id: { in: [] } }]
       }
+    } else {
+      whereBase.OR = [{ id: { in: [] } }]
     }
   } else {
     // Admin/Developer can specify view filters
@@ -2239,14 +2243,13 @@ export async function getTimetableByStudentGrade(input: {
         schoolId,
         termId: input.termId,
         weekOffset: input.weekOffset ?? 0,
-        ...(hasClassIds || hasSectionId
-          ? {
-              OR: [
-                ...(hasClassIds ? [{ classId: { in: classIds } }] : []),
-                ...(hasSectionId ? [{ sectionId: studentSectionId }] : []),
-              ],
-            }
-          : {}),
+        // A student with neither a section nor a class has no schedule yet —
+        // never the whole school's
+        OR: [
+          ...(hasClassIds ? [{ classId: { in: classIds } }] : []),
+          ...(hasSectionId ? [{ sectionId: studentSectionId }] : []),
+          ...(!hasClassIds && !hasSectionId ? [{ id: { in: [] } }] : []),
+        ],
       },
       include: {
         teacher: { select: { id: true, firstName: true, lastName: true } },
@@ -2655,7 +2658,11 @@ export async function getTimetableByTeacher(input: {
     workload: {
       daysPerWeek: uniqueDays.size,
       periodsPerWeek: totalPeriods,
-      classesTeaching: [...new Set(slots.map((s) => s.classId))].length,
+      // A class taught is a section·subject (or a legacy class) — counting
+      // classId alone folded every section slot (classId null) into one
+      classesTeaching: new Set(
+        slots.map((s) => s.classId ?? `${s.sectionId}|${s.subjectId}`)
+      ).size,
     },
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
     liveIndicators,
@@ -3403,23 +3410,9 @@ export async function getPersonalizedTimetable(input: {
       }
 
       case "STUDENT": {
+        // The student view resolves the student's section (and any legacy
+        // classes) server-side in getTimetableByStudentGrade
         viewType = "student"
-        // Get student record and ALL enrolled classes
-        const student = await db.student.findFirst({
-          where: { userId, schoolId },
-          select: { id: true },
-        })
-        if (student) {
-          // Get ALL class enrollments (not just one)
-          const enrollments = await db.studentClass.findMany({
-            where: { studentId: student.id, schoolId },
-            select: { classId: true },
-          })
-          const classIds = enrollments.map((e) => e.classId)
-          if (classIds.length > 0) {
-            filterData.classIds = classIds
-          }
-        }
         break
       }
 
@@ -3571,6 +3564,7 @@ export async function getGuardianChildren() {
               firstName: true,
               lastName: true,
               profilePhotoUrl: true,
+              section: { select: { id: true, name: true } },
               studentClasses: {
                 where: { schoolId },
                 orderBy: { createdAt: "desc" },
@@ -3618,8 +3612,10 @@ export async function getGuardianChildren() {
       id: sg.student.id,
       name: `${sg.student.firstName} ${sg.student.lastName}`,
       photoUrl: sg.student.profilePhotoUrl,
+      sectionId: sg.student.section?.id,
+      // The child's section (Grade 7-A); a legacy class only without one
       classId: enrollment?.class.id,
-      className: enrollment?.class.name,
+      className: sg.student.section?.name ?? enrollment?.class.name,
       gradeName: yearLevel?.yearLevel?.levelName,
       gradeLang: yearLevel?.yearLevel?.lang,
       isPrimary: sg.isPrimary,
