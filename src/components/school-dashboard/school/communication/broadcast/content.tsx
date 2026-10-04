@@ -4,7 +4,7 @@
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { getRecentBatches, getTargetClasses } from "./actions"
+import { getBroadcastTargets, getRecentBatches } from "./actions"
 import { BroadcastForm } from "./form"
 
 interface Props {
@@ -13,14 +13,14 @@ interface Props {
 }
 
 export default async function BroadcastContent({ dictionary, lang }: Props) {
-  const [batches, classes] = await Promise.all([
+  const [batches, grades] = await Promise.all([
     getRecentBatches(),
-    getTargetClasses(),
+    getBroadcastTargets(),
   ])
 
   return (
     <div className="space-y-6">
-      <BroadcastForm classes={classes} recentBatches={batches} lang={lang} />
+      <BroadcastForm grades={grades} recentBatches={batches} lang={lang} />
     </div>
   )
 }

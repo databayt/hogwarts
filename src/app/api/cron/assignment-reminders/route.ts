@@ -11,11 +11,12 @@
  * EXECUTION FLOW:
  * 1. Verify CRON_SECRET authorization
  * 2. Find all non-DRAFT assignments with dueDate in the next 24 hours
- * 3. Dispatch notifications to class students per assignment
+ * 3. Dispatch notifications to each assignment's audience
  * 4. Return execution report
  *
  * TARGETING:
- * - Scoped to class: Notifies all students enrolled in the assignment's class
+ * - The assignment's audience: its section's students, a whole grade's, or
+ *   (legacy) its class's — see `audienceUserIds`
  */
 
 import { NextRequest, NextResponse } from "next/server"

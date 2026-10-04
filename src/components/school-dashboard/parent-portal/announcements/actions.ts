@@ -7,6 +7,8 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import { getStudentScopes } from "@/lib/teaching-scope"
+import { buildViewerAudienceWhere } from "@/components/school-dashboard/listings/announcements/queries"
 import { localize } from "@/components/translation/localize"
 
 export async function getParentAnnouncements(displayLang?: "ar" | "en") {
@@ -20,7 +22,7 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       }
     }
 
-    // Get guardian and their students' classes
+    // The guardian and where each child sits (section, grade, legacy classes)
     const guardian = await db.guardian.findFirst({
       where: {
         userId: session.user.id,
@@ -30,12 +32,11 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
         studentGuardians: {
           include: {
             student: {
-              include: {
-                studentClasses: {
-                  select: {
-                    classId: true,
-                  },
-                },
+              select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
               },
             },
           },
@@ -50,39 +51,26 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       }
     }
 
-    // Get all class IDs for the guardian's students
-    const classIds = new Set<string>()
-    guardian.studentGuardians.forEach((sg) => {
-      sg.student.studentClasses.forEach((sc) => {
-        classIds.add(sc.classId)
-      })
-    })
+    const schoolId = session.user.schoolId
+    const children = guardian.studentGuardians.map((sg) => sg.student)
+    const scopes = await getStudentScopes(
+      schoolId,
+      children.map((c) => c.id)
+    )
 
-    // Fetch announcements that are:
-    // 1. School-wide (scope: 'school')
-    // 2. Parent-specific (scope: 'parents' or role: 'PARENT')
-    // 3. Class-specific for their children's classes
+    // The notices a guardian is an audience for — the same rule as the
+    // announcements page: school-wide, the guardian role, their children's
+    // grades and sections (or a legacy class), published and unexpired
+    const audience = await buildViewerAudienceWhere(
+      schoolId,
+      session.user.id,
+      "GUARDIAN"
+    )
     const announcements = await db.announcement.findMany({
-      where: {
-        schoolId: session.user.schoolId,
-        published: true,
-        OR: [
-          // School-wide announcements
-          { scope: "school" },
-          // Role-based announcements for parents
-          {
-            AND: [{ scope: "role" }, { role: "PARENT" as any }],
-          },
-          // Class-specific announcements for their children
-          {
-            AND: [
-              { scope: "class" },
-              { classId: { in: Array.from(classIds) } },
-            ],
-          },
-        ],
-      },
+      where: { schoolId, ...audience },
       include: {
+        grade: { select: { name: true } },
+        section: { select: { name: true } },
         class: {
           include: {
             subject: true,
@@ -101,10 +89,28 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       },
     })
 
+    // Which children a notice is for
+    const relevantFor = (a: {
+      scope: string
+      gradeId: string | null
+      sectionId: string | null
+      classId: string | null
+    }) =>
+      scopes
+        .filter((sc) =>
+          a.scope === "section"
+            ? sc.sectionId === a.sectionId
+            : a.scope === "grade"
+              ? sc.gradeId === a.gradeId
+              : a.scope === "class"
+                ? !!a.classId && sc.classIds.includes(a.classId)
+                : true
+        )
+        .map((sc) => sc.studentId)
+
     // Map announcements with additional context and on-demand translation.
     // ONE batched localize() pass for the whole list (replaces N×getText).
     const lang = displayLang || "ar"
-    const schoolId = session.user.schoolId
     const localized = await localize("Announcement", announcements, {
       schoolId,
       lang,
@@ -116,6 +122,10 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       scope: announcement.scope,
       createdAt: announcement.createdAt,
       updatedAt: announcement.updatedAt,
+      // The grade or section it's for
+      audienceName:
+        announcement.section?.name ?? announcement.grade?.name ?? null,
+      // Legacy class notices
       class: announcement.class
         ? {
             id: announcement.class.id,
@@ -126,16 +136,8 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
               : "N/A",
           }
         : null,
-      // Mark which student this announcement is relevant for
-      relevantStudents: announcement.classId
-        ? guardian.studentGuardians
-            .filter((sg) =>
-              sg.student.studentClasses.some(
-                (sc) => sc.classId === announcement.classId
-              )
-            )
-            .map((sg) => sg.student.id)
-        : guardian.studentGuardians.map((sg) => sg.student.id),
+      // Mark which children this announcement is relevant for
+      relevantStudents: relevantFor(announcement),
     }))
 
     logger.info("Parent announcements fetched", {
@@ -148,9 +150,9 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
     return {
       success: true,
       announcements: mappedAnnouncements,
-      students: guardian.studentGuardians.map((sg) => ({
-        id: sg.student.id,
-        name: `${sg.student.firstName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.lastName}`,
+      students: children.map((c) => ({
+        id: c.id,
+        name: `${c.firstName}${c.middleName ? ` ${c.middleName}` : ""} ${c.lastName}`,
       })),
     }
   } catch (error) {

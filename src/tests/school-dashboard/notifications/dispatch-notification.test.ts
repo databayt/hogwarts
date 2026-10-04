@@ -8,6 +8,7 @@ import {
   dispatchNotification,
   dispatchNotificationsToAudience,
 } from "@/lib/dispatch-notification"
+import { audienceUserIds } from "@/lib/teaching-scope"
 
 // Mock db before importing dispatch functions
 vi.mock("@/lib/db", () => ({
@@ -23,11 +24,11 @@ vi.mock("@/lib/db", () => ({
     user: {
       findMany: vi.fn(),
     },
-    class: {
-      findUnique: vi.fn(),
-    },
   },
 }))
+
+// Class / grade / section audiences resolve through the shared helper
+vi.mock("@/lib/teaching-scope", () => ({ audienceUserIds: vi.fn() }))
 
 const mockDb = vi.mocked(db)
 
@@ -308,14 +309,12 @@ describe("dispatchNotificationsToAudience", () => {
     expect(userIds).not.toContain("u2")
   })
 
-  it("resolves class scope with students and teacher via User IDs", async () => {
-    mockDb.class.findUnique.mockResolvedValue({
-      teacher: { userId: "teacher-user-1" },
-      studentClasses: [
-        { student: { userId: "student-user-1" } },
-        { student: { userId: "student-user-2" } },
-      ],
-    } as any)
+  it("resolves a legacy class to this school's students and teacher", async () => {
+    vi.mocked(audienceUserIds).mockResolvedValue([
+      "student-user-1",
+      "student-user-2",
+      "teacher-user-1",
+    ])
     mockDb.notificationPreference.findMany.mockResolvedValue([])
     mockDb.notification.createMany.mockResolvedValue({ count: 3 })
 
@@ -325,26 +324,30 @@ describe("dispatchNotificationsToAudience", () => {
       targetClassId: "class-1",
     })
 
+    expect(audienceUserIds).toHaveBeenCalledWith(
+      "school-1",
+      { classId: "class-1", gradeId: null, sectionId: null },
+      { students: true, teachers: true }
+    )
     expect(result.created).toBe(3)
   })
 
-  it("filters out students without linked user accounts", async () => {
-    mockDb.class.findUnique.mockResolvedValue({
-      teacher: { userId: "teacher-user-1" },
-      studentClasses: [
-        { student: { userId: "student-user-1" } },
-        { student: { userId: null } },
-      ],
-    } as any)
+  it("resolves a section to its students, guardians and teachers", async () => {
+    vi.mocked(audienceUserIds).mockResolvedValue(["s1", "g1"])
     mockDb.notificationPreference.findMany.mockResolvedValue([])
     mockDb.notification.createMany.mockResolvedValue({ count: 2 })
 
     const result = await dispatchNotificationsToAudience({
       ...baseAudienceParams,
-      targetScope: "class",
-      targetClassId: "class-1",
+      targetScope: "section",
+      targetSectionId: "7a",
     })
 
+    expect(audienceUserIds).toHaveBeenCalledWith(
+      "school-1",
+      { classId: null, gradeId: null, sectionId: "7a" },
+      { students: true, guardians: true, teachers: true }
+    )
     expect(result.created).toBe(2)
   })
 

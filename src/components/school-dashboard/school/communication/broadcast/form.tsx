@@ -40,14 +40,19 @@ const ROLES = [
 ] as const
 
 interface Props {
-  classes: { id: string; name: string }[]
+  /** Grades in order, each with its sections. */
+  grades: {
+    id: string
+    name: string
+    sections: { id: string; name: string }[]
+  }[]
   recentBatches: (NotificationBatch & {
     creator: { username: string | null; email: string | null } | null
   })[]
   lang: Locale
 }
 
-export function BroadcastForm({ classes, recentBatches, lang }: Props) {
+export function BroadcastForm({ grades, recentBatches, lang }: Props) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
@@ -63,7 +68,16 @@ export function BroadcastForm({ classes, recentBatches, lang }: Props) {
       title: formData.get("title") as string,
       body: formData.get("body") as string,
       targetRole: (formData.get("targetRole") as string) || undefined,
-      targetClassId: (formData.get("targetClassId") as string) || undefined,
+      // "g:<id>" = a whole grade, "s:<id>" = one section
+      ...(() => {
+        const target = (formData.get("target") as string) || ""
+        return {
+          targetGradeId: target.startsWith("g:") ? target.slice(2) : undefined,
+          targetSectionId: target.startsWith("s:")
+            ? target.slice(2)
+            : undefined,
+        }
+      })(),
     }
 
     startTransition(async () => {
@@ -91,7 +105,7 @@ export function BroadcastForm({ classes, recentBatches, lang }: Props) {
             Send Broadcast
           </CardTitle>
           <CardDescription>
-            Send a notification to a group of users by role or class
+            Send a notification to a group of users by role, grade or section
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -149,17 +163,22 @@ export function BroadcastForm({ classes, recentBatches, lang }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="targetClassId">Target Class (optional)</Label>
-                <Select name="targetClassId">
-                  <SelectTrigger>
-                    <SelectValue placeholder="All classes" />
+                <Label htmlFor="target">Grade or section (optional)</Label>
+                <Select name="target">
+                  <SelectTrigger id="target">
+                    <SelectValue placeholder="Whole school" />
                   </SelectTrigger>
                   <SelectContent>
-                    {classes.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </SelectItem>
-                    ))}
+                    {grades.flatMap((grade) => [
+                      <SelectItem key={grade.id} value={`g:${grade.id}`}>
+                        {grade.name}
+                      </SelectItem>,
+                      ...grade.sections.map((section) => (
+                        <SelectItem key={section.id} value={`s:${section.id}`}>
+                          {section.name}
+                        </SelectItem>
+                      )),
+                    ])}
                   </SelectContent>
                 </Select>
               </div>

@@ -240,6 +240,8 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 
 `POST /api/mobile/teacher/classes/:id/attendance` takes a section's day of attendance: `:id` is the section id `/teacher/classes` returns, a teacher may mark only their own sections, and every student must be in the section. It updates the day's rows and creates the rest (2026-10-04).
 
+Announcements (2026-10-04): a notice can be for a grade or a section. The list returns `grade_id` and `section_id`, the detail `target_grade` and `target_section`; `class_id` / `target_class` stay for older app builds and are null on every notice written since classes were retired.
+
 ### Admin (new)
 
 | Method | Path                       | Description                |

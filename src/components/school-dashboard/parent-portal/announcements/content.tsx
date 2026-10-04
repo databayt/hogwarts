@@ -48,6 +48,9 @@ interface Announcement {
   scope: string
   createdAt: Date
   updatedAt: Date
+  /** The grade or section the notice is for. */
+  audienceName: string | null
+  /** Legacy class notices. */
   class: {
     id: string
     name: string
@@ -110,6 +113,8 @@ export function ParentAnnouncementsContent({
     switch (scope) {
       case "school":
         return <School className="h-4 w-4" />
+      case "grade":
+      case "section":
       case "class":
         return <BookOpen className="h-4 w-4" />
       case "role":
@@ -124,6 +129,16 @@ export function ParentAnnouncementsContent({
       case "school":
         return (
           <Badge className="bg-blue-100 text-blue-800">{t.scopeSchool}</Badge>
+        )
+      case "grade":
+        return (
+          <Badge className="bg-green-100 text-green-800">{t.scopeGrade}</Badge>
+        )
+      case "section":
+        return (
+          <Badge className="bg-green-100 text-green-800">
+            {t.scopeSection}
+          </Badge>
         )
       case "class":
         return (
@@ -220,7 +235,8 @@ export function ParentAnnouncementsContent({
               <SelectContent>
                 <SelectItem value="all">{t.scopeAll}</SelectItem>
                 <SelectItem value="school">{t.scopeSchool}</SelectItem>
-                <SelectItem value="class">{t.scopeClass}</SelectItem>
+                <SelectItem value="grade">{t.scopeGrade}</SelectItem>
+                <SelectItem value="section">{t.scopeSection}</SelectItem>
                 <SelectItem value="role">{t.scopeRole}</SelectItem>
               </SelectContent>
             </Select>
@@ -261,6 +277,9 @@ export function ParentAnnouncementsContent({
                                   </CardTitle>
                                   <CardDescription className="flex items-center gap-2">
                                     {getScopeBadge(announcement.scope)}
+                                    {announcement.audienceName && (
+                                      <p>{announcement.audienceName}</p>
+                                    )}
                                     {announcement.class && (
                                       <p>
                                         {announcement.class.subject} -{" "}

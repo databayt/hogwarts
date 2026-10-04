@@ -6,7 +6,11 @@
 
 > **2026-10-04:** a child's assignments are the ones set for their section,
 > grade or a legacy class (`studentAudienceWhere`), so a school without classes
-> shows them too. Attendance and announcements here still read classes (S8/S10).
+> shows them too. Announcements use the announcements block's audience
+> (`buildViewerAudienceWhere`): school, the guardian role, their children's grades
+> and sections, published and unexpired — the old query asked for a `PARENT`
+> role that doesn't exist and never hid expired notices. Each notice lists the
+> children it concerns. Attendance's class filter here is still open (S14).
 > **Tracking issue:** [hogwarts#4](https://github.com/databayt/hogwarts/issues/4)
 > **Source-of-truth epic:** [kun docs `aldar` §04](https://kun.databayt.org/en/docs/aldar)
 

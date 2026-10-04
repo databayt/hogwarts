@@ -31,7 +31,10 @@ type Result = { success: true } | { success: false; error: string }
 async function requireUser(): Promise<
   { userId: string; schoolId: string } | { error: string }
 > {
-  const [session, { schoolId }] = await Promise.all([auth(), getTenantContext()])
+  const [session, { schoolId }] = await Promise.all([
+    auth(),
+    getTenantContext(),
+  ])
   if (!session?.user?.id) return { error: "Unauthorized" }
   if (!schoolId) return { error: "Missing school" }
   return { userId: session.user.id, schoolId }
@@ -72,7 +75,9 @@ export async function subscribeWebPush(input: unknown): Promise<Result> {
 export async function unsubscribeWebPush(input: unknown): Promise<Result> {
   const ctx = await requireUser()
   if ("error" in ctx) return { success: false, error: ctx.error }
-  const parsed = z.object({ endpoint: z.string().url().max(2048) }).safeParse(input)
+  const parsed = z
+    .object({ endpoint: z.string().url().max(2048) })
+    .safeParse(input)
   if (!parsed.success) return { success: false, error: "Invalid subscription" }
 
   // Only the owner may remove a subscription; a stranger's endpoint is a no-op.
@@ -86,7 +91,9 @@ export async function unsubscribeWebPush(input: unknown): Promise<Result> {
 export async function isWebPushSubscribed(input: unknown): Promise<boolean> {
   const ctx = await requireUser()
   if ("error" in ctx) return false
-  const parsed = z.object({ endpoint: z.string().url().max(2048) }).safeParse(input)
+  const parsed = z
+    .object({ endpoint: z.string().url().max(2048) })
+    .safeParse(input)
   if (!parsed.success) return false
   const row = await db.pushSubscription.findFirst({
     where: { endpoint: parsed.data.endpoint, userId: ctx.userId },

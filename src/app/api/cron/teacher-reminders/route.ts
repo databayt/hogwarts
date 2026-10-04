@@ -75,7 +75,7 @@ export async function GET(request: Request) {
               userId: true,
             },
           },
-          class: {
+          section: {
             select: {
               id: true,
               name: true,
@@ -92,13 +92,15 @@ export async function GET(request: Request) {
 
       stats.classesChecked += timetableEntries.length
 
-      // 4. Check which classes have NO attendance records for today
+      // 4. Check which sections have NO attendance for today — neither this
+      // period's marks nor the day's
       for (const entry of timetableEntries) {
+        if (!entry.sectionId) continue
         const attendanceExists = await db.attendance.findFirst({
           where: {
             schoolId: school.id,
-            classId: entry.classId,
-            periodId: entry.periodId,
+            sectionId: entry.sectionId,
+            OR: [{ periodId: entry.periodId }, { periodId: null }],
             date: todayDate,
             deletedAt: null, // deleted records must not suppress the reminder
           },
@@ -112,10 +114,10 @@ export async function GET(request: Request) {
             type: "attendance_alert",
             priority: "normal",
             title: "Attendance Reminder",
-            body: `Reminder: Attendance not yet marked for ${entry.class?.name ?? "Unknown Class"} - ${entry.period.name}`,
+            body: `Reminder: Attendance not yet marked for ${entry.section?.name ?? ""} - ${entry.period.name}`,
             metadata: {
               entityType: "attendance",
-              classId: entry.classId,
+              sectionId: entry.sectionId,
               periodId: entry.periodId,
               date: todayDate.toISOString(),
             },
@@ -123,7 +125,7 @@ export async function GET(request: Request) {
 
           stats.remindersCreated++
           console.log(
-            `[Cron] Created reminder for teacher ${entry.teacher?.firstName} ${entry.teacher?.lastName} - ${entry.class?.name ?? "Unknown Class"}`
+            `[Cron] Created reminder for teacher ${entry.teacher?.firstName} ${entry.teacher?.lastName} - ${entry.section?.name ?? ""}`
           )
         }
       }

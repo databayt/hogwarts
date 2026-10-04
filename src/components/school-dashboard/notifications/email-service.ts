@@ -6,6 +6,7 @@ import { Resend } from "resend"
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
 import { resolveActionUrl } from "@/lib/dispatch-notification"
+import { audienceUserIds } from "@/lib/teaching-scope"
 import { prewarm } from "@/components/translation/prewarm"
 
 // Lazy-init to avoid crashing on import if RESEND_API_KEY is not set
@@ -814,23 +815,18 @@ export async function processNotificationBatch(
       targetUserIds = [...targetUserIds, ...users.map((u) => u.id)]
     }
 
-    if (batch.targetClassId) {
-      // Get students in class via studentClass join table
-      const studentClasses = await db.studentClass.findMany({
-        where: {
-          schoolId,
+    // The students of a section, a whole grade, or (a batch made before
+    // classes were retired) a class — those with a user account
+    if (batch.targetSectionId || batch.targetGradeId || batch.targetClassId) {
+      const studentUserIds = await audienceUserIds(
+        schoolId,
+        {
           classId: batch.targetClassId,
+          gradeId: batch.targetGradeId,
+          sectionId: batch.targetSectionId,
         },
-        select: {
-          student: {
-            select: { userId: true },
-          },
-        },
-      })
-      // Filter out students without linked user accounts
-      const studentUserIds = studentClasses
-        .map((sc) => sc.student.userId)
-        .filter((id): id is string => id !== null)
+        { students: true }
+      )
       targetUserIds = [...targetUserIds, ...studentUserIds]
     }
 

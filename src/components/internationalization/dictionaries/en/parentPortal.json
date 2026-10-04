@@ -15,7 +15,9 @@
     "scopeRole": "Parents",
     "empty": "No announcements found.",
     "by": "by",
-    "relevantFor": "Relevant for:"
+    "relevantFor": "Relevant for:",
+    "scopeGrade": "Grade",
+    "scopeSection": "Section"
   },
   "events": {
     "metaTitle": "Events | Parent Portal",

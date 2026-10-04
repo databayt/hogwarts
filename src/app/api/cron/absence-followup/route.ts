@@ -93,7 +93,6 @@ export async function GET(request: Request) {
         select: {
           id: true,
           studentId: true,
-          classId: true,
           date: true,
           markedAt: true,
           student: {

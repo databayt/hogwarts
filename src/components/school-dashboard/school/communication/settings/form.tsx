@@ -87,7 +87,8 @@ export function SettingsForm({ config, lang }: Props) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="school">Whole School</SelectItem>
-                  <SelectItem value="class">Class</SelectItem>
+                  <SelectItem value="grade">Grade</SelectItem>
+                  <SelectItem value="section">Section</SelectItem>
                   <SelectItem value="role">Role</SelectItem>
                 </SelectContent>
               </Select>

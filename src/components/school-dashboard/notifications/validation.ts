@@ -154,7 +154,9 @@ export const createNotificationBatchSchema = z
       .max(255, "Title must be less than 255 characters"),
     body: z.string().min(1, "Body is required").max(5000),
     targetRole: z.nativeEnum(UserRole).optional(),
-    targetClassId: z.string().optional(),
+    // A grade (all its students) or one section of it
+    targetGradeId: z.string().optional(),
+    targetSectionId: z.string().optional(),
     targetUserIds: z.array(z.string()).optional(),
     scheduledFor: z.string().datetime().optional().or(z.literal("")),
   })
@@ -162,13 +164,14 @@ export const createNotificationBatchSchema = z
     // At least one target must be specified
     if (
       !val.targetRole &&
-      !val.targetClassId &&
+      !val.targetGradeId &&
+      !val.targetSectionId &&
       (!val.targetUserIds || val.targetUserIds.length === 0)
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
-          "At least one target (role, class, or user IDs) must be specified",
+          "At least one target (role, grade, section, or user IDs) must be specified",
         path: ["targetRole"],
       })
     }

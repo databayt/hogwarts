@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
 import { refreshPage } from "@/lib/refresh-page"
+import { resolveBatchTarget } from "@/components/school-dashboard/notifications/batch-target"
 import { processNotificationBatch } from "@/components/school-dashboard/notifications/email-service"
 
 import { requireSchoolRole } from "../../require-school-admin"
@@ -29,6 +30,10 @@ export async function sendBroadcast(input: BroadcastInput) {
 
   const validated = broadcastSchema.parse(input)
 
+  // A grade or section target must be this school's
+  const target = await resolveBatchTarget(schoolId, validated)
+  if (!target.ok) throw new Error(target.code)
+
   // Create the batch
   const batch = await db.notificationBatch.create({
     data: {
@@ -37,7 +42,8 @@ export async function sendBroadcast(input: BroadcastInput) {
       title: validated.title,
       body: validated.body,
       targetRole: validated.targetRole,
-      targetClassId: validated.targetClassId,
+      targetGradeId: target.targetGradeId,
+      targetSectionId: target.targetSectionId,
       targetUserIds: validated.targetUserIds,
       scheduledFor: validated.scheduledFor,
       createdBy: userId,
@@ -53,12 +59,20 @@ export async function sendBroadcast(input: BroadcastInput) {
   return batch
 }
 
-export async function getTargetClasses() {
+/** Grades in order, each with its sections — who a broadcast can target. */
+export async function getBroadcastTargets() {
   const { schoolId } = await requireSchoolRole()
 
-  return db.class.findMany({
+  return db.academicGrade.findMany({
     where: { schoolId },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
+    orderBy: { gradeNumber: "asc" },
+    select: {
+      id: true,
+      name: true,
+      sections: {
+        orderBy: [{ letter: "asc" }, { name: "asc" }],
+        select: { id: true, name: true },
+      },
+    },
   })
 }

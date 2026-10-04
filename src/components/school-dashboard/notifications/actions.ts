@@ -18,6 +18,7 @@ import {
   getAuthContext,
   validateNotificationType,
 } from "./authorization"
+import { resolveBatchTarget } from "./batch-target"
 import { NOTIFICATION_EXPIRATION } from "./config"
 import {
   createNotificationBatchSchema,
@@ -428,6 +429,10 @@ export async function createNotificationBatch(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    // A grade or section target must be this school's
+    const target = await resolveBatchTarget(schoolId, parsed)
+    if (!target.ok) return { success: false, error: target.code }
+
     // Create batch record
     const batch = await db.notificationBatch.create({
       data: {
@@ -436,7 +441,8 @@ export async function createNotificationBatch(
         title: parsed.title,
         body: parsed.body,
         targetRole: parsed.targetRole ?? null,
-        targetClassId: parsed.targetClassId || null,
+        targetGradeId: target.targetGradeId,
+        targetSectionId: target.targetSectionId,
         targetUserIds: parsed.targetUserIds || [],
         scheduledFor: parsed.scheduledFor
           ? new Date(parsed.scheduledFor)

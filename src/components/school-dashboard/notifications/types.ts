@@ -111,7 +111,8 @@ export type CreateNotificationBatchPayload = {
   title: string
   body: string
   targetRole?: string
-  targetClassId?: string
+  targetGradeId?: string
+  targetSectionId?: string
   targetUserIds?: string[]
   scheduledFor?: Date
 }

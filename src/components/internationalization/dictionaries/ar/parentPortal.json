@@ -15,7 +15,9 @@
     "scopeRole": "أولياء الأمور",
     "empty": "لا توجد إعلانات.",
     "by": "بواسطة",
-    "relevantFor": "يخص:"
+    "relevantFor": "يخص:",
+    "scopeGrade": "الصف",
+    "scopeSection": "الفصل"
   },
   "events": {
     "metaTitle": "الفعاليات | بوابة ولي الأمر",

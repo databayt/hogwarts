@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { getStudentScopes } from "@/lib/teaching-scope"
 
 /**
  * The routes run the REAL `announcements/queries.ts` audience logic; only the
@@ -20,10 +21,12 @@ type Row = {
   title: string
   body: string
   lang: string
-  scope: "school" | "class" | "role"
+  scope: "school" | "class" | "grade" | "section" | "role"
   priority: string
   role: string | null
   classId: string | null
+  gradeId: string | null
+  sectionId: string | null
   published: boolean
   publishedAt: Date | null
   scheduledFor: Date | null
@@ -38,6 +41,8 @@ type Row = {
 
 const SCHOOL = "school-1"
 const OTHER_SCHOOL = "school-2"
+/** A school whose notices go to grades and sections (classes retired). */
+const SECTION_SCHOOL = "school-3"
 const USER = "user-1"
 
 const at = (day: number) => new Date(Date.UTC(2026, 8, day))
@@ -51,6 +56,8 @@ const row = (over: Partial<Row> & Pick<Row, "id">): Row => ({
   priority: "normal",
   role: null,
   classId: null,
+  gradeId: null,
+  sectionId: null,
   published: true,
   publishedAt: at(1),
   scheduledFor: null,
@@ -89,6 +96,36 @@ const TABLE: Row[] = [
   row({ id: "ann-pinned", pinned: true, createdAt: at(1) }),
   row({ id: "ann-wizard", wizardStep: "content", createdAt: at(8) }),
   row({ id: "ann-foreign", schoolId: OTHER_SCHOOL, createdAt: at(9) }),
+  row({
+    id: "ann-grade-mine",
+    schoolId: SECTION_SCHOOL,
+    scope: "grade",
+    gradeId: "g7",
+    createdAt: at(4),
+  }),
+  row({
+    id: "ann-section-mine",
+    schoolId: SECTION_SCHOOL,
+    scope: "section",
+    gradeId: "g7",
+    sectionId: "7a",
+    createdAt: at(3),
+  }),
+  row({
+    id: "ann-section-other",
+    schoolId: SECTION_SCHOOL,
+    scope: "section",
+    gradeId: "g7",
+    sectionId: "7b",
+    createdAt: at(2),
+  }),
+  row({
+    id: "ann-grade-other",
+    schoolId: SECTION_SCHOOL,
+    scope: "grade",
+    gradeId: "g8",
+    createdAt: at(5),
+  }),
 ]
 
 function matches(
@@ -137,6 +174,8 @@ function query(args: {
       ...r,
       creator: null,
       class: null,
+      grade: null,
+      section: null,
       _count: { readReceipts: 0 },
     }))
 }
@@ -145,10 +184,11 @@ vi.mock("@/lib/db", () => ({
   db: {
     announcement: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn() },
     announcementRead: { findMany: vi.fn(), upsert: vi.fn() },
-    studentClass: { findMany: vi.fn() },
-    class: { findMany: vi.fn() },
+    student: { findMany: vi.fn() },
+    studentGuardian: { findMany: vi.fn() },
   },
 }))
+vi.mock("@/lib/teaching-scope", () => ({ getStudentScopes: vi.fn() }))
 vi.mock("@/app/api/mobile/lib/authenticate", () => ({
   authenticate: vi.fn(),
   isAuthError: (r: unknown) => r instanceof NextResponse,
@@ -197,11 +237,21 @@ beforeEach(() => {
     { announcementId: "ann-school" },
   ] as never)
   vi.mocked(db.announcementRead.upsert).mockResolvedValue({} as never)
-  // The student sits in class-a; the teacher teaches class-a.
-  vi.mocked(db.studentClass.findMany).mockResolvedValue([
-    { classId: "class-a" },
-  ] as never)
-  vi.mocked(db.class.findMany).mockResolvedValue([{ id: "class-a" }] as never)
+  // The student sits in section 7-A of grade 7 (and, from before classes
+  // were retired, in class-a).
+  vi.mocked(db.student.findMany).mockResolvedValue([{ id: "stu-1" }] as never)
+  vi.mocked(getStudentScopes).mockImplementation(async (_school, studentIds) =>
+    studentIds.includes("stu-1")
+      ? [
+          {
+            studentId: "stu-1",
+            sectionId: "7a",
+            gradeId: "g7",
+            classIds: ["class-a"],
+          },
+        ]
+      : []
+  )
 })
 
 describe("GET /api/mobile/announcements", () => {
@@ -229,6 +279,22 @@ describe("GET /api/mobile/announcements", () => {
     ])
     expect(ids(body)).not.toContain("ann-staff")
     expect(body.total).toBe(4)
+  })
+
+  it("student: their grade's and their section's notices — not another section's or grade's", async () => {
+    await authAs("STUDENT", SECTION_SCHOOL)
+    const { GET } = await import("@/app/api/mobile/announcements/route")
+    const body = await (await GET(req())).json()
+    expect(ids(body)).toEqual(["ann-grade-mine", "ann-section-mine"])
+    const section = body.data.find(
+      (a: { id: string }) => a.id === "ann-section-mine"
+    )
+    expect(section).toMatchObject({
+      scope: "section",
+      section_id: "7a",
+      grade_id: "g7",
+      class_id: null,
+    })
   })
 
   it("unknown or missing role reads as an audience-only user, not staff", async () => {

@@ -185,12 +185,22 @@ describe("createNotificationBatchSchema", () => {
     expect(result.success).toBe(true)
   })
 
-  it("accepts valid batch with targetClassId", () => {
+  it("accepts valid batch with targetSectionId", () => {
     const result = createNotificationBatchSchema.safeParse({
       type: "announcement",
       title: "Batch Title",
       body: "Batch body",
-      targetClassId: "class-1",
+      targetSectionId: "section-1",
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it("accepts valid batch with targetGradeId", () => {
+    const result = createNotificationBatchSchema.safeParse({
+      type: "announcement",
+      title: "Batch Title",
+      body: "Batch body",
+      targetGradeId: "grade-1",
     })
     expect(result.success).toBe(true)
   })

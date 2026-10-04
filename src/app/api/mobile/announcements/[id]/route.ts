@@ -15,7 +15,7 @@ import { displayLang, viewerRole } from "../viewer"
  *
  * Visibility matches the web's reading page (`getAnnouncement`): a student,
  * guardian or plain user may only open a notice they are an audience for;
- * a draft, a staff notice or another class's notice reads as 404.
+ * a draft, a staff notice or another section's notice reads as 404.
  *
  * Also marks the announcement as read for the current user.
  * Query: `lang` (ar|en) localizes title and body.
@@ -61,6 +61,8 @@ export async function GET(
         updatedAt: true,
         creator: { select: { username: true, image: true } },
         class: { select: { id: true, name: true } },
+        grade: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } },
         _count: { select: { readReceipts: true } },
       },
     })
@@ -112,6 +114,14 @@ export async function GET(
       expires_at: announcement.expiresAt?.toISOString() || null,
       is_pinned: announcement.pinned,
       is_featured: announcement.featured,
+      // Additive (2026-10): the grade or section a notice is for.
+      // target_class is legacy (scope "class" only).
+      target_grade: announcement.grade
+        ? { id: announcement.grade.id, name: announcement.grade.name }
+        : null,
+      target_section: announcement.section
+        ? { id: announcement.section.id, name: announcement.section.name }
+        : null,
       target_class: announcement.class
         ? { id: announcement.class.id, name: announcement.class.name }
         : null,

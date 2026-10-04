@@ -23,7 +23,7 @@ const MAX_PER_PAGE = 100
  * Staff (DEVELOPER, ADMIN, TEACHER, STAFF, ACCOUNTANT) see the whole school
  * list, drafts included, exactly as the web table does. A student, guardian
  * or plain user sees only published, unexpired notices addressed to them —
- * school-wide, their role, or one of their classes — via the same
+ * school-wide, their role, or one of their grades or sections — via the same
  * `resolveViewerAudience` the web page and its load-more action use.
  *
  * Query: `page`, `per_page`, `title` (search), `lang` (ar|en: localize).
@@ -58,6 +58,8 @@ export async function GET(request: NextRequest) {
         body: true,
         role: true,
         classId: true,
+        gradeId: true,
+        sectionId: true,
         creator: { select: { username: true, image: true } },
       }
     )
@@ -88,6 +90,10 @@ export async function GET(request: NextRequest) {
       // Additive (2026-09): what the web card and reading page draw.
       scope: a.scope,
       target_role: a.role,
+      // Additive (2026-10): who a grade/section notice is for. class_id is
+      // legacy — null for every notice written since classes were retired.
+      grade_id: a.gradeId,
+      section_id: a.sectionId,
       class_id: a.classId,
       is_published: a.published,
       is_pinned: a.pinned,

@@ -22,6 +22,9 @@
 - Students and guardians read grade/section notices of their own students
   (`viewerAudienceScope`). Removed the unused `getClassAnnouncements` and the
   class option loader `getClassesForAnnouncement`.
+- Part 2: the mobile API returns `grade_id` / `section_id` (list) and
+  `target_grade` / `target_section` (detail) beside the legacy `class_id` /
+  `target_class`; the parent portal reads through `buildViewerAudienceWhere`.
 
 ---
 

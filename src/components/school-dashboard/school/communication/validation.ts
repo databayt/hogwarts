@@ -60,14 +60,18 @@ export const broadcastSchema = z.object({
       "USER",
     ])
     .optional(),
-  targetClassId: z.string().optional(),
+  // A grade (all its students) or one section of it
+  targetGradeId: z.string().optional(),
+  targetSectionId: z.string().optional(),
   targetUserIds: z.array(z.string()).default([]),
   scheduledFor: z.coerce.date().optional(),
 })
 
 // Settings schemas
 export const communicationSettingsSchema = z.object({
-  defaultScope: z.enum(["school", "class", "role"]).default("school"),
+  defaultScope: z
+    .enum(["school", "grade", "section", "role"])
+    .default("school"),
   defaultPriority: z
     .enum(["low", "normal", "high", "urgent"])
     .default("normal"),
