@@ -10,7 +10,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { canViewSchoolAnalytics } from "@/components/school-dashboard/attendance/authorization"
 
 import type { ActionResponse } from "./core"
-import { getClassIdsByGrade, getTeacherClassIds } from "./helpers"
+import { getTeacherSectionIds, sectionScopeWhere } from "./helpers"
 
 // ============================================================================
 // ANALYTICS
@@ -20,7 +20,6 @@ import { getClassIdsByGrade, getTeacherClassIds } from "./helpers"
  * Get overall attendance statistics
  */
 export async function getAttendanceStats(input?: {
-  classId?: string
   sectionId?: string
   dateFrom?: string
   dateTo?: string
@@ -61,7 +60,6 @@ export async function getAttendanceStats(input?: {
 
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
-  if (input?.classId) where.classId = input.classId
   if (input?.sectionId) where.sectionId = input.sectionId
   if (input?.studentId) where.studentId = input.studentId
   if (input?.dateFrom || input?.dateTo) {
@@ -130,7 +128,6 @@ export async function getAttendanceStats(input?: {
 export async function getAttendanceTrends(input: {
   dateFrom: string
   dateTo: string
-  classId?: string
   sectionId?: string
   groupBy?: "day" | "week" | "month"
 }): Promise<
@@ -168,7 +165,6 @@ export async function getAttendanceTrends(input: {
       },
     }
 
-    if (input.classId) where.classId = input.classId
     if (input.sectionId) where.sectionId = input.sectionId
 
     const attendance = await db.attendance.findMany({
@@ -270,7 +266,6 @@ export async function getMethodUsageStats(input?: {
 export async function getDayWisePatterns(input?: {
   dateFrom?: string
   dateTo?: string
-  classId?: string
   sectionId?: string
 }) {
   const { schoolId } = await getTenantContext()
@@ -288,7 +283,6 @@ export async function getDayWisePatterns(input?: {
 
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
-  if (input?.classId) where.classId = input.classId
   if (input?.sectionId) where.sectionId = input.sectionId
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
@@ -348,7 +342,7 @@ export async function getDayWisePatterns(input?: {
 export async function getCalendarData(input: {
   year: number
   month: number // 0-indexed (0 = January)
-  classId?: string
+  sectionId?: string
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
@@ -376,8 +370,8 @@ export async function getCalendarData(input: {
     },
   }
 
-  if (input.classId) {
-    where.classId = input.classId
+  if (input.sectionId) {
+    where.sectionId = input.sectionId
   }
 
   // Fetch all attendance records for the month
@@ -553,9 +547,9 @@ export async function getCalendarData(input: {
 }
 
 /**
- * Get class comparison stats
+ * Compare sections by attendance rate (a teacher sees their own sections)
  */
-export async function getClassComparisonStats(input?: {
+export async function getSectionComparisonStats(input?: {
   dateFrom?: string
   dateTo?: string
   gradeId?: string
@@ -582,56 +576,40 @@ export async function getClassComparisonStats(input?: {
   }
 
   // Teacher scoping
-  let teacherClassIds: string[] | null = null
-  if (session.user.role === "TEACHER") {
-    teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
-  }
+  const teacherSectionIds =
+    session.user.role === "TEACHER"
+      ? await getTeacherSectionIds(schoolId, session.user.id!)
+      : null
 
-  // Grade filter
-  if (input?.gradeId) {
-    const gradeClassIds = await getClassIdsByGrade(
-      schoolId,
-      input.gradeId,
-      teacherClassIds
-    )
-    where.classId = { in: gradeClassIds }
-  } else if (teacherClassIds) {
-    where.classId = { in: teacherClassIds }
-  }
+  const sectionWhere: Prisma.SectionWhereInput = { schoolId }
+  if (teacherSectionIds) sectionWhere.id = { in: teacherSectionIds }
+  if (input?.gradeId) sectionWhere.gradeId = input.gradeId
 
-  const classWhere: {
-    schoolId: string
-    id?: { in: string[] }
-    gradeId?: string
-  } = { schoolId }
-  if (teacherClassIds) classWhere.id = { in: teacherClassIds }
-  if (input?.gradeId) classWhere.gradeId = input.gradeId
-
-  const classes = await db.class.findMany({
-    where: classWhere,
+  const sections = await db.section.findMany({
+    where: sectionWhere,
     select: {
       id: true,
       name: true,
-      _count: { select: { studentClasses: true } },
+      _count: { select: { students: true } },
     },
   })
 
   // Single groupBy query instead of 3N individual counts
-  const classIds = classes.map((c) => c.id)
+  const sectionIds = sections.map((c) => c.id)
   const grouped = await db.attendance.groupBy({
-    by: ["classId", "status"],
-    where: { ...where, classId: { in: classIds }, deletedAt: null },
+    by: ["sectionId", "status"],
+    where: { ...where, sectionId: { in: sectionIds } },
     _count: { _all: true },
   })
 
-  // Build lookup: classId → { total, present, late }
+  // Build lookup: sectionId → { total, present, late }
   const countMap = new Map<
     string,
     { total: number; present: number; late: number }
   >()
   for (const row of grouped) {
-    if (!row.classId) continue
-    const entry = countMap.get(row.classId) ?? {
+    if (!row.sectionId) continue
+    const entry = countMap.get(row.sectionId) ?? {
       total: 0,
       present: 0,
       late: 0,
@@ -639,15 +617,19 @@ export async function getClassComparisonStats(input?: {
     entry.total += row._count._all
     if (row.status === "PRESENT") entry.present += row._count._all
     if (row.status === "LATE") entry.late += row._count._all
-    countMap.set(row.classId, entry)
+    countMap.set(row.sectionId, entry)
   }
 
-  const stats = classes.map((cls) => {
-    const counts = countMap.get(cls.id) ?? { total: 0, present: 0, late: 0 }
+  const stats = sections.map((section) => {
+    const counts = countMap.get(section.id) ?? {
+      total: 0,
+      present: 0,
+      late: 0,
+    }
     return {
-      classId: cls.id,
-      className: cls.name,
-      studentCount: cls._count.studentClasses,
+      sectionId: section.id,
+      sectionName: section.name,
+      studentCount: section._count.students,
       totalRecords: counts.total,
       rate:
         counts.total > 0
@@ -690,33 +672,21 @@ export async function getStudentsAtRisk(input?: {
     if (input.dateTo) where.date.lte = new Date(input.dateTo)
   }
 
-  // Teacher scoping
-  if (session.user.role === "TEACHER") {
-    const teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
-    if (teacherClassIds) {
-      where.classId = { in: teacherClassIds }
-    }
-  }
+  // Teacher scoping and the grade filter, on the marks and the students
+  // alike: a teacher's sections, narrowed to the grade when one is given.
+  const teacherSectionIds =
+    session.user.role === "TEACHER"
+      ? await getTeacherSectionIds(schoolId, session.user.id!)
+      : null
+  const scope = sectionScopeWhere({
+    teacherSectionIds,
+    gradeId: input?.gradeId,
+  })
+  Object.assign(where, scope)
 
-  // Grade filter
-  if (input?.gradeId) {
-    const gradeClassIds = await getClassIdsByGrade(schoolId, input.gradeId)
-    where.classId = where.classId
-      ? {
-          in: (where.classId as any).in.filter((id: string) =>
-            gradeClassIds.includes(id)
-          ),
-        }
-      : { in: gradeClassIds }
-  }
-
-  // Get all students with their attendance
   const studentWhere: Prisma.StudentWhereInput = { schoolId }
-  if (where.classId) {
-    studentWhere.studentClasses = {
-      some: { classId: where.classId as any },
-    }
-  }
+  if (scope.sectionId) studentWhere.sectionId = scope.sectionId
+  if (scope.section) studentWhere.section = scope.section
 
   const students = await db.student.findMany({
     where: studentWhere,
@@ -759,7 +729,6 @@ export async function getStudentsAtRisk(input?: {
  */
 export async function getRecentAttendance(input?: {
   limit?: number
-  classId?: string
   sectionId?: string
 }) {
   const session = await auth()
@@ -780,7 +749,6 @@ export async function getRecentAttendance(input?: {
   const limit = input?.limit ?? 50
 
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
-  if (input?.classId) where.classId = input.classId
   if (input?.sectionId) where.sectionId = input.sectionId
 
   const records = await db.attendance.findMany({
@@ -790,6 +758,9 @@ export async function getRecentAttendance(input?: {
     include: {
       student: {
         select: { firstName: true, lastName: true },
+      },
+      section: {
+        select: { name: true },
       },
       class: {
         select: { name: true },
@@ -802,8 +773,9 @@ export async function getRecentAttendance(input?: {
       id: r.id,
       studentId: r.studentId,
       studentName: `${r.student.firstName} ${r.student.lastName}`,
-      classId: r.classId,
-      className: r.class?.name ?? "",
+      sectionId: r.sectionId,
+      // The section, or the class of a mark kept from before sections.
+      className: r.section?.name ?? r.class?.name ?? "",
       date: r.date.toISOString(),
       status: r.status,
       method: r.method,

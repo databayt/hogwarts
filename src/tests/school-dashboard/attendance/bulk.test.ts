@@ -22,7 +22,7 @@ vi.mock("@/lib/db", () => ({
     student: {
       findMany: vi.fn(),
     },
-    class: {
+    section: {
       findFirst: vi.fn(),
     },
     $transaction: vi.fn(),
@@ -39,6 +39,7 @@ vi.mock("@/auth", () => ({
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+  refresh: vi.fn(),
 }))
 
 vi.mock("@/components/school-dashboard/attendance/authorization", () => ({
@@ -52,7 +53,7 @@ vi.mock("@/components/school-dashboard/attendance/authorization", () => ({
 // ---------------------------------------------------------------------------
 
 const SCHOOL_ID = "school-1"
-const CLASS_ID = "class-1"
+const SECTION_ID = "section-1"
 const USER_ID = "user-1"
 const UPLOAD_DATE = "2026-05-25"
 
@@ -61,7 +62,7 @@ function bulkInput(
   overrides: Partial<{ status: string; method: string }> = {}
 ) {
   return {
-    classId: CLASS_ID,
+    sectionId: SECTION_ID,
     date: UPLOAD_DATE,
     method: (overrides.method ?? "BULK_UPLOAD") as never,
     records: studentIds.map((studentId) => ({
@@ -95,15 +96,14 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     setupAuthAndTenant()
-    // Default: all students exist, class exists, no prior attendance rows.
+    // Default: the section exists, every student is in it, no prior rows.
     vi.mocked(db.student.findMany).mockResolvedValue([
-      { id: "stu-1" },
-      { id: "stu-2" },
-      { id: "stu-3" },
+      { id: "stu-1", sectionId: SECTION_ID },
+      { id: "stu-2", sectionId: SECTION_ID },
+      { id: "stu-3", sectionId: SECTION_ID },
     ] as never)
-    vi.mocked(db.class.findFirst).mockResolvedValue({
-      id: CLASS_ID,
-      schoolId: SCHOOL_ID,
+    vi.mocked(db.section.findFirst).mockResolvedValue({
+      id: SECTION_ID,
     } as never)
     vi.mocked(db.attendance.findMany).mockResolvedValue([] as never)
     // $transaction stub invokes the callback with a stub tx so we can capture
@@ -129,7 +129,7 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
     const attendanceFindManyCalls = vi.mocked(db.attendance.findMany).mock.calls
     expect(attendanceFindManyCalls).toHaveLength(1)
 
-    // The prefetch query must be scoped by tenant + classId + date + the
+    // The prefetch query must be scoped by tenant + sectionId + date + the
     // student-ID set — never a bare findMany that would leak across tenants.
     // It must NOT filter deletedAt: a soft-deleted row still occupies the
     // unique key, and hiding it from the lookup sends the record down the
@@ -137,7 +137,8 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
     // (the update path revives via deletedAt: null instead).
     const where = attendanceFindManyCalls[0][0]!.where!
     expect(where.schoolId).toBe(SCHOOL_ID)
-    expect(where.classId).toBe(CLASS_ID)
+    expect(where.sectionId).toBe(SECTION_ID)
+    expect(where).not.toHaveProperty("classId")
     expect(where.deletedAt).toBeUndefined()
     expect((where.studentId as { in: string[] }).in).toEqual([
       "stu-1",
@@ -179,6 +180,8 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
     const createManyArgs = capturedTx!.attendance.createMany.mock.calls[0][0]
     expect(createManyArgs.data).toHaveLength(3)
     expect(createManyArgs.data[0].schoolId).toBe(SCHOOL_ID)
+    expect(createManyArgs.data[0].sectionId).toBe(SECTION_ID)
+    expect(createManyArgs.data[0]).not.toHaveProperty("classId")
     expect(createManyArgs.data[0].markedBy).toBe(USER_ID)
   })
 
@@ -277,7 +280,9 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
   })
 
   it("does not prefetch when validation fails (missing student) — Phase 1 still short-circuits", async () => {
-    vi.mocked(db.student.findMany).mockResolvedValue([{ id: "stu-1" }] as never)
+    vi.mocked(db.student.findMany).mockResolvedValue([
+      { id: "stu-1", sectionId: SECTION_ID },
+    ] as never)
 
     const { bulkUploadAttendance } =
       await import("@/components/school-dashboard/attendance/actions/bulk")
@@ -292,5 +297,37 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
     // aborted, otherwise the optimization "leaks" an extra query on errors.
     expect(db.attendance.findMany).not.toHaveBeenCalled()
     expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  it("refuses a student of another section — a mark is kept on the section", async () => {
+    vi.mocked(db.student.findMany).mockResolvedValue([
+      { id: "stu-1", sectionId: SECTION_ID },
+      { id: "stu-2", sectionId: "section-other" },
+    ] as never)
+
+    const { bulkUploadAttendance } =
+      await import("@/components/school-dashboard/attendance/actions/bulk")
+    const result = await bulkUploadAttendance(bulkInput(["stu-1", "stu-2"]))
+
+    expect(result.rolledBack).toBe(true)
+    expect(result.errors).toEqual([
+      expect.objectContaining({ studentId: "stu-2", row: 2 }),
+    ])
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  it("refuses a section of another school", async () => {
+    vi.mocked(db.section.findFirst).mockResolvedValue(null)
+
+    const { bulkUploadAttendance } =
+      await import("@/components/school-dashboard/attendance/actions/bulk")
+    const result = await bulkUploadAttendance(bulkInput(["stu-1"]))
+
+    expect(result.rolledBack).toBe(true)
+    expect(db.section.findFirst).toHaveBeenCalledWith({
+      where: { id: SECTION_ID, schoolId: SCHOOL_ID },
+      select: { id: true },
+    })
+    expect(db.student.findMany).not.toHaveBeenCalled()
   })
 })

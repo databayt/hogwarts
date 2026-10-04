@@ -216,7 +216,7 @@ TEACHER → finance `TimesheetEntry` (DRAFT, auto month period, in/out in
 
 - **Timetable**: Period-by-period tracking uses timetable data for current period detection
 - **Students**: Attendance records link to student profiles via `studentId`
-- **Classes**: Class roster loaded for attendance marking via `classId`
+- **Sections**: The roster, the daily key and a teacher's scope are the section (`Student.sectionId`; `getTeacherSectionIds` in `actions/helpers.ts`). Rows recorded against a class keep `classId` for display only.
 - **Notifications**: `triggerAbsenceNotification` (actions/core.ts) fires on
   ABSENT marks. For schools with compliance enabled it now dispatches on
   `in_app + email + whatsapp` channels so the existing crons drain them; for

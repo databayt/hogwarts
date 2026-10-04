@@ -38,7 +38,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
-  getClassesForSelection,
   getSectionsForSelection,
   getStudentsByRiskLevel,
   type AttendanceRiskLevel,
@@ -91,8 +90,8 @@ const RISK_COLORS = {
 interface StudentRisk {
   studentId: string
   studentName: string
-  classId: string | null
-  className: string | null
+  sectionId: string | null
+  sectionName: string | null
   totalDays: number
   presentDays: number
   absentDays: number
@@ -126,11 +125,7 @@ export function EarlyWarningContent({
   const [selectedRiskLevel, setSelectedRiskLevel] = useState<
     AttendanceRiskLevel | "all"
   >("all")
-  const [selectedClassId, setSelectedClassId] = useState<string>("all")
   const [selectedSectionId, setSelectedSectionId] = useState<string>("all")
-  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
-    []
-  )
   const [sections, setSections] = useState<
     Array<{
       id: string
@@ -177,21 +172,13 @@ export function EarlyWarningContent({
     },
   }
 
-  // Fetch classes and sections for filter
+  // Fetch sections for the filter
   useEffect(() => {
-    const fetchClassesAndSections = async () => {
-      const [classesResult, sectionsResult] = await Promise.all([
-        getClassesForSelection(),
-        getSectionsForSelection(),
-      ])
-      if (classesResult.success && classesResult.data) {
-        setClasses(classesResult.data.classes)
-      }
+    getSectionsForSelection().then((sectionsResult) => {
       if (sectionsResult.success && sectionsResult.data) {
         setSections(sectionsResult.data.sections)
       }
-    }
-    fetchClassesAndSections()
+    })
   }, [])
 
   // Fetch students by risk level
@@ -199,7 +186,6 @@ export function EarlyWarningContent({
     const fetchStudents = async () => {
       setIsLoading(true)
       const result = await getStudentsByRiskLevel({
-        classId: selectedClassId !== "all" ? selectedClassId : undefined,
         sectionId: selectedSectionId !== "all" ? selectedSectionId : undefined,
         riskLevel: selectedRiskLevel !== "all" ? selectedRiskLevel : undefined,
       })
@@ -210,7 +196,7 @@ export function EarlyWarningContent({
       setIsLoading(false)
     }
     fetchStudents()
-  }, [selectedClassId, selectedSectionId, selectedRiskLevel])
+  }, [selectedSectionId, selectedRiskLevel])
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
@@ -427,33 +413,15 @@ export function EarlyWarningContent({
               <SelectTrigger
                 className={cn("w-[200px] max-md:w-full", phone.field)}
               >
-                <SelectValue placeholder={isArabic ? "الشعبة" : "Section"} />
+                <SelectValue placeholder={isArabic ? "الفصل" : "Section"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  {isArabic ? "جميع الشعب" : "All Sections"}
+                  {isArabic ? "جميع الفصول" : "All Sections"}
                 </SelectItem>
                 {sections.map((sec) => (
                   <SelectItem key={sec.id} value={sec.id}>
                     {sec.gradeName} - {sec.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger
-                className={cn("w-[200px] max-md:w-full", phone.field)}
-              >
-                <SelectValue placeholder={isArabic ? "الفصل" : "Class"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {isArabic ? "جميع الفصول" : "All Classes"}
-                </SelectItem>
-                {classes.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -503,7 +471,9 @@ export function EarlyWarningContent({
                       {getTrendIcon(student.trend)}
                     </div>
                     <div className="text-muted-foreground flex items-center gap-4 text-sm max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-1 max-md:text-xs">
-                      {student.className && <span>{student.className}</span>}
+                      {student.sectionName && (
+                        <span>{student.sectionName}</span>
+                      )}
                       <span>
                         {isArabic ? "معدل الحضور:" : "Attendance:"}{" "}
                         {student.attendanceRate}%

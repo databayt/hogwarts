@@ -281,26 +281,22 @@ export async function processGeofenceEvents(
 
       if (isArrivalWindow) {
         try {
-          // Find student's homeroom class (primary class for attendance)
-          const studentClass = await db.studentClass.findFirst({
-            where: {
-              studentId,
-              class: { schoolId },
-            },
-            include: {
-              class: { select: { id: true, name: true } },
-            },
-            orderBy: { createdAt: "asc" }, // Get earliest enrolled class (homeroom)
+          // The day is kept on the student's section; a student not yet
+          // placed in one is not auto-marked.
+          const student = await db.student.findFirst({
+            where: { id: studentId, schoolId },
+            select: { sectionId: true },
           })
+          const sectionId = student?.sectionId
 
-          if (studentClass) {
+          if (sectionId) {
             const today = new Date()
             today.setHours(0, 0, 0, 0)
 
             // Create attendance only if not already marked for today.
             //
             // We deliberately avoid `upsert` here because the unique compound
-            // index `(schoolId, studentId, classId, date, periodId)` includes
+            // index `(schoolId, studentId, sectionId, date, periodId)` includes
             // a nullable `periodId`, and Postgres treats NULL ≠ NULL inside
             // unique indexes. Calling `upsert` with `periodId: null` would
             // therefore *always* fall through to the create branch on every
@@ -315,7 +311,7 @@ export async function processGeofenceEvents(
               where: {
                 schoolId,
                 studentId,
-                classId: studentClass.classId,
+                sectionId,
                 date: today,
                 periodId: null,
               },
@@ -327,7 +323,7 @@ export async function processGeofenceEvents(
                 data: {
                   schoolId,
                   studentId,
-                  classId: studentClass.classId,
+                  sectionId,
                   date: today,
                   periodId: null,
                   status: "PRESENT",

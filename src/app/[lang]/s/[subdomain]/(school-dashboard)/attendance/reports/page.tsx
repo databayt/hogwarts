@@ -49,7 +49,7 @@ export default async function Page({ params, searchParams }: Props) {
       dictionary={dictionary}
       locale={lang}
       initialFilters={{
-        classId: sp.classId as string | undefined,
+        sectionId: sp.sectionId as string | undefined,
         studentId: sp.studentId as string | undefined,
         status: sp.status as string | undefined,
         from: sp.from as string | undefined,

@@ -29,7 +29,7 @@ import {
 } from "@/components/school-dashboard/attendance/actions"
 
 type Filters = {
-  classId?: string
+  sectionId?: string
   studentId?: string
   status?: string
   from?: string
@@ -39,7 +39,8 @@ type Filters = {
 interface AttendanceReportExportButtonProps {
   filters: Filters
   schoolName?: string
-  className?: string
+  /** The filtered section's name, for the export's heading. */
+  sectionName?: string
   locale?: string
 }
 
@@ -48,7 +49,7 @@ type ExportFormat = "csv" | "pdf" | "excel"
 export function AttendanceReportExportButton({
   filters,
   schoolName = "School",
-  className,
+  sectionName,
   locale = "en",
 }: AttendanceReportExportButtonProps) {
   const [downloading, setDownloading] = React.useState<ExportFormat | null>(
@@ -104,7 +105,7 @@ export function AttendanceReportExportButton({
         getAttendanceReport({
           dateFrom: dateRange.from.toISOString(),
           dateTo: dateRange.to.toISOString(),
-          classId: filters.classId,
+          sectionId: filters.sectionId,
           status: filters.status as any,
           limit: 5000,
           offset: 0,
@@ -112,7 +113,7 @@ export function AttendanceReportExportButton({
         getAttendanceStats({
           dateFrom: dateRange.from.toISOString(),
           dateTo: dateRange.to.toISOString(),
-          classId: filters.classId,
+          sectionId: filters.sectionId,
         }),
       ])
 
@@ -135,7 +136,7 @@ export function AttendanceReportExportButton({
         stats,
         dateRange,
         schoolName,
-        className,
+        className: sectionName,
         locale,
       })
 
@@ -157,7 +158,7 @@ export function AttendanceReportExportButton({
         getAttendanceReport({
           dateFrom: dateRange.from.toISOString(),
           dateTo: dateRange.to.toISOString(),
-          classId: filters.classId,
+          sectionId: filters.sectionId,
           status: filters.status as any,
           // The action caps `limit` at 5000 (actions/bulk.ts). This asked
           // for 10000, so the action threw a ZodError, the catch below logged
@@ -169,7 +170,7 @@ export function AttendanceReportExportButton({
         getAttendanceStats({
           dateFrom: dateRange.from.toISOString(),
           dateTo: dateRange.to.toISOString(),
-          classId: filters.classId,
+          sectionId: filters.sectionId,
         }),
       ])
 
@@ -191,7 +192,7 @@ export function AttendanceReportExportButton({
         stats,
         dateRange,
         schoolName,
-        className,
+        className: sectionName,
         locale,
       })
 

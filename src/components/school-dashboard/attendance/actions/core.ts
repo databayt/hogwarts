@@ -22,7 +22,7 @@ import { markAttendanceSchema } from "@/components/school-dashboard/attendance/v
 import { getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
 
-import { getTeacherClassIds, guardAttendance } from "./helpers"
+import { guardAttendance } from "./helpers"
 
 // ============================================================================
 // Types
@@ -374,7 +374,8 @@ export async function markAttendance(
  */
 export async function markSingleAttendance(input: {
   studentId: string
-  classId: string
+  /** The section the day is kept on. */
+  sectionId: string
   date: string
   status: AttendanceStatus
   method: AttendanceMethod
@@ -399,12 +400,19 @@ export async function markSingleAttendance(input: {
       }
     }
 
+    // The student must be this school's and in the section
+    const student = await db.student.findFirst({
+      where: { id: input.studentId, schoolId, sectionId: input.sectionId },
+      select: { id: true },
+    })
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+
     // Find existing daily attendance (where periodId is null)
     const existing = await db.attendance.findFirst({
       where: {
         schoolId,
         studentId: input.studentId,
-        classId: input.classId,
+        sectionId: input.sectionId,
         date: new Date(input.date),
         periodId: null,
       },
@@ -431,7 +439,7 @@ export async function markSingleAttendance(input: {
         data: {
           schoolId,
           studentId: input.studentId,
-          classId: input.classId,
+          sectionId: input.sectionId,
           date: new Date(input.date),
           status: input.status,
           method: input.method,
@@ -456,9 +464,10 @@ export async function markSingleAttendance(input: {
       triggerAbsenceNotification(
         schoolId,
         input.studentId,
-        input.classId,
+        null,
         new Date(input.date),
-        session?.user?.id
+        session?.user?.id,
+        input.sectionId
       ).catch((err) =>
         console.error("[markSingleAttendance] Notification error:", err)
       )
@@ -739,6 +748,10 @@ export async function getSectionsForSelection(gradeId?: string): Promise<
  * Get classes for selection dropdown.
  * Teachers see only their assigned classes; admins see all.
  * Accepts optional gradeId/termId for filtering.
+ *
+ * Legacy: classes are being retired. The announcements class scope is the
+ * last caller and goes with it; attendance itself picks sections
+ * (`getSectionsForSelection`).
  */
 export async function getClassesForSelection(input?: {
   gradeId?: string
@@ -769,24 +782,19 @@ export async function getClassesForSelection(input?: {
       return { success: false, error: "Unauthorized" }
     }
 
-    const where: {
-      schoolId: string
-      id?: { in: string[] }
-      gradeId?: string
-      termId?: string
-    } = { schoolId }
+    const where: Prisma.ClassWhereInput = { schoolId }
 
-    // Teacher scoping: only show assigned classes
+    // Teacher scoping: only the classes they teach or co-teach
     if (session.user.role === "TEACHER") {
-      const teacherClassIds = await getTeacherClassIds(
-        schoolId,
-        session.user.id
-      )
-      if (teacherClassIds && teacherClassIds.length > 0) {
-        where.id = { in: teacherClassIds }
-      } else if (teacherClassIds && teacherClassIds.length === 0) {
-        return { success: true, data: { classes: [] } }
-      }
+      const teacher = await db.teacher.findFirst({
+        where: { userId: session.user.id, schoolId },
+        select: { id: true },
+      })
+      if (!teacher) return { success: true, data: { classes: [] } }
+      where.OR = [
+        { teacherId: teacher.id },
+        { classTeachers: { some: { schoolId, teacherId: teacher.id } } },
+      ]
     }
 
     // Optional grade filter
@@ -840,141 +848,11 @@ export async function getClassesForSelection(input?: {
 }
 
 /**
- * Quick mark all students present in a class
- * Returns list of students so teacher can mark exceptions
- */
-export async function quickMarkAllPresent(input: {
-  classId: string
-  date?: string
-}): Promise<
-  ActionResponse<{
-    markedCount: number
-    students: Array<{
-      id: string
-      name: string
-      status: "PRESENT"
-    }>
-  }>
-> {
-  try {
-    // SECURITY: was auth()-only with no role check — any authenticated user
-    // (STUDENT/GUARDIAN) could mark a whole class present. Now requires a
-    // marking role via the RBAC matrix.
-    const guard = await guardAttendance("mark")
-    if (!guard.ok) return guard.error
-    const { schoolId, userId } = guard
-
-    const date = input.date ? new Date(input.date) : new Date()
-    date.setHours(0, 0, 0, 0)
-
-    // Get all students in the class via StudentClass join table
-    const classData = await db.class.findFirst({
-      where: { id: input.classId, schoolId },
-      select: {
-        id: true,
-        studentClasses: {
-          select: {
-            student: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!classData) {
-      return { success: false, error: "Class not found" }
-    }
-
-    // Extract students from StudentClass join table
-    const students = classData.studentClasses.map((sc) => sc.student)
-
-    // Mark all students present — batch operations instead of N individual queries
-    const now = new Date()
-    const studentIds = students.map((s) => s.id)
-
-    // Batch fetch existing records (1 query instead of N)
-    const existingRecords = await db.attendance.findMany({
-      where: {
-        schoolId,
-        studentId: { in: studentIds },
-        classId: input.classId,
-        date,
-        periodId: null,
-      },
-      select: { id: true, studentId: true },
-    })
-    const existingStudentIds = new Set(existingRecords.map((r) => r.studentId))
-    const existingIds = existingRecords.map((r) => r.id)
-
-    // Batch update existing records to PRESENT (1 query)
-    if (existingIds.length > 0) {
-      await db.attendance.updateMany({
-        where: { id: { in: existingIds }, schoolId },
-        data: {
-          status: "PRESENT",
-          markedBy: userId,
-          markedAt: now,
-          // Revive a soft-deleted record on re-mark (see markAttendance).
-          deletedAt: null,
-        },
-      })
-    }
-
-    // Batch create new records for students without existing attendance (1 query)
-    const newStudents = students.filter((s) => !existingStudentIds.has(s.id))
-    if (newStudents.length > 0) {
-      await db.attendance.createMany({
-        data: newStudents.map((student) => ({
-          schoolId,
-          studentId: student.id,
-          classId: input.classId,
-          date,
-          status: "PRESENT" as const,
-          method: "MANUAL" as const,
-          markedBy: userId,
-          markedAt: now,
-          checkInTime: now,
-        })),
-        skipDuplicates: true,
-      })
-    }
-
-    const results = students.map((student) => ({
-      id: student.id,
-      name: `${student.firstName} ${student.lastName}`,
-      status: "PRESENT" as const,
-    }))
-
-    refreshPage("/attendance")
-
-    return {
-      success: true,
-      data: {
-        markedCount: results.length,
-        students: results,
-      },
-    }
-  } catch (error) {
-    console.error("[quickMarkAllPresent] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to mark attendance",
-    }
-  }
-}
-
-/**
  * Check out student (mark departure time)
  */
 export async function checkOutStudent(input: {
   studentId: string
-  classId: string
+  sectionId: string
   date: string
 }): Promise<{ success: boolean; error?: string }> {
   // SECURITY: previously had NO auth() call — reachable unauthenticated via the
@@ -987,7 +865,7 @@ export async function checkOutStudent(input: {
     where: {
       schoolId,
       studentId: input.studentId,
-      classId: input.classId,
+      sectionId: input.sectionId,
       date: new Date(input.date),
       periodId: null,
       deletedAt: null, // never check out a soft-deleted record
@@ -1012,10 +890,10 @@ export async function checkOutStudent(input: {
 }
 
 /**
- * Bulk check out all students for a class
+ * Bulk check out all students of a section
  */
 export async function bulkCheckOut(input: {
-  classId: string
+  sectionId: string
   date: string
 }): Promise<{ success: boolean; count: number }> {
   // SECURITY: previously had NO auth() call — reachable unauthenticated via the
@@ -1027,9 +905,10 @@ export async function bulkCheckOut(input: {
   const result = await db.attendance.updateMany({
     where: {
       schoolId,
-      classId: input.classId,
+      sectionId: input.sectionId,
       date: new Date(input.date),
       checkOutTime: null,
+      deletedAt: null,
     },
     data: { checkOutTime: new Date() },
   })

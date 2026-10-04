@@ -28,7 +28,6 @@ export {
   getAttendanceList,
   getClassesForSelection,
   getSectionsForSelection,
-  quickMarkAllPresent,
   checkOutStudent,
   bulkCheckOut,
   deleteAttendance,
@@ -43,7 +42,7 @@ export {
   getMethodUsageStats,
   getDayWisePatterns,
   getCalendarData,
-  getClassComparisonStats,
+  getSectionComparisonStats,
   getStudentsAtRisk,
   getRecentAttendance,
 } from "./actions/analytics"
@@ -106,9 +105,7 @@ export {
   getStudentsByRiskLevel,
   getStudentEarlyWarningDetails,
   getTodaysDashboard,
-  getTeacherClassesToday,
   getFollowUpStudents,
-  getUnmarkedClasses,
   getParentAttendanceSummary,
 } from "./actions/dashboard"
 

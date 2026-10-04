@@ -225,26 +225,27 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   }
 }
 
-// Hook for real-time attendance updates in a class
-export function useClassAttendance(classId: string) {
+// Hook for real-time attendance updates in a section. (The socket's room
+// option is still named `classId`; it is just the room key.)
+export function useSectionAttendance(sectionId: string) {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
   const [liveCount, setLiveCount] = useState({ present: 0, absent: 0, late: 0 })
 
   const { isConnected, subscribe, subscribeToClass, unsubscribeFromClass } =
     useSocket({
       autoConnect: true,
-      classId,
+      classId: sectionId,
     })
 
   useEffect(() => {
-    if (!isConnected || !classId) return
+    if (!isConnected || !sectionId) return
 
     const unsubscribers: Array<() => void> = []
 
     // Subscribe to attendance events
     unsubscribers.push(
       subscribe("attendance:marked", (data) => {
-        if (data.classId === classId) {
+        if (data.sectionId === sectionId) {
           setAttendance((prev) => {
             const index = prev.findIndex((r) => r.studentId === data.studentId)
             if (index >= 0) {
@@ -267,7 +268,7 @@ export function useClassAttendance(classId: string) {
 
     unsubscribers.push(
       subscribe("attendance:updated", (update) => {
-        if (update.data?.classId === classId) {
+        if (update.data?.sectionId === sectionId) {
           setAttendance((prev) => {
             const index = prev.findIndex((r) => r.id === update.attendanceId)
             if (index >= 0 && update.data) {
@@ -285,7 +286,7 @@ export function useClassAttendance(classId: string) {
     return () => {
       unsubscribers.forEach((unsubscribe) => unsubscribe())
     }
-  }, [isConnected, classId, subscribe])
+  }, [isConnected, sectionId, subscribe])
 
   return {
     attendance,

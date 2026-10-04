@@ -186,8 +186,8 @@ export const studentIdentifierSchema = z.object({
 
 // Bulk upload schema
 export const bulkUploadSchema = z.object({
-  classId: z.string().min(1),
-  sectionId: z.string().optional(),
+  /** The section the file is for; every student in it must belong to it. */
+  sectionId: z.string().min(1),
   date: z.string().min(1),
   method: attendanceMethodSchema.default("BULK_UPLOAD"),
   records: z
@@ -206,7 +206,6 @@ export const bulkUploadSchema = z.object({
 // Attendance filter schema for reports
 export const attendanceFilterSchema = z.object({
   schoolId: z.string().optional(),
-  classId: z.string().optional(),
   sectionId: z.string().optional(),
   studentId: z.string().optional(),
   dateFrom: z.string().optional(),

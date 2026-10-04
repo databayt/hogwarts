@@ -31,9 +31,8 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       findMany: vi.fn(),
     },
-    class: {
+    section: {
       findFirst: vi.fn(),
-      findUnique: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -49,6 +48,7 @@ vi.mock("@/auth", () => ({
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+  refresh: vi.fn(),
 }))
 
 describe("Bulk Attendance Operations", () => {
@@ -59,7 +59,7 @@ describe("Bulk Attendance Operations", () => {
   describe("bulkUploadAttendance", () => {
     const mockSchoolId = "school-123"
     const mockUserId = "user-123"
-    const mockClassId = "class-123"
+    const mockSectionId = "section-123"
     const mockDate = "2024-01-15"
 
     beforeEach(() => {
@@ -84,7 +84,7 @@ describe("Bulk Attendance Operations", () => {
       })
 
       const result = await bulkUploadAttendance({
-        classId: mockClassId,
+        sectionId: mockSectionId,
         date: mockDate,
         records: [{ studentId: "student-1", status: "PRESENT" }],
       })
@@ -99,7 +99,7 @@ describe("Bulk Attendance Operations", () => {
       vi.mocked(authModule.auth).mockResolvedValueOnce(null)
 
       const result = await bulkUploadAttendance({
-        classId: mockClassId,
+        sectionId: mockSectionId,
         date: mockDate,
         records: [{ studentId: "student-1", status: "PRESENT" }],
       })
@@ -110,10 +110,13 @@ describe("Bulk Attendance Operations", () => {
     })
 
     it("should validate that students exist in school", async () => {
+      vi.spyOn(db.section, "findFirst").mockResolvedValueOnce({
+        id: mockSectionId,
+      } as never)
       vi.spyOn(db.student, "findMany").mockResolvedValueOnce([])
 
       const result = await bulkUploadAttendance({
-        classId: mockClassId,
+        sectionId: mockSectionId,
         date: mockDate,
         records: [
           { studentId: "nonexistent-1", status: "PRESENT" },
@@ -128,34 +131,29 @@ describe("Bulk Attendance Operations", () => {
       expect(result.rolledBack).toBe(true)
     })
 
-    it("should validate that class exists in school", async () => {
-      vi.spyOn(db.student, "findMany").mockResolvedValueOnce([
-        { id: "student-1" },
-      ])
-      vi.spyOn(db.class, "findFirst").mockResolvedValueOnce(null)
+    it("should validate that the section exists in school", async () => {
+      vi.spyOn(db.section, "findFirst").mockResolvedValueOnce(null)
 
       const result = await bulkUploadAttendance({
-        classId: "nonexistent-class",
+        sectionId: "nonexistent-section",
         date: mockDate,
         records: [{ studentId: "student-1", status: "PRESENT" }],
       })
 
       expect(result.successful).toBe(0)
       expect(result.failed).toBe(1)
-      expect(result.errors[0].error).toContain("Class not found")
+      expect(result.errors[0].error).toContain("Section not found")
       expect(result.rolledBack).toBe(true)
     })
 
     it("should successfully upload valid attendance records", async () => {
+      vi.spyOn(db.section, "findFirst").mockResolvedValueOnce({
+        id: mockSectionId,
+      } as never)
       vi.spyOn(db.student, "findMany").mockResolvedValueOnce([
-        { id: "student-1" },
-        { id: "student-2" },
-      ])
-      vi.spyOn(db.class, "findFirst").mockResolvedValueOnce({
-        id: mockClassId,
-        schoolId: mockSchoolId,
-        name: "Class 10A",
-      })
+        { id: "student-1", sectionId: mockSectionId },
+        { id: "student-2", sectionId: mockSectionId },
+      ] as never)
       // Prefetch of existing attendance rows (N+1 fix in bulk.ts) — none exist.
       vi.spyOn(db.attendance, "findMany").mockResolvedValueOnce([])
       vi.spyOn(db, "$transaction").mockImplementationOnce(async (callback) => {
@@ -163,7 +161,7 @@ describe("Bulk Attendance Operations", () => {
       })
 
       const result = await bulkUploadAttendance({
-        classId: mockClassId,
+        sectionId: mockSectionId,
         date: mockDate,
         method: "BULK_UPLOAD",
         records: [
@@ -179,14 +177,12 @@ describe("Bulk Attendance Operations", () => {
     })
 
     it("should rollback on transaction error", async () => {
+      vi.spyOn(db.section, "findFirst").mockResolvedValueOnce({
+        id: mockSectionId,
+      } as never)
       vi.spyOn(db.student, "findMany").mockResolvedValueOnce([
-        { id: "student-1" },
-      ])
-      vi.spyOn(db.class, "findFirst").mockResolvedValueOnce({
-        id: mockClassId,
-        schoolId: mockSchoolId,
-        name: "Class 10A",
-      })
+        { id: "student-1", sectionId: mockSectionId },
+      ] as never)
       // Prefetch of existing attendance rows (N+1 fix in bulk.ts) — none exist.
       vi.spyOn(db.attendance, "findMany").mockResolvedValueOnce([])
       vi.spyOn(db, "$transaction").mockRejectedValueOnce(
@@ -194,7 +190,7 @@ describe("Bulk Attendance Operations", () => {
       )
 
       const result = await bulkUploadAttendance({
-        classId: mockClassId,
+        sectionId: mockSectionId,
         date: mockDate,
         records: [{ studentId: "student-1", status: "PRESENT" }],
       })
@@ -242,9 +238,9 @@ describe("Bulk Attendance Operations", () => {
       expect(result.error).toContain("Missing school context")
     })
 
-    it("should apply class filter", async () => {
+    it("should apply the section filter", async () => {
       await getAttendanceReport({
-        classId: "class-123",
+        sectionId: "section-123",
         limit: 10,
         offset: 0,
       })
@@ -252,7 +248,7 @@ describe("Bulk Attendance Operations", () => {
       expect(db.attendance.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            classId: "class-123",
+            sectionId: "section-123",
           }),
         })
       )

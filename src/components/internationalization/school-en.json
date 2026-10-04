@@ -992,7 +992,8 @@
           "selectClass": "Please select a class",
           "selectDate": "Please select a date",
           "processed": "Processed {count} records",
-          "processingFailed": "Processing failed"
+          "processingFailed": "Processing failed",
+          "selectSection": "Please select a section"
         },
         "title": "Bulk Upload Attendance",
         "description": "Upload attendance records in bulk from CSV or Excel files",
@@ -1017,7 +1018,11 @@
           "uploadButton": "Upload",
           "processing": "Processing...",
           "selectedFile": "Selected file: {name} ({size} KB)",
-          "invalidType": "Invalid file type. Please upload a CSV or Excel file."
+          "invalidType": "Invalid file type. Please upload a CSV or Excel file.",
+          "selectSection": "Section",
+          "selectSectionPlaceholder": "Choose a section...",
+          "noSections": "No sections yet",
+          "selectDate": "Date"
         },
         "results": {
           "success": "Attendance records uploaded successfully!",

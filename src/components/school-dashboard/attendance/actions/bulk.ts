@@ -16,7 +16,7 @@ import {
 } from "@/components/school-dashboard/attendance/authorization"
 
 import { attendanceFilterSchema, bulkUploadSchema } from "../shared/validation"
-import { getTeacherClassIds } from "./helpers"
+import { getTeacherSectionIds, sectionScopeWhere } from "./helpers"
 
 /**
  * Encode a single CSV cell: wrap in quotes, double internal quotes, and guard
@@ -32,12 +32,12 @@ function csvCell(value: unknown): string {
  * Bulk upload attendance records with atomic transaction
  *
  * Process:
- * 1. Pre-validate all records (student exists, class exists)
+ * 1. Pre-validate all records (student of this school, in the section)
  * 2. Return early if validation fails (no DB operations)
  * 3. Execute all creates/updates in single transaction
  * 4. Rollback entire operation on any error
  *
- * @param input - Bulk upload payload with classId, date, records
+ * @param input - Bulk upload payload with sectionId, date, records
  * @returns Success count, failure count, and detailed errors
  */
 export async function bulkUploadAttendance(
@@ -87,24 +87,51 @@ export async function bulkUploadAttendance(
     error: string
   }> = []
 
-  // Get all student IDs to validate they exist in this school
+  // The section must be this school's
+  const section = await db.section.findFirst({
+    where: { id: parsed.sectionId, schoolId },
+    select: { id: true },
+  })
+  if (!section) {
+    return {
+      successful: 0,
+      failed: parsed.records.length,
+      errors: [
+        {
+          studentId: "",
+          row: 0,
+          error: `Section not found in this school: ${parsed.sectionId}`,
+        },
+      ],
+      rolledBack: true,
+    }
+  }
+
+  // Every student must be this school's and in the section: a mark is kept
+  // on the section, so another section's student would be filed wrongly.
   const studentIds = parsed.records.map((r) => r.studentId)
   const existingStudents = await db.student.findMany({
     where: { schoolId, id: { in: studentIds } },
-    select: { id: true },
+    select: { id: true, sectionId: true },
   })
-  const validStudentIds = new Set(existingStudents.map((s) => s.id))
+  const sectionOf = new Map(existingStudents.map((s) => [s.id, s.sectionId]))
 
   // Validate each record
   for (let i = 0; i < parsed.records.length; i++) {
     const record = parsed.records[i]
     const rowNum = i + 1
 
-    if (!validStudentIds.has(record.studentId)) {
+    if (!sectionOf.has(record.studentId)) {
       validationErrors.push({
         studentId: record.studentId,
         row: rowNum,
         error: `Student not found in this school: ${record.studentId}`,
+      })
+    } else if (sectionOf.get(record.studentId) !== parsed.sectionId) {
+      validationErrors.push({
+        studentId: record.studentId,
+        row: rowNum,
+        error: `Student is not in this section: ${record.studentId}`,
       })
     }
   }
@@ -119,30 +146,11 @@ export async function bulkUploadAttendance(
     }
   }
 
-  // Validate class exists in this school
-  const classExists = await db.class.findFirst({
-    where: { id: parsed.classId, schoolId },
-  })
-  if (!classExists) {
-    return {
-      successful: 0,
-      failed: parsed.records.length,
-      errors: [
-        {
-          studentId: "",
-          row: 0,
-          error: `Class not found in this school: ${parsed.classId}`,
-        },
-      ],
-      rolledBack: true,
-    }
-  }
-
   // Phase 1b: Prefetch existing rows so the txn issues O(N+1) queries
   // instead of O(2N). Same family of N+1 fixes as markAttendance /
   // quickMarkAllPresent that landed in March; bulk upload slipped through.
-  // Safe to batch because (schoolId, studentId, classId, date, periodId)
-  // is unique — see prisma/models/attendance.prisma:94.
+  // Safe to batch because (schoolId, studentId, sectionId, date, periodId)
+  // is unique — see prisma/models/attendance.prisma.
   const uploadDate = new Date(parsed.date)
   // SOFT-DELETE INVARIANT: this existing-record lookup must NOT filter
   // deletedAt — a soft-deleted row still occupies the unique key, and
@@ -152,7 +160,7 @@ export async function bulkUploadAttendance(
   const existingRows = await db.attendance.findMany({
     where: {
       schoolId,
-      classId: parsed.classId,
+      sectionId: parsed.sectionId,
       date: uploadDate,
       periodId: null,
       studentId: { in: studentIds },
@@ -193,7 +201,7 @@ export async function bulkUploadAttendance(
           toCreate.push({
             schoolId,
             studentId: record.studentId,
-            classId: parsed.classId,
+            sectionId: parsed.sectionId,
             date: uploadDate,
             status: record.status,
             method: parsed.method,
@@ -241,7 +249,7 @@ export async function bulkUploadAttendance(
 /**
  * Get attendance report data with filtering and pagination
  *
- * @param input - Filter options (class, student, status, date range, etc.)
+ * @param input - Filter options (section, student, status, date range, etc.)
  * @returns Paginated attendance records with metadata
  */
 export async function getAttendanceReport(
@@ -267,24 +275,17 @@ export async function getAttendanceReport(
     deletedAt: null,
   }
 
-  // Teacher scoping — a teacher may only see their own classes.
-  let teacherClassIds: string[] | null = null
-  if (session.user.role === "TEACHER") {
-    teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
-  }
-
-  // Apply optional filters. SECURITY: an explicit classId must be INTERSECTED
-  // with the teacher's owned classes — previously it OVERWROTE the restriction,
-  // letting a teacher read any class's attendance in the school.
-  if (parsed.classId) {
-    where.classId =
-      teacherClassIds && !teacherClassIds.includes(parsed.classId)
-        ? "__forbidden__"
-        : parsed.classId
-  } else if (teacherClassIds) {
-    where.classId = { in: teacherClassIds }
-  }
-  if (parsed.sectionId) where.sectionId = parsed.sectionId
+  // Teacher scoping — a teacher may only see their own sections. SECURITY:
+  // an explicit sectionId is INTERSECTED with them, never allowed to widen
+  // the scope (a class filter once overwrote it and leaked the school).
+  const teacherSectionIds =
+    session.user.role === "TEACHER"
+      ? await getTeacherSectionIds(schoolId, session.user.id!)
+      : null
+  Object.assign(
+    where,
+    sectionScopeWhere({ teacherSectionIds, sectionId: parsed.sectionId })
+  )
   if (parsed.studentId) where.studentId = parsed.studentId
 
   // Status filter (handle both single and array)
@@ -314,6 +315,7 @@ export async function getAttendanceReport(
       where,
       include: {
         student: { select: { firstName: true, lastName: true } },
+        section: { select: { name: true } },
         class: { select: { name: true } },
       },
       orderBy: { date: "desc" },
@@ -334,8 +336,9 @@ export async function getAttendanceReport(
       date: r.date.toISOString().split("T")[0],
       studentId: r.studentId,
       studentName: `${r.student.firstName} ${r.student.lastName}`,
-      classId: r.classId,
-      className: r.class?.name ?? "",
+      sectionId: r.sectionId,
+      // The section, or the class of a mark kept from before sections.
+      className: r.section?.name ?? r.class?.name ?? "",
       status: r.status,
       method: r.method,
       checkInTime: r.checkInTime?.toISOString(),
@@ -354,13 +357,13 @@ export async function getAttendanceReport(
 /**
  * Export attendance data as CSV
  *
- * CSV Format: date,studentId,studentName,classId,className,status,method,checkInTime,checkOutTime,notes
+ * CSV Format: date,studentId,studentName,sectionId,section,status,method,checkInTime,checkOutTime,notes
  *
  * @param input - Filter options
  * @returns CSV string with header and data rows
  */
 export async function getAttendanceReportCsv(input: {
-  classId?: string
+  sectionId?: string
   studentId?: string
   status?: string
   from?: string
@@ -381,7 +384,7 @@ export async function getAttendanceReportCsv(input: {
   }
 
   const schema = z.object({
-    classId: z.string().optional(),
+    sectionId: z.string().optional(),
     studentId: z.string().optional(),
     status: z.string().optional(),
     from: z.string().optional(),
@@ -396,19 +399,14 @@ export async function getAttendanceReportCsv(input: {
   }
 
   // Teacher scoping for CSV export — intersect, never overwrite (see report).
-  let teacherClassIds: string[] | null = null
-  if (session.user.role === "TEACHER") {
-    teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
-  }
-
-  if (sp.classId) {
-    where.classId =
-      teacherClassIds && !teacherClassIds.includes(sp.classId)
-        ? "__forbidden__"
-        : sp.classId
-  } else if (teacherClassIds) {
-    where.classId = { in: teacherClassIds }
-  }
+  const teacherSectionIds =
+    session.user.role === "TEACHER"
+      ? await getTeacherSectionIds(schoolId, session.user.id!)
+      : null
+  Object.assign(
+    where,
+    sectionScopeWhere({ teacherSectionIds, sectionId: sp.sectionId })
+  )
   if (sp.studentId) where.studentId = sp.studentId
   if (sp.status)
     where.status = sp.status.toUpperCase() as
@@ -430,13 +428,14 @@ export async function getAttendanceReportCsv(input: {
     take: sp.limit ?? 1000,
     include: {
       student: { select: { firstName: true, lastName: true } },
+      section: { select: { name: true } },
       class: { select: { name: true } },
     },
   })
 
   // CSV Header
   const header =
-    "date,studentId,studentName,classId,className,status,method,checkInTime,checkOutTime,notes\n"
+    "date,studentId,studentName,sectionId,section,status,method,checkInTime,checkOutTime,notes\n"
 
   // CSV Body — every cell is quoted, internal quotes are doubled, and any value
   // beginning with =, +, -, @, tab or CR is prefixed with ' to neutralize
@@ -447,8 +446,8 @@ export async function getAttendanceReportCsv(input: {
         r.date.toISOString().split("T")[0],
         r.studentId,
         `${r.student.firstName} ${r.student.lastName}`,
-        r.classId,
-        r.class?.name ?? "",
+        r.sectionId ?? r.classId,
+        r.section?.name ?? r.class?.name ?? "",
         String(r.status),
         String(r.method),
         r.checkInTime?.toISOString() || "",
@@ -464,7 +463,7 @@ export async function getAttendanceReportCsv(input: {
 }
 
 /**
- * Get recent bulk uploads grouped by class and date
+ * Get recent bulk uploads grouped by section and date
  *
  * Useful for showing upload history and summary stats
  *
@@ -474,8 +473,8 @@ export async function getAttendanceReportCsv(input: {
 export async function getRecentBulkUploads(limit = 5): Promise<{
   uploads: Array<{
     date: Date
-    classId: string
-    className: string
+    sectionId: string
+    sectionName: string
     total: number
     successful: number
     failed: number
@@ -489,12 +488,13 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
     return { uploads: [] }
   }
 
-  // Get most recent bulk uploads (group by date and classId)
+  // Get most recent bulk uploads (group by date and section)
   const recentUploads = await db.attendance.groupBy({
-    by: ["date", "classId"],
+    by: ["date", "sectionId"],
     where: {
       schoolId,
       method: "BULK_UPLOAD",
+      sectionId: { not: null },
       deletedAt: null,
     },
     _count: {
@@ -508,33 +508,33 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
     return { uploads: [] }
   }
 
-  // Get class names for all uploaded classes
-  const classIds = [...new Set(recentUploads.map((u) => u.classId))].filter(
+  // Get section names for all uploaded sections
+  const sectionIds = [...new Set(recentUploads.map((u) => u.sectionId))].filter(
     (id): id is string => id !== null
   )
-  const classes = await db.class.findMany({
-    where: { id: { in: classIds }, schoolId },
+  const sections = await db.section.findMany({
+    where: { id: { in: sectionIds }, schoolId },
     select: { id: true, name: true },
   })
-  const classMap = new Map(classes.map((c) => [c.id, c.name]))
+  const sectionMap = new Map(sections.map((c) => [c.id, c.name]))
 
   // PERF: one grouped query for success counts across all returned upload
   // buckets (was a COUNT query per bucket inside Promise.all = N+1).
   const successGroups = await db.attendance.groupBy({
-    by: ["date", "classId"],
+    by: ["date", "sectionId"],
     where: {
       schoolId,
       method: "BULK_UPLOAD",
       status: { in: ["PRESENT", "LATE"] },
       date: { in: recentUploads.map((u) => u.date) },
-      classId: { in: classIds },
+      sectionId: { in: sectionIds },
       deletedAt: null,
     },
     _count: { _all: true },
   })
   const successByKey = new Map(
     successGroups.map((g) => [
-      `${g.date.toISOString()}|${g.classId}`,
+      `${g.date.toISOString()}|${g.sectionId}`,
       g._count._all,
     ])
   )
@@ -542,13 +542,12 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
   // Count successful records (present or late, not absent/excused/sick)
   const uploads = recentUploads.map((upload) => {
     const successCount =
-      successByKey.get(`${upload.date.toISOString()}|${upload.classId}`) ?? 0
+      successByKey.get(`${upload.date.toISOString()}|${upload.sectionId}`) ?? 0
     return {
       date: upload.date,
-      classId: upload.classId ?? "",
-      className:
-        (upload.classId ? classMap.get(upload.classId) : null) ||
-        "Unknown Class",
+      sectionId: upload.sectionId ?? "",
+      sectionName:
+        (upload.sectionId ? sectionMap.get(upload.sectionId) : null) ?? "",
       total: upload._count._all,
       successful: successCount,
       failed: upload._count._all - successCount,

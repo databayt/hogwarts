@@ -38,9 +38,15 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
   that section's students may scan, and the section is signed into the HMAC
   payload (`security.ts`). Barcode, kiosk and hall passes record the student's
   own `Student.sectionId` — no section to pick; a barcode scanner set to a
-  section refuses another section's student. `quickMarkAllPresent` and bulk
-  upload still key on `classId` until the next S8 step. Legacy QR sessions and
-  passes keep `classId` (now nullable); reads fall back to it.
+  section refuses another section's student. Bulk upload is for one section
+  (every student must be in it). **Teacher scope = sections**:
+  `getTeacherSectionIds` (homeroom ∪ timetable ∪ subject assignment; no
+  teacher record → none, never the school) + `sectionScopeWhere` in
+  `actions/helpers.ts` — every report, CSV, analytics, early-warning and
+  overview read uses them. Rows recorded against a class got the student's
+  section by backfill (`prisma/sql/class-removal/02-attendance-scope.sql`,
+  same-grade only); display reads fall back to the class name for the rest.
+  Legacy QR sessions and passes keep `classId` (now nullable).
   `markPeriodAttendance` resolves and writes `sectionId` best-effort from the
   timetable slot.
 - **Daily attendance has NO DB-unique dedupe for `periodId = null`.** Postgres
@@ -106,9 +112,10 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
   `updateMany({ where: { id, schoolId } })` (Prisma `update` rejects a non-unique
   `where`). Mobile routes + `reviewExcuse` follow this.
 - **Teacher scoping must INTERSECT, not overwrite.** When a teacher passes an
-  explicit `classId`, intersect it with `getTeacherClassIds` — never assign
-  `where.classId = classId` after setting `{ in: teacherClassIds }` (was a
-  cross-class leak in `bulk.ts`).
+  explicit `sectionId`, intersect it with their sections — use
+  `sectionScopeWhere`, never assign `where.sectionId = sectionId` after
+  setting `{ in: teacherSectionIds }` (the class version was a cross-class
+  leak in `bulk.ts`; `getStudentsByRiskLevel` ignored the scope outright).
 - **CSV export** must run every cell through the formula-injection guard
   (`csvCell` in `bulk.ts`).
 - **`markPeriodAttendance` / `bulkUpload` writes are batched + transactional** —

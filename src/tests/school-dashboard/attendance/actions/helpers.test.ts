@@ -5,15 +5,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import {
-  getClassIdsByGrade,
-  getTeacherClassIds,
+  getTeacherSectionIds,
+  sectionScopeWhere,
 } from "@/components/school-dashboard/attendance/actions/helpers"
 
 vi.mock("@/lib/db", () => ({
   db: {
     teacher: { findFirst: vi.fn() },
-    class: { findMany: vi.fn() },
-    classTeacher: { findMany: vi.fn() },
+    section: { findMany: vi.fn() },
   },
 }))
 
@@ -25,103 +24,69 @@ describe("attendance helpers", () => {
     vi.clearAllMocks()
   })
 
-  describe("getTeacherClassIds", () => {
-    it("returns null when user is not a teacher in this school", async () => {
+  describe("getTeacherSectionIds", () => {
+    it("covers no section when the user has no teacher record — never the school", async () => {
       vi.mocked(db.teacher.findFirst).mockResolvedValue(null)
 
-      const result = await getTeacherClassIds(SCHOOL, USER)
-
-      expect(result).toBeNull()
+      expect(await getTeacherSectionIds(SCHOOL, USER)).toEqual([])
       expect(db.teacher.findFirst).toHaveBeenCalledWith({
         where: { userId: USER, schoolId: SCHOOL },
         select: { id: true },
       })
+      expect(db.section.findMany).not.toHaveBeenCalled()
     })
 
-    it("unions primary class teacher + co-teacher bridge classes", async () => {
-      vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as any)
-      vi.mocked(db.class.findMany).mockResolvedValue([
-        { id: "c1" },
-        { id: "c2" },
-      ] as any)
-      vi.mocked(db.classTeacher.findMany).mockResolvedValue([
-        { classId: "c2" },
-        { classId: "c3" },
-      ] as any)
+    it("covers homeroom, timetable and subject-assignment sections", async () => {
+      vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
+      vi.mocked(db.section.findMany).mockResolvedValue([
+        { id: "7a" },
+        { id: "8b" },
+      ] as never)
 
-      const result = await getTeacherClassIds(SCHOOL, USER)
-
-      expect(result).toEqual(expect.arrayContaining(["c1", "c2", "c3"]))
-      expect(result).toHaveLength(3) // deduped
-    })
-
-    it("scopes all lookups by schoolId", async () => {
-      vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as any)
-      vi.mocked(db.class.findMany).mockResolvedValue([] as any)
-      vi.mocked(db.classTeacher.findMany).mockResolvedValue([] as any)
-
-      await getTeacherClassIds(SCHOOL, USER)
-
-      expect(db.class.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { schoolId: SCHOOL, teacherId: "t1" },
-        })
-      )
-      expect(db.classTeacher.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { schoolId: SCHOOL, teacherId: "t1" },
-        })
-      )
-    })
-  })
-
-  describe("getClassIdsByGrade", () => {
-    it("returns class IDs scoped to schoolId + gradeId", async () => {
-      vi.mocked(db.class.findMany).mockResolvedValue([
-        { id: "c1" },
-        { id: "c2" },
-      ] as any)
-
-      const result = await getClassIdsByGrade(SCHOOL, "g1")
-
-      expect(result).toEqual(["c1", "c2"])
-      expect(db.class.findMany).toHaveBeenCalledWith({
-        where: { schoolId: SCHOOL, gradeId: "g1" },
-        select: { id: true },
-      })
-    })
-
-    it("intersects with teacher's classes when teacherClassIds provided", async () => {
-      vi.mocked(db.class.findMany).mockResolvedValue([{ id: "c1" }] as any)
-
-      await getClassIdsByGrade(SCHOOL, "g1", ["c1", "c5"])
-
-      expect(db.class.findMany).toHaveBeenCalledWith({
+      expect(await getTeacherSectionIds(SCHOOL, USER)).toEqual(["7a", "8b"])
+      expect(db.section.findMany).toHaveBeenCalledWith({
         where: {
           schoolId: SCHOOL,
-          gradeId: "g1",
-          id: { in: ["c1", "c5"] },
+          OR: [
+            { homeroomTeacherId: "t1" },
+            { timetables: { some: { schoolId: SCHOOL, teacherId: "t1" } } },
+            {
+              subjectTeachers: { some: { schoolId: SCHOOL, teacherId: "t1" } },
+            },
+          ],
         },
         select: { id: true },
       })
     })
+  })
 
-    it("ignores empty teacher class array (no teacher scoping)", async () => {
-      vi.mocked(db.class.findMany).mockResolvedValue([] as any)
-
-      await getClassIdsByGrade(SCHOOL, "g1", [])
-
-      const call = vi.mocked(db.class.findMany).mock.calls[0][0]
-      expect(call?.where).not.toHaveProperty("id")
+  describe("sectionScopeWhere", () => {
+    it("leaves staff unscoped", () => {
+      expect(sectionScopeWhere({ teacherSectionIds: null })).toEqual({})
     })
 
-    it("ignores null teacher class IDs (admin path)", async () => {
-      vi.mocked(db.class.findMany).mockResolvedValue([] as any)
+    it("keeps a teacher to their sections", () => {
+      expect(sectionScopeWhere({ teacherSectionIds: ["7a", "8b"] })).toEqual({
+        sectionId: { in: ["7a", "8b"] },
+      })
+    })
 
-      await getClassIdsByGrade(SCHOOL, "g1", null)
+    it("narrows to one of the teacher's sections", () => {
+      expect(
+        sectionScopeWhere({ teacherSectionIds: ["7a", "8b"], sectionId: "8b" })
+      ).toEqual({ sectionId: "8b" })
+    })
 
-      const call = vi.mocked(db.class.findMany).mock.calls[0][0]
-      expect(call?.where).not.toHaveProperty("id")
+    it("intersects away a section outside the teacher's own — never widens", () => {
+      expect(
+        sectionScopeWhere({ teacherSectionIds: ["7a"], sectionId: "9c" })
+      ).toEqual({ sectionId: { in: [] } })
+    })
+
+    it("filters by grade through the section", () => {
+      expect(
+        sectionScopeWhere({ teacherSectionIds: null, gradeId: "g7" })
+      ).toEqual({ section: { gradeId: "g7" } })
     })
   })
 })

@@ -10,10 +10,10 @@ import {
   getAttendanceStats,
   getAttendanceTrends,
   getCalendarData,
-  getClassComparisonStats,
   getDayWisePatterns,
   getMethodUsageStats,
   getRecentAttendance,
+  getSectionComparisonStats,
   getStudentsAtRisk,
 } from "@/components/school-dashboard/attendance/actions/analytics"
 
@@ -24,7 +24,7 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       groupBy: vi.fn(),
     },
-    class: {
+    section: {
       findMany: vi.fn(),
     },
     student: {
@@ -33,9 +33,6 @@ vi.mock("@/lib/db", () => ({
     },
     teacher: {
       findFirst: vi.fn(),
-    },
-    classTeacher: {
-      findMany: vi.fn(),
     },
   },
 }))
@@ -64,9 +61,8 @@ describe("attendance analytics actions", () => {
     vi.mocked(db.attendance.count).mockResolvedValue(0)
     vi.mocked(db.attendance.findMany).mockResolvedValue([])
     vi.mocked(db.attendance.groupBy).mockResolvedValue([] as any)
-    vi.mocked(db.class.findMany).mockResolvedValue([])
+    vi.mocked(db.section.findMany).mockResolvedValue([])
     vi.mocked(db.student.findMany).mockResolvedValue([])
-    vi.mocked(db.classTeacher.findMany).mockResolvedValue([])
   })
 
   describe("getAttendanceStats", () => {
@@ -153,18 +149,45 @@ describe("attendance analytics actions", () => {
     })
   })
 
-  describe("getClassComparisonStats", () => {
-    it("scopes class list and aggregation by schoolId", async () => {
-      await getClassComparisonStats({})
+  describe("getSectionComparisonStats", () => {
+    it("ranks the school's sections by rate", async () => {
+      vi.mocked(db.section.findMany).mockResolvedValue([
+        { id: "7a", name: "7-A", _count: { students: 20 } },
+        { id: "7b", name: "7-B", _count: { students: 18 } },
+      ] as never)
+      vi.mocked(db.attendance.groupBy).mockResolvedValue([
+        { sectionId: "7a", status: "PRESENT", _count: { _all: 6 } },
+        { sectionId: "7a", status: "ABSENT", _count: { _all: 4 } },
+        { sectionId: "7b", status: "PRESENT", _count: { _all: 9 } },
+        { sectionId: "7b", status: "LATE", _count: { _all: 1 } },
+      ] as never)
 
-      const calls = [
-        ...vi.mocked(db.attendance.groupBy).mock.calls,
-        ...vi.mocked(db.class.findMany).mock.calls,
-      ]
-      const anyScoped = calls.some(
-        (c: any) => c?.[0]?.where?.schoolId === SCHOOL
-      )
-      expect(anyScoped).toBe(true)
+      const result = await getSectionComparisonStats({})
+
+      expect(vi.mocked(db.section.findMany).mock.calls[0][0]!.where).toEqual({
+        schoolId: SCHOOL,
+      })
+      expect(
+        vi.mocked(db.attendance.groupBy).mock.calls[0][0]!.where
+      ).toMatchObject({ schoolId: SCHOOL, sectionId: { in: ["7a", "7b"] } })
+      expect("stats" in result && result.stats).toEqual([
+        expect.objectContaining({ sectionId: "7b", rate: 100 }),
+        expect.objectContaining({ sectionId: "7a", rate: 60 }),
+      ])
+    })
+
+    it("shows a teacher only their own sections", async () => {
+      mockAuth("TEACHER")
+      vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
+      vi.mocked(db.section.findMany)
+        .mockResolvedValueOnce([{ id: "7a" }] as never) // teacher's sections
+        .mockResolvedValueOnce([] as never)
+
+      await getSectionComparisonStats({})
+
+      expect(
+        vi.mocked(db.section.findMany).mock.calls[1][0]!.where
+      ).toMatchObject({ schoolId: SCHOOL, id: { in: ["7a"] } })
     })
   })
 
@@ -175,6 +198,21 @@ describe("attendance analytics actions", () => {
       const result = await getStudentsAtRisk()
 
       expect(result.success).toBe(false)
+    })
+
+    it("keeps a teacher's list to their sections, students and marks alike", async () => {
+      mockAuth("TEACHER")
+      vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
+      vi.mocked(db.section.findMany).mockResolvedValue([{ id: "7a" }] as never)
+
+      await getStudentsAtRisk({ gradeId: "g7" })
+
+      const where = vi.mocked(db.student.findMany).mock.calls[0][0]!.where
+      expect(where).toMatchObject({
+        schoolId: SCHOOL,
+        sectionId: { in: ["7a"] },
+        section: { gradeId: "g7" },
+      })
     })
   })
 

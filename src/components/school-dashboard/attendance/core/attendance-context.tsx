@@ -151,7 +151,7 @@ interface AttendanceContextType {
   methods: AttendanceMethodConfig[]
   attendance: AttendanceRecord[]
   stats: AttendanceStats | null
-  selectedClass: string | null
+  selectedSection: string | null
   selectedDate: string
   studentIdentifiers: StudentIdentifier[]
   permissions: AttendancePermissions
@@ -160,7 +160,7 @@ interface AttendanceContextType {
 
   // Actions
   setCurrentMethod: (method: AttendanceMethod) => void
-  setSelectedClass: (classId: string | null) => void
+  setSelectedSection: (sectionId: string | null) => void
   setSelectedDate: (date: string) => void
   markAttendance: (
     record: Partial<AttendanceRecord>
@@ -203,7 +203,9 @@ export function AttendanceProvider({
   const [methods] = useState<AttendanceMethodConfig[]>(ATTENDANCE_METHODS)
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
   const [stats, setStats] = useState<AttendanceStats | null>(null)
-  const [selectedClass, setSelectedClass] = useState<string | null>(null)
+  const [selectedSection, setSelectedSection] = useState<string | null>(
+    null
+  )
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   )
@@ -257,7 +259,7 @@ export function AttendanceProvider({
           schoolId: "", // Will be filled by server context
           studentId: r.studentId,
           studentName: r.studentName,
-          classId: r.classId ?? "",
+          sectionId: r.sectionId,
           date: r.date,
           status: r.status as AttendanceStatus,
           method: r.method as AttendanceMethod,
@@ -292,7 +294,7 @@ export function AttendanceProvider({
       setAttendance((prev) => [...prev, fullRecord])
       try {
         // Call server action
-        if (record.studentId && record.classId && record.status) {
+        if (record.studentId && record.sectionId && record.status) {
           type PrismaStatus =
             | "PRESENT"
             | "ABSENT"
@@ -311,7 +313,7 @@ export function AttendanceProvider({
 
           const result = await markSingleAttendance({
             studentId: record.studentId,
-            classId: record.classId,
+            sectionId: record.sectionId,
             date:
               typeof record.date === "string"
                 ? record.date
@@ -367,9 +369,9 @@ export function AttendanceProvider({
             }) as AttendanceRecord
         )
 
-        // Group records by class and date for batch processing
-        if (records.length > 0 && records[0].classId) {
-          const classId = records[0].classId
+        // Records are marked a section and a date at a time
+        if (records.length > 0 && records[0].sectionId) {
+          const sectionId = records[0].sectionId
           const recordDate = records[0].date
           const date =
             typeof recordDate === "string"
@@ -384,7 +386,7 @@ export function AttendanceProvider({
             }))
 
           await markAttendanceAction({
-            classId,
+            sectionId,
             date,
             records: attendanceRecords,
           })
@@ -431,7 +433,7 @@ export function AttendanceProvider({
       )
       try {
         // Call server action to persist the update
-        if (updates.studentId && updates.classId && updates.status) {
+        if (updates.studentId && updates.sectionId && updates.status) {
           type PrismaStatus =
             | "PRESENT"
             | "ABSENT"
@@ -450,7 +452,7 @@ export function AttendanceProvider({
 
           const result = await markSingleAttendance({
             studentId: updates.studentId,
-            classId: updates.classId,
+            sectionId: updates.sectionId,
             date:
               typeof updates.date === "string"
                 ? updates.date
@@ -533,7 +535,6 @@ export function AttendanceProvider({
       try {
         const result = await getRecentAttendance({
           limit: 100,
-          classId: filters?.classId,
           sectionId: filters?.sectionId,
         })
 
@@ -542,7 +543,7 @@ export function AttendanceProvider({
           schoolId: "", // Will be filled by server context
           studentId: r.studentId,
           studentName: r.studentName,
-          classId: r.classId ?? "",
+          sectionId: r.sectionId,
           date: r.date,
           status: r.status.toLowerCase() as AttendanceStatus,
           method: r.method as AttendanceMethod,
@@ -554,7 +555,6 @@ export function AttendanceProvider({
 
         // Refresh stats
         const statsResult = await getAttendanceStats({
-          classId: filters?.classId,
           sectionId: filters?.sectionId,
           dateFrom: filters?.dateFrom ? String(filters.dateFrom) : undefined,
           dateTo: filters?.dateTo ? String(filters.dateTo) : undefined,
@@ -727,7 +727,7 @@ export function AttendanceProvider({
   const refreshStats = useCallback(async () => {
     try {
       const statsResult = await getAttendanceStats({
-        classId: selectedClass || undefined,
+        sectionId: selectedSection || undefined,
       })
 
       setStats({
@@ -743,7 +743,7 @@ export function AttendanceProvider({
     } catch (err) {
       console.error("Failed to refresh stats:", err)
     }
-  }, [selectedClass])
+  }, [selectedSection])
 
   // Clear error
   const clearError = useCallback(() => {
@@ -767,7 +767,7 @@ export function AttendanceProvider({
       methods,
       attendance,
       stats,
-      selectedClass,
+      selectedSection,
       selectedDate,
       studentIdentifiers,
       permissions,
@@ -776,7 +776,7 @@ export function AttendanceProvider({
 
       // Actions
       setCurrentMethod,
-      setSelectedClass,
+      setSelectedSection,
       setSelectedDate,
       markAttendance,
       markBulkAttendance,
@@ -795,7 +795,7 @@ export function AttendanceProvider({
       methods,
       attendance,
       stats,
-      selectedClass,
+      selectedSection,
       selectedDate,
       studentIdentifiers,
       permissions,

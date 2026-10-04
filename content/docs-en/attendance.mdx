@@ -36,28 +36,26 @@ The attendance root is role-aware: TEACHER lands on **Quick Attendance** (mobile
 
 ## RBAC
 
-| Action                | DEVELOPER | ADMIN | TEACHER (own classes) | STAFF | STUDENT | GUARDIAN (children) |
-| --------------------- | :-------: | :---: | :-------------------: | :---: | :-----: | :-----------------: |
-| Mark attendance       |     Y     |   Y   |           Y           |   Y   |    —    |          —          |
-| Read own records      |     Y     |   Y   |           —           |   —   |    Y    |          Y          |
-| Read class records    |     Y     |   Y   |           Y           |   —   |    —    |          —          |
-| Read school-wide      |     Y     |   Y   |           —           |   Y   |    —    |          —          |
-| Delete                |     Y     |   Y   |           Y           |   Y   |    —    |          —          |
-| Restore               |     Y     |   Y   |           —           |   —   |    —    |          —          |
-| Bulk upload           |     Y     |   Y   |           Y           |   —   |    —    |          —          |
-| Export                |     Y     |   Y   |           Y           |   Y   |    —    |          —          |
-| Analytics             |     Y     |   Y   |           Y           |   Y   |    —    |          —          |
-| Compliance / Settings |     Y     |   Y   |           —           |   —   |    —    |          —          |
-| Excuse review         |     Y     |   Y   |           Y           |   Y   |    —    |          —          |
-| Excuse submit         |     Y     |   Y   |           —           |   —   |    —    |          Y          |
+| Action                | DEVELOPER | ADMIN | TEACHER (own sections) | STAFF | STUDENT | GUARDIAN (children) |
+| --------------------- | :-------: | :---: | :--------------------: | :---: | :-----: | :-----------------: |
+| Mark attendance       |     Y     |   Y   |           Y            |   Y   |    —    |          —          |
+| Read own records      |     Y     |   Y   |           —            |   —   |    Y    |          Y          |
+| Read section records  |     Y     |   Y   |           Y            |   —   |    —    |          —          |
+| Read school-wide      |     Y     |   Y   |           —            |   Y   |    —    |          —          |
+| Delete                |     Y     |   Y   |           Y            |   Y   |    —    |          —          |
+| Restore               |     Y     |   Y   |           —            |   —   |    —    |          —          |
+| Bulk upload           |     Y     |   Y   |           Y            |   —   |    —    |          —          |
+| Export                |     Y     |   Y   |           Y            |   Y   |    —    |          —          |
+| Analytics             |     Y     |   Y   |           Y            |   Y   |    —    |          —          |
+| Compliance / Settings |     Y     |   Y   |           —            |   —   |    —    |          —          |
+| Excuse review         |     Y     |   Y   |           Y            |   Y   |    —    |          —          |
+| Excuse submit         |     Y     |   Y   |           —            |   —   |    —    |          Y          |
 
-`getTeacherClassIds()` (`actions/helpers.ts`) combines primary teacher + `ClassTeacher` co-teacher roles.
-
-Grade filter: actions accept `gradeId` to filter via `Class.gradeId → AcademicGrade` (helper `getClassIdsByGrade()`).
+A teacher's sections are their homeroom, any section they hold a timetable period with, and any section they are assigned a subject in — `getTeacherSectionIds()` (`actions/helpers.ts`). `sectionScopeWhere()` applies them to a read: a section filter is intersected with them, never allowed to widen the scope. A grade filter goes through the section (`section.gradeId`).
 
 ## Manual attendance
 
-Flat inline toolbar (`PlatformToolbar`): class selector, date picker, bulk status buttons, Save. `getCurrentPeriod()` auto-selects the class matching the current timetable period; names translate on demand via `getText()`. Keyboard: `P` / `A` / `L` for present / absent / late, `Cmd/Ctrl+S` save. Absent-student guardians are auto-notified on save; an approved `AbsenceIntention` converts ABSENT → EXCUSED.
+Flat inline toolbar (`PlatformToolbar`): section selector, date picker, bulk status buttons, Save. `getCurrentPeriod()` auto-selects the section matching the current timetable period; names translate on demand via `getText()`. Keyboard: `P` / `A` / `L` for present / absent / late, `Cmd/Ctrl+S` save. Absent-student guardians are auto-notified on save; an approved `AbsenceIntention` converts ABSENT → EXCUSED.
 
 The **roster unit is the section** — `Section.students` defines who is in the class. Each section has exactly one main classroom (homeroom) via `Section.classroomId`; non-homeroom rooms (labs, halls, fields) are reached per-period through the timetable slot (`Timetable.classroomId`), which is also what `getCurrentPeriod()` resolves for period-aware attendance. See [Classrooms › Integration](/docs/classrooms#integration).
 
@@ -99,9 +97,11 @@ Intervention tracking at `/attendance/interventions` — 14 intervention types (
 
 ## Analytics & reports
 
-7-tab analytics at `/analytics`: Summary, Calendar, Trends, Patterns, Methods, Classes, At Risk.
+7-tab analytics at `/analytics`: Summary, Calendar, Trends, Patterns, Methods, Classes (sections ranked by rate), At Risk. Filters: date range and section.
 
-Reports at `/reports`: filter by class, student, status, date range, period. Export: CSV, Excel (5 sheets — summary, detailed, by status, by class, by date), PDF (branded).
+Reports at `/reports`: filter by section, student, status, date range, period. Export: CSV, Excel (5 sheets — summary, detailed, by status, by section, by date), PDF (branded). The export follows the section filter.
+
+Bulk upload at `/bulk-upload` is for one section: every student in the file must be in it.
 
 Compliance: `getComplianceDashboard()`, `getComplianceReport()`, `getScheduledReports()`.
 
@@ -109,27 +109,27 @@ Compliance: `getComplianceDashboard()`, `getComplianceReport()`, `getScheduledRe
 
 Actions are split across per-concern modules under `src/components/.../attendance/actions/`.
 
-| Module        | File               | Surface                                                                           |
-| ------------- | ------------------ | --------------------------------------------------------------------------------- |
-| Core          | `core.ts`          | Mark, list, quick-mark, check-out, bulk delete + restore                          |
-| Analytics     | `analytics.ts`     | Stats, trends, method usage, calendar, class comparison, at-risk, recent activity |
-| Periods       | `periods.ts`       | Per-period mark, current-period detection, period analytics                       |
-| QR            | `qr.ts`            | Session generate, scan, active sessions                                           |
-| Identifiers   | `identifiers.ts`   | Student barcode / card identifier CRUD + lookup                                   |
-| Excuses       | `excuses.ts`       | Submit, review, list pending / unexcused                                          |
-| Interventions | `interventions.ts` | Create, update, escalate, list, stats, assignees                                  |
-| Bulk          | `bulk.ts`          | CSV / Excel upload, report builder, CSV export, recent uploads                    |
-| Dashboard     | `dashboard.ts`     | Today's overview, by-risk, early warning, unmarked classes, parent summary        |
-| Policy        | `policy.ts`        | Evaluate policies, triggers, exemptions, dismissals                               |
-| Master        | `master.ts`        | School-gate entry / exit, prefill from master                                     |
-| Compliance    | `compliance.ts`    | Compliance dashboard + scheduled reports                                          |
-| Records       | `records.ts`       | Student own + guardian children                                                   |
+| Module        | File               | Surface                                                                             |
+| ------------- | ------------------ | ----------------------------------------------------------------------------------- |
+| Core          | `core.ts`          | Mark, list, check-out, bulk delete + restore                                        |
+| Analytics     | `analytics.ts`     | Stats, trends, method usage, calendar, section comparison, at-risk, recent activity |
+| Periods       | `periods.ts`       | Per-period mark, current-period detection, period analytics                         |
+| QR            | `qr.ts`            | Session generate, scan, active sessions                                             |
+| Identifiers   | `identifiers.ts`   | Student barcode / card identifier CRUD + lookup                                     |
+| Excuses       | `excuses.ts`       | Submit, review, list pending / unexcused                                            |
+| Interventions | `interventions.ts` | Create, update, escalate, list, stats, assignees                                    |
+| Bulk          | `bulk.ts`          | CSV / Excel upload, report builder, CSV export, recent uploads                      |
+| Dashboard     | `dashboard.ts`     | Today's overview, by-risk, early warning, unmarked sections, parent summary         |
+| Policy        | `policy.ts`        | Evaluate policies, triggers, exemptions, dismissals                                 |
+| Master        | `master.ts`        | School-gate entry / exit, prefill from master                                       |
+| Compliance    | `compliance.ts`    | Compliance dashboard + scheduled reports                                            |
+| Records       | `records.ts`       | Student own + guardian children                                                     |
 
 Sample signatures:
 
 ```typescript
 markAttendance(input: {
-  classId: string
+  sectionId: string
   date: string
   records: Array<{ studentId: string; status: 'present' | 'absent' | 'late' }>
 })
@@ -141,7 +141,7 @@ markPeriodAttendance(input: {
   records: Array<{ studentId: string; status: 'PRESENT' | 'ABSENT' | 'LATE'; notes?: string }>
 })
 
-getAttendanceList({ classId, date, lang? })  // lang triggers translation
+getAttendanceList({ sectionId, date, lang? })  // lang triggers translation
 deleteAttendance(id: string)                  // soft delete
 restoreAttendance(id: string)
 ```
@@ -153,7 +153,8 @@ model Attendance {
   id           String           @id @default(cuid())
   schoolId     String
   studentId    String
-  classId      String
+  sectionId    String?          // the section the mark is kept on
+  classId      String?          // legacy: marks from before sections
   date         DateTime         @db.Date
   status       AttendanceStatus
   method       AttendanceMethod @default(MANUAL)
@@ -168,7 +169,8 @@ model Attendance {
   timetableId String?
   periodName  String?
 
-  @@unique([schoolId, studentId, classId, date, periodId])
+  @@unique([schoolId, studentId, sectionId, date, periodId])
+  @@unique([schoolId, studentId, classId, date, periodId]) // legacy
   @@index([schoolId, date, periodId])
 }
 ```

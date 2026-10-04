@@ -11,9 +11,7 @@ import {
   getParentAttendanceSummary,
   getStudentEarlyWarningDetails,
   getStudentsByRiskLevel,
-  getTeacherClassesToday,
   getTodaysDashboard,
-  getUnmarkedClasses,
 } from "@/components/school-dashboard/attendance/actions/dashboard"
 
 vi.mock("@/lib/db", () => ({
@@ -40,20 +38,10 @@ vi.mock("@/lib/db", () => ({
     teacher: {
       findFirst: vi.fn(),
     },
-    classTeacher: {
+    section: {
       findMany: vi.fn(),
-    },
-    class: {
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
     },
     schoolWeekConfig: {
-      findMany: vi.fn(),
-    },
-    studentClass: {
-      findMany: vi.fn(),
-    },
-    timetable: {
       findMany: vi.fn(),
     },
     attendanceIntervention: {
@@ -91,8 +79,7 @@ describe("attendance dashboard actions", () => {
     vi.mocked(db.attendance.count).mockResolvedValue(0)
     vi.mocked(db.attendance.groupBy).mockResolvedValue([] as any)
     vi.mocked(db.student.findMany).mockResolvedValue([])
-    vi.mocked(db.class.findMany).mockResolvedValue([])
-    vi.mocked(db.studentClass.findMany).mockResolvedValue([])
+    vi.mocked(db.section.findMany).mockResolvedValue([])
     vi.mocked(db.studentGuardian.findMany).mockResolvedValue([])
   })
 
@@ -116,6 +103,19 @@ describe("attendance dashboard actions", () => {
         (c: any) => c?.[0]?.where?.schoolId === SCHOOL
       )
       expect(anyScoped).toBe(true)
+    })
+
+    it("intersects a teacher's section filter with their own sections", async () => {
+      mockAuth("TEACHER")
+      vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t1" } as never)
+      vi.mocked(db.section.findMany).mockResolvedValue([{ id: "7a" }] as never)
+
+      await getStudentsByRiskLevel({ sectionId: "9c" })
+
+      expect(vi.mocked(db.student.findMany).mock.calls[0][0]!.where).toEqual({
+        schoolId: SCHOOL,
+        sectionId: { in: [] },
+      })
     })
   })
 
@@ -165,18 +165,42 @@ describe("attendance dashboard actions", () => {
       )
       expect(anyScoped).toBe(true)
     })
-  })
 
-  describe("getTeacherClassesToday", () => {
-    it("denies non-TEACHER role", async () => {
-      mockAuth("STUDENT")
+    it("lists the sections with students that have no mark today", async () => {
+      vi.mocked(db.section.findMany).mockResolvedValue([
+        { id: "7a", name: "7-A", _count: { students: 20 } },
+        { id: "7b", name: "7-B", _count: { students: 18 } },
+        { id: "7c", name: "7-C", _count: { students: 0 } },
+      ] as never)
+      vi.mocked(db.attendance.findMany).mockImplementation(((args: {
+        select?: { sectionId?: boolean }
+      }) =>
+        Promise.resolve(
+          args?.select?.sectionId
+            ? [
+                {
+                  id: "a1",
+                  sectionId: "7a",
+                  studentId: "s1",
+                  status: "PRESENT",
+                  markedAt: new Date(),
+                },
+              ]
+            : []
+        )) as never)
 
-      const result = await getTeacherClassesToday()
+      const result = await getTodaysDashboard()
 
-      // Returns either error or empty
-      expect(
-        result.success === false || (result as any).data?.classes
-      ).toBeDefined()
+      expect(result.success).toBe(true)
+      if (!result.success) return
+      expect(result.data.stats).toMatchObject({
+        totalStudents: 38,
+        classesTotal: 2,
+        classesMarked: 1,
+      })
+      expect(result.data.unmarkedClasses.map((c) => c.id)).toEqual(
+        result.data.today.isSchoolDay ? ["7b"] : []
+      )
     })
   })
 
@@ -185,16 +209,6 @@ describe("attendance dashboard actions", () => {
       mockAuth("ADMIN", null)
 
       const result = await getFollowUpStudents()
-
-      expect(result.success).toBe(false)
-    })
-  })
-
-  describe("getUnmarkedClasses", () => {
-    it("denies missing schoolId", async () => {
-      mockAuth("ADMIN", null)
-
-      const result = await getUnmarkedClasses()
 
       expect(result.success).toBe(false)
     })

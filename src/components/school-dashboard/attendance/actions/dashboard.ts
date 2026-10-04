@@ -20,14 +20,14 @@ import {
   type TodaysAttendanceDashboard,
 } from "../queries"
 import type { ActionResponse } from "./core"
-import { getTeacherClassIds } from "./helpers"
+import { getTeacherSectionIds, sectionScopeWhere } from "./helpers"
 import type { AttendanceRiskLevel } from "./interventions"
 
 interface StudentRiskData {
   studentId: string
   studentName: string
-  classId: string | null
-  className: string | null
+  sectionId: string | null
+  sectionName: string | null
   totalDays: number
   presentDays: number
   absentDays: number
@@ -55,7 +55,6 @@ function calculateRiskLevel(rate: number): AttendanceRiskLevel {
  * Get students by risk level for early warning system
  */
 export async function getStudentsByRiskLevel(input?: {
-  classId?: string
   sectionId?: string
   riskLevel?: AttendanceRiskLevel
   dateFrom?: string
@@ -90,34 +89,27 @@ export async function getStudentsByRiskLevel(input?: {
       : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     const dateTo = input?.dateTo ? new Date(input.dateTo) : new Date()
 
-    // Teacher scoping
-    let teacherClassIds: string[] | null = null
-    if (session.user.role === "TEACHER") {
-      teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
-    }
+    // Teacher scoping: their sections; a section filter is intersected
+    // with them, never allowed to widen the scope.
+    const teacherSectionIds =
+      session.user.role === "TEACHER"
+        ? await getTeacherSectionIds(schoolId, session.user.id!)
+        : null
+    const scope = sectionScopeWhere({
+      teacherSectionIds,
+      sectionId: input?.sectionId,
+    })
 
     // Get all students with their attendance
     const where: Prisma.StudentWhereInput = { schoolId }
-    if (input?.sectionId) {
-      where.sectionId = input.sectionId
-    } else if (input?.classId) {
-      where.studentClasses = { some: { classId: input.classId } }
-    } else if (teacherClassIds) {
-      where.studentClasses = {
-        some: { classId: { in: teacherClassIds } },
-      }
-    }
+    if (scope.sectionId) where.sectionId = scope.sectionId
 
     const attendanceWhere: Prisma.AttendanceWhereInput = {
       date: { gte: dateFrom, lte: dateTo },
       schoolId,
       deletedAt: null,
     }
-    if (input?.sectionId) {
-      attendanceWhere.sectionId = input.sectionId
-    } else if (teacherClassIds) {
-      attendanceWhere.classId = { in: teacherClassIds }
-    }
+    if (scope.sectionId) attendanceWhere.sectionId = scope.sectionId
 
     const students = await db.student.findMany({
       where,
@@ -125,10 +117,7 @@ export async function getStudentsByRiskLevel(input?: {
         id: true,
         firstName: true,
         lastName: true,
-        studentClasses: {
-          take: 1,
-          include: { class: { select: { id: true, name: true } } },
-        },
+        section: { select: { id: true, name: true } },
         attendances: {
           where: attendanceWhere,
           orderBy: { date: "desc" },
@@ -189,13 +178,11 @@ export async function getStudentsByRiskLevel(input?: {
         else break
       }
 
-      const primaryClass = student.studentClasses[0]?.class
-
       return {
         studentId: student.id,
         studentName: `${student.firstName} ${student.lastName}`,
-        classId: primaryClass?.id || null,
-        className: primaryClass?.name || null,
+        sectionId: student.section?.id ?? null,
+        sectionName: student.section?.name ?? null,
         totalDays,
         presentDays,
         absentDays,
@@ -287,14 +274,12 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
         id: true,
         firstName: true,
         lastName: true,
-        studentClasses: {
-          take: 1,
-          include: { class: { select: { id: true, name: true } } },
-        },
+        section: { select: { id: true, name: true } },
         attendances: {
-          where: { date: { gte: dateFrom }, schoolId },
+          where: { date: { gte: dateFrom }, schoolId, deletedAt: null },
           orderBy: { date: "desc" },
           include: {
+            section: { select: { name: true } },
             class: { select: { name: true } },
             excuse: { select: { status: true } },
           },
@@ -353,7 +338,8 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
       .slice(0, 10)
       .map((a) => ({
         date: a.date.toISOString(),
-        className: a.class?.name ?? "",
+        // The section, or the class of a mark kept from before sections.
+        className: a.section?.name ?? a.class?.name ?? "",
         hasExcuse: !!a.excuse && a.excuse.status === "APPROVED",
       }))
 
@@ -438,16 +424,14 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
       })
     }
 
-    const primaryClass = student.studentClasses[0]?.class
-
     return {
       success: true,
       data: {
         student: {
           studentId: student.id,
           studentName: `${student.firstName} ${student.lastName}`,
-          classId: primaryClass?.id || null,
-          className: primaryClass?.name || null,
+          sectionId: student.section?.id ?? null,
+          sectionName: student.section?.name ?? null,
           totalDays,
           presentDays,
           absentDays,
@@ -516,136 +500,6 @@ export async function getTodaysDashboard(): Promise<
 }
 
 /**
- * Get teacher's classes for today
- */
-export async function getTeacherClassesToday(): Promise<
-  ActionResponse<{
-    classes: Array<{
-      id: string
-      name: string
-      studentCount: number
-      period?: string
-      time?: string
-      isMarked: boolean
-      markedCount: number
-    }>
-  }>
-> {
-  try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
-
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Authentication required" }
-    }
-    // SECURITY: without this, any authenticated role (STUDENT/GUARDIAN/…)
-    // with no Teacher row fell through to the school-wide "admin view" below.
-    if (!isStaffRole(session.user.role as any)) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    // Get teacher's assigned classes (Teacher has direct relation to Class via teacherId)
-    const teacher = await db.teacher.findFirst({
-      where: { userId: session.user.id, schoolId },
-      select: {
-        id: true,
-        classes: {
-          select: {
-            id: true,
-            name: true,
-            _count: { select: { studentClasses: true } },
-          },
-        },
-      },
-    })
-
-    if (!teacher) {
-      // If not a teacher, get all classes (admin view)
-      const allClasses = await db.class.findMany({
-        where: { schoolId },
-        select: {
-          id: true,
-          name: true,
-          _count: { select: { studentClasses: true } },
-        },
-      })
-
-      // Get today's attendance counts per class
-      const attendanceCounts = await db.attendance.groupBy({
-        by: ["classId"],
-        where: { schoolId, date: today, deletedAt: null },
-        _count: true,
-      })
-
-      const countsMap = new Map(
-        attendanceCounts.map((a) => [a.classId, a._count])
-      )
-
-      return {
-        success: true,
-        data: {
-          classes: allClasses.map((c) => ({
-            id: c.id,
-            name: c.name,
-            studentCount: c._count.studentClasses,
-            isMarked: (countsMap.get(c.id) || 0) > 0,
-            markedCount: countsMap.get(c.id) || 0,
-          })),
-        },
-      }
-    }
-
-    // Get classes directly from teacher
-    const teacherClasses = teacher.classes
-
-    // Get today's attendance counts per class
-    const classIds = teacherClasses.map((c) => c.id)
-    const attendanceCounts = await db.attendance.groupBy({
-      by: ["classId"],
-      where: {
-        schoolId,
-        date: today,
-        classId: { in: classIds },
-        deletedAt: null,
-      },
-      _count: true,
-    })
-
-    const countsMap = new Map(
-      attendanceCounts.map((a) => [a.classId, a._count])
-    )
-
-    return {
-      success: true,
-      data: {
-        classes: teacherClasses.map((c) => ({
-          id: c.id,
-          name: c.name,
-          studentCount: c._count.studentClasses,
-          isMarked: (countsMap.get(c.id) || 0) > 0,
-          markedCount: countsMap.get(c.id) || 0,
-        })),
-      },
-    }
-  } catch (error) {
-    console.error("[getTeacherClassesToday] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to get teacher classes",
-    }
-  }
-}
-
-/**
  * Get students needing follow-up
  */
 export async function getFollowUpStudents(input?: {
@@ -679,160 +533,6 @@ export async function getFollowUpStudents(input?: {
         error instanceof Error
           ? error.message
           : "Failed to get follow-up students",
-    }
-  }
-}
-
-/**
- * Get unmarked classes based on today's timetable
- */
-export async function getUnmarkedClasses(): Promise<
-  ActionResponse<{
-    unmarkedClasses: Array<{
-      classId: string
-      className: string
-      periodName: string
-      teacherId: string
-      teacherName: string
-      scheduledTime: string
-    }>
-    totalClasses: number
-    markedClasses: number
-  }>
-> {
-  try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
-
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Authentication required" }
-    }
-    if (!isStaffRole(session.user.role as any)) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    // Teacher scoping
-    let teacherClassIds: string[] | null = null
-    if (session.user.role === "TEACHER") {
-      teacherClassIds = await getTeacherClassIds(schoolId, session.user.id)
-    }
-
-    // Get today's date and day of week
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const dayOfWeek = today.getDay() // 0 = Sunday, 6 = Saturday
-
-    // Get active term
-    const activeTerm = await db.term.findFirst({
-      where: { schoolId, isActive: true },
-    })
-
-    if (!activeTerm) {
-      return {
-        success: true,
-        data: {
-          unmarkedClasses: [],
-          totalClasses: 0,
-          markedClasses: 0,
-        },
-      }
-    }
-
-    // Get today's timetable entries for the active term (scoped for teachers)
-    const timetableWhere: {
-      schoolId: string
-      termId: string
-      dayOfWeek: number
-      classId?: { in: string[] }
-    } = {
-      schoolId,
-      termId: activeTerm.id,
-      dayOfWeek,
-    }
-    if (teacherClassIds) timetableWhere.classId = { in: teacherClassIds }
-
-    const timetableEntries = await db.timetable.findMany({
-      where: timetableWhere,
-      include: {
-        period: {
-          select: {
-            id: true,
-            name: true,
-            startTime: true,
-            endTime: true,
-          },
-        },
-        class: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        teacher: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-    })
-
-    // Get today's attendance records that have a periodId
-    const todayAttendanceRecords = await db.attendance.findMany({
-      where: {
-        schoolId,
-        date: today,
-        periodId: { not: null },
-        deletedAt: null,
-      },
-      select: {
-        periodId: true,
-        classId: true,
-      },
-    })
-
-    // Create a Set of marked period-class combinations
-    const markedPeriodClasses = new Set(
-      todayAttendanceRecords.map((a) => `${a.periodId}-${a.classId}`)
-    )
-
-    // Find unmarked classes
-    const unmarkedClasses = timetableEntries
-      .filter((entry) => {
-        const key = `${entry.periodId}-${entry.classId}`
-        return !markedPeriodClasses.has(key)
-      })
-      .map((entry) => ({
-        classId: entry.class?.id ?? "",
-        className: entry.class?.name ?? "",
-        periodName: entry.period.name,
-        teacherId: entry.teacher?.id ?? "",
-        teacherName: entry.teacher
-          ? `${entry.teacher.firstName} ${entry.teacher.lastName}`
-          : "",
-        scheduledTime: `${entry.period.startTime} - ${entry.period.endTime}`,
-      }))
-
-    return {
-      success: true,
-      data: {
-        unmarkedClasses,
-        totalClasses: timetableEntries.length,
-        markedClasses: timetableEntries.length - unmarkedClasses.length,
-      },
-    }
-  } catch (error) {
-    console.error("[getUnmarkedClasses] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to get unmarked classes",
     }
   }
 }
@@ -893,12 +593,7 @@ export async function getParentAttendanceSummary(): Promise<
             id: true,
             firstName: true,
             lastName: true,
-            studentClasses: {
-              include: {
-                class: { select: { name: true } },
-              },
-              take: 1,
-            },
+            section: { select: { name: true } },
           },
         },
       },
@@ -944,7 +639,10 @@ export async function getParentAttendanceSummary(): Promise<
           periodId: null,
           date: { gte: termStart },
         },
-        include: { class: { select: { name: true } } },
+        include: {
+          section: { select: { name: true } },
+          class: { select: { name: true } },
+        },
         orderBy: { date: "desc" },
       }),
     ])
@@ -996,16 +694,17 @@ export async function getParentAttendanceSummary(): Promise<
         list.push({
           date: a.date.toISOString().split("T")[0],
           status: a.status,
-          className: a.class?.name ?? "",
+          // The section, or the class of a mark kept from before sections.
+          className: a.section?.name ?? a.class?.name ?? "",
         })
       }
     }
 
     const children = studentGuardians.map((sg) => {
       const student = sg.student
-      // Empty, not "Unassigned": a server action cannot know the reader's
-      // language, and the overview hides the line when there is no class.
-      const className = student.studentClasses[0]?.class.name || ""
+      // The child's section. Empty, not "Unassigned": a server action cannot
+      // know the reader's language, and the overview hides an empty line.
+      const className = student.section?.name ?? ""
       return {
         studentId: student.id,
         studentName: `${student.firstName} ${student.lastName}`,

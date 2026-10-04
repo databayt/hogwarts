@@ -11,12 +11,12 @@ import type { Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
 
-import { getTeacherClassIds } from "./actions/helpers"
+import { getTeacherSectionIds } from "./actions/helpers"
 
 export interface AttendanceViewer {
   schoolId: string
   userId: string
-  /** A TEACHER is scoped to their own classes; other staff see the school. */
+  /** A TEACHER is scoped to their own sections; other staff see the school. */
   role: string
 }
 
@@ -88,8 +88,10 @@ export type AttendanceFollowUp = {
 }
 
 /**
- * Today's attendance overview: marking progress by class, the classes still
- * unmarked, 3+ day absence streaks and the last ten marks.
+ * Today's attendance overview: marking progress by section, the sections
+ * still unmarked, 3+ day absence streaks and the last ten marks. (The
+ * `classes*` / `unmarkedClasses` names are kept for the mobile contract; they
+ * hold sections.)
  */
 export async function loadTodaysAttendanceDashboard(
   input: AttendanceViewer
@@ -108,25 +110,22 @@ export async function loadTodaysAttendanceDashboard(
   ]
 
   // Teacher scoping
-  let teacherClassIds: string[] | null = null
-  if (role === "TEACHER") {
-    teacherClassIds = await getTeacherClassIds(schoolId, userId)
-  }
+  const teacherSectionIds =
+    role === "TEACHER" ? await getTeacherSectionIds(schoolId, userId) : null
 
-  // Get classes with student counts (scoped for teachers)
-  const classWhere: { schoolId: string; id?: { in: string[] } } = {
-    schoolId,
-  }
-  if (teacherClassIds) classWhere.id = { in: teacherClassIds }
+  // Sections with student counts (scoped for teachers)
+  const sectionWhere: Prisma.SectionWhereInput = { schoolId }
+  if (teacherSectionIds) sectionWhere.id = { in: teacherSectionIds }
 
-  const [classes, weekConfigs] = await Promise.all([
-    db.class.findMany({
-      where: classWhere,
+  const [sections, weekConfigs] = await Promise.all([
+    db.section.findMany({
+      where: sectionWhere,
       select: {
         id: true,
         name: true,
-        _count: { select: { studentClasses: true } },
+        _count: { select: { students: true } },
       },
+      orderBy: { name: "asc" },
     }),
     // Working-days config: the termId=null row is the school default;
     // term-specific rows override it. No config → every day counts.
@@ -150,15 +149,15 @@ export async function loadTodaysAttendanceDashboard(
     date: today,
     deletedAt: null,
   }
-  if (teacherClassIds) attendanceWhere.classId = { in: teacherClassIds }
+  if (teacherSectionIds) attendanceWhere.sectionId = { in: teacherSectionIds }
 
-  // PERF: stats only need ids/status — don't join student/class names for the
-  // whole day's roster (recent activity below joins names for just 10 rows).
+  // PERF: stats only need ids/status — don't join student/section names for
+  // the whole day's roster (recent activity below joins names for 10 rows).
   const todayAttendance = await db.attendance.findMany({
     where: attendanceWhere,
     select: {
       id: true,
-      classId: true,
+      sectionId: true,
       studentId: true,
       status: true,
       markedAt: true,
@@ -167,13 +166,14 @@ export async function loadTodaysAttendanceDashboard(
   })
 
   // Calculate stats
-  const markedClassIds = new Set(todayAttendance.map((a) => a.classId))
-  const unmarkedClasses = classes.filter(
-    (c) => !markedClassIds.has(c.id) && c._count.studentClasses > 0
+  const markedSectionIds = new Set(todayAttendance.map((a) => a.sectionId))
+  const withStudents = sections.filter((c) => c._count.students > 0)
+  const unmarkedSections = withStudents.filter(
+    (c) => !markedSectionIds.has(c.id)
   )
 
-  const totalStudents = classes.reduce(
-    (sum, c) => sum + c._count.studentClasses,
+  const totalStudents = withStudents.reduce(
+    (sum, c) => sum + c._count.students,
     0
   )
   const uniqueStudentsMarked = new Set(todayAttendance.map((a) => a.studentId))
@@ -192,7 +192,7 @@ export async function loadTodaysAttendanceDashboard(
     date: { gte: threeDaysAgo, lte: today },
     deletedAt: null,
   }
-  if (teacherClassIds) absenceWhere.classId = { in: teacherClassIds }
+  if (teacherSectionIds) absenceWhere.sectionId = { in: teacherSectionIds }
 
   const recentAbsences = await db.attendance.findMany({
     where: absenceWhere,
@@ -200,6 +200,7 @@ export async function loadTodaysAttendanceDashboard(
       studentId: true,
       date: true,
       student: { select: { firstName: true, lastName: true } },
+      section: { select: { name: true } },
       class: { select: { name: true } },
     },
     orderBy: { date: "desc" },
@@ -215,7 +216,7 @@ export async function loadTodaysAttendanceDashboard(
     if (!studentAbsences.has(key)) {
       studentAbsences.set(key, {
         name: `${absence.student.firstName} ${absence.student.lastName}`,
-        className: absence.class?.name ?? "",
+        className: absence.section?.name ?? absence.class?.name ?? "",
         dates: [],
       })
     }
@@ -272,13 +273,15 @@ export async function loadTodaysAttendanceDashboard(
       method: true,
       date: true,
       student: { select: { firstName: true, lastName: true } },
+      section: { select: { name: true } },
       class: { select: { name: true } },
     },
   })
   const recentActivity = recentRows.map((a) => ({
     id: a.id,
     studentName: `${a.student.firstName} ${a.student.lastName}`,
-    className: a.class?.name ?? "",
+    // The section, or the class of a mark kept from before sections.
+    className: a.section?.name ?? a.class?.name ?? "",
     status: a.status,
     time: a.markedAt.toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -309,18 +312,16 @@ export async function loadTodaysAttendanceDashboard(
               ((present + late) / Math.max(uniqueStudentsMarked, 1)) * 100
             )
           : 0,
-      classesTotal: classes.filter((c) => c._count.studentClasses > 0).length,
-      classesMarked: classes.filter(
-        (c) => markedClassIds.has(c.id) && c._count.studentClasses > 0
-      ).length,
+      classesTotal: withStudents.length,
+      classesMarked: withStudents.length - unmarkedSections.length,
     },
-    // On a non-school day an all-classes-unmarked list is pure noise —
+    // On a non-school day an all-sections-unmarked list is pure noise —
     // suppress it so the client can show a neutral "no school today" note.
     unmarkedClasses: isSchoolDay
-      ? unmarkedClasses.map((c) => ({
+      ? unmarkedSections.map((c) => ({
           id: c.id,
           name: c.name,
-          studentCount: c._count.studentClasses,
+          studentCount: c._count.students,
         }))
       : [],
     followUpNeeded: followUpNeeded.slice(0, 5), // Top 5 priority
@@ -337,10 +338,8 @@ export async function loadAttendanceFollowUp(
 ): Promise<AttendanceFollowUp> {
   const { schoolId, userId, role } = input
   // Teacher scoping
-  let teacherClassIds: string[] | null = null
-  if (role === "TEACHER") {
-    teacherClassIds = await getTeacherClassIds(schoolId, userId)
-  }
+  const teacherSectionIds =
+    role === "TEACHER" ? await getTeacherSectionIds(schoolId, userId) : null
 
   const limit = input.limit || 20
   const today = new Date()
@@ -368,8 +367,8 @@ export async function loadAttendanceFollowUp(
     date: { gte: sevenDaysAgo, lte: today },
     deletedAt: null,
   }
-  if (teacherClassIds) {
-    followUpAbsenceWhere.classId = { in: teacherClassIds }
+  if (teacherSectionIds) {
+    followUpAbsenceWhere.sectionId = { in: teacherSectionIds }
   }
 
   const recentAbsences = await db.attendance.findMany({
@@ -378,6 +377,7 @@ export async function loadAttendanceFollowUp(
       studentId: true,
       date: true,
       student: { select: { firstName: true, lastName: true } },
+      section: { select: { name: true } },
       class: { select: { name: true } },
     },
     orderBy: { date: "desc" },
@@ -392,7 +392,7 @@ export async function loadAttendanceFollowUp(
     if (!studentAbsenceMap.has(absence.studentId)) {
       studentAbsenceMap.set(absence.studentId, {
         name: `${absence.student.firstName} ${absence.student.lastName}`,
-        className: absence.class?.name ?? "",
+        className: absence.section?.name ?? absence.class?.name ?? "",
         dates: [],
       })
     }
@@ -429,15 +429,15 @@ export async function loadAttendanceFollowUp(
     }
   }
 
-  // 2. Get pending unexcused absences — scope to the teacher's own classes
-  // too (the absence list above is scoped; this one was not, leaking students
-  // outside the teacher's classes).
+  // 2. Get pending unexcused absences — scope to the teacher's own sections
+  // too (the absence list above is scoped; this one once was not, leaking
+  // students outside the teacher's classes).
   const pendingExcuses = await db.attendanceExcuse.findMany({
     where: {
       schoolId,
       status: "PENDING",
-      ...(teacherClassIds
-        ? { attendance: { classId: { in: teacherClassIds } } }
+      ...(teacherSectionIds
+        ? { attendance: { sectionId: { in: teacherSectionIds } } }
         : {}),
     },
     select: {
@@ -447,6 +447,7 @@ export async function loadAttendanceFollowUp(
           studentId: true,
           date: true,
           student: { select: { firstName: true, lastName: true } },
+          section: { select: { name: true } },
           class: { select: { name: true } },
         },
       },
@@ -458,7 +459,8 @@ export async function loadAttendanceFollowUp(
     results.push({
       studentId: excuse.attendance.studentId,
       studentName: `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`,
-      className: excuse.attendance.class?.name ?? "",
+      className:
+        excuse.attendance.section?.name ?? excuse.attendance.class?.name ?? "",
       issue: "unexcused_pending",
       severity: "info",
       details: `Excuse pending review since ${formatDate(excuse.attendance.date, "ar")}`,

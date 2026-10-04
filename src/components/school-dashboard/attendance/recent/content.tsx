@@ -33,17 +33,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SkeletonList } from "@/components/atom/loading"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
   getAttendanceStats,
-  getClassesForSelection,
   getRecentAttendance,
   getSectionsForSelection,
 } from "../actions"
-import { phone } from "../shared/phone"
 import { AttendancePageSkeleton } from "../loading-skeleton"
-import { SkeletonList } from "@/components/atom/loading"
+import { phone } from "../shared/phone"
 
 interface Props {
   dictionary?: Dictionary["school"]
@@ -55,7 +54,7 @@ interface AttendanceRecord {
   id: string
   studentId: string
   studentName: string
-  classId: string
+  sectionId: string | null
   className: string
   date: string
   status: string // AttendanceStatus enum value
@@ -71,12 +70,6 @@ interface Stats {
   absent: number
   late: number
   attendanceRate: number
-}
-
-interface ClassOption {
-  id: string
-  name: string
-  teacher: string | null
 }
 
 interface SectionOption {
@@ -187,34 +180,27 @@ export function RecentActivityContent({
 }: Props) {
   const [records, setRecords] = React.useState<AttendanceRecord[]>([])
   const [stats, setStats] = React.useState<Stats | null>(null)
-  const [classes, setClasses] = React.useState<ClassOption[]>([])
   const [sections, setSections] = React.useState<SectionOption[]>([])
   const [filter, setFilter] = React.useState<string>("all")
-  const [selectedClass, setSelectedClass] = React.useState<string>("all")
   const [selectedSection, setSelectedSection] = React.useState<string>("all")
   const [loading, setLoading] = React.useState(true)
   const [refreshing, setRefreshing] = React.useState(false)
 
   const fetchData = React.useCallback(async () => {
     try {
-      const classFilter = selectedClass !== "all" ? selectedClass : undefined
       const sectionFilter =
         selectedSection !== "all" ? selectedSection : undefined
 
-      const [recordsResult, statsResult, classesResult, sectionsResult] =
-        await Promise.all([
-          getRecentAttendance({
-            limit: 100,
-            classId: classFilter,
-            sectionId: sectionFilter,
-          }),
-          getAttendanceStats({
-            classId: classFilter,
-            sectionId: sectionFilter,
-          }),
-          getClassesForSelection(),
-          getSectionsForSelection(),
-        ])
+      const [recordsResult, statsResult, sectionsResult] = await Promise.all([
+        getRecentAttendance({
+          limit: 100,
+          sectionId: sectionFilter,
+        }),
+        getAttendanceStats({
+          sectionId: sectionFilter,
+        }),
+        getSectionsForSelection(),
+      ])
 
       // Map the results to match our interface types (mixed return types)
       if (
@@ -232,8 +218,6 @@ export function RecentActivityContent({
       // statsResult returns raw data on success
       if (!("success" in statsResult && !statsResult.success))
         setStats(statsResult as any)
-      if (classesResult.success && classesResult.data)
-        setClasses(classesResult.data.classes)
       if (sectionsResult.success && sectionsResult.data)
         setSections(sectionsResult.data.sections)
     } catch (error) {
@@ -241,7 +225,7 @@ export function RecentActivityContent({
     } finally {
       setLoading(false)
     }
-  }, [selectedClass, selectedSection])
+  }, [selectedSection])
 
   React.useEffect(() => {
     fetchData()
@@ -502,25 +486,7 @@ export function RecentActivityContent({
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger
-                  className={cn("w-[150px] max-md:w-full", phone.field)}
-                >
-                  <SelectValue
-                    placeholder={(dict as any)?.selectClass ?? "Select class"}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    {(dict as any)?.allClasses ?? "All Classes"}
-                  </SelectItem>
-                  {classes.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
               <div className="flex items-center gap-1 max-md:flex-wrap max-md:[&_button]:rounded-full max-md:[&_button]:px-4">
                 <Button
                   variant={filter === "all" ? "default" : "outline"}

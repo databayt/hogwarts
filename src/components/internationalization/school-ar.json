@@ -992,7 +992,8 @@
           "selectClass": "يرجى اختيار الفصل",
           "selectDate": "يرجى اختيار التاريخ",
           "processed": "تمت معالجة {count} سجلًا",
-          "processingFailed": "فشلت المعالجة"
+          "processingFailed": "فشلت المعالجة",
+          "selectSection": "يرجى اختيار الفصل"
         },
         "title": "رفع الحضور الجماعي",
         "description": "رفع سجلات الحضور بشكل جماعي من ملفات CSV أو Excel",
@@ -1017,7 +1018,11 @@
           "uploadButton": "رفع",
           "processing": "جاري المعالجة...",
           "selectedFile": "الملف المحدد: {name} ({size} كيلوبايت)",
-          "invalidType": "نوع الملف غير صالح. يرجى رفع ملف CSV أو Excel."
+          "invalidType": "نوع الملف غير صالح. يرجى رفع ملف CSV أو Excel.",
+          "selectSection": "الفصل",
+          "selectSectionPlaceholder": "اختر الفصل...",
+          "noSections": "لا توجد فصول بعد",
+          "selectDate": "التاريخ"
         },
         "results": {
           "success": "تم رفع سجلات الحضور بنجاح!",

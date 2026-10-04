@@ -40,7 +40,8 @@ export interface AttendanceRecord {
   schoolId: string
   studentId: string
   studentName?: string
-  classId: string
+  /** The section the mark is kept on. */
+  sectionId?: string | null
   date: Date | string
   status: AttendanceStatus
   method: AttendanceMethod
@@ -193,8 +194,6 @@ export interface BulkAttendanceResult {
 // Filter Types for Reports
 export interface AttendanceFilters {
   schoolId: string
-  /** Legacy class filter. */
-  classId?: string
   sectionId?: string
   studentId?: string
   dateFrom?: Date | string

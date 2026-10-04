@@ -238,6 +238,8 @@ The family routes read the web `/finance` resolution (`loadFamilyMoney`); `pay` 
 | GET    | `/api/mobile/teacher/classes/:id/students` | Students in section                                                                                                                           |
 | GET    | `/api/mobile/teacher/schedule?day=`        | Own slots `{ data: [{ id, day_of_week, subject_name, section_id, section_name, grade_name, classroom, period_name, start_time, end_time }] }` |
 
+`POST /api/mobile/teacher/classes/:id/attendance` takes a section's day of attendance: `:id` is the section id `/teacher/classes` returns, a teacher may mark only their own sections, and every student must be in the section. It updates the day's rows and creates the rest (2026-10-04).
+
 ### Admin (new)
 
 | Method | Path                       | Description                |

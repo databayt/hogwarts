@@ -101,62 +101,59 @@ export async function getOwnedStudentIds(
 }
 
 /**
- * Get class IDs assigned to a teacher (primary + co-teacher via ClassTeacher bridge).
- * Returns null for non-teachers (meaning "all classes").
+ * The sections a teacher's attendance covers: their homeroom, a section they
+ * have a timetable period with, or one they are assigned a subject in (which
+ * can exist before the term's timetable does). A TEACHER-role user with no
+ * teacher record covers none — never "the whole school".
  */
-export async function getTeacherClassIds(
+export async function getTeacherSectionIds(
   schoolId: string,
   userId: string
-): Promise<string[] | null> {
+): Promise<string[]> {
   const teacher = await db.teacher.findFirst({
     where: { userId, schoolId },
     select: { id: true },
   })
+  if (!teacher) return []
 
-  if (!teacher) return null
-
-  // Combine primary classes (Class.teacherId) and co-teacher assignments (ClassTeacher)
-  const [primaryClasses, bridgeClasses] = await Promise.all([
-    db.class.findMany({
-      where: { schoolId, teacherId: teacher.id },
-      select: { id: true },
-    }),
-    db.classTeacher.findMany({
-      where: { schoolId, teacherId: teacher.id },
-      select: { classId: true },
-    }),
-  ])
-
-  const ids = new Set([
-    ...primaryClasses.map((c) => c.id),
-    ...bridgeClasses.map((ct) => ct.classId),
-  ])
-
-  return [...ids]
+  const sections = await db.section.findMany({
+    where: {
+      schoolId,
+      OR: [
+        { homeroomTeacherId: teacher.id },
+        { timetables: { some: { schoolId, teacherId: teacher.id } } },
+        { subjectTeachers: { some: { schoolId, teacherId: teacher.id } } },
+      ],
+    },
+    select: { id: true },
+  })
+  return sections.map((s) => s.id)
 }
 
 /**
- * Get class IDs filtered by grade, optionally intersected with teacher's classes.
+ * The attendance rows a viewer may read by section: a teacher's sections,
+ * narrowed to `sectionId` / `gradeId` when given. An explicit section outside
+ * a teacher's own is INTERSECTED away (matches nothing) — never let a filter
+ * widen the teacher's scope.
  */
-export async function getClassIdsByGrade(
-  schoolId: string,
-  gradeId: string,
-  teacherClassIds?: string[] | null
-): Promise<string[]> {
-  const where: { schoolId: string; gradeId: string; id?: { in: string[] } } = {
-    schoolId,
-    gradeId,
+export function sectionScopeWhere(input: {
+  teacherSectionIds: string[] | null
+  sectionId?: string | null
+  gradeId?: string | null
+}): { sectionId?: string | { in: string[] }; section?: { gradeId: string } } {
+  const { teacherSectionIds, sectionId, gradeId } = input
+  const where: {
+    sectionId?: string | { in: string[] }
+    section?: { gradeId: string }
+  } = {}
+  if (sectionId) {
+    where.sectionId =
+      teacherSectionIds && !teacherSectionIds.includes(sectionId)
+        ? { in: [] }
+        : sectionId
+  } else if (teacherSectionIds) {
+    where.sectionId = { in: teacherSectionIds }
   }
-
-  // If teacher scoping is active, only return classes the teacher owns
-  if (teacherClassIds && teacherClassIds.length > 0) {
-    where.id = { in: teacherClassIds }
-  }
-
-  const classes = await db.class.findMany({
-    where,
-    select: { id: true },
-  })
-
-  return classes.map((c) => c.id)
+  if (gradeId) where.section = { gradeId }
+  return where
 }

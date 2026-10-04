@@ -51,9 +51,7 @@ description: حضور متعدّد الطرق — يدوي، QR، باركود،
 | مراجعة الأعذار          |     Y     |   Y   |        Y        |   Y   |    —    |         —         |
 | تقديم الأعذار           |     Y     |   Y   |        —        |   —   |    —    |         Y         |
 
-`getTeacherClassIds()` (`actions/helpers.ts`) يجمع المعلم الأساسي + أدوار `ClassTeacher` المشاركة.
-
-فلتر الصف: الـactions تقبل `gradeId` للفلترة عبر `Class.gradeId → AcademicGrade` (helper `getClassIdsByGrade()`).
+فصول المعلم هي: فصل الريادة، وكل فصل له معه حصة في الجدول، وكل فصل أُسنِدت إليه فيه مادة — `getTeacherSectionIds()` (`actions/helpers.ts`). ويطبّقها `sectionScopeWhere()` على القراءة: فلتر الفصل يُقاطَع معها ولا يوسّع النطاق أبدًا. وفلتر الصف يمرّ عبر الفصل (`section.gradeId`).
 
 ## الحضور اليدوي
 
@@ -97,9 +95,11 @@ description: حضور متعدّد الطرق — يدوي، QR، باركود،
 
 ## التحليلات والتقارير
 
-تحليلات بـ7 تبويبات في `/analytics`: Summary، Calendar، Trends، Patterns، Methods، Classes، At Risk.
+تحليلات بـ7 تبويبات في `/analytics`: Summary، Calendar، Trends، Patterns، Methods، Classes (الفصول مرتّبة حسب النسبة)، At Risk. الفلاتر: نطاق التاريخ والفصل.
 
-التقارير في `/reports`: فلترة بالفصل، الطالب، الحالة، نطاق التاريخ، الحصة. تصدير: CSV، Excel (5 أوراق — summary، detailed، by status، by class، by date)، PDF (بهوية المدرسة).
+التقارير في `/reports`: فلترة بالفصل، الطالب، الحالة، نطاق التاريخ، الحصة. تصدير: CSV، Excel (5 أوراق — summary، detailed، by status، by section، by date)، PDF (بهوية المدرسة). ويتبع التصدير فلتر الفصل.
+
+الرفع الجماعي في `/bulk-upload` لفصل واحد: كل طالب في الملف يجب أن يكون منه.
 
 الامتثال: `getComplianceDashboard()`, `getComplianceReport()`, `getScheduledReports()`.
 
@@ -109,7 +109,7 @@ description: حضور متعدّد الطرق — يدوي، QR، باركود،
 
 | الوحدة        | الملف              | السطح                                                                  |
 | ------------- | ------------------ | ---------------------------------------------------------------------- |
-| Core          | `core.ts`          | تسجيل، قائمة، تسجيل سريع، تسجيل خروج، حذف + استعادة جماعية             |
+| Core          | `core.ts`          | تسجيل، قائمة، تسجيل خروج، حذف + استعادة جماعية                         |
 | Analytics     | `analytics.ts`     | إحصاءات، اتجاهات، استخدام الطرق، تقويم، مقارنة فصول، في خطر، نشاط حديث |
 | Periods       | `periods.ts`       | تسجيل لكل حصة، اكتشاف الحصة الحالية، تحليلات الحصة                     |
 | QR            | `qr.ts`            | توليد جلسة، مسح، جلسات نشطة                                            |
@@ -127,7 +127,7 @@ description: حضور متعدّد الطرق — يدوي، QR، باركود،
 
 ```typescript
 markAttendance(input: {
-  classId: string
+  sectionId: string
   date: string
   records: Array<{ studentId: string; status: 'present' | 'absent' | 'late' }>
 })
@@ -139,7 +139,7 @@ markPeriodAttendance(input: {
   records: Array<{ studentId: string; status: 'PRESENT' | 'ABSENT' | 'LATE'; notes?: string }>
 })
 
-getAttendanceList({ classId, date, lang? })  // lang يُطلق الترجمة
+getAttendanceList({ sectionId, date, lang? })  // lang يُطلق الترجمة
 deleteAttendance(id: string)                  // حذف ناعم
 restoreAttendance(id: string)
 ```
@@ -151,7 +151,8 @@ model Attendance {
   id           String           @id @default(cuid())
   schoolId     String
   studentId    String
-  classId      String
+  sectionId    String?          // الفصل الذي يُحفظ عليه الحضور
+  classId      String?          // قديم: سجلات ما قبل الفصول
   date         DateTime         @db.Date
   status       AttendanceStatus
   method       AttendanceMethod @default(MANUAL)
@@ -166,7 +167,8 @@ model Attendance {
   timetableId String?
   periodName  String?
 
-  @@unique([schoolId, studentId, classId, date, periodId])
+  @@unique([schoolId, studentId, sectionId, date, periodId])
+  @@unique([schoolId, studentId, classId, date, periodId]) // قديم
   @@index([schoolId, date, periodId])
 }
 ```

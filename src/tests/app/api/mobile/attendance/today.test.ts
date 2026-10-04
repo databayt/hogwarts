@@ -10,12 +10,11 @@ import { db } from "@/lib/db"
 // tested through the same loaders the web overview reads.
 vi.mock("@/lib/db", () => ({
   db: {
-    class: { findMany: vi.fn() },
+    section: { findMany: vi.fn() },
     schoolWeekConfig: { findMany: vi.fn() },
     attendance: { findMany: vi.fn() },
     attendanceExcuse: { findMany: vi.fn() },
     teacher: { findFirst: vi.fn() },
-    classTeacher: { findMany: vi.fn() },
   },
 }))
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
@@ -54,7 +53,7 @@ const student = (first: string) => ({ firstName: first, lastName: "Test" })
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(db.class.findMany).mockResolvedValue([])
+  vi.mocked(db.section.findMany).mockResolvedValue([])
   vi.mocked(db.schoolWeekConfig.findMany).mockResolvedValue([])
   vi.mocked(db.attendance.findMany).mockResolvedValue([])
   vi.mocked(db.attendanceExcuse.findMany).mockResolvedValue([])
@@ -90,7 +89,7 @@ describe("GET /api/mobile/attendance/today", () => {
     expect(body.recent_activity).toEqual([])
 
     const calls = [
-      ...vi.mocked(db.class.findMany).mock.calls,
+      ...vi.mocked(db.section.findMany).mock.calls,
       ...vi.mocked(db.schoolWeekConfig.findMany).mock.calls,
       ...vi.mocked(db.attendance.findMany).mock.calls,
       ...vi.mocked(db.attendanceExcuse.findMany).mock.calls,
@@ -101,17 +100,17 @@ describe("GET /api/mobile/attendance/today", () => {
         SCHOOL
       )
     }
-    // Admin-side roles see the whole school: no teacher class lookup.
+    // Admin-side roles see the whole school: no teacher section lookup.
     expect(db.teacher.findFirst).not.toHaveBeenCalled()
   })
 
   it("returns progress, unmarked pills, needs-attention and recent activity in snake_case", async () => {
     await authAs("ADMIN")
     const markedAt = new Date("2026-09-14T05:10:00.000Z")
-    vi.mocked(db.class.findMany).mockResolvedValue([
-      { id: "c1", name: "10A", _count: { studentClasses: 20 } },
-      { id: "c2", name: "10B", _count: { studentClasses: 18 } },
-      { id: "c3", name: "Empty", _count: { studentClasses: 0 } },
+    vi.mocked(db.section.findMany).mockResolvedValue([
+      { id: "c1", name: "10A", _count: { students: 20 } },
+      { id: "c2", name: "10B", _count: { students: 18 } },
+      { id: "c3", name: "Empty", _count: { students: 0 } },
     ] as never)
     vi.mocked(db.attendance.findMany).mockImplementation(((args: {
       where: { status?: string }
@@ -126,7 +125,8 @@ describe("GET /api/mobile/attendance/today", () => {
             method: "MANUAL",
             date: daysAgo(0),
             student: student("Sara"),
-            class: { name: "10A" },
+            section: { name: "10A" },
+            class: null,
           },
         ])
       }
@@ -136,19 +136,26 @@ describe("GET /api/mobile/attendance/today", () => {
             studentId: "s9",
             date: daysAgo(n),
             student: student("Omar"),
-            class: { name: "10A" },
+            section: { name: "10A" },
+            class: null,
           }))
         )
       }
       return Promise.resolve([
         {
           id: "a1",
-          classId: "c1",
+          sectionId: "c1",
           studentId: "s1",
           status: "PRESENT",
           markedAt,
         },
-        { id: "a2", classId: "c1", studentId: "s2", status: "LATE", markedAt },
+        {
+          id: "a2",
+          sectionId: "c1",
+          studentId: "s2",
+          status: "LATE",
+          markedAt,
+        },
       ])
     }) as never)
     vi.mocked(db.attendanceExcuse.findMany).mockResolvedValue([
@@ -158,6 +165,7 @@ describe("GET /api/mobile/attendance/today", () => {
           studentId: "s7",
           date: daysAgo(1),
           student: student("Huda"),
+          section: null,
           class: { name: "10B" },
         },
       },

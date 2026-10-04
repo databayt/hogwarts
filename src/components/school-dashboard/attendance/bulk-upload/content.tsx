@@ -9,18 +9,18 @@
  * - Validates status values (PRESENT, ABSENT, LATE, EXCUSED, SICK)
  * - Shows parse errors inline before upload (row-level feedback)
  * - Displays upload history (recent uploads with success/failure counts)
- * - Requires class selection and date before processing
+ * - Requires a section and a date before processing
  * - Optional check-in/check-out times and notes fields
  *
  * Client-side responsibilities:
  * - CSV parsing and validation (fast feedback without server roundtrip)
- * - Form state for class/date selection
+ * - Form state for section/date selection
  * - Upload result handling and display
  * - Recent uploads history from server
  *
  * Server-side (bulkUploadAttendance action):
- * - Re-validates each record with fresh student/class data
- * - Checks schoolId scoping and student enrollment
+ * - Re-validates each record with fresh student data
+ * - Checks schoolId scoping and that each student is in the section
  * - Batch creates AttendanceRecord rows atomically
  * - Returns summary: total, successful, failed with error details
  *
@@ -68,6 +68,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SkeletonList } from "@/components/atom/loading"
 import {
   ACCEPT_DOCUMENTS,
   FileUploader,
@@ -76,13 +77,11 @@ import {
 
 import {
   bulkUploadAttendance,
-  getClassesForSelection,
   getRecentBulkUploads,
   getSectionsForSelection,
 } from "../actions"
 import { useAttendanceContext } from "../core/attendance-context"
 import { phone } from "../shared/phone"
-import { SkeletonList } from "@/components/atom/loading"
 
 interface BulkUploadContentProps {
   dictionary?: any
@@ -98,8 +97,8 @@ interface ParsedRecord {
 
 interface RecentUpload {
   date: Date
-  classId: string
-  className: string
+  sectionId: string
+  sectionName: string
   total: number
   successful: number
   failed: number
@@ -124,8 +123,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
     }
   } | null>(null)
 
-  // Class/section and date selection
-  const [classes, setClasses] = useState<{ id: string; name: string }[]>([])
+  // Section and date selection
   const [sections, setSections] = useState<
     {
       id: string
@@ -136,7 +134,6 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
       studentCount: number
     }[]
   >([])
-  const [selectedClass, setSelectedClass] = useState<string>("")
   const [selectedSection, setSelectedSection] = useState<string>("")
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
@@ -149,18 +146,14 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
   // Dictionary shorthand
   const d = dictionary?.school?.attendance?.bulkUpload
 
-  // Fetch classes, sections, and recent uploads on mount
+  // Fetch sections and recent uploads on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [classesResult, sectionsResult, uploadsResult] =
-          await Promise.all([
-            getClassesForSelection(),
-            getSectionsForSelection(),
-            getRecentBulkUploads(5),
-          ])
-        if (classesResult.success && classesResult.data)
-          setClasses(classesResult.data.classes)
+        const [sectionsResult, uploadsResult] = await Promise.all([
+          getSectionsForSelection(),
+          getRecentBulkUploads(5),
+        ])
         if (sectionsResult.success && sectionsResult.data)
           setSections(sectionsResult.data.sections)
         // uploadsResult returns raw data on success
@@ -296,8 +289,8 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
       return
     }
 
-    if (!selectedClass) {
-      toast.error(d?.toasts?.selectClass ?? "Please select a class")
+    if (!selectedSection) {
+      toast.error(d?.toasts?.selectSection ?? "Please select a section")
       return
     }
 
@@ -311,8 +304,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
 
     try {
       const result = await bulkUploadAttendance({
-        classId: selectedClass,
-        sectionId: selectedSection || undefined,
+        sectionId: selectedSection,
         date: selectedDate,
         method: "BULK_UPLOAD",
         records: parsedRecords,
@@ -372,7 +364,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
     } finally {
       setIsUploading(false)
     }
-  }, [parsedRecords, selectedClass, selectedDate, refreshStats, d])
+  }, [parsedRecords, selectedSection, selectedDate, refreshStats, d])
 
   const downloadTemplate = useCallback(() => {
     // In real implementation, this would download a template file
@@ -467,11 +459,11 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Section, Class, and Date Selection */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {/* Section and Date Selection */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="section-select">
-                {d?.upload?.selectSection || "Select Section"}
+                {d?.upload?.selectSection || "Section"}
               </Label>
               <Select
                 value={selectedSection}
@@ -492,43 +484,12 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                     </SelectItem>
                   ) : sections.length === 0 ? (
                     <SelectItem value="_empty" disabled>
-                      No sections found
+                      {d?.upload?.noSections || "No sections yet"}
                     </SelectItem>
                   ) : (
                     sections.map((sec) => (
                       <SelectItem key={sec.id} value={sec.id}>
                         {sec.gradeName} - {sec.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="class-select">
-                {d?.upload?.selectClass || "Select Class"}
-              </Label>
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger id="class-select" className={phone.field}>
-                  <SelectValue
-                    placeholder={
-                      d?.upload?.selectClassPlaceholder || "Choose a class..."
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {loadingData ? (
-                    <SelectItem value="_loading" disabled>
-                      Loading...
-                    </SelectItem>
-                  ) : classes.length === 0 ? (
-                    <SelectItem value="_empty" disabled>
-                      No classes found
-                    </SelectItem>
-                  ) : (
-                    classes.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name}
                       </SelectItem>
                     ))
                   )}
@@ -596,7 +557,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
               <Button
                 onClick={handleProcess}
                 disabled={
-                  isUploading || parsedRecords.length === 0 || !selectedClass
+                  isUploading || parsedRecords.length === 0 || !selectedSection
                 }
                 className="w-full max-md:h-10 max-md:rounded-full"
               >
@@ -757,7 +718,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                       <FileSpreadsheet className="text-muted-foreground h-4 w-4" />
                       <div>
                         <p className="text-sm font-medium">
-                          {upload.className}
+                          {upload.sectionName}
                         </p>
                         <p className="text-muted-foreground text-xs">
                           {uploadDate.toLocaleDateString()} • {timeAgo}

@@ -43,16 +43,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SkeletonDataTable } from "@/components/atom/loading"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
   getAttendanceReport,
   getAttendanceStats,
-  getClassesForSelection,
   getSectionsForSelection,
 } from "../actions"
 import { phone } from "../shared/phone"
-import { SkeletonDataTable } from "@/components/atom/loading"
 import { AttendanceReportExportButton } from "./export-button"
 
 interface ReportRecord {
@@ -60,7 +59,7 @@ interface ReportRecord {
   date: string
   studentId: string
   studentName: string
-  classId: string
+  sectionId: string | null
   className: string
   status: string
   method: string
@@ -73,7 +72,7 @@ interface Props {
   dictionary?: Dictionary
   locale?: string
   initialFilters?: {
-    classId?: string
+    sectionId?: string
     studentId?: string
     status?: string
     from?: string
@@ -104,7 +103,6 @@ export function ReportsContent({
   initialFilters,
 }: Props) {
   const [records, setRecords] = useState<ReportRecord[]>([])
-  const [classes, setClasses] = useState<{ id: string; name: string }[]>([])
   const [sections, setSections] = useState<
     {
       id: string
@@ -125,10 +123,9 @@ export function ReportsContent({
       : new Date(new Date().setDate(new Date().getDate() - 30)),
     to: initialFilters?.to ? new Date(initialFilters.to) : new Date(),
   })
-  const [selectedClass, setSelectedClass] = useState<string>(
-    initialFilters?.classId || "all"
+  const [selectedSection, setSelectedSection] = useState<string>(
+    initialFilters?.sectionId || "all"
   )
-  const [selectedSection, setSelectedSection] = useState<string>("all")
   const [selectedStatus, setSelectedStatus] = useState<string>(
     initialFilters?.status || "all"
   )
@@ -156,27 +153,23 @@ export function ReportsContent({
       const sectionFilter =
         selectedSection !== "all" ? selectedSection : undefined
 
-      const [reportResult, classesResult, sectionsResult, statsResult] =
-        await Promise.all([
-          getAttendanceReport({
-            dateFrom: dateRange.from.toISOString(),
-            dateTo: dateRange.to.toISOString(),
-            classId: selectedClass !== "all" ? selectedClass : undefined,
-            sectionId: sectionFilter,
-            status:
-              selectedStatus !== "all" ? [selectedStatus as any] : undefined,
-            limit: pageSize,
-            offset: (page - 1) * pageSize,
-          }),
-          getClassesForSelection(),
-          getSectionsForSelection(),
-          getAttendanceStats({
-            dateFrom: dateRange.from.toISOString(),
-            dateTo: dateRange.to.toISOString(),
-            classId: selectedClass !== "all" ? selectedClass : undefined,
-            sectionId: sectionFilter,
-          }),
-        ])
+      const [reportResult, sectionsResult, statsResult] = await Promise.all([
+        getAttendanceReport({
+          dateFrom: dateRange.from.toISOString(),
+          dateTo: dateRange.to.toISOString(),
+          sectionId: sectionFilter,
+          status:
+            selectedStatus !== "all" ? [selectedStatus as any] : undefined,
+          limit: pageSize,
+          offset: (page - 1) * pageSize,
+        }),
+        getSectionsForSelection(),
+        getAttendanceStats({
+          dateFrom: dateRange.from.toISOString(),
+          dateTo: dateRange.to.toISOString(),
+          sectionId: sectionFilter,
+        }),
+      ])
 
       // Handle mixed return types
       if (
@@ -189,8 +182,6 @@ export function ReportsContent({
         if (reportResult.pagination?.totalPages != null)
           setTotalPages(reportResult.pagination.totalPages)
       }
-      if (classesResult.success && classesResult.data)
-        setClasses(classesResult.data.classes)
       if (sectionsResult.success && sectionsResult.data)
         setSections(sectionsResult.data.sections)
       // statsResult returns raw data on success
@@ -201,7 +192,7 @@ export function ReportsContent({
     } finally {
       setLoading(false)
     }
-  }, [dateRange, selectedClass, selectedSection, selectedStatus, page])
+  }, [dateRange, selectedSection, selectedStatus, page])
 
   useEffect(() => {
     fetchData()
@@ -213,10 +204,10 @@ export function ReportsContent({
     setTimeout(() => setRefreshing(false), 500)
   }, [fetchData])
 
-  // Get selected class name for export
-  const selectedClassName =
-    selectedClass !== "all"
-      ? classes.find((c) => c.id === selectedClass)?.name
+  // Selected section's name, for the export's heading
+  const selectedSectionName =
+    selectedSection !== "all"
+      ? sections.find((c) => c.id === selectedSection)?.name
       : undefined
 
   // Memoize filtered records to prevent recalculation on every render
@@ -264,12 +255,13 @@ export function ReportsContent({
           </Button>
           <AttendanceReportExportButton
             filters={{
-              classId: selectedClass !== "all" ? selectedClass : undefined,
+              sectionId:
+                selectedSection !== "all" ? selectedSection : undefined,
               status: selectedStatus !== "all" ? selectedStatus : undefined,
               from: dateRange.from.toISOString(),
               to: dateRange.to.toISOString(),
             }}
-            className={selectedClassName}
+            sectionName={selectedSectionName}
             locale={locale}
           />
         </div>
@@ -451,31 +443,7 @@ export function ReportsContent({
                 ))}
               </SelectContent>
             </Select>
-            <Select
-              value={selectedClass}
-              onValueChange={(v) => {
-                setSelectedClass(v)
-                setPage(1)
-              }}
-            >
-              <SelectTrigger
-                className={cn("w-[180px] max-md:w-full", phone.field)}
-              >
-                <SelectValue
-                  placeholder={t?.reportsFilter?.selectClass ?? "Select class"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t?.reportsFilter?.allClasses ?? "All Classes"}
-                </SelectItem>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.id} value={cls.id}>
-                    {cls.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
             <Select
               value={selectedStatus}
               onValueChange={(v) => {

@@ -9,7 +9,7 @@
  * - Trends chart: line chart of daily attendance rates over time
  * - Method usage: pie chart showing tracking methods (manual, biometric, etc.)
  * - Day-wise patterns: which days of week have lowest attendance
- * - Class comparison: ranking of classes by attendance rate
+ * - Section comparison: ranking of sections by attendance rate
  * - Student heatmap: individual student attendance calendar
  * - Monthly comparison: how current month compares to previous months
  * - Absence reasons: breakdown of why students were absent
@@ -22,7 +22,7 @@
  *
  * Filters:
  * - Date range picker: default last 30 days
- * - Class selector: filter by single class or 'all'
+ * - Section selector: filter by single section or 'all'
  * - Refresh button: manual data refresh with debounce
  *
  * Multi-tenant: schoolId is passed as prop (from parent/route context)
@@ -59,7 +59,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SkeletonChart, SkeletonStats } from "@/components/atom/loading"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 // Import server actions
@@ -67,19 +69,16 @@ import {
   getAttendanceStats,
   getAttendanceTrends,
   getCalendarData,
-  getClassComparisonStats,
-  getClassesForSelection,
   getDayWisePatterns,
   getMethodUsageStats,
   getRecentAttendance,
+  getSectionComparisonStats,
   getSectionsForSelection,
   getStudentsAtRisk,
 } from "../actions"
 import { AttendanceExport } from "../core/attendance-export"
-import { phone } from "../shared/phone"
 import { AttendancePageSkeleton } from "../loading-skeleton"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonChart, SkeletonStats } from "@/components/atom/loading"
+import { phone } from "../shared/phone"
 import { AttendanceCalendarView, type CalendarData } from "./calendar-view"
 import {
   AbsenceReasonsChart,
@@ -133,9 +132,9 @@ interface DayPattern {
   rate: number
 }
 
-interface ClassStats {
-  classId: string
-  className: string
+interface SectionStats {
+  sectionId: string
+  sectionName: string
   studentCount: number
   totalRecords: number
   rate: number
@@ -150,12 +149,6 @@ interface AtRiskStudent {
   rate: number
 }
 
-interface ClassOption {
-  id: string
-  name: string
-  teacher: string | null
-}
-
 export default function AnalyticsContent({
   dictionary,
   locale = "en",
@@ -165,7 +158,6 @@ export default function AnalyticsContent({
     from: new Date(new Date().setDate(new Date().getDate() - 30)),
     to: new Date(),
   })
-  const [selectedClass, setSelectedClass] = useState<string>("all")
   const [selectedSection, setSelectedSection] = useState<string>("all")
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -175,9 +167,8 @@ export default function AnalyticsContent({
   const [trends, setTrends] = useState<TrendData[]>([])
   const [methodStats, setMethodStats] = useState<MethodData[]>([])
   const [dayPatterns, setDayPatterns] = useState<DayPattern[]>([])
-  const [classStats, setClassStats] = useState<ClassStats[]>([])
+  const [sectionStats, setSectionStats] = useState<SectionStats[]>([])
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([])
-  const [classes, setClasses] = useState<ClassOption[]>([])
   const [sections, setSections] = useState<
     {
       id: string
@@ -207,7 +198,6 @@ export default function AnalyticsContent({
       // Convert Date objects to ISO strings for API transmission
       const dateFrom = dateRange.from.toISOString()
       const dateTo = dateRange.to.toISOString()
-      const classFilter = selectedClass !== "all" ? selectedClass : undefined
       const sectionFilter =
         selectedSection !== "all" ? selectedSection : undefined
 
@@ -218,33 +208,28 @@ export default function AnalyticsContent({
         trendsResult,
         methodResult,
         dayResult,
-        classResult,
+        sectionResult,
         riskResult,
-        classesResult,
         sectionsResult,
       ] = await Promise.all([
         getAttendanceStats({
           dateFrom,
           dateTo,
-          classId: classFilter,
           sectionId: sectionFilter,
         }),
         getAttendanceTrends({
           dateFrom,
           dateTo,
-          classId: classFilter,
           sectionId: sectionFilter,
         }),
         getMethodUsageStats({ dateFrom, dateTo }),
         getDayWisePatterns({
           dateFrom,
           dateTo,
-          classId: classFilter,
           sectionId: sectionFilter,
         }),
-        getClassComparisonStats({ dateFrom, dateTo }),
+        getSectionComparisonStats({ dateFrom, dateTo }),
         getStudentsAtRisk({ threshold: 80, dateFrom, dateTo }),
-        getClassesForSelection(),
         getSectionsForSelection(),
       ])
 
@@ -272,23 +257,14 @@ export default function AnalyticsContent({
         setDayPatterns(dayResult.patterns as DayPattern[])
       }
 
-      // classResult returns { stats: [...] } wrapper on success
-      if (classResult && "stats" in classResult && classResult.stats) {
-        setClassStats(classResult.stats as ClassStats[])
+      // sectionResult returns { stats: [...] } wrapper on success
+      if (sectionResult && "stats" in sectionResult && sectionResult.stats) {
+        setSectionStats(sectionResult.stats as SectionStats[])
       }
 
       // riskResult returns { students: [...], threshold: number } wrapper on success
       if (riskResult && "students" in riskResult && riskResult.students) {
         setAtRiskStudents(riskResult.students as AtRiskStudent[])
-      }
-
-      // classesResult uses standard ActionResponse<{ classes: ... }> pattern
-      if (
-        classesResult &&
-        classesResult.success &&
-        classesResult.data?.classes
-      ) {
-        setClasses(classesResult.data.classes)
       }
 
       // sectionsResult uses standard ActionResponse<{ sections: ... }> pattern
@@ -304,16 +280,17 @@ export default function AnalyticsContent({
     } finally {
       setLoading(false)
     }
-  }, [dateRange, selectedClass, selectedSection])
+  }, [dateRange, selectedSection])
 
   // Fetch calendar data separately (can change independently of date range)
   const fetchCalendarData = useCallback(async () => {
     try {
-      const classFilter = selectedClass !== "all" ? selectedClass : undefined
+      const sectionFilter =
+        selectedSection !== "all" ? selectedSection : undefined
       const result = await getCalendarData({
         year: calendarMonth.year,
         month: calendarMonth.month,
-        classId: classFilter,
+        sectionId: sectionFilter,
       })
 
       if (result.success && result.data) {
@@ -322,7 +299,7 @@ export default function AnalyticsContent({
     } catch (error) {
       console.error("Error fetching calendar data:", error)
     }
-  }, [calendarMonth, selectedClass])
+  }, [calendarMonth, selectedSection])
 
   useEffect(() => {
     fetchAllData()
@@ -374,12 +351,12 @@ export default function AnalyticsContent({
 
   const classChartData = React.useMemo(
     () =>
-      classStats.slice(0, 10).map((c) => ({
-        class: c.className,
+      sectionStats.slice(0, 10).map((c) => ({
+        class: c.sectionName,
         rate: c.rate,
         students: c.studentCount,
       })),
-    [classStats]
+    [sectionStats]
   )
 
   // Memoize time distribution calculation
@@ -426,10 +403,7 @@ export default function AnalyticsContent({
       <AttendancePageSkeleton label={t?.loading?.records} action>
         {/* filter card → stat row → tab strip → overview charts */}
         <Skeleton className="h-[88px] w-full rounded-xl" />
-        <SkeletonStats
-          count={5}
-          columns={cn("md:grid-cols-5", phone.panel)}
-        />
+        <SkeletonStats count={5} columns={cn("md:grid-cols-5", phone.panel)} />
         <Skeleton className="h-9 w-full" />
         <div className="grid gap-4 md:grid-cols-2">
           <SkeletonChart variant="line" />
@@ -519,25 +493,6 @@ export default function AnalyticsContent({
                 {sections.map((sec) => (
                   <SelectItem key={sec.id} value={sec.id}>
                     {sec.gradeName} - {sec.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger
-                className={cn("w-[180px] max-md:w-full", phone.field)}
-              >
-                <SelectValue
-                  placeholder={t?.reportsFilter?.selectClass ?? "Select class"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t?.reportsFilter?.allClasses ?? "All Classes"}
-                </SelectItem>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.id} value={cls.id}>
-                    {cls.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -833,9 +788,9 @@ export default function AnalyticsContent({
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {classStats.map((cls, idx) => (
+                {sectionStats.map((cls, idx) => (
                   <div
-                    key={cls.classId}
+                    key={cls.sectionId}
                     className="max-md:bg-background flex items-center justify-between rounded-lg border p-3 max-md:border-0"
                   >
                     <div className="flex items-center gap-3">
@@ -843,7 +798,7 @@ export default function AnalyticsContent({
                         #{idx + 1}
                       </span>
                       <div>
-                        <p className="font-medium">{cls.className}</p>
+                        <p className="font-medium">{cls.sectionName}</p>
                         <p className="text-muted-foreground text-sm">
                           {cls.studentCount} students
                         </p>
