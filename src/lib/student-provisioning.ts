@@ -23,7 +23,7 @@
 import type { AdmissionChannel, Prisma } from "@prisma/client"
 
 import { mintTempPassword } from "@/lib/credentials"
-import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { createOrLinkGuardian } from "@/lib/guardian-utils"
@@ -648,33 +648,40 @@ export async function provisionStudent(
   }
 
   // ---------------------------------------------------------------------
-  // 10. Section placement — only when the caller supplies one.
-  //     confirmEnrollment never does (placement is a separate, later action);
-  //     this exists for the wizard/CSV-import callers who assign a section
-  //     at creation time.
+  // 10. Section placement — only when the caller supplies one, and only one
+  //     of this school's sections (ids are global; the mobile create route
+  //     passes whatever the client sent). confirmEnrollment never does
+  //     (placement is a separate, later action); this exists for the
+  //     wizard/CSV-import callers who assign a section at creation time.
   // ---------------------------------------------------------------------
   if (input.sectionId) {
     try {
-      await tx.student.update({
-        where: { id: student.id },
-        data: { sectionId: input.sectionId },
-      })
       const section = await tx.section.findFirst({
         where: { id: input.sectionId, schoolId },
-        select: { gradeId: true },
+        select: { id: true },
       })
-      if (section?.gradeId) {
-        await enrollStudentInGradeClasses(
-          schoolId,
-          student.id,
-          section.gradeId,
-          tx
+      if (section) {
+        await tx.student.update({
+          where: { id: student.id },
+          data: { sectionId: section.id },
+        })
+      } else {
+        console.warn(
+          "[provisionStudent] Section is not this school's:",
+          input.sectionId
         )
       }
     } catch (sectionError) {
       console.warn("[provisionStudent] Section placement failed:", sectionError)
     }
   }
+
+  // ---------------------------------------------------------------------
+  // 10b. LMS access — the grade's subjects (section's grade, else the
+  //      placed grade). Inside the transaction: the student row isn't
+  //      visible outside it yet. Never throws.
+  // ---------------------------------------------------------------------
+  await syncStudentSubjectEnrollments(schoolId, student.id, tx)
 
   // ---------------------------------------------------------------------
   // 11. Documents — idempotent on fileUrl so a retried provisioning call

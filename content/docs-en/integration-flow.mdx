@@ -19,7 +19,7 @@ The ordering encodes one deliberate idea: **the timetable comes before people**.
 | 6     | Classrooms & sections | `ClassroomType`, `Classroom`, `Section` — N per grade               | 3          |
 | 7     | Timetable             | `Timetable` slots — section × subject × period × room, teacher-less | 4, 5, 6    |
 | 8a    | Teacher assignment    | `TeacherSubjectExpertise`, `TeacherDepartment`, slot `teacherId`    | 4, 7       |
-| 8b    | Student placement     | `Student.sectionId` (+ `StudentClass` for the grade-book axis)      | 6          |
+| 8b    | Student placement     | `Student.sectionId` (+ LMS `Enrollment` in the grade's subjects)    | 6          |
 | 9     | Attendance            | `Attendance` — section rosters, period-aware via timetable slots    | 7, 8b      |
 | 10    | Exams                 | `SchoolExam`, sessions, marking, `ExamResult`                       | 4, 8       |
 | 11    | Grades & reports      | `ReportCard`, certificates, transcripts, promotion                  | 9, 10      |
@@ -110,7 +110,7 @@ Section          → the student cohort that occupies that classroom
 
 ### The course axis (`Class` records)
 
-Separate from sections, a `Class` is one **subject-course** (`Math – Grade 7`, per term) — the de-emphasized grouping axis the grade-book needs. The standalone "Generate Classes from Catalog" / "Enroll Students" actions were **removed from Classrooms › Configure** (2026-06-18): classrooms stays lean (grades → sections → one main classroom), and because the grade + curriculum already imply the subjects, `Class`/`StudentClass` are maintained in the Classes module rather than provisioned from the rooms page. The timetable no longer requires `Class` records; exams, results, and assignments still do (by design — see the [legacy classId policy](/docs/provision#legacy-classid-policy)).
+Separate from sections, a `Class` is one **subject-course** (`Math – Grade 7`, per term) — the de-emphasized grouping axis the grade-book needs. The standalone "Generate Classes from Catalog" / "Enroll Students" actions were **removed from Classrooms › Configure** (2026-06-18): classrooms stays lean (grades → sections → one main classroom), and because the grade + curriculum already imply the subjects, `Class`/`StudentClass` are maintained in the Classes module rather than provisioned from the rooms page. Since 2026-10-04 nothing requires one: the timetable, exams, results, assignments and attendance are set per section (or whole grade) and subject, teaching is `SubjectTeacher`, and `Class` is being retired — legacy rows stay readable until it is dropped (see the [legacy classId policy](/docs/provision#legacy-classid-policy)).
 
 ## Layer 7 — Timetable
 
@@ -150,8 +150,8 @@ Teachers attach to **subjects**, then to **slots**:
 
 The 5-step admission wizard ends in `ADMITTED` → placement:
 
-- `placement-dialog.tsx` (per student) and `bulk-placement.tsx` (batch) both call `placeStudentInSection(applicationId, sectionId)` — validates `maxCapacity`, sets **`Student.sectionId`** (the operational placement), then — only when the section is linked to an `AcademicGrade` — creates `StudentClass` rows for the grade's course classes (the grade-book) and syncs LMS `Enrollment`. A section with no `gradeId` gets the placement but silently skips the course-class and LMS sync.
-- Through the **section**, a student inherits the classroom, the timetable, and the attendance roster. Through **StudentClass**, they appear in grade-books and exams.
+- `placement-dialog.tsx` (per student) and `bulk-placement.tsx` (batch) both call `placeStudentInSection(applicationId, sectionId)` — validates `maxCapacity`, sets **`Student.sectionId`** (the operational placement), then gives the student an LMS `Enrollment` in every subject of the section's grade (`syncStudentSubjectEnrollments` — stream-filtered, adds only). No `StudentClass` row is written any more.
+- Through the **section**, a student inherits the classroom, the timetable, the attendance roster, and every exam, assignment or notice set for the section or its whole grade.
 - `extractGradeNumber()` in `src/lib/grade-utils.ts` parses free-text grades (`"Grade 5"`, `"5th grade"`, `"الصف الخامس"`).
 
 ## Layer 9 — Attendance
@@ -209,17 +209,17 @@ None of these block the academic chain; they activate independently as their own
 
 ## Failure modes
 
-| Missing            | Blocks                                                                  |
-| ------------------ | ----------------------------------------------------------------------- |
-| Catalog            | Subject selection, timetable generation                                 |
-| Academic structure | Subject selection, sections                                             |
-| Terms              | Timetable (draft fallback shown), attendance period-mode                |
-| Sections           | Timetable generation, attendance rosters, placement                     |
-| `SubjectSelection` | Timetable generation (`No sections have subjects`)                      |
-| Timetable slots    | Attendance period-mode, teacher section-scoping, conference-from-slot   |
-| `StudentClass`     | Grade-books, exams enrollment (not the timetable — section covers that) |
-| Exams / Results    | Report cards, transcripts                                               |
-| Report cards       | Promotion (GPA required)                                                |
+| Missing            | Blocks                                                                |
+| ------------------ | --------------------------------------------------------------------- |
+| Catalog            | Subject selection, timetable generation                               |
+| Academic structure | Subject selection, sections                                           |
+| Terms              | Timetable (draft fallback shown), attendance period-mode              |
+| Sections           | Timetable generation, attendance rosters, placement                   |
+| `SubjectSelection` | Timetable generation (`No sections have subjects`)                    |
+| Timetable slots    | Attendance period-mode, teacher section-scoping, conference-from-slot |
+| `StudentClass`     | Legacy — read for history only; nothing writes it since 2026-10-04    |
+| Exams / Results    | Report cards, transcripts                                             |
+| Report cards       | Promotion (GPA required)                                              |
 
 Provisioning-specific failure modes and the readiness check live in [Provision](/docs/provision#failure-modes).
 

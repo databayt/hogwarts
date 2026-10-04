@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { syncGradeSubjectEnrollments } from "@/lib/enrollment-sync"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   bulkSelectSubjects,
@@ -24,6 +25,10 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
+}))
+
+vi.mock("@/lib/enrollment-sync", () => ({
+  syncGradeSubjectEnrollments: vi.fn().mockResolvedValue({ created: 0 }),
 }))
 
 vi.mock("next/cache", () => ({
@@ -114,6 +119,11 @@ describe("Catalog Subject Selection Actions", () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ selected: true })
+      // The grade's students find the subject in the LMS
+      expect(syncGradeSubjectEnrollments).toHaveBeenCalledWith(
+        "school-1",
+        "grade-1"
+      )
       expect(db.subjectSelection.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           schoolId: "school-1",
@@ -202,6 +212,10 @@ describe("Catalog Subject Selection Actions", () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ added: 1 })
+      expect(syncGradeSubjectEnrollments).toHaveBeenCalledWith(
+        "school-1",
+        "grade-1"
+      )
       // Single batch insert with skipDuplicates (no N+1 find+create loop)
       expect(db.subjectSelection.createMany).toHaveBeenCalledTimes(1)
       expect(db.subjectSelection.createMany).toHaveBeenCalledWith(

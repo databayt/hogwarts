@@ -29,7 +29,7 @@ Every student in the system is born through one shared core, `provisionStudent`,
 
 **Everything after the core is shared, not per channel:**
 
-- **Placement.** The admission `PlacementDialog` is the one placement UI. The Enrollment tab offers it to portal admits; the students list offers **Assign Section** on any provisioned student who has a grade and no seat, so a wizard or CSV student never has to be re-run through a wizard to get a seat. Placing a student enrols them in every class of the grade (roster, timetable, attendance).
+- **Placement.** The admission `PlacementDialog` is the one placement UI. The Enrollment tab offers it to portal admits; the students list offers **Assign Section** on any provisioned student who has a grade and no seat, so a wizard or CSV student never has to be re-run through a wizard to get a seat. Placing a student puts them on the section's roster, timetable and attendance, and gives them their grade's subjects in Lumos (filtered by stream; moving grade never takes last year's courses away).
 - **Money.** Fee assignment happens in the core; the fee-due and fee-overdue crons then remind on instalment and invoice due dates; a payment allocates to invoices and links the payer to a receipt.
 - **Tracking.** The Applications tab lists every channel (Channel column + facet), the student profile links to its application and back.
 - **Telling the family.** One dispatcher, one notice set, in the family's language. Bulk imports queue their notices; single adds send inline.

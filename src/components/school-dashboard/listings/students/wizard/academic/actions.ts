@@ -7,7 +7,7 @@ import { cookies } from "next/headers"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
@@ -182,7 +182,7 @@ export async function getStudentAcademic(
 // Single save for the academic step. Writes only the fields the simplified
 // wizard collects; enrollment bookkeeping (enrollmentDate, admissionNumber,
 // status, …) keeps its DB defaults or is edited later via the profile.
-// Side effects preserved: enroll into grade classes + auto-assign fees.
+// Side effects: LMS access to the grade's subjects + auto-assign fees.
 export async function updateStudentAcademic(
   studentId: string,
   input: AcademicFormData
@@ -194,15 +194,33 @@ export async function updateStudentAcademic(
 
     const parsed = academicSchema.parse(input)
 
-    // The section must be this school's — ids are global CUIDs, and the
-    // write below used to take whatever id the form sent.
-    const section = parsed.sectionId
-      ? await db.section.findFirst({
-          where: { id: parsed.sectionId, schoolId },
-          select: { id: true, gradeId: true },
-        })
-      : null
-    if (parsed.sectionId && !section) {
+    // The section, grade and stream must be this school's — ids are global
+    // CUIDs, and the write below used to take whatever ids the form sent.
+    const [section, grade, stream] = await Promise.all([
+      parsed.sectionId
+        ? db.section.findFirst({
+            where: { id: parsed.sectionId, schoolId },
+            select: { id: true },
+          })
+        : null,
+      parsed.academicGradeId
+        ? db.academicGrade.findFirst({
+            where: { id: parsed.academicGradeId, schoolId },
+            select: { id: true },
+          })
+        : null,
+      parsed.academicStreamId
+        ? db.academicStream.findFirst({
+            where: { id: parsed.academicStreamId, schoolId },
+            select: { id: true },
+          })
+        : null,
+    ])
+    if (
+      (parsed.sectionId && !section) ||
+      (parsed.academicGradeId && !grade) ||
+      (parsed.academicStreamId && !stream)
+    ) {
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
@@ -211,25 +229,22 @@ export async function updateStudentAcademic(
     await db.student.updateMany({
       where: { id: studentId, schoolId },
       data: {
-        academicGradeId: parsed.academicGradeId || null,
-        academicStreamId: parsed.academicStreamId || null,
+        academicGradeId: grade?.id ?? null,
+        academicStreamId: stream?.id ?? null,
         sectionId: section?.id ?? null,
         previousSchoolName: parsed.previousSchoolName || null,
       },
     })
 
-    // The section is the student's roster and timetable. Legacy grade
-    // classes (being retired) are still synced for schools that have them.
-    // The warning only fires when the section really has no timetable —
-    // "no classes" fired for every new school, which never has classes.
+    // The section is the student's roster and timetable; the grade's
+    // subjects (section's grade, else the chosen one) are their LMS
+    // courses. The warning only fires when the section has no timetable.
     const enroll = async () => {
-      if (!section) return
-      const gradeId = section.gradeId || parsed.academicGradeId
       const [, slotCount] = await Promise.all([
-        gradeId
-          ? enrollStudentInGradeClasses(schoolId, studentId, gradeId)
+        syncStudentSubjectEnrollments(schoolId, studentId),
+        section
+          ? db.timetable.count({ where: { schoolId, sectionId: section.id } })
           : Promise.resolve(null),
-        db.timetable.count({ where: { schoolId, sectionId: section.id } }),
       ])
       noTimetableWarning = slotCount === 0
     }
@@ -238,12 +253,12 @@ export async function updateStudentAcademic(
     // exist for every matching active FeeStructure. Awaited + transactional;
     // re-running the wizard finalize is idempotent (no duplicate rows).
     const assignFees = async () => {
-      if (!parsed.academicGradeId) return
+      if (!grade) return
       try {
         await ensureStudentFeeAssignments({
           schoolId,
           studentId,
-          academicGradeId: parsed.academicGradeId,
+          academicGradeId: grade.id,
         })
       } catch (err) {
         // Don't block the wizard — fees can be re-synced later via the Sync
@@ -256,7 +271,7 @@ export async function updateStudentAcademic(
       }
     }
 
-    // Independent of each other (classes vs fee rows, each given its grade):
+    // Independent of each other (LMS vs fee rows, each given its grade):
     // run them side by side instead of paying both latencies in a row.
     await Promise.all([enroll(), assignFees()])
 

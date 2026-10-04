@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
@@ -44,22 +45,19 @@ vi.mock("@/lib/db", () => ({
     },
     academicGrade: {
       findUnique: vi.fn().mockResolvedValue(null),
+      findFirst: vi.fn().mockResolvedValue(null),
       findMany: vi.fn().mockResolvedValue([]),
     },
     section: {
+      findFirst: vi.fn().mockResolvedValue(null),
       findMany: vi.fn().mockResolvedValue([]),
     },
     yearLevel: {
       findFirst: vi.fn(),
     },
-    // autoEnrollStudentInClasses() reads db.class.findMany then upserts
-    // studentClass rows; returning [] makes it a no-op for these unit tests.
-    class: {
-      findMany: vi.fn().mockResolvedValue([]),
-    },
+    // Legacy class enrollments — only counted and cleaned up now.
     studentClass: {
       count: vi.fn().mockResolvedValue(0),
-      upsert: vi.fn().mockResolvedValue({}),
     },
     attendance: {
       count: vi.fn().mockResolvedValue(0),
@@ -103,6 +101,12 @@ vi.mock("@/lib/fee-auto-assign", () => ({
     skipped: 0,
     assignmentIds: [],
   }),
+}))
+
+vi.mock("@/lib/enrollment-sync", () => ({
+  syncStudentSubjectEnrollments: vi
+    .fn()
+    .mockResolvedValue({ subjectIds: [], created: 0 }),
 }))
 
 vi.mock("next/cache", () => ({
@@ -249,6 +253,9 @@ describe("Student Actions", () => {
 
     it("updateStudent provisions fees when academicGradeId changes", async () => {
       vi.mocked(db.student.updateMany).mockResolvedValue({ count: 1 })
+      vi.mocked(db.academicGrade.findFirst).mockResolvedValue({
+        id: mockAcademicGradeId,
+      } as never)
 
       const result = await updateStudent({
         id: "student-1",
@@ -262,6 +269,62 @@ describe("Student Actions", () => {
         studentId: "student-1",
         academicGradeId: mockAcademicGradeId,
       })
+      // ...and the grade's subjects in the LMS
+      expect(syncStudentSubjectEnrollments).toHaveBeenCalledWith(
+        mockSchoolId,
+        "student-1"
+      )
+    })
+
+    it("updateStudent refuses another school's grade", async () => {
+      vi.mocked(db.academicGrade.findFirst).mockResolvedValue(null)
+
+      const result = await updateStudent({
+        id: "student-1",
+        academicGradeId: "foreign-grade",
+      })
+
+      expect(result.success).toBe(false)
+      expect(vi.mocked(db.academicGrade.findFirst).mock.calls[0][0]).toEqual({
+        where: { id: "foreign-grade", schoolId: mockSchoolId },
+        select: { id: true },
+      })
+      expect(db.student.updateMany).not.toHaveBeenCalled()
+      expect(ensureStudentFeeAssignments).not.toHaveBeenCalled()
+    })
+
+    it("updateStudent refuses another school's section", async () => {
+      vi.mocked(db.section.findFirst).mockResolvedValue(null)
+
+      const result = await updateStudent({
+        id: "student-1",
+        sectionId: "foreign-section",
+      })
+
+      expect(result.success).toBe(false)
+      expect(db.student.updateMany).not.toHaveBeenCalled()
+    })
+
+    it("updateStudent places the student in this school's section and syncs the LMS", async () => {
+      vi.mocked(db.student.updateMany).mockResolvedValue({ count: 1 })
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        id: "section-7a",
+      } as never)
+
+      const result = await updateStudent({
+        id: "student-1",
+        sectionId: "section-7a",
+      })
+
+      expect(result.success).toBe(true)
+      expect(vi.mocked(db.student.updateMany).mock.calls[0][0]).toMatchObject({
+        where: { id: "student-1", schoolId: mockSchoolId },
+        data: { sectionId: "section-7a" },
+      })
+      expect(syncStudentSubjectEnrollments).toHaveBeenCalledWith(
+        mockSchoolId,
+        "student-1"
+      )
     })
 
     it("updateStudent persists email + mobileNumber when provided", async () => {

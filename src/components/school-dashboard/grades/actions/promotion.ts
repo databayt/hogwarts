@@ -6,11 +6,25 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
+import { audienceRosterWhere } from "@/lib/teaching-audience"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { gradesPath } from "../lib/paths"
+
+// Promotion moves students between grades: the school's administrators make
+// that call. Staff who can open /grades may look at it.
+const PROMOTION_MANAGERS: ReadonlySet<string> = new Set(["ADMIN", "DEVELOPER"])
+const PROMOTION_VIEWERS: ReadonlySet<string> = new Set([
+  "ADMIN",
+  "DEVELOPER",
+  "TEACHER",
+])
+
+const letterKey = (letter: string) => letter.trim().toUpperCase()
 
 // ============================================================================
 // PROMOTION POLICY CRUD
@@ -19,6 +33,7 @@ import { gradesPath } from "../lib/paths"
 export async function getPromotionPolicy(gradeId: string) {
   const session = await auth()
   if (!session?.user) return null
+  if (!PROMOTION_VIEWERS.has(session.user.role ?? "")) return null
   const { schoolId } = await getTenantContext()
   if (!schoolId) return null
 
@@ -39,6 +54,9 @@ export async function upsertPromotionPolicy(input: {
   try {
     const session = await auth()
     if (!session?.user) return { success: false, error: "Not authenticated" }
+    if (!PROMOTION_MANAGERS.has(session.user.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
@@ -92,8 +110,18 @@ export async function evaluatePromotionCandidates(input: {
   try {
     const session = await auth()
     if (!session?.user) return { success: false, error: "Not authenticated" }
+    if (!PROMOTION_MANAGERS.has(session.user.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
+
+    // The grade must be this school's before a batch is written for it
+    const grade = await db.academicGrade.findFirst({
+      where: { id: input.gradeId, schoolId },
+      select: { id: true },
+    })
+    if (!grade) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     // Check for existing batch
     const existing = await db.promotionBatch.findUnique({
@@ -150,9 +178,17 @@ export async function evaluatePromotionCandidates(input: {
       where: { schoolId_gradeId: { schoolId, gradeId: input.gradeId } },
     })
 
-    // Fetch students in this grade
+    // Students in this grade: its sections' students, and those placed in
+    // the grade with no section yet
     const students = await db.student.findMany({
-      where: { schoolId, academicGradeId: input.gradeId, status: "ACTIVE" },
+      where: {
+        ...audienceRosterWhere(schoolId, {
+          classId: null,
+          gradeId: input.gradeId,
+          sectionId: null,
+        }),
+        status: "ACTIVE",
+      },
       select: { id: true },
     })
 
@@ -164,8 +200,8 @@ export async function evaluatePromotionCandidates(input: {
     const termIds = terms.map((t) => t.id)
 
     // Check if this is the final grade (for graduation)
-    const currentGrade = await db.academicGrade.findUnique({
-      where: { id: input.gradeId },
+    const currentGrade = await db.academicGrade.findFirst({
+      where: { id: input.gradeId, schoolId },
       include: {
         level: {
           include: { grades: { orderBy: { gradeNumber: "desc" }, take: 1 } },
@@ -390,6 +426,9 @@ export async function overridePromotionDecision(input: {
   try {
     const session = await auth()
     if (!session?.user) return { success: false, error: "Not authenticated" }
+    if (!PROMOTION_MANAGERS.has(session.user.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
@@ -432,6 +471,9 @@ export async function approvePromotionBatch(
   try {
     const session = await auth()
     if (!session?.user) return { success: false, error: "Not authenticated" }
+    if (!PROMOTION_MANAGERS.has(session.user.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
@@ -486,6 +528,9 @@ export async function executePromotions(
   try {
     const session = await auth()
     if (!session?.user) return { success: false, error: "Not authenticated" }
+    if (!PROMOTION_MANAGERS.has(session.user.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
@@ -506,22 +551,41 @@ export async function executePromotions(
     })
 
     const candidates = await db.promotionCandidate.findMany({
-      where: { batchId, isExecuted: false },
+      where: { batchId, schoolId, isExecuted: false },
     })
 
     // Resolve YearLevel IDs from AcademicGrade IDs
-    const gradeIds = [
-      batch.gradeId,
-      ...candidates.map((c) => c.newGradeId).filter((id): id is string => !!id),
+    const newGradeIds = [
+      ...new Set(
+        candidates.map((c) => c.newGradeId).filter((id): id is string => !!id)
+      ),
     ]
-    const grades = await db.academicGrade.findMany({
-      where: { id: { in: gradeIds } },
-      select: { id: true, yearLevelId: true },
-    })
+    const [grades, newSections, students] = await Promise.all([
+      db.academicGrade.findMany({
+        where: { schoolId, id: { in: [batch.gradeId, ...newGradeIds] } },
+        select: { id: true, yearLevelId: true },
+      }),
+      db.section.findMany({
+        where: { schoolId, gradeId: { in: newGradeIds } },
+        select: { id: true, gradeId: true, letter: true },
+      }),
+      db.student.findMany({
+        where: { schoolId, id: { in: candidates.map((c) => c.studentId) } },
+        select: { id: true, section: { select: { letter: true } } },
+      }),
+    ])
     const gradeToYearLevel = new Map(
       grades
         .filter((g) => g.yearLevelId)
         .map((g) => [g.id, g.yearLevelId as string])
+    )
+    // A promoted student moves to the same-letter section of the new grade
+    // (7-A → 8-A); with no such section they wait, placed in the grade only.
+    const sectionByGradeLetter = new Map(
+      newSections.map((s) => [`${s.gradeId}|${letterKey(s.letter)}`, s.id])
+    )
+    const letterOf = new Map(
+      students.map((s) => [s.id, s.section?.letter ?? null])
     )
 
     let executed = 0
@@ -529,11 +593,19 @@ export async function executePromotions(
     for (const candidate of candidates) {
       try {
         if (candidate.finalDecision === "PROMOTE" && candidate.newGradeId) {
-          // Move student to next grade
+          // Move student to next grade, and its same-letter section
+          const letter = letterOf.get(candidate.studentId)
+          const sectionId = letter
+            ? (sectionByGradeLetter.get(
+                `${candidate.newGradeId}|${letterKey(letter)}`
+              ) ?? null)
+            : null
           await db.student.update({
-            where: { id: candidate.studentId },
-            data: { academicGradeId: candidate.newGradeId },
+            where: { id: candidate.studentId, schoolId },
+            data: { academicGradeId: candidate.newGradeId, sectionId },
           })
+          // The new grade's subjects in the LMS (last year's stay)
+          await syncStudentSubjectEnrollments(schoolId, candidate.studentId)
 
           // Create StudentYearLevel record
           const levelId = gradeToYearLevel.get(candidate.newGradeId)
@@ -564,7 +636,7 @@ export async function executePromotions(
           }
         } else if (candidate.finalDecision === "GRADUATE") {
           await db.student.update({
-            where: { id: candidate.studentId },
+            where: { id: candidate.studentId, schoolId },
             data: { status: "GRADUATED" },
           })
 
@@ -621,6 +693,7 @@ export async function executePromotions(
 export async function getPromotionBatches() {
   const session = await auth()
   if (!session?.user) return []
+  if (!PROMOTION_VIEWERS.has(session.user.role ?? "")) return []
   const { schoolId } = await getTenantContext()
   if (!schoolId) return []
 
@@ -641,6 +714,7 @@ export async function getPromotionBatches() {
 export async function getPromotionCandidates(batchId: string) {
   const session = await auth()
   if (!session?.user) return []
+  if (!PROMOTION_VIEWERS.has(session.user.role ?? "")) return []
   const { schoolId } = await getTenantContext()
   if (!schoolId) return []
 

@@ -8,7 +8,7 @@ The Subjects block manages the school's academic subject catalog. Admins can cre
 
 - **Admin**: CRUD subjects, assign to departments, manage catalog, configure prerequisites; **customize the platform catalog per school** via the `catalog/` controls — hide chapters / lessons / a specific instructor's video, hide a lesson's practice quiz, set the preferred instructor source, and contribute the school's own lesson videos
 - **Teacher**: View assigned subjects (filtered by teacher classes, co-teaching, timetable, and expertise), contribute materials and assignments
-- **Student**: View their own grade's subjects only. The academic grade is the gate: the grade's active `SubjectSelection` rows always show, and a class enrollment or section timetable slot is added only when the catalog places that subject in the student's grade. A student is always scoped to their own record — `?studentId` is ignored for the `STUDENT` role
+- **Student**: View their own grade's subjects only. The academic grade is the gate: the grade's active `SubjectSelection` rows always show, and a (legacy) class enrollment or section timetable slot is added only when the catalog places that subject in the student's grade. Adding a subject to a grade (or bringing one back) enrols the grade's active students in it in Lumos. A student is always scoped to their own record — `?studentId` is ignored for the `STUDENT` role
 - **Guardian**: View subject information for child's classes
 
 ### School Catalog Customization (`catalog/`)

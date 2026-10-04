@@ -1,5 +1,30 @@
 # Students — Production Readiness Tracker
 
+## 2026-10-04 — placement gives Lumos access; no class enrollment (LOCAL, not pushed)
+
+Classes are being retired (plan S13). Nothing writes `StudentClass` any more.
+
+- [x] **LMS access follows placement.** `syncStudentSubjectEnrollments`
+      (`src/lib/enrollment-sync.ts`) gives a student an active `Enrollment` in
+      every subject of their grade — the section's grade, else the placed
+      grade; a subject offered to one stream reaches that stream, and a student
+      with no stream gets every stream's. Adds only: moving grade never removes
+      last year's courses. Runs from `provisionStudent` (inside its
+      transaction), the wizard's academic step, `updateStudent`, admission
+      placement, the mobile student PUT, promotion and `syncStudentGrades`.
+- [x] **P0 — `updateStudent` wrote ids unchecked.** `sectionId` and
+      `academicGradeId` were written as sent, and `userId` linked a user from
+      any school. Now only this school's grade and section (NOT_FOUND
+      otherwise), and a user of this school or of none.
+- [x] **P0 — `provisionStudent` placed a student in any section id.** The
+      mobile create route passes the client's `section_id` straight through;
+      provisioning now places only in one of the school's sections.
+- [x] The wizard's academic step checks the grade and the stream too (it
+      checked the section only).
+- Deploy: `pnpm tsx prisma/scripts/subject-enrollments-backfill.ts --all`
+  behind a Neon restore point (`--dry` first). Locally 9,009 enrollments
+  (demo 8,973 for 980 students, who had 35), 0 on re-run.
+
 ## 2026-09-05 — intake pass: the four channels meet at one placement step (LOCAL, 14 commits, not pushed)
 
 Read with `admission/ISSUE.md` (same date). The ask: trace adding a student

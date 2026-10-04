@@ -108,7 +108,7 @@ Full admit→accept→pay→enroll→fee pipeline verified twice (08-15, 09-04).
 - `/api/cron/process-document-jobs` -- new cron (\*/10) that processes the document-extraction queue
 - `/api/cron/fee-due` -- daily cron for upcoming-due + offer-expiry reminders
 - `/api/cron/fee-overdue` -- per-tenant OVERDUE mirror to `UserInvoice`
-- `src/lib/enrollment-sync.ts` -- auto-enroll placed students into grade classes
+- `src/lib/enrollment-sync.ts` -- give placed students their grade's subjects in Lumos (`syncStudentSubjectEnrollments`)
 - `src/lib/dispatch-notification.ts` -- notification dispatch on status changes; new-lead notifications to ADMIN+STAFF
 - `src/app/api/webhooks/stripe/route.ts` + `tap/route.ts` -- retry-on-catch, multi-installment `amountPaid`/PARTIAL, `checkout.session.expired` clears stuck admission state
 - `prisma/models/admission.prisma` -- 9 models: AdmissionCampaign, Application, Communication, AdmissionInquiry, AdmissionTimeSlot, TourBooking, ApplicationSession, AdmissionSettings, AdmissionOTP

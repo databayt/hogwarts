@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
+import { syncGradeSubjectEnrollments } from "@/lib/enrollment-sync"
 import { getReferenceWeeklyPeriods } from "@/lib/timetable-reference"
 import {
   getAcademicConfig,
@@ -991,6 +992,10 @@ export async function ensureSubjectSelections(
       data: selectionData,
       skipDuplicates: true,
     })
+    // Students already placed in these grades find them in the LMS
+    for (const gradeId of new Set(selectionData.map((d) => d.gradeId))) {
+      await syncGradeSubjectEnrollments(schoolId, gradeId)
+    }
   }
 
   return {

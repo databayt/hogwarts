@@ -141,7 +141,9 @@ vi.mock("@/lib/dispatch-notification", () => ({
 }))
 
 vi.mock("@/lib/enrollment-sync", () => ({
-  enrollStudentInGradeClasses: vi.fn().mockResolvedValue(undefined),
+  syncStudentSubjectEnrollments: vi
+    .fn()
+    .mockResolvedValue({ subjectIds: [], created: 0 }),
 }))
 
 vi.mock("@/lib/grade-utils", () => ({

@@ -16,6 +16,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { provisionStudent } from "@/lib/student-provisioning"
 import { generateStudentUsername } from "@/lib/student-username"
 import { ensureDirectAdmitApplication } from "@/lib/system-campaign"
@@ -26,7 +27,9 @@ vi.mock("@/lib/credentials", () => ({
     .mockResolvedValue({ plain: "temp-1234", hashed: "hashed" }),
 }))
 vi.mock("@/lib/enrollment-sync", () => ({
-  enrollStudentInGradeClasses: vi.fn().mockResolvedValue({ classIds: [] }),
+  syncStudentSubjectEnrollments: vi
+    .fn()
+    .mockResolvedValue({ subjectIds: [], created: 0 }),
 }))
 vi.mock("@/lib/fee-auto-assign", () => ({
   ensureStudentFeeAssignments: vi.fn().mockResolvedValue({
@@ -177,5 +180,55 @@ describe("provisionStudent — existing student rows", () => {
         tx as never
       )
     ).rejects.toThrow(/another school/)
+  })
+})
+
+describe("provisionStudent — section placement", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const sectionWrites = (tx: ReturnType<typeof makeTx>) =>
+    tx.student.update.mock.calls.filter(
+      (c) => (c[0] as { data: Record<string, unknown> }).data.sectionId
+    )
+
+  it("never places a student in another school's section", async () => {
+    const tx = makeTx(null)
+    tx.section.findFirst.mockResolvedValue(null)
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+    await provisionStudent(
+      { ...baseInput, sectionId: "foreign-section" },
+      { notify: false, credentialDelivery: "none", origin: "ADMIN_DIRECT" },
+      tx as never
+    )
+
+    expect(tx.section.findFirst).toHaveBeenCalledWith({
+      where: { id: "foreign-section", schoolId: SCHOOL_ID },
+      select: { id: true },
+    })
+    expect(sectionWrites(tx)).toHaveLength(0)
+    warn.mockRestore()
+  })
+
+  it("places the student in this school's section and syncs the LMS in the transaction", async () => {
+    const tx = makeTx(null)
+    tx.section.findFirst.mockResolvedValue({ id: "sec-7a" })
+
+    await provisionStudent(
+      { ...baseInput, sectionId: "sec-7a" },
+      { notify: false, credentialDelivery: "none", origin: "ADMIN_DIRECT" },
+      tx as never
+    )
+
+    expect(sectionWrites(tx)).toEqual([
+      [{ where: { id: "stu-new" }, data: { sectionId: "sec-7a" } }],
+    ])
+    expect(syncStudentSubjectEnrollments).toHaveBeenCalledWith(
+      SCHOOL_ID,
+      "stu-new",
+      tx
+    )
   })
 })

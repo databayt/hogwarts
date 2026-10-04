@@ -2,13 +2,13 @@
 
 ### Overview
 
-The Students block manages the complete student lifecycle from enrollment to graduation. Admins can create, search, filter, bulk-import, and export student records with full multi-tenant isolation. Students are linked to classes (many-to-many via StudentClass) and guardians (via StudentGuardian).
+The Students block manages the complete student lifecycle from enrollment to graduation. Admins can create, search, filter, bulk-import, and export student records with full multi-tenant isolation. A student sits in a section of a grade (`Student.sectionId`, or a grade alone before placement), takes that grade's subjects, and is linked to guardians (via StudentGuardian). Legacy class enrollments (StudentClass) are read for history only — nothing writes them since 2026-10-04.
 
 ### Capabilities by Role
 
-- **Admin**: CRUD students, bulk CSV import/export, class enrollment, guardian linking, status tracking
+- **Admin**: CRUD students, bulk CSV import/export, section placement, guardian linking, status tracking
 - **Teacher**: View students in assigned classes (read-only)
-- **Student**: View own profile and class enrollment
+- **Student**: View own profile, section and subjects
 - **Guardian**: View linked child's profile and class assignments
 
 ### Routes
@@ -92,8 +92,8 @@ Arabic-seeded school never gets an English twin row.
 
 ### Integration Points
 
-- **Classes**: StudentClass many-to-many enrollment
+- **Lumos**: placement enrols the student in their grade's subjects (`syncStudentSubjectEnrollments`, `src/lib/enrollment-sync.ts`)
 - **Guardians**: StudentGuardian linking (resolved)
 - **Attendance**: Attendance records per student
 - **Grades**: Results linked via studentId
-- **Timetable**: Schedule inherited from class enrollment
+- **Timetable**: Schedule inherited from the section

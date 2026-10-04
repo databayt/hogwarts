@@ -21,6 +21,14 @@ last_audited: 2026-09-04
 
 ---
 
+## 2026-10-04 — placement grants Lumos, not classes (LOCAL, not pushed)
+
+`placeStudentInSection` no longer writes `StudentClass`; it gives the student
+their grade's subjects in Lumos (`syncStudentSubjectEnrollments`). See
+`listings/students/ISSUE.md` for the other placement paths and the backfill.
+
+---
+
 ## 2026-09-05 — intake pass: four channels, one assembly point (LOCAL, not deployed)
 
 Read with `listings/students/ISSUE.md` (same date). The ask was to trace adding

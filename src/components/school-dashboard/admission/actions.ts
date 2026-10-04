@@ -20,7 +20,7 @@ import {
   dispatchNotification,
   shouldSendNotification,
 } from "@/lib/dispatch-notification"
-import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { refreshPage } from "@/lib/refresh-page"
 import type { ProvisionGuardianInput } from "@/lib/student-provisioning"
@@ -2162,18 +2162,11 @@ export async function placeStudentInSection(params: {
       return actionError(ACTION_ERRORS.STUDENT_ALREADY_IN_SECTION)
     }
 
-    // The section is the student's roster and timetable. Legacy grade
-    // classes (being retired) are still synced for schools that have them,
-    // but the warning only fires when the section has no timetable — "no
-    // classes" fired for every new school, which never has classes.
+    // The section is the student's roster and timetable, and its grade's
+    // subjects are their LMS courses. The warning only fires when the
+    // section has no timetable yet.
     const [, sectionSlotCount] = await Promise.all([
-      sectionData.gradeId
-        ? enrollStudentInGradeClasses(
-            schoolId,
-            student.id,
-            sectionData.gradeId
-          )
-        : Promise.resolve(null),
+      syncStudentSubjectEnrollments(schoolId, student.id),
       db.timetable.count({ where: { schoolId, sectionId: params.sectionId } }),
     ])
     const noTimetable = sectionSlotCount === 0

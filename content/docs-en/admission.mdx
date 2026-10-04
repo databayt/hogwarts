@@ -387,7 +387,7 @@ After enrollment, place the student in a section:
 
 - Enrollment response includes `suggestedSectionId` if exactly one section has capacity for the student's grade.
 - Lists sections with available capacity for that grade.
-- `placeStudentInSection()` assigns + auto-enrols in grade classes via `enrollStudentInGradeClasses()`.
+- `placeStudentInSection()` assigns the seat, then gives the student the LMS courses of the section's grade via `syncStudentSubjectEnrollments()`.
 
 ## Wizard editing
 
@@ -413,7 +413,7 @@ Once an applicant is `SELECTED`:
 3. The applicant pays the **registration fee** through the school's gateway (Tap for UAE/Gulf, Stripe elsewhere). The application wizard shows an informational payment preview — no payment is collected at the application stage.
 4. On payment success, the admin sees a registration-fee paid banner and can proceed.
 5. Admin clicks "Confirm enrollment" → `confirmEnrollment()` transaction fires (see Enrollment transaction).
-6. Post-enrollment the admin uses the **Placement dialog** on the enrollment table to pick a section (seat counts shown); `placeStudentInSection()` enrols the student in all grade classes.
+6. Post-enrollment the admin uses the **Placement dialog** on the enrollment table to pick a section (seat counts shown); `placeStudentInSection()` puts the student on the section's roster and timetable and gives them their grade's subjects in Lumos.
 
 Abandoned-checkout retry is unblocked — applicants who navigated away can return and complete payment.
 

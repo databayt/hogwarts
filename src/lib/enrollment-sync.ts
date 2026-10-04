@@ -1,68 +1,174 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 import type { PrismaClient } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { audienceRosterWhere } from "@/lib/teaching-audience"
+
+type EnrollmentClient = Pick<
+  PrismaClient,
+  "student" | "subjectSelection" | "enrollment"
+>
+
+/** A subject offered to every stream, or to the student's own; a student
+ * with no stream yet takes every stream's subjects, so a missing stream
+ * never empties their list. */
+function offeredTo(
+  selectionStreamId: string | null,
+  studentStreamId: string | null
+): boolean {
+  return (
+    !selectionStreamId ||
+    !studentStreamId ||
+    selectionStreamId === studentStreamId
+  )
+}
 
 /**
- * Enroll a student in all classes for a given grade.
- * Creates StudentClass records (idempotent via unique constraint)
- * and syncs LMS enrollments.
+ * LMS access follows placement: a student gets an active Enrollment in every
+ * subject their grade studies — the section's grade, else the grade they
+ * were placed in. Run it whenever a student is placed or changes grade.
  *
- * Used by: student wizard enrollment, admission placement, CSV import.
+ * Adds only. An Enrollment also holds lesson progress, a certificate or a
+ * paid course, so moving grade never takes last year's subjects away. A row
+ * the student has but can't use (pending checkout, cancelled, expired) is
+ * switched on, because the school now grants it; a completed one is left.
+ *
+ * Safe inside a transaction (inserts skip duplicates rather than fail) and
+ * never throws: a failed sync logs and leaves placement alone.
  */
-export async function enrollStudentInGradeClasses(
+export async function syncStudentSubjectEnrollments(
   schoolId: string,
   studentId: string,
-  gradeId: string,
-  tx?: Pick<PrismaClient, "class" | "studentClass">
-): Promise<{ classIds: string[]; warning?: string }> {
-  const client = tx ?? db
+  client: EnrollmentClient = db
+): Promise<{ subjectIds: string[]; created: number }> {
+  try {
+    const student = await client.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: {
+        userId: true,
+        academicGradeId: true,
+        academicStreamId: true,
+        section: { select: { gradeId: true } },
+      },
+    })
+    const gradeId = student?.section?.gradeId ?? student?.academicGradeId
+    if (!student?.userId || !gradeId) return { subjectIds: [], created: 0 }
 
-  const gradeClasses = await client.class.findMany({
-    where: { schoolId, gradeId },
-    select: { id: true },
-  })
+    const selections = await client.subjectSelection.findMany({
+      where: { schoolId, gradeId, isActive: true },
+      select: { catalogSubjectId: true, streamId: true },
+    })
+    const subjectIds = [
+      ...new Set(
+        selections
+          .filter((s) => offeredTo(s.streamId, student.academicStreamId))
+          .map((s) => s.catalogSubjectId)
+      ),
+    ]
+    if (subjectIds.length === 0) return { subjectIds, created: 0 }
 
-  if (gradeClasses.length === 0) {
-    return {
-      classIds: [],
-      warning:
-        "No classes found for this grade. Generate classes first via Classrooms > Configure.",
-    }
-  }
-
-  await Promise.all(
-    gradeClasses.map((cls) =>
-      client.studentClass.upsert({
-        where: {
-          schoolId_studentId_classId: {
-            schoolId,
-            studentId,
-            classId: cls.id,
-          },
-        },
-        create: { schoolId, studentId, classId: cls.id },
-        update: {},
-      })
+    const userId = student.userId
+    await client.enrollment.updateMany({
+      where: {
+        userId,
+        catalogSubjectId: { in: subjectIds },
+        status: { not: "COMPLETED" },
+        OR: [{ isActive: false }, { status: { not: "ACTIVE" } }],
+      },
+      data: { isActive: true, status: "ACTIVE" },
+    })
+    const { count: created } = await client.enrollment.createMany({
+      data: subjectIds.map((catalogSubjectId) => ({
+        userId,
+        catalogSubjectId,
+        schoolId,
+        isActive: true,
+        status: "ACTIVE" as const,
+      })),
+      skipDuplicates: true,
+    })
+    return { subjectIds, created }
+  } catch (error) {
+    console.warn(
+      `[syncStudentSubjectEnrollments] Failed for student=${studentId}:`,
+      error
     )
-  )
-
-  const classIds = gradeClasses.map((cls) => cls.id)
-
-  // Sync LMS enrollments (non-blocking, outside any transaction)
-  if (!tx) {
-    for (const classId of classIds) {
-      syncStudentClassToEnrollment(schoolId, studentId, classId).catch(() => {})
-    }
+    return { subjectIds: [], created: 0 }
   }
+}
 
-  return { classIds }
+/**
+ * The same, for a whole grade at once — run when a subject joins a grade (or
+ * comes back), so the grade's active students find it in Lumos. Adds only.
+ */
+export async function syncGradeSubjectEnrollments(
+  schoolId: string,
+  gradeId: string,
+  client: EnrollmentClient = db
+): Promise<{ created: number }> {
+  try {
+    const [students, selections] = await Promise.all([
+      client.student.findMany({
+        where: {
+          ...audienceRosterWhere(schoolId, {
+            classId: null,
+            gradeId,
+            sectionId: null,
+          }),
+          status: "ACTIVE",
+          userId: { not: null },
+        },
+        select: { userId: true, academicStreamId: true },
+      }),
+      client.subjectSelection.findMany({
+        where: { schoolId, gradeId, isActive: true },
+        select: { catalogSubjectId: true, streamId: true },
+      }),
+    ])
+
+    const rows = new Map<string, { userId: string; catalogSubjectId: string }>()
+    for (const student of students) {
+      if (!student.userId) continue
+      for (const selection of selections) {
+        if (!offeredTo(selection.streamId, student.academicStreamId)) continue
+        rows.set(`${student.userId}|${selection.catalogSubjectId}`, {
+          userId: student.userId,
+          catalogSubjectId: selection.catalogSubjectId,
+        })
+      }
+    }
+
+    let created = 0
+    const all = [...rows.values()]
+    for (let i = 0; i < all.length; i += 1000) {
+      const { count } = await client.enrollment.createMany({
+        data: all.slice(i, i + 1000).map((row) => ({
+          ...row,
+          schoolId,
+          isActive: true,
+          status: "ACTIVE" as const,
+        })),
+        skipDuplicates: true,
+      })
+      created += count
+    }
+    return { created }
+  } catch (error) {
+    console.warn(
+      `[syncGradeSubjectEnrollments] Failed for grade=${gradeId}:`,
+      error
+    )
+    return { created: 0 }
+  }
 }
 
 /**
  * Sync a StudentClass enrollment to the LMS Enrollment system.
  *
- * When a student is enrolled in a Class (timetable/attendance),
- * this creates a corresponding Enrollment record for catalog/LMS access.
+ * Legacy: only the class pages still call this (the classes list and the
+ * hidden students/enroll page, both deleted with the rest of Class).
  *
  * Non-blocking: logs failures but never throws.
  */

@@ -2,7 +2,17 @@
 
 **Status:** 🟢 READY
 **Completion:** 90%
-**Last Updated:** 2026-06-14
+**Last Updated:** 2026-10-04
+
+---
+
+## 2026-10-04 — a new subject reaches the grade's students in Lumos
+
+Adding a subject to a grade, or bringing one back (`createSubject`,
+`updateSubject` / `updateSubjectSelection` with `isActive: true`, the catalog
+toggle and bulk select), enrolls the grade's active students in it
+(`syncGradeSubjectEnrollments`, after the response). Removing one never
+unenrolls anyone.
 
 ---
 

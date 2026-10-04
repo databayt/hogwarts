@@ -4,17 +4,33 @@
 import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { db } from "@/lib/db"
+import { syncGradeSubjectEnrollments } from "@/lib/enrollment-sync"
 import { getSchoolSubjects } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getSubjects } from "@/components/school-dashboard/listings/subjects/actions"
+import {
+  createSubject,
+  getSubjects,
+} from "@/components/school-dashboard/listings/subjects/actions"
 
 // Mock dependencies
 vi.mock("@/lib/school-subjects", () => ({
   getSchoolSubjects: vi.fn(),
 }))
 
+vi.mock("@/lib/enrollment-sync", () => ({
+  syncGradeSubjectEnrollments: vi.fn().mockResolvedValue({ created: 0 }),
+}))
+
+vi.mock("@/lib/refresh-page", () => ({ refreshPage: vi.fn() }))
+
 vi.mock("@/lib/db", () => ({
   db: {
+    subjectSelection: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      updateMany: vi.fn(),
+    },
     schoolSubjectSelection: {
       findMany: vi.fn(),
       create: vi.fn(),
@@ -77,6 +93,46 @@ describe("Subject Actions", () => {
       subdomain: "test-school",
       role: "ADMIN",
       locale: "en",
+    })
+  })
+
+  describe("createSubject — LMS", () => {
+    it("gives the grade's students the new subject in the LMS", async () => {
+      vi.mocked(db.subjectSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.subjectSelection.create).mockResolvedValue({
+        id: "sel-1",
+      } as never)
+
+      const result = await createSubject({
+        catalogSubjectId: "cat-1",
+        gradeId: "grade-7",
+      } as never)
+
+      expect(result.success).toBe(true)
+      expect(syncGradeSubjectEnrollments).toHaveBeenCalledWith(
+        mockSchoolId,
+        "grade-7"
+      )
+    })
+
+    it("gives it back when a subject returns to the grade", async () => {
+      vi.mocked(db.subjectSelection.findFirst).mockResolvedValue({
+        id: "sel-1",
+        gradeId: "grade-7",
+        isActive: false,
+      } as never)
+
+      const result = await createSubject({
+        catalogSubjectId: "cat-1",
+        gradeId: "grade-7",
+      } as never)
+
+      expect(result.success).toBe(true)
+      expect(db.subjectSelection.create).not.toHaveBeenCalled()
+      expect(syncGradeSubjectEnrollments).toHaveBeenCalledWith(
+        mockSchoolId,
+        "grade-7"
+      )
     })
   })
 

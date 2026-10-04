@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { syncGradeSubjectEnrollments } from "@/lib/enrollment-sync"
 
 /**
  * Parse grade string like "Grade 7", "7", "الصف السابع" into a grade number.
@@ -22,7 +23,8 @@ function parseGradeNumber(input: string): number | null {
 
 /**
  * Sync students that have a raw yearLevel string but no academicGradeId.
- * Resolves yearLevel → grade number → AcademicGrade record for the school.
+ * Resolves yearLevel → grade number → AcademicGrade record for the school,
+ * then gives each grade's newly placed students its subjects in the LMS.
  */
 export async function syncStudentGrades(
   schoolId: string
@@ -56,6 +58,7 @@ export async function syncStudentGrades(
 
   // Resolve each student's yearLevel to a grade
   let updated = 0
+  const placedGradeIds = new Set<string>()
   for (const student of students) {
     if (!student.yearLevel) continue
     const gradeNumber = parseGradeNumber(student.yearLevel)
@@ -68,7 +71,12 @@ export async function syncStudentGrades(
       where: { id: student.id },
       data: { academicGradeId: gradeId },
     })
+    placedGradeIds.add(gradeId)
     updated++
+  }
+
+  for (const gradeId of placedGradeIds) {
+    await syncGradeSubjectEnrollments(schoolId, gradeId)
   }
 
   return { updated }

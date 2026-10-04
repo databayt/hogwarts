@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { PUT } from "@/app/api/mobile/students/[studentId]/route"
 
 vi.mock("@/lib/db", () => ({
@@ -12,6 +13,11 @@ vi.mock("@/lib/db", () => ({
     student: { findFirst: vi.fn(), update: vi.fn() },
     section: { findFirst: vi.fn() },
   },
+}))
+vi.mock("@/lib/enrollment-sync", () => ({
+  syncStudentSubjectEnrollments: vi
+    .fn()
+    .mockResolvedValue({ subjectIds: [], created: 0 }),
 }))
 vi.mock("@/app/api/mobile/lib/authenticate", () => ({
   authenticate: vi.fn(),
@@ -76,7 +82,15 @@ describe("PUT /api/mobile/students/[studentId] — section placement", () => {
 
     expect(res.status).toBe(200)
     expect(db.student.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { sectionId: "sec-1" } })
+      expect.objectContaining({
+        where: { id: "student-1", schoolId: SCHOOL },
+        data: { sectionId: "sec-1" },
+      })
+    )
+    // The section's grade subjects reach the LMS
+    expect(syncStudentSubjectEnrollments).toHaveBeenCalledWith(
+      SCHOOL,
+      "student-1"
     )
   })
 
@@ -90,5 +104,6 @@ describe("PUT /api/mobile/students/[studentId] — section placement", () => {
     expect(db.student.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { sectionId: null } })
     )
+    expect(syncStudentSubjectEnrollments).not.toHaveBeenCalled()
   })
 })

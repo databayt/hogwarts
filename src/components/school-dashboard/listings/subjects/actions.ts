@@ -3,12 +3,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cookies } from "next/headers"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { syncGradeSubjectEnrollments } from "@/lib/enrollment-sync"
 import { refreshPage } from "@/lib/refresh-page"
 import { getSchoolSubjects } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -105,6 +107,8 @@ export async function createSubject(
           where: { id: existing.id, schoolId },
           data: { isActive: true },
         })
+        // The grade's students get it back in the LMS
+        after(() => syncGradeSubjectEnrollments(schoolId, existing.gradeId))
         refreshPage("/subjects")
         return { success: true, data: { id: existing.id } }
       }
@@ -126,6 +130,8 @@ export async function createSubject(
       },
     })
 
+    // The grade's students find the new subject in the LMS
+    after(() => syncGradeSubjectEnrollments(schoolId, parsed.gradeId))
     refreshPage("/subjects")
     return { success: true, data: { id: row.id } }
   } catch (error) {
@@ -175,7 +181,7 @@ export async function updateSubject(
     // Verify selection exists and belongs to this school
     const existing = await db.subjectSelection.findFirst({
       where: { id, schoolId },
-      select: { id: true },
+      select: { id: true, gradeId: true },
     })
 
     if (!existing) {
@@ -196,6 +202,9 @@ export async function updateSubject(
       data,
     })
 
+    if (rest.isActive === true) {
+      after(() => syncGradeSubjectEnrollments(schoolId, existing.gradeId))
+    }
     refreshPage("/subjects")
     return { success: true, data: undefined }
   } catch (error) {

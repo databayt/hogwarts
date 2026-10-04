@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import {
   confirmEnrollment,
@@ -185,6 +186,12 @@ vi.mock("@/components/school-dashboard/notifications/email-service", () => ({
 // confirmEnrollment delegates fee assignment + invoice fan-out to the canonical
 // helper. Mock it as a spy so we assert confirmEnrollment calls it with the
 // right args inside the transaction; the helper has its own dedicated tests.
+vi.mock("@/lib/enrollment-sync", () => ({
+  syncStudentSubjectEnrollments: vi
+    .fn()
+    .mockResolvedValue({ subjectIds: [], created: 0 }),
+}))
+
 vi.mock("@/lib/fee-auto-assign", () => ({
   ensureStudentFeeAssignments: vi.fn().mockResolvedValue({
     created: 0,
@@ -1585,6 +1592,11 @@ describe("Admission Actions", () => {
         where: { id: "student-1" },
         data: { sectionId: "sec-1" },
       })
+      // The section's grade subjects reach the LMS
+      expect(syncStudentSubjectEnrollments).toHaveBeenCalledWith(
+        SCHOOL_ID,
+        "student-1"
+      )
     })
 
     it("does not warn about missing classes when the section has a timetable", async () => {

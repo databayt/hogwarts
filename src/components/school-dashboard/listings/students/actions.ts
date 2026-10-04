@@ -86,6 +86,7 @@ import { withArchiveScope } from "@/lib/archive-scope"
 import { mintTempPassword } from "@/lib/credentials"
 import { deliverStudentCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getModelOrThrow } from "@/lib/prisma-guards"
@@ -245,52 +246,6 @@ export async function getGradesAndSections(): Promise<
 }
 
 // ============================================================================
-// Auto-Enrollment Helper
-// ============================================================================
-
-/**
- * Auto-enroll a student in all classes for their grade.
- * Uses upsert so it's safe to call multiple times (idempotent).
- */
-async function autoEnrollStudentInClasses(
-  studentId: string,
-  gradeId: string,
-  schoolId: string
-): Promise<void> {
-  try {
-    const gradeClasses = await db.class.findMany({
-      where: { schoolId, gradeId },
-      select: { id: true },
-    })
-
-    if (gradeClasses.length === 0) return
-
-    await Promise.all(
-      gradeClasses.map((cls) =>
-        db.studentClass.upsert({
-          where: {
-            schoolId_studentId_classId: {
-              schoolId,
-              studentId,
-              classId: cls.id,
-            },
-          },
-          create: {
-            schoolId,
-            studentId,
-            classId: cls.id,
-          },
-          update: {},
-        })
-      )
-    )
-  } catch (error) {
-    // Non-blocking: log but don't fail the parent operation
-    console.error("[autoEnrollStudentInClasses] Error:", error)
-  }
-}
-
-// ============================================================================
 // Mutations
 // ============================================================================
 
@@ -341,9 +296,11 @@ export async function updateStudent(
     if (typeof rest.userId !== "undefined") {
       const trimmed = rest.userId?.trim()
       if (trimmed) {
+        // Only this school's users, or one not in any school yet — never
+        // another school's account.
         const userModel = getModelOrThrow("user")
         const user = await userModel.findFirst({
-          where: { id: trimmed },
+          where: { id: trimmed, OR: [{ schoolId }, { schoolId: null }] },
         })
         if (user) {
           // Check if this userId is already being used by ANY other student (global unique constraint)
@@ -376,22 +333,43 @@ export async function updateStudent(
     if (typeof rest.email !== "undefined") data.email = rest.email || null
     if (typeof rest.mobileNumber !== "undefined")
       data.mobileNumber = rest.mobileNumber || null
+    // Grade and section ids are global CUIDs: only this school's are
+    // accepted (they used to be written as sent).
+    const [grade, section] = await Promise.all([
+      rest.academicGradeId
+        ? db.academicGrade.findFirst({
+            where: { id: rest.academicGradeId, schoolId },
+            select: { id: true },
+          })
+        : null,
+      rest.sectionId
+        ? db.section.findFirst({
+            where: { id: rest.sectionId, schoolId },
+            select: { id: true },
+          })
+        : null,
+    ])
+    if ((rest.academicGradeId && !grade) || (rest.sectionId && !section)) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
     if (typeof rest.academicGradeId !== "undefined") {
-      data.academicGradeId = rest.academicGradeId || null
+      data.academicGradeId = grade?.id ?? null
     }
     if (typeof rest.sectionId !== "undefined") {
-      data.sectionId = rest.sectionId || null
+      data.sectionId = section?.id ?? null
     }
 
     // Update student (using updateMany for tenant safety)
     const studentModel = getModelOrThrow("student")
     await studentModel.updateMany({ where: { id, schoolId }, data })
 
-    // Auto-enroll in classes if grade is set
-    const gradeId = rest.academicGradeId ?? undefined
-    if (gradeId) {
-      await autoEnrollStudentInClasses(id, gradeId, schoolId)
+    // Placed or moved → the grade's subjects in the LMS (adds only)
+    if (grade || section) {
+      await syncStudentSubjectEnrollments(schoolId, id)
+    }
 
+    const gradeId = grade?.id
+    if (gradeId) {
       // Grade change → re-run fee auto-assign so any new grade-specific
       // structures attach. Existing assignments (admin discounts,
       // scholarships) are left alone — the helper only inserts missing rows.

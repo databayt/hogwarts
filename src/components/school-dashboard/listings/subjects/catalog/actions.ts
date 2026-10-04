@@ -3,11 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { syncGradeSubjectEnrollments } from "@/lib/enrollment-sync"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -103,6 +105,8 @@ export async function toggleSubjectSelection(
         isActive: true,
       },
     })
+    // The grade's students find the new subject in the LMS
+    after(() => syncGradeSubjectEnrollments(schoolId, gradeId))
 
     // Update usage count
     const usageCount = await db.subjectSelection.count({
@@ -152,6 +156,10 @@ export async function bulkSelectSubjects(
       })),
       skipDuplicates: true,
     })
+
+    if (added > 0) {
+      after(() => syncGradeSubjectEnrollments(schoolId, gradeId))
+    }
 
     // Batch update usage counts with single raw query
     if (added > 0) {
@@ -211,6 +219,9 @@ export async function updateSubjectSelection(
       where: { id: selectionId },
       data: parsed,
     })
+    if (parsed.isActive === true) {
+      after(() => syncGradeSubjectEnrollments(schoolId, selection.gradeId))
+    }
 
     revalidatePath("/", "layout")
     return { success: true }

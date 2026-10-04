@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { syncStudentSubjectEnrollments } from "@/lib/enrollment-sync"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 import { hasRole } from "../../lib/roles"
@@ -180,10 +181,15 @@ export async function PUT(
     if (body.status !== undefined) updateData.status = body.status
 
     const student = await db.student.update({
-      where: { id: studentId },
+      where: { id: studentId, schoolId: auth.schoolId },
       data: updateData,
       select: { id: true, firstName: true, lastName: true, status: true },
     })
+
+    // Placed in a section → its grade's subjects in the LMS (adds only)
+    if (updateData.sectionId) {
+      await syncStudentSubjectEnrollments(auth.schoolId, studentId)
+    }
 
     return NextResponse.json({
       id: student.id,

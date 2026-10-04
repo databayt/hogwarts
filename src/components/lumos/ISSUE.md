@@ -20,6 +20,21 @@ last_audited: 2026-09-14
 
 ---
 
+## 2026-10-04 — a school's students are enrolled by grade (LOCAL, not pushed)
+
+A school student's courses came from class enrollments, which new schools
+never have: their dashboard stayed empty until they enrolled by hand (locally
+35 enrollments for 980 demo students). Placement now enrolls them in their
+grade's subjects (`src/lib/enrollment-sync.ts`, see
+`listings/students/ISSUE.md`), and adding a subject to a grade — `createSubject`,
+the catalog toggle / bulk select, re-activation, `ensureSubjectSelections` —
+enrolls the grade's active students. Adds only; a pending, cancelled or expired
+row the school now grants is switched on; a completed one is left. Backfill for
+existing students: `prisma/scripts/subject-enrollments-backfill.ts` (owed on
+prod).
+
+---
+
 ## 2026-09-14 — private videos stay private; captures carry the viewer
 
 Asked for directly: protect lessons whose owners set them PRIVATE, and act on

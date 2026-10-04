@@ -129,7 +129,9 @@ vi.mock("@/lib/guardian-utils", () => ({
 }))
 
 vi.mock("@/lib/enrollment-sync", () => ({
-  enrollStudentInGradeClasses: vi.fn().mockResolvedValue({ classIds: [] }),
+  syncStudentSubjectEnrollments: vi
+    .fn()
+    .mockResolvedValue({ subjectIds: [], created: 0 }),
 }))
 
 vi.mock("@/lib/grade-utils", () => ({

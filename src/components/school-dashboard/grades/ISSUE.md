@@ -13,6 +13,23 @@ last_audited: 2026-10-04
 
 # Grades — Production Readiness Tracker
 
+## 2026-10-04 — promotion: admins decide, sections follow (LOCAL, not pushed)
+
+- [x] **P0 — any signed-in school user could run promotion.** Every action
+      checked a session only, so a student could approve and execute their own
+      batch. Writes (policy, evaluate, override, approve, execute) are
+      ADMIN / DEVELOPER; reads are ADMIN / TEACHER / DEVELOPER, as `/grades/*`.
+- [x] **A promoted student keeps their section letter** — 7-A moves to 8-A;
+      with no such section they are placed in the grade without one. Before,
+      they stayed in 7-A, and since the section's grade wins every roster still
+      read them as grade 7.
+- [x] Evaluation reads the grade's roster like everything else (its sections'
+      students plus those placed in the grade without one), refuses another
+      school's grade, and promotion gives the new grade's subjects in Lumos.
+- Open: a graduate keeps their last section. Clearing it would drop them into
+  the grade's "no section yet" group, which grade-wide notices and exams reach;
+  rosters need a status filter first.
+
 ## 2026-10-04 — gradebook without classes (LOCAL, not pushed)
 
 Schools created by onboarding have no `Class` rows, so the gradebook could not
